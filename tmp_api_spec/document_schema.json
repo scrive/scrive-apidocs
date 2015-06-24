@@ -490,6 +490,9 @@
               "type": "string",
               "enum": [ "signature" ]
             },
+            "name": {
+              "type": "string"
+            },
             "signature": {
               "oneOf" : [
                 { "type": "null" }
@@ -508,6 +511,9 @@
             "type": {
               "type": "string",
               "enum": [ "checkbox" ]
+            },
+            "name": {
+              "type": "string"
             },
             "is_checked": {
               "type": "boolean"
