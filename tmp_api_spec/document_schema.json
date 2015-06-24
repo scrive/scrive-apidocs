@@ -128,7 +128,7 @@
             "enum": [
               "standard"
             , "sms_pin"
-            , "sv_bankid"
+            , "se_bankid"
             ],
             "default": "standard"
           },

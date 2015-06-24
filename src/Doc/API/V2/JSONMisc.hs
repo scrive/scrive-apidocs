@@ -84,12 +84,12 @@ instance Unjson AuthenticationMethod where
 
 authenticationMethodToText :: AuthenticationMethod -> Text
 authenticationMethodToText StandardAuthentication = "standard"
-authenticationMethodToText ELegAuthentication = "sv_bankid"
+authenticationMethodToText ELegAuthentication = "se_bankid"
 authenticationMethodToText SMSPinAuthentication = "sms_pin"
 
 textToAuthenticationMethod :: Text -> Maybe AuthenticationMethod
 textToAuthenticationMethod "standard"  = Just StandardAuthentication
-textToAuthenticationMethod "sv_bankid" = Just ELegAuthentication
+textToAuthenticationMethod "se_bankid" = Just ELegAuthentication
 textToAuthenticationMethod "sms_pin"   = Just SMSPinAuthentication
 textToAuthenticationMethod _           = Nothing
 
