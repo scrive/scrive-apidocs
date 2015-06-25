@@ -36,7 +36,13 @@ import Doc.API.V2.JSONList
 import Doc.API.V2.Parameters
 
 docApiV2Available :: Kontrakcja m => m Response
-docApiV2Available = $undefined -- TODO implement
+docApiV2Available = api $ do
+  (user, _) <- getAPIUser APIDocCheck
+  (ids :: [DocumentID]) <- apiV2Parameter' (ApiV2ParameterRead "ids" Obligatory)
+  when (length ids > 10000) $ do
+    apiError $ requestParameterInvalid "ids" "Can't contain more than 10,000 document ids"
+  available <- fmap (map fromDocumentID) $ dbQuery $ GetDocumentsIDs [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
+  return $ Ok $ Response 200 Map.empty nullRsFlags (unjsonToByteStringLazy unjsonDef available) Nothing
 
 docApiV2List :: Kontrakcja m => m Response
 docApiV2List = api $ do
