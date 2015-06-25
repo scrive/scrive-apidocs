@@ -78,7 +78,11 @@ do
 done
 echo "Done."
 
-html_files=("Evidence Quality of Scrive esigned Documents"
+# We have to do this here because Google Drive doesn't like `-` in filenames
+# and gets rid of them :/
+mv "$dest/Evidence Quality of Scrive esigned Documents.html" "$dest/Evidence Quality of Scrive E-signed Documents.html"
+
+html_files=("Evidence Quality of Scrive E-signed Documents"
 "Appendix 1 Evidence Quality Framework"
 "Appendix 2 Service Description"
 "Appendix 6 Digital Signature Documentation")

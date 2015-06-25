@@ -343,7 +343,7 @@ sealSpecFromDocument boxImages hostpart document elog offsets graphEvidenceOfTim
 
   additionalAttachments <- findOutAttachmentDesc sim tmppath document
   docs <- mapM (\f -> (takeFileName f,) <$> liftIO (BS.readFile f))
-            [ "files/Evidence Quality of Scrive Esigned Documents.html"
+            [ "files/Evidence Quality of Scrive E-signed Documents.html"
             , "files/Appendix 1 Evidence Quality Framework.html"
             , "files/Appendix 2 Service Description.html"
             , "files/Appendix 6 Digital Signature Documentation.html"

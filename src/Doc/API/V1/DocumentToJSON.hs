@@ -27,6 +27,7 @@ import DB.TimeZoneName
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocUtils
+import Doc.EvidenceAttachments
 import File.File
 import File.Model
 import File.Storage
@@ -45,11 +46,17 @@ import qualified Doc.EvidenceAttachments as EvidenceAttachments
 evidenceAttachmentsJSONV1 :: (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => Document -> m JSValue
 evidenceAttachmentsJSONV1 doc = do
     evidenceattachments <- EvidenceAttachments.fetch doc
+    let evidenceattachments' = sortBy eaSorter evidenceattachments
     runJSONGenT $ do
-      J.objects "evidenceattachments" $ for evidenceattachments $ \a -> do
+      J.objects "evidenceattachments" $ for evidenceattachments' $ \a -> do
         J.value "name"     $ BSC.unpack $ EvidenceAttachments.name a
         J.value "mimetype" $ BSC.unpack <$> EvidenceAttachments.mimetype a
         J.value "downloadLink" $ show $ LinkEvidenceAttachment (documentid doc) (EvidenceAttachments.name a)
+  where eaSorter :: Attachment -> Attachment -> Ordering
+        eaSorter a b | name a == firstAttachmentName = LT
+                     | name b == firstAttachmentName = GT
+                     | otherwise = compare a b
+        firstAttachmentName = "Evidence Quality of Scrive E-signed Documents.html"
 
 documentJSONV1 :: (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
 documentJSONV1 muser forapi forauthor msl doc = do
