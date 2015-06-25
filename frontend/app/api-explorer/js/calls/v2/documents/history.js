@@ -15,7 +15,16 @@ new APICallV2({
     'v1': 'History'
   },
   params: [
-          window.APIV2CallParamDocumentID
+          window.APIV2CallParamDocumentID,
+          new APICallParam({
+            type: "text",
+            argName: "lang",
+            optional: true,
+            name: "Language",
+            sendAsParam: true,
+            description: "Language to get the history events in.",
+            defaultValue: ""
+          })
         ]
 });
 

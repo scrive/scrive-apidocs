@@ -9,31 +9,35 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 , docApiV2Texts
 ) where
 
-import KontraPrelude
-import Happstack.Server.Types
+import Data.Text (unpack)
 import Doc.Model.Update
 import File.Model
+import Happstack.Server.Types
+import KontraPrelude
+import Text.JSON.Types (JSValue(..))
 
-import Doc.DocStateData
 import API.V2
-import Doc.API.V2.JSONDocument
-import Doc.DocumentID
-import Kontra
-import Doc.DocumentMonad
-import Data.Unjson
-import Doc.DocInfo
 import DB
-import qualified Data.Map as Map hiding (map)
+import Data.Unjson
 import Doc.API.V2.DocumentAccess
-import Util.Actor
-import Util.SignatoryLinkUtils
-import OAuth.Model
-import Doc.DocUtils
-import User.Model
-import Doc.Model
 import Doc.API.V2.Guards
+import Doc.API.V2.JSONDocument
 import Doc.API.V2.JSONList
 import Doc.API.V2.Parameters
+import Doc.DocInfo
+import Doc.DocStateData
+import Doc.DocUtils
+import Doc.DocumentID
+import Doc.DocumentMonad
+import Doc.Model
+import EvidenceLog.Model
+import EvidenceLog.View
+import Kontra
+import OAuth.Model
+import User.Model
+import Util.Actor
+import Util.SignatoryLinkUtils
+import qualified Data.Map as Map hiding (map)
 
 docApiV2Available :: Kontrakcja m => m Response
 docApiV2Available = api $ do
@@ -89,7 +93,22 @@ docApiV2Get did = api $ do
     Ok <$> (\d -> (unjsonDocument $ da,d)) <$> theDocument
 
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
-docApiV2History _did = $undefined -- TODO implement
+docApiV2History did = api $ do
+  (user,_) <- getAPIUser APIDocCheck
+  mLangCode <- apiV2Parameter (ApiV2ParameterText "lang" Optional)
+  mLang <- case fmap (langFromCode . unpack) mLangCode of
+    Nothing -> return Nothing
+    Just Nothing -> do
+      apiError $ requestParameterInvalid "lang" "Not a valid or supported language code"
+    Just (Just l) -> return $ Just l
+  ctx <- getContext
+  modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
+  switchLang $ fromMaybe (lang $ usersettings user) mLang
+  evidenceLog <- dbQuery $ GetEvidenceLog did
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  events <- eventsJSListFromEvidenceLog doc evidenceLog
+  modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
+  return $ Ok (JSArray events)
 
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
 docApiV2EvidenceAttachments _did = $undefined -- TODO implement
