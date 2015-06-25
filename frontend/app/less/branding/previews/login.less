@@ -27,20 +27,29 @@
         margin-bottom: @actual-padding;
       }
 
-      p a { text-decoration: underline; }
+      p a {
+        cursor: text;
+        text-decoration: underline;
+      }
 
       .select-container {
+        cursor: default;
         padding-bottom: 0;
         width: 280px;
         margin: 0 auto;
 
         .select {
+          cursor: default;
           width: 180px !important;
           margin: 0 auto;
         }
 
         .select-button {
           background: transparent;
+        }
+
+        .select-button-label {
+          cursor: text;
         }
       }
 
