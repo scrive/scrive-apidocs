@@ -18,7 +18,7 @@ Usage:
     border="1px solid #ddd" // border css property.
     inactive={false} // is select box inactive.
     width={100} // width of select button in pixels.
-    maxOptionsWidth={200} // Optional. If not provided, 2 * width will be used instead. Max width of option box as css property.
+    maxOptionsWidth={200} // Optional. If not provided, 2 * width will be used instead.
     onSelect={function (v) { return true; }} // fired when an option is selected,
                                              // can be overwittern by options onSelect,
                                              // return false to not close option box.
