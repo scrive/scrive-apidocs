@@ -79,8 +79,20 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return this.document().authorattachments().length > 0;
   },
   hasExtraDetailsSection : function() {
+    if (this.get('hasExtraDetailsSection') !== undefined) {
+      // this is cached, because if signview is rendered() again,
+      // it's possible that the signatory has already filled out
+      // extra details section and it would disappear,
+      // so if it was once needed, we cache that fact and display it
+      // always in the future
+      return this.get('hasExtraDetailsSection');
+    }
     if (!this.document().currentSignatoryCanSign()) return false;
-    return this.hasExtraInputs();
+    if (this.hasExtraInputs()) {
+      this.set('hasExtraDetailsSection', true);
+      return true;
+    }
+    return false;
   },
   hasExtraInputs : function() {
     return this.askForName()
