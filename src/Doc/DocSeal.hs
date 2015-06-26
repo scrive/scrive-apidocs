@@ -523,8 +523,14 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     logInfo_ $ "Sealing completed with " ++ show code
     case code of
       ExitSuccess -> do
-        sealedfileid <- dbUpdate . NewFile filename . Binary =<< liftIO (BS.readFile tmpout)
-        dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
+        tmpoutContent <- liftIO (BS.readFile tmpout)
+        case tmpoutContent of
+          "" -> do
+            logAttention_ $ "Sealing document #" ++ show documentid ++ " resulted in an empty output"
+            internalError
+          _ -> do
+            sealedfileid <- dbUpdate $ NewFile filename $ Binary tmpoutContent
+            dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
       ExitFailure _ -> do
         systmp <- liftIO $ getTemporaryDirectory
         (path, handle) <- liftIO $ openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
