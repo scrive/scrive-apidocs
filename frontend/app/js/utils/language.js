@@ -11,7 +11,7 @@ window.Language = {
        return localization.code;
     },
     allLanguagesCodes : function() {
-      return ["en","sv","de","fr","it","es","pt","nl","da","no","el","fi"];
+      return ["en","sv","de","fr","it","es","pt","nl","da","no","el","fi","is"];
     },
     changeForPageAndUserAndReload : function(code) {
         $.post('/api/frontend/changelanguage', {lang: code }, function() {

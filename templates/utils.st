@@ -59,6 +59,8 @@ GreekInGreek=ελληνικά
 ###
 FinnishInFinish=Suomi
 ###
+IcelandicInIcelandic=Íslenska
+###
 PoweredByScrive=E-signing powered by Scrive
 ###
 ### All the prices below are when paying yearly.

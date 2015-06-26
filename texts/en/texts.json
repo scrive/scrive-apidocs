@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -17,6 +17,7 @@
 "_German":"German",
 "_HeadUsageStats":"Usage stats",
 "_HeadUserInfo":"My info",
+"_Icelandic":"Icelandic",
 "_Italian":"Italian",
 "_NewPassword":"New password",
 "_Norwegian":"Norwegian",

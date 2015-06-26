@@ -24,6 +24,7 @@ Usage:
                                              // return false to not close option box.
     onOpen={function () { return true }} // fired when option box opens
                                          // return false to not open option box.
+    onClose={function () { return true }} // fired when option box closes
     onRemove={function () { }} // if set adds a remove button to select box.
     adjustHeightOnExpand={false} // make the height of the non expanded select
                                  // the same as the expanded
@@ -159,6 +160,7 @@ define(["legacy_code", "React"], function (legacy_code, React) {
       color: React.PropTypes.string,
       style:  React.PropTypes.object,
       onOpen: React.PropTypes.func,
+      onClose: React.PropTypes.func,
       onSelect: React.PropTypes.func,
       onRemove: React.PropTypes.func,
       options: React.PropTypes.array.isRequired,
@@ -177,7 +179,8 @@ define(["legacy_code", "React"], function (legacy_code, React) {
         style: {},
         width: 160,
         inactive: false,
-        onOpen: function () { return true; }
+        onOpen: function () { return true; },
+        onClose: function () { return true; }
       };
     },
 
@@ -223,6 +226,7 @@ define(["legacy_code", "React"], function (legacy_code, React) {
 
     close: function () {
       this.setState({expanded: false});
+      this.props.onClose()
     },
 
     toggle: function () {

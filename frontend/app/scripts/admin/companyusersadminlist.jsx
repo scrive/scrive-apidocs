@@ -43,6 +43,7 @@ var openNewUserModal = function(companyid,callback) {
                           + '<option value="da">Danish</option>'
                           + '<option value="el">Greek</option>'
                           + '<option value="fi">Finnish</option>'
+                          + '<option value="is">Icelandic</option>'
                           + "</select>");
   tr6.append(jQuery("<td/>").append(lang));
   table.append(tr6);

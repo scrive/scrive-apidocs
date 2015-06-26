@@ -314,6 +314,7 @@ var AccountSettingsView = Backbone.View.extend({
         , {name: localization.languages.noInNo, value: "no"}
         , {name: localization.languages.elInEl, value: "el"}
         , {name: localization.languages.fiInFi, value: "fi"}
+        , {name: localization.languages.isInIs, value: "is", hidden: true}
       ];
 
       languages = _.sortBy(languages, function(l) {return l.name.toLowerCase();});
@@ -336,18 +337,20 @@ var AccountSettingsView = Backbone.View.extend({
                              onOpen: function() {
                                // right now the expanded select is still not mounted, so this value is pre-select-existience
                                var documentHeight = $(document).height();
+                               var bodyPaddingHeight = $("footer").offset().top + $("footer").outerHeight() - $('.body-container').offset().top - $('.body-container').height();
                                setTimeout(function() {
                                  // and now the document (maybe) is bigger
                                  var newDocumentHeight = $(document).height();
                                  if (newDocumentHeight > documentHeight) {
                                    var heightDifference = newDocumentHeight - documentHeight;
-                                   $(".body-container").css("padding-bottom", 207 + heightDifference + "px"); // 160 is linked to .body-container[padding-bottom]
+                                   $(".body-container").css("padding-bottom", bodyPaddingHeight + heightDifference + "px"); 
                                    $("footer").css("height", $("footer").height() + heightDifference + "px");
                                  }
                                }, 100);
                                return true;
                              },
                              onClose: function() {
+
                                 $(".body-container").css("padding-bottom","");
                                 $("footer").css("height","");
                              }

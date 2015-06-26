@@ -217,6 +217,7 @@ javascriptLocalisation =
               , no : "$_Norwegian()$"
               , el : "$_Greek()$"
               , fi : "$_Finnish()$"
+              , is : "$_Icelandic()$"
               , svInSv :"$SwedishInSwedish()$"
               , enInEn : "$EnglishInEnglish()$"
               , deInDe : "$GermanInGerman()$"
@@ -229,6 +230,7 @@ javascriptLocalisation =
               , noInNo : "$NorwegianInNorwegian()$"
               , elInEl : "$GreekInGreek()$"
               , fiInFi : "$FinnishInFinish()$"
+              , isInIs : "$IcelandicInIcelandic()$"
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"
