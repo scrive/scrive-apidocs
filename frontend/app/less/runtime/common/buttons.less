@@ -94,7 +94,14 @@
   }
 
   &.inactive {
-    .colored-button(#eaeaea, #999999);
+    cursor: default;
+    opacity: .4;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=40)";
+    &:hover {
+      background-color: @actioncolor;
+      opacity: .4;
+      -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=40)";
+    }
   }
 
   // Used only when button is used for pages that should look like EE

@@ -293,13 +293,15 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             var spinner = this.spinnerSmall();
             var spinnerContainer = $("<span class='spinner-container' />");
             spinnerContainer.append(spinner.el);
+            var span = $('<span class="float-right"/>');
 
             var acceptButton = new Button({
               type : "action",
               text : localization.designview.sign,
               oneClick : true,
               onClick : function() {
-                acceptButton.el().addClass('is-inactive').prepend(spinnerContainer); // Add the spinner and make inactive
+                acceptButton.el().addClass('is-inactive');
+                span.prepend(spinnerContainer);
                 self.confirmationpopup.hideCancel();
                 self.confirmationpopup.hideClose();
 
@@ -313,6 +315,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                 });
              }
             });
+            span.append(acceptButton.el());
 
             var content = $("<span/>");
             if (document.authorIsOnlySignatory()) {
@@ -339,7 +342,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
             self.confirmationpopup = new Confirmation({
                 title : localization.signByAuthor.modalTitle,
-                acceptButton : acceptButton.el(),
+                acceptButton : span,
                 rejectText: localization.cancel,
                 content  : content
             });

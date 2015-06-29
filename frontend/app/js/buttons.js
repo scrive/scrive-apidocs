@@ -55,13 +55,19 @@ var ButtonModel = Backbone.Model.extend({
        return this.get("isClicked");
   },
   clicked : function(){
-    if (!this.oneClick() || !this.isClicked()) // We call onClick, only if we don't count clicks or button was not clicked
-     { this.set({isClicked : true});
-       this.get("onClick")();
-     }
+    if (!this.oneClick() || !this.isClicked()) { // We call onClick, only if we don't count clicks or button was not clicked
+      if (this.oneClick()) {
+        this.originalType = this.type();
+        this.set({isClicked : true, 'type': 'inactive'});
+      }
+      this.get("onClick")();
+    }
   },
   setNotClicked : function() {
        this.set({isClicked : false});
+       if (this.originalType !== undefined) {
+         this.set({type: this.originalType});
+       }
   },
   icon : function() {
        return this.get("icon");
@@ -85,6 +91,7 @@ var ButtonView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clicked', 'updateText');
         this.model.bind("change:text",this.updateText);
+        this.model.bind("change:isClicked", this.render);
         this.render();
     },
     updateText : function() {
@@ -105,6 +112,12 @@ var ButtonView = Backbone.View.extend({
         return 0;
     },
     render: function () {
+        // we can't remove all the children, because upload buttons
+        // inject their hidden inputs inside this button
+        // by removing .label we remove all own children
+        // and leave the rest as they are
+        $(this.el).find('.label').remove();
+
         $(this.el).attr("style",this.model.style());
         $(this.el).addClass(this.model.cssClass());
         $(this.el).addClass(this.model.type());

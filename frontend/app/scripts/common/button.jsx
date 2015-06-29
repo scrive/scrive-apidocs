@@ -52,7 +52,9 @@ define(['React'], function(React) {
         };
       },
     getInitialState: function() {
-      return {clicked: false};
+      return {clicked: false,
+              "type": this.props.type,
+              originalType: this.props.type};
     },
     handleClick: function() {
       var eventName = 'Clicked button' + this.props.text;
@@ -60,6 +62,9 @@ define(['React'], function(React) {
       mixpanel.track(eventName);
       this.setState({'clicked': true});
       if (fireClick) {
+        if (this.props.oneClick) {
+          this.setState({"type": 'inactive'});
+        }
         this.props.onClick();
       }
     },
@@ -92,7 +97,7 @@ define(['React'], function(React) {
       return this.props.multiline ? "button-signleline": "";
     },
     className : function() {
-      return (this.props.className || "") + " button " + this.sizeClass() + " " + (this.props.type || "") + " " + this.multilineClass();
+      return (this.props.className || "") + " button " + this.sizeClass() + " " + (this.state.type || "") + " " + this.multilineClass();
     },
     style : function() {
       return  _.extend({width: this.width()},this.props.style);
