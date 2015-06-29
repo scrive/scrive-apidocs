@@ -226,7 +226,7 @@ define(["legacy_code", "React"], function (legacy_code, React) {
 
     close: function () {
       this.setState({expanded: false});
-      this.props.onClose()
+      this.props.onClose();
     },
 
     toggle: function () {
