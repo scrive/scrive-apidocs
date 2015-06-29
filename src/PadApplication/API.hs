@@ -3,31 +3,26 @@ module PadApplication.API (
   ) where
 
 import Control.Exception.Lifted
+import Data.Unjson as Unjson
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Text.JSON.Gen
 import Text.JSON.Types (JSValue(JSNull))
 
+import API.Monad
+import AppView
+import BrandedDomain.BrandedDomain
 import Company.CompanyUI
 import Company.Model
-
-import Data.Unjson as Unjson
-
-import BrandedDomain.BrandedDomain
-
-import Theme.View
-import Theme.Model
-
-import User.Utils
-
-import API.Monad
-import DB.SQL
 import DB.Query
+import DB.SQL
 import Happstack.Fields
 import Kontra
 import KontraPrelude
 import Routing
-import AppView
+import Theme.Model
+import Theme.View
+import User.Utils
 
 padApplicationAPI :: Route (Kontra Response)
 padApplicationAPI = dir "api" $ choice
