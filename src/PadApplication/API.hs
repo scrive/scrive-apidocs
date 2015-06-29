@@ -8,12 +8,26 @@ import Happstack.StaticRouting
 import Text.JSON.Gen
 import Text.JSON.Types (JSValue(JSNull))
 
+import Company.CompanyUI
+import Company.Model
+
+import Data.Unjson as Unjson
+
+import BrandedDomain.BrandedDomain
+
+import Theme.View
+import Theme.Model
+
+import User.Utils
+
 import API.Monad
 import DB.SQL
+import DB.Query
 import Happstack.Fields
 import Kontra
 import KontraPrelude
 import Routing
+import AppView
 
 padApplicationAPI :: Route (Kontra Response)
 padApplicationAPI = dir "api" $ choice
@@ -24,8 +38,9 @@ padApplicationAPI = dir "api" $ choice
   ]
 
 padApplicationAPI' :: Route (Kontra Response)
-padApplicationAPI' = choice [
-  dir "checkclient"     $ hPostNoXTokenHttp $ toK0 $ apiCallCheckClient
+padApplicationAPI' = choice 
+  [ dir "checkclient"     $ hPostNoXTokenHttp $ toK0 $ apiCallCheckClient
+  , dir "padclienttheme"     $ hGet $ toK0 $ apiCallGetPadClientTheme
   ]
 
 
@@ -40,3 +55,12 @@ apiCallCheckClient = api $ do
       value "valid_until" JSNull
       value "upgrade_url" JSNull
       value "message" JSNull
+
+apiCallGetPadClientTheme :: Kontrakcja m => m Response
+apiCallGetPadClientTheme = api $ do
+  ctx <- getContext
+  (user, _ , _) <- getAPIUserWithAnyPrivileges
+  company <- getCompanyForUser user
+  companyui <- dbQuery $ GetCompanyUI (companyid company)
+  theme <- dbQuery $ GetTheme $ fromMaybe (bdServiceTheme $ ctxbrandeddomain ctx) (companyServiceTheme $ companyui)
+  simpleAesonResponse $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme theme
