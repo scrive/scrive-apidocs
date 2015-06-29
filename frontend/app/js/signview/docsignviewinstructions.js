@@ -118,6 +118,12 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
 
     if (document.showpdfdownload() && !BrowserInfo.isSmallScreen()) {
         var link = $("<a target='_blank' class='download' />").attr("href", document.mainfile().downloadLinkForMainFile(document.title())).text(document.title() + ".pdf");
+        link.click(function () {
+          mixpanel.track("Download pdf", {
+            "Can sign": document.currentSignatoryCanSign() ? "yes" : "no",
+            "Delivery method": document.currentSignatory().delivery()
+          });
+        });
         smallerbit.append(link);
     }
 
