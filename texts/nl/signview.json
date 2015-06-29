@@ -1,7 +1,7 @@
 { 
 "_DeletePDF":"verwijderen",
 "_RequestedAttachments":"Aangevraagde bijlagen",
-"_ReviewPDF":"Bekijk",
+"_ReviewPDF":"",
 "_cancel":"Annuleren",
 "_changePartyTo":"Verander ondertekenende partij naar",
 "_changeSignatoryButtonText":"Wijzig",
@@ -51,7 +51,7 @@
 "_email":"E-mail",
 "_enterPhoneForPinDelivery":"Vul uw telefoonnummer in",
 "_enterSMSPin":"Vul uw SMS PIN in",
-"_filladitionfields":"",
+"_filladitionfields":"Over u",
 "_filladitionfieldsdescription":"Voeg gaarne extra informatie over uzelf toe.",
 "_filladitionfieldslabel":"Over u",
 "_firstname":"Voornaam",
