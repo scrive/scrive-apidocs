@@ -1,136 +1,120 @@
-define(["legacy_code", "Underscore", "Backbone", "signview/fileview/filepageview"],
-  function (legacy_code, _, Backbone, FilePageView) {
+define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "signview/fileview/filepageview"],
+  function (legacy_code, _, Backbone, React, BackboneMixin, FilePageView) {
+  return React.createClass({
+    propTypes: {
+      model: React.PropTypes.instanceOf(File).isRequired,
+      signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
+      arrow: React.PropTypes.func.isRequired,
+      onReady: React.PropTypes.func
+    },
 
-var FileView = Backbone.View.extend({
-  initialize: function (args) {
-    this.listenTo(this.model, "change", this.render);
+    mixins: [BackboneMixin.BackboneMixin],
 
-    this.model.view = this;
-    this.pageviews = [];
-    this.arrow = args.arrow;
-    this.signview = args.signview;
+    getBackboneModels: function () {
+      return [this.props.model];
+    },
 
-    this.model.fetch({
-      data: {signatoryid: this.model.signatoryid()},
-      processData:  true,
-      cache: false
-    });
+    getInitialState: function () {
+      return {images: []};
+    },
 
-    this.render();
-  },
+    componentWillMount: function () {
+      var model = this.props.model;
 
-  startReadyChecker: function () {
-    if (this.destroyed) { return; }
+      model.view = this;
+      model.fetch({
+        data: {signatoryid: model.signatoryid()},
+        processData: true,
+        cache: false
+      });
+    },
 
-    var view = this;
-
-    if (view.ready()) {
-
-      // TODO. Here we need to trigger ready twice. It should be two different events, but it's not.
-      // Maybe after rewrite to React.  First 'ready' will force placecements to get connected to pages.
-      // Then we 'updatePosition' on each of them.  Second 'ready'will force update of arrows -
-      // and arrows are based on position or placementview el, so it has to be done after 'updatePosition'.
-
-      view.model.trigger("ready");
-      if (view.pageviews != undefined) {
-        _.each(view.pageviews, function (pv) {
-          pv.updateDragablesPosition();
-        });
+    componentDidUpdate: function (prevProps, prevState) {
+      if (this.props.model.pages().length !== this.state.images.length) {
+        this.updateImages();
       }
-      view.model.trigger("ready");
+    },
 
-    } else {
-      setTimeout(function () {view.startReadyChecker()}, 100);
-    }
-  },
+    ready: function () {
+      var model = this.props.model;
+      var ready = model.ready() && model.pages().length > 0 &&
+        this.state.images.length === model.pages().length &&
+        _.all(this.state.images, function (img) { return img.complete; });
+      return ready;
+    },
 
-  startReadyCheckerFirstPage: function () {
-    if (this.destroyed) { return; }
+    readyFirstPage: function () {
+      return this.state.images.length > 0 && this.state.images[0].complete;
+    },
 
-    var view = this;
+    updateImages: function () {
+      var self = this;
+      var file = self.props.model;
+      var fileid = file.fileid();
 
-    if (view.readyFirstPage()) {
-     view.model.trigger("FirstPageReady");
-    } else {
-     setTimeout(function () {view.startReadyCheckerFirstPage()}, 100);
-    }
-  },
-
-  ready: function () {
-    return (this.readyToConnectToPage() && $(this.el).parents("body").length > 0);
-  },
-
-  readyToConnectToPage: function () {
-    return (
-      this.model.ready() &&
-      (this.model.pages().length > 0) &&
-      (this.pageviews.length == this.model.pages().length) &&
-      _.all(this.pageviews, function (pv) {return pv.ready();})
-    );
-  },
-
-  readyFirstPage: function () {
-    return this.pageviews.length > 0 && this.pageviews[0].ready();
-  },
-
-  render: function () {
-    var view = this;
-    var file = this.model;
-    var docbox = $(this.el);
-
-    docbox.empty();
-
-    if (!file.ready()) {
-      var waitbox = $("<div class='waiting4page'/>");
-      docbox.append(waitbox);
-    } else {
-      _.each(this.pageviews, function (p) { p.destroy(); });
-
-      this.pageviews = [];
-
-      _.each(file.pages(), function (page) {
-        var pageview = new FilePageView({
-          model: page,
-          arrow: view.arrow,
-          signview: view.signview,
-          el: $("<div/>")
-        });
-
-        view.pageviews.push(pageview);
-        docbox.append($(pageview.el));
+      _.each(self.state.images, function () {
+        img.removeEventListener("load", self.handleLoad);
       });
 
-      view.startReadyCheckerFirstPage();
-      view.startReadyChecker();
+      var images = _.map(file.pages(), function (page, index) {
+        var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart({"pixelwidth": page.width()});
+        var img = new Image();
+        img.src = pagelink;
+        img.addEventListener("load", function () {self.handleLoad(index)});
+        return img;
+      });
+
+      self.setState({images: images});
+    },
+
+    handleLoad: function (index) {
+      if (index === 0) {
+        this.props.model.trigger("FirstPageReady");
+      }
+
+      if (this.ready()) {
+        this.forceUpdate();
+        this.props.model.trigger("view:ready");
+        if (this.props.onReady) {
+          this.props.onReady();
+        }
+      }
+    },
+
+    renderPage: function (page, index) {
+      var image = this.state.images[index];
+
+      if (!image) {
+        return <span key={index} />;
+      }
+
+      return (
+        <FilePageView
+          key={index}
+          model={page}
+          arrow={this.props.arrow}
+          signview={this.props.signview}
+          imageSrc={image.src}
+          imageComplete={image.complete}
+          imageWidth={image.width}
+          imageHeight={image.height}
+        />
+      );
+    },
+
+    render: function () {
+      var file = this.props.model;
+
+      return (
+        <div className="document-pages">
+          {/* if */ !file.ready() &&
+            <div className="waiting4page" />
+          }
+          {/* else */ file.ready() &&
+            _.map(file.pages(), this.renderPage)
+          }
+        </div>
+      );
     }
-  }
-});
-
-return function (args) {
-  if (args.file) {
-    this.model = args.file;
-  } else {
-    this.model = new File({
-      id: args.id,
-      name: args.name,
-      documentid: args.documentid,
-      attachmentid: args.attachmentid,
-      signatoryid: args.signatoryid
-    });
-  }
-
-  this.view = new FileView({
-    model: this.model,
-    signview: args.signview,
-    arrow: args.arrow,
-    el: $("<div class='document-pages'/>")
   });
-
-  this.readyToConnectToPage = function () {
-    return this.view.readyToConnectToPage();
-  };
-
-  return this;
-};
-
 });

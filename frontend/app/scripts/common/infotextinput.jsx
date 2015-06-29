@@ -35,6 +35,7 @@ define(['React'], function(React) {
       className     : React.PropTypes.string,
       style         : React.PropTypes.object,
       inputStyle    : React.PropTypes.object,
+      okStyle       : React.PropTypes.object,
       maxLength     : React.PropTypes.number,
 
       // Behaviour
@@ -42,6 +43,7 @@ define(['React'], function(React) {
       autocompleate : React.PropTypes.bool,
       readonly      : React.PropTypes.bool,
       focus         : React.PropTypes.bool,
+      autoGrowth    : React.PropTypes.bool,
       restrictInput : React.PropTypes.func,
 
       // Events
@@ -52,6 +54,7 @@ define(['React'], function(React) {
       onRemove      : React.PropTypes.func,
       onOk          : React.PropTypes.func,
       onClick       : React.PropTypes.func,
+      onAutoGrowth  : React.PropTypes.func,
 
       // More
       buttonTitle    : React.PropTypes.string
@@ -67,6 +70,7 @@ define(['React'], function(React) {
           "className" : "",
           "style" : {},
           "inputStyle" : {},
+          "okStyle" : {},
           "autocomplete" : false,
           "readonly" : false,
           "restrictInput": function () { return true; }
@@ -78,6 +82,16 @@ define(['React'], function(React) {
     componentDidMount : function() {
       if (this.props.focus)
         this.focus();
+
+      // must rerender otherwise autoGrowth width is 0.
+      if (this.props.autoGrowth) {
+        this.forceUpdate();
+      }
+    },
+    componentDidUpdate: function () {
+      if (this.props.onAutoGrowth) {
+        this.props.onAutoGrowth();
+      }
     },
     componentWillReceiveProps: function(props) {
       if (props.value != this.props.value)
@@ -89,6 +103,28 @@ define(['React'], function(React) {
     },
     value : function() {
       return this.state.value;
+    },
+    measureText: function (text) {
+      if (!this.refs.growth) {
+        return 0;
+      }
+
+      var $growth = $(this.refs.growth.getDOMNode());
+      $growth.text(text);
+      return $growth.width();
+    },
+    textWidth: function () {
+      var valueWidth = this.measureText(this.state.value);
+      var infotextWidth = this.measureText(this.props.infotext);
+      var textWidth = Math.max(valueWidth, infotextWidth);
+
+      var width = textWidth + 20;
+
+      if (this.props.onOk) {
+        width += 10;
+      }
+
+      return width;
     },
     focus : function() {
       $(this.refs.input.getDOMNode()).focus();
@@ -140,6 +176,13 @@ define(['React'], function(React) {
     },
     render: function() {
       var fakePlaceholder = BrowserInfo.isIE9orLower() && !this.state.focus && (this.state.value == undefined || this.state.value =="") ;
+
+      var inputStyle = _.extend({}, this.props.inputStyle);
+
+      if (this.props.autoGrowth) {
+        _.extend(inputStyle, {width: this.textWidth() + "px"});
+      }
+
       return (
         <div
           style={this.props.style}
@@ -150,7 +193,7 @@ define(['React'], function(React) {
             name={this.props.name}
             type={this.props.inputtype}
             autoComplete={this.props.autocompleate}
-            style={this.props.inputStyle}
+            style={inputStyle}
             readOnly={this.props.readonly}
             disabled={this.props.readonly}
             className={fakePlaceholder ? "grayed" : ""}
@@ -168,10 +211,13 @@ define(['React'], function(React) {
               <div ref="close" className="closer" onClick={this.onRemove}/>
            }
            {/*if*/ this.props.onOk != undefined &&
-              <div className="ok-button" onClick={this.onOk}>OK</div>
+              <div ref="ok" className="ok-button" style={this.props.okStyle} onClick={this.onOk}>OK</div>
            }
            {/*if*/ (this.props.buttonTitle != undefined && this.props.onClick != undefined) &&
               <div className="internal-button-wrapper"><div className="internal-button" onClick={this.props.onClick}>{this.props.buttonTitle}</div></div>
+           }
+           {/*if*/ this.props.autoGrowth &&
+              <div ref="growth" className="growth" style={this.props.inputStyle} />
            }
         </div>
       );
