@@ -9,10 +9,12 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 , docApiV2Texts
 ) where
 
+import Data.Char
 import Data.Text (unpack)
 import Data.Unjson
 import Happstack.Server.Types
 import Text.JSON.Types (JSValue(..))
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map hiding (map)
 
 import API.V2
@@ -22,12 +24,15 @@ import Doc.API.V2.Guards
 import Doc.API.V2.JSONDocument
 import Doc.API.V2.JSONList
 import Doc.API.V2.Parameters
+import Doc.Data.MainFile
+import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model
 import EvidenceLog.Model
 import EvidenceLog.View
 import File.Model
+import File.Storage
 import Kontra
 import KontraPrelude
 import OAuth.Model
@@ -83,7 +88,24 @@ docApiV2FilesMain :: Kontrakcja m => DocumentID -> String -> m Response
 docApiV2FilesMain _did _filename = $undefined -- TODO implement
 
 docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
-docApiV2FilesGet _did _fid _filename = $undefined -- TODO implement
+docApiV2FilesGet did fid filename = api $ do
+  mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
+  _ <- guardDocumentAccessSessionOrUser did mslid APIDocCheck guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++
+                      (authorattachmentfileid <$> documentauthorattachments doc) ++
+                      (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
+  if (all (/= fid) allfiles)
+     then apiError $ resourceNotFound "No file with given fileid associated with document"
+     else do
+       fileContents <- getFileIDContents fid
+       let filename' = map toLower filename
+           contentType | isSuffixOf ".pdf" filename' = "application/pdf"
+                       | isSuffixOf ".png" filename' = "image/png"
+                       | isSuffixOf ".jpg" filename' = "image/jpeg"
+                       | otherwise = "application/octet-stream"
+           headers = mkHeaders [("Content-Type", contentType)]
+       return $ Ok $ Response 200 headers nullRsFlags (BSL.fromStrict fileContents) Nothing
 
 -------------------------------------------------------------------------------
 
