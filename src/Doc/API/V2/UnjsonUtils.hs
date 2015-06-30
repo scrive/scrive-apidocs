@@ -1,12 +1,16 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+module Doc.API.V2.UnjsonUtils (
+  unjsonEnumBy
+, unjsonEnum
+, nothingToNullDef
+, unjsonDefWithNull
+) where
 
-module Doc.API.V2.UnjsonUtils (unjsonEnumBy, unjsonEnum, nothingToNullDef, unjsonDefWithNull) where
-
+import Data.Text
+import Data.Unjson
+import qualified Data.Aeson as Aeson
 
 import KontraPrelude
-import Data.Unjson
-import Data.Text
-import qualified Data.Aeson as Aeson
 
 unjsonEnumBy :: (Eq a) => Text -> [(a,Text)] -> UnjsonDef a
 unjsonEnumBy desc enumDef =
@@ -47,4 +51,3 @@ unjsonDefWithNull = SimpleUnjsonDef "ReadOnly"  (\v -> Just <$> parse unjsonDef 
   case mv of
     Nothing -> Aeson.Null
     Just v -> unjsonToJSON unjsonDef v
-

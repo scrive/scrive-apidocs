@@ -6,8 +6,8 @@ module Doc.API.V2.Calls.SignatoryCalls (
 , docApiV2SigSetAttachment
 ) where
 
-import Happstack.Server.Types
 import Data.Text (strip, unpack)
+import Happstack.Server.Types
 
 import API.V2
 import Chargeable.Model
@@ -28,9 +28,9 @@ import Doc.SignatoryLinkID
 import EID.Signature.Model
 import Kontra
 import KontraPrelude
-import Util.SignatoryLinkUtils
-import Util.Actor
 import User.Lang
+import Util.Actor
+import Util.SignatoryLinkUtils
 
 docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigReject did slid = api $ do

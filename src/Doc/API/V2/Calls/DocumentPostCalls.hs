@@ -17,18 +17,15 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2SigSetAuthentication
 ) where
 
-import KontraPrelude
-import Happstack.Server.Types
-import Doc.Model.Update
-import DB.TimeZoneName (defaultTimeZoneName)
-import Text.StringTemplates.Templates
-import MinutesTime
-
-import API.V2
-import DB
 import Data.Text hiding (reverse, takeWhile)
 import Data.Unjson
 import Data.Unjson as Unjson
+import Happstack.Server.Types
+import Text.StringTemplates.Templates
+
+import API.V2
+import DB
+import DB.TimeZoneName (defaultTimeZoneName)
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.DocumentUpdateUtils
 import Doc.API.V2.Guards
@@ -44,6 +41,8 @@ import Doc.Model
 import Doc.SignatoryLinkID
 import File.File (File(..))
 import Kontra
+import KontraPrelude
+import MinutesTime
 import OAuth.Model
 
 docApiV2New :: Kontrakcja m => m Response

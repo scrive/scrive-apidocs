@@ -1,12 +1,11 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.API.V2.DocumentUpdateUtils (
-    applyDraftDataToDocument
-  ) where
+ applyDraftDataToDocument
+) where
 
 import Control.Conditional (whenM, unlessM)
 import Data.Functor
-import Log
 import qualified Control.Exception.Lifted as E
 
 import API.V2 (apiError, serverError, requestParameterInvalid)
@@ -14,12 +13,13 @@ import DB
 import DB.TimeZoneName
 import Doc.DocInfo (isPreparation)
 import Doc.DocStateData
-import Doc.DocumentMonad (DocumentMonad, theDocument)
 import Doc.DocUtils
+import Doc.DocumentMonad (DocumentMonad, theDocument)
 import Doc.Model
 import Doc.SignatoryFieldID
 import Kontra
 import KontraPrelude
+import Log
 import Util.Actor
 import Util.HasSomeUserInfo
 
@@ -108,4 +108,3 @@ mergeAuthorDetails sigs nsigs =
 mergeSignatoriesIDs :: [SignatoryLink] ->[SignatoryLink] -> [SignatoryLink]
 mergeSignatoriesIDs (s:ss) (ns:nss) = (ns {signatorylinkid = signatorylinkid s}) : (mergeSignatoriesIDs ss nss)
 mergeSignatoriesIDs _ ns = ns
-

@@ -5,6 +5,7 @@ module Doc.API.V2.Parameters (
   , apiV2Parameter
   , apiV2Parameter'
 ) where
+
 import Control.Monad.IO.Class
 import Happstack.Server.RqData
 import Happstack.Server.Types
@@ -25,6 +26,7 @@ import Happstack.Fields
 import Kontra
 import LiveDocx
 import qualified Data.Aeson as Aeson
+
 -- | Parameters are either Obligatory or Optional
 -- If they are Optional we may want a default value, or we may want Nothing
 data ParameterOption a = Obligatory | Optional | OptionalWithDefault a

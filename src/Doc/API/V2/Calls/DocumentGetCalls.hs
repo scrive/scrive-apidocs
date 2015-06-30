@@ -10,15 +10,13 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 ) where
 
 import Data.Text (unpack)
-import Doc.Model.Update
-import File.Model
+import Data.Unjson
 import Happstack.Server.Types
-import KontraPrelude
 import Text.JSON.Types (JSValue(..))
+import qualified Data.Map as Map hiding (map)
 
 import API.V2
 import DB
-import Data.Unjson
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
 import Doc.API.V2.JSONDocument
@@ -32,12 +30,13 @@ import Doc.DocumentMonad
 import Doc.Model
 import EvidenceLog.Model
 import EvidenceLog.View
+import File.Model
 import Kontra
+import KontraPrelude
 import OAuth.Model
 import User.Model
 import Util.Actor
 import Util.SignatoryLinkUtils
-import qualified Data.Map as Map hiding (map)
 
 docApiV2Available :: Kontrakcja m => m Response
 docApiV2Available = api $ do

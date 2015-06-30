@@ -1,13 +1,18 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+module Doc.API.V2.DocumentAccess (
+  DocumentAccess(..)
+, DocumentAccessMode(..)
+, canSeeSignlinks
+, propertyForCurrentSignatory
+, documentAccessForUser
+) where
 
-module Doc.API.V2.DocumentAccess (DocumentAccess(..),DocumentAccessMode(..),canSeeSignlinks, propertyForCurrentSignatory, documentAccessForUser) where
-
+import Doc.DocStateData
+import Doc.DocumentID
 import Doc.SignatoryLinkID
 import KontraPrelude
-import Doc.DocumentID
-import Util.SignatoryLinkUtils
-import Doc.DocStateData
 import User.Model
+import Util.SignatoryLinkUtils
 
 data DocumentAccess = DocumentAccess {
       daDocumentID :: DocumentID
@@ -34,7 +39,6 @@ propertyForCurrentSignatory da f doc =
     slForAccess (DocumentAccess { daAccessMode = SignatoryDocumentAccess sid}) = getSigLinkFor sid
     slForAccess (DocumentAccess { daAccessMode = AdminDocumentAccess})         = getAuthorSigLink
     slForAccess (DocumentAccess { daAccessMode = AuthorDocumentAccess})        = getAuthorSigLink
-
 
 documentAccessForUser :: User -> Document -> DocumentAccess
 documentAccessForUser user document = DocumentAccess {

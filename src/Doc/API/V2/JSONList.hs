@@ -1,18 +1,22 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-
-module Doc.API.V2.JSONList (DocumentFiltering, toDocumentSorting, toDocumentFilter) where
+module Doc.API.V2.JSONList (
+  DocumentFiltering
+, toDocumentSorting
+, toDocumentFilter
+) where
 
 import Control.Applicative.Free
-import Doc.DocStateData
-import KontraPrelude
-import Data.Unjson
-import Doc.API.V2.UnjsonUtils
-import Doc.API.V2.JSONMisc()
-import User.UserID
-import MinutesTime
 import Data.Text
-import Doc.Model.OrderBy
+import Data.Unjson
+
 import DB
+import Doc.API.V2.JSONMisc()
+import Doc.API.V2.UnjsonUtils
+import Doc.DocStateData
+import Doc.Model.OrderBy
+import KontraPrelude
+import MinutesTime
+import User.UserID
 import qualified Doc.Model.Filter as DF
 
 data DocumentSort = DocumentSort DocumentSortOn DocumentSortOrder

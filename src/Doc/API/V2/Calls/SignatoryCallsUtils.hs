@@ -5,31 +5,31 @@ module Doc.API.V2.Calls.SignatoryCallsUtils (
 , checkSignatoryPin
 ) where
 
-import KontraPrelude
 import Data.Text (pack)
+import Data.Unjson
 import Happstack.Fields
 import qualified Data.ByteString.Char8 as BS
-import File.Model
+
+import API.V2
+import DB
+import Doc.API.V2.JSONFields
+import Doc.API.V2.JSONMisc
+import Doc.API.V2.Parameters
+import Doc.DocStateData
+import Doc.DocumentMonad
+import Doc.Model.Update
+import Doc.SMSPin.Model
+import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots(SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
 import EID.Signature.Model
-import MagicHash (MagicHash)
-import Data.Unjson
-
-import Doc.DocStateData
-import API.V2
+import File.Model
 import Kontra
-import Doc.DocumentMonad
-import DB
+import KontraPrelude
+import MagicHash (MagicHash)
 import User.Model
-import Doc.SignatoryLinkID
-import Doc.API.V2.JSONMisc
-import Util.SignatoryLinkUtils
-import Util.HasSomeUserInfo
-import Doc.API.V2.JSONFields
-import Doc.Model.Update
 import Util.Actor
-import Doc.SMSPin.Model
-import Doc.API.V2.Parameters
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 
 {- | Check if provided authorization values for sign call patch -}
 checkAuthenticationMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()

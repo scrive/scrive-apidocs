@@ -1,7 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-
-module Doc.API.V2.DocumentViewer (DocumentViewer(..),unjsonDocumentViewer, viewerForDocument) where
-
+module Doc.API.V2.DocumentViewer (
+  DocumentViewer(..)
+, unjsonDocumentViewer
+, viewerForDocument
+) where
 
 import Doc.DocStateData
 import KontraPrelude
@@ -24,7 +26,6 @@ viewerForDocument (DocumentAccess { daAccessMode = AuthorDocumentAccess}) doc =
   case (getAuthorSigLink doc) of
     Just sig -> SignatoryDocumentViewer $ signatorylinkid sig
     Nothing  -> $unexpectedError "Could not find author for document for DocumentViewer"
-
 
 dvSignatoryLinkID :: DocumentViewer -> Maybe SignatoryLinkID
 dvSignatoryLinkID (SignatoryDocumentViewer sid) = Just sid

@@ -1,20 +1,23 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+module Doc.API.V2.JSONFields (
+  unjsonSignatoryFields
+, unjsonSignatoryFieldsValues
+, SignatoryFieldTMPValue(..)
+) where
 
-module Doc.API.V2.JSONFields (unjsonSignatoryFields, unjsonSignatoryFieldsValues, SignatoryFieldTMPValue(..)) where
-
-
-import Doc.DocStateData
-import KontraPrelude
-import Data.Unjson
 import Data.Text
-import Control.Applicative.Free
-import Doc.API.V2.UnjsonUtils
-import Doc.API.V2.JSONMisc()
-import Doc.SignatoryFieldID
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.Aeson as Aeson
-import qualified Data.ByteString.RFC2397 as RFC2397
 import Data.Text.Encoding
+import Data.Unjson
+import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.RFC2397 as RFC2397
+
+import Control.Applicative.Free
+import Doc.API.V2.JSONMisc()
+import Doc.API.V2.UnjsonUtils
+import Doc.DocStateData
+import Doc.SignatoryFieldID
+import KontraPrelude
 
 -- Unjson for signatory fields
 unjsonSignatoryFields :: UnjsonDef [SignatoryField]

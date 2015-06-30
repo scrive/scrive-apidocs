@@ -1,13 +1,13 @@
 module Doc.API.V2.Guards (
-      guardThatDocument
-    , guardDocumentStatus
-    , guardThatUserIsAuthor
-    , guardThatUserIsAuthorOrCompanyAdmin
-    , guardThatUserIsAuthorOrDocumentIsShared
-    , guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
-    , guardThatDocumentCanBeStarted
-    , guardThatObjectVersionMatchesIfProvided
-  ) where
+  guardThatDocument
+, guardDocumentStatus
+, guardThatUserIsAuthor
+, guardThatUserIsAuthorOrCompanyAdmin
+, guardThatUserIsAuthorOrDocumentIsShared
+, guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
+, guardThatDocumentCanBeStarted
+, guardThatObjectVersionMatchesIfProvided
+) where
 
 import Control.Conditional (unlessM, whenM)
 import Data.Text (Text, pack, append)

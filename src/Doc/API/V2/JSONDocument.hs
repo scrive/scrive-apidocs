@@ -1,21 +1,24 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-
-module Doc.API.V2.JSONDocument (unjsonDocument,listToJSONBS) where
+module Doc.API.V2.JSONDocument (
+  unjsonDocument
+, listToJSONBS
+) where
 
 import Control.Applicative.Free
-import Doc.DocStateData
-import KontraPrelude
+import Data.ByteString.Lazy.Char8 hiding (map, last)
+import Data.Default
 import Data.Unjson
-import Doc.DocUtils
-import Doc.API.V2.UnjsonUtils
-import Doc.API.V2.JSONMisc
-import Doc.API.V2.JSONFields
+
 import Doc.API.V2.DisplayOptions
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.DocumentViewer
+import Doc.API.V2.JSONFields
+import Doc.API.V2.JSONMisc
+import Doc.API.V2.UnjsonUtils
+import Doc.DocStateData
+import Doc.DocUtils
 import KontraLink
-import Data.ByteString.Lazy.Char8 hiding (map, last)
-import Data.Default
+import KontraPrelude
 
 unjsonDocument :: DocumentAccess -> UnjsonDef Document
 unjsonDocument da = objectOf $

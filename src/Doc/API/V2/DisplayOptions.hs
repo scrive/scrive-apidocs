@@ -1,13 +1,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+module Doc.API.V2.DisplayOptions (
+  documentDisplayOptions
+, applyDisplayOptionsToDocument
+) where
 
-module Doc.API.V2.DisplayOptions (documentDisplayOptions,applyDisplayOptionsToDocument) where
-
-
-import Doc.DocStateData
 import Control.Applicative
 import Data.Unjson
+import Doc.DocStateData
 import KontraPrelude
-
 
 data DocumentDisplayOptions = DocumentDisplayOptions {
     showHeader :: Bool
