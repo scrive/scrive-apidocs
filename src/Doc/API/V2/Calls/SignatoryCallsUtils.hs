@@ -64,7 +64,7 @@ checkAuthenticationMethodAndValue slid = do
 
 getScreenshots :: (Kontrakcja m) => m SignatoryScreenshots
 getScreenshots = do
-  screenshots <- apiV2Parameter' (ApiV2ParameterJSON "screenshots" (OptionalWithDefault emptySignatoryScreenshots) unjsonDef)
+  screenshots <- apiV2ParameterDefault emptySignatoryScreenshots (ApiV2ParameterJSON "screenshots" unjsonDef)
   resolvedScreenshots <- resolveReferenceScreenshotNames screenshots
   case resolvedScreenshots of
     Nothing -> apiError $ requestParameterInvalid "screenshots" "Could not resolve reference screenshot"

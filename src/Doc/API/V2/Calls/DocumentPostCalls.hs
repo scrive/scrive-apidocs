@@ -48,8 +48,8 @@ import OAuth.Model
 docApiV2New :: Kontrakcja m => m Response
 docApiV2New = api $ do
   (user, actor) <- getAPIUser APIDocCreate
-  saved <- apiV2Parameter' (ApiV2ParameterBool "saved" (OptionalWithDefault True))
-  mFile <- apiV2Parameter (ApiV2ParameterFile "file" Optional)
+  saved <- apiV2ParameterDefault True (ApiV2ParameterBool "saved")
+  mFile <- apiV2ParameterOptional (ApiV2ParameterFile "file")
   title <- case mFile of
     Nothing -> do
       ctx <- getContext
@@ -86,7 +86,7 @@ docApiV2Update did = api $ do
     guardThatUserIsAuthor user
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Preparation
-    documentJSON <- apiV2Parameter' (ApiV2ParameterAeson "document" Obligatory)
+    documentJSON <- apiV2ParameterObligatory (ApiV2ParameterAeson "document")
     doc <- theDocument
     case (Unjson.update doc (unjsonDocument (DocumentAccess did AuthorDocumentAccess)) documentJSON) of
       (Result draftData []) -> do
@@ -104,7 +104,7 @@ docApiV2Start did = api $ do
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Preparation
     guardThatDocumentCanBeStarted
-    authorSignsNow <- apiV2Parameter' (ApiV2ParameterBool "author_signs_now" (OptionalWithDefault False))
+    authorSignsNow <- apiV2ParameterDefault False (ApiV2ParameterBool "author_signs_now")
     t <- ctxtime <$> getContext
     timezone <- documenttimezonename <$> theDocument
     dbUpdate $ PreparationToPending actor timezone
@@ -152,7 +152,7 @@ docApiV2SetFile did = api $ do
     guardThatUserIsAuthor user
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Preparation
-    mFile <- apiV2Parameter (ApiV2ParameterFile "file" Optional)
+    mFile <- apiV2ParameterOptional (ApiV2ParameterFile "file")
     case mFile of
       Nothing -> dbUpdate $ DetachFile actor
       Just file -> do

@@ -35,7 +35,7 @@ import Util.SignatoryLinkUtils
 docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigReject did slid = api $ do
   mh <- getMagicHashForSignatoryAction did slid
-  rejectReason' <- apiV2Parameter (ApiV2ParameterText "reason" Optional)
+  rejectReason' <- apiV2ParameterOptional (ApiV2ParameterText "reason")
   let rejectReason = fmap (unpack . strip) rejectReason'
   guardThatObjectVersionMatchesIfProvided did
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
@@ -55,7 +55,7 @@ docApiV2SigSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSign did slid = api $ do
   mh <- getMagicHashForSignatoryAction did slid
   screenshots <- getScreenshots
-  fields <- apiV2Parameter' (ApiV2ParameterJSON "fields" Obligatory unjsonSignatoryFieldsValues)
+  fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValues)
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
   olddoc `withDocument` ( do
     guardThatObjectVersionMatchesIfProvided did
@@ -72,7 +72,7 @@ docApiV2SigSign did slid = api $ do
         Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
 
       SMSPinAuthentication -> do
-        pin <- fmap unpack $ apiV2Parameter' (ApiV2ParameterText "pin" Obligatory)
+        pin <- fmap unpack $ apiV2ParameterObligatory (ApiV2ParameterText "pin")
         validPin <- checkSignatoryPin slid fields pin
         if validPin
           then do

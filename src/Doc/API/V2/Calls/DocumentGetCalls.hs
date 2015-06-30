@@ -41,7 +41,7 @@ import Util.SignatoryLinkUtils
 docApiV2Available :: Kontrakcja m => m Response
 docApiV2Available = api $ do
   (user, _) <- getAPIUser APIDocCheck
-  (ids :: [DocumentID]) <- apiV2Parameter' (ApiV2ParameterRead "ids" Obligatory)
+  (ids :: [DocumentID]) <- apiV2ParameterObligatory (ApiV2ParameterRead "ids")
   when (length ids > 10000) $ do
     apiError $ requestParameterInvalid "ids" "Can't contain more than 10,000 document ids"
   available <- fmap (map fromDocumentID) $ dbQuery $ GetDocumentsIDs [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
@@ -50,10 +50,10 @@ docApiV2Available = api $ do
 docApiV2List :: Kontrakcja m => m Response
 docApiV2List = api $ do
   (user, _) <- getAPIUserWithPad APIDocCheck
-  offset   <- apiV2Parameter' (ApiV2ParameterInt  "offset"  (OptionalWithDefault 0))
-  maxcount <- apiV2Parameter' (ApiV2ParameterInt  "max"     (OptionalWithDefault 100))
-  filters  <- apiV2Parameter' (ApiV2ParameterJSON "filter"  (OptionalWithDefault []) unjsonDef)
-  sorting  <- apiV2Parameter' (ApiV2ParameterJSON "sorting" (OptionalWithDefault []) unjsonDef)
+  offset   <- apiV2ParameterDefault 0   (ApiV2ParameterInt  "offset")
+  maxcount <- apiV2ParameterDefault 100 (ApiV2ParameterInt  "max")
+  filters  <- apiV2ParameterDefault []  (ApiV2ParameterJSON "filter" unjsonDef)
+  sorting  <- apiV2ParameterDefault []  (ApiV2ParameterJSON "sorting" unjsonDef)
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
   let documentSorting = (toDocumentSorting <$> sorting)
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit [DocumentsVisibleToUser $ userid user] documentFilters documentSorting (offset,1000,maxcount)
@@ -65,7 +65,7 @@ docApiV2Get did = api $ do
   -- If a 'signatory_id' parameter was given, we first check if the session
   -- has a matching and valid MagicHash for that SignatoryLinkID
   mSessionSignatory <- do
-    mslid <- apiV2Parameter (ApiV2ParameterRead "signatory_id" Optional)
+    mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
     maybe (return Nothing) (getDocumentSignatoryMagicHash did) mslid
   (da, msl) <- case mSessionSignatory of
     Just sl -> do
@@ -92,7 +92,7 @@ docApiV2Get did = api $ do
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History did = api $ do
   (user,_) <- getAPIUser APIDocCheck
-  mLangCode <- apiV2Parameter (ApiV2ParameterText "lang" Optional)
+  mLangCode <- apiV2ParameterOptional (ApiV2ParameterText "lang")
   mLang <- case fmap (langFromCode . unpack) mLangCode of
     Nothing -> return Nothing
     Just Nothing -> do

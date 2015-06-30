@@ -72,7 +72,7 @@ guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user = do
 
 guardThatObjectVersionMatchesIfProvided :: Kontrakcja m => DocumentID -> m ()
 guardThatObjectVersionMatchesIfProvided did = do
-  reqObjectVersion <- apiV2Parameter (ApiV2ParameterInt "object_version" Optional)
+  reqObjectVersion <- apiV2ParameterOptional (ApiV2ParameterInt "object_version")
   case reqObjectVersion of
     Nothing -> return ()
     Just ov -> (dbQuery $ CheckDocumentObjectVersionIs did (fromIntegral ov))
