@@ -12,6 +12,7 @@ new APICallV2({
                                       + this.get("file_name");
         },
   needsAuthorization: true,
+  expectBinaryResponse: true,
   tryToUseDocumentIDWithCopy: true,
   params: [
           new APICallParam({

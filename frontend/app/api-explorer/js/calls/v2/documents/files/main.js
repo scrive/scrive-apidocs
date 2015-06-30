@@ -10,6 +10,7 @@ new APICallV2({
           return "/api/v2/documents/" + this.get("document_id") + "/files/main/" + this.get("file_name");
         },
   needsAuthorization: true,
+  expectBinaryResponse: true,
   tryToUseDocumentIDWithCopy: true,
   params: [
           new APICallParam({
