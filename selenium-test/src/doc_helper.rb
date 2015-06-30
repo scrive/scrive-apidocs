@@ -231,7 +231,7 @@ class DocHelper
 
   def acceptStandardModal
     puts "acceptStandardModal"
-    (@h.wait_until { @driver.find_element :css => ".modal-footer .button.float-right" }).click
+    (@h.wait_until { @driver.find_element :css => ".modal-footer .button.action" }).click
 
     # If you are thinking of inserting a delay here because there is
     # another modal coming up after this one, please don't (it doesn't
