@@ -67,9 +67,7 @@ docApiV2Get did = api $ do
   -- has a matching and valid MagicHash for that SignatoryLinkID
   mSessionSignatory <- do
     mslid <- apiV2Parameter (ApiV2ParameterRead "signatory_id" Optional)
-    case mslid of
-      Nothing -> return Nothing
-      Just slid -> getDocumentSignatoryMagicHash did slid
+    maybe (return Nothing) (getDocumentSignatoryMagicHash did) mslid
   (da, msl) <- case mSessionSignatory of
     Just sl -> do
       let slid = signatorylinkid sl
@@ -101,13 +99,10 @@ docApiV2History did = api $ do
     Just Nothing -> do
       apiError $ requestParameterInvalid "lang" "Not a valid or supported language code"
     Just (Just l) -> return $ Just l
-  ctx <- getContext
-  modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
   switchLang $ fromMaybe (lang $ usersettings user) mLang
   evidenceLog <- dbQuery $ GetEvidenceLog did
   doc <- dbQuery $ GetDocumentByDocumentID did
   events <- eventsJSListFromEvidenceLog doc evidenceLog
-  modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
   return $ Ok (JSArray events)
 
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
