@@ -161,10 +161,3 @@ instance Unjson SignatoryScreenshots.SignatoryScreenshots where
       combineSignatoryScreenshots f s (Just rn) _ = SignatoryScreenshots.SignatoryScreenshots f s (Just $ Left rn)
       combineSignatoryScreenshots f s _ (Just rs) = SignatoryScreenshots.SignatoryScreenshots f s (Just $ Right rs)
       combineSignatoryScreenshots f s _ _ = SignatoryScreenshots.SignatoryScreenshots f s Nothing
-
-
-{-
-  toJSValue (Screenshot time' (Binary image')) = runJSONGen $ do
-    value "time"  $ toJSValue $ formatTimeISO time'
-    value "image" $ toJSValue $ BS.toString $ RFC2397.encode "image/jpeg" image'
-    -}

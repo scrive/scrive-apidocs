@@ -50,7 +50,7 @@ instance ToAPIResponse JSValue where
 instance ToAPIResponse (UnjsonDef a,a) where
   toAPIResponse (unjson,a) =
     -- must be text/plain because some browsers complain about JSON type
-    setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjson a
+    setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) unjson a
 
 instance ToAPIResponse CSV where
   toAPIResponse v = let r1 = Web.toResponse $ v in

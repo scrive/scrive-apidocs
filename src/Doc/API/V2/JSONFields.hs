@@ -299,32 +299,10 @@ unjsonSignatureFieldFieldValue = pure (\no v ->(no,v))
     unsafeSignatureName (SignatureFI n) = n
     unsafeSignatureName _ = $unexpectedError "unsafeSignatureName"
     unjsonImage :: UnjsonDef BS.ByteString
+    -- JJ: what is "Screenshot" here?
     unjsonImage = SimpleUnjsonDef "Screenshot" parseImage (Aeson.String . decodeUtf8 . (RFC2397.encode "image/png"))
     parseImage :: Aeson.Value -> Result BS.ByteString
     parseImage (Aeson.String t ) = case RFC2397.decode $ encodeUtf8 t of
                                             Just (_,v) -> pure v
                                             _ -> fail "Can't parse image encoded as string. RFC2397 encoding expected"
     parseImage _ = fail "Can't parse image from something that is not string"
-
-
-
- -- pure (\no v ob sfbs ps -> NameField (unsafeSignatoryFieldID 0) no v ob sfbs ps)
-  {-
-  <*  fieldReadonly "type" fieldType "Type of a field"
-  <*> field "order" (unsafeFromNameField snfNameOrder) "Order of name field"
-  <*> fieldDef "value" "" (unsafeFromNameField snfValue) "Value of the field"
-  <*> fieldDef "is_obligatory" True (unsafeFromNameField snfObligatory) "If is oligatory"
-  <*> fieldDef "should_be_filled_by_sender" False (unsafeFromNameField snfShouldBeFilledBySender) "If should be filled by sender"
-  <*> fieldDef "placements" [] (unsafeFromNameField snfPlacements) "Placements"
-  -}
-{-
-  unjsonCompanyFieldFieldValue:: Ap (FieldDef SignatoryField) SignatoryNameField
-unjsonPersonalNumberFieldFieldValue
-unjsonCompanyNumberFieldFieldValue
-unjsonEmailFieldFieldValue
-unjsonMobileFieldFieldValue
-unjsonTextFieldFieldValue
-unjsonCheckboxFieldFieldValue
-unjsonSignatureFieldFieldValue
-
--}
