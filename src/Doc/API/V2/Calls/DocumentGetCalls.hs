@@ -22,9 +22,6 @@ import Doc.API.V2.Guards
 import Doc.API.V2.JSONDocument
 import Doc.API.V2.JSONList
 import Doc.API.V2.Parameters
-import Doc.DocInfo
-import Doc.DocStateData
-import Doc.DocUtils
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model
@@ -35,8 +32,6 @@ import Kontra
 import KontraPrelude
 import OAuth.Model
 import User.Model
-import Util.Actor
-import Util.SignatoryLinkUtils
 
 docApiV2Available :: Kontrakcja m => m Response
 docApiV2Available = api $ do
@@ -61,32 +56,9 @@ docApiV2List = api $ do
 
 docApiV2Get :: Kontrakcja m => DocumentID -> m Response
 docApiV2Get did = api $ do
-  ctx <- getContext
-  -- If a 'signatory_id' parameter was given, we first check if the session
-  -- has a matching and valid MagicHash for that SignatoryLinkID
-  mSessionSignatory <- do
-    mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
-    maybe (return Nothing) (getDocumentSignatoryMagicHash did) mslid
-  (da, msl) <- case mSessionSignatory of
-    Just sl -> do
-      let slid = signatorylinkid sl
-      return (DocumentAccess did $ SignatoryDocumentAccess slid, Just sl)
-  -- If we didn't get a session *only* then we check normally and try to get
-  -- a SignatoryLink too as we need to mark if they see the document
-    Nothing -> withDocumentID did $ do
-      (user,_) <- getAPIUser APIDocCheck
-      doc <- theDocument
-      let msiglink = getSigLinkFor user doc
-      case msiglink of
-        Just _ -> return ()
-        Nothing -> guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user
-      return (documentAccessForUser user doc, msiglink)
+  mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
+  da <- guardDocumentAccessSessionOrUser did mslid APIDocCheck guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
   withDocumentID did $ do
-    doc <- theDocument
-    let canMarkSeen = not ((isTemplate || isPreparation || isClosed) doc)
-    case (msl, canMarkSeen) of
-      (Just sl, True) -> dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) =<< signatoryActor ctx sl
-      _ -> return ()
     Ok <$> (\d -> (unjsonDocument $ da,d)) <$> theDocument
 
 docApiV2History :: Kontrakcja m => DocumentID -> m Response

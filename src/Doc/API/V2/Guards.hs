@@ -7,6 +7,7 @@ module Doc.API.V2.Guards (
 , guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
 , guardThatDocumentCanBeStarted
 , guardThatObjectVersionMatchesIfProvided
+, guardDocumentAccessSessionOrUser
 ) where
 
 import Control.Conditional (unlessM, whenM)
@@ -14,6 +15,7 @@ import Data.Text (Text, pack, append)
 
 import API.V2
 import DB
+import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Parameters
 import Doc.Conditions
 import Doc.DocInfo
@@ -22,9 +24,11 @@ import Doc.DocUtils
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model.Query
+import Doc.SignatoryLinkID
 import InputValidation
 import Kontra
 import KontraPrelude
+import OAuth.Model (APIPrivilege)
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -94,3 +98,29 @@ guardThatDocumentCanBeStarted = do
       MobileDelivery ->  isGood $ asValidPhoneForSMS $ getMobile sl
       EmailAndMobileDelivery -> (isGood $ asValidPhoneForSMS $ getMobile sl) && (isGood $ asValidEmail $ getEmail sl)
       _ -> True
+
+-- | For the given DocumentID:
+--
+-- 1. Try to get a valid session for the given `Maybe SignatoryLinkID`
+--
+-- if that fails or no SignatoryLinkID is given, then:
+--
+-- Get permissions using `getAPIUser` with given privileges.
+-- If the user account is not linked to the document then also guard extra
+-- permissions using the given $User -> DocumentT m ()$ function, which can be
+-- any guard from this module.
+--
+-- This is useful in all situations where a signatory or other users could use
+-- the API call (e.g. document GET call)
+guardDocumentAccessSessionOrUser :: Kontrakcja m => DocumentID -> Maybe SignatoryLinkID -> APIPrivilege -> (User -> DocumentT m ()) -> m DocumentAccess
+guardDocumentAccessSessionOrUser did mslid apiPermission guardOnUser = do
+  mSessionSignatory <- maybe (return Nothing) (getDocumentSignatoryMagicHash did) mslid
+  case mSessionSignatory of
+    Just sl -> return $ DocumentAccess did $ SignatoryDocumentAccess (signatorylinkid sl)
+    Nothing -> withDocumentID did $ do
+      (user,_) <- getAPIUser apiPermission
+      doc <- theDocument
+      case getSigLinkFor user doc of
+        Just _ -> return ()
+        Nothing -> guardOnUser user
+      return $ documentAccessForUser user doc
