@@ -7,6 +7,7 @@ module API.V2 (
   , requestParameterInvalid
   , documentObjectVersionMismatch
   , documentStateError
+  , documentStateErrorWithCode
   , signatoryStateError
   , documentActionForbidden
   , documentNotFound

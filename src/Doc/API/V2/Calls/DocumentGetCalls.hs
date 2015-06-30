@@ -10,7 +10,7 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 ) where
 
 import Data.Char
-import Data.Text (unpack)
+import Data.Text (pack, unpack)
 import Data.Unjson
 import Happstack.Server.Types
 import Text.JSON.Types (JSValue(..))
@@ -18,6 +18,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map hiding (map)
 
 import API.V2
+import AppView (respondWithPDF)
 import DB
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
@@ -25,7 +26,9 @@ import Doc.API.V2.JSONDocument
 import Doc.API.V2.JSONList
 import Doc.API.V2.Parameters
 import Doc.Data.MainFile
+import Doc.DocSeal (presealDocumentFile)
 import Doc.DocStateData
+import Doc.DocUtils (fileFromMainFile)
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model
@@ -85,7 +88,27 @@ docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
 docApiV2EvidenceAttachments _did = $undefined -- TODO implement
 
 docApiV2FilesMain :: Kontrakcja m => DocumentID -> String -> m Response
-docApiV2FilesMain _did _filename = $undefined -- TODO implement
+docApiV2FilesMain did _filenameForBrowser = api $ do
+  mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
+  _ <- guardDocumentAccessSessionOrUser did mslid APIDocCheck guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
+  fileContents <- withDocumentID did $ do
+    doc <- theDocument
+    case documentstatus doc of
+      Closed -> do
+        mFile <- fileFromMainFile (documentsealedfile doc)
+        case mFile of
+          Nothing -> apiError $ documentStateErrorWithCode 503 "The sealed PDF for the document is not ready yet, please wait and try again."
+          Just file -> getFileContents file
+      _ -> do
+        mFile <- fileFromMainFile (documentfile doc)
+        case mFile of
+          Nothing -> apiError $ resourceNotFound "The document has no main file"
+          Just file -> do
+           presealFile <- presealDocumentFile doc file
+           case presealFile of
+             Left err -> apiError $ serverError (pack err)
+             Right f -> return $ f
+  return $ Ok $ respondWithPDF False fileContents
 
 docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
 docApiV2FilesGet did fid filename = api $ do

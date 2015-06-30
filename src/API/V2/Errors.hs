@@ -6,6 +6,7 @@ module API.V2.Errors (
   , requestParameterInvalid
   , documentObjectVersionMismatch
   , documentStateError
+  , documentStateErrorWithCode
   , signatoryStateError
   , documentActionForbidden
   , documentNotFound
@@ -141,6 +142,9 @@ documentObjectVersionMismatch (DocumentObjectVersionDoesNotMatch {..}) = APIErro
 
 documentStateError :: Text -> APIError
 documentStateError msg = APIError { errorType = DocumentStateError, errorHttpCode = 409, errorMessage = msg}
+
+documentStateErrorWithCode :: Int -> Text -> APIError
+documentStateErrorWithCode code msg = (documentStateError msg) {errorHttpCode = code}
 
 signatoryStateError :: Text -> APIError
 signatoryStateError msg = APIError { errorType = SignatoryStateError, errorHttpCode = 409, errorMessage = msg}
