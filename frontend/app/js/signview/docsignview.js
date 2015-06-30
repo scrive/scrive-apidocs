@@ -3,7 +3,10 @@
  * Instrumented for Mixpanel
  */
 
-define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories', 'common/retargeting_service', 'signview/fileview/fileclass', 'Backbone', 'Underscore', 'legacy_code'], function(React, CreateAccountSection,DocumentViewSignatories, RetargetingService, FileClass) {
+define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories',
+        'common/retargeting_service', 'signview/fileview/fileclass', 'signview/instructionsview/instructionsview',
+        'Backbone', 'Underscore', 'legacy_code'],
+  function(React, CreateAccountSection, DocumentViewSignatories, RetargetingService, FileClass, InstructionsView) {
 
 
 var DocumentSignViewModel = Backbone.Model.extend({
@@ -128,14 +131,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
   hasArrows : function() {
       return this.document().ready() && this.document().currentSignatoryCanSign() && this.mainfile() != undefined && this.mainfile().view.ready();
-  },
-
-  instructionssection : function() {
-      // I don't understand what is going on here, but if I cache it doesn't show up properly.
-      return new DocumentSignInstructionsView({
-        model: this,
-        el: $("<div />")
-      });
   },
 
   /**
@@ -563,7 +558,11 @@ var DocumentSignViewView = Backbone.View.extend({
 
      this.subcontainer = $("<div class='subcontainer'></div>").appendTo(subcontainerWrapper);
 
-     subcontainerWrapper.prepend(this.model.instructionssection().el);
+     var $instructions = $("<div>");
+
+     subcontainerWrapper.prepend($instructions);
+
+     React.render(React.createElement(InstructionsView, {model: this.model}), $instructions[0]);
 
       if(this.model.hasCreateAccountSection()) {
 	this.subcontainer.append(this.model.createAccountSection());
