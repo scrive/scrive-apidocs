@@ -1,7 +1,7 @@
 /* Basic buttons
  * Usage
  *  var button =  new Button({
- *                   type: "action | optional | cancel | inactive | main",
+ *                   type: "action | optional | cancel | main",
  *                   size: "tiny | small | big",
  *                   text: "Text that will be put inside of button"
  *                   onClick* : "Function to be called when button is clicked" })
@@ -57,17 +57,13 @@ var ButtonModel = Backbone.Model.extend({
   clicked : function(){
     if (!this.oneClick() || !this.isClicked()) { // We call onClick, only if we don't count clicks or button was not clicked
       if (this.oneClick()) {
-        this.originalType = this.type();
-        this.set({isClicked : true, 'type': 'inactive'});
+        this.set({isClicked : true});
       }
       this.get("onClick")();
     }
   },
   setNotClicked : function() {
        this.set({isClicked : false});
-       if (this.originalType !== undefined) {
-         this.set({type: this.originalType});
-       }
   },
   icon : function() {
        return this.get("icon");
@@ -121,6 +117,7 @@ var ButtonView = Backbone.View.extend({
         $(this.el).attr("style",this.model.style());
         $(this.el).addClass(this.model.cssClass());
         $(this.el).addClass(this.model.type());
+        $(this.el).toggleClass("inactive", this.model.oneClick() && this.model.isClicked());
 
         $(this.el).addClass("button");
         $(this.el).addClass("button-singleline");

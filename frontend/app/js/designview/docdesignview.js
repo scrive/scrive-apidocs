@@ -300,7 +300,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
               text : localization.designview.sign,
               oneClick : true,
               onClick : function() {
-                acceptButton.el().addClass('is-inactive');
                 span.prepend(spinnerContainer);
                 self.confirmationpopup.hideCancel();
                 self.confirmationpopup.hideClose();
@@ -381,27 +380,28 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             var spinner = this.spinnerSmall();
             var spinnerContainer = $("<span class='spinner-container' />");
             spinnerContainer.append(spinner.el);
+            var span = $('<span class="float-right"/>');
+
+            var acceptButton = new Button({
+              type: "action",
+              text: otherSignatoriesSignInPerson ? localization.process.startsigningbuttontext : localization.process.sendbuttontext,
+              oneClick: true,
+              onClick: function() {
+                span.prepend(spinnerContainer);
+                confirmation.hideCancel();
+                confirmation.hideClose();
+
+                mixpanel.track('Click accept sign', {'Button' : 'send'});
+                document.takeSigningScreenshot(function() {
+                  view.sendWithCSV(document, 1, document.isCsv() ? document.csv().length - 1 : undefined);
+                });
+              }
+            });
+            span.append(acceptButton.el());
 
             var confirmation = new Confirmation({
                 title : otherSignatoriesSignInPerson ? localization.process.startsigningtitle : localization.process.confirmsendtitle,
-                acceptButton : new Button({
-                    type : "action",
-                    text : otherSignatoriesSignInPerson ? localization.process.startsigningbuttontext : localization.process.sendbuttontext,
-                    oneClick : true,
-                    onClick : function() {
-
-                        confirmation.acceptButton().addClass('is-inactive').prepend(spinnerContainer);  // Add the spinner and make inactive
-                        confirmation.hideCancel();
-                        confirmation.hideClose();
-
-                        mixpanel.track('Click accept sign', {
-                            'Button' : 'send'
-                        });
-                        document.takeSigningScreenshot(function() {
-                               view.sendWithCSV(document, 1, document.isCsv() ? document.csv().length - 1 : undefined);
-                        });
-                    }
-                }).el(),
+                acceptButton: span,
                 rejectText: localization.cancel,
                 content  : box
             });
