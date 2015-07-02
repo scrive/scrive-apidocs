@@ -34,16 +34,23 @@ return Backbone.View.extend({
           el: elem
         };
 
+        var view = undefined;
+
         if (field.isSignature()) {
-          return new SignaturePlacementPlacedView(args);
+          view = new SignaturePlacementPlacedView(args);
         }
 
         if (field.isCheckbox()) {
-          return new CheckboxPlacementPlacedView(args);
+          view = new CheckboxPlacementPlacedView(args);
         }
 
         if (field.isText()) {
-          return new TextPlacementPlacedView(args);
+          view = new TextPlacementPlacedView(args);
+        }
+
+        if (view !== undefined) {
+          placement.view = view;
+          return view;
         }
 
         throw new Error("unknown field type");
