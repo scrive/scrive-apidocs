@@ -21,7 +21,7 @@ return Backbone.View.extend({
       this.updateSize(placement.wrel() * parentWidth, placement.hrel() * parentHeight);
     }
   },
-  updateSize: function(width, height) {
+  updateSize: function (width, height) {
     var field = this.model.field();
     if (field.value()) {
       this.box.css({width: width, height: height});
