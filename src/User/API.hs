@@ -1,6 +1,7 @@
 module User.API (
     userAPI,
     apiCallGetUserProfile,
+    apiCallLoginUser,
     apiCallChangeUserPassword,
     apiCallChangeUserLanguage,
     apiCallUpdateUserProfile,
@@ -33,6 +34,7 @@ import OAuth.Model
 import OAuth.View
 import Payments.Action
 import Payments.Model
+import Redirect
 import Routing
 import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
@@ -61,6 +63,7 @@ userAPI' :: Route (Kontra Response)
 userAPI' = choice [
   dir "getpersonaltoken"     $ hPost $ toK0 $ apiCallGetUserPersonalToken,
   dir "signup"          $ hPost $ toK0 $ apiCallSignup,
+  dir "login"          $ hPostNoXToken $ toK0 $ apiCallLoginUser,
   dir "sendpasswordresetmail" $ hPost $ toK0 $ apiCallSendPasswordReminder,
   dir "getprofile"      $ hGet $ toK0 $ apiCallGetUserProfile,
   dir "changepassword"  $ hPost $ toK0 $ apiCallChangeUserPassword,
@@ -125,6 +128,17 @@ apiCallChangeUserPassword = api $ do
               _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (Just $ userid $ user)
               Ok <$> (runJSONGenT $ value "changed" False)
      _ ->  throwIO . SomeKontraException $ serverError "Newpassword fields do not match Scrive standard"
+
+apiCallLoginUser :: Kontrakcja m => m Response
+apiCallLoginUser = api $ do
+  ctx <- getContext
+  (user, _ , _) <- getAPIUser APIPersonal
+
+  redirectUrl <- apiGuardJustM (badInput "Redirect URL not provided or invalid.") $ getField "redirect"
+
+  _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
+  logUserToContext $ Just user
+  sendRedirect $ LinkExternal redirectUrl
 
 
 apiCallChangeUserLanguage :: Kontrakcja m => m Response

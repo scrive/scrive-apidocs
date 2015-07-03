@@ -36,6 +36,7 @@ accountInfoTests env = testGroup "AccountInfo" [
   , testThat "need the password to the correct to complete the email change" env testEmailChangeFailsIfPasswordWrong
   , testThat "need the password to be entered to complete the email change" env testEmailChangeFailsIfNoPassword
   , testThat "getprofile can be called with tokens aquired through OAuth" env testGetUserInfoWithOAuthTokens
+  , testThat "the login api call redirects and sets cookie" env testLoginUsingAPI
   ]
 
 testChangeEmailAddress :: TestEnv ()
@@ -230,6 +231,26 @@ testGetUserInfoWithOAuthTokens = do
                                       [("authorization", [authStr])]
   (resUserInfo, _) <- runTestKontra reqUserInfo ctx $ apiCallGetUserProfile
   assertEqual "We should get a 200 response" 200 (rsCode resUserInfo)
+
+testLoginUsingAPI :: TestEnv ()
+testLoginUsingAPI = do
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+
+  let uid = userid user
+  _ <- dbUpdate $ DeletePersonalToken uid
+  _ <- dbUpdate $ CreatePersonalToken uid
+  Just (apitoken, apisecret, t, s) <- dbQuery $ GetPersonalToken uid
+
+  let authStr = "oauth_signature_method=\"PLAINTEXT\""
+             ++ ",oauth_consumer_key=\"" ++ show apitoken ++ "\""
+             ++ ",oauth_token=\"" ++ show t ++"\""
+             ++ ",oauth_signature=\"" ++ show apisecret ++ "&" ++ show s ++ "\""
+
+  reqLogin <- mkRequestWithHeaders POST [("redirect", inText "/newdocument")]
+                                      [("authorization", [authStr])]
+  (resLogin, _) <- runTestKontra reqLogin ctx $ apiCallLoginUser
+  assertEqual "We should get a 303 response" 303 (rsCode resLogin)
 
 getRequestChangeEmailActions :: TestEnv [EmailChangeRequest]
 getRequestChangeEmailActions = do
