@@ -10,7 +10,7 @@
       size        : string, tiny | small | big
       textcolor   : string, color for text on button, else default value for predefined color will be used.
       width       : integer, final width of button, if not set, button will adjust to text
-      className    : additional css classes
+      className   : additional css classes
       style       : style object (react format)
 
  *
@@ -41,9 +41,20 @@ define(['React','common/button'], function(React,Button) {
         "style"     : {}
       };
     },
+    fileinput: null,
+    openFileDialogue: function () {
+      if (this.fileinput) {
+        var targetElm = $(this.fileinput.data("MultiFile").current);
+        if (targetElm.length == 1 && targetElm.click) {
+          targetElm.click();
+          return true;
+        }
+      }
+    },
     componentDidMount : function() {
       var self = this;
       var fileinput = $("<input class='multiFileInput' type='file'/>");
+      self.fileinput = fileinput;
       if (self.props.fileType != "")
           fileinput.attr("accept",self.props.fileType );
       fileinput.attr("maxlength",1);

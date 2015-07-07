@@ -4,10 +4,11 @@
  */
 
 define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories',
-        'common/retargeting_service', 'signview/fileview/fileclass', 'signview/instructionsview/instructionsview',
+        'signview/attachments/signatoryattachmentsview', 'signview/instructionsview/instructionsview',
+        'common/retargeting_service', 'signview/fileview/fileclass',
         'Backbone', 'Underscore', 'legacy_code'],
-  function(React, CreateAccountSection, DocumentViewSignatories, RetargetingService, FileClass, InstructionsView) {
-
+  function (React, CreateAccountSection, DocumentViewSignatories,
+            SignatoryAttachmentsView, InstructionsView, RetargetingService, FileClass) {
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
@@ -192,20 +193,15 @@ var DocumentSignViewModel = Backbone.Model.extend({
        return this.signatoriessection();
   },
   signatoryattachmentsection : function() {
-        if (this.get("signatoryattachmentsection") == undefined)
-            this.set({'signatoryattachmentsection' :
-                            new DocumentSignatoryAttachmentsView({
-                                model: this,
-                                el: $("<div class='section spacing'/>"),
-                                title:  this.document().currentSignatory().hasSigned() ?
-                                        (localization.requestedAttachments) :
-                                        ((this.document().currentSignatory().attachments().length > 1) ?
-                                            localization.docsignview.signatoryAttachmentsTitleForLots :
-                                            localization.docsignview.signatoryAttachmentsTitleForOne),
-                                subtitle :   this.document().currentSignatory().hasSigned() ? undefined : localization.docsignview.signatoryAttachmentsSupportedFormats
-                            })
-            }, {silent : true});
-        return this.get('signatoryattachmentsection');
+    if (!this.get("signatoryattachmentsection")) {
+      var $el = $("<div class='section spacing'>");
+      var comp = React.render(React.createElement(SignatoryAttachmentsView, {model: this}), $el[0]);
+      var obj = {comp: comp, el: $el};
+      this.set({"signatoryattachmentsection": obj}, {silent: true});
+      return comp;
+    }
+
+    return this.get("signatoryattachmentsection");
   },
   authorattachmentssection : function() {
       if (this.get("authorattachmentssection") == undefined)
@@ -253,8 +249,10 @@ var DocumentSignViewModel = Backbone.Model.extend({
   signatoryattachmentasks: function() {
         var model = this;
         var els = [];
-        _.each(model.signatoryattachmentsection().uploadViews, function (uplView) {
-          els.push($(uplView.el));
+        var attachmentView = model.signatoryattachmentsection().comp;
+
+        _.each(attachmentView.attachmentEls(), function (el) {
+          els.push($(el));
         });
 
         var attachments = model.document().currentSignatory().attachments();
@@ -270,7 +268,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
                             },
                             el: els[i],
                             onArrowClick : function () {
-                              model.signatoryattachmentsection().uploadViews[i].uploadButton.openFileDialogue();
+                              attachmentView.openFileDialogue(i);
                             },
                             onActivate   : function() {
                                 mixpanel.track('Begin attachment task');
@@ -585,8 +583,9 @@ var DocumentSignViewView = Backbone.View.extend({
         if (this.model.hasExtraDetailsSection())
             this.subcontainer.append(this.model.extradetailssection().el);
 
-        if (this.model.hasSignatoriesAttachmentsSection())
-            this.subcontainer.append(this.model.signatoryattachmentsection().el);
+        if (this.model.hasSignatoriesAttachmentsSection()) {
+          this.subcontainer.append(this.model.signatoryattachmentsection().el);
+        }
 
         if (this.model.hasSignatoriesSection())
             this.subcontainer.append(this.model.signatoriessection().el());
