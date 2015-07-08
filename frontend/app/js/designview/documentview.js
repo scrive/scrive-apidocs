@@ -149,8 +149,6 @@ define(['Spinjs', 'designview/fileview/fileview', 'Backbone', 'legacy_code'], fu
                         url : "/api/frontend/changemainfile/" + document.documentid(),
                         ajaxsuccess: function(d) {
                             mixpanel.track('Upload main file');
-                            window.documencio = document;
-                            debugger;
                             document.killAllPlacements();
                             document.recall();
                         },
