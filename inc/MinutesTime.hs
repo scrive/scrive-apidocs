@@ -15,6 +15,8 @@ module MinutesTime (
   , parseTimeSimple
   , minutesAfter
   , minutesBefore
+  , secondsAfter
+  , secondsBefore
   , daysAfter
   , daysBefore
   , monthsBefore
@@ -87,6 +89,12 @@ parseTimeISO s = msum [
   ]
 
 ----------------------------------------
+
+secondsAfter :: Int -> UTCTime -> UTCTime
+secondsAfter = addUTCTime . fromIntegral
+
+secondsBefore :: Int -> UTCTime -> UTCTime
+secondsBefore = secondsAfter . negate
 
 minutesAfter :: Int -> UTCTime -> UTCTime
 minutesAfter = addUTCTime . (60 *) . fromIntegral
