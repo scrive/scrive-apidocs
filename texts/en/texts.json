@@ -610,7 +610,7 @@
 "_mailNewAccountCreatedByAdminTitle":"Please activate your account",
 "_mailNewCompanyUserInviteContentBodyUserName":"Username:",
 "_mailNewCompanyUserInviteContentButton":"Activate account",
-"_mailNewCompanyUserInviteContentClickLink":"Please click the button below to activate your account.",
+"_mailNewCompanyUserInviteContentClickLink":"Please click the button below to activate your account. This invitation is valid until $expiredate$.",
 "_mailNewCompanyUserInvitePrivacyInfo":"This account is intended to be used only in relation to <strong>$companyname$</strong> and all saved documents will belong to <strong>$companyname$</strong>. This account is not for private use.",
 "_mailPreviewImageAltText":"Document preview",
 "_mailRequestChangeEmailButton":"Change username and email",

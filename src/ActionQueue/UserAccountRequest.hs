@@ -67,7 +67,7 @@ getUserAccountRequestUser uid token = runMaybeT $ do
 newUserAccountRequest :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => UserID -> m UserAccountRequest
 newUserAccountRequest uid = do
   token <- random
-  expires <- (14 `daysAfter`) `liftM` currentTime
+  expires <- (28 `daysAfter`) <$> currentTime
   -- FIXME: highly unlikely, but possible race condition
   ma <- dbQuery $ GetAction userAccountRequest uid
   case ma of
