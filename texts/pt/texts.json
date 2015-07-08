@@ -610,7 +610,7 @@
 "_mailNewAccountCreatedByAdminTitle":"Activar a conta",
 "_mailNewCompanyUserInviteContentBodyUserName":"Nome de utilizador:",
 "_mailNewCompanyUserInviteContentButton":"Activar conta",
-"_mailNewCompanyUserInviteContentClickLink":"Clique no botão abaixo para activar a sua conta.",
+"_mailNewCompanyUserInviteContentClickLink":"",
 "_mailNewCompanyUserInvitePrivacyInfo":"Esta conta destina-se a ser utilizada apenas em relação à <strong>$companyname$</strong> e todos os documentos guardados pertencerão a <strong>$companyname$</strong>. Esta conta não se destina a uso privado.",
 "_mailPreviewImageAltText":"",
 "_mailRequestChangeEmailButton":"Alterar nome de utilizador e email",

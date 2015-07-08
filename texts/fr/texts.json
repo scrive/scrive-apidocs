@@ -610,7 +610,7 @@
 "_mailNewAccountCreatedByAdminTitle":"Veuillez activer votre compte",
 "_mailNewCompanyUserInviteContentBodyUserName":"Nom d'utilisateur:",
 "_mailNewCompanyUserInviteContentButton":"Activer le compte",
-"_mailNewCompanyUserInviteContentClickLink":"Cliquez sur le bouton ci-dessous pour activer votre compte.",
+"_mailNewCompanyUserInviteContentClickLink":"",
 "_mailNewCompanyUserInvitePrivacyInfo":"Ce compte est destiné à être utilisé exclusivement au profit de <strong>$companyname$</strong> et tous les documents sauvegardés seront la propriété de <strong>$companyname$</strong>. Ce compte n'est pas prévu pour un usage personnel.",
 "_mailPreviewImageAltText":"",
 "_mailRequestChangeEmailButton":"Changer le nom d'utilisateur et l'adresse mail",
