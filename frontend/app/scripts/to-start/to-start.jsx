@@ -80,7 +80,7 @@ return React.createClass({
     var documentSent = !document.preparation();
     var signviewbranding = this.props.signviewbranding;
 
-    var buttonClass = "send-button " + (this.state.sending ? "is-inactive" : "");
+    var buttonClass = "send-button";
 
     if (documentSent) {
       var authorView = new AuthorView({

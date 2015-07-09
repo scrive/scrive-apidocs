@@ -15,7 +15,7 @@ return React.createClass({
 
             <List.Column
               name={localization.account.stats.columnDate}
-              width="100px"
+              width="60px"
               rendering={function(d) {
                 return (<div>{d.field("fields").date}</div>);
               }}
@@ -68,7 +68,7 @@ return React.createClass({
 
             <List.Column
               name={localization.account.stats.columnClosedSignatures}
-              width="70"
+              width="80"
               rendering={function(d) {
                 return (<div>{d.field("fields").signatures}</div>);
               }}

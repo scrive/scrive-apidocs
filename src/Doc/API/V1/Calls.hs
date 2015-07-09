@@ -219,6 +219,8 @@ apiCallV1CreateFromTemplate did =  api $ do
                       (usercompany auser == usercompany user &&  isDocumentShared template)
   unless (isTemplate template && haspermission) $ do
     throwIO $ SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
+  when (documentDeletedForUser template $ userid user) $
+    throwIO $ SomeKontraException $ serverError "Template is deleted"
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True

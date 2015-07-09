@@ -6,7 +6,7 @@
  *
  * Properties:
       text        : string , text on button,  default ""
-      type:       : string, "action | optional | cancel | inactive | main",
+      type:       : string, "action | optional | cancel | main",
       size        : string, tiny | small | big
       textcolor   : string, color for text on button, else default value for predefined color will be used.
       width       : integer, final width of button, if not set, button will adjust to text
@@ -52,7 +52,9 @@ define(['React'], function(React) {
         };
       },
     getInitialState: function() {
-      return {clicked: false};
+      return {clicked: false,
+              "type": this.props.type,
+              originalType: this.props.type};
     },
     handleClick: function() {
       var eventName = 'Clicked button' + this.props.text;
@@ -91,8 +93,11 @@ define(['React'], function(React) {
     multilineClass : function() {
       return this.props.multiline ? "button-signleline": "";
     },
+    inactiveClass : function() {
+      return (this.props.oneClick && this.state.clicked) ? "inactive " : "";
+    },
     className : function() {
-      return (this.props.className || "") + " button " + this.sizeClass() + " " + (this.props.type || "") + " " + this.multilineClass();
+      return this.inactiveClass() + (this.props.className || "") + " button " + this.sizeClass() + " " + (this.state.type || "") + " " + this.multilineClass();
     },
     style : function() {
       return  _.extend({width: this.width()},this.props.style);

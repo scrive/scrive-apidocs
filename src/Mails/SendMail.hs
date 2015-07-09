@@ -114,9 +114,14 @@ kontramailHelper bd theme renderFunc tname fields = do
 
     wholemail <- renderFunc tname fields
     let (title,content) = span (/= '\n') $ dropWhile (isControl || isSpace) wholemail
+        noreplyAddress = case strip $ bdNoreplyEmail bd of
+                           -- add a fallback noreply address if it's not set in bd settings
+                           -- otherwise emails will not be sent
+                           "" -> "noreply@scrive.com"
+                           x  -> x
     return $ emptyMail {
                          originator = bdEmailOriginator bd
-                       , originatorEmail = strip $ bdNoreplyEmail bd
+                       , originatorEmail = noreplyAddress
                        , title   = title
                        , content = content
                        , attachments = [("logo-"++ (imageAdler32 $ themeLogo  theme) ++ ".png", Left $ unBinary $ themeLogo theme)]

@@ -14,6 +14,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
 import Company.Model
+import Doc.DocViewMail (brandingMailFields)
 import KontraPrelude
 import Mails.SendMail(Mail, kontramail)
 import MinutesTime
@@ -39,6 +40,7 @@ mailSignup bd theme hp user company subscription = do
     when (not $ null $ getCompanyName company) $ do
       F.value "companyname" $ getCompanyName company
     F.value "email" $ getEmail user
+    brandingMailFields theme
   where amountInCentsWithVat = round $ (fromIntegral $ Recurly.subUnitAmountInCents subscription) * 1.25
 
 mailFailed :: (TemplatesMonad m) => BrandedDomain -> Theme ->  String -> User -> Company -> Recurly.Invoice -> m Mail
@@ -52,11 +54,13 @@ mailFailed bd theme hp user company invoice = do
     F.value "date" $ showDate $ Recurly.inDate invoice
     F.value "total" $ showTotal 1 $ Recurly.inTotalInCents invoice
     F.value "currency" $ Recurly.inCurrency invoice
+    brandingMailFields theme
 
 mailExpired :: TemplatesMonad m => BrandedDomain -> Theme ->  String -> m Mail
 mailExpired bd theme hp = do
   kontramail bd theme "paymentsExpiredEmail" $ do
     F.value "ctxhostpart" hp
+    brandingMailFields theme
 
 showTotal :: Int -> Int -> String
 showTotal q tc = insertDecimal $ show (q * tc)

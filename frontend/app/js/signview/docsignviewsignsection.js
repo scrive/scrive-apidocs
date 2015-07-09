@@ -177,6 +177,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       cssClass: 'greybg signbutton',
       text: this.signaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing: localization.process.signbuttontext,
       oneClick: true,
+      style: "margin-top: -10px; margin-bottom: " + BrowserInfo.isSmallScreen() ? '10px;': '0;',
       onClick: function() {
        self.tryToSign({ onFail: function() {
          button.setNotClicked();
@@ -184,9 +185,6 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
        return false;
       }
     });
-
-    button.el().css('margin-top', '-10px')
-               .css('margin-bottom', BrowserInfo.isSmallScreen() ? '10px': '0px');
     return button.el();
   },
 

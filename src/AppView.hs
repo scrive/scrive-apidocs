@@ -175,9 +175,18 @@ unsupportedBrowserPage = do
 
 enableCookiesPage :: Kontrakcja m => m Response
 enableCookiesPage = do
-  cookies <- rqCookies <$> askRq
+  rq <- askRq
+  let cookies = rqCookies rq
+      headers = rqHeaders rq
+      hostname = fst $ rqPeer rq
+      ua = case Map.lookup "user-agent" headers of
+             Just (HeaderPair _ (x:_)) -> BS.toString x
+             _ -> "<unknown>"
   let cookieNames = show $ map fst cookies
-      mixpanel event = asyncLogEvent (NamedEvent event) [SomeProp "cookies" $ PVString cookieNames]
+      mixpanel event = asyncLogEvent (NamedEvent event) [ SomeProp "cookies" $ PVString cookieNames
+                                                        , SomeProp "browser" $ PVString ua
+                                                        , SomeProp "host" $ PVString hostname
+                                                        ]
   logInfo_ $ show cookies
   ctx <- getContext
   ad <- getAnalyticsData

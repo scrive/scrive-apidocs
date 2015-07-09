@@ -18,12 +18,16 @@ return Backbone.View.extend({
         top: Math.round(placement.yrel() * parentHeight),
         fontSize: placement.fsrel() * parentWidth
       });
-      if (this.signaturePlacement !== undefined) {
-        this.signaturePlacement.updateSize(placement.wrel() * parentWidth, placement.hrel() * parentHeight);
-      }
+      this.updateSize(placement.wrel() * parentWidth, placement.hrel() * parentHeight);
     }
   },
-
+  updateSize: function (width, height) {
+    var field = this.model.field();
+    if (field.value()) {
+      this.box.css({width: width, height: height});
+      this.img.css({width: width, height: height});
+    }
+  },
   render: function () {
     var field = this.model.field();
     var signatory = field.signatory();
@@ -32,6 +36,8 @@ return Backbone.View.extend({
     var img = $("<img alt=''/>");
     var width = this.model.wrel() * this.$el.parent().width();
     var height = this.model.hrel() * this.$el.parent().height();
+    this.box = box;
+    this.img = img;
 
     this.$el.empty();
 

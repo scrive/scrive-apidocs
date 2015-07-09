@@ -94,7 +94,7 @@ define(['Backbone', 'legacy_code'], function() {
       content.append(wrapper.append(body));
 
       if (this.options.body)
-         body.append($("<label style='padding-bottom: 1em;'/>").text(this.options.body));
+         body.append($("<label style='cursor: text; padding-bottom: 1em;'/>").text(this.options.body));
 
       var passwordInput = new InfoTextInput({
         infotext: localization.newPasswordModal.modalNewPasswordViewNewPassword,

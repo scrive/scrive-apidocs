@@ -17,7 +17,7 @@ return React.createClass({
       , {name: localization.languages.no, value: "no"}
       , {name: localization.languages.el, value: "el"}
       , {name: localization.languages.fi, value: "fi"}
-      , {name: localization.languages.is, value: "is", hidden: true}
+      , {name: localization.languages.is, value: "is"}
     ];
     return _.sortBy(languages, function(l) {return l.name.toLowerCase();});
   },

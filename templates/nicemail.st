@@ -9,7 +9,7 @@ nicemail=
               <table cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="padding-top: 32px; padding-bottom: 32px;">
-                    <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px;" id="headerImage campaign-icon" />
+                    <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px;" id="headerImage campaign-icon" alt="$_mailLogoAltText()$" />
                   </td>
                 </tr>
               </table>
@@ -44,7 +44,7 @@ nicemail=
                                     <table>
                                       <tr>
                                         <td style="height: 106px; color: $nicemailfgcolour()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 16px; line-height: 0; text-align: left; border:1px solid #dee4ed; width: 150px;">
-                                          <img src="$ctxhostpart$$previewLink$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; display: inline; max-width:150px;"/>
+                                          <img src="$ctxhostpart$$previewLink$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; display: inline; max-width:150px;" alt="$_mailPreviewImageAltText()$"/>
                                         </td>
                                       </tr>
                                       <tr>
@@ -113,7 +113,7 @@ nicemail=
           <tr>
             <td>
               <div style="padding:32px; border-top: 1px solid $nicemailbordercolor()$;">
-                <a style="text-decoration: none;" href="$ctxhostpart$">
+                <a class="notclickableinpreview" style="text-decoration: none;" href="$ctxhostpart$">
                   <span class="h3" style="color: $nicemailfgcolour()$; display: block; font-family: $nicemailfont()$; font-size: 16px; font-weight: normal; line-height: 150%; text-align: left;">
                     $PoweredByScrive()$
                   </span>

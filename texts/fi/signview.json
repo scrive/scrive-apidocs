@@ -1,7 +1,7 @@
 { 
 "_DeletePDF":"Poista",
 "_RequestedAttachments":"Pyydetyt liitteet",
-"_ReviewPDF":"",
+"_ReviewPDF":"Katso",
 "_cancel":"Peruuta",
 "_changePartyTo":"Vaihda allekirjoittava osapuoli",
 "_changeSignatoryButtonText":"Muuta",
@@ -24,7 +24,7 @@
 "_couldNotUpload":"Olemme pahoillamme, mutta tiedostoa ei pystytty lataamaan. Ole hyvä, ja yritä uudelleen tai käytä eri tiedostoa.",
 "_deliveryEmail":"sähköposti",
 "_deliveryEmailMobile":"sähköposti ja tekstiviesti",
-"_deliveryMobile":"tekstiviesti",
+"_deliveryMobile":"Tekstiviesti",
 "_dialogConfirmSignByAuthorHead":"Allekirjoita",
 "_dueDate":"Eräpäivä",
 "_elegBankAccessDenied":"Sisäinen virhe. Yritä myöhemmin uudelleen.",

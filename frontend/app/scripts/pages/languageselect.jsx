@@ -25,7 +25,7 @@ define(['React', 'Backbone', 'common/select'], function(React, Backbone, Select)
         , {value : "no", name : localization.languages.noInNo}
         , {value : "el", name : localization.languages.elInEl}
         , {value : "fi", name : localization.languages.fiInFi}
-        , {value : "is", name : localization.languages.isInIs, hidden: true}
+        , {value : "is", name : localization.languages.isInIs}
       ],function(l) {return l.name;});
     },
     render: function() {

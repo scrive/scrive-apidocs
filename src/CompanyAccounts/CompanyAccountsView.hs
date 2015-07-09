@@ -12,6 +12,7 @@ module CompanyAccounts.CompanyAccountsView (
     ) where
 
 import Control.Monad.Catch
+import Data.Time
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
@@ -25,6 +26,7 @@ import FlashMessage
 import KontraLink
 import KontraPrelude
 import Mails.SendMail(Mail, kontramail, kontramaillocal)
+import MinutesTime
 import Theme.Model
 import User.Model
 import Util.HasSomeCompanyInfo
@@ -33,14 +35,15 @@ import Util.HasSomeUserInfo
 ----------------------------------------------------------------------------
 
 mailNewCompanyUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
-                               Context -> a -> b -> Company -> CompanyUI -> KontraLink -> m Mail
-mailNewCompanyUserInvite ctx invited inviter company companyui link = do
+                               Context -> a -> b -> Company -> CompanyUI -> KontraLink -> UTCTime -> m Mail
+mailNewCompanyUserInvite ctx invited inviter company companyui link expires = do
   theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme (ctxbrandeddomain ctx)) (companyMailTheme companyui)
   kontramail (ctxbrandeddomain ctx) theme "mailNewCompanyUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxhostpart ctx) link
     brandingMailFields theme
     F.value "creatorname" $ getSmartName inviter
+    F.value "expiredate" $ formatTimeYMD expires
 
 
 mailTakeoverSingleUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
