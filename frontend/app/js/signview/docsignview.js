@@ -5,10 +5,11 @@
 
 define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories',
         'signview/attachments/signatoryattachmentsview', 'signview/instructionsview/instructionsview',
-        'common/retargeting_service', 'signview/fileview/fileclass',
-        'Backbone', 'Underscore', 'legacy_code'],
+        'signview/attachments/authorattachmentsview', 'common/retargeting_service',
+        'signview/fileview/fileclass', 'Backbone', 'Underscore', 'legacy_code'],
   function (React, CreateAccountSection, DocumentViewSignatories,
-            SignatoryAttachmentsView, InstructionsView, RetargetingService, FileClass) {
+            SignatoryAttachmentsView, InstructionsView, AuthorAttachmentsView,
+            RetargetingService, FileClass) {
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
@@ -202,20 +203,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
     }
 
     return this.get("signatoryattachmentsection");
-  },
-  authorattachmentssection : function() {
-      if (this.get("authorattachmentssection") == undefined)
-        this.set({'authorattachmentssection' :
-                        new DocumentAuthorAttachments({
-                            forSigning: this.document().currentSignatoryCanSign(),
-                            document : this.document(),
-                            el: $("<div class='section spacing'/>"),
-                            title: (this.document().currentSignatory().attachments().length > 1) ?
-                                    localization.docsignview.authorAttachmentsTitleForLots :
-                                    localization.docsignview.authorAttachmentsTitleForOne
-                        })
-        }, {silent : true});
-      return this.get('authorattachmentssection');
   },
   extradetailssection : function() {
       var model = this;
@@ -577,8 +564,13 @@ var DocumentSignViewView = Backbone.View.extend({
         if (this.model.hasMainFileSection())
             this.subcontainer.append(this.model.mainfile().view.el);
 
-        if (this.model.hasAuthorAttachmentsSection())
-            this.subcontainer.append(this.model.authorattachmentssection().el());
+        if (this.model.hasAuthorAttachmentsSection()) {
+            var $authorAttachmentsEl = $("<div class='section spacing'>");
+            React.render(React.createElement(AuthorAttachmentsView, {
+              model: this.model.document()
+            }), $authorAttachmentsEl[0]);
+            this.subcontainer.append($authorAttachmentsEl);
+        }
 
         if (this.model.hasExtraDetailsSection())
             this.subcontainer.append(this.model.extradetailssection().el);
