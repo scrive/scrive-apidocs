@@ -52,15 +52,26 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var file = self.props.model;
       var fileid = file.fileid();
 
-      _.each(self.state.images, function () {
-        img.removeEventListener("load", self.handleLoad);
+      _.each(self.state.images, function (img) {
+        if (BrowserInfo.isIE8orLower()) {
+          img.detachEvent("onload", self.handleLoad);
+        } else {
+          img.removeEventListener("load", self.handleLoad);
+        }
       });
 
       var images = _.map(file.pages(), function (page, index) {
         var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart({"pixelwidth": page.width()});
         var img = new Image();
         img.src = pagelink;
-        img.addEventListener("load", function () {self.handleLoad(index)});
+        var callback = function () {
+          self.handleLoad(index)
+        };
+        if (BrowserInfo.isIE8orLower()) {
+          img.attachEvent("onload", callback);
+        } else {
+          img.addEventListener("load", callback);
+        }
         return img;
       });
 
