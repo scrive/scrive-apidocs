@@ -610,7 +610,7 @@
 "_mailNewAccountCreatedByAdminTitle":"Vänligen aktivera ditt konto",
 "_mailNewCompanyUserInviteContentBodyUserName":"Användarnamn:",
 "_mailNewCompanyUserInviteContentButton":"Aktivera konto",
-"_mailNewCompanyUserInviteContentClickLink":"",
+"_mailNewCompanyUserInviteContentClickLink":"Vänligen klicka på knappen nedan för att aktivera ditt konto. Denna inbjudan är giltig till och med $expiredate$.",
 "_mailNewCompanyUserInvitePrivacyInfo":"Detta konto är avsett att användas endast för bolaget <strong>$companyname$</strong> och alla dokument kommer att tillhöra <strong>$companyname$</strong>. Detta konto är inte avsett för privat bruk.",
 "_mailPreviewImageAltText":"Förhandsgranskning av dokument",
 "_mailRequestChangeEmailButton":"Ändra användarnamn och e-post",

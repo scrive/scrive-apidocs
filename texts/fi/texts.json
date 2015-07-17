@@ -610,7 +610,7 @@
 "_mailNewAccountCreatedByAdminTitle":"Aktivoi tilisi",
 "_mailNewCompanyUserInviteContentBodyUserName":"Käyttäjänimi:",
 "_mailNewCompanyUserInviteContentButton":"Aktivoi tili",
-"_mailNewCompanyUserInviteContentClickLink":"",
+"_mailNewCompanyUserInviteContentClickLink":"Paina alla olevaa kuvaketta aktivoidaksesi tilisi. Tämä kutsu on voimassa $expiredate$ saakka.",
 "_mailNewCompanyUserInvitePrivacyInfo":"Tämä tili on tarkoitettu <strong>$companyname$</strong>:n käyttöön, ja kaikki tallennetut dokumentit kuuluvat<strong>$companyname$</strong>:lle. Tämä tili ei ole henkilökohtaista käyttöä varten.",
 "_mailPreviewImageAltText":"Dokumentin esikatselu",
 "_mailRequestChangeEmailButton":"Muuta käyttäjänimi ja sähköposti",

@@ -610,7 +610,7 @@
 "_mailNewAccountCreatedByAdminTitle":"Activeer a.u.b. uw account",
 "_mailNewCompanyUserInviteContentBodyUserName":"Gebruikersnaam: ",
 "_mailNewCompanyUserInviteContentButton":"Activeer account",
-"_mailNewCompanyUserInviteContentClickLink":"",
+"_mailNewCompanyUserInviteContentClickLink":"Klik op de knop hieronder om u account te activeren. Deze uitnodiging is geldig tot $expiredate$",
 "_mailNewCompanyUserInvitePrivacyInfo":"Dit account is alleen bedoeld om te gebruiken in relatie tot <strong>$companyname$</strong> en alle opgeslagen documenten zijn eigendom van <strong>$companyname$</strong>. Dit account is niet voor privégebruik. ",
 "_mailPreviewImageAltText":"Voorvertoning document",
 "_mailRequestChangeEmailButton":"Verander gebruikersnaam en e-mail",

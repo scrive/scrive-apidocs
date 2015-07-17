@@ -610,7 +610,7 @@
 "_mailNewAccountCreatedByAdminTitle":"Aktiver venligst din konto",
 "_mailNewCompanyUserInviteContentBodyUserName":"Brugernavn:",
 "_mailNewCompanyUserInviteContentButton":"Aktiver konto",
-"_mailNewCompanyUserInviteContentClickLink":"",
+"_mailNewCompanyUserInviteContentClickLink":"Klik venligst på den nedenstående knap for at aktivere din konto. Denne invitation er gyldig indtil $expiredate$.",
 "_mailNewCompanyUserInvitePrivacyInfo":"Denne konto er kun beregnet til at blive brugt i relation til <strong>$companyname$</strong>, og alle gemte dokumenter vil tilhøre <strong>$companyname$</strong>. Denne konto er ikke til privat brug.",
 "_mailPreviewImageAltText":"Dokument forhåndsvisning",
 "_mailRequestChangeEmailButton":"Skift brugernavn og e-mail",
