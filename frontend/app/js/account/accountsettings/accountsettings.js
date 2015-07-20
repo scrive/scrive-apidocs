@@ -436,17 +436,22 @@ var AccountSettingsView = Backbone.View.extend({
             body.append(p);
             var table = jQuery("<table/>");
 
-            var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.account.accountDetails.newEmail ));
-            var newemail = jQuery("<input type='text' name='newemail' autocomplete='off' style='margin: 5px 10px;'/>");
-            newemail.change(function() {model.setNewEmail(newemail.val());});
-            tr1.append(jQuery("<td/>").append(newemail));
+            var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.account.accountDetails.changeEmailCurrentEmail));
+            var currentemail = jQuery("<label style='margin-left: 10px;'/>").text(model.user().email());
+            tr1.append(jQuery("<td/>").append(currentemail));
             table.append(tr1);
 
-            var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.account.accountDetails.newEmailAgain));
+            var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.account.accountDetails.newEmail ));
+            var newemail = jQuery("<input type='text' name='newemail' autocomplete='off' style='margin: 5px 10px;'/>");
+            newemail.change(function() {model.setNewEmail(newemail.val());});
+            tr2.append(jQuery("<td/>").append(newemail));
+            table.append(tr2);
+
+            var tr3 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.account.accountDetails.newEmailAgain));
             var newemailagain = jQuery("<input type='text' name='newemailagain' autocomplete='off' style='margin: 5px 10px;' />");
             newemailagain.change(function() {model.setNewEmailAgain(newemailagain.val());});
-            tr2.append(jQuery("<td/>").append(newemailagain));
-            table.append(tr2);
+            tr3.append(jQuery("<td/>").append(newemailagain));
+            table.append(tr3);
 
             body.append(table);
 

@@ -1057,6 +1057,7 @@ javascriptLocalisation =
               , companycountry : "$_country()$"
               , newEmail       : "$_newemail()$"
               , newEmailAgain  : "$_newemailagain()$"
+              , changeEmailCurrentEmail : "$_currentemailaddress()$"
               , changeEmailButton : "$_changeEmailRequestButtonText()$"
               , changeEmailExplaination : "$_changeEmailRequestExplanation()$"
               , changeEmailTitle : "$_changeEmailRequestTitle()$"

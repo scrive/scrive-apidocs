@@ -292,6 +292,7 @@
 "_createFromTemplateDescription":"Select a template to continue",
 "_createNewTemplate":"New template",
 "_csvFilePersons":"one person for each row defined in the CSV file",
+"_currentemailaddress":"Current email address",
 "_customiseBorderColourLabel":"Border colour",
 "_customiseButtonColourLabel":"Button colour",
 "_customiseEmailBackgroundColourLabel":"Email background colour",
