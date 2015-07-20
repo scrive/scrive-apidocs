@@ -292,6 +292,7 @@
 "_createFromTemplateDescription":"Kies een template om verder te gaan",
 "_createNewTemplate":"Niewe mal",
 "_csvFilePersons":"één persoon voor iedere rij gedefiniëerd in het CSV-bestand",
+"_currentemailaddress":"",
 "_customiseBorderColourLabel":"Borderkleur",
 "_customiseButtonColourLabel":"Knop kleur",
 "_customiseEmailBackgroundColourLabel":"Achtergrondkleur E-mail",

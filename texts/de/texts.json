@@ -292,6 +292,7 @@
 "_createFromTemplateDescription":"Wählen Sie eine Vorlage, um fortzusetzen",
 "_createNewTemplate":"Neue Vorlage",
 "_csvFilePersons":"eine Person pro Zeile, wie in der CSV-Datei definiert",
+"_currentemailaddress":"",
 "_customiseBorderColourLabel":"Rahmenfarbe",
 "_customiseButtonColourLabel":"Farbe der Schaltfläche",
 "_customiseEmailBackgroundColourLabel":"E-Mail-Hintergrundfarbe",

@@ -292,6 +292,7 @@
 "_createFromTemplateDescription":"Veldu sniðmál til að halda áfram",
 "_createNewTemplate":"Nýtt sniðmát",
 "_csvFilePersons":"einn einstaklingur í hverri röð auðkenndur í CSV-skránni",
+"_currentemailaddress":"",
 "_customiseBorderColourLabel":"Jaðarlitur",
 "_customiseButtonColourLabel":"Hnappalitur",
 "_customiseEmailBackgroundColourLabel":"Bakgrunnslitur tölvupósts",

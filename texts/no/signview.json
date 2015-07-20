@@ -65,7 +65,7 @@
 "_mailContractClosedContentAttached":"Det ferdigstilte dokumentet er vedlagt.",
 "_mailContractClosedContentLinked":"Det signerte dokumentet var for stort for å kunne sendes til deg via e-post.",
 "_mailContractClosedContentLinkedAccount":"Dokumentet har blitt lagret på din Scrive-konto.",
-"_mailContractClosedContentLinkedAccountButton":"Gå til din konto",
+"_mailContractClosedContentLinkedAccountButton":"Gå til kontoen din",
 "_mailContractClosedContentLinkedNoAccount":"Det vil være tilgjengelig for nedlastning frem til $availabledate$.",
 "_mailContractClosedContentLinkedNoAccountButton":"Last ned dokument",
 "_mailContractClosedContentSignedBy":"Dokumentet <strong>$documenttitle$</strong> har blitt signert av $partylist:noescape()$.",

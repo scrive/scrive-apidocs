@@ -292,6 +292,7 @@
 "_createFromTemplateDescription":"Sélectionner un modèle afin de continuer",
 "_createNewTemplate":"Nouveau modèle",
 "_csvFilePersons":"une personne pour chaque ligne définie dans le fichier CSV",
+"_currentemailaddress":"",
 "_customiseBorderColourLabel":"Couleur de bordure",
 "_customiseButtonColourLabel":"Couleur du bouton",
 "_customiseEmailBackgroundColourLabel":"Couleur de fond du mail",

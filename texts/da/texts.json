@@ -292,6 +292,7 @@
 "_createFromTemplateDescription":"Vælg en skabelon for at fortsætte",
 "_createNewTemplate":"Opret skabelon",
 "_csvFilePersons":"én person for hver række er defineret i CSV-filen",
+"_currentemailaddress":"",
 "_customiseBorderColourLabel":"Kantfarve",
 "_customiseButtonColourLabel":"Knapfarve",
 "_customiseEmailBackgroundColourLabel":"E-mail baggrundsfarve",
