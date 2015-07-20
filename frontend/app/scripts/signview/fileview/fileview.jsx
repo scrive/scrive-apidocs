@@ -65,7 +65,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         var img = new Image();
         img.src = pagelink;
         var callback = function () {
-          self.handleLoad(index)
+          self.handleLoad(index);
         };
         if (BrowserInfo.isIE8orLower()) {
           img.attachEvent("onload", callback);
