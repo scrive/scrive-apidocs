@@ -44,6 +44,7 @@ conversionEq = do
     n' <- fetchOne runIdentity
     assertBool ("toSQL . fromSQL /= id on " ++ show n) $ n' == n
 
+
 evidenceLogTemplateVariables :: Set String
 evidenceLogTemplateVariables = Set.fromList
   [ "actor"           -- Person identifier (possibly prefixed by role)
@@ -70,6 +71,11 @@ evidenceLogTemplateVariables = Set.fromList
   , "timeouttime"     -- Pending :: UTCTime
   , "timezone"        -- Pending :: TimeZone
   , "value"           -- Field updates :: FieldValue
+  , "provider"        -- Provider of eleg (Swedish BankID)
+  , "signatory_name"  -- Name returned by Eleg
+  , "signatory_personal_number" -- Personal number returned by eleg
+  , "signature"       -- Data for eleg signing
+  , "ocsp_response"   -- Data for eleg signing
   ]
 
 -- Attachment name                                       , "name"
@@ -116,6 +122,7 @@ evidenceLogTemplatesWellDefined = do
             assertFailure $ "Cannot find template name " ++ show tn
             return []
           Just st -> do
+            -- NOTE: checkTemplateDeep in HStringTemplates 8.3 is not reliable. It can miss fields if conditionals are used ($if$). Bug reported by MR
             let (pe,freevars,te') = checkTemplateDeep st
             let te = filter (/="noescape") te'
             let errcontext = " in template " ++ tn ++ " for language " ++ show l ++ ": "

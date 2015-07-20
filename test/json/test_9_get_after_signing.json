@@ -126,6 +126,7 @@
          "userid":"45",
          "signsuccessredirect":null,
          "rejectredirect":null,
+         "authenticationToView": "standard",
          "authentication":"standard"
       }
    ],

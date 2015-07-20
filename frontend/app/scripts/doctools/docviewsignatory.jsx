@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React','common/button','common/backbone_mixin','Backbone','common/language_service','doctools/changeauthenticationmodal', 'doctools/changesignatorydetailmodal', 'legacy_code'], function(React, Button, BackboneMixin, Backbone, LanguageService, ChangeAuthenticationModal, ChangeSignatoryDetailModal) {
+define(['React','common/button','common/backbone_mixin','Backbone','common/language_service','doctools/changeauthenticationtosignmodal', 'doctools/changesignatorydetailmodal', 'legacy_code'], function(React, Button, BackboneMixin, Backbone, LanguageService, ChangeAuthenticationToSignModal, ChangeSignatoryDetailModal) {
 
 var expose = {};
 
@@ -86,7 +86,7 @@ var DocumentViewSignatoryModel = Backbone.Model.extend({
    return    !this.forSigning()
           && (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin());
  },
- hasChangeAuthentication: function() {
+ hasChangeAuthenticationToSign: function() {
    var signatory = this.signatory();
    return    !this.forSigning()
           && (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
@@ -293,8 +293,8 @@ var DocumentViewSignatoryView = React.createClass({
        });
      }
     },
-    handleChangeAuthenticationMethod : function() {
-      new ChangeAuthenticationModal({
+    handleChangeAuthenticationToSignMethod : function() {
+      new ChangeAuthenticationToSignModal({
         signatory : this.props.model.signatory(),
         onAction : this.props.model.get("onAction")
       });
@@ -340,17 +340,27 @@ var DocumentViewSignatoryView = React.createClass({
           return localization.docview.signatory.roleViewer;
       }
     },
-    getAuthenticationMethodText : function() {
+    getAuthenticationToViewMethodText : function() {
       var model = this.props.model;
       var signatory = model.signatory();
-      if(signatory.standardAuthentication()) {
-          return localization.docview.signatory.authenticationStandard;
+      if(signatory.standardAuthenticationToView()) {
+          return localization.docview.signatory.authenticationToViewStandard;
       }
-      else if (signatory.smsPinAuthentication()) {
-          return localization.docview.signatory.authenticationSMSPin;
+      else if (signatory.seBankIDAuthenticationToView()) {
+          return localization.docview.signatory.authenticationToViewSEBankID;
       }
-      else if (signatory.elegAuthentication()) {
-          return localization.docview.signatory.authenticationELeg;
+    },
+    getAuthenticationToSignMethodText : function() {
+      var model = this.props.model;
+      var signatory = model.signatory();
+      if(signatory.standardAuthenticationToSign()) {
+          return localization.docview.signatory.authenticationToSignStandard;
+      }
+      else if (signatory.smsPinAuthenticationToSign()) {
+          return localization.docview.signatory.authenticationToSignSMSPin;
+      }
+      else if (signatory.seBankIDAuthenticationToSign()) {
+          return localization.docview.signatory.authenticationToSignSEBankID;
       }
     },
     getConfirmationMethod : function() {
@@ -440,6 +450,14 @@ var DocumentViewSignatoryView = React.createClass({
               </span>
             </div>
 
+            {/*if*/ signatory.signs() &&
+              <div className="fieldrow">
+                <span className="authentication-to-view field" title={this.getAuthenticationToViewMethodText()}>
+                  {localization.docview.signatory.authenticationToView}: {this.getAuthenticationToViewMethodText()}
+                </span>
+              </div>
+            }
+
             <div className="fieldrow">
               <span className="role field" title={this.getRole()}>
                 {localization.docview.signatory.role}: {this.getRole()}
@@ -447,14 +465,14 @@ var DocumentViewSignatoryView = React.createClass({
             </div>
 
             {/*if*/ signatory.signs() &&
-            <div className="fieldrow">
-              {/*if*/ model.hasChangeAuthentication() &&
-               <a className="edit clickable" onClick={this.handleChangeAuthenticationMethod}>{localization.docview.signatory.editAuthenticationMethod}</a>
-              }
-              <span className="authentication field" title={this.getAuthenticationMethodText()}>
-                {localization.docview.signatory.authentication}: {this.getAuthenticationMethodText()}
-              </span>
-            </div>
+              <div className="fieldrow">
+                {/*if*/ model.hasChangeAuthenticationToSign() &&
+                <a className="edit clickable" onClick={this.handleChangeAuthenticationToSignMethod}>{localization.docview.signatory.editAuthenticationToSignMethod}</a>
+                }
+                <span className="authentication-to-sign field" title={this.getAuthenticationToSignMethodText()}>
+                  {localization.docview.signatory.authenticationToSign}: {this.getAuthenticationToSignMethodText()}
+                </span>
+              </div>
             }
 
             <div className="fieldrow">

@@ -150,6 +150,7 @@
          "userid":"1",
          "signsuccessredirect":null,
          "rejectredirect":null,
+         "authenticationToView": "standard",
          "authentication":"sms_pin"
       },
       {
@@ -316,6 +317,7 @@
          "userid":null,
          "signsuccessredirect":null,
          "rejectredirect":null,
+         "authenticationToView":"standard",
          "authentication":"standard"
       },
       {
@@ -515,6 +517,7 @@
          "userid":null,
          "signsuccessredirect":"success-redirect",
          "rejectredirect":"fail-redirect",
+         "authenticationToView": "standard",
          "authentication":"sms_pin"
       },
       {
@@ -730,6 +733,7 @@
          "userid":null,
          "signsuccessredirect":null,
          "rejectredirect":null,
+         "authenticationToView": "se_bankid",
          "authentication":"eleg"
       }
    ],

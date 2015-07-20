@@ -7,7 +7,7 @@
 define(['React', 'signview/send_sms_pin_modal', 'eleg/signwithelegmodal', 'tinycolor','Backbone', 'legacy_code'], function(React, SendSMSPinModal, SignWithElegModal, tinycolor) {
 
 window.DocumentSignConfirmation = function(args) {
-          if (args.model.document().currentSignatory().smsPinAuthentication()) {
+          if (args.model.document().currentSignatory().smsPinAuthenticationToSign()) {
              var modal = new SendSMSPinModal({
                 model: args.model,
                 margin: args.margin,
@@ -106,7 +106,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     var document = this.document();
     var signatory = document.currentSignatory();
     var self = this;
-    if (signatory.smsPinAuthentication() && (self.pin == undefined || self.pin == "")) {
+    if (signatory.smsPinAuthenticationToSign() && (self.pin == undefined || self.pin == "")) {
           new FlashMessage({content: localization.docsignview.pinSigning.noPinProvided,  type: 'error'});
           if (args.onFail) {
             args.onFail();
@@ -137,7 +137,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
             }
         };
 
-        var pinParam = signatory.smsPinAuthentication() ? {pin: self.pin}: {};
+        var pinParam = signatory.smsPinAuthenticationToSign() ? {pin: self.pin}: {};
 
         document.checksign(function() {
 
@@ -161,7 +161,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
             }
             trackTimeout('Accept', {'Accept': 'sign document'});
 
-            var pinParam = signatory.smsPinAuthentication() ? {pin: self.pin}: {};
+            var pinParam = signatory.smsPinAuthenticationToSign() ? {pin: self.pin}: {};
             document.sign(errorCallback, self.onSignedDocument, pinParam).send();
           };
           f();
@@ -239,7 +239,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
     var document = this.document();
     var signatory = document.currentSignatory();
 
-    if (signatory.smsPinAuthentication()) {
+    if (signatory.smsPinAuthenticationToSign()) {
       content.append(this.pinCodeInput());
     }
 
@@ -269,7 +269,7 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
 
     var isSmallScreen = BrowserInfo.isSmallScreen();
 
-    if(signatory.elegAuthentication()) {
+    if(signatory.seBankIDAuthenticationToSign()) {
       new SignWithElegModal({
         signview: this.margin ? false: self.signview, // margin overrides signview
         margin: this.margin || (isSmallScreen ? '150px auto 0px': undefined),

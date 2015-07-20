@@ -114,7 +114,7 @@
   height: 100%;
   margin-left: 3px;
   overflow: hidden;
-  width: 316px;
+  width: 268px;
 
   .box-sizing(border-box);
 }
@@ -125,7 +125,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 298px;
+  width: 250px;
 }
 
 .design-view-action-participant-info-company {
@@ -146,6 +146,8 @@
   white-space: nowrap;
   width: 162px;
 }
+
+/**************************/
 
 .design-view-action-participant-icon-order {
   border-left: 2px solid @white;
@@ -175,14 +177,14 @@
 }
 
 .design-view-action-participant-icon-role-icon-viewer {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -1*36px 0;
   height: 36px;
   width: 36px;
 }
 
 .design-view-action-participant-icon-role-icon-signatory {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -0*36px 0;
   height: 36px;
   width: 36px;
@@ -193,6 +195,8 @@
   margin-top: 2px;
   text-align: center;
 }
+
+/**************************/
 
 .design-view-action-participant-icon-device {
   display: inline-block;
@@ -206,42 +210,42 @@
 }
 
 .design-view-action-participant-icon-device-icon-email {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -3*36px 0;
   height: 36px;
   width: 36px;
 }
 
 .design-view-action-participant-icon-device-icon-pad {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -2*36px 0;
   height: 36px;
   width: 36px;
 }
 
 .design-view-action-participant-icon-device-icon-email {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -3*36px 0;
   height: 36px;
   width: 36px;
 }
 
 .design-view-action-participant-icon-device-icon-phone {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -4*36px 0;
   height: 36px;
   width: 36px;
 }
 
 .design-view-action-participant-icon-device-icon-email-mobile {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -5*36px 0;
   height: 36px;
   width: 36px;
 }
 
 .design-view-action-participant-icon-device-icon-empty {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -7*36px 0;
   height: 36px;
   width: 36px;
@@ -253,7 +257,9 @@
   text-align: center;
 }
 
-.design-view-action-participant-icon-auth {
+/**************************/
+
+.design-view-action-participant-icon-auth-to-view {
   border-left: 2px solid @white;
   display: inline-block;
   float:left;
@@ -264,33 +270,68 @@
   .user-select(none);
 }
 
-.design-view-action-participant-icon-auth-icon-noauth {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+.design-view-action-participant-icon-auth-to-view-icon-noauth {
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -7*36px 0;
   height: 36px;
   width: 36px;
 }
 
-.design-view-action-participant-icon-auth-icon-eleg {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
-  background-position: -6*36px 0;
+.design-view-action-participant-icon-auth-to-view-icon-se-bankid {
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
+  background-position: -13*36px 0;
   height: 36px;
   width: 36px;
 }
 
-.design-view-action-participant-icon-auth-icon-sms-pin {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
-  background-position: -11*36px 0;
-  height: 36px;
-  width: 36px;
-}
-
-.design-view-action-participant-icon-auth-inner {
+.design-view-action-participant-icon-auth-to-view-inner {
   margin-left: 3px;
   margin-top: 2px;
   text-align: center;
 }
 
+
+.design-view-action-participant-icon-auth-to-sign {
+  border-left: 2px solid @white;
+  display: inline-block;
+  float:left;
+  height: 100%;
+  width: 44px;
+
+  .box-sizing(border-box);
+  .user-select(none);
+}
+
+/**************************/
+
+.design-view-action-participant-icon-auth-to-sign-icon-noauth {
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
+  background-position: -7*36px 0;
+  height: 36px;
+  width: 36px;
+}
+
+.design-view-action-participant-icon-auth-to-sign-icon-se-bankid {
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
+  background-position: -13*36px 0;
+  height: 36px;
+  width: 36px;
+}
+
+.design-view-action-participant-icon-auth-to-sign-icon-sms-pin {
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
+  background-position: -11*36px 0;
+  height: 36px;
+  width: 36px;
+}
+
+.design-view-action-participant-icon-auth-to-sign-inner {
+  margin-left: 3px;
+  margin-top: 2px;
+  text-align: center;
+}
+
+/**************************/
 
 .design-view-action-participant-confirmation {
   display: inline-block;
@@ -303,28 +344,28 @@
 }
 
 .design-view-action-participant-confirmation-icon-email {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -3*36px 0;
   height: 36px;
   width: 36px;
 }
 
 .design-view-action-participant-confirmation-icon-phone {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -4*36px 0;
   height: 36px;
   width: 36px;
 }
 
 .design-view-action-participant-confirmation-icon-email-mobile {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -5*36px 0;
   height: 36px;
   width: 36px;
 }
 
 .design-view-action-participant-confirmation-icon-empty {
-  background-image: url(~"@{img-base-url}/sprite-participation-icons.png");
+  background-image: url(~"@{img-base-url}/sprite-participation-icons2.png");
   background-position: -7*36px 0;
   height: 36px;
   width: 36px;
@@ -472,7 +513,7 @@
   .design-view-action-participant-details-participation-box {
     display: inline-block;
     margin-right: 8px;
-    width: 180px;
+    width: 150px;
   }
 }
 

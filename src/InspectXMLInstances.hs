@@ -120,7 +120,8 @@ instance InspectXML SignupMethod where
 instance InspectXML DeliveryStatus where
 instance InspectXML UserInfo where
 instance InspectXML UserSettings where
-instance InspectXML AuthenticationMethod where
+instance InspectXML AuthenticationToViewMethod where
+instance InspectXML AuthenticationToSignMethod where
 instance InspectXML DeliveryMethod where
 instance InspectXML ConfirmationDeliveryMethod where
 instance InspectXML Company where

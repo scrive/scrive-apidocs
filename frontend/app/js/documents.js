@@ -348,8 +348,8 @@ window.Document = Backbone.Model.extend({
             url : "/api/frontend/checksign/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
             method: "POST",
             fields: JSON.stringify(fields),
-            authentication_type: signatory.authentication(),
-            authentication_value: signatory.authenticationFieldValue(),
+            authentication_type: signatory.authenticationToSign(),
+            authentication_value: signatory.authenticationToSignFieldValue(),
             ajax: true,
             expectedType : "text",
             ajaxsuccess : successCallback,
@@ -366,8 +366,8 @@ window.Document = Backbone.Model.extend({
             method: "POST",
             screenshots: JSON.stringify(document.get("screenshots")),
             fields: JSON.stringify(fields),
-            authentication_type: signatory.authentication(),
-            authentication_value: signatory.authenticationFieldValue(),
+            authentication_type: signatory.authenticationToSign(),
+            authentication_value: signatory.authenticationToSignFieldValue(),
             ajax: true,
             expectedType : "text",
             ajaxsuccess : function(newDocumentRaw) {
@@ -590,12 +590,12 @@ window.Document = Backbone.Model.extend({
             // We don't support drawing signature in design view
             return false;
         }
-        if (this.author().elegAuthentication()) {
+        if (this.author().seBankIDAuthenticationToSign() || this.author().seBankIDAuthenticationToView()) {
             // We don't support eleg authorization in design view
             return false;
         }
 
-        if (this.author().smsPinAuthentication()) {
+        if (this.author().smsPinAuthenticationToSign()) {
             // We don't support sms pin for author from design view
             return false;
         }
@@ -816,7 +816,7 @@ window.Document = Backbone.Model.extend({
     },
     hasEleg: function() {
         return _.some(this.signatories(), function(s) {
-            return s.elegAuthentication();
+            return s.seBankIDAuthenticationToSign() ||  s.seBankIDAuthenticationToView();
         });
     },
     hasEmail: function() {

@@ -182,17 +182,11 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
 
       (res, ctx') <- routeHandlers ctx
 
-      let newsession = session {
-            sesID        = ctxsessionid ctx'
-          , sesUserID    = userid <$> ctxmaybeuser ctx'
-          , sesPadUserID = userid <$> ctxmaybepaduser ctx'
-          }
-          newflashmessages = ctxflashmessages ctx'
-      F.updateFlashCookie (ctxflashmessages ctx) newflashmessages
+      F.updateFlashCookie (ctxflashmessages ctx) (ctxflashmessages ctx')
       issecure <- isSecure
       let usehttps = useHttps appConf
       when (issecure || not usehttps) $
-        updateSession session newsession
+        updateSession session (ctxsessionid ctx') (userid <$> ctxmaybeuser ctx') (userid <$> ctxmaybepaduser ctx')
 
       -- Here we show in debug log some statistics that should help
       -- optimize code and instantly see if there is something

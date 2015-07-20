@@ -115,7 +115,7 @@ personExFromSignatoryLink tz sim boxImages sl@SignatoryLink{..} = do
      , Seal.fullnameverified = False
      , Seal.companyverified  = False
      , Seal.numberverified   = True
-     , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationmethod == SMSPinAuthentication)
+     , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationtosignmethod == SMSPinAuthenticationToSign)
      }
 
 fieldsFromSignatory :: (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => (BS.ByteString,BS.ByteString) -> SignatoryLink -> m [Seal.Field]

@@ -16,6 +16,18 @@ signviewAnalyticsVariables=
   ]);
 </script>
 ####
+scaleReset=
+    <meta name="viewport" content="width=1020, user-scalable=no" />
+    <script type="text/javascript">
+      require(['legacy_code'], function() {
+        jQuery(document).ready(function() {
+          setTimeout(function() {
+            jQuery('meta[name=viewport]').attr('content','width=1020, user-scalable=yes');},
+            200);
+        });
+      });
+    </script>
+####
 padLogin=$doctype()$
 $htmlopentag()$
   <head>
@@ -24,14 +36,14 @@ $htmlopentag()$
   </head>
   <body style="background: $background$" >
   $flashmessages()$
-  <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
-      <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
+  <div class='global-table'>
+      <div class="global-table-cell">
       </div>
   </div>
   <script type="text/javascript">
    require(['jquery', 'React', 'login/login', 'legacy_code'], function(jQuery,React,Login) {
     jQuery(document).ready(function() {
-      var div = jQuery('.inner');
+      var div = jQuery('.global-table-cell');
       React.render(React.createElement(Login,{
         referer:   "/to-sign",
         autofocus: true,
@@ -54,13 +66,15 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $signviewAnalyticsVariables()$
-    $standardHeaderContents(nobranding='true')$
+    $standardHeaderContents(nobranding='true'; noviewport='true')$
     $if(!usestandardheaders)$
       <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     $else$
       <link href='/internal_signview_branding/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     $endif$
+    $scaleReset()$
   </head>
+
   <body  $if(usestandardheaders)$ $if(custombackground)$style="background:$custombackground$;"$endif$    $endif$ >
     $if(usestandardheaders)$
     $wrapperopentag()$
@@ -130,8 +144,9 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $signviewAnalyticsVariables()$
-    $standardHeaderContents(nobranding='true')$
+    $standardHeaderContents(nobranding='true'; noviewport='true')$
     <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
+    $scaleReset()$
   </head>
   <body>
     <div class="signview">
@@ -194,6 +209,43 @@ $htmlopentag()$
         </div>
       </div>
     </div>
+  </body>
+$htmlclosingtag()$
+####
+pageDocumentIdentifyView=$doctype()$
+$htmlopentag()$
+  <head>
+    <title>$pagetitle()$</title>
+    $signviewAnalyticsVariables()$
+    $standardHeaderContents(nobranding='true'; noviewport='true')$
+    <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2" />
+  </head>
+  <body>
+    <div class='global-table'>
+      <div class="global-table-cell">
+      </div>
+    </div>
+    <script>
+    require(["legacy_code", "jquery", "React", "signview/identify/identifyview"], function(legacy_code, jQuery, React, IdentifyView) {
+      var doc = new Document({
+                  id: "$documentid$",
+                  viewer : new DocumentViewer({
+                    signatoryid : "$siglinkid$"
+                  })
+                });
+
+      jQuery(function () {
+        // no design for loading.
+        doc.recall(function () {
+          React.render(React.createElement(IdentifyView, {
+            doc: doc,
+            siglinkid: "$siglinkid$"
+          }), jQuery(".global-table-cell")[0]);
+        });
+      });
+    });
+    </script>
   </body>
 $htmlclosingtag()$
 ####

@@ -27,7 +27,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import DB
 import DB.XML ()
-import Doc.DocStateData (SignatoryLink(..), AuthenticationMethod(..), DeliveryMethod(..))
+import Doc.DocStateData (SignatoryLink(..), AuthenticationToSignMethod(..), DeliveryMethod(..))
 import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocumentID, theDocument)
 import Doc.SignatoryLinkID
@@ -72,10 +72,10 @@ eventTextTemplateName t e =  show e ++ suffix t
 
 signatoryLinkTemplateFields :: Monad m => SignatoryLink -> F.Fields m ()
 signatoryLinkTemplateFields sl = do
-  F.value "identified"  $ signatorylinkauthenticationmethod sl == ELegAuthentication
+  F.value "identified"  $ signatorylinkauthenticationtosignmethod sl == SEBankIDAuthenticationToSign
                        || not (signatoryisauthor sl || signatorylinkdeliverymethod sl == APIDelivery)
-  F.value "eleg"        $ signatorylinkauthenticationmethod sl == ELegAuthentication
-  F.value "sms_pin"     $ signatorylinkauthenticationmethod sl == SMSPinAuthentication
+  F.value "eleg"        $ signatorylinkauthenticationtosignmethod sl == SEBankIDAuthenticationToSign
+  F.value "sms_pin"     $ signatorylinkauthenticationtosignmethod sl == SMSPinAuthenticationToSign
   F.value "api"         $ signatorylinkdeliverymethod sl == APIDelivery
   F.value "pad"         $ signatorylinkdeliverymethod sl == PadDelivery
   F.value "email"       $ signatorylinkdeliverymethod sl == EmailDelivery
@@ -83,6 +83,7 @@ signatoryLinkTemplateFields sl = do
   F.value "emailmobile" $ signatorylinkdeliverymethod sl == EmailAndMobileDelivery
   F.value "viewing"     $ not $ signatoryispartner sl
   F.value "signing"     $ signatoryispartner sl
+
 
 -- | Create evidence text that goes into evidence log
 evidenceLogText :: (DocumentMonad m, TemplatesMonad m, MonadDB m, MonadThrow m)
@@ -278,7 +279,6 @@ data CurrentEvidenceEventType =
   ReminderSend                                     |  --Renamed
   InvitationDeliveredByEmail                       |
   InvitationUndeliveredByEmail                     |
-  SignatoryLinkVisited                             |
   ProlongDocumentEvidence                          |
   ChangeSignatoryPhoneWhenUndeliveredEvidence      |
   InvitationDeliveredBySMS                         |
@@ -291,12 +291,12 @@ data CurrentEvidenceEventType =
   UpdateFieldSignatureEvidence                     |
   SMSPinSendEvidence                               |
   SMSPinDeliveredEvidence                          |
-  ChangeAuthenticationMethodStandardToELegEvidence |
-  ChangeAuthenticationMethodStandardToSMSEvidence  |
-  ChangeAuthenticationMethodELegToStandardEvidence |
-  ChangeAuthenticationMethodELegToSMSEvidence      |
-  ChangeAuthenticationMethodSMSToStandardEvidence  |
-  ChangeAuthenticationMethodSMSToElegEvidence      |
+  ChangeAuthenticationToSignMethodStandardToSEBankIDEvidence  |
+  ChangeAuthenticationToSignMethodStandardToSMSEvidence       |
+  ChangeAuthenticationToSignMethodSEBankIDToStandardEvidence  |
+  ChangeAuthenticationToSignMethodSEBankIDToSMSEvidence       |
+  ChangeAuthenticationToSignMethodSMSToStandardEvidence       |
+  ChangeAuthenticationToSignMethodSMSToSEBankIDEvidence       |
   UpdateFieldFirstNameEvidence                 |
   UpdateFieldLastNameEvidence                  |
   UpdateFieldCompanyEvidence                   |
@@ -305,7 +305,10 @@ data CurrentEvidenceEventType =
   UpdateFieldEmailEvidence                     |
   UpdateFieldCustomEvidence                    |
   UpdateFieldMobileEvidence                    |
-  UpdateFieldNameEvidence
+  UpdateFieldNameEvidence                      |
+  VisitedViewForAuthenticationEvidence         |
+  VisitedViewForSigningEvidence                |
+  AuthenticatedToViewEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -359,8 +362,8 @@ data ObsoleteEvidenceEventType =
   SetAPIDeliveryMethodEvidence                    |
   SetDocumentProcessEvidence                      |
   DetachFileEvidence                              |
-  SetStandardAuthenticationMethodEvidence         |
-  SetELegAuthenticationMethodEvidence             |
+  SetStandardAuthenticationToSignMethodEvidence   |
+  SetELegAuthenticationToSignMethodEvidence       |
   AuthorUsesCSVEvidence                           |
   ErrorDocumentEvidence                           |
   SetDocumentInviteTimeEvidence                   |
@@ -368,7 +371,8 @@ data ObsoleteEvidenceEventType =
   SendToPadDevice                                 |
   RemovedFromPadDevice                            |
   UpdateFieldTextEvidence                         |
-  SignWithELegFailureEvidence
+  SignWithELegFailureEvidence                     |
+  SignatoryLinkVisited
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 
@@ -439,8 +443,8 @@ instance ToSQL EvidenceEventType where
   toSQL (Obsolete ChangeFieldEvidence)                             = toSQL (60::Int16)
   toSQL (Current ResealedPDF)                                      = toSQL (61::Int16)
   toSQL (Obsolete OldDocumentHistory)                              = toSQL (62::Int16)
-  toSQL (Obsolete SetStandardAuthenticationMethodEvidence)         = toSQL (63::Int16)
-  toSQL (Obsolete SetELegAuthenticationMethodEvidence)             = toSQL (64::Int16)
+  toSQL (Obsolete SetStandardAuthenticationToSignMethodEvidence)         = toSQL (63::Int16)
+  toSQL (Obsolete SetELegAuthenticationToSignMethodEvidence)             = toSQL (64::Int16)
   toSQL (Obsolete SetEmailDeliveryMethodEvidence)                  = toSQL (65::Int16)
   toSQL (Obsolete SetPadDeliveryMethodEvidence)                    = toSQL (66::Int16)
   toSQL (Obsolete SetAPIDeliveryMethodEvidence)                    = toSQL (67::Int16)
@@ -449,7 +453,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Obsolete DetachFileEvidence)                              = toSQL (70::Int16)
   toSQL (Current InvitationDeliveredByEmail)                       = toSQL (71::Int16)
   toSQL (Current InvitationUndeliveredByEmail)                     = toSQL (72::Int16)
-  toSQL (Current SignatoryLinkVisited)                             = toSQL (73::Int16)
+  toSQL (Obsolete SignatoryLinkVisited)                             = toSQL (73::Int16)
   toSQL (Current ProlongDocumentEvidence)                          = toSQL (74::Int16)
   toSQL (Current ChangeSignatoryPhoneWhenUndeliveredEvidence)      = toSQL (75::Int16)
   toSQL (Current InvitationDeliveredBySMS)                         = toSQL (76::Int16)
@@ -464,12 +468,12 @@ instance ToSQL EvidenceEventType where
   toSQL (Obsolete UpdateFieldTextEvidence)                         = toSQL (85::Int16)
   toSQL (Current SMSPinSendEvidence)                               = toSQL (86::Int16)
   toSQL (Current SMSPinDeliveredEvidence)                          = toSQL (87::Int16)
-  toSQL (Current ChangeAuthenticationMethodStandardToELegEvidence) = toSQL (88::Int16)
-  toSQL (Current ChangeAuthenticationMethodStandardToSMSEvidence ) = toSQL (89::Int16)
-  toSQL (Current ChangeAuthenticationMethodELegToStandardEvidence) = toSQL (90::Int16)
-  toSQL (Current ChangeAuthenticationMethodELegToSMSEvidence     ) = toSQL (91::Int16)
-  toSQL (Current ChangeAuthenticationMethodSMSToStandardEvidence ) = toSQL (92::Int16)
-  toSQL (Current ChangeAuthenticationMethodSMSToElegEvidence     ) = toSQL (93::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodStandardToSEBankIDEvidence) = toSQL (88::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodStandardToSMSEvidence)      = toSQL (89::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodSEBankIDToStandardEvidence) = toSQL (90::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodSEBankIDToSMSEvidence)      = toSQL (91::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodSMSToStandardEvidence)      = toSQL (92::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodSMSToSEBankIDEvidence)      = toSQL (93::Int16)
   toSQL (Current UpdateFieldFirstNameEvidence                ) = toSQL (94::Int16)
   toSQL (Current UpdateFieldLastNameEvidence                 ) = toSQL (95::Int16)
   toSQL (Current UpdateFieldCompanyEvidence                  ) = toSQL (96::Int16)
@@ -479,6 +483,10 @@ instance ToSQL EvidenceEventType where
   toSQL (Current UpdateFieldCustomEvidence                   ) = toSQL (100::Int16)
   toSQL (Current UpdateFieldMobileEvidence                   ) = toSQL (101::Int16)
   toSQL (Current UpdateFieldNameEvidence                     ) = toSQL (102::Int16)
+  toSQL (Current VisitedViewForAuthenticationEvidence        ) = toSQL (103::Int16)
+  toSQL (Current VisitedViewForSigningEvidence               ) = toSQL (104::Int16)
+  toSQL (Current AuthenticatedToViewEvidence                 ) = toSQL (105::Int16)
+
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -547,8 +555,8 @@ instance FromSQL EvidenceEventType where
       60 -> return (Obsolete ChangeFieldEvidence)
       61 -> return (Current ResealedPDF)
       62 -> return (Obsolete OldDocumentHistory)
-      63 -> return (Obsolete SetStandardAuthenticationMethodEvidence)
-      64 -> return (Obsolete SetELegAuthenticationMethodEvidence)
+      63 -> return (Obsolete SetStandardAuthenticationToSignMethodEvidence)
+      64 -> return (Obsolete SetELegAuthenticationToSignMethodEvidence)
       65 -> return (Obsolete SetEmailDeliveryMethodEvidence)
       66 -> return (Obsolete SetPadDeliveryMethodEvidence)
       67 -> return (Obsolete SetAPIDeliveryMethodEvidence)
@@ -557,7 +565,7 @@ instance FromSQL EvidenceEventType where
       70 -> return (Obsolete DetachFileEvidence)
       71 -> return (Current InvitationDeliveredByEmail)
       72 -> return (Current InvitationUndeliveredByEmail)
-      73 -> return (Current SignatoryLinkVisited)
+      73 -> return (Obsolete SignatoryLinkVisited)
       74 -> return (Current ProlongDocumentEvidence)
       75 -> return (Current ChangeSignatoryPhoneWhenUndeliveredEvidence)
       76 -> return (Current InvitationDeliveredBySMS)
@@ -572,12 +580,12 @@ instance FromSQL EvidenceEventType where
       85 -> return (Obsolete UpdateFieldTextEvidence)
       86 -> return (Current SMSPinSendEvidence)
       87 -> return (Current SMSPinDeliveredEvidence)
-      88 -> return (Current ChangeAuthenticationMethodStandardToELegEvidence)
-      89 -> return (Current ChangeAuthenticationMethodStandardToSMSEvidence )
-      90 -> return (Current ChangeAuthenticationMethodELegToStandardEvidence)
-      91 -> return (Current ChangeAuthenticationMethodELegToSMSEvidence     )
-      92 -> return (Current ChangeAuthenticationMethodSMSToStandardEvidence )
-      93 -> return (Current ChangeAuthenticationMethodSMSToElegEvidence     )
+      88 -> return (Current ChangeAuthenticationToSignMethodStandardToSEBankIDEvidence)
+      89 -> return (Current ChangeAuthenticationToSignMethodStandardToSMSEvidence )
+      90 -> return (Current ChangeAuthenticationToSignMethodSEBankIDToStandardEvidence)
+      91 -> return (Current ChangeAuthenticationToSignMethodSEBankIDToSMSEvidence     )
+      92 -> return (Current ChangeAuthenticationToSignMethodSMSToStandardEvidence )
+      93 -> return (Current ChangeAuthenticationToSignMethodSMSToSEBankIDEvidence     )
       94 -> return (Current UpdateFieldFirstNameEvidence                )
       95 -> return (Current UpdateFieldLastNameEvidence                 )
       96 -> return (Current UpdateFieldCompanyEvidence                  )
@@ -586,8 +594,11 @@ instance FromSQL EvidenceEventType where
       99 -> return (Current UpdateFieldEmailEvidence                    )
       100 -> return (Current UpdateFieldCustomEvidence                  )
       101 -> return (Current UpdateFieldMobileEvidence                  )
-      102 -> return (Current UpdateFieldNameEvidence                  )
+      102 -> return (Current UpdateFieldNameEvidence                    )
+      103 -> return (Current VisitedViewForAuthenticationEvidence       )
+      104 -> return (Current VisitedViewForSigningEvidence              )
+      105 -> return (Current AuthenticatedToViewEvidence                )
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 102)]
+        reRange = [(1, 105)]
       , reValue = n
       }

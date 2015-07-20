@@ -3,6 +3,21 @@
         {      code : "en"
              , welcomeback : "Welcome!"
              , reloadPage : "Reload page"
+             , poweredBy : "E-signing powered by Scrive"
+             , identifyDocument: "Document"
+             , identifyBankId: "Identify"
+             , identifyBankIdNo: "BankID"
+             , identifyBankIdNoMobile: "BankID on mobile"
+             , identifyPhoneError: "The phone number must be 8 digits."
+             , identifyPhoneNumber: "Phone"
+             , identifyPhoneNumber8: "Phone (8 digits)"
+             , identifyDateOfBirth: "Date of birth"
+             , openBankId: "Open BankID on this device"
+             , problemBankId: "Problem signing with BankID"
+             , startBankId: "Start your BankID App"
+             , yourIdNumber: "Your ID number"
+             , idNumber: "ID number"
+             , verifyIdentity : "to see the document verify your identity"
              , problemContactingServer : "We're experiencing difficulties handling your document.<br/>Please reload the page and try again."
              , esigningpoweredbyscrive : "E-signing powered by Scrive"
              , sessionTimedoutInSignview : "Your session has timed out. You can access your document again by following the link in your email."
@@ -687,7 +702,7 @@
            , plans: {
                     // Legacy plans only need the name
                     form : {
-                          name: "Team"
+                          name: "One"
                     }
                     , trial : {
                           name : "Trial"

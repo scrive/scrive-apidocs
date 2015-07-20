@@ -122,7 +122,7 @@ window.Field = Backbone.Model.extend({
             return true;
         else if (this.isEmail())
             return new EmailValidation().validateData(this.value());
-        if (this.isSSN() && this.signatory().elegAuthentication())
+        if (this.isSSN() && (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView()))
             return new SSNForElegValidation().validateData(this.value());
         else if (this.isText() && (this.value() != ""))
             return true;
@@ -192,7 +192,8 @@ window.Field = Backbone.Model.extend({
                                          field.isMobile() && (signatory.mobileConfirmationDelivery() || signatory.emailMobileConfirmationDelivery()));
       var willSignNowAndFieldNeeded = signatory.author()
         && signatory.ableToSign()
-        && (!signatory.elegAuthentication())
+        && (!signatory.seBankIDAuthenticationToSign())
+        && (!signatory.seBankIDAuthenticationToView())
         && (!signatory.hasPlacedSignatures())
         && field.isObligatory()
         && (field.isText() || field.isCheckbox());
@@ -219,7 +220,7 @@ window.Field = Backbone.Model.extend({
       return concatValidations;
     },
     validateSSN: function() {
-      if (this.signatory().elegAuthentication())
+      if (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView())
         return new EmptyValidation().or(new SSNForElegValidation());
       return new Validation();
     },
@@ -235,7 +236,7 @@ window.Field = Backbone.Model.extend({
       if(signatory.mobileDelivery() || signatory.emailMobileDelivery()) {
         return new PhoneValidation().concat(new NotEmptyValidation());
       }
-      if(signatory.smsPinAuthentication()            ||
+      if(signatory.smsPinAuthenticationToSign()            ||
          signatory.emailMobileConfirmationDelivery() ||
          signatory.mobileConfirmationDelivery()
         ) {

@@ -22,7 +22,7 @@ var ChangeAuthenticationModalModel = Backbone.Model.extend({
   },
   initialize: function (args) {
     var self = this;
-    this.setNewAuthenticationMethod(this.signatory().authentication());
+    this.setNewAuthenticationMethod(this.signatory().authenticationToSign());
   },
   document :function() {
      return this.signatory().document();
@@ -108,13 +108,13 @@ var ChangeAuthenticationModalView = React.createClass({
   getAuthenticationMethodNameText : function() {
     var model = this.props.model;
     if(model.isNewAuthenticationStandard()) {
-      return localization.docview.signatory.authenticationStandard;
+      return localization.docview.signatory.authenticationToSignStandard;
     }
     else if(model.isNewAuthenticationPINbySMS()) {
-      return localization.docview.signatory.authenticationSMSPin;
+      return localization.docview.signatory.authenticationToSignSMSPin;
     }
     else if(model.isNewAuthenticationELeg()) {
-      return localization.docview.signatory.authenticationELeg;
+      return localization.docview.signatory.authenticationToSignSEBankID;
     }
   },
   setAuthenticationMethod : function(v) {
@@ -160,13 +160,13 @@ var ChangeAuthenticationModalView = React.createClass({
                     name={this.getAuthenticationMethodNameText()}
                     onSelect={this.setAuthenticationMethod}
                     width={348}
-                    options={ [ { name : localization.docview.signatory.authenticationStandard,
+                    options={ [ { name : localization.docview.signatory.authenticationToSignStandard,
                                   value : "standard"
                                 }
-                              , { name : localization.docview.signatory.authenticationELeg,
+                              , { name : localization.docview.signatory.authenticationToSignSEBankID,
                                   value : "eleg"
                                 }
-                              , { name : localization.docview.signatory.authenticationSMSPin,
+                              , { name : localization.docview.signatory.authenticationToSignSMSPin,
                                   value : "sms_pin"
                                 }
                               ] }
@@ -216,7 +216,7 @@ return function(args) {
            'Authentication method' : authmethod,
            'Authentication value' : authvalue});
       LoadingDialog.open();
-      model.signatory().changeAuthentication(authmethod, authvalue).sendAjax(
+      model.signatory().changeAuthenticationToSign(authmethod, authvalue).sendAjax(
           function() {
             args.onAction();
           }

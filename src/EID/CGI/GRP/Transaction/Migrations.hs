@@ -34,3 +34,16 @@ createCgiGrpTransactionsTable = Migration {
     ]
   }
 }
+
+extendCgiGrpTransactionsWithAuthRequest :: MonadDB m => Migration m
+extendCgiGrpTransactionsWithAuthRequest =
+  Migration
+    { mgrTable = tableCgiGrpTransactions
+    , mgrFrom = 1
+    , mgrDo = do
+        runSQL_ "ALTER TABLE cgi_grp_transactions ADD COLUMN type SMALLINT NOT NULL DEFAULT 2" -- 2 is CgiGrpSign
+        runSQL_ "ALTER TABLE cgi_grp_transactions ALTER COLUMN type DROP DEFAULT"
+        runSQL_ "ALTER TABLE cgi_grp_transactions ALTER COLUMN text_to_be_signed DROP NOT NULL"
+        runQuery_ $ "ALTER TABLE cgi_grp_transactions " <> sqlDropPK (tblName tableCgiGrpTransactions)
+        runQuery_ $ "ALTER TABLE cgi_grp_transactions " <> sqlAddPK (tblName tableCgiGrpTransactions) ($fromJust $ pkOnColumns ["signatory_link_id","type"])
+    }

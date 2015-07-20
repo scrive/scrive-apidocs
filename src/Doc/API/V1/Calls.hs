@@ -14,7 +14,7 @@ module Doc.API.V1.Calls (
   , apiCallV1DownloadMainFile    -- Exported for tests
   , apiCallV1DownloadFile        -- Exported for tests
   , apiCallV1ChangeMainFile
-  , apiCallV1ChangeAuthentication    -- Exported for tests
+  , apiCallV1ChangeAuthenticationToSign    -- Exported for tests
   , apiCallV1SetAuthorAttachemnts -- Exported for tests
   ) where
 
@@ -53,7 +53,6 @@ import qualified Text.JSON.Pretty as J (pp_value)
 import API.Monad
 import AppView (respondWithPDF)
 import Attachment.Model
-import Chargeable.Model
 import DB
 import DB.TimeZoneName (mkTimeZoneName, defaultTimeZoneName)
 import Doc.Action
@@ -127,7 +126,7 @@ documentAPIV1  = choice [
   dir "restart"              $ hPost $ toK1 $ apiCallV1Restart,
   dir "prolong"              $ hPost $ toK1 $ apiCallV1Prolong,
   dir "setautoreminder"      $ hPost $ toK1 $ apiCallV1SetAutoReminder,
-  dir "changeauthentication" $ hPost $ toK2 $ apiCallV1ChangeAuthentication,
+  dir "changeauthentication" $ hPost $ toK2 $ apiCallV1ChangeAuthenticationToSign,
 
 
   dir "remind"             $ hPost $ toK1 $ apiCallV1Remind,
@@ -413,17 +412,19 @@ apiCallV1CheckSign did slid = api $ do
       (throwIO . SomeKontraException $ conflictError $ "Document not pending")
     whenM (hasSigned <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwIO . SomeKontraException $ conflictError $ "Document already signed")
-    checkAuthenticationMethodAndValue slid
-    authorization <- signatorylinkauthenticationmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
+    whenM (signatoryNeedsToIdentifyToView =<< $fromJust . getSigLinkFor slid <$> theDocument) $ do
+      (throwIO . SomeKontraException $ forbidden "Authorization to view is needed")  
+    checkAuthenticationToSignMethodAndValue slid
+    authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
     fields <- getFieldForSigning
     case authorization of
-       StandardAuthentication -> return $ Right $ Ok () -- If we have a document with standard auth, it can be always signed if its not closed and signed
-       SMSPinAuthentication -> do
+       StandardAuthenticationToSign -> return $ Right $ Ok () -- If we have a document with standard auth, it can be always signed if its not closed and signed
+       SMSPinAuthenticationToSign -> do
              validPin <- getValidPin slid fields
              if (isJust validPin)
                then return $ Right $ Ok ()
                else (Left . Failed) <$> (runJSONGenT $ value "pinProblem" True)
-       ELegAuthentication -> dbQuery (GetESignature slid) >>= \case
+       SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
          Just _ -> return $ Right $ Ok ()
          Nothing -> do
            logInfo_ "No e-signature found for a signatory"
@@ -447,17 +448,19 @@ apiCallV1Sign  did slid = api $ do
       (throwIO . SomeKontraException $ conflictError $ "Document not pending")
     whenM (hasSigned <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwIO . SomeKontraException $ conflictError $ "Document already signed")
-    checkAuthenticationMethodAndValue slid
-    authorization <- signatorylinkauthenticationmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
+    whenM (signatoryNeedsToIdentifyToView =<< $fromJust . getSigLinkFor slid <$> theDocument) $ do
+      (throwIO . SomeKontraException $ forbidden "Authorization to view is needed")
+    checkAuthenticationToSignMethodAndValue slid
+    authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
 
     case authorization of
-      StandardAuthentication -> do
+      StandardAuthenticationToSign -> do
         signDocument slid mh fields Nothing Nothing screenshots
         postDocumentPendingChange olddoc
         handleAfterSigning slid
         (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
 
-      SMSPinAuthentication -> do
+      SMSPinAuthenticationToSign -> do
         validPin <- getValidPin slid fields
         if (isJust validPin)
           then do
@@ -467,10 +470,9 @@ apiCallV1Sign  did slid = api $ do
             (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
           else (Left . Failed) <$> (runJSONGenT $ return ())
 
-      ELegAuthentication -> dbQuery (GetESignature slid) >>= \case
+      SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
         mesig@(Just _) -> do
           -- charge company of the author of the document for the signature
-          dbUpdate $ ChargeCompanyForElegSignature did
           signDocument slid mh fields mesig Nothing screenshots
           postDocumentPendingChange olddoc
           handleAfterSigning slid
@@ -483,8 +485,8 @@ apiCallV1Sign  did slid = api $ do
     `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
 
 {- | Utils for signing with eleg -}
-checkAuthenticationMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
-checkAuthenticationMethodAndValue slid = do
+checkAuthenticationToSignMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
+checkAuthenticationToSignMethodAndValue slid = do
   mAuthType  :: Maybe String <- getField "authentication_type"
   mAuthValue :: Maybe String <- getField "authentication_value"
   case (mAuthType, mAuthValue) of
@@ -493,17 +495,17 @@ checkAuthenticationMethodAndValue slid = do
            case mAuthMethod of
                 Just authMethod -> do
                     siglink <- $fromJust . getSigLinkFor slid <$> theDocument
-                    let authOK = authMethod == signatorylinkauthenticationmethod siglink
+                    let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
                     case (authOK, authMethod) of
                          (False, _) -> throwIO . SomeKontraException $
                              conflictError "`authentication_type` does not match"
-                         (True, StandardAuthentication) -> return ()
-                         (True, ELegAuthentication)   ->
+                         (True, StandardAuthenticationToSign) -> return ()
+                         (True, SEBankIDAuthenticationToSign)   ->
                              if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
                                 then return ()
                                 else throwIO . SomeKontraException $
                                     conflictError "`authentication_value` for personal number does not match"
-                         (True, SMSPinAuthentication) ->
+                         (True, SMSPinAuthenticationToSign) ->
                              if (authValue == getMobile siglink || null (getMobile siglink))
                                 then return ()
                                 else throwIO . SomeKontraException $
@@ -592,8 +594,8 @@ apiCallV1SetAutoReminder did =  api $ do
       triggerAPICallbackIfThereIsOne =<< theDocument
       Accepted <$> (documentJSONV1 (Just $ user) True True Nothing =<< theDocument)
 
-apiCallV1ChangeAuthentication :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-apiCallV1ChangeAuthentication did slid = api $ do
+apiCallV1ChangeAuthenticationToSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+apiCallV1ChangeAuthenticationToSign did slid = api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
       guardAuthorOrAuthorsAdmin user "Permission problem. You don't have a permission to change this document"
@@ -616,7 +618,7 @@ apiCallV1ChangeAuthentication did slid = api $ do
               Nothing -> Left $ fromMaybe "" authentication_type
       -- Change authentication method (if input is a valid method)
       case authenticationMethod of
-           Right a -> dbUpdate $ ChangeAuthenticationMethod slid a maybeAuthValue actor
+           Right a -> dbUpdate $ ChangeAuthenticationToSignMethod slid a maybeAuthValue actor
            Left  a -> throwIO . SomeKontraException
                       $ badInput $ "Invalid authentication method: `" ++ a ++ "` was given. "
                         ++ "Supported values are: `standard`, `eleg`, `sms_pin`."
@@ -862,7 +864,12 @@ apiCallV1DownloadMainFile did _nameForBrowser = api $ do
 
   doc <- do
            case (msid, mmh, maccesstoken) of
-            (Just sid, Just mh, _) -> dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+            (Just sid, Just mh, _) -> do
+              (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
+                sl <- apiGuardJustM  (serverError "Signatory does not exist") $ getSigLinkFor sid <$> theDocument
+                whenM (signatoryNeedsToIdentifyToView sl) $ do
+                  throwIO . SomeKontraException $ forbidden "Authorization to view is needed"
+                theDocument
             (_, _, Just _) -> getDocByDocIDEx did maccesstoken
             _ ->  do
                   (user, _actor, external) <- getAPIUser APIDocCheck
@@ -897,7 +904,12 @@ apiCallV1DownloadFile did fileid nameForBrowser = api $ do
   mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
   doc <- do
            case (msid, mmh, maccesstoken) of
-            (Just sid, Just mh, _) -> dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+            (Just sid, Just mh, _) -> do
+              (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
+                sl <- apiGuardJustM  (serverError "Signatory does not exist") $ getSigLinkFor sid <$> theDocument
+                whenM (signatoryNeedsToIdentifyToView sl) $ do
+                  throwIO . SomeKontraException $ forbidden "Authorization to view is needed"
+                theDocument
             (_, _, Just _accesstoken) -> getDocByDocIDEx did maccesstoken
             _ ->  do
                   (user, _actor, external) <- getAPIUser APIDocCheck
@@ -1070,7 +1082,7 @@ apiCallV1SendSMSPinCode did slid = api $ do
     sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
     whenM (not . isPending <$> theDocument) $ do
        throwIO . SomeKontraException $ serverError "SMS pin code can't be sent to document that is not pending"
-    when (SMSPinAuthentication /= signatorylinkauthenticationmethod sl) $ do
+    when (SMSPinAuthenticationToSign /= signatorylinkauthenticationtosignmethod sl) $ do
        throwIO . SomeKontraException $ serverError "SMS pin code can't be sent to this signatory"
     phone <- apiGuardJustM (badInput "Phone number is no valid.") $ getOptionalField  asValidPhone "phone"
     pin <- dbQuery $ GetSignatoryPin slid phone

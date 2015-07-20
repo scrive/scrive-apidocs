@@ -47,21 +47,36 @@ return React.createClass({
       {name: localization.designview.addParties.roleViewer, value: "viewer"}
     ];
   },
-  authenticationText: function (t) {
+  authenticationToViewText: function (t) {
     if (t == "standard") {
-      return localization.designview.addParties.authenticationStandard;
-    } else if (t == "eleg") {
-      return localization.designview.addParties.authenticationELeg;
-    } else if (t == "sms_pin") {
-      return localization.designview.addParties.authenticationSMSPin;
+      return localization.designview.addParties.authenticationToViewStandard;
+    } else if (t == "se_bankid") {
+      return localization.designview.addParties.authenticationToViewSEBankID;
     }
   },
-  authenticationOptions: function () {
+  authenticationToViewOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes = ["standard", "eleg", "sms_pin"];
+    var authTypes =  sig.signs() ? ["standard", "se_bankid"] : ["standard"];
     return _.map(authTypes, function (t) {
-      return {name: self.authenticationText(t), value:t};
+      return {name: self.authenticationToViewText(t), value:t};
+    });
+  },
+  authenticationToSignText: function (t) {
+    if (t == "standard") {
+      return localization.designview.addParties.authenticationToSignStandard;
+    } else if (t == "eleg") {
+      return localization.designview.addParties.authenticationToSignSEBankID;
+    } else if (t == "sms_pin") {
+      return localization.designview.addParties.authenticationToSignSMSPin;
+    }
+  },
+  authenticationToSignOptions: function () {
+    var self = this;
+    var sig = this.props.model;
+    var authTypes = sig.signs() ? ["standard", "eleg", "sms_pin"] : ["standard"];
+    return _.map(authTypes, function (t) {
+      return {name: self.authenticationToSignText(t), value:t};
     });
   },
   confirmationDeliveryText: function (t) {
@@ -96,7 +111,7 @@ return React.createClass({
           <Select
             ref="order-select"
             name={LanguageService.localizedOrdinal(sig.signorder())}
-            width={178}
+            width={148}
             options={self.signorderOptions()}
             onSelect={function (v) {
               mixpanel.track("Choose sign order", {
@@ -112,7 +127,7 @@ return React.createClass({
           <Select
             ref="delivery-select"
             name={self.deliveryText(sig.isLastViewer() ? "none" : sig.delivery())}
-            width={178}
+            width={148}
             options={self.deliveryOptions()}
             onSelect={function (v) {
               mixpanel.track("Choose delivery method", {
@@ -126,6 +141,22 @@ return React.createClass({
         </span>
 
         <span className="design-view-action-participant-details-participation-box">
+          <label className="label">{localization.designview.addParties.authenticationToView}</label>
+          <Select
+            ref="delivery-select"
+            name={self.authenticationToViewText(sig.signs() ? sig.authenticationToView() : "standard")}
+            width={148}
+            options={self.authenticationToViewOptions()}
+            onSelect={function (v) {
+              mixpanel.track("Choose auth", {
+                Where: "select"
+              });
+              sig.setAuthenticationToView(v);
+            }}
+          />
+        </span>
+
+        <span className="design-view-action-participant-details-participation-box">
           <label className="label">{localization.designview.addParties.role}</label>
           <Select
             ref="role-select"
@@ -134,7 +165,7 @@ return React.createClass({
               localization.designview.addParties.roleSignatory :
               localization.designview.addParties.roleViewer
             }
-            width={178}
+            width={148}
             options={self.roleOptions()}
             onSelect={function (v) {
               mixpanel.track("Choose participant role", {
@@ -150,17 +181,17 @@ return React.createClass({
         </span>
 
         <span className="design-view-action-participant-details-participation-box">
-          <label className="label">{localization.designview.addParties.authentication}</label>
+          <label className="label">{localization.designview.addParties.authenticationToSign}</label>
           <Select
             ref="authentication-select"
-            name={self.authenticationText(sig.authentication())}
-            width={178}
-            options={self.authenticationOptions()}
+            name={self.authenticationToSignText(sig.signs() ? sig.authenticationToSign() : "standard")}
+            width={148}
+            options={self.authenticationToSignOptions()}
             onSelect={function (v) {
               mixpanel.track("Choose auth", {
                 Where: "select"
               });
-              sig.setAuthentication(v);
+              sig.setAuthenticationToSign(v);
             }}
           />
         </span>
@@ -170,7 +201,7 @@ return React.createClass({
           <Select
             ref="confirmation-delivery-select"
             name={self.confirmationDeliveryText(sig.confirmationdelivery())}
-            width={178}
+            width={148}
             options={self.confirmationDeliveryOptions()}
             onSelect={function (v) {
               mixpanel.track("Choose confirmation delivery method", {

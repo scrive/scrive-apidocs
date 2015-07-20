@@ -58,6 +58,7 @@ docControlTests env = testGroup "DocControl" [
   , testThat "We can't get json for evidence attachments if we are not logged in" env testGetEvidenceAttachmentsNotLoggedIn
   , testThat "Document bulk delete works fast" env testDocumentDeleteInBulk
   , testThat "Download file and download main file obey access rights" env testDownloadFile
+  , testThat "Download file and download main file blocked if authorization to view is needed" env testDownloadFileWithAuthToView
 
   , testThat "Signview branding generation block nasty input " env testSignviewBrandingBlocksNastyInput
   , testThat "We can download signview branding if we have access to document" env testDownloadSignviewBrandingAccess
@@ -194,7 +195,7 @@ testSigningWithPin = do
               signatorysignorder = SignOrder 1
             , signatoryisauthor = False
             , signatoryispartner = True
-            , signatorylinkauthenticationmethod = SMSPinAuthentication
+            , signatorylinkauthenticationtosignmethod = SMSPinAuthenticationToSign
             , signatorylinkdeliverymethod = MobileDelivery
             , signatoryfields = [
                 fieldForTests (NameFI (NameOrder 1)) "Fred"
@@ -388,6 +389,28 @@ testDownloadFile = do
                   apiCallV1DownloadMainFile (documentid doc) "anything.pdf"
 
     sortOutResult "apiCallV1DownloadMainFile" shouldallow result2 comment
+
+
+testDownloadFileWithAuthToView :: TestEnv ()
+testDownloadFileWithAuthToView = do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  ctx <- mkContext def
+  doc <- addRandomDocumentWithAuthorAndCondition
+            user
+            (\d -> documentstatus d == Pending
+                     && length (documentsignatorylinks d) == 2
+                     && (signatorylinkauthenticationtoviewmethod (documentsignatorylinks d !! 1) /= StandardAuthenticationToView)
+                     && (not $ hasSigned (documentsignatorylinks d !! 1))
+                     && (isSignatory (documentsignatorylinks d !! 1))
+                     && case documenttype d of
+                         Signable -> True
+                         _ -> False)
+  let sl = $head $ reverse $ documentsignatorylinks $ doc
+  req1 <- mkRequest GET []
+  (_,ctx') <- runTestKontra req1 ctx $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+  req2 <- mkRequest GET [("signatorylinkid",inText $ show (signatorylinkid sl) )]
+  (res2,_) <- runTestKontra req2 ctx' $  apiCallV1DownloadMainFile  (documentid doc) "anything.pdf"
+  assertEqual "Response should be 403" 403 (rsCode res2)
 
 testSendingReminderClearsDeliveryInformation :: TestEnv ()
 testSendingReminderClearsDeliveryInformation = do

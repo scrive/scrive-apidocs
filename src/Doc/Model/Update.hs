@@ -8,7 +8,7 @@ module Doc.Model.Update
   , CancelDocument(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
   , ChangeSignatoryPhoneWhenUndelivered(..)
-  , ChangeAuthenticationMethod(..)
+  , ChangeAuthenticationToSignMethod(..)
   , CloseDocument(..)
   , DeleteSigAttachment(..)
   , RemoveOldDrafts(..)
@@ -138,7 +138,8 @@ insertSignatoryLinks did links = do
     sqlSetList "reject_redirect_url" $ signatorylinkrejectredirecturl <$> links
     sqlSetList "rejection_time" $ signatorylinkrejectiontime <$> links
     sqlSetList "rejection_reason" $ signatorylinkrejectionreason <$> links
-    sqlSetList "authentication_method" $ signatorylinkauthenticationmethod <$> links
+    sqlSetList "authentication_to_view_method" $ signatorylinkauthenticationtoviewmethod <$> links
+    sqlSetList "authentication_to_sign_method" $ signatorylinkauthenticationtosignmethod <$> links
     sqlSetList "delivery_method" $ signatorylinkdeliverymethod <$> links
     sqlSetList "confirmation_delivery_method" $ signatorylinkconfirmationdeliverymethod <$> links
     sqlResult "id"
@@ -491,19 +492,19 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeS
           (F.value "oldphone" oldphone >> F.value "newphone" phone)
           actor
 
-data ChangeAuthenticationMethod = ChangeAuthenticationMethod SignatoryLinkID AuthenticationMethod (Maybe String) Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeAuthenticationMethod () where
-  update (ChangeAuthenticationMethod slid newAuth mValue actor) = do
-    let extraInfoField StandardAuthentication = Nothing
-        extraInfoField ELegAuthentication     = Just PersonalNumberFI
-        extraInfoField SMSPinAuthentication   = Just MobileFI
+data ChangeAuthenticationToSignMethod = ChangeAuthenticationToSignMethod SignatoryLinkID AuthenticationToSignMethod (Maybe String) Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeAuthenticationToSignMethod () where
+  update (ChangeAuthenticationToSignMethod slid newAuth mValue actor) = do
+    let extraInfoField StandardAuthenticationToSign = Nothing
+        extraInfoField SEBankIDAuthenticationToSign     = Just PersonalNumberFI
+        extraInfoField SMSPinAuthenticationToSign   = Just MobileFI
     (oldAuth, sig) <- updateDocumentWithID $ const $ do
       -- Set the new authentication method in signatory_links
       -- Return the old authentication method
-      (oldAuth' :: AuthenticationMethod) <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "signatory_links" $ do
+      (oldAuth' :: AuthenticationToSignMethod) <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "signatory_links" $ do
         sqlFrom "signatory_links AS signatory_links_old"
-        sqlSet "authentication_method" newAuth
-        sqlResult "signatory_links_old.authentication_method"
+        sqlSet "authentication_to_sign_method" newAuth
+        sqlResult "signatory_links_old.authentication_to_sign_method"
         sqlWhere "signatory_links.id = signatory_links_old.id"
         sqlWhereEq "signatory_links.id" slid
         sqlWhereExists $ sqlSelect "documents" $ do
@@ -570,12 +571,12 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
     let insertEvidence e = void $ update $ InsertEvidenceEvent e
           (F.value "signatory" (getSmartName sig)) actor
     case (oldAuth, newAuth) of
-         (StandardAuthentication, ELegAuthentication)   -> insertEvidence ChangeAuthenticationMethodStandardToELegEvidence
-         (StandardAuthentication, SMSPinAuthentication) -> insertEvidence ChangeAuthenticationMethodStandardToSMSEvidence
-         (ELegAuthentication, StandardAuthentication)   -> insertEvidence ChangeAuthenticationMethodELegToStandardEvidence
-         (ELegAuthentication, SMSPinAuthentication)     -> insertEvidence ChangeAuthenticationMethodELegToSMSEvidence
-         (SMSPinAuthentication, StandardAuthentication) -> insertEvidence ChangeAuthenticationMethodSMSToStandardEvidence
-         (SMSPinAuthentication, ELegAuthentication)     -> insertEvidence ChangeAuthenticationMethodSMSToElegEvidence
+         (StandardAuthenticationToSign, SEBankIDAuthenticationToSign)   -> insertEvidence ChangeAuthenticationToSignMethodStandardToSEBankIDEvidence
+         (StandardAuthenticationToSign, SMSPinAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodStandardToSMSEvidence
+         (SEBankIDAuthenticationToSign, StandardAuthenticationToSign)   -> insertEvidence ChangeAuthenticationToSignMethodSEBankIDToStandardEvidence
+         (SEBankIDAuthenticationToSign, SMSPinAuthenticationToSign)     -> insertEvidence ChangeAuthenticationToSignMethodSEBankIDToSMSEvidence
+         (SMSPinAuthenticationToSign, StandardAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodSMSToStandardEvidence
+         (SMSPinAuthenticationToSign, SEBankIDAuthenticationToSign)     -> insertEvidence ChangeAuthenticationToSignMethodSMSToSEBankIDEvidence
          _ -> return()
 
 data PreparationToPending = PreparationToPending Actor TimeZoneName
@@ -817,7 +818,8 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                               , signatoryattachments         = signatoryattachments sl
                               , signatorylinksignredirecturl = signatorylinksignredirecturl sl
                               , signatorylinkrejectredirecturl = signatorylinkrejectredirecturl sl
-                              , signatorylinkauthenticationmethod = signatorylinkauthenticationmethod sl
+                              , signatorylinkauthenticationtoviewmethod = signatorylinkauthenticationtoviewmethod sl
+                              , signatorylinkauthenticationtosignmethod = signatorylinkauthenticationtosignmethod sl
                               , signatorylinkdeliverymethod       = signatorylinkdeliverymethod sl
                               , maybesignatory = if (isAuthor sl) then maybesignatory sl else Nothing
                           }
@@ -1060,9 +1062,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
            sqlWhereSignatoryIsPartner
            sqlWhereSignatoryHasNotSigned
            case (mesig, mpin) of
-             (Just _, _) -> sqlWhereSignatoryAuthenticationMethodIs ELegAuthentication
-             (_, Just _) -> sqlWhereSignatoryAuthenticationMethodIs SMSPinAuthentication -- We should check pin here, but for now we do it in controler
-             (Nothing, Nothing) -> sqlWhereSignatoryAuthenticationMethodIs StandardAuthentication
+             (Just _, _) -> sqlWhereSignatoryAuthenticationToSignMethodIs SEBankIDAuthenticationToSign
+             (_, Just _) -> sqlWhereSignatoryAuthenticationToSignMethodIs SMSPinAuthenticationToSign -- We should check pin here, but for now we do it in controler
+             (Nothing, Nothing) -> sqlWhereSignatoryAuthenticationToSignMethodIs StandardAuthenticationToSign
            sqlWhereSignatoryLinkMagicHashIs mh
       updateMTimeAndObjectVersion (actorTime actor)
     sl <- theDocumentID >>= \docid -> query $ GetSignatoryLinkByID docid slid Nothing
@@ -1077,7 +1079,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
             F.value "signatory_name" bidsSignatoryName
             F.value "signatory_personal_number" bidsSignatoryPersonalNumber
             F.value "signed_text" bidsSignedText
-            F.value "provider" ("BankID" :: String)
+            F.value "provider" ("Swedish BankID" :: String)
             F.value "signature" $ B64.encode . unBinary $ bidsSignature
             F.value "ocsp_response" $ B64.encode . unBinary $ bidsOcspResponse
           (Nothing, Just _) -> do
@@ -1596,7 +1598,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "signatorysignorder" (signatorysignorder)
                          , checkEqualBy "signatorylinkrejectiontime" signatorylinkrejectiontime
                          , checkEqualBy "signatorylinkrejectionreason" signatorylinkrejectionreason
-                         , checkEqualBy "signatorylinkauthenticationmethod" signatorylinkauthenticationmethod
+                         , checkEqualBy "signatorylinkauthenticationtosignmethod" signatorylinkauthenticationtosignmethod
                          , checkEqualBy "signatorylinkdeliverymethod" signatorylinkdeliverymethod
                          ]
 

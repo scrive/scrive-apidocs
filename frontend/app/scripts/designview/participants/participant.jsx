@@ -1,11 +1,11 @@
 /** @jsx React.DOM */
 
 define(["legacy_code", "React", "designview/participants/ordericon", "designview/participants/roleicon",
-        "designview/participants/deliveryicon", "designview/participants/authicon",
-        "designview/participants/confirmationdeliveryicon", "designview/participants/participantsettings",
-        "designview/participants/participantfields"],
+        "designview/participants/authtoviewicon", "designview/participants/deliveryicon",
+        "designview/participants/authtosignicon", "designview/participants/confirmationdeliveryicon",
+        "designview/participants/participantsettings", "designview/participants/participantfields"],
 function (_Legacy, React, OrderIcon, RoleIcon,
-          DeliveryIcon, AuthIcon,
+          AuthToViewIcon, DeliveryIcon, AuthToSignIcon,
           ConfirmationDeliveryIcon, ParticipantSettings,
           ParticipantFields) {
 
@@ -115,8 +115,9 @@ return React.createClass({
             </div>
             <OrderIcon model={sig}/>
             <DeliveryIcon model={sig}/>
+            <AuthToViewIcon model={sig}/>
             <RoleIcon model={sig}/>
-            <AuthIcon model={sig}/>
+            <AuthToSignIcon model={sig}/>
             <ConfirmationDeliveryIcon model={sig}/>
           </div>
           <div className="design-view-action-participant-details">

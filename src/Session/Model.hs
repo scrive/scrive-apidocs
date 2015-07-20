@@ -65,29 +65,36 @@ getCurrentSession = withRqData currentSessionInfoCookies $ getSessionFromCookies
         Nothing  -> getSessionFromCookies css
     getSessionFromCookies [] = emptySession
 
-updateSession :: (FilterMonad Response m, MonadLog m, MonadDB m, MonadThrow m, ServerMonad m, MonadIO m) => Session -> Session -> m ()
-updateSession old_ses ses = do
-  case sesID ses == tempSessionID of
-    -- if session id is temporary, but its data is not empty, insert it into db
-    True | not (isSessionEmpty ses) -> do
-      when (isNothing (sesUserID old_ses) && isJust (sesUserID ses)) $ do
-        let uid = $fromJust $ sesUserID ses
-        n <- deleteSuperfluousUserSessions uid
-        logInfo_ $ show n ++ " superfluous sessions of user with id = " ++ show uid ++ " removed from the database"
+updateSession :: (FilterMonad Response m, MonadLog m, MonadDB m, MonadThrow m, ServerMonad m, MonadIO m) => Session -> SessionID -> (Maybe UserID) -> (Maybe UserID) -> m ()
+updateSession old_ses new_ses_id new_muser new_mpad_user = do
+  case new_ses_id == tempSessionID of
+    -- We have no session and we want to log in some user
+    True | (isJust new_muser || isJust new_mpad_user) -> do
+      let uid = $fromJust $ (new_muser `mplus` new_mpad_user)
+      n <- deleteSuperfluousUserSessions uid
+      logInfo_ $ show n ++ " superfluous sessions of user with id = " ++ show uid ++ " removed from the database"
       expires <- sessionNowModifier `liftM` currentTime
-      let Session{..} = ses
-      dbUpdate (NewAction session expires (sesUserID, sesPadUserID, sesToken, sesCSRFToken, sesDomain))
+      dbUpdate (NewAction session expires (new_muser, new_mpad_user, sesToken old_ses, sesCSRFToken old_ses, sesDomain old_ses))
         >>= startSessionCookie
-    _ | old_ses /= ses -> do
-      success <- dbUpdate $ UpdateAction session ses
-      -- if below condition is met, that means empty session was inserted
-      -- into the database (with getNonTempSessionID) to allow inserting
-      -- document token/eid transaction, but cookie wasn't created, so
-      -- we need to create it here.
-      when (sesID old_ses == tempSessionID && sesID ses /= tempSessionID) $
-        startSessionCookie ses
-      when (not success) $
-        logInfo_ "UpdateAction didn't update session where it should have to"
+    -- We have no session and we don't want to log in some user
+    True -> return ()
+    -- We are updating existing session
+    False | sesID old_ses == new_ses_id -> do
+      when (sesUserID old_ses /= new_muser || sesPadUserID old_ses /= new_mpad_user) $ do
+        success <- dbUpdate $ UpdateAction session old_ses { sesUserID = new_muser, sesPadUserID = new_mpad_user}
+        when (not success) $
+          logInfo_ "UpdateAction didn't update session where it should have to (existing session)"
+    -- We got new session - now we need to generate a cookie for it. We also update it with users logged in durring this handler.
+    False | sesID old_ses /= new_ses_id -> do
+      mses <- dbQuery $ GetAction session new_ses_id
+      case mses of
+        Nothing -> logInfo_ "updateSession failed while trying to switch session"
+        Just sess -> do
+          let new_sess = sess { sesUserID = new_muser, sesPadUserID = new_mpad_user}
+          success <- dbUpdate $ UpdateAction session new_sess
+          startSessionCookie new_sess
+          when (not success) $
+            logInfo_ "UpdateAction didn't update session where it should have to"
     _ -> return ()
 
 getUserFromSession :: (MonadDB m, MonadThrow m) => Session -> m (Maybe User)
@@ -102,9 +109,6 @@ getPadUserFromSession Session{sesPadUserID} = case sesPadUserID of
 
 sessionNowModifier :: UTCTime -> UTCTime
 sessionNowModifier = (720 `minutesAfter`)
-
-isSessionEmpty :: Session -> Bool
-isSessionEmpty Session{..} = isNothing sesUserID && isNothing sesPadUserID
 
 getSession :: (MonadDB m, MonadThrow m, MonadTime m) => SessionID -> MagicHash -> String -> m (Maybe Session)
 getSession sid token domain = runMaybeT $ do

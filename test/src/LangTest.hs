@@ -80,29 +80,26 @@ testDocumentLangSwitchToEnglish :: TestEnv ()
 testDocumentLangSwitchToEnglish = do
   user <- createTestUser LANG_SV
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  doc <- createTestElegDoc user (ctxtime ctx)
+  doc <- createTestDoc user (ctxtime ctx)
 
   --make sure the doc lang matches the author lang
   assertEqual "Initial lang is Swedish" LANG_SV (getLang doc)
 
-  -- check that eleg is used
-  --assertEqual "Eleg is used" ELegAuthentication (documentauthenticationmethod doc)
 
 testDocumentLangSwitchToSwedish :: TestEnv ()
 testDocumentLangSwitchToSwedish = do
   user <- createTestUser LANG_EN
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  doc <- createTestElegDoc user (ctxtime ctx)
+  doc <- createTestDoc user (ctxtime ctx)
 
   -- make sure the doc lang matches the author's lang
   assertEqual "Initial lang is English" LANG_EN (getLang doc)
 
 
-createTestElegDoc :: User -> UTCTime -> TestEnv Document
-createTestElegDoc user _ctxtime = do
+createTestDoc :: User -> UTCTime -> TestEnv Document
+createTestDoc user _ctxtime = do
   doc <- addRandomDocumentWithAuthorAndCondition user
            (\d -> documentstatus d == Preparation)
-  --True <- dbUpdate $ SetDocumentAuthenticationMethod (documentid doc) ELegAuthentication (systemActor ctxtime)
   dbQuery $ GetDocumentByDocumentID $ documentid doc
 
 createTestUser :: Lang -> TestEnv User

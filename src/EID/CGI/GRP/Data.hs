@@ -1,11 +1,15 @@
 module EID.CGI.GRP.Data (
     BankIDSignature(..)
+  , BankIDAuthentication(..)
   , GrpFault(..)
   , xpGrpFault
+  , AuthRequest(..)
   , SignRequest(..)
   , AutoStartToken
   , unAutoStartToken
+  , AuthResponse(..)
   , SignResponse(..)
+  , xpAuthResponse
   , xpSignResponse
   , CollectRequest(..)
   , ProgressStatus(..)
@@ -24,6 +28,7 @@ import qualified Data.Text as T
 import DB hiding (InternalError)
 import KontraPrelude
 import Network.SOAP.Call
+import Session.Cookies
 
 -- | Final BankID signature.
 data BankIDSignature = BankIDSignature {
@@ -33,6 +38,15 @@ data BankIDSignature = BankIDSignature {
 , bidsSignature               :: !(Binary ByteString)
 , bidsOcspResponse            :: !(Binary ByteString)
 } deriving (Eq, Ord, Show)
+
+-- | Final BankID signature.
+data BankIDAuthentication = BankIDAuthentication {
+  bidaSignatoryName           :: !Text
+, bidaSignatoryPersonalNumber :: !Text
+, bidaSignature               :: !(Binary ByteString)
+, bidaOcspResponse            :: !(Binary ByteString)
+} deriving (Eq, Ord, Show)
+
 
 ----------------------------------------
 
@@ -89,6 +103,25 @@ xpGrpFault = XMLParser $ \c -> listToMaybe $ c
 
 ----------------------------------------
 
+-- | Auth action request.
+data AuthRequest = AuthRequest {
+  arqPolicy          :: !Text
+, arqDisplayName     :: !Text
+, arqPersonalNumber  :: !Text
+, arqProvider        :: !Text
+} deriving (Eq, Ord, Show)
+
+-- | Construct SOAP request from the 'AuthRequest'.
+instance ToXML AuthRequest where
+  toXML AuthRequest{..} =
+    element "{http://funktionstjanster.se/grp/service/v1.0.0/}AuthenticateRequest" $ do
+      element "policy" arqPolicy
+      element "displayName" arqDisplayName
+      element "personalNumber" arqPersonalNumber
+      element "provider" arqProvider
+
+----------------------------------------
+
 -- | Sign action request.
 data SignRequest = SignRequest {
   srqPolicy          :: !Text
@@ -116,13 +149,38 @@ newtype AutoStartToken = AutoStartToken Text
 unAutoStartToken :: AutoStartToken -> Text
 unAutoStartToken (AutoStartToken t) = t
 
-instance Unjson AutoStartToken where
-  unjsonDef = objectOf $ AutoStartToken
-    <$> field "auto_start_token"
-        unAutoStartToken
+
+-- With autostart token we always return session id - so bankid app can bag user back to service
+instance Unjson (AutoStartToken,SessionCookieInfo) where
+  unjsonDef = objectOf $ (pure $ \at si -> (AutoStartToken at, si))
+    <*> field "auto_start_token"
+        (unAutoStartToken . fst)
         "Token for starting the application"
+    <*> fieldBy "session_id"
+        snd
+        "Token for starting the application"
+        (unjsonInvmapR ((maybe (fail "SessionCookieInfo")  return) . maybeRead) (show :: SessionCookieInfo -> String) unjsonDef)
 
 ----------------------------------------
+
+-- | Auth action response.
+data AuthResponse = AuthResponse {
+  arsTransactionID  :: !Text
+, arsOrderRef       :: !Text
+, arsAutoStartToken :: !AutoStartToken
+} deriving (Eq, Ord, Show)
+
+-- | Retrieve 'SignResponse' from SOAP response.
+xpAuthResponse :: XMLParser AuthResponse
+xpAuthResponse = XMLParser $ \c -> listToMaybe $ c
+  $/ laxElement "AuthenticateResponse" &| \sr -> AuthResponse {
+      arsTransactionID  = readT "transactionId"  sr
+    , arsOrderRef       = readT "orderRef"       sr
+    , arsAutoStartToken = AutoStartToken $ readT "AutoStartToken" sr
+    }
+
+----------------------------------------
+
 
 -- | Sign action response.
 data SignResponse = SignResponse {

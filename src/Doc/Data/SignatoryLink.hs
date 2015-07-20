@@ -4,7 +4,8 @@ module Doc.Data.SignatoryLink (
   , SignInfo(..)
   , DeliveryStatus(..)
   , CSVUpload(..)
-  , AuthenticationMethod(..)
+  , AuthenticationToViewMethod(..)
+  , AuthenticationToSignMethod(..)
   , DeliveryMethod(..)
   , ConfirmationDeliveryMethod(..)
   , SignatoryLink(..)
@@ -94,33 +95,60 @@ instance ToSQL [[String]] where
 
 ---------------------------------
 
-data AuthenticationMethod
-  = StandardAuthentication
-  | ELegAuthentication
-  | SMSPinAuthentication
+data AuthenticationToViewMethod
+  = StandardAuthenticationToView
+  | SEBankIDAuthenticationToView
     deriving (Eq, Ord, Show)
 
-instance PQFormat AuthenticationMethod where
+instance PQFormat AuthenticationToViewMethod where
   pqFormat = const $ pqFormat ($undefined::Int16)
 
-instance FromSQL AuthenticationMethod where
-  type PQBase AuthenticationMethod = PQBase Int16
+instance FromSQL AuthenticationToViewMethod where
+  type PQBase AuthenticationToViewMethod = PQBase Int16
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
-      1 -> return StandardAuthentication
-      2 -> return ELegAuthentication
-      3 -> return SMSPinAuthentication
+      1 -> return StandardAuthenticationToView
+      2 -> return SEBankIDAuthenticationToView
+      _ -> throwM RangeError {
+        reRange = [(1, 2)]
+      , reValue = n
+      }
+
+instance ToSQL AuthenticationToViewMethod where
+  type PQDest AuthenticationToViewMethod = PQDest Int16
+  toSQL StandardAuthenticationToView      = toSQL (1::Int16)
+  toSQL SEBankIDAuthenticationToView      = toSQL (2::Int16)
+
+---------------------------------
+
+data AuthenticationToSignMethod
+  = StandardAuthenticationToSign
+  | SEBankIDAuthenticationToSign
+  | SMSPinAuthenticationToSign
+    deriving (Eq, Ord, Show)
+
+instance PQFormat AuthenticationToSignMethod where
+  pqFormat = const $ pqFormat ($undefined::Int16)
+
+instance FromSQL AuthenticationToSignMethod where
+  type PQBase AuthenticationToSignMethod = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return StandardAuthenticationToSign
+      2 -> return SEBankIDAuthenticationToSign
+      3 -> return SMSPinAuthenticationToSign
       _ -> throwM RangeError {
         reRange = [(1, 3)]
       , reValue = n
       }
 
-instance ToSQL AuthenticationMethod where
-  type PQDest AuthenticationMethod = PQDest Int16
-  toSQL StandardAuthentication = toSQL (1::Int16)
-  toSQL ELegAuthentication     = toSQL (2::Int16)
-  toSQL SMSPinAuthentication   = toSQL (3::Int16)
+instance ToSQL AuthenticationToSignMethod where
+  type PQDest AuthenticationToSignMethod = PQDest Int16
+  toSQL StandardAuthenticationToSign      = toSQL (1::Int16)
+  toSQL SEBankIDAuthenticationToSign = toSQL (2::Int16)
+  toSQL SMSPinAuthenticationToSign        = toSQL (3::Int16)
 
 ---------------------------------
 
@@ -225,7 +253,8 @@ data SignatoryLink = SignatoryLink {
 , signatorylinkrejectredirecturl          :: !(Maybe String)
 , signatorylinkrejectiontime              :: !(Maybe UTCTime)
 , signatorylinkrejectionreason            :: !(Maybe String)
-, signatorylinkauthenticationmethod       :: !AuthenticationMethod
+, signatorylinkauthenticationtoviewmethod :: !AuthenticationToViewMethod
+, signatorylinkauthenticationtosignmethod :: !AuthenticationToSignMethod
 , signatorylinkdeliverymethod             :: !DeliveryMethod
 , signatorylinkconfirmationdeliverymethod :: !ConfirmationDeliveryMethod
 } deriving (Show)
@@ -252,7 +281,8 @@ instance Default SignatoryLink where
   , signatorylinkrejectredirecturl = Nothing
   , signatorylinkrejectiontime = Nothing
   , signatorylinkrejectionreason = Nothing
-  , signatorylinkauthenticationmethod = StandardAuthentication
+  , signatorylinkauthenticationtoviewmethod = StandardAuthenticationToView
+  , signatorylinkauthenticationtosignmethod = StandardAuthenticationToSign
   , signatorylinkdeliverymethod = EmailDelivery
   , signatorylinkconfirmationdeliverymethod = EmailConfirmationDelivery
   }
@@ -283,18 +313,19 @@ signatoryLinksSelectors = [
   , "signatory_links.reject_redirect_url"
   , "signatory_links.rejection_time"
   , "signatory_links.rejection_reason"
-  , "signatory_links.authentication_method"
+  , "signatory_links.authentication_to_view_method"
+  , "signatory_links.authentication_to_sign_method"
   , "signatory_links.delivery_method"
   , "signatory_links.confirmation_delivery_method"
   ]
 
-type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationMethod, DeliveryMethod, ConfirmationDeliveryMethod)
+type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod)
 
 instance PQFormat SignatoryLink where
   pqFormat _ = "%signatory_link"
 
 instance CompositeFromSQL SignatoryLink where
-  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_method, delivery_method, confirmation_delivery_method) = SignatoryLink {
+  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method) = SignatoryLink {
     signatorylinkid = slid
   , signatoryfields = fields
   , signatoryisauthor = is_author
@@ -315,7 +346,8 @@ instance CompositeFromSQL SignatoryLink where
   , signatorylinkrejectredirecturl = mreject_redirect_url
   , signatorylinkrejectiontime = mrejection_time
   , signatorylinkrejectionreason = mrejection_reason
-  , signatorylinkauthenticationmethod = authentication_method
+  , signatorylinkauthenticationtoviewmethod = authentication_to_view_method
+  , signatorylinkauthenticationtosignmethod = authentication_to_sign_method
   , signatorylinkdeliverymethod = delivery_method
   , signatorylinkconfirmationdeliverymethod = confirmation_delivery_method
   }

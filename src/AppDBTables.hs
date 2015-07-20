@@ -20,6 +20,7 @@ import Doc.AutomaticReminder.Tables
 import Doc.SMSPin.Tables
 import Doc.Tables
 import Doc.Tokens.Tables
+import EID.Authentication.Tables
 import EID.CGI.GRP.Transaction.Tables
 import EID.Signature.Tables
 import EvidenceLog.Tables
@@ -108,6 +109,7 @@ kontraTables =
   , tableSignatorySMSPins
   , tableChargeableItems
   , tableThemeOwnership
+  , tableEIDAuthentications
   ] ++ cronTables
     ++ mailerTables
     ++ messengerTables

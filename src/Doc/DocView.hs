@@ -11,6 +11,7 @@ module Doc.DocView (
   , pageDocumentDesign
   , pageDocumentView
   , pageDocumentSignView
+  , pageDocumentIdentifyView
   , pageDocumentSignForPadView
   , pageDocumentPadList
   , pageDocumentPadListLogin
@@ -75,6 +76,19 @@ pageDocumentSignView ctx document siglink ad = do
       F.value "usestandardheaders" $ (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> ctxmaybeuser ctx)
       standardPageFields ctx mcompany ad
 
+pageDocumentIdentifyView :: Kontrakcja m
+                    => Context
+                    -> Document
+                    -> SignatoryLink
+                    -> AnalyticsData
+                    -> m String
+pageDocumentIdentifyView ctx document siglink ad = do
+  mcompany <- companyUIForPage
+  renderTemplate "pageDocumentIdentifyView" $ do
+      F.value "documentid" $ show $ documentid document
+      F.value "siglinkid" $ show $ signatorylinkid siglink
+      F.value "documenttitle" $ documenttitle document
+      standardPageFields ctx mcompany ad
 
 pageDocumentSignForPadView :: Kontrakcja m
                     => Context

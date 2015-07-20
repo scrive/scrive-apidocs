@@ -50,7 +50,7 @@ testSessionUpdate = do
   (Just sess, ctx) <- insertNewSession uid
   _ <- do
     rq <- mkRequest GET []
-    runTestKontra rq ctx $ updateSession sess (sess { sesPadUserID = Just uid })
+    runTestKontra rq ctx $ updateSession sess (sesID sess) (sesUserID sess) (Just uid)
   msess' <- getSession (sesID sess) (sesToken sess) (domainFromString $ defaultUri)
   assertBool "modified session successfully taken from the database" (isJust msess')
 
@@ -86,12 +86,14 @@ testElegTransactionInsertion = replicateM_ 10 $ do
 testElegTransactionUpdate :: TestEnv ()
 testElegTransactionUpdate = replicateM_ 10 $ do
   (Just trans, ctx) <- addCgiGrpTransaction
-  let newtrans = trans { cgtOrderRef = "new order ref" }
+  let newtrans = case trans of
+        (CgiGrpAuthTransaction slid tid orf sid) ->  (CgiGrpAuthTransaction slid tid orf sid)
+        (CgiGrpSignTransaction slid _ tid orf sid) -> (CgiGrpSignTransaction slid "new order ref"  tid orf sid)
   (mtrans', _) <- do
     rq <- mkRequest GET []
     runTestKontra rq ctx $ do
       dbUpdate $ MergeCgiGrpTransaction newtrans
-      dbQuery (GetCgiGrpTransaction $ cgtSignatoryLinkID trans)
+      dbQuery (GetCgiGrpTransaction (cgiTransactionType newtrans) (cgiSignatoryLinkID trans))
   assertBool "cgi grp transaction present is the database" $ isJust mtrans'
   let Just trans' = mtrans'
   assertBool "cgi grp transaction properly modified" $ newtrans == trans'
@@ -103,7 +105,7 @@ insertNewSession uid = do
     ctx <- mkContext def
     runTestKontra rq ctx $ do
       initialSession <- emptySession
-      updateSession initialSession (initialSession { sesUserID = Just uid })
+      updateSession initialSession  (sesID initialSession) (Just uid) Nothing
       return initialSession
   -- FIXME: this sucks, but there is no way to get id of newly inserted
   -- session and modifying normal code to get access to it seems like
@@ -125,20 +127,22 @@ addDocumentAndInsertToken = do
       sess <- emptySession
       dbUpdate $ AddDocumentSessionToken (signatorylinkid asl) (signatorymagichash asl)
       ctx' <- getContext
-      updateSession sess (sess { sesID = ctxsessionid ctx' })
+      updateSession sess (ctxsessionid ctx') (sesUserID sess) (sesPadUserID sess)
   return (author, doc, ctx)
+
 
 addCgiGrpTransaction :: TestEnv (Maybe CgiGrpTransaction, Context)
 addCgiGrpTransaction = do
   (_, doc, ctx) <- addDocumentAndInsertToken
   let Just asl = getAuthorSigLink doc
-  trans <- (\tr -> tr {
-      cgtSignatoryLinkID = signatorylinkid asl
-    }) <$> rand 20 arbitrary
+  trans_ <-rand 20 arbitrary
+  let trans = case trans_ of
+        (CgiGrpAuthTransaction _  tid orf _) ->  (CgiGrpAuthTransaction (signatorylinkid asl) tid orf $ ctxsessionid ctx)
+        (CgiGrpSignTransaction _  tbs tid orf _) -> (CgiGrpSignTransaction (signatorylinkid asl) tbs tid orf $ ctxsessionid ctx)
   rq <- mkRequest GET []
   runTestKontra rq ctx $ do
     dbUpdate $ MergeCgiGrpTransaction trans
-    dbQuery $ GetCgiGrpTransaction $ signatorylinkid asl
+    dbQuery $ GetCgiGrpTransaction (cgiTransactionType trans) $ signatorylinkid asl
 
 testUser :: TestEnv UserID
 testUser = do

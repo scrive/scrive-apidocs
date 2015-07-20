@@ -1,0 +1,194 @@
+.background_with_ie_support(@bcolor) {
+  @filter :  %("progid:DXImageTransform.Microsoft.gradient(startColorstr=%s,endColorstr=%s)",argb(@bcolor),argb(@bcolor));
+  background:transparent; /* Fallback IE */
+  filter: e(@filter);
+  background-color: @bcolor;
+}
+
+.global-table {
+  .background_with_ie_support(@brandcolor);
+}
+
+@content-breakpoint: 529px;
+@scrollbar-width: 15px;
+@content-width: @content-breakpoint - @scrollbar-width;
+
+@media (min-width: @content-breakpoint) {
+  .identify-content {
+    width: @content-width;
+  }
+}
+
+@media not all and (min-width: @content-breakpoint) {
+  .identify-content {
+    width: 100%;
+  }
+}
+
+.identify-content {
+  margin: 20px auto;
+
+
+  .identify-logo-box {
+    margin: 0 auto;
+    padding-bottom: 47px;
+    width: 276px;
+  }
+
+  .identify-logo-img {
+    display: block;
+    margin: 0 auto;
+    max-height: 53px;
+    max-width: 100%;
+  }
+
+  .identify-logo-text {
+    color: @brandtextcolor;
+    font-size: 17.58px;
+    font-weight: 400;
+    line-height: 10px;
+    text-align: center;
+  }
+
+  .identify-box {
+    .background_with_ie_support(#f1f1f1);
+  }
+
+  .identify-box-header {
+    color: #505050;
+    font-size: 26px;
+    font-weight: 300;
+    letter-spacing: 0.234px;
+    line-height: 26px;
+    padding: 26px 34px;
+    text-align: center;
+  }
+
+  .identify-box-content {
+    background-color: white;
+    color: #505050;
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 28px;
+    padding: 38px 48px;
+    text-align: center;
+  }
+
+  .identify-box-button {
+    .button {
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+
+  .identify-phone-number {
+    border-color: @actioncolor; /* Fallback IE */
+    border-color: fade(@actioncolor,60%);
+    margin-left: 15px;
+    width: 170px;
+
+    &:hover, &.active {
+      border-color: @actioncolor !important;
+    }
+
+    &.valid {
+      border-color: #ddd !important;
+    }
+  }
+
+  @media (min-width: @content-breakpoint) {
+    .identify-box-button-select {
+      &:first-child {
+        margin-right: 16px;
+      }
+
+      width: 134px;
+    }
+  }
+
+  @media not all and (min-width: @content-breakpoint) {
+    .identify-box-button-select {
+      &:first-child {
+        margin-bottom: 20px;
+      }
+
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+
+  .identify-box-checkbox {
+    color: #505050;
+    font-size: 18px;
+    font-weight: 300;
+    text-align: left;
+  }
+
+  .identify-box-heading {
+    color:  #505050;
+    font-size: 26px;
+    font-weight: 300;
+    line-height: 28px;
+    margin-bottom: 31px;
+    text-align: center;
+  }
+
+  .identify-box-spinner {
+    margin-bottom: 30px;
+  }
+
+  .identify-box-cancel {
+    color:  #505050;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 300;
+    margin: 0 auto;
+    text-align: center;
+    width: 70px;
+  }
+
+  .identify-box-footer {
+    color: #505050;
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 18px;
+    overflow: hidden;
+    padding: 37px 34px;
+    text-align: left;
+
+    b {
+      font-weight: 600;
+      margin-left: 2px;
+    }
+  }
+
+
+  @media (min-width: @content-breakpoint) {
+    .identify-box-footer-text {
+      float: left;
+      width: 70%;
+    }
+
+    .identify-box-footer-logo {
+      float: right;
+      line-height: 57px;
+    }
+  }
+
+
+  @media not all and (min-width: @content-breakpoint) {
+    .identify-box-footer-text {
+      text-align: center;
+    }
+
+    .identify-box-footer-logo {
+      margin-top: 25px;
+      text-align: center;
+    }
+  }
+
+  .identify-box-footer-text {
+    word-wrap: break-word;
+  }
+}

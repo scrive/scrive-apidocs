@@ -346,24 +346,24 @@ sqlWhereDocumentIsNotReallyDeleted = sqlWhereEVVVV (DocumentIsReallyDeleted,
 
 ------------------------------------------------------------
 
-data SignatoryAuthenticationDoesNotMatch = SignatoryAuthenticationDoesNotMatch DocumentID SignatoryLinkID AuthenticationMethod AuthenticationMethod
+data SignatoryAuthenticationToSignDoesNotMatch = SignatoryAuthenticationToSignDoesNotMatch DocumentID SignatoryLinkID AuthenticationToSignMethod AuthenticationToSignMethod
   deriving (Eq, Ord, Show, Typeable)
 
-instance ToJSValue SignatoryAuthenticationDoesNotMatch where
-  toJSValue (SignatoryAuthenticationDoesNotMatch did slid expected actual) = runJSONGen $ do
-    value "message" ("Signatory authentication method does not match" :: String)
+instance ToJSValue SignatoryAuthenticationToSignDoesNotMatch where
+  toJSValue (SignatoryAuthenticationToSignDoesNotMatch did slid expected actual) = runJSONGen $ do
+    value "message" ("Signatory authentication to sign method does not match" :: String)
     value "document_id" (show did)
     value "signatory_link_id" (show slid)
     value "expected" (show expected)
     value "actual" (show actual)
 
-instance KontraException SignatoryAuthenticationDoesNotMatch
+instance KontraException SignatoryAuthenticationToSignDoesNotMatch
 
-sqlWhereSignatoryAuthenticationMethodIs :: (MonadState v m, SqlWhere v)
-                                        => AuthenticationMethod -> m ()
-sqlWhereSignatoryAuthenticationMethodIs am =
-  sqlWhereEVVV (\did slid amact -> SignatoryAuthenticationDoesNotMatch did slid am amact,
+sqlWhereSignatoryAuthenticationToSignMethodIs :: (MonadState v m, SqlWhere v)
+                                        => AuthenticationToSignMethod -> m ()
+sqlWhereSignatoryAuthenticationToSignMethodIs am =
+  sqlWhereEVVV (\did slid amact -> SignatoryAuthenticationToSignDoesNotMatch did slid am amact,
                 "signatory_links.document_id",
                 "signatory_links.id",
-                "signatory_links.authentication_method")
-                ("signatory_links.authentication_method = " <?> am)
+                "signatory_links.authentication_to_sign_method")
+                ("signatory_links.authentication_to_sign_method = " <?> am)

@@ -48,6 +48,7 @@ import KontraMonad
 import KontraPrelude
 import MagicHash (MagicHash, unsafeMagicHash)
 import MinutesTime
+import Session.SessionID
 import System.Random.CryptoRNG ()
 import TestKontra
 import User.Email
@@ -183,7 +184,8 @@ instance Arbitrary SignatoryLink where
                 else return Nothing
 
     delivery <- arbitrary
-    authentication <- arbitrary
+    authenticationToSign <- arbitrary
+    authenticationToView <- arbitrary
     return $ def { signatorylinkid = unsafeSignatoryLinkID 0
                           , signatoryfields = fields
                           , signatoryisauthor = False
@@ -193,7 +195,8 @@ instance Arbitrary SignatoryLink where
                           , maybesigninfo              = signinfo
                           , maybeseeninfo              = seeninfo
                           , signatorylinkdeliverymethod = delivery
-                          , signatorylinkauthenticationmethod = authentication
+                          , signatorylinkauthenticationtosignmethod = authenticationToSign
+                          , signatorylinkauthenticationtoviewmethod = authenticationToView
                           }
 
 instance Arbitrary CSVUpload where
@@ -392,8 +395,11 @@ instance Arbitrary SignatoryTextField where
        , stfPlacements = p
     }
 
-instance Arbitrary AuthenticationMethod where
-  arbitrary = elements [StandardAuthentication, ELegAuthentication]
+instance Arbitrary AuthenticationToSignMethod where
+  arbitrary = elements [StandardAuthenticationToSign, SEBankIDAuthenticationToSign]
+
+instance Arbitrary AuthenticationToViewMethod where
+  arbitrary = elements [StandardAuthenticationToView, SEBankIDAuthenticationToView]
 
 instance Arbitrary DeliveryMethod where
   arbitrary = elements [EmailDelivery, PadDelivery]
@@ -438,11 +444,13 @@ instance Arbitrary User where
                    <*> pure (unsafeBrandedDomainID 0)
 
 instance Arbitrary CgiGrpTransaction where
-  arbitrary = CgiGrpTransaction
+  arbitrary = do
+    CgiGrpSignTransaction
     <$> arbitrary
     <*> (T.pack . fromSNN <$> arbitrary)
     <*> (T.pack . fromSNN <$> arbitrary)
     <*> (T.pack . fromSNN <$> arbitrary)
+    <*> (pure tempSessionID)
 
 instance Arbitrary BankIDSignature where
   arbitrary = BankIDSignature
@@ -504,7 +512,7 @@ signatoryLinkExample1 = def { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorylinksignredirecturl = Nothing
                                       , signatorylinkrejectiontime = Nothing
                                       , signatorylinkrejectionreason = Nothing
-                                      , signatorylinkauthenticationmethod = StandardAuthentication
+                                      , signatorylinkauthenticationtosignmethod = StandardAuthenticationToSign
                                       }
 
 testThat :: String -> TestEnvSt -> TestEnv () -> Test

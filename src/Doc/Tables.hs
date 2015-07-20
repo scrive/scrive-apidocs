@@ -186,7 +186,7 @@ ctSignatoryAttachment = CompositeType {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 27
+  , tblVersion = 28
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -206,12 +206,14 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "is_partner", colType = BoolT, colNullable = False }
     , tblColumn { colName = "rejection_time", colType = TimestampWithZoneT }
     , tblColumn { colName = "rejection_reason", colType = TextT }
-    , tblColumn { colName = "authentication_method", colType = SmallIntT, colNullable = False }
+    , tblColumn { colName = "authentication_to_sign_method", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "delivery_method", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "mail_invitation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }
     , tblColumn { colName = "sms_invitation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }
     , tblColumn { colName = "reject_redirect_url", colType = TextT }
     , tblColumn { colName = "confirmation_delivery_method", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
+    , tblColumn { colName = "authentication_to_view_method", colType = SmallIntT, colNullable = False }
+
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -250,7 +252,8 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "reject_redirect_url", ccType = TextT }
   , CompositeColumn { ccName = "rejection_time", ccType = TimestampWithZoneT }
   , CompositeColumn { ccName = "rejection_reason", ccType = TextT }
-  , CompositeColumn { ccName = "authentication_method", ccType = SmallIntT }
+  , CompositeColumn { ccName = "authentication_to_view_method", ccType = SmallIntT }
+  , CompositeColumn { ccName = "authentication_to_sign_method", ccType = SmallIntT }
   , CompositeColumn { ccName = "delivery_method", ccType = SmallIntT }
   , CompositeColumn { ccName = "confirmation_delivery_method", ccType = SmallIntT }
   ]

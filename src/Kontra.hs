@@ -7,6 +7,7 @@ module Kontra
     , clearFlashMsgs
     , logUserToContext
     , logPadUserToContext
+    , unsafeSessionTakeover
     , isAdmin
     , isSales
     , onlyAdmin
@@ -38,10 +39,14 @@ import Happstack.Server.ReqHandler
 import KontraError
 import KontraMonad
 import KontraPrelude
+import MagicHash
 import MailContext (MailContextMonad(..))
 import Mails.MailsConfig
+import Session.Data
+import Session.Model
 import Templates
 import User.Model
+import Utils.HTTP
 import qualified Amazon as AWS
 
 type InnerKontra = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (LogT IO)))))
@@ -140,6 +145,17 @@ logUserToContext user =
 logPadUserToContext :: Kontrakcja m => Maybe User -> m ()
 logPadUserToContext user =
     modifyContext $ \ctx -> ctx { ctxmaybepaduser = user}
+
+unsafeSessionTakeover :: Kontrakcja m => SessionID -> MagicHash -> m ()
+unsafeSessionTakeover sid stoken = do
+  domain <- currentDomain
+  msession <- getSession sid stoken domain
+  case msession of
+   Nothing -> internalError
+   Just s -> do
+    mUser <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesUserID s
+    mPadUser <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesPadUserID s
+    modifyContext $ \ctx -> ctx { ctxsessionid = sesID s, ctxmaybeuser = mUser, ctxmaybepaduser = mPadUser}
 
 switchLang :: Kontrakcja m => Lang -> m ()
 switchLang lang =

@@ -79,6 +79,7 @@
    "userid": "9206820953483508074",
    "signsuccessredirect": null,
    "rejectredirect": null,
+   "authenticationToView": "standard",
    "authentication": "standard"
   }
  ],

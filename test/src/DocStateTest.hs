@@ -205,7 +205,7 @@ docStateTests env = testGroup "DocState" [
   testThat "When document is signed it's status class is signed" env testStatusClassSignedWhenAllSigned,
   testThat "When document is pending and some invitation is undelivered it's status is undelivered" env testStatusClassSignedWhenAllSigned,
 
-  testThat "ChangeAuthenticationMethod works and evidence is as expected" env testChangeAuthenticationMethod
+  testThat "ChangeAuthenticationToSignMethod works and evidence is as expected" env testChangeAuthenticationToSignMethod
   ]
 
 testSealMissingSignatures :: TestEnv ()
@@ -302,7 +302,7 @@ testSignDocumentEvidenceLog = do
       isPending &&
       ((==) 2 . length . documentsignatorylinks) &&
       (all signatoryispartner . documentsignatorylinks) &&
-      (all ((==) StandardAuthentication . signatorylinkauthenticationmethod) . documentsignatorylinks)
+      (all ((==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod) . documentsignatorylinks)
     ) `withDocumentM` do
       Just asl <- getSigLinkFor (isAuthor::SignatoryLink->Bool) <$> theDocument
       randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid asl) (signatorymagichash asl) (systemActor t)
@@ -402,7 +402,7 @@ testDeleteSigAttachmentAlreadySigned = do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (    isSignable
                                                   && isPreparation
-                                                  && ((all (isSignatory && not .hasSigned && (==) StandardAuthentication . signatorylinkauthenticationmethod)) . documentsignatorylinks)
+                                                  && ((all (isSignatory && not .hasSigned && (==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod)) . documentsignatorylinks)
                                                   && (((==) 2) . length .documentsignatorylinks)) `withDocumentM` do
     file <- addNewRandomFile
     sl <- (\d -> (documentsignatorylinks d) !! 1) <$> theDocument
@@ -470,7 +470,7 @@ testChangeSignatoryEmailWhenUndeliveredEvidenceLog = do
 testCloseDocumentEvidenceLog :: TestEnv ()
 testCloseDocumentEvidenceLog = do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isSignable && isPending && (all ((==) StandardAuthentication . signatorylinkauthenticationmethod) . documentsignatorylinks)) `withDocumentM` do
+  addRandomDocumentWithAuthorAndCondition author (isSignable && isPending && (all ((==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod) . documentsignatorylinks)) `withDocumentM` do
     documentsignatorylinks <$> theDocument >>= \sls -> forM_  sls $ \sl -> when (isSignatory sl) $ do
       randomUpdate $ \t->MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
       randomUpdate $ \t->SignDocument (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
@@ -496,7 +496,7 @@ assertGoodNewDocument mcompany doctype title (user, time, doc) = do
     assertEqual "Doc modification time" time (documentmtime doc)
     assertEqual "No author attachments" [] (documentauthorattachments doc)
     assertEqual "No sig attachments" [] (concatMap signatoryattachments $ documentsignatorylinks doc)
-    assertBool "Uses email identification only" (all ((==) StandardAuthentication . signatorylinkauthenticationmethod) (documentsignatorylinks doc))
+    assertBool "Uses email identification only" (all ((==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod) (documentsignatorylinks doc))
     assertEqual "In preparation" Preparation (documentstatus doc)
     assertEqual "1 signatory" 1 (length $ documentsignatorylinks doc)
     let siglink = $head $ documentsignatorylinks doc
@@ -594,24 +594,24 @@ testRestoreArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
 
     assertNoArchivedSigLink =<< theDocument
 
-testChangeAuthenticationMethod :: TestEnv ()
-testChangeAuthenticationMethod = replicateM_ 10 $ do
+testChangeAuthenticationToSignMethod :: TestEnv ()
+testChangeAuthenticationToSignMethod = replicateM_ 10 $ do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (
       isSignable && isPending && ((<=) 2 . length . documentsignatorylinks)
-      && ( all ((==) StandardAuthentication . signatorylinkauthenticationmethod) . documentsignatorylinks)
+      && ( all ((==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod) . documentsignatorylinks)
     ) `withDocumentM` do
       Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
 
-      randomUpdate $ \t->ChangeAuthenticationMethod (signatorylinkid sl) SMSPinAuthentication Nothing (systemActor t)
+      randomUpdate $ \t->ChangeAuthenticationToSignMethod (signatorylinkid sl) SMSPinAuthenticationToSign Nothing (systemActor t)
       lg1 <- dbQuery . GetEvidenceLog  =<< theDocumentID
-      assertJust $ find (\e -> evType e == Current ChangeAuthenticationMethodStandardToSMSEvidence) lg1
+      assertJust $ find (\e -> evType e == Current ChangeAuthenticationToSignMethodStandardToSMSEvidence) lg1
       assertNothing $ find (\e -> evType e == Current UpdateFieldMobileEvidence) lg1
 
-      randomUpdate $ \t->ChangeAuthenticationMethod (signatorylinkid sl) SMSPinAuthentication (Just "+486543222112") (systemActor t)
+      randomUpdate $ \t->ChangeAuthenticationToSignMethod (signatorylinkid sl) SMSPinAuthenticationToSign (Just "+486543222112") (systemActor t)
       lg2 <- dbQuery . GetEvidenceLog  =<< theDocumentID
       assertEqual "Too many evidence logs for change authentication method"
-        (length $ filter (\e -> evType e == Current ChangeAuthenticationMethodStandardToSMSEvidence) lg2) 1
+        (length $ filter (\e -> evType e == Current ChangeAuthenticationToSignMethodStandardToSMSEvidence) lg2) 1
       assertJust $ find (\e -> evType e == Current UpdateFieldMobileEvidence) lg2
 
 --------------------------------------------------------------------------------
@@ -895,7 +895,7 @@ testSealDocument = replicateM_ 1 $ do
 
     forM_ sls $ \slk -> do
       when (signatoryispartner slk) $ do
-        if signatorylinkauthenticationmethod slk == ELegAuthentication
+        if signatorylinkauthenticationtosignmethod slk == SEBankIDAuthenticationToSign
           then do
              randomUpdate $ \info -> SignDocument (signatorylinkid slk) (signatorymagichash slk) (Just info) Nothing screenshots sa
           else do
@@ -980,14 +980,14 @@ testPreparationResetSignatoryDetails2Works = replicateM_ 10 $ do
     assertInvariants =<< theDocument
     sls <- documentsignatorylinks <$> theDocument
     assertEqual "Proper delivery method set" [EmailDelivery] (map signatorylinkdeliverymethod sls)
-    assertEqual "Proper authentication method set" [StandardAuthentication] (map signatorylinkauthenticationmethod sls)
+    assertEqual "Proper authentication method set" [StandardAuthenticationToSign] (map signatorylinkauthenticationtosignmethod sls)
 
-    let newData2 =  def { signatoryisauthor = True, maybesignatory = Just $ userid author , signatorylinkdeliverymethod = PadDelivery, signatorylinkauthenticationmethod = ELegAuthentication }
+    let newData2 =  def { signatoryisauthor = True, maybesignatory = Just $ userid author , signatorylinkdeliverymethod = PadDelivery, signatorylinkauthenticationtosignmethod= SEBankIDAuthenticationToSign }
     success2 <- dbUpdate $ ResetSignatoryDetails [newData2] (systemActor mt)
     assert success2
     sls2 <- documentsignatorylinks <$> theDocument
     assertEqual "Proper delivery method set" [PadDelivery] (map signatorylinkdeliverymethod sls2)
-    assertEqual "Proper authentication method set" [ELegAuthentication] (map signatorylinkauthenticationmethod sls2)
+    assertEqual "Proper authentication method set" [SEBankIDAuthenticationToSign] (map signatorylinkauthenticationtosignmethod sls2)
     assertInvariants =<< theDocument
 
 testNoDocumentResetSignatoryDetailsAlwaysLeft :: TestEnv ()
@@ -1316,8 +1316,8 @@ testSignDocumentSignablePendingRight :: TestEnv ()
 testSignDocumentSignablePendingRight = replicateM_ 10 $ do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (isSignable && isPending &&
-           any ((== StandardAuthentication) . signatorylinkauthenticationmethod && isSignatory && (not . hasSigned)) . documentsignatorylinks) `withDocumentM` do
-    Just sl <- find ((== StandardAuthentication) . signatorylinkauthenticationmethod && isSignatory && (not . hasSigned)) .documentsignatorylinks <$> theDocument
+           any ((== StandardAuthenticationToSign) . signatorylinkauthenticationtosignmethod&& isSignatory && (not . hasSigned)) . documentsignatorylinks) `withDocumentM` do
+    Just sl <- find ((== StandardAuthenticationToSign) . signatorylinkauthenticationtosignmethod&& isSignatory && (not . hasSigned)) .documentsignatorylinks <$> theDocument
     time <- rand 10 arbitrary
     randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
     randomUpdate $ SignDocument (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
@@ -1326,8 +1326,8 @@ testSignDocumentSignablePendingElegRight :: TestEnv ()
 testSignDocumentSignablePendingElegRight = replicateM_ 10 $ do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (isSignable && isPending &&
-           any ((== ELegAuthentication) . signatorylinkauthenticationmethod && isSignatory && (not . hasSigned)) . documentsignatorylinks) `withDocumentM` do
-    Just sl <- find ((== ELegAuthentication) . signatorylinkauthenticationmethod && isSignatory && (not . hasSigned)) . documentsignatorylinks <$> theDocument
+           any ((== SEBankIDAuthenticationToSign) . signatorylinkauthenticationtosignmethod&& isSignatory && (not . hasSigned)) . documentsignatorylinks) `withDocumentM` do
+    Just sl <- find ((== SEBankIDAuthenticationToSign) . signatorylinkauthenticationtosignmethod&& isSignatory && (not . hasSigned)) . documentsignatorylinks <$> theDocument
     time <- rand 10 arbitrary
     randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
     randomUpdate $ \signinfo -> SignDocument (signatorylinkid sl) (signatorymagichash sl) (Just signinfo) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
@@ -1812,7 +1812,7 @@ signatoryLinksAreAlmoustEqualForTests a b = and [
     , signatorylinkrejectredirecturl a == signatorylinkrejectredirecturl b
     , signatorylinkrejectiontime a == signatorylinkrejectiontime b
     , signatorylinkrejectionreason a == signatorylinkrejectionreason b
-    , signatorylinkauthenticationmethod a == signatorylinkauthenticationmethod b
+    , signatorylinkauthenticationtosignmethod a == signatorylinkauthenticationtosignmethod b
     , signatorylinkdeliverymethod a == signatorylinkdeliverymethod b
     , signatorylinkconfirmationdeliverymethod a == signatorylinkconfirmationdeliverymethod b
     ]

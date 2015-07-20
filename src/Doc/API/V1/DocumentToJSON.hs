@@ -75,10 +75,10 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.value "state" $ show $ documentstatus doc
       J.objects "signatories" $ map (signatoryJSON forapi forauthor doc msl) (documentsignatorylinks doc)
       J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
-      J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
-          [StandardAuthentication] -> ("standard"::String)
-          [ELegAuthentication]     -> "eleg"
-          [SMSPinAuthentication]   -> "sms_pin"
+      J.value "authentication" $ case nub (map signatorylinkauthenticationtosignmethod (documentsignatorylinks doc)) of
+          [StandardAuthenticationToSign] -> ("standard"::String)
+          [SEBankIDAuthenticationToSign] -> "eleg"
+          [SMSPinAuthenticationToSign]   -> "sms_pin"
           _                        -> "mixed"
       J.value "delivery" $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
           [EmailDelivery]   -> ("email"::String)
@@ -121,14 +121,20 @@ documentJSONV1 muser forapi forauthor msl doc = do
         J.value "canbeprolonged" $ isAuthor msl && ((documentstatus doc) `elem` [Timedout])
         J.value "canbecanceled" $ (isAuthor msl || fromMaybe False (useriscompanyadmin <$> muser)) && documentstatus doc == Pending
         J.value "canseeallattachments" $ isAuthor msl || fromMaybe False (useriscompanyadmin <$> muser)
-      J.value "accesstoken" $ show (documentmagichash doc)
+      J.value "accesstoken" $
+        if (isNothing msl || isAuthor msl)
+        then show (documentmagichash doc)
+        else ""
       J.value "timezone" $ toString $ documenttimezonename doc
+      
+authenticationToViewJSON :: AuthenticationToViewMethod -> JSValue
+authenticationToViewJSON StandardAuthenticationToView = toJSValue ("standard"::String)
+authenticationToViewJSON SEBankIDAuthenticationToView = toJSValue ("se_bankid"::String)
 
-authenticationJSON :: AuthenticationMethod -> JSValue
-authenticationJSON StandardAuthentication = toJSValue ("standard"::String)
-authenticationJSON ELegAuthentication     = toJSValue ("eleg"::String)
-authenticationJSON SMSPinAuthentication   = toJSValue ("sms_pin"::String)
-
+authenticationToSignJSON :: AuthenticationToSignMethod -> JSValue
+authenticationToSignJSON StandardAuthenticationToSign = toJSValue ("standard"::String)
+authenticationToSignJSON SEBankIDAuthenticationToSign     = toJSValue ("eleg"::String)
+authenticationToSignJSON SMSPinAuthenticationToSign   = toJSValue ("sms_pin"::String)
 
 signatoryJSON :: (MonadDB m, MonadThrow m, AWS.AmazonMonad m, MonadLog m, MonadBase IO m) => Bool -> Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON forapi forauthor doc viewer siglink = do
@@ -158,7 +164,8 @@ signatoryJSON forapi forauthor doc viewer siglink = do
     J.value "userid" $ show <$> maybesignatory siglink
     J.value "signsuccessredirect" $ signatorylinksignredirecturl siglink
     J.value "rejectredirect" $ signatorylinkrejectredirecturl siglink
-    J.value "authentication" $ authenticationJSON $ signatorylinkauthenticationmethod siglink
+    J.value "authenticationToView" $ authenticationToViewJSON $ signatorylinkauthenticationtoviewmethod siglink
+    J.value "authentication" $ authenticationToSignJSON $ signatorylinkauthenticationtosignmethod siglink
 
     when (not (isPreparation doc) && forauthor && forapi && signatorylinkdeliverymethod siglink == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc doc siglink
@@ -344,10 +351,10 @@ docFieldsListForJSON userid doc = do
                         Template -> ("template"::String)
                         Signable -> "signable"
     J.value "process" ("contract"::String) -- Constant. Need to leave it till we will change API version
-    J.value "authentication" $ case nub (map signatorylinkauthenticationmethod (documentsignatorylinks doc)) of
-      [StandardAuthentication] -> ("standard"::String)
-      [ELegAuthentication]     -> "eleg"
-      [SMSPinAuthentication]   -> "sms_pin"
+    J.value "authentication" $ case nub (map signatorylinkauthenticationtosignmethod (documentsignatorylinks doc)) of
+      [StandardAuthenticationToSign] -> ("standard"::String)
+      [SEBankIDAuthenticationToSign]     -> "eleg"
+      [SMSPinAuthenticationToSign]   -> "sms_pin"
       _                        -> "mixed"
     J.value "delivery" $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
       [EmailDelivery] -> ("email"::String)
@@ -383,10 +390,10 @@ signatoryFieldsListForJSON doc sl = do
     J.value "inpadqueue" $  False
     J.value "isauthor" $ isAuthor sl
     J.value "cansignnow" $ canSignatorySignNow doc sl
-    J.value "authentication" $ case signatorylinkauthenticationmethod sl of
-      StandardAuthentication -> ("standard"::String)
-      ELegAuthentication     -> "eleg"
-      SMSPinAuthentication   -> "sms_pin"
+    J.value "authentication" $ case signatorylinkauthenticationtosignmethod sl of
+      StandardAuthenticationToSign -> ("standard"::String)
+      SEBankIDAuthenticationToSign -> "eleg"
+      SMSPinAuthenticationToSign   -> "sms_pin"
 
     J.value "delivery" $ signatorylinkdeliverymethod sl
     where
@@ -394,7 +401,6 @@ signatoryFieldsListForJSON doc sl = do
         seen = signtime <$> maybeseeninfo sl
         reject = signatorylinkrejectiontime sl
         open = maybereadinvite sl
-
 
 -- Haskell version of statusClassCaseExpression. We don't sort of filter signatories based on that, so there is no need to compute it in DB
 signatoryStatusClass :: Document -> SignatoryLink -> StatusClass

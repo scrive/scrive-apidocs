@@ -15,6 +15,9 @@ window.BrowserInfo = {
     isIphone : function(){
         return navigator.userAgent.match(/iPhone/i) != null;
     },
+    isWindowsPhone : function() {
+        return navigator.userAgent.match(/Windows Phone/i) != null;
+    },
     isAndroid : function(){
         return navigator.userAgent.match(/Android/i) != null;
     },

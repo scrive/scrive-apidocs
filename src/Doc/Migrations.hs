@@ -571,7 +571,8 @@ splitIdentificationTypes = Migration {
     runSQL_ "ALTER TABLE documents ADD COLUMN delivery_method SMALLINT NULL"
     runQuery_ $ mconcat [
         "UPDATE documents SET"
-      , "  authentication_method = (CASE WHEN allowed_id_types = 0 THEN " <?> StandardAuthentication <> " WHEN allowed_id_types = 1 THEN " <?> StandardAuthentication <> " WHEN allowed_id_types = 2 THEN " <?> ELegAuthentication <> " WHEN allowed_id_types = 4 THEN " <?> StandardAuthentication <> " END)::SMALLINT"
+      , "  authentication_method = (CASE WHEN allowed_id_types = 0 THEN 1 WHEN allowed_id_types = 1 THEN 1 WHEN allowed_id_types = 2 THEN 2 WHEN allowed_id_types = 4 THEN 2 END)::SMALLINT"
+           -- For authentication 1 = StandardAuthenticationToSign, 2 = SEBankIDAuthenticationToSign
       , ", delivery_method = (CASE WHEN allowed_id_types = 0 THEN " <?> EmailDelivery <> " WHEN allowed_id_types = 1 THEN " <?> EmailDelivery <> " WHEN allowed_id_types = 2 THEN " <?> EmailDelivery <> " WHEN allowed_id_types = 4 THEN " <?> PadDelivery <> " END)::SMALLINT"
       ]
     runSQL_ "ALTER TABLE documents ALTER authentication_method SET NOT NULL"
@@ -964,7 +965,7 @@ changeSomeStandardFieldsToOptional=
                      sqlWhereAny
                        [ do
                          sqlWhereEq "f.type" PersonalNumberFT
-                         sqlWhereNotEq "s.authentication_method" ELegAuthentication
+                         sqlWhereNotEq "s.authentication_method" (2::Int16) -- 2 == SEBankIDAuthenticationToSign
                        , do
                          sqlWhereEq "f.type" (MobileFT)
                          sqlWhereNotIn "s.delivery_method" [MobileDelivery,EmailAndMobileDelivery]
@@ -1172,4 +1173,15 @@ addAPIV2CallbackAndRenameExisting = Migration {
     , mgrDo = do
         runSQL_ "ALTER TABLE documents RENAME api_callback_url TO api_v1_callback_url"
         runSQL_ "ALTER TABLE documents ADD COLUMN api_v2_callback_url TEXT NULL"
+    }
+
+
+addSignatoryAuthenticationToView :: MonadDB m => Migration m
+addSignatoryAuthenticationToView = Migration {
+      mgrTable = tableSignatoryLinks
+    , mgrFrom = 27
+    , mgrDo = do
+      runSQL_ "ALTER TABLE signatory_links RENAME COLUMN authentication_method TO authentication_to_sign_method"
+      runSQL_ "ALTER TABLE signatory_links ADD COLUMN authentication_to_view_method SMALLINT NOT NULL DEFAULT 1" -- StandartAuthenticationToView
+      runSQL_ "ALTER TABLE signatory_links ALTER COLUMN authentication_to_view_method DROP DEFAULT"
     }

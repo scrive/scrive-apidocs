@@ -1,6 +1,7 @@
 module Session.Cookies (
     SessionCookieInfo(..)
   , startSessionCookie
+  , sessionCookieInfoFromSession
   , currentSessionInfoCookies
   ) where
 
@@ -39,15 +40,18 @@ instance FromReqURI SessionCookieInfo where
 -- | Add a session cookie to browser.
 startSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m)
                    => Session -> m ()
-startSessionCookie Session{..} = do
+startSessionCookie s = do
   ishttps  <- isHTTPS
   addHttpOnlyCookie ishttps (MaxAge (60*60*24)) $
-    mkCookie "sessionId" . show $ SessionCookieInfo {
-        cookieSessionID = sesID
-      , cookieSessionToken = sesToken
-      }
+    mkCookie "sessionId" . show $ sessionCookieInfoFromSession s
   addCookie ishttps (MaxAge (60*60*24)) $
-    mkCookie "xtoken" $ show sesCSRFToken
+    mkCookie "xtoken" $ show $ sesCSRFToken s
+
+sessionCookieInfoFromSession :: Session -> SessionCookieInfo
+sessionCookieInfoFromSession s = SessionCookieInfo {
+     cookieSessionID = sesID s
+   , cookieSessionToken = sesToken s
+  }
 
 -- | Read current session cookie from request.
 currentSessionInfoCookies :: RqData [SessionCookieInfo]

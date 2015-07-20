@@ -33,10 +33,17 @@ var FlashMessageView = Backbone.View.extend({
 
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
+        $("body").append(this.$el);
+        if (BrowserInfo.isIE8orLower()) {
+         window.attachEvent("resize", this.render);
+        } else {
+         window.addEventListener("resize", this.render);
+        }
         this.render();
     },
     render: function () {
         var self = this;
+        this.$el.empty();
         $(this.el).addClass(this.model.flashType());
         var close = $("<div class='flash-close'>&times;</div>");
         close.click(function() {
@@ -47,6 +54,10 @@ var FlashMessageView = Backbone.View.extend({
                     .append($("<div class='flash-body'></div>").append(this.model.get("content")))
                     .append(close))
                    );
+        if ($('.flash-body',$(self.el)).height() > $('.flash-content',$(self.el)).height() + 10) {
+          console.log("multi line");
+          $('.flash-content',$(self.el)).addClass("multiline");
+        }
         return this;
     },
     clear: function(){
@@ -58,6 +69,7 @@ var FlashMessageView = Backbone.View.extend({
           if (self.el != undefined) $(self.el).remove();
             if (self.model != undefined) self.model.destroy();
         },1000);
+        window.removeEventListener("resize", this.render);
     }
 });
 
@@ -98,11 +110,7 @@ window.FlashMessage = function(args) {
         }
         var model = new FlashMessageModel(args);
         var view = new FlashMessageView({model : model, el : $("<div class='flash'/>")});
-        $("body").append($(view.el));
 
-        if ($('.flash-body',$(view.el)).height() > $('.flash-content',$(view.el)).height() + 10) {
-          $('.flash-content',$(view.el)).addClass("multiline");
-        }
         setTimeout(function() {$(view.el).addClass("active");},100);
         setTimeout(function() {view.clear();},10000);
 };

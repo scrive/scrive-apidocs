@@ -30,13 +30,17 @@ module Doc.DocStateQuery
     , getDocByDocIDForAuthor
     , getDocByDocIDForAuthorOrAuthorsCompanyAdmin
     , getMagicHashForDocumentSignatoryWithUser
+    , signatoryNeedsToIdentifyToView
     ) where
 
 import DB
+import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
+import Doc.DocumentMonad (DocumentMonad, theDocument)
 import Doc.Model
 import Doc.SignatoryLinkID
+import EID.Authentication.Model
 import Kontra
 import KontraPrelude
 import MagicHash
@@ -103,3 +107,20 @@ getMagicHashForDocumentSignatoryWithUser did sigid user = do
                                 else return Nothing
                  Nothing -> return Nothing
      _ -> return Nothing
+
+
+signatoryNeedsToIdentifyToView :: (Kontrakcja m , DocumentMonad m) => SignatoryLink -> m Bool
+signatoryNeedsToIdentifyToView sl = do
+  doc <- theDocument
+  if (
+        (signatorylinkauthenticationtoviewmethod sl /= SEBankIDAuthenticationToView)
+     || (hasSigned sl)
+     || (not $ isPending doc)
+     )
+  then return False
+  else do
+    sid <- ctxsessionid <$> getContext
+    auth <- dbQuery (GetEAuthentication sid $ signatorylinkid sl)
+    case auth of
+      Just (BankIDAuthentication_ _) -> return False
+      _ -> return True

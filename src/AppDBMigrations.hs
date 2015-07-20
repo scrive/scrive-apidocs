@@ -17,6 +17,7 @@ import Doc.API.Callback.Migrations
 import Doc.AutomaticReminder.Tables
 import Doc.Migrations
 import Doc.SMSPin.Tables
+import EID.Authentication.Migrations
 import EID.CGI.GRP.Transaction.Migrations
 import EID.Signature.Migrations
 import EvidenceLog.Migrations
@@ -177,6 +178,9 @@ kontraMigrations = [
   , dropAPIVersionFromDocuments
   , addAPIV2CallbackAndRenameExisting
   , addAPIVersionToDocumentApiCallbacks
+  , extendCgiGrpTransactionsWithAuthRequest
+  , createEIDAuthenticationTable
+  , addSignatoryAuthenticationToView
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

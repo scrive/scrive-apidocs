@@ -1,75 +1,133 @@
 module EID.CGI.GRP.Transaction.Model (
-    CgiGrpTransaction(..)
+    CgiGrpTransactionType(..)
+  , CgiGrpTransaction(..)
+  , cgiSignatoryLinkID
+  , cgiTransactionID
+  , cgiOrderRef
+  , cgiTransactionType
   , MergeCgiGrpTransaction(..)
   , GetCgiGrpTransaction(..)
+  , DeleteCgiGrpTransaction(..)
   ) where
 
 import Control.Monad.Catch
 import Control.Monad.State
-import Control.Monad.Time
+import Data.Data
+import Data.Int
 import Data.Text (Text)
-import Happstack.Server
 
-import Context
 import Crypto.RNG
 import DB
 import Doc.SignatoryLinkID
 import KontraMonad
 import KontraPrelude
-import Session.Model
 import Session.SessionID
 
-data CgiGrpTransaction = CgiGrpTransaction {
-  cgtSignatoryLinkID :: !SignatoryLinkID
-, ctgTextToBeSigned  :: !Text
-, cgtTransactionID   :: !Text
-, cgtOrderRef        :: !Text
-} deriving (Eq, Ord, Show)
+data CgiGrpTransactionType = CgiGrpAuth | CgiGrpSign
+  deriving (Eq, Ord, Show, Typeable)
+
+instance PQFormat CgiGrpTransactionType where
+  pqFormat = const $ pqFormat ($undefined::Int16)
+
+instance FromSQL CgiGrpTransactionType where
+  type PQBase CgiGrpTransactionType = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1  -> return CgiGrpAuth
+      2  -> return CgiGrpSign
+      _  -> throwM RangeError {
+        reRange = [(1,2)]
+      , reValue = n
+      }
+
+instance ToSQL CgiGrpTransactionType where
+  type PQDest CgiGrpTransactionType = PQDest Int16
+  toSQL CgiGrpAuth = toSQL (1::Int16)
+  toSQL CgiGrpSign = toSQL (2::Int16)
+
+data CgiGrpTransaction =
+    CgiGrpAuthTransaction !SignatoryLinkID  !Text !Text !SessionID
+  | CgiGrpSignTransaction !SignatoryLinkID  !Text !Text !Text !SessionID
+  deriving (Eq, Ord, Show)
+
+
+cgiTransactionType :: CgiGrpTransaction -> CgiGrpTransactionType
+cgiTransactionType (CgiGrpAuthTransaction _ _ _ _) = CgiGrpAuth
+cgiTransactionType (CgiGrpSignTransaction _ _ _ _ _) = CgiGrpSign
+
+cgiSignatoryLinkID :: CgiGrpTransaction -> SignatoryLinkID
+cgiSignatoryLinkID (CgiGrpAuthTransaction slid _ _ _) = slid
+cgiSignatoryLinkID (CgiGrpSignTransaction slid _ _ _ _) = slid
+
+cgiTextToBeSigned :: CgiGrpTransaction -> Maybe Text
+cgiTextToBeSigned (CgiGrpAuthTransaction _ _ _ _) = Nothing
+cgiTextToBeSigned (CgiGrpSignTransaction _ tbs _ _ _) = Just tbs
+
+cgiTransactionID  :: CgiGrpTransaction -> Text
+cgiTransactionID  (CgiGrpAuthTransaction _ tid _ _) = tid
+cgiTransactionID  (CgiGrpSignTransaction _ _ tid _ _) = tid
+
+cgiOrderRef :: CgiGrpTransaction -> Text
+cgiOrderRef (CgiGrpAuthTransaction _ _ orf _) = orf
+cgiOrderRef (CgiGrpSignTransaction _ _ _ orf _) = orf
+
+cgiSessionID :: CgiGrpTransaction -> SessionID
+cgiSessionID (CgiGrpAuthTransaction _ _ _ session_id) = session_id
+cgiSessionID (CgiGrpSignTransaction _ _ _ _ session_id) = session_id
 
 ----------------------------------------
 
 -- | Insert new transaction or replace the existing one.
 data MergeCgiGrpTransaction = MergeCgiGrpTransaction CgiGrpTransaction
-instance (CryptoRNG m, KontraMonad m, MonadDB m, MonadMask m, MonadTime m, ServerMonad m)
+instance (CryptoRNG m, KontraMonad m, MonadDB m, MonadMask m)
   => DBUpdate m MergeCgiGrpTransaction () where
-    update (MergeCgiGrpTransaction CgiGrpTransaction{..}) = do
-      sid <- getNonTempSessionID
+    update (MergeCgiGrpTransaction cgiTransaction) = do
       loopOnUniqueViolation . withSavepoint "merge_cgi_grp_transaction" $ do
         success <- runQuery01 . sqlUpdate "cgi_grp_transactions" $ do
-          setFields sid
-          sqlWhereEq "signatory_link_id" cgtSignatoryLinkID
+          setFields
+          sqlWhereEq "signatory_link_id" $ cgiSignatoryLinkID cgiTransaction
+          sqlWhereEq "type" $ cgiTransactionType cgiTransaction
         when (not success) $ do
           runQuery_ . sqlInsert "cgi_grp_transactions" $ do
-            setFields sid
+            setFields
       where
-        setFields :: (MonadState v n, SqlSet v) => SessionID -> n ()
-        setFields sid = do
-          sqlSet "signatory_link_id" cgtSignatoryLinkID
-          sqlSet "session_id" sid
-          sqlSet "text_to_be_signed" ctgTextToBeSigned
-          sqlSet "transaction_id" cgtTransactionID
-          sqlSet "order_ref" cgtOrderRef
+        setFields :: (MonadState v n, SqlSet v) => n ()
+        setFields  = do
+          sqlSet "type" $ cgiTransactionType cgiTransaction
+          sqlSet "signatory_link_id" $ cgiSignatoryLinkID cgiTransaction
+          sqlSet "session_id" $ cgiSessionID cgiTransaction
+          sqlSet "text_to_be_signed" $ cgiTextToBeSigned cgiTransaction
+          sqlSet "transaction_id" $ cgiTransactionID cgiTransaction
+          sqlSet "order_ref" $ cgiOrderRef cgiTransaction
 
-data GetCgiGrpTransaction = GetCgiGrpTransaction SignatoryLinkID
+data DeleteCgiGrpTransaction = DeleteCgiGrpTransaction CgiGrpTransactionType SignatoryLinkID
+instance (MonadDB m, MonadMask m) => DBUpdate m DeleteCgiGrpTransaction () where
+    update (DeleteCgiGrpTransaction cgitt slid) = do
+       runQuery_ . sqlDelete "cgi_grp_transactions" $ do
+          sqlWhereEq "signatory_link_id" $ slid
+          sqlWhereEq "type" $ cgitt
+
+
+data GetCgiGrpTransaction = GetCgiGrpTransaction CgiGrpTransactionType SignatoryLinkID
 instance (KontraMonad m, MonadDB m, MonadThrow m)
   => DBQuery m GetCgiGrpTransaction (Maybe CgiGrpTransaction) where
-    query (GetCgiGrpTransaction slid) = do
-      sid <- ctxsessionid <$> getContext
+    query (GetCgiGrpTransaction cgitt slid) = do
       runQuery_ . sqlSelect "cgi_grp_transactions" $ do
+        sqlResult "type"
         sqlResult "signatory_link_id"
         sqlResult "text_to_be_signed"
         sqlResult "transaction_id"
         sqlResult "order_ref"
+        sqlResult "session_id"
         sqlWhereEq "signatory_link_id" slid
-        sqlWhereEq "session_id" sid
+        sqlWhereEq "type" cgitt
       fetchMaybe fetchCgiGrpTransaction
 
 ----------------------------------------
 
-fetchCgiGrpTransaction :: (SignatoryLinkID, Text, Text, Text) -> CgiGrpTransaction
-fetchCgiGrpTransaction (slid, ttbs, transaction_id, order_ref) = CgiGrpTransaction {
-  cgtSignatoryLinkID = slid
-, ctgTextToBeSigned = ttbs
-, cgtTransactionID = transaction_id
-, cgtOrderRef = order_ref
-}
+fetchCgiGrpTransaction :: (CgiGrpTransactionType,SignatoryLinkID, Maybe Text, Text, Text, SessionID) -> CgiGrpTransaction
+fetchCgiGrpTransaction (cgitt, slid, mttbs, transaction_id, order_ref, session_id) =
+    case cgitt of
+      CgiGrpAuth -> CgiGrpAuthTransaction  slid transaction_id order_ref session_id
+      CgiGrpSign -> CgiGrpSignTransaction slid (fromMaybe ($unexpectedError "CGI Transaction field has NULL as text_to_be_signed") mttbs) transaction_id order_ref session_id

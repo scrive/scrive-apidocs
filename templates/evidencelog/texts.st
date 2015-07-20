@@ -59,17 +59,17 @@ ChangeSignatoryEmailWhenUndeliveredEvidenceLog=The user <span class="actor"/> ch
 ###
 ChangeSignatoryPhoneWhenUndeliveredEvidenceLog=The user <span class="actor"/> changed the phone number for the party from $oldphone$ to $newphone$.
 ###
-ChangeAuthenticationMethodStandardToELegEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “no extra authentication” to “eID”.
+ChangeAuthenticationToSignMethodStandardToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “no extra authentication” to “eID”.
 ###
-ChangeAuthenticationMethodStandardToSMSEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “no extra authentication” to “PIN by SMS”.
+ChangeAuthenticationToSignMethodStandardToSMSEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “no extra authentication” to “PIN by SMS”.
 ###
-ChangeAuthenticationMethodELegToStandardEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “eID” to “no extra authentication”.
+ChangeAuthenticationToSignMethodSEBankIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “eID” to “no extra authentication”.
 ###
-ChangeAuthenticationMethodELegToSMSEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “eID” to “PIN by SMS”.
+ChangeAuthenticationToSignMethodSEBankIDToSMSEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “eID” to “PIN by SMS”.
 ###
-ChangeAuthenticationMethodSMSToStandardEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “PIN by SMS” to “no extra authentication”.
+ChangeAuthenticationToSignMethodSMSToStandardEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “PIN by SMS” to “no extra authentication”.
 ###
-ChangeAuthenticationMethodSMSToElegEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “PIN by SMS” to “eID”.
+ChangeAuthenticationToSignMethodSMSToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “PIN by SMS” to “eID”.
 ###
 ###
 CloseDocumentEvidenceLog=Scrive eSign locked the document from further modifications by the parties.
@@ -333,9 +333,9 @@ SendToPadDeviceLog=The signing invitation for signatory <span class="signatory"/
 SetDocumentInviteTimeEvidenceLog=The signing process was started by <span class="actor"/>.
 ###
 ###
-SignDocumentEvidenceLogSMSPin=The signatory <span class="actor"/> signed the document using PIN by SMS as identification method. $pinWasSent()$
+SignDocumentEvidenceLogSMSPin=The signatory <span class="actor"/> signed the document using PIN by SMS as authentication method. $pinWasSent()$
 ###
-SignDocumentEvidenceLogEleg=The signatory <span class="actor"/> signed the document using eID as identification method. $elegVerification()$
+SignDocumentEvidenceLogEleg=The document was signed by <span class="actor"/> using $provider$ as authentication method. $elegVerificationSign()$
 ###
 SignDocumentEvidenceLogStandard=The signatory <span class="actor"/> signed the document.
 ###
@@ -423,14 +423,17 @@ updateFieldPlacements=$if(placements)$<table class="placements"><tr><td>Page</td
 ###
 pinWasSent=The PIN was sent to $phone$.
 ###
-elegVerification=
-<p>The text signed in the eID client was:</p>
+elegVerificationSign=
+<br/>
+<br/>
+<p>The text signed in the $provider$ client was:</p>
 <pre style='white-space:normal'>$signed_text$</pre>
-<p>eID provider: $provider$</p>
-<p>Data returned from the eID:
+<br/>
+<p>Data returned from the  $provider$:
   <br/>Name: $signatory_name$
   <br/>ID number: $signatory_personal_number$
 </p>
+<br/>
 <p>Signature: <div style='white-space:pre'>$signature$</div></p>
 <p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp_response$</div></p>
 ###
@@ -444,4 +447,45 @@ invitationCustomMessageTextToReviewIfThereIsOne=
 $if(text)$$if(!mobile)$ $_invitationCustomMessageTextToReview()$ $endif$$endif$
 ###
 CancelDocumenElegEvidenceText=$_CancelDocumenElegEvidenceText()$
+###
+###
+###
+VisitedViewForSigningEvidenceArchive=$_VisitedViewForSigningEvidenceArchive()$
+###
+VisitedViewForSigningEvidenceVerificationPages=$_VisitedViewForSigningEvidenceVerificationPages()$
+###
+###
+VisitedViewForSigningEvidenceLogForSign=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to sign documents.
+###
+VisitedViewForSigningEvidenceLogForReview=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to review documents.
+###
+VisitedViewForSigningEvidenceLog=*
+$if(signing)$
+  $VisitedViewForSigningEvidenceLogForSign()$
+$elseif(viewing)$
+  $VisitedViewForSigningEvidenceLogForReview()$
+$endif$
+###
+VisitedViewForAuthenticationEvidenceLog=The party <span class="actor"/> opened the view to verify their identity before viewing the document.
+###
+VisitedViewForAuthenticationEvidenceArchive=$_VisitedViewForAuthenticationEvidenceArchive()$
+###
+VisitedViewForAuthenticationEvidenceVerificationPages=$_VisitedViewForAuthenticationEvidenceVerificationPages()$
+###
+AuthenticatedToViewEvidenceLog=The party <span class="actor"/> verified their identity with $provider$ to access the document. $elegVerificationAuth()$
+###
+elegVerificationAuth=
+<br/>
+<br/>
+<p>Data returned from the $provider$:
+  <br/>Name: $signatory_name$
+  <br/>ID number: $signatory_personal_number$
+</p>
+<br/>
+<p>Signature: <div style='white-space:pre'>$signature$</div></p>
+<p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp_response$</div></p>
+###
+AuthenticatedToViewEvidenceArchive=$_AuthenticatedToViewEvidenceArchive()$
+###
+AuthenticatedToViewEvidenceVerificationPages=$_AuthenticatedToViewEvidenceVerificationPages()$
 ###

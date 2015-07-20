@@ -9,7 +9,9 @@ return Backbone.Model.extend({
       onCriticalError: function() {},
       thisDevice: true,
       pollingInterval: 3000,
-      activationTime : 0
+      activationTime : 0,
+      cancelled : false, // Flag for when transaction is aborted in frontend - to stop polling
+      type: "sign" // sign or auth. Must match backend option. Used for creating and collecting requests
     },
     triggerStatusChange: function() {
       this.get("onStatusChange")();
@@ -23,8 +25,14 @@ return Backbone.Model.extend({
     triggerCriticalError: function(xhr) {
       this.get("onCriticalError")(xhr);
     },
+    type : function() {
+      return this.get("type");
+    },
     document: function() {
       return this.signatory().document();
+    },
+    cancelled: function() {
+      return this.get("cancelled");
     },
     activeForAtLeast5Sec: function() {
       // Activation time is initiated when we get autostart token.
@@ -36,14 +44,20 @@ return Backbone.Model.extend({
     thisDevice: function() {
       return this.get('thisDevice');
     },
+    cancel : function() {
+      this.set("cancelled", true);
+    },
     pollingInterval: function() {
       return this.get('pollingInterval');
     },
-    setAutoStartToken: function(t) {
-      this.set({"autoStartToken": t, "activationTime" : new Date().getTime()});
+    setAutoStartTokenAndSessionID: function(t,s) {
+      this.set({"autoStartToken": t, "sessionID" : s, "activationTime" : new Date().getTime()});
     },
     autoStartToken: function() {
       return this.get('autoStartToken');
+    },
+    sessionID: function() {
+      return this.get('sessionID');
     },
     setStatus: function(s) {
       this.set({'status': s}, {silent: true});
@@ -169,6 +183,19 @@ return Backbone.Model.extend({
         return 'bankid:///?autostarttoken=' + this.autoStartToken() + "&redirect=null";
       }
     },
+    bankIdUrlWithRedirectIfNeeded: function() {
+      if(this.autoStartToken()) {
+        if (BrowserInfo.isIpad() || BrowserInfo.isIphone() || BrowserInfo.isWindowsPhone()) {
+          // We set redirect only for selected devices. On other platform BankID app can close itself
+          var returnUrl =  window.location.origin + "/s/eid/cgi/grp/collectWithRedirect/" + this.document().documentid() + "/" + this.signatory().signatoryid() +
+                          '?type='+this.type() + "&session_id=" + this.sessionID() + "&url=" + encodeURIComponent(window.location) +'&_=' + Math.random();
+          return 'bankid:///?autostarttoken=' + this.autoStartToken() + "&redirect=" + encodeURIComponent(returnUrl);
+        }
+        else {
+          return this.bankIdUrl();
+        }
+      }
+    },
     normalizedPersonalNumber: function() {
       var pp = this.signatory().personalnumber();
       pp = pp.replace(/-/g, "");
@@ -185,12 +212,12 @@ return Backbone.Model.extend({
       var self = this;
       new Submit({
         method: 'POST',
-        url: "/s/eid/cgi/grp/sign/" + self.document().documentid() + "/" + self.signatory().signatoryid(),
+        url: "/s/eid/cgi/grp/"+self.type()+"/" + self.document().documentid() + "/" + self.signatory().signatoryid(),
         personal_number: self.normalizedPersonalNumber(),
         ajaxsuccess: function(d, s, xhr) {
           var resp = JSON.parse(d);
-          if(resp.auto_start_token) {
-            self.setAutoStartToken(resp.auto_start_token);
+          if(resp.auto_start_token && resp.session_id) {
+            self.setAutoStartTokenAndSessionID(resp.auto_start_token,resp.session_id);
             self.triggerStatusChange();
             self.pollCollect();
           }
@@ -212,8 +239,10 @@ return Backbone.Model.extend({
       var poller = function() {
         new Submit({
           method: 'GET',
-          url: "/s/eid/cgi/grp/collect/" + self.document().documentid() + "/" + self.signatory().signatoryid() + '?_=' + Math.random(),
+          url: "/s/eid/cgi/grp/collect/" + self.document().documentid() + "/" + self.signatory().signatoryid() + '?type='+self.type()+'&_=' + Math.random(),
           ajaxsuccess: function(d, s, xhr) {
+            if (self.cancelled())
+              return; // If action was cancelled we stop processing any results and we will stop polling
             var resp = JSON.parse(d);
             if(resp.progress_status && self.checkIsProgressStatus(resp.progress_status)) {
               self.setStatus(resp.progress_status);
@@ -233,7 +262,9 @@ return Backbone.Model.extend({
             }
           },
           ajaxerror: function(xhr, textStatus, errorThrown) {
-            // Don't throw error on ajax error here. Some environments trigger error, when switching to bankid native app.
+           if (self.cancelled())
+              return; // If action was cancelled we stop processing any results and we will stop polling
+            // Don't throw error on ajax error here. Some environments trigger error, when switching from bankid native app.
             setTimeout(poller, self.pollingInterval());
           }
         }).sendAjax();

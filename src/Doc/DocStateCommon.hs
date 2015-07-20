@@ -45,7 +45,7 @@ signLinkFromDetails' fields author partner sorder attachments magichash =
                 , signatorylinksignredirecturl = Nothing
                 , signatorylinkrejectiontime = Nothing
                 , signatorylinkrejectionreason = Nothing
-                , signatorylinkauthenticationmethod = StandardAuthentication
+                , signatorylinkauthenticationtosignmethod = StandardAuthenticationToSign
                 }
 
 signatoryLinkClearField :: SignatoryField -> SignatoryField

@@ -43,6 +43,7 @@ var clearBankIDIframes = function() {
 
 return function(args) {
   var bankID = new BankIDSigning({
+    type : "sign",
     signatory : args.signatory,
     onStatusChange : function() {
       updateLoadingDialogWithBankIDStatus(bankID);

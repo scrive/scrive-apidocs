@@ -84,7 +84,9 @@ remindMailNotSigned forMail customMessage document signlink = do
         F.value "isattachments" $ length (documentauthorattachments document) > 0
         F.value "attachments" $ map authorattachmentfilename $ documentauthorattachments document
         F.value "ispreview" $ not $ forMail
-        F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
+        F.value "previewLink" $  case (signatorylinkauthenticationtoviewmethod $ signlink) of
+          StandardAuthenticationToView -> Just $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
+          _ -> Nothing
         F.value "hassigattachments" $ not $ null $ concat $ signatoryattachments <$> documentsignatorylinks document
         -- We try to use generic templates and this is why we return a tuple
         F.value "sigattachments" $ for (concat $ (\l -> (\a -> (l,a)) <$> signatoryattachments l) <$> documentsignatorylinks document) $ \(link, sa) ->
@@ -209,7 +211,9 @@ mailInvitation forMail
         F.value "isattachments" $ length (documentauthorattachments document) > 0
         F.value "attachments" $ map authorattachmentfilename $ documentauthorattachments document
         F.value "ispreview" $ not $ forMail
-        F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (msiglink <| forMail |> Nothing) (mainfile)
+        F.value "previewLink" $  case (fromMaybe StandardAuthenticationToView $ signatorylinkauthenticationtoviewmethod <$> msiglink) of
+          StandardAuthenticationToView -> Just $ show $ LinkDocumentPreview (documentid document) (msiglink <| forMail |> Nothing) (mainfile)
+          _ -> Nothing
         F.value "hassigattachments" $ length (concatMap signatoryattachments $ documentsignatorylinks document ) > 0
         -- We try to use generic templates and this is why we return a tuple
         F.value "sigattachments" $ for (concat $ (\l -> (\a -> (l,a)) <$> signatoryattachments l) <$> documentsignatorylinks document) $ \(link, sa) ->

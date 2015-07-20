@@ -60,5 +60,11 @@ define(["legacy_code", "React"], function(legacy_code, React) {
     $('body').empty();
   };
 
+  exports.findComponents = function (tree, comp) {
+    return TestUtils.findAllInRenderedTree(tree, function (node) {
+      return TestUtils.isCompositeComponentWithType(node, comp);
+    });
+  };
+
   return exports;
 });

@@ -13,23 +13,23 @@ import Utils.Monoid
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
 -- newer versions of happstack here is.  This should be droped when
 -- new version is globaly established.
-getDataFn' :: (HasRqData m, MonadIO m, ServerMonad m)
+getDataFn' :: (HasRqData m, ServerMonad m)
            => RqData a -> m (Maybe a)
 getDataFn' fun = either (const Nothing) Just `liftM` getDataFn fun
 
-isFieldSet :: (HasRqData m, MonadIO m, ServerMonad m)
+isFieldSet :: (HasRqData m, ServerMonad m)
            => String -> m Bool
 isFieldSet name = isJust `liftM` getField name
 
-getFields :: (HasRqData m, MonadIO m, ServerMonad m)
+getFields :: (HasRqData m, ServerMonad m)
           => String -> m [String]
 getFields name = map BSLU.toString `liftM` fromMaybe [] `liftM` getDataFn' (lookInputList name)
 
-getField :: (HasRqData m, MonadIO m, ServerMonad m)
+getField :: (HasRqData m, ServerMonad m)
          => String -> m (Maybe String)
 getField name = (listToMaybe . reverse) `liftM` getFields name
 
-getFieldJSON :: (HasRqData m, MonadIO m, ServerMonad m)
+getFieldJSON :: (HasRqData m, ServerMonad m)
          => String -> m (Maybe J.JSValue)
 getFieldJSON name = do
   res <- getField name
@@ -37,15 +37,15 @@ getFieldJSON name = do
      Just (J.Ok js) -> return $ Just js
      _ -> return $ Nothing
 
-getField' :: (HasRqData m, MonadIO m, ServerMonad m)
+getField' :: (HasRqData m, ServerMonad m)
           => String -> m String
 getField' name = fromMaybe "" `liftM` getField name
 
-readField :: (HasRqData m, MonadIO m, Read a, ServerMonad m)
+readField :: (HasRqData m, Read a, ServerMonad m)
           => String -> m (Maybe a)
 readField name = (join . liftM maybeRead) `liftM` getField name
 
-getFieldBS :: (HasRqData m, MonadIO m, ServerMonad m)
+getFieldBS :: (HasRqData m, ServerMonad m)
           => String -> m (Maybe BSLU.ByteString)
 getFieldBS name = (listToMaybe . reverse) `liftM` fromMaybe [] `liftM` getDataFn' (lookInputList name)
 

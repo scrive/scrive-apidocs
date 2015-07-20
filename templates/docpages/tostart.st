@@ -8,14 +8,14 @@ $htmlopentag()$
   </head>
   <body style="background: $background$" >
   $flashmessages()$
-  <div class='mainContainer big' style='height:auto;position: static;overflow-y:hidden;'>
-      <div class="inner" style='height:auto;position:static;margin:auto;width:auto;'>
+  <div class='global-table'>
+      <div class="global-table-cell">
       </div>
   </div>
   <script type="text/javascript">
    require(['jquery', 'React', 'login/login', 'legacy_code'], function(jQuery,React,Login) {
     jQuery(document).ready(function() {
-      var div = jQuery('.inner');
+      var div = jQuery('.global-table-cell');
       React.render(React.createElement(Login,{
         referer:   "/to-start",
         autofocus: true,

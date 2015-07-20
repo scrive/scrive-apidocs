@@ -1,8 +1,8 @@
-define(["legacy_code", "backend", "util", "React", "designview/participants/authicon"], function(legacy_code, backend, util, React, AuthIcon) {
+define(["legacy_code", "backend", "util", "React", "designview/participants/authtosignicon"], function(legacy_code, backend, util, React, AuthToSignIcon) {
 
   var TestUtils = React.addons.TestUtils;
 
-  describe("designview/participants/authicon", function () {
+  describe("designview/participants/authtosignicon", function () {
     var server, signatory;
 
     before(function (done) {
@@ -16,7 +16,7 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/auth
 
     it("should auth icon changes signatory authentication method when clicking", function () {
 
-      var authIcon = TestUtils.renderIntoDocument(React.createElement(AuthIcon, {
+      var authIcon = TestUtils.renderIntoDocument(React.createElement(AuthToSignIcon, {
         model: signatory
         , element: $("body")[0]
       }));
@@ -38,7 +38,7 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/auth
     it("should not change auth if signatory is last viewer", function () {
       signatory.makeViewer();
       signatory.setSignOrder(5);
-      var authIcon = TestUtils.renderIntoDocument(React.createElement(AuthIcon, {
+      var authIcon = TestUtils.renderIntoDocument(React.createElement(AuthToSignIcon, {
         model: signatory
         , element: $("body")[0]
       }));

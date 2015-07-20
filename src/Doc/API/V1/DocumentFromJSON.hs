@@ -17,13 +17,22 @@ import User.Lang
 
 -- JSON instances
 
-instance FromJSValue AuthenticationMethod where
+instance FromJSValue AuthenticationToViewMethod where
   fromJSValue = do
     j <- fromJSValue
     return $ case j of
-      Just "standard" -> Just StandardAuthentication
-      Just "eleg"     -> Just ELegAuthentication
-      Just "sms_pin"  -> Just SMSPinAuthentication
+      Just "standard"  -> Just StandardAuthenticationToView
+      Just "se_bankid" -> Just SEBankIDAuthenticationToView
+      _               -> Nothing
+
+
+instance FromJSValue AuthenticationToSignMethod where
+  fromJSValue = do
+    j <- fromJSValue
+    return $ case j of
+      Just "standard" -> Just StandardAuthenticationToSign
+      Just "eleg"     -> Just SEBankIDAuthenticationToSign
+      Just "sms_pin"  -> Just SMSPinAuthenticationToSign
       _               -> Nothing
 
 instance FromJSValue DeliveryMethod where
@@ -96,7 +105,8 @@ instance FromJSValueWithUpdate SignatoryLink where
         (csv :: Maybe (Maybe CSVUpload)) <- fromJSValueField "csv"
         (sredirecturl :: Maybe (Maybe String)) <- fromJSValueField "signsuccessredirect"
         (rredirecturl :: Maybe (Maybe String)) <- fromJSValueField "rejectredirect"
-        authentication' <-  fromJSValueField "authentication"
+        authenticationToView' <-  fromJSValueField "authenticationToView"
+        authenticationToSign' <-  fromJSValueField "authentication"
         delivery' <-  fromJSValueField "delivery"
         confirmationdelivery' <-  fromJSValueField "confirmationdelivery"
         case (mfields) of
@@ -112,7 +122,8 @@ instance FromJSValueWithUpdate SignatoryLink where
                   , signatoryattachments         = updateWithDefaultAndField [] signatoryattachments attachments
                   , signatorylinksignredirecturl = updateWithDefaultAndField Nothing signatorylinksignredirecturl sredirecturl
                   , signatorylinkrejectredirecturl = updateWithDefaultAndField Nothing signatorylinkrejectredirecturl rredirecturl
-                  , signatorylinkauthenticationmethod = updateWithDefaultAndField StandardAuthentication signatorylinkauthenticationmethod authentication'
+                  , signatorylinkauthenticationtoviewmethod = updateWithDefaultAndField StandardAuthenticationToView signatorylinkauthenticationtoviewmethod authenticationToView'
+                  , signatorylinkauthenticationtosignmethod = updateWithDefaultAndField StandardAuthenticationToSign signatorylinkauthenticationtosignmethod authenticationToSign'
                   , signatorylinkdeliverymethod       = updateWithDefaultAndField EmailDelivery signatorylinkdeliverymethod delivery'
                   , signatorylinkconfirmationdeliverymethod = updateWithDefaultAndField EmailConfirmationDelivery signatorylinkconfirmationdeliverymethod confirmationdelivery'
                 }
@@ -454,6 +465,6 @@ instance FromJSValueWithUpdate Document where
        mapDL :: Maybe DeliveryMethod -> [SignatoryLink] -> [SignatoryLink]
        mapDL Nothing sls = sls
        mapDL (Just dl) sls = map (\sl -> sl {signatorylinkdeliverymethod = dl}) sls
-       mapAuth :: Maybe AuthenticationMethod -> [SignatoryLink] -> [SignatoryLink]
+       mapAuth :: Maybe AuthenticationToSignMethod -> [SignatoryLink] -> [SignatoryLink]
        mapAuth Nothing sls = sls
-       mapAuth (Just au) sls = map (\sl -> sl {signatorylinkauthenticationmethod = au}) sls
+       mapAuth (Just au) sls = map (\sl -> sl {signatorylinkauthenticationtosignmethod = au}) sls

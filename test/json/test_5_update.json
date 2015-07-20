@@ -79,6 +79,7 @@
    "userid": "56700",
    "signsuccessredirect": null,
    "rejectredirect": null,
+   "authenticationToView": "standard",
    "authentication": "standard"
   },
   {
@@ -163,6 +164,7 @@
    "userid": null,
    "signsuccessredirect": null,
    "rejectredirect": null,
+   "authenticationToView": "standard",
    "authentication": "standard"
   }
  ],

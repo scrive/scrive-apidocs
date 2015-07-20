@@ -25,6 +25,14 @@ define(["legacy_code", "sinon", "../test/data/document", "../test/data/file"], f
       xhr.respond(200, { "Content-Type": "application/json" }, JSON.stringify(clone));
     });
 
+    server.respondWith(/\/s\/eid\/cgi\/grp\/auth\/(\d+)\/(\d+)/, function (xhr) {
+      xhr.respond(200, { "Content-Type": "application/text" }, JSON.stringify({auto_start_token : "123", session_id : "300"}));
+    });
+
+    server.respondWith(/\/s\/eid\/cgi\/grp\/collect\/(\d+)\/(\d+)/, function (xhr, id) {
+      xhr.respond(200, { "Content-Type": "application/text" }, JSON.stringify({progress_status : "outstanding_transaction"}));
+    });
+
     return server;
   };
 

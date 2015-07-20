@@ -169,5 +169,6 @@ newSignatorySignatoryLinkIsChangingSignatoryLink newsl sl =
      || (signatoryattachments newsl /= signatoryattachments sl)
      || (signatorylinkcsvupload newsl /= signatorylinkcsvupload sl)
      || (signatorylinksignredirecturl newsl /= signatorylinksignredirecturl sl)
-     || (signatorylinkauthenticationmethod newsl /= signatorylinkauthenticationmethod sl)
+     || (signatorylinkauthenticationtoviewmethod newsl /= signatorylinkauthenticationtoviewmethod sl)
+     || (signatorylinkauthenticationtosignmethod newsl /= signatorylinkauthenticationtosignmethod sl)
      || (signatorylinkdeliverymethod newsl /= signatorylinkdeliverymethod sl)

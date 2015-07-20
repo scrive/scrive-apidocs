@@ -80,7 +80,8 @@ window.Signatory = Backbone.Model.extend({
         csv: undefined,
         saved: false,
         ispadqueue : false,
-        authentication: "standard",
+        authentication: "standard", // Authentication to sign. TODO: Change name of field with API V2
+        authenticationToView: "standard",
         delivery: "email",
         confirmationdelivery : "email",
         // Internal properties used by design view for "goldfish" memory
@@ -444,14 +445,20 @@ window.Signatory = Backbone.Model.extend({
            return field.value() != "" || field.hasPlacements();
        });
     },
-    standardAuthentication: function() {
-          return this.get("authentication") == "standard" && !this.isLastViewer();
+    standardAuthenticationToView: function() {
+          return this.get("authenticationToView") == "standard" && this.signs();
     },
-    elegAuthentication: function() {
-          return this.get("authentication") == "eleg" && !this.isLastViewer();
+    seBankIDAuthenticationToView: function() {
+          return this.get("authenticationToView") == "se_bankid" && this.signs();
     },
-    smsPinAuthentication: function() {
-          return this.get("authentication") == "sms_pin" && !this.isLastViewer();
+    standardAuthenticationToSign: function() {
+          return this.get("authentication") == "standard" && this.signs();
+    },
+    seBankIDAuthenticationToSign: function() {
+          return this.get("authentication") == "eleg" &&  this.signs();
+    },
+    smsPinAuthenticationToSign: function() {
+          return this.get("authentication") == "sms_pin" && this.signs();
     },
     emailDelivery: function() {
           return this.get("delivery") == "email" && !this.isLastViewer();
@@ -507,7 +514,7 @@ window.Signatory = Backbone.Model.extend({
     padSigningURL : function() {
         return "/padqueue";
     },
-    changeAuthentication: function(type, value) {
+    changeAuthenticationToSign: function(type, value) {
         return new Submit({
                 url: "/api/frontend/changeauthentication/" + this.document().documentid() + "/" + this.signatoryid(),
                 method: "POST",
@@ -613,7 +620,8 @@ window.Signatory = Backbone.Model.extend({
               csv: this.csv(),
               signsuccessredirect : this.signsuccessredirect(),
               rejectredirect : this.rejectredirect(),
-              authentication: this.authentication(),
+              authentication: this.authenticationToSign(),
+              authenticationToView: this.authenticationToView(),
               delivery: this.delivery(),
               confirmationdelivery : this.confirmationdelivery()
         };
@@ -676,20 +684,29 @@ window.Signatory = Backbone.Model.extend({
         this.set({delivery:"email"});
       }
     },
-    authentication: function() {
-        return this.get('authentication');
+    authenticationToView: function() {
+        return this.get('authenticationToView');
     },
-    setAuthentication: function(a) {
+    setAuthenticationToView: function(a) {
         // TODO: check values of a
         // standard, eleg
-        this.set({authentication:a});
+        this.set({"authenticationToView":a});
         return this;
     },
-    authenticationFieldValue: function() {
-        if(this.elegAuthentication()) {
+    authenticationToSign: function() {
+        return this.get('authentication');
+    },
+    setAuthenticationToSign: function(a) {
+        // TODO: check values of a
+        // standard, eleg
+        this.set({"authentication":a});
+        return this;
+    },
+    authenticationToSignFieldValue: function() {
+        if(this.seBankIDAuthenticationToSign()) {
             return this.personalnumber();
         }
-        else if(this.smsPinAuthentication()) {
+        else if(this.smsPinAuthenticationToSign()) {
             return this.mobile();
         }
         return '';
@@ -751,12 +768,13 @@ window.Signatory = Backbone.Model.extend({
                 var f = new Field({name:'sigpersnr',
                                    type: 'standard',
                                    obligatory: true,
-                                   shouldbefilledbysender: false,
+                                   shouldbefilledbysender: signatory.needsPersonalNumberFilledByAuthor(),
                                    signatory: signatory});
                 f.addedByMe = true;
                 signatory.addField(f);
             } else {
                 pn.makeObligatory();
+                pn.setShouldBeFilledBySender(signatory.needsPersonalNumberFilledByAuthor());
             }
         } else {
             if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
@@ -774,7 +792,10 @@ window.Signatory = Backbone.Model.extend({
         }
     },
     needsPersonalNumber: function() {
-        return this.elegAuthentication();
+        return this.seBankIDAuthenticationToSign() || this.seBankIDAuthenticationToView();
+    },
+    needsPersonalNumberFilledByAuthor: function() {
+        return this.seBankIDAuthenticationToView();
     },
     ensureMobile: function() {
         var signatory = this;
@@ -808,7 +829,7 @@ window.Signatory = Backbone.Model.extend({
         }
     },
     needsMobile: function() {
-        return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() || this.emailMobileConfirmationDelivery() || this.smsPinAuthentication();
+        return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() || this.emailMobileConfirmationDelivery() || this.smsPinAuthenticationToSign();
     },
     needsEmail: function() {
         return this.emailDelivery() || this.emailMobileDelivery() || this.emailConfirmationDelivery() || this.emailMobileConfirmationDelivery();

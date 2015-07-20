@@ -30,9 +30,9 @@ return React.createClass({
   getAuthenticationMethodText: function() { 
     var sig = this.props.signatory;
 
-    if (sig.standardAuthentication()) return localization.docview.signatory.authenticationStandard;
-    if (sig.smsPinAuthentication()) return localization.docview.signatory.authenticationSMSPin;
-    if (sig.elegAuthentication()) return localization.docview.signatory.authenticationELeg;
+    if (sig.standardAuthenticationToSign()) return localization.docview.signatory.authenticationStandard;
+    if (sig.smsPinAuthenticationToSign()) return localization.docview.signatory.authenticationSMSPin;
+    if (sig.seBankIDAuthenticationToSign()) return localization.docview.signatory.authenticationELeg;
 
     return "";
   },

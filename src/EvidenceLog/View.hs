@@ -24,6 +24,7 @@ import DB
 import Doc.DocStateData
 import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
 import Doc.SignatoryIdentification (SignatoryIdentifierMap, siLink, siFullName, signatoryIdentifierMap, signatoryIdentifier)
+import EID.Authentication.Model
 import EID.Signature.Model
 import EvidenceLog.Model
 import KontraPrelude
@@ -109,10 +110,13 @@ simpleEvents (Current ReminderSend)                      = True
 simpleEvents (Current AutomaticReminderSent)             = True
 simpleEvents (Current RestartDocumentEvidence)           = True
 simpleEvents (Current SignDocumentEvidence)              = True
-simpleEvents (Current SignatoryLinkVisited)              = True
+simpleEvents (Obsolete SignatoryLinkVisited)              = True
 simpleEvents (Current TimeoutDocumentEvidence)           = True
 simpleEvents (Current SMSPinSendEvidence)                = True
 simpleEvents (Current SMSPinDeliveredEvidence)           = True
+simpleEvents (Current VisitedViewForAuthenticationEvidence) = True
+simpleEvents (Current VisitedViewForSigningEvidence)     = True
+simpleEvents (Current AuthenticatedToViewEvidence)       = True
 simpleEvents _                                           = False
 
 getEvidenceEventStatusClass :: EvidenceEventType -> StatusClass
@@ -122,7 +126,7 @@ getEvidenceEventStatusClass (Current RejectDocumentEvidence)            = SCReje
 getEvidenceEventStatusClass (Current TimeoutDocumentEvidence)           = SCTimedout
 getEvidenceEventStatusClass (Current PreparationToPendingEvidence)      = SCInitiated
 getEvidenceEventStatusClass (Current MarkInvitationReadEvidence)        = SCRead
-getEvidenceEventStatusClass (Current SignatoryLinkVisited)              = SCOpened
+getEvidenceEventStatusClass (Obsolete SignatoryLinkVisited)             = SCOpened
 getEvidenceEventStatusClass (Current RestartDocumentEvidence)           = SCDraft
 getEvidenceEventStatusClass (Current SignDocumentEvidence)              = SCSigned
 getEvidenceEventStatusClass (Current InvitationEvidence)                = SCSent
@@ -140,13 +144,17 @@ getEvidenceEventStatusClass (Current AttachGuardtimeSealedFileEvidence) = SCSeal
 getEvidenceEventStatusClass (Current AttachExtendedSealedFileEvidence)  = SCExtended
 getEvidenceEventStatusClass (Current SMSPinSendEvidence)                = SCSent
 getEvidenceEventStatusClass (Current SMSPinDeliveredEvidence)           = SCDelivered
+getEvidenceEventStatusClass (Current VisitedViewForAuthenticationEvidence) = SCOpened
+getEvidenceEventStatusClass (Current VisitedViewForSigningEvidence)        = SCOpened
+getEvidenceEventStatusClass (Current AuthenticatedToViewEvidence)          = SCOpened
+
 getEvidenceEventStatusClass _                                           = SCError
 
 -- Remove signatory events that happen after signing (link visited, invitation read)
 cleanUnimportantAfterSigning :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
 cleanUnimportantAfterSigning = go Set.empty
   where go _ [] = []
-        go m (e:es) | evType e `elem` [Current SignatoryLinkVisited, Current MarkInvitationReadEvidence]
+        go m (e:es) | evType e `elem` [Obsolete SignatoryLinkVisited, Current MarkInvitationReadEvidence]
                        && ids e `Set.member` m
                     = go m es -- the only place for skipping events, but these events always have evSigLink == Just ...
                     | evType e == Current SignDocumentEvidence
@@ -222,6 +230,12 @@ simplyfiedEventText target mactor d sim dee = do
                 LegacyNordeaSignature_{} -> Nothing
                 LegacyMobileBankIDSignature_{} -> Nothing
                 BankIDSignature_ BankIDSignature{..} -> Just bidsSignatoryName
+          when (evType dee == Current AuthenticatedToViewEvidence) $ do
+            dbQuery (GetEAuthenticationWithoutSession slinkid) >>= \case
+              Nothing -> return ()
+              Just esig -> F.value "provider" $ case esig of
+                BankIDAuthentication_{} -> Just ("Swedish BankID" ::String)
+
         F.value "text" $ String.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "signatory" $ (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) <$> mslinkid
         F.forM_ mactor $ F.value "actor"
