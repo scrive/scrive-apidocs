@@ -182,6 +182,7 @@ var ConfirmationView = Backbone.View.extend({
        var title = $("<div class='modal-title'/>");
        if (BrowserInfo.isSmallScreen()) {
          title.css('font-size', '42px');
+         title.css('line-height', '42px');
          title.css('font-style', 'bold');
        }
        title.append(this.model.title());
