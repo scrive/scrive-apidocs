@@ -181,7 +181,7 @@ tryToConvertConditionalExpectionIntoAPIError  =  compose [
     , convertDocumentIsDeleted
     , convertDocumentIsNotDeleted
     , convertDocumentIsReallyDeleted
-    , convertSignatoryAuthenticationDoesNotMatch
+    , convertSignatoryAuthenticationToSignDoesNotMatch
   ]
   where
     compose [] = id
@@ -284,8 +284,8 @@ convertDocumentIsReallyDeleted (SomeKontraException ex) =
     Just (DocumentIsReallyDeleted {}) -> SomeKontraException $ documentStateError $ "Document is really deleted. It is not avaialbe and will be purged soon"
     Nothing -> (SomeKontraException ex)
 
-convertSignatoryAuthenticationDoesNotMatch ::  SomeKontraException -> SomeKontraException
-convertSignatoryAuthenticationDoesNotMatch (SomeKontraException ex) =
+convertSignatoryAuthenticationToSignDoesNotMatch ::  SomeKontraException -> SomeKontraException
+convertSignatoryAuthenticationToSignDoesNotMatch (SomeKontraException ex) =
   case cast ex of
-    Just (SignatoryAuthenticationDoesNotMatch {}) -> SomeKontraException $ signatoryStateError $ "Invalid authorization for signatory"
+    Just (SignatoryAuthenticationToSignDoesNotMatch {}) -> SomeKontraException $ signatoryStateError $ "Invalid authorization for signatory"
     Nothing -> (SomeKontraException ex)

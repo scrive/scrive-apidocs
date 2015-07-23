@@ -123,7 +123,15 @@
             ],
             "default": "email"
           },
-          "authentication_method": {
+          "authentication_method_to_view": {
+            "type": "string",
+            "enum": [
+              "standard"
+            , "se_bankid"
+            ],
+            "default": "standard"
+          },
+          "authentication_method_to_sign": {
             "type": "string",
             "enum": [
               "standard"

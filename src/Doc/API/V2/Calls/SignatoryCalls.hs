@@ -10,7 +10,6 @@ import Data.Text (strip, unpack)
 import Happstack.Server.Types
 
 import API.V2
-import Chargeable.Model
 import DB
 import Doc.API.V2.Calls.SignatoryCallsUtils
 import Doc.API.V2.DocumentAccess
@@ -61,17 +60,18 @@ docApiV2SigSign did slid = api $ do
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending
     guardThatDocument (hasSigned . $fromJust . getSigLinkFor slid ) "Document can't be already signed"
-    checkAuthenticationMethodAndValue slid
-    authorization <- signatorylinkauthenticationmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
+    guardSignatoryNeedsToIdentifyToView slid
+    checkAuthenticationToSignMethodAndValue slid
+    authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
 
     case authorization of
-      StandardAuthentication -> do
+      StandardAuthenticationToSign -> do
         signDocument slid mh fields Nothing Nothing screenshots
         postDocumentPendingChange olddoc
         handleAfterSigning slid
         Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
 
-      SMSPinAuthentication -> do
+      SMSPinAuthenticationToSign -> do
         pin <- fmap unpack $ apiV2ParameterObligatory (ApiV2ParameterText "pin")
         validPin <- checkSignatoryPin slid fields pin
         if validPin
@@ -82,10 +82,8 @@ docApiV2SigSign did slid = api $ do
             Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
           else apiError documentActionForbidden
 
-      ELegAuthentication -> dbQuery (GetESignature slid) >>= \case
+      SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
         mesig@(Just _) -> do
-          -- charge company of the author of the document for the signature
-          dbUpdate $ ChargeCompanyForElegSignature did
           signDocument slid mh fields mesig Nothing screenshots
           postDocumentPendingChange olddoc
           handleAfterSigning slid

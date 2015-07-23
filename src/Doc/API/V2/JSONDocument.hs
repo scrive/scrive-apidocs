@@ -93,9 +93,11 @@ unjsonSignatory da =  objectOf $
   <**> (fieldOpt "csv" signatorylinkcsvupload ("CSV upload for multipart") <**> (pure $ \mcsv s -> s { signatorylinkcsvupload = mcsv })) -- Check only one csv for whole doc
   <**> (fieldDef "delivery_method" (signatorylinkdeliverymethod def) signatorylinkdeliverymethod "Signatory invitation delivery method"
         <**> (pure $ \sd s -> s { signatorylinkdeliverymethod = sd }))
-  <**> (fieldDef "authentication_method" (signatorylinkauthenticationmethod def) signatorylinkauthenticationmethod "Signatory authentication method"
-        <**> (pure $ \sa s -> s { signatorylinkauthenticationmethod = sa }))
-  <**> (fieldDef "confirmation_delivery_method" (signatorylinkconfirmationdeliverymethod def) signatorylinkconfirmationdeliverymethod "Signatory authentication method"
+  <**> (fieldDef "authentication_method_to_view" (signatorylinkauthenticationtoviewmethod def) signatorylinkauthenticationtoviewmethod "Signatory authentication to view method"
+        <**> (pure $ \satv s -> s { signatorylinkauthenticationtoviewmethod = satv }))
+  <**> (fieldDef "authentication_method_to_sign" (signatorylinkauthenticationtosignmethod def) signatorylinkauthenticationtosignmethod "Signatory authentication to sign method"
+        <**> (pure $ \sats s -> s { signatorylinkauthenticationtosignmethod = sats }))
+  <**> (fieldDef "confirmation_delivery_method" (signatorylinkconfirmationdeliverymethod def) signatorylinkconfirmationdeliverymethod ""
         <**> (pure $ \scd s -> s { signatorylinkconfirmationdeliverymethod = scd }))
   <**> (fieldDef "attachments"  (signatoryattachments def) signatoryattachments "Signatory attachments"
         <**> (pure $ \sa s -> s { signatoryattachments = sa }))

@@ -91,6 +91,7 @@ docApiV2FilesMain :: Kontrakcja m => DocumentID -> String -> m Response
 docApiV2FilesMain did _filenameForBrowser = api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
   _ <- guardDocumentAccessSessionOrUser did mslid APIDocCheck guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
+  when (isJust mslid) (withDocumentID did $ guardSignatoryNeedsToIdentifyToView $ $fromJust mslid)
   fileContents <- withDocumentID did $ do
     doc <- theDocument
     case documentstatus doc of
@@ -114,6 +115,7 @@ docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
 docApiV2FilesGet did fid filename = api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
   _ <- guardDocumentAccessSessionOrUser did mslid APIDocCheck guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
+  when (isJust mslid) (withDocumentID did $ guardSignatoryNeedsToIdentifyToView $ $fromJust mslid)
   doc <- dbQuery $ GetDocumentByDocumentID did
   let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++
                       (authorattachmentfileid <$> documentauthorattachments doc) ++

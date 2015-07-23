@@ -7,6 +7,7 @@ module Doc.API.V2.Guards (
 , guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
 , guardThatDocumentCanBeStarted
 , guardThatObjectVersionMatchesIfProvided
+, guardSignatoryNeedsToIdentifyToView
 , guardDocumentAccessSessionOrUser
 ) where
 
@@ -20,6 +21,7 @@ import Doc.API.V2.Parameters
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocStateData
+import Doc.DocStateQuery
 import Doc.DocUtils
 import Doc.DocumentID
 import Doc.DocumentMonad
@@ -81,6 +83,11 @@ guardThatObjectVersionMatchesIfProvided did = do
     Nothing -> return ()
     Just ov -> (dbQuery $ CheckDocumentObjectVersionIs did (fromIntegral ov))
       `catchKontra` (\e@DocumentObjectVersionDoesNotMatch {} -> apiError $ documentObjectVersionMismatch e)
+
+guardSignatoryNeedsToIdentifyToView :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
+guardSignatoryNeedsToIdentifyToView slid =
+  whenM (signatoryNeedsToIdentifyToView =<< $fromJust . getSigLinkFor slid <$> theDocument) $ do
+    (apiError $ signatoryStateError "Authorisation to view needed before signing")
 
 -- Checks if document can be strated. Throws matching API exception if it does not
 guardThatDocumentCanBeStarted :: (DocumentMonad m, Kontrakcja m) => m ()

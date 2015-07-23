@@ -2,7 +2,7 @@
 module Doc.API.V2.JSONMisc (
   iso8601Time
 , unjsonMaybeMainFile
-, textToAuthenticationMethod
+, textToAuthenticationToSignMethod
 ) where
 
 import Data.Text.Encoding
@@ -79,19 +79,31 @@ instance Unjson DeliveryStatus where
     , (Deferred, "deferred")
     ]
 
-instance Unjson AuthenticationMethod where
-  unjsonDef = unjsonEnum "AuthenticationMethod" textToAuthenticationMethod authenticationMethodToText
+instance Unjson AuthenticationToViewMethod where
+  unjsonDef = unjsonEnum "AuthenticationToViewMethod" textToAuthenticationToViewMethod authenticationToViewMethodToText
 
-authenticationMethodToText :: AuthenticationMethod -> Text
-authenticationMethodToText StandardAuthentication = "standard"
-authenticationMethodToText ELegAuthentication = "se_bankid"
-authenticationMethodToText SMSPinAuthentication = "sms_pin"
+authenticationToViewMethodToText :: AuthenticationToViewMethod -> Text
+authenticationToViewMethodToText StandardAuthenticationToView = "standard"
+authenticationToViewMethodToText SEBankIDAuthenticationToView = "se_bankid"
 
-textToAuthenticationMethod :: Text -> Maybe AuthenticationMethod
-textToAuthenticationMethod "standard"  = Just StandardAuthentication
-textToAuthenticationMethod "se_bankid" = Just ELegAuthentication
-textToAuthenticationMethod "sms_pin"   = Just SMSPinAuthentication
-textToAuthenticationMethod _           = Nothing
+textToAuthenticationToViewMethod :: Text -> Maybe AuthenticationToViewMethod
+textToAuthenticationToViewMethod "standard" = Just StandardAuthenticationToView
+textToAuthenticationToViewMethod "se_bankid" = Just SEBankIDAuthenticationToView
+textToAuthenticationToViewMethod _ = Nothing
+
+instance Unjson AuthenticationToSignMethod where
+  unjsonDef = unjsonEnum "AuthenticationToSignMethod" textToAuthenticationToSignMethod authenticationToSignMethodToText
+
+authenticationToSignMethodToText :: AuthenticationToSignMethod -> Text
+authenticationToSignMethodToText StandardAuthenticationToSign = "standard"
+authenticationToSignMethodToText SEBankIDAuthenticationToSign = "se_bankid"
+authenticationToSignMethodToText SMSPinAuthenticationToSign = "sms_pin"
+
+textToAuthenticationToSignMethod :: Text -> Maybe AuthenticationToSignMethod
+textToAuthenticationToSignMethod "standard"  = Just StandardAuthenticationToSign
+textToAuthenticationToSignMethod "se_bankid" = Just SEBankIDAuthenticationToSign
+textToAuthenticationToSignMethod "sms_pin"   = Just SMSPinAuthenticationToSign
+textToAuthenticationToSignMethod _           = Nothing
 
 
 instance Unjson DeliveryMethod where

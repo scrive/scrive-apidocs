@@ -1,5 +1,5 @@
 module Doc.API.V2.Calls.SignatoryCallsUtils (
-  checkAuthenticationMethodAndValue
+  checkAuthenticationToSignMethodAndValue
 , getScreenshots
 , signDocument
 , checkSignatoryPin
@@ -32,26 +32,26 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
 {- | Check if provided authorization values for sign call patch -}
-checkAuthenticationMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
-checkAuthenticationMethodAndValue slid = do
+checkAuthenticationToSignMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
+checkAuthenticationToSignMethodAndValue slid = do
   mAuthType  :: Maybe String <- getField "authentication_type"
   mAuthValue :: Maybe String <- getField "authentication_value"
   case (mAuthType, mAuthValue) of
        (Just authType, Just authValue) -> do
-           case (textToAuthenticationMethod $ pack authType) of
+           case (textToAuthenticationToSignMethod $ pack authType) of
                 Just authMethod -> do
                     siglink <- $fromJust . getSigLinkFor slid <$> theDocument
-                    let authOK = authMethod == signatorylinkauthenticationmethod siglink
+                    let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
                     case (authOK, authMethod) of
                          (False, _) -> apiError $
                              requestParameterInvalid "authentication_type" "does not match with document"
-                         (True, StandardAuthentication) -> return ()
-                         (True, ELegAuthentication)   ->
+                         (True, StandardAuthenticationToSign) -> return ()
+                         (True, SEBankIDAuthenticationToSign) ->
                              if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
                                 then return ()
                                 else apiError $
                                     requestParameterInvalid "authentication_value" "value for personal number does not match"
-                         (True, SMSPinAuthentication) ->
+                         (True, SMSPinAuthenticationToSign) ->
                              if (authValue == getMobile siglink || null (getMobile siglink))
                                 then return ()
                                 else apiError $

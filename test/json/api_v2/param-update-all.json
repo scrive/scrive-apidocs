@@ -86,7 +86,8 @@
       "sign_success_redirect_url": "#☭ҖSIGNURL",
       "reject_redirect_url": "#☭ҖREJURL",
       "delivery_method": "api",
-      "authentication_method": "sms_pin",
+      "authentication_method_to_view": "se_bankid",
+      "authentication_method_to_sign": "sms_pin",
       "confirmation_delivery_method": "none",
       "attachments": [
         {

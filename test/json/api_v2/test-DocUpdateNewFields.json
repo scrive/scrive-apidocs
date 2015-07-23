@@ -43,7 +43,8 @@
       "mobile_delivery_status": "unknown",
       "csv": null,
       "delivery_method": "email",
-      "authentication_method": "standard",
+      "authentication_method_to_view": "standard",
+      "authentication_method_to_sign": "standard",
       "confirmation_delivery_method": "email",
       "attachments": [],
       "api_delivery_url": null
@@ -165,7 +166,8 @@
       "mobile_delivery_status": "unknown",
       "csv": null,
       "delivery_method": "email",
-      "authentication_method": "standard",
+      "authentication_method_to_view": "standard",
+      "authentication_method_to_sign": "standard",
       "confirmation_delivery_method": "email",
       "attachments": [],
       "api_delivery_url": null
