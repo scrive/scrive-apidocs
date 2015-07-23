@@ -21,6 +21,7 @@ import Data.Text hiding (reverse, takeWhile)
 import Data.Unjson
 import Data.Unjson as Unjson
 import Happstack.Server.Types
+import System.FilePath (dropExtension)
 import Text.StringTemplates.Templates
 
 import API.V2
@@ -56,7 +57,7 @@ docApiV2New = api $ do
       ctx <- getContext
       title <- renderTemplate_ "newDocumentTitle"
       return $ title ++ " " ++ formatTimeSimple (ctxtime ctx)
-    Just f -> return $ filename f
+    Just f -> return . dropExtension . filename $ f
   (dbUpdate $ NewDocument user title Signable defaultTimeZoneName 0 actor) `withDocumentM` do
     dbUpdate $ SetDocumentUnsavedDraft (not saved)
     case mFile of
