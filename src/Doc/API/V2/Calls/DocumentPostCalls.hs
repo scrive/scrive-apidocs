@@ -44,6 +44,7 @@ import Kontra
 import KontraPrelude
 import MinutesTime
 import OAuth.Model
+import User.Model
 
 docApiV2New :: Kontrakcja m => m Response
 docApiV2New = api $ do
@@ -72,6 +73,7 @@ docApiV2NewFromTemplate did = api $ do
     guardThatUserIsAuthorOrDocumentIsShared user
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocument isTemplate "Document must be a template"
+    guardThatDocument (not $ flip documentDeletedForUser $ userid user) "The template is in trash"
   template <- dbQuery $ GetDocumentByDocumentID $ did
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
