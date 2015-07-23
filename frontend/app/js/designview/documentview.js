@@ -92,7 +92,7 @@ define(['Spinjs', 'designview/fileview/fileview', 'Backbone', 'legacy_code'], fu
           var sizeOfEverythingAboveEmptyDocSpace = designViewFrameTopBar.height() + designViewFrameTopBar.offset().top;
           var sizeOfFooter = $(window).height() - designViewButtonBar.offset().top; // size of everything that is below the empty document space
           var paddingSize = 36; // 2 * documentview.less: .design-view-document-buttons-wrapper-outer[padding-(top|bottom)]
-          var docHeight = Math.floor($(window).height() - sizeOfEverythingAboveEmptyDocSpace - sizeOfFooter - paddingSize);
+          var docHeight = Math.floor($(window).height() - sizeOfEverythingAboveEmptyDocSpace - sizeOfFooter - paddingSize) - 5; // -5 makes no difference everywhere except for chrome on OSX, and on OSX chrome it makes window scrollbar disappear
 
           if (this.wrapperDiv != undefined) {
             this.wrapperDiv.css('height', docHeight + 'px');
