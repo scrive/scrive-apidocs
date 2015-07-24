@@ -419,16 +419,6 @@ window.Signatory = Backbone.Model.extend({
             return attachment.hasFile();
         });
     },
-    allFieldsReadyForSign: function() {
-        return _.all(this.fields(), function(field) {
-            return field.readyForSign();
-        });
-    },
-    signatureReadyForSign: function() {
-        return _.all(this.signatures(), function(signature) {
-            return signature.readyForSign();
-        });
-    },
     signatures: function() {
         return this.fieldsByType("signature");
     },

@@ -292,6 +292,7 @@
 "_createFromTemplateDescription":"Välj en mall för att gå vidare",
 "_createNewTemplate":"Ny mall",
 "_csvFilePersons":"en person för varje rad definierad i CSV-filen",
+"_currentemailaddress":"",
 "_customiseBorderColourLabel":"Ramfärg",
 "_customiseButtonColourLabel":"Knappfärg",
 "_customiseEmailBackgroundColourLabel":"Bakgrundsfärg e-post",

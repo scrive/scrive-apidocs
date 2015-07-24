@@ -42,9 +42,12 @@ handleGlobalMouthEvents = flip E.catch (\(e :: SomeException) -> logInfo_ (show 
   case xref of
     Just xref' -> do
               let ev = SMSEvent xmsisdn event
-              logInfo_ $ "UpdateWithSMSEvent" <+> show xref' <+> show ev
-              res <- dbUpdate (UpdateWithSMSEvent xref' ev)
-              logInfo_ $ "UpdateWithSMSEvent" <+> show xref' <+> show ev <+> "=>" <+> show res
+                  updateEvent = do
+                    res <- dbUpdate $ UpdateWithSMSEvent xref' ev
+                    logInfo_ $ "UpdateWithSMSEvent" <+> show xref' <+> show ev <+> "=>" <+> show res
+                  handleMissingSMS (e :: DBException) = do
+                    logInfo_ $ "UpdateWithSMSEvent" <+> show xref' <+> show ev <+> "=> DB Error (probably original SMS got purged): " <+> show e
+              updateEvent `E.catch` handleMissingSMS
               ok $ toResponse "Thanks"
     Nothing -> do
               logInfo_ $ "UpdateWithSMSEvent not run due to xref=" ++ show xref

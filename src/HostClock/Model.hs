@@ -61,9 +61,9 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetNClockErrorEstimates [ClockEr
         sqlResult "clock_offset"
         sqlResult "clock_frequency"
         sqlWhere "clock_offset IS NOT NULL"
-        sqlOrderBy "time"
+        sqlOrderBy "time DESC"
         sqlLimit limit
-    fetchMany $ \(time', offset', frequency') -> ClockErrorEstimate time' offset' frequency'
+    reverse <$> (fetchMany $ \(time', offset', frequency') -> ClockErrorEstimate time' offset' frequency')
 
 -- | Simple way to see that there are more than 2 different offset values
 enoughClockErrorOffsetSamples :: [ClockErrorEstimate] -> Bool

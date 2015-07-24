@@ -120,6 +120,8 @@ window.Field = Backbone.Model.extend({
           return new EmailValidation().validateData(this.value());
         else if (this.isOptional())
             return true;
+        else if (this.isFstName() || this.isSndName())
+            return new NotEmptyValidation().validateData(this.value());
         else if (this.isEmail())
             return new EmailValidation().validateData(this.value());
         if (this.isSSN() && (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView()))

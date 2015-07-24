@@ -292,6 +292,7 @@
 "_createFromTemplateDescription":"Seleccione la plantilla para continuar",
 "_createNewTemplate":"Nueva plantilla",
 "_csvFilePersons":"una persona de cada fila es definida en el archivo CSV",
+"_currentemailaddress":"",
 "_customiseBorderColourLabel":"Color del borde",
 "_customiseButtonColourLabel":"Color del botón",
 "_customiseEmailBackgroundColourLabel":"Color de fondo del email",

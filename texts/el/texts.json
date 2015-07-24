@@ -292,6 +292,7 @@
 "_createFromTemplateDescription":"Επιλέξτε ένα πρότυπο για να συνεχίσετε",
 "_createNewTemplate":"Νέο πρότυπο ",
 "_csvFilePersons":"στο αρχείο CSV ορίστηκε ένα άτομο για κάθε σειρά  ",
+"_currentemailaddress":"",
 "_customiseBorderColourLabel":"Χρώμα ορίων ",
 "_customiseButtonColourLabel":"Χρώμα ένδειξης ",
 "_customiseEmailBackgroundColourLabel":"Χρώμα φόντου email ",
