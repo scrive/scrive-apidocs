@@ -63,15 +63,19 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var images = _.map(file.pages(), function (page, index) {
         var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart({"pixelwidth": page.width()});
         var img = new Image();
-        img.src = pagelink;
         var callback = function () {
-          self.handleLoad(index)
+          if (!img.complete) {
+            setTimeout(callback, 100);
+          } else {
+            self.handleLoad(index)
+          }
         };
         if (BrowserInfo.isIE8orLower()) {
           img.attachEvent("onload", callback);
         } else {
           img.addEventListener("load", callback);
         }
+        img.src = pagelink;
         return img;
       });
 
