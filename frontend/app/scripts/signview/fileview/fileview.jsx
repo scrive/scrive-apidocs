@@ -67,7 +67,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
           if (!img.complete) {
             setTimeout(callback, 100);
           } else {
-            self.handleLoad(index)
+            self.handleLoad(index);
           }
         };
         if (BrowserInfo.isIE8orLower()) {
