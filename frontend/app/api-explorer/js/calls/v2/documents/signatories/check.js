@@ -16,6 +16,13 @@ new APICallV2({
           window.APIV2CallParamDocumentID,
           window.APIV2CallParamSignatoryID,
           new APICallParam({
+            type: "json",
+            argName: "fields",
+            name: "Signatory Fields",
+            description: "TODO",
+            defaultValue: "[]"
+          }),
+          new APICallParam({
             type: "text",
             optional: true,
             argName: "authentication_type",

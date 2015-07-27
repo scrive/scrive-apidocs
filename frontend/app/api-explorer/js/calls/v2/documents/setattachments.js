@@ -17,8 +17,8 @@ new APICallV2({
           window.APIV2CallParamDocumentID,
           new APICallParam({
             type: "file",
-            argName: function () { return "attachments";},
-            name: "files (application/pdf)",
+            argName: function (i) { return "attachment_" + i;},
+            name: "attachments (application/pdf)",
             sendAsParam: true,
             optional: true,
             description: "TODO",
@@ -32,6 +32,15 @@ new APICallV2({
               });
               return input.data("MultiFile");
             }
+          }),
+          new APICallParam({
+            type: "json",
+            argName: "file_ids",
+            name: "File Ids",
+            sendAsParam: true,
+            optional: true,
+            description: "TODO",
+            defaultValue: "[]"
           })
           , window.APIV2CallParamObjectVersion
         ]

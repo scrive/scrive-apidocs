@@ -16,6 +16,7 @@ new APICallV2({
             type: "text",
             argName: "days",
             name: "Days",
+            optional: true,
             description: "TODO",
             defaultValue: ""
           }),

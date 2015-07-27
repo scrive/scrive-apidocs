@@ -14,7 +14,7 @@ import Data.Text (pack, unpack)
 import Data.Unjson
 import Happstack.Server.Types
 import Text.JSON.Types (JSValue(..))
-import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy as BSL (fromStrict)
 import qualified Data.Map as Map hiding (map)
 
 import API.V2
@@ -24,6 +24,7 @@ import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
 import Doc.API.V2.JSONDocument
 import Doc.API.V2.JSONList
+import Doc.API.V2.JSONMisc (evidenceAttachmentsToJSONBS)
 import Doc.API.V2.Parameters
 import Doc.Data.MainFile
 import Doc.DocSeal (presealDocumentFile)
@@ -40,6 +41,7 @@ import Kontra
 import KontraPrelude
 import OAuth.Model
 import User.Model
+import qualified Doc.EvidenceAttachments as EvidenceAttachments
 
 docApiV2Available :: Kontrakcja m => m Response
 docApiV2Available = api $ do
@@ -85,7 +87,12 @@ docApiV2History did = api $ do
   return $ Ok (JSArray events)
 
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
-docApiV2EvidenceAttachments _did = $undefined -- TODO implement
+docApiV2EvidenceAttachments did = api $ withDocumentID did $ do
+  (user,_) <- getAPIUser APIDocCheck
+  guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user
+  doc <- theDocument
+  eas <- EvidenceAttachments.fetch doc
+  return $ Ok $ Response 200 Map.empty nullRsFlags (evidenceAttachmentsToJSONBS (documentid doc) eas) Nothing
 
 docApiV2FilesMain :: Kontrakcja m => DocumentID -> String -> m Response
 docApiV2FilesMain did _filenameForBrowser = api $ do

@@ -8,6 +8,7 @@ module Doc.API.V2.Guards (
 , guardThatDocumentCanBeStarted
 , guardThatObjectVersionMatchesIfProvided
 , guardSignatoryNeedsToIdentifyToView
+, guardSignatoryHasNotSigned
 , guardDocumentAccessSessionOrUser
 ) where
 
@@ -88,6 +89,11 @@ guardSignatoryNeedsToIdentifyToView :: (Kontrakcja m, DocumentMonad m) => Signat
 guardSignatoryNeedsToIdentifyToView slid =
   whenM (signatoryNeedsToIdentifyToView =<< $fromJust . getSigLinkFor slid <$> theDocument) $ do
     (apiError $ signatoryStateError "Authorisation to view needed before signing")
+
+guardSignatoryHasNotSigned :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
+guardSignatoryHasNotSigned slid =
+  whenM (hasSigned . $fromJust . getSigLinkFor slid <$> theDocument) $ do
+    (apiError $ signatoryStateError "The signatory has already signed")
 
 -- Checks if document can be strated. Throws matching API exception if it does not
 guardThatDocumentCanBeStarted :: (DocumentMonad m, Kontrakcja m) => m ()

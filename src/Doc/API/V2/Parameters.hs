@@ -16,7 +16,7 @@ import qualified Data.ByteString.Lazy as BSL
 
 import API.V2
 import DB
-import Data.Text hiding (reverse, takeWhile)
+import Data.Text hiding (map, reverse, takeWhile)
 import Data.Unjson
 import Data.Unjson as Unjson
 import Doc.Rendering
@@ -34,7 +34,8 @@ data ApiV2Parameter a where
   ApiV2ParameterRead  :: Read a => Text -> ApiV2Parameter a
   ApiV2ParameterJSON  :: Text -> UnjsonDef a -> ApiV2Parameter a
   ApiV2ParameterAeson :: Aeson.FromJSON a => Text -> ApiV2Parameter a
-  ApiV2ParameterFile  :: Text -> ApiV2Parameter File
+  ApiV2ParameterFilePDF        :: Text -> ApiV2Parameter File
+  ApiV2ParameterFilePDFOrImage :: Text -> ApiV2Parameter File
 
 -- | Get an obligatory parameter
 --
@@ -87,7 +88,7 @@ apiV2ParameterOptional (ApiV2ParameterAeson name) = do
       Right js -> return $ Just js
     Nothing -> return Nothing
 
-apiV2ParameterOptional (ApiV2ParameterFile name) = do
+apiV2ParameterOptional (ApiV2ParameterFilePDF name) = do
   mValue <- getDataFn' (lookInput $ unpack name)
   case mValue of
     Nothing -> return Nothing
@@ -122,6 +123,32 @@ apiV2ParameterOptional (ApiV2ParameterFile name) = do
       file <- dbQuery $ GetFileByFileID fileid
       return $ Just file
 
+apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
+  mValue <- getDataFn' (lookInput $ unpack name)
+  case mValue of
+    Nothing -> return Nothing
+    Just (Input _ Nothing _) -> apiError $ requestParameterInvalid name "file was empty"
+    Just (Input contentspec (Just filename') _contentType) -> do
+      let filename = reverse . takeWhile (/='\\') . reverse $ filename' -- Drop filepath for windows
+      content' <- case contentspec of
+        Left filepath -> liftIO $ BS.readFile filepath
+        Right content -> return (BS.concat $ BSL.toChunks content)
+      let filenameExt = toLower . pack . takeExtension $ filename
+          pdfSuffix = ".pdf" == filenameExt
+          jpgSufix = ".jpg" == filenameExt || ".jpeg" == filenameExt
+          pngSuffix = ".png" == filenameExt
+      content <- case (pdfSuffix, jpgSufix || pngSuffix) of
+        (True, _) -> do
+          res <- preCheckPDF content'
+          case res of
+            Right r -> return r
+            Left _ ->  apiError $ requestParameterParseError name $ "filename suggests PDF, but not a valid PDF"
+        (_, True) -> return $ Binary $ content'
+        _ -> apiError $ requestParameterParseError name "not a PDF or image (PNG or JPG)"
+      fileid <- dbUpdate $ NewFile filename content
+      file <- dbQuery $ GetFileByFileID fileid
+      return $ Just file
+
 -- * Internal
 
 -- | Helper function for all parameters that can just be parsed using `maybeRead`
@@ -141,4 +168,5 @@ getParameterName (ApiV2ParameterText n) = n
 getParameterName (ApiV2ParameterRead n) = n
 getParameterName (ApiV2ParameterJSON n _) = n
 getParameterName (ApiV2ParameterAeson n) = n
-getParameterName (ApiV2ParameterFile n) = n
+getParameterName (ApiV2ParameterFilePDF n) = n
+getParameterName (ApiV2ParameterFilePDFOrImage n) = n

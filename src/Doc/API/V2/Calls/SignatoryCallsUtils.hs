@@ -5,9 +5,8 @@ module Doc.API.V2.Calls.SignatoryCallsUtils (
 , checkSignatoryPin
 ) where
 
-import Data.Text (pack)
+import Data.Text (unpack)
 import Data.Unjson
-import Happstack.Fields
 import qualified Data.ByteString.Char8 as BS
 
 import API.V2
@@ -34,33 +33,29 @@ import Util.SignatoryLinkUtils
 {- | Check if provided authorization values for sign call patch -}
 checkAuthenticationToSignMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
 checkAuthenticationToSignMethodAndValue slid = do
-  mAuthType  :: Maybe String <- getField "authentication_type"
-  mAuthValue :: Maybe String <- getField "authentication_value"
-  case (mAuthType, mAuthValue) of
-       (Just authType, Just authValue) -> do
-           case (textToAuthenticationToSignMethod $ pack authType) of
-                Just authMethod -> do
-                    siglink <- $fromJust . getSigLinkFor slid <$> theDocument
-                    let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
-                    case (authOK, authMethod) of
-                         (False, _) -> apiError $
-                             requestParameterInvalid "authentication_type" "does not match with document"
-                         (True, StandardAuthenticationToSign) -> return ()
-                         (True, SEBankIDAuthenticationToSign) ->
-                             if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
-                                then return ()
-                                else apiError $
-                                    requestParameterInvalid "authentication_value" "value for personal number does not match"
-                         (True, SMSPinAuthenticationToSign) ->
-                             if (authValue == getMobile siglink || null (getMobile siglink))
-                                then return ()
-                                else apiError $
-                                    requestParameterInvalid "authentication_value" "value for phone number does not match"
-                Nothing ->
-                    apiError $ requestParameterParseError "authentication_type" "invalid type"
-       (Nothing, Nothing) -> return ()
-       (Just _, Nothing) ->  apiError $ requestParameterMissing "authentication_value"
-       (Nothing, Just _) ->  apiError $ requestParameterMissing "authentication_type"
+  mAuthType <- apiV2ParameterOptional (ApiV2ParameterText "authentication_type")
+  case fmap textToAuthenticationToSignMethod mAuthType of
+    Nothing -> return ()
+    Just Nothing -> apiError $ requestParameterParseError "authentication_type" "Not a valid  authentication type, see our API documentation."
+    Just (Just authMethod) -> do
+      siglink <- $fromJust . getSigLinkFor slid <$> theDocument
+      let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
+      when (not authOK) $
+        apiError $ requestParameterInvalid "authentication_type" "does not match with document"
+      case authMethod of
+        StandardAuthenticationToSign -> return ()
+        SEBankIDAuthenticationToSign -> do
+          authValue <- liftM unpack $ apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
+          if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
+            then return ()
+            else apiError $
+              requestParameterInvalid "authentication_value" "value for personal number does not match"
+        SMSPinAuthenticationToSign -> do
+          authValue <- liftM unpack $ apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
+          if (authValue == getMobile siglink || null (getMobile siglink))
+            then return ()
+            else apiError $
+              requestParameterInvalid "authentication_value" "value for phone number does not match"
 
 getScreenshots :: (Kontrakcja m) => m SignatoryScreenshots
 getScreenshots = do

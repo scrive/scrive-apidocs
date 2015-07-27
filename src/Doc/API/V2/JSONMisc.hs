@@ -3,6 +3,7 @@ module Doc.API.V2.JSONMisc (
   iso8601Time
 , unjsonMaybeMainFile
 , textToAuthenticationToSignMethod
+, evidenceAttachmentsToJSONBS
 ) where
 
 import Data.Text.Encoding
@@ -10,21 +11,24 @@ import Data.Time.Clock
 import Data.Time.Format
 import Database.PostgreSQL.PQTypes.Binary
 import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.Lazy.Char8 as BC
 import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.ByteString.UTF8 as BS
 
 import DB.TimeZoneName
 import Data.Functor.Invariant
-import Data.Text
+import Data.Text hiding (last, map, scanl1)
 import Data.Unjson
 import Doc.API.V2.UnjsonUtils
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryLinkID
 import File.FileID
+import KontraLink
 import KontraPrelude
 import User.Lang
 import User.UserID
+import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 
@@ -173,3 +177,14 @@ instance Unjson SignatoryScreenshots.SignatoryScreenshots where
       combineSignatoryScreenshots f s (Just rn) _ = SignatoryScreenshots.SignatoryScreenshots f s (Just $ Left rn)
       combineSignatoryScreenshots f s _ (Just rs) = SignatoryScreenshots.SignatoryScreenshots f s (Just $ Right rs)
       combineSignatoryScreenshots f s _ _ = SignatoryScreenshots.SignatoryScreenshots f s Nothing
+
+evidenceAttachmentsToJSONBS :: DocumentID -> [EvidenceAttachments.Attachment] -> BC.ByteString
+evidenceAttachmentsToJSONBS did eas = "[" `BC.append` (BC.intercalate "," $ map eatobs eas) `BC.append` "]"
+  where eatobs :: EvidenceAttachments.Attachment -> BC.ByteString
+        eatobs ea = "{\"name\":\"" `BC.append` (BC.fromStrict $ EvidenceAttachments.name ea) `BC.append` "\"" `BC.append`
+                    (case EvidenceAttachments.mimetype ea of
+                          Just mt -> ",\"mimetype\":\"" `BC.append` (BC.fromStrict mt) `BC.append` "\""
+                          Nothing -> ""
+                    ) `BC.append`
+                    ",\"download_url\":\"" `BC.append` (BC.pack $ show $ LinkEvidenceAttachment did (EvidenceAttachments.name ea)) `BC.append` "\"" `BC.append`
+                    "}"
