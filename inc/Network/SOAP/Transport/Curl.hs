@@ -92,7 +92,7 @@ curlTransport :: SSL
               -> CurlErrorHandler
               -> DebugFunction
               -> Transport
-curlTransport ssl mcacert url response_parser on_failure _debug_fun soap_action soap_request = do
+curlTransport ssl mcacert url response_parser on_failure debug_fun soap_action soap_request = do
   curl <- initialize
   (final_body, fetch_body) <- newIncoming
   F.forM_ mcacert $ setopt curl . CurlCAInfo
@@ -111,7 +111,7 @@ curlTransport ssl mcacert url response_parser on_failure _debug_fun soap_action 
     , CurlPost True
     , CurlPostFields [TL.unpack $ renderText def soap_request]
     , CurlVerbose True
-    -- , CurlDebugFunction debug_fun -- disabled to check if it's leaking
+    , CurlDebugFunction debug_fun
     ]
   perform curl >>= \case
     CurlOK -> response_parser <$> final_body
