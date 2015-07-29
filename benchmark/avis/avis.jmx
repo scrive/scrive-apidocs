@@ -20,7 +20,7 @@
           </elementProp>
           <elementProp name="templateid" elementType="Argument">
             <stringProp name="Argument.name">templateid</stringProp>
-            <stringProp name="Argument.value">${__property(templateid,,1819)}</stringProp>
+            <stringProp name="Argument.value">${__property(templateid,,17)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="numberofpages" elementType="Argument">
@@ -30,7 +30,7 @@
           </elementProp>
           <elementProp name="filepath" elementType="Argument">
             <stringProp name="Argument.name">filepath</stringProp>
-            <stringProp name="Argument.value">${__property(filepath,,/home/paczesiowa/upload/color.pdf)}</stringProp>
+            <stringProp name="Argument.value">${__property(filepath,,/home/paczesiowa/upload/sample.pdf)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="server" elementType="Argument">
@@ -50,22 +50,22 @@
           </elementProp>
           <elementProp name="token_credentials_identifier" elementType="Argument">
             <stringProp name="Argument.name">token_credentials_identifier</stringProp>
-            <stringProp name="Argument.value">${__property(token_credentials_identifier,,aa11db25d501c99e_1)}</stringProp>
+            <stringProp name="Argument.value">${__property(token_credentials_identifier,,293e38a7399ae922_1)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="client_credentials_identifier" elementType="Argument">
             <stringProp name="Argument.name">client_credentials_identifier</stringProp>
-            <stringProp name="Argument.value">${__property(client_credentials_identifier,,f161aef30590f94a_1)}</stringProp>
+            <stringProp name="Argument.value">${__property(client_credentials_identifier,,c458020177bc2c68_1)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="token_credentials_secret" elementType="Argument">
             <stringProp name="Argument.name">token_credentials_secret</stringProp>
-            <stringProp name="Argument.value">${__property(token_credentials_secret,,b02c1c42924a9af1)}</stringProp>
+            <stringProp name="Argument.value">${__property(token_credentials_secret,,92a3bd3586c71963)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="client_credentials_secret" elementType="Argument">
             <stringProp name="Argument.name">client_credentials_secret</stringProp>
-            <stringProp name="Argument.value">${__property(client_credentials_secret,,00b33ab9b0817c6b)}</stringProp>
+            <stringProp name="Argument.value">${__property(client_credentials_secret,,bb0d47f3a2117c9a)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="number_of_concurrent_users" elementType="Argument">
@@ -470,27 +470,27 @@ vars.put(&apos;signatorylinkid&apos;, doc.signatories[1].id);</stringProp>
             <collectionProp name="Arguments.arguments">
               <elementProp name="signview_resource1" elementType="Argument">
                 <stringProp name="Argument.name">signview_resource1</stringProp>
-                <stringProp name="Argument.value">/branded_signview_image?file=sign-arrow-action-label.png&amp;colour=%23110a73</stringProp>
+                <stringProp name="Argument.value">/colored_image?file=sign-arrow-action-label.png&amp;color=%23110a73</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
               <elementProp name="signview_resource2" elementType="Argument">
                 <stringProp name="Argument.name">signview_resource2</stringProp>
-                <stringProp name="Argument.value">/branded_signview_image?file=sign-arrow-action-right-back.png&amp;colour=%23110a73</stringProp>
+                <stringProp name="Argument.value">/colored_image?file=sign-arrow-action-right-back.png&amp;color=%23110a73</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
               <elementProp name="signview_resource3" elementType="Argument">
                 <stringProp name="Argument.name">signview_resource3</stringProp>
-                <stringProp name="Argument.value">/branded_signview_image?file=sign-arrow-action-right-front.png&amp;colour=%23110a73</stringProp>
+                <stringProp name="Argument.value">/colored_image?file=sign-arrow-action-right-front.png&amp;color=%23110a73</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
               <elementProp name="signview_resource4" elementType="Argument">
                 <stringProp name="Argument.name">signview_resource4</stringProp>
-                <stringProp name="Argument.value">/branded_signview_image?file=sign-arrow-down.png&amp;colour=%23110a73</stringProp>
+                <stringProp name="Argument.value">/colored_image?file=sign-arrow-down.png&amp;color=%23110a73</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
               <elementProp name="signview_resource5" elementType="Argument">
                 <stringProp name="Argument.name">signview_resource5</stringProp>
-                <stringProp name="Argument.value">/branded_signview_image?file=sign-arrow-up.png&amp;colour=%23110a73</stringProp>
+                <stringProp name="Argument.value">/colored_image?file=sign-arrow-up.png&amp;color=%23110a73</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
               <elementProp name="signview_resource6" elementType="Argument">
@@ -560,12 +560,12 @@ vars.put(&apos;signatorylinkid&apos;, doc.signatories[1].id);</stringProp>
               </elementProp>
               <elementProp name="signview_resource19" elementType="Argument">
                 <stringProp name="Argument.name">signview_resource19</stringProp>
-                <stringProp name="Argument.value">/branded_signview_image?file=sign-arrow-action-left-back.png&amp;colour=%23110a73</stringProp>
+                <stringProp name="Argument.value">/colored_image?file=sign-arrow-action-left-back.png&amp;color=%23110a73</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
               <elementProp name="signview_resource20" elementType="Argument">
                 <stringProp name="Argument.name">signview_resource20</stringProp>
-                <stringProp name="Argument.value">/branded_signview_image?file=sign-arrow-action-left-front.png&amp;colour=%23110a73</stringProp>
+                <stringProp name="Argument.value">/colored_image?file=sign-arrow-action-left-front.png&amp;color=%23110a73</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
             </collectionProp>
@@ -629,7 +629,7 @@ vars.put(&apos;signatorylinkid&apos;, doc.signatories[1].id);</stringProp>
             <stringProp name="HTTPSampler.response_timeout"></stringProp>
             <stringProp name="HTTPSampler.protocol"></stringProp>
             <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-            <stringProp name="HTTPSampler.path">/account/company/signview/${authorcompanyid}</stringProp>
+            <stringProp name="HTTPSampler.path">/signview_logo/${documentid}/${signatorylinkid}/rAnDoMhAsH</stringProp>
             <stringProp name="HTTPSampler.method">GET</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
