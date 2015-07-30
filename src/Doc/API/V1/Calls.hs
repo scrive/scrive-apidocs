@@ -472,7 +472,6 @@ apiCallV1Sign  did slid = api $ do
 
       SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
         mesig@(Just _) -> do
-          -- charge company of the author of the document for the signature
           signDocument slid mh fields mesig Nothing screenshots
           postDocumentPendingChange olddoc
           handleAfterSigning slid
