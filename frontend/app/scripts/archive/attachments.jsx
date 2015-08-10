@@ -74,15 +74,14 @@ return React.createClass({
                 className="float-left actionButton"
                 width={118}
                 onUploadComplete={function(input) {
-                   setTimeout(function() {
-                                new Submit({
-                                method : "POST",
-                                url : "/a",
-                                ajaxsuccess : function() {self.reload();},
-                                ajaxerror : function() {
-                                  new FlashMessage({type: 'error', content: localization.couldNotUpload});
-                                }
-                                }).addInputs($(input)).sendAjax(); },100);
+                        new Submit({
+                        method : "POST",
+                        url : "/a",
+                        ajaxsuccess : function() {self.reload();},
+                        ajaxerror : function() {
+                          new FlashMessage({type: 'error', content: localization.couldNotUpload});
+                        }
+                        }).addInputs($(input)).sendAjax();
 
                 }}
               />);
