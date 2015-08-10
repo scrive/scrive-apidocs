@@ -72,6 +72,7 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
         model: field,
         height: heightFunction != undefined ? heightFunction() : undefined,
         width: widthFunction != undefined ? widthFunction() : undefined,
+        dragging: true,
         fontSize: fontSize
       }).el;
       return helper;

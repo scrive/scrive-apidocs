@@ -402,6 +402,7 @@ window.Signatory = Backbone.Model.extend({
         if (this.get("confirmationDeliveryWasNone")) {
           this.set({ confirmationdelivery : _.contains(["email", "mobile", "email_mobile"], this.get("delivery")) ? this.get("delivery") : "email"});
         }
+        this.set({delivery: "pad"});
         this.trigger("change:delivery");
       } else if (previousLastViewerState && !lastViewerState) {
         this.set({ delivery : this.get("deliveryGoldfishMemory") == null

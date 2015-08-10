@@ -11,7 +11,6 @@ window.Field = Backbone.Model.extend({
         obligatory : true,
         shouldbefilledbysender : false,
         fresh : false,
-        ddSignature : false,
         hasChanged: false
     },
     initialize : function(args){
@@ -349,9 +348,6 @@ window.Field = Backbone.Model.extend({
     isReady: function(){
       return this.get("fresh") == false && this.name() !== '' && this.type() !== '';
     },
-    isDDSignature : function() {
-      return this.get("ddSignature");
-    },
     makeReady : function() {
       this.set({fresh: false});
       this.trigger("ready");
@@ -383,7 +379,7 @@ window.Field = Backbone.Model.extend({
    removePlacement : function(placement) {
        var newplacements = _.without(this.placements(), placement);
        this.set({placements : newplacements});
-       if (this.isCheckbox() && newplacements.length == 0)
+       if (newplacements.length == 0 && (this.isCheckbox() || this.isSignature()))
            this.signatory().deleteField(this);
        else if ((this.isFstName() || this.isSndName()) && newplacements.length == 0){
            this.signatory().trigger('change'); // Signatory will fallback to defaults obligatoriness if names don't have placements

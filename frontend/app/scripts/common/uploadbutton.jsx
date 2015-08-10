@@ -85,7 +85,10 @@ define(['React','common/button'], function(React,Button) {
         },
         afterFileAppend : function(input,title,fileinput) {
           if (self.props.onUploadComplete != undefined) {
-            self.props.onUploadComplete(input,title,fileinput);
+            // IE8 requires delay before inputs are available.
+            setTimeout(function () {
+              self.props.onUploadComplete(input,title,fileinput);
+            }, 100);
             fileinput.n--;
             _.each(fileinput.slaves, function(slave) {
                $(slave).remove();
