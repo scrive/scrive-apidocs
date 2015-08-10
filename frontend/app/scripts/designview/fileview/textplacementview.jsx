@@ -8,6 +8,7 @@ return Backbone.View.extend({
     if (this.model) {
       this.model.bind("removed", this.clear);
     }
+    this.dragging = args.dragging;
     this.render();
   },
 
@@ -28,15 +29,23 @@ return Backbone.View.extend({
     var field = this.model;
     var box = $(this.el);
     box.addClass("placedfieldvalue value");
-    box.css("padding", FieldPlacementGlobal.textPlacementSpacingString);
+    box.toggleClass("invalid", field && !field.isValid(true));
+    var boxForText = box;
+    if (this.dragging) {
+      boxForText = $("<div class='placedfield-placement-wrapper-text' />");
+      boxForText.css("padding", FieldPlacementGlobal.textPlacementSpacingString);
+      box.append($("<div class='placedfield-placement-wrapper' />").append(boxForText));
+    } else {
+      box.css("padding", FieldPlacementGlobal.textPlacementSpacingString);
+    }
 
     if (field) {
-      box.text(field.nicetext());
+      boxForText.text(field.nicetext());
       field.bind("change", function () {
-        box.text(field.nicetext());
+        boxForText.text(field.nicetext());
       });
     } else {
-      box.text("unset field");
+      boxForText.text("unset field");
     }
 
     if (this.fontSize) {
