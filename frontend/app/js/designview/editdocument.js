@@ -95,7 +95,6 @@ define(['Backbone', 'designview/fileview/draggablefield', 'legacy_code'], functi
             var fieldOrPlacementFN = function() {
                 return new Field({
                   fresh:false,
-                  ddSignature : true,
                   type:'signature',
                   signatory: model.document().signatoriesWhoSign()[0] || model.document().author(),
                   name: "temp-signature"});
