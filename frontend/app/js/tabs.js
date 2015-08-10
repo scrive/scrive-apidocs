@@ -130,7 +130,11 @@ var Tabs = Backbone.Model.extend({
           this.activate(_.filter(args.tabs,function(tab) {return !tab.isRedirect();})[0]);
    },
    beforeEachChange : function() {
-      this.get("beforeEachChange")();
+     this.tabToHide = undefined;
+     if (this.activeTab() !== undefined) {
+       this.tabToHide = this.activeTab();
+     }
+     this.get("beforeEachChange")();
    },
    activate: function(newtab)
    {
@@ -316,8 +320,8 @@ var TabsView = Backbone.View.extend({
               newvisible = newvisible.add(e);
           });
         }
-        var toHide = visible.not(newvisible);
-        var toShow = newvisible.not(visible);
+        var hasElementsToHide = visible.not(newvisible).size() > 0;
+        var hasElementsToShow = newvisible.not(visible).size() > 0;
         var forceRedraw = function(el, c) {
           var el = el[0];
           el.style.cssText += ';-webkit-transform:rotateZ(0deg)';
@@ -325,28 +329,52 @@ var TabsView = Backbone.View.extend({
           el.style.cssText += ';-webkit-transform:none';
           c();
         };
-        var hideMethod = model.slideEffect() ? function(c) { toHide.slideUp(200,c); } : function(c) { toHide.hide(0,c);};
-        var showMethod = model.slideEffect() ? function(c) { toShow.slideDown(200, function() {
-          /* Chrome 33 on certain platforms (JN's mac, JS's linux) partially renders the participants
-           * after sliding down the tab content and requires a redraw of the tab to fully render the participants. */
-          forceRedraw(toShow, c);
-        }); } : function(c) { toShow.show(0,c);};
 
-        if (toHide.size() != 0 || toShow.size() != 0) {
-
-          var activeTab = this.model.activeTab();
-
-          if (toHide.size() != 0 || toShow.size() != 0) {
-
-            var activeTab = this.model.activeTab();
-              if (toHide.size() == 0)
-                showMethod(self.postRenderTabEvents);
-              else if (toShow.size() == 0)
-                hideMethod(self.postRenderTabEvents);
-              else
-                hideMethod(function() {showMethod(self.postRenderTabEvents);} );
-                return this;
+        var hideMethod = function(c) {
+          var toHide = $();
+          if (model.tabToHide !== undefined) {
+            _.each(model.tabToHide.elems(), function(elem) {
+              toHide = toHide.add(elem);
+            });
           }
+
+          if (model.slideEffect()) {
+            toHide.slideUp(200, c);
+          } else {
+            toHide.hide(0, c);
+          }
+        };
+
+        var showMethod = function(c) {
+          var toShow = $();
+          if (model.activeTab() !== undefined) {
+            _.each(model.activeTab().elems(), function(elem) {
+              toShow = toShow.add(elem);
+            });
+          }
+
+          if (model.slideEffect()) {
+            toShow.slideDown(200, function() {
+              /* Chrome 33 on certain platforms (JN's mac, JS's linux) partially renders the participants
+               * after sliding down the tab content and requires a redraw of the tab to fully render the participants. */
+              forceRedraw(toShow, c);
+            });
+          } else {
+            toShow.show(0, c);
+          }
+        };
+
+        if (hasElementsToHide || hasElementsToShow) {
+          if (!hasElementsToHide) {
+            showMethod(self.postRenderTabEvents);
+          } else if (!hasElementsToShow) {
+            hideMethod(self.postRenderTabEvents);
+          } else {
+            hideMethod(function() {
+              showMethod(self.postRenderTabEvents);
+            });
+          }
+          return this;
         }
     }
 });
