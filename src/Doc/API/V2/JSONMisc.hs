@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.API.V2.JSONMisc (
-  iso8601Time
+  utcTimeToAPIFormat
 , unjsonMaybeMainFile
 , textToAuthenticationToSignMethod
 , evidenceAttachmentsToJSONBS
@@ -33,8 +33,8 @@ import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 
 -- | Convert UTCTime to ISO8601 time format with two decimal places that we use
-iso8601Time :: UTCTime -> Text
-iso8601Time time = Data.Text.take 22 (pack (formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S%Q")) time)) `append` "Z"
+utcTimeToAPIFormat :: UTCTime -> Text
+utcTimeToAPIFormat time = Data.Text.take 22 (pack (formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S%Q")) time)) `append` "Z"
 
 instance Unjson DocumentID where
   unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse DocumentID")  return) . maybeRead) (show . fromDocumentID :: DocumentID -> String) unjsonDef

@@ -31,10 +31,10 @@ unjsonDocument da = objectOf $
   <*   fieldReadonlyBy "file" documentfile "Document main file" unjsonMaybeMainFile
   <*   fieldReadonlyBy "sealed_file" documentsealedfile "Document sealed file" unjsonMaybeMainFile
   <*   fieldReadonly "author_attachments" documentauthorattachments "Author attachments"
-  <*   fieldReadonly "ctime" (iso8601Time . documentctime) "Document creation time"
-  <*   fieldReadonly "mtime" (iso8601Time . documentmtime) "Document modification time"
-  <*   fieldReadonlyBy "timeout_time" (fmap iso8601Time . documenttimeouttime) "Document timeout time" unjsonDefWithNull
-  <*   fieldReadonlyBy "auto_remind_time" (fmap iso8601Time . documentautoremindtime) "Document autoremind time" unjsonDefWithNull
+  <*   fieldReadonly "ctime" (utcTimeToAPIFormat . documentctime) "Document creation time"
+  <*   fieldReadonly "mtime" (utcTimeToAPIFormat . documentmtime) "Document modification time"
+  <*   fieldReadonlyBy "timeout_time" (fmap utcTimeToAPIFormat . documenttimeouttime) "Document timeout time" unjsonDefWithNull
+  <*   fieldReadonlyBy "auto_remind_time" (fmap utcTimeToAPIFormat . documentautoremindtime) "Document autoremind time" unjsonDefWithNull
   <*   fieldReadonly "status" documentstatus "Document status"
   <**> (field "days_to_sign" documentdaystosign ("Days to sign document")
         <**> (pure $ \days d -> d { documentdaystosign = days }))
@@ -80,10 +80,10 @@ unjsonSignatory da =  objectOf $
         <**> (pure $ \fs s -> s { signatoryfields = fs }))
   <**> (fieldDef "sign_order"  (signatorysignorder def) signatorysignorder "Signatory sign order"
         <**> (pure $ \so s-> s { signatorysignorder = so }))
-  <*   (fieldReadonlyBy "sign_time" (fmap iso8601Time . fmap signtime . maybesigninfo) "Time when signatory signed document" unjsonDefWithNull)
-  <*   (fieldReadonlyBy "seen_time" (fmap iso8601Time . fmap signtime . maybeseeninfo) "Time when signatory opened document in browser" unjsonDefWithNull)
-  <*   (fieldReadonlyBy "read_invitation_time" (fmap iso8601Time . maybereadinvite) "Time when signatory read invitation" unjsonDefWithNull)
-  <*   (fieldReadonlyBy "rejected_time" (fmap iso8601Time . signatorylinkrejectiontime) "Time when signatory rejected document" unjsonDefWithNull)
+  <*   (fieldReadonlyBy "sign_time" (fmap utcTimeToAPIFormat . fmap signtime . maybesigninfo) "Time when signatory signed document" unjsonDefWithNull)
+  <*   (fieldReadonlyBy "seen_time" (fmap utcTimeToAPIFormat . fmap signtime . maybeseeninfo) "Time when signatory opened document in browser" unjsonDefWithNull)
+  <*   (fieldReadonlyBy "read_invitation_time" (fmap utcTimeToAPIFormat . maybereadinvite) "Time when signatory read invitation" unjsonDefWithNull)
+  <*   (fieldReadonlyBy "rejected_time" (fmap utcTimeToAPIFormat . signatorylinkrejectiontime) "Time when signatory rejected document" unjsonDefWithNull)
   <**> (fieldOpt "sign_success_redirect_url" signatorylinksignredirecturl ("Redirect user when he signed")
         <**> (pure $ \mrd s -> s { signatorylinksignredirecturl = mrd }))
   <**> (fieldOpt "reject_redirect_url" signatorylinkrejectredirecturl ("Redirect user when he rejected")
