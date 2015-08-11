@@ -3,8 +3,8 @@
 define(['legacy_code'], function() {
 
 return Backbone.Model.extend({
-        defaults: {
-            filters: []
+        defaults: function () {
+          return {filters: []};
         },
         filters : function() {
           return this.get("filters");
