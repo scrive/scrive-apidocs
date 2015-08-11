@@ -1,5 +1,5 @@
 module Doc.API.V2.Guards (
-  guardThatDocument
+  guardThatDocumentIs
 , guardDocumentStatus
 , guardThatUserIsAuthor
 , guardThatUserIsAuthorOrCompanyAdmin
@@ -36,8 +36,10 @@ import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
-guardThatDocument :: (DocumentMonad m, Kontrakcja m) => (Document -> Bool) -> Text -> m ()
-guardThatDocument f text = unlessM (f <$> theDocument) $ apiError $ documentStateError text
+-- | Guard a given condition on the document, throws an error with
+-- `documentStateError` when this does not match.
+guardThatDocumentIs :: (DocumentMonad m, Kontrakcja m) => (Document -> Bool) -> Text -> m ()
+guardThatDocumentIs f text = unlessM (f <$> theDocument) $ apiError $ documentStateError text
 
 guardDocumentStatus :: (Kontrakcja m, DocumentMonad m) => DocumentStatus -> m ()
 guardDocumentStatus s = unlessM ((\d -> documentstatus d == s) <$> theDocument) $ apiError $ documentStateError errorMsg

@@ -82,8 +82,8 @@ docApiV2NewFromTemplate did = api $ do
   withDocumentID did $ do
     guardThatUserIsAuthorOrDocumentIsShared user
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocument isTemplate "Document must be a template"
-    guardThatDocument (not $ flip documentDeletedForUser $ userid user) "The template is in trash"
+    guardThatDocumentIs (isTemplate) "Document must be a template"
+    guardThatDocumentIs (not $ flip documentDeletedForUser $ userid user) "The template is in trash"
   template <- dbQuery $ GetDocumentByDocumentID $ did
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
@@ -131,7 +131,7 @@ docApiV2Prolong did = api $ do
   withDocumentID did $ do
     guardThatUserIsAuthorOrCompanyAdmin user
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocument (isTimedout) "Document has not timed out and can not be prolonged yet"
+    guardThatDocumentIs (isTimedout) "Document has not timed out and can not be prolonged yet"
     days <- liftM fromIntegral $ apiV2ParameterObligatory (ApiV2ParameterInt "days")
     when (days < 1 || days > 90) $
       apiError $ requestParameterInvalid "days" "Days must be a number between 1 and 90"
@@ -161,7 +161,7 @@ docApiV2Trash did = api $ do
     when (not . isJust $ msl) $ -- This might be a user with an account
       guardThatUserIsAuthorOrCompanyAdmin user
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocument (not . isPending) "Pending documents can not be trashed or deleted"
+    guardThatDocumentIs (not . isPending) "Pending documents can not be trashed or deleted"
     dbUpdate $ ArchiveDocument (userid user) actor
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
@@ -174,7 +174,7 @@ docApiV2Delete did = api $ do
     when (not . isJust $ msl) $ -- This might be a user with an account
       guardThatUserIsAuthorOrCompanyAdmin user
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocument (not . isPending) "Pending documents can not be trashed or deleted"
+    guardThatDocumentIs (not . isPending) "Pending documents can not be trashed or deleted"
     dbUpdate $ ReallyDeleteDocument (userid user) actor
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
@@ -324,7 +324,7 @@ docApiV2Restart did = api $ do
   withDocumentID did $ do
     guardThatUserIsAuthor user
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocument (\d -> not $ documentstatus d `elem` [Preparation, Pending, Closed])
+    guardThatDocumentIs (\d -> not $ documentstatus d `elem` [Preparation, Pending, Closed])
       "Documents that are in Preparation, Pending, or Closed can not be restarted"
     doc <- theDocument
     mNewDoc <- dbUpdate $ RestartDocument doc actor
