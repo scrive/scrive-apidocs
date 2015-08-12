@@ -4,6 +4,7 @@
   "./app/scripts/designview/fileview/*.jsx",
   "./app/scripts/authorview/fileview/*.jsx",
   "./app/scripts/signview/fileview/*.jsx",
+  "./app/scripts/signview/extradetails/*.jsx",
   "./app/scripts/signview/instructionsview/*.jsx",
   "./app/scripts/signview/attachments/*.jsx",
   "./app/scripts/signview/identify/*.jsx",

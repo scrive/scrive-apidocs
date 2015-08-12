@@ -5,11 +5,12 @@
 
 define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories',
         'signview/attachments/signatoryattachmentsview', 'signview/instructionsview/instructionsview',
-        'signview/attachments/authorattachmentsview', 'common/retargeting_service',
-        'signview/fileview/fileclass', 'Backbone', 'Underscore', 'legacy_code'],
+        'signview/attachments/authorattachmentsview', 'signview/extradetails/extradetailsview',
+        'common/retargeting_service', 'signview/fileview/fileclass', 'Backbone',
+        'Underscore', 'legacy_code'],
   function (React, CreateAccountSection, DocumentViewSignatories,
             SignatoryAttachmentsView, InstructionsView, AuthorAttachmentsView,
-            RetargetingService, FileClass) {
+            ExtraDetailsView, RetargetingService, FileClass) {
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
@@ -205,16 +206,26 @@ var DocumentSignViewModel = Backbone.Model.extend({
     return this.get("signatoryattachmentsection");
   },
   extradetailssection : function() {
-      var model = this;
-      var document = this.document();
-      if (this.get('extradetailssection') === undefined) {
-        var extradetailssection = new DocumentSignExtraDetailsSection({model: this.document().currentSignatory(),
-                                                                       arrow: function() { return model.arrow(); },
-                                                                       signview: this
-        });
-        this.set({'extradetailssection': extradetailssection}, {silent: true});
-      }
-      return this.get('extradetailssection');
+    var model = this;
+
+    if (!model.get("extradetailssection")) {
+      var $el = $("<div class='section spacing extradetails'>");
+      var comp = React.render(React.createElement(ExtraDetailsView, {
+        model: model.document().currentSignatory(),
+        // needs to be called here because they change when given valid input.
+        askForName: model.askForName(),
+        askForEmail: model.askForEmail(),
+        askForSSN: model.askForSSN(),
+        askForPhone: model.askForPhone(),
+        arrow: function () { return model.arrow(); },
+        signview: model
+      }), $el[0]);
+      var obj = {comp: comp, el: $el};
+      model.set({"extradetailssection": obj}, {silent: true});
+      return obj;
+    }
+
+    return model.get("extradetailssection");
   },
   mainfile : function() {
       var model = this;
@@ -368,69 +379,69 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
   extraDetailsTasks : function() {
         var self = this;
-        var xdetails = self.extradetailssection();
+        var xdetails = self.extradetailssection().comp;
         var document = self.document();
         var label = localization.docsignview.textfield;
 
           var tasks = [];
 
           if(this.askForName()) {
-            var nameInput = xdetails.nameInput();
+            var nameInput = xdetails.refs.name;
             tasks.push(new PageTask({
               type: 'extra-details',
               label: label,
               onArrowClick: function () {
-                xdetails.focusOnNameInput();
+                nameInput.focus();
               },
               isComplete: function() {
                 return !self.askForName();
               },
-              el: nameInput.el()
+              el: $(nameInput.getDOMNode())
             }));
           }
 
           if(this.askForEmail()) {
-            var emailInput = xdetails.emailInput();
+            var emailInput = xdetails.refs.email;
             tasks.push(new PageTask({
               type: 'extra-details',
               label: label,
               onArrowClick: function () {
-                xdetails.focusOnEmailInput();
+                emailInput.focus();
               },
               isComplete: function() {
                 return !self.askForEmail();
               },
-              el: emailInput.el()
+              el: $(emailInput.getDOMNode())
             }));
           }
 
           if(this.askForSSN()) {
-            var ssnInput = xdetails.ssnInput();
+            var ssnInput = xdetails.refs.ssn;
             tasks.push(new PageTask({
               type: 'extra-details',
               label: label,
               onArrowClick: function () {
-                xdetails.focusOnSsnInput();
+                ssnInput.focus();
               },
               isComplete: function() {
                 return !self.askForSSN();
               },
-              el: ssnInput.el()
+              el: $(ssnInput.getDOMNode())
             }));
           }
 
           if(this.askForPhone()) {
-            var phoneInput = xdetails.phoneInput();
+            var phoneInput = xdetails.refs.phone;
             tasks.push(new PageTask({
               type: 'extra-details',
               label: label,
               onArrowClick: function () {
-                xdetails.focusOnPhoneInput();
+                phoneInput.focus();
               },
               isComplete: function() {
                 return !self.askForPhone();
               },
-              el: phoneInput.el()
+              el: $(phoneInput.getDOMNode())
             }));
           }
 

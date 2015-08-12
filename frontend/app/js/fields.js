@@ -62,16 +62,9 @@ window.Field = Backbone.Model.extend({
     setValue : function(value, options) {
         this.set({ hasChanged: true }, { silent: true });
         this.set({"value" : value}, options);
-        this.triggerSignatoryPostChanges();
     },
     hasChanged: function() {
       return this.get("hasChanged");
-    },
-    triggerSignatoryPostChanges : function() {
-        // Let's try to be at least a little efficient with not triggering change too often
-        if (this.isStandard()) {
-          this.signatory().trigger('change');
-        }
     },
     setValueTMP : function(value) {
         this.set({"valueTMP" : value});
