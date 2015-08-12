@@ -16,6 +16,7 @@ import Happstack.Server.Types
 import Text.JSON.Types (JSValue(..))
 import qualified Data.ByteString.Lazy as BSL (fromStrict)
 import qualified Data.Map as Map hiding (map)
+import qualified Text.JSON as J
 
 import API.V2
 import AppView (respondWithPDF)
@@ -33,6 +34,7 @@ import Doc.DocUtils (fileFromMainFile)
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model
+import Doc.Texts
 import EvidenceLog.Model
 import EvidenceLog.View
 import File.Model
@@ -142,4 +144,28 @@ docApiV2FilesGet did fid filename = api $ do
 -------------------------------------------------------------------------------
 
 docApiV2Texts :: Kontrakcja m => DocumentID -> FileID -> m Response
-docApiV2Texts _did _fid = $undefined -- TODO implement
+docApiV2Texts did _fid = api $ do
+  (user,_) <- getAPIUser APIDocCreate
+  withDocumentID did $ do
+    -- Guards
+    guardThatUserIsAuthor user
+    guardDocumentStatus Preparation
+    -- Parameters
+    -- We have a "black-box" JSON structure here, see Doc.Texts for details
+    -- If you feel motivated you can refactor this to proper data type with
+    -- Unjson instance to make things better :)
+    jsonText <- liftM unpack $ apiV2ParameterObligatory (ApiV2ParameterText "json")
+    (json :: JSValue) <- case J.decode jsonText of
+            J.Ok j -> return j
+            _ -> apiError $ requestParameterParseError "json" "Could not read JSON"
+    -- API call actions
+    doc <- theDocument
+    case mainfileid <$> documentfile doc of
+      Nothing -> apiError $ resourceNotFound "The document has no main file"
+      Just fid -> do
+        content <- getFileIDContents fid
+        eitherResult <- runJavaTextExtract json content
+    -- Return
+        case eitherResult of
+          Left err -> apiError $ serverError err
+          Right res -> return $ Ok res

@@ -12,15 +12,7 @@ new APICallV2({
   needsAuthorization: true,
   tryToUseDocumentIDWithCopy: true,
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
+          window.APIV2CallParamDocumentID,
           new APICallParam({
             type: "text",
             argName: "file_id",
@@ -28,6 +20,14 @@ new APICallV2({
             sendAsParam: false,
             description: "TODO",
             defaultValue: ""
+          }),
+          new APICallParam({
+            type: "json",
+            argName: "json",
+            name: "json",
+            sendAsParam: true,
+            decsription: "TODO",
+            defaultValue: "{}"
           })
         ]
 });

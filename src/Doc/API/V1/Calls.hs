@@ -27,12 +27,12 @@ import Data.Aeson (Value(..))
 import Data.Char
 import Data.Int
 import Data.String.Utils (replace,splitWs, strip)
+import Data.Text (unpack)
 import Data.Time
 import Happstack.Server.RqData
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Log
-import System.Exit
 import System.FilePath.Posix (takeBaseName)
 import Text.JSON hiding (Ok)
 import Text.JSON.FromJSValue
@@ -48,8 +48,6 @@ import qualified Data.Map as Map hiding (map)
 import qualified Data.Traversable as T
 import qualified Data.Vector as Vec
 import qualified Text.JSON as J
-import qualified Text.JSON.Gen as J
-import qualified Text.JSON.Pretty as J (pp_value)
 
 import API.Monad.V1
 import AppView (respondWithPDF)
@@ -80,6 +78,7 @@ import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots(SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
 import Doc.SMSPin.Model
+import Doc.Texts
 import Doc.Tokens.Model
 import EID.Signature.Model
 import EvidenceLog.Control
@@ -103,8 +102,6 @@ import Util.Actor
 import Util.CSVUtil
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Utils.Directory
-import Utils.IO
 import Utils.Monad
 import qualified Data.ByteString.RFC2397 as RFC2397
 
@@ -1066,66 +1063,10 @@ apiCallV1ExtractTexts did fileid = logDocumentAndFile did fileid . api $ do
       throwIO . SomeKontraException $ serverError "Requested file does not belong to the document"
 
     content <- getFileIDContents fileid
-    runJavaTextExtract json content
-
-
-{-
-
-Java scrivepdftools extract-text expect as input json in the following format:
-
-{ "rects": [ { "rect": [0,0,1,1],   // rectangle to extract text from, normalized to 0,0-1,1
-               "page": 1},          // page number to extract from, starting from 1
-             { "rect": [0,0,0.2,0.2],
-               "page": 7 }]}
-
-as output it will add keys to the json on the input:
-{ "rects": [ { "rect": [0,0,1,1],   // rectangle to extract text from, normalized to 0,0-1,1
-               "page": 1,           // page number to extract from, starting from 1
-               "lines": [ "first line of extracted text",
-                          "second line of extracted text" ]
-             { "rect": [0,0,0.2,0.2],
-               // no lines here as document has less than 7 pages
-               "page": 7 }]}
-
-java tool tries to preserve lines of text that were give in
-pdf. Whitespace is normalized: no whitespec at the beginning or the
-end, single space between words, newlines, tabs changed to
-spaces. Note that whitespace in PDF is not reliable as sometimes
-letters are just spread out visually but do not contain whitespace
-character between them. When matching you should probably just run the
-words together to stay on the safe side.
-
--}
-runJavaTextExtract :: (Monad m,Kontrakcja m) => JSValue -> BS.ByteString -> m (Ok JSValue)
-runJavaTextExtract json content = do
-  withSystemTempDirectory' ("extract-texts-") $ \tmppath -> do
-    let tmpin = tmppath ++ "/input.pdf"
-    let specpath = tmppath ++ "/sealspec.json"
-
-    let (rects :: Maybe JSValue) = fromJSValueField "rects" json
-    let config = J.runJSONGen $ do
-                   J.value "rects" rects
-
-    liftIO $ BS.writeFile tmpin content
-    liftIO $ BS.writeFile specpath (BS.fromString $ show $ J.pp_value (J.toJSValue config))
-    (code,_stdout,stderr) <- liftIO $ do
-      readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "extract-texts", specpath, tmpin] (BSL.empty)
-    case code of
-      ExitSuccess -> do
-          (jsonresult :: JSValue) <- apiGuard (serverError "Backend did not return json.") $
-                                        case decode (BSL.toString _stdout) of
-                                          J.Ok js -> Just js
-                                          _ -> Nothing
-          let (rectsresult :: Maybe JSValue) = fromJSValueField "rects" jsonresult
-          let censoredresult = J.runJSONGen $ do
-                   J.value "rects" rectsresult
-          return $ Ok censoredresult
-      ExitFailure _ -> do
-          logAttention "Extract texts failed" $ object [
-              "configuration" .= jsonToAeson json
-            , "stderr" `equalsExternalBSL` stderr
-            ]
-          apiGuardL (serverError "Extract texts failed on PDF") (return Nothing)
+    eitherResult <- runJavaTextExtract json content
+    case eitherResult of
+      Left err -> throwIO . SomeKontraException $ serverError (unpack err)
+      Right res -> return $ Ok res
 
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form
