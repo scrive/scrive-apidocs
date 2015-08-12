@@ -2,8 +2,8 @@ module EID.Signature.Model (
     ESignature(..)
   , module EID.Signature.Legacy
   -- from EID.CGI.GRP.Data
-  , BankIDSignature(..)
-  , MergeBankIDSignature(..)
+  , CGISEBankIDSignature(..)
+  , MergeCGISEBankIDSignature(..)
   , GetESignature(..)
   ) where
 
@@ -32,7 +32,7 @@ data ESignature
   | LegacyTeliaSignature_ !LegacyTeliaSignature
   | LegacyNordeaSignature_ !LegacyNordeaSignature
   | LegacyMobileBankIDSignature_ !LegacyMobileBankIDSignature
-  | BankIDSignature_ !BankIDSignature
+  | CGISEBankIDSignature_ !CGISEBankIDSignature
   deriving (Eq, Ord, Show)
 
 ----------------------------------------
@@ -78,9 +78,9 @@ instance ToSQL SignatureProvider where
 ----------------------------------------
 
 -- | Insert bank id signature for a given signatory or replace the existing one.
-data MergeBankIDSignature = MergeBankIDSignature SignatoryLinkID BankIDSignature
-instance (MonadDB m, MonadMask m) => DBUpdate m MergeBankIDSignature () where
-  update (MergeBankIDSignature slid BankIDSignature{..}) = do
+data MergeCGISEBankIDSignature = MergeCGISEBankIDSignature SignatoryLinkID CGISEBankIDSignature
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDSignature () where
+  update (MergeCGISEBankIDSignature slid CGISEBankIDSignature{..}) = do
     loopOnUniqueViolation . withSavepoint "merge_bank_id_signature" $ do
       runQuery01_ selectSignatorySignTime
       msign_time :: Maybe UTCTime <- fetchOne runIdentity
@@ -104,11 +104,11 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeBankIDSignature () where
       setFields = do
         sqlSet "signatory_link_id" slid
         sqlSet "provider" CgiGrpBankID
-        sqlSet "data" bidsSignedText
-        sqlSet "signature" bidsSignature
-        sqlSet "signatory_name" bidsSignatoryName
-        sqlSet "signatory_personal_number" bidsSignatoryPersonalNumber
-        sqlSet "ocsp_response" bidsOcspResponse
+        sqlSet "data" cgisebidsSignedText
+        sqlSet "signature" cgisebidsSignature
+        sqlSet "signatory_name" cgisebidsSignatoryName
+        sqlSet "signatory_personal_number" cgisebidsSignatoryPersonalNumber
+        sqlSet "ocsp_response" cgisebidsOcspResponse
 
 -- | Get signature for a given signatory.
 data GetESignature = GetESignature SignatoryLinkID
@@ -148,10 +148,10 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
   , lmbidsSignature = signature
   , lmbidsOcspResponse = $fromJust mocsp_response
   }
-  CgiGrpBankID -> BankIDSignature_ BankIDSignature {
-    bidsSignatoryName = $fromJust msignatory_name
-  , bidsSignatoryPersonalNumber = $fromJust msignatory_personal_number
-  , bidsSignedText = sdata
-  , bidsSignature = signature
-  , bidsOcspResponse = $fromJust mocsp_response
+  CgiGrpBankID -> CGISEBankIDSignature_ CGISEBankIDSignature {
+    cgisebidsSignatoryName = $fromJust msignatory_name
+  , cgisebidsSignatoryPersonalNumber = $fromJust msignatory_personal_number
+  , cgisebidsSignedText = sdata
+  , cgisebidsSignature = signature
+  , cgisebidsOcspResponse = $fromJust mocsp_response
   }

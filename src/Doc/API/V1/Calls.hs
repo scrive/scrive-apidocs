@@ -352,6 +352,8 @@ apiCallV1Ready did = logDocument did . api $ do
             throwIO . SomeKontraException $ serverError "Some signatories have invalid email address or phone number, and it is required for invitation delivery."
       unlessM (((all signatoryHasValidAuthSettings) . documentsignatorylinks) <$> theDocument) $ do
             throwIO . SomeKontraException $ serverError "Some signatories have invalid personal number, and it is required for authentication."
+      unlessM (((all signatoryHasValidSSNForIdentifyToView) . documentsignatorylinks) <$> theDocument) $ do
+            throwIO . SomeKontraException $ serverError "Some signatories have invalid personal number and it is required for identification to view document."
       whenM (isNothing . documentfile <$> theDocument) $ do
             throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
       t <- ctxtime <$> getContext
@@ -373,6 +375,9 @@ apiCallV1Ready did = logDocument did . api $ do
       _ -> True
     authToViewIsValid sl = case signatorylinkauthenticationtoviewmethod sl of
       SEBankIDAuthenticationToView -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
+    signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
+      SEBankIDAuthenticationToView  ->  isGood $ asValidSwedishSSN $ getPersonalNumber sl
+      NOBankIDAuthenticationToView ->   isGood $ asValidNorwegianSSN $ getPersonalNumber sl
       _ -> True
 
 apiCallV1Cancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response

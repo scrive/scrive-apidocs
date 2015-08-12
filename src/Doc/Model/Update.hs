@@ -53,6 +53,7 @@ module Doc.Model.Update
   , TimeoutDocument(..)
   , PostReminderSend(..)
   , UpdateFieldsForSigning(..)
+  , UpdatePhoneAfterIdentificationToView(..)
   , SetSigAttachments(..)
   , UpdateDraft(..)
   , GetDocsSentBetween(..)
@@ -1079,14 +1080,14 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
           (Just LegacyTeliaSignature_{}, _) -> legacy_signature_error
           (Just LegacyNordeaSignature_{}, _) -> legacy_signature_error
           (Just LegacyMobileBankIDSignature_{}, _) -> legacy_signature_error
-          (Just (BankIDSignature_ BankIDSignature{..}), _) -> do
+          (Just (CGISEBankIDSignature_ CGISEBankIDSignature{..}), _) -> do
             F.value "eleg" True
-            F.value "signatory_name" bidsSignatoryName
-            F.value "signatory_personal_number" bidsSignatoryPersonalNumber
-            F.value "signed_text" bidsSignedText
+            F.value "signatory_name" cgisebidsSignatoryName
+            F.value "signatory_personal_number" cgisebidsSignatoryPersonalNumber
+            F.value "signed_text" cgisebidsSignedText
             F.value "provider" ("Swedish BankID" :: String)
-            F.value "signature" $ B64.encode . unBinary $ bidsSignature
-            F.value "ocsp_response" $ B64.encode . unBinary $ bidsOcspResponse
+            F.value "signature" $ B64.encode . unBinary $ cgisebidsSignature
+            F.value "ocsp_response" $ B64.encode . unBinary $ cgisebidsOcspResponse
           (Nothing, Just _) -> do
             F.value "sms_pin" True
             F.value "phone" $ getMobile sl
@@ -1355,6 +1356,23 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                actor
 
     forM_ fields updateValue
+
+data UpdatePhoneAfterIdentificationToView = UpdatePhoneAfterIdentificationToView SignatoryLink String Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdatePhoneAfterIdentificationToView () where
+  update (UpdatePhoneAfterIdentificationToView sl newphone actor) = updateDocumentWithID $ const $ do
+    runQuery_ . sqlUpdate "signatory_link_fields" $ do
+                   sqlSet "value_text" $ newphone
+                   sqlWhereEq "signatory_link_id" $ signatorylinkid sl
+                   sqlWhereEq "type" $ MobileFT
+                   sqlWhereEq "value_text" (""::String) -- Note: we only let update of phone number if it's not set
+                   sqlWhereExists $ sqlSelect "documents" $ do
+                     sqlWhere "signatory_links.id = signatory_link_id"
+                     sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"
+                     sqlWhereEq "documents.status" Pending
+                     sqlWhere "signatory_links.sign_time IS NULL"
+    void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg UpdateMobileAfterIdentificationToViewWithNets
+               (F.value "value" $ newphone) (Just sl) Nothing actor
+
 
 data AddDocumentAttachment = AddDocumentAttachment FileID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AddDocumentAttachment Bool where

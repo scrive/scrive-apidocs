@@ -67,7 +67,7 @@ handleAuthRequest did slid = do
   guardThatPersonalNumberMatches slid pn doc
   certErrorHandler <- mkCertErrorHandler
   debugFunction <- mkDebugFunction
-  let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler debugFunction
+  let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway id certErrorHandler debugFunction
       req = AuthRequest {
         arqPolicy = cgServiceID
       , arqDisplayName = fromMaybe cgDisplayName mcompany_display_name
@@ -103,7 +103,7 @@ handleSignRequest did slid = do
   guardThatPersonalNumberMatches slid pn doc
   certErrorHandler <- mkCertErrorHandler
   debugFunction <- mkDebugFunction
-  let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler debugFunction
+  let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway id certErrorHandler debugFunction
       req = SignRequest {
         srqPolicy = cgServiceID
       , srqDisplayName = fromMaybe cgDisplayName mcompany_display_name
@@ -171,7 +171,7 @@ collectRequest did slid = do
     Just cgiTransaction -> do
       certErrorHandler <- mkCertErrorHandler
       debugFunction <- mkDebugFunction
-      let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler debugFunction
+      let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway id certErrorHandler debugFunction
           req = CollectRequest {
             crqPolicy = cgServiceID
           , crqTransactionID = cgiTransactionID cgiTransaction
@@ -202,11 +202,11 @@ collectRequest did slid = do
                 let signature = mk_binary $ fromMaybe (missing "signature") crsSignature
                 let ocspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
 
-                dbUpdate $ MergeBankIDAuthentication session_id slid BankIDAuthentication {
-                    bidaSignatoryName = signatoryName
-                  , bidaSignatoryPersonalNumber = signatoryPersonalNumber
-                  , bidaSignature = signature
-                  , bidaOcspResponse = ocspResponse
+                dbUpdate $ MergeCGISEBankIDAuthentication session_id slid CGISEBankIDAuthentication {
+                    cgisebidaSignatoryName = signatoryName
+                  , cgisebidaSignatoryPersonalNumber = signatoryPersonalNumber
+                  , cgisebidaSignature = signature
+                  , cgisebidaOcspResponse = ocspResponse
                 }
                 ctx <- getContext
                 let eventFields = do
@@ -222,12 +222,12 @@ collectRequest did slid = do
               (CgiGrpSignTransaction _ tbs _ _ _)   -> do
                 -- all the required attributes are supposed to always
                 -- be there, so bail out if this is not the case.
-                dbUpdate $ MergeBankIDSignature slid BankIDSignature {
-                    bidsSignatoryName = just_lookup "cert.subject.cn" crsAttributes
-                  , bidsSignatoryPersonalNumber = just_lookup "cert.subject.serialnumber" crsAttributes
-                  , bidsSignedText = tbs
-                  , bidsSignature = mk_binary $ fromMaybe (missing "signature") crsSignature
-                  , bidsOcspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
+                dbUpdate $ MergeCGISEBankIDSignature slid CGISEBankIDSignature {
+                    cgisebidsSignatoryName = just_lookup "cert.subject.cn" crsAttributes
+                  , cgisebidsSignatoryPersonalNumber = just_lookup "cert.subject.serialnumber" crsAttributes
+                  , cgisebidsSignedText = tbs
+                  , cgisebidsSignature = mk_binary $ fromMaybe (missing "signature") crsSignature
+                  , cgisebidsOcspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
                 }
                 dbUpdate $ ChargeCompanyForSEBankIDSignature did
 

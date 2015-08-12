@@ -308,7 +308,8 @@ data CurrentEvidenceEventType =
   UpdateFieldNameEvidence                      |
   VisitedViewForAuthenticationEvidence         |
   VisitedViewForSigningEvidence                |
-  AuthenticatedToViewEvidence
+  AuthenticatedToViewEvidence                  |
+  UpdateMobileAfterIdentificationToViewWithNets
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -486,7 +487,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Current VisitedViewForAuthenticationEvidence        ) = toSQL (103::Int16)
   toSQL (Current VisitedViewForSigningEvidence               ) = toSQL (104::Int16)
   toSQL (Current AuthenticatedToViewEvidence                 ) = toSQL (105::Int16)
-
+  toSQL (Current UpdateMobileAfterIdentificationToViewWithNets  ) = toSQL (106::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -598,6 +599,7 @@ instance FromSQL EvidenceEventType where
       103 -> return (Current VisitedViewForAuthenticationEvidence       )
       104 -> return (Current VisitedViewForSigningEvidence              )
       105 -> return (Current AuthenticatedToViewEvidence                )
+      106 -> return (Current UpdateMobileAfterIdentificationToViewWithNets )
       _ -> E.throwIO $ RangeError {
         reRange = [(1, 105)]
       , reValue = n

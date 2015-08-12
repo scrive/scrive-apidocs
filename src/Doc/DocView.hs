@@ -31,6 +31,7 @@ import BrandedDomain.BrandedDomain
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
+import EID.Nets.Config
 import Kontra
 import KontraPrelude
 import User.Model
@@ -88,6 +89,8 @@ pageDocumentIdentifyView ctx document siglink ad = do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
       F.value "documenttitle" $ documenttitle document
+      F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctxnetsconfig ctx
+      F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctxnetsconfig ctx
       standardPageFields ctx mcompany ad
 
 pageDocumentSignForPadView :: Kontrakcja m

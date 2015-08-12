@@ -74,6 +74,7 @@ evidenceLogTemplateVariables = Set.fromList
   , "provider"        -- Provider of eleg (Swedish BankID)
   , "signatory_name"  -- Name returned by Eleg
   , "signatory_personal_number" -- Personal number returned by eleg
+  , "signatory_mobile"-- Mobile number returned by eleg (NO BankID on mobile only)
   , "signature"       -- Data for eleg signing
   , "ocsp_response"   -- Data for eleg signing
   ]

@@ -5,6 +5,7 @@ module Network.SOAP.Transport.Curl (
   , mkCertErrorHandler
   , mkDebugFunction
   , curlTransport
+  , CurlAuth(..)
   ) where
 
 import Control.Monad.Catch
@@ -17,6 +18,8 @@ import Network.SOAP.Transport
 import Network.SOAP.Transport.HTTP
 import Text.XML
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.Foldable as F
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
@@ -86,17 +89,28 @@ mkDebugFunction = liftBaseWith $ \run -> do
 
 ----------------------------------------
 
+data CurlAuth = CurlAuthCert FilePath
+              | CurlAuthBasic T.Text T.Text
+              | CurlAuthNone
+
+
+
 curlTransport :: SSL
-              -> Maybe FilePath
+              -> CurlAuth
               -> String
               -> BodyP
               -> CurlErrorHandler
               -> DebugFunction
               -> Transport
-curlTransport ssl mcacert url response_parser on_failure debug_fun soap_action soap_request = do
+curlTransport ssl curlAuth url response_parser on_failure debug_fun soap_action soap_request = do
   curl <- initialize
   (final_body, fetch_body) <- newIncoming
-  F.forM_ mcacert $ setopt curl . CurlCAInfo
+  case curlAuth of
+   CurlAuthCert fp -> (setopt curl $ CurlCAInfo fp) >> return ()
+   _ -> return ()
+  let authHeaders =   case curlAuth of
+        CurlAuthBasic un pwd -> ["Authorization: Basic " <+> (BSC8.unpack $ B64.encode $ BSC8.pack $ T.unpack $ un <> ":" <>  pwd)]
+        _ -> []
   setopts curl [
       CurlWriteFunction $ gatherOutput_ fetch_body
     , CurlNoSignal True
@@ -105,10 +119,11 @@ curlTransport ssl mcacert url response_parser on_failure debug_fun soap_action s
     , CurlSSLVerifyPeer $ case ssl of
         SecureSSL   -> True
         InsecureSSL -> False
-    , CurlHttpHeaders [
+    , CurlHttpHeaders $ [
         "Content-Type: text/xml; charset=utf-8"
       , "SOAPAction:" <+> soap_action
-      ]
+      ] ++ authHeaders
+
     , CurlPost True
     , CurlPostFields [TL.unpack $ renderText def soap_request]
     , CurlVerbose True

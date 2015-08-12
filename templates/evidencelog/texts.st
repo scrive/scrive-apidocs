@@ -479,13 +479,24 @@ elegVerificationAuth=
 <br/>
 <p>Data returned from the $provider$:
   <br/>Name: $signatory_name$
+  $if(signatory_personal_number)$
   <br/>ID number: $signatory_personal_number$
+  $endif$
+  $if(signatory_mobile)$
+  <br/>Phone: $signatory_mobile$
+  $endif$
 </p>
 <br/>
+$if(signature)$
 <p>Signature: <div style='white-space:pre'>$signature$</div></p>
+$endif$
+$if(ocsp_response)$
 <p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp_response$</div></p>
+$endif$
 ###
 AuthenticatedToViewEvidenceArchive=$_AuthenticatedToViewEvidenceArchive()$
 ###
 AuthenticatedToViewEvidenceVerificationPages=$_AuthenticatedToViewEvidenceVerificationPages()$
+###
+UpdateMobileAfterIdentificationToViewWithNetsLog=Phone number for <span class="signatory"/> updated to $value$ after identification with Norwegian BankID.
 ###

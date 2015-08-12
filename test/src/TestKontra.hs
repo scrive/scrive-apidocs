@@ -324,6 +324,7 @@ mkContext lang = do
         , ctxgoogleanalyticstoken = "5b04329b972851feac0e9b853738e741"
         , ctxbrandeddomain = bd
         , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" ""
+        , ctxnetsconfig = Nothing
         , ctxthreadjoins = []
     }
 

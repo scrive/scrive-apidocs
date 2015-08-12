@@ -1,6 +1,6 @@
 module EID.CGI.GRP.Data (
-    BankIDSignature(..)
-  , BankIDAuthentication(..)
+    CGISEBankIDSignature(..)
+  , CGISEBankIDAuthentication(..)
   , GrpFault(..)
   , xpGrpFault
   , AuthRequest(..)
@@ -31,20 +31,20 @@ import Network.SOAP.Call
 import Session.Cookies
 
 -- | Final BankID signature.
-data BankIDSignature = BankIDSignature {
-  bidsSignatoryName           :: !Text
-, bidsSignatoryPersonalNumber :: !Text
-, bidsSignedText              :: !Text
-, bidsSignature               :: !(Binary ByteString)
-, bidsOcspResponse            :: !(Binary ByteString)
+data CGISEBankIDSignature = CGISEBankIDSignature {
+  cgisebidsSignatoryName           :: !Text
+, cgisebidsSignatoryPersonalNumber :: !Text
+, cgisebidsSignedText              :: !Text
+, cgisebidsSignature               :: !(Binary ByteString)
+, cgisebidsOcspResponse            :: !(Binary ByteString)
 } deriving (Eq, Ord, Show)
 
 -- | Final BankID signature.
-data BankIDAuthentication = BankIDAuthentication {
-  bidaSignatoryName           :: !Text
-, bidaSignatoryPersonalNumber :: !Text
-, bidaSignature               :: !(Binary ByteString)
-, bidaOcspResponse            :: !(Binary ByteString)
+data CGISEBankIDAuthentication = CGISEBankIDAuthentication {
+  cgisebidaSignatoryName           :: !Text
+, cgisebidaSignatoryPersonalNumber :: !Text
+, cgisebidaSignature               :: !(Binary ByteString)
+, cgisebidaOcspResponse            :: !(Binary ByteString)
 } deriving (Eq, Ord, Show)
 
 

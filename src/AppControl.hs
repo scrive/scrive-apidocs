@@ -370,5 +370,6 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
         , ctxgoogleanalyticstoken = googleanalyticsToken appConf
         , ctxbrandeddomain = brandeddomain
         , ctxsalesforceconf = getSalesforceConf appConf
+        , ctxnetsconfig = netsConfig appConf
         , ctxthreadjoins = []
         }

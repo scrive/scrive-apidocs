@@ -29,7 +29,8 @@ import qualified Branding.Control as Branding
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Doc.DocControl as DocControl
-import qualified EID.CGI.GRP.Control as EID
+import qualified EID.CGI.GRP.Control as CGI
+import qualified EID.Nets.Control as NETS
 import qualified Payments.Control as Payments
 import qualified ServerUtils.ServerUtils as ServerUtils
 import qualified User.UserControl as UserControl
@@ -65,7 +66,8 @@ staticRoutes production = choice
      , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowSaveMagicHash
 
      -- E-ID stuff
-     , dir "s" $ dir "eid" $ EID.grpRoutes
+     , dir "s" $ dir "eid" $ CGI.grpRoutes
+     , dir "nets" $ NETS.netsRoutes
 
      , dir "s" $ dir "acceptaccount"  $ hPostNoXToken $ toK2 $ DocControl.handleAcceptAccountFromSign
 

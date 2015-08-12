@@ -230,12 +230,13 @@ simplyfiedEventText target mactor d sim dee = do
                 LegacyTeliaSignature_{} -> Nothing
                 LegacyNordeaSignature_{} -> Nothing
                 LegacyMobileBankIDSignature_{} -> Nothing
-                BankIDSignature_ BankIDSignature{..} -> Just bidsSignatoryName
+                CGISEBankIDSignature_ CGISEBankIDSignature{..} -> Just cgisebidsSignatoryName
           when (evType dee == Current AuthenticatedToViewEvidence) $ do
             dbQuery (GetEAuthenticationWithoutSession slinkid) >>= \case
               Nothing -> return ()
               Just esig -> F.value "provider" $ case esig of
-                BankIDAuthentication_{} -> Just ("Swedish BankID" ::String)
+                CGISEBankIDAuthentication_{} -> Just ("Swedish BankID" ::String)
+                NetsNOBankIDAuthentication_{} -> Just ("Norwegian BankID" ::String)
 
         F.value "text" $ String.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "signatory" $ (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) <$> mslinkid

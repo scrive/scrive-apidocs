@@ -11,6 +11,7 @@ import BrandedDomain.BrandedDomain
 import Branding.Cache
 import Doc.RenderedPages
 import EID.CGI.GRP.Config
+import EID.Nets.Config
 import File.FileID
 import FlashMessage
 import GuardTime (GuardTimeConf(..))
@@ -64,6 +65,7 @@ data Context = Context
     , ctxgoogleanalyticstoken :: String
     , ctxbrandeddomain       :: BrandedDomain
     , ctxsalesforceconf      :: SalesforceConf
+    , ctxnetsconfig          :: Maybe NetsConfig
     -- | Contains actions that join threads spawned with forkAction
     , ctxthreadjoins       :: [IO (T.Result ())]
     }

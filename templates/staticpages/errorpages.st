@@ -241,3 +241,17 @@ $htmlopentag()$
   </body>
 $htmlclosingtag()$
 ####
+#### Error page for Nets is always embedded in iframe that will signal main page that it should be reloaded
+####
+netsError=
+<html>
+<body>
+<script>
+ var triggerError = function() {
+  window.parent.postMessage("errorPageLoaded",window.location.origin);
+  setTimeout(triggerError,100);
+ };
+ triggerError();
+</script>
+</body>
+</html>

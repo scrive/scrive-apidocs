@@ -182,6 +182,7 @@ kontraMigrations = [
   , createEIDAuthenticationTable
   , addSignatoryAuthenticationToView
   , fixPurgedPendingDocumentsAndAddConstraint
+  , addNetsFieldsToEIDAuthentication
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

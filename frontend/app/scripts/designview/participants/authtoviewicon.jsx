@@ -13,6 +13,8 @@ return React.createClass({
     } else if (sig.standardAuthenticationToView()) {
       sig.setAuthenticationToView("se_bankid");
     } else if (sig.seBankIDAuthenticationToView()) {
+      sig.setAuthenticationToView("no_bankid");
+    } else if (sig.noBankIDAuthenticationToView()) {
       sig.setAuthenticationToView("standard");
     }
   },
@@ -22,6 +24,8 @@ return React.createClass({
       return "design-view-action-participant-icon-auth-to-view-icon-noauth";
     } else if (sig.seBankIDAuthenticationToView()) {
       return "design-view-action-participant-icon-auth-to-view-icon-se-bankid";
+    } else if (sig.noBankIDAuthenticationToView()) {
+      return "design-view-action-participant-icon-auth-to-view-icon-no-bankid";
     }
   },
   render: function () {

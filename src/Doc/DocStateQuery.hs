@@ -112,15 +112,19 @@ getMagicHashForDocumentSignatoryWithUser did sigid user = do
 signatoryNeedsToIdentifyToView :: (Kontrakcja m , DocumentMonad m) => SignatoryLink -> m Bool
 signatoryNeedsToIdentifyToView sl = do
   doc <- theDocument
-  if (
-        (signatorylinkauthenticationtoviewmethod sl /= SEBankIDAuthenticationToView)
-     || (hasSigned sl)
-     || (not $ isPending doc)
-     )
+  if (hasSigned sl || (not $ isPending doc))
   then return False
-  else do
+  else case (signatorylinkauthenticationtoviewmethod sl) of
+   StandardAuthenticationToView -> return False
+   NOBankIDAuthenticationToView -> do
     sid <- ctxsessionid <$> getContext
     auth <- dbQuery (GetEAuthentication sid $ signatorylinkid sl)
     case auth of
-      Just (BankIDAuthentication_ _) -> return False
+      Just (NetsNOBankIDAuthentication_ _) -> return False
+      _ -> return True
+   SEBankIDAuthenticationToView -> do
+    sid <- ctxsessionid <$> getContext
+    auth <- dbQuery (GetEAuthentication sid $ signatorylinkid sl)
+    case auth of
+      Just (CGISEBankIDAuthentication_ _) -> return False
       _ -> return True
