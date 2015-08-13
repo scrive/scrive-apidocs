@@ -47,23 +47,31 @@ import qualified Doc.EvidenceAttachments as EvidenceAttachments
 
 docApiV2Available :: Kontrakcja m => m Response
 docApiV2Available = api $ do
+  -- Permissions
   (user, _) <- getAPIUser APIDocCheck
+  -- Parameters
   (ids :: [DocumentID]) <- apiV2ParameterObligatory (ApiV2ParameterRead "ids")
   when (length ids > 10000) $ do
     apiError $ requestParameterInvalid "ids" "Can't contain more than 10,000 document ids"
+  -- API call actions
   available <- fmap (map fromDocumentID) $ dbQuery $ GetDocumentsIDs [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
+  -- Result
   return $ Ok $ Response 200 Map.empty nullRsFlags (unjsonToByteStringLazy unjsonDef available) Nothing
 
 docApiV2List :: Kontrakcja m => m Response
 docApiV2List = api $ do
+  -- Permissions
   (user, _) <- getAPIUserWithPad APIDocCheck
+  -- Parameters
   offset   <- apiV2ParameterDefault 0   (ApiV2ParameterInt  "offset")
   maxcount <- apiV2ParameterDefault 100 (ApiV2ParameterInt  "max")
   filters  <- apiV2ParameterDefault []  (ApiV2ParameterJSON "filter" unjsonDef)
   sorting  <- apiV2ParameterDefault []  (ApiV2ParameterJSON "sorting" unjsonDef)
+  -- API call actions
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
   let documentSorting = (toDocumentSorting <$> sorting)
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit [DocumentsVisibleToUser $ userid user] documentFilters documentSorting (offset,1000,maxcount)
+  -- Result
   return $ Ok $ Response 200 Map.empty nullRsFlags (listToJSONBS (allDocsCount,(\d -> (documentAccessForUser user d,d)) <$> allDocs)) Nothing
 
 docApiV2Get :: Kontrakcja m => DocumentID -> m Response
@@ -75,17 +83,21 @@ docApiV2Get did = api $ do
 
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History did = api $ do
+  -- Permissions
   (user,_) <- getAPIUser APIDocCheck
+  -- Parameters
   mLangCode <- apiV2ParameterOptional (ApiV2ParameterText "lang")
   mLang <- case fmap (langFromCode . unpack) mLangCode of
     Nothing -> return Nothing
     Just Nothing -> do
       apiError $ requestParameterInvalid "lang" "Not a valid or supported language code"
     Just (Just l) -> return $ Just l
+  -- API call actions
   switchLang $ fromMaybe (lang $ usersettings user) mLang
   evidenceLog <- dbQuery $ GetEvidenceLog did
   doc <- dbQuery $ GetDocumentByDocumentID did
   events <- eventsJSListFromEvidenceLog doc evidenceLog
+  -- Result
   return $ Ok (JSArray events)
 
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
@@ -145,6 +157,7 @@ docApiV2FilesGet did fid filename = api $ do
 
 docApiV2Texts :: Kontrakcja m => DocumentID -> FileID -> m Response
 docApiV2Texts did _fid = api $ do
+  -- Permissions
   (user,_) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     -- Guards
@@ -160,12 +173,12 @@ docApiV2Texts did _fid = api $ do
             _ -> apiError $ requestParameterParseError "json" "Could not read JSON"
     -- API call actions
     doc <- theDocument
-    case mainfileid <$> documentfile doc of
+    fid <- case mainfileid <$> documentfile doc of
       Nothing -> apiError $ resourceNotFound "The document has no main file"
-      Just fid -> do
-        content <- getFileIDContents fid
-        eitherResult <- runJavaTextExtract json content
-    -- Return
-        case eitherResult of
-          Left err -> apiError $ serverError err
-          Right res -> return $ Ok res
+      Just fid -> return fid
+    content <- getFileIDContents fid
+    eitherResult <- runJavaTextExtract json content
+    case eitherResult of
+      Left err -> apiError $ serverError err
+      -- Return
+      Right res -> return $ Ok res

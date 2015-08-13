@@ -120,17 +120,17 @@ insufficientPrivileges = APIError { errorType = InsufficientPrivileges, errorHtt
 -- Request specific errors
 requestParameterMissing :: Text -> APIError
 requestParameterMissing param = APIError { errorType = RequestParametersMissing, errorHttpCode = 400, errorMessage = msg}
-  where msg = "The parameter " `append` param `append` " was missing. Please refer to our API documentation."
+  where msg = "The parameter '" `append` param `append` "' was missing. Please refer to our API documentation."
 
 requestParameterParseError :: Text -> Text -> APIError
 requestParameterParseError param error = APIError { errorType = RequestParametersParseError, errorHttpCode = 400, errorMessage = msg}
-  where msg = "The parameter " `append` param `append` " could not be parsed."
+  where msg = "The parameter '" `append` param `append` "' could not be parsed."
             `append` " Please refer to our API documentation. Error details: "
             `append` error
 
 requestParameterInvalid :: Text -> Text -> APIError
 requestParameterInvalid param reason = APIError { errorType = RequestParametersInvalid, errorHttpCode = 400, errorMessage = msg}
-  where msg = "The parameter " `append` param `append` " had the following problems: " `append` reason
+  where msg = "The parameter '" `append` param `append` "' had the following problems: " `append` reason
 
 -- Document calls errors
 

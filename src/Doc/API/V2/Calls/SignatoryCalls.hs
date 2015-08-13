@@ -38,22 +38,27 @@ import Util.SignatoryLinkUtils
 
 docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigReject did slid = api $ do
+  -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
-  rejectReason' <- apiV2ParameterOptional (ApiV2ParameterText "reason")
-  let rejectReason = fmap (unpack . strip) rejectReason'
-  guardThatObjectVersionMatchesIfProvided did
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+    -- Guards
+    guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending
+    -- Parameters
+    rejectReason <- liftM (fmap $ unpack . strip) $ apiV2ParameterOptional (ApiV2ParameterText "reason")
+    -- API call actions
     ctx <- getContext
     Just sl <- getSigLinkFor slid <$> theDocument
     actor <- signatoryActor ctx sl
     switchLang . getLang =<< theDocument
     dbUpdate $ RejectDocument slid rejectReason actor
     postDocumentRejectedChange slid rejectReason =<< theDocument
+    -- Result
     Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
 
 docApiV2SigCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigCheck did slid = api $ do
+  -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     -- Guards
@@ -61,83 +66,86 @@ docApiV2SigCheck did slid = api $ do
     guardDocumentStatus Pending
     guardSignatoryHasNotSigned slid
     guardSignatoryNeedsToIdentifyToView slid
-    -- Parameters, API call actions, and return
-    fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValues)
+    -- Parameters
     checkAuthenticationToSignMethodAndValue slid
+    fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValues)
+    -- API call actions + extra conditional parameter
     authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
     case authorization of
-      StandardAuthenticationToSign -> return $ Ok ()
+      StandardAuthenticationToSign -> return ()
       SMSPinAuthenticationToSign -> do
         pin <- fmap unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
         validPin <- checkSignatoryPin slid fields pin
-        if validPin then return $ Ok ()
-                    else apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
+        if not validPin
+           then apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
+           else return ()
       SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
-        Just _ -> return $ Ok ()
         Nothing -> apiError $ signatoryStateError "Swedish BankID authentication needed before signing."
+        Just _ -> return ()
+    -- Return
+    return $ Ok ()
 
 
 docApiV2SigSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSign did slid = api $ do
+  -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
-  screenshots <- getScreenshots
-  fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValues)
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
   olddoc `withDocument` ( do
+    -- Guards
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending
     guardSignatoryHasNotSigned slid
     guardSignatoryNeedsToIdentifyToView slid
+    -- Parameters
     checkAuthenticationToSignMethodAndValue slid
+    screenshots <- getScreenshots
+    fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValues)
+    -- API call actions + extra conditional parameter
     authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
-
-    case authorization of
-      StandardAuthenticationToSign -> do
-        signDocument slid mh fields Nothing Nothing screenshots
-        postDocumentPendingChange olddoc
-        handleAfterSigning slid
-        Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
-
+    (mesig, mpin) <- case authorization of
+      StandardAuthenticationToSign -> return (Nothing, Nothing)
       SMSPinAuthenticationToSign -> do
         pin <- fmap unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
         validPin <- checkSignatoryPin slid fields pin
-        if validPin
-          then do
-            signDocument slid mh fields Nothing (Just pin) screenshots
-            postDocumentPendingChange olddoc
-            handleAfterSigning slid
-            Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
-          else apiError documentActionForbidden
-
+        if not validPin
+          then apiError documentActionForbidden
+          else return (Nothing, Just pin)
       SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
-        mesig@(Just _) -> do
-          signDocument slid mh fields mesig Nothing screenshots
-          postDocumentPendingChange olddoc
-          handleAfterSigning slid
-          Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
-        Nothing -> apiError documentActionForbidden
+        Nothing -> apiError $ signatoryStateError "Swedish BankID authentication needed before signing."
+        Just esig -> return (Just esig, Nothing)
+    signDocument slid mh fields mesig mpin screenshots
+    handleAfterSigning slid
+    -- Return
+    Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
    )
 
 docApiV2SigSendSmsPin :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSendSmsPin did slid = api $ do
+  -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+    -- Guards
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending
     guardSignatoryHasNotSigned slid
     sl <- $fromJust . getSigLinkFor slid <$> theDocument
     when (signatorylinkauthenticationtosignmethod sl /= SMSPinAuthenticationToSign) $ do
       apiError $ signatoryStateError "Signatory authentication method to sign is not SMS PIN"
+    -- Parameters
     phone <- liftM unpack $ apiV2ParameterObligatory (ApiV2ParameterText "phone")
+    -- API call actions
     case asValidPhoneForSMS phone of
       Good validPhone -> do
         pin <- dbQuery $ GetSignatoryPin slid validPhone
         sendPinCode sl validPhone pin
+    -- Return
         return $ Accepted ()
       _ -> apiError $ requestParameterInvalid "phone" "Not a valid phone number"
 
 docApiV2SigSetAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSetAttachment did slid = api $ do
+  -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     -- Guards
