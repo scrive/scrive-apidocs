@@ -1,14 +1,18 @@
 module Doc.API.V2.Guards (
+-- * Document guards
   guardThatDocumentIs
 , guardDocumentStatus
+, guardThatDocumentCanBeStarted
+, guardThatObjectVersionMatchesIfProvided
+-- * User guards
 , guardThatUserIsAuthor
 , guardThatUserIsAuthorOrCompanyAdmin
 , guardThatUserIsAuthorOrDocumentIsShared
 , guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
-, guardThatDocumentCanBeStarted
-, guardThatObjectVersionMatchesIfProvided
+-- * Signatory guards
 , guardSignatoryNeedsToIdentifyToView
 , guardSignatoryHasNotSigned
+-- * Access / Session guard
 , guardDocumentAccessSessionOrUser
 ) where
 
@@ -38,9 +42,12 @@ import Util.SignatoryLinkUtils
 
 -- | Guard a given condition on the document, throws an error with
 -- `documentStateError` when this does not match.
+--
+-- Prefer to use a more specific guard if this satisfies your need.
 guardThatDocumentIs :: (DocumentMonad m, Kontrakcja m) => (Document -> Bool) -> Text -> m ()
 guardThatDocumentIs f text = unlessM (f <$> theDocument) $ apiError $ documentStateError text
 
+-- | Guard that the document status matches, otherwise throw a `documentStateError`
 guardDocumentStatus :: (Kontrakcja m, DocumentMonad m) => DocumentStatus -> m ()
 guardDocumentStatus s = unlessM ((\d -> documentstatus d == s) <$> theDocument) $ apiError $ documentStateError errorMsg
   where errorMsg = "The document status should be " `append` (pack $ show s)
