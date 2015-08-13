@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.API.V2.JSONDocument (
   unjsonDocument
 , listToJSONBS
