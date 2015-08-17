@@ -34,6 +34,7 @@ import DB.PostgreSQL
 import DB.SQLFunction
 import Doc.API.V1.CallsTest
 import Doc.API.V1.JSONTest
+import Doc.API.V2.CallsTest
 import Doc.API.V2.JSONTest
 import DocControlTest
 import DocStateTest
@@ -79,6 +80,7 @@ allTests = [
   , csvUtilTests
   , apiV1JSONTests
   , apiV1CallsTests
+  , apiV2CallsTests
   , apiV2JSONTests
   , archiveTests
   , docControlTests
