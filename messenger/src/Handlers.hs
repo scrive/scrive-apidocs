@@ -29,7 +29,11 @@ router rng cs routes = withPostgreSQL cs $ do
 
 handlers :: Route (Messenger Response)
 handlers = choice [
-    dir "sms" $ dir "globalmouth" $ hGet handleGlobalMouthEvents
+    hGet showHelloMessage
+  , dir "sms" $ dir "globalmouth" $ hGet handleGlobalMouthEvents
   ]
   where
     hGet = path GET id
+
+showHelloMessage :: Messenger Response
+showHelloMessage = ok $ toResponse "Messenger says hello!"
