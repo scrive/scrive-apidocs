@@ -27,11 +27,16 @@ router rng cs routes = withPostgreSQL cs $
 
 handlers :: Route (Mailer Response)
 handlers = choice [
-    dir "mail" $ dir "sendgrid" $ hPost $ handleSendGridEvents
+    hGet showHelloMessage
+  , dir "mail" $ dir "sendgrid" $ hPost $ handleSendGridEvents
   , dir "mail" $ dir "mailgun" $ hPost $ withDecodedBody_ handleMailGunEvents
   ]
   where
+    hGet = path GET id
     hPost = path POST id
+
+showHelloMessage :: Mailer Response
+showHelloMessage = ok $ toResponse "Mailer says hello!"
 
 handleSendGridEvents :: Mailer Response
 handleSendGridEvents = do
