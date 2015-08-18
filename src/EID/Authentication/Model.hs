@@ -130,6 +130,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDAuthentication 
         sqlSet "signature" netsNOBankIDCertificate
         sqlSet "signatory_name" netsNOBankIDSignatoryName
         sqlSet "signatory_phone_number" netsNOBankIDPhoneNumber
+        sqlSet "date_of_birth" netsNOBankIDDateOfBirth
         sqlSet "session_id" sid
 
 
@@ -145,6 +146,7 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationWithoutSession
       sqlResult "signatory_name"
       sqlResult "signatory_personal_number"
       sqlResult "signatory_phone_number"
+      sqlResult "date_of_birth"
       sqlResult "ocsp_response"
       sqlWhereEq "signatory_link_id" slid
     fetchMaybe fetchESignature
@@ -160,14 +162,15 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthentication (Maybe EAuthe
       sqlResult "signatory_name"
       sqlResult "signatory_personal_number"
       sqlResult "signatory_phone_number"
+      sqlResult "date_of_birth"
       sqlResult "ocsp_response"
       sqlWhereEq "session_id" sid
       sqlWhereEq "signatory_link_id" slid
     fetchMaybe fetchESignature
 
 -- | Fetch e-signature.
-fetchESignature :: (AuthenticationProvider, (Maybe Int16), Binary ByteString, Text, Maybe Text, Maybe Text, Maybe (Binary ByteString)) -> EAuthentication
-fetchESignature (provider, internal_provider, signature, signatory_name, signatory_personal_number, signatory_phone_number, ocsp_response) = case provider of
+fetchESignature :: (AuthenticationProvider, (Maybe Int16), Binary ByteString, Text, Maybe Text, Maybe Text, Text, Maybe (Binary ByteString)) -> EAuthentication
+fetchESignature (provider, internal_provider, signature, signatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response) = case provider of
   CgiGrpBankID -> CGISEBankIDAuthentication_ CGISEBankIDAuthentication {
     cgisebidaSignatoryName = signatory_name
   , cgisebidaSignatoryPersonalNumber = $fromJust signatory_personal_number
@@ -178,5 +181,6 @@ fetchESignature (provider, internal_provider, signature, signatory_name, signato
     netsNOBankIDInternalProvider = unsafeNetsNOBankIDInternalProviderFromInt16 ($fromJust internal_provider)
   , netsNOBankIDSignatoryName = signatory_name
   , netsNOBankIDPhoneNumber   = signatory_phone_number
+  , netsNOBankIDDateOfBirth   = signatory_dob
   , netsNOBankIDCertificate   = signature
   }

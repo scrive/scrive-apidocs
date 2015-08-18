@@ -360,7 +360,8 @@ asValidCompanyNumber input =
 -}
 asValidSwedishSSN :: String -> Result String
 asValidSwedishSSN input =
-        checkIfEmpty input
+    filterOutCharacters [' ', '-'] input
+    >>= checkIfEmpty
     >>= checkLengthIs [10,12]
     >>= checkOnly [isDigit]
 
@@ -371,7 +372,8 @@ asValidSwedishSSN input =
 -}
 asValidNorwegianSSN :: String -> Result String
 asValidNorwegianSSN input =
-        checkIfEmpty input
+    filterOutCharacters [' ', '-'] input
+    >>= checkIfEmpty
     >>= checkLengthIs [11]
     >>= checkOnly [isDigit]
 

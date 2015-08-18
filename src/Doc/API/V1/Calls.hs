@@ -369,12 +369,10 @@ apiCallV1Ready did = logDocument did . api $ do
       MobileDelivery ->  isGood $ asValidPhoneForSMS $ getMobile sl
       EmailAndMobileDelivery -> (isGood $ asValidPhoneForSMS $ getMobile sl) && (isGood $ asValidEmail $ getEmail sl)
       _ -> True
-    signatoryHasValidAuthSettings sl = authToSignIsValid sl && authToViewIsValid sl
+    signatoryHasValidAuthSettings sl = authToSignIsValid sl
     authToSignIsValid sl = getPersonalNumber sl == "" || case signatorylinkauthenticationtosignmethod sl of
       SEBankIDAuthenticationToSign -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
       _ -> True
-    authToViewIsValid sl = case signatorylinkauthenticationtoviewmethod sl of
-      SEBankIDAuthenticationToView -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
       SEBankIDAuthenticationToView  ->  isGood $ asValidSwedishSSN $ getPersonalNumber sl
       NOBankIDAuthenticationToView ->   isGood $ asValidNorwegianSSN $ getPersonalNumber sl
@@ -626,7 +624,11 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
               Nothing -> Left $ fromMaybe "" authentication_type
       -- Change authentication method (if input is a valid method)
       case authenticationMethod of
-           Right a -> dbUpdate $ ChangeAuthenticationToSignMethod slid a maybeAuthValue actor
+           Right a -> do
+               let viewMethod = signatorylinkauthenticationtoviewmethod ($fromJust siglink)
+               when (viewMethod == NOBankIDAuthenticationToView && a == SEBankIDAuthenticationToSign) $
+                   throwIO . SomeKontraException $ badInput $ "Can't mix Norwegian and Swedish Bank ID"
+               dbUpdate $ ChangeAuthenticationToSignMethod slid a maybeAuthValue actor
            Left  a -> throwIO . SomeKontraException
                       $ badInput $ "Invalid authentication method: `" ++ a ++ "` was given. "
                         ++ "Supported values are: `standard`, `eleg`, `sms_pin`."

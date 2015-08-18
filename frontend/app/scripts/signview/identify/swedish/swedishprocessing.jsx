@@ -1,4 +1,5 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/button",  "signview/identify/swedish/swedishidentifymodel"],
+define(["legacy_code", "Underscore", "Backbone", "React", "common/button",
+  "signview/identify/swedish/swedishidentifymodel"],
   function (legacy_code, _, Backbone, React, Button, SwedishIdentifyModel) {
 
   return React.createClass({
@@ -54,7 +55,9 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button",  "sig
               />
             </div>
           }
-          <div onClick={this.handleCancel} className="identify-box-cancel" ref="identify-box-cancel">{localization.cancel}</div>
+          <div onClick={this.handleCancel} className="identify-box-cancel" ref="identify-box-cancel">
+            {localization.cancel}
+          </div>
         </span>
       );
     }

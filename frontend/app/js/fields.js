@@ -245,6 +245,9 @@ window.Field = Backbone.Model.extend({
         ) {
         return new PhoneValidation().or(new EmptyValidation());
       }
+      if (signatory.noBankIDAuthenticationToView()) {
+        return new EmptyValidation().or(new PhoneValidationNO());
+      }
       return new Validation();
     },
     validateEmail: function() {

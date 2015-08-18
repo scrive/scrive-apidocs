@@ -72,20 +72,20 @@ define(["legacy_code",  "React", "common/backbone_mixin",
             <div className="identify-box-header">
               {this.verifyIdentityText()}
             </div>
-            <div className="identify-box-content">
-              { /* if */ model.isSwedish() &&
+            { /* if */ model.isSwedish() &&
+              <div className="identify-box-content">
                 <SwedishIdentifyView
                   ref="identify"
                   model={model}
                 />
-              }
-              { /* else if */ model.isNorwegian() &&
-                <NorwegianIdentifyView
-                  ref="identify"
-                  model={model}
-                />
-              }
-            </div>
+              </div>
+            }
+            { /* else if */ model.isNorwegian() &&
+              <NorwegianIdentifyView
+                ref="identify"
+                model={model}
+              />
+            }
             <div className="identify-box-footer">
               <div className="identify-box-footer-text">
                 <div>

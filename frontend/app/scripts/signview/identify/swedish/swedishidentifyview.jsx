@@ -1,5 +1,5 @@
 define(["legacy_code",  "React", "common/backbone_mixin",
-        "signview/identify/swedish/swedishidentifymodel","signview/identify/swedish/swedishidentify",
+        "signview/identify/swedish/swedishidentifymodel", "signview/identify/swedish/swedishidentify",
         "signview/identify/swedish/swedishprocessing", "signview/identify/swedish/swedishproblem"],
   function (legacy_code, React, BackboneMixin,
             SwedishIdentifyModel, SwedishIdentify, SwedishProcessing, SwedishProblem) {

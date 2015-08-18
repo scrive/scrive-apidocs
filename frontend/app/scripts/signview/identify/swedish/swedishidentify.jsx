@@ -1,4 +1,5 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/checkbox", "signview/identify/swedish/swedishidentifymodel"],
+define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/checkbox",
+  "signview/identify/swedish/swedishidentifymodel"],
   function (legacy_code, _, Backbone, React, Button, Checkbox, SwedishIdentifyModel) {
   return React.createClass({
     propTypes: {

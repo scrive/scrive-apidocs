@@ -1,10 +1,10 @@
-{ 
+{
 "_AttachExtendedSealedFileEvidenceTextSimple":"The document was sealed with a keyless digital signature.",
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"The document was sealed with a digital signature.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive prepared the final PDF.",
 "_AttachSealedFileEvidenceTextSimpleNotArchive":"Scrive prepared the final PDF, including evidence collected by Scrive, before sealing with a digital signature.",
 "_AuthenticatedToViewEvidenceArchive":"Verified their identity with $provider$ to access the document.",
-"_AuthenticatedToViewEvidenceVerificationPages":"$actor$ verified their identity with $provider$ to access the document.",
+"_AuthenticatedToViewEvidenceVerificationPages":"$actor$ verified their identity with $provider$ to access the document. $provider$ returned the name \"$signatory_name$\" and the date of birth \"$signatory_dob$\".",
 "_AutomaticReminderSentTextSimpleEmail":"An automatic reminder to sign the document was sent to $signatory$ using email.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"An automatic reminder to sign the document was sent to $signatory$ using email and SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"An automatic reminder to sign the document was sent to $signatory$ using SMS.",

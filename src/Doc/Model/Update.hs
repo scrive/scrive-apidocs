@@ -1357,9 +1357,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
 
     forM_ fields updateValue
 
-data UpdatePhoneAfterIdentificationToView = UpdatePhoneAfterIdentificationToView SignatoryLink String Actor
+data UpdatePhoneAfterIdentificationToView = UpdatePhoneAfterIdentificationToView SignatoryLink String String Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdatePhoneAfterIdentificationToView () where
-  update (UpdatePhoneAfterIdentificationToView sl newphone actor) = updateDocumentWithID $ const $ do
+  update (UpdatePhoneAfterIdentificationToView sl oldphone newphone actor) = updateDocumentWithID $ const $ do
     runQuery_ . sqlUpdate "signatory_link_fields" $ do
                    sqlSet "value_text" $ newphone
                    sqlWhereEq "signatory_link_id" $ signatorylinkid sl
@@ -1371,7 +1371,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateP
                      sqlWhereEq "documents.status" Pending
                      sqlWhere "signatory_links.sign_time IS NULL"
     void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg UpdateMobileAfterIdentificationToViewWithNets
-               (F.value "value" $ newphone) (Just sl) Nothing actor
+               (F.value "oldphone" oldphone >> F.value "newphone" newphone) (Just sl) Nothing actor
 
 
 data AddDocumentAttachment = AddDocumentAttachment FileID Actor

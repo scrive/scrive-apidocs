@@ -472,7 +472,7 @@ VisitedViewForAuthenticationEvidenceArchive=$_VisitedViewForAuthenticationEviden
 ###
 VisitedViewForAuthenticationEvidenceVerificationPages=$_VisitedViewForAuthenticationEvidenceVerificationPages()$
 ###
-AuthenticatedToViewEvidenceLog=The party <span class="actor"/> verified their identity with $provider$ to access the document. $elegVerificationAuth()$
+AuthenticatedToViewEvidenceLog=<span class="actor"/> verified their identity with $provider$ to access the document. $elegVerificationAuth()$
 ###
 elegVerificationAuth=
 <br/>
@@ -484,6 +484,12 @@ elegVerificationAuth=
   $endif$
   $if(signatory_mobile)$
   <br/>Phone: $signatory_mobile$
+  $endif$
+  $if(signatory_dob)$
+  <br/>Date of birth: $signatory_dob$
+  $endif$
+  $if(signatory_pid)$
+  <br/>PID: $signatory_pid$
   $endif$
 </p>
 <br/>
@@ -498,5 +504,5 @@ AuthenticatedToViewEvidenceArchive=$_AuthenticatedToViewEvidenceArchive()$
 ###
 AuthenticatedToViewEvidenceVerificationPages=$_AuthenticatedToViewEvidenceVerificationPages()$
 ###
-UpdateMobileAfterIdentificationToViewWithNetsLog=Phone number for <span class="signatory"/> updated to $value$ after identification with Norwegian BankID.
+UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Phone". Scrive eSign changed it from "$oldphone$" to "$newphone$".
 ###

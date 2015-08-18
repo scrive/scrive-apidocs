@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -22,8 +22,15 @@
 "_IdNumber":"ID number",
 "_IdentifyBankId":"Identify",
 "_IdentifyBankIdNO":"BankID",
-"_IdentifyBankIdNOFailed":"Identification with Norwegian BankID failed",
+"_IdentifyBankIdNOAuth":"Norwegian BankID log in was not successful.",
+"_IdentifyBankIdNOBlocked":"Your Norwegian BankID is blocked. Contact your bank.",
+"_IdentifyBankIdNOCanceled":"Identification with Norwegian BankID was canceled.",
+"_IdentifyBankIdNOExpired":"Your Norwegian BankID has expired. Contact your bank.",
+"_IdentifyBankIdNOFailed":"Identification with Norwegian BankID failed.",
 "_IdentifyBankIdNOMobile":"BankID on mobile",
+"_IdentifyBankIdNOMobileError":"Wrong mobile phone number or date of birth has been supplied. Contact the sender.",
+"_IdentifyBankIdNORevoked":"Your Norwegian BankID has been revoked. Contact your bank.",
+"_IdentifyBankIdNOUserAgent":"Norwegian BankID do not support your browser. Try another browser.",
 "_IdentifyDateOfBirth":"Date of birth",
 "_IdentifyDocument":"Document",
 "_IdentifyPhoneError":"The phone number must be 8 digits.",

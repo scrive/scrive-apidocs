@@ -1,5 +1,6 @@
-define(["legacy_code",  "React","common/backbone_mixin",
-        "signview/identify/norwegian/norwegianidentifymodel","signview/identify/norwegian/norwegianidentify",
+define(["legacy_code", "React", "common/backbone_mixin",
+        "signview/identify/norwegian/norwegianidentifymodel",
+        "signview/identify/norwegian/norwegianidentify",
         "signview/identify/norwegian/norwegianprocessing"],
   function (legacy_code, React, BackboneMixin,
             NorwegianIdentifyModel, NorwegianIdentify, NorwegianProcessing) {

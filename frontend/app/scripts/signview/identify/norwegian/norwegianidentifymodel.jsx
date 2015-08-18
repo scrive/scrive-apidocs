@@ -18,8 +18,9 @@ define(["legacy_code", "Underscore", "Backbone", "base64"],
       });
       _.bindAll(this, "identify", "cancel", "back");
     },
-    mobileForNOBankIDFormat: function(mobile) {
-      return mobile.replace("+47",""); // We need to drop prefix. It's a standard for users of NO BankID not to have it.
+    mobileForNOBankIDFormat: function (mobile) {
+      // We need to drop prefix. It's a standard for users of NO BankID not to have it.
+      return mobile.replace("+47", "");
     },
     doc: function () {
       return this.get("doc");
@@ -27,27 +28,33 @@ define(["legacy_code", "Underscore", "Backbone", "base64"],
     siglinkid: function () {
       return this.get("siglinkid");
     },
-    personalnumber: function() {
+    personalnumber: function () {
       return this.doc().currentSignatory().personalnumber();
     },
-    dateOfBirth: function() {
-      return this.personalnumber().slice(0, 6);
+    personalnumberFormatted: function () {
+      return this.doc().currentSignatory().personalnumber().replace(/-/g, "");
     },
-    mobile: function(){
+    dateOfBirth: function () {
+      return this.personalnumberFormatted().slice(0, 6);
+    },
+    mobile: function () {
       return this.get("mobile");
+    },
+    mobileFormatted: function () {
+      return this.get("mobile").replace(/[ -]/g, "");
     },
     setMobile: function (v) {
       if (this.canEditMobile()) {
         this.set({mobile: v});
       }
     },
-    canEditMobile: function() {
+    canEditMobile: function () {
       return this.get("canEditMobile");
     },
-    isDesktopMode : function() {
+    isDesktopMode: function () {
       return this.get("type") == "desktop";
     },
-    isMobileMode : function() {
+    isMobileMode: function () {
       return this.get("type") == "mobile";
     },
     setDesktopMode: function () {
@@ -86,19 +93,18 @@ define(["legacy_code", "Underscore", "Backbone", "base64"],
     back: function () {
       this.setIdentify();
     },
-    noBankIDLink : function() {
+    noBankIDLink: function () {
       var location = "https://scrive.com"; // window.location.origin
       var netsIdentifyUrl = window.netsIdentifyUrl;
       var netsMerchantIdentifier = window.netsMerchantIdentifier;
       var target = "KDMsNiwiaHR0cDovL2xvY2FsaG9zdDo4MDAwL3MvMy82Iik%3D";
       var vendor = this.isDesktopMode() ? "no_bankid" : "no_bidmob";
       link = netsIdentifyUrl + "?mid=" + netsMerchantIdentifier + "&wi=r";
-      var vendor = this.isDesktopMode() ? "no_bankid" : "no_bidmob";
-      link = link + "&forcepkivendor="+vendor;
+      link = link + "&forcepkivendor=" + vendor;
       if (this.isDesktopMode()) {
-        link = link + "&presetid=" + encodeURIComponent(Base64.encode(this.personalnumber()));
+        link = link + "&presetid=" + encodeURIComponent(Base64.encode(this.personalnumberFormatted()));
       } else if (this.isMobileMode()) {
-        link = link + "&celnr8=" + encodeURIComponent(Base64.encode(this.mobile()));
+        link = link + "&celnr8=" + encodeURIComponent(Base64.encode(this.mobileFormatted()));
         link = link + "&dob6=" + encodeURIComponent(Base64.encode(this.dateOfBirth()));
       }
       var target = "(" + this.doc().documentid() + "," + this.siglinkid() + ",\"" + window.location  + "\")";
@@ -109,6 +115,11 @@ define(["legacy_code", "Underscore", "Backbone", "base64"],
 
       var status = location + "/nets/status?status=";
       link = link + "&status=" + encodeURIComponent(status);
+
+      if (this.isMobileMode()) {
+        var style = location + "/assets/nets.css";
+        link = link + "&style=" + encodeURIComponent(style);
+      }
 
       var locale = "en_GB";
       if (this.doc().lang().simpleCode() == "sv") {

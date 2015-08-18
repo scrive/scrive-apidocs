@@ -11,8 +11,17 @@ javascriptLocalisation =
              , identifyDocument: "$_IdentifyDocument()$"
              , identifyBankId: "$_IdentifyBankId()$"
              , identifyBankIdNo: "$_IdentifyBankIdNO()$"
-             , identifyBankIdNoFailed: "$_IdentifyBankIdNOFailed()$"
              , identifyBankIdNoMobile: "$_IdentifyBankIdNOMobile()$"
+             , identifyBankIdError: {
+               failed: "$_IdentifyBankIdNOFailed()$"
+               , canceled: "$_IdentifyBankIdNOCanceled()$"
+               , useragent: "$_IdentifyBankIdNOUserAgent()$"
+               , auth: "$_IdentifyBankIdNOAuth()$"
+               , blocked: "$_IdentifyBankIdNOBlocked()$"
+               , revoked: "$_IdentifyBankIdNORevoked()$"
+               , expired: "$_IdentifyBankIdNOExpired()$"
+               , mobile: "$_IdentifyBankIdNOMobileError()$"
+             }
              , identifyPhoneError: "$_IdentifyPhoneError()$"
              , identifyPhoneNumber: "$_IdentifyPhoneNumber()$"
              , identifyPhoneNumber8: "$_IdentifyPhoneNumber8()$"

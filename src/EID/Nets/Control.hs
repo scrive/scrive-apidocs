@@ -45,6 +45,10 @@ netsRoutes = choice [
 
 ----------------------------------------
 
+formatDOB :: Text -> Text
+formatDOB s = day `append` month `append` (Text.drop 2 year)
+    where [day, month, year] = splitOn "." s
+
 handleResolve :: Kontrakcja m => m KontraLink
 handleResolve = do
   ctx <- getContext
@@ -72,14 +76,19 @@ handleResolve = do
                                       _ -> $unexpectedError $ "provider not supported"  <+> Text.unpack s
                let provider = decodeProvider $ attributeFromAssestion "IDPROVIDER" $ assertionAttributes res
                let signatoryName = attributeFromAssestion "CN" $ assertionAttributes res
+               let dob = attributeFromAssestion "DOB" $ assertionAttributes res
+               let dobSSN = KontraPrelude.take 6 $ getPersonalNumber sl
+               let dobNETS = Text.unpack $ formatDOB dob
                let certificate = decodeCertificate $ attributeFromAssestion "CERTIFICATE" $ assertionAttributes res
                let mphone = lookup "NO_CEL8" $ assertionAttributes res
+               let mpid = lookup "NO_BID_PID" $ assertionAttributes res
 
                -- Put NO BankID transaction in DB
                dbUpdate $ MergeNetsNOBankIDAuthentication sessionID (netsSignatoryID nt) $ NetsNOBankIDAuthentication {
                      netsNOBankIDInternalProvider = provider
                    , netsNOBankIDSignatoryName = signatoryName
                    , netsNOBankIDPhoneNumber = mphone
+                   , netsNOBankIDDateOfBirth = dob
                    , netsNOBankIDCertificate = certificate
                  }
 
@@ -88,17 +97,27 @@ handleResolve = do
                  let eventFields = do
                       F.value "signatory_name" signatoryName
                       F.value "signatory_mobile" mphone
+                      F.value "signatory_dob" dob
+                      F.value "signatory_pid" mpid
                       F.value "provider" $ ("Norwegian BankID" :: String)
                       F.value "signature" $ B64.encode . unBinary $ certificate
                  void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
 
+                 when (dobNETS /= dobSSN) $ do
+                  -- FIXME
+                  logAttention_ $ "Date of birth from NETS does not match date of birth from SSN, " ++ dobNETS ++ " != " ++ dobSSN
+
                  -- Updating phone number - mobile workflow only and only if not provided
                  when (isJust mphone) $ do
-                   let formattedPhone = "+47" ++ (Text.unpack ($fromJust mphone))
-                   when (getMobile sl /= formattedPhone && getMobile sl /= "") $ do
+                   let phone = Text.unpack ($fromJust mphone)
+                   let formattedPhoneFromNets = "+47" ++ phone
+                   let signatoryHasFilledInPhone = getMobile sl == ""
+                   let formattedPhoneFromSignatory = KontraPrelude.filter (\c -> not (c `elem` " -")) $ getMobile sl
+                   when (not signatoryHasFilledInPhone && formattedPhoneFromSignatory /= formattedPhoneFromNets) $ do
                      logAttention_ "Not matching phone for NO BankID - Nets should blocked that"
                      internalError
-                   dbUpdate . UpdatePhoneAfterIdentificationToView sl formattedPhone =<< signatoryActor ctx sl
+                   when signatoryHasFilledInPhone $ do
+                     dbUpdate . UpdatePhoneAfterIdentificationToView sl phone formattedPhoneFromNets =<< signatoryActor ctx sl
 
                dbUpdate $ ChargeCompanyForNOBankIDAuthentication (documentid doc)
 

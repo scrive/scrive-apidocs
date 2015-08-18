@@ -1,4 +1,5 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/button",  "signview/identify/swedish/swedishidentifymodel"],
+define(["legacy_code", "Underscore", "Backbone", "React", "common/button",
+  "signview/identify/swedish/swedishidentifymodel"],
   function (legacy_code, _, Backbone, React, Button, SwedishIdentifyModel) {
   return React.createClass({
     propTypes: {
@@ -21,7 +22,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button",  "sig
               size="big"
               type="action"
               text={localization.ok}
-              onClick={function() {model.back();}}
+              onClick={function () {model.back();}}
             />
           </div>
         </span>
