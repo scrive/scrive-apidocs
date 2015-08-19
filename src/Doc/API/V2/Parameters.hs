@@ -59,7 +59,7 @@ apiV2ParameterDefault d p = do
 apiV2ParameterOptional :: Kontrakcja m => ApiV2Parameter a -> m (Maybe a)
 
 apiV2ParameterOptional (ApiV2ParameterInt name) = apiParameterUsingMaybeRead name
-apiV2ParameterOptional (ApiV2ParameterText name) = apiParameterUsingMaybeRead name
+apiV2ParameterOptional (ApiV2ParameterText name) = liftM (fmap pack) $ getField $ unpack name
 apiV2ParameterOptional (ApiV2ParameterRead name) = apiParameterUsingMaybeRead name
 
 apiV2ParameterOptional (ApiV2ParameterBool name) = do
