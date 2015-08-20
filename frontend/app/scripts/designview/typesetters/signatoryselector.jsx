@@ -38,7 +38,7 @@ define(["Backbone", "React", "common/select", "legacy_code"], function (Backbone
       var options = doc.signatories().map(function (s) {
         return {name: s.nameOrEmail() || s.nameInDocument(), value: s};
       }).filter(function (s) {
-        return s.name !== signame;
+        return s.value !== sig;
       });
 
       return (
