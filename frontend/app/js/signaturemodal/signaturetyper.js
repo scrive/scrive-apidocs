@@ -82,7 +82,13 @@ var SignatureTyperView = Backbone.View.extend({
       return 820;
     },
     saveImage : function(callback) {
-        var field = this.model.field();
+        var model = this.model;
+        var field = model.field();
+        if (model.text() === "") {
+          field.setValue("");
+          if (callback != undefined) callback();
+          return;
+        }
         $.ajax(this.imageBase64Url(),
                {cache: false,
                 success: function(resp) {
