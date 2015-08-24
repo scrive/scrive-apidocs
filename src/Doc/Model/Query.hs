@@ -290,6 +290,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetTimeoutedButPendingDocumentsC
     runQuery_ . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereEq "documents.status" Pending
+      sqlWhere "purged_time IS NULL"
       sqlWhere $ "timeout_time IS NOT NULL AND timeout_time < " <?> mtime
       sqlLimit size
     fetchMany toComposite
