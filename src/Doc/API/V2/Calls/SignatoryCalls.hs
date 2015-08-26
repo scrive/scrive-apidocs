@@ -115,6 +115,7 @@ docApiV2SigSign did slid = api $ do
         Nothing -> apiError $ signatoryStateError "Swedish BankID authentication needed before signing."
         Just esig -> return (Just esig, Nothing)
     signDocument slid mh fields mesig mpin screenshots
+    postDocumentPendingChange olddoc
     handleAfterSigning slid
     -- Return
     Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument

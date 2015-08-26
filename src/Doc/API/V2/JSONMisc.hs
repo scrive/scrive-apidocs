@@ -179,7 +179,7 @@ instance Unjson SignatoryScreenshots.SignatoryScreenshots where
       combineSignatoryScreenshots f s _ _ = SignatoryScreenshots.SignatoryScreenshots f s Nothing
 
 evidenceAttachmentsToJSONBS :: DocumentID -> [EvidenceAttachments.Attachment] -> BC.ByteString
-evidenceAttachmentsToJSONBS did eas = "[" `BC.append` (BC.intercalate "," $ map eatobs eas) `BC.append` "]"
+evidenceAttachmentsToJSONBS did eas = "[" `BC.append` (BC.intercalate "," $ map eatobs (sortBy eaSorter eas)) `BC.append` "]"
   where eatobs :: EvidenceAttachments.Attachment -> BC.ByteString
         eatobs ea = "{\"name\":\"" `BC.append` (BC.fromStrict $ EvidenceAttachments.name ea) `BC.append` "\"" `BC.append`
                     (case EvidenceAttachments.mimetype ea of
@@ -188,3 +188,8 @@ evidenceAttachmentsToJSONBS did eas = "[" `BC.append` (BC.intercalate "," $ map 
                     ) `BC.append`
                     ",\"download_url\":\"" `BC.append` (BC.pack $ show $ LinkEvidenceAttachment did (EvidenceAttachments.name ea)) `BC.append` "\"" `BC.append`
                     "}"
+        eaSorter :: EvidenceAttachments.Attachment -> EvidenceAttachments.Attachment -> Ordering
+        eaSorter a b | EvidenceAttachments.name a == firstAttachmentName = LT
+                     | EvidenceAttachments.name b == firstAttachmentName = GT
+                     | otherwise = compare a b
+        firstAttachmentName = "Evidence Quality of Scrive E-signed Documents.html"
