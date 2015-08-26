@@ -19,7 +19,7 @@ All you need to do is `./runProcess.sh`.
 This will expect the HTML files exported from Google Docs in `exports/`.
 To get these you will need to go through all the documents in the
 [Google Drive folder]
-(https://drive.google.com/a/scrive.com/folderview?id=0B8akyOlg6VShUzc5czNwUnR2cWs&usp=sharing)
+(https://drive.google.com/drive/folders/0B8akyOlg6VShUzc5czNwUnR2cWs)
 for the evidence package and do "File -> Download as -> Web page (.html,
 zipped)".
 
