@@ -196,6 +196,7 @@ simplyfiedEventText target mactor d sim dee = do
   emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
   case evType dee of
     Obsolete CancelDocumenElegEvidence -> renderEvent emptyNamePlaceholder "CancelDocumenElegEvidenceText"
+    Obsolete SignatoryLinkVisited -> renderEvent emptyNamePlaceholder "SignatoryLinkVisitedArchive"
     Current et -> renderEvent emptyNamePlaceholder $ eventTextTemplateName target et
     Obsolete _ -> return "" -- shouldn't we throw an error in this case?
     where
