@@ -1195,6 +1195,10 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongD
          sqlWhereDocumentIDIs did
          sqlWhereDocumentTypeIs Signable
          sqlWhereDocumentStatusIs Timedout
+      runQuery_ . sqlUpdate "signatory_links" $ do
+         sqlSet "deleted" (Nothing :: Maybe UTCTime)
+         sqlSet "really_deleted" (Nothing :: Maybe UTCTime)
+         sqlWhereEq "document_id" did
     void $ update $ InsertEvidenceEvent
         ProlongDocumentEvidence
         (return ())

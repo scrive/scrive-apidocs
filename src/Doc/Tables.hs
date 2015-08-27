@@ -6,7 +6,7 @@ import KontraPrelude
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 40
+  , tblVersion = 41
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -41,6 +41,10 @@ tableDocuments = tblTable {
       indexOnColumn "mtime"
       -- for filtering by status in archive
     , indexOnColumn "status"
+    ]
+  , tblChecks = [
+        Check "check_documents_pending_are_not_purged"
+          "status <> 2 OR purged_time IS NULL"
     ]
   }
 

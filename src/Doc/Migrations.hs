@@ -1175,6 +1175,19 @@ addAPIV2CallbackAndRenameExisting = Migration {
         runSQL_ "ALTER TABLE documents ADD COLUMN api_v2_callback_url TEXT NULL"
     }
 
+fixPurgedPendingDocumentsAndAddConstraint :: MonadDB m => Migration m
+fixPurgedPendingDocumentsAndAddConstraint = Migration {
+      mgrTable = tableDocuments
+    , mgrFrom = 40
+    , mgrDo = do
+        runSQL_ "UPDATE documents SET status = 5 WHERE status = 2 and purged_time IS NOT NULL" -- Timeout pending purged documents
+        runQuery_ $ sqlAlterTable "documents" [
+          sqlAddCheck $ Check "check_documents_pending_are_not_purged"
+            "status <> 2 OR purged_time IS NULL"
+          ]
+    }
+
+
 
 addSignatoryAuthenticationToView :: MonadDB m => Migration m
 addSignatoryAuthenticationToView = Migration {
