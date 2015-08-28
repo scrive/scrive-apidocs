@@ -62,7 +62,7 @@ define(["Underscore", "React", "common/button", "common/select",
           onSelect: function () {
             field.authorObligatory = "signatory";
             field.addedByMe = false;
-            field.setObligatoryAndShouldBeFilledBySender(true,false);
+            field.setObligatoryAndShouldBeFilledBySender(true, false);
           }
         });
       }
