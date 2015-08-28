@@ -49,10 +49,9 @@ define(["Underscore", "React", "common/button", "common/select",
         options.push({
           name: localization.designview.mandatoryForSender,
           onSelect: function () {
-            field.makeObligatory();
-            field.setShouldBeFilledBySender(true);
             field.authorObligatory = "sender";
             field.addedByMe = false;
+            field.setObligatoryAndShouldBeFilledBySender(true, true);
           }
         });
       }
@@ -61,10 +60,9 @@ define(["Underscore", "React", "common/button", "common/select",
         options.push({
           name: localization.designview.mandatoryForRecipient,
           onSelect: function () {
-            field.makeObligatory();
-            field.setShouldBeFilledBySender(false);
             field.authorObligatory = "signatory";
             field.addedByMe = false;
+            field.setObligatoryAndShouldBeFilledBySender(true,false);
           }
         });
       }
@@ -73,10 +71,9 @@ define(["Underscore", "React", "common/button", "common/select",
         options.push({
           name: localization.designview.optionalField,
           onSelect: function () {
-            field.makeOptional();
-            field.setShouldBeFilledBySender(false);
             field.authorObligatory = "optional";
             field.addedByMe = false;
+            field.setObligatoryAndShouldBeFilledBySender(false, false);
           }
         });
       }
@@ -122,7 +119,6 @@ define(["Underscore", "React", "common/button", "common/select",
       var field = model.field();
 
       var options = this.obligatoryOptions();
-
       return (
         <span>
           <SignatorySelector field={field} useDefaultBehavior={false} onSelect={this.handleSelectSig} />
