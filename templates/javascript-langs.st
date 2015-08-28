@@ -1250,6 +1250,8 @@ javascriptLocalisation =
       , integrations: {
               salesforce : "$salesforce()$"
             , salesforceDescription : "$salesforceDescription()$"
+            , basicAuth : "$basicAuth()$"
+            , basicAuthDescription : "$basicAuthDescription()$"
             , constantUrlCallback : "$constantUrlCallback()$"
             , constantUrlCallbackDescription : "$constantUrlCallbackDescription()$"
       }

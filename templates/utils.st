@@ -108,3 +108,7 @@ constantUrlCallback=Callbacks
 ###
 constantUrlCallbackDescription=All callbacks for this account will be redirected to <strong class='put-url-here'/>
 ###
+basicAuth=Basic Auth
+###
+basicAuthDescription=Basic Auth adds an Authorization header to all callbacks.
+###

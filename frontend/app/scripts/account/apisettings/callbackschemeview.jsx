@@ -13,6 +13,9 @@ return React.createClass({
       res.find('.put-url-here').text( this.props.model.constantUrl());
       return res.html();
     },
+    reload : function() {
+      this.props.model.fetch();
+    },
     render: function() {
       var self = this;
       var model = this.props.model;
@@ -32,13 +35,23 @@ return React.createClass({
             </div>
           }
           {/*else if*/ (model.constantScheme()) &&
-             <div>
+            <div>
               <div className='oauth-section-header'>
                 {localization.integrations.constantUrlCallback}
               </div>
               <div className='oauth-section-label'
                   dangerouslySetInnerHTML={{__html: this.constantUrlCallbackDescription()}}
               />
+            </div>
+          }
+          {/*else if*/ (model.basicAuthScheme()) &&
+            <div>
+              <div className='oauth-section-header'>
+                {localization.integrations.basicAuth}
+              </div>
+              <div className='oauth-section-label'>
+                {localization.integrations.basicAuthDescription}
+              </div>
             </div>
           }
           {/*else*/ (model.emptyScheme() ) &&

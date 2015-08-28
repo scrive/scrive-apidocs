@@ -8,6 +8,8 @@ import Log
 import Network.HTTP as HTTP
 import System.Exit
 import Text.JSON
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString, fromString)
 
@@ -42,25 +44,21 @@ execute DocumentAPICallback{..} = do
         mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
         case mcallbackschema of
           Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL
-          _ -> executeStandardCallback doc dacURL dacApiVersion
+          Just (BasicAuthScheme lg pwd) -> executeStandardCallback (Just (lg,pwd)) doc dacURL dacApiVersion
+          _ -> executeStandardCallback Nothing doc dacURL dacApiVersion
   else do -- TODO APIv2: Get rid of this block too, see TODO above
     logAttention "API callback was dropped as it is not a V1 callback: this is not yet implemented and shouldn't happen!" $
       object [ "document_id" .= show dacDocumentID, "api_version" .= show dacApiVersion, "url" .= dacURL]
     return True
 
-executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) => Document -> String -> APIVersion -> m Bool
-executeStandardCallback doc url apiVersion = do
+executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) => Maybe (String,String) -> Document -> String -> APIVersion -> m Bool
+executeStandardCallback mBasicAuth doc url apiVersion = do
   dJSON <- case apiVersion of
                 -- TODO APIv2: Use correct JSON for the version given
                 _ -> documentJSONV1 Nothing False True Nothing doc
   (exitcode, _ , stderr) <- readCurl
-     [ "-X", "POST"
-     , "-f" -- make curl return exit code (22) if it got anything else but 2XX
-     , "-L" -- make curl follow redirects
-     , "--data-binary", "@-"          -- take binary data from stdin
-     , "-H", "Content-type: application/x-www-form-urlencoded; charset=UTF-8"
-     , url
-     ] (BSL.fromString (urlEncodeVars [ ("documentid", show (documentid doc))
+     curlParams
+     (BSL.fromString (urlEncodeVars [ ("documentid", show (documentid doc))
                                       , ("signedAndSealed", (if (isClosed doc && (isJust $ documentsealedfile doc))
                                                              then "true" else "false"))
                                       , ("json", encode dJSON)
@@ -82,6 +80,19 @@ executeStandardCallback doc url apiVersion = do
         , "stderr" .= BSL.toString stderr
         ]
       return False
+  where
+    curlParams =  [
+          "-X", "POST"
+        , "-f" -- make curl return exit code (22) if it got anything else but 2XX
+        , "-L" -- make curl follow redirects
+        , "--data-binary", "@-"          -- take binary data from stdin
+        , "-H", "Content-type: application/x-www-form-urlencoded; charset=UTF-8"
+        ] ++
+        (case mBasicAuth of
+            Just (lg,pwd) -> ["-H", "Authorization: Basic " ++ (BSC8.unpack $ B64.encode $ BSC8.pack $ lg ++ ":" ++  pwd)]
+            _ -> []
+        ) ++
+        [ url]
 
 executeSalesforceCallback :: (MonadDB m, MonadLog m, MonadIO m, MonadBase IO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> m Bool
 executeSalesforceCallback doc rtoken url = do

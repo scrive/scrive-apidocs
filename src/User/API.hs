@@ -334,6 +334,8 @@ apiCallUserGetCallbackScheme = api $ do
                     value "url" url
       Just (SalesforceScheme _key)  -> runJSONGenT $ do
                     value "scheme" ("salesforce"::String)
+      Just (BasicAuthScheme _lg _pwd)  -> runJSONGenT $ do
+                    value "scheme" ("basic_auth"::String)
       Nothing -> runJSONGenT $ do
                     value "scheme" ("none"::String)
 
