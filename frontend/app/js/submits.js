@@ -91,8 +91,10 @@ window.Submit = Backbone.Model.extend({
                 form.append(input);
             }
         }
-        if (Cookies.get("xtoken") != undefined && this.get("method").toUpperCase() == "POST")
-            form.append( $('<input type="hidden" name="xtoken">').val(Cookies.get("xtoken")));
+        if (Cookies.get("xtoken") != undefined && this.get("method").toUpperCase() == "POST") {
+          var xtoken = Cookies.getMulti("xtoken").join(";");
+          form.append( $('<input type="hidden" name="xtoken">').val(xtoken));
+        }
         form.append(this.get("inputs"));
         $("body").append(form);
 

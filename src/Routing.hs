@@ -25,6 +25,7 @@ module Routing ( hGet
                ) where
 
 import Data.Functor
+import Data.List.Split
 import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), ToMessage(..))
 import Happstack.StaticRouting
 import Text.JSON
@@ -167,10 +168,12 @@ toK6 m a b c d e f = m a b c d e f >>= toResp
 guardXToken :: Kontra Response -> Kontra Response
 guardXToken action = do
   ctx <- getContext
-  xtoken <- join <$> (fmap maybeRead) <$> readField "xtoken"
-  if isJust xtoken && ($fromJust xtoken == ctxxtoken ctx)
-    then action
-    else do -- Requests authorized by something else then xtoken, can't access session data or change context stuff.
+  let unQuote = filter (not . (== '"'))
+      tokensFromString = catMaybes . map (maybeRead . unQuote) . splitOn ";"
+  mxtokenString <- getField "xtoken"
+  case mxtokenString of
+    Just xtokenString | ctxxtoken ctx `elem` tokensFromString xtokenString -> action
+    _ -> do -- Requests authorized by something else then xtoken, can't access session data or change context stuff.
       modifyContext anonymousContext
       res <- action
       modifyContext (\_ -> ctx)

@@ -4,16 +4,31 @@ define(['legacy_code'],function() {
    *  Reading and settings browser cookies
    */
   window.Cookies = {
-    buildCookieMap : function () {
+    buildCookieMultiMap : function () {
       var cookies = document.cookie.split(';');
       var cookieMap = {};
 
-      cookies.forEach(function(cookie, i) {
-          cookies[i] = cookie.split('=');
-          cookieMap[cookies[i][0].trim()] = cookies[i][1];
+      cookies.forEach(function (cookie) {
+        var cookieName = cookie.split('=')[0].trim();
+        var cookieValue = cookie.split('=')[1].trim();
+        var cookieValues = cookieMap[cookieName];
+        if (cookieValues === undefined) {
+          cookieMap[cookieName] = cookieValues = [];
+        }
+        cookieValues.push(cookieValue);
       });
 
       return cookieMap;
+    },
+
+    buildCookieMap : function () {
+      var cookieMap = Cookies.buildCookieMultiMap();
+      return _.mapObject(cookieMap, function (value) {
+        return value[0];
+      });
+    },
+    getMulti: function(name) {
+      return this.buildCookieMultiMap()[name];
     },
     get : function(name) {
       var cookies = this.buildCookieMap();
