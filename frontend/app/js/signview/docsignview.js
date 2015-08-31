@@ -217,7 +217,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
         askForEmail: model.askForEmail(),
         askForSSN: model.askForSSN(),
         askForPhone: model.askForPhone(),
-        arrow: function () { return model.arrow(); },
         signview: model
       }), $el[0]);
       var obj = {comp: comp, el: $el};

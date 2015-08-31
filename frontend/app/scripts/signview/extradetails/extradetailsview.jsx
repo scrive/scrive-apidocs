@@ -4,6 +4,15 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
+    propTypes: {
+      model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
+      signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
+      askForName: React.PropTypes.bool.isRequired,
+      askForEmail: React.PropTypes.bool.isRequired,
+      askForSSN: React.PropTypes.bool.isRequired,
+      askForPhone: React.PropTypes.bool.isRequired
+    },
+
     getBackboneModels: function () {
       return [this.props.model];
     },
@@ -41,7 +50,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         <span>
           <h2 className="title">Om dig</h2>
           <div className="column spacing fillbox">
-            {this.props.askForName &&
+            {/* if */ this.props.askForName &&
               <InfoTextInput
                 ref="name"
                 className={nameClass}
@@ -68,7 +77,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
                 }}
               />
             }
-            {this.props.askForEmail &&
+            {/* if */ this.props.askForEmail &&
               <InfoTextInput
                 ref="email"
                 className={emailClass}
@@ -77,7 +86,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
                 onChange={function (value) {emailField.setValue(value);}}
               />
             }
-            {this.props.askForSSN &&
+            {/* if */ this.props.askForSSN &&
               <InfoTextInput
                 ref="ssn"
                 className={ssnClass}
@@ -86,7 +95,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
                 onChange={function (value) {ssnField.setValue(value);}}
               />
             }
-            {this.props.askForPhone &&
+            {/* if */ this.props.askForPhone &&
               <InfoTextInput
                 ref="phone"
                 className={phoneClass}
