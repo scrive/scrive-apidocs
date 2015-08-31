@@ -17,6 +17,7 @@ module InputValidation
     , asValidName
     , asValidCompanyName
     , asValidCompanyNumber
+    , asValidSEBankIdPersonalNumber
     , asValidAddress
     , asValidPhone
     , asValidPhoneForSMS
@@ -340,7 +341,7 @@ asValidCompanyName input =
     >>= checkOnly (isAlphaNum : map (==) " &\'@():,!.-?")
 
 {- |
-    Creates a clean and validated company or individual number.
+    Creates a clean and validated company number.
     White list: Alphabetic characters, Numeric characters, punctuation
     Size: From 4 to 50 chars
 -}
@@ -350,6 +351,20 @@ asValidCompanyNumber input =
     >>= checkIfEmpty
     >>= checkLengthIsMax 50
     >>= checkOnly [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')]
+
+{- |
+    Creates a clean and validated personal number.
+    White list: Digits, hyphens (to be stripped)
+    Size: 10 or 12
+-}
+asValidSEBankIdPersonalNumber :: String -> Result String
+asValidSEBankIdPersonalNumber input =
+    stripAllWhitespace input
+    >>= filterOutCharacters "-"
+    >>= checkOnly [isDigit]
+    >>= (\xs -> if
+             | length xs `elem` [10, 12] -> return xs
+             | otherwise -> Bad)
 
 {- |
     Creates a clean and validated address.
@@ -618,3 +633,9 @@ stripWhitespace =
     return . stripLeadingWhitespace . stripTrailingWhitespace
     where stripLeadingWhitespace = dropWhile isSpace
           stripTrailingWhitespace = reverse . stripLeadingWhitespace . reverse
+
+{- |
+    Strips all (even from the middle) whitespace
+-}
+stripAllWhitespace :: String -> Result String
+stripAllWhitespace = return . filter (not . isSpace)
