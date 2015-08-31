@@ -150,7 +150,7 @@ sendgridEventFromJSValueM = do
                               return (SG_Bounce <$> status <*> reason <*> btype)
       (Just "deferred")    -> do
                               response <- fromJSValueField "response"
-                              (attempt :: Maybe Int)  <- fromJSValueField "attempt"
+                              attempt <- join <$> fmap maybeRead <$> fromJSValueField "attempt"  -- SG returns ints as strings for this field
                               return (SG_Deferred <$> response <*> (fromIntegral <$> attempt))
       (Just "spamreport")  -> return $ Just SG_SpamReport
       (Just "unsubscribe") -> return $ Just SG_Unsubscribe
