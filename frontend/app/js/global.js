@@ -134,8 +134,9 @@ safeReady(function() {
     var form = $(this);
     if ($("input[name='xtoken']",form).size() == 0 && $(form).attr('method') != undefined && $(form).attr('method').toUpperCase() == 'POST') {
       var tokenTag = $('<input type="hidden" name="xtoken">');
-      var token = Cookies.get("xtoken");
-      if (token && token.length > 0) {
+      var tokens = Cookies.getMulti("xtoken");
+      if (tokens && tokens[0].length > 0) {
+        var token = tokens.join(";");
         console.log(token);
         tokenTag.attr("value", token);
         form.append(tokenTag);

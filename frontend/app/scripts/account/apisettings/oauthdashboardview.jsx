@@ -235,7 +235,10 @@ return React.createClass({
             </div>
           </div>
           <div className="oauth-section">
-            <CallbackSchemeView model={new CallbackScheme({})}/>
+            <CallbackSchemeView
+              ref='callbackschemeview'
+              model={new CallbackScheme({})}
+            />
           </div>
         </div>);
       }

@@ -29,6 +29,8 @@ import User.Model
 data UserCallbackScheme = ConstantUrlScheme String
                         | SalesforceScheme String
                         | ConstantUrlSchemeV2 String
+                        | BasicAuthScheme String String -- Sample of DB value: {"BasicAuthScheme" : ["a","b"]}
+
   deriving (Eq, Show, Data, Typeable)
 
 instance PQFormat UserCallbackScheme where

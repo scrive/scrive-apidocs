@@ -7,7 +7,7 @@ define(['legacy_code'], function() {
         ready : false
     },
     initialize: function(args) {
-          this.url = "/api/frontend/getcallbackscheme";
+       this.url = "/api/frontend/getcallbackscheme";
     },
     ready : function() {
        return this.get("ready");
@@ -17,6 +17,9 @@ define(['legacy_code'], function() {
     },
     constantScheme : function() {
        return this.get("scheme") == "constant";
+    },
+    basicAuthScheme : function() {
+       return this.get("scheme") == "basic_auth";
     },
     emptyScheme : function() {
        return this.get("scheme") == "none";
