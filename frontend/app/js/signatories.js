@@ -724,13 +724,13 @@ window.Signatory = Backbone.Model.extend({
       if (signatory.fstnameField() != undefined && !signatory.fstnameField().hasPlacements())
       {
         signatory.fstnameField().authorObligatory = 'optional';
-        signatory.fstnameField().set({"obligatory":true, "shouldbefilledbysender" : false});
+        signatory.fstnameField().setObligatoryAndShouldBeFilledBySender(true,false);
       }
 
       if (signatory.sndnameField() != undefined && !signatory.sndnameField().hasPlacements())
       {
         signatory.sndnameField().authorObligatory = 'optional';
-        signatory.sndnameField().set({"obligatory":true, "shouldbefilledbysender" : false});
+        signatory.sndnameField().setObligatoryAndShouldBeFilledBySender(true,false);
       }
 
       if (signatory.personalnumberField() != undefined && !signatory.personalnumberField().hasPlacements())
@@ -764,21 +764,18 @@ window.Signatory = Backbone.Model.extend({
                 f.addedByMe = true;
                 signatory.addField(f);
             } else {
-                pn.makeObligatory();
-                pn.setShouldBeFilledBySender(signatory.needsPersonalNumberFilledByAuthor());
+               pn.setObligatoryAndShouldBeFilledBySender(true, signatory.needsPersonalNumberFilledByAuthor() || pn.shouldbefilledbysender());
             }
         } else {
             if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
                 signatory.deleteField(pn);
             } else if(pn && pn.authorObligatory == 'sender') {
-                pn.makeObligatory();
-                pn.setShouldBeFilledBySender(true);
+                pn.setObligatoryAndShouldBeFilledBySender(true,true);
             } else if(pn && pn.authorObligatory == 'signatory') {
-                pn.makeObligatory();
-                pn.setShouldBeFilledBySender(false);
+                pn.setObligatoryAndShouldBeFilledBySender(true,false);
             } else if(pn && pn.authorObligatory == 'optional') {
-                pn.makeOptional();
-                pn.setShouldBeFilledBySender(false);
+                pn.setObligatoryAndShouldBeFilledBySender(false,false);
+
             }
         }
     },
@@ -801,21 +798,17 @@ window.Signatory = Backbone.Model.extend({
                 f.addedByMe = true;
                 signatory.addField(f);
             } else {
-                pn.makeObligatory();
-                pn.setShouldBeFilledBySender((!pn.canBeSetByRecipent()) || signatory.author() || (pn.authorObligatory == 'sender'));
+                pn.setObligatoryAndShouldBeFilledBySender(true,(!pn.canBeSetByRecipent()) || signatory.author() || (pn.authorObligatory == 'sender'));
             }
         } else {
             if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
                 signatory.deleteField(pn);
             } else if(pn && pn.authorObligatory == 'sender') {
-                pn.makeObligatory();
-                pn.setShouldBeFilledBySender(true);
+                pn.setObligatoryAndShouldBeFilledBySender(true,true);
             } else if(pn && pn.authorObligatory == 'signatory') {
-                pn.makeObligatory();
-                pn.setShouldBeFilledBySender(false);
+                pn.setObligatoryAndShouldBeFilledBySender(true,false);
             } else if(pn && pn.authorObligatory == 'optional') {
-                pn.makeOptional();
-                pn.setShouldBeFilledBySender(false);
+                pn.setObligatoryAndShouldBeFilledBySender(false,false);
             }
         }
     },
@@ -838,22 +831,18 @@ window.Signatory = Backbone.Model.extend({
             f.addedByMe = true;
             signatory.addField(f);
           } else {
-            email.makeObligatory();
-            email.setShouldBeFilledBySender((!email.canBeSetByRecipent()) || (email.authorObligatory == 'sender'));
+            email.setObligatoryAndShouldBeFilledBySender(true,(!email.canBeSetByRecipent()) || (email.authorObligatory == 'sender'));
           }
         }
        else {
          if(email && email.addedByMe && email.value() === '' && !email.hasPlacements()) {
             signatory.deleteField(email);
          } else if(email && email.authorObligatory == 'sender') {
-            email.makeObligatory();
-            email.setShouldBeFilledBySender(true);
+            email.setObligatoryAndShouldBeFilledBySender(true,true);
          } else if(email && email.authorObligatory == 'signatory') {
-            email.makeObligatory();
-            email.setShouldBeFilledBySender(false);
+            email.setObligatoryAndShouldBeFilledBySender(true,false);
          } else if(email && email.authorObligatory == 'optional') {
-            email.makeOptional();
-            email.setShouldBeFilledBySender(false);
+            email.setObligatoryAndShouldBeFilledBySender(false,false);
          }
       }
     },

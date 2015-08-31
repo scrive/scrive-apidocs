@@ -181,6 +181,7 @@ kontraMigrations = [
   , extendCgiGrpTransactionsWithAuthRequest
   , createEIDAuthenticationTable
   , addSignatoryAuthenticationToView
+  , fixPurgedPendingDocumentsAndAddConstraint
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

@@ -56,6 +56,9 @@ window.Field = Backbone.Model.extend({
         this.set({shouldbefilledbysender:s});
         return this;
     },
+    setObligatoryAndShouldBeFilledBySender : function(obl,sbs) {
+      this.set({"obligatory" : obl, "shouldbefilledbysender": sbs});
+    },
     setValue : function(value, options) {
         this.set({ hasChanged: true }, { silent: true });
         this.set({"value" : value}, options);
@@ -339,11 +342,15 @@ window.Field = Backbone.Model.extend({
       return true;
     },
     canBeSetByRecipent : function() {
-      if (this.isEmail())
+      if (this.isEmail()) {
         return !(this.signatory().emailDelivery() || this.signatory().emailMobileDelivery());
-      if (this.isMobile())
+      } else if (this.isMobile()) {
         return !(this.signatory().mobileDelivery() || this.signatory().emailMobileDelivery());
-      return true;
+      } else if (this.isSSN()) {
+        return !this.signatory().seBankIDAuthenticationToView();
+      } else {
+        return true;
+      }
     },
     isReady: function(){
       return this.get("fresh") == false && this.name() !== '' && this.type() !== '';
