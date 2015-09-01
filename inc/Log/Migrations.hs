@@ -9,7 +9,23 @@ logsMigrations :: MonadDB m => [Migration m]
 logsMigrations = [
     createLogsTable
   , addColumnDomain
+  , addObjectIndexes
   ]
+
+addObjectIndexes :: MonadDB m => Migration m
+addObjectIndexes = Migration {
+  mgrTable = tableLogs
+, mgrFrom = 2
+, mgrDo = do
+  runSQL_ "DROP INDEX idx__logs__time"
+  mapM_ (runQuery_ . sqlCreateIndex (tblName tableLogs) . indexOnColumn) [
+      "\"time\""
+    , "(data ->> 'document_id'::text)"
+    , "(data ->> 'file_id'::text)"
+    , "(data ->> 'signatory_link_id'::text)"
+    , "(data ->> 'user_id'::text)"
+    ]
+}
 
 addColumnDomain :: MonadDB m => Migration m
 addColumnDomain = Migration {

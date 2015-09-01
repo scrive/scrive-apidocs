@@ -13,8 +13,10 @@ module DB.Model.Index (
 
 import Crypto.Hash.RIPEMD160
 import Data.ByteString.Base16
+import Data.Char
 import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.UTF8 as BSU
 
 import KontraPrelude
 
@@ -63,13 +65,23 @@ indexName tname TableIndex{..} = flip rawSQL () $ BS.take 63 . unRawSQL $ mconca
     if idxUnique then "unique_idx__" else "idx__"
   , tname
   , "__"
-  , mintercalate "__" idxColumns
+  , mintercalate "__" $ map (asBS sanitize) idxColumns
   , maybe "" (("__" <>) . hashWhere) idxWhere
   ]
   where
+    asBS f = flip rawSQL () . f . unRawSQL
+    -- See http://www.postgresql.org/docs/9.4/static/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS.
+    -- Remove all unallowed characters and replace them by at most one adjacent dollar sign.
+    sanitize = BSU.fromString . foldr go [] . BSU.toString
+      where
+        go c acc = if isAlphaNum c || c == '_'
+          then c : acc
+          else case acc of
+            ('$':_) ->       acc
+            _       -> '$' : acc
     -- hash WHERE clause and add it to index name so that indexes
     -- with the same columns, but different constraints can coexist
-    hashWhere = flip rawSQL () . encode . BS.take 10 . hash . unRawSQL
+    hashWhere = asBS $ encode . BS.take 10 . hash
 
 sqlCreateIndex :: RawSQL () -> TableIndex -> RawSQL ()
 sqlCreateIndex tname idx@TableIndex{..} = mconcat [

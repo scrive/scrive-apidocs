@@ -422,13 +422,25 @@ fetchTableCheck (name, condition) = Check {
 sqlGetIndexes :: Table -> SQL
 sqlGetIndexes table = toSQLCommand . sqlSelect "pg_catalog.pg_class c" $ do
   sqlResult "c.relname::text" -- index name
-  sqlResult "array(SELECT a.attname::text FROM pg_catalog.pg_attribute a WHERE a.attrelid = i.indexrelid ORDER BY attnum) " -- array of affected columns
+  sqlResult $ "ARRAY(" <> selectCoordinates <> ")" -- array of index coordinates
   sqlResult "i.indisunique" -- is it unique?
-  sqlResult "CASE WHEN pg_get_indexdef(i.indexrelid, 0, true) LIKE '%WHERE%' THEN regexp_replace(pg_get_indexdef(i.indexrelid, 0, true), '.*WHERE (.*)', '\\1') ELSE NULL END" -- if partial, get constraint def
+  sqlResult "pg_catalog.pg_get_expr(i.indpred, i.indrelid, true)" -- if partial, get constraint def
   sqlJoinOn "pg_catalog.pg_index i" "c.oid = i.indexrelid"
   sqlLeftJoinOn "pg_catalog.pg_constraint r" "r.conindid = i.indexrelid"
   sqlWhereEqSql "i.indrelid" $ sqlGetTableID table
   sqlWhereIsNULL "r.contype" -- fetch only "pure" indexes
+  where
+    -- Get all coordinates of the index.
+    selectCoordinates = smconcat [
+        "WITH RECURSIVE coordinates(k, name) AS ("
+      , "  VALUES (0, NULL)"
+      , "  UNION ALL"
+      , "    SELECT k+1, pg_catalog.pg_get_indexdef(i.indexrelid, k+1, true)"
+      , "      FROM coordinates"
+      , "     WHERE pg_catalog.pg_get_indexdef(i.indexrelid, k+1, true) != ''"
+      , ")"
+      , "SELECT name FROM coordinates WHERE k > 0"
+      ]
 
 fetchTableIndex :: (String, Array1 String, Bool, Maybe String) -> (TableIndex, RawSQL ())
 fetchTableIndex (name, Array1 columns, unique, mconstraint) = (TableIndex {

@@ -11,7 +11,7 @@ logsTables = [
 tableLogs :: Table
 tableLogs = tblTable {
   tblName = "logs"
-, tblVersion = 2
+, tblVersion = 3
 , tblColumns = [
     tblColumn { colName = "insertion_order", colType = BigIntT,  colNullable = False }
   , tblColumn { colName = "insertion_time", colType = TimestampWithZoneT,  colNullable = False }
@@ -23,7 +23,11 @@ tableLogs = tblTable {
   , tblColumn { colName = "domain", colType = ArrayT TextT, colNullable = False }
   ]
 , tblIndexes = [
-      indexOnColumn "time"
+      indexOnColumn "\"time\""
     , indexOnColumn "component"
+    , indexOnColumn "(data ->> 'document_id'::text)"
+    , indexOnColumn "(data ->> 'file_id'::text)"
+    , indexOnColumn "(data ->> 'signatory_link_id'::text)"
+    , indexOnColumn "(data ->> 'user_id'::text)"
     ]
 }
