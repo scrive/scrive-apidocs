@@ -34,6 +34,7 @@ import Kontra
 import KontraPrelude
 import User.Lang
 import Util.Actor
+import Util.HasSomeUserInfo (getMobile)
 import Util.SignatoryLinkUtils
 
 docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -134,15 +135,21 @@ docApiV2SigSendSmsPin did slid = api $ do
     when (signatorylinkauthenticationtosignmethod sl /= SMSPinAuthenticationToSign) $ do
       apiError $ signatoryStateError "Signatory authentication method to sign is not SMS PIN"
     -- Parameters
-    phone <- liftM unpack $ apiV2ParameterObligatory (ApiV2ParameterText "phone")
+    let slidPhone = getMobile sl
+    phone <- if not $ null slidPhone
+                then case asValidPhoneForSMS slidPhone of
+                          Good v -> return v
+                          _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
+                else do
+                    phoneParam <- liftM unpack $ apiV2ParameterObligatory (ApiV2ParameterText "phone")
+                    case asValidPhoneForSMS phoneParam of
+                         Good v -> return v
+                         _ -> apiError $ requestParameterInvalid "phone" "Not a valid phone number"
     -- API call actions
-    case asValidPhoneForSMS phone of
-      Good validPhone -> do
-        pin <- dbQuery $ GetSignatoryPin slid validPhone
-        sendPinCode sl validPhone pin
+    pin <- dbQuery $ GetSignatoryPin slid phone
+    sendPinCode sl phone pin
     -- Return
-        return $ Accepted ()
-      _ -> apiError $ requestParameterInvalid "phone" "Not a valid phone number"
+    return $ Accepted ()
 
 docApiV2SigSetAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSetAttachment did slid = api $ do

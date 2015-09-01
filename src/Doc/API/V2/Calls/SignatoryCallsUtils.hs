@@ -105,8 +105,11 @@ fieldsToFieldsWithFiles (f:fs) = do
 
 checkSignatoryPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, SignatoryFieldTMPValue)] -> String -> m Bool
 checkSignatoryPin slid fields pin = do
-  phone <- case (lookup MobileFI fields) of
-    Just (StringFTV v) -> return v
-    _ ->  getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
+  slidPhone <- getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
+  phone <- case (not $ null slidPhone, lookup MobileFI fields) of
+                (True, _) -> return slidPhone
+                (False, Just (StringFTV v)) -> return v
+                (False, _) -> apiError $ requestParameterInvalid "fields"
+                              "Does not contain a mobile number field, author has not set one for the signatory"
   pin' <- dbQuery $ GetSignatoryPin slid phone
   return $ pin == pin'
