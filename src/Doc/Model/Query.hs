@@ -25,7 +25,7 @@ module Doc.Model.Query
   , GetDocumentTags(..)
   , GetSignatoriesByEmail(..)
   , CheckDocumentObjectVersionIs(..)
-  , DocumentExistsAndIsNotPurged(..)
+  , DocumentExistsAndIsNotPurgedOrReallyDeleted(..)
   ) where
 
 import Control.Monad.Base
@@ -54,7 +54,7 @@ import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
 import File.FileID
 import File.Storage
-import KontraPrelude
+import KontraPrelude hiding (all)
 import MagicHash
 import User.Email
 import User.Model
@@ -346,15 +346,19 @@ instance (MonadDB m, MonadThrow m) => DBQuery m CheckDocumentObjectVersionIs () 
        sqlWhereDocumentObjectVersionIs ov
     return ()
 
-data DocumentExistsAndIsNotPurged = DocumentExistsAndIsNotPurged DocumentID
-instance (MonadDB m, MonadThrow m) => DBQuery m DocumentExistsAndIsNotPurged Bool where
-  query (DocumentExistsAndIsNotPurged did) = do
+data DocumentExistsAndIsNotPurgedOrReallyDeleted = DocumentExistsAndIsNotPurgedOrReallyDeleted DocumentID
+instance (MonadDB m, MonadThrow m) => DBQuery m DocumentExistsAndIsNotPurgedOrReallyDeleted Bool where
+  query (DocumentExistsAndIsNotPurgedOrReallyDeleted did) = do
     runQuery_ . sqlSelect "documents" $ do
-       sqlResult "TRUE"
-       sqlWhereDocumentIDIs did
-       sqlWhereDocumentWasNotPurged
-    (notpurged :: Maybe Bool) <- fetchMaybe runIdentity
-    return (notpurged == Just True)
+      sqlResult "TRUE"
+      sqlWhereDocumentIDIs did
+      sqlWhereDocumentWasNotPurged
+      sqlWhereExists $ sqlSelect "signatory_links" $ do
+        sqlWhere "signatory_links.user_id IS NOT NULL"
+        sqlWhere "signatory_links.really_deleted IS NULL"
+        sqlWhere "signatory_links.document_id = documents.id"
+    result <- fetchMaybe runIdentity
+    return $ result == Just True
 
 instance (MonadDB m, MonadThrow m) => GetRow Document m where
   getRow did = dbQuery $ GetDocumentByDocumentID did
