@@ -184,7 +184,6 @@ window.DocumentExtraDetailsModal = Backbone.View.extend({
 
   popup: function() {
     var document = this.model.document();
-    var signviewbranding = this.model.signviewbranding();
     var signatory = document.currentSignatory();
     var arrow = this.arrow;
     var self = this;

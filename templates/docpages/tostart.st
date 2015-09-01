@@ -57,7 +57,7 @@ $htmlopentag()$
                   var toStartDiv = jQuery('<div />');
                   jQuery(".form-container").append(toStartDiv);
                   jQuery(".to-start").append(footerDiv);
-                  React.render(ToStart({document: doc, signviewbranding: svb}), toStartDiv[0]);
+                  React.render(ToStart({document: doc}), toStartDiv[0]);
                 });
               });
 
@@ -117,7 +117,6 @@ $htmlopentag()$
 
               var listDiv = jQuery('.list-container');
               var component = React.render(React.createElement(ToStartList,{
-                   signviewbranding: svb
                 }), listDiv[0]);
 
               var headerDiv = jQuery('<div/>');

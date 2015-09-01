@@ -5,7 +5,6 @@ define(['legacy_code', 'React', 'common/backbone_mixin', 'common/infotextinput',
 return React.createClass({
   propTypes: {
     field: React.PropTypes.object,
-    signviewbranding: React.PropTypes.object // sign view branding
   },
   mixins: [BackboneMixin.BackboneMixin],
   getBackboneModels: function() {

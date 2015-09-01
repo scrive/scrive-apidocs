@@ -4,8 +4,7 @@ define(['legacy_code', 'React', 'common/backbone_mixin', 'to-start/field'], func
 
 return React.createClass({
   propTypes: {
-    signatory: React.PropTypes.object,
-    signviewbranding: React.PropTypes.object
+    signatory: React.PropTypes.object
   },
   mixins: [BackboneMixin.BackboneMixin],
   getBackboneModels: function() {
@@ -60,7 +59,6 @@ return React.createClass({
     var sent = signatory.document().signingInProcess();
     var minified = this.state.minified;
     var containerClasses = "party-container " + (minified ? "minified" : "");
-    var svb = this.props.signviewbranding;
     var imageSource = this.state.minified ? '/img/to-send/arrow-up.png' : '/img/to-send/arrow-down.png';
 
     return (
@@ -82,7 +80,6 @@ return React.createClass({
                 key={"field-" + field.cid}
                 ref={"field-" + field.cid}
                 field={field}
-                signviewbranding={svb}
               />
             );
           }

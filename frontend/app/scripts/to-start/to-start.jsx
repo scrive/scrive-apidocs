@@ -4,8 +4,7 @@ define(['legacy_code', 'React', 'common/backbone_mixin', 'common/button', 'to-st
 
 return React.createClass({
   propTypes: {
-    document: React.PropTypes.object,
-    signviewbranding: React.PropTypes.object
+    document: React.PropTypes.object
   },
   mixins: [BackboneMixin.BackboneMixin],
   getBackboneModels: function() {
@@ -78,7 +77,6 @@ return React.createClass({
     var document = this.props.document;
     var signatories = document.signatories();
     var documentSent = !document.preparation();
-    var signviewbranding = this.props.signviewbranding;
 
     var buttonClass = "send-button";
 
@@ -105,16 +103,14 @@ return React.createClass({
         <ToStartHeader document={document} />
 
           {this.orderedSignatories().map(function(sig) {
-            return (<ToStartSignatory key={"signatory-" + sig.id} ref={"signatory-" + sig.id} signatory={sig} signviewbranding={signviewbranding} />);
+            return (<ToStartSignatory key={"signatory-" + sig.id} ref={"signatory-" + sig.id} signatory={sig} />);
           })}
 
           <div className="party-container sign-button-container">
             <Button 
               ref="sendButton"
               text={localization.toStart.sendForSigning}
-              color="green" 
               size="large" 
-              customcolor={{'backgroundColor': signviewbranding.signviewprimarycolour(), 'color': signviewbranding.signviewprimarytextcolour()}}
               type="action"
               className={buttonClass}
               onClick={this.finalClick}
