@@ -40,6 +40,7 @@ window.CallResponseView = Backbone.View.extend({
     var self = this;
     var model = this.model;
     var call = model.selectedApiCall();
+    var callPrototype = call.callPrototype();
     var panel = $(this.el);
     var panelBody = $("<div class='panel-body'></div>")
     panel.empty().append(panelBody);
@@ -85,11 +86,12 @@ window.CallResponseView = Backbone.View.extend({
         copyButton.tooltip({title: "Copy to clipoard", trigger: "hover", placement: "top", animation: false});
       })
 
-      if (call.tryToUseDocumentIDWithCopy()) {
+      if (callPrototype.tryToUseDocumentIDWithCopy()) {
         try {
           var json = JSON.parse(call.resultContent());
           if (json.id != undefined) {
             LocalStorage.set("param", "documentid", json.id);
+            LocalStorage.set("param", "document_id", json.id);
           }
         } catch (e) { }
       }
