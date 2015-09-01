@@ -156,7 +156,7 @@ docApiV2FilesGet did fid filename = api $ do
 -------------------------------------------------------------------------------
 
 docApiV2Texts :: Kontrakcja m => DocumentID -> FileID -> m Response
-docApiV2Texts did _fid = api $ do
+docApiV2Texts did fid = api $ do
   -- Permissions
   (user,_) <- getAPIUser APIDocCreate
   withDocumentID did $ do
@@ -173,9 +173,9 @@ docApiV2Texts did _fid = api $ do
             _ -> apiError $ requestParameterParseError "json" "Could not read JSON"
     -- API call actions
     doc <- theDocument
-    fid <- case mainfileid <$> documentfile doc of
+    case mainfileid <$> documentfile doc of
       Nothing -> apiError $ resourceNotFound "The document has no main file"
-      Just fid -> return fid
+      Just mainFid -> when (fid /= mainFid) (apiError $ resourceNotFound "Given 'fileid' is not the main file of the document")
     content <- getFileIDContents fid
     eitherResult <- runJavaTextExtract json content
     case eitherResult of

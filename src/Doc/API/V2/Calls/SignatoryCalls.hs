@@ -45,6 +45,7 @@ docApiV2SigReject did slid = api $ do
     -- Guards
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending
+    guardSignatoryHasNotSigned slid
     -- Parameters
     rejectReason <- liftM (fmap $ unpack . strip) $ apiV2ParameterOptional (ApiV2ParameterText "reason")
     -- API call actions
