@@ -2,9 +2,13 @@
 
 BEGIN;
 
-
+-- According to:
+-- http://stackoverflow.com/questions/308324/csv-for-excel-including-both-leading-zeros-and-commas
+-- to embed commas and leading zeros in a string it should look like this:
+--     "=""001,002"""
+--
 CREATE FUNCTION escape_for_csv(text) RETURNS text
-    AS $$select '"' || regexp_replace($1,'"','""','g') || '"';$$
+    AS $$select '"=""' || regexp_replace($1,'"','"" & Chr(34) & ""','g') || '"""';$$
     LANGUAGE SQL
     IMMUTABLE
     RETURNS NULL ON NULL INPUT;
@@ -14,7 +18,7 @@ CREATE TEMP TABLE thetime(time) AS
 
 CREATE TEMP TABLE results AS
 SELECT escape_for_csv(companies.name) AS "Company name"
-     , (escape_for_csv('x ' || companies.id :: TEXT)) AS "Company ID"
+     , (escape_for_csv(companies.id :: TEXT)) AS "Company ID"
      , escape_for_csv(companies.number :: TEXT) AS "Company number"
      , escape_for_csv((
        SELECT email
