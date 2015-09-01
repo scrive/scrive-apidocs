@@ -6,11 +6,11 @@
 define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories',
         'signview/attachments/signatoryattachmentsview', 'signview/instructionsview/instructionsview',
         'signview/attachments/authorattachmentsview', 'signview/extradetails/extradetailsview',
-        'common/retargeting_service', 'signview/fileview/fileclass', 'Backbone',
-        'Underscore', 'legacy_code'],
+        'signview/signsection/signsectionview/', 'common/retargeting_service',
+        'signview/fileview/fileclass', 'Backbone', 'Underscore', 'legacy_code'],
   function (React, CreateAccountSection, DocumentViewSignatories,
             SignatoryAttachmentsView, InstructionsView, AuthorAttachmentsView,
-            ExtraDetailsView, RetargetingService, FileClass) {
+            ExtraDetailsView, SignSectionView, RetargetingService, FileClass) {
 
 var DocumentSignViewModel = Backbone.Model.extend({
   defaults : {
@@ -169,9 +169,29 @@ var DocumentSignViewModel = Backbone.Model.extend({
   },
 
   signsection : function() {
-        if (this.get("signsection") == undefined)
-            this.set({'signsection' : new DocumentSignSignSection({model : this})}, {silent : true});
-        return this.get('signsection');
+    var useOld = false;
+
+    if (useOld) {
+      if (!this.get("signsection")) {
+        this.set({'signsection' : new DocumentSignSignSection({model : this})}, {silent : true});
+      }
+
+      return this.get("signsection");
+    } else {
+      var model = this;
+
+      if (!model.get("signsection")) {
+        var $el = $("<div class='section spacing signbuttons'>");
+        var comp = React.render(React.createElement(SignSectionView, {
+          model: model
+        }), $el[0]);
+        var obj = {comp: comp, el: $el};
+        model.set({"signsection": obj}, {silent: true});
+        return obj;
+      }
+
+      return this.get("signsection");
+    }
   },
   signatoriessection : function() {
        var document = this.document();
@@ -286,12 +306,12 @@ var DocumentSignViewModel = Backbone.Model.extend({
                                 type: 'sign',
                                 label: localization.docsignview.signArrowLabel,
                                 onArrowClick: function () {
-                                    model.signsection().activateSignConfirmation();
+                                    model.signsection().comp.activateSignConfirmation();
                                 },
                                 isComplete: function() {
                                     return !model.document().currentSignatoryCanSign();
                                 },
-                                el:  $(model.signsection().signButton.el()),
+                                el:  $(model.signsection().comp.signButtonNode()),
                                 onActivate   : function() {
                                     mixpanel.track('Begin signature task');
                                 },

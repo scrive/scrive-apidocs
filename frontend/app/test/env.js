@@ -12,4 +12,7 @@ window.hubspotConf = {
 window.mixpanel = {
   track: function () { }
   , register: function () { }
+  , people: {
+    set: function () { }
+  }
 };
