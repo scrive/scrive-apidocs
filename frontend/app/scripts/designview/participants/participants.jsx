@@ -70,7 +70,8 @@ return React.createClass({
         openParticipant = self.refs["participant-" + i];
       }
     });
-    if (openParticipant === undefined || !this.hasScrollbar() || !this.isMounted() || this.refs["participants-box"] === undefined) {
+    if (openParticipant === undefined || !this.hasScrollbar() ||
+        !this.isMounted() || this.refs["participants-box"] === undefined) {
       return;
     }
     var openParticipantNode = openParticipant.getDOMNode();
@@ -78,9 +79,12 @@ return React.createClass({
     var participantsBox = $(this.refs["participants-box"].getDOMNode());
     var lowestVisiblePositionInBox = participantsBox.height() + participantsBox.scrollTop();
     var topOfOpenParticipantBox = openParticipantNode.offsetTop;
-    var bottomOfOpenParticipantBox = topOfOpenParticipantBox + 254; // This should be $(openParticipantNode).outerHeight(), but before the animation ends it's lower than is should be
+
+    // This should be $(openParticipantNode).outerHeight(), but before the animation ends it's lower than is should be
+    var bottomOfOpenParticipantBox = topOfOpenParticipantBox + 254;
+
     if (bottomOfOpenParticipantBox > lowestVisiblePositionInBox) {
-        participantsBox.animate({scrollTop: topOfOpenParticipantBox}, '500');
+        participantsBox.animate({scrollTop: topOfOpenParticipantBox}, "500");
     }
   },
   render: function () {
