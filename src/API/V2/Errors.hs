@@ -221,7 +221,7 @@ convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument (SomeKontraException ex
 convertSignatoryLinkDoesNotExist :: SomeKontraException -> SomeKontraException
 convertSignatoryLinkDoesNotExist (SomeKontraException ex) =
   case cast ex of
-    Just (SignatoryLinkDoesNotExist sig) ->  SomeKontraException $ signatoryStateError $ "Signatory"  `append` pack (show sig) `append` " does not exists"
+    Just (SignatoryLinkDoesNotExist sig) ->  SomeKontraException $ signatoryStateError $ "Signatory "  `append` pack (show sig) `append` " does not exists"
     Nothing -> (SomeKontraException ex)
 
 convertSignatoryHasNotYetSigned :: SomeKontraException -> SomeKontraException
@@ -269,19 +269,19 @@ convertDocumentWasPurged (SomeKontraException ex) =
 convertDocumentIsDeleted ::  SomeKontraException -> SomeKontraException
 convertDocumentIsDeleted (SomeKontraException ex) =
   case cast ex of
-    Just (DocumentIsDeleted {}) -> SomeKontraException $ documentStateError $ "Document is deleted"
+    Just (DocumentIsDeleted {}) -> SomeKontraException $ documentStateError $ "The document is in Trash."
     Nothing -> (SomeKontraException ex)
 
 convertDocumentIsNotDeleted ::  SomeKontraException -> SomeKontraException
 convertDocumentIsNotDeleted (SomeKontraException ex) =
   case cast ex of
-    Just (DocumentIsNotDeleted {}) -> SomeKontraException $ documentStateError $ "Document is not deleted"
+    Just (DocumentIsNotDeleted {}) -> SomeKontraException $ documentStateError $ "The document is not in Trash."
     Nothing -> (SomeKontraException ex)
 
 convertDocumentIsReallyDeleted ::  SomeKontraException -> SomeKontraException
 convertDocumentIsReallyDeleted (SomeKontraException ex) =
   case cast ex of
-    Just (DocumentIsReallyDeleted {}) -> SomeKontraException $ documentStateError $ "Document is really deleted. It is not avaialbe and will be purged soon"
+    Just (DocumentIsReallyDeleted {}) -> SomeKontraException $ documentStateError $ "The document is deleted. It is not avaialbe and will be purged soon."
     Nothing -> (SomeKontraException ex)
 
 convertSignatoryAuthenticationToSignDoesNotMatch ::  SomeKontraException -> SomeKontraException

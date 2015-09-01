@@ -52,7 +52,7 @@ docApiV2Available = api $ do
   -- Parameters
   (ids :: [DocumentID]) <- apiV2ParameterObligatory (ApiV2ParameterRead "ids")
   when (length ids > 10000) $ do
-    apiError $ requestParameterInvalid "ids" "Can't contain more than 10,000 document ids"
+    apiError $ requestParameterInvalid "ids" "cannot contain more than 10,000 document IDs."
   -- API call actions
   available <- fmap (sort . map fromDocumentID) $ dbQuery $ GetDocumentsIDs [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
   -- Result

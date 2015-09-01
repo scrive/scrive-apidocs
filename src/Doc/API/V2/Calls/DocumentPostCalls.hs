@@ -88,8 +88,8 @@ docApiV2NewFromTemplate did = api $ do
   withDocumentID did $ do
     guardThatUserIsAuthorOrDocumentIsShared user
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocumentIs (isTemplate) "Document must be a template"
-    guardThatDocumentIs (not $ flip documentDeletedForUser $ userid user) "The template is in trash"
+    guardThatDocumentIs (isTemplate) "The document is not a template."
+    guardThatDocumentIs (not $ flip documentDeletedForUser $ userid user) "The template is in Trash"
   -- API call actions
   template <- dbQuery $ GetDocumentByDocumentID $ did
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
@@ -151,7 +151,7 @@ docApiV2Prolong did = api $ do
     -- Guards
     guardThatUserIsAuthorOrCompanyAdmin user
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocumentIs (isTimedout) "Document has not timed out and can not be prolonged yet"
+    guardThatDocumentIs (isTimedout) "The document has not timed out. Only timed out documents can be prolonged."
     -- Parameters
     days <- liftM fromIntegral $ apiV2ParameterObligatory (ApiV2ParameterInt "days")
     when (days < 1 || days > 90) $
@@ -386,7 +386,7 @@ docApiV2Restart did = api $ do
     guardThatUserIsAuthor user
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs (\d -> not $ documentstatus d `elem` [Preparation, Pending, Closed])
-      "Documents that are in Preparation, Pending, or Closed can not be restarted"
+      "Documents that are in Preparation, Pending, or Closed can not be restarted."
     -- API call actions
     doc <- theDocument
     mNewDoc <- dbUpdate $ RestartDocument doc actor
