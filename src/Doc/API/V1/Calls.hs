@@ -1092,7 +1092,10 @@ apiCallV1SendSMSPinCode did slid = logDocumentAndSignatory did slid . api $ do
        throwIO . SomeKontraException $ serverError "SMS pin code can't be sent to document that is not pending"
     when (SMSPinAuthenticationToSign /= signatorylinkauthenticationtosignmethod sl) $ do
        throwIO . SomeKontraException $ serverError "SMS pin code can't be sent to this signatory"
-    phone <- apiGuardJustM (badInput "Phone number is no valid.") $ getOptionalField  asValidPhone "phone"
+    slidPhone <- getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
+    phone <- if not $ null slidPhone
+                then return slidPhone
+                else apiGuardJustM (badInput "Phone number provided is not valid.") $ getOptionalField asValidPhone "phone"
     pin <- dbQuery $ GetSignatoryPin slid phone
     sendPinCode sl phone pin
     Ok <$> (J.runJSONGenT $ J.value "sent" True)
@@ -1197,9 +1200,11 @@ data FieldTmpValue = StringFTV String
 getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, FieldTmpValue)] -> m (Maybe String)
 getValidPin slid fields = do
   pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
-  phone <- case (lookup MobileFI fields) of
-    Just (StringFTV v) -> return v
-    _ ->  getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
+  slidPhone <- getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
+  phone <- case (not $ null slidPhone, lookup MobileFI fields) of
+                (True, _) -> return slidPhone
+                (False, Just (StringFTV v)) -> return v
+                (False, _) -> throwIO . SomeKontraException $ badInput "Phone number not provided by author, you need to provide it"
   pin' <- dbQuery $ GetSignatoryPin slid phone
   if (pin == pin')
     then return $ Just pin
