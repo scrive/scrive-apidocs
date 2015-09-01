@@ -3,7 +3,7 @@
 new APICallV2({
   category: "signing",
   name: "Signatory- Set Attachment",
-  description: "TODO",
+  description: "Set a signatory attachment that was requested by the document author.",
   sampleUrl: "/api/v2/documents/$document_id$/$signatory_id$/setattachment",
   method: "POST",
   getCallUrl: function () {
@@ -20,7 +20,8 @@ new APICallV2({
             argName: "name",
             name: "Attachment name",
             sendAsParam: true,
-            description: "TODO",
+            description: "The name of the attachment. Must match an attachment\
+                          name as requested by the document author.",
             defaultValue: ""
           }),
           new APICallParam({
@@ -28,7 +29,8 @@ new APICallV2({
             argName: function () { return "attachment";},
             name: "attachment (application/pdf)",
             sendAsParam: true,
-            description: "TODO",
+            description: "If provided, this is the file to set as the attachment.\
+                          If not provided, this will remove the existing attachment.",
             limit: 1,
             defaultValue: function (self) {
               var input = $("<input type='file' class='form-control multiFileInput'/>");

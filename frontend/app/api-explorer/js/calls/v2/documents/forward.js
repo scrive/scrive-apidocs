@@ -3,7 +3,7 @@
 new APICallV2({
   category: "signing",
   name: "Forward",
-  description: "TODO",
+  description: "Forward a document to an email address.",
   sampleUrl: "/api/v2/documents/$document_id$/forward",
   method: "POST",
   getCallUrl: function () {
@@ -19,7 +19,7 @@ new APICallV2({
             type: "text",
             argName: "email",
             name: "Email",
-            description: "TODO",
+            description: "The email address to forward the document to.",
             defaultValue: ""
           }),
           new APICallParam({
@@ -27,7 +27,7 @@ new APICallV2({
             argName: "no_content",
             optional: true,
             name: "No content",
-            description: "TODO"
+            description: "When set to true only the signed document will be forwarded, with no other email content."
           }),
           window.APIV2CallParamObjectVersion
         ]

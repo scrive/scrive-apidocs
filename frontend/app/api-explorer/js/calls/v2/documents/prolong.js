@@ -3,7 +3,7 @@
 new APICallV2({
   category: "signing",
   name: "Prolong",
-  description: "TODO",
+  description: "Prolong a document that has timed out.",
   sampleUrl: "/api/v2/documents/$document_id$/prolong",
   method: "POST",
   getCallUrl: function () {
@@ -19,7 +19,7 @@ new APICallV2({
             type: "text",
             argName: "days",
             name: "Days",
-            description: "TODO",
+            description: "Number of days to prolong document by.",
             defaultValue: ""
           }),
           window.APIV2CallParamObjectVersion

@@ -3,7 +3,7 @@
 new APICallV2({
   category: ["draft", "main"],
   name: "New",
-  description: "Create a new document, optionally with the given PDF as the main file",
+  description: "Create a new document, optionally with the given PDF as the main file.",
   sampleUrl: "/api/v2/documents/new",
   method: "POST",
   getCallUrl: function () {
@@ -21,7 +21,7 @@ new APICallV2({
             name: "file (application/pdf)",
             sendAsParam: true,
             optional: true,
-            description: "PDF to be used as main file for new document.",
+            description: "The PDF to use in the new document.",
             limit: 1,
             defaultValue: function (self) {
               var input = $("<input type='file' class='form-control multiFileInput'/>");

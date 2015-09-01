@@ -3,7 +3,7 @@
 new APICallV2({
   category: "signing",
   name: "Set Auto Reminder",
-  description: "TODO",
+  description: "Set the number of days in which to send an automatic invitation reminder to the signatories waiting to sign.",
   sampleUrl: "/api/v2/documents/$document_id$/setautoreminder",
   method: "POST",
   getCallUrl: function () {
@@ -17,7 +17,9 @@ new APICallV2({
             argName: "days",
             name: "Days",
             optional: true,
-            description: "TODO",
+            description: "Including this parameter sets the number of days in\
+                          which to send automatic reminders.\
+                          Excluding it will remove automatic reminders from the document.",
             defaultValue: ""
           }),
           window.APIV2CallParamObjectVersion

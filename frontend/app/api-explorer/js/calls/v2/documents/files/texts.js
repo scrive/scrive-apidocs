@@ -1,16 +1,15 @@
 (function (window) {
 
 new APICallV2({
-  category: "fetch",
+  category: "draft",
   name: "Document Texts",
-  description: "TODO",
+  description: "Extract text from the main file of a document.",
   sampleUrl: "/api/v2/documents/$document_id$/texts/$file_id$",
   method: "GET",
   getCallUrl: function () {
           return "/api/v2/documents/" + this.get("document_id") + "/texts/" + this.get("file_id");
         },
   needsAuthorization: true,
-  tryToUseDocumentIDWithCopy: true,
   params: [
           window.APIV2CallParamDocumentID,
           new APICallParam({
@@ -18,7 +17,7 @@ new APICallV2({
             argName: "file_id",
             name: "$file_id$",
             sendAsParam: false,
-            description: "TODO",
+            description: "The file ID of the document's main file",
             defaultValue: ""
           }),
           new APICallParam({
@@ -26,7 +25,7 @@ new APICallV2({
             argName: "json",
             name: "json",
             sendAsParam: true,
-            decsription: "TODO",
+            description: "A JSON representation of rectangles to extract text from.",
             defaultValue: "{}"
           })
         ]

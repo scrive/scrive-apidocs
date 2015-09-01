@@ -3,7 +3,7 @@
 new APICallV2({
   category: "fetch",
   name: "Files: Get File",
-  description: "TODO",
+  description: "Get a file.",
   sampleUrl: "/api/v2/documents/$document_id$/files/$file_id$/$file_name$",
   method: "GET",
   getCallUrl: function () {
@@ -13,23 +13,14 @@ new APICallV2({
         },
   needsAuthorization: true,
   expectBinaryResponse: true,
-  tryToUseDocumentIDWithCopy: true,
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "document_id",
-            name: "$document_id$",
-            sendAsParam: false,
-            useLocalStorage: true,
-            description: "TODO",
-            defaultValue: ""
-          }),
+          window.APIV2CallParamDocumentID,
           new APICallParam({
             type: "text",
             argName: "file_id",
             name: "$file_id$",
             sendAsParam: false,
-            description: "TODO",
+            description: "The file ID",
             defaultValue: ""
           }),
           new APICallParam({
@@ -37,7 +28,7 @@ new APICallV2({
             argName: "file_name",
             name: "$file_name$",
             sendAsParam: false,
-            description: "TODO",
+            description: "Arbitrary filename for downloading",
             defaultValue: ""
           })
         ]

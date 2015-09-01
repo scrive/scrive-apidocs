@@ -3,7 +3,7 @@
 new APICallV2({
   category: ["draft", "main"],
   name: "Start",
-  description: "TODO",
+  description: "Start the signing process for a document in preparation.",
   sampleUrl: "/api/v2/documents/$document_id$/start",
   method: "POST",
   getCallUrl: function () {
@@ -21,8 +21,10 @@ new APICallV2({
             name: "author_signs_now",
             sendAsParam: true,
             optional: true,
-            description: "Whether the document author signs immediately as part\
-                          of the start call.",
+            description: "Setting to ‘true’ will result in no invitation to\
+                          sign being sent to the author.\
+                          This is useful for when the author signs immediately\
+                          after the ‘start’ call.",
             defaultValue: false
           })
         , window.APIV2CallParamObjectVersion

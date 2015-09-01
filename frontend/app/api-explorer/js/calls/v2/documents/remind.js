@@ -3,7 +3,7 @@
 new APICallV2({
   category: "signing",
   name: "Remind",
-  description: "TODO",
+  description: "Send a reminder invitation message to all participants waiting to sign.",
   sampleUrl: "/api/v2/documents/$document_id$/remind",
   method: "POST",
   getCallUrl: function () {

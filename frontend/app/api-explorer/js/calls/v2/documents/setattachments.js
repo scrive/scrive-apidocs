@@ -3,7 +3,7 @@
 new APICallV2({
   category: "draft",
   name: "Set Attachments",
-  description: "TODO",
+  description: "Set or remove attachments for the document. Replaces any existing attachments.",
   sampleUrl: "/api/v2/documents/$document_id$/setattachments",
   method: "POST",
   getCallUrl: function () {
@@ -21,7 +21,8 @@ new APICallV2({
             name: "attachments (application/pdf)",
             sendAsParam: true,
             optional: true,
-            description: "TODO",
+            description: "The PDFs to attach to the document.\
+                          These and ‘file_ids’ will be used to replace any existing attachments.",
             limit: 100,
             defaultValue: function (self) {
               var input = $("<input type='file' class='form-control multiFileInput'/>");
@@ -39,7 +40,8 @@ new APICallV2({
             name: "File Ids",
             sendAsParam: true,
             optional: true,
-            description: "TODO",
+            description: "The existing attachment ‘file_ids’ to attach to the document.\
+                          These and the ‘attachment_x’ will be used to replace any existing attachments.",
             defaultValue: "[]"
           })
           , window.APIV2CallParamObjectVersion

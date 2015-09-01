@@ -3,7 +3,7 @@
 new APICallV2({
   category: ["draft", "main"],
   name: "Update",
-  description: "TODO",
+  description: "Update a document in preparation.",
   sampleUrl: "/api/v2/documents/$document_id$/update",
   method: "POST",
   getCallUrl: function () {
@@ -20,7 +20,10 @@ new APICallV2({
             argName: "document",
             name: "Document (JSON)",
             sendAsParam: true,
-            description: "TODO",
+            description: "The updated Document JSON.\
+                          This can be a partial Document JSON representing only\
+                          the parts that need updating.\
+                          The call will always return the full Document JSON.",
             defaultValue: "{}"
           }),
           window.APIV2CallParamObjectVersion

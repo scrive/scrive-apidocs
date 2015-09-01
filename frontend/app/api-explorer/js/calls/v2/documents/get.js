@@ -3,7 +3,7 @@
 new APICallV2({
   category: ["main", "fetch"],
   name: "Get",
-  description: "TODO",
+  description: "Get a document.",
   sampleUrl: "/api/v2/documents/$document_id$/get",
   method: "GET",
   getCallUrl: function () {

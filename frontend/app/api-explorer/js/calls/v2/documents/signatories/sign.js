@@ -3,7 +3,7 @@
 new APICallV2({
   category: "signing",
   name: "Signatory- Sign",
-  description: "TODO",
+  description: "Sign a document.",
   sampleUrl: "/api/v2/documents/$document_id$/$signatory_id$/sign",
   method: "POST",
   getCallUrl: function () {
@@ -19,24 +19,17 @@ new APICallV2({
             type: "json",
             argName: "fields",
             name: "Signatory Fields",
-            description: "TODO",
+            description: "Updated information as entered by the signatory.",
             defaultValue: "[]"
-          }),
-          new APICallParam({
-            type: "json",
-            argName: "screenshots",
-            name: "Screenshots (JSON)",
-            sendAsParam: true,
-            optional: true,
-            description: "TODO",
-            defaultValue: "{}"
           }),
           new APICallParam({
             type: "text",
             optional: true,
             argName: "authentication_type",
             name: "Authentication Type",
-            description: "TODO",
+            description: "The authentication method to be used for signing.\
+                          Not including this parameter will omit this check\
+                          even though signing requires it.",
             defaultValue: ""
           }),
           new APICallParam({
@@ -44,7 +37,9 @@ new APICallV2({
             optional: true,
             argName: "authentication_value",
             name: "Authentication Value",
-            description: "TODO",
+            description: "If the ‘authentication_type’ is not ‘standard’,\
+                          then the value associated with it\
+                          (e.g. phone number for ‘sms_pin’).",
             defaultValue: ""
           }),
           new APICallParam({
@@ -52,8 +47,19 @@ new APICallV2({
             optional: true,
             argName: "sms_pin",
             name: "SMS PIN",
-            description: "TODO",
+            description: "If the `authentication_method` for the signatory is\
+                          `sms_pin` then SMS PIN also needs to be included.\
+                          This is independant of other parameters in this call.",
             defaultValue: ""
+          }),
+          new APICallParam({
+            type: "json",
+            argName: "screenshots",
+            name: "Screenshots (JSON)",
+            sendAsParam: true,
+            optional: true,
+            description: "The screenshots and/or reference screenshots to use for the Evidence of Intent as part of the Evidence Package.",
+            defaultValue: "{}"
           }),
           window.APIV2CallParamObjectVersion
         ]

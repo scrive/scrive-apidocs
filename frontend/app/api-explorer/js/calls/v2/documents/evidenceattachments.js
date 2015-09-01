@@ -3,7 +3,7 @@
 new APICallV2({
   category: "fetch",
   name: "Evidence Attachments",
-  description: "TODO",
+  description: "Returns the list of evidence attachments for a document. List can be empty.",
   sampleUrl: "/api/v2/documents/$document_id$/evidenceattachments",
   method: "GET",
   getCallUrl: function () {

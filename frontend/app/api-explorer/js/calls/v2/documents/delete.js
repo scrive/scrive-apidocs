@@ -1,9 +1,9 @@
 (function (window) {
 
 new APICallV2({
-  category: "signing",
+  category: "other",
   name: "Delete",
-  description: "TODO",
+  description: "Delete a document that is in Trash.",
   sampleUrl: "/api/v2/documents/$document_id$/delete",
   method: "POST",
   getCallUrl: function () {

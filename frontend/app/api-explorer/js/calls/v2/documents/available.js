@@ -3,7 +3,7 @@
 new APICallV2({
   category: "fetch",
   name: "Available",
-  description: "TODO",
+  description: "Given a list of document IDs, checks which ones are available for the user. This call silently ignores any bad document IDs (whether due to lacking permissions, document not existing, or any other reason). Return value may be an empty list.",
   sampleUrl: "/api/v2/documents/available",
   method: "GET",
   getCallUrl: function () {
@@ -14,9 +14,9 @@ new APICallV2({
           new APICallParam({
             type: "json",
             argName: "ids",
-            name: "Document Ids",
+            name: "Document IDs",
             sendAsParam: true,
-            description: "TODO",
+            description: "JSON Array (list) of document IDs to check",
             defaultValue: "[]"
           })
         ]

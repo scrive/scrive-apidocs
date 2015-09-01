@@ -3,7 +3,7 @@
 new APICallV2({
   category: "signing",
   name: "Cancel",
-  description: "TODO",
+  description: "Cancels a pending document.",
   sampleUrl: "/api/v2/documents/$document_id$/cancel",
   method: "POST",
   getCallUrl: function () {

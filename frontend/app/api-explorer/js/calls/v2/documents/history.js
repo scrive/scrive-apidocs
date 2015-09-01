@@ -3,14 +3,13 @@
 new APICallV2({
   category: "fetch",
   name: "History",
-  description: "TODO",
+  description: "Get the document history to display to the user.",
   sampleUrl: "/api/v2/documents/$document_id$/history",
   method: "GET",
   getCallUrl: function () {
           return "/api/v2/documents/" + this.get("document_id") + "/history";
         },
   needsAuthorization: true,
-  tryToUseDocumentIDWithCopy: true,
   equivalentCalls: {
     'v1': 'History'
   },
@@ -22,7 +21,7 @@ new APICallV2({
             optional: true,
             name: "Language",
             sendAsParam: true,
-            description: "Language to get the history events in.",
+            description: "The language to display the history in. Has to be a supported and valid two letter language code. Defaults to user setting.",
             defaultValue: ""
           })
         ]

@@ -3,7 +3,7 @@
 new APICallV2({
   category: "fetch",
   name: "List",
-  description: "Fetch a list of documents, with sorting and filtering options",
+  description: "Fetch a list of documents, with sorting and filtering options.",
   sampleUrl: "/api/v2/documents/list",
   method: "GET",
   getCallUrl: function () {
@@ -19,7 +19,7 @@ new APICallV2({
             argName: "offset",
             name: "Offset",
             sendAsParam: true,
-            description: "TODO",
+            description: "Starting offset for documents to return. If offset is larger than the total number of matching documents an empty list is returned.",
             defaultValue: "0"
           }),
           new APICallParam({
@@ -28,7 +28,7 @@ new APICallV2({
             optional: true,
             name: "Max",
             sendAsParam: true,
-            description: "TODO",
+            description: "Maximum number of documents to return. Server may cap to a lower value.",
             defaultValue: ""
           }),
           new APICallParam({
@@ -37,7 +37,7 @@ new APICallV2({
             optional: true,
             name: "Sorting",
             sendAsParam: true,
-            description: "TODO",
+            description: "Filtering options.",
             defaultValue: "[]"
           }),
           new APICallParam({
@@ -46,7 +46,7 @@ new APICallV2({
             optional: true,
             name: "Filter",
             sendAsParam: true,
-            description: "TODO",
+            description: "Sorting options.",
             defaultValue: "[]"
           })
         ]

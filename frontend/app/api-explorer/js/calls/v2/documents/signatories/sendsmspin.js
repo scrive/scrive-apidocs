@@ -3,7 +3,7 @@
 new APICallV2({
   category: "signing",
   name: "Signatory- Send SMS PIN",
-  description: "TODO",
+  description: "Send an SMS PIN for the signatory to authenticate.",
   sampleUrl: "/api/v2/documents/$document_id$/$signatory_id$/sendsmspin",
   method: "POST",
   getCallUrl: function () {
@@ -19,7 +19,9 @@ new APICallV2({
             type: "text",
             argName: "phone",
             name: "Phone number",
-            description: "TODO",
+            description: "If the phone number is not set by document author,\
+                          then it must be provided.",
+            optional: true,
             defaultValue: ""
           }),
           window.APIV2CallParamObjectVersion

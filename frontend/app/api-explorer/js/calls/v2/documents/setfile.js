@@ -3,7 +3,7 @@
 new APICallV2({
   category: "draft",
   name: "Set File",
-  description: "TODO",
+  description: "Set the file for a document in preparation.",
   sampleUrl: "/api/v2/documents/$document_id$/setfile",
   method: "POST",
   getCallUrl: function () {
@@ -21,7 +21,8 @@ new APICallV2({
             name: "file (application/pdf)",
             sendAsParam: true,
             optional: true,
-            description: "PDF to be used as main file for the document.",
+            description: "If provided, the PDF will be set as the file for the document.\
+                          If not provided the current file for the document will be removed.",
             limit: 1,
             defaultValue: function (self) {
               var input = $("<input type='file' class='form-control multiFileInput'/>");

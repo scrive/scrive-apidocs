@@ -1,9 +1,9 @@
 (function (window) {
 
 new APICallV2({
-  category: "signing",
+  category: "other",
   name: "Clone",
-  description: "TODO",
+  description: "Clone a document. The new document will have status as ‘preparation’ and will use current author data as the first signatory.",
   sampleUrl: "/api/v2/documents/$document_id$/clone",
   method: "POST",
   getCallUrl: function () {

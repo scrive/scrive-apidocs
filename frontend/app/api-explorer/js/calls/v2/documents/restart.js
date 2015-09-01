@@ -3,7 +3,7 @@
 new APICallV2({
   category: "signing",
   name: "Restart",
-  description: "TODO",
+  description: "Restart a document that has been cancelled, timed out, or rejected.",
   sampleUrl: "/api/v2/documents/$document_id$/restart",
   method: "POST",
   getCallUrl: function () {

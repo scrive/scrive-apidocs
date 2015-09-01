@@ -3,7 +3,7 @@
 new APICallV2({
   category: "signing",
   name: "Signatory- Reject",
-  description: "TODO",
+  description: "Reject signing a document.",
   sampleUrl: "/api/v2/documents/$document_id$/$signatory_id$/reject",
   method: "POST",
   getCallUrl: function () {
@@ -19,7 +19,8 @@ new APICallV2({
             type: "text",
             argName: "reason",
             name: "Reject reason",
-            description: "TODO",
+            description: "Reason for rejecting the document. Default is empty.",
+            optional: true,
             defaultValue: ""
           }),
           window.APIV2CallParamObjectVersion

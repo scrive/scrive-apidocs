@@ -3,7 +3,7 @@
 new APICallV2({
   category: "signing",
   name: "Signatory- Check",
-  description: "TODO",
+  description: "Check if a signatory `Sign` call could succeed.",
   sampleUrl: "/api/v2/documents/$document_id$/$signatory_id$/check",
   method: "POST",
   getCallUrl: function () {
@@ -19,7 +19,7 @@ new APICallV2({
             type: "json",
             argName: "fields",
             name: "Signatory Fields",
-            description: "TODO",
+            description: "Updated information as entered by the signatory.",
             defaultValue: "[]"
           }),
           new APICallParam({
@@ -27,7 +27,9 @@ new APICallV2({
             optional: true,
             argName: "authentication_type",
             name: "Authentication Type",
-            description: "TODO",
+            description: "The authentication method to be used for signing.\
+                          Not including this parameter will omit this check\
+                          even though signing requires it.",
             defaultValue: ""
           }),
           new APICallParam({
@@ -35,7 +37,9 @@ new APICallV2({
             optional: true,
             argName: "authentication_value",
             name: "Authentication Value",
-            description: "TODO",
+            description: "If the ‘authentication_type’ is not ‘standard’,\
+                          then the value associated with it\
+                          (e.g. phone number for ‘sms_pin’).",
             defaultValue: ""
           }),
           new APICallParam({
@@ -43,7 +47,9 @@ new APICallV2({
             optional: true,
             argName: "sms_pin",
             name: "SMS PIN",
-            description: "TODO",
+            description: "If the `authentication_method` for the signatory is\
+                          `sms_pin` then SMS PIN also needs to be included.\
+                          This is independant of other parameters in this call.",
             defaultValue: ""
           }),
           window.APIV2CallParamObjectVersion
