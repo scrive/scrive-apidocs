@@ -98,8 +98,6 @@ import OAuth.Model
 import Routing
 import Text.JSON.Convert
 import User.Model
-import User.UserView
-import User.Utils
 import Util.Actor
 import Util.CSVUtil
 import Util.HasSomeUserInfo
@@ -147,8 +145,6 @@ documentAPIV1  = choice [
   dir "extracttexts"       $ hGetAllowHttp  $ toK2 $ apiCallV1ExtractTexts,
 
   dir "changemainfile"     $ hPost $ toK1 $ apiCallV1ChangeMainFile,
-
-  dir "documentbrandingforsignview" $ hGet $ toK2 $ apiCallV1GetBrandingForSignView,
 
   dir "setsignatoryattachment"    $ hPost $ toK3 $ apiCallV1SetSignatoryAttachment
   ]
@@ -1106,17 +1102,6 @@ apiCallV1SendSMSPinCode did slid = logDocumentAndSignatory did slid . api $ do
     pin <- dbQuery $ GetSignatoryPin slid phone
     sendPinCode sl phone pin
     Ok <$> (J.runJSONGenT $ J.value "sent" True)
-
-apiCallV1GetBrandingForSignView :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
-apiCallV1GetBrandingForSignView did slid = logDocumentAndSignatory did slid . api $ do
-  magichash <- apiGuardL (serverError "No document found")  $ dbQuery $ GetDocumentSessionToken slid
-  doc <- dbQuery $ GetDocumentByDocumentID did
-  sl <- apiGuardJustM  (serverError "No document found") $ return $ getMaybeSignatoryLink (doc,slid)
-  when (signatorymagichash sl /= magichash) $ throwIO . SomeKontraException $ serverError "No document found"
-  authorid <- apiGuardL (serverError "Document problem | No author") $ return $ getAuthorSigLink doc >>= maybesignatory
-  user <- apiGuardL (serverError "Document problem | No author in DB") $ dbQuery $ GetUserByIDIncludeDeleted authorid
-  company <- getCompanyForUser user
-  Ok <$> (J.runJSONGenT $ documentSignviewBrandingJSON user company doc)
 
 -- Signatory Attachments handling
 apiCallV1SetSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> String -> m Response

@@ -48,8 +48,6 @@ $htmlopentag()$
           <div class="form-container"></div>
           <script>
            require(['jquery', 'React' , 'signview/header', 'signview/footer',  'to-start/to-start', 'legacy_code'], function(jQuery,React,Header,Footer,ToStart) {
-              var svb =  new BrandingForSignView({});
-              svb.fetch({ processData:  true, cache : false});
 
               jQuery(function(){
                 doc = new Document({id: "$documentid$"});
@@ -63,7 +61,6 @@ $htmlopentag()$
 
               var headerDiv = jQuery('<div/>');
               var component = React.render(React.createElement(Header,{
-                   signviewbranding: svb,
                    fullWidth: true,
                    forceShowing: true,
                    link : {
@@ -76,7 +73,6 @@ $htmlopentag()$
 
               var footerDiv = jQuery('<div/>');
               var component = React.render(React.createElement(Footer,{
-                   signviewbranding: svb,
                    forceShowing: true
                 }), footerDiv[0]);
 
@@ -110,8 +106,6 @@ $htmlopentag()$
           <div class="list-container"></div>
           <script>
            require(['jquery', 'React' , 'signview/header', 'signview/footer', 'to-start/templatelist', 'legacy_code'], function(jQuery,React,Header,Footer, ToStartList) {
-              var svb =  new BrandingForSignView({});
-              svb.fetch({ processData:  true, cache : false});
 
               jQuery(function(){
 
@@ -121,7 +115,6 @@ $htmlopentag()$
 
               var headerDiv = jQuery('<div/>');
               var component = React.render(React.createElement(Header,{
-                   signviewbranding: svb,
                    fullWidth: true,
                    forceShowing: true,
                    link : {
@@ -139,7 +132,6 @@ $htmlopentag()$
 
               var footerDiv = jQuery('<div/>');
               var component = React.render(React.createElement(Footer,{
-                   signviewbranding: svb,
                    forceShowing: true
                 }), footerDiv[0]);
 

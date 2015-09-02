@@ -19,7 +19,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
   initialize : function(args){
       var model = this;
       var document = args.document;
-      var signviewbranding = args.signviewbranding;
       var triggeredChangeOnReady = false;
 
       document.bind("reset", function() {
@@ -35,13 +34,6 @@ var DocumentSignViewModel = Backbone.Model.extend({
         }
       });
 
-      signviewbranding.bind("reset", function() {
-          model.trigger("change");
-      });
-      signviewbranding.bind("change", function() {
-          model.trigger("change");
-      });
-
       document.bind('file:change placements:change', function() {
         var arrow = model.get('arrow');
         if (arrow !== undefined) {
@@ -54,11 +46,11 @@ var DocumentSignViewModel = Backbone.Model.extend({
   document : function(){
        return this.get("document");
   },
-  signviewbranding : function() {
-       return this.get("signviewbranding");
+  allowsavesafetycopy : function() {
+      return this.get("allowsavesafetycopy");
   },
   isReady : function() {
-      return this.document().ready() && this.document().mainfile() != undefined && this.signviewbranding().ready();
+      return this.document().ready() && this.document().mainfile() != undefined;
   },
   noMainFile : function() {
       return this.document().ready() && this.document().mainfile() == undefined;
@@ -67,7 +59,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
       return this.get("hasChangedPin");
   },
   hasRejectOption : function() {
-      return this.signviewbranding().showrejectoption();
+      return this.document().showrejectoption();
   },
   hasMainFileSection : function() {
       return this.document().ready() && this.document().mainfile() != undefined;
@@ -155,7 +147,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
              && !document.currentSignatory().padDelivery()
              && !document.currentSignatory().apiDelivery()
              && document.currentSignatory().hasSigned()
-             && this.signviewbranding().allowsavesafetycopy();
+             && this.allowsavesafetycopy();
   },
 
   createAccountSection: function() {
@@ -612,7 +604,7 @@ var DocumentSignViewView = Backbone.View.extend({
          if (active) { active.onActivate(); }
      }
 
-     if (BrowserInfo.isSmallScreen() && this.model.signviewbranding().showheader()) {
+     if (BrowserInfo.isSmallScreen() && this.model.document().showheader()) {
        $('.mainContainer').css('padding-top', '20px');
      }
 
@@ -623,10 +615,9 @@ var DocumentSignViewView = Backbone.View.extend({
 
 
 window.DocumentSignView = function(args){
-        this.signviewbranding =  args.signviewbranding;
         this.model = new DocumentSignViewModel( {
                         document : new Document({ id: args.id, viewer: args.viewer }),
-                        signviewbranding : this.signviewbranding
+                        allowsavesafetycopy : args.allowsavesafetycopy
                     });
         this.view = new DocumentSignViewView({
                         model: this.model,

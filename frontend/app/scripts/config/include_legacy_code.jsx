@@ -56,7 +56,6 @@ define([
   '../js/tasks',
   '../js/doctools/docauthorattachments',
   '../js/doctools/docevidenceattachments',
-  '../js/signview/docsignviewbranding',
   '../js/signview/docsignviewextradetailssection',
   '../js/signview/docsignviewsignsection',
   '../js/signview/docsignview',

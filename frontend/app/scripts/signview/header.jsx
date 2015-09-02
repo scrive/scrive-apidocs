@@ -5,14 +5,20 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'tinycolor'], function(Rea
 
   return React.createClass({
     propTypes: {
-      signviewbranding: React.PropTypes.object,
+      document: React.PropTypes.object,
       fullWidth : React.PropTypes.bool,
       link : React.PropTypes.object,
+      authorFullname: React.PropTypes.string,
+      authorPhone: React.PropTypes.string,
       forceShowing: React.PropTypes.bool // Overrides sign view branding setting "showheader"
     },
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
-      return [this.props.signviewbranding];
+      if (this.props.document) {
+        return [this.props.document];
+      } else {
+        return [];
+      }
     },
     logoLink : function() {
       if (this.props.documentid && this.props.signatorylinkid) {
@@ -22,16 +28,19 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'tinycolor'], function(Rea
       }
     },
     render: function() {
-      var signviewbranding = this.props.signviewbranding;
+      var document = this.props.document;
+      var documentUndefinedOrDocumentReady = document == undefined || document.ready();
+      var documentUndefinedOrDocumentReadyWithShowFooter = document == undefined || (document.ready() && document.showfooter());
+
+      var showHeader = documentUndefinedOrDocumentReadyWithShowFooter && !BrowserInfo.isSmallScreen();
+
+      if (documentUndefinedOrDocumentReady && this.props.forceShowing) {
+        showHeader = true;
+      }
       var hasLink = this.props.link != undefined;
 
-      // In usual cases we don't show the header (with the logo etc) on small screen devices, but some cases (to-sign and to-start view) override this behaviour.
-      var showHeader = signviewbranding.ready() && !BrowserInfo.isSmallScreen() && signviewbranding.showheader();
-
-      if (signviewbranding.ready() && this.props.forceShowing) showHeader = true;
-
       $('.signview').toggleClass("noheader",!showHeader); // We need to toogle this class here
-      if (!showHeader || !signviewbranding.ready())
+      if (!showHeader)
         return (<div/>);
       else {
         return (
@@ -55,10 +64,10 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'tinycolor'], function(Rea
                 <div className="sender">
                   <div className="inner">
                     <div className='name'>
-                      {signviewbranding.fullname()}
+                      {this.props.authorFullname}
                     </div>
                     <div className='phone'>
-                      {signviewbranding.phone()}
+                      {this.props.authorPhone}
                     </div>
                   </div>
                 </div>

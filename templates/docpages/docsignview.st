@@ -86,13 +86,11 @@ $htmlopentag()$
         <div class="body-container">
           <script>
            require(['jquery', 'React' , 'signview/header', 'signview/footer', 'legacy_code'], function(jQuery,React,Header,Footer) {
-              var svb =  new BrandingForSignView({ documentid : "$documentid$" , signatoryid : "$siglinkid$" });
-              svb.fetch({ processData:  true, cache : false});
 
               jQuery(function(){
                   var docview = new DocumentSignView({
                       id:"$documentid$",
-                      signviewbranding : svb,
+                      allowsavesafetycopy : $if(allowsavesafetycopy)$ true $else$ false $endif$,
                       viewer : new DocumentViewer({
                           signatoryid : "$siglinkid$"
                          })
@@ -103,14 +101,16 @@ $htmlopentag()$
 
                   var headerDiv = jQuery('<div/>');
                   var component = React.render(React.createElement(Header,{
-                      signviewbranding: svb,
+                      document: docview.model.document(),
                       documentid:"$documentid$",
-                      signatorylinkid : "$siglinkid$"
+                      signatorylinkid : "$siglinkid$",
+                      authorFullname : "$authorFullname$",
+                      authorPhone : "$authorPhone$"
                     }), headerDiv[0]);
 
                   var footerDiv = jQuery('<div/>');
                   var component = React.render(React.createElement(Footer,{
-                      signviewbranding: svb
+                      document: docview.model.document()
                     }), footerDiv[0]);
                   jQuery('.signview').prepend(headerDiv);
                   jQuery('.signview').append(footerDiv);
@@ -156,12 +156,11 @@ $htmlopentag()$
         <div class="body-container">
           <script>
            require(['jquery', 'React' , 'signview/header', 'signview/footer', 'legacy_code'], function(jQuery,React,Header,Footer) {
-              var svb =  new BrandingForSignView({ documentid : "$documentid$" , signatoryid : "$siglinkid$" });
-              svb.fetch({ processData:  true, cache : false});
+
               jQuery(function(){
                   var docview = new DocumentSignView({
                       id:"$documentid$",
-                      signviewbranding : svb,
+                      allowsavesafetycopy : false,
                       viewer : new DocumentViewer({
                           signatoryid : "$siglinkid$"
                       })
@@ -169,7 +168,7 @@ $htmlopentag()$
 
               var headerDiv = jQuery('<div/>');
               var link = {};
-              var headerOpts = {signviewbranding: svb, link: link};
+              var headerOpts = {document: docview.model.document(), link: link};
               var target = LocalStorage.get("backlink", "target");
               if (target == "to-sign") {
                 link.text= localization.pad.backToList;
@@ -187,7 +186,7 @@ $htmlopentag()$
 
               var footerDiv = jQuery('<div/>');
               var component = React.render(React.createElement(Footer,{
-                   signviewbranding: svb
+                   document: docview.model.document()
                 }), footerDiv[0]);
               jQuery('.signview').prepend(headerDiv);
               jQuery('.signview').append(footerDiv);

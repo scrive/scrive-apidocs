@@ -28,6 +28,8 @@ import qualified Text.StringTemplates.Fields as F
 import Analytics.Include
 import AppView (standardPageFields, companyUIForPage, simpleHtmlResonseClrFlash)
 import BrandedDomain.BrandedDomain
+import Company.Model
+import DB
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
@@ -35,6 +37,9 @@ import EID.Nets.Config
 import Kontra
 import KontraPrelude
 import User.Model
+import User.Utils
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 
 pageCreateFromTemplate :: TemplatesMonad m => m String
 pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
@@ -69,12 +74,21 @@ pageDocumentSignView :: Kontrakcja m
                     -> AnalyticsData
                     -> m String
 pageDocumentSignView ctx document siglink ad = do
+
+  -- Sign view needs some author details and information if company allows saving a safety copy.
+  let authorid = $fromJust $ getAuthorSigLink document >>= maybesignatory
+  auser <- fmap $fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
+  acompany <- getCompanyForUser auser
+
   mcompany <- companyUIForPage
   renderTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
       F.value "documenttitle" $ documenttitle document
       F.value "usestandardheaders" $ (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> ctxmaybeuser ctx)
+      F.value "allowsavesafetycopy" $ companyallowsavesafetycopy $ companyinfo acompany
+      F.value "authorFullname" $ getFullName auser
+      F.value "authorPhone" $ getMobile auser
       standardPageFields ctx mcompany ad
 
 pageDocumentIdentifyView :: Kontrakcja m

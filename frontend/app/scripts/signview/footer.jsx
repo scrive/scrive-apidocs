@@ -5,25 +5,32 @@ define(['React', 'Backbone', 'common/backbone_mixin'], function(React, Backbone,
 
   return React.createClass({
     propTypes: {
-      signviewbranding: React.PropTypes.object,
+      document: React.PropTypes.object,
       forceShowing: React.PropTypes.bool // OVERRIDES Sign View Branding setting "showfooter"
     },
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
-      return [this.props.signviewbranding];
+      if (this.props.document) {
+        return [this.props.document];
+      } else {
+        return [];
+      }
     },
     render: function() {
-      var signviewbranding = this.props.signviewbranding;
+      var document = this.props.document;
       
-      // Show the footer if the svb is loaded and either we force showing of the footer, or
-      // we're not on a small screen device and svb showfooter is set)
-      var showFooter = signviewbranding.ready() && !BrowserInfo.isSmallScreen() && signviewbranding.showfooter();
+      var documentUndefinedOrDocumentReady = document == undefined || document.ready();
+      var documentUndefinedOrDocumentReadyWithShowFooter = document == undefined || (document.ready() && document.showfooter());
 
-      if (signviewbranding.ready() && this.props.forceShowing) showFooter = true;
+      var showFooter = documentUndefinedOrDocumentReadyWithShowFooter && !BrowserInfo.isSmallScreen();
+
+      if (documentUndefinedOrDocumentReady && this.props.forceShowing) {
+        showFooter = true;
+      }
 
       $('.signview').toggleClass("nofooter",!showFooter); // We need to toogle this class here
 
-      if (!showFooter || !signviewbranding.ready())
+      if (!showFooter)
         return (<div/>);
       else
         return (

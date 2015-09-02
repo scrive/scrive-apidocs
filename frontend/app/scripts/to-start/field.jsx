@@ -4,7 +4,7 @@ define(['legacy_code', 'React', 'common/backbone_mixin', 'common/infotextinput',
 
 return React.createClass({
   propTypes: {
-    field: React.PropTypes.object,
+    field: React.PropTypes.object
   },
   mixins: [BackboneMixin.BackboneMixin],
   getBackboneModels: function() {

@@ -72,7 +72,6 @@ userAPI' = choice [
   dir "changeemail"     $ hPost $ toK0 $ apiCallChangeEmail,
   dir "addflash"        $ hPost $ toK0 $ apiCallAddFlash,
   dir "paymentinfo"     $ hGet $ toK0 $ apiCallPaymentInfo,
-  dir "userbrandingforsignview" $ hGet $ toK0 $ apiCallUserSignviewBranding,
   dir "getcallbackscheme" $ hGet $ toK0 $ apiCallUserGetCallbackScheme,
   dir "testsalesforceintegration" $ hGet $ toK0 $ apiCallTestSalesforceIntegration
   ]
@@ -102,13 +101,6 @@ apiCallGetUserProfile =  api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
   company <- getCompanyForUser user
   Ok <$> userJSON user company
-
-
-apiCallUserSignviewBranding :: Kontrakcja m => m Response
-apiCallUserSignviewBranding =  api $ do
-  (user, _ , _) <- getAPIUserWithPad APIPersonal
-  company <- getCompanyForUser user
-  Ok <$> (runJSONGenT $ signviewBrandingJSON user company)
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do

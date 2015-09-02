@@ -3,8 +3,6 @@ module User.UserView (
     -- pages
     userJSON,
     companyJSON,
-    documentSignviewBrandingJSON,
-    signviewBrandingJSON,
     pageAcceptTOS,
     pageDoYouWantToChangeEmail,
 
@@ -45,7 +43,6 @@ import qualified Text.StringTemplates.Fields as F
 import BrandedDomain.BrandedDomain
 import Company.Model
 import DB
-import Doc.DocStateData
 import Doc.DocViewMail
 import FlashMessage
 import Kontra
@@ -85,23 +82,6 @@ companyJSON company = runJSONGenT $ do
     value "ipaddressmasklist" $ intercalate "," $ fmap show $ companyipaddressmasklist $ companyinfo company
     value "allowsavesafetycopy" $ companyallowsavesafetycopy (companyinfo company)
     value "idledoctimeout" $ companyidledoctimeout $ companyinfo company
-
-documentSignviewBrandingJSON :: Monad m => User -> Company -> Document -> JSONGenT m ()
-documentSignviewBrandingJSON user company document = do
-    signviewBrandingJSON user company
-    value "showheader" $ documentshowheader $ document
-    value "showpdfdownload" $ documentshowpdfdownload $ document
-    value "showrejectoption" $ documentshowrejectoption $ document
-    value "showfooter" $ documentshowfooter $ document
-
-signviewBrandingJSON :: Monad m => User -> Company -> JSONGenT m ()
-signviewBrandingJSON user company = do
-    value "fullname" $ getFullName user
-    value "email" $ getEmail user
-    value "company" $ getCompanyName company
-    value "phone" $ userphone $ userinfo user
-    value "position" $ usercompanyposition$ userinfo $ user
-    value "allowsavesafetycopy" $ companyallowsavesafetycopy (companyinfo company)
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> [JSValue]
 userStatsToJSON formatTime uuss = map tojson uuss

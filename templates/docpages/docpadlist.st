@@ -14,8 +14,6 @@ $htmlopentag()$
           <div class="list-container"></div>
           <script>
            require(['jquery', 'React' , 'signview/header', 'signview/footer', 'padlist/padlist',  'legacy_code'], function(jQuery,React,Header,Footer,PadList) {
-              var svb =  new BrandingForSignView({});
-              svb.fetch({ processData:  true, cache : false});
 
              jQuery(function(){
               var padlistDiv = jQuery('<div/>')
@@ -29,7 +27,6 @@ $htmlopentag()$
               refresherPadListStep();
               var headerDiv = jQuery('<div/>');
               React.render(React.createElement(Header,{
-                   signviewbranding: svb,
                    fullWidth: true,
                    forceShowing: true,
                    link : {
@@ -47,7 +44,6 @@ $htmlopentag()$
 
               var footerDiv = jQuery('<div/>');
               React.render(React.createElement(Footer,{
-                   signviewbranding: svb
                 }), footerDiv[0]);
               jQuery(".pad-list").prepend(headerDiv);
               jQuery(".list-container").append(padlistDiv);
