@@ -630,7 +630,9 @@ checkFileAccessWith fid msid mmh mdid mattid =
     (Just sid, Just mh, Just did,_) -> do
        (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
         sl <- guardJustM $ getSigLinkFor sid <$> theDocument
-        whenM (signatoryNeedsToIdentifyToView sl) $ internalError
+        whenM (signatoryNeedsToIdentifyToView sl) $ do
+          unless (isAuthor sl) $ do
+            internalError
         indoc <- dbQuery $ FileInDocument did fid
         when (not indoc) $ internalError
     (_,_,Just did,_) -> do
