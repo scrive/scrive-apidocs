@@ -9,7 +9,6 @@ import Happstack.Server.Types
 import Happstack.StaticRouting(Route, choice, dir)
 import Log
 import Text.JSON
-import Text.JSON.Gen hiding (value)
 import Network.HTTP.Base (urlEncodeVars)
 import qualified Text.JSON.Gen as J
 import qualified Happstack.Server.Response as Web
@@ -56,7 +55,7 @@ tempCredRequest = api $ do
   case etcr of
     Left errors -> (throwIO . SomeKontraException) $ badInput errors
     Right tcr -> do
-      logInfo "TempCredRequest got successfully" $ object [
+      logInfo "TempCredRequest got successfully" $ Log.object [
           "temp_cred_request" .= show tcr
         ]
       (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials tcr time

@@ -4,6 +4,7 @@ module Doc.API.V2.DocumentUpdateUtils (
 
 import Control.Conditional (whenM, unlessM)
 import Data.Functor
+import Data.Text (append, pack)
 import qualified Control.Exception.Lifted as E
 
 import API.V2 (apiError, serverError, requestParameterInvalid)
@@ -30,7 +31,7 @@ applyDraftDataToDocument :: (Kontrakcja m, DocumentMonad m) =>  Document -> Acto
 applyDraftDataToDocument draft actor = do
     checkDraftTimeZoneName draft
     unlessM (isPreparation <$> theDocument) $ do
-      theDocument >>= \doc -> logAttention_ $ "Document is not in preparation, is in " ++ show (documentstatus doc)
+      theDocument >>= \doc -> logAttention_ $ "Document is not in preparation, is in " `append` (pack $ show $ documentstatus doc)
       apiError $ serverError "applyDraftDataToDocument failed"
     _ <- theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
                                   documenttitle = documenttitle draft

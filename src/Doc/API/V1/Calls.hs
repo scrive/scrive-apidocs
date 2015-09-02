@@ -48,6 +48,7 @@ import qualified Data.Map as Map hiding (map)
 import qualified Data.Traversable as T
 import qualified Data.Vector as Vec
 import qualified Text.JSON as J
+import qualified Text.JSON.Gen as J
 
 import API.Monad.V1
 import AppView (respondWithPDF)
@@ -91,7 +92,6 @@ import Kontra
 import KontraPrelude
 import ListUtil
 import LiveDocx
-import Log.Utils
 import MagicHash (MagicHash)
 import MinutesTime
 import OAuth.Model

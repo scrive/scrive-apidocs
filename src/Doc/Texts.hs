@@ -4,8 +4,10 @@ module Doc.Texts (
 
 import Control.Monad.IO.Class
 import Log
+import Log.Utils (equalsExternalBSL)
 import System.Exit
 import Text.JSON hiding (Ok)
+import Text.JSON.Convert (jsonToAeson)
 import Text.JSON.FromJSValue
 import Text.JSON.Gen
 import Data.Text
@@ -59,11 +61,11 @@ runJavaTextExtract json content = do
 
     liftIO $ BS.writeFile tmpin content
     liftIO $ BS.writeFile specpath (BS.fromString $ show $ J.pp_value (toJSValue config))
-    (code,_stdout,_stderr) <- liftIO $ do
+    (code, stdout, stderr) <- liftIO $ do
       readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "extract-texts", specpath, tmpin] (BSL.empty)
     case code of
       ExitSuccess -> do
-          let (decoderesult :: Result JSValue) = decode $ BSL.toString _stdout
+          let (decoderesult :: Result JSValue) = decode $ BSL.toString stdout
           case decoderesult of
             J.Ok jsvalue -> do
               let (rectsresult :: Maybe JSValue) = fromJSValueField "rects" jsvalue
@@ -72,7 +74,7 @@ runJavaTextExtract json content = do
               return $ Right censoredresult
             _ -> return $ Left "Backend did not return JSON"
       ExitFailure _ -> do
-          logAttention "Extract texts failed" $ object [
+          logAttention "Extract texts failed" $ Log.object [
               "configuration" .= jsonToAeson json
             , "stderr" `equalsExternalBSL` stderr
             ]
