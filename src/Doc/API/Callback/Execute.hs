@@ -33,9 +33,9 @@ import Utils.IO
 
 execute :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadIO m, MonadBase IO m,  MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
-  exists <- dbQuery $ DocumentExistsAndIsNotPurged dacDocumentID
+  exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeleted dacDocumentID
   if not exists then do
-    logInfo_ "API callback dropped since document does not exists or is purged"
+    logInfo_ "API callback dropped since document does not exists or is purged/reallydeleted"
     return True
   else if dacApiVersion == V1 then do -- TODO APIv2: Get rid of the API version check here, executeStandardCallback will handle it
     doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID

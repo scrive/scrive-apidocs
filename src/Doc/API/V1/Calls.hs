@@ -871,7 +871,8 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
               (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
                 sl <- apiGuardJustM  (serverError "Signatory does not exist") $ getSigLinkFor sid <$> theDocument
                 whenM (signatoryNeedsToIdentifyToView sl) $ do
-                  throwIO . SomeKontraException $ forbidden "Authorization to view is needed"
+                  unless (isAuthor sl) $ do
+                    throwIO . SomeKontraException $ forbidden "Authorization to view is needed"
                 theDocument
             (_, _, Just _) -> getDocByDocIDEx did maccesstoken
             _ ->  do
@@ -913,7 +914,8 @@ apiCallV1DownloadFile did fileid nameForBrowser = logDocumentAndFile did fileid 
               (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
                 sl <- apiGuardJustM  (serverError "Signatory does not exist") $ getSigLinkFor sid <$> theDocument
                 whenM (signatoryNeedsToIdentifyToView sl) $ do
-                  throwIO . SomeKontraException $ forbidden "Authorization to view is needed"
+                  unless (isAuthor sl) $ do
+                    throwIO . SomeKontraException $ forbidden "Authorization to view is needed"
                 theDocument
             (_, _, Just _accesstoken) -> getDocByDocIDEx did maccesstoken
             _ ->  do

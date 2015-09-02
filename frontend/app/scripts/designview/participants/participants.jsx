@@ -11,7 +11,7 @@ return React.createClass({
     return [this.props.model, this.props.model.document()];
   },
   getInitialState: function () {
-    return {needsToScrollToBottom: false};
+    return {needsToScroll: false};
   },
   maxHeight: function () {
     var heightOfNavigationTabs = 350;  // Height of navigation tabs on page.
@@ -52,14 +52,39 @@ return React.createClass({
   hasScrollbar: function () {
     return this.maxHeight() < this.participantsHeight();
   },
-  // Whenever we update - we check if we need to scroll to the bottom.
-  // This is used when adding new signatories
+  // Whenever we update - we check if we need to scroll to the bottom/signatory
+  // This is used when adding new signatories/opening existing
   componentDidUpdate: function () {
-    if (this.state.needsToScrollToBottom && this.hasScrollbar()) {
-      if (this.isMounted() && this.refs["participants-box"] != undefined) {
-        $(this.refs["participants-box"].getDOMNode()).scrollTop(this.participantsHeight() - this.maxHeight());
+    if (this.state.needsToScroll) {
+      this.scrollToOpenParticipant();
+      this.setState({needsToScroll: false});
+    }
+  },
+  scrollToOpenParticipant: function () {
+    var self = this;
+    var model = this.props.model;
+    var doc = model.document();
+    var openParticipant;
+    _.map(doc.signatories(), function (s, i) {
+      if (model.participantDetail() === s) {
+        openParticipant = self.refs["participant-" + i];
       }
-      this.setState({needsToScrollToBottom: false});
+    });
+    if (openParticipant === undefined || !this.hasScrollbar() ||
+        !this.isMounted() || this.refs["participants-box"] === undefined) {
+      return;
+    }
+    var openParticipantNode = openParticipant.getDOMNode();
+
+    var participantsBox = $(this.refs["participants-box"].getDOMNode());
+    var lowestVisiblePositionInBox = participantsBox.height() + participantsBox.scrollTop();
+    var topOfOpenParticipantBox = openParticipantNode.offsetTop;
+
+    // This should be $(openParticipantNode).outerHeight(), but before the animation ends it's lower than is should be
+    var bottomOfOpenParticipantBox = topOfOpenParticipantBox + 254;
+
+    if (bottomOfOpenParticipantBox > lowestVisiblePositionInBox) {
+        participantsBox.animate({scrollTop: topOfOpenParticipantBox}, "500");
     }
   },
   render: function () {
@@ -84,9 +109,11 @@ return React.createClass({
                 return (
                   <Participant
                     key={s.cid}
+                    ref={"participant-" + i}
                     model={s}
                     number={i}
                     viewmodel={model}
+                    onExpand={function () {self.setState({needsToScroll: true})}}
                   />
                 );
               })
@@ -96,7 +123,7 @@ return React.createClass({
             <AddParticipants
               ref="add-participants"
               model={model}
-              onAddSingle={function () {self.setState({needsToScrollToBottom: true});}}
+              onAddSingle={function () {self.setState({needsToScroll: true});}}
               />
           </div>
         </div>
