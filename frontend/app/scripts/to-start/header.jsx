@@ -14,7 +14,7 @@ return React.createClass({
     var document = this.props.document;
     var sent = !document.preparation();
 
-    var status = localization.authorview.firsttime.docsent;
+    var status = localization.toStart.docSent;
     if (document.closed()) status = localization.docsignview.signedAndClosed;
 
     return (

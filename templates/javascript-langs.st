@@ -262,6 +262,7 @@ javascriptLocalisation =
 
            }
           , toStart: {
+               docSent: "$_toStartDocSent()$",
                sendForSigning: "$_sendForSigning()$"
                , backFromSigningPage: "$_afterErrorGoBack()$"
                , someFieldsNotFilledInCorrectly: "$_flashMessageSomeFieldsAreIncorrectlyFilledIn()$"
@@ -528,20 +529,6 @@ javascriptLocalisation =
              , pending  : "$_authorviewPending()$"
              , goToSignView : "$_authorviewGoToSignview()$"
              , downloadPdf : "$_DownloadPDF()$"
-             , firsttime : {
-                   emailDelivered : "$InvitationDeliveredByEmailText(signatory='ACTOR';signing='TRUE')$"
-                 , emailRead : "$MarkInvitationReadEvidenceText(signatory_email='EMAIL';signing='TRUE')$"
-                 , tryYourself : "$_authorviewFTUETryYourself()$"
-                 , linkOpened : "$SignatoryLinkVisitedText(actor='ACTOR')$"
-                 , documentSigned : "$SignDocumentEvidenceText(actor='ACTOR')$"
-                 , documentSealed : "$AttachGuardtimeSealedFileEvidenceText()$"
-                 , branding: "$_authorviewFTUEBrand()$"
-                 , contact: "$_authorviewFTUEContact()$"
-                 , contactdetails: "$_authorviewFTUEContactDetails()$"
-                 , upload: "$_authorviewFTUEUpload()$"
-                 , docsent: "$_authorviewFTUEDocSent()$"
-                 , dochistory: "$_authorviewFTUEDocHistory()$"
-             }
          }
          , history : {
                time  : "$_historyTime()$"

@@ -7,10 +7,6 @@ pageDocumentView=
 <script>
  require(['jquery', 'legacy_code'], function(jQuery) {
 jQuery(function(){
-  if (AuthorViewFirstTime.isFromFTUE()) {
-    AuthorViewFirstTime.noLongerFromFTUE();
-    jQuery(".place-for-authorview").replaceWith(AuthorViewFirstTime.fromFTUEContent());
-  } else {
     var authorView = new AuthorView({
       id:"$documentid$"
        $if(siglinkid)$
@@ -24,7 +20,6 @@ jQuery(function(){
       $endif$
     });
     jQuery(".place-for-authorview").replaceWith(authorView.el());
-  }
 });
 
 mixpanel.register({DocumentID : "$documentid$"
