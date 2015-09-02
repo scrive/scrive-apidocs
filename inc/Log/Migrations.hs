@@ -17,10 +17,9 @@ addObjectIndexes = Migration {
   mgrTable = tableLogs
 , mgrFrom = 2
 , mgrDo = do
-  runSQL_ "DROP INDEX idx__logs__time"
+  runSQL_ "ALTER INDEX idx__logs__time RENAME TO idx__logs__$time$"
   mapM_ (runQuery_ . sqlCreateIndex (tblName tableLogs) . indexOnColumn) [
-      "\"time\""
-    , "(data ->> 'document_id'::text)"
+      "(data ->> 'document_id'::text)"
     , "(data ->> 'file_id'::text)"
     , "(data ->> 'signatory_link_id'::text)"
     , "(data ->> 'user_id'::text)"
