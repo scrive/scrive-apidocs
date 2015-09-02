@@ -172,6 +172,7 @@ return Backbone.View.extend({
     var placewrapper = $("<div class='placedfield-placement-wrapper'>");
 
     place.addClass("placedfield");
+    place.addClass("js-" + field.type());
     this.updateErrorBackground();
 
     place.css("cursor", "pointer");

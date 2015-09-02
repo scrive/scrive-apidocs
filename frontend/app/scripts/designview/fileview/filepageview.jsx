@@ -101,6 +101,7 @@ return Backbone.View.extend({
 
     container.empty();
     container.attr("id", "page" + page.number());
+    container.data("id", page.number());
     container.addClass("pagediv");
 
     this.pagejpg = $("<img class='pagejpg'/>");

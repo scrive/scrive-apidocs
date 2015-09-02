@@ -1,6 +1,7 @@
 define(["legacy_code", "designview/fileview/signatureplacementviewwithoutplacement",
-        "designview/fileview/checkboxplacementview", "designview/fileview/textplacementview"],
-  function (legacy_code, SignaturePlacementViewWithoutPlacement, CheckboxPlacementView, TextPlacementView) {
+        "designview/fileview/checkboxplacementview", "designview/fileview/textplacementview",
+        "designview/editdocument/placeondocument"],
+  function (legacy_code, SignaturePlacementViewWithoutPlacement, CheckboxPlacementView, TextPlacementView, placeOnDocument) {
 
 var createFieldPlacementView = function (args) {
   if (args.model.isSignature()) {
@@ -62,21 +63,117 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
     });
   }
 
+  var onDrop = function (page, x, y, w, h) {
+    if (field.isText() || field.isFake()) {
+      x += FieldPlacementGlobal.textPlacementXOffset;
+      y += FieldPlacementGlobal.textPlacementYOffset;
+    } else if (field.isCheckbox()) {
+      x += FieldPlacementGlobal.checkboxPlacementMargin;
+      y += FieldPlacementGlobal.checkboxPlacementMargin;
+    } else if (field.isSignature()) {
+      x += FieldPlacementGlobal.signaturePlacementLeftMargin;
+      y += FieldPlacementGlobal.signaturePlacementTopMargin;
+    }
+    droppedInside = true;
+    var signatory = field.signatory();
+    if (!_.find(signatory.fields(), function (f) { return f == field; })) {
+      if (onFieldAdded != undefined) {
+        onFieldAdded(field);
+      }
+      signatory.addField(field);
+    }
+
+    field.setSignatory(signatory);
+
+    var fontSizeText = $(helper).css("font-size");
+    var fontSize = parseFloat(fontSizeText) || 16;
+
+    if (placement != undefined) {
+      if (placement.page() == page.number()) {
+        placement.set({xrel: x / w,
+                        yrel: y / h,
+                        wrel: $(helper).width() / w,
+                        hrel: $(helper).height() / h
+                      });
+      }        else {
+        /*
+         * Placement has been moved from page to another
+         * page. For now we just remove and re-add
+         * placement. Refactor this later to in place
+         * update.
+         */
+        mixpanel.track("Drag field to new page", {fieldname:field.name(),
+                                                  signatory:field.signatory().signIndex(),
+                                                  documentid:field.signatory().document().documentid()});
+        placement.remove();
+        var newPlacement = new FieldPlacement({
+          page: page.number(),
+          fileid: page.file().fileid(),
+          field: field,
+          xrel: x / w,
+          yrel: y / h,
+          wrel: $(helper).width() / w,
+          hrel: $(helper).height() / h,
+          fsrel: fontSize / w,
+          tip: placement.tip(),
+          step: placement.step()
+        });
+        field.addPlacement(newPlacement);
+      }
+    }      else {
+      _.each(field.signatory().document().signatories(), function (s) {
+        _.each(s.fields(), function (f) {
+          _.each(f.placements(), function (p) {
+            if (p.typeSetter != undefined && p.withTypeSetter()) {
+                p.typeSetter.clear();
+            }
+          });
+        });
+      });
+      mixpanel.track("Drag field", {
+        documentid:field.signatory().document().documentid()
+      });
+      var newPlacement = new FieldPlacement({
+        page: page.number(),
+        fileid: page.file().fileid(),
+        field: field,
+        xrel: x / w,
+        yrel: y / h,
+        wrel: $(helper).width() / w,
+        hrel: $(helper).height() / h,
+        fsrel: fontSize / w,
+        withTypeSetter: true,
+        step: (field.isFake() ? "signatory" : "edit")
+      });
+      field.addPlacement(newPlacement);
+      signatory.trigger("drag:checkbox");
+    }
+  };
+
+  var initHelper = function (event) {
+    initFP();
+    helper = createFieldPlacementView({
+      model: field,
+      height: heightFunction != undefined ? heightFunction() : undefined,
+      width: widthFunction != undefined ? widthFunction() : undefined,
+      dragging: true,
+      fontSize: fontSize
+    }).el;
+    return helper;
+  };
+
+  dragHandler.click(function () {
+    var signatory = field.signatory();
+    if (!dragHandler.hasClass("placedfield")) {
+      placeOnDocument(dragHandler, field, onDrop);
+    }
+  });
+
   dragHandler.draggable({
     appendTo: ".design-view-frame",
     scroll: false,
     cursorAt: cursorNormalize ? {top:7, left:7} : undefined,
-    helper: function (event) {
-      initFP();
-      helper = createFieldPlacementView({
-        model: field,
-        height: heightFunction != undefined ? heightFunction() : undefined,
-        width: widthFunction != undefined ? widthFunction() : undefined,
-        dragging: true,
-        fontSize: fontSize
-      }).el;
-      return helper;
-    },
+    helper: initHelper,
     start: function (event, ui) {
       if ($("html")[0].scrollWidth <= $(window).width()) {
         // there"s no horizontal scrollbar, so dragging away should not create one
@@ -132,92 +229,7 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
           verticaloffset, xAxisOffset, yAxisOffset);
       }
     },
-    onDrop: function (page, x, y, w, h) {
-      if (field.isText() || field.isFake()) {
-        x += FieldPlacementGlobal.textPlacementXOffset;
-        y += FieldPlacementGlobal.textPlacementYOffset;
-      } else if (field.isCheckbox()) {
-        x += FieldPlacementGlobal.checkboxPlacementMargin;
-        y += FieldPlacementGlobal.checkboxPlacementMargin;
-      } else if (field.isSignature()) {
-        x += FieldPlacementGlobal.signaturePlacementLeftMargin;
-        y += FieldPlacementGlobal.signaturePlacementTopMargin;
-      }
-      droppedInside = true;
-      var signatory = field.signatory();
-      if (!_.find(signatory.fields(), function (f) { return f == field; })) {
-        if (onFieldAdded != undefined) {
-          onFieldAdded(field);
-        }
-        signatory.addField(field);
-      }
-
-      field.setSignatory(signatory);
-
-      var fontSizeText = $(helper).css("font-size");
-      var fontSize = parseFloat(fontSizeText) || 16;
-
-      if (placement != undefined) {
-        if (placement.page() == page.number()) {
-          placement.set({xrel: x / w,
-                          yrel: y / h,
-                          wrel: $(helper).width() / w,
-                          hrel: $(helper).height() / h
-                        });
-        }        else {
-          /*
-           * Placement has been moved from page to another
-           * page. For now we just remove and re-add
-           * placement. Refactor this later to in place
-           * update.
-           */
-          mixpanel.track("Drag field to new page", {fieldname:field.name(),
-                                                    signatory:field.signatory().signIndex(),
-                                                    documentid:field.signatory().document().documentid()});
-          placement.remove();
-          var newPlacement = new FieldPlacement({
-            page: page.number(),
-            fileid: page.file().fileid(),
-            field: field,
-            xrel: x / w,
-            yrel: y / h,
-            wrel: $(helper).width() / w,
-            hrel: $(helper).height() / h,
-            fsrel: fontSize / w,
-            tip: placement.tip(),
-            step: placement.step()
-          });
-          field.addPlacement(newPlacement);
-        }
-      }      else {
-        _.each(field.signatory().document().signatories(), function (s) {
-          _.each(s.fields(), function (f) {
-            _.each(f.placements(), function (p) {
-              if (p.typeSetter != undefined && p.withTypeSetter()) {
-                  p.typeSetter.clear();
-              }
-            });
-          });
-        });
-        mixpanel.track("Drag field", {
-          documentid:field.signatory().document().documentid()
-        });
-        var newPlacement = new FieldPlacement({
-          page: page.number(),
-          fileid: page.file().fileid(),
-          field: field,
-          xrel: x / w,
-          yrel: y / h,
-          wrel: $(helper).width() / w,
-          hrel: $(helper).height() / h,
-          fsrel: fontSize / w,
-          withTypeSetter: true,
-          step: (field.isFake() ? "signatory" : "edit")
-        });
-        field.addPlacement(newPlacement);
-        signatory.trigger("drag:checkbox");
-      }
-    }
+    onDrop: onDrop
   });
 };
 

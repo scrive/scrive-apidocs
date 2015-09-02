@@ -24,6 +24,8 @@ return Backbone.View.extend({
     var field =   this.model;
     var box = $(this.el);
     box.addClass("placedcheckbox");
+    box.css("width", FieldPlacementGlobal.checkboxWidth);
+    box.css("height", FieldPlacementGlobal.checkboxHeight);
     this.updateSignatoryCSSClass();
     box.toggleClass("checked", field.value() != "");
     box.toggleClass("needs-sender-action", field.needsSenderAction());
