@@ -15,13 +15,10 @@ import qualified Data.Vector as V
 
 import Context
 import DB
---import Doc.API.V1.Calls
 import Kontra
 import Doc.API.V2.Calls
-import Doc.DocumentID (DocumentID, unsafeDocumentID)
-import Doc.DocumentMonad
-import Doc.Model
-import Doc.SignatoryLinkID (SignatoryLinkID, unsafeSignatoryLinkID)
+import Doc.DocumentID
+import Doc.SignatoryLinkID()
 import KontraPrelude
 import TestingUtil
 import TestKontra as T
