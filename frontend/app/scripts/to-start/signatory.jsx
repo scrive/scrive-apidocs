@@ -30,9 +30,9 @@ return React.createClass({
   getAuthenticationMethodText: function() { 
     var sig = this.props.signatory;
 
-    if (sig.standardAuthenticationToSign()) return localization.docview.signatory.authenticationStandard;
-    if (sig.smsPinAuthenticationToSign()) return localization.docview.signatory.authenticationSMSPin;
-    if (sig.seBankIDAuthenticationToSign()) return localization.docview.signatory.authenticationELeg;
+    if (sig.standardAuthenticationToSign()) return localization.docview.signatory.authenticationToSignStandard;
+    if (sig.smsPinAuthenticationToSign()) return localization.docview.signatory.authenticationToSignSMSPin;
+    if (sig.seBankIDAuthenticationToSign()) return localization.docview.signatory.authenticationToSignSEBankID;
 
     return "";
   },
@@ -91,7 +91,7 @@ return React.createClass({
         {/* if */ signatory.signs() && 
           <div className="extra-info">
             <div className="auth">
-              {localization.docview.signatory.authentication}: {this.getAuthenticationMethodText()}
+              {localization.docview.signatory.authenticationToSign}: {this.getAuthenticationMethodText()}
             </div>
             <div className="delivery">
               {localization.docview.signatory.invitationMethod}: {this.getDeliveryMethodText()}
