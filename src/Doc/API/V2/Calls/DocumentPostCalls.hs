@@ -111,7 +111,8 @@ docApiV2Update did = api $ do
     -- Parameters
     documentJSON <- apiV2ParameterObligatory (ApiV2ParameterAeson "document")
     doc <- theDocument
-    draftData <- case (Unjson.update doc (unjsonDocument (DocumentAccess did AuthorDocumentAccess)) documentJSON) of
+    let da = documentAccessForUser user doc
+    draftData <- case (Unjson.update doc (unjsonDocument da) documentJSON) of
       (Result draftData []) ->
         return draftData
       (Result _ errs) ->
@@ -119,7 +120,7 @@ docApiV2Update did = api $ do
     -- API call actions
     applyDraftDataToDocument draftData actor
     -- Result
-    Ok <$> (unjsonDocument (DocumentAccess did AuthorDocumentAccess),) <$> theDocument
+    Ok <$> (unjsonDocument da,) <$> theDocument
 
 
 docApiV2Start :: Kontrakcja m => DocumentID -> m Response

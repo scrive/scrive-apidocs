@@ -104,7 +104,7 @@ unjsonSignatory da =  objectOf $
 
 fieldSignLink :: DocumentAccess -> Ap (FieldDef SignatoryLink) ()
 fieldSignLink da =
-  if (canSeeSignlinks da)
+  if (canSeeSignlinks da && daStatus da /= Preparation)
     then fieldReadonlyBy "api_delivery_url"
           (\sl -> if (signatorylinkdeliverymethod sl == APIDelivery)
                   then (Just $ show $ LinkSignDoc (daDocumentID da) sl)

@@ -4,6 +4,7 @@ module Doc.API.V2.DocumentAccess (
 , canSeeSignlinks
 , propertyForCurrentSignatory
 , documentAccessForUser
+, documentAccessForSlid
 ) where
 
 import Doc.DocStateData
@@ -16,6 +17,7 @@ import Util.SignatoryLinkUtils
 data DocumentAccess = DocumentAccess {
       daDocumentID :: DocumentID
     , daAccessMode :: DocumentAccessMode
+    , daStatus     :: DocumentStatus
   }
 
 data DocumentAccessMode =
@@ -43,6 +45,7 @@ documentAccessForUser :: User -> Document -> DocumentAccess
 documentAccessForUser user document = DocumentAccess {
       daDocumentID = documentid document
     , daAccessMode = documentAccessModeForUser user document
+    , daStatus = documentstatus document
   }
 
 documentAccessModeForUser :: User -> Document -> DocumentAccessMode
@@ -54,3 +57,20 @@ documentAccessModeForUser user document =
     Nothing -> if (documentauthorcompanyid document == Just (usercompany user) && useriscompanyadmin user)
                  then AdminDocumentAccess
                  else $unexpectedError $ "User " ++ show (userid user) ++ " accessing document " ++ show (documentid document) ++ " without any permission. This should be cought earlier."
+
+documentAccessForSlid :: SignatoryLinkID -> Document -> DocumentAccess
+documentAccessForSlid slid document = DocumentAccess {
+      daDocumentID = documentid document
+    , daAccessMode = documentAccessModeForSlid slid document
+    , daStatus = documentstatus document
+  }
+
+documentAccessModeForSlid :: SignatoryLinkID -> Document -> DocumentAccessMode
+documentAccessModeForSlid slid document =
+  case (getSigLinkFor slid document) of
+    Just sl -> if (isAuthor sl)
+                  then AuthorDocumentAccess
+                  else SignatoryDocumentAccess $ signatorylinkid sl
+    Nothing -> $unexpectedError $ "SignatoryLinkID " ++ show slid
+                ++ " accessing document " ++ show (documentid document)
+                ++ " without any permission. This should be caught earlier."

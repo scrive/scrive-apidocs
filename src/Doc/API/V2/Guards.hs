@@ -140,7 +140,7 @@ guardDocumentAccessSessionOrUser :: Kontrakcja m => DocumentID -> Maybe Signator
 guardDocumentAccessSessionOrUser did mslid apiPermission guardOnUser = do
   mSessionSignatory <- maybe (return Nothing) (getDocumentSignatoryMagicHash did) mslid
   case mSessionSignatory of
-    Just sl -> return $ DocumentAccess did $ SignatoryDocumentAccess (signatorylinkid sl)
+    Just sl -> withDocumentID did (documentAccessForSlid (signatorylinkid sl) <$> theDocument)
     Nothing -> withDocumentID did $ do
       (user,_) <- getAPIUser apiPermission
       doc <- theDocument

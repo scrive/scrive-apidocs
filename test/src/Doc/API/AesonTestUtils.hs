@@ -11,6 +11,7 @@ import qualified Data.Vector as V
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSONDocument
 import Doc.DocumentID (DocumentID)
+import Doc.Data.DocumentStatus (DocumentStatus(..))
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import KontraPrelude
 import TestKontra
@@ -107,7 +108,7 @@ lookupObjectNull k v = do
 parseMockDocumentFromBS :: DocumentID -> BS.ByteString -> TestEnv Value
 parseMockDocumentFromBS did bs = do
   docJSON <- valueFromBS bs
-  let da = DocumentAccess { daDocumentID = did, daAccessMode = AuthorDocumentAccess }
+  let da = DocumentAccess { daDocumentID = did, daAccessMode = AuthorDocumentAccess , daStatus = Pending}
   case parse (unjsonDocument da) docJSON of
     (Result _ []) -> return docJSON
     (Result _ _) -> $unexpectedErrorM "Could not parse Document JSON"

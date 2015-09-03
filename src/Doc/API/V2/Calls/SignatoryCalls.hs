@@ -56,7 +56,8 @@ docApiV2SigReject did slid = api $ do
     dbUpdate $ RejectDocument slid rejectReason actor
     postDocumentRejectedChange slid rejectReason =<< theDocument
     -- Result
-    Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
+    doc <- theDocument
+    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
 
 docApiV2SigCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigCheck did slid = api $ do
@@ -120,7 +121,8 @@ docApiV2SigSign did slid = api $ do
     postDocumentPendingChange olddoc
     handleAfterSigning slid
     -- Return
-    Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
+    doc <- theDocument
+    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
    )
 
 docApiV2SigSendSmsPin :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -180,4 +182,5 @@ docApiV2SigSetAttachment did slid = api $ do
         (\(DBBaseLineConditionIsFalse _) -> apiError $ signatoryStateError
           "An attachment of this name for this signatory and document is already set, remove it first.")
     -- Return
-    Ok <$> (\d -> (unjsonDocument (DocumentAccess did $ SignatoryDocumentAccess slid),d)) <$> theDocument
+    updatedDoc <- theDocument
+    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid updatedDoc),d)) updatedDoc
