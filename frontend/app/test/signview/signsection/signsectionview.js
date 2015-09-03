@@ -58,24 +58,19 @@ define(["legacy_code", "backend", "util", "React", "signview/signsection/signsec
         TestUtils.Simulate.click(sectionView.refs.rejectButton.getDOMNode());
       });
 
-      it("should test component in small screen", function () {
-        var oldBrowserInfo = window.BrowserInfo;
-        window.BrowserInfo = {
-          isSmallScreen: function () { return true; },
-          isPadDevice: function () { true; }
-        };
+      it("should test component in small screen", function (done) {
+        util.withSmallScreen(function () {
+          var signview = new SignView();
+          signview.setDocument(doc);
 
-        var signview = new SignView();
-        signview.setDocument(doc);
+          var sectionView = TestUtils.renderIntoDocument(React.createElement(SignSectionView, {
+            model: signview,
+            noScreenshot: true
+          }));
 
-        var sectionView = TestUtils.renderIntoDocument(React.createElement(SignSectionView, {
-          model: signview,
-          noScreenshot: true
-        }));
-
-        TestUtils.Simulate.click(sectionView.signButtonNode());
-
-        window.BrowserInfo = oldBrowserInfo;
+          TestUtils.Simulate.click(sectionView.signButtonNode());
+          done();
+        });
       });
     });
 

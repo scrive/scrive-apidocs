@@ -168,31 +168,62 @@ var DocumentSignViewModel = Backbone.Model.extend({
         }
   },
 
-  signsection : function() {
-    var useOld = false;
+  sendTrackingData: function () {
+    var signatory = this.document().currentSignatory();
 
-    if (useOld) {
-      if (!this.get("signsection")) {
-        this.set({'signsection' : new DocumentSignSignSection({model : this})}, {silent : true});
-      }
+    var sps = {};
+    sps["Has user?"] = signatory.hasUser();
+    sps["First visit"] = !signatory.seendate();
+    mixpanel.register(sps);
 
-      return this.get("signsection");
-    } else {
-      var model = this;
-
-      if (!model.get("signsection")) {
-        var $el = $("<div class='section spacing signbuttons'>");
-        var comp = React.render(React.createElement(SignSectionView, {
-          model: model
-        }), $el[0]);
-        var obj = {comp: comp, el: $el};
-        model.set({"signsection": obj}, {silent: true});
-        return obj;
-      }
-
-      return this.get("signsection");
+    var ps = {};
+    ps["Full Name"] = signatory.nameOrEmail();
+    ps.$email = signatory.email();
+    if (signatory.fstname()) {
+      ps.$first_name = signatory.fstname();
     }
+
+    if (signatory.sndname()) {
+      ps.$last_name = signatory.sndname();
+    }
+
+    if (signatory.hasUser()) {
+      ps.$username = signatory.email();
+    }
+
+    mixpanel.people.set(ps);
+
+    mixpanel.track("View sign view");
   },
+
+  takeScreenshotWithDelay: function () {
+    var doc = this.document();
+
+    setTimeout(function () {
+      doc.takeFirstScreenshot();
+    }, 1500);
+  },
+
+  signsection : function() {
+    var model = this;
+
+    if (!model.get("signsection")) {
+      var $el = $("<span>");
+      var comp = React.render(React.createElement(SignSectionView, {
+        model: model,
+        onMount: function () {
+          model.sendTrackingData();
+          model.takeScreenshotWithDelay();
+        }
+      }), $el[0]);
+      var obj = {comp: comp, el: $el};
+      model.set({"signsection": obj}, {silent: true});
+      return obj;
+    }
+
+    return this.get("signsection");
+  },
+
   signatoriessection : function() {
        var document = this.document();
        if (this.get("signatoriessection") != undefined)

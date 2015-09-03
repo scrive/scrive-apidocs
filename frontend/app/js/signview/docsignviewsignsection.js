@@ -23,6 +23,68 @@ window.DocumentSignConfirmation = function(args) {
 };
 
 
+window.DocumentSignRejection = function (args) {
+  if (!(args.doc instanceof Document)) {
+    throw new Error("needs a doc");
+  }
+
+  if (typeof args.arrow === "undefined") {
+    throw new Error("needs a arrow");
+  }
+
+  mixpanel.track("Click Reject");
+
+  var arrow = args.arrow;
+  var doc = args.doc;
+
+  if (arrow) { arrow.disable(); }
+  var content = $("<div />");
+  var textarea = $("<textarea class='modal-textarea' />");
+  textarea.attr("placeholder", localization.process.signatorycancelmodalplaceholder);
+  var text = $("<p style='margin-bottom: 10px'/>");
+  text.text(localization.process.signatorycancelmodaltext);
+
+  content.append(text);
+  content.append(textarea);
+
+  var rejectErrorCallback = function (xhr) {
+    if (xhr.status == 403) {
+      ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+    } else {
+      new FlashMessage({content: localization.signviewSigningFailed, type: "error", withReload: true});
+    }
+  };
+
+  var popup = new Confirmation({
+    title: localization.process.signatorycancelmodaltitle,
+    icon: null,
+    width: 500,
+    content: content,
+    extraClass: "grey reject-modal",
+    acceptText: localization.reject.send,
+    acceptColor: "cancel",
+    onAccept: function () {
+      ReloadManager.stopBlocking();
+      var customtext = textarea.val();
+      trackTimeout("Accept", {"Accept": "reject document"}, function () {
+        var text = customtext != undefined && customtext != "" ? customtext : undefined;
+        doc.currentSignatory().reject(text).sendAjax(function () {
+          var shouldRedirect = doc.currentSignatory().rejectredirect() != undefined &&
+            doc.currentSignatory().rejectredirect() != "";
+          if (shouldRedirect) {
+            window.location = doc.currentSignatory().rejectredirect();
+           } else {
+            window.location.reload();
+           }
+        }, rejectErrorCallback);
+      });
+    },
+    onReject: function () {
+      if (arrow) { arrow.enable(); }
+    }
+  });
+};
+
 window.ReloadDueToErrorModal = function(xhr) {
   ReloadManager.stopBlocking();
   mixpanel.track('Error', {
@@ -339,162 +401,6 @@ window.DocumentSignConfirmationForSigning = Backbone.View.extend({
       }
     }
   }
-});
-
-window.DocumentSignSignSection = Backbone.View.extend({
-   initialize: function(args){
-      this.render();
-   },
-
-  activateSignConfirmation: function () {
-      var model = this.model;
-      var signatoryHasPlacedSignatures = model.document().currentSignatory().hasPlacedSignatures();
-
-      var valid =  model.tasks().notCompletedTasks().length == 1 &&
-                   model.tasks().notCompletedTasks()[0].isSignTask();
-      if (!valid) {
-              model.arrow().blink();
-              return false;
-      }
-
-      mixpanel.track('Click sign');
-
-      return new DocumentSignConfirmation({
-          model: model,
-          signview: true,
-          signaturesPlaced: signatoryHasPlacedSignatures
-      });
-  },
-
-   render: function() {
-       var self = this;
-       var model = this.model;
-       var document = this.model.document();
-       var box = $(this.el).addClass('section').addClass('spacing').addClass('signbuttons');
-
-       var signatory = document.currentSignatory();
-       var signatoryHasPlacedSignatures = signatory.hasPlacedSignatures();
-       var sps = {};
-       sps['Has user?'] = signatory.hasUser();
-       sps['First visit'] = !signatory.seendate();
-       mixpanel.register(sps);
-
-       // track signatory properties
-       var ps = {};
-       ps['Full Name'] = signatory.nameOrEmail();
-       ps['$email'] = signatory.email();
-       if(signatory.fstname())
-           ps['$first_name'] = signatory.fstname();
-       if(signatory.sndname())
-           ps['$last_name'] = signatory.sndname();
-       if(signatory.hasUser())
-           ps['$username'] = signatory.email();
-       mixpanel.people.set(ps);
-
-       mixpanel.track('View sign view');
-
-       var rejectErrorCallback = function(xhr) {
-         if (xhr.status == 403) {
-           // session timed out
-           ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
-         } else {
-           new FlashMessage({content: localization.signviewSigningFailed,
-                             type: 'error',
-                             withReload: true});
-         }
-       };
-       this.rejectButton = new Button({
-                                        text: localization.process.rejectbuttontext,
-                                        onClick: function() {
-                                            mixpanel.track('Click Reject');
-
-                                            var arrow = model.arrow();
-                                            if (arrow) { arrow.disable(); }
-                                            var content = $("<div />");
-                                            var textarea = $("<textarea class='modal-textarea' />");
-                                            textarea.attr('placeholder', localization.process.signatorycancelmodalplaceholder);
-                                            var text = $("<p style='margin-bottom: 10px'/>");
-                                            text.text(localization.process.signatorycancelmodaltext);
-
-                                            content.append(text);
-                                            content.append(textarea);
-
-                                            var popup = new Confirmation({
-                                              title: localization.process.signatorycancelmodaltitle,
-                                              icon: null,
-                                              width: 500,
-                                              content: content,
-                                              extraClass: "grey reject-modal",
-                                              acceptText: localization.reject.send,
-                                              acceptColor: "cancel",
-                                              onAccept: function() {
-                                                ReloadManager.stopBlocking();
-                                                var customtext = textarea.val();
-                                                trackTimeout('Accept', {'Accept': 'reject document'}, function() {
-                                                  document.currentSignatory().reject(customtext != undefined && customtext != "" ? customtext : undefined).sendAjax(function() {
-                                                    if (document.currentSignatory().rejectredirect() != undefined && document.currentSignatory().rejectredirect() != "") {
-                                                      window.location = document.currentSignatory().rejectredirect();
-                                                     } else {
-                                                      window.location.reload();
-                                                     }
-                                                  }, rejectErrorCallback);
-                                                });
-                                              },
-                                              onReject: function() {
-                                                var arrow = model.arrow();
-                                                if (arrow) { arrow.enable(); }
-                                              }
-                                            });
-                                        }
-                                });
-
-       var signButtonText = localization.process.signbuttontext;
-       if (signatoryHasPlacedSignatures) {
-         signButtonText = localization.next;
-       }
-
-       this.signButton = new Button({
-                            type: "action",
-                            cssClass: "sign-button",
-                            text: signButtonText,
-                            onClick: function() { self.activateSignConfirmation(); }
-                         });
-
-      var signButton = this.signButton.el();
-
-      if (BrowserInfo.isSmallScreen()) {
-        signButton.css({
-          'padding-left': '0px',
-          'padding-right': '0px',
-          'font-size': '100px',
-          'height': '100px',
-          'max-height': '120px',
-          'line-height': '85px',
-          'padding-top': '55px',
-          'padding-bottom': '55px',
-          'margin': '0px',
-          'width': '100%'
-        });
-      }
-
-      if (model.hasRejectOption() && !BrowserInfo.isSmallScreen()) {
-        box.append($("<div class='rejectwrapper reject'>").append(this.rejectButton.el()));
-        box.append($("<div class='signwrapper sign'>").append(signButton));
-      }
-      else {
-        box.css("text-align","center").append($("<div class='signwrapper sign' style='width:100%;margin-right:0px;'>").append(signButton));
-        if (BrowserInfo.isSmallScreen()) {
-          box.css("padding", "0px");
-          box.css("margin", "10px auto auto");
-          box.css("width", "939px");
-        }
-      }
-      box.append($("<div class='clearfix' />"));
-
-    setTimeout(function() {
-      document.takeFirstScreenshot();
-    }, 1500);
-   }
 });
 
 });

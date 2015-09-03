@@ -60,6 +60,18 @@ define(["legacy_code", "React"], function(legacy_code, React) {
     $('body').empty();
   };
 
+  exports.withSmallScreen = function (fn) {
+    var oldBrowserInfo = window.BrowserInfo;
+    window.BrowserInfo = {
+      isSmallScreen: function () { return true; },
+      isPadDevice: function () { true; }
+    };
+
+    fn();
+
+    window.BrowserInfo = oldBrowserInfo;
+  };
+
   exports.findComponents = function (tree, comp) {
     return TestUtils.findAllInRenderedTree(tree, function (node) {
       return TestUtils.isCompositeComponentWithType(node, comp);
