@@ -4,13 +4,13 @@ module EID.Nets.Control (netsRoutes) where
 import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
-import Data.Text as Text
+import Data.Text as T
 import Happstack.Server hiding (dir)
 import Happstack.StaticRouting
 import Log
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
-import qualified Data.Text.Encoding as Text
+import qualified Data.Text.Encoding as T
 import qualified Text.StringTemplates.Fields as F
 
 import AppView
@@ -46,7 +46,7 @@ netsRoutes = choice [
 ----------------------------------------
 
 formatDOB :: Text -> Text
-formatDOB s = day `append` month `append` (Text.drop 2 year)
+formatDOB s = day `append` month `append` (T.drop 2 year)
     where [day, month, year] = splitOn "." s
 
 handleResolve :: Kontrakcja m => m KontraLink
@@ -63,22 +63,22 @@ handleResolve = do
           certErrorHandler <- mkCertErrorHandler
           debugFunction <- mkDebugFunction
           let netsAuth =  CurlAuthBasic (netsMerchantIdentifier netsconf) (netsMerchantPassword netsconf)
-              transport = curlTransport SecureSSL netsAuth (Text.unpack $ netsAssertionUrl netsconf) id certErrorHandler debugFunction
-          res <- soapCall transport "" () (GetAssertionRequest {  assertionArtifact = Text.pack art }) xpGetAssertionResponse
-          if ("Success" `Text.isInfixOf` assertionStatusCode res)
+              transport = curlTransport SecureSSL netsAuth (T.unpack $ netsAssertionUrl netsconf) id certErrorHandler debugFunction
+          res <- soapCall transport "" () (GetAssertionRequest {  assertionArtifact = T.pack art }) xpGetAssertionResponse
+          if ("Success" `T.isInfixOf` assertionStatusCode res)
              then do
                sessionID <- ctxsessionid <$> getContext
-               let attributeFromAssestion name = fromMaybe ($unexpectedError $ "missing field in assestion" <+> Text.unpack name) . lookup name
-               let decodeCertificate = either ($unexpectedError $ "invalid base64 of nets certificate") Binary . B64.decode . Text.encodeUtf8
+               let attributeFromAssestion name = fromMaybe ($unexpectedError $ "missing field in assestion" <+> T.unpack name) . lookup name
+               let decodeCertificate = either ($unexpectedError $ "invalid base64 of nets certificate") Binary . B64.decode . T.encodeUtf8
                let decodeProvider s = case s of
                                       "no_bankid" -> NetsNOBankIDStandard
                                       "no_bidmob" -> NetsNOBankIDMobile
-                                      _ -> $unexpectedError $ "provider not supported"  <+> Text.unpack s
+                                      _ -> $unexpectedError $ "provider not supported"  <+> T.unpack s
                let provider = decodeProvider $ attributeFromAssestion "IDPROVIDER" $ assertionAttributes res
                let signatoryName = attributeFromAssestion "CN" $ assertionAttributes res
                let dob = attributeFromAssestion "DOB" $ assertionAttributes res
-               let dobSSN = KontraPrelude.take 6 $ getPersonalNumber sl
-               let dobNETS = Text.unpack $ formatDOB dob
+               let dobSSN = T.pack $ KontraPrelude.take 6 $ getPersonalNumber sl
+               let dobNETS = formatDOB dob
                let certificate = decodeCertificate $ attributeFromAssestion "CERTIFICATE" $ assertionAttributes res
                let mphone = lookup "NO_CEL8" $ assertionAttributes res
                let mpid = lookup "NO_BID_PID" $ assertionAttributes res
@@ -105,11 +105,11 @@ handleResolve = do
 
                  when (dobNETS /= dobSSN) $ do
                   -- FIXME
-                  logAttention_ $ "Date of birth from NETS does not match date of birth from SSN, " ++ dobNETS ++ " != " ++ dobSSN
+                  logAttention_ $ "Date of birth from NETS does not match date of birth from SSN," <+> dobNETS <+> "!=" <+> dobSSN
 
                  -- Updating phone number - mobile workflow only and only if not provided
                  when (isJust mphone) $ do
-                   let phone = Text.unpack ($fromJust mphone)
+                   let phone = T.unpack ($fromJust mphone)
                    let formattedPhoneFromNets = "+47" ++ phone
                    let signatoryHasFilledInPhone = getMobile sl == ""
                    let formattedPhoneFromSignatory = KontraPrelude.filter (\c -> not (c `elem` " -")) $ getMobile sl
@@ -124,7 +124,7 @@ handleResolve = do
                logInfo_ $ "Successful assertion check with Nets. Signatory redirected back and should see view for signing"
                return $ LinkExternal $ netsReturnURL nt
              else do
-               logInfo_ $ "Checking assertion with Nets failed. Status was " <+> Text.unpack (assertionStatusCode res) <+> ". Signatory redirected back and should see identify view."
+               logInfo_ $ "Checking assertion with Nets failed. Status was " <+> (assertionStatusCode res) <+> ". Signatory redirected back and should see identify view."
                return $ LinkExternal $ netsReturnURL nt
         _ -> internalError
 
@@ -142,7 +142,7 @@ guardDocumentAccess nt= dbQuery (GetDocumentSessionToken $ netsSignatoryID nt) >
     logInfo_ "Document token found"
     doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash (netsDocumentID nt) (netsSignatoryID nt) mh
     when (documentstatus doc /= Pending) $ do
-      logInfo_ $ "Document is" <+> show (documentstatus doc) <+> ", should be" <+> show Pending
+      logInfo_ $ "Document is" <+> (T.pack $ show (documentstatus doc)) <+> ", should be" <+> (T.pack $ show Pending)
       respond404
     -- this should always succeed as we already got the document
     let slink = $fromJust $ getSigLinkFor (netsSignatoryID nt) doc
