@@ -33,6 +33,7 @@ apiV2JSONTests env = testGroup "DocAPIV2JSON"
   , testThat "Test API v2 'update' changing all non read-only fields" env testDocUpdateAll
   , testThat "Test API v2 'update' with new signatory and empty fields" env testDocUpdateNewFields
   , testThat "Test API v2 'setfile'" env testDocSetFile
+  , testThat "Test API v2 'list' response structure" env testDocList
   ]
 
 testJSONCtx :: TestEnv Context
@@ -192,6 +193,37 @@ testDocSetFile = do
   _ <- runApiJSONTest ctx POST (docApiV2SetFile did) rq_setfile2_params 200 rq_setfile2_json
 
   return ()
+
+testDocList :: TestEnv ()
+testDocList = do
+  ctx <- testJSONCtx
+
+  reqEmpty <- mkRequestWithHeaders GET [("offset", inText "0")] []
+  (resEmpty,_) <- runTestKontra reqEmpty ctx $ docApiV2List
+  assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resEmpty)
+  testJSONWith "test/json/api_v2/test-DocListEmpty.json" (rsBody resEmpty)
+
+  let rq_new_params = [ ("file", inFile "test/pdfs/simple.pdf") ]
+  _ <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
+
+  reqOne <- mkRequestWithHeaders GET [("offset", inText "0")] []
+  (resOne,_) <- runTestKontra reqOne ctx $ docApiV2List
+  assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resOne)
+  testJSONWith "test/json/api_v2/test-DocListOne.json" (rsBody resOne)
+
+  reqFilterPrep <- mkRequestWithHeaders GET [("offset", inText "0")
+                                            ,("filter", inText "[{\"filter_by\":\"status\",\"statuses\": [\"preparation\"]}]")
+                                            ] []
+  (resFilterPrep,_) <- runTestKontra reqFilterPrep ctx $ docApiV2List
+  assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resFilterPrep)
+  testJSONWith "test/json/api_v2/test-DocListOne.json" (rsBody resFilterPrep)
+
+  reqFilterPending <- mkRequestWithHeaders GET [("offset", inText "0")
+                                               ,("filter", inText "[{\"filter_by\":\"status\",\"statuses\": [\"pending\"]}]")
+                                               ] []
+  (resFilterPending,_) <- runTestKontra reqFilterPending ctx $ docApiV2List
+  assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resFilterPending)
+  testJSONWith "test/json/api_v2/test-DocListEmpty.json" (rsBody resFilterPending)
 
 -- Compare JSON sesults from API calls
 testJSONWith :: FilePath -> BS.ByteString -> TestEnv ()

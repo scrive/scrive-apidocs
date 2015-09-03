@@ -129,5 +129,6 @@ listToJSONBS (i,docs) =
     "]}"
   where
     docList :: [(DocumentAccess,Document)] -> ByteString
-    docList l = $last $ scanl1 (\a b -> a `append` ",\n" `append` b) (map unjsonDocDa l)
+    docList [] = ""
+    docList l@(_:_) = $last $ scanl1 (\a b -> a `append` ",\n" `append` b) (map unjsonDocDa l)
     unjsonDocDa (da,d) = unjsonToByteStringLazy' (Options {pretty = False, indent = 0, nulls = True}) (unjsonDocument da) d
