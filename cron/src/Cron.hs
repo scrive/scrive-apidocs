@@ -5,6 +5,7 @@ import Control.Monad
 import Control.Monad.Base
 import Data.Maybe
 import Data.Time
+import Database.PostgreSQL.Consumers
 import Log
 import System.Console.CmdArgs hiding (def)
 import System.Environment
@@ -30,9 +31,6 @@ import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.Model
 import HostClock.Collector (collectClockError)
-import JobQueue.Components
-import JobQueue.Config
-import JobQueue.Utils
 import KontraPrelude hiding (All)
 import Log.Configuration
 import Log.Model

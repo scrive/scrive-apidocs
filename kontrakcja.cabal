@@ -82,6 +82,7 @@ Executable kontrakcja-server
   Build-depends: cmdargs
   Build-depends: cond
   Build-depends: conduit
+  Build-depends: consumers
   Build-depends: containers
   Build-depends: Crypto
   Build-depends: crypto-api
@@ -211,6 +212,7 @@ Executable cron
   Build-depends: cmdargs
   Build-depends: cond
   Build-depends: conduit
+  Build-depends: consumers
   Build-depends: containers
   Build-depends: Crypto
   Build-depends: crypto-api
@@ -340,6 +342,7 @@ Executable kontrakcja-migrate
   Build-depends: bytestring
   Build-depends: cond
   Build-depends: conduit
+  Build-depends: consumers
   Build-depends: containers
   Build-depends: Crypto
   Build-depends: crypto-api
@@ -464,6 +467,7 @@ Executable mailing-server
   Build-depends: cmdargs
   Build-depends: cond
   Build-depends: conduit
+  Build-depends: consumers
   Build-depends: containers
   Build-depends: Crypto
   Build-depends: crypto-api
@@ -584,6 +588,7 @@ Executable messenger-server
   Build-depends: cmdargs
   Build-depends: cond
   Build-depends: conduit
+  Build-depends: consumers
   Build-depends: containers
   Build-depends: Crypto
   Build-depends: crypto-api
@@ -704,6 +709,7 @@ Executable kontrakcja-test
   Build-depends: bytestring
   Build-depends: cond
   Build-depends: conduit
+  Build-depends: consumers
   Build-depends: containers
   Build-depends: Crypto
   Build-depends: crypto-api

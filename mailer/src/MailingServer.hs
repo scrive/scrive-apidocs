@@ -4,6 +4,7 @@ import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Data.Aeson
 import Data.Monoid
+import Database.PostgreSQL.Consumers
 import Happstack.Server hiding (result, waitForTermination)
 import Log
 import System.Console.CmdArgs hiding (def)
@@ -20,9 +21,6 @@ import DB.Checks
 import DB.PostgreSQL
 import Handlers
 import Happstack.Server.ReqHandler
-import JobQueue.Components
-import JobQueue.Config
-import JobQueue.Utils
 import KontraPrelude
 import Log.Configuration
 import Log.Identifier

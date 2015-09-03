@@ -9,6 +9,7 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.State
 import Data.Int
+import Database.PostgreSQL.Consumers.Config
 import Log
 
 import ActionQueue.Scheduler
@@ -19,7 +20,6 @@ import Doc.API.Callback.Execute
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Logging
-import JobQueue.Config
 import KontraPrelude
 import MinutesTime
 import User.CallbackScheme.Model
