@@ -32,8 +32,8 @@ unjsonDocument da = objectOf $
   <*   fieldReadonly "author_attachments" documentauthorattachments "Author attachments"
   <*   fieldReadonly "ctime" (utcTimeToAPIFormat . documentctime) "Document creation time"
   <*   fieldReadonly "mtime" (utcTimeToAPIFormat . documentmtime) "Document modification time"
-  <*   fieldReadonlyBy "timeout_time" (fmap utcTimeToAPIFormat . documenttimeouttime) "Document timeout time" unjsonDefWithNull
-  <*   fieldReadonlyBy "auto_remind_time" (fmap utcTimeToAPIFormat . documentautoremindtime) "Document autoremind time" unjsonDefWithNull
+  <*   fieldReadOnlyOpt "timeout_time" (fmap utcTimeToAPIFormat . documenttimeouttime) "Document timeout time"
+  <*   fieldReadOnlyOpt "auto_remind_time" (fmap utcTimeToAPIFormat . documentautoremindtime) "Document autoremind time"
   <*   fieldReadonly "status" documentstatus "Document status"
   <**> (field "days_to_sign" documentdaystosign ("Days to sign document")
         <**> (pure $ \days d -> d { documentdaystosign = days }))
@@ -78,7 +78,7 @@ unjsonSignatory :: DocumentAccess -> UnjsonDef SignatoryLink
 unjsonSignatory da =  objectOf $
        pure def
   <*   (fieldReadonly "id" signatorylinkid "Signatory id")
-  <*   (fieldReadonlyBy "user_id"  maybesignatory "User connected to document " unjsonDefWithNull)
+  <*   (fieldReadOnlyOpt "user_id"  maybesignatory "User connected to document ")
   <*   (fieldReadonly "is_author" signatoryisauthor "Is this signatory an actor")
   <**> (fieldDef "is_signatory" (signatoryispartner def) signatoryispartner "Is this signatory signing this document"
         <**> (pure $ \isa s -> s { signatoryispartner = isa }))
@@ -86,10 +86,10 @@ unjsonSignatory da =  objectOf $
         <**> (pure $ \fs s -> s { signatoryfields = fs }))
   <**> (fieldDef "sign_order"  (signatorysignorder def) signatorysignorder "Signatory sign order"
         <**> (pure $ \so s-> s { signatorysignorder = so }))
-  <*   (fieldReadonlyBy "sign_time" (fmap utcTimeToAPIFormat . fmap signtime . maybesigninfo) "Time when signatory signed document" unjsonDefWithNull)
-  <*   (fieldReadonlyBy "seen_time" (fmap utcTimeToAPIFormat . fmap signtime . maybeseeninfo) "Time when signatory opened document in browser" unjsonDefWithNull)
-  <*   (fieldReadonlyBy "read_invitation_time" (fmap utcTimeToAPIFormat . maybereadinvite) "Time when signatory read invitation" unjsonDefWithNull)
-  <*   (fieldReadonlyBy "rejected_time" (fmap utcTimeToAPIFormat . signatorylinkrejectiontime) "Time when signatory rejected document" unjsonDefWithNull)
+  <*   (fieldReadOnlyOpt "sign_time" (fmap utcTimeToAPIFormat . fmap signtime . maybesigninfo) "Time when signatory signed document")
+  <*   (fieldReadOnlyOpt "seen_time" (fmap utcTimeToAPIFormat . fmap signtime . maybeseeninfo) "Time when signatory opened document in browser" )
+  <*   (fieldReadOnlyOpt "read_invitation_time" (fmap utcTimeToAPIFormat . maybereadinvite) "Time when signatory read invitation" )
+  <*   (fieldReadOnlyOpt "rejected_time" (fmap utcTimeToAPIFormat . signatorylinkrejectiontime) "Time when signatory rejected document" )
   <**> (fieldOpt "sign_success_redirect_url" signatorylinksignredirecturl ("Redirect user when he signed")
         <**> (pure $ \mrd s -> s { signatorylinksignredirecturl = mrd }))
   <**> (fieldOpt "reject_redirect_url" signatorylinkrejectredirecturl ("Redirect user when he rejected")
@@ -112,12 +112,12 @@ unjsonSignatory da =  objectOf $
 fieldSignLink :: DocumentAccess -> Ap (FieldDef SignatoryLink) ()
 fieldSignLink da =
   if (canSeeSignlinks da && daStatus da /= Preparation)
-    then fieldReadonlyBy "api_delivery_url"
+    then fieldReadOnlyOpt "api_delivery_url"
           (\sl -> if (signatorylinkdeliverymethod sl == APIDelivery)
                   then (Just $ show $ LinkSignDoc (daDocumentID da) sl)
                   else Nothing
           )
-          "Link for signing document" unjsonDefWithNull
+          "Link for signing document"
     else pure ()
 
 

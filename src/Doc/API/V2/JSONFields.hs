@@ -143,7 +143,7 @@ unjsonSignatureField :: Ap (FieldDef SignatoryField) SignatorySignatureField
 unjsonSignatureField  = pure (\n ob sfbs ps -> SignatureField  (unsafeSignatoryFieldID 0) n Nothing ob sfbs ps)
   <*  fieldReadonly "type" fieldType "Type of a field"
   <*> field "name"  (unsafeFromSignatureField  ssfName)  "Value of the field"
-  <*  fieldReadonlyBy "signature" (unsafeFromSignatureField  ssfValue) "Uploaded file" unjsonDefWithNull
+  <*  fieldReadOnlyOpt "signature" (unsafeFromSignatureField  ssfValue) "Uploaded file"
   <*> fieldDef "is_obligatory" True (unsafeFromSignatureField ssfObligatory) "If is oligatory"
   <*> fieldDef "should_be_filled_by_sender" False (unsafeFromSignatureField ssfShouldBeFilledBySender) "If should be filled by sender"
   <*> fieldDef "placements" [] (unsafeFromSignatureField ssfPlacements) "Placements"

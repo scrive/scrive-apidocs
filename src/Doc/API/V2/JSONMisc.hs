@@ -141,7 +141,7 @@ instance Unjson SignatoryAttachment where
   unjsonDef = objectOf $ pure (SignatoryAttachment Nothing)
     <*> field "name"  signatoryattachmentname  "Name of attachment"
     <*> field "description" signatoryattachmentdescription "Description of attachment"
-    <* fieldReadonlyBy "file" signatoryattachmentfile "Uploaded file id" unjsonDefWithNull
+    <* fieldReadOnlyOpt "file" signatoryattachmentfile "Uploaded file id"
 
 instance Unjson DocumentTag where
   unjsonDef = objectOf $ pure DocumentTag

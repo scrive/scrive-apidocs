@@ -2,9 +2,10 @@ module Doc.API.V2.UnjsonUtils (
   unjsonEnumBy
 , unjsonEnum
 , nothingToNullDef
-, unjsonDefWithNull
+, fieldReadOnlyOpt
 ) where
 
+import Control.Applicative.Free
 import Data.Text
 import Data.Unjson
 import qualified Data.Aeson as Aeson
@@ -39,14 +40,20 @@ unjsonEnum desc parseEnum printEnum  =
     parseFromEnumFromAeson _ = fail $ unpack $ "cannot parse enum " `append` desc `append` " from not string"
 
 
+-- | It is impossible to write a reasonable definition of 'Unjson (Maybe a)'
+-- for any record like 'a' using field combinators.
+-- So we use this to accomplish this goal.
 nothingToNullDef :: UnjsonDef (Maybe a) ->  UnjsonDef (Maybe a)
-nothingToNullDef def = SimpleUnjsonDef "ReadOnly"  (parse def) $ \mv ->
+nothingToNullDef def = SimpleUnjsonDef "ReadOnly (Maybe a) for record like 'a'"  (parse def) $ \mv ->
   case mv of
     Nothing -> Aeson.Null
     _ -> unjsonToJSON def mv
 
-unjsonDefWithNull :: Unjson a => UnjsonDef (Maybe a)
-unjsonDefWithNull = SimpleUnjsonDef "ReadOnly"  (\v -> Just <$> parse unjsonDef v) $ \mv ->
-  case mv of
-    Nothing -> Aeson.Null
-    Just v -> unjsonToJSON unjsonDef v
+-- | Used for optional fields that are also read-only
+fieldReadOnlyOpt :: Unjson a => Text -> (s -> Maybe a) -> Text -> Ap (FieldDef s) ()
+fieldReadOnlyOpt name f desc = fieldReadonlyBy name f desc unjsonDefWithNull
+  where unjsonDefWithNull :: Unjson a => UnjsonDef (Maybe a)
+        unjsonDefWithNull = SimpleUnjsonDef "ReadOnly"  (\v -> Just <$> parse unjsonDef v) $ \mv ->
+          case mv of
+            Nothing -> Aeson.Null
+            Just v -> unjsonToJSON unjsonDef v
