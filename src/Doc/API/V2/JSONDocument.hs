@@ -50,7 +50,7 @@ unjsonDocument da = objectOf $
   <**> (fieldOpt "api_callback_url" documentapiv2callbackurl ("Document callback url (for V2)")
         <**> (pure $ \mcu d -> d { documentapiv2callbackurl = mcu }))
   <*   fieldReadonly "object_version" documentobjectversion "Document object version token"
-  <*   fieldReadonly "access_token" (show . documentmagichash)   "Document access token"
+  <*   fieldAccessToken da
   <**> (field "timezone" documenttimezonename ("Document language")
         <**> (pure $ \tz d -> d { documenttimezonename = tz }))
   <**> (field "tags" documenttags ("Document tags")
@@ -63,6 +63,13 @@ unjsonDocument da = objectOf $
   <*   (fieldReadonly "is_deleted" (propertyForCurrentSignatory da (isJust . signatorylinkreallydeleted)) ("Document is permanently deleted"))
   <*   (fieldReadonlyBy "viewer" (\d -> Just $ viewerForDocument da d) ("Document viewer") unjsonDocumentViewer)
 
+fieldAccessToken :: DocumentAccess -> Ap (FieldDef Document) ()
+fieldAccessToken (DocumentAccess { daAccessMode }) =
+  case daAccessMode of
+       AuthorDocumentAccess -> accessTokenField
+       AdminDocumentAccess -> accessTokenField
+       _ -> pure ()
+  where accessTokenField = fieldReadonly "access_token" (show . documentmagichash) "Document access token"
 
 unjsonSignatoryArray ::  DocumentAccess -> UnjsonDef [SignatoryLink]
 unjsonSignatoryArray da = arrayOf (unjsonSignatory da)
