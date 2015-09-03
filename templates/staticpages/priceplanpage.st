@@ -29,7 +29,9 @@ $htmlopentag()$
 
     </div>
   </div>
-  $pageFooter()$
+  <div class="pricing-footer">
+    $pageFooter()$
+  </div>
 </div>
 </body>
 $htmlclosingtag()$
