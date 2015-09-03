@@ -95,8 +95,10 @@ guardThatObjectVersionMatchesIfProvided did = do
       `catchKontra` (\e@DocumentObjectVersionDoesNotMatch {} -> apiError $ documentObjectVersionMismatch e)
 
 guardSignatoryNeedsToIdentifyToView :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
-guardSignatoryNeedsToIdentifyToView slid =
-  whenM (signatoryNeedsToIdentifyToView =<< $fromJust . getSigLinkFor slid <$> theDocument) $ do
+guardSignatoryNeedsToIdentifyToView slid = do
+  msl <- getSigLinkFor slid <$> theDocument
+  identifyToView <- signatoryNeedsToIdentifyToView ($fromJust msl)
+  when (identifyToView && (not $ isAuthor msl))
     (apiError $ signatoryStateError "Authorisation to view needed before signing")
 
 guardSignatoryHasNotSigned :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
