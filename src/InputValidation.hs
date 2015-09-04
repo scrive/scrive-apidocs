@@ -33,6 +33,8 @@ module InputValidation
     , asValidFieldValue
     , asValidInviteText
     , asValidIPAddressWithMaskList
+    , asValidSwedishSSN
+    , asValidNorwegianSSN
 ) where
 
 import Data.Char
@@ -350,6 +352,31 @@ asValidCompanyNumber input =
     >>= checkLengthIsMax 50
     >>= checkOnly [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')]
 
+
+{- |
+    Validated swedish personal number.
+    White list: Digits only
+    Size: From 10 or 12 chars
+-}
+asValidSwedishSSN :: String -> Result String
+asValidSwedishSSN input =
+    filterOutCharacters [' ', '-'] input
+    >>= checkIfEmpty
+    >>= checkLengthIs [10,12]
+    >>= checkOnly [isDigit]
+
+{- |
+    Validated swedish personal number.
+    White list: Digits only
+    Size: From 10 or 12 chars
+-}
+asValidNorwegianSSN :: String -> Result String
+asValidNorwegianSSN input =
+    filterOutCharacters [' ', '-'] input
+    >>= checkIfEmpty
+    >>= checkLengthIs [11]
+    >>= checkOnly [isDigit]
+
 {- |
     Creates a clean and validated personal number.
     White list: Digits, hyphens (to be stripped)
@@ -610,6 +637,14 @@ checkLengthIsMax :: Int -> String -> Result String
 checkLengthIsMax maxlength xs
     | length xs > maxlength =  Bad
     | otherwise = return xs
+
+{- |
+    Checks that a string has lenght from list.
+-}
+checkLengthIs :: [Int] -> String -> Result String
+checkLengthIs lengths xs
+    | length xs `elem` lengths =  Good xs
+    | otherwise = Bad
 
 {- |
     Checks if the input is empty, assigning it value Empty.

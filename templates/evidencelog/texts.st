@@ -472,20 +472,42 @@ VisitedViewForAuthenticationEvidenceArchive=$_VisitedViewForAuthenticationEviden
 ###
 VisitedViewForAuthenticationEvidenceVerificationPages=$_VisitedViewForAuthenticationEvidenceVerificationPages()$
 ###
-AuthenticatedToViewEvidenceLog=The party <span class="actor"/> verified their identity with $provider$ to access the document. $elegVerificationAuth()$
+AuthenticatedToViewEvidenceLog=<span class="actor"/> verified their identity with $provider$ to access the document. $elegVerificationAuth()$
 ###
 elegVerificationAuth=
 <br/>
 <br/>
 <p>Data returned from the $provider$:
   <br/>Name: $signatory_name$
+  $if(signatory_personal_number)$
   <br/>ID number: $signatory_personal_number$
+  $endif$
+  $if(signatory_mobile)$
+  <br/>Phone: $signatory_mobile$
+  $endif$
+  $if(signatory_dob)$
+  <br/>Date of birth: $signatory_dob$
+  $endif$
+  $if(signatory_pid)$
+  <br/>PID: $signatory_pid$
+  $endif$
 </p>
 <br/>
+$if(signature)$
 <p>Signature: <div style='white-space:pre'>$signature$</div></p>
+$endif$
+$if(ocsp_response)$
 <p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp_response$</div></p>
+$endif$
 ###
 AuthenticatedToViewEvidenceArchive=$_AuthenticatedToViewEvidenceArchive()$
 ###
-AuthenticatedToViewEvidenceVerificationPages=$_AuthenticatedToViewEvidenceVerificationPages()$
+AuthenticatedToViewEvidenceVerificationPages=
+$if(signatory_dob)$
+$_AuthenticatedToViewEvidenceVerificationPagesWithDate()$
+$else$
+$_AuthenticatedToViewEvidenceVerificationPagesWithoutDate()$
+$endif$
+###
+UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Phone". Scrive eSign changed it from "$oldphone$" to "$newphone$".
 ###

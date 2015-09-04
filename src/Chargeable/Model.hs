@@ -2,6 +2,7 @@ module Chargeable.Model (
     ChargeCompanyForSMS(..)
   , ChargeCompanyForSEBankIDSignature(..)
   , ChargeCompanyForSEBankIDAuthentication(..)
+  , ChargeCompanyForNOBankIDAuthentication(..)
   ) where
 
 import Control.Monad.Catch
@@ -15,7 +16,7 @@ import Doc.DocumentID
 import KontraPrelude
 import User.UserID
 
-data ChargeableItem = SMS | SEBankIDSignature | SEBankIDAuthentication
+data ChargeableItem = SMS | SEBankIDSignature | SEBankIDAuthentication | NOBankIDAuthentication
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -29,8 +30,9 @@ instance FromSQL ChargeableItem where
       1 -> return SMS
       2 -> return SEBankIDSignature
       3 -> return SEBankIDAuthentication
+      4 -> return NOBankIDAuthentication
       _ -> throwM RangeError {
-        reRange = [(1, 3)]
+        reRange = [(1, 4)]
       , reValue = n
       }
 
@@ -39,6 +41,7 @@ instance ToSQL ChargeableItem where
   toSQL SMS                    = toSQL (1::Int16)
   toSQL SEBankIDSignature      = toSQL (2::Int16)
   toSQL SEBankIDAuthentication = toSQL (3::Int16)
+  toSQL NOBankIDAuthentication = toSQL (4::Int16)
 
 ----------------------------------------
 
@@ -61,6 +64,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForSE
 data ChargeCompanyForSEBankIDAuthentication = ChargeCompanyForSEBankIDAuthentication DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForSEBankIDAuthentication () where
   update (ChargeCompanyForSEBankIDAuthentication document_id) = update (ChargeCompanyFor SEBankIDAuthentication 1 document_id)
+
+-- | Charge company of the author of the document for norwegian authorization
+data ChargeCompanyForNOBankIDAuthentication = ChargeCompanyForNOBankIDAuthentication DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForNOBankIDAuthentication () where
+  update (ChargeCompanyForNOBankIDAuthentication document_id) = update (ChargeCompanyFor NOBankIDAuthentication 1 document_id)
 
 data ChargeCompanyFor = ChargeCompanyFor ChargeableItem Int32 DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyFor () where

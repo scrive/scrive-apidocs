@@ -1,6 +1,5 @@
 module EID.CGI.GRP.Control (grpRoutes) where
 
-import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Unjson
 import Happstack.Server hiding (dir)
@@ -18,11 +17,10 @@ import Chargeable.Model
 import Company.Model
 import DB hiding (InternalError)
 import Doc.DocStateData
+import Doc.DocStateQuery
 import Doc.DocumentID
 import Doc.DocumentMonad
-import Doc.Model
 import Doc.SignatoryLinkID
-import Doc.Tokens.Model
 import EID.Authentication.Model
 import EID.CGI.GRP.Config
 import EID.CGI.GRP.Data
@@ -59,7 +57,7 @@ grpRoutes = dir "cgi" . dir "grp" $ choice [
 handleAuthRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleAuthRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
-  (doc,_) <- getDocumentAndSignatory did slid
+  (doc,_) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
   pn <- getField "personal_number" `onNothing` do
     logInfo_ "No personal number"
@@ -67,7 +65,7 @@ handleAuthRequest did slid = do
   guardThatPersonalNumberMatches slid pn doc
   certErrorHandler <- mkCertErrorHandler
   debugFunction <- mkDebugFunction
-  let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler debugFunction
+  let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway id certErrorHandler debugFunction
       req = AuthRequest {
         arqPolicy = cgServiceID
       , arqDisplayName = fromMaybe cgDisplayName mcompany_display_name
@@ -94,7 +92,7 @@ handleAuthRequest did slid = do
 handleSignRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleSignRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
-  (doc,_) <- getDocumentAndSignatory did slid
+  (doc,_) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
   tbs <- textToBeSigned doc
   pn <- getField "personal_number" `onNothing` do
@@ -103,7 +101,7 @@ handleSignRequest did slid = do
   guardThatPersonalNumberMatches slid pn doc
   certErrorHandler <- mkCertErrorHandler
   debugFunction <- mkDebugFunction
-  let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler debugFunction
+  let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway id certErrorHandler debugFunction
       req = SignRequest {
         srqPolicy = cgServiceID
       , srqDisplayName = fromMaybe cgDisplayName mcompany_display_name
@@ -150,7 +148,7 @@ handleCollectAndRedirectRequest did slid = do
 collectRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either GrpFault ProgressStatus)
 collectRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
-  (doc,sl) <- getDocumentAndSignatory did slid
+  (doc,sl) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
   ttype <- getField "type" >>= \case
     Just "auth" -> return CgiGrpAuth
@@ -171,7 +169,7 @@ collectRequest did slid = do
     Just cgiTransaction -> do
       certErrorHandler <- mkCertErrorHandler
       debugFunction <- mkDebugFunction
-      let transport = curlTransport SecureSSL (Just cgCertFile) cgGateway id certErrorHandler debugFunction
+      let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway id certErrorHandler debugFunction
           req = CollectRequest {
             crqPolicy = cgServiceID
           , crqTransactionID = cgiTransactionID cgiTransaction
@@ -202,11 +200,11 @@ collectRequest did slid = do
                 let signature = mk_binary $ fromMaybe (missing "signature") crsSignature
                 let ocspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
 
-                dbUpdate $ MergeBankIDAuthentication session_id slid BankIDAuthentication {
-                    bidaSignatoryName = signatoryName
-                  , bidaSignatoryPersonalNumber = signatoryPersonalNumber
-                  , bidaSignature = signature
-                  , bidaOcspResponse = ocspResponse
+                dbUpdate $ MergeCGISEBankIDAuthentication session_id slid CGISEBankIDAuthentication {
+                    cgisebidaSignatoryName = signatoryName
+                  , cgisebidaSignatoryPersonalNumber = signatoryPersonalNumber
+                  , cgisebidaSignature = signature
+                  , cgisebidaOcspResponse = ocspResponse
                 }
                 ctx <- getContext
                 let eventFields = do
@@ -222,12 +220,12 @@ collectRequest did slid = do
               (CgiGrpSignTransaction _ tbs _ _ _)   -> do
                 -- all the required attributes are supposed to always
                 -- be there, so bail out if this is not the case.
-                dbUpdate $ MergeBankIDSignature slid BankIDSignature {
-                    bidsSignatoryName = just_lookup "cert.subject.cn" crsAttributes
-                  , bidsSignatoryPersonalNumber = just_lookup "cert.subject.serialnumber" crsAttributes
-                  , bidsSignedText = tbs
-                  , bidsSignature = mk_binary $ fromMaybe (missing "signature") crsSignature
-                  , bidsOcspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
+                dbUpdate $ MergeCGISEBankIDSignature slid CGISEBankIDSignature {
+                    cgisebidsSignatoryName = just_lookup "cert.subject.cn" crsAttributes
+                  , cgisebidsSignatoryPersonalNumber = just_lookup "cert.subject.serialnumber" crsAttributes
+                  , cgisebidsSignedText = tbs
+                  , cgisebidsSignature = mk_binary $ fromMaybe (missing "signature") crsSignature
+                  , cgisebidsOcspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
                 }
                 dbUpdate $ ChargeCompanyForSEBankIDSignature did
 
@@ -240,30 +238,6 @@ collectRequest did slid = do
     mk_binary txt = either (invalid_b64 txt) Binary . B64.decode . T.encodeUtf8 $ txt
 
 ----------------------------------------
-
--- | Fetch the document for e-signing. Checks that the document
--- is in the correct state and the signatory hasn't signed yet.
-getDocumentAndSignatory :: (MonadDB m, MonadLog m, KontraMonad m, MonadThrow m,MonadBase IO m)
-            => DocumentID -> SignatoryLinkID -> m (Document,SignatoryLink)
-getDocumentAndSignatory did slid = dbQuery (GetDocumentSessionToken slid) >>= \case
-  Just mh -> do
-    logInfo_ "Document token found"
-    doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
-    when (documentstatus doc /= Pending) $ do
-      logInfo "Unexpected status of the document" $ object [
-          "expected" .= show Pending
-        , "given" .= show (documentstatus doc)
-        ]
-      respond404
-    -- this should always succeed as we already got the document
-    let slink = $fromJust $ getSigLinkFor slid doc
-    when (hasSigned slink) $ do
-      logInfo_ "Signatory already signed the document"
-      respond404
-    return (doc,slink)
-  Nothing -> do
-    logInfo_ "No document token found"
-    respond404
 
 getCompanyDisplayName :: (MonadDB m, MonadThrow m) => Document -> m (Maybe T.Text)
 getCompanyDisplayName doc = fmap T.pack . companycgidisplayname . companyinfo

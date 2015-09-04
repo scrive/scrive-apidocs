@@ -7,7 +7,7 @@
   "./app/scripts/signview/extradetails/*.jsx",
   "./app/scripts/signview/instructionsview/*.jsx",
   "./app/scripts/signview/attachments/*.jsx",
-  "./app/scripts/signview/identify/*.jsx",
+  "./app/scripts/signview/identify/**/*.jsx",
   "./app/scripts/common/editabletext.jsx",
   "./app/scripts/common/select.jsx",
   "./app/js/anchors.js",

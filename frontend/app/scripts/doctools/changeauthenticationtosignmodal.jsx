@@ -148,6 +148,20 @@ var ChangeAuthenticationModalView = React.createClass({
     }
     return text;
   },
+  getAuthenticationOptions: function () {
+    var model = this.props.model;
+    var sig = model.signatory();
+
+    var standard = {name: localization.docview.signatory.authenticationToSignStandard, value: "standard"};
+    var eleg = {name: localization.docview.signatory.authenticationToSignSEBankID, value: "eleg"};
+    var sms = {name: localization.docview.signatory.authenticationToSignSMSPin, value : "sms_pin"};
+
+    if (sig.authenticationToView() === "no_bankid") {
+      return [standard, sms];
+    }
+
+    return [standard, eleg, sms];
+  },
   render : function() {
    var model = this.props.model;
    var signatory = model.signatory();
@@ -160,16 +174,7 @@ var ChangeAuthenticationModalView = React.createClass({
                     name={this.getAuthenticationMethodNameText()}
                     onSelect={this.setAuthenticationMethod}
                     width={348}
-                    options={ [ { name : localization.docview.signatory.authenticationToSignStandard,
-                                  value : "standard"
-                                }
-                              , { name : localization.docview.signatory.authenticationToSignSEBankID,
-                                  value : "eleg"
-                                }
-                              , { name : localization.docview.signatory.authenticationToSignSMSPin,
-                                  value : "sms_pin"
-                                }
-                              ] }
+                    options={this.getAuthenticationOptions()}
            />
            {/*if*/ model.newAuthenticationMethod() != 'standard' &&
            <div>
@@ -220,7 +225,7 @@ return function(args) {
           function() {
             args.onAction();
           }
-        , function () {
+        , function (err) {
             LoadingDialog.close();
             new FlashMessage({ content : localization.docview.changeAuthentication.errorSigned
                              , type: "error"});

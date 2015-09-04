@@ -452,8 +452,8 @@ instance Arbitrary CgiGrpTransaction where
     <*> (T.pack . fromSNN <$> arbitrary)
     <*> (pure tempSessionID)
 
-instance Arbitrary BankIDSignature where
-  arbitrary = BankIDSignature
+instance Arbitrary CGISEBankIDSignature where
+  arbitrary = CGISEBankIDSignature
     <$> (C.renderXMLContent <$> arbitrary)
     <*> (C.renderXMLContent <$> arbitrary)
     <*> (C.renderXMLContent <$> arbitrary)
@@ -461,7 +461,7 @@ instance Arbitrary BankIDSignature where
     <*> arbitrary
 
 instance Arbitrary ESignature where
-  arbitrary = BankIDSignature_ <$> arbitrary
+  arbitrary = CGISEBankIDSignature_ <$> arbitrary
 
 -- generate (byte)strings without \NUL in them since
 -- hdbc-postgresql plays around with these chars and

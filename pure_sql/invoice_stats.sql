@@ -97,7 +97,17 @@ SELECT escape_for_csv(companies.name) AS "Company name"
           FROM chargeable_items chi
          WHERE chi.company_id = companies.id
            AND chi.type = 2 -- eleg signatures
-           AND date_trunc('month', chi.time) = thetime.time) as "E-leg signatures"
+           AND date_trunc('month', chi.time) = thetime.time) as "Swedish BankID signatures"
+     , (SELECT sum(chi.quantity)
+          FROM chargeable_items chi
+         WHERE chi.company_id = companies.id
+           AND chi.type = 3
+           AND date_trunc('month', chi.time) = thetime.time) as "Swedish BankID authorization"
+     , (SELECT sum(chi.quantity)
+          FROM chargeable_items chi
+         WHERE chi.company_id = companies.id
+           AND chi.type = 4
+           AND date_trunc('month', chi.time) = thetime.time) as "Norwegian BankID authorization"
      , (SELECT count(*)
           FROM users
          WHERE (users.deleted IS NULL OR users.deleted > thetime.time)

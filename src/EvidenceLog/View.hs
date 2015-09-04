@@ -25,6 +25,7 @@ import Doc.DocStateData
 import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
 import Doc.SignatoryIdentification (SignatoryIdentifierMap, siLink, siFullName, signatoryIdentifierMap, signatoryIdentifier)
 import EID.Authentication.Model
+import EID.Nets.Data
 import EID.Signature.Model
 import EvidenceLog.Model
 import KontraPrelude
@@ -230,12 +231,16 @@ simplyfiedEventText target mactor d sim dee = do
                 LegacyTeliaSignature_{} -> Nothing
                 LegacyNordeaSignature_{} -> Nothing
                 LegacyMobileBankIDSignature_{} -> Nothing
-                BankIDSignature_ BankIDSignature{..} -> Just bidsSignatoryName
+                CGISEBankIDSignature_ CGISEBankIDSignature{..} -> Just cgisebidsSignatoryName
           when (evType dee == Current AuthenticatedToViewEvidence) $ do
             dbQuery (GetEAuthenticationWithoutSession slinkid) >>= \case
               Nothing -> return ()
-              Just esig -> F.value "provider" $ case esig of
-                BankIDAuthentication_{} -> Just ("Swedish BankID" ::String)
+              Just esig -> case esig of
+                CGISEBankIDAuthentication_{} -> F.value "provider" $ Just ("Swedish BankID" ::String)
+                NetsNOBankIDAuthentication_ n -> do
+                  F.value "provider" $ Just ("Norwegian BankID" ::String)
+                  F.value "signatory_name" $ netsNOBankIDSignatoryName n
+                  F.value "signatory_dob" $ netsNOBankIDDateOfBirth n
 
         F.value "text" $ String.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "signatory" $ (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) <$> mslinkid

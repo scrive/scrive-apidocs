@@ -5,12 +5,13 @@ module AppConf (
   ) where
 
 import Data.Default
-import Data.Text (Text)
 import Data.Unjson
 import Data.Word
 import qualified Data.Map as Map
+import qualified Data.Text as T
 
 import EID.CGI.GRP.Config
+import EID.Nets.Config
 import GuardTime (GuardTimeConf(..))
 import HostClock.System (defaultNtpServers)
 import HubSpot.Conf (HubSpotConf(..))
@@ -33,7 +34,7 @@ data AppConf = AppConf {
   , hostpart           :: String                       -- ^ hostname as it should looklike in emails for example
   , useHttps           :: Bool                         -- ^ should we redirect to https?
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
-  , dbConfig           :: Text                         -- ^ postgresql configuration
+  , dbConfig           :: T.Text                       -- ^ postgresql configuration
   , logConfig          :: LogConfig                    -- ^ logging configuration
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , guardTimeConf      :: GuardTimeConf
@@ -48,7 +49,9 @@ data AppConf = AppConf {
   , hubspotConf        :: HubSpotConf                  -- ^ for hubspot integration
   , googleanalyticsToken      :: String                -- ^ for google-analytics integration
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
-  , salesforceConf     :: SalesforceConf             -- ^ Configuration of salesforce
+  , salesforceConf     :: SalesforceConf               -- ^ Configuration of salesforce
+  , netsConfig         :: Maybe NetsConfig             -- ^ Configuration of Nets - NO BankID provider
+
   } deriving (Eq, Ord, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -129,6 +132,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "salesforce"
       salesforceConf
       "Configuration of salesforce"
+  <*> fieldOpt "nets"
+      netsConfig
+      "Configuration of Nets - NO BankID provider"
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf
@@ -176,6 +182,13 @@ instance Default AppConf where
                               , salesforceIntegrationAPIToken  = "12ef3_22"
                               , salesforceIntegrationAPISecret = "a1033b2caa"
                               }
+     , netsConfig        = Just $ NetsConfig {
+                                netsMerchantIdentifier = "SRWUOEDLAXDV"
+                              , netsMerchantPassword = "21r1ee95bp4n"
+                              , netsIdentifyUrl = "https://ti-pp.bbs.no/its/index.html"
+                              , netsAssertionUrl = "https://ti-pp.bbs.no/saml1resp/getassertion"
+                              }
+
     }
 
 instance HasSalesforceConf AppConf where

@@ -1,0 +1,245 @@
+html,body {
+	height: 100%;
+  background-color: #FFFFFF;
+}
+
+body,div,span,form,input,a,.frame {
+	color: rgb(112, 111, 111);
+	font-family: verdana;
+	font-size: 14px;
+	font-weight: normal;
+	margin: 0px;
+	padding: 0px;
+}
+
+a {
+	color: #00f;
+}
+
+label{
+	display: block;
+	float: left;
+	color: rgb(112, 111, 111);
+	margin-bottom: 5px;
+}
+
+input.text {
+	clear: both;
+	display: block;
+	z-index: 1;
+	margin-bottom: 10px;
+	width: 9em;
+	height: auto;
+	-moz-box-sizing: border-box;
+	float: left;
+	border-radius: 6px;
+	padding: 2px;
+	background-color: rgb(227, 227, 227);
+	color: rgb(112, 111, 111);;
+	border: 1px solid rgb(198, 198, 198);
+}
+
+input.formcontrol {
+ 	color: rgb(255, 255, 255);
+    text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+    background-color: rgb(0, 81, 145);
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    border-radius: 6px;
+}
+
+.ipageheader {
+	margin-top: 2%;
+	font-size: 24px;
+	font-weight: 500;
+	color: rgb(0, 81, 145);
+}
+
+.body {
+	display: block;
+	margin-bottom: 10px;
+}
+
+div.button_holder {
+	clear: both;
+	float: left;
+}
+
+#bidmob_content {
+	position: relative;
+	width: 388px;
+	color: #002337; /*  R=0, G=35, B=55 */
+	font-family: "Arial", serif;
+}
+
+#bidmob_content * {
+	margin: 0;
+	padding: 0;
+}
+
+div.bidmobil {
+	position: fixed;
+	text-align: left;
+	width: 388px;
+	height: 240px;
+	color: #666666;
+	font-family: "Arial", serif;
+	font-size: 10px;
+}
+
+div.bidmobil * {
+	position: absolute;
+	font-family: "Arial", serif;
+	font-size: 10px;
+}
+
+div#bidmob_errtext {
+	margin-left: 5px;
+	width: 250px;
+	height: 55px;
+	left: 65px;
+	top: 170px;
+}
+
+div#bidmob_header {
+	left: 30px;
+	top: 72px;
+	font-size: 12px;
+	font-weight: bold;
+}
+
+#bidmob_content label{
+	width: 150px;
+}
+
+label[for="bidmob_mobileno"] {
+	left: 30px;
+	top: 112px;
+}
+
+label[for="bidmob_mobilealias"] {
+	left: 218px;
+	top: 112px;
+}
+
+input#bidmob_mobileno {
+	left: 30px;
+	top: 133px;
+}
+
+input#bidmob_mobilealias {
+	left: 218px;
+	top: 133px;
+}
+
+input#bidmob_next {
+	top: 205px;
+	left: 328px;
+}
+
+input#bidmob_cancel {
+	top: 205px;
+	left: 30px;
+}
+
+div#bidmob_reflabel {
+	left: 30px;
+	top: 108px;
+	width: 190px;
+}
+
+div#bidmob_reftext {
+	left: 30px;
+	top: 125px;
+	width: 190px;
+}
+
+div#bidmob_refcode {
+	font-weight: bold;
+	top: 108px;
+	left: 80px;
+}
+
+div#bidmob_instructions {
+	top: 190px;
+	left: 30px;
+	width: 220px;
+}
+
+#bidmob_receipt #bidmob_header {
+	top:104px;
+	font-size: 24px;
+	left:30px;
+	font-weight: normal;
+}
+
+#bankid_app a {
+  font-size: 24px;
+}
+
+.ipage {
+  padding-left: 0px;
+}
+div#bidmob_content {
+  margin-top: 0px;
+  margin-left: 0px;
+}
+div#bidmob_layout2 {
+  background-image: none;
+  text-align: left;
+  width: 100%;
+}
+#bidmob_receipt div#bidmob_layout1{
+  background-image: none;
+  width: 100%;
+}
+#bidmob_wait div#bidmob_header {
+  display: none;
+}
+div#bidmob_logo {
+  display: block;
+  top: 4px;
+  left: 65%;
+  background-image: url("../img/no_bankid/logo_BIM.jpg");
+  width: 109px;
+  height: 46px;
+}
+div#bidmob_refcode {
+  font-family: "Arial", serif;
+  text-align: center;
+  font-size: 30px;
+  background-color: white;
+  border: 1px solid grey;
+  border-radius: 15px;
+  width: 89%;
+  padding-top: 5%;
+  padding-bottom: 5%;
+  left: 5%;
+  top: 70px;
+}
+div#bidmob_reflabel {
+  overflow: hidden;
+  top: 56px;
+}
+div#bidmob_reftext {
+  font-size: 16px;
+  top: 245px;
+  text-align: center;
+  width: 89%;
+  left: 5%;
+  margin-top: -10px;
+}
+div#bidmob_work {
+  display: block;
+  top: 180px;
+  left: 42%;
+  background-image: url("../img/no_bankid/ajax-loader.gif");
+  width: 33px;
+  height: 33px;
+}
+div#bidmob_instructions {
+  font-size: 16px;
+  top: 320px;
+  text-align: center;
+  width: 89%;
+  left: 5%;
+}

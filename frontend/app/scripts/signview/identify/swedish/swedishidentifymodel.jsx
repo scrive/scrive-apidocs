@@ -1,19 +1,19 @@
 // ignore model in coverage for now.
 /* istanbul ignore next */
-define(["legacy_code", "Underscore", "Backbone", "React", "eleg/bankidsigning"],
-  function (legacy_code, _, Backbone, React, BankIDSigning) {
+define(["legacy_code", "Underscore", "Backbone", "eleg/bankidsigning"],
+  function (legacy_code, _, Backbone, BankIDSigning) {
   return Backbone.Model.extend({
     defaults: {
       doc: undefined,
       siglinkid: 0,
-      type: "swedish",
       step: "identify",
       transaction: undefined,
+      iframe: undefined,
       statusText: undefined,
       thisDevice: true
     },
     initialize: function (args) {
-      _.bindAll(this, "identifySwedish", "identifyNorwegian", "cancel", "back");
+      _.bindAll(this, "identify", "cancel", "back");
     },
     doc: function () {
       return this.get("doc");
@@ -25,7 +25,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "eleg/bankidsigning"],
       return this.get("transaction");
     },
     isSwedish: function () {
-      return this.doc().currentSignatory().seBankIDAuthenticationToView();
+      return true;
     },
     isNorwegian: function () {
       return false;
@@ -63,7 +63,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "eleg/bankidsigning"],
     setThisDevice: function (v) {
       this.set({thisDevice: v});
     },
-    identifySwedish: function () {
+    identify: function () {
       var self = this;
       var bankID = new BankIDSigning({
         type: "auth",
@@ -92,10 +92,6 @@ define(["legacy_code", "Underscore", "Backbone", "React", "eleg/bankidsigning"],
       self.setStatusText(bankID.statusMessage());
       self.setProcessing();
     },
-    identifyNorwegian: function (type, phoneNumber) {
-      this.setProcessing();
-    },
-
     cancel: function () {
       if (this.transaction()) {
         this.transaction().cancel();

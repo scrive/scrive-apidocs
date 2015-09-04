@@ -345,9 +345,10 @@ var DocumentViewSignatoryView = React.createClass({
       var signatory = model.signatory();
       if(signatory.standardAuthenticationToView()) {
           return localization.docview.signatory.authenticationToViewStandard;
-      }
-      else if (signatory.seBankIDAuthenticationToView()) {
+      } else if (signatory.seBankIDAuthenticationToView()) {
           return localization.docview.signatory.authenticationToViewSEBankID;
+      } else if (signatory.noBankIDAuthenticationToView()) {
+          return localization.docview.signatory.authenticationToViewNOBankID;
       }
     },
     getAuthenticationToSignMethodText : function() {

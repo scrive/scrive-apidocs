@@ -94,6 +94,8 @@ var mustLoadBefore = {
     StateMachine: '../bower_components/javascript-state-machine/state-machine',
     tinycolor : '../libs/tinycolor-min',
     html2canvas: '../libs/html2canvas',
+    base64: '../libs/base64',
+
     /**
      *  Legacy code imports
      */

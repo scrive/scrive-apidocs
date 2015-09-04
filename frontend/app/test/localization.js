@@ -3,11 +3,20 @@
         {      code : "en"
              , welcomeback : "Welcome!"
              , reloadPage : "Reload page"
-             , poweredBy : "E-signing powered by Scrive"
              , identifyDocument: "Document"
              , identifyBankId: "Identify"
              , identifyBankIdNo: "BankID"
              , identifyBankIdNoMobile: "BankID on mobile"
+             , identifyBankIdError: {
+               failed: "Identification with Norwegian BankID failed."
+               , canceled: "Identification with Norwegian BankID was canceled."
+               , useragent: "Norwegian BankID do not support your browser. Try another browser."
+               , auth: "Norwegian BankID log in was not successful."
+               , blocked: "Your Norwegian BankID is blocked. Contact your bank."
+               , revoked: "Your Norwegian BankID has been revoked. Contact your bank."
+               , expired: "Your Norwegian BankID has expired. Contact your bank."
+               , mobile: "Wrong mobile phone number or date of birth has been supplied. Contact the sender."
+             }
              , identifyPhoneError: "The phone number must be 8 digits."
              , identifyPhoneNumber: "Phone"
              , identifyPhoneNumber8: "Phone (8 digits)"
@@ -17,7 +26,8 @@
              , startBankId: "Start your BankID App"
              , yourIdNumber: "Your ID number"
              , idNumber: "ID number"
-             , verifyIdentity : "to see the document verify your identity"
+             , verifyIdentityWithName : "<span class='name-of-signatory'></span>, to see the document verify your identity"
+             , verifyIdentityWithoutName : "To see the document verify your identity"
              , problemContactingServer : "We're experiencing difficulties handling your document.<br/>Please reload the page and try again."
              , esigningpoweredbyscrive : "E-signing powered by Scrive"
              , sessionTimedoutInSignview : "Your session has timed out. You can access your document again by following the link in your email."
@@ -60,8 +70,8 @@
              , you : "you"
              , searchBoxButtonText : "Search"
              , downloadPDF : "Download PDF"
-             , reviewAttachment: "Review"
-             , reviewPDF: "Review"
+             , reviewAttachment: "View"
+             , reviewPDF: "View"
              , deletePDF: "Delete"
              , attachmentType : "Attachments:"
              , requestedAttachments : "Requested attachments"
@@ -227,6 +237,7 @@
               , no : "Norwegian"
               , el : "Greek"
               , fi : "Finnish"
+              , is : "Icelandic"
               , svInSv :"Svenska"
               , enInEn : "English"
               , deInDe : "Deutsch"
@@ -239,6 +250,7 @@
               , noInNo : "Norsk"
               , elInEl : "ελληνικά"
               , fiInFi : "Suomi"
+              , isInIs : "Íslenska"
             }
          , csv : {
                 title : "Multisend"
@@ -255,6 +267,7 @@
 
            }
           , toStart: {
+               docSent: "Your document has been sent!",
                sendForSigning: "Initiate signing"
                , backFromSigningPage: "Back"
                , someFieldsNotFilledInCorrectly: "Some fields are not filled out correctly."
@@ -283,22 +296,6 @@
              , anyoneElse: "Would you like me to send you an email about how to make your organization more efficient with e-signing?"
              , phoneNumber: "Work phone number"
          }
-         , ftue : {
-               step1: "Step 1"
-             , step2: "Step 2"
-             , step3: "Step 3"
-             , step4: "Step 4"
-             , step1description: "Here's a sample document for you.<br />If it looks OK, click \"Use the sample document\""
-             , step2description: "You are the sender of this document. <br />Who would you like to add as a recipient?"
-             , step3description: "Here you can add the email address of your recipient (all other fields are optional).<br />Then click \"Save\" when you're finished."
-             , step3descriptionScriver: "Below we have added Viktor Wrede's contact information. He will receive and e-sign this sample document.<br />Click \"Save\" to go to the last step."
-             , step3descriptionYourself: "Below we have added your contact information, so you will be the recipient of this sample document.<br />Click \"Save\" to go to the last step."
-             , step4description: "Click \"Start signing\" to sign and send the document!"
-             , useSampleDocument: "Use the sample document"
-             , addYourself: "Add yourself!"
-             , addAScriver: "Add Viktor at Scrive!"
-             , documentTitle: "Demo of e-signing"
-           }
          , phonePlaceholder: "Phone (+46701234567)"
          , designview : {
               dndDisabled: "You need at least one signing party to place a signature box.",
@@ -373,10 +370,14 @@
                , role : "Role"
                , roleSignatory : "Signing party"
                , roleViewer : "Viewer"
-               , authentication : "Authentication"
-               , authenticationStandard : "No extra authentication"
-               , authenticationELeg : "eID"
-               , authenticationSMSPin : "PIN by SMS"
+               , authenticationToView : "Authentication to view"
+               , authenticationToViewStandard : "No extra authentication"
+               , authenticationToViewSEBankID : "Swedish BankID"
+               , authenticationToViewNOBankID : "Norwegian BankID"
+               , authenticationToSign : "Authentication to sign"
+               , authenticationToSignStandard : "No extra authentication"
+               , authenticationToSignSEBankID : "Swedish BankID"
+               , authenticationToSignSMSPin : "PIN by SMS"
                , confirmation : "Confirmation"
                , confirmationEmail : "Email"
                , confirmationSMS : "SMS"
@@ -437,6 +438,7 @@
              , startSigningModalText : "Are you sure you want to send the document?"
              , startSigningModalTextWithSendout : "Are you sure you want to send the document to: <BR/> <span class='put-names-of-parties-here'></span>"
              , lastViewerOnlyGetsConfirmation : "A viewer who is last in the invitation order only gets the confirmation message."
+             , viewerCantHaveAuthorisation : "Authentication method cannot be set for a viewer."
          }
          , validation : {
                 required: "<span class='put-field-name'></span> required."
@@ -533,20 +535,6 @@
              , pending  : "Waiting for signing parties to sign"
              , goToSignView : "Go to the signing page"
              , downloadPdf : "Download PDF"
-             , firsttime : {
-                   emailDelivered : "No Template Found for: InvitationDeliveredByEmailText"
-                 , emailRead : "No Template Found for: MarkInvitationReadEvidenceText"
-                 , tryYourself : "Would you like to give something else a try?"
-                 , linkOpened : "No Template Found for: SignatoryLinkVisitedText"
-                 , documentSigned : "No Template Found for: SignDocumentEvidenceText"
-                 , documentSealed : "No Template Found for: AttachGuardtimeSealedFileEvidenceText"
-                 , branding: "Brand Scrive with your colours and logo"
-                 , contact: "Learn more about Scrive from our expert"
-                 , contactdetails: "Viktor will be your personal e-signing expert.<br />You can reach him at +46708 88 47 49 or at <a class='put-link-to-mail-viktor-here'>viktor@scrive.com</a>"
-                 , upload: "Upload my own document"
-                 , docsent: "Your document has been sent!"
-                 , dochistory: "With Scrive E-sign, you can track the progress of your documents.<br />See an example of the document updates, below:"
-             }
          }
          , history : {
                time  : "Time"
@@ -583,8 +571,8 @@
              , signature: "Click there"
              , signArrowLabel: "Click there"
              , textfield: "Write there"
-             , filladitionfields : "Additional details"
-             , filladitionfieldsdescription : "Please submit additional information about yourself."
+             , filladitionfields : "About you"
+             , filladitionfieldslabel: "About you"
              , additionalFieldsMissingInModal : "Please submit additional information about yourself."
              , mandatoryAction: "Mandatory action"
              , optionalAction: "Optional action"
@@ -633,7 +621,7 @@
         }
         , docview : {
             signatory : {
-                editAuthenticationMethod: "Edit"
+                editAuthenticationToSignMethod: "Edit"
               , invitationOrder: "Invitation order"
               , invitationMethod: "Invitation method"
               , invitationEmail: "email"
@@ -645,10 +633,14 @@
               , role: "Role"
               , roleSignatory: "signing party"
               , roleViewer: "viewer"
-              , authentication: "Authentication"
-              , authenticationStandard: "no extra authentication"
-              , authenticationSMSPin: "PIN by SMS"
-              , authenticationELeg: "eID"
+              , authenticationToView: "Authentication to view"
+              , authenticationToViewStandard: "no extra authentication"
+              , authenticationToViewSEBankID: "Swedish BankID"
+              , authenticationToViewNOBankID: "Norwegian BankID"
+              , authenticationToSign: "Authentication to sign"
+              , authenticationToSignStandard: "no extra authentication"
+              , authenticationToSignSMSPin: "PIN by SMS"
+              , authenticationToSignSEBankID: "Swedish BankID"
               , confirmation: "Confirmation method"
               , confirmationEmail: "email"
               , confirmationSMS: "SMS"
@@ -861,15 +853,6 @@
                     , idleRemark  : "Idle documents will be moved to trash after <span class='put-idledoctimeout-here'></span> days."
                     , idleRemark1 : "Idle documents will be moved to trash after 1 day."
                 }
-            , ftue: {
-                       title: "Your signed document has now been safely stored in your own e-archive"
-                     , subtitleInJustAFewMinutes: "In just a few minutes, you:"
-                     , subtitleIsntThisHowSimple: "Isn't this how simple signing should be for your customers?"
-                     , subtitleReturned: "Returned the signed document to the sender"
-                     , subtitleReviewed: "Reviewed and signed a document"
-                     , subtitleSaved: "Saved a digital copy in your personal e-archive"
-                     , button: "Try sending a sample document"
-                       }
             ,  templates : {
                        name :  "Templates"
                     ,  remove : {
@@ -1033,7 +1016,7 @@
               body  : "You have reached the monthly usage limit of 100 sent documents. Please <a class='put-link-to-payments-here'>contact support</a> to increase the limit. Sorry for the inconvenience."
             },
             csv : {
-              body  : "Your file contains <span class='put-no-of-parties-here'></span> recipients and you have only <span class='put-docs-left-here'></span> documents left to send. Please <a class='put-link-to-payments-here'>contact support</a> to increase the limit."
+              body  : "Your file contains <span class='put-no-of-parties-here'></span> recipients and you have only <span class='put-docs-left-here'></span> documents left to send. Please <a class='put-link-to-contact-here'>contact Scrive</a> to increase the limit."
             }
           },
            button : {
@@ -1090,6 +1073,7 @@
               , companycountry : "Country"
               , newEmail       : "New email address"
               , newEmailAgain  : "Confirm new email address"
+              , changeEmailCurrentEmail : "Current email address"
               , changeEmailButton : "Change"
               , changeEmailExplaination : "Your email and username are the same in Scrive. By changing the email you will also change the username for logging in. To verify your new address we will send you a confirmation email. Please follow the instructions in the email to complete the change."
               , changeEmailTitle : "Change username and email"
@@ -1167,7 +1151,7 @@
           , phone : "Phone"
           , email : "Email"
           , textField : "Write there"
-          , reviewPDF : "Review"
+          , reviewPDF : "View"
           , rejectButton : "Reject and reply"
           , signButton : "Sign"
           , attachmentsTitle : "Read attachment"
@@ -1260,6 +1244,8 @@
       , integrations: {
               salesforce : "Salesforce"
             , salesforceDescription : "Salesforce integration is active for this account"
+            , basicAuth : "Basic Auth"
+            , basicAuthDescription : "Basic Auth adds an Authorization header to all callbacks."
             , constantUrlCallback : "Callbacks"
             , constantUrlCallbackDescription : "All callbacks for this account will be redirected to <strong class='put-url-here'/>"
       }

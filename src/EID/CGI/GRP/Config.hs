@@ -1,7 +1,7 @@
 module EID.CGI.GRP.Config where
 
-import Data.Text (Text)
 import Data.Unjson
+import qualified Data.Text as T
 
 import KontraPrelude
 
@@ -11,9 +11,9 @@ data CgiGrpConfig = CgiGrpConfig {
 -- | Path to the certificate file
 , cgCertFile    :: FilePath
 -- | Service ID registered with CGI
-, cgServiceID   :: Text
+, cgServiceID   :: T.Text
 -- | Display name registered with CGI
-, cgDisplayName :: Text
+, cgDisplayName :: T.Text
 } deriving (Eq, Ord, Show)
 
 instance Unjson CgiGrpConfig where

@@ -98,6 +98,7 @@ instance ToSQL [[String]] where
 data AuthenticationToViewMethod
   = StandardAuthenticationToView
   | SEBankIDAuthenticationToView
+  | NOBankIDAuthenticationToView
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationToViewMethod where
@@ -110,8 +111,9 @@ instance FromSQL AuthenticationToViewMethod where
     case n :: Int16 of
       1 -> return StandardAuthenticationToView
       2 -> return SEBankIDAuthenticationToView
+      3 -> return NOBankIDAuthenticationToView
       _ -> throwM RangeError {
-        reRange = [(1, 2)]
+        reRange = [(1, 3)]
       , reValue = n
       }
 
@@ -119,6 +121,7 @@ instance ToSQL AuthenticationToViewMethod where
   type PQDest AuthenticationToViewMethod = PQDest Int16
   toSQL StandardAuthenticationToView      = toSQL (1::Int16)
   toSQL SEBankIDAuthenticationToView      = toSQL (2::Int16)
+  toSQL NOBankIDAuthenticationToView      = toSQL (3::Int16)
 
 ---------------------------------
 
@@ -147,7 +150,7 @@ instance FromSQL AuthenticationToSignMethod where
 instance ToSQL AuthenticationToSignMethod where
   type PQDest AuthenticationToSignMethod = PQDest Int16
   toSQL StandardAuthenticationToSign      = toSQL (1::Int16)
-  toSQL SEBankIDAuthenticationToSign = toSQL (2::Int16)
+  toSQL SEBankIDAuthenticationToSign      = toSQL (2::Int16)
   toSQL SMSPinAuthenticationToSign        = toSQL (3::Int16)
 
 ---------------------------------

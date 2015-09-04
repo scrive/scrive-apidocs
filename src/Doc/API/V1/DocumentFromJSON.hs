@@ -23,6 +23,7 @@ instance FromJSValue AuthenticationToViewMethod where
     return $ case j of
       Just "standard"  -> Just StandardAuthenticationToView
       Just "se_bankid" -> Just SEBankIDAuthenticationToView
+      Just "no_bankid" -> Just NOBankIDAuthenticationToView
       _               -> Nothing
 
 

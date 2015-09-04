@@ -31,7 +31,12 @@ module Doc.DocStateQuery
     , getDocByDocIDForAuthorOrAuthorsCompanyAdmin
     , getMagicHashForDocumentSignatoryWithUser
     , signatoryNeedsToIdentifyToView
+    , getDocumentAndSignatoryForEID
     ) where
+
+import Control.Monad.Base
+import Control.Monad.Catch
+import Log
 
 import DB
 import Doc.DocInfo
@@ -40,6 +45,7 @@ import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocument)
 import Doc.Model
 import Doc.SignatoryLinkID
+import Doc.Tokens.Model
 import EID.Authentication.Model
 import Kontra
 import KontraPrelude
@@ -112,15 +118,43 @@ getMagicHashForDocumentSignatoryWithUser did sigid user = do
 signatoryNeedsToIdentifyToView :: (Kontrakcja m , DocumentMonad m) => SignatoryLink -> m Bool
 signatoryNeedsToIdentifyToView sl = do
   doc <- theDocument
-  if (
-        (signatorylinkauthenticationtoviewmethod sl /= SEBankIDAuthenticationToView)
-     || (hasSigned sl)
-     || (not $ isPending doc)
-     )
+  if (hasSigned sl || (not $ isPending doc))
   then return False
-  else do
+  else case (signatorylinkauthenticationtoviewmethod sl) of
+   StandardAuthenticationToView -> return False
+   NOBankIDAuthenticationToView -> do
     sid <- ctxsessionid <$> getContext
     auth <- dbQuery (GetEAuthentication sid $ signatorylinkid sl)
     case auth of
-      Just (BankIDAuthentication_ _) -> return False
+      Just (NetsNOBankIDAuthentication_ _) -> return False
       _ -> return True
+   SEBankIDAuthenticationToView -> do
+    sid <- ctxsessionid <$> getContext
+    auth <- dbQuery (GetEAuthentication sid $ signatorylinkid sl)
+    case auth of
+      Just (CGISEBankIDAuthentication_ _) -> return False
+      _ -> return True
+
+-- | Fetch the document and signatory for e-signing or e-auth. Checks that the document
+-- is in the correct state and the signatory hasn't signed yet. Requires session token to be set
+getDocumentAndSignatoryForEID :: (MonadDB m, MonadLog m, KontraMonad m, MonadThrow m,MonadBase IO m)
+            => DocumentID -> SignatoryLinkID -> m (Document,SignatoryLink)
+getDocumentAndSignatoryForEID did slid = dbQuery (GetDocumentSessionToken slid) >>= \case
+  Just mh -> do
+    logInfo_ "Document token found"
+    doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
+    when (documentstatus doc /= Pending) $ do
+      logInfo "Unexpected status of the document" $ object [
+          "expected" .= show Pending
+        , "given" .= show (documentstatus doc)
+        ]
+      respond404
+    -- this should always succeed as we already got the document
+    let slink = $fromJust $ getSigLinkFor slid doc
+    when (hasSigned slink) $ do
+      logInfo_ "Signatory already signed the document"
+      respond404
+    return (doc,slink)
+  Nothing -> do
+    logInfo_ "No document token found"
+    respond404

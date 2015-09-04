@@ -14,7 +14,7 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Data.Data
 import Data.Int
-import Data.Text (Text)
+import qualified Data.Text as T
 
 import Crypto.RNG
 import DB
@@ -47,8 +47,8 @@ instance ToSQL CgiGrpTransactionType where
   toSQL CgiGrpSign = toSQL (2::Int16)
 
 data CgiGrpTransaction =
-    CgiGrpAuthTransaction !SignatoryLinkID  !Text !Text !SessionID
-  | CgiGrpSignTransaction !SignatoryLinkID  !Text !Text !Text !SessionID
+    CgiGrpAuthTransaction !SignatoryLinkID  !T.Text !T.Text !SessionID
+  | CgiGrpSignTransaction !SignatoryLinkID  !T.Text !T.Text !T.Text !SessionID
   deriving (Eq, Ord, Show)
 
 
@@ -60,15 +60,15 @@ cgiSignatoryLinkID :: CgiGrpTransaction -> SignatoryLinkID
 cgiSignatoryLinkID (CgiGrpAuthTransaction slid _ _ _) = slid
 cgiSignatoryLinkID (CgiGrpSignTransaction slid _ _ _ _) = slid
 
-cgiTextToBeSigned :: CgiGrpTransaction -> Maybe Text
+cgiTextToBeSigned :: CgiGrpTransaction -> Maybe T.Text
 cgiTextToBeSigned (CgiGrpAuthTransaction _ _ _ _) = Nothing
 cgiTextToBeSigned (CgiGrpSignTransaction _ tbs _ _ _) = Just tbs
 
-cgiTransactionID  :: CgiGrpTransaction -> Text
+cgiTransactionID  :: CgiGrpTransaction -> T.Text
 cgiTransactionID  (CgiGrpAuthTransaction _ tid _ _) = tid
 cgiTransactionID  (CgiGrpSignTransaction _ _ tid _ _) = tid
 
-cgiOrderRef :: CgiGrpTransaction -> Text
+cgiOrderRef :: CgiGrpTransaction -> T.Text
 cgiOrderRef (CgiGrpAuthTransaction _ _ orf _) = orf
 cgiOrderRef (CgiGrpSignTransaction _ _ _ orf _) = orf
 
@@ -126,7 +126,7 @@ instance (KontraMonad m, MonadDB m, MonadThrow m)
 
 ----------------------------------------
 
-fetchCgiGrpTransaction :: (CgiGrpTransactionType,SignatoryLinkID, Maybe Text, Text, Text, SessionID) -> CgiGrpTransaction
+fetchCgiGrpTransaction :: (CgiGrpTransactionType,SignatoryLinkID, Maybe T.Text, T.Text, T.Text, SessionID) -> CgiGrpTransaction
 fetchCgiGrpTransaction (cgitt, slid, mttbs, transaction_id, order_ref, session_id) =
     case cgitt of
       CgiGrpAuth -> CgiGrpAuthTransaction  slid transaction_id order_ref session_id

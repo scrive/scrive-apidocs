@@ -119,8 +119,10 @@ window.Field = Backbone.Model.extend({
             return new NotEmptyValidation().validateData(this.value());
         else if (this.isEmail())
             return new EmailValidation().validateData(this.value());
+        if (this.isSSN() && (this.signatory().noBankIDAuthenticationToView()))
+            return new SSNForNOBankIDValidation().validateData(this.value());
         if (this.isSSN() && (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView()))
-            return new SSNForElegValidation().validateData(this.value());
+            return new SSNForSEBankIDValidation().validateData(this.value());
         else if (this.isText() && (this.value() != ""))
             return true;
         else if (this.canBeIgnored())
@@ -217,9 +219,13 @@ window.Field = Backbone.Model.extend({
       return concatValidations;
     },
     validateSSN: function() {
-      if (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView())
-        return new EmptyValidation().or(new SSNForElegValidation());
-      return new Validation();
+      if (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView()) {
+        return new EmptyValidation().or(new SSNForSEBankIDValidation());
+      } else if (this.signatory().noBankIDAuthenticationToView()) {
+        return new EmptyValidation().or(new SSNForNOBankIDValidation());
+      } else {
+        return new Validation();
+      }
     },
     validateCheckbox: function() {
       var field = this;
@@ -238,6 +244,9 @@ window.Field = Backbone.Model.extend({
          signatory.mobileConfirmationDelivery()
         ) {
         return new PhoneValidation().or(new EmptyValidation());
+      }
+      if (signatory.noBankIDAuthenticationToView()) {
+        return new EmptyValidation().or(new PhoneValidationNO());
       }
       return new Validation();
     },

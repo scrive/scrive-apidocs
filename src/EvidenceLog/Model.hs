@@ -19,10 +19,10 @@ import Control.Monad.Catch
 import Control.Monad.Identity
 import Data.Int
 import Data.List.Utils (replace)
-import Data.Text (pack)
 import Data.Typeable
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
+import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import DB
@@ -111,7 +111,7 @@ evidenceLogText event textFields masl mmsg = do
 parseEventTextTemplate :: MonadThrow m => String -> String -> m XMLContent
 parseEventTextTemplate name s =
   either ($unexpectedErrorM . (("Cannot parse event template " ++ name ++ " with content " ++ s ++ ": ") ++) . show) (return . CleanXMLContent) $
-    parseXMLContent $ pack s
+    parseXMLContent $ T.pack s
 
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor) = do
@@ -308,7 +308,8 @@ data CurrentEvidenceEventType =
   UpdateFieldNameEvidence                      |
   VisitedViewForAuthenticationEvidence         |
   VisitedViewForSigningEvidence                |
-  AuthenticatedToViewEvidence
+  AuthenticatedToViewEvidence                  |
+  UpdateMobileAfterIdentificationToViewWithNets
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -486,7 +487,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Current VisitedViewForAuthenticationEvidence        ) = toSQL (103::Int16)
   toSQL (Current VisitedViewForSigningEvidence               ) = toSQL (104::Int16)
   toSQL (Current AuthenticatedToViewEvidence                 ) = toSQL (105::Int16)
-
+  toSQL (Current UpdateMobileAfterIdentificationToViewWithNets  ) = toSQL (106::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -598,7 +599,8 @@ instance FromSQL EvidenceEventType where
       103 -> return (Current VisitedViewForAuthenticationEvidence       )
       104 -> return (Current VisitedViewForSigningEvidence              )
       105 -> return (Current AuthenticatedToViewEvidence                )
+      106 -> return (Current UpdateMobileAfterIdentificationToViewWithNets )
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 105)]
+        reRange = [(1, 106)]
       , reValue = n
       }

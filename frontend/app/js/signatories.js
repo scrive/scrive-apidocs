@@ -442,6 +442,9 @@ window.Signatory = Backbone.Model.extend({
     seBankIDAuthenticationToView: function() {
           return this.get("authenticationToView") == "se_bankid" && this.signs();
     },
+    noBankIDAuthenticationToView: function() {
+          return this.get("authenticationToView") == "no_bankid" && this.signs();
+    },
     standardAuthenticationToSign: function() {
           return this.get("authentication") == "standard" && this.signs();
     },
@@ -679,19 +682,21 @@ window.Signatory = Backbone.Model.extend({
         return this.get('authenticationToView');
     },
     setAuthenticationToView: function(a) {
-        // TODO: check values of a
-        // standard, eleg
-        this.set({"authenticationToView":a});
-        return this;
+        this.set({
+          "authenticationToView" : a,
+          // Don't mix swedish and norwegian bankid
+          "authentication" : (a == "no_bankid") ? "standard" : this.authenticationToSign()
+        });
     },
     authenticationToSign: function() {
         return this.get('authentication');
     },
     setAuthenticationToSign: function(a) {
-        // TODO: check values of a
-        // standard, eleg
-        this.set({"authentication":a});
-        return this;
+        this.set({
+          "authentication":a,
+          // Don't mix swedish and norwegian bankid
+          "authenticationToView": (a == "eleg" && this.authenticationToView() == "no_bankid") ? "standard" : this.authenticationToView()
+        });
     },
     authenticationToSignFieldValue: function() {
         if(this.seBankIDAuthenticationToSign()) {
@@ -780,10 +785,10 @@ window.Signatory = Backbone.Model.extend({
         }
     },
     needsPersonalNumber: function() {
-        return this.seBankIDAuthenticationToSign() || this.seBankIDAuthenticationToView();
+        return this.seBankIDAuthenticationToSign() || this.seBankIDAuthenticationToView() || this.noBankIDAuthenticationToView();
     },
     needsPersonalNumberFilledByAuthor: function() {
-        return this.seBankIDAuthenticationToView();
+        return this.seBankIDAuthenticationToView()  || this.noBankIDAuthenticationToView();
     },
     ensureMobile: function() {
         var signatory = this;
@@ -792,13 +797,13 @@ window.Signatory = Backbone.Model.extend({
             if(!pn) {
                 var f = new Field({name:'mobile',
                                    type: 'standard',
-                                   obligatory: true,
+                                   obligatory: this.mobileIsObligatory(),
                                    shouldbefilledbysender: signatory.author(),
                                    signatory: signatory});
                 f.addedByMe = true;
                 signatory.addField(f);
             } else {
-                pn.setObligatoryAndShouldBeFilledBySender(true,(!pn.canBeSetByRecipent()) || signatory.author() || (pn.authorObligatory == 'sender'));
+                pn.setObligatoryAndShouldBeFilledBySender(this.mobileIsObligatory(), (!pn.canBeSetByRecipent()) || signatory.author() || (pn.authorObligatory == 'sender'));
             }
         } else {
             if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
@@ -813,7 +818,13 @@ window.Signatory = Backbone.Model.extend({
         }
     },
     needsMobile: function() {
-        return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() || this.emailMobileConfirmationDelivery() || this.smsPinAuthenticationToSign();
+        return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() ||
+               this.emailMobileConfirmationDelivery() || this.smsPinAuthenticationToSign() || this.noBankIDAuthenticationToView();
+    },
+    mobileIsObligatory: function() {
+        // Mobile number is needed for NO BankID, but is not obligatory
+        return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() ||
+               this.emailMobileConfirmationDelivery() || this.smsPinAuthenticationToSign();
     },
     needsEmail: function() {
         return this.emailDelivery() || this.emailMobileDelivery() || this.emailConfirmationDelivery() || this.emailMobileConfirmationDelivery();
@@ -848,7 +859,6 @@ window.Signatory = Backbone.Model.extend({
     },
     bindBubble: function() {
         var signatory = this;
-        window.alreadyTriggered = 0;
         signatory.listenTo(signatory,'change', function() {
           signatory.ensureAllFields();
           if (signatory.document()) {

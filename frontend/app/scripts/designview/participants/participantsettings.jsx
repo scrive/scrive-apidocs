@@ -52,12 +52,14 @@ return React.createClass({
       return localization.designview.addParties.authenticationToViewStandard;
     } else if (t == "se_bankid") {
       return localization.designview.addParties.authenticationToViewSEBankID;
+    } else if (t == "no_bankid") {
+      return localization.designview.addParties.authenticationToViewNOBankID;
     }
   },
   authenticationToViewOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes =  sig.signs() ? ["standard", "se_bankid"] : ["standard"];
+    var authTypes =  sig.signs() ? ["standard", "se_bankid", "no_bankid"] : ["standard"];
     return _.map(authTypes, function (t) {
       return {name: self.authenticationToViewText(t), value:t};
     });

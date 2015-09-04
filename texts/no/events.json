@@ -4,7 +4,7 @@
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive utarbeidet den ferdigstilte PDF-en.",
 "_AttachSealedFileEvidenceTextSimpleNotArchive":"Scrive utarbeidet den ferdigstilte PDF-en inkludert bevis samlet inn av Scrive før den ble forseglet med en digital signatur.",
 "_AuthenticatedToViewEvidenceArchive":"Verifiser identiteten deres med $provider$ for å få tilgang til dokumentet.",
-"_AuthenticatedToViewEvidenceVerificationPages":"$actor$ verifiserte identiteten deres med $provider$ for å få tilgang til dokumentet.",
+"_AuthenticatedToViewEvidenceVerificationPages":"",
 "_AutomaticReminderSentTextSimpleEmail":"En automatisk påminnelse om å signere dokumentet ble sendt til $signatory$ via e-post.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"En automatisk påminnelse om å signere dokumentet ble sendt til $signatory$ via e-post og SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"En automatisk påminnelse om å signere dokumentet ble sendt til $signatory$ via SMS.",

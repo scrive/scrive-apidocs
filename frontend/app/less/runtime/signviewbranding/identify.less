@@ -44,7 +44,7 @@
 
   .identify-logo-text {
     color: @brandtextcolor;
-    font-size: 17.58px;
+    font-size: 18px;
     font-weight: 400;
     line-height: 10px;
     text-align: center;
@@ -60,7 +60,7 @@
     font-weight: 300;
     letter-spacing: 0.234px;
     line-height: 26px;
-    padding: 26px 34px;
+    padding: 32px 34px;
     text-align: center;
   }
 
@@ -72,6 +72,10 @@
     line-height: 28px;
     padding: 38px 48px;
     text-align: center;
+
+    b {
+      font-weight: 600;
+    }
   }
 
   .identify-box-button {
@@ -96,26 +100,42 @@
     }
   }
 
-  @media (min-width: @content-breakpoint) {
-    .identify-box-button-select {
-      &:first-child {
-        margin-right: 16px;
-      }
-
-      width: 134px;
-    }
+  .identify-box-buttons {
+    display: table;
+    width: 100%;
   }
 
-  @media not all and (min-width: @content-breakpoint) {
-    .identify-box-button-select {
-      &:first-child {
-        margin-bottom: 20px;
-      }
+  .identify-box-button-select {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    background-color: #F2F2F2;
+    box-sizing: border-box;
+    color: #262626;
+    cursor: pointer;
+    display: table-cell;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 18px;
+    margin: 0;
+    max-height: 18px;
+    padding: 17px 25px 17px;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.15s ease-in-out;
+    vertical-align: middle;
+    width: 50%;
+  }
 
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
+  .identify-box-button-select:hover {
+    background-color: #CCCCCC;
+  }
+
+  .identify-box-button-select:active {
+    background-color: #FFFFFF;
+  }
+
+  .identify-box-button-selected, .identify-box-button-selected:hover {
+    background-color: #FFFFFF;
   }
 
   .identify-box-checkbox {

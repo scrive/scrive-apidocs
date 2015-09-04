@@ -1,43 +1,39 @@
-define(["legacy_code",  "React", "signview/identify/identifymodel",
-        "common/backbone_mixin", "common/button", "common/checkbox", "signview/identify/swedishidentify",
-        "signview/identify/swedishprocessing", "signview/identify/swedishproblem",
-        "signview/identify/norwegianidentify", "signview/identify/norwegianprocessing",
-        "signview/identify/norwegianproblem"],
-  function (legacy_code, React, IdentifyModel, BackboneMixin, Button,
-            Checkbox, SwedishIdentify, SwedishProcessing, SwedishProblem,
-            NorwegianIdentify, NorwegianProcessing, NorwegianProblem) {
+define(["legacy_code",  "React", "common/backbone_mixin",
+        "signview/identify/swedish/swedishidentifyview", "signview/identify/swedish/swedishidentifymodel",
+        "signview/identify/norwegian/norwegianidentifyview", "signview/identify/norwegian/norwegianidentifymodel"],
+  function (legacy_code, React, BackboneMixin,
+            SwedishIdentifyView, SwedishIdentifyModel, NorwegianIdentifyView, NorwegianIdentifyModel) {
 
   return React.createClass({
-    mixins: [BackboneMixin.BackboneMixin],
 
     propTypes: {
       doc: React.PropTypes.instanceOf(Document).isRequired,
       siglinkid: React.PropTypes.string.isRequired
     },
-
     getInitialState: function () {
       return this.stateFromProps(this.props);
     },
-
     componentWillReceiveProps: function (props) {
       this.setState(this.stateFromProps(props));
     },
-
     stateFromProps: function (props) {
-      var model = new IdentifyModel({
-        doc: this.props.doc,
-        siglinkid: this.props.siglinkid
-      });
+      var model;
+      if (this.props.doc.currentSignatory().seBankIDAuthenticationToView()) {
+        model = new SwedishIdentifyModel({
+          doc: this.props.doc,
+          siglinkid: this.props.siglinkid
+        });
+      } else if (this.props.doc.currentSignatory().noBankIDAuthenticationToView()) {
+        model = new NorwegianIdentifyModel({
+          doc: this.props.doc,
+          siglinkid: this.props.siglinkid
+        });
+      }
       return {model: model};
     },
-
-    getBackboneModels: function () {
-      return [this.state.model];
-    },
-
     brandLogo: function () {
-      var documentId = this.state.model.doc().documentid();
-      var signatoryId = this.state.model.siglinkid();
+      var documentId = this.props.doc.documentid();
+      var signatoryId = this.props.siglinkid;
       return "/signview_logo/" + documentId + "/" + signatoryId + "/" + window.brandinghash;
     },
 
@@ -46,7 +42,7 @@ define(["legacy_code",  "React", "signview/identify/identifymodel",
     },
     verifyIdentityText: function () {
       var model = this.state.model;
-      var doc = model.doc();
+      var doc = this.props.doc;
       var sig = doc.currentSignatory();
       if (sig.name()) {
         var textWrapper =  $("<span>" + localization.verifyIdentityWithName + "</span>");
@@ -59,25 +55,12 @@ define(["legacy_code",  "React", "signview/identify/identifymodel",
 
     render: function () {
       var model = this.state.model;
-      var doc = model.doc();
+      var doc = this.props.doc;
       var sig = doc.currentSignatory();
       var author = doc.author();
       var authorName = author.name();
       var personalNumber = sig.personalnumber();
 
-      var Content = {};
-      if (model.isSwedish()) {
-        Content.Identify = SwedishIdentify;
-        Content.Processing = SwedishProcessing;
-        Content.Problem = SwedishProblem;
-      }
-      if (model.isNorwegian()) {
-        Content.Identify = NorwegianIdentify;
-        Content.Processing = NorwegianProcessing;
-        Content.Problem = NorwegianProblem;
-      }
-
-      var handleIdentify = model.isSwedish() ? model.identifySwedish : model.identifyNorwegian;
       return (
         <div className="identify-content">
           <div className="identify-logo-box">
@@ -89,33 +72,20 @@ define(["legacy_code",  "React", "signview/identify/identifymodel",
             <div className="identify-box-header">
               {this.verifyIdentityText()}
             </div>
-            <div className="identify-box-content">
-              { /* if */ model.isIdentify() &&
-                <Content.Identify
+            { /* if */ model.isSwedish() &&
+              <div className="identify-box-content">
+                <SwedishIdentifyView
                   ref="identify"
-                  personalNumber={personalNumber}
-                  phoneNumber={sig.mobile()}
-                  onIdentify={handleIdentify}
-                  onSetThisDevice={function (v) {model.setThisDevice(v);}}
-                  thisDevice={model.thisDevice()}
+                  model={model}
                 />
-              }
-              { /* else if */ model.isProcessing() &&
-                <Content.Processing
-                  ref="processing"
-                  transaction={model.transaction()}
-                  onCancel={model.cancel}
-                  statusText={model.statusText()}
-                />
-              }
-              { /* else if */  model.isProblem() &&
-                <Content.Problem
-                  ref="problem"
-                  onBack={model.back}
-                  statusText={model.statusText()}
-                />
-              }
-            </div>
+              </div>
+            }
+            { /* else if */ model.isNorwegian() &&
+              <NorwegianIdentifyView
+                ref="identify"
+                model={model}
+              />
+            }
             <div className="identify-box-footer">
               <div className="identify-box-footer-text">
                 <div>

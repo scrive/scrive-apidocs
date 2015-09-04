@@ -130,6 +130,7 @@ documentJSONV1 muser forapi forauthor msl doc = do
 authenticationToViewJSON :: AuthenticationToViewMethod -> JSValue
 authenticationToViewJSON StandardAuthenticationToView = toJSValue ("standard"::String)
 authenticationToViewJSON SEBankIDAuthenticationToView = toJSValue ("se_bankid"::String)
+authenticationToViewJSON NOBankIDAuthenticationToView = toJSValue ("no_bankid"::String)
 
 authenticationToSignJSON :: AuthenticationToSignMethod -> JSValue
 authenticationToSignJSON StandardAuthenticationToSign = toJSValue ("standard"::String)

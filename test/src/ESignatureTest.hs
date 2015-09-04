@@ -15,21 +15,21 @@ import Util.SignatoryLinkUtils
 
 eSignatureTests :: TestEnvSt -> Test
 eSignatureTests env = testGroup "E-signature" [
-    testThat "can perform operations on BankID signatures in the database" env testBankIDSignatures
+    testThat "can perform operations on CGI Swedish BankID signatures in the database" env testCGISEBankIDSignatures
   ]
 
-testBankIDSignatures :: TestEnv ()
-testBankIDSignatures = do
+testCGISEBankIDSignatures :: TestEnv ()
+testCGISEBankIDSignatures = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable && isPending)
   let Just SignatoryLink{signatorylinkid = slid} = getAuthorSigLink doc
-  bids :: BankIDSignature <- rand 20 arbitrary
-  dbUpdate $ MergeBankIDSignature slid bids
-  Just (BankIDSignature_ bids') <- dbQuery $ GetESignature slid
+  bids :: CGISEBankIDSignature <- rand 20 arbitrary
+  dbUpdate $ MergeCGISEBankIDSignature slid bids
+  Just (CGISEBankIDSignature_ bids') <- dbQuery $ GetESignature slid
   assertEqual "Signatures are the same" bids bids'
   let new_bids = bids {
-        bidsSignatoryName = bidsSignatoryName bids <> "!"
+        cgisebidsSignatoryName = cgisebidsSignatoryName bids <> "!"
       }
-  dbUpdate $ MergeBankIDSignature slid new_bids
-  Just (BankIDSignature_ new_bids') <- dbQuery $ GetESignature slid
+  dbUpdate $ MergeCGISEBankIDSignature slid new_bids
+  Just (CGISEBankIDSignature_ new_bids') <- dbQuery $ GetESignature slid
   assertEqual "Updated signatures are the same" new_bids new_bids'

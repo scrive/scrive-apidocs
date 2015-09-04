@@ -116,6 +116,17 @@ window.PhoneValidation = Validation.extend({
     }
 });
 
+window.PhoneValidationNO = Validation.extend({
+     defaults: {
+            validates: function(t) {
+              // Norwegian phone numbers +47xxx xxx xx.
+              var z = t.replace(/-/g, "").replace(/\s/g, "");
+              return /^\+47[0-9]{8}$/.test(z);
+            },
+            message: "Wrong Norwegian phone number format!"
+    }
+});
+
 window.NameValidation = Validation.extend({
     defaults: {
             validates: function(t) {
@@ -265,13 +276,23 @@ window.PasswordEqValidation = Validation.extend({
     }
 });
 
-window.SSNForElegValidation = Validation.extend({
+window.SSNForSEBankIDValidation = Validation.extend({
     defaults: {
         validates: function(t) {
            var fWithoutHyphens = t.replace(/-/g, "");
            return /^([0-9]{10}|[0-9]{12})$/i.test(fWithoutHyphens);
         },
-        message: "Personal number for elegitimation must contain 10 or 12 digits"
+        message: "Personal number for Swedish BankID must contain 10 or 12 digits"
+    }
+});
+
+window.SSNForNOBankIDValidation = Validation.extend({
+    defaults: {
+        validates: function(t) {
+           var fWithoutHyphens = t.replace(/-/g, "");
+           return /^([0-9]{11})$/i.test(fWithoutHyphens);
+        },
+        message: "Personal number for Norwegian BankID must contain 11 digits"
     }
 });
 

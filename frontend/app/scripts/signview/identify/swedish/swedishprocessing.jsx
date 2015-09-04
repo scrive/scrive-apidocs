@@ -1,11 +1,10 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/button"],
-  function (legacy_code, _, Backbone, React, Button) {
+define(["legacy_code", "Underscore", "Backbone", "React", "common/button",
+  "signview/identify/swedish/swedishidentifymodel"],
+  function (legacy_code, _, Backbone, React, Button, SwedishIdentifyModel) {
 
   return React.createClass({
     propTypes: {
-      transaction: React.PropTypes.object.isRequired,
-      statusText: React.PropTypes.string,
-      onCancel: React.PropTypes.func.isRequired
+      model: React.PropTypes.instanceOf(SwedishIdentifyModel).isRequired
     },
     getInitialState: function () {
       return {iframe: undefined, redirected: false};
@@ -16,7 +15,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button"],
       }
     },
     componentDidUpdate: function () {
-      var transaction = this.props.transaction;
+      var transaction = this.props.model.transaction();
       var canStart = !transaction.isFaultStatus() && !transaction.isWaitingForToken() && transaction.thisDevice();
       if (!this.state.iframe && canStart && !BrowserInfo.isAndroid()) {
         var iframe = $("<iframe width='0' height='0' class='bankid-iframe'/>")
@@ -33,14 +32,14 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button"],
       }
     },
     handleCancel: function () {
-      this.props.onCancel();
+      this.props.model.cancel();
     },
     render: function () {
       var self = this;
-      var transaction = this.props.transaction;
+      var transaction = this.props.model.transaction();
       return (
         <span>
-          <h3 className="identify-box-heading">{this.props.statusText}</h3>
+          <h3 className="identify-box-heading">{this.props.model.statusText()}</h3>
           <img className="identify-box-spinner" src="/img/wait30trans.gif" />
           { /* if */ transaction.thisDevice() && transaction.activeForAtLeast5Sec() &&
                      (transaction.isStatusOutstanding() || transaction.isStatusNoClient()) &&
@@ -51,12 +50,14 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button"],
                 style={{marginBottom: "38px"}}
                 text={localization.docsignview.eleg.bankid.rfa18}
                 onClick={function () {
-                  window.location = self.props.transaction.bankIdUrlWithRedirectIfNeeded();
+                  window.location = this.props.model.transaction().bankIdUrlWithRedirectIfNeeded();
                 }}
               />
             </div>
           }
-          <div onClick={this.handleCancel} className="identify-box-cancel">{localization.cancel}</div>
+          <div onClick={this.handleCancel} className="identify-box-cancel" ref="identify-box-cancel">
+            {localization.cancel}
+          </div>
         </span>
       );
     }

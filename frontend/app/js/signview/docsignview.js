@@ -122,7 +122,15 @@ var DocumentSignViewModel = Backbone.Model.extend({
   askForSSN : function() {
     var signatory = this.document().currentSignatory();
     var field = signatory.personalnumberField();
-    return field != undefined && !new SSNForElegValidation().validateData(field.value()) && (!field.hasPlacements()) && field.obligatory();
+    if ( field != undefined && (!field.hasPlacements()) && field.obligatory()) {
+      if (signatory.noBankIDAuthenticationToView()) {
+        return !new SSNForNOBankIDValidation().validateData(field.value());
+      } else {
+        return !new SSNForSEBankIDValidation().validateData(field.value());
+      }
+    } else {
+      return false;
+    }
   },
   askForPhone : function() {
     var signatory = this.document().currentSignatory();
