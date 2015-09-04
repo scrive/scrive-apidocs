@@ -163,8 +163,9 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
   };
 
   dragHandler.click(function () {
-    var signatory = field.signatory();
     if (!dragHandler.hasClass("placedfield")) {
+      var signatory = field.signatory();
+      initHelper();
       placeOnDocument(dragHandler, field, onDrop);
     }
   });

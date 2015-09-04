@@ -56,7 +56,7 @@ return Backbone.View.extend({
       $("body").append(typeSetterDiv);
 
       setTimeout(function () {
-        placement.typeSetter.place();
+        placement.typeSetter && placement.typeSetter.place();
       }, 0);
     }
   },
