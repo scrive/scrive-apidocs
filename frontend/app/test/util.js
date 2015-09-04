@@ -67,9 +67,16 @@ define(["legacy_code", "React"], function(legacy_code, React) {
       isPadDevice: function () { true; }
     };
 
-    fn();
+    var done = function () {
+      window.BrowserInfo = oldBrowserInfo;
+    };
 
-    window.BrowserInfo = oldBrowserInfo;
+    if (fn.length === 0) {
+      fn();
+      done();
+    } else {
+      fn(done);
+    }
   };
 
   exports.findComponents = function (tree, comp) {

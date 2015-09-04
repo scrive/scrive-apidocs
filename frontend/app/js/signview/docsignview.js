@@ -6,7 +6,7 @@
 define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories',
         'signview/attachments/signatoryattachmentsview', 'signview/instructionsview/instructionsview',
         'signview/attachments/authorattachmentsview', 'signview/extradetails/extradetailsview',
-        'signview/signsection/signsectionview/', 'common/retargeting_service',
+        'signview/signsection/signsectionview', 'common/retargeting_service',
         'signview/fileview/fileclass', 'Backbone', 'Underscore', 'legacy_code'],
   function (React, CreateAccountSection, DocumentViewSignatories,
             SignatoryAttachmentsView, InstructionsView, AuthorAttachmentsView,
@@ -196,7 +196,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
     mixpanel.track("View sign view");
   },
 
-  takeScreenshotWithDelay: function () {
+  takeFirstScreenshotWithDelay: function () {
     var doc = this.document();
 
     setTimeout(function () {
@@ -213,7 +213,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
         model: model,
         onMount: function () {
           model.sendTrackingData();
-          model.takeScreenshotWithDelay();
+          model.takeFirstScreenshotWithDelay();
         }
       }), $el[0]);
       var obj = {comp: comp, el: $el};

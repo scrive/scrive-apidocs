@@ -87,7 +87,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       });
 
       return (
-        <div style={{textAlign: !canHaveRejectButton && "center"}} className={boxClass}>
+        <div className={boxClass}>
           {/* if */ canHaveRejectButton &&
             <div className="rejectwrapper reject">
               <Button
