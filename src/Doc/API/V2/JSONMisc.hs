@@ -89,10 +89,12 @@ instance Unjson AuthenticationToViewMethod where
 authenticationToViewMethodToText :: AuthenticationToViewMethod -> T.Text
 authenticationToViewMethodToText StandardAuthenticationToView = "standard"
 authenticationToViewMethodToText SEBankIDAuthenticationToView = "se_bankid"
+authenticationToViewMethodToText NOBankIDAuthenticationToView = "no_bankid"
 
 textToAuthenticationToViewMethod :: T.Text -> Maybe AuthenticationToViewMethod
 textToAuthenticationToViewMethod "standard" = Just StandardAuthenticationToView
 textToAuthenticationToViewMethod "se_bankid" = Just SEBankIDAuthenticationToView
+textToAuthenticationToViewMethod "no_bankid" = Just NOBankIDAuthenticationToView
 textToAuthenticationToViewMethod _ = Nothing
 
 instance Unjson AuthenticationToSignMethod where
