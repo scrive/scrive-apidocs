@@ -1,6 +1,5 @@
 module EID.CGI.GRP.Control (grpRoutes) where
 
-import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Unjson
 import Happstack.Server hiding (dir)
@@ -18,11 +17,10 @@ import Chargeable.Model
 import Company.Model
 import DB hiding (InternalError)
 import Doc.DocStateData
+import Doc.DocStateQuery
 import Doc.DocumentID
 import Doc.DocumentMonad
-import Doc.Model
 import Doc.SignatoryLinkID
-import Doc.Tokens.Model
 import EID.Authentication.Model
 import EID.CGI.GRP.Config
 import EID.CGI.GRP.Data
@@ -59,7 +57,7 @@ grpRoutes = dir "cgi" . dir "grp" $ choice [
 handleAuthRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleAuthRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
-  (doc,_) <- getDocumentAndSignatory did slid
+  (doc,_) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
   pn <- getField "personal_number" `onNothing` do
     logInfo_ "No personal number"
@@ -94,7 +92,7 @@ handleAuthRequest did slid = do
 handleSignRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleSignRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
-  (doc,_) <- getDocumentAndSignatory did slid
+  (doc,_) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
   tbs <- textToBeSigned doc
   pn <- getField "personal_number" `onNothing` do
@@ -150,7 +148,7 @@ handleCollectAndRedirectRequest did slid = do
 collectRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either GrpFault ProgressStatus)
 collectRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
-  (doc,sl) <- getDocumentAndSignatory did slid
+  (doc,sl) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
   ttype <- getField "type" >>= \case
     Just "auth" -> return CgiGrpAuth
@@ -240,30 +238,6 @@ collectRequest did slid = do
     mk_binary txt = either (invalid_b64 txt) Binary . B64.decode . T.encodeUtf8 $ txt
 
 ----------------------------------------
-
--- | Fetch the document for e-signing. Checks that the document
--- is in the correct state and the signatory hasn't signed yet.
-getDocumentAndSignatory :: (MonadDB m, MonadLog m, KontraMonad m, MonadThrow m,MonadBase IO m)
-            => DocumentID -> SignatoryLinkID -> m (Document,SignatoryLink)
-getDocumentAndSignatory did slid = dbQuery (GetDocumentSessionToken slid) >>= \case
-  Just mh -> do
-    logInfo_ "Document token found"
-    doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
-    when (documentstatus doc /= Pending) $ do
-      logInfo "Unexpected status of the document" $ object [
-          "expected" .= show Pending
-        , "given" .= show (documentstatus doc)
-        ]
-      respond404
-    -- this should always succeed as we already got the document
-    let slink = $fromJust $ getSigLinkFor slid doc
-    when (hasSigned slink) $ do
-      logInfo_ "Signatory already signed the document"
-      respond404
-    return (doc,slink)
-  Nothing -> do
-    logInfo_ "No document token found"
-    respond404
 
 getCompanyDisplayName :: (MonadDB m, MonadThrow m) => Document -> m (Maybe T.Text)
 getCompanyDisplayName doc = fmap T.pack . companycgidisplayname . companyinfo

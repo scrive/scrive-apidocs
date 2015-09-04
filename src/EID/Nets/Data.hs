@@ -5,7 +5,6 @@ module EID.Nets.Data (
     , NetsNOBankIDAuthentication(..)
     -- Target passed inside request
     , NetsTarget(..)
-    , encodeNetsTarget
     , decodeNetsTarget
 
     -- Request calls
@@ -18,11 +17,11 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Data.ByteString (ByteString)
 import Data.Int
-import Data.Text hiding (concatMap,zip)
 import Text.XML.Cursor hiding (element)
 import Text.XML.Writer hiding (content, many, node)
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.Text as T
 
 import DB
 import Doc.DocumentID
@@ -65,22 +64,20 @@ instance ToSQL NetsNOBankIDInternalProvider where
 
 data NetsNOBankIDAuthentication = NetsNOBankIDAuthentication {
     netsNOBankIDInternalProvider     :: !NetsNOBankIDInternalProvider
-  , netsNOBankIDSignatoryName        :: !Text
-  , netsNOBankIDPhoneNumber          :: !(Maybe Text)
-  , netsNOBankIDDateOfBirth          :: !Text
+  , netsNOBankIDSignatoryName        :: !T.Text
+  , netsNOBankIDPhoneNumber          :: !(Maybe T.Text)
+  , netsNOBankIDDateOfBirth          :: !T.Text
   , netsNOBankIDCertificate          :: !(Binary ByteString)
 } deriving (Eq, Ord, Show)
 
 
--- | Final BankID signature.
+-- | Information for transaction. It is encoded in frontend as triple + Base64 when strating nets iframe.
+--   Backend decodes that within resolve handler.
 data NetsTarget = NetsTarget {
     netsDocumentID           :: !DocumentID
   , netsSignatoryID          :: !SignatoryLinkID
   , netsReturnURL            :: !String
 } deriving (Eq, Ord, Show)
-
-encodeNetsTarget :: NetsTarget -> String
-encodeNetsTarget nt = BS.unpack $ B64.encode $ BS.pack $ show (netsDocumentID nt,netsSignatoryID nt, netsReturnURL nt)
 
 decodeNetsTarget :: String -> Maybe NetsTarget
 decodeNetsTarget t = case (B64.decode $ BS.pack $ t) of
@@ -94,7 +91,7 @@ decodeNetsTarget t = case (B64.decode $ BS.pack $ t) of
 
 -- | GetAssertionRequest request
 data GetAssertionRequest = GetAssertionRequest {
-  assertionArtifact :: !Text
+  assertionArtifact :: !T.Text
 } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'GetAssertionRequest'.
@@ -105,15 +102,15 @@ instance ToXML GetAssertionRequest where
 
 -- | Collect action response.
 data GetAssertionResponse = GetAssertionResponse {
-  assertionStatusCode :: !Text,
-  assertionAttributes :: ![(Text,Text)]
+  assertionStatusCode :: !T.Text,
+  assertionAttributes :: ![(T.Text,T.Text)]
 } deriving (Eq, Ord, Show)
 
--- | Retrieve 'CollectResponse' from SOAP response.
+-- | Retrieve 'GetAssertionResponse' from SOAP response.
 xpGetAssertionResponse :: XMLParser GetAssertionResponse
 xpGetAssertionResponse = XMLParser $ \c -> listToMaybe $ c
   $/ laxElement "Response" &| (\sr -> GetAssertionResponse {
-      assertionStatusCode = Data.Text.concat $ sr $/ laxElement "Status" &/ laxAttribute "Value"
+      assertionStatusCode = T.concat $ sr $/ laxElement "Status" &/ laxAttribute "Value"
     , assertionAttributes = concatMap (uncurry zip) $
         sr $/ laxElement "Assertion" &/ laxElement "AttributeStatement" &|
           \a -> (a $/ laxAttribute "AttributeName" , a $/ laxElement "Attribute" &/ laxElement "AttributeValue"  &/ content)

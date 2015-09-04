@@ -12,8 +12,8 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Data.ByteString (ByteString)
 import Data.Int
-import Data.Text (Text)
 import Data.Time
+import qualified Data.Text as T
 
 import DB
 import Doc.SignatoryLinkID
@@ -35,10 +35,10 @@ data EAuthentication
 
 ----------------------------------------
 
--- | Signature provider. Used internally to distinguish between
--- signatures in the database. Should not be exported, as the
+-- | Authentication provider. Used internally to distinguish between
+-- authentications in the database. Should not be exported, as the
 -- distinction between various signatures on the outside should
--- be made with pattern matching on 'ESignature' constructors.
+-- be made with pattern matching on 'EAuthentication' constructors.
 data AuthenticationProvider
   = CgiGrpBankID |
     NetsNOBankID
@@ -66,10 +66,10 @@ instance ToSQL AuthenticationProvider where
 
 ----------------------------------------
 
--- | Insert bank id authentication for a given signatory or replace the existing one.
-data MergeCGISEBankIDAuthentication = MergeCGISEBankIDAuthentication SessionID SignatoryLinkID CGISEBankIDAuthentication
-instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDAuthentication () where
-  update (MergeCGISEBankIDAuthentication sid slid CGISEBankIDAuthentication{..}) = do
+-- | General version of mergin some authentication for a given signatory or replace the existing one.
+data MergeAuthenticationInternal = MergeAuthenticationInternal SessionID SignatoryLinkID ((MonadState v n, SqlSet v) => n ())
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeAuthenticationInternal () where
+  update (MergeAuthenticationInternal sid slid setDedicatedAuthFields) = do
     loopOnUniqueViolation . withSavepoint "merge_bank_id_authentication" $ do
       runQuery01_ selectSignatorySignTime
       msign_time :: Maybe UTCTime <- fetchOne runIdentity
@@ -92,53 +92,38 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDAuthentication (
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do
         sqlSet "signatory_link_id" slid
+        sqlSet "session_id" sid
+        setDedicatedAuthFields
+
+
+-- | Insert bank id authentication for a given signatory or replace the existing one.
+data MergeCGISEBankIDAuthentication = MergeCGISEBankIDAuthentication SessionID SignatoryLinkID CGISEBankIDAuthentication
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDAuthentication () where
+  update (MergeCGISEBankIDAuthentication sid slid CGISEBankIDAuthentication{..}) = do
+    dbUpdate $ MergeAuthenticationInternal sid slid $ do
         sqlSet "provider" CgiGrpBankID
         sqlSet "signature" cgisebidaSignature
         sqlSet "signatory_name" cgisebidaSignatoryName
         sqlSet "signatory_personal_number" cgisebidaSignatoryPersonalNumber
         sqlSet "ocsp_response" cgisebidaOcspResponse
-        sqlSet "session_id" sid
 
 -- | Insert bank id authentication for a given signatory or replace the existing one.
 data MergeNetsNOBankIDAuthentication = MergeNetsNOBankIDAuthentication SessionID SignatoryLinkID NetsNOBankIDAuthentication
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDAuthentication () where
   update (MergeNetsNOBankIDAuthentication sid slid NetsNOBankIDAuthentication{..}) = do
-    loopOnUniqueViolation . withSavepoint "merge_bank_id_authentication" $ do
-      runQuery01_ selectSignatorySignTime
-      msign_time :: Maybe UTCTime <- fetchOne runIdentity
-      when (isJust msign_time) $ do
-        $unexpectedErrorM "signatory already signed, can't merge authentication"
-      success <- runQuery01 . sqlUpdate "eid_authentications" $ do
-        setFields
-        sqlWhereEq "signatory_link_id" slid
-        -- replace the signature only if signatory hasn't signed yet
-        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
-      when (not success) $ do
-        runQuery_ . sqlInsertSelect "eid_authentications" "" $ do
-          setFields
-    where
-      selectSignatorySignTime = do
-        sqlSelect "signatory_links" $ do
-          sqlResult "sign_time"
-          sqlWhereEq "id" slid
-
-      setFields :: (MonadState v n, SqlSet v) => n ()
-      setFields = do
-        sqlSet "signatory_link_id" slid
+    dbUpdate $ MergeAuthenticationInternal sid slid $ do
         sqlSet "provider" NetsNOBankID
         sqlSet "internal_provider" netsNOBankIDInternalProvider
         sqlSet "signature" netsNOBankIDCertificate
         sqlSet "signatory_name" netsNOBankIDSignatoryName
         sqlSet "signatory_phone_number" netsNOBankIDPhoneNumber
-        sqlSet "date_of_birth" netsNOBankIDDateOfBirth
-        sqlSet "session_id" sid
+        sqlSet "signatory_date_of_birth" netsNOBankIDDateOfBirth
 
 
-
--- | Get signature for a given signatory.
-data GetEAuthenticationWithoutSession = GetEAuthenticationWithoutSession SignatoryLinkID
-instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationWithoutSession (Maybe EAuthentication) where
-  query (GetEAuthenticationWithoutSession slid) = do
+-- Get authentication - internal - just to unify code
+data GetEAuthenticationInternal = GetEAuthenticationInternal SignatoryLinkID (Maybe SessionID)
+instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Maybe EAuthentication) where
+  query (GetEAuthenticationInternal slid msid) = do
     runQuery_ . sqlSelect "eid_authentications" $ do
       sqlResult "provider"
       sqlResult "internal_provider"
@@ -146,31 +131,26 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationWithoutSession
       sqlResult "signatory_name"
       sqlResult "signatory_personal_number"
       sqlResult "signatory_phone_number"
-      sqlResult "date_of_birth"
+      sqlResult "signatory_date_of_birth"
       sqlResult "ocsp_response"
       sqlWhereEq "signatory_link_id" slid
-    fetchMaybe fetchESignature
+      when (isJust msid) $ do
+        sqlWhereEq "session_id" $ $fromJust msid
+    fetchMaybe fetchEAuthentication
+
+-- | Get signature for a given signatory. Used when generating evidence long after user has signed.
+data GetEAuthenticationWithoutSession = GetEAuthenticationWithoutSession SignatoryLinkID
+instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationWithoutSession (Maybe EAuthentication) where
+  query (GetEAuthenticationWithoutSession slid) = query (GetEAuthenticationInternal slid Nothing)
+
 
 -- | Get signature for a given signatory and session.
 data GetEAuthentication = GetEAuthentication SessionID SignatoryLinkID
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthentication (Maybe EAuthentication) where
-  query (GetEAuthentication sid slid) = do
-    runQuery_ . sqlSelect "eid_authentications" $ do
-      sqlResult "provider"
-      sqlResult "internal_provider"
-      sqlResult "signature"
-      sqlResult "signatory_name"
-      sqlResult "signatory_personal_number"
-      sqlResult "signatory_phone_number"
-      sqlResult "date_of_birth"
-      sqlResult "ocsp_response"
-      sqlWhereEq "session_id" sid
-      sqlWhereEq "signatory_link_id" slid
-    fetchMaybe fetchESignature
+  query (GetEAuthentication sid slid) = query (GetEAuthenticationInternal slid (Just sid) )
 
--- | Fetch e-signature.
-fetchESignature :: (AuthenticationProvider, (Maybe Int16), Binary ByteString, Text, Maybe Text, Maybe Text, Text, Maybe (Binary ByteString)) -> EAuthentication
-fetchESignature (provider, internal_provider, signature, signatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response) = case provider of
+fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), Binary ByteString, T.Text, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe (Binary ByteString)) -> EAuthentication
+fetchEAuthentication (provider, internal_provider, signature, signatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response) = case provider of
   CgiGrpBankID -> CGISEBankIDAuthentication_ CGISEBankIDAuthentication {
     cgisebidaSignatoryName = signatory_name
   , cgisebidaSignatoryPersonalNumber = $fromJust signatory_personal_number
@@ -181,6 +161,6 @@ fetchESignature (provider, internal_provider, signature, signatory_name, signato
     netsNOBankIDInternalProvider = unsafeNetsNOBankIDInternalProviderFromInt16 ($fromJust internal_provider)
   , netsNOBankIDSignatoryName = signatory_name
   , netsNOBankIDPhoneNumber   = signatory_phone_number
-  , netsNOBankIDDateOfBirth   = signatory_dob
+  , netsNOBankIDDateOfBirth   = $fromJust signatory_dob
   , netsNOBankIDCertificate   = signature
   }

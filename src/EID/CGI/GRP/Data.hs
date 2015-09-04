@@ -18,7 +18,6 @@ module EID.CGI.GRP.Data (
   ) where
 
 import Data.ByteString (ByteString)
-import Data.Text (Text)
 import Data.Unjson
 import Network.SOAP.Parsing.Cursor
 import Text.XML.Cursor hiding (element)
@@ -32,17 +31,17 @@ import Session.Cookies
 
 -- | Final BankID signature.
 data CGISEBankIDSignature = CGISEBankIDSignature {
-  cgisebidsSignatoryName           :: !Text
-, cgisebidsSignatoryPersonalNumber :: !Text
-, cgisebidsSignedText              :: !Text
+  cgisebidsSignatoryName           :: !T.Text
+, cgisebidsSignatoryPersonalNumber :: !T.Text
+, cgisebidsSignedText              :: !T.Text
 , cgisebidsSignature               :: !(Binary ByteString)
 , cgisebidsOcspResponse            :: !(Binary ByteString)
 } deriving (Eq, Ord, Show)
 
 -- | Final BankID signature.
 data CGISEBankIDAuthentication = CGISEBankIDAuthentication {
-  cgisebidaSignatoryName           :: !Text
-, cgisebidaSignatoryPersonalNumber :: !Text
+  cgisebidaSignatoryName           :: !T.Text
+, cgisebidaSignatoryPersonalNumber :: !T.Text
 , cgisebidaSignature               :: !(Binary ByteString)
 , cgisebidaOcspResponse            :: !(Binary ByteString)
 } deriving (Eq, Ord, Show)
@@ -105,10 +104,10 @@ xpGrpFault = XMLParser $ \c -> listToMaybe $ c
 
 -- | Auth action request.
 data AuthRequest = AuthRequest {
-  arqPolicy          :: !Text
-, arqDisplayName     :: !Text
-, arqPersonalNumber  :: !Text
-, arqProvider        :: !Text
+  arqPolicy          :: !T.Text
+, arqDisplayName     :: !T.Text
+, arqPersonalNumber  :: !T.Text
+, arqProvider        :: !T.Text
 } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'AuthRequest'.
@@ -124,11 +123,11 @@ instance ToXML AuthRequest where
 
 -- | Sign action request.
 data SignRequest = SignRequest {
-  srqPolicy          :: !Text
-, srqDisplayName     :: !Text
-, srqPersonalNumber  :: !Text
-, srqUserVisibleData :: !Text
-, srqProvider        :: !Text
+  srqPolicy          :: !T.Text
+, srqDisplayName     :: !T.Text
+, srqPersonalNumber  :: !T.Text
+, srqUserVisibleData :: !T.Text
+, srqProvider        :: !T.Text
 } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'SignRequest'.
@@ -143,10 +142,10 @@ instance ToXML SignRequest where
 
 ----------------------------------------
 
-newtype AutoStartToken = AutoStartToken Text
+newtype AutoStartToken = AutoStartToken T.Text
   deriving (Eq, Ord, Show)
 
-unAutoStartToken :: AutoStartToken -> Text
+unAutoStartToken :: AutoStartToken -> T.Text
 unAutoStartToken (AutoStartToken t) = t
 
 
@@ -165,8 +164,8 @@ instance Unjson (AutoStartToken,SessionCookieInfo) where
 
 -- | Auth action response.
 data AuthResponse = AuthResponse {
-  arsTransactionID  :: !Text
-, arsOrderRef       :: !Text
+  arsTransactionID  :: !T.Text
+, arsOrderRef       :: !T.Text
 , arsAutoStartToken :: !AutoStartToken
 } deriving (Eq, Ord, Show)
 
@@ -184,8 +183,8 @@ xpAuthResponse = XMLParser $ \c -> listToMaybe $ c
 
 -- | Sign action response.
 data SignResponse = SignResponse {
-  srsTransactionID  :: !Text
-, srsOrderRef       :: !Text
+  srsTransactionID  :: !T.Text
+, srsOrderRef       :: !T.Text
 , srsAutoStartToken :: !AutoStartToken
 } deriving (Eq, Ord, Show)
 
@@ -202,10 +201,10 @@ xpSignResponse = XMLParser $ \c -> listToMaybe $ c
 
 -- | Collect action request.
 data CollectRequest = CollectRequest {
-  crqPolicy        :: !Text
-, crqTransactionID :: !Text
-, crqOrderRef      :: !Text
-, crqDisplayName   :: !Text
+  crqPolicy        :: !T.Text
+, crqTransactionID :: !T.Text
+, crqOrderRef      :: !T.Text
+, crqDisplayName   :: !T.Text
 } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'CollectRequest'.
@@ -245,8 +244,8 @@ instance Unjson ProgressStatus where
 -- | Collect action response.
 data CollectResponse = CollectResponse {
   crsProgressStatus :: !ProgressStatus
-, crsSignature      :: !(Maybe Text)
-, crsAttributes     :: ![(Text, Text)]
+, crsSignature      :: !(Maybe T.Text)
+, crsAttributes     :: ![(T.Text, T.Text)]
 } deriving (Eq, Ord, Show)
 
 -- | Retrieve 'CollectResponse' from SOAP response.

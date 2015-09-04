@@ -1360,7 +1360,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
 data UpdatePhoneAfterIdentificationToView = UpdatePhoneAfterIdentificationToView SignatoryLink String String Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdatePhoneAfterIdentificationToView () where
   update (UpdatePhoneAfterIdentificationToView sl oldphone newphone actor) = updateDocumentWithID $ const $ do
-    runQuery_ . sqlUpdate "signatory_link_fields" $ do
+    success <- runQuery01 . sqlUpdate "signatory_link_fields" $ do
                    sqlSet "value_text" $ newphone
                    sqlWhereEq "signatory_link_id" $ signatorylinkid sl
                    sqlWhereEq "type" $ MobileFT
@@ -1370,6 +1370,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateP
                      sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"
                      sqlWhereEq "documents.status" Pending
                      sqlWhere "signatory_links.sign_time IS NULL"
+    unless success $ do
+      $unexpectedErrorM "Failed to update phone number after identification to view"
     void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg UpdateMobileAfterIdentificationToViewWithNets
                (F.value "oldphone" oldphone >> F.value "newphone" newphone) (Just sl) Nothing actor
 

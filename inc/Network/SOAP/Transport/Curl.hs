@@ -22,6 +22,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.Foldable as F
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
 
 import KontraPrelude
@@ -106,10 +107,10 @@ curlTransport ssl curlAuth url response_parser on_failure debug_fun soap_action 
   curl <- initialize
   (final_body, fetch_body) <- newIncoming
   case curlAuth of
-   CurlAuthCert fp -> (setopt curl $ CurlCAInfo fp) >> return ()
+   CurlAuthCert fp -> void (setopt curl $ CurlCAInfo fp)
    _ -> return ()
   let authHeaders =   case curlAuth of
-        CurlAuthBasic un pwd -> ["Authorization: Basic " <+> (BSC8.unpack $ B64.encode $ BSC8.pack $ T.unpack $ un <> ":" <>  pwd)]
+        CurlAuthBasic un pwd -> ["Authorization: Basic " <+> (BSC8.unpack $ B64.encode $ T.encodeUtf8 $ un <> ":" <>  pwd)]
         _ -> []
   setopts curl [
       CurlWriteFunction $ gatherOutput_ fetch_body

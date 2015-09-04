@@ -5,10 +5,10 @@ module AppConf (
   ) where
 
 import Data.Default
-import Data.Text (Text)
 import Data.Unjson
 import Data.Word
 import qualified Data.Map as Map
+import qualified Data.Text as T
 
 import EID.CGI.GRP.Config
 import EID.Nets.Config
@@ -34,7 +34,7 @@ data AppConf = AppConf {
   , hostpart           :: String                       -- ^ hostname as it should looklike in emails for example
   , useHttps           :: Bool                         -- ^ should we redirect to https?
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
-  , dbConfig           :: Text                         -- ^ postgresql configuration
+  , dbConfig           :: T.Text                       -- ^ postgresql configuration
   , logConfig          :: LogConfig                    -- ^ logging configuration
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , guardTimeConf      :: GuardTimeConf
