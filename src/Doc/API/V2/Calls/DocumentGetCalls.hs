@@ -33,6 +33,7 @@ import Doc.DocStateData
 import Doc.DocUtils (fileFromMainFile)
 import Doc.DocumentID
 import Doc.DocumentMonad
+import Doc.Logging
 import Doc.Model
 import Doc.Texts
 import EvidenceLog.Model
@@ -75,14 +76,14 @@ docApiV2List = api $ do
   return $ Ok $ Response 200 Map.empty nullRsFlags (listToJSONBS (allDocsCount,(\d -> (documentAccessForUser user d,d)) <$> allDocs)) Nothing
 
 docApiV2Get :: Kontrakcja m => DocumentID -> m Response
-docApiV2Get did = api $ do
+docApiV2Get did = logDocument did . api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
   da <- guardDocumentAccessSessionOrUser did mslid APIDocCheck guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
   withDocumentID did $ do
     Ok <$> (\d -> (unjsonDocument $ da,d)) <$> theDocument
 
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
-docApiV2History did = api $ do
+docApiV2History did = logDocument did . api $ do
   -- Permissions
   (user,_) <- getAPIUser APIDocCheck
   -- Parameters
@@ -101,7 +102,7 @@ docApiV2History did = api $ do
   return $ Ok (JSArray events)
 
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
-docApiV2EvidenceAttachments did = api $ withDocumentID did $ do
+docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ do
   (user,_) <- getAPIUser APIDocCheck
   guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user
   doc <- theDocument
@@ -109,7 +110,7 @@ docApiV2EvidenceAttachments did = api $ withDocumentID did $ do
   return $ Ok $ Response 200 Map.empty nullRsFlags (evidenceAttachmentsToJSONBS (documentid doc) eas) Nothing
 
 docApiV2FilesMain :: Kontrakcja m => DocumentID -> String -> m Response
-docApiV2FilesMain did _filenameForBrowser = api $ do
+docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
   _ <- guardDocumentAccessSessionOrUser did mslid APIDocCheck guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
   when (isJust mslid) (withDocumentID did $ guardSignatoryNeedsToIdentifyToView $ $fromJust mslid)
@@ -133,7 +134,7 @@ docApiV2FilesMain did _filenameForBrowser = api $ do
   return $ Ok $ respondWithPDF False fileContents
 
 docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
-docApiV2FilesGet did fid filename = api $ do
+docApiV2FilesGet did fid filename = logDocumentAndFile did fid . api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
   _ <- guardDocumentAccessSessionOrUser did mslid APIDocCheck guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
   when (isJust mslid) (withDocumentID did $ guardSignatoryNeedsToIdentifyToView $ $fromJust mslid)
@@ -156,7 +157,7 @@ docApiV2FilesGet did fid filename = api $ do
 -------------------------------------------------------------------------------
 
 docApiV2Texts :: Kontrakcja m => DocumentID -> FileID -> m Response
-docApiV2Texts did fid = api $ do
+docApiV2Texts did fid = logDocumentAndFile did fid . api $ do
   -- Permissions
   (user,_) <- getAPIUser APIDocCreate
   withDocumentID did $ do

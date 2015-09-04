@@ -24,6 +24,7 @@ import Doc.DocStateData
 import Doc.DocUtils (getSignatoryAttachment)
 import Doc.DocumentID
 import Doc.DocumentMonad
+import Doc.Logging
 import Doc.Model
 import Doc.SMSPin.Model (GetSignatoryPin(..))
 import Doc.SignatoryLinkID
@@ -38,7 +39,7 @@ import Util.HasSomeUserInfo (getMobile)
 import Util.SignatoryLinkUtils
 
 docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigReject did slid = api $ do
+docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
@@ -60,7 +61,7 @@ docApiV2SigReject did slid = api $ do
     return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
 
 docApiV2SigCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigCheck did slid = api $ do
+docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
@@ -90,7 +91,7 @@ docApiV2SigCheck did slid = api $ do
 
 
 docApiV2SigSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigSign did slid = api $ do
+docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
@@ -126,7 +127,7 @@ docApiV2SigSign did slid = api $ do
    )
 
 docApiV2SigSendSmsPin :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigSendSmsPin did slid = api $ do
+docApiV2SigSendSmsPin did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
@@ -155,7 +156,7 @@ docApiV2SigSendSmsPin did slid = api $ do
     return $ Accepted ()
 
 docApiV2SigSetAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigSetAttachment did slid = api $ do
+docApiV2SigSetAttachment did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do

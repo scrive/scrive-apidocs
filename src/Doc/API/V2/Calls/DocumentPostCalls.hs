@@ -44,6 +44,7 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocumentID
 import Doc.DocumentMonad
+import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
 import File.File (File(..))
@@ -81,7 +82,7 @@ docApiV2New = api $ do
 
 
 docApiV2NewFromTemplate :: Kontrakcja m => DocumentID -> m Response
-docApiV2NewFromTemplate did = api $ do
+docApiV2NewFromTemplate did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocCreate
   -- Guards
@@ -100,7 +101,7 @@ docApiV2NewFromTemplate did = api $ do
 
 
 docApiV2Update :: Kontrakcja m => DocumentID -> m Response
-docApiV2Update did = api $ do
+docApiV2Update did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
@@ -124,7 +125,7 @@ docApiV2Update did = api $ do
 
 
 docApiV2Start :: Kontrakcja m => DocumentID -> m Response
-docApiV2Start did = api $ do
+docApiV2Start did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
@@ -145,7 +146,7 @@ docApiV2Start did = api $ do
 
 
 docApiV2Prolong :: Kontrakcja m => DocumentID -> m Response
-docApiV2Prolong did = api $ do
+docApiV2Prolong did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
@@ -166,7 +167,7 @@ docApiV2Prolong did = api $ do
 
 
 docApiV2Cancel :: Kontrakcja m => DocumentID -> m Response
-docApiV2Cancel did = api $ do
+docApiV2Cancel did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
@@ -182,7 +183,7 @@ docApiV2Cancel did = api $ do
 
 
 docApiV2Trash :: Kontrakcja m => DocumentID -> m Response
-docApiV2Trash did = api $ do
+docApiV2Trash did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
@@ -199,7 +200,7 @@ docApiV2Trash did = api $ do
 
 
 docApiV2Delete :: Kontrakcja m => DocumentID -> m Response
-docApiV2Delete did = api $ do
+docApiV2Delete did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
@@ -216,7 +217,7 @@ docApiV2Delete did = api $ do
 
 
 docApiV2Remind :: Kontrakcja m => DocumentID -> m Response
-docApiV2Remind did = api $ do
+docApiV2Remind did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
@@ -231,7 +232,7 @@ docApiV2Remind did = api $ do
 
 
 docApiV2Forward :: Kontrakcja m => DocumentID -> m Response
-docApiV2Forward did = api $ do
+docApiV2Forward did = logDocument did . api $ do
   -- Permissions
   (user,_) <- getAPIUser APIDocCheck
   withDocumentID did $ do
@@ -255,7 +256,7 @@ docApiV2Forward did = api $ do
 
 
 docApiV2SetFile :: Kontrakcja m => DocumentID -> m Response
-docApiV2SetFile did = api $ do
+docApiV2SetFile did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
@@ -279,7 +280,7 @@ docApiV2SetFile did = api $ do
 
 
 docApiV2SetAttachments :: Kontrakcja m => DocumentID -> m Response
-docApiV2SetAttachments did = api $ do
+docApiV2SetAttachments did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
@@ -335,7 +336,7 @@ docApiV2SetAttachments did = api $ do
 
 
 docApiV2SetAutoReminder :: Kontrakcja m => DocumentID -> m Response
-docApiV2SetAutoReminder did = api $ do
+docApiV2SetAutoReminder did = logDocument did . api $ do
   -- Permissions
   (user,_) <- getAPIUser APIDocSend
   withDocumentID did $ do
@@ -361,7 +362,7 @@ docApiV2SetAutoReminder did = api $ do
 
 
 docApiV2Clone :: Kontrakcja m => DocumentID -> m Response
-docApiV2Clone did = api $ do
+docApiV2Clone did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
@@ -379,7 +380,7 @@ docApiV2Clone did = api $ do
 
 
 docApiV2Restart :: Kontrakcja m => DocumentID -> m Response
-docApiV2Restart did = api $ do
+docApiV2Restart did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
@@ -397,7 +398,7 @@ docApiV2Restart did = api $ do
     return $ Created $ (\d -> (unjsonDocument $ documentAccessForUser user d,d)) ($fromJust mNewDoc)
 
 docApiV2SigSetAuthenticationToSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigSetAuthenticationToSign did slid = api $ do
+docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
