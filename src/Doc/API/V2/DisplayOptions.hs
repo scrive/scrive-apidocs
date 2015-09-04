@@ -5,6 +5,7 @@ module Doc.API.V2.DisplayOptions (
 
 import Control.Applicative
 import Data.Unjson
+
 import Doc.DocStateData
 import KontraPrelude
 

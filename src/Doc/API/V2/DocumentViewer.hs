@@ -4,14 +4,15 @@ module Doc.API.V2.DocumentViewer (
 , viewerForDocument
 ) where
 
-import Doc.DocStateData
-import KontraPrelude
 import Data.Unjson
-import Data.Text
-import Doc.SignatoryLinkID
-import Doc.API.V2.UnjsonUtils
+import qualified Data.Text as T
+
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSONMisc()
+import Doc.API.V2.UnjsonUtils
+import Doc.DocStateData
+import Doc.SignatoryLinkID
+import KontraPrelude
 import Util.SignatoryLinkUtils
 
 data DocumentViewer =
@@ -30,7 +31,7 @@ dvSignatoryLinkID :: DocumentViewer -> Maybe SignatoryLinkID
 dvSignatoryLinkID (SignatoryDocumentViewer sid) = Just sid
 dvSignatoryLinkID _ = Nothing
 
-dvRole ::DocumentViewer -> Text
+dvRole ::DocumentViewer -> T.Text
 dvRole (SignatoryDocumentViewer _) = "signatory"
 dvRole (AdminDocumentViewer) = "company_admin"
 

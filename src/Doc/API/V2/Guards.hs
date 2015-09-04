@@ -17,7 +17,7 @@ module Doc.API.V2.Guards (
 ) where
 
 import Control.Conditional (unlessM, whenM)
-import Data.Text (Text, pack, append)
+import qualified Data.Text as T
 
 import API.V2
 import DB
@@ -44,13 +44,13 @@ import Util.SignatoryLinkUtils
 -- `documentStateError` when this does not match.
 --
 -- Prefer to use a more specific guard if this satisfies your need.
-guardThatDocumentIs :: (DocumentMonad m, Kontrakcja m) => (Document -> Bool) -> Text -> m ()
+guardThatDocumentIs :: (DocumentMonad m, Kontrakcja m) => (Document -> Bool) -> T.Text -> m ()
 guardThatDocumentIs f text = unlessM (f <$> theDocument) $ apiError $ documentStateError text
 
 -- | Guard that the document status matches, otherwise throw a `documentStateError`
 guardDocumentStatus :: (Kontrakcja m, DocumentMonad m) => DocumentStatus -> m ()
 guardDocumentStatus s = unlessM ((\d -> documentstatus d == s) <$> theDocument) $ apiError $ documentStateError errorMsg
-  where errorMsg = "The document status should be '" `append` (pack $ show s) `append` "'."
+  where errorMsg = "The document status should be '" `T.append` (T.pack $ show s) `T.append` "'."
 
 -- | Internal function used in all guards on User
 -- Helps code reuse and keep error messages consistent

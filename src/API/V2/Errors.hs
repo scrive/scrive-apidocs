@@ -22,10 +22,10 @@ module API.V2.Errors (
   , tryToConvertConditionalExpectionIntoAPIError
 ) where
 
-import Data.Text
 import Data.Typeable
 import Text.JSON
 import Text.JSON.Gen hiding (object)
+import qualified Data.Text as T
 
 import DB
 import Doc.Conditions
@@ -36,14 +36,14 @@ import KontraPrelude
 data APIError = APIError {
       errorType     :: APIErrorType
     , errorHttpCode :: Int
-    , errorMessage  :: Text
+    , errorMessage  :: T.Text
   }
   deriving (Show, Eq, Typeable)
 
 instance ToJSValue APIError where
   toJSValue a = runJSONGen $ do
-    value "error_type" (unpack $ errorIDFromAPIErrorType $ errorType a)
-    value "error_message" (unpack $ errorMessage a)
+    value "error_type" (T.unpack $ errorIDFromAPIErrorType $ errorType a)
+    value "error_message" (T.unpack $ errorMessage a)
     value "http_code" (errorHttpCode $ a)
 
 instance KontraException APIError
@@ -64,7 +64,7 @@ data APIErrorType = ServerError
 
 
 
-errorIDFromAPIErrorType :: APIErrorType -> Text
+errorIDFromAPIErrorType :: APIErrorType -> T.Text
 errorIDFromAPIErrorType ServerError                   = "server_error"
 errorIDFromAPIErrorType EndpointNotFound              = "endpoint_not_found"
 errorIDFromAPIErrorType InvalidAuthorisation          = "invalid_authorisation"
@@ -90,17 +90,17 @@ httpCodeFromSomeKontraException (SomeKontraException ex) =
 
 
 -- General errors
-serverError :: Text -> APIError
+serverError :: T.Text -> APIError
 serverError reason = APIError { errorType = ServerError, errorHttpCode = 500, errorMessage = msg}
   where msg = "We encountered an unexpected error. Please contact Scrive "
-              `append` "support and include as much details about what caused "
-              `append` "the error, including the document id or any other details. "
-              `append` "Error details: " `append` reason
+              `T.append` "support and include as much details about what caused "
+              `T.append` "the error, including the document id or any other details. "
+              `T.append` "Error details: " `T.append` reason
 
 -- | Used internally by API.V2 for reporting bad API endpoints
-endpointNotFound :: Text -> APIError
+endpointNotFound :: T.Text -> APIError
 endpointNotFound ep = APIError { errorType = EndpointNotFound, errorHttpCode = 404, errorMessage = msg}
-  where msg = "The endpoint " `append` ep `append` " was not found. See our website for API documentation."
+  where msg = "The endpoint " `T.append` ep `T.append` " was not found. See our website for API documentation."
 
 -- | Used interally by this module and API.V2.User
 invalidAuthorisation :: APIError
@@ -108,9 +108,9 @@ invalidAuthorisation = APIError { errorType = InvalidAuthorisation, errorHttpCod
   where msg = "No valid access credentials were provided. Please refer to our API documentation."
 
 -- | Used interally by this module and API.V2.User
-invalidAuthorisationWithMsg :: Text -> APIError
+invalidAuthorisationWithMsg :: T.Text -> APIError
 invalidAuthorisationWithMsg problem = invalidAuthorisation { errorMessage = msg}
-  where msg = errorMessage invalidAuthorisation `append` " The problem was: " `append` problem
+  where msg = errorMessage invalidAuthorisation `T.append` " The problem was: " `T.append` problem
 
 -- | Used interally by this module and API.V2.User
 insufficientPrivileges :: APIError
@@ -118,35 +118,35 @@ insufficientPrivileges = APIError { errorType = InsufficientPrivileges, errorHtt
   where msg = "The access credentials provided do not have sufficient privileges for this request."
 
 -- Request specific errors
-requestParameterMissing :: Text -> APIError
+requestParameterMissing :: T.Text -> APIError
 requestParameterMissing param = APIError { errorType = RequestParametersMissing, errorHttpCode = 400, errorMessage = msg}
-  where msg = "The parameter '" `append` param `append` "' was missing. Please refer to our API documentation."
+  where msg = "The parameter '" `T.append` param `T.append` "' was missing. Please refer to our API documentation."
 
-requestParameterParseError :: Text -> Text -> APIError
+requestParameterParseError :: T.Text -> T.Text -> APIError
 requestParameterParseError param error = APIError { errorType = RequestParametersParseError, errorHttpCode = 400, errorMessage = msg}
-  where msg = "The parameter '" `append` param `append` "' could not be parsed."
-            `append` " Please refer to our API documentation. Error details: "
-            `append` error
+  where msg = "The parameter '" `T.append` param `T.append` "' could not be parsed."
+            `T.append` " Please refer to our API documentation. Error details: "
+            `T.append` error
 
-requestParameterInvalid :: Text -> Text -> APIError
+requestParameterInvalid :: T.Text -> T.Text -> APIError
 requestParameterInvalid param reason = APIError { errorType = RequestParametersInvalid, errorHttpCode = 400, errorMessage = msg}
-  where msg = "The parameter '" `append` param `append` "' had the following problems: " `append` reason
+  where msg = "The parameter '" `T.append` param `T.append` "' had the following problems: " `T.append` reason
 
 -- Document calls errors
 
 documentObjectVersionMismatch :: DocumentObjectVersionDoesNotMatch -> APIError
 documentObjectVersionMismatch (DocumentObjectVersionDoesNotMatch {..}) = APIError { errorType = DocumentObjectVersionMismatch, errorHttpCode = 409, errorMessage = msg}
   where msg = "The document has a different object_version to the one provided and so the request was not processed."
-              `append` " You gave " `append` (pack $ show documentObjectVersionShouldBe)
-              `append` " but the document had " `append` (pack $ show documentObjectVersionIs)
+              `T.append` " You gave " `T.append` (T.pack $ show documentObjectVersionShouldBe)
+              `T.append` " but the document had " `T.append` (T.pack $ show documentObjectVersionIs)
 
-documentStateError :: Text -> APIError
+documentStateError :: T.Text -> APIError
 documentStateError msg = APIError { errorType = DocumentStateError, errorHttpCode = 409, errorMessage = msg}
 
-documentStateErrorWithCode :: Int -> Text -> APIError
+documentStateErrorWithCode :: Int -> T.Text -> APIError
 documentStateErrorWithCode code msg = (documentStateError msg) {errorHttpCode = code}
 
-signatoryStateError :: Text -> APIError
+signatoryStateError :: T.Text -> APIError
 signatoryStateError msg = APIError { errorType = SignatoryStateError, errorHttpCode = 409, errorMessage = msg}
 
 documentActionForbidden :: APIError
@@ -154,12 +154,12 @@ documentActionForbidden = APIError { errorType = DocumentActionForbidden, errorH
   where msg = "You do not have permission to perform this action on the document."
 
 documentNotFound :: DocumentID -> APIError
-documentNotFound did = resourceNotFound $ "A document with id " `append` didText `append` " was not found."
-  where didText = pack (show did)
+documentNotFound did = resourceNotFound $ "A document with id " `T.append` didText `T.append` " was not found."
+  where didText = T.pack (show did)
 
-resourceNotFound :: Text -> APIError
+resourceNotFound :: T.Text -> APIError
 resourceNotFound info = APIError { errorType = ResourceNotFound, errorHttpCode = 404, errorMessage = msg}
-  where msg = "The resource was not found. " `append` info
+  where msg = "The resource was not found. " `T.append` info
 
 -- Conversion of DB exception / document conditionals into API errors
 
@@ -221,7 +221,7 @@ convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument (SomeKontraException ex
 convertSignatoryLinkDoesNotExist :: SomeKontraException -> SomeKontraException
 convertSignatoryLinkDoesNotExist (SomeKontraException ex) =
   case cast ex of
-    Just (SignatoryLinkDoesNotExist sig) ->  SomeKontraException $ signatoryStateError $ "Signatory "  `append` pack (show sig) `append` " does not exists"
+    Just (SignatoryLinkDoesNotExist sig) ->  SomeKontraException $ signatoryStateError $ "Signatory "  `T.append` T.pack (show sig) `T.append` " does not exists"
     Nothing -> (SomeKontraException ex)
 
 convertSignatoryHasNotYetSigned :: SomeKontraException -> SomeKontraException

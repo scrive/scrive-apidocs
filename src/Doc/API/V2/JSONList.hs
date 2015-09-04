@@ -5,8 +5,8 @@ module Doc.API.V2.JSONList (
 ) where
 
 import Control.Applicative.Free
-import Data.Text
 import Data.Unjson
+import qualified Data.Text as T
 
 import DB
 import Doc.API.V2.JSONMisc()
@@ -58,17 +58,17 @@ type DocumentFiltering = [DocumentFilter]
 
 data DocumentFilter = DocumentFilterStatuses [DocumentStatus]
                     | DocumentFilterTime (Maybe UTCTime) (Maybe UTCTime)
-                    | DocumentFilterTag Text Text
+                    | DocumentFilterTag T.Text T.Text
                     | DocumentFilterIsAuthor
                     | DocumentFilterIsAuthoredBy UserID
                     | DocumentFilterIsSignableOnPad
                     | DocumentFilterIsTemplate Bool
                     | DocumentFilterIsInTrash Bool
-                    | DocumentFilterByText Text
+                    | DocumentFilterByText T.Text
                     | DocumentFilterCanBeSignedBy UserID
 
 
-filterType ::  DocumentFilter -> Text
+filterType ::  DocumentFilter -> T.Text
 filterType (DocumentFilterStatuses _) = "status"
 filterType (DocumentFilterTime _ _) = "mtime"
 filterType (DocumentFilterTag _ _) = "tag"
@@ -94,7 +94,7 @@ instance Unjson DocumentFilter where
       , (DocumentFilterCanBeSignedBy (unsafeUserID 0), unjsonDocumentFilterCanBeSignedBy)
     ]
     where
-      filterMatch :: (DocumentFilter,Ap (FieldDef DocumentFilter) DocumentFilter) -> (Text, DocumentFilter -> Bool, Ap (FieldDef DocumentFilter) DocumentFilter)
+      filterMatch :: (DocumentFilter,Ap (FieldDef DocumentFilter) DocumentFilter) -> (T.Text, DocumentFilter -> Bool, Ap (FieldDef DocumentFilter) DocumentFilter)
       filterMatch (df,a) = (filterType df, \f -> filterType df == filterType f, a)
 
 unjsonDocumentFilterStatuses:: Ap (FieldDef DocumentFilter) DocumentFilter
@@ -125,10 +125,10 @@ unjsonDocumentFilterTag = pure DocumentFilterTag
   <*> field "name" unsafeDocumentFilterTagName "Name of tag to filter on"
   <*> field "value" unsafeDocumentFilterTagValue "Value of such tag"
   where
-    unsafeDocumentFilterTagName:: DocumentFilter ->  Text
+    unsafeDocumentFilterTagName:: DocumentFilter ->  T.Text
     unsafeDocumentFilterTagName (DocumentFilterTag n _) = n
     unsafeDocumentFilterTagName _ = $unexpectedError "unsafeDocumentFilterTagName"
-    unsafeDocumentFilterTagValue:: DocumentFilter ->  Text
+    unsafeDocumentFilterTagValue:: DocumentFilter ->  T.Text
     unsafeDocumentFilterTagValue (DocumentFilterTag _ v) = v
     unsafeDocumentFilterTagValue _ = $unexpectedError "unsafeDocumentFilterTagValue"
 
@@ -173,7 +173,7 @@ unjsonDocumentFilterByText = pure DocumentFilterByText
   <*  fieldReadonly "filter_by" filterType "Type of filter"
   <*> field "text" unsafeDocumentFilterText "Text to filter on"
   where
-    unsafeDocumentFilterText :: DocumentFilter ->  Text
+    unsafeDocumentFilterText :: DocumentFilter ->  T.Text
     unsafeDocumentFilterText (DocumentFilterByText text) = text
     unsafeDocumentFilterText _ = $unexpectedError "unsafeDocumentFilterText"
 
@@ -193,12 +193,12 @@ toDocumentFilter _ (DocumentFilterTime (Just start) (Just end)) = [DF.DocumentFi
 toDocumentFilter _ (DocumentFilterTime Nothing (Just end)) = [DF.DocumentFilterByTimeBefore end]
 toDocumentFilter _ (DocumentFilterTime (Just start) Nothing) = [DF.DocumentFilterByTimeAfter start]
 toDocumentFilter _ (DocumentFilterTime Nothing Nothing) = []
-toDocumentFilter _ (DocumentFilterTag name value) = [DF.DocumentFilterByTags [DocumentTag (unpack name) (unpack value)]]
+toDocumentFilter _ (DocumentFilterTag name value) = [DF.DocumentFilterByTags [DocumentTag (T.unpack name) (T.unpack value)]]
 toDocumentFilter uid (DocumentFilterIsAuthor) = [DF.DocumentFilterByAuthor uid]
 toDocumentFilter _ (DocumentFilterIsAuthoredBy uid) = [DF.DocumentFilterByAuthor uid]
 toDocumentFilter _ (DocumentFilterIsSignableOnPad) = [DF.DocumentFilterSignNowOnPad]
 toDocumentFilter _ (DocumentFilterIsTemplate True)  = [DF.DocumentFilterTemplate]
 toDocumentFilter _ (DocumentFilterIsTemplate False) = [DF.DocumentFilterSignable]
 toDocumentFilter _ (DocumentFilterIsInTrash bool) = [DF.DocumentFilterDeleted bool]
-toDocumentFilter _ (DocumentFilterByText text) = [DF.DocumentFilterByString (unpack text)]
+toDocumentFilter _ (DocumentFilterByText text) = [DF.DocumentFilterByString (T.unpack text)]
 toDocumentFilter _ (DocumentFilterCanBeSignedBy uid) = [DF.DocumentFilterByCanSign uid]

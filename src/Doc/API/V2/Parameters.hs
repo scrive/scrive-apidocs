@@ -13,10 +13,10 @@ import KontraPrelude
 import System.FilePath
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Text as T
 
 import API.V2
 import DB
-import Data.Text hiding (map, reverse, takeWhile)
 import Data.Unjson
 import Data.Unjson as Unjson
 import Doc.Rendering
@@ -28,14 +28,14 @@ import LiveDocx
 import qualified Data.Aeson as Aeson
 
 data ApiV2Parameter a where
-  ApiV2ParameterBool  :: Text -> ApiV2Parameter Bool
-  ApiV2ParameterInt   :: Text -> ApiV2Parameter Int
-  ApiV2ParameterText  :: Text -> ApiV2Parameter Text
-  ApiV2ParameterRead  :: Read a => Text -> ApiV2Parameter a
-  ApiV2ParameterJSON  :: Text -> UnjsonDef a -> ApiV2Parameter a
-  ApiV2ParameterAeson :: Aeson.FromJSON a => Text -> ApiV2Parameter a
-  ApiV2ParameterFilePDF        :: Text -> ApiV2Parameter File
-  ApiV2ParameterFilePDFOrImage :: Text -> ApiV2Parameter File
+  ApiV2ParameterBool  :: T.Text -> ApiV2Parameter Bool
+  ApiV2ParameterInt   :: T.Text -> ApiV2Parameter Int
+  ApiV2ParameterText  :: T.Text -> ApiV2Parameter T.Text
+  ApiV2ParameterRead  :: Read a => T.Text -> ApiV2Parameter a
+  ApiV2ParameterJSON  :: T.Text -> UnjsonDef a -> ApiV2Parameter a
+  ApiV2ParameterAeson :: Aeson.FromJSON a => T.Text -> ApiV2Parameter a
+  ApiV2ParameterFilePDF        :: T.Text -> ApiV2Parameter File
+  ApiV2ParameterFilePDFOrImage :: T.Text -> ApiV2Parameter File
 
 -- | Get an obligatory parameter
 --
@@ -59,11 +59,11 @@ apiV2ParameterDefault d p = do
 apiV2ParameterOptional :: Kontrakcja m => ApiV2Parameter a -> m (Maybe a)
 
 apiV2ParameterOptional (ApiV2ParameterInt name) = apiParameterUsingMaybeRead name
-apiV2ParameterOptional (ApiV2ParameterText name) = liftM (fmap pack) $ getField $ unpack name
+apiV2ParameterOptional (ApiV2ParameterText name) = liftM (fmap T.pack) $ getField $ T.unpack name
 apiV2ParameterOptional (ApiV2ParameterRead name) = apiParameterUsingMaybeRead name
 
 apiV2ParameterOptional (ApiV2ParameterBool name) = do
-  mValue <- getField $ unpack name
+  mValue <- getField $ T.unpack name
   case mValue of
     Just "true"  -> return $ Just True
     Just "false" -> return $ Just False
@@ -71,17 +71,17 @@ apiV2ParameterOptional (ApiV2ParameterBool name) = do
     Nothing -> return Nothing
 
 apiV2ParameterOptional (ApiV2ParameterJSON name jsonDef) = do
-  mValue <- getFieldBS (unpack name)
+  mValue <- getFieldBS (T.unpack name)
   case mValue of
     Just paramValue -> case Aeson.eitherDecode paramValue of
       Left _ -> apiError $ requestParameterParseError name "Invalid JSON"
       Right paramAeson -> case (Unjson.parse jsonDef paramAeson) of
         (Result res []) -> return $ Just res
-        (Result _ errs) -> apiError $ requestParameterParseError name (pack (show errs))
+        (Result _ errs) -> apiError $ requestParameterParseError name (T.pack (show errs))
     Nothing -> return Nothing
 
 apiV2ParameterOptional (ApiV2ParameterAeson name) = do
-  mValue <- getFieldBS (unpack name)
+  mValue <- getFieldBS (T.unpack name)
   case mValue of
     Just paramValue -> case Aeson.eitherDecode paramValue of
       Left _ -> apiError $ requestParameterParseError name "Invalid JSON"
@@ -89,7 +89,7 @@ apiV2ParameterOptional (ApiV2ParameterAeson name) = do
     Nothing -> return Nothing
 
 apiV2ParameterOptional (ApiV2ParameterFilePDF name) = do
-  mValue <- getDataFn' (lookInput $ unpack name)
+  mValue <- getDataFn' (lookInput $ T.unpack name)
   case mValue of
     Nothing -> return Nothing
     Just (Input _ Nothing _) -> apiError $ requestParameterInvalid name "file was empty"
@@ -106,8 +106,8 @@ apiV2ParameterOptional (ApiV2ParameterFilePDF name) = do
         Just format -> do
           eres <- convertToPDF (ctxlivedocxconf ctx) content' format
           case eres of
-            Left (LiveDocxIOError e) -> apiError $ requestParameterParseError name $ "LiveDocX conversion IO failed " `append` pack (show e)
-            Left (LiveDocxSoapError s)-> apiError $ requestParameterParseError name $ "LiveDocX conversion SOAP failed " `append` pack s
+            Left (LiveDocxIOError e) -> apiError $ requestParameterParseError name $ "LiveDocX conversion IO failed " `T.append` T.pack (show e)
+            Left (LiveDocxSoapError s)-> apiError $ requestParameterParseError name $ "LiveDocX conversion SOAP failed " `T.append` T.pack s
             Right res -> do
               -- change extension from .doc, .docx and others to .pdf
               let filename = takeBaseName filename' ++ ".pdf"
@@ -124,7 +124,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDF name) = do
       return $ Just file
 
 apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
-  mValue <- getDataFn' (lookInput $ unpack name)
+  mValue <- getDataFn' (lookInput $ T.unpack name)
   case mValue of
     Nothing -> return Nothing
     Just (Input _ Nothing _) -> apiError $ requestParameterInvalid name "file was empty"
@@ -133,7 +133,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
       content' <- case contentspec of
         Left filepath -> liftIO $ BS.readFile filepath
         Right content -> return (BS.concat $ BSL.toChunks content)
-      let filenameExt = toLower . pack . takeExtension $ filename
+      let filenameExt = T.toLower . T.pack . takeExtension $ filename
           pdfSuffix = ".pdf" == filenameExt
           jpgSufix = ".jpg" == filenameExt || ".jpeg" == filenameExt
           pngSuffix = ".png" == filenameExt
@@ -152,16 +152,16 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
 -- * Internal
 
 -- | Helper function for all parameters that can just be parsed using `maybeRead`
-apiParameterUsingMaybeRead :: (Kontrakcja m, Read a) => Text -> m (Maybe a)
+apiParameterUsingMaybeRead :: (Kontrakcja m, Read a) => T.Text -> m (Maybe a)
 apiParameterUsingMaybeRead name = do
-  mValue <- getField $ unpack name
+  mValue <- getField $ T.unpack name
   case fmap maybeRead mValue of
     Just (Just v) -> return $ Just v
     Just Nothing  -> apiError $ requestParameterParseError name "could not read parameter"
     Nothing -> return Nothing
 
 -- | Helper function to extract name from `ApiV2Parameter`
-getParameterName :: ApiV2Parameter a -> Text
+getParameterName :: ApiV2Parameter a -> T.Text
 getParameterName (ApiV2ParameterBool n) = n
 getParameterName (ApiV2ParameterInt n) = n
 getParameterName (ApiV2ParameterText n) = n

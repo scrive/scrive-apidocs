@@ -17,12 +17,12 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2SigSetAuthenticationToSign
 ) where
 
-import Data.Text hiding (map, null, reverse, takeWhile)
 import Data.Unjson
 import Data.Unjson as Unjson
 import Happstack.Server.Types
 import System.FilePath (dropExtension)
 import Text.StringTemplates.Templates
+import qualified Data.Text as T
 
 import API.V2
 import Attachment.Model
@@ -117,7 +117,7 @@ docApiV2Update did = logDocument did . api $ do
       (Result draftData []) ->
         return draftData
       (Result _ errs) ->
-        apiError $ requestParameterParseError "document" $ "Errors while parsing document data: " `append` pack (show errs)
+        apiError $ requestParameterParseError "document" $ "Errors while parsing document data: " `T.append` T.pack (show errs)
     -- API call actions
     applyDraftDataToDocument draftData actor
     -- Result
@@ -243,7 +243,7 @@ docApiV2Forward did = logDocument did . api $ do
     -- when it is closed, otherwise the link may be abused
     guardDocumentStatus Closed
     -- Parameters
-    email <- liftM unpack $ apiV2ParameterObligatory (ApiV2ParameterText "email")
+    email <- liftM T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "email")
     noContent <- apiV2ParameterDefault True (ApiV2ParameterBool "no_content")
     -- API call actions
     asiglink <- liftM $fromJust $ getAuthorSigLink <$> theDocument
@@ -300,8 +300,8 @@ docApiV2SetAttachments did = logDocument did . api $ do
           let fidAlreadyInDoc = fid `elem` (authorattachmentfileid <$> documentauthorattachments doc)
           hasAccess <- liftM (not null) $ dbQuery $ attachmentsQueryFor user fid
           when (not (fidAlreadyInDoc || hasAccess)) $
-            apiError $ resourceNotFound $ "No file with file_id " `append` (pack . show $ fid)
-              `append` " found. It may not exist or you don't have permission to use it."
+            apiError $ resourceNotFound $ "No file with file_id " `T.append` (T.pack . show $ fid)
+              `T.append` " found. It may not exist or you don't have permission to use it."
           return fid
           )
     let allAttachments = fileIDs ++ attachments
@@ -315,7 +315,7 @@ docApiV2SetAttachments did = logDocument did . api $ do
     processAttachmentParameters :: (Kontrakcja m) => m [FileID]
     processAttachmentParameters = sequenceOfFileIDsWith getAttachmentParmeter [] 0
     getAttachmentParmeter :: (Kontrakcja m) => Int -> m (Maybe FileID)
-    getAttachmentParmeter i = liftM (fmap fileid) $ apiV2ParameterOptional (ApiV2ParameterFilePDF $ "attachment_" `append` (pack . show $ i))
+    getAttachmentParmeter i = liftM (fmap fileid) $ apiV2ParameterOptional (ApiV2ParameterFilePDF $ "attachment_" `T.append` (T.pack . show $ i))
     sequenceOfFileIDsWith :: (Kontrakcja m) => (Int -> m (Maybe FileID)) -> [FileID] -> Int -> m [FileID]
     sequenceOfFileIDsWith fidFunc lf i = do
       mAttachment <- fidFunc i
@@ -412,7 +412,7 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
     authentication_type <- case mAuthenticationType of
       Just a -> return a
       Nothing -> apiError $ requestParameterParseError "authentication_type" "Not a valid  authentication type, see our API documentation."
-    authentication_value <- liftM (fmap unpack) $ apiV2ParameterOptional (ApiV2ParameterText "authentication_value")
+    authentication_value <- liftM (fmap T.unpack) $ apiV2ParameterOptional (ApiV2ParameterText "authentication_value")
     -- API call actions
     dbUpdate $ ChangeAuthenticationToSignMethod slid authentication_type authentication_value actor
     -- Return

@@ -14,10 +14,10 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as BC
 import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Text as T
 
 import DB.TimeZoneName
 import Data.Functor.Invariant
-import Data.Text hiding (last, map, scanl1)
 import Data.Unjson
 import Doc.API.V2.UnjsonUtils
 import Doc.DocStateData
@@ -33,8 +33,8 @@ import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 
 -- | Convert UTCTime to ISO8601 time format with two decimal places that we use
-utcTimeToAPIFormat :: UTCTime -> Text
-utcTimeToAPIFormat time = Data.Text.take 22 (pack (formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S%Q")) time)) `append` "Z"
+utcTimeToAPIFormat :: UTCTime -> T.Text
+utcTimeToAPIFormat time = T.take 22 (T.pack (formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S%Q")) time)) `T.append` "Z"
 
 instance Unjson DocumentID where
   unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse DocumentID")  return) . maybeRead) (show . fromDocumentID :: DocumentID -> String) unjsonDef
@@ -86,11 +86,11 @@ instance Unjson DeliveryStatus where
 instance Unjson AuthenticationToViewMethod where
   unjsonDef = unjsonEnum "AuthenticationToViewMethod" textToAuthenticationToViewMethod authenticationToViewMethodToText
 
-authenticationToViewMethodToText :: AuthenticationToViewMethod -> Text
+authenticationToViewMethodToText :: AuthenticationToViewMethod -> T.Text
 authenticationToViewMethodToText StandardAuthenticationToView = "standard"
 authenticationToViewMethodToText SEBankIDAuthenticationToView = "se_bankid"
 
-textToAuthenticationToViewMethod :: Text -> Maybe AuthenticationToViewMethod
+textToAuthenticationToViewMethod :: T.Text -> Maybe AuthenticationToViewMethod
 textToAuthenticationToViewMethod "standard" = Just StandardAuthenticationToView
 textToAuthenticationToViewMethod "se_bankid" = Just SEBankIDAuthenticationToView
 textToAuthenticationToViewMethod _ = Nothing
@@ -98,12 +98,12 @@ textToAuthenticationToViewMethod _ = Nothing
 instance Unjson AuthenticationToSignMethod where
   unjsonDef = unjsonEnum "AuthenticationToSignMethod" textToAuthenticationToSignMethod authenticationToSignMethodToText
 
-authenticationToSignMethodToText :: AuthenticationToSignMethod -> Text
+authenticationToSignMethodToText :: AuthenticationToSignMethod -> T.Text
 authenticationToSignMethodToText StandardAuthenticationToSign = "standard"
 authenticationToSignMethodToText SEBankIDAuthenticationToSign = "se_bankid"
 authenticationToSignMethodToText SMSPinAuthenticationToSign = "sms_pin"
 
-textToAuthenticationToSignMethod :: Text -> Maybe AuthenticationToSignMethod
+textToAuthenticationToSignMethod :: T.Text -> Maybe AuthenticationToSignMethod
 textToAuthenticationToSignMethod "standard"  = Just StandardAuthenticationToSign
 textToAuthenticationToSignMethod "se_bankid" = Just SEBankIDAuthenticationToSign
 textToAuthenticationToSignMethod "sms_pin"   = Just SMSPinAuthenticationToSign
@@ -128,7 +128,7 @@ instance Unjson ConfirmationDeliveryMethod where
     ]
 
 instance Unjson Lang where
-  unjsonDef = unjsonEnum "Lang" (langFromCode . unpack) (pack . codeFromLang)
+  unjsonDef = unjsonEnum "Lang" (langFromCode . T.unpack) (T.pack . codeFromLang)
 
 -- Unjson for simple structures used in document and signatories json
 

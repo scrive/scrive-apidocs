@@ -5,9 +5,9 @@ module Doc.API.V2.Calls.SignatoryCallsUtils (
 , checkSignatoryPin
 ) where
 
-import Data.Text (unpack)
 import Data.Unjson
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.Text as T
 
 import API.V2
 import DB
@@ -45,13 +45,13 @@ checkAuthenticationToSignMethodAndValue slid = do
       case authMethod of
         StandardAuthenticationToSign -> return ()
         SEBankIDAuthenticationToSign -> do
-          authValue <- liftM unpack $ apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
+          authValue <- liftM T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
           if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
             then return ()
             else apiError $
               requestParameterInvalid "authentication_value" "value for personal number does not match"
         SMSPinAuthenticationToSign -> do
-          authValue <- liftM unpack $ apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
+          authValue <- liftM T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
           if (authValue == getMobile siglink || null (getMobile siglink))
             then return ()
             else apiError $

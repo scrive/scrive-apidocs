@@ -5,12 +5,12 @@ module Doc.API.V2.JSONFields (
 , SignatoryFieldTMPValue(..)
 ) where
 
-import Data.Text
 import Data.Text.Encoding
 import Data.Unjson
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.RFC2397 as RFC2397
+import qualified Data.Text as T
 
 import Control.Applicative.Free
 import Doc.API.V2.JSONMisc()
@@ -157,7 +157,7 @@ unjsonSignatureField  = pure (\n ob sfbs ps -> SignatureField  (unsafeSignatoryF
 instance Unjson FieldType where
   unjsonDef = unjsonEnum "FieldType (Readonly)" (\_ -> Nothing) fieldTypeToText
 
-fieldTypeToText :: FieldType -> Text
+fieldTypeToText :: FieldType -> T.Text
 fieldTypeToText NameFT = "name"
 fieldTypeToText CompanyFT = "company"
 fieldTypeToText PersonalNumberFT = "personal_number"

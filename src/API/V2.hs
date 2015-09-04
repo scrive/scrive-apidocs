@@ -21,9 +21,9 @@ import API.V2.Errors
 import API.V2.Monad
 import API.V2.User
 
-import Data.Text (pack)
 import Happstack.Server (askRq)
 import Happstack.Server.Types (Response, rqUri)
+import qualified Data.Text as T
 
 import Kontra (Kontrakcja)
 import KontraPrelude
@@ -32,5 +32,5 @@ import KontraPrelude
 noAPIV2CallFoundHandler :: Kontrakcja m => m Response
 noAPIV2CallFoundHandler = api $ do
   uri <- rqUri <$> askRq
-  _ <- apiError $ endpointNotFound (pack uri)
+  _ <- apiError $ endpointNotFound (T.pack uri)
   return $ Ok ()

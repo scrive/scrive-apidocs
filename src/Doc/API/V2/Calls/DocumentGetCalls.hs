@@ -10,12 +10,12 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 ) where
 
 import Data.Char
-import Data.Text (pack, unpack)
 import Data.Unjson
 import Happstack.Server.Types
 import Text.JSON.Types (JSValue(..))
 import qualified Data.ByteString.Lazy as BSL (fromStrict)
 import qualified Data.Map as Map hiding (map)
+import qualified Data.Text as T
 import qualified Text.JSON as J
 
 import API.V2
@@ -88,7 +88,7 @@ docApiV2History did = logDocument did . api $ do
   (user,_) <- getAPIUser APIDocCheck
   -- Parameters
   mLangCode <- apiV2ParameterOptional (ApiV2ParameterText "lang")
-  mLang <- case fmap (langFromCode . unpack) mLangCode of
+  mLang <- case fmap (langFromCode . T.unpack) mLangCode of
     Nothing -> return Nothing
     Just Nothing -> do
       apiError $ requestParameterInvalid "lang" "Not a valid or supported language code"
@@ -129,7 +129,7 @@ docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
           Just file -> do
            presealFile <- presealDocumentFile doc file
            case presealFile of
-             Left err -> apiError $ serverError (pack err)
+             Left err -> apiError $ serverError (T.pack err)
              Right f -> return $ f
   return $ Ok $ respondWithPDF False fileContents
 
@@ -168,7 +168,7 @@ docApiV2Texts did fid = logDocumentAndFile did fid . api $ do
     -- We have a "black-box" JSON structure here, see Doc.Texts for details
     -- If you feel motivated you can refactor this to proper data type with
     -- Unjson instance to make things better :)
-    jsonText <- liftM unpack $ apiV2ParameterObligatory (ApiV2ParameterText "json")
+    jsonText <- liftM T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "json")
     (json :: JSValue) <- case J.decode jsonText of
             J.Ok j -> return j
             _ -> apiError $ requestParameterParseError "json" "Could not read JSON"

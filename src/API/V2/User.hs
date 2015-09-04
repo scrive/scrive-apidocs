@@ -7,8 +7,8 @@ module API.V2.User (
   , getDocumentSignatoryMagicHash
 ) where
 
-import Data.Text
 import MagicHash (MagicHash)
+import qualified Data.Text as T
 
 import API.V2.Errors
 import API.V2.Monad
@@ -90,7 +90,7 @@ getAPIUserWith :: Kontrakcja m => (Context -> Maybe User) -> [APIPrivilege] -> m
 getAPIUserWith ctxUser privs = do
   moauthuser <- getOAuthUser privs
   case moauthuser of
-    Just (Left msg) -> apiError $ invalidAuthorisationWithMsg (pack msg)
+    Just (Left msg) -> apiError $ invalidAuthorisationWithMsg (T.pack msg)
     Just (Right (user, actor)) -> return (user, actor)
     Nothing -> do
       msessionuser <- do
