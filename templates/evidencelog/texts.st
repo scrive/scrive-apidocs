@@ -502,7 +502,12 @@ $endif$
 ###
 AuthenticatedToViewEvidenceArchive=$_AuthenticatedToViewEvidenceArchive()$
 ###
-AuthenticatedToViewEvidenceVerificationPages=$_AuthenticatedToViewEvidenceVerificationPages()$
+AuthenticatedToViewEvidenceVerificationPages=
+$if(signatory_dob)$
+$_AuthenticatedToViewEvidenceVerificationPagesWithDate()$
+$else$
+$_AuthenticatedToViewEvidenceVerificationPagesWithoutDate()$
+$endif$
 ###
 UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Phone". Scrive eSign changed it from "$oldphone$" to "$newphone$".
 ###

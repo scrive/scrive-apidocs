@@ -71,10 +71,11 @@ data NetsNOBankIDAuthentication = NetsNOBankIDAuthentication {
 } deriving (Eq, Ord, Show)
 
 
--- | Information for transaction. It is encoded in frontend as triple + Base64 when strating nets iframe.
+-- | Information for transaction. It is encoded in frontend as (,,,) + Base64 when starting nets iframe.
 --   Backend decodes that within resolve handler.
 data NetsTarget = NetsTarget {
-    netsDocumentID           :: !DocumentID
+    netsTransactionDomain    :: String -- Domain where session cookie is set
+  , netsDocumentID           :: !DocumentID
   , netsSignatoryID          :: !SignatoryLinkID
   , netsReturnURL            :: !String
 } deriving (Eq, Ord, Show)
@@ -82,7 +83,7 @@ data NetsTarget = NetsTarget {
 decodeNetsTarget :: String -> Maybe NetsTarget
 decodeNetsTarget t = case (B64.decode $ BS.pack $ t) of
                        Right t' -> case (maybeRead $ BS.unpack t') of
-                         Just (did,sid,rurl) -> Just $ NetsTarget did sid rurl
+                         Just (dmn,did,sid,rurl) -> Just $ NetsTarget dmn did sid rurl
                          _ -> Nothing
                        _ -> Nothing
 

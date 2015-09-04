@@ -11,6 +11,7 @@ module EID.Authentication.Model (
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.ByteString (ByteString)
+import Data.Foldable as F
 import Data.Int
 import Data.Time
 import qualified Data.Text as T
@@ -66,7 +67,7 @@ instance ToSQL AuthenticationProvider where
 
 ----------------------------------------
 
--- | General version of mergin some authentication for a given signatory or replace the existing one.
+-- | General version of inserting some authentication for a given signatory or replacing existing one.
 data MergeAuthenticationInternal = MergeAuthenticationInternal SessionID SignatoryLinkID ((MonadState v n, SqlSet v) => n ())
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeAuthenticationInternal () where
   update (MergeAuthenticationInternal sid slid setDedicatedAuthFields) = do
@@ -134,8 +135,7 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Mayb
       sqlResult "signatory_date_of_birth"
       sqlResult "ocsp_response"
       sqlWhereEq "signatory_link_id" slid
-      when (isJust msid) $ do
-        sqlWhereEq "session_id" $ $fromJust msid
+      F.forM_ msid $ sqlWhereEq "session_id"
     fetchMaybe fetchEAuthentication
 
 -- | Get signature for a given signatory. Used when generating evidence long after user has signed.

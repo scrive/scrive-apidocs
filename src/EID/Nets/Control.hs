@@ -2,6 +2,7 @@ module EID.Nets.Control (netsRoutes) where
 
 
 import Control.Monad
+import Data.String.Utils (replace)
 import Happstack.Server hiding (dir)
 import Happstack.StaticRouting
 import Log
@@ -31,6 +32,7 @@ import Network.SOAP.Transport.Curl
 import Routing
 import Util.Actor
 import Util.HasSomeUserInfo
+import Utils.HTTP
 
 netsRoutes :: Route (Kontra Response)
 netsRoutes = choice [
@@ -58,6 +60,10 @@ handleResolve = do
       mnt <-  getField "TARGET"
       mart <- getField "SAMLart"
       case (join $ fmap decodeNetsTarget mnt,mart) of
+        (Just nt, _) | (ctxhostpart ctx) /= (netsTransactionDomain nt) -> do
+          -- Nets can redirect us from branded domain to main domain. We need to jump back to branded domain for cookies
+          link <- currentLink
+          return $ LinkExternal $ replace (ctxhostpart ctx) (netsTransactionDomain nt) link
         (Just nt, Just art) -> do
           (doc,sl) <- getDocumentAndSignatoryForEID (netsDocumentID nt) (netsSignatoryID nt)
           certErrorHandler <- mkCertErrorHandler
@@ -89,6 +95,7 @@ handleResolve = do
                       "DOB" .= dobNETS
                     , "SSN" .= dobSSN
                     ]
+                  internalError
 
                -- Put NO BankID transaction in DB
                dbUpdate $ MergeNetsNOBankIDAuthentication sessionID (netsSignatoryID nt) $ NetsNOBankIDAuthentication {

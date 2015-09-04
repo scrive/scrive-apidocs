@@ -81,7 +81,7 @@ define(["legacy_code", "backend", "util", "React", "signview/identify/norwegian/
         var iframe = processingView.refs.iframe;
         assert.ok(iframe, "processing view should have iframe");
 
-        window.postMessage("errorPageLoaded",window.location.origin);
+        window.postMessage("identify_none",window.location.origin);
         setTimeout(function() {
           assert.ok(model.isIdentify(), "we should go back to identify after post message");
           done();

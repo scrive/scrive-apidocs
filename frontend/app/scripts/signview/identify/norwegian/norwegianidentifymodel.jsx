@@ -94,10 +94,9 @@ define(["legacy_code", "Underscore", "Backbone", "base64"],
       this.setIdentify();
     },
     noBankIDLink: function () {
-      var location = "https://scrive.com"; // window.location.origin
+      var location = window.location.origin; // For local testing - replace this with https domain
       var netsIdentifyUrl = window.netsIdentifyUrl;
       var netsMerchantIdentifier = window.netsMerchantIdentifier;
-      var target = "KDMsNiwiaHR0cDovL2xvY2FsaG9zdDo4MDAwL3MvMy82Iik%3D";
       var vendor = this.isDesktopMode() ? "no_bankid" : "no_bidmob";
       link = netsIdentifyUrl + "?mid=" + netsMerchantIdentifier + "&wi=r";
       link = link + "&forcepkivendor=" + vendor;
@@ -107,7 +106,8 @@ define(["legacy_code", "Underscore", "Backbone", "base64"],
         link = link + "&celnr8=" + encodeURIComponent(Base64.encode(this.mobileFormatted()));
         link = link + "&dob6=" + encodeURIComponent(Base64.encode(this.dateOfBirth()));
       }
-      var target = "(" + this.doc().documentid() + "," + this.siglinkid() + ",\"" + window.location  + "\")";
+      var target = "(\"" + window.location.origin + "\"," + this.doc().documentid() +
+                     "," + this.siglinkid() + ",\"" + window.location  + "\")";
       link = link + "&TARGET=" + encodeURIComponent(Base64.encode(target));
 
       var start = location + "/nets/start?status=";
