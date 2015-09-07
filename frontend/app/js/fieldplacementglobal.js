@@ -62,7 +62,5 @@ FieldPlacementGlobal.checkboxWidth = 10;
 FieldPlacementGlobal.checkboxHeight = 10;
 FieldPlacementGlobal.textfieldWidth = 77;
 FieldPlacementGlobal.textfieldHeight = 34;
-FieldPlacementGlobal.extractionWidth = 260;
-FieldPlacementGlobal.extractionHeight = 102;
 
 });

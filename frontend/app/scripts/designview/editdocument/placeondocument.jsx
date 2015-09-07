@@ -29,9 +29,6 @@ define(["legacy_code"], function (legacy_code) {
     } else if (field.isSignature()) {
       placementWidth = FieldPlacementGlobal.signatureWidth;
       placementHeight = FieldPlacementGlobal.signatureHeight;
-    } else if (field.isExtraction()) {
-      placementWidth = FieldPlacementGlobal.extractionWidth;
-      placementHeight = FieldPlacementGlobal.extractionHeight;
     }
 
     return {

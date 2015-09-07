@@ -152,23 +152,26 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
 
   var initHelper = function (event) {
     initFP();
-    helper = createFieldPlacementView({
-      model: field,
-      height: heightFunction != undefined ? heightFunction() : undefined,
-      width: widthFunction != undefined ? widthFunction() : undefined,
-      dragging: true,
-      fontSize: fontSize
-    }).el;
-    return helper;
+    if (field) {
+      helper = createFieldPlacementView({
+        model: field,
+        height: heightFunction != undefined ? heightFunction() : undefined,
+        width: widthFunction != undefined ? widthFunction() : undefined,
+        dragging: true,
+        fontSize: fontSize
+      }).el;
+      return helper;
+    }
   };
 
-  dragHandler.click(function () {
-    if (!dragHandler.hasClass("placedfield")) {
-      var signatory = field.signatory();
+  if (!dragHandler.hasClass("placedfield")) {
+    dragHandler.click(function () {
       initHelper();
-      placeOnDocument(dragHandler, field, onDrop);
-    }
-  });
+      if (helper && field) {
+        placeOnDocument(dragHandler, field, onDrop);
+      }
+    });
+  }
 
   dragHandler.draggable({
     appendTo: ".design-view-frame",

@@ -10,6 +10,7 @@ define(["legacy_code", "React", "designview/fileview/draggablefield"], function 
 
     componentDidMount: function () {
       var isDisabledCallback = function (field) {
+        if (!field) { return false; }
         if (!field.signatory()) { return true; }
 
         var doc = field.signatory().document();

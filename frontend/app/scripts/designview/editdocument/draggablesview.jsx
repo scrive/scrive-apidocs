@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
-define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocument/help", "designview/editdocument/draggable"],
-  function (legacy_code, React, BackboneMixin, Help, Draggable) {
+define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocument/draggablehelp", "designview/editdocument/draggable"],
+  function (legacy_code, React, BackboneMixin, DraggableHelp, Draggable) {
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
@@ -15,42 +15,40 @@ define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocumen
 
     textboxFactory: function () {
       var doc = this.props.model.document();
-
-      if (doc.signatoriesWhoSign()[0]) {
-        var signatory = doc.signatoriesWhoSign()[0];
-        var field = signatory.field("fstname", "standard");
-        return field;
-      }
-
-      console.warn("no signatories in document, draggable could not be created");
+      var sig = doc.signatoriesWhoSign()[0] || doc.author();
+      var field = sig.field("fstname", "standard");
+      return field;
     },
 
     signatureFactory: function () {
       var doc = this.props.model.document();
 
-      var field = new Field({
-        fresh: false,
-        ddSignature: true,
-        type: "signature",
-        signatory: doc.signatoriesWhoSign()[0],
-        name: "temp-signature"
-      });
+      if (doc.signatoriesWhoSign()[0]) {
+        return new Field({
+          fresh: false,
+          ddSignature: true,
+          type: "signature",
+          signatory: doc.signatoriesWhoSign()[0],
+          name: "temp-signature"
+        });
+      }
 
-      return field;
+      console.warn("no signatories in document, draggable could not be created");
     },
 
     checkboxFactory: function () {
       var doc = this.props.model.document();
+      var sig = doc.signatoriesWhoSign()[0] || doc.author();
 
-      var field = new Field({
+      return new Field({
         fresh: false,
         type: "checkbox",
         value: "checked",
-        signatory: doc.signatoriesWhoSign()[0],
+        signatory: sig,
         name: "temp-checkbox"
       });
 
-      return field;
+      console.warn("no signatories in document, draggable could not be created");
     },
 
     render: function () {
@@ -58,8 +56,8 @@ define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocumen
 
       return (
         <div className="design-view-action-document-draggables">
-          <Help className="help1" text={localization.designview.draggablehelp1} />
-          <Help className="help2" text={localization.designview.draggablehelp2} />
+          <DraggableHelp className="help1" text={localization.designview.draggablehelp1} />
+          <DraggableHelp className="help2" text={localization.designview.draggablehelp2} />
           {doc.ready() &&
             <span>
               <Draggable
