@@ -2,7 +2,7 @@
  * Now unified with author and viewer views
  */
 
-define(['React','doctools/docviewsignatories', 'authorview/fileview/fileview', 'Backbone', 'legacy_code'], function(React,DocumentViewSignatories, FileView) {
+define(['React','authorview/signatories/docviewsignatories', 'authorview/fileview/fileview', 'Backbone', 'legacy_code'], function(React,DocumentViewSignatories, FileView) {
 
 var AuthorViewModel = Backbone.Model.extend({
   defaults : {
@@ -30,7 +30,7 @@ var AuthorViewModel = Backbone.Model.extend({
     var self = this;
     if (this.get("signatories") == undefined) {
        var div = $('<div/>');
-       var component = React.render(React.createElement(DocumentViewSignatories.DocumentViewSignatories,{
+       var component = React.render(React.createElement(DocumentViewSignatories,{
                            forSigning: false,
                            document : this.document(),
                            onAction: function() {self.reload(true);}

@@ -3,7 +3,7 @@
  * Instrumented for Mixpanel
  */
 
-define(['React', 'signview/create_account_section_view', 'doctools/docviewsignatories',
+define(['React', 'signview/create_account_section_view', 'signview/signatories/docviewsignatories',
         'signview/attachments/signatoryattachmentsview', 'signview/instructionsview/instructionsview',
         'signview/attachments/authorattachmentsview', 'signview/extradetails/extradetailsview',
         'signview/signsection/signsectionview', 'common/retargeting_service',
@@ -233,7 +233,7 @@ var DocumentSignViewModel = Backbone.Model.extend({
 
     // TODO(jens): Remove this when we drop support for IE7
     if(!BrowserInfo.isIE7orLower()) {
-      var component = React.render(React.createElement(DocumentViewSignatories.DocumentViewSignatories,{
+      var component = React.render(React.createElement(DocumentViewSignatories,{
           forSigning: true,
           document : this.document()
         }), div[0]);
