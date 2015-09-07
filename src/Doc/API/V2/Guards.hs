@@ -113,6 +113,8 @@ guardThatDocumentCanBeStarted = do
        apiError $ (documentStateError "Document is a template, templates can not be started")
     unlessM (((all signatoryHasValidDeliverySettings) . documentsignatorylinks) <$> theDocument) $ do
        apiError $ documentStateError "Some signatories have invalid email address or phone number, and it is required for invitation delivery."
+    unlessM (((all signatoryHasValidSSNForIdentifyToView) . documentsignatorylinks) <$> theDocument) $ do
+       apiError $ documentStateError "Some signatories have invalid personal numbers: valid numbers are required for identification to view."
     whenM (isNothing . documentfile <$> theDocument) $ do
        apiError $ documentStateError "Document must have a file before it can be started"
     return ()
@@ -121,6 +123,10 @@ guardThatDocumentCanBeStarted = do
       EmailDelivery  ->  isGood $ asValidEmail $ getEmail sl
       MobileDelivery ->  isGood $ asValidPhoneForSMS $ getMobile sl
       EmailAndMobileDelivery -> (isGood $ asValidPhoneForSMS $ getMobile sl) && (isGood $ asValidEmail $ getEmail sl)
+      _ -> True
+    signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
+      SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN   $ getPersonalNumber sl
+      NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
       _ -> True
 
 -- | For the given DocumentID:
