@@ -112,9 +112,11 @@ guardThatDocumentCanBeStarted = do
     whenM (isTemplate <$> theDocument) $ do
        apiError $ (documentStateError "Document is a template, templates can not be started")
     unlessM (((all signatoryHasValidDeliverySettings) . documentsignatorylinks) <$> theDocument) $ do
-       apiError $ documentStateError "Some signatories have invalid email address or phone number, and it is required for invitation delivery."
+       apiError $ documentStateError "Some signatories have invalid email address or phone number, their invitation 'delivery_method' requires it to be valid and not empty."
     unlessM (((all signatoryHasValidSSNForIdentifyToView) . documentsignatorylinks) <$> theDocument) $ do
-       apiError $ documentStateError "Some signatories have invalid personal numbers: valid numbers are required for identification to view."
+       apiError $ documentStateError "Some signatories have invalid personal numbers, their 'authentication_to_view' requires it to be valid and not empty."
+    unlessM (((all signatoryHasValidAuthSettings) . documentsignatorylinks) <$> theDocument) $ do
+       apiError $ documentStateError "Some signatories have invalid personal numbers, their 'authentication_to_sign' requires it to be valid or empty."
     whenM (isNothing . documentfile <$> theDocument) $ do
        apiError $ documentStateError "Document must have a file before it can be started"
     return ()
@@ -123,6 +125,10 @@ guardThatDocumentCanBeStarted = do
       EmailDelivery  ->  isGood $ asValidEmail $ getEmail sl
       MobileDelivery ->  isGood $ asValidPhoneForSMS $ getMobile sl
       EmailAndMobileDelivery -> (isGood $ asValidPhoneForSMS $ getMobile sl) && (isGood $ asValidEmail $ getEmail sl)
+      _ -> True
+    signatoryHasValidAuthSettings sl = authToSignIsValid sl
+    authToSignIsValid sl = getPersonalNumber sl == "" || case signatorylinkauthenticationtosignmethod sl of
+      SEBankIDAuthenticationToSign -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
       _ -> True
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN   $ getPersonalNumber sl
