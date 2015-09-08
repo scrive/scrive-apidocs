@@ -166,7 +166,6 @@ var ChangeAuthenticationModalView = React.createClass({
    var model = this.props.model;
    var signatory = model.signatory();
    var selectLabel = $('<div>').html(localization.docview.changeAuthentication.methodLabel);
-   $('.put-person-name',selectLabel).text(signatory.smartname());
    return (
        <div>
            <label dangerouslySetInnerHTML={{__html: selectLabel.html()}} />

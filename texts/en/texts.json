@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -458,10 +458,10 @@
 "_docviewChangeAuthenticationModalErrorEID":"Invalid personal ID number",
 "_docviewChangeAuthenticationModalErrorPhone":"Wrong format. Correct format is +46701234567",
 "_docviewChangeAuthenticationModalErrorSigned":"As the recipient has already signed, it's not possible to change the authentication.",
-"_docviewChangeAuthenticationModalMethodLabel":"Authentication method for <strong class='put-person-name'></strong>",
+"_docviewChangeAuthenticationModalMethodLabel":"Authentication method",
 "_docviewChangeAuthenticationModalPlaceholderEID":"YYMMDDNNNN",
 "_docviewChangeAuthenticationModalPlaceholderPhone":"E.g. +46712345678",
-"_docviewChangeAuthenticationModalTitle":"Authentication",
+"_docviewChangeAuthenticationModalTitle":"Authentication to sign",
 "_docviewChangeAuthenticationModalValueInfotext":"If left empty, the recipient will enter this information.",
 "_docviewSignatoryAuthenticationToSignMethodLabel":"Authentication to sign",
 "_docviewSignatoryAuthenticationToSignSEBankID":"Swedish BankID",
