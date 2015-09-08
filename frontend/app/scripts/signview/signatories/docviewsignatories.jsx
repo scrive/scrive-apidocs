@@ -1,8 +1,8 @@
 /** @jsx React.DOM */
 
-define(["React", "Backbone","signview/signatories/docviewsignatoryforlist",
+define(["React", "Backbone", "signview/signatories/docviewsignatoryforlist",
   "signview/signatories/docviewsignatory", "legacy_code"],
-  function (React, Backbone, DocumentViewSignatoryForList ,DocumentViewSignatory) {
+  function (React, Backbone, DocumentViewSignatoryForList, DocumentViewSignatory) {
   return React.createClass({
     propTypes: {
       document: React.PropTypes.object

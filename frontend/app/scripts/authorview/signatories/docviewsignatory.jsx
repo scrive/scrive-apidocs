@@ -6,39 +6,27 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
   function (React, Button, BackboneMixin, Backbone, LanguageService,
     ChangeAuthenticationToSignModal, ChangeSignatoryDetailModal) {
 
-  var expose = {};
+  return React.createClass({
+    mixins: [BackboneMixin.BackboneMixin],
 
-  var DocumentViewSignatoryModel = Backbone.Model.extend({
-    defaults: {
-      onAction: function () {}
+    getBackboneModels: function () {
+      return [this.props.signatory];
     },
 
-    initialize: function (args) {
-      var self = this;
-      this.listenTo(args.signatory, "change", function () {self.trigger("change");});
+    propTypes: {
+      onAction: React.PropTypes.func,
+      signatory: React.PropTypes.object
     },
 
     triggerOnAction: function () {
-      if (this.get("onAction")) {
-        this.get("onAction")();
+      if (this.props.onAction) {
+        this.props.onAction();
       }
     },
 
-    document:function () {
-      return this.signatory().document();
-    },
-
-    signatory: function () {
-      return this.get("signatory");
-    },
-
-    status: function () {
-      return this.signatory().status();
-    },
-
     signatorySummary: function () {
-      var signatory = this.signatory();
-      var document = this.document();
+      var signatory = this.props.signatory;
+      var document = signatory.document();
       if (signatory.signdate() != undefined) {
         return localization.signatoryMessage.signed;
       } else if (document.timedout() || document.canceled() || document.rejected()) {
@@ -59,7 +47,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     },
 
     hasRemindOption: function () {
-      var signatory = this.signatory();
+      var signatory = this.props.signatory;
 
       if (signatory.document().signingInProcess() && signatory.hasSigned()) {
         return false;
@@ -83,7 +71,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     },
 
     hasChangeEmailOption: function () {
-      var signatory = this.signatory();
+      var signatory = this.props.signatory;
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.undeliveredMailInvitation()
         && signatory.document().signingInProcess()
@@ -92,12 +80,12 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     },
 
     hasExtraSignatoryDetails: function () {
-      var signatory = this.signatory();
-      return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin());
+      var signatory = this.props.signatory;
+      return signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin();
     },
 
     hasChangeAuthenticationToSign: function () {
-      var signatory = this.signatory();
+      var signatory = this.props.signatory;
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
       && signatory.document().signingInProcess()
       && signatory.document().pending()
@@ -106,7 +94,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     },
 
     hasChangePhoneOption: function () {
-      var signatory = this.signatory();
+      var signatory = this.props.signatory;
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.undeliveredSMSInvitation()
         && signatory.document().signingInProcess()
@@ -115,7 +103,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     },
 
     hasGoToSignviewOption: function () {
-      var signatory = this.signatory();
+      var signatory = this.props.signatory;
       return signatory.document().currentViewerIsAuthor()
       && signatory.document().signingInProcess()
       && signatory.canSign()
@@ -123,89 +111,27 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     },
 
     hasAnyOptions: function () {
-    return this.hasRemindOption()
-      || this.hasChangeEmailOption()
-      || this.hasChangePhoneOption()
-      || this.hasGoToSignviewOption();
+      return this.hasRemindOption()
+        || this.hasChangeEmailOption()
+        || this.hasChangePhoneOption()
+        || this.hasGoToSignviewOption();
     },
 
     hasAnyDetails: function () {
-     var signatory = this.signatory();
+     var signatory = this.props.signatory;
      return signatory.company()
        || signatory.email()
        || signatory.mobile()
        || signatory.companynumber()
        || signatory.personalnumber();
-    }
-  });
-
-  var DocumentViewSignatoryForListView = React.createClass({
-    mixins: [BackboneMixin.BackboneMixin],
-
-    getBackboneModels: function () {
-      return [this.props.model];
-    },
-
-    propTypes: {
-      model: React.PropTypes.object
-    },
-
-    onSelect: function () {
-      this.props.onSelect();
-    },
-
-    render: function () {
-      var model = this.props.model;
-      var signatory = model.signatory();
-      var divClass = React.addons.classSet({
-        "sig": true,
-        "first": this.props.first,
-        "last": this.props.last,
-        "active": this.props.active
-      });
-
-      return (
-        <div onClick={this.onSelect} className={divClass}>
-          {/* if */ (this.props.active) &&
-            <div className="arrow"/>
-          }
-          <div className="name">
-            {signatory.nameOrEmailOrMobile()}{"\u00A0"}
-          </div>
-          <div className="line">
-            <div className="middle">
-              <div className={"icon status " + model.status() }> </div>
-            </div>
-            <div className="middle">
-              <div className={"statustext " + model.status()}>
-                  {model.signatorySummary()}
-              </div>
-            </div>
-            <div className="middle details">
-            </div>
-          </div>
-        </div>
-      );
-    }
-  });
-
-  var DocumentViewSignatoryView = React.createClass({
-    mixins: [BackboneMixin.BackboneMixin],
-
-    getBackboneModels: function () {
-      return [this.props.model];
-    },
-
-    propTypes: {
-      model: React.PropTypes.object
     },
 
     handleStartChangingEmail: function () {
-      var model = this.props.model;
-      var signatory = model.signatory();
+      var self = this;
+      var signatory = this.props.signatory;
       mixpanel.track("Click change email", {"Signatory index":signatory.signIndex()});
       new ChangeSignatoryDetailModal({
-        value: this.props.model.signatory().email(),
+        value: signatory.email(),
         validator: new EmailValidation(),
         label: localization.changeEmailModal.label,
         placeholder: localization.changeEmailModal.placeholder,
@@ -217,18 +143,18 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
                                   "Accept": "change email"});
           LoadingDialog.open();
           signatory.changeEmail(newValue).sendAjax(function () {
-            model.triggerOnAction();
+            self.triggerOnAction();
           });
         }
       });
     },
 
     handleStartChangingMobile: function () {
-      var model = this.props.model;
-      var signatory = model.signatory();
+      var self = this;
+      var signatory = this.props.signatory;
       mixpanel.track("Click change phone", {"Signatory index":signatory.signIndex()});
       new ChangeSignatoryDetailModal({
-        value: this.props.model.signatory().mobile(),
+        value: signatory.mobile(),
         validator: new PhoneValidation(),
         label: localization.changeMobileModal.label,
         placeholder: localization.changeMobileModal.placeholder,
@@ -240,15 +166,15 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
                                   "Accept": "change phone"});
           LoadingDialog.open();
           signatory.changePhone(newValue).sendAjax(function () {
-            model.triggerOnAction();
+            self.triggerOnAction();
           });
         }
       });
     },
 
     handleSendReminder: function () {
-      var model = this.props.model;
-      var signatory = model.signatory();
+      var self = this;
+      var signatory = this.props.signatory;
       mixpanel.track("Click send reminder", {"Signatory index":signatory.signIndex()});
       if (!signatory.hasSigned()) {
         // if signatory hasnt signed yet, use invitation delivery method
@@ -278,7 +204,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
                "Delivery method": "Email"});
             LoadingDialog.open();
             signatory.remind(customtext).sendAjax(function () {
-              model.triggerOnAction();
+              self.triggerOnAction();
             });
             return true;
           }
@@ -298,7 +224,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
               "Delivery method": "Mobile"});
            LoadingDialog.open();
            signatory.remind().sendAjax(function () {
-             model.triggerOnAction();
+             self.triggerOnAction();
            });
            return true;
          }
@@ -316,7 +242,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
            "Delivery method": "Email and Mobile"});
           LoadingDialog.open();
           signatory.remind().sendAjax(function () {
-            model.triggerOnAction();
+            self.triggerOnAction();
           });
           return true;
         }
@@ -326,22 +252,20 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
 
     handleChangeAuthenticationToSignMethod: function () {
       new ChangeAuthenticationToSignModal({
-        signatory: this.props.model.signatory(),
-        onAction: this.props.model.get("onAction")
+        signatory: this.props.signatory,
+        onAction: this.props.onAction
       });
     },
 
     goToSignView: function () {
-      var model = this.props.model;
-      var signatory = model.signatory();
+      var signatory = this.props.signatory;
       LocalStorage.set("backlink", "target", "to-sign");
       mixpanel.track("Accept", {"Signatory index":signatory.signIndex(), "Accept": "give for signing"});
       signatory.giveForPadSigning().send();
     },
 
     getDeliveryMethod: function () {
-      var model = this.props.model;
-      var signatory = model.signatory();
+      var signatory = this.props.signatory;
       if (signatory.emailDelivery()) {
         return localization.docview.signatory.invitationEmail;
       } else if (signatory.padDelivery()) {
@@ -358,8 +282,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     },
 
     getRole: function () {
-      var model = this.props.model;
-      var signatory = model.signatory();
+      var signatory = this.props.signatory;
       if (signatory.signs()) {
         return localization.docview.signatory.roleSignatory;
       } else {
@@ -368,8 +291,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     },
 
     getAuthenticationToViewMethodText: function () {
-      var model = this.props.model;
-      var signatory = model.signatory();
+      var signatory = this.props.signatory;
       if (signatory.standardAuthenticationToView()) {
         return localization.docview.signatory.authenticationToViewStandard;
       } else if (signatory.seBankIDAuthenticationToView()) {
@@ -380,8 +302,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     },
 
     getAuthenticationToSignMethodText: function () {
-      var model = this.props.model;
-      var signatory = model.signatory();
+      var signatory = this.props.signatory;
       if (signatory.standardAuthenticationToSign()) {
         return localization.docview.signatory.authenticationToSignStandard;
       } else if (signatory.smsPinAuthenticationToSign()) {
@@ -392,8 +313,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     },
 
     getConfirmationMethod: function () {
-      var model = this.props.model;
-      var signatory = model.signatory();
+      var signatory = this.props.signatory;
       if (signatory.emailConfirmationDelivery()) {
         return localization.docview.signatory.confirmationEmail;
       } else if (signatory.mobileConfirmationDelivery()) {
@@ -406,8 +326,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     },
 
     render: function () {
-      var model = this.props.model;
-      var signatory = model.signatory();
+      var signatory = this.props.signatory;
 
       return (
         <div className="grey-box">
@@ -416,7 +335,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
               {signatory.nameOrEmailOrMobile()}{"\u00A0"}
             </div>
           </div>
-          <div className={model.hasAnyDetails() ? "inner fields" : ""} >
+          <div className={this.hasAnyDetails() ? "inner fields" : ""} >
             {/* if */ signatory.company() &&
               <div className="fieldrow">
                 <span className="company field" title={signatory.company()}>
@@ -455,7 +374,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
               </div>
             }
           </div>
-          {/* if */ model.hasExtraSignatoryDetails() &&
+          {/* if */ this.hasExtraSignatoryDetails() &&
             <div className="inner fields">
               <div className="fieldrow">
                 <span className="signorder field" title={LanguageService.localizedOrdinal(signatory.signorder())}>
@@ -482,7 +401,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
               </div>
               {/* if */ signatory.signs() &&
                 <div className="fieldrow">
-                  {/* if */ model.hasChangeAuthenticationToSign() &&
+                  {/* if */ this.hasChangeAuthenticationToSign() &&
                     <a className="edit clickable" onClick={this.handleChangeAuthenticationToSignMethod}>
                       {localization.docview.signatory.editAuthenticationToSignMethod}
                     </a>
@@ -499,34 +418,34 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
               </div>
             </div>
           }
-          <div className={"statusbox " + (model.hasAnyOptions() ? "" : "last")} >
+          <div className={"statusbox " + (this.hasAnyOptions() ? "" : "last")} >
             <div className="spacing butt" >
-              <span className={"icon status " + model.status()}></span>
-              <span className={"status statustext " + model.status()}>
-                {model.signatorySummary()}
+              <span className={"icon status " + signatory.status()}></span>
+              <span className={"status statustext " + signatory.status()}>
+                {this.signatorySummary()}
               </span>
             </div>
           </div>
-          <div className="optionbox" style={model.hasAnyOptions() ? {} : {display:"none"}}>
-            {/* if */ model.hasRemindOption() &&
+          <div className="optionbox" style={this.hasAnyOptions() ? {} : {display:"none"}}>
+            {/* if */ this.hasRemindOption() &&
               <Button
               text={signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.send}
               onClick={this.handleSendReminder}
               />
             }
-            {/* if */ model.hasGoToSignviewOption() &&
+            {/* if */ this.hasGoToSignviewOption() &&
               <Button
                 text={localization.authorview.goToSignView}
                 onClick={this.goToSignView}
               />
             }
-            {/* if */ model.hasChangeEmailOption() &&
+            {/* if */ this.hasChangeEmailOption() &&
               <Button
                 text={localization.changeEmail}
                 onClick={this.handleStartChangingEmail}
               />
             }
-            {/* if */ model.hasChangePhoneOption() &&
+            {/* if */ this.hasChangePhoneOption() &&
               <Button
                 text={localization.changePhone}
                 onClick={this.handleStartChangingMobile}
@@ -538,75 +457,4 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     }
   });
 
-  var DocumentViewSignatoryForList = React.createClass({
-    propTypes: {
-      signatory: React.PropTypes.object,
-      first: React.PropTypes.bool.isRequired,
-      last: React.PropTypes.bool.isRequired,
-      active: React.PropTypes.bool.isRequired,
-      onSelect: React.PropTypes.func
-    },
-
-    getInitialState: function () {
-      return this.stateFromProps(this.props);
-    },
-
-    componentWillReceiveProps: function (props) {
-      this.setState(this.stateFromProps(props));
-    },
-
-    stateFromProps: function (props) {
-      var model = new DocumentViewSignatoryModel({
-        signatory: props.signatory
-      });
-      return {model: model};
-    },
-
-    render: function () {
-      return (
-        <DocumentViewSignatoryForListView
-          model={this.state.model}
-          first={this.props.first}
-          last={this.props.last}
-          active={this.props.active}
-          onSelect={this.props.onSelect}
-        />
-      );
-    }
-  });
-
-  var DocumentViewSignatory = React.createClass({
-    propTypes: {
-      signatory: React.PropTypes.object,
-      onAction: React.PropTypes.func
-    },
-
-    getInitialState: function () {
-      return this.stateFromProps(this.props);
-    },
-
-    componentWillReceiveProps: function (props) {
-      this.setState(this.stateFromProps(props));
-    },
-
-    stateFromProps: function (props) {
-      var model = new DocumentViewSignatoryModel({
-        signatory: props.signatory,
-        onAction: props.onAction
-      });
-
-      return {model: model};
-    },
-
-    render: function () {
-      return (
-        <DocumentViewSignatoryView model={this.state.model}/>
-      );
-    }
-  });
-
-  expose.DocumentViewSignatoryForList = DocumentViewSignatoryForList;
-  expose.DocumentViewSignatory = DocumentViewSignatory;
-
-  return expose;
 });

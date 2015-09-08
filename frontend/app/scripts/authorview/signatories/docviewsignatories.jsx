@@ -1,12 +1,12 @@
 /** @jsx React.DOM */
 
 define(["React", "Backbone", "authorview/authorviewautomaticreminders",
-  "authorview/signatories/docviewsignatoriesmodel",
-  "authorview/signatories/docviewsignatory", "legacy_code"],
-  function (React, Backbone, Reminders, DocumentViewSignatoriesModel, SignatoryView) {
-  var DocumentViewSignatoriesView = React.createClass({
+  "authorview/signatories/docviewsignatoryforlist", "authorview/signatories/docviewsignatory", "legacy_code"],
+  function (React, Backbone, Reminders, DocumentViewSignatoryForList, DocumentViewSignatory) {
+  return React.createClass({
     propTypes: {
-      model: React.PropTypes.object
+      document: React.PropTypes.object,
+      onAction: React.PropTypes.func
     },
 
     getInitialState: function () {
@@ -21,16 +21,42 @@ define(["React", "Backbone", "authorview/authorviewautomaticreminders",
       return this.state.currentIndex;
     },
 
+    signatories: function () {
+      var signatories = this.props.document.signatories();
+      var current = _.find  (signatories, function (s) { return s.current(); });
+      var others  = _.filter(signatories, function (s) { return !s.current(); });
+      var sigs = _.compact([current].concat(others));
+      return sigs;
+    },
+
+    hasAutomaticReminder: function () {
+      var document = this.props.document;
+      var hasNotSigned = _.any(document.signatories(), function (s) {
+        return s.signs() && !s.hasSigned() && !s.padDelivery();
+      });
+
+      return document.pending()
+        && (document.timeouttime().diffDays() > 0 || document.autoremindtime() != undefined)
+        && hasNotSigned
+        && document.currentViewerIsAuthor();
+    },
+
+    hasList: function () {
+      return this.signatories().length > 2;
+    },
+
+    isSingleSignatory: function () {
+      return this.signatories().length == 1;
+    },
+
     render: function () {
       var self = this;
-      var model = this.props.model;
-      var signatories = model.signatories();
+      var document = this.props.document;
+      var signatories = document.signatories();
       var AuthorViewAutomaticReminders = Reminders.AuthorViewAutomaticReminders;
-      var DocumentViewSignatory = SignatoryView.DocumentViewSignatory;
-      var DocumentViewSignatoryForList = SignatoryView.DocumentViewSignatoryForList;
-      var lastSignatoryIndex = model.hasList() ?
-        self.currentIndex() : (model.isSingleSignatory() ? 0 : 1);
-      var lastSignatory = model.signatories()[lastSignatoryIndex];
+      var lastSignatoryIndex = self.hasList() ?
+        self.currentIndex() : (self.isSingleSignatory() ? 0 : 1);
+      var lastSignatory = signatories[lastSignatoryIndex];
 
       return (
         <div className="signatories section" >
@@ -40,36 +66,36 @@ define(["React", "Backbone", "authorview/authorviewautomaticreminders",
             </h2>
           </div>
           <div className="column middle">
-            {/* if */ model.hasList() &&
+            {/* if */ self.hasList() &&
               <div className="list spacing grey-box" style={{padding:"0px;"}}>
-                {model.signatories().map(function (s, i) {
+                {self.signatories().map(function (s, i) {
                   return (
                     <DocumentViewSignatoryForList
                       key={String(s.signatoryid())}
                       signatory={s}
                       onSelect={function () {self.setCurrentIndex(i);}}
                       first= {i == 0}
-                      last={i == model.signatories().length - 1}
+                      last={i == self.signatories().length - 1}
                       active={i == self.currentIndex()}
                     />
                   );
                 })}
               </div>
             }
-            {/* else */ !model.hasList() && !model.isSingleSignatory() &&
+            {/* else */ !self.hasList() && !self.isSingleSignatory() &&
               <DocumentViewSignatory
-                signatory={model.signatories()[0]}
-                onAction={model.onAction()}
+                signatory={self.signatories()[0]}
+                onAction={this.props.onAction}
               />
             }
           </div>
           <div className="column last">
             <DocumentViewSignatory
               signatory={lastSignatory}
-              onAction={model.onAction()}
+              onAction={this.props.onAction}
             />
-            {/* if */ model.hasAutomaticReminder() &&
-              <AuthorViewAutomaticReminders document={model.document()} onAction={model.onAction()} />
+            {/* if */ this.hasAutomaticReminder() &&
+              <AuthorViewAutomaticReminders document={this.props.document} onAction={this.props.onAction} />
             }
           </div>
         </div>
@@ -77,40 +103,4 @@ define(["React", "Backbone", "authorview/authorviewautomaticreminders",
     }
   });
 
-  return React.createClass({
-    propTypes: {
-      document: React.PropTypes.object,
-      onAction: React.PropTypes.func
-    },
-
-    getInitialState: function () {
-      return this.stateFromProps(this.props);
-    },
-
-    componentWillReceiveProps: function (props) {
-      this.setState(this.stateFromProps(props));
-    },
-
-    stateFromProps: function (props) {
-      var model = new DocumentViewSignatoriesModel({
-        document: props.document,
-        onAction: props.onAction
-      });
-      return {model: model};
-    },
-
-    currentIndex: function () {
-      return this.refs.view.currentIndex();
-    },
-
-    setCurrentIndex: function (i) {
-      return this.refs.view.setCurrentIndex(i);
-    },
-
-    render: function () {
-      return (
-        <DocumentViewSignatoriesView ref="view" model={this.state.model}/>
-      );
-    }
-  });
 });
