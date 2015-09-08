@@ -344,6 +344,9 @@ window.Signatory = Backbone.Model.extend({
           if (field.isCheckbox()) field.remove();
       });
 
+      this.setAuthenticationToSign("standard");
+      this.setAuthenticationToView("standard");
+
       this.trigger("change:role");
     },
     hasSigned: function() {
