@@ -83,7 +83,7 @@ handleResolve = do
                let provider = decodeProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes res
                let signatoryName = attributeFromAssertion "CN" $ assertionAttributes res
                let dob = attributeFromAssertion "DOB" $ assertionAttributes res
-               let dobSSN = T.pack $ KontraPrelude.take 6 $ getPersonalNumber sl
+               let dobSSN = T.pack $ take 6 $ getPersonalNumber sl
                let dobNETS = formatDOB dob
                let certificate = decodeCertificate $ attributeFromAssertion "CERTIFICATE" $ assertionAttributes res
                let mphone = lookup "NO_CEL8" $ assertionAttributes res
@@ -123,7 +123,7 @@ handleResolve = do
                    let phone = T.unpack ($fromJust mphone)
                    let formattedPhoneFromNets = "+47" ++ phone
                    let signatoryHasFilledInPhone = getMobile sl == ""
-                   let formattedPhoneFromSignatory = KontraPrelude.filter (\c -> not (c `elem` " -")) $ getMobile sl
+                   let formattedPhoneFromSignatory = filter (\c -> not (c `elem` (" -"::String))) $ getMobile sl
                    when (not signatoryHasFilledInPhone && formattedPhoneFromSignatory /= formattedPhoneFromNets) $ do
                      logAttention_ "Not matching phone for NO BankID - Nets should have blocked that"
                      internalError

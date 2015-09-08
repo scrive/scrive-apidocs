@@ -68,7 +68,7 @@ instance ToSQL AuthenticationProvider where
 ----------------------------------------
 
 -- | General version of inserting some authentication for a given signatory or replacing existing one.
-data MergeAuthenticationInternal = MergeAuthenticationInternal SessionID SignatoryLinkID ((MonadState v n, SqlSet v) => n ())
+data MergeAuthenticationInternal = MergeAuthenticationInternal SessionID SignatoryLinkID (forall v n. (MonadState v n, SqlSet v) => n ())
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeAuthenticationInternal () where
   update (MergeAuthenticationInternal sid slid setDedicatedAuthFields) = do
     loopOnUniqueViolation . withSavepoint "merge_bank_id_authentication" $ do
