@@ -10,21 +10,16 @@ define(["legacy_code", "React", "designview/fileview/draggablefield"], function 
 
     componentDidMount: function () {
       var isDisabledCallback = function (field) {
-        if (!field) { return false; }
-        if (!field.signatory()) { return true; }
+        if (!field.isSignature()) { return true; }
 
         var doc = field.signatory().document();
 
-        if (field.type() !== "signature") {
-          // we only block d&d when there are no signing parties for signatures
-          return true;
-        }
         if (doc.signatoriesWhoSign().length > 0) {
           return true;
-        } else {
-          new FlashMessage({type: "error", content: localization.designview.dndDisabled});
-          return false;
         }
+
+        new FlashMessage({type: "error", content: localization.designview.dndDisabled});
+        return false;
       };
 
       if (this.props.fieldFactory) {

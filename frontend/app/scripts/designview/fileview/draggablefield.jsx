@@ -1,7 +1,8 @@
 define(["legacy_code", "designview/fileview/signatureplacementviewwithoutplacement",
         "designview/fileview/checkboxplacementview", "designview/fileview/textplacementview",
         "designview/editdocument/placeondocument"],
-  function (legacy_code, SignaturePlacementViewWithoutPlacement, CheckboxPlacementView, TextPlacementView, placeOnDocument) {
+  function (legacy_code, SignaturePlacementViewWithoutPlacement, CheckboxPlacementView, TextPlacementView,
+    placeOnDocument) {
 
 var createFieldPlacementView = function (args) {
   if (args.model.isSignature()) {
@@ -21,6 +22,7 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
   var placement;
   var verticaloffset = 0;
   var fieldOrPlacement;
+  var disabled = false;
   var initFP = function () {
       if (typeof fieldOrPlacementFN === "function") {
         fieldOrPlacement = fieldOrPlacementFN();
@@ -35,30 +37,47 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
         placement = undefined;
         field = fieldOrPlacement;
       }
+
+      if (field.isFake()) {
+        verticaloffset = -1;
+      } else if (field.isText()) {
+        verticaloffset = -1;
+      } else if (field.isSignature()) {
+        verticaloffset = 0;
+      }
   };
 
-  initFP();
-
-  if (fieldOrPlacement === undefined) {
-    return;
-  }
-
-  if (field.isFake()) {
-    verticaloffset = -1;
-  } else if (field.isText()) {
-    verticaloffset = -1;
-  } else if (field.isSignature()) {
-    verticaloffset = 0;
-  }
-
-  if (onDragStart !== undefined) {
-    dragHandler.mousedown(function () {
+  dragHandler.mousedown(function () {
+    initFP();
+    disabled = false;
+    if (onDragStart) {
       if (onDragStart(field)) {
         dragHandler.draggable("enable");
         return true;
       } else {
         dragHandler.draggable("disable");
+        disabled = true;
         return false;
+      }
+    }
+  });
+
+  var initHelper = function (event) {
+    helper = createFieldPlacementView({
+      model: field,
+      height: heightFunction != undefined ? heightFunction() : undefined,
+      width: widthFunction != undefined ? widthFunction() : undefined,
+      dragging: true,
+      fontSize: fontSize
+    }).el;
+    return helper;
+  };
+
+  if (!dragHandler.hasClass("placedfield")) {
+    dragHandler.click(function () {
+      if (!disabled) {
+        initHelper();
+        placeOnDocument(dragHandler, field, onDrop);
       }
     });
   }
@@ -150,29 +169,6 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
     }
   };
 
-  var initHelper = function (event) {
-    initFP();
-    if (field) {
-      helper = createFieldPlacementView({
-        model: field,
-        height: heightFunction != undefined ? heightFunction() : undefined,
-        width: widthFunction != undefined ? widthFunction() : undefined,
-        dragging: true,
-        fontSize: fontSize
-      }).el;
-      return helper;
-    }
-  };
-
-  if (!dragHandler.hasClass("placedfield")) {
-    dragHandler.click(function () {
-      initHelper();
-      if (helper && field) {
-        placeOnDocument(dragHandler, field, onDrop);
-      }
-    });
-  }
-
   dragHandler.draggable({
     appendTo: ".design-view-frame",
     scroll: false,
@@ -183,7 +179,6 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
         // there"s no horizontal scrollbar, so dragging away should not create one
         $("html").css("overflow-x", "hidden");
       }
-      initFP();
       if (placement != undefined) {
         if (placement.typeSetter != undefined) {
           placement.typeSetter.clear();
@@ -217,7 +212,6 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
         field.signatory().document().mainfile().view.hideCoordinateAxes();
       }
       droppedInside = false;
-      initFP();
     },
     drag: function (event, ui) {
       if (field.signatory().document().mainfile() != undefined) {

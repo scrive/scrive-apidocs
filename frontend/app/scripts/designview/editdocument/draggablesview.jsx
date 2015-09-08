@@ -13,42 +13,33 @@ define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocumen
       return [this.props.model, this.props.model.document()];
     },
 
-    textboxFactory: function () {
+    firstSignatoryOrAuthor: function () {
       var doc = this.props.model.document();
-      var sig = doc.signatoriesWhoSign()[0] || doc.author();
-      var field = sig.field("fstname", "standard");
-      return field;
+      return doc.signatoriesWhoSign()[0] || doc.author();
+    },
+
+    textboxFactory: function () {
+      return this.firstSignatoryOrAuthor().field("fstname", "standard");
     },
 
     signatureFactory: function () {
-      var doc = this.props.model.document();
-
-      if (doc.signatoriesWhoSign()[0]) {
-        return new Field({
-          fresh: false,
-          ddSignature: true,
-          type: "signature",
-          signatory: doc.signatoriesWhoSign()[0],
-          name: "temp-signature"
-        });
-      }
-
-      console.warn("no signatories in document, draggable could not be created");
+      return new Field({
+        fresh: false,
+        ddSignature: true,
+        type: "signature",
+        signatory: this.firstSignatoryOrAuthor(),
+        name: "temp-signature"
+      });
     },
 
     checkboxFactory: function () {
-      var doc = this.props.model.document();
-      var sig = doc.signatoriesWhoSign()[0] || doc.author();
-
       return new Field({
         fresh: false,
         type: "checkbox",
         value: "checked",
-        signatory: sig,
+        signatory: this.firstSignatoryOrAuthor(),
         name: "temp-checkbox"
       });
-
-      console.warn("no signatories in document, draggable could not be created");
     },
 
     render: function () {
