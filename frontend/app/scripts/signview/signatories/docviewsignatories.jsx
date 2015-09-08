@@ -1,13 +1,34 @@
 /** @jsx React.DOM */
 
-define(["React", "Backbone", "signview/signatories/docviewsignatoriesmodel",
+define(["React", "Backbone","signview/signatories/docviewsignatoryforlist",
   "signview/signatories/docviewsignatory", "legacy_code"],
-  function (React, Backbone, DocumentViewSignatoriesModel, SignatoryView) {
-  var DocumentViewSignatoriesView = React.createClass({
+  function (React, Backbone, DocumentViewSignatoryForList ,DocumentViewSignatory) {
+  return React.createClass({
     propTypes: {
-      model: React.PropTypes.object
+      document: React.PropTypes.object
     },
 
+    document: function () {
+      return this.props.document;
+    },
+
+    signatories: function () {
+      var signatories = this.document().signatories();
+      var current = _.find  (signatories, function (s) { return s.current(); });
+      var others  = _.filter(signatories, function (s) { return !s.current(); });
+      var sigs = _.compact([current].concat(others));
+      _.filter(sigs, function (s) { return s.signs(); });
+
+      return sigs;
+    },
+
+    hasList: function () {
+      return this.signatories().length > 2;
+    },
+
+    isSingleSignatory: function () {
+      return this.signatories().length == 1;
+    },
     getInitialState: function () {
       return {currentIndex: 0};
     },
@@ -22,13 +43,10 @@ define(["React", "Backbone", "signview/signatories/docviewsignatoriesmodel",
 
     render: function () {
       var self = this;
-      var model = this.props.model;
-      var signatories = model.signatories();
-      var DocumentViewSignatory = SignatoryView.DocumentViewSignatory;
-      var DocumentViewSignatoryForList = SignatoryView.DocumentViewSignatoryForList;
-      var lastSignatoryIndex = model.hasList() ?
-        self.currentIndex() : (model.isSingleSignatory() ? 0 : 1);
-      var lastSignatory = model.signatories()[lastSignatoryIndex];
+      var signatories = this.signatories();
+      var lastSignatoryIndex = this.hasList() ?
+        self.currentIndex() : (this.isSingleSignatory() ? 0 : 1);
+      var lastSignatory = signatories[lastSignatoryIndex];
 
       return (
         <div className="signatories section" >
@@ -38,25 +56,25 @@ define(["React", "Backbone", "signview/signatories/docviewsignatoriesmodel",
             </h2>
           </div>
           <div className="column middle">
-            {/* if */ model.hasList() &&
+            {/* if */ this.hasList() &&
               <div className="list spacing grey-box" style={{padding:"0px;"}}>
-                {model.signatories().map(function (s, i) {
+                {signatories.map(function (s, i) {
                   return (
                     <DocumentViewSignatoryForList
                       key={String(s.signatoryid())}
                       signatory={s}
                       onSelect={function () {self.setCurrentIndex(i);}}
                       first= {i == 0}
-                      last={i == model.signatories().length - 1}
+                      last={i == signatories.length - 1}
                       active={i == self.currentIndex()}
                     />
                   );
                 })}
               </div>
             }
-            {/* else */ !model.hasList() && !model.isSingleSignatory() &&
+            {/* else */ !this.hasList() && !this.isSingleSignatory() &&
               <DocumentViewSignatory
-                signatory={model.signatories()[0]}
+                signatory={signatories[0]}
               />
             }
           </div>
@@ -70,38 +88,4 @@ define(["React", "Backbone", "signview/signatories/docviewsignatoriesmodel",
     }
   });
 
-  return React.createClass({
-    propTypes: {
-      document: React.PropTypes.object
-    },
-
-    getInitialState: function () {
-      return this.stateFromProps(this.props);
-    },
-
-    componentWillReceiveProps: function (props) {
-      this.setState(this.stateFromProps(props));
-    },
-
-    stateFromProps: function (props) {
-      var model = new DocumentViewSignatoriesModel({
-        document: props.document
-      });
-      return {model: model};
-    },
-
-    currentIndex: function () {
-      return this.refs.view.currentIndex();
-    },
-
-    setCurrentIndex: function (i) {
-      return this.refs.view.setCurrentIndex(i);
-    },
-
-    render: function () {
-      return (
-        <DocumentViewSignatoriesView ref="view" model={this.state.model}/>
-      );
-    }
-  });
 });
