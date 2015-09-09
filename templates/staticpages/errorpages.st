@@ -261,10 +261,10 @@ netsError=
       return b;
   })(window.location.search.substr(1).split('&'));
 
- var status = "identify_" + (qs["status"] || "").toLowerCase();
+ var status = "identify_" + (qs["status"] || "none").toLowerCase();
 
  var triggerError = function() {
-  window.parent.postMessage(status || "none",window.location.origin);
+  window.parent.postMessage(status,"*");
   setTimeout(triggerError,100);
  };
  triggerError();
