@@ -229,6 +229,7 @@ $htmlopentag()$
     require(["legacy_code", "jquery", "React", "signview/identify/identifyview"], function(legacy_code, jQuery, React, IdentifyView) {
       window.netsIdentifyUrl = "$netsIdentifyUrl$";
       window.netsMerchantIdentifier = "$netsMerchantIdentifier$";
+      window.netsTrustedDomain = "$netsTrustedDomain$";
       var doc = new Document({
                   id: "$documentid$",
                   viewer : new DocumentViewer({

@@ -254,7 +254,7 @@ module.exports = function(grunt) {
               'api-explorer/**/*',
               'enable-cookies/**/*',
               'css/fonts/*',
-              'css/tinymce.css',
+              'css/assets/*',
               'fonts/**/*',
               'img/**/*',
               'newsletter/**/*',

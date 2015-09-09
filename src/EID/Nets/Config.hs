@@ -10,6 +10,8 @@ data NetsConfig = NetsConfig {
   , netsMerchantPassword       :: T.Text
   , netsIdentifyUrl            :: T.Text
   , netsAssertionUrl           :: T.Text
+  , netsTrustedDomain          :: T.Text
+
 } deriving (Eq, Ord, Show)
 
 instance Unjson NetsConfig where
@@ -26,3 +28,6 @@ instance Unjson NetsConfig where
     <*> field "assertionUrl"
         netsAssertionUrl
         "Nets assertion url"
+    <*> field "trustedDomain"
+        netsTrustedDomain
+        "Trusted domain registed for this nets merchant"

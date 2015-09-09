@@ -94,7 +94,7 @@ define(["legacy_code", "Underscore", "Backbone", "base64"],
       this.setIdentify();
     },
     noBankIDLink: function () {
-      var location = window.location.origin; // For local testing - replace this with https domain
+      var netsTrustedDomain = window.netsTrustedDomain;
       var netsIdentifyUrl = window.netsIdentifyUrl;
       var netsMerchantIdentifier = window.netsMerchantIdentifier;
       var vendor = this.isDesktopMode() ? "no_bankid" : "no_bidmob";
@@ -110,14 +110,14 @@ define(["legacy_code", "Underscore", "Backbone", "base64"],
                      "," + this.siglinkid() + ",\"" + window.location  + "\")";
       link = link + "&TARGET=" + encodeURIComponent(Base64.encode(target));
 
-      var start = location + "/nets/start?status=";
+      var start = netsTrustedDomain + "/nets/start?status=";
       link = link + "&start=" + encodeURIComponent(start);
 
-      var status = location + "/nets/status?status=";
+      var status = netsTrustedDomain + "/nets/status?status=";
       link = link + "&status=" + encodeURIComponent(status);
 
       if (this.isMobileMode()) {
-        var style = location + "/assets/nets.css";
+        var style = netsTrustedDomain + "/css/assets/nets.css";
         link = link + "&style=" + encodeURIComponent(style);
       }
 
