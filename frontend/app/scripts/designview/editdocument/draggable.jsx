@@ -5,27 +5,13 @@ define(["legacy_code", "React", "designview/fileview/draggablefield"], function 
       buttonText: React.PropTypes.string.isRequired,
       fontSize: React.PropTypes.number,
       onAdd: React.PropTypes.func,
-      fieldFactory: React.PropTypes.func
+      fieldFactory: React.PropTypes.func.isRequired,
+      isEnabledCheckWithCallback: React.PropTypes.func.isRequired
     },
 
     componentDidMount: function () {
-      var isDisabledCallback = function (field) {
-        if (!field.isSignature()) { return true; }
-
-        var doc = field.signatory().document();
-
-        if (doc.signatoriesWhoSign().length > 0) {
-          return true;
-        }
-
-        new FlashMessage({type: "error", content: localization.designview.dndDisabled});
-        return false;
-      };
-
-      if (this.props.fieldFactory) {
         draggableField($(this.getDOMNode()), this.props.fieldFactory, undefined,
-          undefined, true, this.props.fontSize, this.props.onAdd, isDisabledCallback);
-      }
+          undefined, true, this.props.fontSize, this.props.onAdd, this.props.isEnabledCheckWithCallback);
     },
 
     render: function () {

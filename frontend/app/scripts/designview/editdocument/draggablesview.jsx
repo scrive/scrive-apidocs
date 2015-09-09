@@ -42,6 +42,15 @@ define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocumen
       });
     },
 
+    isEnabledCheckWithCallbackForSignature: function (field) {
+        if (this.props.model.document().signatoriesWhoSign().length > 0) {
+          return true;
+        } else {
+          new FlashMessage({type: "error", content: localization.designview.dndDisabled});
+          return false;
+        }
+    },
+
     render: function () {
       var doc = this.props.model.document();
 
@@ -55,12 +64,14 @@ define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocumen
                 className="design-view-action-document-draggable-textbox"
                 buttonText={localization.designview.freeTextBox}
                 fieldFactory={this.textboxFactory}
+                isEnabledCheckWithCallback={function() {return true}}
                 fontSize={16}
               />
               <Draggable
                 className="design-view-action-document-draggable-signature"
                 buttonText={localization.designview.signatureBox}
                 fieldFactory={this.signatureFactory}
+                isEnabledCheckWithCallback={this.isEnabledCheckWithCallbackForSignature}
                 onAdd={function (f) {
                   f.setName(doc.newSignatureName());
                 }}
@@ -69,6 +80,7 @@ define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocumen
                 className="design-view-action-document-draggable-checkbox"
                 buttonText={localization.designview.checkbox}
                 fieldFactory={this.checkboxFactory}
+                isEnabledCheckWithCallback={function() {return true}}
                 onAdd={function (f) {
                   f.setName(doc.newCheckboxName());
                 }}
