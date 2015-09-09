@@ -236,7 +236,9 @@ simplyfiedEventText target mactor d sim dee = do
             dbQuery (GetEAuthenticationWithoutSession slinkid) >>= \case
               Nothing -> return ()
               Just esig -> case esig of
-                CGISEBankIDAuthentication_{} -> F.value "provider" $ Just ("Swedish BankID" ::String)
+                CGISEBankIDAuthentication_ n -> do
+                  F.value "provider" $ Just ("Swedish BankID" ::String)
+                  F.value "signatory_name" $ cgisebidaSignatoryName n
                 NetsNOBankIDAuthentication_ n -> do
                   F.value "provider" $ Just ("Norwegian BankID" ::String)
                   F.value "signatory_name" $ netsNOBankIDSignatoryName n
