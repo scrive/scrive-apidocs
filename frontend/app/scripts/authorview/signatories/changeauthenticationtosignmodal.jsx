@@ -171,7 +171,6 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
       var model = this.props.model;
       var signatory = model.signatory();
       var selectLabel = $("<div>").html(localization.docview.changeAuthentication.methodLabel);
-      $(".put-person-name", selectLabel).text(signatory.smartname());
 
       return (
         <div>
