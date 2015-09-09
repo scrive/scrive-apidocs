@@ -1199,3 +1199,10 @@ addSignatoryAuthenticationToView = Migration {
       runSQL_ "ALTER TABLE signatory_links ADD COLUMN authentication_to_view_method SMALLINT NOT NULL DEFAULT 1" -- StandartAuthenticationToView
       runSQL_ "ALTER TABLE signatory_links ALTER COLUMN authentication_to_view_method DROP DEFAULT"
     }
+
+addAuthenticatedToViewToCompositeType :: MonadDB m => Migration m
+addAuthenticatedToViewToCompositeType = Migration {
+      mgrTable = tableSignatoryLinks
+    , mgrFrom = 28
+    , mgrDo = return () -- Empty migration to mark change in ctSignatoryLink :: CompositeType
+    }

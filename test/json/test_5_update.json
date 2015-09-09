@@ -80,6 +80,7 @@
    "signsuccessredirect": null,
    "rejectredirect": null,
    "authenticationToView": "standard",
+   "hasAuthenticatedToView": false,
    "authentication": "standard"
   },
   {
@@ -165,6 +166,7 @@
    "signsuccessredirect": null,
    "rejectredirect": null,
    "authenticationToView": "standard",
+   "hasAuthenticatedToView": false,
    "authentication": "standard"
   }
  ],

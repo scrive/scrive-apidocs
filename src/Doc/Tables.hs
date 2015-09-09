@@ -190,7 +190,7 @@ ctSignatoryAttachment = CompositeType {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 28
+  , tblVersion = 29
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -260,6 +260,7 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "authentication_to_sign_method", ccType = SmallIntT }
   , CompositeColumn { ccName = "delivery_method", ccType = SmallIntT }
   , CompositeColumn { ccName = "confirmation_delivery_method", ccType = SmallIntT }
+  , CompositeColumn { ccName = "has_identified_to_view", ccType = BoolT }
   ]
 }
 
