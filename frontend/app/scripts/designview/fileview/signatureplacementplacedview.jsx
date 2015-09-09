@@ -56,7 +56,7 @@ return Backbone.View.extend({
       $("body").append(typeSetterDiv);
 
       setTimeout(function () {
-        placement.typeSetter.place();
+        placement.typeSetter && placement.typeSetter.place();
       }, 0);
     }
   },
@@ -72,12 +72,14 @@ return Backbone.View.extend({
     var self = this;
 
     var placement = self.model;
+    var field = placement.field();
     var place = self.$el;
     var parent = place.parent();
 
     place.empty();
 
     place.addClass("placedfield");
+    place.addClass("js-" + field.type());
     place.addClass("empty-signature");
 
     place.css("cursor", "pointer");

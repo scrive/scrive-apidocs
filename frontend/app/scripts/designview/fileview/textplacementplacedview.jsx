@@ -24,6 +24,8 @@ return Backbone.View.extend({
     this.render();
   },
 
+  firstRender: true,
+
   fontSize: function () {
     var parent = $(this.el).parent();
     if (parent.length > 0) { return Math.floor(this.model.fsrel() * parent.width()); }
@@ -99,8 +101,8 @@ return Backbone.View.extend({
              }), typeSetterDiv[0]);
       $("body").append(typeSetterDiv);
 
+      placement.typeSetter && placement.typeSetter.place();
       setTimeout(function () {
-        placement.typeSetter.place();
       }, 0);
     }
   },
@@ -172,6 +174,7 @@ return Backbone.View.extend({
     var placewrapper = $("<div class='placedfield-placement-wrapper'>");
 
     place.addClass("placedfield");
+    place.addClass("js-" + field.type());
     this.updateErrorBackground();
 
     place.css("cursor", "pointer");
@@ -204,13 +207,14 @@ return Backbone.View.extend({
       });
     }
 
-    if (placement.withTypeSetter()) {
+    if (placement.withTypeSetter() && this.firstRender) {
       this.addTypeSetter();
     }
 
     this.stopListening(undefined, undefined, self.fixWHRel);
     this.listenTo(placement.field(), "change", self.fixWHRel);
     this.fixWHRel();
+    this.firstRender = false;
     return this;
   }
 });

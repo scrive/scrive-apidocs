@@ -3,7 +3,7 @@
  *
  */
 
-define(['Backbone',  'React',  'designview/participants/participants' , 'designview/processsettings/processsettings' , 'legacy_code'], function(Backbone, React, Participants, ProcessSettings) {
+define(['Backbone',  'React',  'designview/participants/participants' , 'designview/processsettings/processsettings', 'designview/editdocument/draggablesview', 'legacy_code'], function(Backbone, React, Participants, ProcessSettings, DraggablesView) {
 
 window.DesignViewTabsView = function(args) {
   var model = args.model;
@@ -13,7 +13,11 @@ window.DesignViewTabsView = function(args) {
     model: model
   }), participantsViewEl[0]);
 
-  var draggablesView   = new DesignViewDraggablesView({ model : model});
+  var draggablesViewEl = $("<div/>");
+  var draggablesView = React.render(React.createElement(DraggablesView, {
+    model: model
+  }), draggablesViewEl[0]);
+
   var processSettingsEl      = $("<div/>");
   var processSettings = React.render(React.createElement(ProcessSettings,{
     model: model
@@ -46,7 +50,7 @@ window.DesignViewTabsView = function(args) {
           name: tab2Name,
           pagehash : "placements",
           available : document.mainfile() != undefined,
-          elems: [ $("<div class='design-view-tab-center' />").append($(draggablesView.el))],
+          elems: [ $("<div class='design-view-tab-center' />").append(draggablesViewEl)],
           onActivate : function() {
                mixpanel.track('Click tab', {
                         Action: 'Open',

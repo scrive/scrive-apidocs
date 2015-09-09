@@ -85,6 +85,7 @@ return Backbone.View.extend({
     var place = $(self.el);
 
     place.addClass("placedfield");
+    place.addClass("js-" + field.type());
     place.css("cursor", "pointer");
 
     self.updatePosition();
