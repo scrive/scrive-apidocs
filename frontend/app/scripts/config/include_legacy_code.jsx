@@ -60,7 +60,6 @@ define([
   '../js/signview/docsignviewsignsection',
   '../js/signview/docsignview',
   '../js/signview/docsignviewsigningprogressmodal',
-  '../js/designview/editdocument',
   '../js/designview/documentview',
   '../js/designview/docdesignview',
   '../js/designview/authoraattachmentsdesign',
