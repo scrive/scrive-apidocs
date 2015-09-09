@@ -187,6 +187,7 @@ instance Default AppConf where
                               , netsMerchantPassword = "21r1ee95bp4n"
                               , netsIdentifyUrl = "https://ti-pp.bbs.no/its/index.html"
                               , netsAssertionUrl = "https://ti-pp.bbs.no/saml1resp/getassertion"
+                              , netsTrustedDomain = "https://dev.scrive.com"
                               }
 
     }

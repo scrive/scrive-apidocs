@@ -105,6 +105,7 @@ pageDocumentIdentifyView ctx document siglink ad = do
       F.value "documenttitle" $ documenttitle document
       F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctxnetsconfig ctx
       F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctxnetsconfig ctx
+      F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctxnetsconfig ctx
       standardPageFields ctx mcompany ad
 
 pageDocumentSignForPadView :: Kontrakcja m

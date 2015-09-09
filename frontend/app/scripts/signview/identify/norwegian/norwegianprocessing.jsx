@@ -8,7 +8,6 @@ define(["legacy_code", "Underscore", "Backbone", "React",
     },
     onError: function (e) {
       var errorType = e.data;
-      var originOk = e.origin === window.location.origin;
 
       var errorMsgs = {
         "identify_none": localization.identifyBankIdError.failed,
@@ -30,7 +29,7 @@ define(["legacy_code", "Underscore", "Backbone", "React",
         "identify_wrongmobdob": localization.identifyBankIdError.mobile
       };
 
-      if (originOk && /^identify_/.test(errorType)) {
+      if (/^identify_/.test(errorType)) {
         new FlashMessage({
           type: "error",
           content: errorMsgs[errorType] || errorMsgs.none
