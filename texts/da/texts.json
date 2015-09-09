@@ -458,7 +458,7 @@
 "_docviewChangeAuthenticationModalErrorEID":"Ugyldigt personnummer",
 "_docviewChangeAuthenticationModalErrorPhone":"Forkert format. Korrekte format er +46701234567",
 "_docviewChangeAuthenticationModalErrorSigned":"Da modtageren allerede har underskrevet, er det ikke muligt at ændre autentifikationen.",
-"_docviewChangeAuthenticationModalMethodLabel":"Autentifikationsmetode for <strong class='put-person-name'></strong>",
+"_docviewChangeAuthenticationModalMethodLabel":"",
 "_docviewChangeAuthenticationModalPlaceholderEID":"YYMMDDNNNN",
 "_docviewChangeAuthenticationModalPlaceholderPhone":"F.x. +46712345678",
 "_docviewChangeAuthenticationModalTitle":"Autentifikation",

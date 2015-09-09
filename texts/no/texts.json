@@ -458,7 +458,7 @@
 "_docviewChangeAuthenticationModalErrorEID":"Ugyldig fødelsnummer",
 "_docviewChangeAuthenticationModalErrorPhone":"Feil format. Riktig format er +46701234567",
 "_docviewChangeAuthenticationModalErrorSigned":"Siden mottakeren allerede har signert, er det ikke mulig å endre autentiseringen.",
-"_docviewChangeAuthenticationModalMethodLabel":"Autentiseringsmetode for <strong class='put-person-name'></strong>",
+"_docviewChangeAuthenticationModalMethodLabel":"",
 "_docviewChangeAuthenticationModalPlaceholderEID":"DDMMÅÅNNNNN",
 "_docviewChangeAuthenticationModalPlaceholderPhone":"F.eks. +46712345678",
 "_docviewChangeAuthenticationModalTitle":"Autentisering",

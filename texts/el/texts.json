@@ -458,7 +458,7 @@
 "_docviewChangeAuthenticationModalErrorEID":"Άκυρος προσωπικός Α.Δ.Τ. ",
 "_docviewChangeAuthenticationModalErrorPhone":"Λανθασμένη μορφοποίηση. Η σωστή μορφοποίηση είναι +46701234567 ",
 "_docviewChangeAuthenticationModalErrorSigned":"Εφόσον ο παραλήπτης έχει ήδη υπογράψει, δεν είναι δυνατή η αλλαγή πιστοποίησης. ",
-"_docviewChangeAuthenticationModalMethodLabel":"Μέθοδος πιστοποίσης για <strong class='put-person-name'></strong>",
+"_docviewChangeAuthenticationModalMethodLabel":"",
 "_docviewChangeAuthenticationModalPlaceholderEID":"Α.Φ.Μ. ",
 "_docviewChangeAuthenticationModalPlaceholderPhone":"π.χ. +46712345678 ",
 "_docviewChangeAuthenticationModalTitle":"Πιστοποίηση ",

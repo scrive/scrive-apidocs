@@ -458,7 +458,7 @@
 "_docviewChangeAuthenticationModalErrorEID":"Virheellinen henkilö-ID -numero",
 "_docviewChangeAuthenticationModalErrorPhone":"Väärä muoto. Oikea muoto on +358401234567",
 "_docviewChangeAuthenticationModalErrorSigned":"Koska vastaanottaja on jo allekirjoittanut, enää ei ole mahdollista muuttaa todentamista.",
-"_docviewChangeAuthenticationModalMethodLabel":"<strong class='put-person-name'></strong> todennustapa",
+"_docviewChangeAuthenticationModalMethodLabel":"",
 "_docviewChangeAuthenticationModalPlaceholderEID":"PPKKVVXXXX",
 "_docviewChangeAuthenticationModalPlaceholderPhone":"Esim. +358401234567",
 "_docviewChangeAuthenticationModalTitle":"Todennus",

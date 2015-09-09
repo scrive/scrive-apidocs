@@ -458,7 +458,7 @@
 "_docviewChangeAuthenticationModalErrorEID":"Número personal de DNI no válido",
 "_docviewChangeAuthenticationModalErrorPhone":"Formato erróneo. El formato correcto es +46701234567",
 "_docviewChangeAuthenticationModalErrorSigned":"Como el receptor ya ha firmado, no es posible cambiar la autentificación.",
-"_docviewChangeAuthenticationModalMethodLabel":"Método de autentificación para <strong class='put-person-name'></strong>",
+"_docviewChangeAuthenticationModalMethodLabel":"",
 "_docviewChangeAuthenticationModalPlaceholderEID":"YYMMDDNNNN",
 "_docviewChangeAuthenticationModalPlaceholderPhone":"P. ej. +46712345678",
 "_docviewChangeAuthenticationModalTitle":"Autentificación",

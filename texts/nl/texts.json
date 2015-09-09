@@ -458,7 +458,7 @@
 "_docviewChangeAuthenticationModalErrorEID":"Ongeldig persoonlijk ID-nummer",
 "_docviewChangeAuthenticationModalErrorPhone":"Verkeerd formaat. Het correcte formaat is +46701234567",
 "_docviewChangeAuthenticationModalErrorSigned":"Aangezien de ontvanger reeds ondertekend heeft is het niet mogelijk de authenticatie te veranderen.",
-"_docviewChangeAuthenticationModalMethodLabel":"Authenticatiemethode voor <strong class='put-person-name'></strong>",
+"_docviewChangeAuthenticationModalMethodLabel":"",
 "_docviewChangeAuthenticationModalPlaceholderEID":"JJMMDDNNNN",
 "_docviewChangeAuthenticationModalPlaceholderPhone":"Bijv. +46712345678",
 "_docviewChangeAuthenticationModalTitle":"Authenticatie",

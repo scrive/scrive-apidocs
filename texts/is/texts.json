@@ -458,7 +458,7 @@
 "_docviewChangeAuthenticationModalErrorEID":"Ógild kennitala",
 "_docviewChangeAuthenticationModalErrorPhone":"Rangt snið. Rétt snið er +46701234567",
 "_docviewChangeAuthenticationModalErrorSigned":"Þar sem viðtakandinn hefur þegar skrifað undir er ekki hægt að breyta sannvottuninni.",
-"_docviewChangeAuthenticationModalMethodLabel":"Sannvottunaraðferð fyrir <strong class='put-person-name'></strong>",
+"_docviewChangeAuthenticationModalMethodLabel":"",
 "_docviewChangeAuthenticationModalPlaceholderEID":"ÁÁMMDDNNNN",
 "_docviewChangeAuthenticationModalPlaceholderPhone":"T.d. +46712345678",
 "_docviewChangeAuthenticationModalTitle":"Sannvottun",

@@ -458,7 +458,7 @@
 "_docviewChangeAuthenticationModalErrorEID":"Numéro d'identifiant personnel incorrect",
 "_docviewChangeAuthenticationModalErrorPhone":"Format erroné. Le format correct est +46701234567",
 "_docviewChangeAuthenticationModalErrorSigned":"Etant donné que le destinataire a déjà signé, il est impossible de modifier l'authentification.",
-"_docviewChangeAuthenticationModalMethodLabel":"Méthode d'authentification de <strong class='put-person-name'></strong>",
+"_docviewChangeAuthenticationModalMethodLabel":"",
 "_docviewChangeAuthenticationModalPlaceholderEID":"AAMMJJNNNN",
 "_docviewChangeAuthenticationModalPlaceholderPhone":"Ex: +46712345678",
 "_docviewChangeAuthenticationModalTitle":"Authentification",
