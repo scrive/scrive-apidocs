@@ -297,19 +297,25 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToSignMethodSEBankIDToSMSEvidence       |
   ChangeAuthenticationToSignMethodSMSToStandardEvidence       |
   ChangeAuthenticationToSignMethodSMSToSEBankIDEvidence       |
-  UpdateFieldFirstNameEvidence                 |
-  UpdateFieldLastNameEvidence                  |
-  UpdateFieldCompanyEvidence                   |
-  UpdateFieldPersonalNumberEvidence            |
-  UpdateFieldCompanyNumberEvidence             |
-  UpdateFieldEmailEvidence                     |
-  UpdateFieldCustomEvidence                    |
-  UpdateFieldMobileEvidence                    |
-  UpdateFieldNameEvidence                      |
-  VisitedViewForAuthenticationEvidence         |
-  VisitedViewForSigningEvidence                |
-  AuthenticatedToViewEvidence                  |
-  UpdateMobileAfterIdentificationToViewWithNets
+  UpdateFieldFirstNameEvidence                       |
+  UpdateFieldLastNameEvidence                        |
+  UpdateFieldCompanyEvidence                         |
+  UpdateFieldPersonalNumberEvidence                  |
+  UpdateFieldCompanyNumberEvidence                   |
+  UpdateFieldEmailEvidence                           |
+  UpdateFieldCustomEvidence                          |
+  UpdateFieldMobileEvidence                          |
+  UpdateFieldNameEvidence                            |
+  VisitedViewForAuthenticationEvidence               |
+  VisitedViewForSigningEvidence                      |
+  AuthenticatedToViewEvidence                        |
+  UpdateMobileAfterIdentificationToViewWithNets      |
+  ChangeAuthenticationToViewMethodStandardToSEBankIDEvidence |
+  ChangeAuthenticationToViewMethodStandardToNOBankIDEvidence |
+  ChangeAuthenticationToViewMethodSEBankIDToStandardEvidence |
+  ChangeAuthenticationToViewMethodSEBankIDToNOBankIDEvidence |
+  ChangeAuthenticationToViewMethodNOBankIDToStandardEvidence |
+  ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -488,6 +494,12 @@ instance ToSQL EvidenceEventType where
   toSQL (Current VisitedViewForSigningEvidence               ) = toSQL (104::Int16)
   toSQL (Current AuthenticatedToViewEvidence                 ) = toSQL (105::Int16)
   toSQL (Current UpdateMobileAfterIdentificationToViewWithNets  ) = toSQL (106::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodStandardToSEBankIDEvidence) = toSQL (107::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodStandardToNOBankIDEvidence) = toSQL (108::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodSEBankIDToStandardEvidence) = toSQL (109::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodSEBankIDToNOBankIDEvidence) = toSQL (110::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodNOBankIDToStandardEvidence) = toSQL (111::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidence) = toSQL (112::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -600,7 +612,13 @@ instance FromSQL EvidenceEventType where
       104 -> return (Current VisitedViewForSigningEvidence              )
       105 -> return (Current AuthenticatedToViewEvidence                )
       106 -> return (Current UpdateMobileAfterIdentificationToViewWithNets )
+      107 -> return (Current ChangeAuthenticationToViewMethodStandardToSEBankIDEvidence)
+      108 -> return (Current ChangeAuthenticationToViewMethodStandardToNOBankIDEvidence)
+      109 -> return (Current ChangeAuthenticationToViewMethodSEBankIDToStandardEvidence)
+      110 -> return (Current ChangeAuthenticationToViewMethodSEBankIDToNOBankIDEvidence)
+      111 -> return (Current ChangeAuthenticationToViewMethodNOBankIDToStandardEvidence)
+      112 -> return (Current ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidence)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 106)]
+        reRange = [(1, 112)]
       , reValue = n
       }

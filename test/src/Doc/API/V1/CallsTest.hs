@@ -37,6 +37,7 @@ apiV1CallsTests env = testGroup "CallsAPIV1" $
     testThat "settings auto reminder works" env testSetAutoReminder
   , testThat "change main file works" env testChangeMainFile
   , testThat "change main file moves placements" env testChangeMainFileMovePlacements
+  , testThat "Changing authentication to view method works" env testChangeAuthenticationToViewMethod
   , testThat "Changing authentication to sign method works" env testChangeAuthenticationToSignMethod
   , testThat "Changing authentication to sign method without changing existing info works" env testChangeAuthenticationToSignMethodWithEmptyAuthenticationValue
   , testThat "Creating doc with access credentials via API works" env testOAuthCreateDoc
@@ -251,6 +252,58 @@ testUpdateDocToSaved useOAuth = do
   assertEqual "Document should still be saved (JSON)" True unsaved
   docUnsaved <- dbQuery $ GetDocumentByDocumentID did
   assertEqual "Document should still be saved (DB)" False (documentunsaveddraft docUnsaved)
+
+testChangeAuthenticationToViewMethod :: TestEnv ()
+testChangeAuthenticationToViewMethod = do
+  ctx@Context{ctxmaybeuser = Just user} <- testUpdateDoc $ $head jsonDocs
+  [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
+  let siglinks = documentsignatorylinks doc
+      validsiglinkid = signatorylinkid $ $head $ filter signatoryispartner siglinks
+
+  reqNoAuthMethod <- mkRequest POST [("personal_number", inText "12345678901")]
+  (resNoAuthMethod, _) <- runTestKontra reqNoAuthMethod ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 400" 400 (rsCode resNoAuthMethod)
+
+  reqInvalidMethod <- mkRequest POST [("authentication_type", inText "god_is_witness")]
+  (resInvalidMethod, _) <- runTestKontra reqInvalidMethod ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 400" 400 (rsCode resInvalidMethod)
+
+  reqNOBankIDNoSSN <- mkRequest POST [("authentication_type", inText "no_bankid")]
+  (resNOBankIDNoSSN, _) <- runTestKontra reqNOBankIDNoSSN ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 400" 400 (rsCode resNOBankIDNoSSN)
+
+  reqNOBankIDValid <- mkRequest POST [("authentication_type", inText "no_bankid"),("personal_number", inText "12345678901")]
+  (resNOBankIDValid, _) <- runTestKontra reqNOBankIDValid ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 202" 202 (rsCode resNOBankIDValid)
+
+  reqNOBankIDValidWithMobile <- mkRequest POST [("authentication_type", inText "no_bankid"),("personal_number", inText "12345678901"),("mobile_number", inText "+4712345678")]
+  (resNOBankIDValidWithMobile, _) <- runTestKontra reqNOBankIDValidWithMobile ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 202" 202 (rsCode resNOBankIDValidWithMobile)
+
+  reqNOBankIDInvalidMobile <- mkRequest POST [("authentication_type", inText "no_bankid"),("personal_number", inText "12345678901"),("mobile_number", inText "+4612345678")]
+  (resNOBankIDInvalidMobile, _) <- runTestKontra reqNOBankIDInvalidMobile ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 400" 400 (rsCode resNOBankIDInvalidMobile)
+
+  reqSEBankIDButOldNOSSN <- mkRequest POST [("authentication_type", inText "se_bankid")]
+  (resSEBankIDButOldNOSSN, _) <- runTestKontra reqSEBankIDButOldNOSSN ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 400" 400 (rsCode resSEBankIDButOldNOSSN)
+
+  reqSEBankIDValid12digits <- mkRequest POST [("authentication_type", inText "se_bankid"),("personal_number", inText "123456789012")]
+  (resSEBankIDValid12digits, _) <- runTestKontra reqSEBankIDValid12digits ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 202" 202 (rsCode resSEBankIDValid12digits)
+
+  reqSEBankIDValid10digits <- mkRequest POST [("authentication_type", inText "se_bankid"),("personal_number", inText "1234567890")]
+  (resSEBankIDValid10digits, _) <- runTestKontra reqSEBankIDValid10digits ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 202" 202 (rsCode resSEBankIDValid10digits)
+
+  reqStandard <- mkRequest POST [("authentication_type", inText "standard")]
+  (resStandard, _) <- runTestKontra reqStandard ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 202" 202 (rsCode resStandard)
+
+  user2 <- addNewRandomUser
+  ctx2 <- (\c -> c { ctxmaybeuser = Just user2 }) <$> mkContext def
+  (resBadUser, _) <- runTestKontra reqSEBankIDValid10digits ctx2 $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 403" 403 (rsCode resBadUser)
 
 testChangeAuthenticationToSignMethod :: TestEnv ()
 testChangeAuthenticationToSignMethod = do

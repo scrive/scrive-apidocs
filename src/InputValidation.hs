@@ -21,6 +21,7 @@ module InputValidation
     , asValidAddress
     , asValidPhone
     , asValidPhoneForSMS
+    , asValidPhoneForNorwegianBankID
     , asValidPosition
     , asValidCheckBox
     , asValidID
@@ -468,6 +469,14 @@ asValidPhoneForSMS input =
     >>= (\str -> if take 1 str == "+"
                  then return str
                  else Bad)
+
+asValidPhoneForNorwegianBankID :: String -> Result String
+asValidPhoneForNorwegianBankID input =
+    asValidPhoneForSMS input
+    >>= checkLengthIs [11]
+    >>= (\str -> if take 3 str == "+47"
+                    then return str
+                    else Bad)
 
 {- |
     Gets a cleaned up doc id. Useful for validating
