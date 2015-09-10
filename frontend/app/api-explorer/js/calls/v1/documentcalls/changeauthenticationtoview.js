@@ -3,12 +3,12 @@
 
 new APICallV1({
   category: "signing",
-  name: "Change authentication",
-  description: "Change authentication for any signatory of document.",
-  sampleUrl: "/api/v1/changeauthentication/$docid$/$signatoryid$",
+  name: "Change authentication to view",
+  description: "Change authentication to view for any signatory of document.",
+  sampleUrl: "/api/v1/changeauthenticationtoview/$docid$/$signatoryid$",
   method: "POST",
   getCallUrl: function () {
-          return "/api/v1/changeauthentication/" + this.get("documentid") + "/" + this.get("signatoryid");
+          return "/api/v1/changeauthenticationtoview/" + this.get("documentid") + "/" + this.get("signatoryid");
         },
   needsAuthorization: true,
   params: [
@@ -35,15 +35,25 @@ new APICallV1({
             argName: "authentication_type",
             name: "Type of authentication",
             sendAsParam: true,
-            description: "Type of authentication that will be used. Possible values: standard, sms_pin and eleg.",
+            description: "Type of authentication that will be used. Possible values: standard, se_bankid, no_bankid.",
             defaultValue: ""
           }),
           new APICallParam({
             type: "text",
-            argName: "authentication_value",
-            name: "Value for authentication",
+            argName: "personal_number",
+            name: "Personal number",
             sendAsParam: true,
-            description: "Optional. Depending on type of authentication it can be phone number or SSN.",
+            optional: true,
+            description: "Personal number to set for the signatory, if the authentication method requires it.",
+            defaultValue: ""
+          }),
+          new APICallParam({
+            type: "text",
+            argName: "mobile_number",
+            name: "Mobile number",
+            sendAsParam: true,
+            optional: true,
+            description: "Phone number to use for Norwegian BankID",
             defaultValue: ""
           })
         ]
