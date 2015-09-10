@@ -207,6 +207,8 @@ jsonError rest = runJSONGen $ do
 api :: (Kontrakcja m, ToAPIResponse v) => m v -> m Response
 api acc = (toAPIResponse <$> acc) `catches` [
     Handler $ \ex@(SomeKontraException e) -> do
+      -- API handler always returns a valid response. Due to that appHandler will not rollback - and we need to do it here
+      rollback
       logAttention "API error" $ object [
           "error" .= jsonToAeson (toJSValue e)
         ]
