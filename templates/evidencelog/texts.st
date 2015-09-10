@@ -59,17 +59,17 @@ ChangeSignatoryEmailWhenUndeliveredEvidenceLog=The user <span class="actor"/> ch
 ###
 ChangeSignatoryPhoneWhenUndeliveredEvidenceLog=The user <span class="actor"/> changed the phone number for the party from $oldphone$ to $newphone$.
 ###
-ChangeAuthenticationToSignMethodStandardToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “no extra authentication” to “eID”.
+ChangeAuthenticationToSignMethodStandardToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “eID”.
 ###
-ChangeAuthenticationToSignMethodStandardToSMSEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “no extra authentication” to “PIN by SMS”.
+ChangeAuthenticationToSignMethodStandardToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “PIN by SMS”.
 ###
-ChangeAuthenticationToSignMethodSEBankIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “eID” to “no extra authentication”.
+ChangeAuthenticationToSignMethodSEBankIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “eID” to “no extra authentication”.
 ###
-ChangeAuthenticationToSignMethodSEBankIDToSMSEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “eID” to “PIN by SMS”.
+ChangeAuthenticationToSignMethodSEBankIDToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “eID” to “PIN by SMS”.
 ###
-ChangeAuthenticationToSignMethodSMSToStandardEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “PIN by SMS” to “no extra authentication”.
+ChangeAuthenticationToSignMethodSMSToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “PIN by SMS” to “no extra authentication”.
 ###
-ChangeAuthenticationToSignMethodSMSToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication for <span class="signatory"/> from “PIN by SMS” to “eID”.
+ChangeAuthenticationToSignMethodSMSToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “PIN by SMS” to “eID”.
 ###
 ###
 CloseDocumentEvidenceLog=Scrive eSign locked the document from further modifications by the parties.
