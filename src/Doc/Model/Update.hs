@@ -571,8 +571,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
                   )
                   actor
                 )
-    let insertEvidence e = void $ update $ InsertEvidenceEvent e
-          (F.value "signatory" (getSmartName sig)) actor
+    let insertEvidence e = void $ update $
+          InsertEvidenceEventWithAffectedSignatoryAndMsg e (return ()) (Just sig) Nothing actor
     case (oldAuth, newAuth) of
          (StandardAuthenticationToSign, SEBankIDAuthenticationToSign)   -> insertEvidence ChangeAuthenticationToSignMethodStandardToSEBankIDEvidence
          (StandardAuthenticationToSign, SMSPinAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodStandardToSMSEvidence
