@@ -33,15 +33,15 @@ define(['React'], function(React) {
     },
 
     render: function() {
-      var classSet = React.addons.classSet;
-      var classes = classSet({
+
+      var checkboxClasses = React.addons.classSet({
         'checkbox': true,
         'checked': this.props.checked
       });
 
       return (
-        <div className="checkbox-box">
-          <div onClick={this.handleClick} className={classes} style={this.props.style} tabIndex="0" onKeyDown={this.handleKeyDn}>
+        <div className={React.addons.classSet("checkbox-box",this.props.className)}>
+          <div onClick={this.handleClick} className={checkboxClasses} style={this.props.style} tabIndex="0" onKeyDown={this.handleKeyDn}>
             <div className="checkmark" />
           </div>
           { this.props.label &&
