@@ -13,6 +13,7 @@ module TestKontra (
     , getHeader
     , getCookie
     , defaultUri
+    , defaultDomain
     , mkRequest
     , mkRequestWithHeaders
     , mkContext
@@ -237,9 +238,13 @@ getHeader name hdrs = BSU.toString <$> join
 getCookie :: String -> [(String, Cookie)] -> Maybe String
 getCookie name cookies = cookieValue <$> lookup name cookies
 
+-- | Default domain and uri used for tests
+defaultDomain :: String
+defaultDomain = "testkontra.fake"
+
 -- | Default uri used for tests
 defaultUri :: String
-defaultUri = "http://testkontra.fake"
+defaultUri = "http://" ++ defaultDomain
 
 -- | Constructs initial request with given data (POST or GET)
 mkRequest :: MonadIO m => Method -> [(String, Input)] -> m Request
@@ -283,7 +288,6 @@ mkContext lang = do
     return Context {
           ctxmaybeuser = Nothing
         , ctxhostpart = defaultUri
-        , ctxresourcehostpart = defaultUri
         , ctxflashmessages = []
         , ctxtime = time
         , ctxclientname = Nothing

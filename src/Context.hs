@@ -35,7 +35,6 @@ import qualified MemCache
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
     , ctxhostpart            :: String -- ^ The hostname of the URL for the request.
-    , ctxresourcehostpart    :: String -- ^ The hostname for the resources (will be https if possible)
     , ctxflashmessages       :: [FlashMessage] -- ^ The flash messages for the NEXT request.
     , ctxtime                :: UTCTime -- ^ The time of the request.
     , ctxclientname          :: Maybe String -- ^ Client identification from header Client-Name or if that's missing: User-Agent

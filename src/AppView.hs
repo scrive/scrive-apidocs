@@ -296,7 +296,6 @@ contextInfoFields ctx@Context{ ctxlang } = do
   F.value "padlogged" $ isJust (ctxmaybepaduser ctx)
   F.objects "flashmessages" $ map flashMessageFields $ ctxflashmessages ctx
   F.value "hostpart" $ ctxhostpart ctx
-  F.value "resourcehostpart" $ ctxresourcehostpart ctx
   F.value "production" (ctxproduction ctx)
   F.value "ctxlang" $ codeFromLang ctxlang
 

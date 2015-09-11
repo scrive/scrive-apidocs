@@ -1,30 +1,29 @@
-module Utils.HTTP where
+{-# OPTIONS_GHC #-}
 
-import Data.Char
+module Utils.HTTP(
+    isHTTPS
+  , isSecure
+  , currentDomain
+  , getHttpHostpart
+  , getHostpart
+  , currentLink
+  , currentLinkBody
+  ) where
+
 import Happstack.Server
-import Network.URI hiding (scheme)
 import qualified Data.ByteString.UTF8 as BS
 
 import KontraPrelude
-
-class URLAble a where
-   encodeForURL :: a -> String
-
-
-domainFromString  :: String -> String
-domainFromString s = fromMaybe "" $ fmap uriRegName $ join $ fmap uriAuthority $ parseURI s
 
 currentDomain :: ServerMonad m => m String
 currentDomain = do
   rq <- askRq
   return $ maybe "scrive.com" BS.toString $ getHeader "host" rq
 
-isIphone :: ServerMonad m => m Bool
-isIphone =  do
-  magent <- fmap BS.toString  `liftM` (getHeaderM "User-Agent")
-  case magent of
-    Nothing -> return False
-    Just agent -> return $ "iphone" `isInfixOf` (map toLower agent)
+currentScheme :: ServerMonad m => m String
+currentScheme = do
+  rq <- askRq
+  return $ maybe "http" BS.toString $ getHeader "scheme" rq
 
 isSecure :: ServerMonad m => m Bool
 isSecure = (Just (BS.fromString "http") /=) `liftM` getHeaderM "scheme"
@@ -37,37 +36,23 @@ isHTTPS = do
 
 getHostpart :: ServerMonad m => m String
 getHostpart = do
-  rq <- askRq
-  let hostpart = maybe "scrive.com" BS.toString $ getHeader "host" rq
-  let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
+  hostpart <- currentDomain
+  scheme <- currentScheme
   return $ scheme ++ "://" ++ hostpart
 
 getHttpHostpart :: ServerMonad m => m String
 getHttpHostpart = do
-  rq <- askRq
-  let hostpart = maybe "scrive.com" BS.toString $ getHeader "host" rq
+  hostpart <- currentDomain
   return $ "http://" ++ hostpart
 
-getResourceHostpart :: ServerMonad m => m String
-getResourceHostpart = do
-  rq <- askRq
-  let hostpart = maybe "scrive.com" BS.toString $ getHeader "host" rq
-  let scheme = maybe "http" (const "https") $ getHeader "scheme" rq
-  return $ scheme ++ "://" ++ hostpart
-
-currentLink :: ServerMonad m => m String -- We use this since we can switch to HTTPS whenever we wan't
+currentLink :: ServerMonad m => m String -- We use this since we can switch to HTTPS whenever we want
 currentLink = do
-  secure <- isHTTPS
+  scheme <- currentScheme
   urlbody <- currentLinkBody
-  return $ if secure
-    then "https://" ++ urlbody
-    else "http://"  ++ urlbody
+  return $ scheme ++ "://" ++ urlbody
 
 currentLinkBody :: ServerMonad m => m String
 currentLinkBody = do
   rq <- askRq
-  let hostpart = maybe "scrive.com" BS.toString $ getHeader "host" rq
-  let fixurl a1 a2 = if ("/" `isSuffixOf` a1 && "/" `isPrefixOf` a2)
-                     then drop 1 a2
-                     else a2
-  return $ hostpart ++ fixurl hostpart (rqUri rq) ++ fixurl (rqUri rq) (rqURL rq)
+  hostpart <- currentDomain
+  return $ hostpart ++ (rqUri rq) ++ (rqQuery rq)

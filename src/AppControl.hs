@@ -311,7 +311,6 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
            `E.catch` \ (_ :: E.SomeException) -> return noIP
 
       currhostpart <- getHostpart
-      reshostpart <- getResourceHostpart
       minutestime <- currentTime
       let clientName = BS.toString <$> getHeader "client-name" rq
           clientTime = parseTimeISO =<< (BS.toString <$> getHeader "client-time" rq)
@@ -340,7 +339,6 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
       return Context {
           ctxmaybeuser = muser
         , ctxhostpart = currhostpart
-        , ctxresourcehostpart = reshostpart
         , ctxflashmessages = flashmessages
         , ctxtime = minutestime
         , ctxclientname = clientName `mplus` userAgent
