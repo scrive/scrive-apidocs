@@ -24,7 +24,7 @@ data DocumentSortOn = DocumentSortStatus | DocumentSortTitle | DocumentSortTime|
 data DocumentSortOrder = DocumentSortAsc | DocumentSortDesc  deriving Eq
 
 instance Unjson DocumentSortOrder where
-  unjsonDef = unjsonEnumBy "DocumentSortOn" [
+  unjsonDef = unjsonEnumBy "DocumentSortOrder" [
       (DocumentSortAsc, "ascending")
     , (DocumentSortDesc, "descending")
     ]
@@ -100,7 +100,7 @@ instance Unjson DocumentFilter where
 unjsonDocumentFilterStatuses:: Ap (FieldDef DocumentFilter) DocumentFilter
 unjsonDocumentFilterStatuses = pure DocumentFilterStatuses
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> field "statuses" unsafeDocumentFilterStatuses"Statuses to filter on"
+  <*> field "statuses" unsafeDocumentFilterStatuses "Statuses to filter on"
   where
     unsafeDocumentFilterStatuses:: DocumentFilter ->  [DocumentStatus]
     unsafeDocumentFilterStatuses(DocumentFilterStatuses fs) = fs

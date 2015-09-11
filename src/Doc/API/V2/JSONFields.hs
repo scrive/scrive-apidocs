@@ -182,7 +182,7 @@ unsonFieldPlacement =  objectOf $ pure FieldPlacement
   <*> field "fsrel" placementfsrel "Relative font size"
   <*> field "page" placementpage "Page of palcement"
   <*> fieldOpt "tip" placementtipside "Should arrow point on field from left or right"
-  <*> fieldDef "anchors" [] placementanchors "Should arrow point on field from left or right"
+  <*> fieldDef "anchors" [] placementanchors "Field placement anchors"
 
 instance Unjson PlacementAnchor where
   unjsonDef = unsonPlacementAnchor
@@ -190,8 +190,8 @@ instance Unjson PlacementAnchor where
 unsonPlacementAnchor :: UnjsonDef PlacementAnchor
 unsonPlacementAnchor = objectOf $ pure PlacementAnchor
   <*> field "text" placementanchortext "Text to match with anchor"
-  <*> field "index" placementanchorindex "Relative x position"
-  <*> fieldOpt "pages" placementanchorpages "Relative x position"
+  <*> field "index" placementanchorindex "Occurrence of text to match with"
+  <*> fieldOpt "pages" placementanchorpages "Page numbers on which to match"
 
 instance Unjson TipSide where
   unjsonDef = unjsonEnumBy "TipSide" [

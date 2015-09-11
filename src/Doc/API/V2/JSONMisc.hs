@@ -40,13 +40,13 @@ instance Unjson DocumentID where
   unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse DocumentID")  return) . maybeRead) (show . fromDocumentID :: DocumentID -> String) unjsonDef
 
 instance Unjson SignatoryLinkID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse DocumentID")  return) . maybeRead) (show . fromSignatoryLinkID :: SignatoryLinkID -> String) unjsonDef
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse SignatoryLinkID")  return) . maybeRead) (show . fromSignatoryLinkID :: SignatoryLinkID -> String) unjsonDef
 
 instance Unjson FileID where
   unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse FileID")  return) . maybeRead) (show . fromFileID :: FileID -> String) unjsonDef
 
 instance Unjson UserID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse FileID")  return) . maybeRead) (show . unUserID :: UserID -> String) unjsonDef
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserID")  return) . maybeRead) (show . unUserID :: UserID -> String) unjsonDef
 
 -- Unjson for types that are just wrappers around some base type
 
@@ -84,27 +84,20 @@ instance Unjson DeliveryStatus where
     ]
 
 instance Unjson AuthenticationToViewMethod where
-  unjsonDef = unjsonEnum "AuthenticationToViewMethod" textToAuthenticationToViewMethod authenticationToViewMethodToText
-
-authenticationToViewMethodToText :: AuthenticationToViewMethod -> T.Text
-authenticationToViewMethodToText StandardAuthenticationToView = "standard"
-authenticationToViewMethodToText SEBankIDAuthenticationToView = "se_bankid"
-authenticationToViewMethodToText NOBankIDAuthenticationToView = "no_bankid"
-
-textToAuthenticationToViewMethod :: T.Text -> Maybe AuthenticationToViewMethod
-textToAuthenticationToViewMethod "standard" = Just StandardAuthenticationToView
-textToAuthenticationToViewMethod "se_bankid" = Just SEBankIDAuthenticationToView
-textToAuthenticationToViewMethod "no_bankid" = Just NOBankIDAuthenticationToView
-textToAuthenticationToViewMethod _ = Nothing
+  unjsonDef = unjsonEnumBy "AuthenticationToViewMethod" [
+      (StandardAuthenticationToView, "standard")
+    , (SEBankIDAuthenticationToView, "se_bankid")
+    , (NOBankIDAuthenticationToView, "no_bankid")
+    ]
 
 instance Unjson AuthenticationToSignMethod where
-  unjsonDef = unjsonEnum "AuthenticationToSignMethod" textToAuthenticationToSignMethod authenticationToSignMethodToText
+  unjsonDef = unjsonEnumBy "AuthenticationToSignMethod" [
+      (StandardAuthenticationToSign, "standard")
+    , (SEBankIDAuthenticationToSign, "se_bankid")
+    , (SMSPinAuthenticationToSign, "sms_pin")
+    ]
 
-authenticationToSignMethodToText :: AuthenticationToSignMethod -> T.Text
-authenticationToSignMethodToText StandardAuthenticationToSign = "standard"
-authenticationToSignMethodToText SEBankIDAuthenticationToSign = "se_bankid"
-authenticationToSignMethodToText SMSPinAuthenticationToSign = "sms_pin"
-
+-- JJ FIXME: remove this too, check usages though :(
 textToAuthenticationToSignMethod :: T.Text -> Maybe AuthenticationToSignMethod
 textToAuthenticationToSignMethod "standard"  = Just StandardAuthenticationToSign
 textToAuthenticationToSignMethod "se_bankid" = Just SEBankIDAuthenticationToSign
