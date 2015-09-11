@@ -151,6 +151,7 @@
          "signsuccessredirect":null,
          "rejectredirect":null,
          "authenticationToView": "standard",
+         "hasAuthenticatedToView": false,
          "authentication":"sms_pin"
       },
       {
@@ -318,6 +319,7 @@
          "signsuccessredirect":null,
          "rejectredirect":null,
          "authenticationToView":"standard",
+         "hasAuthenticatedToView": false,
          "authentication":"standard"
       },
       {
@@ -518,6 +520,7 @@
          "signsuccessredirect":"success-redirect",
          "rejectredirect":"fail-redirect",
          "authenticationToView": "standard",
+         "hasAuthenticatedToView": false,
          "authentication":"sms_pin"
       },
       {
@@ -734,6 +737,7 @@
          "signsuccessredirect":null,
          "rejectredirect":null,
          "authenticationToView": "se_bankid",
+         "hasAuthenticatedToView": false,
          "authentication":"eleg"
       }
    ],

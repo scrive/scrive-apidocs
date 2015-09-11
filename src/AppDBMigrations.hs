@@ -183,6 +183,7 @@ kontraMigrations = [
   , addSignatoryAuthenticationToView
   , fixPurgedPendingDocumentsAndAddConstraint
   , addNetsFieldsToEIDAuthentication
+  , addAuthenticatedToViewToCompositeType
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

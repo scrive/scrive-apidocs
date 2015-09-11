@@ -126,7 +126,7 @@ documentJSONV1 muser forapi forauthor msl doc = do
         then show (documentmagichash doc)
         else ""
       J.value "timezone" $ toString $ documenttimezonename doc
-      
+
 authenticationToViewJSON :: AuthenticationToViewMethod -> JSValue
 authenticationToViewJSON StandardAuthenticationToView = toJSValue ("standard"::String)
 authenticationToViewJSON SEBankIDAuthenticationToView = toJSValue ("se_bankid"::String)
@@ -166,6 +166,7 @@ signatoryJSON forapi forauthor doc viewer siglink = do
     J.value "signsuccessredirect" $ signatorylinksignredirecturl siglink
     J.value "rejectredirect" $ signatorylinkrejectredirecturl siglink
     J.value "authenticationToView" $ authenticationToViewJSON $ signatorylinkauthenticationtoviewmethod siglink
+    J.value "hasAuthenticatedToView" $ signatorylinkidentifiedtoview siglink
     J.value "authentication" $ authenticationToSignJSON $ signatorylinkauthenticationtosignmethod siglink
 
     when (not (isPreparation doc) && forauthor && forapi && signatorylinkdeliverymethod siglink == APIDelivery) $ do

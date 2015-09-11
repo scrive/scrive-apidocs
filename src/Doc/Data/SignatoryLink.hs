@@ -260,6 +260,8 @@ data SignatoryLink = SignatoryLink {
 , signatorylinkauthenticationtosignmethod :: !AuthenticationToSignMethod
 , signatorylinkdeliverymethod             :: !DeliveryMethod
 , signatorylinkconfirmationdeliverymethod :: !ConfirmationDeliveryMethod
+-- | If a person has identified to view the document
+, signatorylinkidentifiedtoview           :: !Bool
 } deriving (Show)
 
 instance Default SignatoryLink where
@@ -288,6 +290,7 @@ instance Default SignatoryLink where
   , signatorylinkauthenticationtosignmethod = StandardAuthenticationToSign
   , signatorylinkdeliverymethod = EmailDelivery
   , signatorylinkconfirmationdeliverymethod = EmailConfirmationDelivery
+  , signatorylinkidentifiedtoview = False
   }
 
 ---------------------------------
@@ -320,15 +323,16 @@ signatoryLinksSelectors = [
   , "signatory_links.authentication_to_sign_method"
   , "signatory_links.delivery_method"
   , "signatory_links.confirmation_delivery_method"
+  , "(SELECT EXISTS (SELECT 1 FROM eid_authentications WHERE signatory_links.id = eid_authentications.signatory_link_id))"
   ]
 
-type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod)
+type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool)
 
 instance PQFormat SignatoryLink where
   pqFormat _ = "%signatory_link"
 
 instance CompositeFromSQL SignatoryLink where
-  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method) = SignatoryLink {
+  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, has_identified) = SignatoryLink {
     signatorylinkid = slid
   , signatoryfields = fields
   , signatoryisauthor = is_author
@@ -353,4 +357,5 @@ instance CompositeFromSQL SignatoryLink where
   , signatorylinkauthenticationtosignmethod = authentication_to_sign_method
   , signatorylinkdeliverymethod = delivery_method
   , signatorylinkconfirmationdeliverymethod = confirmation_delivery_method
+  , signatorylinkidentifiedtoview = has_identified
   }
