@@ -99,7 +99,7 @@ guardSignatoryNeedsToIdentifyToView slid = do
   msl <- getSigLinkFor slid <$> theDocument
   identifyToView <- signatoryNeedsToIdentifyToView ($fromJust msl)
   when (identifyToView && (not $ isAuthor msl))
-    (apiError $ signatoryStateError "Authorisation to view needed before signing")
+    (apiError $ signatoryStateError "Authorization to view needed before signing")
 
 guardSignatoryHasNotSigned :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
 guardSignatoryHasNotSigned slid =

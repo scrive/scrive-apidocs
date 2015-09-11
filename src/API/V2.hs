@@ -28,9 +28,9 @@ import qualified Data.Text as T
 import Kontra (Kontrakcja)
 import KontraPrelude
 
--- | Helper for constructing API V2 routes
+-- Handler for 404 for API calls. Has to be inserted directly into system main routing table
 noAPIV2CallFoundHandler :: Kontrakcja m => m Response
 noAPIV2CallFoundHandler = api $ do
   uri <- rqUri <$> askRq
   _ <- apiError $ endpointNotFound (T.pack uri)
-  return $ Ok ()
+  return $ Ok () -- This part will never be reached, since exception is thrown above

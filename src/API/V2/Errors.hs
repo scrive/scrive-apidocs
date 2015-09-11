@@ -14,8 +14,8 @@ module API.V2.Errors (
   -- * Internal to API.V2
   , APIError
   , endpointNotFound
-  , invalidAuthorisation
-  , invalidAuthorisationWithMsg
+  , invalidAuthorization
+  , invalidAuthorizationWithMsg
   , insufficientPrivileges
   , httpCodeFromSomeKontraException
   , jsonFromSomeKontraException
@@ -50,7 +50,7 @@ instance KontraException APIError
 
 data APIErrorType = ServerError
                | EndpointNotFound
-               | InvalidAuthorisation
+               | InvalidAuthorization
                | InsufficientPrivileges
                | ResourceNotFound
                | DocumentActionForbidden
@@ -67,7 +67,7 @@ data APIErrorType = ServerError
 errorIDFromAPIErrorType :: APIErrorType -> T.Text
 errorIDFromAPIErrorType ServerError                   = "server_error"
 errorIDFromAPIErrorType EndpointNotFound              = "endpoint_not_found"
-errorIDFromAPIErrorType InvalidAuthorisation          = "invalid_authorisation"
+errorIDFromAPIErrorType InvalidAuthorization          = "invalid_authorisation"
 errorIDFromAPIErrorType InsufficientPrivileges        = "insufficient_privileges"
 errorIDFromAPIErrorType ResourceNotFound              = "resource_not_found"
 errorIDFromAPIErrorType DocumentActionForbidden       = "document_action_forbidden"
@@ -103,14 +103,14 @@ endpointNotFound ep = APIError { errorType = EndpointNotFound, errorHttpCode = 4
   where msg = "The endpoint " `T.append` ep `T.append` " was not found. See our website for API documentation."
 
 -- | Used interally by this module and API.V2.User
-invalidAuthorisation :: APIError
-invalidAuthorisation = APIError { errorType = InvalidAuthorisation, errorHttpCode = 401, errorMessage = msg}
+invalidAuthorization :: APIError
+invalidAuthorization = APIError { errorType = InvalidAuthorization, errorHttpCode = 401, errorMessage = msg}
   where msg = "No valid access credentials were provided. Please refer to our API documentation."
 
 -- | Used interally by this module and API.V2.User
-invalidAuthorisationWithMsg :: T.Text -> APIError
-invalidAuthorisationWithMsg problem = invalidAuthorisation { errorMessage = msg}
-  where msg = errorMessage invalidAuthorisation `T.append` " The problem was: " `T.append` problem
+invalidAuthorizationWithMsg :: T.Text -> APIError
+invalidAuthorizationWithMsg problem = invalidAuthorization { errorMessage = msg}
+  where msg = errorMessage invalidAuthorization `T.append` " The problem was: " `T.append` problem
 
 -- | Used interally by this module and API.V2.User
 insufficientPrivileges :: APIError
@@ -251,7 +251,7 @@ convertSignatoryHasAlreadySigned (SomeKontraException ex) =
 convertSignatoryTokenDoesNotMatch :: SomeKontraException -> SomeKontraException
 convertSignatoryTokenDoesNotMatch (SomeKontraException ex) =
   case cast ex of
-    Just (SignatoryTokenDoesNotMatch {}) -> SomeKontraException $ invalidAuthorisationWithMsg "Signatory token does not match"
+    Just (SignatoryTokenDoesNotMatch {}) -> SomeKontraException $ invalidAuthorizationWithMsg "Signatory token does not match"
     Nothing -> (SomeKontraException ex)
 
 convertDocumentObjectVersionDoesNotMatch :: SomeKontraException -> SomeKontraException

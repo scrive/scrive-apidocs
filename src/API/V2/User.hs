@@ -90,7 +90,7 @@ getAPIUserWith :: Kontrakcja m => (Context -> Maybe User) -> [APIPrivilege] -> m
 getAPIUserWith ctxUser privs = do
   moauthuser <- getOAuthUser privs
   case moauthuser of
-    Just (Left msg) -> apiError $ invalidAuthorisationWithMsg (T.pack msg)
+    Just (Left msg) -> apiError $ invalidAuthorizationWithMsg (T.pack msg)
     Just (Right (user, actor)) -> return (user, actor)
     Nothing -> do
       msessionuser <- do
@@ -100,7 +100,7 @@ getAPIUserWith ctxUser privs = do
           Just user -> return $ Just (user, authorActor ctx user)
       case msessionuser of
         Just (user, actor) -> return (user, actor)
-        Nothing -> apiError invalidAuthorisation
+        Nothing -> apiError invalidAuthorization
 
 getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either String (User, Actor)))
 getOAuthUser privs = do
