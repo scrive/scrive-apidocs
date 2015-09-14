@@ -16,6 +16,7 @@ import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 
+import MagicHash
 import DB.TimeZoneName
 import Data.Functor.Invariant
 import Data.Unjson
@@ -47,6 +48,9 @@ instance Unjson FileID where
 
 instance Unjson UserID where
   unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserID")  return) . maybeRead) show  unjsonDef
+
+instance Unjson MagicHash where
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse access token")  return) . maybeRead) show  unjsonDef
 
 -- Unjson for types that are just wrappers around some base type
 

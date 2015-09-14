@@ -46,7 +46,8 @@
       "authentication_method_to_view": "standard",
       "authentication_method_to_sign": "standard",
       "confirmation_delivery_method": "email",
-      "attachments": []
+      "attachments": [],
+      "api_delivery_url": null
     },
     {
       "id": "66",
@@ -146,7 +147,8 @@
           "description": "#☭ҖATT_DESC",
           "file": null
         }
-      ]
+      ],
+      "api_delivery_url": null
     }
   ],
   "file": {

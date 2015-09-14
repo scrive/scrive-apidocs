@@ -70,7 +70,7 @@ fieldAccessToken (DocumentAccess { daAccessMode }) =
        AuthorDocumentAccess -> accessTokenField
        AdminDocumentAccess -> accessTokenField
        _ -> pure ()
-  where accessTokenField = fieldReadonly "access_token" (show . documentmagichash) "Document access token"
+  where accessTokenField = fieldReadonly "access_token" documentmagichash "Document access token"
 
 unjsonSignatoryArray ::  DocumentAccess -> UnjsonDef [SignatoryLink]
 unjsonSignatoryArray da = arrayOf (unjsonSignatory da)
