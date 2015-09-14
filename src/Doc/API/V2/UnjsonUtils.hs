@@ -27,7 +27,7 @@ unjsonEnumBy desc enumDef =
     printEnum ((m,t):ms) a =  if (a == m)
                             then t
                             else printEnum ms a
-    printEnum _ _ = $unexpectedError $ T.unpack ("Incompleate printEnum definition for " `T.append` desc)
+    printEnum _ _ = $unexpectedError $ T.unpack ("Incompleate printEnum definition for" <+> desc)
 
 unjsonEnum :: T.Text -> (T.Text -> Maybe a) -> (a -> T.Text) -> UnjsonDef a
 unjsonEnum desc parseEnum printEnum  =
@@ -36,8 +36,8 @@ unjsonEnum desc parseEnum printEnum  =
     printEnumToAeson a = Aeson.String $ printEnum a
     parseFromEnumFromAeson (Aeson.String s) = case (parseEnum s) of
                                                 Just a -> Result a []
-                                                _ -> fail $ T.unpack $ "cannot parse enum " `T.append` desc `T.append` " from " `T.append` s
-    parseFromEnumFromAeson _ = fail $ T.unpack $ "cannot parse enum " `T.append` desc `T.append` " from not string"
+                                                _ -> fail $ T.unpack $ "cannot parse enum" <+> desc <+> "from" <+> s
+    parseFromEnumFromAeson _ = fail $ T.unpack $ "cannot parse enum " <+> desc <+> "from not string"
 
 
 -- | It is impossible to write a reasonable definition of 'Unjson (Maybe a)'

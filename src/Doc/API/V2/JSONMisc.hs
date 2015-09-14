@@ -34,7 +34,7 @@ import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 
 -- | Convert UTCTime to ISO8601 time format with two decimal places that we use
 utcTimeToAPIFormat :: UTCTime -> T.Text
-utcTimeToAPIFormat time = T.take 22 (T.pack (formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S%Q")) time)) `T.append` "Z"
+utcTimeToAPIFormat time = T.take 22 (T.pack (formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S%Q")) time)) <> "Z"
 
 instance Unjson DocumentID where
   unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse DocumentID")  return) . maybeRead) (show . fromDocumentID :: DocumentID -> String) unjsonDef

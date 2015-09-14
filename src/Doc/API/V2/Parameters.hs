@@ -106,8 +106,8 @@ apiV2ParameterOptional (ApiV2ParameterFilePDF name) = do
         Just format -> do
           eres <- convertToPDF (ctxlivedocxconf ctx) content' format
           case eres of
-            Left (LiveDocxIOError e) -> apiError $ requestParameterParseError name $ "LiveDocX conversion IO failed " `T.append` T.pack (show e)
-            Left (LiveDocxSoapError s)-> apiError $ requestParameterParseError name $ "LiveDocX conversion SOAP failed " `T.append` T.pack s
+            Left (LiveDocxIOError e) -> apiError $ requestParameterParseError name $ "LiveDocX conversion IO failed" <+> T.pack (show e)
+            Left (LiveDocxSoapError s)-> apiError $ requestParameterParseError name $ "LiveDocX conversion SOAP failed" <+> T.pack s
             Right res -> do
               -- change extension from .doc, .docx and others to .pdf
               let filename = takeBaseName filename' ++ ".pdf"

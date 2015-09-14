@@ -46,7 +46,7 @@ netsRoutes = choice [
 
 formatDOB :: T.Text -> T.Text
 formatDOB s = case T.splitOn "." s of
-               [day, month, year] -> day `T.append` month `T.append` (T.drop 2 year)
+               [day, month, year] -> day <> month <> (T.drop 2 year)
                _ -> $unexpectedError "Nets returned date of birth in invalid format"
 
 handleResolve :: Kontrakcja m => m KontraLink

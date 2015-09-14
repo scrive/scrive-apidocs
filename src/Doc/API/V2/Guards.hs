@@ -50,7 +50,7 @@ guardThatDocumentIs f text = unlessM (f <$> theDocument) $ apiError $ documentSt
 -- | Guard that the document status matches, otherwise throw a `documentStateError`
 guardDocumentStatus :: (Kontrakcja m, DocumentMonad m) => DocumentStatus -> m ()
 guardDocumentStatus s = unlessM ((\d -> documentstatus d == s) <$> theDocument) $ apiError $ documentStateError errorMsg
-  where errorMsg = "The document status should be '" `T.append` (T.pack $ show s) `T.append` "'."
+  where errorMsg = "The document status should be '" <> (T.pack $ show s) <> "'."
 
 -- | Internal function used in all guards on User
 -- Helps code reuse and keep error messages consistent
