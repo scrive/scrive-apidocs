@@ -84,7 +84,7 @@ getDocumentSignatoryMagicHash did slid = do
           then return $ Just sl
           else apiError $ documentActionForbidden
 
--- * Interal functions
+-- * Internal functions
 
 getAPIUserWith :: Kontrakcja m => (Context -> Maybe User) -> [APIPrivilege] -> m (User, Actor)
 getAPIUserWith ctxUser privs = do

@@ -32,8 +32,7 @@ module API.Monad.V1 (
                  )
   where
 
-import Control.Exception.Lifted
-import Control.Monad.Base
+import Control.Monad.Catch
 import Data.Typeable
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
@@ -221,33 +220,33 @@ apiGuardL' acc = apiGuard' =<< acc
 apiGuardL :: (Kontrakcja m, APIGuard m a b) => APIError -> m a -> m b
 apiGuardL e acc = apiGuard e =<< acc
 
-apiGuard' :: (MonadBase IO m, APIGuard m a b) => a -> m b
-apiGuard' a = guardEither a >>= either (throwIO . SomeKontraException) return
+apiGuard' :: (MonadThrow m, APIGuard m a b) => a -> m b
+apiGuard' a = guardEither a >>= either (throwM . SomeKontraException) return
 
-apiGuard :: (MonadBase IO m, APIGuard m a b) => APIError -> a -> m b
-apiGuard e a = guardEither a >>= either (const $ (throwIO . SomeKontraException) e) return
+apiGuard :: (MonadThrow m, APIGuard m a b) => APIError -> a -> m b
+apiGuard e a = guardEither a >>= either (const $ (throwM . SomeKontraException) e) return
 
-apiGuardJustM :: (MonadBase IO m) => APIError -> m (Maybe a) -> m a
-apiGuardJustM e a = a >>= maybe ((throwIO . SomeKontraException) e) return
+apiGuardJustM :: (MonadThrow m) => APIError -> m (Maybe a) -> m a
+apiGuardJustM e a = a >>= maybe ((throwM . SomeKontraException) e) return
 
 
 -- | Unify the different types of guards with this class
-class MonadBase IO m => APIGuard m a b | a -> b where
+class MonadThrow m => APIGuard m a b | a -> b where
   guardEither :: a -> m (Either APIError b)
 
-instance MonadBase IO m => APIGuard m (Maybe b) b where
+instance MonadThrow m => APIGuard m (Maybe b) b where
   guardEither Nothing = return $ Left $ forbidden "The resource you are trying to access does not exist or you do not have permission to access it."
   guardEither (Just v) = return $ Right v
 
-instance MonadBase IO m => APIGuard m (Either String b) b where
+instance MonadThrow m => APIGuard m (Either String b) b where
   guardEither (Left s) = return $ Left $ serverError s
   guardEither (Right v) = return $ Right v
 
-instance (MonadBase IO m) => APIGuard m (Either FileError b) b where
+instance (MonadThrow m) => APIGuard m (Either FileError b) b where
   guardEither (Left _) = return $ Left $ serverError'
   guardEither (Right v) = return $ Right v
 
-instance MonadBase IO m => APIGuard m Bool () where
+instance MonadThrow m => APIGuard m Bool () where
   guardEither False = return $ Left $ serverError'
   guardEither True  = return $ Right ()
 
@@ -277,25 +276,25 @@ getAPIUserWithPrivileges :: Kontrakcja m => [APIPrivilege] -> m (User, Actor, Bo
 getAPIUserWithPrivileges privs = do
   moauthuser <- getOAuthUser privs
   case moauthuser of
-    Just (Left err) -> (throwIO . SomeKontraException) $ notLoggedIn err
+    Just (Left err) -> (throwM . SomeKontraException) $ notLoggedIn err
     Just (Right (user, actor)) -> return (user, actor, True)
     Nothing -> do
       msessionuser <- getSessionUser
       case msessionuser of
         Just (user, actor) -> return (user, actor, False)
-        Nothing -> (throwIO . SomeKontraException) notLoggedIn'
+        Nothing -> (throwM . SomeKontraException) notLoggedIn'
 
 getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor, Bool)
 getAPIUserWithPad priv = do
   moauthuser <- getOAuthUser [priv]
   case moauthuser of
-    Just (Left err) -> (throwIO . SomeKontraException) $ notLoggedIn err
+    Just (Left err) -> (throwM . SomeKontraException) $ notLoggedIn err
     Just (Right (user, actor)) -> return (user, actor, True)
     Nothing -> do
       msessionuser <- getSessionUserWithPad
       case msessionuser of
         Just (user, actor) -> return (user, actor, False)
-        Nothing -> (throwIO . SomeKontraException) notLoggedIn'
+        Nothing -> (throwM . SomeKontraException) notLoggedIn'
 
 
 getSessionUser :: Kontrakcja m => m (Maybe (User, Actor))

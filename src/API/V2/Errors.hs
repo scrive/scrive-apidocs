@@ -19,7 +19,7 @@ module API.V2.Errors (
   , insufficientPrivileges
   , httpCodeFromSomeKontraException
   , jsonFromSomeKontraException
-  , tryToConvertConditionalExpectionIntoAPIError
+  , tryToConvertConditionalExceptionIntoAPIError
 ) where
 
 import Data.Typeable
@@ -163,8 +163,8 @@ resourceNotFound info = APIError { errorType = ResourceNotFound, errorHttpCode =
 
 -- Conversion of DB exception / document conditionals into API errors
 
-tryToConvertConditionalExpectionIntoAPIError :: SomeKontraException -> SomeKontraException
-tryToConvertConditionalExpectionIntoAPIError  =  compose [
+tryToConvertConditionalExceptionIntoAPIError :: SomeKontraException -> SomeKontraException
+tryToConvertConditionalExceptionIntoAPIError  =  foldr (.) id [
       convertDocumentDoesNotExist
     , convertDocumentTypeShouldBe
     , convertDocumentStatusShouldBe
@@ -183,9 +183,7 @@ tryToConvertConditionalExpectionIntoAPIError  =  compose [
     , convertDocumentIsReallyDeleted
     , convertSignatoryAuthenticationToSignDoesNotMatch
   ]
-  where
-    compose [] = id
-    compose (f:fs) = f . compose fs
+
 
 convertDocumentDoesNotExist :: SomeKontraException -> SomeKontraException
 convertDocumentDoesNotExist (SomeKontraException ex) =

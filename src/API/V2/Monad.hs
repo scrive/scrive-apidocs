@@ -9,8 +9,8 @@ module API.V2.Monad (
   , apiError
 ) where
 
-import Control.Exception.Lifted
-import Control.Monad.Base
+import Control.Monad.Catch
+
 import Data.Unjson
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
@@ -27,7 +27,7 @@ import Text.JSON.Convert
 import Util.CSVUtil
 import qualified Data.ByteString.Lazy.Char8 as BSL
 
--- | Wrapper around any API response. If forces us to select HTTP reposponse code
+-- | Wrapper around any API response. If forces us to select HTTP response code
 data APIResponse a = Ok a | Created a | Accepted a
 
 -- Define what we can respond from an API call
@@ -77,14 +77,14 @@ api acc =  (toAPIResponse <$> acc) `catches` [
       rollback
       logAttention "API v2 Error (may convert to error response):" $ object ["error" .= jsonToAeson (toJSValue e)]
       -- For some exceptions we do a conversion to APIError
-      let ex' = tryToConvertConditionalExpectionIntoAPIError ex
-      return $ (toAPIResponse $ jsonFromSomeKontraException $ tryToConvertConditionalExpectionIntoAPIError ex') {
-        rsCode = httpCodeFromSomeKontraException $ tryToConvertConditionalExpectionIntoAPIError ex'
+      let ex' = tryToConvertConditionalExceptionIntoAPIError ex
+      return $ (toAPIResponse $ jsonFromSomeKontraException $ ex') {
+        rsCode = httpCodeFromSomeKontraException $ ex'
       }
   ]
 
-apiGuardJustM :: (MonadBase IO m) => APIError -> m (Maybe a) -> m a
+apiGuardJustM :: (MonadThrow m) => APIError -> m (Maybe a) -> m a
 apiGuardJustM e a = a >>= maybe (apiError e) return
 
-apiError :: (MonadBase IO m) => APIError -> m a
-apiError e = throwIO . SomeKontraException $ e
+apiError :: (MonadThrow m) => APIError -> m a
+apiError e = throwM . SomeKontraException $ e

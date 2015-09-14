@@ -2,7 +2,8 @@ module PadApplication.API (
     padApplicationAPI
   ) where
 
-import Control.Exception.Lifted
+import Control.Monad.Catch
+
 import Data.Unjson as Unjson
 import Happstack.Server.Types
 import Happstack.StaticRouting
@@ -43,7 +44,7 @@ apiCallCheckClient :: Kontrakcja m => m Response
 apiCallCheckClient = api $ do
     mclient  <- getField "client"
     when (isNothing mclient) $ do
-      throwIO . SomeKontraException $ serverError "No client description"
+      throwM . SomeKontraException $ serverError "No client description"
     runJSONGenT $ do
       value "valid" True
       value "upgrade_warning" False

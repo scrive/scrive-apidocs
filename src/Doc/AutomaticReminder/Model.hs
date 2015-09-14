@@ -4,7 +4,6 @@ module Doc.AutomaticReminder.Model (
   , setAutoreminder
   ) where
 
-import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Int
@@ -52,7 +51,7 @@ documentAutomaticReminder = Action {
   , qaEvaluateExpired = sentReminder
   }
   where
-    sentReminder :: (MonadLog m, MonadCatch m, CryptoRNG m, MonadDB m, MonadIO m, MonadBase IO m, MonadReader SchedulerData m) => DocumentAutomaticReminder -> m ()
+    sentReminder :: (MonadLog m, MonadCatch m, CryptoRNG m, MonadDB m, MonadIO m, MonadReader SchedulerData m) => DocumentAutomaticReminder -> m ()
     sentReminder dar = do
       now <- currentTime
       exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor $ reminderDocumentID dar

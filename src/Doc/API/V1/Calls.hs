@@ -20,9 +20,9 @@ module Doc.API.V1.Calls (
   ) where
 
 import Control.Conditional ((<|), (|>), whenM, unlessM, ifM)
-import Control.Exception.Lifted
 import Control.Monad.IO.Class
-import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Catch
+
 import Data.Aeson (Value(..))
 import Data.Char
 import Data.Int
@@ -168,7 +168,7 @@ apiCallV1CreateFromFile = api $ do
     Nothing -> do
       title <- renderTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
       return (Nothing,  replace "  " " " $ title ++ " " ++ formatTimeSimple (ctxtime ctx))
-    Just (Input _ Nothing _) -> throwIO . SomeKontraException $ badInput "Missing file"
+    Just (Input _ Nothing _) -> throwM . SomeKontraException $ badInput "Missing file"
     Just (Input contentspec (Just filename'') _contentType) -> do
       let filename' = dropFilePathFromWindows filename''
       let mformat = getFileFormatForConversion filename'
@@ -185,8 +185,8 @@ apiCallV1CreateFromFile = api $ do
         Just format -> do
           eres <- convertToPDF (ctxlivedocxconf ctx) content' format
           case eres of
-            Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ serverError $ show e
-            Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ serverError s
+            Left (LiveDocxIOError e) -> throwM . SomeKontraException $ serverError $ show e
+            Left (LiveDocxSoapError s)-> throwM . SomeKontraException $ serverError s
             Right res -> do
               -- change extension from .doc, .docx and others to .pdf
               let filename = takeBaseName filename' ++ ".pdf"
@@ -214,9 +214,9 @@ apiCallV1CreateFromTemplate did = logDocument did . api $ do
   let haspermission = (userid auser == userid user) ||
                       (usercompany auser == usercompany user &&  isDocumentShared template)
   unless (isTemplate template && haspermission) $ do
-    throwIO $ SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
+    throwM $ SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
   when (documentDeletedForUser template $ userid user) $
-    throwIO $ SomeKontraException $ serverError "Template is deleted"
+    throwM $ SomeKontraException $ serverError "Template is deleted"
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
@@ -230,10 +230,10 @@ apiCallV1Clone did = logDocument did . api $ do
      then do
          mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user doc actor
          when (isNothing mndid) $
-             throwIO . SomeKontraException $ serverError "Can't clone given document"
+             throwM . SomeKontraException $ serverError "Can't clone given document"
          newdoc <- dbQuery $ GetDocumentByDocumentID $ $fromJust mndid
          Created <$> documentJSONV1 (Just $ user) True  True Nothing newdoc
-     else throwIO . SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
+     else throwM . SomeKontraException $ serverError "Id did not matched template or you do not have right to access document"
 
 apiCallV1Update :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Update did = logDocument did . api $ do
@@ -243,7 +243,7 @@ apiCallV1Update did = logDocument did . api $ do
     unlessM (isPreparation <$> theDocument) $ do
           checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
     when (not $ (auid == userid user)) $ do
-          throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+          throwM . SomeKontraException $ serverError "Permission problem. Not an author."
     jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
     json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                  J.Ok js -> Just js
@@ -274,7 +274,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
     unlessM (isPreparation <$> theDocument) $ do
           checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
     when (not $ (auid == userid user)) $ do
-          throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+          throwM . SomeKontraException $ serverError "Permission problem. Not an author."
     attachments <- getAttachments 0 =<< theDocument
     (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachment (authorattachmentfileid att) actor
     forM_ attachments $ \att -> dbUpdate $ AddDocumentAttachment att actor
@@ -299,7 +299,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
                        cres <- preCheckPDF (BSL.toStrict content)
                        case cres of
                          Left _ -> do
-                           throwIO . SomeKontraException $ (badInput $ "AttachFile " ++ show i ++ " file is not a valid PDF")
+                           throwM . SomeKontraException $ (badInput $ "AttachFile " ++ show i ++ " file is not a valid PDF")
                          Right content' -> do
                            fileid' <- dbUpdate $ NewFile filename content'
                            return (Just fileid')
@@ -309,8 +309,8 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
                               access <- hasAccess doc fid
                               if access
                                 then return (Just fid)
-                                else throwIO . SomeKontraException $ (forbidden $ "Access to attachment " ++ show i ++ " forbiden")
-                            Nothing -> throwIO . SomeKontraException $ (badInput $ "Can parse attachment id for attachment " ++ show i)
+                                else throwM . SomeKontraException $ (forbidden $ "Access to attachment " ++ show i ++ " forbiden")
+                            Nothing -> throwM . SomeKontraException $ (badInput $ "Can parse attachment id for attachment " ++ show i)
                    _ -> return Nothing
 
           hasAccess ::  Kontrakcja m => Document -> FileID -> m Bool
@@ -328,7 +328,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
                                               (0,1)
               return $ not $ null atts
 
-apiCallV1Ready :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
+apiCallV1Ready :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Ready did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
@@ -338,21 +338,21 @@ apiCallV1Ready did = logDocument did . api $ do
      {-else-} $ do
       checkObjectVersionIfProvided did
       when (not $ (auid == userid user)) $ do
-            throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+            throwM . SomeKontraException $ serverError "Permission problem. Not an author."
       unlessM (isPreparation <$> theDocument) $ do
             checkObjectVersionIfProvidedAndThrowError did $ (conflictError "Document is not a draft")
       whenM (isTemplate <$> theDocument) $ do
             checkObjectVersionIfProvidedAndThrowError did $ (serverError "Document is not a draft")
       unlessM (((all signatoryHasValidDeliverySettings) . documentsignatorylinks) <$> theDocument) $ do
-            throwIO . SomeKontraException $ serverError "Some signatories have invalid email address or phone number, and it is required for invitation delivery."
+            throwM . SomeKontraException $ serverError "Some signatories have invalid email address or phone number, and it is required for invitation delivery."
       unlessM (((all signatoryHasValidAuthSettings) . documentsignatorylinks) <$> theDocument) $ do
-            throwIO . SomeKontraException $ serverError "Some signatories have invalid personal number, and it is required for authentication."
+            throwM . SomeKontraException $ serverError "Some signatories have invalid personal number, and it is required for authentication."
       unlessM (((all signatoryHasValidSSNForIdentifyToView) . documentsignatorylinks) <$> theDocument) $ do
-            throwIO . SomeKontraException $ serverError "Some signatories have invalid personal number and it is required for identification to view document."
+            throwM . SomeKontraException $ serverError "Some signatories have invalid personal number and it is required for identification to view document."
       unlessM (((all signatoryHasValidPhoneForIdentifyToView) . documentsignatorylinks) <$> theDocument) $ do
-            throwIO . SomeKontraException $ serverError "Some signatories have invalid phone number and it is required for identification to view document."
+            throwM . SomeKontraException $ serverError "Some signatories have invalid phone number and it is required for identification to view document."
       whenM (isNothing . documentfile <$> theDocument) $ do
-            throwIO . SomeKontraException $ serverError "File must be provided before document can be made ready."
+            throwM . SomeKontraException $ serverError "File must be provided before document can be made ready."
       t <- ctxtime <$> getContext
       timezone <- documenttimezonename <$> theDocument
       dbUpdate $ PreparationToPending actor timezone
@@ -380,19 +380,19 @@ apiCallV1Ready did = logDocument did . api $ do
          then isGood resultValidPhone || isEmpty resultValidPhone
          else True
 
-apiCallV1Cancel :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
+apiCallV1Cancel :: Kontrakcja m =>  DocumentID -> m Response
 apiCallV1Cancel did = logDocument did . api $ do
     checkObjectVersionIfProvided did
     (user, actor, _) <- getAPIUser APIDocSend
     withDocumentID did $ do
       guardAuthorOrAuthorsAdmin user "Permission problem. You don't have a permission to cancel this document"
       unlessM (isPending <$> theDocument) $ do
-            throwIO . SomeKontraException $ (conflictError "Document is not pending")
+            throwM . SomeKontraException $ (conflictError "Document is not pending")
       dbUpdate $ CancelDocument actor
       postDocumentCanceledChange =<< theDocument
       Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
-apiCallV1Reject :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m Response
+apiCallV1Reject :: Kontrakcja m =>  DocumentID -> SignatoryLinkID -> m Response
 apiCallV1Reject did slid = logDocumentAndSignatory did slid . api $ do
   checkObjectVersionIfProvided did
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
@@ -402,8 +402,8 @@ apiCallV1Reject did slid = logDocumentAndSignatory did slid . api $ do
     customtext <- fmap strip <$> getField "customtext"
     switchLang . getLang =<< theDocument
     (dbUpdate . RejectDocument slid customtext =<< signatoryActor ctx sll)
-        `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
-        `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
+        `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwM . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
+        `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwM . SomeKontraException $ conflictError $ "Signatory has already signed")
     postDocumentRejectedChange slid customtext =<< theDocument
     Accepted <$> (documentJSONV1 mu True True Nothing =<< theDocument)
 
@@ -418,11 +418,11 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
 
   (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     whenM (not <$> isPending <$> theDocument ) $ do
-      (throwIO . SomeKontraException $ conflictError $ "Document not pending")
+      (throwM . SomeKontraException $ conflictError $ "Document not pending")
     whenM (hasSigned <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
-      (throwIO . SomeKontraException $ conflictError $ "Document already signed")
+      (throwM . SomeKontraException $ conflictError $ "Document already signed")
     whenM (signatoryNeedsToIdentifyToView =<< $fromJust . getSigLinkFor slid <$> theDocument) $ do
-      (throwIO . SomeKontraException $ forbidden "Authorization to view is needed")
+      (throwM . SomeKontraException $ forbidden "Authorization to view is needed")
     checkAuthenticationToSignMethodAndValue slid
     authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
     fields <- getFieldForSigning
@@ -449,19 +449,18 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
   screenshots' <- fmap (fromMaybe emptySignatoryScreenshots) $
                (fromJSValue =<<) <$> getFieldJSON "screenshots"
-  mscreenshots <- resolveReferenceScreenshotNames screenshots'
-  when (isNothing mscreenshots) $ do
-    throwIO . SomeKontraException $ badInput "Illegal reference screenshot name"
-  let screenshots = $fromJust mscreenshots
+  screenshots <- resolveReferenceScreenshotNames screenshots' >>= \case
+                   Nothing -> throwM . SomeKontraException $ badInput "Illegal reference screenshot name"
+                   Just s -> return s
   fields <- getFieldForSigning
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
   olddoc `withDocument` ( do
     whenM (not <$> isPending <$> theDocument ) $ do
-      (throwIO . SomeKontraException $ conflictError $ "Document not pending")
+      (throwM . SomeKontraException $ conflictError $ "Document not pending")
     whenM (hasSigned <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
-      (throwIO . SomeKontraException $ conflictError $ "Document already signed")
+      (throwM . SomeKontraException $ conflictError $ "Document already signed")
     whenM (signatoryNeedsToIdentifyToView =<< $fromJust . getSigLinkFor slid <$> theDocument) $ do
-      (throwIO . SomeKontraException $ forbidden "Authorization to view is needed")
+      (throwM . SomeKontraException $ forbidden "Authorization to view is needed")
     checkAuthenticationToSignMethodAndValue slid
     authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
 
@@ -492,8 +491,8 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
           logInfo_ "No e-signature found for a signatory"
           return . Left . Failed $ J.runJSONGen $ J.value "noSignature" True
    )
-    `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwIO . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
-    `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwIO . SomeKontraException $ conflictError $ "Signatory has already signed")
+    `catchKontra` (\(DocumentStatusShouldBe _ _ i) -> throwM . SomeKontraException $ conflictError $ "Document not pending but " ++ show i)
+    `catchKontra` (\(SignatoryHasAlreadySigned {}) -> throwM . SomeKontraException $ conflictError $ "Signatory has already signed")
 
 {- | Utils for signing with eleg -}
 checkAuthenticationToSignMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
@@ -508,23 +507,23 @@ checkAuthenticationToSignMethodAndValue slid = do
                     siglink <- $fromJust . getSigLinkFor slid <$> theDocument
                     let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
                     case (authOK, authMethod) of
-                         (False, _) -> throwIO . SomeKontraException $
+                         (False, _) -> throwM . SomeKontraException $
                              conflictError "`authentication_type` does not match"
                          (True, StandardAuthenticationToSign) -> return ()
                          (True, SEBankIDAuthenticationToSign)   ->
                              if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
                                 then return ()
-                                else throwIO . SomeKontraException $
+                                else throwM . SomeKontraException $
                                     conflictError "`authentication_value` for personal number does not match"
                          (True, SMSPinAuthenticationToSign) ->
                              if (authValue == getMobile siglink || null (getMobile siglink))
                                 then return ()
-                                else throwIO . SomeKontraException $
+                                else throwM . SomeKontraException $
                                     conflictError "`authentication_value` for phone number does not match"
                 Nothing ->
-                    throwIO . SomeKontraException $ badInput "`authentication_type` was not a valid"
+                    throwM . SomeKontraException $ badInput "`authentication_type` was not a valid"
        (Nothing, Nothing) -> return ()
-       _ -> throwIO . SomeKontraException $ badInput "Only one of `authentication_type` and `authentication_value` provided"
+       _ -> throwM . SomeKontraException $ badInput "Only one of `authentication_type` and `authentication_value` provided"
 
 signDocument :: (Kontrakcja m, DocumentMonad m)
              => SignatoryLinkID
@@ -547,34 +546,34 @@ signDocument slid mh fields mesig mpin screenshots = do
 
 {- End of utils-}
 
-apiCallV1Restart :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
+apiCallV1Restart :: Kontrakcja m =>  DocumentID -> m Response
 apiCallV1Restart did = logDocument did . api $ do
     checkObjectVersionIfProvided did
     (user, actor, _) <- getAPIUser APIDocSend
     doc <- dbQuery $ GetDocumentByDocumentID $ did
     auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
     when (not $ (auid == userid user)) $ do
-          throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+          throwM . SomeKontraException $ serverError "Permission problem. Not an author."
     when (documentstatus doc `elem` [Pending,Preparation, Closed] ) $ do
-          throwIO . SomeKontraException $ (conflictError "Document can not be restarted")
+          throwM . SomeKontraException $ (conflictError "Document can not be restarted")
     newdocument <- apiGuardJustM (serverError "Document can't be restarted") $ dbUpdate $ RestartDocument doc actor
     Accepted <$> documentJSONV1 (Just $ user) True True Nothing newdocument
 
-apiCallV1Prolong :: (MonadBaseControl IO m, Kontrakcja m) =>  DocumentID -> m Response
+apiCallV1Prolong :: Kontrakcja m =>  DocumentID -> m Response
 apiCallV1Prolong did = logDocument did . api $ do
     checkObjectVersionIfProvided did
     (user, actor, _) <- getAPIUser APIDocSend
     withDocumentID did $ do
       hasPermission <- isAuthorOrAuthorsAdmin user <$> theDocument
       when (not hasPermission) $
-        throwIO . SomeKontraException $ serverError "Permission problem. Not an author[s admin]."
+        throwM . SomeKontraException $ serverError "Permission problem. Not an author[s admin]."
       unlessM (isTimedout <$> theDocument) $ do
-            throwIO . SomeKontraException $ (conflictError "Document is not timedout")
+            throwM . SomeKontraException $ (conflictError "Document is not timedout")
       mdays <- getDefaultedField 1 asValidNumber "days"
       days <- case mdays of
-           Nothing -> throwIO . SomeKontraException $ (badInput "Number of days to sign must be a valid number, between 1 and 90")
+           Nothing -> throwM . SomeKontraException $ (badInput "Number of days to sign must be a valid number, between 1 and 90")
            Just n -> if (n < 1 || n > 90)
-                              then throwIO . SomeKontraException $ (badInput "Number of days to sign must be a valid number, between 1 and 90")
+                              then throwM . SomeKontraException $ (badInput "Number of days to sign must be a valid number, between 1 and 90")
                               else return n
       timezone <- documenttimezonename <$> theDocument
       dbUpdate $ ProlongDocument days timezone actor
@@ -582,7 +581,7 @@ apiCallV1Prolong did = logDocument did . api $ do
       Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 
-apiCallV1SetAutoReminder :: (MonadBaseControl IO m, Kontrakcja m) => DocumentID -> m Response
+apiCallV1SetAutoReminder :: Kontrakcja m => DocumentID -> m Response
 apiCallV1SetAutoReminder did = logDocument did . api $ do
     ctx <- getContext
     checkObjectVersionIfProvided did
@@ -590,15 +589,15 @@ apiCallV1SetAutoReminder did = logDocument did . api $ do
     withDocumentID did $ do
       auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
       when (not $ (auid == userid user)) $ do
-            throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+            throwM . SomeKontraException $ serverError "Permission problem. Not an author."
       unlessM (isPending <$> theDocument) $ do
-            throwIO . SomeKontraException $ (conflictError "Document is not pending")
+            throwM . SomeKontraException $ (conflictError "Document is not pending")
       mdays <- getOptionalField asValidNumber "days"
       days <- case mdays of
            Nothing -> return Nothing
            Just n -> do tot <- documenttimeouttime <$> theDocument
                         if n < 1 || (isJust tot && n `daysAfter` (ctxtime ctx) > $fromJust tot)
-                          then throwIO . SomeKontraException $ (badInput "Number of days to send autoreminder must be a valid number, between 1 and number of days left till document deadline")
+                          then throwM . SomeKontraException $ (badInput "Number of days to send autoreminder must be a valid number, between 1 and number of days left till document deadline")
                           else return $ Just (fromIntegral n :: Int32)
       timezone <- documenttimezonename <$> theDocument
       setAutoreminder did days timezone
@@ -670,21 +669,21 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
       guardAuthorOrAuthorsAdmin user "Permission problem. You don't have a permission to change this document"
       -- Document status and input checks
       unlessM (isPending <$> theDocument) $
-          throwIO . SomeKontraException $ badInput "Document status must be pending"
+          throwM . SomeKontraException $ badInput "Document status must be pending"
       sl <- getSigLinkFor slid <$> theDocument >>= \case
         Nothing ->
-          throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
+          throwM . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
         Just sl -> return sl
       when (isJust . maybesigninfo $ sl) $
-          throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already signed"
+          throwM . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already signed"
       -- Get the POST data and check it
       authentication_type  <- getField "authentication_type"
       authentication_value <- getField "authentication_value"
       when (isNothing authentication_type) $
-        throwIO . SomeKontraException $ badInput
+        throwM . SomeKontraException $ badInput
           "`authentication_type` must be given. Supported values are: `standard`, `eleg`, `sms_pin`."
       (authenticationMethod, maybeAuthValue) <- case fromJSValue $ J.toJSValue $ fromMaybe "" authentication_type of
-        Nothing -> throwIO . SomeKontraException $ badInput
+        Nothing -> throwM . SomeKontraException $ badInput
           "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
         Just StandardAuthenticationToSign -> return (StandardAuthenticationToSign, Nothing)
         Just SEBankIDAuthenticationToSign -> return (SEBankIDAuthenticationToSign, authentication_value)
@@ -695,29 +694,29 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
         SEBankIDAuthenticationToSign -> do
           -- Can't mix SEBankID and NOBankID
           when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $
-            throwIO . SomeKontraException $ badInput $ "Can't mix Norwegian and Swedish Bank ID"
+            throwM . SomeKontraException $ badInput $ "Can't mix Norwegian and Swedish Bank ID"
           case maybeAuthValue of
             Nothing -> return ()
             -- If we are given a Swedish SSN
             Just val -> do
               when (signatorylinkidentifiedtoview sl && val /= getPersonalNumber sl) $
-                throwIO . SomeKontraException $ badInput "The signatory has authenticated to view, therefore you can't change the authentication value"
+                throwM . SomeKontraException $ badInput "The signatory has authenticated to view, therefore you can't change the authentication value"
               case asValidSwedishSSN val of
                 -- Empty is allowed only if we don't need it for AuthenticationToViewMethod
                 Empty -> when (signatorylinkauthenticationtoviewmethod sl == SEBankIDAuthenticationToView) $
-                  throwIO . SomeKontraException $ badInput "You provided an empty authentication value, needs a value for authentication to view"
-                Bad -> throwIO . SomeKontraException $ badInput "The authentication value provided is not a valid for Swedish BankID"
+                  throwM . SomeKontraException $ badInput "You provided an empty authentication value, needs a value for authentication to view"
+                Bad -> throwM . SomeKontraException $ badInput "The authentication value provided is not a valid for Swedish BankID"
                 Good _ -> return ()
         SMSPinAuthenticationToSign -> case maybeAuthValue of
           Nothing -> return ()
           Just val -> do
             -- If the signatory has authenticated to view with NOBankIDAuthenticationToView and a valid number, then we can't change the phone number!
             when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView && signatorylinkidentifiedtoview sl && getMobile sl /= "" && val /= getMobile sl) $
-              throwIO . SomeKontraException $ badInput "The signatory has authenticated to view with Norwegian BankID, therefore you can't change the phone number"
+              throwM . SomeKontraException $ badInput "The signatory has authenticated to view with Norwegian BankID, therefore you can't change the phone number"
             -- If given a phone number we need to make sure it doesn't invalidate NOBankIDAuthenticationToView
             when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $
               case asValidPhoneForNorwegianBankID val of
-                Bad -> throwIO . SomeKontraException $ badInput "Phone number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
+                Bad -> throwM . SomeKontraException $ badInput "Phone number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
                 Empty -> return ()
                 Good _ -> return ()
       -- Change authentication to sign method and return Document JSON
@@ -729,10 +728,10 @@ apiCallV1Remind did = logDocument did . api $ do
   (user, actor , _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     unlessM (isPending <$> theDocument) $ do
-          throwIO . SomeKontraException $ serverError "Can't send reminder for documents that are not pending"
+          throwM . SomeKontraException $ serverError "Can't send reminder for documents that are not pending"
     hasPermission <- isAuthorOrAuthorsAdmin user <$> theDocument
     when (not hasPermission) $
-      throwIO . SomeKontraException $ serverError "Permission problem. Not an author[s admin]."
+      throwM . SomeKontraException $ serverError "Permission problem. Not an author[s admin]."
     _ <- sendAllReminderEmailsExceptAuthor actor False
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
@@ -741,11 +740,11 @@ apiCallV1Forward did = logDocument did . api $ do
   (user, _actor , _) <- getAPIUser APIDocCheck
   withDocumentID did $ do
     unlessM (isClosed <$> theDocument) $ do
-          throwIO . SomeKontraException $ badInput "Only document that are signed can be forwarded"
+          throwM . SomeKontraException $ badInput "Only document that are signed can be forwarded"
     asiglink <- apiGuardJustM (serverError "No author found") $ getAuthorSigLink <$> theDocument
     auid <- apiGuardJustM (serverError "No author found") $ return $ maybesignatory asiglink
     when (not $ (auid == userid user)) $ do
-          throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+          throwM . SomeKontraException $ serverError "Permission problem. Not an author."
     email <- apiGuardJustM (badInput "Email adress is no valid.") $ getOptionalField  asValidEmail "email"
     noContent <- (== Just "true") <$> getField  "nocontent"
     _ <- sendForwardEmail email noContent asiglink -- Make sure we only send out the document with the author's signatory link when it is closed, otherwise the link may be abused
@@ -762,7 +761,7 @@ apiCallV1Delete did = logDocument did . api $ do
     let haspermission = (isJust msl)
                      || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user))
     when (not haspermission) $ do
-           throwIO . SomeKontraException $ serverError "Permission problem. Not connected to document."
+           throwM . SomeKontraException $ serverError "Permission problem. Not connected to document."
     dbUpdate $ ArchiveDocument (userid user) actor
 
     Accepted <$> (J.runJSONGenT $ return ())
@@ -779,7 +778,7 @@ apiCallV1ReallyDelete did = logDocument did . api $ do
     let haspermission = (isJust msl)
                      || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user))
     when (not haspermission) $ do
-           throwIO . SomeKontraException $ serverError "Permission problem. Not connected to document."
+           throwM . SomeKontraException $ serverError "Permission problem. Not connected to document."
     dbUpdate $ ReallyDeleteDocument (userid user) actor
 
     Accepted <$> (J.runJSONGenT $ return ())
@@ -795,7 +794,7 @@ apiCallV1Get did = logDocument did . api $ do
   withDocumentID did $ case (msignatorylink,mmagichashh) of
     (Just slid,Just mh) -> do
        sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
-       when (signatorymagichash sl /= mh) $ throwIO . SomeKontraException $ serverError "No document found"
+       when (signatorymagichash sl /= mh) $ throwM . SomeKontraException $ serverError "No document found"
        unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $
          dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
                        =<< signatoryActor ctx sl
@@ -820,7 +819,7 @@ apiCallV1Get did = logDocument did . api $ do
       if (haspermission)
         then do
           Ok <$> (documentJSONV1 (Just user) external ((userid <$> mauser) == (Just $ userid user)) msiglink =<< theDocument)
-        else throwIO . SomeKontraException $ serverError "You do not have right to access document"
+        else throwM . SomeKontraException $ serverError "You do not have right to access document"
 
 -- Return evidence attachments for document
 apiCallV1GetEvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
@@ -931,10 +930,10 @@ apiCallV1CheckAvailable = api $ do
   (user, _actor, _) <- getAPIUser APIDocCheck
   (mids :: Maybe [DocumentID]) <- readField "ids"
   when (isNothing mids) $ do
-    throwIO . SomeKontraException $ serverError "No ids parameter was provided or it had wrong format"
+    throwM . SomeKontraException $ serverError "No ids parameter was provided or it had wrong format"
   let ids = $fromJust mids
   when (length ids > 10000) $ do
-    throwIO . SomeKontraException $ serverError "This request can't check more then 10000 documents"
+    throwM . SomeKontraException $ serverError "This request can't check more then 10000 documents"
   docids <- dbQuery $ GetDocumentsIDs [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
   Ok <$> (J.runJSONGenT $ J.value "ids" (show <$> docids))
 
@@ -969,7 +968,7 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
                 sl <- apiGuardJustM  (serverError "Signatory does not exist") $ getSigLinkFor sid <$> theDocument
                 whenM (signatoryNeedsToIdentifyToView sl) $ do
                   unless (isAuthor sl) $ do
-                    throwIO . SomeKontraException $ forbidden "Authorization to view is needed"
+                    throwM . SomeKontraException $ forbidden "Authorization to view is needed"
                 theDocument
             (_, _, Just _) -> getDocByDocIDEx did maccesstoken
             _ ->  do
@@ -992,7 +991,7 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
                       logInfo "Waiting for Guardtime signing" $ object [
                           "document_last_modified_ago" .= show (diffUTCTime now $ documentmtime doc)
                         ]
-                      throwIO $ SomeKontraException $ noAvailableYet "Digitally sealed document not ready"
+                      throwM $ SomeKontraException $ noAvailableYet "Digitally sealed document not ready"
                   file <- apiGuardJustM (noAvailableYet "Not ready, please try later") $ fileFromMainFile (documentsealedfile doc)
                   getFileIDContents $ fileid file
                 _ -> do
@@ -1012,7 +1011,7 @@ apiCallV1DownloadFile did fileid nameForBrowser = logDocumentAndFile did fileid 
                 sl <- apiGuardJustM  (serverError "Signatory does not exist") $ getSigLinkFor sid <$> theDocument
                 whenM (signatoryNeedsToIdentifyToView sl) $ do
                   unless (isAuthor sl) $ do
-                    throwIO . SomeKontraException $ forbidden "Authorization to view is needed"
+                    throwM . SomeKontraException $ forbidden "Authorization to view is needed"
                 theDocument
             (_, _, Just _accesstoken) -> getDocByDocIDEx did maccesstoken
             _ ->  do
@@ -1029,7 +1028,7 @@ apiCallV1DownloadFile did fileid nameForBrowser = logDocumentAndFile did fileid 
                       (authorattachmentfileid <$> documentauthorattachments doc) ++
                       (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
   if (all (/= fileid) allfiles)
-     then throwIO . SomeKontraException $ forbidden "Access to file is forbiden."
+     then throwM . SomeKontraException $ forbidden "Access to file is forbiden."
      else do
         content <- getFileIDContents fileid
         let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [content]) Nothing
@@ -1048,10 +1047,10 @@ apiCallV1ExtractTexts did fileid = logDocumentAndFile did fileid . api $ do
   (user, _actor , _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     unlessM (isPreparation <$> theDocument) $ do
-      throwIO . SomeKontraException $ serverError "Can't extract texts from documents that are not in preparation"
+      throwM . SomeKontraException $ serverError "Can't extract texts from documents that are not in preparation"
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
     when (not $ (auid == userid user)) $ do
-      throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+      throwM . SomeKontraException $ serverError "Permission problem. Not an author."
 
 
     jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
@@ -1060,12 +1059,12 @@ apiCallV1ExtractTexts did fileid = logDocumentAndFile did fileid . api $ do
                                                                                  _ -> Nothing
     doc <- theDocument
     when (Just fileid /= (mainfileid <$> documentfile doc)) $ do
-      throwIO . SomeKontraException $ serverError "Requested file does not belong to the document"
+      throwM . SomeKontraException $ serverError "Requested file does not belong to the document"
 
     content <- getFileIDContents fileid
     eitherResult <- runJavaTextExtract json content
     case eitherResult of
-      Left err -> throwIO . SomeKontraException $ serverError (unpack err)
+      Left err -> throwM . SomeKontraException $ serverError (unpack err)
       Right res -> return $ Ok res
 
 -- this one must be standard post with post params because it needs to
@@ -1078,16 +1077,16 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
   withDocumentID docid $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
-      throwIO . SomeKontraException $ (serverError "Document is not a draft or template")
+      throwM . SomeKontraException $ (serverError "Document is not a draft or template")
     when (not $ (auid == userid user)) $ do
-          throwIO . SomeKontraException $ serverError "Permission problem. Not an author."
+          throwM . SomeKontraException $ serverError "Permission problem. Not an author."
 
     moldfileid <- fmap mainfileid <$> documentfile  <$> theDocument
     fileinput <- getDataFn' (lookInput "file")
 
     mft <- case fileinput of
       Nothing -> return Nothing
-      Just (Input _ Nothing _) -> throwIO . SomeKontraException $ badInput "Missing file"
+      Just (Input _ Nothing _) -> throwM . SomeKontraException $ badInput "Missing file"
       Just (Input contentspec (Just filename') _contentType) -> do
         let filename = takeBaseName filename' ++ ".pdf"
         let mformat = getFileFormatForConversion filename'
@@ -1106,8 +1105,8 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
             ctx <- getContext
             eres <- convertToPDF (ctxlivedocxconf ctx) content' format
             case eres of
-              Left (LiveDocxIOError e) -> throwIO . SomeKontraException $ serverError $ show e
-              Left (LiveDocxSoapError s)-> throwIO . SomeKontraException $ serverError s
+              Left (LiveDocxIOError e) -> throwM . SomeKontraException $ serverError $ show e
+              Left (LiveDocxSoapError s)-> throwM . SomeKontraException $ serverError s
               Right res -> return $ res
         pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content''
         fileid' <- dbUpdate $ NewFile filename pdfcontent
@@ -1130,9 +1129,9 @@ apiCallV1SendSMSPinCode did slid = logDocumentAndSignatory did slid . api $ do
   (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
     whenM (not . isPending <$> theDocument) $ do
-       throwIO . SomeKontraException $ serverError "SMS pin code can't be sent to document that is not pending"
+       throwM . SomeKontraException $ serverError "SMS pin code can't be sent to document that is not pending"
     when (SMSPinAuthenticationToSign /= signatorylinkauthenticationtosignmethod sl) $ do
-       throwIO . SomeKontraException $ serverError "SMS pin code can't be sent to this signatory"
+       throwM . SomeKontraException $ serverError "SMS pin code can't be sent to this signatory"
     slidPhone <- getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
     phone <- if not $ null slidPhone
                 then return slidPhone
@@ -1153,7 +1152,7 @@ apiCallV1SetSignatoryAttachment did sid aname = logDocumentAndSignatory did sid 
   -- We check permission here - because we are able to get a valid magichash here
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
     unlessM (isPending <$> theDocument) $ do
-            throwIO . SomeKontraException $ (badInput "Document is not pending")
+            throwM . SomeKontraException $ (badInput "Document is not pending")
     sl  <- apiGuard (badInput "There is no signatory by that id.") =<< getSigLinkFor sid <$> theDocument
     sigattach <- apiGuard (badInput "The attachment with that name does not exist for the signatory.") =<< getSignatoryAttachment sid aname <$> theDocument
     filedata <- getDataFn' (lookInput "file")
@@ -1166,13 +1165,13 @@ apiCallV1SetSignatoryAttachment did sid aname = logDocumentAndSignatory did sid 
                   then apiGuardL (badInput "The PDF was invalid.") $ preCheckPDF (BSL.toStrict content1)
                   else if (".png" `isSuffixOf` (map toLower filename) || ".jpg" `isSuffixOf` (map toLower filename))
                     then return $ Binary $ BSL.toStrict content1
-                    else throwIO . SomeKontraException $ badInput "Only pdf files or images can be attached."
+                    else throwM . SomeKontraException $ badInput "Only pdf files or images can be attached."
                 (dbUpdate $ NewFile (dropFilePathFromWindows filename) content)
       _ -> return Nothing
     ctx <- getContext
     case mfileid of
       Just fileid -> (dbUpdate . SaveSigAttachment sid sigattach fileid =<< signatoryActor ctx sl)
-                       `catchKontra` (\(DBBaseLineConditionIsFalse _) -> throwIO . SomeKontraException $ conflictError $ "Inconsistent state - attachment is already set")
+                       `catchKontra` (\(DBBaseLineConditionIsFalse _) -> throwM . SomeKontraException $ conflictError $ "Inconsistent state - attachment is already set")
       Nothing -> dbUpdate . DeleteSigAttachment sid sigattach =<< signatoryActor ctx sl
 
     Accepted <$> (documentJSONV1 mu True False (Just sl) =<< theDocument)
@@ -1183,16 +1182,16 @@ checkObjectVersionIfProvided did = do
     case mov of
         Just ov -> dbQuery $ CheckDocumentObjectVersionIs did ov
         Nothing -> return ()
-  `catchKontra` (\DocumentObjectVersionDoesNotMatch {} -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")
+  `catchKontra` (\DocumentObjectVersionDoesNotMatch {} -> throwM . SomeKontraException $ conflictError $ "Document object version does not match")
 
 checkObjectVersionIfProvidedAndThrowError ::  (Kontrakcja m) => DocumentID -> APIError -> m ()
 checkObjectVersionIfProvidedAndThrowError did err = do
     mov <- readField "objectversion"
     case mov of
         Just ov -> (dbQuery $ CheckDocumentObjectVersionIs did ov)
-                      `catchKontra` (\DocumentObjectVersionDoesNotMatch {} -> throwIO . SomeKontraException $ conflictError $ "Document object version does not match")
+                      `catchKontra` (\DocumentObjectVersionDoesNotMatch {} -> throwM . SomeKontraException $ conflictError $ "Document object version does not match")
         Nothing -> return ()
-    throwIO . SomeKontraException $ err
+    throwM . SomeKontraException $ err
 
 
 -- Utils
@@ -1204,7 +1203,7 @@ guardAuthorOrAuthorsAdmin user forbidenMessage = do
                           ((usercompany docUser == usercompany user)
                             && (useriscompanyadmin user))
   when (not hasPermission) $
-    throwIO . SomeKontraException $ forbidden forbidenMessage
+    throwM . SomeKontraException $ forbidden forbidenMessage
 
 getMagicHashAndUserForSignatoryAction :: (Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m (MagicHash,Maybe User)
 getMagicHashAndUserForSignatoryAction did sid = do
@@ -1218,7 +1217,7 @@ getMagicHashAndUserForSignatoryAction did sid = do
           ]
         mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
         case mh'' of
-          Nothing -> throwIO . SomeKontraException $ serverError "Can't perform this action. Not authorized."
+          Nothing -> throwM . SomeKontraException $ serverError "Can't perform this action. Not authorized."
           Just mh''' -> return (mh''',Just $ user)
 
 -- Helper type that represents ~field value, but without file reference - and only with file content. Used only locally.
@@ -1234,7 +1233,7 @@ getValidPin slid fields = do
   phone <- case (not $ null slidPhone, lookup MobileFI fields) of
                 (True, _) -> return slidPhone
                 (False, Just (StringFTV v)) -> return v
-                (False, _) -> throwIO . SomeKontraException $ badInput "Phone number not provided by author, you need to provide it"
+                (False, _) -> throwM . SomeKontraException $ badInput "Phone number not provided by author, you need to provide it"
   pin' <- dbQuery $ GetSignatoryPin slid phone
   if (pin == pin')
     then return $ Just pin
@@ -1244,7 +1243,7 @@ getFieldForSigning ::(Kontrakcja m) => m [(FieldIdentity, FieldTmpValue)]
 getFieldForSigning = do
   eFieldsJSON <- getFieldJSON "fields"
   case eFieldsJSON of
-    Nothing -> throwIO . SomeKontraException $ serverError "No fields description provided or fields description is not a valid JSON array"
+    Nothing -> throwM . SomeKontraException $ serverError "No fields description provided or fields description is not a valid JSON array"
     Just fieldsJSON -> do
       let mvalues = flip ($) fieldsJSON $ fromJSValueCustomMany $ do
             mfi <- fromJSValue
@@ -1260,7 +1259,7 @@ getFieldForSigning = do
               (Just fi, Just val) -> Just (fi, StringFTV val)
               _ -> Nothing
       case mvalues of
-        Nothing -> throwIO . SomeKontraException $ serverError "Fields description json has invalid format"
+        Nothing -> throwM . SomeKontraException $ serverError "Fields description json has invalid format"
         Just values -> return values
 
 

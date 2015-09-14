@@ -1,7 +1,7 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 module OAuth.Control(oauth) where
 
-import Control.Exception.Lifted
+import Control.Monad.Catch
 import Data.Aeson
 import Data.Map (singleton)
 import Happstack.Server.RqData
@@ -53,7 +53,7 @@ tempCredRequest = api $ do
 
   etcr <- getTempCredRequest
   case etcr of
-    Left errors -> (throwIO . SomeKontraException) $ badInput errors
+    Left errors -> (throwM . SomeKontraException) $ badInput errors
     Right tcr -> do
       logInfo "TempCredRequest got successfully" $ Log.object [
           "temp_cred_request" .= show tcr
@@ -114,7 +114,7 @@ tokenCredRequest = api $ do
   time <- ctxtime <$> getContext
   etr <- getTokenRequest
   case etr of
-    Left errors -> (throwIO . SomeKontraException) $ badInput errors
+    Left errors -> (throwM . SomeKontraException) $ badInput errors
     Right tr -> do
       (accesstoken, accesssecret) <- apiGuardL' $ dbUpdate $ RequestAccessToken tr time
       return $ setHeader "Content-Type" "application/x-www-form-urlencoded" $
