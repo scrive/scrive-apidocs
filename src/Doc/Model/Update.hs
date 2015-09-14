@@ -333,8 +333,7 @@ newFromDocumentID f docid = do
   newFromDocument f doc
 
 newFromDocument :: (MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => (Document -> Document) -> Document -> m (Maybe Document)
-newFromDocument f doc = do
-  Just `liftM` insertNewDocument (f doc)
+newFromDocument f doc = Just <$> insertNewDocument (f doc)
 
 data ArchiveDocument = ArchiveDocument UserID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ArchiveDocument () where
@@ -1599,7 +1598,7 @@ instance (DocumentMonad m) => DBUpdate m SetSigAttachments () where
 
 data UpdateDraft = UpdateDraft Document Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateDraft Bool where
-  update (UpdateDraft document actor) = updateDocument $ const $ and `liftM` sequence [
+  update (UpdateDraft document actor) = updateDocument $ const $ and <$> sequence [
       update $ SetDocumentTitle (documenttitle document) actor
     , update $ SetDaysToSign (documentdaystosign document) actor
     , update $ SetDaysToRemind (documentdaystoremind document) actor

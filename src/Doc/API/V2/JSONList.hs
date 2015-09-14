@@ -1,6 +1,5 @@
 module Doc.API.V2.JSONList (
-  DocumentFiltering
-, toDocumentSorting
+  toDocumentSorting
 , toDocumentFilter
 ) where
 
@@ -18,187 +17,191 @@ import MinutesTime
 import User.UserID
 import qualified Doc.Model.Filter as DF
 
-data DocumentSort = DocumentSort DocumentSortOn DocumentSortOrder
+-- All sorting and filtering types defined in this module are internal to API V2.
+-- Sorting and filtering used by API is different then sorting and filtering defined
+-- in Doc.Model
 
-data DocumentSortOn = DocumentSortStatus | DocumentSortTitle | DocumentSortTime| DocumentSortAuthor deriving Eq
-data DocumentSortOrder = DocumentSortAsc | DocumentSortDesc  deriving Eq
+-- Note that types defined here aren't even exported, since only Unjson instance is used, and result
+-- of parsing is converted immediately to sorting and filtering defined in Doc.Model
 
-instance Unjson DocumentSortOrder where
-  unjsonDef = unjsonEnumBy "DocumentSortOrder" [
-      (DocumentSortAsc, "ascending")
-    , (DocumentSortDesc, "descending")
+data DocumentAPISort = DocumentAPISort DocumentAPISortOn DocumentAPISortOrder
+
+data DocumentAPISortOn = DocumentAPISortStatus | DocumentAPISortTitle | DocumentAPISortTime| DocumentAPISortAuthor deriving Eq
+data DocumentAPISortOrder = DocumentAPISortAsc | DocumentAPISortDesc  deriving Eq
+
+instance Unjson DocumentAPISortOrder where
+  unjsonDef = unjsonEnumBy "DocumentAPISortOrder" [
+      (DocumentAPISortAsc, "ascending")
+    , (DocumentAPISortDesc, "descending")
     ]
 
-instance Unjson DocumentSortOn where
-  unjsonDef = unjsonEnumBy "DocumentSortOn" [
-      (DocumentSortStatus, "status")
-    , (DocumentSortTitle, "title")
-    , (DocumentSortTime, "mtime")
-    , (DocumentSortAuthor, "author")
+instance Unjson DocumentAPISortOn where
+  unjsonDef = unjsonEnumBy "DocumentAPISortOn" [
+      (DocumentAPISortStatus, "status")
+    , (DocumentAPISortTitle, "title")
+    , (DocumentAPISortTime, "mtime")
+    , (DocumentAPISortAuthor, "author")
     ]
 
-instance Unjson DocumentSort where
-  unjsonDef = objectOf $ pure DocumentSort
-    <*> field "sort_by" (\(DocumentSort v _) -> v) "How documents should be sorted"
-    <*> fieldDef "order" DocumentSortAsc (\(DocumentSort _ o) -> o) "Descending or ascending sorting"
+instance Unjson DocumentAPISort where
+  unjsonDef = objectOf $ pure DocumentAPISort
+    <*> field "sort_by" (\(DocumentAPISort v _) -> v) "How documents should be sorted"
+    <*> fieldDef "order" DocumentAPISortAsc (\(DocumentAPISort _ o) -> o) "Descending or ascending sorting"
 
 
-toDocumentSorting ::  DocumentSort -> AscDesc DocumentOrderBy
-toDocumentSorting (DocumentSort DocumentSortStatus DocumentSortAsc) = Asc DocumentOrderByStatus
-toDocumentSorting (DocumentSort DocumentSortTitle DocumentSortAsc) = Asc DocumentOrderByTitle
-toDocumentSorting (DocumentSort DocumentSortTime DocumentSortAsc) = Asc DocumentOrderByMTime
-toDocumentSorting (DocumentSort DocumentSortAuthor DocumentSortAsc) = Asc DocumentOrderByAuthor
-toDocumentSorting (DocumentSort DocumentSortStatus DocumentSortDesc) = Desc DocumentOrderByStatus
-toDocumentSorting (DocumentSort DocumentSortTitle DocumentSortDesc) = Desc DocumentOrderByTitle
-toDocumentSorting (DocumentSort DocumentSortTime DocumentSortDesc) = Desc DocumentOrderByMTime
-toDocumentSorting (DocumentSort DocumentSortAuthor DocumentSortDesc) = Desc DocumentOrderByAuthor
+toDocumentSorting ::  DocumentAPISort -> AscDesc DocumentOrderBy
+toDocumentSorting (DocumentAPISort DocumentAPISortStatus DocumentAPISortAsc) = Asc DocumentOrderByStatus
+toDocumentSorting (DocumentAPISort DocumentAPISortTitle DocumentAPISortAsc) = Asc DocumentOrderByTitle
+toDocumentSorting (DocumentAPISort DocumentAPISortTime DocumentAPISortAsc) = Asc DocumentOrderByMTime
+toDocumentSorting (DocumentAPISort DocumentAPISortAuthor DocumentAPISortAsc) = Asc DocumentOrderByAuthor
+toDocumentSorting (DocumentAPISort DocumentAPISortStatus DocumentAPISortDesc) = Desc DocumentOrderByStatus
+toDocumentSorting (DocumentAPISort DocumentAPISortTitle DocumentAPISortDesc) = Desc DocumentOrderByTitle
+toDocumentSorting (DocumentAPISort DocumentAPISortTime DocumentAPISortDesc) = Desc DocumentOrderByMTime
+toDocumentSorting (DocumentAPISort DocumentAPISortAuthor DocumentAPISortDesc) = Desc DocumentOrderByAuthor
+
+data DocumentAPIFilter = DocumentAPIFilterStatuses [DocumentStatus]
+                    | DocumentAPIFilterTime (Maybe UTCTime) (Maybe UTCTime)
+                    | DocumentAPIFilterTag T.Text T.Text
+                    | DocumentAPIFilterIsAuthor
+                    | DocumentAPIFilterIsAuthoredBy UserID
+                    | DocumentAPIFilterIsSignableOnPad
+                    | DocumentAPIFilterIsTemplate Bool
+                    | DocumentAPIFilterIsInTrash Bool
+                    | DocumentAPIFilterByText T.Text
+                    | DocumentAPIFilterCanBeSignedBy UserID
 
 
-type DocumentFiltering = [DocumentFilter]
+filterType ::  DocumentAPIFilter -> T.Text
+filterType (DocumentAPIFilterStatuses _) = "status"
+filterType (DocumentAPIFilterTime _ _) = "mtime"
+filterType (DocumentAPIFilterTag _ _) = "tag"
+filterType (DocumentAPIFilterIsAuthor) = "is_author"
+filterType (DocumentAPIFilterIsAuthoredBy _) = "author"
+filterType (DocumentAPIFilterIsSignableOnPad) = "is_signable_on_pad"
+filterType (DocumentAPIFilterIsTemplate _) = "template"
+filterType (DocumentAPIFilterIsInTrash _) = "trash"
+filterType (DocumentAPIFilterByText _) = "text"
+filterType (DocumentAPIFilterCanBeSignedBy _) = "user_can_sign"
 
-data DocumentFilter = DocumentFilterStatuses [DocumentStatus]
-                    | DocumentFilterTime (Maybe UTCTime) (Maybe UTCTime)
-                    | DocumentFilterTag T.Text T.Text
-                    | DocumentFilterIsAuthor
-                    | DocumentFilterIsAuthoredBy UserID
-                    | DocumentFilterIsSignableOnPad
-                    | DocumentFilterIsTemplate Bool
-                    | DocumentFilterIsInTrash Bool
-                    | DocumentFilterByText T.Text
-                    | DocumentFilterCanBeSignedBy UserID
-
-
-filterType ::  DocumentFilter -> T.Text
-filterType (DocumentFilterStatuses _) = "status"
-filterType (DocumentFilterTime _ _) = "mtime"
-filterType (DocumentFilterTag _ _) = "tag"
-filterType (DocumentFilterIsAuthor) = "is_author"
-filterType (DocumentFilterIsAuthoredBy _) = "author"
-filterType (DocumentFilterIsSignableOnPad) = "is_signable_on_pad"
-filterType (DocumentFilterIsTemplate _) = "template"
-filterType (DocumentFilterIsInTrash _) = "trash"
-filterType (DocumentFilterByText _) = "text"
-filterType (DocumentFilterCanBeSignedBy _) = "user_can_sign"
-
-instance Unjson DocumentFilter where
+instance Unjson DocumentAPIFilter where
   unjsonDef = disjointUnionOf "filter_by" $ filterMatch <$> [
-        (DocumentFilterStatuses [], unjsonDocumentFilterStatuses)
-      , (DocumentFilterTime Nothing Nothing, unjsonDocumentFilterTime)
-      , (DocumentFilterTag "" "", unjsonDocumentFilterTag)
-      , (DocumentFilterIsAuthor, unjsonDocumentFilterIsAuthor)
-      , (DocumentFilterIsAuthoredBy (unsafeUserID 0), unjsonDocumentFilterIsAuthoredBy)
-      , (DocumentFilterIsSignableOnPad, unjsonDocumentFilterIsSignableOnPad)
-      , (DocumentFilterIsTemplate False, unjsonDocumentFilterIsTemplate)
-      , (DocumentFilterIsInTrash False, unjsonDocumentFilterIsInTrash)
-      , (DocumentFilterByText "", unjsonDocumentFilterByText)
-      , (DocumentFilterCanBeSignedBy (unsafeUserID 0), unjsonDocumentFilterCanBeSignedBy)
+        (DocumentAPIFilterStatuses [], unjsonDocumentAPIFilterStatuses)
+      , (DocumentAPIFilterTime Nothing Nothing, unjsonDocumentAPIFilterTime)
+      , (DocumentAPIFilterTag "" "", unjsonDocumentAPIFilterTag)
+      , (DocumentAPIFilterIsAuthor, unjsonDocumentAPIFilterIsAuthor)
+      , (DocumentAPIFilterIsAuthoredBy (unsafeUserID 0), unjsonDocumentAPIFilterIsAuthoredBy)
+      , (DocumentAPIFilterIsSignableOnPad, unjsonDocumentAPIFilterIsSignableOnPad)
+      , (DocumentAPIFilterIsTemplate False, unjsonDocumentAPIFilterIsTemplate)
+      , (DocumentAPIFilterIsInTrash False, unjsonDocumentAPIFilterIsInTrash)
+      , (DocumentAPIFilterByText "", unjsonDocumentAPIFilterByText)
+      , (DocumentAPIFilterCanBeSignedBy (unsafeUserID 0), unjsonDocumentAPIFilterCanBeSignedBy)
     ]
     where
-      filterMatch :: (DocumentFilter,Ap (FieldDef DocumentFilter) DocumentFilter) -> (T.Text, DocumentFilter -> Bool, Ap (FieldDef DocumentFilter) DocumentFilter)
+      filterMatch :: (DocumentAPIFilter,Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter) -> (T.Text, DocumentAPIFilter -> Bool, Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter)
       filterMatch (df,a) = (filterType df, \f -> filterType df == filterType f, a)
 
-unjsonDocumentFilterStatuses:: Ap (FieldDef DocumentFilter) DocumentFilter
-unjsonDocumentFilterStatuses = pure DocumentFilterStatuses
+unjsonDocumentAPIFilterStatuses:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterStatuses = pure DocumentAPIFilterStatuses
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> field "statuses" unsafeDocumentFilterStatuses "Statuses to filter on"
+  <*> field "statuses" unsafeDocumentAPIFilterStatuses "Statuses to filter on"
   where
-    unsafeDocumentFilterStatuses:: DocumentFilter ->  [DocumentStatus]
-    unsafeDocumentFilterStatuses(DocumentFilterStatuses fs) = fs
-    unsafeDocumentFilterStatuses _ = $unexpectedError "unsafeDocumentFilterStatus"
+    unsafeDocumentAPIFilterStatuses:: DocumentAPIFilter ->  [DocumentStatus]
+    unsafeDocumentAPIFilterStatuses(DocumentAPIFilterStatuses fs) = fs
+    unsafeDocumentAPIFilterStatuses _ = $unexpectedError "unsafeDocumentAPIFilterStatus"
 
-unjsonDocumentFilterTime :: Ap (FieldDef DocumentFilter) DocumentFilter
-unjsonDocumentFilterTime = pure DocumentFilterTime
+unjsonDocumentAPIFilterTime :: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterTime = pure DocumentAPIFilterTime
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> fieldOpt "start_time" unsafeDocumentFilterStartTime "Only documents after start time"
-  <*> fieldOpt "end_time" unsafeDocumentFilterEndTime "Only documents before end time"
+  <*> fieldOpt "start_time" unsafeDocumentAPIFilterStartTime "Only documents after start time"
+  <*> fieldOpt "end_time" unsafeDocumentAPIFilterEndTime "Only documents before end time"
   where
-    unsafeDocumentFilterStartTime :: DocumentFilter ->  Maybe UTCTime
-    unsafeDocumentFilterStartTime (DocumentFilterTime s _) = s
-    unsafeDocumentFilterStartTime _ = $unexpectedError "unsafeDocumentFilterStartTime"
-    unsafeDocumentFilterEndTime :: DocumentFilter ->  Maybe UTCTime
-    unsafeDocumentFilterEndTime (DocumentFilterTime _ e) = e
-    unsafeDocumentFilterEndTime _ = $unexpectedError "unsafeDocumentFilterEndTime"
+    unsafeDocumentAPIFilterStartTime :: DocumentAPIFilter ->  Maybe UTCTime
+    unsafeDocumentAPIFilterStartTime (DocumentAPIFilterTime s _) = s
+    unsafeDocumentAPIFilterStartTime _ = $unexpectedError "unsafeDocumentAPIFilterStartTime"
+    unsafeDocumentAPIFilterEndTime :: DocumentAPIFilter ->  Maybe UTCTime
+    unsafeDocumentAPIFilterEndTime (DocumentAPIFilterTime _ e) = e
+    unsafeDocumentAPIFilterEndTime _ = $unexpectedError "unsafeDocumentAPIFilterEndTime"
 
-unjsonDocumentFilterTag:: Ap (FieldDef DocumentFilter) DocumentFilter
-unjsonDocumentFilterTag = pure DocumentFilterTag
+unjsonDocumentAPIFilterTag:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterTag = pure DocumentAPIFilterTag
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> field "name" unsafeDocumentFilterTagName "Name of tag to filter on"
-  <*> field "value" unsafeDocumentFilterTagValue "Value of such tag"
+  <*> field "name" unsafeDocumentAPIFilterTagName "Name of tag to filter on"
+  <*> field "value" unsafeDocumentAPIFilterTagValue "Value of such tag"
   where
-    unsafeDocumentFilterTagName:: DocumentFilter ->  T.Text
-    unsafeDocumentFilterTagName (DocumentFilterTag n _) = n
-    unsafeDocumentFilterTagName _ = $unexpectedError "unsafeDocumentFilterTagName"
-    unsafeDocumentFilterTagValue:: DocumentFilter ->  T.Text
-    unsafeDocumentFilterTagValue (DocumentFilterTag _ v) = v
-    unsafeDocumentFilterTagValue _ = $unexpectedError "unsafeDocumentFilterTagValue"
+    unsafeDocumentAPIFilterTagName:: DocumentAPIFilter ->  T.Text
+    unsafeDocumentAPIFilterTagName (DocumentAPIFilterTag n _) = n
+    unsafeDocumentAPIFilterTagName _ = $unexpectedError "unsafeDocumentAPIFilterTagName"
+    unsafeDocumentAPIFilterTagValue:: DocumentAPIFilter ->  T.Text
+    unsafeDocumentAPIFilterTagValue (DocumentAPIFilterTag _ v) = v
+    unsafeDocumentAPIFilterTagValue _ = $unexpectedError "unsafeDocumentAPIFilterTagValue"
 
-unjsonDocumentFilterIsAuthor:: Ap (FieldDef DocumentFilter) DocumentFilter
-unjsonDocumentFilterIsAuthor = pure DocumentFilterIsAuthor
+unjsonDocumentAPIFilterIsAuthor:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsAuthor = pure DocumentAPIFilterIsAuthor
   <*  fieldReadonly "filter_by" filterType "Type of filter"
 
-unjsonDocumentFilterIsAuthoredBy:: Ap (FieldDef DocumentFilter) DocumentFilter
-unjsonDocumentFilterIsAuthoredBy = pure DocumentFilterIsAuthoredBy
+unjsonDocumentAPIFilterIsAuthoredBy:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsAuthoredBy = pure DocumentAPIFilterIsAuthoredBy
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> field "user_id" unsafeDocumentFilterUserID "Id of author"
+  <*> field "user_id" unsafeDocumentAPIFilterUserID "Id of author"
   where
-    unsafeDocumentFilterUserID :: DocumentFilter ->  UserID
-    unsafeDocumentFilterUserID (DocumentFilterIsAuthoredBy uid) = uid
-    unsafeDocumentFilterUserID _ = $unexpectedError "unsafeDocumentFilterStatus"
+    unsafeDocumentAPIFilterUserID :: DocumentAPIFilter ->  UserID
+    unsafeDocumentAPIFilterUserID (DocumentAPIFilterIsAuthoredBy uid) = uid
+    unsafeDocumentAPIFilterUserID _ = $unexpectedError "unsafeDocumentAPIFilterStatus"
 
-unjsonDocumentFilterIsSignableOnPad :: Ap (FieldDef DocumentFilter) DocumentFilter
-unjsonDocumentFilterIsSignableOnPad = pure DocumentFilterIsSignableOnPad
+unjsonDocumentAPIFilterIsSignableOnPad :: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsSignableOnPad = pure DocumentAPIFilterIsSignableOnPad
   <*  fieldReadonly "filter_by" filterType "Type of filter"
 
 
-unjsonDocumentFilterIsTemplate:: Ap (FieldDef DocumentFilter) DocumentFilter
-unjsonDocumentFilterIsTemplate = pure DocumentFilterIsTemplate
+unjsonDocumentAPIFilterIsTemplate:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsTemplate = pure DocumentAPIFilterIsTemplate
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> field "is_template" unsafeDocumentFilterIsTemplate "Filter documents that are templates"
+  <*> field "is_template" unsafeDocumentAPIFilterIsTemplate "Filter documents that are templates"
   where
-    unsafeDocumentFilterIsTemplate :: DocumentFilter ->  Bool
-    unsafeDocumentFilterIsTemplate (DocumentFilterIsTemplate is_template) = is_template
-    unsafeDocumentFilterIsTemplate _ = $unexpectedError "unsafeDocumentFilterIsTemplate"
+    unsafeDocumentAPIFilterIsTemplate :: DocumentAPIFilter ->  Bool
+    unsafeDocumentAPIFilterIsTemplate (DocumentAPIFilterIsTemplate is_template) = is_template
+    unsafeDocumentAPIFilterIsTemplate _ = $unexpectedError "unsafeDocumentAPIFilterIsTemplate"
 
-unjsonDocumentFilterIsInTrash:: Ap (FieldDef DocumentFilter) DocumentFilter
-unjsonDocumentFilterIsInTrash = pure DocumentFilterIsInTrash
+unjsonDocumentAPIFilterIsInTrash:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsInTrash = pure DocumentAPIFilterIsInTrash
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> field "is_trashed" unsafeDocumentFilterIsTrashed "Filter documents that are in trash"
+  <*> field "is_trashed" unsafeDocumentAPIFilterIsTrashed "Filter documents that are in trash"
   where
-    unsafeDocumentFilterIsTrashed :: DocumentFilter ->  Bool
-    unsafeDocumentFilterIsTrashed (DocumentFilterIsInTrash is_trashed) = is_trashed
-    unsafeDocumentFilterIsTrashed _ = $unexpectedError "unsafeDocumentFilterIsTrashed"
+    unsafeDocumentAPIFilterIsTrashed :: DocumentAPIFilter ->  Bool
+    unsafeDocumentAPIFilterIsTrashed (DocumentAPIFilterIsInTrash is_trashed) = is_trashed
+    unsafeDocumentAPIFilterIsTrashed _ = $unexpectedError "unsafeDocumentAPIFilterIsTrashed"
 
-unjsonDocumentFilterByText:: Ap (FieldDef DocumentFilter) DocumentFilter
-unjsonDocumentFilterByText = pure DocumentFilterByText
+unjsonDocumentAPIFilterByText:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterByText = pure DocumentAPIFilterByText
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> field "text" unsafeDocumentFilterText "Text to filter on"
+  <*> field "text" unsafeDocumentAPIFilterText "Text to filter on"
   where
-    unsafeDocumentFilterText :: DocumentFilter ->  T.Text
-    unsafeDocumentFilterText (DocumentFilterByText text) = text
-    unsafeDocumentFilterText _ = $unexpectedError "unsafeDocumentFilterText"
+    unsafeDocumentAPIFilterText :: DocumentAPIFilter ->  T.Text
+    unsafeDocumentAPIFilterText (DocumentAPIFilterByText text) = text
+    unsafeDocumentAPIFilterText _ = $unexpectedError "unsafeDocumentAPIFilterText"
 
-unjsonDocumentFilterCanBeSignedBy:: Ap (FieldDef DocumentFilter) DocumentFilter
-unjsonDocumentFilterCanBeSignedBy = pure DocumentFilterCanBeSignedBy
+unjsonDocumentAPIFilterCanBeSignedBy:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterCanBeSignedBy = pure DocumentAPIFilterCanBeSignedBy
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> field "user_id" unsafeDocumentFilterUserID "Id of user that can sign"
+  <*> field "user_id" unsafeDocumentAPIFilterUserID "Id of user that can sign"
   where
-    unsafeDocumentFilterUserID :: DocumentFilter ->  UserID
-    unsafeDocumentFilterUserID (DocumentFilterCanBeSignedBy uid) = uid
-    unsafeDocumentFilterUserID _ = $unexpectedError "unsafeDocumentFilterStatus"
+    unsafeDocumentAPIFilterUserID :: DocumentAPIFilter ->  UserID
+    unsafeDocumentAPIFilterUserID (DocumentAPIFilterCanBeSignedBy uid) = uid
+    unsafeDocumentAPIFilterUserID _ = $unexpectedError "unsafeDocumentAPIFilterStatus"
 
 
-toDocumentFilter :: UserID -> DocumentFilter -> [DF.DocumentFilter]
-toDocumentFilter _ (DocumentFilterStatuses ss) = [DF.DocumentFilterStatuses ss]
-toDocumentFilter _ (DocumentFilterTime (Just start) (Just end)) = [DF.DocumentFilterByTimeAfter start, DF.DocumentFilterByTimeBefore end]
-toDocumentFilter _ (DocumentFilterTime Nothing (Just end)) = [DF.DocumentFilterByTimeBefore end]
-toDocumentFilter _ (DocumentFilterTime (Just start) Nothing) = [DF.DocumentFilterByTimeAfter start]
-toDocumentFilter _ (DocumentFilterTime Nothing Nothing) = []
-toDocumentFilter _ (DocumentFilterTag name value) = [DF.DocumentFilterByTags [DocumentTag (T.unpack name) (T.unpack value)]]
-toDocumentFilter uid (DocumentFilterIsAuthor) = [DF.DocumentFilterByAuthor uid]
-toDocumentFilter _ (DocumentFilterIsAuthoredBy uid) = [DF.DocumentFilterByAuthor uid]
-toDocumentFilter _ (DocumentFilterIsSignableOnPad) = [DF.DocumentFilterSignNowOnPad]
-toDocumentFilter _ (DocumentFilterIsTemplate True)  = [DF.DocumentFilterTemplate]
-toDocumentFilter _ (DocumentFilterIsTemplate False) = [DF.DocumentFilterSignable]
-toDocumentFilter _ (DocumentFilterIsInTrash bool) = [DF.DocumentFilterDeleted bool]
-toDocumentFilter _ (DocumentFilterByText text) = [DF.DocumentFilterByString (T.unpack text)]
-toDocumentFilter _ (DocumentFilterCanBeSignedBy uid) = [DF.DocumentFilterByCanSign uid]
+toDocumentFilter :: UserID -> DocumentAPIFilter -> [DF.DocumentFilter]
+toDocumentFilter _ (DocumentAPIFilterStatuses ss) = [DF.DocumentFilterStatuses ss]
+toDocumentFilter _ (DocumentAPIFilterTime (Just start) (Just end)) = [DF.DocumentFilterByTimeAfter start, DF.DocumentFilterByTimeBefore end]
+toDocumentFilter _ (DocumentAPIFilterTime Nothing (Just end)) = [DF.DocumentFilterByTimeBefore end]
+toDocumentFilter _ (DocumentAPIFilterTime (Just start) Nothing) = [DF.DocumentFilterByTimeAfter start]
+toDocumentFilter _ (DocumentAPIFilterTime Nothing Nothing) = []
+toDocumentFilter _ (DocumentAPIFilterTag name value) = [DF.DocumentFilterByTags [DocumentTag (T.unpack name) (T.unpack value)]]
+toDocumentFilter uid (DocumentAPIFilterIsAuthor) = [DF.DocumentFilterByAuthor uid]
+toDocumentFilter _ (DocumentAPIFilterIsAuthoredBy uid) = [DF.DocumentFilterByAuthor uid]
+toDocumentFilter _ (DocumentAPIFilterIsSignableOnPad) = [DF.DocumentFilterSignNowOnPad]
+toDocumentFilter _ (DocumentAPIFilterIsTemplate True)  = [DF.DocumentFilterTemplate]
+toDocumentFilter _ (DocumentAPIFilterIsTemplate False) = [DF.DocumentFilterSignable]
+toDocumentFilter _ (DocumentAPIFilterIsInTrash bool) = [DF.DocumentFilterDeleted bool]
+toDocumentFilter _ (DocumentAPIFilterByText text) = [DF.DocumentFilterByString (T.unpack text)]
+toDocumentFilter _ (DocumentAPIFilterCanBeSignedBy uid) = [DF.DocumentFilterByCanSign uid]

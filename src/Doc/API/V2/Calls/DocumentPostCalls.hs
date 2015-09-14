@@ -155,7 +155,7 @@ docApiV2Prolong did = logDocument did . api $ do
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs (isTimedout) "The document has not timed out. Only timed out documents can be prolonged."
     -- Parameters
-    days <- liftM fromIntegral $ apiV2ParameterObligatory (ApiV2ParameterInt "days")
+    days <- fromIntegral <$> apiV2ParameterObligatory (ApiV2ParameterInt "days")
     when (days < 1 || days > 90) $
       apiError $ requestParameterInvalid "days" "Days must be a number between 1 and 90"
     -- API call actions
@@ -243,10 +243,10 @@ docApiV2Forward did = logDocument did . api $ do
     -- when it is closed, otherwise the link may be abused
     guardDocumentStatus Closed
     -- Parameters
-    email <- liftM T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "email")
+    email <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "email")
     noContent <- apiV2ParameterDefault True (ApiV2ParameterBool "no_content")
     -- API call actions
-    asiglink <- liftM $fromJust $ getAuthorSigLink <$> theDocument
+    asiglink <- $fromJust <$> getAuthorSigLink <$> theDocument
     validEmail <- case asValidEmail email of
       Good em -> return em
       _ -> apiError $ requestParameterInvalid "email" "Not a valid email address"
@@ -298,7 +298,7 @@ docApiV2SetAttachments did = logDocument did . api $ do
         doc <- theDocument
         forM fids (\fid -> do
           let fidAlreadyInDoc = fid `elem` (authorattachmentfileid <$> documentauthorattachments doc)
-          hasAccess <- liftM (not null) $ dbQuery $ attachmentsQueryFor user fid
+          hasAccess <- (not null) <$> dbQuery (attachmentsQueryFor user fid)
           when (not (fidAlreadyInDoc || hasAccess)) $
             apiError $ resourceNotFound $ "No file with file_id" <+> (T.pack . show $ fid)
               <+> "found. It may not exist or you don't have permission to use it."
@@ -315,7 +315,7 @@ docApiV2SetAttachments did = logDocument did . api $ do
     processAttachmentParameters :: (Kontrakcja m) => m [FileID]
     processAttachmentParameters = sequenceOfFileIDsWith getAttachmentParmeter [] 0
     getAttachmentParmeter :: (Kontrakcja m) => Int -> m (Maybe FileID)
-    getAttachmentParmeter i = liftM (fmap fileid) $ apiV2ParameterOptional (ApiV2ParameterFilePDF $ "attachment_" <> (T.pack . show $ i))
+    getAttachmentParmeter i = (fmap fileid) <$> apiV2ParameterOptional (ApiV2ParameterFilePDF $ "attachment_" <> (T.pack . show $ i))
     sequenceOfFileIDsWith :: (Kontrakcja m) => (Int -> m (Maybe FileID)) -> [FileID] -> Int -> m [FileID]
     sequenceOfFileIDsWith fidFunc lf i = do
       mAttachment <- fidFunc i
@@ -408,11 +408,11 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
     guardDocumentStatus Pending
     guardSignatoryHasNotSigned slid
     -- Parameters
-    mAuthenticationType <- liftM textToAuthenticationToSignMethod $ apiV2ParameterObligatory (ApiV2ParameterText "authentication_type")
+    mAuthenticationType <- textToAuthenticationToSignMethod <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_type")
     authentication_type <- case mAuthenticationType of
       Just a -> return a
       Nothing -> apiError $ requestParameterParseError "authentication_type" "Not a valid  authentication type, see our API documentation."
-    authentication_value <- liftM (fmap T.unpack) $ apiV2ParameterOptional (ApiV2ParameterText "authentication_value")
+    authentication_value <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "authentication_value")
     -- API call actions
     dbUpdate $ ChangeAuthenticationToSignMethod slid authentication_type authentication_value actor
     -- Return

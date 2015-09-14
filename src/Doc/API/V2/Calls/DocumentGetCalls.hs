@@ -168,7 +168,7 @@ docApiV2Texts did fid = logDocumentAndFile did fid . api $ do
     -- We have a "black-box" JSON structure here, see Doc.Texts for details
     -- If you feel motivated you can refactor this to proper data type with
     -- Unjson instance to make things better :)
-    jsonText <- liftM T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "json")
+    jsonText <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "json")
     (json :: JSValue) <- case J.decode jsonText of
             J.Ok j -> return j
             _ -> apiError $ requestParameterParseError "json" "Could not read JSON"

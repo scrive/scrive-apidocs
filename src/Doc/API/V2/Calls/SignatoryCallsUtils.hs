@@ -45,13 +45,13 @@ checkAuthenticationToSignMethodAndValue slid = do
       case authMethod of
         StandardAuthenticationToSign -> return ()
         SEBankIDAuthenticationToSign -> do
-          authValue <- liftM T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
+          authValue <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
           if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
             then return ()
             else apiError $
               requestParameterInvalid "authentication_value" "value for personal number does not match"
         SMSPinAuthenticationToSign -> do
-          authValue <- liftM T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
+          authValue <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
           if (authValue == getMobile siglink || null (getMobile siglink))
             then return ()
             else apiError $
@@ -67,14 +67,8 @@ getScreenshots = do
 
 
 
-signDocument :: (Kontrakcja m, DocumentMonad m)
-             => SignatoryLinkID
-             -> MagicHash
-             -> [(FieldIdentity, SignatoryFieldTMPValue)]
-             -> Maybe ESignature
-             -> Maybe String
-             -> SignatoryScreenshots
-             -> m ()
+signDocument :: (Kontrakcja m, DocumentMonad m) =>
+  SignatoryLinkID -> MagicHash -> [(FieldIdentity, SignatoryFieldTMPValue)] -> Maybe ESignature -> Maybe String -> SignatoryScreenshots -> m ()
 signDocument slid mh fields mesig mpin screenshots = do
   switchLang =<< getLang <$> theDocument
   ctx <- getContext
@@ -87,9 +81,8 @@ signDocument slid mh fields mesig mpin screenshots = do
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 
-fieldsToFieldsWithFiles :: (Kontrakcja m)
-                           => [(FieldIdentity,SignatoryFieldTMPValue)]
-                           -> m ([(FieldIdentity,FieldValue)],[(FileID,BS.ByteString)])
+fieldsToFieldsWithFiles :: (Kontrakcja m) =>
+  [(FieldIdentity,SignatoryFieldTMPValue)] -> m ([(FieldIdentity,FieldValue)],[(FileID,BS.ByteString)])
 fieldsToFieldsWithFiles [] = return ([],[])
 fieldsToFieldsWithFiles (f:fs) = do
   (changeFields,files') <- fieldsToFieldsWithFiles fs
@@ -97,19 +90,19 @@ fieldsToFieldsWithFiles (f:fs) = do
     (fi,StringFTV s) -> return ((fi,StringFV s):changeFields,files')
     (fi,BoolFTV b)   -> return ((fi,BoolFV b):changeFields,files')
     (fi,FileFTV bs)  -> if (BS.null bs)
-                          then return $ ((fi,FileFV Nothing):changeFields,files')
-                          else do
-                            fileid <- dbUpdate $ NewFile "signature.png" (Binary bs)
-                            return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')
+      then return $ ((fi,FileFV Nothing):changeFields,files')
+      else do
+        fileid <- dbUpdate $ NewFile "signature.png" (Binary bs)
+        return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')
 
 
 checkSignatoryPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, SignatoryFieldTMPValue)] -> String -> m Bool
 checkSignatoryPin slid fields pin = do
   slidPhone <- getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
   phone <- case (not $ null slidPhone, lookup MobileFI fields) of
-                (True, _) -> return slidPhone
-                (False, Just (StringFTV v)) -> return v
-                (False, _) -> apiError $ requestParameterInvalid "fields"
-                              "Does not contain a mobile number field, author has not set one for the signatory"
+    (True, _) -> return slidPhone
+    (False, Just (StringFTV v)) -> return v
+    (False, _) -> apiError $ requestParameterInvalid "fields"
+                    "Does not contain a mobile number field, author has not set one for the signatory"
   pin' <- dbQuery $ GetSignatoryPin slid phone
   return $ pin == pin'

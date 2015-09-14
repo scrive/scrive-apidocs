@@ -19,7 +19,7 @@ import Session.Model
 data GetDocumentSessionToken = GetDocumentSessionToken SignatoryLinkID
 instance (KontraMonad m, MonadDB m, MonadThrow m) => DBQuery m GetDocumentSessionToken (Maybe MagicHash) where
   query (GetDocumentSessionToken slid) = do
-    sid <- ctxsessionid `liftM` getContext
+    sid <- ctxsessionid <$> getContext
     runQuery_ . sqlSelect "document_session_tokens" $ do
       sqlResult "token"
       sqlWhereEq "session_id" sid

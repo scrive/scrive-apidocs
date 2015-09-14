@@ -208,15 +208,18 @@ data SignatoryFieldTMPValue = StringFTV String
 
 unsafeStringFromSignatoryFieldTMPValue :: SignatoryFieldTMPValue -> String
 unsafeStringFromSignatoryFieldTMPValue (StringFTV a) = a
-unsafeStringFromSignatoryFieldTMPValue _ = $unexpectedError "unsafeStringFromSignatoryFieldTMPValue"
+unsafeStringFromSignatoryFieldTMPValue (BoolFTV _) = $unexpectedError "unsafeStringFromSignatoryFieldTMPValue: Bool instead of Sting"
+unsafeStringFromSignatoryFieldTMPValue (FileFTV _) = $unexpectedError "unsafeStringFromSignatoryFieldTMPValue: File instead of Sting"
 
 unsafeBoolFromSignatoryFieldTMPValue :: SignatoryFieldTMPValue -> Bool
 unsafeBoolFromSignatoryFieldTMPValue (BoolFTV a) = a
-unsafeBoolFromSignatoryFieldTMPValue _ = $unexpectedError "unsafeBoolFromSignatoryFieldTMPValue"
+unsafeBoolFromSignatoryFieldTMPValue (StringFTV _) = $unexpectedError "unsafeBoolFromSignatoryFieldTMPValue: Sting instead of Bool"
+unsafeBoolFromSignatoryFieldTMPValue (FileFTV _) = $unexpectedError "unsafeBoolFromSignatoryFieldTMPValue: File instead of Bool"
 
 unsafeFileFromSignatoryFieldTMPValue :: SignatoryFieldTMPValue -> BS.ByteString
 unsafeFileFromSignatoryFieldTMPValue (FileFTV a) = a
-unsafeFileFromSignatoryFieldTMPValue _ = $unexpectedError "unsafeFileFromSignatoryFieldTMPValue"
+unsafeFileFromSignatoryFieldTMPValue (StringFTV _) = $unexpectedError "unsafeFileFromSignatoryFieldTMPValue: Sting instead of File"
+unsafeFileFromSignatoryFieldTMPValue (BoolFTV _) = $unexpectedError "unsafeFileFromSignatoryFieldTMPValue: Bool instead of File"
 
 unjsonSignatoryFieldsValues :: UnjsonDef [(FieldIdentity,SignatoryFieldTMPValue)]
 unjsonSignatoryFieldsValues = arrayOf unjsonSignatoryFieldValue

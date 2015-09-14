@@ -7,6 +7,7 @@ import Control.Applicative.Free
 import Data.Default
 import Data.Unjson
 import qualified Data.ByteString.Lazy.Char8 as BSC
+import Data.ByteString.Builder
 
 import Doc.API.V2.DisplayOptions
 import Doc.API.V2.DocumentAccess
@@ -117,12 +118,13 @@ unjsonSignatory da =  objectOf $
 
 -- We can't implement lists as Unjson - since we would have to do unjsonToJSON on each document parser. And this will make us loose the order
 listToJSONBS ::  (Int,[(DocumentAccess,Document)]) -> BSC.ByteString
-listToJSONBS (i,docs) =
-    "{\"total_matching\":"  `BSC.append` (BSC.pack $ show i) `BSC.append`
-    ",\"documents\":[" `BSC.append` (docList docs) `BSC.append`
+listToJSONBS (i,docs) = toLazyByteString $
+    "{\"total_matching\":"  <> (lazyByteString  $ BSC.pack $ show i) <>
+    ",\"documents\":[" <> (docList docs) <>
     "]}"
   where
-    docList :: [(DocumentAccess,Document)] -> BSC.ByteString
+    docList :: [(DocumentAccess,Document)] -> Builder
     docList [] = ""
-    docList l@(_:_) = $last $ scanl1 (\a b -> a `BSC.append` ",\n" `BSC.append` b) (map unjsonDocDa l)
+    docList [l] = lazyByteString (unjsonDocDa l)
+    docList (l:ls) = lazyByteString (unjsonDocDa l) <> "," <> docList ls
     unjsonDocDa (da,d) = unjsonToByteStringLazy' (Options {pretty = False, indent = 0, nulls = True}) (unjsonDocument da) d

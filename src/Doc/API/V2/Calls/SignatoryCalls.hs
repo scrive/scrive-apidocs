@@ -48,7 +48,7 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
     guardDocumentStatus Pending
     guardSignatoryHasNotSigned slid
     -- Parameters
-    rejectReason <- liftM (fmap $ T.unpack . T.strip) $ apiV2ParameterOptional (ApiV2ParameterText "reason")
+    rejectReason <- (fmap $ T.unpack . T.strip) <$> apiV2ParameterOptional (ApiV2ParameterText "reason")
     -- API call actions
     ctx <- getContext
     Just sl <- getSigLinkFor slid <$> theDocument
@@ -145,7 +145,7 @@ docApiV2SigSendSmsPin did slid = logDocumentAndSignatory did slid . api $ do
                           Good v -> return v
                           _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
                 else do
-                    phoneParam <- liftM T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "phone")
+                    phoneParam <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "phone")
                     case asValidPhoneForSMS phoneParam of
                          Good v -> return v
                          _ -> apiError $ requestParameterInvalid "phone" "Not a valid phone number"
@@ -165,7 +165,7 @@ docApiV2SigSetAttachment did slid = logDocumentAndSignatory did slid . api $ do
     guardDocumentStatus Pending
     guardSignatoryHasNotSigned slid
     -- Parameters
-    name <- liftM T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "name")
+    name <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "name")
     mAttachment <- apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage "attachment")
     doc <- theDocument
     let mSigAttachment = getSignatoryAttachment slid name doc
