@@ -12,9 +12,106 @@ import qualified Data.ByteString as BS
 import qualified Text.XML.HaXml.Types as XML
 
 import DB
+import DB.Checks
 import Doc.Tables
 import KontraPrelude
 import Utils.String
+
+createTablePlacementAnchors :: MonadDB m => Migration m
+createTablePlacementAnchors = Migration {
+    mgrTable = tablePlacementAnchors
+  , mgrFrom = 0
+  , mgrDo = createTable tblTable {
+      tblName = "placement_anchors"
+    , tblVersion = 1
+    , tblColumns = [
+        tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+      , tblColumn { colName = "field_placement_id", colType = BigIntT, colNullable = False }
+      , tblColumn { colName = "text", colType = TextT, colNullable = False }
+      , tblColumn { colName = "index", colType = IntegerT, colNullable = False, colDefault = Just "1" }
+      ]
+    , tblPrimaryKey = pkOnColumn "id"
+    -- no foreigh keys, created later
+    }
+  }
+
+createTableFieldPlacements :: MonadDB m => Migration m
+createTableFieldPlacements = Migration {
+    mgrTable = tableFieldPlacements
+  , mgrFrom = 0
+  , mgrDo = createTable tblTable {
+      tblName = "field_placements"
+    , tblVersion = 1
+    , tblColumns = [
+        tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+      , tblColumn { colName = "signatory_field_id", colType = BigIntT, colNullable = False }
+      , tblColumn { colName = "xrel", colType = DoubleT, colNullable = False }
+      , tblColumn { colName = "yrel", colType = DoubleT, colNullable = False }
+      , tblColumn { colName = "wrel", colType = DoubleT, colNullable = False }
+      , tblColumn { colName = "hrel", colType = DoubleT, colNullable = False }
+      , tblColumn { colName = "fsrel", colType = DoubleT, colNullable = False }
+      , tblColumn { colName = "page", colType = IntegerT, colNullable = False }
+      , tblColumn { colName = "tip", colType = SmallIntT }
+      -- temporary column for staged data migration
+      , tblColumn { colName = "anchors", colType = JsonT }
+      ]
+    , tblPrimaryKey = pkOnColumn "id"
+    -- no foreigh keys, created later
+    }
+  }
+
+unjsonFieldPlacements :: MonadDB m => Migration m
+unjsonFieldPlacements = Migration {
+    mgrTable = tableSignatoryLinkFields
+  , mgrFrom = 10
+  , mgrDo = do
+    -- Note: tested on production data, took ~200 seconds to complete.
+    -- Stage 1: copy placements over to a separate table with anchors as json.
+    runSQL_ $ smconcat [
+        "WITH placements AS ("
+      , "  SELECT id, json_array_elements(placements::json) AS pl"
+      , "  FROM signatory_link_fields"
+      , ")"
+      , "INSERT INTO field_placements (signatory_field_id, xrel, yrel, wrel, hrel, fsrel, page, tip, anchors)"
+      , "(SELECT id"
+      , ", (pl->>'xrel')::float8 AS xrel"
+      , ", (pl->>'yrel')::float8 AS yrel"
+      , ", (pl->>'wrel')::float8 AS wrel"
+      , ", (pl->>'hrel')::float8 AS hrel"
+      , ", (pl->>'fsrel')::float8 AS fsrel"
+      , ", (pl->>'page')::int4 AS page"
+      , ", CASE WHEN (pl->>'tip') IS NULL THEN NULL WHEN (pl->>'tip') = 'left' THEN 1 WHEN (pl->>'tip') = 'right' THEN 2 ELSE 65536 END AS tip"
+      , ", (pl->>'anchors')::json AS anchors"
+      , "FROM placements)"
+      ]
+
+    -- Add foreign key and index after copy as it's faster that way.
+    let fpName = "field_placements"
+    runQuery_ $ sqlAlterTable fpName [sqlAddFK fpName $ (fkOnColumn "signatory_field_id" "signatory_link_fields" "id") { fkOnDelete = ForeignKeyCascade }]
+    runQuery_ . sqlCreateIndex fpName $ indexOnColumn "signatory_field_id"
+
+    -- Stage 2: copy anchors to another table.
+    runSQL_ $ smconcat [
+        "WITH anchors AS ("
+      , "  SELECT id, json_array_elements(anchors) AS anchor"
+      , "FROM field_placements"
+      , ")"
+      , "INSERT INTO placement_anchors (field_placement_id, text, index)"
+      , "(SELECT id"
+      , ", anchor->>'text' AS text"
+      , ", (anchor->>'index')::int4 AS index"
+      , "FROM anchors)"
+      ]
+
+    -- Add foreign key and index once again after copy.
+    let paName = "placement_anchors"
+    runQuery_ $ sqlAlterTable paName [sqlAddFK paName $ (fkOnColumn "field_placement_id" "field_placements" "id") { fkOnDelete = ForeignKeyCascade }]
+    runQuery_ . sqlCreateIndex paName $ indexOnColumn "field_placement_id"
+
+    -- Stage 3: remove migrated json data
+    runQuery_ $ sqlAlterTable fpName [sqlDropColumn "anchors"]
+    runQuery_ $ sqlAlterTable (tblName tableSignatoryLinkFields) [sqlDropColumn "placements"]
+  }
 
 moveSignaturesToFilesAndAddBoolValueForFields :: MonadDB m => Migration m
 moveSignaturesToFilesAndAddBoolValueForFields = Migration {

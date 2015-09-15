@@ -167,19 +167,27 @@ insertSignatoryAttachments atts = runQuery_ . sqlInsert "signatory_attachments" 
 
 insertSignatoryLinkFields :: MonadDB m => [(SignatoryLinkID, SignatoryField)] -> m ()
 insertSignatoryLinkFields [] = return ()
-insertSignatoryLinkFields fields = runQuery_ . sqlInsert "signatory_link_fields" $ do
-  sqlSetList "signatory_link_id" $ map fst fields
-  sqlSetList "type" $ map (fieldType . snd) fields
-  sqlSetList "name_order" $ map (name_order . snd) fields
-  sqlSetList "custom_name" $ map (custom_name . snd) fields
-  sqlSetList "is_author_filled" $ map (author_filled . snd) fields
-  sqlSetList "value_text" $ map (fieldTextValue . snd) fields
-  sqlSetList "value_file_id" $ map (fieldFileValue . snd) fields
-  sqlSetList "value_bool" $ map (fieldBoolValue . snd) fields
-  sqlSetList "placements" $ map (fieldPlacements . snd) fields
-  sqlSetList "obligatory" $ map (fieldIsObligatory . snd) fields
-  sqlSetList "should_be_filled_by_author" $ map (fieldShouldBeFilledBySender . snd) fields
+insertSignatoryLinkFields xs = do
+  runQuery_ . sqlInsert "signatory_link_fields" $ do
+    sqlSetList "signatory_link_id" ids
+    sqlSetList "type" $ map fieldType fields
+    sqlSetList "name_order" $ map name_order fields
+    sqlSetList "custom_name" $ map custom_name fields
+    sqlSetList "is_author_filled" $ map author_filled fields
+    sqlSetList "value_text" $ map fieldTextValue fields
+    sqlSetList "value_file_id" $ map fieldFileValue fields
+    sqlSetList "value_bool" $ map fieldBoolValue fields
+    sqlSetList "obligatory" $ map fieldIsObligatory fields
+    sqlSetList "should_be_filled_by_author" $ map fieldShouldBeFilledBySender fields
+    sqlResult "id"
+  insertFieldPlacements
+    . concat
+    . zipWith (\sf sfid -> [(sfid, pl) | pl <- fieldPlacements sf]) fields
+    =<< fetchMany runIdentity
   where
+    ids = map fst xs
+    fields = map snd xs
+
     name_order field = case field of
       SignatoryNameField (NameField{snfNameOrder})-> Just snfNameOrder
       _ -> Nothing
@@ -191,6 +199,38 @@ insertSignatoryLinkFields fields = runQuery_ . sqlInsert "signatory_link_fields"
     author_filled field = case field of
       SignatoryTextField (TextField{stfFilledByAuthor})-> stfFilledByAuthor
       _ -> False
+
+insertFieldPlacements :: MonadDB m => [(SignatoryFieldID, FieldPlacement)] -> m ()
+insertFieldPlacements [] = return ()
+insertFieldPlacements xs = do
+  runQuery_ . sqlInsert "field_placements" $ do
+    sqlSetList "signatory_field_id" ids
+    sqlSetList "xrel" $ map placementxrel placements
+    sqlSetList "yrel" $ map placementyrel placements
+    sqlSetList "wrel" $ map placementwrel placements
+    sqlSetList "hrel" $ map placementhrel placements
+    sqlSetList "fsrel" $ map placementfsrel placements
+    sqlSetList "page" $ map placementpage placements
+    sqlSetList "tip" $ map placementtipside placements
+    sqlResult "id"
+  insertPlacementAnchors
+    . concat
+    . zipWith (\pl plid -> [(plid, anchor) | anchor <- placementanchors pl]) placements
+    =<< fetchMany runIdentity
+  where
+    ids = map fst xs
+    placements = map snd xs
+
+insertPlacementAnchors :: MonadDB m => [(PlacementID, PlacementAnchor)] -> m ()
+insertPlacementAnchors [] = return ()
+insertPlacementAnchors xs = do
+  runQuery_ . sqlInsert "placement_anchors" $ do
+    sqlSetList "field_placement_id" ids
+    sqlSetList "text" $ map placementanchortext anchors
+    sqlSetList "index" $ map placementanchorindex anchors
+  where
+    ids = map fst xs
+    anchors = map snd xs
 
 insertDocumentTags :: MonadDB m => Bool -> DocumentID -> S.Set DocumentTag -> m (S.Set DocumentTag)
 insertDocumentTags fetch did tags
@@ -549,7 +589,6 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
                  sqlSet "signatory_link_id" slid
                  sqlSet "value_text" $ fromMaybe "" mValue
                  sqlSet "type" $ fieldTypeFromFieldIdentity authMethodField
-                 sqlSet "placements" ("[]"::String)
       updateMTimeAndObjectVersion (actorTime actor)
       return (oldAuth', siglink)
     -- Evidence Events
@@ -896,14 +935,13 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SaveSig
             F.value "description" $ signatoryattachmentdescription sigattach)
         actor
 
-
 data SetFieldPlacements = SetFieldPlacements SignatoryFieldID [FieldPlacement]
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetFieldPlacements () where
-  update (SetFieldPlacements fieldid placements) =
-    updateDocumentWithID $ const $
-    runQuery_ . sqlUpdate "signatory_link_fields" $ do
-      sqlSet "placements" $ placements
-      sqlWhereEq "id" fieldid
+  update (SetFieldPlacements fieldid placements) = updateDocumentWithID $ const $ do
+    -- Delete existing fields and reinsert them
+    runQuery_ . sqlDelete "field_placements" $ do
+      sqlWhereEq "signatory_field_id" fieldid
+    insertFieldPlacements [(fieldid, pl) | pl <- placements]
 
 data SetDocumentTags = SetDocumentTags (S.Set DocumentTag) Actor
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetDocumentTags Bool where

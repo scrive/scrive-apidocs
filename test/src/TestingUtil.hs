@@ -291,7 +291,8 @@ instance Arbitrary FieldPlacement where
     (e :: Int) <- choose (1,1000)
     (x :: Int) <- choose (1, 10)
     f <- arbitrary
-    return $ FieldPlacement { placementxrel       = fromIntegral a / fromIntegral x
+    return $ FieldPlacement { placementid         = tempPlacementID
+                            , placementxrel       = fromIntegral a / fromIntegral x
                             , placementyrel       = fromIntegral b / fromIntegral x
                             , placementwrel       = fromIntegral c / fromIntegral x
                             , placementhrel       = fromIntegral d / fromIntegral x

@@ -58,19 +58,11 @@
                      "page":1,
                      "anchors":[
                         {
-                           "text":"aaaa",
-                           "pages":[
-                              1,
-                              2,
-                              3
-                           ]
+                           "text":"aaaa"
                         },
                         {
                            "text":"XXXXaaaa",
-                           "index":11,
-                           "pages":[
-                              -3
-                           ]
+                           "index":11
                         }
                      ],
                      "tip":"right"

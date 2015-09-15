@@ -126,6 +126,7 @@ instance InspectXML DeliveryMethod where
 instance InspectXML ConfirmationDeliveryMethod where
 instance InspectXML Company where
 instance InspectXML CompanyID where
+instance InspectXML PlacementID where
 instance InspectXML DocumentSharing where
 instance InspectXML KontraLink where
 instance InspectXML FieldType where

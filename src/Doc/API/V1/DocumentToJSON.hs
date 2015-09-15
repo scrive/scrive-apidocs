@@ -284,9 +284,6 @@ instance ToJSValue PlacementAnchor where
     J.value "text" (placementanchortext anchor)
     when (placementanchorindex anchor /=1 ) $ do
       J.value "index" (placementanchorindex anchor)
-    case placementanchorpages anchor of
-      Nothing -> return ()
-      Just pages -> J.value "pages" pages
 
 instance ToJSValue ConfirmationDeliveryMethod where
   toJSValue EmailConfirmationDelivery  = toJSValue ("email"::String)

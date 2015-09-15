@@ -5,6 +5,7 @@ module Doc.Anchors (
 
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Int
 import Log
 import System.Exit
 import Text.JSON.FromJSValue
@@ -29,7 +30,7 @@ import Log.Utils
 import Utils.Directory
 import Utils.IO
 
-getAnchorPositions :: (Monad m, MonadBaseControl IO m, MonadLog m, MonadIO m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int,Double,Double))
+getAnchorPositions :: (Monad m, MonadBaseControl IO m, MonadLog m, MonadIO m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int32, Double, Double))
 getAnchorPositions _pdfcontent [] = return Map.empty
 getAnchorPositions pdfcontent anchors = do
   withSystemTempDirectory' ("find-text-") $ \tmppath -> do
@@ -40,9 +41,6 @@ getAnchorPositions pdfcontent anchors = do
         anchorToJS anc = do
           value "text" (placementanchortext anc)
           value "index" (placementanchorindex anc)
-          case placementanchorpages anc of
-            Nothing -> return ()
-            Just pages -> value "pages" pages
         configpath = tmppath ++ "/find-texts.json"
 
     liftIO $ BS.writeFile inputpath pdfcontent
@@ -61,16 +59,15 @@ getAnchorPositions pdfcontent anchors = do
           fail "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json"
           ) return $ J.runGetJSON J.readJSValue (BSL.toString stdout)
 
-        let matches :: Maybe (Maybe [Maybe (PlacementAnchor, (Int,Double,Double))])
+        let matches :: Maybe (Maybe [Maybe (PlacementAnchor, (Int32, Double, Double))])
             matches = withJSValue stdoutjs $ fromJSValueFieldCustom "matches" $ fromJSValueCustomMany $ ((do
               text                 <- fromJSValueField "text"
               index                <- fromMaybe (Just 1) <$> fromJSValueField "index"
-              pages                <- fmap Just $ fromJSValueField "pages"
               page                 <- fromJSValueField "page"
               coords               <- fromJSValueField "coords"
               let coordx = fst <$> coords
               let coordy = snd <$> coords
-              return (Just ((,) <$> (PlacementAnchor <$> text <*> index <*> pages)
+              return (Just ((,) <$> (PlacementAnchor <$> text <*> index)
                       <*> ((,,) <$> page <*> coordx <*> coordy)))))
         case matches of
           Just (Just realMatches) -> do

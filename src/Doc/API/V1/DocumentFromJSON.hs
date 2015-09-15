@@ -70,10 +70,7 @@ instance FromJSValue PlacementAnchor where
   fromJSValue = do
     text        <- fromJSValueField "text"
     index       <- fromMaybe (Just 1) <$> fromJSValueField "index"
-    pages       <- fmap Just $ fromJSValueField "pages"
-    return (PlacementAnchor <$> text
-            <*> index
-            <*> pages)
+    return (PlacementAnchor <$> text <*> index)
 
 instance FromJSValue FieldPlacement where
   fromJSValue = do
@@ -85,10 +82,9 @@ instance FromJSValue FieldPlacement where
                   page       <- fromJSValueField "page"
                   side       <- fromJSValueField "tip"
                   anchors    <- fromMaybe (Just []) <$> fromJSValueField "anchors"
-                  return (FieldPlacement <$> xrel <*> yrel
+                  return (FieldPlacement <$> pure tempPlacementID <*> xrel <*> yrel
                                          <*> wrel <*> hrel <*> fsrel
-                                         <*> page <*> Just side
-                                         <*> anchors)
+                                         <*> page <*> Just side <*> anchors)
 
 
 instance MatchWithJSValue SignatoryLink where

@@ -65,6 +65,9 @@ kontraMigrations = [
   , fixPurgedPendingDocumentsAndAddConstraint
   , addNetsFieldsToEIDAuthentication
   , addAuthenticatedToViewToCompositeType
+  , createTableFieldPlacements
+  , createTablePlacementAnchors
+  , unjsonFieldPlacements
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

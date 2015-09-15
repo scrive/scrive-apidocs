@@ -1,6 +1,7 @@
 module Doc.SealSpec where
 
 import Data.Char
+import Data.Int
 import Data.Functor.Invariant
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
@@ -96,7 +97,7 @@ data Field
     { value            :: String -- ^ text to put into a field
     , x                :: Double -- ^ left coordinate of field in (0,0)-(1,1)
     , y                :: Double -- ^ upper coordinate of field in (0,0)-(1,1)
-    , page             :: Int    -- ^ on which page should the field be placed
+    , page             :: Int32  -- ^ on which page should the field be placed
     , fontSize         :: Double -- ^ font size divided by width
     , greyed           :: Bool   -- ^ field should be grayed, (to mark temporary values)
     , includeInSummary :: Bool   -- ^ add this field to report at the very end of document
@@ -105,7 +106,7 @@ data Field
     { valueBinary      :: BS.ByteString -- ^ binary content of image to put into a field
     , x                :: Double -- ^ left coordinate of field in (0,0)-(1,1)
     , y                :: Double -- ^ upper coordinate of field in  (0,0)-(1,1)
-    , page             :: Int    -- ^ on which page should the field be placed
+    , page             :: Int32  -- ^ on which page should the field be placed
     , image_w          :: Double -- ^ image width in (0,0)-(1,1)
     , image_h          :: Double -- ^ image height in (0,0)-(1,1)
     , includeInSummary :: Bool   -- ^ add this field to report at the very end of document

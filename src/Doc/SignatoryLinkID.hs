@@ -7,7 +7,6 @@ module Doc.SignatoryLinkID (
   , unsafeSignatoryLinkID
   ) where
 
-import Data.Data
 import Data.Int
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
@@ -16,10 +15,10 @@ import DB.Derive
 import KontraPrelude
 import Log.Identifier
 
--- | 'SignatoryLinkID' is and integer that identifies
+-- | 'SignatoryLinkID' is an integer that identifies
 -- a signatory inside a document scope.
 newtype SignatoryLinkID = SignatoryLinkID Int64
-  deriving (Eq, Ord, PQFormat, Data, Typeable)
+  deriving (Eq, Ord, PQFormat)
 $(newtypeDeriveUnderlyingReadShow ''SignatoryLinkID)
 
 instance FromReqURI SignatoryLinkID where

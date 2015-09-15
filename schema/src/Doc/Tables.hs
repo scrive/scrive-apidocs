@@ -292,10 +292,82 @@ ctDocumentTag = CompositeType {
 
 ---------------------------------
 
+tableFieldPlacements :: Table
+tableFieldPlacements = tblTable {
+    tblName = "field_placements"
+  , tblVersion = 1
+  , tblColumns = [
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "signatory_field_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "xrel", colType = DoubleT, colNullable = False }
+    , tblColumn { colName = "yrel", colType = DoubleT, colNullable = False }
+    , tblColumn { colName = "wrel", colType = DoubleT, colNullable = False }
+    , tblColumn { colName = "hrel", colType = DoubleT, colNullable = False }
+    , tblColumn { colName = "fsrel", colType = DoubleT, colNullable = False }
+    , tblColumn { colName = "page", colType = IntegerT, colNullable = False }
+    , tblColumn { colName = "tip", colType = SmallIntT }
+    ]
+  , tblPrimaryKey = pkOnColumn "id"
+  , tblForeignKeys = [
+      (fkOnColumn "signatory_field_id" "signatory_link_fields" "id") { fkOnDelete = ForeignKeyCascade }
+    ]
+  , tblIndexes = [
+      indexOnColumn "signatory_field_id"
+    ]
+  }
+
+ctFieldPlacement :: CompositeType
+ctFieldPlacement = CompositeType {
+    ctName = "field_placement"
+  , ctColumns = [
+      CompositeColumn { ccName = "id", ccType = BigIntT }
+    , CompositeColumn { ccName = "xrel", ccType = DoubleT }
+    , CompositeColumn { ccName = "yrel", ccType = DoubleT }
+    , CompositeColumn { ccName = "wrel", ccType = DoubleT }
+    , CompositeColumn { ccName = "hrel", ccType = DoubleT }
+    , CompositeColumn { ccName = "fsrel", ccType = DoubleT }
+    , CompositeColumn { ccName = "page", ccType = IntegerT }
+    , CompositeColumn { ccName = "tip", ccType = SmallIntT }
+    , CompositeColumn { ccName = "anchors", ccType = ArrayT $ CustomT "placement_anchor" }
+    ]
+  }
+
+---------------------------------
+
+tablePlacementAnchors :: Table
+tablePlacementAnchors = tblTable {
+    tblName = "placement_anchors"
+  , tblVersion = 1
+  , tblColumns = [
+      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "field_placement_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "text", colType = TextT, colNullable = False }
+    , tblColumn { colName = "index", colType = IntegerT, colNullable = False, colDefault = Just "1" }
+    ]
+  , tblPrimaryKey = pkOnColumn "id"
+  , tblForeignKeys = [
+      (fkOnColumn "field_placement_id" "field_placements" "id") { fkOnDelete = ForeignKeyCascade }
+    ]
+  , tblIndexes = [
+      indexOnColumn "field_placement_id"
+    ]
+  }
+
+ctPlacementAnchor :: CompositeType
+ctPlacementAnchor = CompositeType {
+    ctName = "placement_anchor"
+  , ctColumns = [
+      CompositeColumn { ccName = "text", ccType = TextT }
+    , CompositeColumn { ccName = "index", ccType = IntegerT }
+    ]
+  }
+
+---------------------------------
+
 tableSignatoryLinkFields :: Table
 tableSignatoryLinkFields = tblTable {
     tblName = "signatory_link_fields"
-  , tblVersion = 10
+  , tblVersion = 11
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
@@ -303,7 +375,6 @@ tableSignatoryLinkFields = tblTable {
     , tblColumn { colName = "custom_name", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "value_text", colType = TextT }
     , tblColumn { colName = "is_author_filled", colType = BoolT, colNullable = False, colDefault = Just "false" }
-    , tblColumn { colName = "placements", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "obligatory", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "should_be_filled_by_author", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "name_order", colType = SmallIntT }
@@ -344,7 +415,7 @@ ctSignatoryField = CompositeType {
   , CompositeColumn { ccName = "value_file_id", ccType = BigIntT }
   , CompositeColumn { ccName = "obligatory", ccType = BoolT }
   , CompositeColumn { ccName = "should_be_filled_by_author", ccType = BoolT }
-  , CompositeColumn { ccName = "placements", ccType = TextT }
+  , CompositeColumn { ccName = "placements", ccType = ArrayT $ CustomT "field_placement" }
   ]
 }
 

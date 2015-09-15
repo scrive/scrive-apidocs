@@ -42,6 +42,8 @@ kontraComposites :: [CompositeType]
 kontraComposites = [
     ctAuthorAttachment
   , ctSignatoryAttachment
+  , ctPlacementAnchor
+  , ctFieldPlacement
   , ctSignatoryField
   , ctDocumentTag
   , ctMainFile
@@ -82,6 +84,8 @@ kontraTables =
   , tableEvidenceLog
   , tableDocumentTags
   , tableSignatoryLinkFields
+  , tableFieldPlacements
+  , tablePlacementAnchors
   , tableSignatoryScreenshots
   , tableAPIToken
   , tableAccessToken

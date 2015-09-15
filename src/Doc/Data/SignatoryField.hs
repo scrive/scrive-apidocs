@@ -1,12 +1,13 @@
 module Doc.Data.SignatoryField (
     FieldType(..)
   , NameOrder(..)
+  , PlacementID
+  , tempPlacementID
   , PlacementAnchor(..)
   , TipSide(..)
   , FieldPlacement(..)
   , SignatoryField(..)
   , signatoryFieldsSelectors
-
   , SignatoryNameField(..)
   , SignatoryCompanyField(..)
   , SignatoryPersonalNumberField(..)
@@ -22,9 +23,6 @@ import Control.Monad.Catch
 import Data.Data
 import Data.Int
 import Database.PostgreSQL.PQTypes hiding (def)
-import Text.JSON
-import Text.JSON.FromJSValue
-import qualified Text.JSON.Gen as J
 
 import DB.Derive
 import Doc.SignatoryFieldID
@@ -32,7 +30,7 @@ import File.FileID
 import KontraPrelude
 
 newtype NameOrder = NameOrder Int16
-  deriving (Eq, Ord, Show, Data, Typeable)
+  deriving (Eq, Ord, Show)
 
 instance FromSQL NameOrder where
   type PQBase NameOrder = PQBase Int16
@@ -65,7 +63,7 @@ data FieldType
   | SignatureFT
   | CheckboxFT
   | MobileFT
-    deriving (Eq, Show, Data, Typeable)
+    deriving (Eq, Show)
 
 instance PQFormat FieldType where
   pqFormat = const $ pqFormat ($undefined::Int16)
@@ -104,25 +102,72 @@ instance ToSQL FieldType where
 
 ---------------------------------
 
+newtype PlacementID = PlacementID Int64
+  deriving (Eq, Ord, PQFormat)
+$(newtypeDeriveUnderlyingReadShow ''PlacementID)
+
+instance FromSQL PlacementID where
+  type PQBase PlacementID = PQBase Int64
+  fromSQL mbase = PlacementID <$> fromSQL mbase
+instance ToSQL PlacementID where
+  type PQDest PlacementID = PQDest Int64
+  toSQL (PlacementID n) = toSQL n
+
+tempPlacementID :: PlacementID
+tempPlacementID = PlacementID 0
+
+---------------------------------
+
 data PlacementAnchor = PlacementAnchor {
   placementanchortext  :: !String
-, placementanchorindex :: !Int
-, placementanchorpages :: !(Maybe [Int])
-} deriving (Eq,Ord, Show, Data, Typeable)
+, placementanchorindex :: !Int32
+} deriving (Eq, Ord, Show)
+
+type instance CompositeRow PlacementAnchor = (String, Int32)
+
+instance PQFormat PlacementAnchor where
+  pqFormat = const "%placement_anchor"
+
+instance CompositeFromSQL PlacementAnchor where
+  toComposite (text, index) = PlacementAnchor {
+      placementanchortext = text
+    , placementanchorindex = index
+    }
 
 data TipSide = LeftTip | RightTip
-  deriving (Eq, Show, Data, Typeable)
+  deriving (Eq, Show)
+
+instance PQFormat TipSide where
+  pqFormat = const $ pqFormat ($undefined::Int16)
+
+instance FromSQL TipSide where
+  type PQBase TipSide = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1  -> return LeftTip
+      2  -> return RightTip
+      _  -> throwM RangeError {
+        reRange = [(1, 2)]
+      , reValue = n
+      }
+
+instance ToSQL TipSide where
+  type PQDest TipSide = PQDest Int16
+  toSQL LeftTip  = toSQL (1::Int16)
+  toSQL RightTip = toSQL (2::Int16)
 
 data FieldPlacement = FieldPlacement {
-  placementxrel    :: !Double
+  placementid      :: !PlacementID
+, placementxrel    :: !Double
 , placementyrel    :: !Double
 , placementwrel    :: !Double
 , placementhrel    :: !Double
 , placementfsrel   :: !Double
-, placementpage    :: !Int
+, placementpage    :: !Int32
 , placementtipside :: !(Maybe TipSide)
 , placementanchors :: ![PlacementAnchor]
-} deriving (Show, Data, Typeable)
+} deriving Show
 
 instance Eq FieldPlacement where
   a == b = and [
@@ -138,59 +183,23 @@ instance Eq FieldPlacement where
     where
       eqByEpsilon f = abs (f a - f b) < 0.00001
 
-instance PQFormat [FieldPlacement] where
-  pqFormat = const $ pqFormat ($undefined::String)
+type instance CompositeRow FieldPlacement = (PlacementID, Double, Double, Double, Double, Double, Int32, Maybe TipSide, CompositeArray1 PlacementAnchor)
 
-instance FromSQL [FieldPlacement] where
-  type PQBase [FieldPlacement] = PQBase String
-  fromSQL = jsonFromSQL' $ fmap nothingToResult $ fromJSValueCustomMany $ do
-    xrel <- fromJSValueField "xrel"
-    yrel <- fromJSValueField "yrel"
-    wrel <- fromJSValueField "wrel"
-    hrel <- fromJSValueField "hrel"
-    fsrel <- fromJSValueField "fsrel"
-    page <- fromJSValueField "page"
-    side <- fromJSValueFieldCustom "tip" $ do
-      s <- fromJSValue
-      case s :: Maybe String of
-        Just "left"  -> return $ Just LeftTip
-        Just "right" -> return $ Just RightTip
-        _ ->            return $ Nothing
-    anchors <- fmap (fromMaybe []) <$> fromJSValueFieldCustom "anchors" $ fromJSValueCustomMany $ do
-      text <- fromJSValueField "text"
-      index <- fromMaybe (Just 1) <$> fromJSValueField "index"
-      pages  <- fmap Just $ fromJSValueField "pages"
-      return (PlacementAnchor <$> text
-        <*> index
-        <*> pages)
-    return (FieldPlacement <$> xrel <*> yrel
-      <*> wrel <*> hrel <*> fsrel
-      <*> page <*> Just side
-      <*> Just anchors)
+instance PQFormat FieldPlacement where
+  pqFormat = const "%field_placement"
 
-instance ToSQL [FieldPlacement] where
-  type PQDest [FieldPlacement] = PQDest String
-  toSQL = jsonToSQL' $ JSArray . map placementJSON
-    where
-      placementJSON placement = J.runJSONGen $ do
-        J.value "xrel" $ placementxrel placement
-        J.value "yrel" $ placementyrel placement
-        J.value "wrel" $ placementwrel placement
-        J.value "hrel" $ placementhrel placement
-        J.value "fsrel" $ placementfsrel placement
-        J.value "page" $ placementpage placement
-        when (not (null (placementanchors placement))) $ do
-          J.value "anchors" $ (flip map) (placementanchors placement) $ \anchor -> J.runJSONGen $ do
-            J.value "text" (placementanchortext anchor)
-            when (placementanchorindex anchor /=1 ) $ do
-              J.value "index" (placementanchorindex anchor)
-            case placementanchorpages anchor of
-              Nothing -> return ()
-              Just pages -> J.value "pages" pages
-        J.value "tip" $ case (placementtipside placement) of
-          Just LeftTip -> Just ("left" :: String)
-          Just RightTip -> Just "right"
-          _ -> Nothing
+instance CompositeFromSQL FieldPlacement where
+  toComposite (pid, xrel, yrel, wrel, hrel, fsrel, page, tip, CompositeArray1 anchors) = FieldPlacement {
+      placementid = pid
+    , placementxrel = xrel
+    , placementyrel = yrel
+    , placementwrel = wrel
+    , placementhrel = hrel
+    , placementfsrel = fsrel
+    , placementpage = page
+    , placementtipside = tip
+    , placementanchors = anchors
+    }
 
 ---------------------------------
 
@@ -297,16 +306,20 @@ signatoryFieldsSelectors = [
   , "signatory_link_fields.value_file_id"
   , "signatory_link_fields.obligatory"
   , "signatory_link_fields.should_be_filled_by_author"
-  , "signatory_link_fields.placements"
+  , "ARRAY(" <> placements <> ")"
   ]
+  where
+    placements = "SELECT (id, xrel, yrel, wrel, hrel, fsrel, page, tip, ARRAY(" <> anchors <> "))::field_placement FROM field_placements WHERE field_placements.signatory_field_id = signatory_link_fields.id ORDER BY field_placements.id"
 
-type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe Bool, Maybe FileID, Bool, Bool, [FieldPlacement])
+    anchors = "SELECT (text, index)::placement_anchor FROM placement_anchors WHERE placement_anchors.field_placement_id = field_placements.id ORDER BY placement_anchors.id"
+
+type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe Bool, Maybe FileID, Bool, Bool, CompositeArray1 FieldPlacement)
 
 instance PQFormat SignatoryField where
-  pqFormat _ = "%signatory_field"
+  pqFormat = const "%signatory_field"
 
 instance CompositeFromSQL SignatoryField where
-  toComposite (sfid, ftype, mname_order, custom_name, is_author_filled, mvalue_text, mvalue_bool, mvalue_file, obligatory, should_be_filled_by_sender, placements) =
+  toComposite (sfid, ftype, mname_order, custom_name, is_author_filled, mvalue_text, mvalue_bool, mvalue_file, obligatory, should_be_filled_by_sender, CompositeArray1 placements) =
     case ftype of
       NameFT -> SignatoryNameField $ NameField {
           snfID                     = sfid
