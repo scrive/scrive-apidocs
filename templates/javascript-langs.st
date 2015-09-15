@@ -625,7 +625,8 @@ javascriptLocalisation =
         }
         , docview : {
             signatory : {
-                editAuthenticationToSignMethod: "$_docviewSignatoryeditAuthenticationToSignMethod()$"
+                editAuthenticationToViewMethod: "$_docviewSignatoryeditAuthenticationToViewMethod()$"
+              , editAuthenticationToSignMethod: "$_docviewSignatoryeditAuthenticationToSignMethod()$"
               , invitationOrder: "$_docviewSignatoryInvitationOrderLabel()$"
               , invitationMethod: "$_docviewSignatoryInvitationMethodLabel()$"
               , invitationEmail: "$_docviewSignatoryInvitationEmail()$"
@@ -650,6 +651,20 @@ javascriptLocalisation =
               , confirmationSMS: "$_docviewSignatoryConfirmationSMS()$"
               , confirmationEmailSMS: "$_docviewSignatoryConfirmationEmailSMS()$"
               , confirmationNone: "$_docviewSignatoryConfirmationNone()$"
+            },
+            changeAuthenticationToView : {
+                title: "$_docviewChangeAuthenticationToViewModalTitle()$"
+              , accept: "$_docviewChangeAuthenticationToViewModalAccept()$"
+              , methodLabel: "$_docviewChangeAuthenticationToViewModalMethodLabel()$"
+              , ssnSEBankIDLabel: "$_docviewChangeAuthenticationToViewModalSEBankIDSSNLabel()$"
+              , ssnNOBankIDLabel: "$_docviewChangeAuthenticationToViewModalNOBankIDSSNLabel()$"
+              , ssnNOBankIDPlaceholder: "$_docviewChangeAuthenticationToViewModalNOBankIDPlaceholder()$"
+              , phoneLabel: "$_docviewChangeAuthenticationToViewModalPhoneLabel()$"
+              , flashMessageInvalidSESSN: "$_docviewChangeAuthenticationToViewFlashMessageInvalidSESSN()$"
+              , flashMessageInvalidNOSSN: "$_docviewChangeAuthenticationToViewFlashMessageInvalidNOSSN()$"
+              , flashMessageInvalidNOPhone: "$_docviewChangeAuthenticationToViewFlashMessageInvalidNOPhone()$"
+              , flashMessageInvalidNOSSNAndPhone: "$_docviewChangeAuthenticationToViewFlashMessageInvalidNOSSNAndPhone()$"
+              , errorFlashMessage: "$_docviewChangeAuthenticationToViewFlashMessageError()$"
             },
             changeAuthentication : {
                 title: "$_docviewChangeAuthenticationModalTitle()$"

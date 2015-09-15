@@ -349,6 +349,9 @@ window.Signatory = Backbone.Model.extend({
 
       this.trigger("change:role");
     },
+    hasAuthenticatedToView: function() {
+        return this.get("hasAuthenticatedToView");
+    },
     hasSigned: function() {
         return this.signdate() != undefined;
     },
@@ -510,6 +513,15 @@ window.Signatory = Backbone.Model.extend({
     },
     padSigningURL : function() {
         return "/padqueue";
+    },
+    changeAuthenticationToView: function(authenticationType, personalNumber, mobileNumber) {
+        return new Submit({
+                url: "/api/frontend/changeauthenticationtoview/" + this.document().documentid() + "/" + this.signatoryid(),
+                method: "POST",
+                authentication_type: authenticationType,
+                personal_number: personalNumber,
+                mobile_number: mobileNumber
+        });
     },
     changeAuthenticationToSign: function(type, value) {
         return new Submit({

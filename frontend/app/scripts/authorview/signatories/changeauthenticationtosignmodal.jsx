@@ -71,15 +71,30 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
       var authvalue = this.newAuthenticationValue();
 
       if (this.isNewAuthenticationPINbySMS()) {
-        return (
-          !new PhoneValidation().validateData(authvalue) &&
-          !new EmptyValidation().validateData(authvalue)
-        );
+        // If NO BankID to view is set, then we need a valid Norwegian number, or empty
+        if (this.signatory().authenticationToView() === "no_bankid") {
+          return (
+            !new PhoneValidationNO().validateData(authvalue) &&
+            !new EmptyValidation().validateData(authvalue)
+          );
+        // Else we need any valid number, or empty
+        } else {
+          return (
+            !new PhoneValidation().validateData(authvalue) &&
+            !new EmptyValidation().validateData(authvalue)
+          );
+        }
       } else if (this.isNewAuthenticationELeg()) {
-        return (
-          !new NumberValidation().validateData(authvalue) &&
-          !new EmptyValidation().validateData(authvalue)
-        );
+        // If SE BankID to view is set, then SSN needs to be valid and not empty
+        if (this.signatory().authenticationToView() === "se_bankid") {
+          return !new SSNForSEBankIDValidation().validateData(authvalue);
+        // Else valid or empty
+        } else {
+          return (
+            !new SSNForSEBankIDValidation().validateData(authvalue) &&
+            !new EmptyValidation().validateData(authvalue)
+          );
+        }
       }
 
       return false;
@@ -167,6 +182,25 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
       return [standard, eleg, sms];
     },
 
+    showAuthenticationValueField: function () {
+      var model = this.props.model;
+      var signatory = model.signatory();
+
+      if (signatory.hasAuthenticatedToView()) {
+        // If we are setting SE BankID and signatory has authenticated to view,
+        // we cannot change SSN
+        if (model.newAuthenticationMethod == "eleg") {
+          return false;
+        // If we are setting SMS PIN and signatory has authenticated to view
+        // using NO BankID, we cannot change phone number
+        } else if (model.newAuthenticationMethod == "sms_pin" && signatory.authenticationToView() == "no_bankid") {
+          return false;
+        }
+      } else {
+        return model.newAuthenticationMethod() != "standard";
+      }
+    },
+
     render: function () {
       var model = this.props.model;
       var signatory = model.signatory();
@@ -181,7 +215,7 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
             width={348}
             options={this.getAuthenticationOptions()}
           />
-          {/* if */ model.newAuthenticationMethod() != "standard" &&
+          {/* if */ this.showAuthenticationValueField() &&
             <div>
               <label>{this.getAuthenticationValueLabelText()}</label>
               <div

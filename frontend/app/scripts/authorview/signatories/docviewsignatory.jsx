@@ -1,10 +1,13 @@
 /** @jsx React.DOM */
 
 define(["React", "common/button", "common/backbone_mixin", "Backbone",
-  "common/language_service", "authorview/signatories/changeauthenticationtosignmodal",
+  "common/language_service",
+  "authorview/signatories/changeauthenticationtoviewmodal",
+  "authorview/signatories/changeauthenticationtosignmodal",
   "authorview/signatories/changesignatorydetailmodal", "legacy_code"],
   function (React, Button, BackboneMixin, Backbone, LanguageService,
-    ChangeAuthenticationToSignModal, ChangeSignatoryDetailModal) {
+    ChangeAuthenticationToViewModal, ChangeAuthenticationToSignModal,
+    ChangeSignatoryDetailModal) {
 
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -84,6 +87,15 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
       return signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin();
     },
 
+    hasChangeAuthenticationToView: function () {
+      var signatory = this.props.signatory;
+      return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
+      && signatory.document().signingInProcess()
+      && signatory.document().pending()
+      && signatory.signs()
+      && !signatory.hasSigned()
+      && !signatory.hasAuthenticatedToView();
+    },
     hasChangeAuthenticationToSign: function () {
       var signatory = this.props.signatory;
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
@@ -250,6 +262,12 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
       }
     },
 
+    handleChangeAuthenticationToViewMethod: function () {
+      new ChangeAuthenticationToViewModal({
+        signatory: this.props.signatory,
+        onAction: this.props.onAction
+      });
+    },
     handleChangeAuthenticationToSignMethod: function () {
       new ChangeAuthenticationToSignModal({
         signatory: this.props.signatory,
@@ -389,6 +407,11 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
               </div>
               {/* if */ signatory.signs() &&
                 <div className="fieldrow">
+                  {/* if */ this.hasChangeAuthenticationToView() &&
+                    <a className="edit clickable" onClick={this.handleChangeAuthenticationToViewMethod}>
+                      {localization.docview.signatory.editAuthenticationToViewMethod}
+                    </a>
+                  }
                   <span className="authentication-to-view field" title={this.getAuthenticationToViewMethodText()}>
                     {localization.docview.signatory.authenticationToView}: {this.getAuthenticationToViewMethodText()}
                   </span>
