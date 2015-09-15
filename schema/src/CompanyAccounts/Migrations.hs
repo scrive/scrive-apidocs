@@ -1,12 +1,10 @@
 module CompanyAccounts.Migrations where
-
+{-
 import Data.Char
 
-import Company.CompanyID
 import CompanyAccounts.Tables
 import DB
 import KontraPrelude
-import User.Model
 
 normalizeCompanyInvites :: MonadDB m => Migration m
 normalizeCompanyInvites = Migration {
@@ -50,3 +48,4 @@ normalizeCompanyInvites = Migration {
             sqlSet "lang" LANG_SV
             sqlWhereNotExists (sqlSelect "users AS users2" $ sqlWhereEq "users2.email" (map toLower email))
   }
+-}

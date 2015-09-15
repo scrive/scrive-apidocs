@@ -69,15 +69,6 @@ createTableDocumentApiCallbackConsumers = Migration {
   }
 }
 
-removeDuplicateIndexFromDocumentApiCallbacks :: MonadDB m => Migration m
-removeDuplicateIndexFromDocumentApiCallbacks = Migration {
-  mgrTable = tableDocumentApiCallbacks
-, mgrFrom = 1
-, mgrDo = do
-  let Table{..} = tableDocumentApiCallbacks
-  runQuery_ . sqlDropIndex tblName $ indexOnColumn "document_id"
-}
-
 addAPIVersionToDocumentApiCallbacks :: MonadDB m => Migration m
 addAPIVersionToDocumentApiCallbacks = Migration {
   mgrTable = tableDocumentApiCallbacks

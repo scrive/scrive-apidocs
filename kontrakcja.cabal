@@ -56,11 +56,12 @@ Flag test-coverage
   Manual: True
   Default: False
 
+
 Executable kontrakcja-server
 
-  Hs-source-dirs: inc misc src cron/inc mailer/inc docconv/src messenger/src messenger/inc pdftools
+  Hs-source-dirs: cron cron/inc cron/schema docconv/src inc mailer/inc mailer/schema messenger/inc messenger/schema messenger/src pdftools misc schema/inc schema/src src
 
-  GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
@@ -191,9 +192,9 @@ Executable kontrakcja-server
 
 Executable cron
 
-  Hs-source-dirs: inc misc src cron/inc cron/src mailer/inc docconv/src messenger/inc pdftools
+  Hs-source-dirs: cron/inc cron/schema cron/src docconv/src inc mailer/inc mailer/schema messenger/inc messenger/schema misc pdftools schema/inc schema/src src
 
-  GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
@@ -319,9 +320,10 @@ Executable cron
     UndecidableInstances
 
 Executable kontrakcja-migrate
-  Hs-source-dirs: inc misc src cron/inc messenger/inc mailer/inc docconv/src
 
-  GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  Hs-source-dirs: cron/inc cron/schema docconv/src inc mailer/inc mailer/schema messenger/inc messenger/schema misc schema/inc schema/src
+
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
@@ -340,6 +342,7 @@ Executable kontrakcja-migrate
   Build-depends: base64-bytestring
   Build-depends: binary
   Build-depends: bytestring
+  Build-depends: cmdargs
   Build-depends: cond
   Build-depends: conduit
   Build-depends: consumers
@@ -443,9 +446,9 @@ Executable kontrakcja-migrate
 
 Executable mailing-server
 
-  Hs-source-dirs: inc misc mailer/src mailer/inc docconv/src
+  Hs-source-dirs: docconv/src inc mailer/inc mailer/schema mailer/src misc schema/inc
 
-  GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
@@ -562,11 +565,12 @@ Executable mailing-server
     TypeSynonymInstances,
     UndecidableInstances
 
+
 Executable messenger-server
 
-  Hs-source-dirs: src inc misc messenger/src messenger/inc
+  Hs-source-dirs: inc messenger/inc messenger/schema messenger/src misc schema/inc src
 
-  GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
@@ -683,12 +687,11 @@ Executable messenger-server
     TypeSynonymInstances,
     UndecidableInstances
 
-
 Executable kontrakcja-test
 
-  Hs-source-dirs: inc misc test/src src cron/inc mailer/inc mailer/src docconv/src docconv/test/src messenger/src messenger/inc pdftools
+  Hs-source-dirs: cron/inc cron/schema docconv/src docconv/test/src inc mailer/inc mailer/schema mailer/src messenger/inc messenger/schema messenger/src misc pdftools schema/inc schema/src src test/src
 
-  GHC-Options: -Werror -Wall -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
