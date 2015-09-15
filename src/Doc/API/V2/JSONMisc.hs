@@ -2,7 +2,6 @@
 module Doc.API.V2.JSONMisc (
   utcTimeToAPIFormat
 , unjsonMaybeMainFile
-, textToAuthenticationToSignMethod
 , evidenceAttachmentsToJSONBS
 ) where
 
@@ -100,14 +99,6 @@ instance Unjson AuthenticationToSignMethod where
     , (SEBankIDAuthenticationToSign, "se_bankid")
     , (SMSPinAuthenticationToSign, "sms_pin")
     ]
-
--- JJ FIXME: remove this too, check usages though :(
-textToAuthenticationToSignMethod :: T.Text -> Maybe AuthenticationToSignMethod
-textToAuthenticationToSignMethod "standard"  = Just StandardAuthenticationToSign
-textToAuthenticationToSignMethod "se_bankid" = Just SEBankIDAuthenticationToSign
-textToAuthenticationToSignMethod "sms_pin"   = Just SMSPinAuthenticationToSign
-textToAuthenticationToSignMethod _           = Nothing
-
 
 instance Unjson DeliveryMethod where
   unjsonDef = unjsonEnumBy "DeliveryMethod" [

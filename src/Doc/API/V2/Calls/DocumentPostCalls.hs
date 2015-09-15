@@ -33,7 +33,6 @@ import Doc.API.V2.DocumentAccess
 import Doc.API.V2.DocumentUpdateUtils
 import Doc.API.V2.Guards
 import Doc.API.V2.JSONDocument
-import Doc.API.V2.JSONMisc
 import Doc.API.V2.Parameters
 import Doc.Action
 import Doc.Anchors
@@ -408,10 +407,7 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
     guardDocumentStatus Pending
     guardSignatoryHasNotSigned slid
     -- Parameters
-    mAuthenticationType <- textToAuthenticationToSignMethod <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_type")
-    authentication_type <- case mAuthenticationType of
-      Just a -> return a
-      Nothing -> apiError $ requestParameterParseError "authentication_type" "Not a valid  authentication type, see our API documentation."
+    authentication_type <- apiV2ParameterObligatory (ApiV2ParameterTextUnjson "authentication_type" unjsonDef)
     authentication_value <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "authentication_value")
     -- API call actions
     dbUpdate $ ChangeAuthenticationToSignMethod slid authentication_type authentication_value actor

@@ -100,12 +100,12 @@ serverError reason = APIError { errorType = ServerError, errorHttpCode = 500, er
 -- | Used internally by API.V2 for reporting bad API endpoints
 endpointNotFound :: T.Text -> APIError
 endpointNotFound ep = APIError { errorType = EndpointNotFound, errorHttpCode = 404, errorMessage = msg}
-  where msg = "The endpoint" <+> ep <+> "was not found. See our website for API documentation."
+  where msg = "The endpoint" <+> ep <+> "was not found. See our website for API documentation"
 
 -- | Used interally by this module and API.V2.User
 invalidAuthorization :: APIError
 invalidAuthorization = APIError { errorType = InvalidAuthorization, errorHttpCode = 401, errorMessage = msg}
-  where msg = "No valid access credentials were provided. Please refer to our API documentation."
+  where msg = "No valid access credentials were provided. Please refer to our API documentation"
 
 -- | Used interally by this module and API.V2.User
 invalidAuthorizationWithMsg :: T.Text -> APIError
@@ -115,12 +115,12 @@ invalidAuthorizationWithMsg problem = invalidAuthorization { errorMessage = msg}
 -- | Used interally by this module and API.V2.User
 insufficientPrivileges :: APIError
 insufficientPrivileges = APIError { errorType = InsufficientPrivileges, errorHttpCode = 403, errorMessage = msg}
-  where msg = "The access credentials provided do not have sufficient privileges for this request."
+  where msg = "The access credentials provided do not have sufficient privileges for this request"
 
 -- Request specific errors
 requestParameterMissing :: T.Text -> APIError
 requestParameterMissing param = APIError { errorType = RequestParametersMissing, errorHttpCode = 400, errorMessage = msg}
-  where msg = "The parameter '"<> param <> "' was missing. Please refer to our API documentation."
+  where msg = "The parameter '"<> param <> "' was missing. Please refer to our API documentation"
 
 requestParameterParseError :: T.Text -> T.Text -> APIError
 requestParameterParseError param error = APIError { errorType = RequestParametersParseError, errorHttpCode = 400, errorMessage = msg}
@@ -151,10 +151,10 @@ signatoryStateError msg = APIError { errorType = SignatoryStateError, errorHttpC
 
 documentActionForbidden :: APIError
 documentActionForbidden = APIError { errorType = DocumentActionForbidden, errorHttpCode = 403, errorMessage = msg}
-  where msg = "You do not have permission to perform this action on the document."
+  where msg = "You do not have permission to perform this action on the document"
 
 documentNotFound :: DocumentID -> APIError
-documentNotFound did = resourceNotFound $ "A document with id" <+> didText <+> "was not found."
+documentNotFound did = resourceNotFound $ "A document with id" <+> didText <+> "was not found"
   where didText = T.pack (show did)
 
 resourceNotFound :: T.Text -> APIError
@@ -201,7 +201,7 @@ convertDocumentTypeShouldBe (SomeKontraException ex) =
 convertDocumentStatusShouldBe :: SomeKontraException -> SomeKontraException
 convertDocumentStatusShouldBe (SomeKontraException ex) =
   case cast ex of
-    Just (DocumentStatusShouldBe{}) ->  SomeKontraException $ documentStateError $ "Invalid document state "
+    Just (DocumentStatusShouldBe{}) ->  SomeKontraException $ documentStateError $ "Invalid document state"
     Nothing -> (SomeKontraException ex)
 
 convertUserShouldBeSelfOrCompanyAdmin :: SomeKontraException -> SomeKontraException
@@ -231,7 +231,7 @@ convertSignatoryHasNotYetSigned (SomeKontraException ex) =
 convertSignatoryIsNotPartner :: SomeKontraException -> SomeKontraException
 convertSignatoryIsNotPartner (SomeKontraException ex) =
   case cast ex of
-    Just (SignatoryIsNotPartner {}) ->  SomeKontraException $ signatoryStateError $ "Signatory should not sign this document "
+    Just (SignatoryIsNotPartner {}) ->  SomeKontraException $ signatoryStateError $ "Signatory should not sign this document"
     Nothing -> (SomeKontraException ex)
 
 convertSignatoryIsAuthor :: SomeKontraException -> SomeKontraException
@@ -267,19 +267,19 @@ convertDocumentWasPurged (SomeKontraException ex) =
 convertDocumentIsDeleted ::  SomeKontraException -> SomeKontraException
 convertDocumentIsDeleted (SomeKontraException ex) =
   case cast ex of
-    Just (DocumentIsDeleted {}) -> SomeKontraException $ documentStateError $ "The document is in Trash."
+    Just (DocumentIsDeleted {}) -> SomeKontraException $ documentStateError $ "The document is in Trash"
     Nothing -> (SomeKontraException ex)
 
 convertDocumentIsNotDeleted ::  SomeKontraException -> SomeKontraException
 convertDocumentIsNotDeleted (SomeKontraException ex) =
   case cast ex of
-    Just (DocumentIsNotDeleted {}) -> SomeKontraException $ documentStateError $ "The document is not in Trash."
+    Just (DocumentIsNotDeleted {}) -> SomeKontraException $ documentStateError $ "The document is not in Trash"
     Nothing -> (SomeKontraException ex)
 
 convertDocumentIsReallyDeleted ::  SomeKontraException -> SomeKontraException
 convertDocumentIsReallyDeleted (SomeKontraException ex) =
   case cast ex of
-    Just (DocumentIsReallyDeleted {}) -> SomeKontraException $ documentStateError $ "The document is deleted. It is not avaialbe and will be purged soon."
+    Just (DocumentIsReallyDeleted {}) -> SomeKontraException $ documentStateError $ "The document is deleted. It is not avaialbe and will be purged soon"
     Nothing -> (SomeKontraException ex)
 
 convertSignatoryAuthenticationToSignDoesNotMatch ::  SomeKontraException -> SomeKontraException

@@ -12,7 +12,6 @@ import qualified Data.Text as T
 import API.V2
 import DB
 import Doc.API.V2.JSONFields
-import Doc.API.V2.JSONMisc
 import Doc.API.V2.Parameters
 import Doc.DocStateData
 import Doc.DocumentMonad
@@ -33,11 +32,10 @@ import Util.SignatoryLinkUtils
 {- | Check if provided authorization values for sign call patch -}
 checkAuthenticationToSignMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
 checkAuthenticationToSignMethodAndValue slid = do
-  mAuthType <- apiV2ParameterOptional (ApiV2ParameterText "authentication_type")
-  case fmap textToAuthenticationToSignMethod mAuthType of
+  mAuthType <- apiV2ParameterOptional (ApiV2ParameterTextUnjson "authentication_type" unjsonDef)
+  case mAuthType of
     Nothing -> return ()
-    Just Nothing -> apiError $ requestParameterParseError "authentication_type" "Not a valid  authentication type, see our API documentation."
-    Just (Just authMethod) -> do
+    Just authMethod -> do
       siglink <- $fromJust . getSigLinkFor slid <$> theDocument
       let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
       when (not authOK) $

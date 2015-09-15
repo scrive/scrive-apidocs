@@ -75,11 +75,16 @@ api acc =  (toAPIResponse <$> acc) `catches` [
     Handler $ \ex@(SomeKontraException e) -> do
       -- API handler always returns a valid response. Due to that appHandler will not rollback - and we need to do it here
       rollback
-      logAttention "API v2 Error (may convert to error response):" $ object ["error" .= jsonToAeson (toJSValue e)]
       -- For some exceptions we do a conversion to APIError
       let ex' = tryToConvertConditionalExceptionIntoAPIError ex
-      return $ (toAPIResponse $ jsonFromSomeKontraException $ ex') {
-        rsCode = httpCodeFromSomeKontraException $ ex'
+
+      logAttention "API v2 Error:" $ object [
+        "error" .= jsonToAeson (toJSValue e),
+        "response_json" .= jsonToAeson (jsonFromSomeKontraException ex')
+        ]
+
+      return $ (toAPIResponse $ jsonFromSomeKontraException ex') {
+        rsCode = httpCodeFromSomeKontraException ex'
       }
   ]
 

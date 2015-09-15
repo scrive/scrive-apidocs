@@ -12,8 +12,8 @@ module Doc.API.V2.Guards (
 -- * Signatory guards
 , guardSignatoryNeedsToIdentifyToView
 , guardSignatoryHasNotSigned
--- * Access / Session guard
-, guardDocumentAccessSessionOrUser
+-- * Joined guard for read-only functions
+, guardDocumentReadAccess
 ) where
 
 import Control.Conditional (unlessM, whenM)
@@ -35,7 +35,7 @@ import Doc.SignatoryLinkID
 import InputValidation
 import Kontra
 import KontraPrelude
-import OAuth.Model (APIPrivilege)
+import OAuth.Model (APIPrivilege(..))
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -143,20 +143,21 @@ guardThatDocumentCanBeStarted = do
 --
 -- Get permissions using `getAPIUser` with given privileges.
 -- If the user account is not linked to the document then also guard extra
--- permissions using the given $User -> DocumentT m ()$ function, which can be
--- any guard from this module.
+-- permissions using guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
 --
 -- This is useful in all situations where a signatory or other users could use
--- the API call (e.g. document GET call)
-guardDocumentAccessSessionOrUser :: Kontrakcja m => DocumentID -> Maybe SignatoryLinkID -> APIPrivilege -> (User -> DocumentT m ()) -> m DocumentAccess
-guardDocumentAccessSessionOrUser did mslid apiPermission guardOnUser = do
+-- the API call (e.g. document GET call), but not that this function is focused only
+-- on ability to read document
+
+guardDocumentReadAccess :: Kontrakcja m => DocumentID -> Maybe SignatoryLinkID -> m DocumentAccess
+guardDocumentReadAccess did mslid   = do
   mSessionSignatory <- maybe (return Nothing) (getDocumentSignatoryMagicHash did) mslid
   case mSessionSignatory of
     Just sl -> withDocumentID did (documentAccessForSlid (signatorylinkid sl) <$> theDocument)
     Nothing -> withDocumentID did $ do
-      (user,_) <- getAPIUser apiPermission
+      (user,_) <- getAPIUser APIDocCheck
       doc <- theDocument
       case getSigLinkFor user doc of
         Just _ -> return ()
-        Nothing -> guardOnUser user
+        Nothing -> guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user
       return $ documentAccessForUser user doc

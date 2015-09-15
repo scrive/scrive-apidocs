@@ -14,6 +14,8 @@ import System.FilePath
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
+import qualified Data.Aeson as Aeson
+
 
 import API.V2
 import DB
@@ -25,7 +27,6 @@ import File.Model
 import Happstack.Fields
 import Kontra
 import LiveDocx
-import qualified Data.Aeson as Aeson
 
 data ApiV2Parameter a where
   ApiV2ParameterBool  :: T.Text -> ApiV2Parameter Bool
@@ -33,6 +34,8 @@ data ApiV2Parameter a where
   ApiV2ParameterText  :: T.Text -> ApiV2Parameter T.Text
   ApiV2ParameterRead  :: Read a => T.Text -> ApiV2Parameter a
   ApiV2ParameterJSON  :: T.Text -> UnjsonDef a -> ApiV2Parameter a
+  -- Param that is text, but we want to reuse definition from Unjson instance
+  ApiV2ParameterTextUnjson :: T.Text -> UnjsonDef a -> ApiV2Parameter a
   ApiV2ParameterAeson :: Aeson.FromJSON a => T.Text -> ApiV2Parameter a
   ApiV2ParameterFilePDF        :: T.Text -> ApiV2Parameter File
   ApiV2ParameterFilePDFOrImage :: T.Text -> ApiV2Parameter File
@@ -70,6 +73,7 @@ apiV2ParameterOptional (ApiV2ParameterBool name) = do
     Just _ -> apiError $ requestParameterParseError name "boolean value should be 'true' or 'false'"
     Nothing -> return Nothing
 
+
 apiV2ParameterOptional (ApiV2ParameterJSON name jsonDef) = do
   mValue <- getFieldBS (T.unpack name)
   case mValue of
@@ -79,6 +83,15 @@ apiV2ParameterOptional (ApiV2ParameterJSON name jsonDef) = do
         (Result res []) -> return $ Just res
         (Result _ errs) -> apiError $ requestParameterParseError name (T.pack (show errs))
     Nothing -> return Nothing
+
+apiV2ParameterOptional (ApiV2ParameterTextUnjson name jsonDef) = do
+  mValue <- getField (T.unpack name)
+  case mValue of
+    Just paramValue -> case (Unjson.parse jsonDef (Aeson.String $ T.pack paramValue)) of
+        (Result res []) -> return $ Just res
+        (Result _ errs) -> apiError $ requestParameterParseError name (T.pack (show errs))
+    Nothing -> return Nothing
+
 
 apiV2ParameterOptional (ApiV2ParameterAeson name) = do
   mValue <- getFieldBS (T.unpack name)
@@ -167,6 +180,7 @@ getParameterName (ApiV2ParameterInt n) = n
 getParameterName (ApiV2ParameterText n) = n
 getParameterName (ApiV2ParameterRead n) = n
 getParameterName (ApiV2ParameterJSON n _) = n
+getParameterName (ApiV2ParameterTextUnjson n _) = n
 getParameterName (ApiV2ParameterAeson n) = n
 getParameterName (ApiV2ParameterFilePDF n) = n
 getParameterName (ApiV2ParameterFilePDFOrImage n) = n

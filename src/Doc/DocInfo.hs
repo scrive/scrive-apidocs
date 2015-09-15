@@ -71,7 +71,7 @@ isDocumentError doc =  DocumentError == documentstatus doc
    Is document shared?
  -}
 isDocumentShared :: Document -> Bool
-isDocumentShared doc = Shared == documentsharing doc
+isDocumentShared doc = Shared == documentsharing doc && Template == documenttype doc
 
 {- |
   Get the time of the last signature as Int. Returns unixEpoch when there are no signatures.

@@ -78,7 +78,7 @@ docApiV2List = api $ do
 docApiV2Get :: Kontrakcja m => DocumentID -> m Response
 docApiV2Get did = logDocument did . api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
-  da <- guardDocumentAccessSessionOrUser did mslid APIDocCheck guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
+  da <- guardDocumentReadAccess did mslid
   withDocumentID did $ do
     Ok <$> (\d -> (unjsonDocument $ da,d)) <$> theDocument
 
@@ -112,7 +112,7 @@ docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ d
 docApiV2FilesMain :: Kontrakcja m => DocumentID -> String -> m Response
 docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
-  _ <- guardDocumentAccessSessionOrUser did mslid APIDocCheck guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
+  _ <- guardDocumentReadAccess did mslid
   when (isJust mslid) (withDocumentID did $ guardSignatoryNeedsToIdentifyToView $ $fromJust mslid)
   fileContents <- withDocumentID did $ do
     doc <- theDocument
@@ -136,7 +136,7 @@ docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
 docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
 docApiV2FilesGet did fid filename = logDocumentAndFile did fid . api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
-  _ <- guardDocumentAccessSessionOrUser did mslid APIDocCheck guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
+  _ <- guardDocumentReadAccess did mslid
   when (isJust mslid) (withDocumentID did $ guardSignatoryNeedsToIdentifyToView $ $fromJust mslid)
   doc <- dbQuery $ GetDocumentByDocumentID did
   let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++
