@@ -1,6 +1,33 @@
-define(["React", "signview/fileview/placement_mixin", "legacy_code"], function (React, PlacementMixin) {
+define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin", "legacy_code"],
+  function (React, PlacementMixin, TaskMixin) {
+
   return React.createClass({
-    mixins: [PlacementMixin],
+    mixins: [PlacementMixin, TaskMixin],
+
+    createTasks: function () {
+      var self = this;
+      var placement = self.props.model;
+      var field = placement.field();
+
+      if (!field.signatory().current()) {
+        return;
+      }
+
+      return [new PageTask({
+        type: "field",
+        field: field,
+        isComplete: function () {
+          return placement.field().readyForSign();
+        },
+        el: $(self.getDOMNode()),
+        label: localization.docsignview.signature,
+        pointSelector: ".button",
+        onArrowClick: function () {
+          self.activateSignatureModal();
+        },
+        tipSide: placement.tip()
+      })];
+    },
 
     activateSignatureModal: function () {
       var size = this.size();

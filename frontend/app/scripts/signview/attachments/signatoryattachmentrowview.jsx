@@ -1,12 +1,34 @@
-define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutton", "common/backbone_mixin"],
-  function (legacy_code, React, Backbone, NewButton, UploadButton, BackboneMixin) {
+define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutton", "common/backbone_mixin",
+  "signview/tasks/task_mixin"],
+  function (legacy_code, React, Backbone, NewButton, UploadButton, BackboneMixin, TaskMixin) {
 
   return React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model)
     },
 
-    mixins: [BackboneMixin.BackboneMixin],
+    mixins: [BackboneMixin.BackboneMixin, TaskMixin],
+
+    createTasks: function () {
+      var self = this;
+
+      return [new PageTask({
+        type: "signatory-attachment",
+        isComplete: function () {
+          return self.props.model.hasFile();
+        },
+        el: $(self.refs.uploadArea.getDOMNode()),
+        onArrowClick: function () {
+          self.refs.uploadButton.openFileDialogue();
+        },
+        onActivate: function () {
+          mixpanel.track("Begin attachment task");
+        },
+        onDeactivate: function () {
+          mixpanel.track("Finish attachment task");
+        }
+      })];
+    },
 
     getBackboneModels: function () {
       return [this.props.model];

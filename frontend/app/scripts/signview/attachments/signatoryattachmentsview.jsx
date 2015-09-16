@@ -7,24 +7,6 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
       model: React.PropTypes.instanceOf(Backbone.Model)
     },
 
-    openFileDialogue: function (index) {
-      var row = this.refs["attachmentRow-" + index];
-      if (row && row.refs.uploadButton) {
-        row.refs.uploadButton.openFileDialogue();
-      }
-    },
-
-    attachmentEls: function () {
-      var self = this;
-      var doc = self.props.model.document();
-      var rows = _.map(doc.currentSignatory().attachments(), function (attachment, i) {
-        var row = self.refs["attachmentRow-" + i];
-        return row && row.refs.uploadArea && row.refs.uploadArea.getDOMNode();
-      });
-
-      return rows;
-    },
-
     componentDidUpdate: function () {
       this.props.model.updateArrowPosition();
     },
@@ -42,23 +24,25 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
       var subtitle = localization.docsignview.signatoryAttachmentsSupportedFormats;
 
       return (
-        <div className="signatoryattachments">
-          <div className="header">
-            <h2>{title}</h2>
-            {/* if */ !hasSigned &&
-              <div className="subtitle">{subtitle}</div>
-            }
+        <div className="section spacing">
+          <div className="signatoryattachments">
+            <div className="header">
+              <h2>{title}</h2>
+              {/* if */ !hasSigned &&
+                <div className="subtitle">{subtitle}</div>
+              }
+            </div>
+            <table className="list">
+              <tbody>
+                {_.map(doc.currentSignatory().attachments(), function (attachment, i) {
+                  return (
+                    <SignatoryAttachmentRow ref={"attachmentRow-" + i} key={i} model={attachment} />
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="clearfix"></div>
           </div>
-          <table className="list">
-            <tbody>
-              {_.map(doc.currentSignatory().attachments(), function (attachment, i) {
-                return (
-                  <SignatoryAttachmentRow ref={"attachmentRow-" + i} key={i} model={attachment} />
-                );
-              })}
-            </tbody>
-          </table>
-          <div className="clearfix"></div>
         </div>
       );
     }

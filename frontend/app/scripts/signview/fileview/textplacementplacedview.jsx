@@ -1,7 +1,8 @@
-define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "legacy_code"],
-  function (React, InfoTextInput, PlacementMixin) {
+define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "signview/tasks/task_mixin",
+  "legacy_code"],
+  function (React, InfoTextInput, PlacementMixin, TaskMixin) {
   return React.createClass({
-    mixins: [PlacementMixin],
+    mixins: [PlacementMixin, TaskMixin],
 
     getInitialState: function () {
       return {editing: false};
@@ -15,6 +16,30 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "l
       if (!prevState.editing && this.state.editing) {
         this.focusInput();
       }
+    },
+
+    createTasks: function () {
+      var self = this;
+      var placement = self.props.model;
+      var field = placement.field();
+
+      if (!field.signatory().current()) {
+        return;
+      }
+
+      return [new PageTask({
+        type: "field",
+        field: field,
+        isComplete: function () {
+          return placement.field().readyForSign();
+        },
+        el: $(self.getDOMNode()),
+        label: localization.docsignview.textfield,
+        onArrowClick: function () {
+          self.startInlineEditing();
+        },
+        tipSide: placement.tip()
+      })];
     },
 
     focusInput: function () {
@@ -48,6 +73,10 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "l
       field.signatory().trigger("change");
       field.trigger("change:inlineedited");
       this.stopInlineEditing();
+    },
+
+    componentWillUnmount: function () {
+      console.log("unmount");
     },
 
     render: function () {

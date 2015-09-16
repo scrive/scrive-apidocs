@@ -20,13 +20,15 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
 
     componentWillMount: function () {
       var model = this.props.model;
-
       model.view = this;
-      model.fetch({
-        data: {signatoryid: model.signatoryid()},
-        processData: true,
-        cache: false
-      });
+
+      if (!model.ready()) {
+        model.fetch({
+          data: {signatoryid: model.signatoryid()},
+          processData: true,
+          cache: false
+        });
+      }
     },
 
     componentDidUpdate: function (prevProps, prevState) {

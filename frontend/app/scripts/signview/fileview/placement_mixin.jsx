@@ -8,20 +8,10 @@ define(["Backbone", "React", "common/backbone_mixin", "legacy_code"], function (
       arrow: React.PropTypes.func.isRequired
     },
 
-    el: null,
-
     mixins: [BackboneMixin.BackboneMixin],
 
     getBackboneModels: function () {
       return [this.props.model, this.props.model.field()];
-    },
-
-    componentWillMount: function () {
-      this.props.model.view = this;
-    },
-
-    componentDidMount: function () {
-      this.el = this.getDOMNode();
     },
 
     dimensions: function () {

@@ -1,8 +1,9 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/button"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, Button) {
+define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
+  "signview/tasks/task_mixin"],
+  function (legacy_code, _, Backbone, React, BackboneMixin, Button, TaskMixin) {
 
   return React.createClass({
-    mixins: [BackboneMixin.BackboneMixin],
+    mixins: [BackboneMixin.BackboneMixin, TaskMixin],
 
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
@@ -11,6 +12,29 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
 
     getBackboneModels: function () {
       return [this.props.model];
+    },
+
+    createTasks: function () {
+      var self = this;
+      var model = self.props.model;
+
+      return [new PageTask({
+        type: "sign",
+        label: localization.docsignview.signArrowLabel,
+        onArrowClick: function () {
+          self.activateSignConfirmation();
+        },
+        isComplete: function () {
+          return !model.document().currentSignatoryCanSign();
+        },
+        el:  $(self.signButtonNode()),
+        onActivate: function () {
+          mixpanel.track("Begin signature task");
+        },
+        onDeactivate: function () {
+          mixpanel.track("Finish signature task");
+        }
+      })];
     },
 
     componentDidMount: function () {

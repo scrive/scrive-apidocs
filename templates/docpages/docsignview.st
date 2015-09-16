@@ -76,62 +76,36 @@ $htmlopentag()$
   </head>
 
   <body  $if(usestandardheaders)$ $if(custombackground)$style="background:$custombackground$;"$endif$    $endif$ >
+    $flashmessages()$
     $if(usestandardheaders)$
     $wrapperopentag()$
     $header()$
     $endif$
-    <div class="signview">
-      <div class="mainContainer" >
-        $flashmessages()$
-        <div class="body-container">
-          <script>
-           require(['jquery', 'React' , 'signview/header', 'signview/footer', 'legacy_code'], function(jQuery,React,Header,Footer) {
+    <div class="place-for-signview"></div>
+    <script>
+     require(['jquery', 'React', 'signview/signview', 'legacy_code'], function(jQuery, React, SignView) {
+        jQuery(function(){
+          React.render(React.createElement(SignView, {
+            documentId: "$documentid$",
+            sigLinkId: "$siglinkid$",
+            allowSaveSafetyCopy: $if(allowsavesafetycopy)$ true $else$ false $endif$,
+            authorFullname: "$authorFullname$",
+            authorPhone: "$authorPhone$",
+            useStandardHeaders: $if(usestandardheaders)$ true $else$ false $endif$
+          }), jQuery(".place-for-signview")[0]);
+        });
 
-              jQuery(function(){
-                  var docview = new DocumentSignView({
-                      id:"$documentid$",
-                      allowsavesafetycopy : $if(allowsavesafetycopy)$ true $else$ false $endif$,
-                      viewer : new DocumentViewer({
-                          signatoryid : "$siglinkid$"
-                         })
-                  });
+        mixpanel.register({
+          Context : 'Sign view',
+          DocumentID : "$documentid$",
+          'Signatory ID' : $siglinkid$
+        });
 
-
-                $if(!usestandardheaders)$
-
-                  var headerDiv = jQuery('<div/>');
-                  var component = React.render(React.createElement(Header,{
-                      document: docview.model.document(),
-                      documentid:"$documentid$",
-                      signatorylinkid : "$siglinkid$",
-                      authorFullname : "$authorFullname$",
-                      authorPhone : "$authorPhone$"
-                    }), headerDiv[0]);
-
-                  var footerDiv = jQuery('<div/>');
-                  var component = React.render(React.createElement(Footer,{
-                      document: docview.model.document()
-                    }), footerDiv[0]);
-                  jQuery('.signview').prepend(headerDiv);
-                  jQuery('.signview').append(footerDiv);
-
-                $endif$
-               jQuery(".body-container").replaceWith(docview.view.el);
-              });
-
-              mixpanel.register({
-                Context : 'Sign view',
-                DocumentID : "$documentid$",
-                'Signatory ID' : $siglinkid$
-              });
-              mixpanel.people.set({
-               'Last document sign view' : new Date()
-              });
-           });
-         </script>
-        </div>
-      </div>
-    </div>
+        mixpanel.people.set({
+         'Last document sign view' : new Date()
+        });
+     });
+   </script>
     $if(usestandardheaders)$
     $pageFooter()$
     $wrapperclosingtag()$
@@ -149,65 +123,48 @@ $htmlopentag()$
     $scaleReset()$
   </head>
   <body>
-    <div class="signview">
-      <div class="mainContainer" >
-        $flashmessages()$
+    <div class="place-for-signview"></div>
+    <script>
+     require(['jquery', 'React', 'signview/signview', 'legacy_code'], function(jQuery, React, SignView) {
+        jQuery(function(){
+          var link = {};
+          var forceShowing = false;
+          var target = LocalStorage.get("backlink", "target");
+          if (target == "to-sign") {
+            link.text= localization.pad.backToList;
+            link.onClick = function() {window.location = "/to-sign"};
+            forceShowing = true;
+          } else if (target == "to-start") {
+            link.text = localization.toStart.backFromSigningPage;
+            link.onClick = function() {window.location = "/ts/$documentid$"};
+          } else {
+            link.text = localization.pad.backToDocument;
+            link.onClick = function() {window.location = "/d/$documentid$"};
+          }
 
-        <div class="body-container">
-          <script>
-           require(['jquery', 'React' , 'signview/header', 'signview/footer', 'legacy_code'], function(jQuery,React,Header,Footer) {
+          React.render(React.createElement(SignView, {
+            documentId: "$documentid$",
+            sigLinkId: "$siglinkid$",
+            allowSaveSafetyCopy: $if(allowsavesafetycopy)$ true $else$ false $endif$,
+            authorFullname: "$authorFullname$",
+            authorPhone: "$authorPhone$",
+            useStandardHeaders: $if(usestandardheaders)$ true $else$ false $endif$,
+            link: link,
+            forceShowing: forceShowing
+          }), jQuery(".place-for-signview")[0]);
+        });
 
-              jQuery(function(){
-                  var docview = new DocumentSignView({
-                      id:"$documentid$",
-                      allowsavesafetycopy : false,
-                      viewer : new DocumentViewer({
-                          signatoryid : "$siglinkid$"
-                      })
-                  });
+        mixpanel.register({
+          Context : 'Sign view for pad',
+          DocumentID : "$documentid$",
+          'Signatory ID' : $siglinkid$
+        });
 
-              var headerDiv = jQuery('<div/>');
-              var link = {};
-              var headerOpts = {document: docview.model.document(), link: link};
-              var target = LocalStorage.get("backlink", "target");
-              if (target == "to-sign") {
-                link.text= localization.pad.backToList;
-                link.onClick = function() {window.location = "/to-sign"};
-                headerOpts.forceShowing = true;
-              } else if (target == "to-start") {
-                link.text = localization.toStart.backFromSigningPage;
-                link.onClick = function() {window.location = "/ts/$documentid$"};
-              } else {
-                link.text = localization.pad.backToDocument;
-                link.onClick = function() {window.location = "/d/$documentid$"};
-              }
-
-              var component = React.render(React.createElement(Header, headerOpts), headerDiv[0]);
-
-              var footerDiv = jQuery('<div/>');
-              var component = React.render(React.createElement(Footer,{
-                   document: docview.model.document()
-                }), footerDiv[0]);
-              jQuery('.signview').prepend(headerDiv);
-              jQuery('.signview').append(footerDiv);
-
-              jQuery(".body-container").replaceWith(docview.view.el);
-            });
-
-              mixpanel.register({
-                Context : 'Sign view for pad',
-                DocumentID : "$documentid$",
-                'Signatory ID' : $siglinkid$
-              });
-
-              mixpanel.people.set({
-               'Last document sign view' : new Date()
-              });
-           });
-         </script>
-        </div>
-      </div>
-    </div>
+        mixpanel.people.set({
+         'Last document sign view' : new Date()
+        });
+     });
+    </script>
   </body>
 $htmlclosingtag()$
 ####

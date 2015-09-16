@@ -22,16 +22,18 @@ define(["legacy_code", "Underscore", "Backbone", "React", "signview/attachments/
       });
 
       return (
-        <div className="authorattachments">
-          <h2>{title}</h2>
-          <table className="list">
-            <tbody>
-              {_.map(attachments, function (attachment, index) {
-                return <AuthorAttachmentRow key={index} canSign={canSign} model={attachment} />;
-              })}
-            </tbody>
-          </table>
-          <div className="clearfix"></div>
+        <div className="section spacing">
+          <div className="authorattachments">
+            <h2>{title}</h2>
+            <table className="list">
+              <tbody>
+                {_.map(attachments, function (attachment, index) {
+                  return <AuthorAttachmentRow key={index} canSign={canSign} model={attachment} />;
+                })}
+              </tbody>
+            </table>
+            <div className="clearfix"></div>
+          </div>
         </div>
       );
     }

@@ -1,20 +1,82 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/infotextinput"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, InfoTextInput) {
+define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/infotextinput",
+  "signview/tasks/task_mixin"],
+  function (legacy_code, _, Backbone, React, BackboneMixin, InfoTextInput, TaskMixin) {
 
   return React.createClass({
-    mixins: [BackboneMixin.BackboneMixin],
+    mixins: [BackboneMixin.BackboneMixin, TaskMixin],
 
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      askForName: React.PropTypes.bool.isRequired,
-      askForEmail: React.PropTypes.bool.isRequired,
-      askForSSN: React.PropTypes.bool.isRequired,
-      askForPhone: React.PropTypes.bool.isRequired
+      signview: React.PropTypes.instanceOf(Backbone.Model).isRequired
+    },
+
+    getInitialState: function () {
+      return {
+        askForName: false,
+        askForEmail: false,
+        askForSSN: false,
+        askForPhone: false
+      };
+    },
+
+    componentWillMount: function () {
+      var signview = this.props.signview;
+
+      this.setState({
+        askForName: signview.askForName(),
+        askForEmail: signview.askForEmail(),
+        askForSSN: signview.askForSSN(),
+        askForPhone: signview.askForPhone()
+      });
     },
 
     getBackboneModels: function () {
       return [this.props.model];
+    },
+
+    createTaskFromName: function (name, isComplete) {
+      var ref = this.refs[name];
+
+      return new PageTask({
+        type: "extra-details",
+        label: localization.docsignview.textfield,
+        onArrowClick: function () {
+          ref.focus();
+        },
+        isComplete: isComplete,
+        el: $(ref.getDOMNode())
+      });
+    },
+
+    createTasks: function () {
+      var signview = this.props.signview;
+      var tasks = [];
+
+      if (this.state.askForName) {
+        tasks.push(this.createTaskFromName("name", function () {
+          return !signview.askForName();
+        }));
+      }
+
+      if (this.state.askForEmail) {
+        tasks.push(this.createTaskFromName("email", function () {
+          return !signview.askForEmail();
+        }));
+      }
+
+      if (this.state.askForSSN) {
+        tasks.push(this.createTaskFromName("ssn", function () {
+          return !signview.askForSSN();
+        }));
+      }
+
+      if (this.state.askForPhone) {
+        tasks.push(this.createTaskFromName("phone", function () {
+          return !signview.askForPhone();
+        }));
+      }
+
+      return tasks;
     },
 
     render: function () {
@@ -47,10 +109,10 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       });
 
       return (
-        <span>
+        <div className="section spacing extradetails">
           <h2 className="title">Om dig</h2>
           <div className="column spacing fillbox">
-            {/* if */ this.props.askForName &&
+            {/* if */ this.state.askForName &&
               <InfoTextInput
                 ref="name"
                 className={nameClass}
@@ -77,7 +139,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
                 }}
               />
             }
-            {/* if */ this.props.askForEmail &&
+            {/* if */ this.state.askForEmail &&
               <InfoTextInput
                 ref="email"
                 className={emailClass}
@@ -86,7 +148,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
                 onChange={function (value) {emailField.setValue(value);}}
               />
             }
-            {/* if */ this.props.askForSSN &&
+            {/* if */ this.state.askForSSN &&
               <InfoTextInput
                 ref="ssn"
                 className={ssnClass}
@@ -95,7 +157,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
                 onChange={function (value) {ssnField.setValue(value);}}
               />
             }
-            {/* if */ this.props.askForPhone &&
+            {/* if */ this.state.askForPhone &&
               <InfoTextInput
                 ref="phone"
                 className={phoneClass}
@@ -106,7 +168,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
             }
           </div>
           <div className="clearfix" />
-        </span>
+        </div>
       );
     }
   });

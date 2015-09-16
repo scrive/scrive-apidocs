@@ -58,7 +58,6 @@ define([
   '../js/doctools/docevidenceattachments',
   '../js/signview/docsignviewextradetailssection',
   '../js/signview/docsignviewsignsection',
-  '../js/signview/docsignview',
   '../js/signview/docsignviewsigningprogressmodal',
   '../js/designview/documentview',
   '../js/designview/docdesignview',
