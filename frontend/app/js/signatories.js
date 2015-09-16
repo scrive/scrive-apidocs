@@ -769,7 +769,7 @@ window.Signatory = Backbone.Model.extend({
                 f.addedByMe = true;
                 signatory.addField(f);
             } else {
-               pn.setObligatoryAndShouldBeFilledBySender(true, signatory.needsPersonalNumberFilledByAuthor() || pn.shouldbefilledbysender());
+               pn.setObligatoryAndShouldBeFilledBySender(true, signatory.needsPersonalNumberFilledByAuthor() || (pn.hasPlacements() && pn.shouldbefilledbysender()));
             }
         } else {
             if(pn && pn.addedByMe && pn.value() === '' && !pn.hasPlacements()) {
