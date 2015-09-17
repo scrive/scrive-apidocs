@@ -32,7 +32,7 @@ import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.DocumentUpdateUtils
 import Doc.API.V2.Guards
-import Doc.API.V2.JSONDocument
+import Doc.API.V2.JSON.Document
 import Doc.API.V2.Parameters
 import Doc.Action
 import Doc.Anchors

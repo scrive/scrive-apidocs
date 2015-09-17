@@ -1,4 +1,4 @@
-module Doc.API.V2.JSONDocument (
+module Doc.API.V2.JSON.Document (
   unjsonDocument
 , listToJSONBS
 ) where
@@ -9,12 +9,12 @@ import Data.Unjson
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import Data.ByteString.Builder
 
-import Doc.API.V2.DisplayOptions
+import Doc.API.V2.JSON.DisplayOptions
 import Doc.API.V2.DocumentAccess
-import Doc.API.V2.DocumentViewer
-import Doc.API.V2.JSONFields
-import Doc.API.V2.JSONMisc
-import Doc.API.V2.UnjsonUtils
+import Doc.API.V2.JSON.DocumentViewer
+import Doc.API.V2.JSON.Fields
+import Doc.API.V2.JSON.Misc
+import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.DocUtils
 import KontraLink

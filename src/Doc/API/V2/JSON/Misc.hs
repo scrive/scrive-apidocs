@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Doc.API.V2.JSONMisc (
+module Doc.API.V2.JSON.Misc (
   utcTimeToAPIFormat
 , unjsonMaybeMainFile
 , evidenceAttachmentsToJSONBS
@@ -19,7 +19,7 @@ import MagicHash
 import DB.TimeZoneName
 import Data.Functor.Invariant
 import Data.Unjson
-import Doc.API.V2.UnjsonUtils
+import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryLinkID

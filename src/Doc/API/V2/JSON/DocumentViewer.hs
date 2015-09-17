@@ -1,4 +1,4 @@
-module Doc.API.V2.DocumentViewer (
+module Doc.API.V2.JSON.DocumentViewer (
   DocumentViewer(..)
 , unjsonDocumentViewer
 , viewerForDocument
@@ -8,8 +8,8 @@ import Data.Unjson
 import qualified Data.Text as T
 
 import Doc.API.V2.DocumentAccess
-import Doc.API.V2.JSONMisc()
-import Doc.API.V2.UnjsonUtils
+import Doc.API.V2.JSON.Misc()
+import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.SignatoryLinkID
 import KontraPrelude

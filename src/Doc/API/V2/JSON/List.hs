@@ -1,4 +1,4 @@
-module Doc.API.V2.JSONList (
+module Doc.API.V2.JSON.List (
   toDocumentSorting
 , toDocumentFilter
 ) where
@@ -8,8 +8,8 @@ import Data.Unjson
 import qualified Data.Text as T
 
 import DB
-import Doc.API.V2.JSONMisc()
-import Doc.API.V2.UnjsonUtils
+import Doc.API.V2.JSON.Misc()
+import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.Model.OrderBy
 import KontraPrelude

@@ -14,8 +14,8 @@ import DB
 import Doc.API.V2.Calls.SignatoryCallsUtils
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
-import Doc.API.V2.JSONDocument
-import Doc.API.V2.JSONFields
+import Doc.API.V2.JSON.Document
+import Doc.API.V2.JSON.Fields
 import Doc.API.V2.Parameters
 import Doc.Action
 import Doc.DocControl

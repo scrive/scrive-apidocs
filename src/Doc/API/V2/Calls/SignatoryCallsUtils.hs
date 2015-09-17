@@ -11,7 +11,7 @@ import qualified Data.Text as T
 
 import API.V2
 import DB
-import Doc.API.V2.JSONFields
+import Doc.API.V2.JSON.Fields
 import Doc.API.V2.Parameters
 import Doc.DocStateData
 import Doc.DocumentMonad

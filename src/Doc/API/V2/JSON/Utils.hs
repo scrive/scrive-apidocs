@@ -1,4 +1,4 @@
-module Doc.API.V2.UnjsonUtils (
+module Doc.API.V2.JSON.Utils (
   unjsonEnumBy
 , unjsonEnum
 , nothingToNullDef

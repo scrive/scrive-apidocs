@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Doc.API.V2.JSONFields (
+module Doc.API.V2.JSON.Fields (
   unjsonSignatoryFields
 , unjsonSignatoryFieldsValues
 , SignatoryFieldTMPValue(..)
@@ -13,8 +13,8 @@ import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.Text as T
 
 import Control.Applicative.Free
-import Doc.API.V2.JSONMisc()
-import Doc.API.V2.UnjsonUtils
+import Doc.API.V2.JSON.Misc()
+import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import KontraPrelude

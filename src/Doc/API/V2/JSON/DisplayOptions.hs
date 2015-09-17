@@ -1,4 +1,4 @@
-module Doc.API.V2.DisplayOptions (
+module Doc.API.V2.JSON.DisplayOptions (
   documentDisplayOptions
 , applyDisplayOptionsToDocument
 ) where

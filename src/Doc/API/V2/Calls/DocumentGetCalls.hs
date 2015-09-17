@@ -23,9 +23,9 @@ import AppView (respondWithPDF)
 import DB
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
-import Doc.API.V2.JSONDocument
-import Doc.API.V2.JSONList
-import Doc.API.V2.JSONMisc (evidenceAttachmentsToJSONBS)
+import Doc.API.V2.JSON.Document
+import Doc.API.V2.JSON.List
+import Doc.API.V2.JSON.Misc (evidenceAttachmentsToJSONBS)
 import Doc.API.V2.Parameters
 import Doc.Data.MainFile
 import Doc.DocSeal (presealDocumentFile)

@@ -7,8 +7,8 @@ module Doc.API.V2.Parameters (
 ) where
 
 import Control.Monad.IO.Class
-import Happstack.Server.RqData
-import Happstack.Server.Types
+import Control.Monad.Catch
+import Happstack.Server
 import KontraPrelude
 import System.FilePath
 import qualified Data.ByteString.Char8 as BS
@@ -165,7 +165,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
 -- * Internal
 
 -- | Helper function for all parameters that can just be parsed using `maybeRead`
-apiParameterUsingMaybeRead :: (Kontrakcja m, Read a) => T.Text -> m (Maybe a)
+apiParameterUsingMaybeRead :: (HasRqData m,ServerMonad m, MonadThrow m, Read a) => T.Text -> m (Maybe a)
 apiParameterUsingMaybeRead name = do
   mValue <- getField $ T.unpack name
   case fmap maybeRead mValue of
