@@ -107,113 +107,118 @@ return React.createClass({
     var sig = this.props.model;
     return (
       <div className="design-view-action-participant-details-participation">
+        <div className="design-view-action-participant-details-participation-row">
 
-        <span className="design-view-action-participant-details-participation-box">
-          <label className="label">{localization.designview.addParties.invitationOrder}</label>
-          <Select
-            ref="order-select"
-            name={LanguageService.localizedOrdinal(sig.signorder())}
-            width={148}
-            options={self.signorderOptions()}
-            onSelect={function (v) {
-              mixpanel.track("Choose sign order", {
-                Where: "select"
-              });
-              sig.setSignOrder(v);
-            }}
-          />
-        </span>
+          <span className="design-view-action-participant-details-participation-box">
+            <label className="label">{localization.designview.addParties.invitationOrder}</label>
+            <Select
+              ref="order-select"
+              name={LanguageService.localizedOrdinal(sig.signorder())}
+              width={297}
+              options={self.signorderOptions()}
+              onSelect={function (v) {
+                mixpanel.track("Choose sign order", {
+                  Where: "select"
+                });
+                sig.setSignOrder(v);
+              }}
+            />
+          </span>
 
-        <span className="design-view-action-participant-details-participation-box">
-          <label className="label">{localization.designview.addParties.invitation}</label>
-          <Select
-            ref="delivery-select"
-            name={self.deliveryText(sig.isLastViewer() ? "none" : sig.delivery())}
-            width={148}
-            options={self.deliveryOptions()}
-            onSelect={function (v) {
-              mixpanel.track("Choose delivery method", {
-                Where: "select"
-              });
-              if (!sig.isLastViewer()) {
-                sig.setDelivery(v);
+          <span className="design-view-action-participant-details-participation-box">
+            <label className="label">{localization.designview.addParties.invitation}</label>
+            <Select
+              ref="delivery-select"
+              name={self.deliveryText(sig.isLastViewer() ? "none" : sig.delivery())}
+              width={297}
+              options={self.deliveryOptions()}
+              onSelect={function (v) {
+                mixpanel.track("Choose delivery method", {
+                  Where: "select"
+                });
+                if (!sig.isLastViewer()) {
+                  sig.setDelivery(v);
+                }
+              }}
+            />
+          </span>
+
+          <span className="design-view-action-participant-details-participation-box">
+            <label className="label">{localization.designview.addParties.authenticationToView}</label>
+            <Select
+              ref="delivery-select"
+              name={self.authenticationToViewText(sig.signs() ? sig.authenticationToView() : "standard")}
+              width={297}
+              options={self.authenticationToViewOptions()}
+              onSelect={function (v) {
+                mixpanel.track("Choose auth", {
+                  Where: "select"
+                });
+                sig.setAuthenticationToView(v);
+              }}
+            />
+          </span>
+        </div>
+
+        <div className="design-view-action-participant-details-participation-row last-row">
+
+          <span className="design-view-action-participant-details-participation-box">
+            <label className="label">{localization.designview.addParties.role}</label>
+            <Select
+              ref="role-select"
+              name={
+                sig.signs() ?
+                localization.designview.addParties.roleSignatory :
+                localization.designview.addParties.roleViewer
               }
-            }}
-          />
-        </span>
+              width={297}
+              options={self.roleOptions()}
+              onSelect={function (v) {
+                mixpanel.track("Choose participant role", {
+                  Where: "Icon"
+                });
+                if (v === "signatory") {
+                  sig.makeSignatory();
+                } else if (v === "viewer") {
+                  sig.makeViewer();
+                }
+              }}
+            />
+          </span>
 
-        <span className="design-view-action-participant-details-participation-box">
-          <label className="label">{localization.designview.addParties.authenticationToView}</label>
-          <Select
-            ref="delivery-select"
-            name={self.authenticationToViewText(sig.signs() ? sig.authenticationToView() : "standard")}
-            width={148}
-            options={self.authenticationToViewOptions()}
-            onSelect={function (v) {
-              mixpanel.track("Choose auth", {
-                Where: "select"
-              });
-              sig.setAuthenticationToView(v);
-            }}
-          />
-        </span>
+          <span className="design-view-action-participant-details-participation-box">
+            <label className="label">{localization.designview.addParties.authenticationToSign}</label>
+            <Select
+              ref="authentication-select"
+              name={self.authenticationToSignText(sig.signs() ? sig.authenticationToSign() : "standard")}
+              width={297}
+              options={self.authenticationToSignOptions()}
+              onSelect={function (v) {
+                mixpanel.track("Choose auth", {
+                  Where: "select"
+                });
+                sig.setAuthenticationToSign(v);
+              }}
+            />
+          </span>
 
-        <span className="design-view-action-participant-details-participation-box">
-          <label className="label">{localization.designview.addParties.role}</label>
-          <Select
-            ref="role-select"
-            name={
-              sig.signs() ?
-              localization.designview.addParties.roleSignatory :
-              localization.designview.addParties.roleViewer
-            }
-            width={148}
-            options={self.roleOptions()}
-            onSelect={function (v) {
-              mixpanel.track("Choose participant role", {
-                Where: "Icon"
-              });
-              if (v === "signatory") {
-                sig.makeSignatory();
-              } else if (v === "viewer") {
-                sig.makeViewer();
-              }
-            }}
-          />
-        </span>
+          <span className="design-view-action-participant-details-participation-box">
+            <label className="label">{localization.designview.addParties.confirmation}</label>
+            <Select
+              ref="confirmation-delivery-select"
+              name={self.confirmationDeliveryText(sig.confirmationdelivery())}
+              width={297}
+              options={self.confirmationDeliveryOptions()}
+              onSelect={function (v) {
+                mixpanel.track("Choose confirmation delivery method", {
+                  Where: "select"
+                });
+                sig.setConfirmationDelivery(v);
+              }}
+            />
+          </span>
 
-        <span className="design-view-action-participant-details-participation-box">
-          <label className="label">{localization.designview.addParties.authenticationToSign}</label>
-          <Select
-            ref="authentication-select"
-            name={self.authenticationToSignText(sig.signs() ? sig.authenticationToSign() : "standard")}
-            width={148}
-            options={self.authenticationToSignOptions()}
-            onSelect={function (v) {
-              mixpanel.track("Choose auth", {
-                Where: "select"
-              });
-              sig.setAuthenticationToSign(v);
-            }}
-          />
-        </span>
-
-        <span className="design-view-action-participant-details-participation-box">
-          <label className="label">{localization.designview.addParties.confirmation}</label>
-          <Select
-            ref="confirmation-delivery-select"
-            name={self.confirmationDeliveryText(sig.confirmationdelivery())}
-            width={148}
-            options={self.confirmationDeliveryOptions()}
-            onSelect={function (v) {
-              mixpanel.track("Choose confirmation delivery method", {
-                Where: "select"
-              });
-              sig.setConfirmationDelivery(v);
-            }}
-          />
-        </span>
-
+        </div>
       </div>
     );
   }
