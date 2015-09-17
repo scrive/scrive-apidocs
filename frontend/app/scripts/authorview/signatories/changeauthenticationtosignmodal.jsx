@@ -4,10 +4,6 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
   function (React, BackboneMixin, Backbone, Select) {
 
   var ChangeAuthenticationModalModel = Backbone.Model.extend({
-    defaults: {
-      newAuthenticationValueInvalid: false
-    },
-
     initialize: function (args) {
       this.setNewAuthenticationMethod(this.signatory().authenticationToSign());
     },
@@ -26,14 +22,6 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
 
     newAuthenticationValue: function () {
       return this.get("newAuthenticationValue");
-    },
-
-    newAuthenticationValueInvalid: function () {
-      return this.get("newAuthenticationValueInvalid");
-    },
-
-    setNewAuthenticationValueInvalid: function (v) {
-      this.set({newAuthenticationValueInvalid: v});
     },
 
     setNewAuthenticationMethod: function (method) {
@@ -141,7 +129,6 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
 
     setAuthenticationValue: function (event) {
       var model = this.props.model;
-      model.setNewAuthenticationValueInvalid(false);
       model.setNewAuthenticationValue(event.target.value);
     },
 
@@ -192,8 +179,11 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
         if (model.newAuthenticationMethod == "eleg") {
           return false;
         // If we are setting SMS PIN and signatory has authenticated to view
-        // using NO BankID, we cannot change phone number
-        } else if (model.newAuthenticationMethod == "sms_pin" && signatory.authenticationToView() == "no_bankid") {
+        // using NO BankID with a valid mobile, we cannot change phone number
+        } else if (model.newAuthenticationMethod == "sms_pin"
+            && signatory.authenticationToView() == "no_bankid"
+            && signatory.mobile != ""
+        ) {
           return false;
         }
       } else {
@@ -219,7 +209,7 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
             <div>
               <label>{this.getAuthenticationValueLabelText()}</label>
               <div
-                className={model.newAuthenticationValueInvalid() ?
+                className={model.isAuthenticationValueInvalid() ?
                   "info-text-input obligatory-input" : "info-text-input"
                 }
               >
@@ -256,7 +246,6 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
         var authvalue = model.newAuthenticationValue();
 
         if (model.isAuthenticationValueInvalid()) {
-          model.setNewAuthenticationValueInvalid(true);
           new FlashMessage({content: model.getAuthenticationValueInvalidFlashMessageText(), type: "error"});
           return false;
         }
@@ -274,7 +263,7 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
           args.onAction();
         }, function (err) {
           LoadingDialog.close();
-          new FlashMessage({content: localization.docview.changeAuthentication.errorSigned, type: "error"});
+          new FlashMessage({content: localization.docview.changeAuthentication.errorFlashMessage, type: "error"});
         });
 
         return true;

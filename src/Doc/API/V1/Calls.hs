@@ -711,8 +711,8 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
         SMSPinAuthenticationToSign -> case maybeAuthValue of
           Nothing -> return ()
           Just val -> do
-            -- If the signatory has authenticated to view with NOBankIDAuthenticationToView, then we can't change the phone number!
-            when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView && signatorylinkidentifiedtoview sl && val /= getMobile sl) $
+            -- If the signatory has authenticated to view with NOBankIDAuthenticationToView and a valid number, then we can't change the phone number!
+            when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView && signatorylinkidentifiedtoview sl && getMobile sl /= "" && val /= getMobile sl) $
               throwIO . SomeKontraException $ badInput "The signatory has authenticated to view with Norwegian BankID, therefore you can't change the phone number"
             -- If given a phone number we need to make sure it doesn't invalidate NOBankIDAuthenticationToView
             when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $

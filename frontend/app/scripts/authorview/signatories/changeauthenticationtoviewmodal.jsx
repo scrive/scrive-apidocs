@@ -4,9 +4,6 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
   function (React, BackboneMixin, Backbone, Select) {
 
   var ChangeAuthenticationToViewModalModel = Backbone.Model.extend({
-    defaults: {
-    },
-
     initialize: function (args) {
       this.setAuthenticationMethod(this.signatory().authenticationToView());
     },
@@ -188,7 +185,9 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
     getPersonalNumberPlaceholderText: function () {
       var model = this.props.model;
       var text = "";
-      if (model.isAuthenticationNOBankID()) {
+      if (model.isAuthenticationSEBankID()) {
+        text = localization.docview.changeAuthenticationToView.ssnSEBankIDPlaceholder;
+      } else if (model.isAuthenticationNOBankID()) {
         text = localization.docview.changeAuthenticationToView.ssnNOBankIDPlaceholder;
       }
       return text;

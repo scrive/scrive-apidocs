@@ -657,6 +657,7 @@ javascriptLocalisation =
               , accept: "$_docviewChangeAuthenticationToViewModalAccept()$"
               , methodLabel: "$_docviewChangeAuthenticationToViewModalMethodLabel()$"
               , ssnSEBankIDLabel: "$_docviewChangeAuthenticationToViewModalSEBankIDSSNLabel()$"
+              , ssnSEBankIDPlaceholder: "$_docviewChangeAuthenticationToViewModalSEBankIDPlaceholder()$"
               , ssnNOBankIDLabel: "$_docviewChangeAuthenticationToViewModalNOBankIDSSNLabel()$"
               , ssnNOBankIDPlaceholder: "$_docviewChangeAuthenticationToViewModalNOBankIDPlaceholder()$"
               , phoneLabel: "$_docviewChangeAuthenticationToViewModalPhoneLabel()$"
@@ -673,7 +674,7 @@ javascriptLocalisation =
               , placeholderEID: "$_docviewChangeAuthenticationModalPlaceholderEID()$"
               , placeholderPhone: "$_docviewChangeAuthenticationModalPlaceholderPhone()$"
               , valueInfotext: "$_docviewChangeAuthenticationModalValueInfotext()$"
-              , errorSigned: "$_docviewChangeAuthenticationModalErrorSigned()$"
+              , errorFlashMessage: "$_docviewChangeAuthenticationModalErrorFlashMessage()$"
               , errorPhone: "$_docviewChangeAuthenticationModalErrorPhone()$"
               , errorEID: "$_docviewChangeAuthenticationModalErrorEID()$"
             }

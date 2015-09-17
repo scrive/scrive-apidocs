@@ -59,29 +59,29 @@ ChangeSignatoryEmailWhenUndeliveredEvidenceLog=The user <span class="actor"/> ch
 ###
 ChangeSignatoryPhoneWhenUndeliveredEvidenceLog=The user <span class="actor"/> changed the phone number for the party from $oldphone$ to $newphone$.
 ###
-ChangeAuthenticationToViewMethodStandardToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “standard” to “Swedish BankID”.
+ChangeAuthenticationToViewMethodStandardToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “no extra authentication” to “Swedish BankID”.
 ###
-ChangeAuthenticationToViewMethodStandardToNOBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “standard” to “Norwegian BankID”.
+ChangeAuthenticationToViewMethodStandardToNOBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “no extra authentication” to “Norwegian BankID”.
 ###
-ChangeAuthenticationToViewMethodSEBankIDToStandardEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Swedish BankID” to “standard”.
+ChangeAuthenticationToViewMethodSEBankIDToStandardEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Swedish BankID” to “no extra authentication”.
 ###
 ChangeAuthenticationToViewMethodSEBankIDToNOBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Swedish BankID” to “Norwegian BankID”.
 ###
-ChangeAuthenticationToViewMethodNOBankIDToStandardEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Norwegian BankID” to “standard”.
+ChangeAuthenticationToViewMethodNOBankIDToStandardEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Norwegian BankID” to “no extra authentication”.
 ###
 ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Norwegian BankID” to “Swedish BankID”.
 ###
-ChangeAuthenticationToSignMethodStandardToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “eID”.
+ChangeAuthenticationToSignMethodStandardToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “Swedish BankID”.
 ###
 ChangeAuthenticationToSignMethodStandardToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “PIN by SMS”.
 ###
-ChangeAuthenticationToSignMethodSEBankIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “eID” to “no extra authentication”.
+ChangeAuthenticationToSignMethodSEBankIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Swedish BankID” to “no extra authentication”.
 ###
-ChangeAuthenticationToSignMethodSEBankIDToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “eID” to “PIN by SMS”.
+ChangeAuthenticationToSignMethodSEBankIDToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Swedish BankID” to “PIN by SMS”.
 ###
 ChangeAuthenticationToSignMethodSMSToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “PIN by SMS” to “no extra authentication”.
 ###
-ChangeAuthenticationToSignMethodSMSToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “PIN by SMS” to “eID”.
+ChangeAuthenticationToSignMethodSMSToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “PIN by SMS” to “Swedish BankID”.
 ###
 ###
 CloseDocumentEvidenceLog=Scrive eSign locked the document from further modifications by the parties.
