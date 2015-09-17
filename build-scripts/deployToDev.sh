@@ -18,6 +18,10 @@ supervisorctl stop dev-cron dev-messenger dev-mailer dev
 
 ./dist/build/kontrakcja-migrate/kontrakcja-migrate
 
+rsync -avz -e ssh --delete /home/dev/kontrakcja/frontend/dist/ /srv/dev.scrive.com
+
+chcon -Rt httpd_sys_content_t /srv/dev.scrive.com
+
 supervisorctl start dev-cron dev-messenger dev-mailer dev
 
 EOF
