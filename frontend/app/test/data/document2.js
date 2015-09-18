@@ -1,31 +1,35 @@
 define(["legacy_code"], function () {
   return {
-      "accesstoken": "388f5e5e1afe659c",
+      "accesstoken": "",
       "apicallbackurl": null,
       "authentication": "standard",
-      "authorattachments": [],
+      "authorattachments": [
+          {
+              "id": "106",
+              "name": "contract.pdf"
+          }
+      ],
       "autoremindtime": null,
       "canbecanceled": false,
       "canbeprolonged": false,
       "canberestarted": false,
-      "canperformsigning": false,
-      "canseeallattachments": true,
+      "canseeallattachments": false,
       "confirmationmessage": "",
-      "ctime": "2015-03-03T10:22:37Z",
+      "ctime": "2015-09-18T09:34:45Z",
       "daystoremind": null,
-      "daystosign": 14,
+      "daystosign": 90,
       "deleted": false,
-      "delivery": "email",
+      "delivery": "pad",
       "evidenceattachments": [],
       "file": {
-          "id": "135",
+          "id": "105",
           "name": "contract.pdf"
       },
-      "id": "1",
+      "id": "2",
       "invitationmessage": "",
-      "isviewedbyauthor": true,
+      "isviewedbyauthor": false,
       "lang": "sv",
-      "objectversion": 2,
+      "objectversion": 11,
       "process": "Contract",
       "reallydeleted": false,
       "saved": false,
@@ -38,20 +42,21 @@ define(["legacy_code"], function () {
           {
               "attachments": [],
               "authentication": "standard",
+              "authenticationToView": "standard",
               "author": true,
               "confirmationdelivery": "email",
               "csv": null,
-              "current": true,
+              "current": false,
               "datamismatch": null,
               "deliveredInvitation": false,
-              "delivery": "email",
+              "delivery": "pad",
               "fields": [
                   {
                       "closed": false,
                       "name": "fstname",
                       "obligatory": true,
                       "placements": [],
-                      "shouldbefilledbysender": true,
+                      "shouldbefilledbysender": false,
                       "type": "standard",
                       "value": ""
                   },
@@ -60,16 +65,16 @@ define(["legacy_code"], function () {
                       "name": "sndname",
                       "obligatory": true,
                       "placements": [],
-                      "shouldbefilledbysender": true,
+                      "shouldbefilledbysender": false,
                       "type": "standard",
                       "value": ""
                   },
                   {
-                      "closed": false,
+                      "closed": true,
                       "name": "email",
                       "obligatory": true,
                       "placements": [],
-                      "shouldbefilledbysender": true,
+                      "shouldbefilledbysender": false,
                       "type": "standard",
                       "value": "test-1@skrivapa.se"
                   },
@@ -83,7 +88,7 @@ define(["legacy_code"], function () {
                       "value": ""
                   }
               ],
-              "id": "114",
+              "id": "90",
               "inpadqueue": false,
               "readdate": null,
               "rejecteddate": null,
@@ -91,32 +96,49 @@ define(["legacy_code"], function () {
               "rejectredirect": null,
               "saved": true,
               "seendate": null,
-              "signdate": null,
+              "signdate": "2015-09-18T09:35:37Z",
               "signorder": 1,
               "signs": true,
               "signsuccessredirect": null,
-              "status": "draft",
+              "status": "signed",
               "undeliveredInvitation": false,
               "undeliveredMailInvitation": false,
               "undeliveredSMSInvitation": false,
               "userid": "1"
           },
           {
-              "attachments": [],
+              "attachments": [
+                  {
+                      "description": "weqwewqe",
+                      "file": null,
+                      "name": "qwewqe"
+                  }
+              ],
               "authentication": "standard",
+              "authenticationToView": "standard",
               "author": false,
               "confirmationdelivery": "email",
               "csv": null,
-              "current": false,
+              "current": true,
               "datamismatch": null,
               "deliveredInvitation": false,
-              "delivery": "email",
+              "delivery": "pad",
               "fields": [
                   {
                       "closed": false,
                       "name": "fstname",
-                      "obligatory": false,
-                      "placements": [],
+                      "obligatory": true,
+                      "placements": [
+                          {
+                              "fsrel": 0.016967127,
+                              "hrel": 0.025468165,
+                              "page": 1,
+                              "tip": "right",
+                              "wrel": 0.081654295,
+                              "xrel": 0.22587487,
+                              "yrel": 0.06516854
+                          }
+                      ],
                       "shouldbefilledbysender": false,
                       "type": "standard",
                       "value": ""
@@ -124,7 +146,7 @@ define(["legacy_code"], function () {
                   {
                       "closed": false,
                       "name": "sndname",
-                      "obligatory": false,
+                      "obligatory": true,
                       "placements": [],
                       "shouldbefilledbysender": false,
                       "type": "standard",
@@ -133,7 +155,7 @@ define(["legacy_code"], function () {
                   {
                       "closed": false,
                       "name": "email",
-                      "obligatory": false,
+                      "obligatory": true,
                       "placements": [],
                       "shouldbefilledbysender": false,
                       "type": "standard",
@@ -165,21 +187,59 @@ define(["legacy_code"], function () {
                       "shouldbefilledbysender": false,
                       "type": "standard",
                       "value": ""
+                  },
+                  {
+                      "closed": false,
+                      "name": "Kryssruta 1",
+                      "obligatory": true,
+                      "placements": [
+                          {
+                              "fsrel": 0.01590668,
+                              "hrel": 0.007490637,
+                              "page": 1,
+                              "tip": "left",
+                              "wrel": 0.010604454,
+                              "xrel": 0.46871686,
+                              "yrel": 0.09363296
+                          }
+                      ],
+                      "shouldbefilledbysender": false,
+                      "type": "checkbox",
+                      "value": ""
+                  },
+                  {
+                      "closed": false,
+                      "name": "Signatur 1",
+                      "obligatory": true,
+                      "placements": [
+                          {
+                              "fsrel": 0.01590668,
+                              "hrel": 0.0764045,
+                              "page": 1,
+                              "tip": "right",
+                              "wrel": 0.2757158,
+                              "xrel": 0.65959704,
+                              "yrel": 0.08239701
+                          }
+                      ],
+                      "shouldbefilledbysender": false,
+                      "type": "signature",
+                      "value": ""
                   }
               ],
-              "id": "115",
+              "id": "1",
               "inpadqueue": false,
               "readdate": null,
               "rejecteddate": null,
               "rejectionreason": null,
               "rejectredirect": null,
               "saved": false,
-              "seendate": null,
+              "seendate": "2015-09-18T09:35:44Z",
               "signdate": null,
               "signorder": 1,
               "signs": true,
               "signsuccessredirect": null,
-              "status": "draft",
+              "status": "opened",
               "undeliveredInvitation": false,
               "undeliveredMailInvitation": false,
               "undeliveredSMSInvitation": false,
@@ -187,12 +247,12 @@ define(["legacy_code"], function () {
           }
       ],
       "signorder": 1,
-      "state": "Preparation",
-      "status": "Preparation",
+      "state": "Pending",
+      "status": "Pending",
       "tags": [],
       "template": false,
-      "time": "2015-03-03T10:23:01Z",
-      "timeouttime": null,
+      "time": "2015-09-18T09:35:37Z",
+      "timeouttime": "2015-12-17T22:59:59Z",
       "timezone": "Europe/Berlin",
       "title": "contract"
   };

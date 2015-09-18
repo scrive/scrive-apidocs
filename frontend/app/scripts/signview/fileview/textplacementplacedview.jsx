@@ -75,10 +75,6 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
       this.stopInlineEditing();
     },
 
-    componentWillUnmount: function () {
-      console.log("unmount");
-    },
-
     render: function () {
       var self = this;
       var field = self.props.model.field();

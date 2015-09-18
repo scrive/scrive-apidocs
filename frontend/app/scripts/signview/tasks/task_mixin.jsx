@@ -14,41 +14,35 @@ define(["React"], function (React) {
 
       var tasks = self.createTasks();
 
-      if (typeof tasks === "undefined") {
-        return ;
+      if (tasks instanceof Array) {
+        self._tasks = tasks;
+
+        tasks.forEach(function (task) {
+          self.context.addTask(task);
+        });
       }
-
-      self._tasks = tasks;
-
-      tasks.forEach(function (task) {
-        self.context.addTask(task);
-      });
     },
 
     componentDidUpdate: function () {
       var self = this;
       var tasks = self._tasks;
 
-      if (typeof tasks === "undefined") {
-        return ;
+      if (tasks instanceof Array) {
+        tasks.forEach(function (task) {
+          task.update();
+        });
       }
-
-      tasks.forEach(function (task) {
-        task.update();
-      });
     },
 
     componentWillUnmount: function () {
       var self = this;
       var tasks = self._tasks;
 
-      if (typeof tasks === "undefined") {
-        return ;
+      if (tasks instanceof Array) {
+        tasks.forEach(function (task) {
+          self.context.removeTask(task);
+        });
       }
-
-      tasks.forEach(function (task) {
-        self.context.removeTask(task);
-      });
     }
   };
 });

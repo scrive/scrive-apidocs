@@ -3,6 +3,27 @@ define(["legacy_code", "React"], function(legacy_code, React) {
 
   var TestUtils = React.addons.TestUtils;
 
+  var taskContextContainer = exports.taskContextContainer = function (comp, props) {
+    return React.createElement(React.createClass({
+      childContextTypes: {
+        addTask: React.PropTypes.func.isRequired,
+        removeTask: React.PropTypes.func.isRequired
+      },
+
+      getChildContext: function () {
+        return {
+          addTask: function (task) { },
+          removeTask: function (task) { }
+        };
+      },
+
+      render: function () {
+        props.ref = "comp";
+        return React.createElement(comp, props);
+      }
+    }));
+  };
+
   var createDocument = exports.createDocument = function (cb) {
     var doc = new Document({ id: 0 });
     doc.fetch({ processData: true, cache: false });
@@ -12,6 +33,16 @@ define(["legacy_code", "React"], function(legacy_code, React) {
         cb(doc);
       });
     });
+  };
+
+  var waitUntil = exports.waitUntil = function (fn, cb) {
+    if (fn()) {
+      return cb();
+    }
+
+    setTimeout(function () {
+      waitUntil(fn, cb);
+    }, 10);
   };
 
   var createDesignView = exports.createDesignView = function (cb) {

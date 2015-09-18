@@ -4,8 +4,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
     propTypes: {
       model: React.PropTypes.instanceOf(File).isRequired,
       signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      arrow: React.PropTypes.func.isRequired,
-      onReady: React.PropTypes.func
+      arrow: React.PropTypes.func.isRequired
     },
 
     mixins: [BackboneMixin.BackboneMixin],
@@ -32,9 +31,13 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
     },
 
     componentDidUpdate: function (prevProps, prevState) {
+      var signview = this.props.signview;
+
       if (this.props.model.pages().length !== this.state.images.length) {
         this.updateImages();
       }
+
+      signview.updateArrow();
     },
 
     ready: function () {
@@ -92,9 +95,6 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       if (this.ready()) {
         this.forceUpdate();
         this.props.model.trigger("view:ready");
-        if (this.props.onReady) {
-          this.props.onReady();
-        }
       }
     },
 

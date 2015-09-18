@@ -329,6 +329,7 @@ window.PageTasksArrow = function(args){
             , enable   : function()    { view.enable(); }
             , disable  : function()    { view.disable(); }
             , updatePosition: function() { view.updatePosition();}
+            , updateArrow: function() { view.updateArrow();}
             , goToCurrentTask: function() { view.goToCurrentTask();}
             , deletePageTasksArrow: function() { view.deletePageTasksArrowView(); model.deletePageTasks(); }
             , notCompletedTasks: function() { return model.notCompletedTasks(); }

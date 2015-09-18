@@ -6,8 +6,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
     mixins: [BackboneMixin.BackboneMixin, TaskMixin],
 
     propTypes: {
-      model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      onMount: React.PropTypes.func
+      model: React.PropTypes.instanceOf(Backbone.Model).isRequired
     },
 
     getBackboneModels: function () {
@@ -35,12 +34,6 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
           mixpanel.track("Finish signature task");
         }
       })];
-    },
-
-    componentDidMount: function () {
-      if (this.props.onMount) {
-        this.props.onMount();
-      }
     },
 
     signButtonNode: function () {

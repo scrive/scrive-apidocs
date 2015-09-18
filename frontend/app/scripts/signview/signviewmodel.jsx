@@ -2,15 +2,17 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
         "signview/attachments/signatoryattachmentsview", "signview/instructionsview/instructionsview",
         "signview/attachments/authorattachmentsview", "signview/extradetails/extradetailsview",
         "signview/signsection/signsectionview", "common/retargeting_service",
-        "signview/fileview/fileclass", "Backbone", "Underscore", "legacy_code"],
+         "Backbone", "Underscore", "legacy_code"],
   function (React, CreateAccountSection, DocumentViewSignatories,
             SignatoryAttachmentsView, InstructionsView, AuthorAttachmentsView,
-            ExtraDetailsView, SignSectionView, RetargetingService, FileClass,
+            ExtraDetailsView, SignSectionView, RetargetingService,
             Backbone, _) {
 
     return Backbone.Model.extend({
     defaults: {
       hasChangedPin: false,
+      hasTakenFirstScreenshot: false,
+      hasSentTrackingData: false,
       tasks: []
     },
 
@@ -72,12 +74,8 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
       return this.document().ready() && this.document().mainfile() != undefined;
     },
 
-    noMainFile: function () {
-      return this.document().ready() && this.document().mainfile() == undefined;
-    },
-
     hasAnySection: function () {
-      return this.hasMainFileSection()
+      return this.isReady()
         || this.hasAuthorAttachmentsSection()
         || this.hasExtraDetailsSection()
         || this.hasSignatoriesAttachmentsSection()
@@ -91,10 +89,6 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
 
     hasRejectOption: function () {
       return this.document().showrejectoption();
-    },
-
-    hasMainFileSection: function () {
-      return this.document().ready() && this.document().mainfile() != undefined;
     },
 
     hasSignSection: function () {
@@ -199,7 +193,13 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
       }
     },
 
+    hasDonePostRenderTasks: function () {
+      return this.get("hasSentTrackingData") && this.get("hasTakenFirstScreenshot");
+    },
+
     sendTrackingData: function () {
+      this.set({hasSentTrackingData: true}, {silent: true});
+
       var signatory = this.document().currentSignatory();
 
       var sps = {};
@@ -228,6 +228,8 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
     },
 
     takeFirstScreenshotWithDelay: function () {
+      this.set({hasTakenFirstScreenshot: true}, {silent: true});
+
       var doc = this.document();
 
       setTimeout(function () {
@@ -239,21 +241,21 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
       var tasks = this.get("tasks");
       var newTasks = tasks.concat([task]);
       this.set({tasks: newTasks});
-      this.updateArrow();
+      this.clearArrow();
     },
 
     removeTask: function (task) {
       var tasks = this.get("tasks");
       tasks = _.without(tasks, task);
       this.set({tasks: tasks});
-      this.updateArrow();
+      this.clearArrow();
     },
 
     tasks: function () {
       return new PageTasks({tasks: this.get("tasks")});
     },
 
-    updateArrow: function () {
+    clearArrow: function () {
       this.set("arrow", undefined, {silent: true});
     },
 
@@ -270,8 +272,16 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
     },
 
     updateArrowPosition: function () {
-      if (this.get("arrow") != undefined) {
-        this.get("arrow").updatePosition();
+      var arrow = this.get("arrow");
+      if (arrow) {
+        arrow.updatePosition();
+      }
+    },
+
+    updateArrow: function () {
+      var arrow = this.get("arrow");
+      if (arrow) {
+        arrow.updateArrow();
       }
     },
 

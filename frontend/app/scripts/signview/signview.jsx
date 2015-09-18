@@ -67,6 +67,8 @@ define([
       removeTask: React.PropTypes.func.isRequired
     },
 
+    // Contexts are an undocumented built in feature of React.
+    // https://discuss.reactjs.org/t/documentation-on-context/130
     getChildContext: function () {
       var model = this.state.model;
 
@@ -81,9 +83,21 @@ define([
       };
     },
 
+    isReady: function () {
+      return this.state.model.isReady();
+    },
+
     componentDidMount: function () {
       this.state.model.recall();
       ReloadManager.pushBlock(this.state.model.blockReload);
+    },
+
+    componentDidUpdate: function () {
+      var model = this.state.model;
+      if (model.isReady() && model.hasSignSection() && !model.hasDonePostRenderTasks()) {
+        model.sendTrackingData();
+        model.takeFirstScreenshotWithDelay();
+      }
     },
 
     getBackboneModels: function () {
@@ -131,29 +145,21 @@ define([
                   {/* if */ model.hasCreateAccountSection() &&
                     <CreateAccountSection document={doc} />
                   }
-                  {/* if */ model.hasMainFileSection() &&
-                    <FileView model={doc.mainfile()} signview={model} arrow={arrow} />
-                  }
+                  <FileView model={doc.mainfile()} signview={model} arrow={arrow} />
                   {/* if */ model.hasAuthorAttachmentsSection() &&
                     <AuthorAttachmentsView model={doc} />
                   }
-                  {/* if */ model.hasExtraDetailsSection() &&
-                    <ExtraDetailsView model={doc.currentSignatory()} signview={model} />
-                  }
                   {/* if */ model.hasSignatoriesAttachmentsSection() &&
                     <SignatoryAttachmentsView model={model} />
+                  }
+                  {/* if */ model.hasExtraDetailsSection() &&
+                    <ExtraDetailsView model={doc.currentSignatory()} signview={model} />
                   }
                   {/* if */ model.hasSignatoriesSection() &&
                     <DocumentViewSignatories document={doc} />
                   }
                   {/* if */ model.hasSignSection() &&
-                    <SignSectionView
-                      model={model}
-                      onMount={function () {
-                        model.sendTrackingData();
-                        model.takeFirstScreenshotWithDelay();
-                      }}
-                    />
+                    <SignSectionView model={model} />
                   }
                   {/* if */ model.hasAnySection() && <div className="clearfix" />}
                 </div>

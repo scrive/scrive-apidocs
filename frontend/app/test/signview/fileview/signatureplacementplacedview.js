@@ -26,7 +26,7 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/s
         });
         var field = placement.field();
 
-        var signaturePlacement = TestUtils.renderIntoDocument(React.createElement(SignaturePlacementPlacedView, {
+        var container = TestUtils.renderIntoDocument(util.taskContextContainer(SignaturePlacementPlacedView, {
           model: placement,
           width: 800,
           height: 600,
@@ -38,6 +38,8 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/s
             }
           },
         }));
+
+        var signaturePlacement = container.refs.comp;
 
         signaturePlacement.activateSignatureModal();
 

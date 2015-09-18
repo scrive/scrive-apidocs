@@ -148,16 +148,16 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone", "legacy_c
             {/* if */ signatory.companynumber() &&
               <div className="fieldrow">
                 <span className="orgnum field" title={signatory.companynumber()}>
-                  {localization.docsignview.companyNumberLabel}:
-                  {signatory.companynumber().trim() || localization.docsignview.notEntered}
+                  {localization.docsignview.companyNumberLabel + ": " +
+                    (signatory.companynumber().trim() || localization.docsignview.notEntered)}
                 </span>
               </div>
             }
             {/* if */ signatory.personalnumber() &&
               <div className="fieldrow">
                 <span className="persnum field" title={signatory.personalnumber()}>
-                  {localization.docsignview.personalNumberLabel}:
-                  {signatory.personalnumber().trim() || localization.docsignview.notEntered}
+                  {localization.docsignview.personalNumberLabel + ": " +
+                    (signatory.personalnumber().trim() || localization.docsignview.notEntered)}
                 </span>
               </div>
             }

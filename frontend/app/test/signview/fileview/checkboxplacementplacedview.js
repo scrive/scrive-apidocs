@@ -23,13 +23,15 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/c
 
         var field = placement.field();
 
-        var checkboxPlacement = TestUtils.renderIntoDocument(React.createElement(CheckboxPlacementPlacedView, {
+        var container = TestUtils.renderIntoDocument(util.taskContextContainer(CheckboxPlacementPlacedView, {
           model: placement,
           width: 800,
           height: 600,
           signview: new SignView(),
           arrow: function () { },
         }));
+
+        var checkboxPlacement = container.refs.comp;
 
         assert.equal(field.value(), "", "checkbox should be unchecked");
 

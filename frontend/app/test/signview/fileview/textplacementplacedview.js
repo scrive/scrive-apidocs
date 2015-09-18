@@ -19,13 +19,15 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/t
       it("should test component", function () {
         var placement = util.addPlacement(doc);
 
-        var textPlacement = TestUtils.renderIntoDocument(React.createElement(TextPlacementPlacedView, {
+        var container = TestUtils.renderIntoDocument(util.taskContextContainer(TextPlacementPlacedView, {
           model: placement,
           width: 800,
           height: 600,
           signview: new SignView(),
           arrow: function () { },
         }));
+
+        var textPlacement = container.refs.comp;
 
         textPlacement.startInlineEditing();
 

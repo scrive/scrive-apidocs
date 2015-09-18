@@ -31,7 +31,7 @@ define(["legacy_code", "backend", "util", "React", "signview/extradetails/extrad
 
         var signview = new SignView();
 
-        var extradetails = TestUtils.renderIntoDocument(React.createElement(ExtradetailsView, {
+        var container = TestUtils.renderIntoDocument(util.taskContextContainer(ExtradetailsView, {
           model: sig,
           signview: signview,
           askForPhone: signview.askForPhone(),
@@ -39,6 +39,8 @@ define(["legacy_code", "backend", "util", "React", "signview/extradetails/extrad
           askForEmail: signview.askForEmail(),
           askForName: signview.askForName()
         }));
+
+        var extradetails = container.refs.comp;
 
         var inputs = TestUtils.scryRenderedDOMComponentsWithTag(extradetails, "input");
 

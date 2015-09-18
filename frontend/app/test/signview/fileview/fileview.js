@@ -18,7 +18,7 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/f
     });
 
     describe("FileView", function () {
-      it("should test component", function (done) {
+      it("should test component", function () {
         var placement = util.addPlacement(doc);
         var field = placement.field();
         var file = doc.mainfile();
@@ -26,11 +26,7 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/f
         var fileView = TestUtils.renderIntoDocument(React.createElement(FileView, {
           model: file,
           signview: new SignView(),
-          arrow: function () { },
-          onReady: function () {
-            assert.ok(fileView.readyFirstPage(), "first page should be ready");
-            done();
-          }
+          arrow: function () { }
         }));
       });
     });

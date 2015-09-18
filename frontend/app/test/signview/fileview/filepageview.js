@@ -33,7 +33,7 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/f
 
         img.addEventListener("load", function () {
 
-          var filePageView = TestUtils.renderIntoDocument(React.createElement(FilePageView, {
+          var container = TestUtils.renderIntoDocument(util.taskContextContainer(FilePageView, {
             model: page,
             signview: new SignView(),
             arrow: function () { },
@@ -42,6 +42,8 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/f
             imageWidth: img.width,
             imageHeight: img.height
           }));
+
+          var filePageView = container.refs.comp;
 
           filePageView.handleChange();
 

@@ -1,4 +1,4 @@
-define(["legacy_code", "sinon", "../test/data/document", "../test/data/file"], function(legacy_code, sinon, doc, file) {
+define(["legacy_code", "sinon", "../test/data/document", "../test/data/document2", "../test/data/file"], function(legacy_code, sinon, doc1, doc2, file) {
   var exports = {};
 
   exports.createServer = function () {
@@ -20,7 +20,12 @@ define(["legacy_code", "sinon", "../test/data/document", "../test/data/file"], f
     });
 
     server.respondWith(/\/api\/frontend\/get\/(\d+)/, function (xhr, id) {
-      var clone = _.clone(doc);
+      var clone;
+      if (id == 2) {
+        clone = _.clone(doc2);
+      } else {
+        clone = _.clone(doc1);
+      }
       clone.id = id;
       xhr.respond(200, { "Content-Type": "application/json" }, JSON.stringify(clone));
     });

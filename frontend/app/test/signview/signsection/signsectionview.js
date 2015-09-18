@@ -49,10 +49,12 @@ define(["legacy_code", "backend", "util", "React", "signview/signsection/signsec
         var signview = new SignView();
         signview.setDocument(doc);
 
-        var sectionView = TestUtils.renderIntoDocument(React.createElement(SignSectionView, {
+        var container = TestUtils.renderIntoDocument(util.taskContextContainer(SignSectionView, {
           model: signview,
           noScreenshot: true
         }));
+
+        var sectionView = container.refs.comp;
 
         TestUtils.Simulate.click(sectionView.signButtonNode());
         TestUtils.Simulate.click(sectionView.refs.rejectButton.getDOMNode());
@@ -63,12 +65,15 @@ define(["legacy_code", "backend", "util", "React", "signview/signsection/signsec
           var signview = new SignView();
           signview.setDocument(doc);
 
-          var sectionView = TestUtils.renderIntoDocument(React.createElement(SignSectionView, {
+          var container = TestUtils.renderIntoDocument(util.taskContextContainer(SignSectionView, {
             model: signview,
             noScreenshot: true
           }));
 
+          var sectionView = container.refs.comp;
+
           TestUtils.Simulate.click(sectionView.signButtonNode());
+
           done();
         });
       });

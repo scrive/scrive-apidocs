@@ -34,9 +34,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       return [this.props.model];
     },
 
-    createTaskFromName: function (name, isComplete) {
-      var ref = this.refs[name];
-
+    createTaskFromRef: function (ref, isComplete) {
       return new PageTask({
         type: "extra-details",
         label: localization.docsignview.textfield,
@@ -53,25 +51,25 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var tasks = [];
 
       if (this.state.askForName) {
-        tasks.push(this.createTaskFromName("name", function () {
+        tasks.push(this.createTaskFromRef(this.refs.name, function () {
           return !signview.askForName();
         }));
       }
 
       if (this.state.askForEmail) {
-        tasks.push(this.createTaskFromName("email", function () {
+        tasks.push(this.createTaskFromRef(this.refs.email, function () {
           return !signview.askForEmail();
         }));
       }
 
       if (this.state.askForSSN) {
-        tasks.push(this.createTaskFromName("ssn", function () {
+        tasks.push(this.createTaskFromRef(this.refs.ssn, function () {
           return !signview.askForSSN();
         }));
       }
 
       if (this.state.askForPhone) {
-        tasks.push(this.createTaskFromName("phone", function () {
+        tasks.push(this.createTaskFromRef(this.refs.phone, function () {
           return !signview.askForPhone();
         }));
       }
@@ -110,7 +108,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
 
       return (
         <div className="section spacing extradetails">
-          <h2 className="title">Om dig</h2>
+          <h2 className="title">{localization.docsignview.filladitionfieldslabel}</h2>
           <div className="column spacing fillbox">
             {/* if */ this.state.askForName &&
               <InfoTextInput
