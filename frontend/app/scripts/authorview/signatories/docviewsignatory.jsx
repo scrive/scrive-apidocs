@@ -360,16 +360,16 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
             {/* if */ signatory.companynumber() &&
               <div className="fieldrow">
                 <span className="orgnum field" title={signatory.companynumber()}>
-                  {localization.docsignview.companyNumberLabel}:
-                  {signatory.companynumber().trim() || localization.docsignview.notEntered}
+                  {localization.docsignview.companyNumberLabel + ": " +
+                    (signatory.companynumber().trim() || localization.docsignview.notEntered)}
                 </span>
               </div>
             }
             {/* if */ signatory.personalnumber() &&
               <div className="fieldrow">
                 <span className="persnum field" title={signatory.personalnumber()}>
-                  {localization.docsignview.personalNumberLabel}:
-                  {signatory.personalnumber().trim() || localization.docsignview.notEntered}
+                  {localization.docsignview.personalNumberLabel + ": " +
+                    (signatory.personalnumber().trim() || localization.docsignview.notEntered)}
                 </span>
               </div>
             }
@@ -378,8 +378,8 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
             <div className="inner fields">
               <div className="fieldrow">
                 <span className="signorder field" title={LanguageService.localizedOrdinal(signatory.signorder())}>
-                  {localization.docview.signatory.invitationOrder}:
-                  {LanguageService.localizedOrdinal(signatory.signorder())}
+                  {localization.docview.signatory.invitationOrder + ": " +
+                    (LanguageService.localizedOrdinal(signatory.signorder()))}
                 </span>
               </div>
               <div className="fieldrow">
