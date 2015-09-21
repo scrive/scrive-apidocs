@@ -46,7 +46,7 @@ tableCronWorkers = tblTable {
 tableCronJobs :: Table
 tableCronJobs = tblTable {
     tblName = "cron_jobs"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblColumns = [
     -- Type of the task.
       tblColumn { colName = "id", colType = TextT, colNullable = False }
@@ -72,22 +72,23 @@ tableCronJobs = tblTable {
   where
     tasks :: [ByteString]
     tasks = [
-        "amazon_deletion"
-      , "amazon_upload"
+        "amazon_upload"
       , "async_events_processing"
       , "clock_error_collection"
       , "document_automatic_reminders_evaluation"
-      , "documents_purge"
       , "documents_archive_idle"
+      , "documents_purge"
       , "email_change_requests_evaluation"
       , "find_and_do_post_document_closed_actions"
       , "find_and_do_post_document_closed_actions_new"
       , "find_and_extend_digital_signatures"
       , "find_and_timeout_documents"
       , "mail_events_processing"
+      , "mark_orphan_files_for_purge"
       , "old_drafts_removal"
       , "old_logs_removal"
       , "password_reminders_evaluation"
+      , "purge_orphan_file"
       , "recurly_synchronization"
       , "sessions_evaluation"
       , "sms_events_processing"

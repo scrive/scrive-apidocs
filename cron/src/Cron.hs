@@ -33,6 +33,7 @@ import Doc.Model
 import HostClock.Collector (collectClockError)
 import KontraPrelude hiding (All)
 import Log.Configuration
+import Log.Identifier
 import Log.Model
 import Log.Utils
 import Mails.Events
@@ -125,9 +126,6 @@ main = do
     , ccProcessJob = \CronJob{..} -> logHandlerInfo cjType $ do
       logInfo_ "Processing job"
       action <- case cjType of
-        AmazonDeletion -> do -- This one should be renamed to FilesPurge
-          runScheduler purgeSomeFiles
-          return . RerunAfter $ ihours 1
         AmazonUpload -> do
           if AWS.isAWSConfigOk $ amazonConfig appConf
             then do
@@ -180,6 +178,16 @@ main = do
         MailEventsProcessing -> do
           runScheduler Mails.Events.processEvents
           return . RerunAfter $ iseconds 5
+        MarkOrphanFilesForPurge -> do
+          let maxMarked = 1000
+          fids <- runDB . dbUpdate . MarkOrphanFilesForPurgeAfter maxMarked $ idays 7
+          logInfo "Orphan files marked for purge" $ object [
+              identifiers fids
+            ]
+          -- If maximum amount of files was marked, run it again shortly after.
+          if length fids == maxMarked
+            then return . RerunAfter $ iseconds 1
+            else RerunAt . nextDayMidnight <$> currentTime
         OldDraftsRemoval -> do
           runScheduler $ do
             delCount <- dbUpdate $ RemoveOldDrafts 100
@@ -204,6 +212,11 @@ main = do
         PasswordRemindersEvaluation -> do
           runScheduler $ actionQueue passwordReminder
           return . RerunAfter $ ihours 1
+        PurgeOrphanFile -> do
+          found <- runScheduler purgeOrphanFile
+          return . RerunAfter $ if found
+                                then iseconds 1
+                                else iminutes 1
         RecurlySynchronization -> do
           time <- runDB $ do
             time <- currentTime

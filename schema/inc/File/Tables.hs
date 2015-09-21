@@ -6,7 +6,7 @@ import KontraPrelude
 tableFiles :: Table
 tableFiles = tblTable {
     tblName = "files"
-  , tblVersion = 6
+  , tblVersion = 7
   , tblColumns = [
       tblColumn { colName = "id",            colType = BigSerialT,  colNullable = False }
     , tblColumn { colName = "name",          colType = TextT,       colNullable = False }
@@ -18,6 +18,10 @@ tableFiles = tblTable {
     , tblColumn { colName = "aes_key",       colType = BinaryT }
     , tblColumn { colName = "aes_iv",        colType = BinaryT }
     , tblColumn { colName = "purged_time",   colType = TimestampWithZoneT }
+    , tblColumn { colName = "purge_at",      colType = TimestampWithZoneT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
+  , tblIndexes = [
+      (indexOnColumn "purge_at") { idxWhere = Just "purged_time IS NOT NULL" }
+    ]
   }

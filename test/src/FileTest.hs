@@ -76,16 +76,18 @@ testFileMovedToAWS  = replicateM_ 100 $ do
 
 testPurgeFiles :: TestEnv ()
 testPurgeFiles  = replicateM_ 100 $ do
+  let maxMarked = 1000
   (name,content) <- fileData
-  _fileid' <- dbUpdate $ NewFile name $ Binary content
-
-  -- here we might purge some other file that is a left over in the
-  -- database from former test but that is ok
-  [(idx,_,_,_)] <- dbQuery $ FindFilesForPurging 1
-  dbUpdate $ PurgeFile idx
+  fid <- dbUpdate $ NewFile name $ Binary content
+  fidsToPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
+  assertEqual "File successfully marked for purge" [fid] fidsToPurge
+  dbUpdate $ PurgeFile fid
 
   assertRaisesKontra (\FileWasPurged {} -> True) $ do
-     dbQuery $ GetFileByFileID idx
+     dbQuery $ GetFileByFileID fid
+
+  orphanFidsAfterPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
+  assertEqual "File not marked for purge after it was purged" [] orphanFidsAfterPurge
 
 testNewFileThatShouldBeMovedToAWS :: TestEnv ()
 testNewFileThatShouldBeMovedToAWS  = do

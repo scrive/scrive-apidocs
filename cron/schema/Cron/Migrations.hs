@@ -13,7 +13,17 @@ cronMigrations = [
   , createCronJobsTable
   , addNameToCronWorkers
   , addOldLogsRemovalToCronJobs
+  , addMarkFilesForPurge
   ]
+
+addMarkFilesForPurge :: MonadDB m => Migration m
+addMarkFilesForPurge = Migration {
+  mgrTable = tableCronJobs
+, mgrFrom = 2
+, mgrDo = do
+  runSQL_ "UPDATE cron_jobs SET id = 'purge_orphan_file' WHERE id = 'amazon_deletion'"
+  runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('mark_orphan_files_for_purge', to_timestamp(0))"
+}
 
 addOldLogsRemovalToCronJobs :: MonadDB m => Migration m
 addOldLogsRemovalToCronJobs = Migration {
