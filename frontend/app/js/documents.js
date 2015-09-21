@@ -673,6 +673,7 @@ window.Document = Backbone.Model.extend({
      },500);
      var dataForFile =
         { documentid: self.documentid(),
+          document: self,
           signatoryid: self.viewer().signatoryid()
         };
      if (self.file() != undefined) self.file().off();
@@ -790,6 +791,18 @@ window.Document = Backbone.Model.extend({
     },
     newCustomName: function() {
         return this.newNameWithIndex(localization.designview.customField);
+    },
+    allPlacements: function() {
+        var document = this;
+        var out = [];
+        _.each(document.signatories(), function(sig) {
+            _.each(sig.fields(), function(field) {
+                _.each(field.placements(), function(placement) {
+                    out.push(placement);
+                });
+            });
+        });
+        return out;
     },
     removeTypeSetters: function() {
         var document = this;

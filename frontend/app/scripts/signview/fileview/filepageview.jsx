@@ -37,31 +37,34 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var file = page.file();
       var imageWidth = self.props.imageWidth;
       var imageHeight = self.props.imageHeight;
+      var doc = file.document();
 
-      return _.map(page.placements(), function (placement, index) {
-        var field = placement.field();
+      return _.map(doc.allPlacements(), function (placement, index) {
+        if (placement.page() === page.number()) {
+          var field = placement.field();
 
-        var args = {
-          model: placement,
-          width: imageWidth,
-          height: imageHeight,
-          signview: self.props.signview,
-          arrow: self.props.arrow
-        };
+          var args = {
+            model: placement,
+            width: imageWidth,
+            height: imageHeight,
+            signview: self.props.signview,
+            arrow: self.props.arrow
+          };
 
-        if (field.isSignature()) {
-          return <SignaturePlacementPlacedView key={index} {...args} />;
+          if (field.isSignature()) {
+            return <SignaturePlacementPlacedView key={index} {...args} />;
+          }
+
+          if (field.isCheckbox()) {
+            return <CheckboxPlacementPlacedView key={index} {...args} />;
+          }
+
+          if (field.isText()) {
+            return <TextPlacementPlacedView key={index} {...args} />;
+          }
+
+          throw new Error("unknown field type");
         }
-
-        if (field.isCheckbox()) {
-          return <CheckboxPlacementPlacedView key={index} {...args} />;
-        }
-
-        if (field.isText()) {
-          return <TextPlacementPlacedView key={index} {...args} />;
-        }
-
-        throw new Error("unknown field type");
       });
     },
 
@@ -73,13 +76,15 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
 
     render: function () {
       var page = this.props.model;
+      var file = page.file();
+      var doc = file.document();
       var imageSrc = this.props.imageSrc;
       var imageComplete = this.props.imageComplete;
 
       return (
         <div id={"page" + page.number()} className="pagediv">
           <img src={imageSrc} />
-          {/* if */ imageComplete &&
+          {/* if */ imageComplete && !doc.closed() &&
             this.renderFields()
           }
         </div>

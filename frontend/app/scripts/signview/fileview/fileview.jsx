@@ -18,16 +18,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
     },
 
     componentWillMount: function () {
-      var model = this.props.model;
-      model.view = this;
-
-      if (!model.ready()) {
-        model.fetch({
-          data: {signatoryid: model.signatoryid()},
-          processData: true,
-          cache: false
-        });
-      }
+      this.props.model.view = this;
     },
 
     componentDidUpdate: function (prevProps, prevState) {
@@ -95,6 +86,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       if (this.ready()) {
         this.forceUpdate();
         this.props.model.trigger("view:ready");
+        this.props.model.trigger("change");
       }
     },
 

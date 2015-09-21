@@ -32,6 +32,11 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
             model.trigger("change");
           } else if (!triggeredChangeOnReady) { // Once model is ready - we want to trigger change only once
             triggeredChangeOnReady = true;
+            document.mainfile().fetch({
+              data: {signatoryid: document.viewer().signatoryid()},
+              processData: true,
+              cache: false
+            });
             model.trigger("change");
           }
         });
@@ -171,7 +176,9 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
     },
 
     hasArrows: function () {
-      return this.document().ready() && this.document().currentSignatoryCanSign();
+      var file = this.document().mainfile();
+      return this.document().ready() && this.document().currentSignatoryCanSign()
+        && file.ready() && file.view && file.view.ready();
     },
 
     hasCreateAccountSection: function () {

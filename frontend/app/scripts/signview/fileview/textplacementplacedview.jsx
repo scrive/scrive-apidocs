@@ -38,6 +38,22 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
         onArrowClick: function () {
           self.startInlineEditing();
         },
+        onActivate: function () {
+          // It the window does not have focus (for some old browsers we can't really tell), we should not start
+          // inline editing.
+          var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
+          if (!field.readyForSign() && windowIsFocused) {
+            self.startInlineEditing();
+            mixpanel.track("Begin editing field", {Label: field.name()});
+          }
+        },
+        onScrollWhenActive: function () {
+          var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
+          var nothingHasFocus = $(":focus").size() == 0;
+          if (!field.readyForSign() && windowIsFocused && nothingHasFocus) {
+            self.startInlineEditing();
+          }
+        },
         tipSide: placement.tip()
       })];
     },
