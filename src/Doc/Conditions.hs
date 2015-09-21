@@ -214,6 +214,20 @@ sqlWhereSignatoryIsNotAuthor = sqlWhereE SignatoryIsAuthor $
   "NOT signatory_links.is_author"
 
 
+data SignatoryHasAlreadyAuthenticatedToView = SignatoryHasAlreadyAuthenticatedToView
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue SignatoryHasAlreadyAuthenticatedToView where
+  toJSValue (SignatoryHasAlreadyAuthenticatedToView {..}) = runJSONGen $ do
+    value "messsage" ("Signaory has already authenticated to view" :: String)
+
+instance KontraException SignatoryHasAlreadyAuthenticatedToView
+
+sqlWhereSignatoryHasNotAuthenticatedToView :: (MonadState v m, SqlWhere v) => m ()
+sqlWhereSignatoryHasNotAuthenticatedToView = sqlWhereE (SignatoryHasAlreadyAuthenticatedToView)
+  "signatory_links.id NOT IN (SELECT signatory_link_id FROM eid_authentications)"
+
+
 data SignatoryHasAlreadySigned = SignatoryHasAlreadySigned
   { signatoryHasAlreadySignedTime :: UTCTime
   }

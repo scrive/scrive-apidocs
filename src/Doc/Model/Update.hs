@@ -548,10 +548,15 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
         sqlWhereEq "id" slid
         sqlWhereSignatoryIsPartner
         sqlWhereSignatoryHasNotSigned
+        sqlWhereSignatoryHasNotAuthenticatedToView
         sqlWhereExists $ sqlSelect "documents" $ do
           sqlWhere "documents.id = signatory_links.document_id"
           sqlWhereDocumentStatusIs Pending
-      -- Do things if the new authentication to view needs a personal number
+      -- If the AuthenticationToViewMethod does *not* need a personal number we
+      -- need to check if it is still needed, otherwise make the field
+      -- non-obligatory
+      -- If it *does* need it, we need to make sure the field is there and maybe
+      -- update the value
       case authToViewNeedsPersonalNumber newAuthToView of
         -- When new AuthenticationToViewMethod doesn't need a personal number,
         -- we check that AuthenticationToSignMethod doesn't need it,
@@ -597,37 +602,35 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
               (Just sl)
               Nothing
               actor
-      -- Do things if the new authentication to view makes use of mobile number
-      when (authToViewCanHaveMobileNumber newAuthToView) $
-        case mPhone of
-          Nothing -> return ()
-          -- For NOBankIDAuthenticationToView we can also change the signatory's
-          -- phone number if provided. Change it (or add the field) and also add
-          -- an EvidenceLog event.
-          Just phone -> do
-            case getFieldByIdentity MobileFI (signatoryfields sl) of
-              Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
-                sqlSet "signatory_link_id" slid
-                sqlSet "obligatory" False
-                sqlSet "value_text" phone
-                sqlSet "type" MobileFT
-                sqlSet "placements" ("[]"::String)
-              Just _ -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
-                sqlSet "value_text" phone
-                sqlWhereEq "signatory_link_id" slid
-                sqlWhereEq "type" MobileFT
-            let oldPhone = fromMaybe "" $ fieldTextValue =<< getFieldByIdentity MobileFI (signatoryfields sl)
-            when (phone /= oldPhone) $
-              void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-                (getEvidenceTextForUpdateField sl MobileFI)
-                (do F.value "value" phone
-                    F.value "previousvalue" oldPhone
-                    when (phone == "")    (F.value "newblank" True)
-                    when (oldPhone == "") (F.value "prvblank" True)
-                )
-                (Just sl)
-                Nothing
-                actor
+      -- If the AuthenticationToViewMethod needs a mobile number field, check
+      -- if it exists for the signatory and make sure it is there, optionally
+      -- also update with the value supplied
+      when (authToViewNeedsMobileNumber newAuthToView) $ do
+        let oldPhone = fromMaybe "" $ fieldTextValue =<< getFieldByIdentity MobileFI (signatoryfields sl)
+            newPhone = fromMaybe "" mPhone
+        case getFieldByIdentity MobileFI (signatoryfields sl) of
+          Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
+            sqlSet "signatory_link_id" slid
+            sqlSet "obligatory" False
+            sqlSet "value_text" newPhone
+            sqlSet "type" MobileFT
+            sqlSet "placements" ("[]"::String)
+          Just _ -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+            sqlSet "value_text" $ fromMaybe oldPhone mPhone
+            sqlWhereEq "signatory_link_id" slid
+            sqlWhereEq "type" MobileFT
+        -- Add an EvidenceLog event if the value changed
+        when (newPhone /= oldPhone) $
+          void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+            (getEvidenceTextForUpdateField sl MobileFI)
+            (do F.value "value" newPhone
+                F.value "previousvalue" oldPhone
+                when (newPhone == "") (F.value "newblank" True)
+                when (oldPhone == "") (F.value "prvblank" True)
+            )
+            (Just sl)
+            Nothing
+            actor
 
       -- Finally, add event in EvidenceLog for changed authentication
       addChangeAuthenticationToViewEvidenceEvent sl (signatorylinkauthenticationtoviewmethod sl, newAuthToView)
@@ -637,10 +640,10 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
           authToViewNeedsPersonalNumber SEBankIDAuthenticationToView = True
           authToViewNeedsPersonalNumber NOBankIDAuthenticationToView = True
 
-          authToViewCanHaveMobileNumber :: AuthenticationToViewMethod -> Bool
-          authToViewCanHaveMobileNumber NOBankIDAuthenticationToView = True
-          authToViewCanHaveMobileNumber StandardAuthenticationToView = True
-          authToViewCanHaveMobileNumber SEBankIDAuthenticationToView = True
+          authToViewNeedsMobileNumber :: AuthenticationToViewMethod -> Bool
+          authToViewNeedsMobileNumber StandardAuthenticationToView = False
+          authToViewNeedsMobileNumber SEBankIDAuthenticationToView = False
+          authToViewNeedsMobileNumber NOBankIDAuthenticationToView = True
 
           authToSignNeedsPersonalNumber :: AuthenticationToSignMethod -> Bool
           authToSignNeedsPersonalNumber StandardAuthenticationToSign = False

@@ -1,7 +1,8 @@
 /** @jsx React.DOM */
 
-define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_code"],
-  function (React, BackboneMixin, Backbone, Select) {
+define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
+  "common/select", "common/infotextinput"],
+  function (Legacy, React, BackboneMixin, Backbone, Select, InfoTextInput) {
 
   var ChangeAuthenticationModalModel = Backbone.Model.extend({
     initialize: function (args) {
@@ -61,15 +62,15 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
       if (this.isNewAuthenticationPINbySMS()) {
         // If NO BankID to view is set, then we need a valid Norwegian number, or empty
         if (this.signatory().authenticationToView() === "no_bankid") {
-          return (
-            !new PhoneValidationNO().validateData(authvalue) &&
-            !new EmptyValidation().validateData(authvalue)
+          return !(
+            new PhoneValidationNO().validateData(authvalue)
+            || new EmptyValidation().validateData(authvalue)
           );
         // Else we need any valid number, or empty
         } else {
-          return (
-            !new PhoneValidation().validateData(authvalue) &&
-            !new EmptyValidation().validateData(authvalue)
+          return !(
+            new PhoneValidation().validateData(authvalue)
+            || new EmptyValidation().validateData(authvalue)
           );
         }
       } else if (this.isNewAuthenticationELeg()) {
@@ -78,9 +79,9 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
           return !new SSNForSEBankIDValidation().validateData(authvalue);
         // Else valid or empty
         } else {
-          return (
-            !new SSNForSEBankIDValidation().validateData(authvalue) &&
-            !new EmptyValidation().validateData(authvalue)
+          return !(
+            new SSNForSEBankIDValidation().validateData(authvalue)
+            || new EmptyValidation().validateData(authvalue)
           );
         }
       }
@@ -127,9 +128,9 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
       model.setNewAuthenticationMethod(v);
     },
 
-    setAuthenticationValue: function (event) {
+    setAuthenticationValue: function (v) {
       var model = this.props.model;
-      model.setNewAuthenticationValue(event.target.value);
+      model.setNewAuthenticationValue(v);
     },
 
     getAuthenticationValueLabelText: function () {
@@ -173,19 +174,19 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
       var model = this.props.model;
       var signatory = model.signatory();
 
-      if (signatory.hasAuthenticatedToView()) {
-        // If we are setting SE BankID and signatory has authenticated to view,
-        // we cannot change SSN
-        if (model.newAuthenticationMethod == "eleg") {
+      // If we are setting SE BankID and signatory has authenticated to view,
+      // we cannot change SSN
+      if (signatory.hasAuthenticatedToView() && model.newAuthenticationMethod() == "eleg") {
           return false;
-        // If we are setting SMS PIN and signatory has authenticated to view
-        // using NO BankID with a valid mobile, we cannot change phone number
-        } else if (model.newAuthenticationMethod == "sms_pin"
-            && signatory.authenticationToView() == "no_bankid"
-            && signatory.mobile != ""
-        ) {
-          return false;
-        }
+      // If we are setting SMS PIN and signatory has authenticated to view
+      // using NO BankID with a valid mobile, we cannot change phone number
+      } else if (signatory.hasAuthenticatedToView()
+          && model.newAuthenticationMethod() == "sms_pin"
+          && signatory.authenticationToView() == "no_bankid"
+          && signatory.mobile() != ""
+      ) {
+        return false;
+      // Else always show if we are setting anything other than no authentication
       } else {
         return model.newAuthenticationMethod() != "standard";
       }
@@ -195,6 +196,10 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
       var model = this.props.model;
       var signatory = model.signatory();
       var selectLabel = $("<div>").html(localization.docview.changeAuthentication.methodLabel);
+
+      var authenticationValueClass = React.addons.classSet({
+        "obligatory-input" : model.isAuthenticationValueInvalid()
+      });
 
       return (
         <div>
@@ -208,18 +213,13 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
           {/* if */ this.showAuthenticationValueField() &&
             <div>
               <label>{this.getAuthenticationValueLabelText()}</label>
-              <div
-                className={model.isAuthenticationValueInvalid() ?
-                  "info-text-input obligatory-input" : "info-text-input"
-                }
-              >
-                <input
-                  type="text"
-                  placeholder={this.getAuthenticationValuePlaceholderText()}
-                  value={model.newAuthenticationValue()}
-                  onChange={this.setAuthenticationValue}
-                />
-              </div>
+              <InfoTextInput
+                inputtype="text"
+                infotext={this.getAuthenticationValuePlaceholderText()}
+                value={model.newAuthenticationValue()}
+                onChange={this.setAuthenticationValue}
+                className={authenticationValueClass}
+              />
               <label className="infotext">{localization.docview.changeAuthentication.valueInfotext}</label>
             </div>
           }
@@ -230,7 +230,7 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
 
   return function (args) {
     var model = new ChangeAuthenticationModalModel({signatory: args.signatory});
-    var content = $("<div class=\"docview-changeauthentication-modal\">");
+    var content = $("<div class='docview-changeauthentication-modal'>");
 
     React.render(React.createElement(ChangeAuthenticationModalView, {
       model: model

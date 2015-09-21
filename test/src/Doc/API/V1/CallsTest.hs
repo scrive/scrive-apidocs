@@ -279,6 +279,12 @@ testChangeAuthenticationToViewMethod = do
   reqNOBankIDValidWithMobile <- mkRequest POST [("authentication_type", inText "no_bankid"),("personal_number", inText "12345678901"),("mobile_number", inText "+4712345678")]
   (resNOBankIDValidWithMobile, _) <- runTestKontra reqNOBankIDValidWithMobile ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
   assertEqual "Response code should be 202" 202 (rsCode resNOBankIDValidWithMobile)
+  updatedDocNOBankID <- dbQuery $ GetDocumentBySignatoryLinkID validsiglinkid
+  let updatedSigLinkNOBankID = documentsignatorylinks updatedDocNOBankID
+      siglinkNOBankID = $head $ filter signatoryispartner updatedSigLinkNOBankID
+  assertEqual "Authentication to view should be NOBankID" NOBankIDAuthenticationToView (signatorylinkauthenticationtoviewmethod siglinkNOBankID)
+  assertEqual "The phone number +4712345678 should be set" "+4712345678" (getMobile siglinkNOBankID)
+  assertEqual "The personal number 12345678901 should be set" "12345678901" (getPersonalNumber siglinkNOBankID)
 
   reqNOBankIDInvalidMobile <- mkRequest POST [("authentication_type", inText "no_bankid"),("personal_number", inText "12345678901"),("mobile_number", inText "+4612345678")]
   (resNOBankIDInvalidMobile, _) <- runTestKontra reqNOBankIDInvalidMobile ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
@@ -291,6 +297,11 @@ testChangeAuthenticationToViewMethod = do
   reqSEBankIDValid12digits <- mkRequest POST [("authentication_type", inText "se_bankid"),("personal_number", inText "123456789012")]
   (resSEBankIDValid12digits, _) <- runTestKontra reqSEBankIDValid12digits ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
   assertEqual "Response code should be 202" 202 (rsCode resSEBankIDValid12digits)
+  updatedDocSEBankID <- dbQuery $ GetDocumentBySignatoryLinkID validsiglinkid
+  let updatedSigLinkSEBankID = documentsignatorylinks updatedDocSEBankID
+      siglinkSEBankID = $head $ filter signatoryispartner updatedSigLinkSEBankID
+  assertEqual "Authentication to view should be SEBankID" SEBankIDAuthenticationToView (signatorylinkauthenticationtoviewmethod siglinkSEBankID)
+  assertEqual "The personal number 123456789012 should be set" "123456789012" (getPersonalNumber siglinkSEBankID)
 
   reqSEBankIDValid10digits <- mkRequest POST [("authentication_type", inText "se_bankid"),("personal_number", inText "1234567890")]
   (resSEBankIDValid10digits, _) <- runTestKontra reqSEBankIDValid10digits ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
@@ -299,6 +310,12 @@ testChangeAuthenticationToViewMethod = do
   reqStandard <- mkRequest POST [("authentication_type", inText "standard")]
   (resStandard, _) <- runTestKontra reqStandard ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
   assertEqual "Response code should be 202" 202 (rsCode resStandard)
+  updatedDocStandard <- dbQuery $ GetDocumentBySignatoryLinkID validsiglinkid
+  let updatedSigLinkStandard = documentsignatorylinks updatedDocStandard
+      siglinkStandard = $head $ filter signatoryispartner updatedSigLinkStandard
+  assertEqual "The personal number 1234567890 should be set from previous call" "1234567890" (getPersonalNumber siglinkStandard)
+  assertEqual "The mobile number +4712345678 should be set from previous call" "+4712345678" (getMobile siglinkStandard)
+  assertEqual "Authentication to view should be Standard" StandardAuthenticationToView (signatorylinkauthenticationtoviewmethod siglinkStandard)
 
   user2 <- addNewRandomUser
   ctx2 <- (\c -> c { ctxmaybeuser = Just user2 }) <$> mkContext def

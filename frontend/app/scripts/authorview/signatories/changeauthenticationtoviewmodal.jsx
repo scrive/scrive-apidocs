@@ -1,7 +1,8 @@
 /** @jsx React.DOM */
 
-define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_code"],
-  function (React, BackboneMixin, Backbone, Select) {
+define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
+  "common/select", "common/infotextinput"],
+  function (Legacy, React, BackboneMixin, Backbone, Select, InfoTextInput) {
 
   var ChangeAuthenticationToViewModalModel = Backbone.Model.extend({
     initialize: function (args) {
@@ -166,9 +167,9 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
       }
     },
 
-    setPersonalNumber: function (e) {
+    setPersonalNumber: function (v) {
       var model = this.props.model;
-      model.setPersonalNumber(e.target.value);
+      model.setPersonalNumber(v);
     },
 
     getPersonalNumberLabelText: function () {
@@ -193,9 +194,9 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
       return text;
     },
 
-    setMobileNumber: function(e) {
+    setMobileNumber: function(v) {
       var model = this.props.model;
-      model.setMobileNumber(e.target.value);
+      model.setMobileNumber(v);
     },
 
     getMobileNumberLabelText: function () {
@@ -206,6 +207,13 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
       var model = this.props.model;
       var signatory = model.signatory();
       var methodLabel = $("<div>").html(localization.docview.changeAuthenticationToView.methodLabel);
+
+      var personalNumberClass = React.addons.classSet({
+        "obligatory-input" : !model.isPersonalNumberValid()
+      });
+      var mobileNumberClass = React.addons.classSet({
+        "obligatory-input" : !model.isMobileNumberValid()
+      });
 
       return (
         <div>
@@ -219,32 +227,24 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
           {/* if */ !model.isAuthenticationStandard() &&
             <div>
               <label>{this.getPersonalNumberLabelText()}</label>
-              <div className={model.isPersonalNumberValid() ?
-                  "info-text-input" : "info-text-input obligatory-input"
-                }
-              >
-                <input
-                  type="text"
-                  placeholder={this.getPersonalNumberPlaceholderText()}
-                  value={model.personalNumber()}
-                  onChange={this.setPersonalNumber}
-                />
-              </div>
+              <InfoTextInput
+                inputtype="text"
+                infotext={this.getPersonalNumberPlaceholderText()}
+                value={model.personalNumber()}
+                onChange={this.setPersonalNumber}
+                className={personalNumberClass}
+              />
             </div>
           }
           {/* if */ model.isAuthenticationNOBankID() &&
             <div>
               <label>{this.getMobileNumberLabelText()}</label>
-              <div className={model.isMobileNumberValid() ?
-                  "info-text-input" : "info-text-input obligatory-input"
-                }
-              >
-                <input
-                  type="text"
-                  value={model.mobileNumber()}
-                  onChange={this.setMobileNumber}
-                />
-              </div>
+              <InfoTextInput
+                inputtype="text"
+                value={model.mobileNumber()}
+                onChange={this.setMobileNumber}
+                className={mobileNumberClass}
+              />
             </div>
           }
         </div>
@@ -254,7 +254,7 @@ define(["React", "common/backbone_mixin", "Backbone", "common/select", "legacy_c
 
   return function (args) {
     var model = new ChangeAuthenticationToViewModalModel({signatory: args.signatory});
-    var content = $("<div class=\"docview-changeauthentication-modal\">");
+    var content = $("<div class='docview-changeauthentication-modal'>");
 
     React.render(React.createElement(ChangeAuthenticationToViewModalView, {
       model: model
