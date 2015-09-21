@@ -26,11 +26,15 @@ define(["legacy_code", "React"], function(legacy_code, React) {
 
   var createDocument = exports.createDocument = function (cb) {
     var doc = new Document({ id: 0 });
+    var triggered = false;
     doc.fetch({ processData: true, cache: false });
     doc.on("change:ready", function () {
       doc.mainfile().fetch({ processData: true, cache: false });
       doc.mainfile().on("change:pages", function () {
-        cb(doc);
+        if (!triggered) {
+          triggered = true
+          cb(doc);
+        }
       });
     });
   };
