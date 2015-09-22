@@ -542,6 +542,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
     updateDocumentWithID $ const $ do
       -- Get the signatory link before the update
       sl <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid Nothing
+      let ssnField =  getFieldByIdentity PersonalNumberFI $ signatoryfields sl
+      let mobileField =  getFieldByIdentity MobileFI $ signatoryfields sl
       -- Update the authentication to view method
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
         sqlSet "authentication_to_view_method" newAuthToView
@@ -563,8 +565,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
         -- and set it to optional if we don't need it anymore
         False -> when
           (not $ authToSignNeedsPersonalNumber (signatorylinkauthenticationtosignmethod sl)
-            && (isJust $ getFieldByIdentity PersonalNumberFI $ signatoryfields sl)
-            && (not . null $ fromMaybe [] $ fmap fieldPlacements $ getFieldByIdentity PersonalNumberFI $ signatoryfields sl)
+            && (isJust $ ssnField)
+            && (not . null $ fromMaybe [] $ fmap fieldPlacements $ ssnField)
           ) $
           kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
            sqlSet "obligatory" False
@@ -574,13 +576,12 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
         -- we either alter the existing field or add it to the signatory
         -- Maybe setting the value too along the way
         True -> do
-          case getFieldByIdentity PersonalNumberFI (signatoryfields sl) of
+          case ssnField of
             Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
               sqlSet "signatory_link_id" slid
               sqlSet "obligatory" True
               sqlSet "value_text" $ fromMaybe "" mSSN
               sqlSet "type" PersonalNumberFT
-              sqlSet "placements" ("[]"::String)
             Just _ -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
               sqlSet "obligatory" True
               case mSSN of
@@ -589,7 +590,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
               sqlWhereEq "signatory_link_id" slid
               sqlWhereEq "type" PersonalNumberFT
           -- Add event in EvidenceLog if the new personal number is different to the old one
-          let oldSSN = fromMaybe "" $ fieldTextValue =<< getFieldByIdentity PersonalNumberFI (signatoryfields sl)
+          let oldSSN = fromMaybe "" $ fieldTextValue =<< ssnField
               newSSN = fromMaybe "" mSSN
           when (isJust mSSN && newSSN /= oldSSN) $
             void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
@@ -606,15 +607,14 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
       -- if it exists for the signatory and make sure it is there, optionally
       -- also update with the value supplied
       when (authToViewNeedsMobileNumber newAuthToView) $ do
-        let oldPhone = fromMaybe "" $ fieldTextValue =<< getFieldByIdentity MobileFI (signatoryfields sl)
+        let oldPhone = fromMaybe "" $ fieldTextValue =<< mobileField
             newPhone = fromMaybe "" mPhone
-        case getFieldByIdentity MobileFI (signatoryfields sl) of
+        case mobileField of
           Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
             sqlSet "signatory_link_id" slid
             sqlSet "obligatory" False
             sqlSet "value_text" newPhone
             sqlSet "type" MobileFT
-            sqlSet "placements" ("[]"::String)
           Just _ -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
             sqlSet "value_text" $ fromMaybe oldPhone mPhone
             sqlWhereEq "signatory_link_id" slid
