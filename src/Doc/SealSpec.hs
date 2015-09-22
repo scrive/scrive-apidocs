@@ -1,8 +1,8 @@
 module Doc.SealSpec where
 
 import Data.Char
-import Data.Int
 import Data.Functor.Invariant
+import Data.Int
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as Text
