@@ -87,6 +87,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         this.forceUpdate();
         this.props.model.trigger("view:ready");
         this.props.model.trigger("change");
+        this.props.signview.updateArrow();
+
       }
     },
 
