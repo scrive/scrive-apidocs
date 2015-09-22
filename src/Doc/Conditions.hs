@@ -218,7 +218,7 @@ data SignatoryHasAlreadyAuthenticatedToView = SignatoryHasAlreadyAuthenticatedTo
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue SignatoryHasAlreadyAuthenticatedToView where
-  toJSValue (SignatoryHasAlreadyAuthenticatedToView {..}) = runJSONGen $ do
+  toJSValue SignatoryHasAlreadyAuthenticatedToView = runJSONGen $ do
     value "messsage" ("Signatory has already authenticated to view" :: String)
 
 instance KontraException SignatoryHasAlreadyAuthenticatedToView
