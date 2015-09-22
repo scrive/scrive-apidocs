@@ -17,12 +17,13 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button",
     componentDidUpdate: function () {
       var transaction = this.props.model.transaction();
       var canStart = !transaction.isFaultStatus() && !transaction.isWaitingForToken() && transaction.thisDevice();
-      if (!this.state.iframe && canStart && !BrowserInfo.isAndroid()) {
+      var iframeUncapableBrowser = BrowserInfo.isAndroid() || BrowserInfo.isIOS9();
+      if (!this.state.iframe && canStart && !iframeUncapableBrowser) {
         var iframe = $("<iframe width='0' height='0' class='bankid-iframe'/>")
                        .attr("src", transaction.bankIdUrlWithRedirectIfNeeded());
         this.setState({iframe: iframe});
         $("body").append(iframe);
-      } else if (!this.state.redirected && canStart && BrowserInfo.isAndroid()) {
+      } else if (!this.state.redirected && canStart && iframeUncapableBrowser) {
         ReloadManager.stopBlocking();
         setTimeout(function () {
           ReloadManager.startBlocking();

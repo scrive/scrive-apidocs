@@ -360,7 +360,7 @@ apiCallV1Ready did = logDocument did . api $ do
       postDocumentPreparationChange authorsignsimmediately timezone
       Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
   where
-    signatoryHasValidDeliverySettings sl = (isAuthor sl) || case (signatorylinkdeliverymethod sl) of
+    signatoryHasValidDeliverySettings sl = case (signatorylinkdeliverymethod sl) of
       EmailDelivery  ->  isGood $ asValidEmail $ getEmail sl
       MobileDelivery ->  isGood $ asValidPhoneForSMS $ getMobile sl
       EmailAndMobileDelivery -> (isGood $ asValidPhoneForSMS $ getMobile sl) && (isGood $ asValidEmail $ getEmail sl)

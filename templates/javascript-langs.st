@@ -27,7 +27,6 @@ javascriptLocalisation =
              , identifyPhoneNumber8: "$_IdentifyPhoneNumber8()$"
              , identifyDateOfBirth: "$_IdentifyDateOfBirth()$"
              , openBankId: "$_OpenBankId()$"
-             , problemBankId: "$_ProblemBankId()$"
              , startBankId: "$_StartBankId()$"
              , yourIdNumber: "$_YourIdNumber()$"
              , idNumber: "$_IdNumber()$"
