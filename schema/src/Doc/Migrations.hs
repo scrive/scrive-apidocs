@@ -28,7 +28,7 @@ createTablePlacementAnchors = Migration {
         tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
       , tblColumn { colName = "field_placement_id", colType = BigIntT, colNullable = False }
       , tblColumn { colName = "text", colType = TextT, colNullable = False }
-      , tblColumn { colName = "index", colType = IntegerT, colNullable = False, colDefault = Just "1" }
+      , tblColumn { colName = "index", colType = IntegerT, colNullable = False }
       ]
     , tblPrimaryKey = pkOnColumn "id"
     -- no foreigh keys, created later
@@ -99,7 +99,7 @@ unjsonFieldPlacements = Migration {
       , "INSERT INTO placement_anchors (field_placement_id, text, index)"
       , "(SELECT id"
       , ", anchor->>'text' AS text"
-      , ", (anchor->>'index')::int4 AS index"
+      , ", CASE WHEN (anchor->>'index') IS NULL THEN 1 ELSE (anchor->>'index')::int4 END AS index"
       , "FROM anchors)"
       ]
 

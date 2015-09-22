@@ -342,7 +342,7 @@ tablePlacementAnchors = tblTable {
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "field_placement_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "text", colType = TextT, colNullable = False }
-    , tblColumn { colName = "index", colType = IntegerT, colNullable = False, colDefault = Just "1" }
+    , tblColumn { colName = "index", colType = IntegerT, colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
