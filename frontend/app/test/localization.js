@@ -22,7 +22,6 @@
              , identifyPhoneNumber8: "Phone (8 digits)"
              , identifyDateOfBirth: "Date of birth"
              , openBankId: "Open BankID on this device"
-             , problemBankId: "Problem signing with BankID"
              , startBankId: "Start your BankID App"
              , yourIdNumber: "Your ID number"
              , idNumber: "ID number"
