@@ -198,7 +198,7 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
       var selectLabel = $("<div>").html(localization.docview.changeAuthentication.methodLabel);
 
       var authenticationValueClass = React.addons.classSet({
-        "obligatory-input" : model.isAuthenticationValueInvalid()
+        "obligatory-input": model.isAuthenticationValueInvalid()
       });
 
       return (

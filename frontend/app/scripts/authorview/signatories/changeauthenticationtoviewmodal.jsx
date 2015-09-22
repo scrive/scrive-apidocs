@@ -37,7 +37,7 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
       }
     },
 
-    standardAuthenticationValue : function () {
+    standardAuthenticationValue: function () {
       return "standard";
     },
 
@@ -45,7 +45,7 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
       return this.authenticationMethod() == this.standardAuthenticationValue();
     },
 
-    SEBankIDAuthenticationValue : function () {
+    SEBankIDAuthenticationValue: function () {
       return "se_bankid";
     },
 
@@ -53,7 +53,7 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
       return this.authenticationMethod() == this.SEBankIDAuthenticationValue();
     },
 
-    NOBankIDAuthenticationValue : function () {
+    NOBankIDAuthenticationValue: function () {
       return "no_bankid";
     },
 
@@ -161,8 +161,7 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
 
       if (model.canUseNOBankID()) {
         return [standard, se_bankid, no_bankid];
-      }
-      else {
+      } else {
         return [standard, se_bankid];
       }
     },
@@ -194,7 +193,7 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
       return text;
     },
 
-    setMobileNumber: function(v) {
+    setMobileNumber: function (v) {
       var model = this.props.model;
       model.setMobileNumber(v);
     },
@@ -209,10 +208,10 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
       var methodLabel = $("<div>").html(localization.docview.changeAuthenticationToView.methodLabel);
 
       var personalNumberClass = React.addons.classSet({
-        "obligatory-input" : !model.isPersonalNumberValid()
+        "obligatory-input": !model.isPersonalNumberValid()
       });
       var mobileNumberClass = React.addons.classSet({
-        "obligatory-input" : !model.isMobileNumberValid()
+        "obligatory-input": !model.isMobileNumberValid()
       });
 
       return (
@@ -289,7 +288,10 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
           .sendAjax(function () {
             args.onAction();}, function (err) {
               LoadingDialog.close();
-              new FlashMessage({content: localization.docview.changeAuthenticationToView.errorFlashMessage, type: "error"});
+              new FlashMessage({
+                content: localization.docview.changeAuthenticationToView.errorFlashMessage,
+                type: "error"
+              });
           });
 
         return true;

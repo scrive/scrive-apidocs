@@ -1,25 +1,31 @@
 /** @jsx React.DOM */
 
 /**
- * A infotextinput component in React. It does not have all properties of original backbone infotextinput
+ * A infotextinput component in React. Used instead of input tag for text input.
+ * It can automaticly deal with IE8, and also has a lot of features like
  *
- * Properties:
-      text        : string , text on button,  default ""
-      color       : string, red | green | black | light-blue | signview-blue, one of predefined colors
-      size        : string, tiny | small | big
-      shape       : string, rounded | square, where square is default
-      textcolor   : string, color for text on button, else default value for predefined color will be used.
+ *   - autogrowth
+ *   - internal small button (ie. small OK button)
+ *   - remove button (x on in top, right corner)
+ *   - restrict input, not to let people type in numbers in name field
+ *
+ * Basic props, for full list check propTypes:
+      infotext    : string , used instead of placeholder
+      value       : string,
+      inputtype   : string, default is "text", but "password" is also used
+      name        : string, name for input
+
       className   : additional css classes
       style       : style object (react format)
-      onClick     : func, functiona to be called on click
-      multiline   : bool, if button should support multiline labels (if true, text must be an array of strings)
-      oneClick    : bool, if the button can be clicked only once
-      restrictInput : func, restrict input, if false do not update state.
+      inputStyle  : style object - one to applied only to input element
 
+      onChange    : func with new value as param,
  *
- * Example usage:
+ * Sample usage:
  * var button = React.render(React.createElement(InfoTextInput(,
- *    text: "ABC"
+ *    infotext: "Name",
+      value : signatory.name(),
+ *    onChange: function(v) {signatory.setName(v);}
  * }), div);
  *
  */
