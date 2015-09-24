@@ -101,6 +101,8 @@ data StatusClass
   | SCSealed -- ^ Has a digital seal
   | SCExtended -- ^ Has an extended digital seal
   | SCInitiated
+  | SCOpenedAuthToView
+  | SCAuthenticatedToView
     deriving (Eq, Ord, Enum, Bounded)
 
 instance PQFormat StatusClass where
@@ -126,6 +128,8 @@ instance FromSQL StatusClass where
       13 -> return SCSealed
       14 -> return SCExtended
       15 -> return SCInitiated
+      16 -> return SCOpenedAuthToView
+      17 -> return SCAuthenticatedToView
       _ -> throwM RangeError {
         reRange = [(1, 15)]
       , reValue = n
@@ -148,6 +152,8 @@ instance ToSQL StatusClass where
   toSQL SCSealed          = toSQL (13::Int16)
   toSQL SCExtended        = toSQL (14::Int16)
   toSQL SCInitiated       = toSQL (15::Int16)
+  toSQL SCOpenedAuthToView    = toSQL (16::Int16)
+  toSQL SCAuthenticatedToView = toSQL (17::Int16)
 
 instance Show StatusClass where
   show SCInitiated = "initiated"
@@ -165,6 +171,8 @@ instance Show StatusClass where
   show SCProlonged = "prolonged"
   show SCSealed = "sealed"
   show SCExtended = "extended"
+  show SCOpenedAuthToView = "authenticationview"
+  show SCAuthenticatedToView = "authenticated"
 
 instance Read StatusClass where
   readsPrec _ str =

@@ -184,15 +184,15 @@ return React.createClass({
             <DomainColorEditor
                 ref="openedColor"
                 title="Email opened, prolonged"
-                icons={["opened","prolonged"]}
+                icons={["read","prolonged"]}
                 getValue={function() {return model.openedColor()}}
                 setValue={function(v) {return model.setOpenedColor(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
               />
               <DomainColorEditor
                 ref="reviewedColor"
-                title="Reviewed online"
-                icons={["read"]}
+                title="Reviewed online, Opened view to identify, and Identified online"
+                icons={["opened","authenticationview","authenticated"]}
                 getValue={function() {return model.reviewedColor()}}
                 setValue={function(v) {return model.setReviewedColor(v)}}
                 onColorPickerOpen={function() { self.hideAllColorPickers(); }}
