@@ -30,7 +30,7 @@
 "_IdentifyBankIdNOMobile":"BankID on mobile",
 "_IdentifyBankIdNOMobileError":"Wrong mobile phone number or date of birth has been supplied. Contact the sender.",
 "_IdentifyBankIdNORevoked":"Your Norwegian BankID has been revoked. Contact your bank.",
-"_IdentifyBankIdNOUserAgent":"Norwegian BankID do not support your browser. Try another browser.",
+"_IdentifyBankIdNOUserAgent":"Norwegian BankID does not support your browser. Try another browser.",
 "_IdentifyDateOfBirth":"Date of birth",
 "_IdentifyDocument":"Document",
 "_IdentifyPhoneError":"The phone number must be 8 digits.",
