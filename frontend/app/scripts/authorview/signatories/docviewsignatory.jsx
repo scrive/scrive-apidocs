@@ -42,8 +42,10 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
         return localization.signatoryMessage.other;
       } else if (signatory.status() == "sent") {
         return localization.signatoryMessage.waiting;
-      } else if (localization.signatoryMessage[signatory.status()] != undefined) {
-        return localization.signatoryMessage[signatory.status()];
+      } else if (signatory.status() == "delivered") {
+        return localization.signatoryMessage.delivered;
+      } else if (signatory.status() == "read") {
+        return localization.signatoryMessage.read;
       } else {
         return localization.signatoryMessage.other;
       }
