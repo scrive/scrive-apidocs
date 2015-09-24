@@ -210,7 +210,7 @@ collectRequest did slid = do
                 let eventFields = do
                       F.value "signatory_name" signatoryName
                       F.value "signatory_personal_number" signatoryPersonalNumber
-                      F.value "provider" ("Swedish BankID" :: String)
+                      F.value "provider_sebankid" True
                       F.value "signature" $ B64.encode . unBinary $ signature
                       F.value "ocsp_response" $ B64.encode . unBinary $ ocspResponse
                 withDocument doc $

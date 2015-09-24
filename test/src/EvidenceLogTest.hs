@@ -71,7 +71,8 @@ evidenceLogTemplateVariables = Set.fromList
   , "timeouttime"     -- Pending :: UTCTime
   , "timezone"        -- Pending :: TimeZone
   , "value"           -- Field updates :: FieldValue
-  , "provider"        -- Provider of eleg (Swedish BankID)
+  , "provider_sebankid"  -- Provider is Swedish BankID
+  -- , "provider_nobankid"  -- Provider is Norwegian BankID - disabled to do bug is StringTemplate variable detection
   , "signatory_name"  -- Name returned by Eleg
   , "signatory_personal_number" -- Personal number returned by eleg
   , "signatory_mobile"-- Mobile number returned by eleg (NO BankID on mobile only)

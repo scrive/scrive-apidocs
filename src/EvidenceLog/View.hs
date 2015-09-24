@@ -237,10 +237,10 @@ simplyfiedEventText target mactor d sim dee = do
               Nothing -> return ()
               Just esig -> case esig of
                 CGISEBankIDAuthentication_ n -> do
-                  F.value "provider" $ Just ("Swedish BankID" ::String)
+                  F.value "provider_sebankid" True
                   F.value "signatory_name" $ cgisebidaSignatoryName n
                 NetsNOBankIDAuthentication_ n -> do
-                  F.value "provider" $ Just ("Norwegian BankID" ::String)
+                  F.value "provider_nobankid" True
                   F.value "signatory_name" $ netsNOBankIDSignatoryName n
                   F.value "signatory_dob" $ netsNOBankIDDateOfBirth n
 

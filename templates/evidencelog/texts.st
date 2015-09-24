@@ -484,12 +484,12 @@ VisitedViewForAuthenticationEvidenceArchive=$_VisitedViewForAuthenticationEviden
 ###
 VisitedViewForAuthenticationEvidenceVerificationPages=$_VisitedViewForAuthenticationEvidenceVerificationPages()$
 ###
-AuthenticatedToViewEvidenceLog=<span class="actor"/> verified their identity with $provider$ to access the document. $elegVerificationAuth()$
+AuthenticatedToViewEvidenceLog=<span class="actor"/> verified their identity with $provider()$ to access the document. $elegVerificationAuth()$
 ###
 elegVerificationAuth=
 <br/>
 <br/>
-<p>Data returned from the $provider$:
+<p>Data returned from the $provider()$:
   <br/>Name: $signatory_name$
   $if(signatory_personal_number)$
   <br/>ID number: $signatory_personal_number$
@@ -512,13 +512,28 @@ $if(ocsp_response)$
 <p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp_response$</div></p>
 $endif$
 ###
-AuthenticatedToViewEvidenceArchive=$_AuthenticatedToViewEvidenceArchive()$
+provider=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$endif$
+###
+AuthenticatedToViewEvidenceArchive=
+$if(provider_sebankid)$
+$_AuthenticatedToViewEvidenceArchiveSEBankID()$
+$elseif(provider_nobankid)$
+$_AuthenticatedToViewEvidenceArchiveNOBankID()$
+$endif$
 ###
 AuthenticatedToViewEvidenceVerificationPages=
 $if(signatory_dob)$
-$_AuthenticatedToViewEvidenceVerificationPagesWithDate()$
+$if(provider_sebankid)$
+$_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID()$
+$elseif(provider_nobankid)$
+$_AuthenticatedToViewEvidenceVerificationPagesWithDateNOBankID()$
+$endif$
 $else$
-$_AuthenticatedToViewEvidenceVerificationPagesWithoutDate()$
+$if(provider_sebankid)$
+$_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID()$
+$elseif(provider_nobankid)$
+$_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID()$
+$endif$
 $endif$
 ###
 UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Phone". Scrive eSign changed it from "$oldphone$" to "$newphone$".
