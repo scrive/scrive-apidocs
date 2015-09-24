@@ -134,15 +134,12 @@
 "_signViewTextField":"Write there",
 "_signWithSMSPin":"Sign with PIN by SMS",
 "_signatoryAttachmentsSupportedFormats":"Supported file formats: PDF, JPG and PNG",
-"_signatoryMessageIfCancelled":"Cancelled",
 "_signatoryMessageIfElse":"Sent",
-"_signatoryMessageIfSignatoryDatamismatch":"Incorrect eID",
 "_signatoryMessageIfSignatoryDeliveredEmail":"Delivered",
 "_signatoryMessageIfSignatoryReaddate":"Email opened",
 "_signatoryMessageIfSignatoryRejected":"Rejected",
 "_signatoryMessageIfSignatorySeendate":"Reviewed online",
 "_signatoryMessageIfSigned":"Signed",
-"_signatoryMessageIfTimedout":"Expired",
 "_signatoryMessageWaiting":"Waiting for prior signatures",
 "_signatureConfirm":"Apply signature",
 "_signedAndClosed":"Document signed!",
@@ -171,6 +168,5 @@
 "_subtitleSignedNotClosedByEmail":"When every party has signed the finalised document will be sent to you by email.",
 "_subtitleSignedNotClosedByEmailMobile":"When every party has signed the finalised document will be sent to you by email and SMS.",
 "_subtitleSignedNotClosedByMobile":"When every party has signed the finalised document will be sent to you by SMS.",
-"_unavailableForSign":"The document is no longer available for signing",
-"_waitingForSignature":"Waiting for signature"
+"_unavailableForSign":"The document is no longer available for signing"
 }

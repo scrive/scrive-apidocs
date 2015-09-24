@@ -98,21 +98,13 @@ javascriptLocalisation =
              , reject : {
                          send : "$_pageDocumentForSignContentRejectFooterReject()$"
                }
-
-
-
-
              , signatoryMessage : {
-                         datamismatch :"$_signatoryMessageIfSignatoryDatamismatch()$"
-                       , timedout : "$_signatoryMessageIfTimedout()$"
-                       , rejected : "$_signatoryMessageIfSignatoryRejected()$"
+                         rejected : "$_signatoryMessageIfSignatoryRejected()$"
                        , seen : "$_signatoryMessageIfSignatorySeendate()$"
                        , read : "$_signatoryMessageIfSignatoryReaddate()$"
                        , delivered : "$_signatoryMessageIfSignatoryDeliveredEmail()$"
                        , signed : "$_signatoryMessageIfSigned()$"
-                       , cancelled : "$_signatoryMessageIfCancelled()$"
                        , other : "$_signatoryMessageIfElse()$"
-                       , waitingForSignature: "$_waitingForSignature()$"
                        , waiting : "$_signatoryMessageWaiting()$"
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
