@@ -180,10 +180,9 @@ main = do
           return . RerunAfter $ iseconds 5
         MarkOrphanFilesForPurge -> do
           let maxMarked = 1000
+              orphanFileMarked = "Orphan file marked for purge"
           fids <- runDB . dbUpdate . MarkOrphanFilesForPurgeAfter maxMarked $ idays 7
-          logInfo "Orphan files marked for purge" $ object [
-              identifiers fids
-            ]
+          forM_ fids $ \fid -> logInfo orphanFileMarked $ object [identifier_ fid]
           -- If maximum amount of files was marked, run it again shortly after.
           if length fids == maxMarked
             then return . RerunAfter $ iseconds 1
