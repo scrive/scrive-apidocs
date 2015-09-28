@@ -131,7 +131,7 @@ instance FromSQL StatusClass where
       16 -> return SCOpenedAuthToView
       17 -> return SCAuthenticatedToView
       _ -> throwM RangeError {
-        reRange = [(1, 15)]
+        reRange = [(1, 17)]
       , reValue = n
       }
 
