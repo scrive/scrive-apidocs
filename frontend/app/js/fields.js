@@ -236,19 +236,29 @@ window.Field = Backbone.Model.extend({
     },
     validateMobile: function() {
       var signatory = this.signatory();
-      if(signatory.mobileDelivery() || signatory.emailMobileDelivery()) {
-        return new PhoneValidation().concat(new NotEmptyValidation());
-      }
-      if(signatory.smsPinAuthenticationToSign()            ||
-         signatory.emailMobileConfirmationDelivery() ||
-         signatory.mobileConfirmationDelivery()
-        ) {
-        return new PhoneValidation().or(new EmptyValidation());
-      }
+      var validation = new Validation();
+      // If we have NOBankID to view we need Norwegian phone validation
       if (signatory.noBankIDAuthenticationToView()) {
-        return new EmptyValidation().or(new PhoneValidationNO());
+        validation = new PhoneValidationNO();
       }
-      return new Validation();
+      // Else If we have anything that needs a valid phone, then of course we need phone validation!
+      else if (signatory.mobileDelivery()
+              || signatory.emailMobileDelivery()
+              || signatory.smsPinAuthenticationToSign()
+              || signatory.mobileConfirmationDelivery()
+              || signatory.emailMobileConfirmationDelivery()
+      ) {
+        validation = new PhoneValidation();
+      }
+      // If we have mobile delivery, we need a non-empty mobile
+      if (signatory.mobileDelivery() || signatory.emailMobileDelivery()) {
+        validation = validation.concat(new NotEmptyValidation());
+      }
+      // Else it can be empty
+      else {
+        validation = validation.or(new EmptyValidation());
+      }
+      return validation;
     },
     validateEmail: function() {
       var field = this;

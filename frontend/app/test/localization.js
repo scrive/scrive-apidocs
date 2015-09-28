@@ -93,21 +93,13 @@
              , reject : {
                          send : "Reject"
                }
-
-
-
-
-             , signatoryMessage : {
-                         datamismatch :"Incorrect eID"
-                       , timedout : "Expired"
-                       , rejected : "Rejected"
+             , signatoryMessage :
+                         rejected : "Rejected"
                        , seen : "Reviewed online"
                        , read : "Email opened"
                        , delivered : "Delivered"
                        , signed : "Signed"
-                       , cancelled : "Cancelled"
                        , other : "Sent"
-                       , waitingForSignature: "Waiting for signature"
                        , waiting : "Waiting for prior signatures"
                     }
             , authorAttachmentBoxHeader : "Attachments"
