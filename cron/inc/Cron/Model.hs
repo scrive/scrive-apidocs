@@ -14,8 +14,7 @@ import KontraPrelude
 import Utils.List
 
 data JobType
-  = AmazonDeletion
-  | AmazonUpload
+  = AmazonUpload
   | AsyncEventsProcessing
   | ClockErrorCollection
   | DocumentAutomaticRemindersEvaluation
@@ -27,9 +26,11 @@ data JobType
   | FindAndExtendDigitalSignatures
   | FindAndTimeoutDocuments
   | MailEventsProcessing
+  | MarkOrphanFilesForPurge
   | OldDraftsRemoval
   | OldLogsRemoval
   | PasswordRemindersEvaluation
+  | PurgeOrphanFile
   | RecurlySynchronization
   | SessionsEvaluation
   | SMSEventsProcessing
@@ -38,8 +39,7 @@ data JobType
 
 jobTypeMapper :: [(JobType, ByteString)]
 jobTypeMapper = [
-    (AmazonDeletion, "amazon_deletion")
-  , (AmazonUpload, "amazon_upload")
+    (AmazonUpload, "amazon_upload")
   , (AsyncEventsProcessing, "async_events_processing")
   , (ClockErrorCollection, "clock_error_collection")
   , (DocumentAutomaticRemindersEvaluation, "document_automatic_reminders_evaluation")
@@ -51,9 +51,11 @@ jobTypeMapper = [
   , (FindAndExtendDigitalSignatures, "find_and_extend_digital_signatures")
   , (FindAndTimeoutDocuments, "find_and_timeout_documents")
   , (MailEventsProcessing, "mail_events_processing")
+  , (MarkOrphanFilesForPurge, "mark_orphan_files_for_purge")
   , (OldDraftsRemoval, "old_drafts_removal")
   , (OldLogsRemoval, "old_logs_removal")
   , (PasswordRemindersEvaluation, "password_reminders_evaluation")
+  , (PurgeOrphanFile, "purge_orphan_file")
   , (RecurlySynchronization, "recurly_synchronization")
   , (SessionsEvaluation, "sessions_evaluation")
   , (SMSEventsProcessing, "sms_events_processing")

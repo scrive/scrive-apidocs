@@ -1,25 +1,23 @@
 module Purging.Files (
-    FindFilesForPurging(..)
-  , purgeSomeFiles
+    MarkOrphanFilesForPurgeAfter(..)
+  , purgeOrphanFile
   ) where
 
 import Control.Monad.Catch
 import Control.Monad.IO.Class
-import Data.Int
 import Log
 
 import Amazon
 import DB
-import File.FileID
+import File.Conditions
 import File.Model
 import KontraPrelude
+import Log.Identifier
 
-data FindFilesForPurging = FindFilesForPurging Int
-instance (MonadDB m, MonadThrow m) => DBQuery m FindFilesForPurging [(FileID, Maybe String, Maybe String, Bool)] where
-  query (FindFilesForPurging limit) = do
-    -- lets check if the database still looks similar to what the code
-    -- below was written for
-
+data MarkOrphanFilesForPurgeAfter = MarkOrphanFilesForPurgeAfter Int Interval
+instance (MonadDB m, MonadThrow m) => DBUpdate m MarkOrphanFilesForPurgeAfter [FileID] where
+  update (MarkOrphanFilesForPurgeAfter limit interval) = do
+    -- Check if the database still looks similar to what the code below was written for
     runSQL_ $ "SELECT table_name::text, column_name::text"
         <+> "  FROM information_schema.key_column_usage"
         <+> " WHERE constraint_name IN (SELECT constraint_name"
@@ -39,9 +37,11 @@ instance (MonadDB m, MonadThrow m) => DBQuery m FindFilesForPurging [(FileID, Ma
     when (sort expected_refs /= sort refs) $
       $unexpectedErrorM $ "PurgeFile: database layout has changed, update PurgeFile.expected_refs and check the code: " ++ show refs
 
-    runSQL_ $ "SELECT id, amazon_bucket, amazon_url, content IS NULL"
-        <+> "  FROM files"
-        <+> " WHERE purged_time IS NULL"
+    runSQL_ $ "UPDATE files"
+        <+> "SET purge_at = now() +" <?> interval
+        <+> "WHERE id IN ("
+        <+> " SELECT id FROM files"
+        <+> " WHERE purge_at IS NULL AND purged_time IS NULL"
                 -- Case 1:"
                 -- File is connected as a file to a document that is still available to somebody."
         <+> "   AND NOT EXISTS ("
@@ -103,24 +103,40 @@ instance (MonadDB m, MonadThrow m) => DBQuery m FindFilesForPurging [(FileID, Ma
         <+> "         FROM signatory_link_fields"
         <+> "        WHERE signatory_link_fields.value_file_id = files.id"
         <+> "       )"
-        <+> "   LIMIT" <?> (fromIntegral limit :: Int32)
-    fetchMany id
+        <+> "  LIMIT" <?> limit <+> "FOR UPDATE)"
+        <+> "  RETURNING id"
+    fetchMany runIdentity
 
-purgeSomeFiles :: (MonadDB m, MonadThrow m, MonadLog m, MonadIO m, AmazonMonad m) => m ()
-purgeSomeFiles = do
-  someFiles <- dbQuery $ FindFilesForPurging 10
-  mapM_ purge someFiles
+purgeOrphanFile :: forall m. (MonadDB m, MonadThrow m, MonadLog m, MonadIO m, AmazonMonad m) => m Bool
+purgeOrphanFile = do
+  runQuery_ . sqlSelect "files" $ do
+    sqlResult "id"
+    sqlResult "amazon_bucket"
+    sqlResult "amazon_url"
+    sqlResult "content IS NULL"
+    sqlWhereFileWasNotPurged
+    sqlWhere "purge_at >= now()"
+    sqlOrderBy "purge_at"
+    sqlLimit 1
+  fetchMaybe id >>= \case
+    Nothing   -> return False
+    Just file -> do
+      purge file
+      return True
   where
-    purge (id', mamazon_bucket, mamazon_url, isonamazon) = do
-      purgedFromOtherSystems <- case (mamazon_bucket,mamazon_url, isonamazon) of
-        (Just amazon_bucket,Just amazon_url, True) -> do
+    purge :: (FileID, Maybe String, Maybe String, Bool) -> m ()
+    purge (fid, mamazonBucket, mamazonUrl, isOnAmazon) = do
+      purgedFromOtherSystems <- case (mamazonBucket, mamazonUrl, isOnAmazon) of
+        (Just amazonBucket, Just amazonUrl, True) -> do
           conf <- getAmazonConfig
-          deleteFile (mkAWSAction $ amazonConfig conf) amazon_bucket amazon_url
+          deleteFile (mkAWSAction $ amazonConfig conf) amazonBucket amazonUrl
         _ -> return True
       if purgedFromOtherSystems
-      then do
-        dbUpdate $ PurgeFile id'
-        commit
-      else do
-        rollback
-        $unexpectedErrorM $ "Purging file " <+> show id' <+> "failed. Couldn't be removed from external system (Amazon)"
+        then do
+          dbUpdate $ PurgeFile fid
+          commit
+        else do
+          logAttention "Purging file failed, it couldn't be removed from Amazon" $ object [
+              identifier_ fid
+            ]
+          rollback

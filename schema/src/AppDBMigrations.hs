@@ -16,6 +16,7 @@ import EID.Authentication.Migrations
 import EID.CGI.GRP.Transaction.Migrations
 import EID.Signature.Migrations
 import EvidenceLog.Migrations
+import File.Migrations
 import KontraPrelude
 import Mails.Migrations
 import SMS.Migrations
@@ -68,6 +69,7 @@ kontraMigrations = [
   , createTableFieldPlacements
   , createTablePlacementAnchors
   , unjsonFieldPlacements
+  , filesAddPurgeAtColumn
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations
