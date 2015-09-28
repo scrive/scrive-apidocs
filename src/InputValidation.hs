@@ -325,7 +325,7 @@ asValidName input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 100
-    >>= checkOnly (isAlpha : map (==) " \'-")
+    >>= checkOnly (isAlpha : isMark : map (==) " \'-")
 
 
 {- |
