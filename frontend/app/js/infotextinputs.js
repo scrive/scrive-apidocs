@@ -11,7 +11,7 @@
       cssClass* : "",            // Extra calles for main tag
       style* : "",               // Style of main tag
       inputStyle* : "",          // Style of input tag
-      autocomplete* : false,     // Allow autocompleate
+      autocomplete* : false,     // Allow autocomplete
       readonly* : false,         // If input is read only. Just for consistency.
       onEnter*  : function() {}, // Function to be called when enter is pressed
       onTab*    : function() {}, // Function to be called when tab is entered
@@ -127,8 +127,8 @@ var InfoTextInputModel = Backbone.Model.extend({
   hasOkOption : function(){
        return this.get("onOk") != undefined;
   },
-  autocompleate : function(){
-       return this.get("autocompleate");
+  autocomplete : function(){
+       return this.get("autocomplete");
   },
   readonly : function() {
        return this.get("readonly");
@@ -167,7 +167,7 @@ var InfoTextInputView = Backbone.View.extend({
         this.input = $("<input/>")
                           .attr("name",model.name())
                           .attr("type",model.inputtype())
-                          .attr("autocomplete",model.autocompleate ? "on" : "off")
+                          .attr("autocomplete",model.autocomplete() ? "on" : "off")
                           .attr("style",model.inputStyle())
                           .attr("readonly",model.readonly() ? "true" : undefined)
                           .attr("disabled",model.readonly() ? "true" : undefined);
