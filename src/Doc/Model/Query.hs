@@ -25,7 +25,7 @@ module Doc.Model.Query
   , GetDocumentTags(..)
   , GetSignatoriesByEmail(..)
   , CheckDocumentObjectVersionIs(..)
-  , DocumentExistsAndIsNotPurgedOrReallyDeleted(..)
+  , DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor(..)
   ) where
 
 import Control.Monad.Base
@@ -346,16 +346,16 @@ instance (MonadDB m, MonadThrow m) => DBQuery m CheckDocumentObjectVersionIs () 
        sqlWhereDocumentObjectVersionIs ov
     return ()
 
-data DocumentExistsAndIsNotPurgedOrReallyDeleted = DocumentExistsAndIsNotPurgedOrReallyDeleted DocumentID
-instance (MonadDB m, MonadThrow m) => DBQuery m DocumentExistsAndIsNotPurgedOrReallyDeleted Bool where
-  query (DocumentExistsAndIsNotPurgedOrReallyDeleted did) = do
+data DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor = DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor DocumentID
+instance (MonadDB m, MonadThrow m) => DBQuery m DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor Bool where
+  query (DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor did) = do
     runQuery_ . sqlSelect "documents" $ do
       sqlResult "TRUE"
       sqlWhereDocumentIDIs did
       sqlWhereDocumentWasNotPurged
       sqlWhereExists $ sqlSelect "signatory_links" $ do
-        sqlWhere "signatory_links.user_id IS NOT NULL"
-        sqlWhere "signatory_links.really_deleted IS NULL"
+        sqlWhere "signatory_links.is_author IS TRUE"
+        sqlWhere "signatory_links.really_deleted IS NOT NULL"
         sqlWhere "signatory_links.document_id = documents.id"
     result <- fetchMaybe runIdentity
     return $ result == Just True

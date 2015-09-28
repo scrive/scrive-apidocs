@@ -55,7 +55,7 @@ documentAutomaticReminder = Action {
     sentReminder :: (MonadLog m, MonadCatch m, CryptoRNG m, MonadDB m, MonadIO m, MonadBase IO m, MonadReader SchedulerData m) => DocumentAutomaticReminder -> m ()
     sentReminder dar = do
       now <- currentTime
-      exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeleted $ reminderDocumentID dar
+      exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor $ reminderDocumentID dar
       if exists
         then do
           void $ dbQuery (GetDocumentByDocumentID (reminderDocumentID dar)) >>= \doc -> runMailTInScheduler doc $

@@ -33,7 +33,7 @@ import Utils.IO
 
 execute :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadIO m, MonadBase IO m,  MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
-  exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeleted dacDocumentID
+  exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor dacDocumentID
   if not exists then do
     logInfo_ "API callback dropped since document does not exists or is purged/reallydeleted"
     return True
