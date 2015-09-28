@@ -47,13 +47,6 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone", "legacy_c
        || signatory.personalnumber();
     },
 
-    goToSignView: function () {
-      var signatory = this.props.signatory;
-      LocalStorage.set("backlink", "target", "to-sign");
-      mixpanel.track("Accept", {"Signatory index":signatory.signIndex(), "Accept": "give for signing"});
-      signatory.giveForPadSigning().send();
-    },
-
     getDeliveryMethod: function () {
       var signatory = this.props.signatory;
       if (signatory.emailDelivery()) {
