@@ -16,6 +16,8 @@ return React.createClass({
       sig.setDelivery("mobile");
     } else if (sig.delivery() == "mobile") {
       sig.setDelivery("email_mobile");
+    } else if (sig.delivery() == "email_mobile") {
+      sig.setDelivery("api");
     } else {
       sig.setDelivery("email");
     }
@@ -29,7 +31,7 @@ return React.createClass({
     } else if (sig.delivery() == "pad") {
       return "design-view-action-participant-icon-device-icon-pad";
     } else if (sig.delivery() == "api") {
-      return "design-view-action-participant-icon-device-icon-pad";
+      return "design-view-action-participant-icon-device-icon-api";
     } else if (sig.delivery() == "mobile") {
       return "design-view-action-participant-icon-device-icon-phone";
     } else if (sig.delivery() == "email_mobile") {

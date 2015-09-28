@@ -801,7 +801,7 @@ apiCallV1Get did = logDocument did . api $ do
                        =<< signatoryActor ctx sl
        switchLang . getLang =<< theDocument
 
-       Ok <$> (documentJSONV1 Nothing False False (Just sl) =<< theDocument)
+       Ok <$> (documentJSONV1 Nothing False (signatoryisauthor sl) (Just sl) =<< theDocument)
     _ -> do
       (user, _actor, external) <- getAPIUser APIDocCheck
       msiglink <- getSigLinkFor user <$> theDocument

@@ -4,10 +4,12 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
   "common/language_service",
   "authorview/signatories/changeauthenticationtoviewmodal",
   "authorview/signatories/changeauthenticationtosignmodal",
-  "authorview/signatories/changesignatorydetailmodal", "legacy_code"],
+  "authorview/signatories/changesignatorydetailmodal",
+  "authorview/signatories/showapideliverymodal",
+  "legacy_code"],
   function (React, Button, BackboneMixin, Backbone, LanguageService,
     ChangeAuthenticationToViewModal, ChangeAuthenticationToSignModal,
-    ChangeSignatoryDetailModal) {
+    ChangeSignatoryDetailModal, ShowAPIDeliveryModal) {
 
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -284,6 +286,20 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
       signatory.giveForPadSigning().send();
     },
 
+    hasShowAPIDelivery: function () {
+      var signatory = this.props.signatory;
+      return signatory.document().currentViewerIsAuthor()
+      && signatory.document().signingInProcess()
+      && signatory.canSign()
+      && signatory.apiDelivery();
+    },
+
+    handleShowAPIDeliveryModal: function () {
+      new ShowAPIDeliveryModal({
+        signatory: this.props.signatory
+      });
+    },
+
     getDeliveryMethod: function () {
       var signatory = this.props.signatory;
       if (signatory.emailDelivery()) {
@@ -403,6 +419,11 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
                 </span>
               </div>
               <div className="fieldrow">
+                {/* if */ this.hasShowAPIDelivery() &&
+                  <a className="edit clickable" onClick={this.handleShowAPIDeliveryModal}>
+                    {localization.docview.signatory.showAPIDelivery}
+                  </a>
+                }
                 <span className="deliverymethod field" title={this.getDeliveryMethod()}>
                   {localization.docview.signatory.invitationMethod}: {this.getDeliveryMethod()}
                 </span>

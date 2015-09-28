@@ -138,6 +138,8 @@ define(['React'], function(React) {
       $(this.refs.input.getDOMNode()).val($(this.refs.input.getDOMNode()).val());
     },
     onClick: function (e) {
+      if (this.props.onClick != undefined)
+        this.props.onClick(e, this.getDOMNode());
       // focus when clicking on the padding of the outer element,
       // but only when clicking on the outer element as we dont want to
       // break selecting.

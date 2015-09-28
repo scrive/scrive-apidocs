@@ -36,7 +36,11 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/deli
       deliveryIcon.forceUpdate();
       TestUtils.Simulate.click(deliveryIcon.getDOMNode());
       var deliveryMethod5 = signatory.get("delivery");
-      assert.equal(deliveryMethod5, deliveryMethod1);
+      assert.notEqual(deliveryMethod5, deliveryMethod1);
+      deliveryIcon.forceUpdate();
+      TestUtils.Simulate.click(deliveryIcon.getDOMNode());
+      var deliveryMethod6 = signatory.get("delivery");
+      assert.equal(deliveryMethod6, deliveryMethod1);
     });
 
     it("should delivery icon changes also change confirmation delivery method when clicking (for fresh document - order of tests is important))", function () {

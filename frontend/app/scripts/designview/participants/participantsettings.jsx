@@ -30,13 +30,13 @@ return React.createClass({
     } else if (t == "email_mobile") {
       return localization.designview.addParties.invitationEmailSMS;
     } else if (t == "api") {
-      return localization.designview.byAPI;
+      return localization.designview.addParties.invitationAPI;
     }
   },
   deliveryOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var deliveryTypes = sig.isLastViewer() ? ["none"] : ["email", "pad", "mobile", "email_mobile"];
+    var deliveryTypes = sig.isLastViewer() ? ["none"] : ["email", "pad", "mobile", "email_mobile", "api"];
     return _.map(deliveryTypes, function (t) {
       return {name: self.deliveryText(t), value:t};
     });
