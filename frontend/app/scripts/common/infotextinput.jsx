@@ -46,7 +46,7 @@ define(['React'], function(React) {
 
       // Behaviour
       suppressSpace : React.PropTypes.bool,
-      autocompleate : React.PropTypes.bool,
+      autocomplete  : React.PropTypes.bool,
       readonly      : React.PropTypes.bool,
       focus         : React.PropTypes.bool,
       autoGrowth    : React.PropTypes.bool,
@@ -198,7 +198,7 @@ define(['React'], function(React) {
           <input
             name={this.props.name}
             type={this.props.inputtype}
-            autoComplete={this.props.autocompleate}
+            autoComplete={this.props.autocomplete}
             style={inputStyle}
             readOnly={this.props.readonly}
             disabled={this.props.readonly}
