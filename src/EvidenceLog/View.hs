@@ -145,9 +145,9 @@ getEvidenceEventStatusClass (Current AttachGuardtimeSealedFileEvidence) = SCSeal
 getEvidenceEventStatusClass (Current AttachExtendedSealedFileEvidence)  = SCExtended
 getEvidenceEventStatusClass (Current SMSPinSendEvidence)                = SCSent
 getEvidenceEventStatusClass (Current SMSPinDeliveredEvidence)           = SCDelivered
-getEvidenceEventStatusClass (Current VisitedViewForAuthenticationEvidence) = SCOpened
+getEvidenceEventStatusClass (Current VisitedViewForAuthenticationEvidence) = SCOpenedAuthToView
 getEvidenceEventStatusClass (Current VisitedViewForSigningEvidence)        = SCOpened
-getEvidenceEventStatusClass (Current AuthenticatedToViewEvidence)          = SCOpened
+getEvidenceEventStatusClass (Current AuthenticatedToViewEvidence)          = SCAuthenticatedToView
 
 getEvidenceEventStatusClass _                                           = SCError
 
