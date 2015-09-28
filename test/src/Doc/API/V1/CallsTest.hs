@@ -12,19 +12,22 @@ import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import Context
 import DB
-import Doc.Action
 import Doc.API.V1.Calls
 import Doc.API.V1.DocumentToJSON
+import Doc.Action
 import Doc.DocInfo
 import Doc.DocStateData
-import Doc.DocumentMonad
 import Doc.DocUtils
+import Doc.DocumentMonad
 import Doc.Model
 import Doc.SignatoryScreenshots
+import EID.Authentication.Model
+import EID.CGI.GRP.Data()
 import KontraPrelude
 import OAuth.Model
-import TestingUtil
+import Session.Model
 import TestKontra as T
+import TestingUtil
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -316,6 +319,22 @@ testChangeAuthenticationToViewMethod = do
   assertEqual "The personal number 1234567890 should be set from previous call" "1234567890" (getPersonalNumber siglinkStandard)
   assertEqual "The mobile number +4712345678 should be set from previous call" "+4712345678" (getMobile siglinkStandard)
   assertEqual "Authentication to view should be Standard" StandardAuthenticationToView (signatorylinkauthenticationtoviewmethod siglinkStandard)
+
+  reqSEBankIDAgain <- mkRequest POST [("authentication_type", inText "se_bankid"),("personal_number", inText "1234567890")]
+  (resSEBankIDAgain, _) <- runTestKontra reqSEBankIDAgain ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 202" 202 (rsCode resSEBankIDAgain)
+
+  (sessionid, ctx')<- runTestKontra reqSEBankIDAgain ctx $ getNonTempSessionID
+  dbUpdate $ MergeCGISEBankIDAuthentication sessionid validsiglinkid $
+    CGISEBankIDAuthentication {
+        cgisebidaSignatoryName = "AName"
+      , cgisebidaSignatoryPersonalNumber = "BName"
+      , cgisebidaSignature = Binary "sig_here"
+      , cgisebidaOcspResponse = Binary "sig_resp"
+    }
+  reqStandardAgain <- mkRequest POST [("authentication_type", inText "standard")]
+  (resStandardAgain, _) <- runTestKontra reqStandardAgain ctx' $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
+  assertEqual "Response code should be 400" 400 (rsCode resStandardAgain)
 
   user2 <- addNewRandomUser
   ctx2 <- (\c -> c { ctxmaybeuser = Just user2 }) <$> mkContext def
