@@ -93,7 +93,7 @@
              , reject : {
                          send : "Reject"
                }
-             , signatoryMessage :
+             , signatoryMessage : {
                          rejected : "Rejected"
                        , seen : "Reviewed online"
                        , read : "Email opened"
