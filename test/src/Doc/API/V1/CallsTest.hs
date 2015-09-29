@@ -320,6 +320,7 @@ testChangeAuthenticationToViewMethod = do
   assertEqual "The mobile number +4712345678 should be set from previous call" "+4712345678" (getMobile siglinkStandard)
   assertEqual "Authentication to view should be Standard" StandardAuthenticationToView (signatorylinkauthenticationtoviewmethod siglinkStandard)
 
+  -- Check that we can't change authentication to view for signatory that has already authenticated to view
   reqSEBankIDAgain <- mkRequest POST [("authentication_type", inText "se_bankid"),("personal_number", inText "1234567890")]
   (resSEBankIDAgain, _) <- runTestKontra reqSEBankIDAgain ctx $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
   assertEqual "Response code should be 202" 202 (rsCode resSEBankIDAgain)
@@ -336,6 +337,7 @@ testChangeAuthenticationToViewMethod = do
   (resStandardAgain, _) <- runTestKontra reqStandardAgain ctx' $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
   assertEqual "Response code should be 400" 400 (rsCode resStandardAgain)
 
+  -- Check that we can't change authentication to view if we are logged as user not connected to document
   user2 <- addNewRandomUser
   ctx2 <- (\c -> c { ctxmaybeuser = Just user2 }) <$> mkContext def
   (resBadUser, _) <- runTestKontra reqSEBankIDValid10digits ctx2 $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
