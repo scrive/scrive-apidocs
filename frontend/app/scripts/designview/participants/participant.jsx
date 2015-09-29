@@ -18,9 +18,10 @@ return React.createClass({
       viewmodel.setParticipantDetail(undefined);
     } else {
       mixpanel.track("Open participant detail");
+      var oldSig = viewmodel.participantDetail();
       viewmodel.setParticipantDetail(sig);
       if (this.props.onExpand !== undefined) {
-        this.props.onExpand();
+        this.props.onExpand(oldSig);
       }
     }
   },
