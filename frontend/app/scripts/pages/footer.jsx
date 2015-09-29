@@ -88,6 +88,7 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
                  <li className="branch"><a href={this.props.langprefix + 'terms'} id="nav-terms">{localization.footer.tos}</a></li>
                  <li className="branch"><a href={this.props.httplink + this.langprefixForStaticPages() + 'environment'} id="nav-environment">{localization.footer.environmentalPolicy}</a></li>
                  <li className="branch"><a href={this.props.httplink + this.langprefixForStaticPages() + 'privacy'} id="nav-privacy">{localization.footer.privacyPolicy}</a></li>
+
                </ul>
              </div>
            </nav>
@@ -104,6 +105,12 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
                    </li>
                    <li className="branch">
                        <a href="mailto:info@scrive.com">info@scrive.com</a>
+                   </li>
+                   <li className="branch">
+                      <a href="https://scrive.ideas.aha.io" id="nav-give-feedback">{localization.footer.giveFeedback}</a>
+                   </li>
+                   <li className="branch">
+                      <a href="http://blog.scrive.com" id="nav-blog">{localization.footer.blog}</a>
                    </li>
                </ul>
              </div>

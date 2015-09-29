@@ -1279,6 +1279,9 @@ javascriptLocalisation =
             , address2             : "$_pageFooterAddress2()$"
             , address3             : "$_pageFooterAddress3()$"
             , address4             : "$_pageFooterAddress4()$"
+            , giveFeedback          : "$_pageFooterGiveFeedback()$"
+            , blog                 : "$_pageFooterBlog()$"
+
       }
       , header : {
               login : "$_login()$"

@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -733,9 +733,11 @@
 "_pageFooterAddress2":"Drottninggatan 82",
 "_pageFooterAddress3":"111 36 Stockholm",
 "_pageFooterAddress4":"Sweden",
+"_pageFooterBlog":"Blog",
 "_pageFooterContact":"Contact us",
 "_pageFooterEnvironmentalPolicy":"Environmental policy",
 "_pageFooterExplore":"Explore",
+"_pageFooterGiveFeedback":"Give feedback",
 "_pageFooterPrivacyPolicy":"Privacy policy",
 "_pageFooterTOS":"Terms of service",
 "_pageFooterTerms":"Terms and policies",
