@@ -353,7 +353,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m DocumentExistsAndIsNotPurgedOrRe
       sqlResult "TRUE"
       sqlWhereDocumentIDIs did
       sqlWhereDocumentWasNotPurged
-      sqlWhereExists $ sqlSelect "signatory_links" $ do
+      sqlWhereNotExists $ sqlSelect "signatory_links" $ do
         sqlWhere "signatory_links.is_author IS TRUE"
         sqlWhere "signatory_links.really_deleted IS NOT NULL"
         sqlWhere "signatory_links.document_id = documents.id"
