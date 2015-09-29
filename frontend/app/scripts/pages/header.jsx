@@ -33,7 +33,7 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
         <nav>
           <ul className="ct">
             <li id="branding">
-              <a id="logo" className="page" href="/">
+              <a id="logo" className="page" href="/newdocument">
                 {
                   <img src={"/service_logo/" + window.brandinghash}   style={{"margin":"0px"}} />
                 }
