@@ -113,7 +113,7 @@ handleResolve = do
                       F.value "signatory_mobile" mphone
                       F.value "signatory_dob" dob
                       F.value "signatory_pid" mpid
-                      F.value "provider" $ ("Norwegian BankID" :: String)
+                      F.value "provider_nobankid" True
                       F.value "signature" $ B64.encode . unBinary $ certificate
                  void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
 
