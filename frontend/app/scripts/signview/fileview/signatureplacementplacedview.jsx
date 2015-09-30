@@ -1,5 +1,6 @@
-define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin", "legacy_code"],
-  function (React, PlacementMixin, TaskMixin) {
+define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin",
+        "signview/signaturemodal/signaturemodal", "legacy_code"],
+  function (React, PlacementMixin, TaskMixin, SignatureModal) {
 
   return React.createClass({
     mixins: [PlacementMixin, TaskMixin],
@@ -33,7 +34,7 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
       var size = this.size();
       var field = this.props.model.field();
 
-      new SignatureDrawOrTypeModal({
+      new SignatureModal({
         field: field,
         width: size.width,
         height: size.height,

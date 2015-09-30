@@ -6,6 +6,7 @@
   "./app/scripts/authorview/signatories/*.jsx",
   "./app/scripts/signview/signatories/*.jsx",
   "./app/scripts/signview/fileview/*.jsx",
+  "./app/scripts/signview/signaturemodal/*.jsx",
   "./app/scripts/signview/extradetails/*.jsx",
   "./app/scripts/signview/instructionsview/*.jsx",
   "./app/scripts/signview/attachments/*.jsx",
