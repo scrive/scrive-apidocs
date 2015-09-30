@@ -177,8 +177,9 @@ define(['React'], function(React) {
     onKeyDown : function(e) {
       if (e.keyCode == 13 && this.props.onEnter != undefined)
           this.props.onEnter();
-      else if (e.keyCode == 9 && this.props.onTab != undefined)
-          this.props.onTab();
+      else if (e.keyCode == 9 && this.props.onTab != undefined) {
+        this.props.onTab(e);
+      }
     },
     render: function() {
       var fakePlaceholder = BrowserInfo.isIE9orLower() && !this.state.focus && (this.state.value == undefined || this.state.value =="") ;

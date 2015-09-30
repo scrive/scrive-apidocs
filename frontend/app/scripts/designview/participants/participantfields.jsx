@@ -13,21 +13,36 @@ return React.createClass({
     var self = this;
     var sig = this.props.model;
     var viewmodel = this.props.viewmodel;
+    var lastTextFieldIndex = _.findLastIndex(sig.fields(), function (f) {
+      return f.isText();
+    });
+    var lastTextField = sig.fields()[lastTextFieldIndex];
 
     return (
       <div className="design-view-action-participant-details-information">
-        <ParticipantNameField model={sig}/>
+        <ParticipantNameField
+           last={lastTextField.isFstName() || lastTextField.isSndName()}
+           model={sig}
+        />
         {/* if */ sig.emailField() != undefined &&
-          <ParticipantField model={sig.emailField()}/>
+          <ParticipantField last={lastTextField.isEmail()} model={sig.emailField()}/>
         }
         {
-          _.map(sig.fields(), function (f) {
+          _.map(sig.fields(), function (f, i) {
             if (f.isBlank()) {
               return (<ParticipantSelectField model={f} key={"select-field" + f.cid}/>);
             } else if (f.noName()) {
-              return (<ParticipantNotNamedField model={f} key={"not-named-field-" + f.cid}/>);
+              return (<ParticipantNotNamedField
+                         last={i == lastTextFieldIndex}
+                         model={f}
+                         key={"not-named-field-" + f.cid}
+                      />);
             } else if (!f.isEmail() && !f.isFstName() && !f.isSndName() && f.isText()) {
-              return (<ParticipantField model={f} key={"field-" + f.cid}/>);
+              return (<ParticipantField
+                         last={i == lastTextFieldIndex}
+                         model={f}
+                         key={"field-" + f.cid}
+                      />);
             } else {
               return;
             }
