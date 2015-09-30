@@ -21,9 +21,23 @@ scaleReset=
     <script type="text/javascript">
       require(['legacy_code'], function() {
         jQuery(document).ready(function() {
-          setTimeout(function() {
-            jQuery('meta[name=viewport]').attr('content','width=1020, user-scalable=yes');},
-            200);
+          if (BrowserInfo.isAndroid() && BrowserInfo.isFirefox()) {
+            // In firefox on android initial scale computing is broken, and we need to recompute it.
+            // Also for FF meta tags needs to be appended to head, not only changed
+            setTimeout(function() {
+              var scale = (window.innerWidth / 1020);
+              scale = scale > 1 ? "1.0" : (scale + "").substring(0,4)
+              jQuery('head').append("<meta name='viewport' content='width=1020, user-scalable=no, initial-scale="+scale+"'/>");
+              setTimeout(function() {
+                  jQuery('head').append("<meta name='viewport' content='width=1020, user-scalable=yes'/>");
+                }, 200);
+              }, 200);
+          } else {
+            setTimeout(function() {
+              jQuery('meta[name=viewport]').attr('content','width=1020, user-scalable=yes');
+            }, 200);
+          }
+
         });
       });
     </script>

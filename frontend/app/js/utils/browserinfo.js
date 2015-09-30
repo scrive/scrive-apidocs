@@ -24,6 +24,12 @@ window.BrowserInfo = {
     isIOS9 : function(){
         return navigator.userAgent.match(/OS 9_0 like Mac OS X/i) != null;
     },
+    isFirefox : function() {
+        return navigator.userAgent.match(/Firefox/i) != null; //
+    },
+    isChrome : function() {
+        return navigator.userAgent.match(/Chrome/i) != null; //
+    },
     isIE : function() {
         return navigator.userAgent.match(/MSIE|Trident/i) != null; // MSIE for IE <=10 and Trident for IE 11=<
     },
