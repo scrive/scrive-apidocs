@@ -85,13 +85,28 @@ return React.createClass({
       return (
         <div className="companybranding-top-bar">
 
-          <div className="select-theme-for-view">
+          <div className="select-theme-for-view-labels">
             <h5
               className={"select-theme-header " + (model.mailThemeMode() ? "active" : "")}
               onClick={function() {model.switchToMailThemeMode();}}
             >
               {localization.branding.emailThemeTitle}
             </h5>
+            <h5
+              className={"select-theme-header " + (model.signviewThemeMode() ? "active" : "")}
+              onClick={function() {model.switchToSignviewThemeMode();}}
+            >
+              {localization.branding.signviewThemeTitle}
+            </h5>
+            <h5
+              className={"select-theme-header " + (model.serviceThemeMode() ? "active" : "")}
+              onClick={function() {model.switchToServiceThemeMode();}}
+            >
+             {localization.branding.serviceThemeTitle}
+            </h5>
+          </div>
+
+          <div className="select-theme-for-view-selects">
             {
               self.themeSelector(
                 function() {return companybranding.mailTheme();},
@@ -102,16 +117,6 @@ return React.createClass({
                 companybranding.newThemeUrl("mail")
               )
             }
-          </div>
-
-          <div className="select-theme-for-view">
-
-            <h5
-              className={"select-theme-header " + (model.signviewThemeMode() ? "active" : "")}
-              onClick={function() {model.switchToSignviewThemeMode();}}
-            >
-              {localization.branding.signviewThemeTitle}
-            </h5>
             {
               self.themeSelector(
                 function() {return companybranding.signviewTheme();},
@@ -122,15 +127,6 @@ return React.createClass({
                 companybranding.newThemeUrl("signview")
               )
             }
-          </div>
-
-          <div className="select-theme-for-view">
-            <h5
-              className={"select-theme-header " + (model.serviceThemeMode() ? "active" : "")}
-              onClick={function() {model.switchToServiceThemeMode();}}
-            >
-             {localization.branding.serviceThemeTitle}
-            </h5>
             {
               self.themeSelector(
                 function() {return companybranding.serviceTheme();},
