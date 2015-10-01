@@ -250,6 +250,12 @@ return React.createClass({
          * whereas scrollLeft is constant. */
         canvasLeft -= window.pageXOffset;
         canvasLeft += document.documentElement.scrollLeft;
+      } else if (BrowserInfo.isAndroid() && BrowserInfo.isChrome()) {
+        /* Similar issue on android, but only for XOffset and only when zoomed.
+         * Note that Chrome on Android has many other issues when zoomed, and they are not solveable right now,
+         * since offsetY computation is broken on this platform.
+         */
+        canvasLeft -= window.pageXOffset;
       }
       return e.pageX - canvasLeft;
     },
