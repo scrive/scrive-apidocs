@@ -18,7 +18,6 @@ module AppView(
               , unsupportedBrowserPage
               , standardPageFields
               , contextInfoFields
-              , localizationScript
               , companyForPage
               , companyUIForPage
               , handleTermsOfService
@@ -312,12 +311,3 @@ flashMessageFields flash = do
     OperationDone   -> ("success" :: String)
     OperationFailed -> ("error" :: String)
   F.value "message" $ replace "\"" "'" $ filter (not . isControl) $ flashMessage flash
-
-localizationScript :: Kontrakcja m => String -> m Response
-localizationScript _ = do
-   Context{ctxlang} <- getContext
-   script <- renderTemplate "javascriptLocalisation" $ F.value "code" $ codeFromLang ctxlang
-   ok $
-     setHeaderBS "Cache-Control" "max-age=31536000"  $
-     toResponseBS (BS.fromString "text/javascript;charset=utf-8") $
-       BSL.fromString script

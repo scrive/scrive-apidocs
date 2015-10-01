@@ -1,30 +1,30 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module LocalizationTest (localizationTest) where
 
+import Control.Monad.Reader (asks)
 import Data.Function
 import Data.Map ((!))
 import Data.String.Utils
-import Happstack.Server
-import System.Exit
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool, Assertion)
 import Text.JSON
 import Text.StringTemplate
+import Text.StringTemplates.Templates (renderTemplate)
 import Text.StringTemplates.TextTemplates
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
-import qualified Data.ByteString.Lazy as BS
-import qualified Data.ByteString.Lazy.UTF8 as BS
+import qualified Text.StringTemplates.Fields as F
 
-import AppView (localizationScript)
+import Doc.DocumentMonad (withDocumentID)
 import KontraPrelude
-import TestingUtil (testThat, assertFailure)
+import Templates (runTemplatesT)
 import TestKontra
+import TestingUtil (addNewRandomUser, addRandomDocumentWithAuthor)
+import TestingUtil (testThat, assertFailure)
 import User.Lang
 import Utils.Enum
-import Utils.IO
 
 localizationTest :: TestEnvSt -> Test
 localizationTest env = testGroup "Localization Test"
@@ -34,7 +34,7 @@ localizationTest env = testGroup "Localization Test"
         , testCase "text templates have same structure" testTranslationsHaveSameStructure
         , testCase "text templates have same html structure" testTranslationsHaveSameHtmlStructure
         , testCase "text templates have same number of excaped \\\" " testTranslationsHaveSameEscapeSequences
-        , testThat "localization file never uses single quotes to wrap translation text" env testLocalizationFileNoSingleQuotes
+        , testThat "Localisation templates render for all languages" env testLocalizationTemplatesRender
       ]
     ]
 
@@ -206,13 +206,11 @@ compareEscapeSequeces s t =
     countGTs str = length $ split ">" str
     countLTs str = length $ split "<" str
 
-testLocalizationFileNoSingleQuotes :: TestEnv ()
-testLocalizationFileNoSingleQuotes = forM_ allLangs $ \l -> do
-  ctx <- mkContext l
-  req <- mkRequest GET []
-  (res, _) <- runTestKontra req ctx $ localizationScript ""
-  let src = BS.fromString "window = {};\n" `BS.append` rsBody res
-  (exitCode, _, stderr) <- readProcessWithExitCode' "node" [] src
-  case exitCode of
-    ExitSuccess -> return ()
-    ExitFailure _ -> assertFailure $ "Rendered localization file is unparseable in lang " ++ show l ++ ", becase: " ++ BS.toString stderr
+testLocalizationTemplatesRender :: TestEnv ()
+testLocalizationTemplatesRender = do
+  author <- addNewRandomUser
+  did <- addRandomDocumentWithAuthor author
+  withDocumentID did $ forM_ allLangs $ \lang -> do
+    gts <- asks teGlobalTemplates
+    runTemplatesT (lang, gts) $
+        renderTemplate "javascriptLocalisation" $ F.value "code" $ codeFromLang lang

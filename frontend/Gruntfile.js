@@ -18,7 +18,8 @@ module.exports = function(grunt) {
   // configurable paths
   var yeomanConfig = {
     app: 'app',
-    dist: 'dist'
+    dist: 'dist',
+    kontrakcja: '../'
   };
 
   try {
@@ -32,6 +33,13 @@ module.exports = function(grunt) {
       less: {
         files: ["<%= yeoman.app %>/less/**/*.less", "<%= yeoman.app %>/scripts/temporary_less_directory/**/*.less"],
         tasks: ["less:compile"]
+      },
+      localization: {
+        files: [
+          '<%= yeoman.kontrakcja %>/texts/**/*.json',
+          '<%= yeoman.kontrakcja %>/templates/javascript-langs.st'
+        ],
+        tasks: ["shell:generateLocalization"]
       },
       livereload: {
         options: {
@@ -57,7 +65,7 @@ module.exports = function(grunt) {
     },
     connect: {
       proxyserver: {
-        // Proxy connections to either kontraktcja or angularjs
+        // Proxy connections to either kontratcja or angularjs
         options: {
           debug: true,
           hostname: '*',
@@ -83,7 +91,7 @@ module.exports = function(grunt) {
             port: 9001,
             https: false
           },
-          // this gives access to kontraktcja under root
+          // this gives access to kontrakcja under root
           {
             context: ['/'],
             host: '127.0.0.1',
@@ -175,6 +183,7 @@ module.exports = function(grunt) {
             src: [
               '.tmp',
               '<%= yeoman.app %>/compiled_jsx/',
+              '<%= yeoman.app %>/localization/',
               '<%= yeoman.dist %>/*',
               '!<%= yeoman.dist %>/.git*'
             ]
@@ -209,7 +218,8 @@ module.exports = function(grunt) {
         files: {
           src: [
             '<%= yeoman.dist %>/*.js',
-            '<%= yeoman.dist %>/*.css'
+            '<%= yeoman.dist %>/*.css',
+            '<%= yeoman.dist %>/localization/*.js'
           ]
         }
       }
@@ -239,6 +249,22 @@ module.exports = function(grunt) {
       },
       compileJsx: {
         command: './node_modules/react-tools/bin/jsx -x jsx <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/'
+      },
+      compileLocalization: {
+        command: 'cabal build localization',
+        options: {
+          execOptions: {
+            cwd: '<%= yeoman.kontrakcja %>'
+          }
+        }
+      },
+      generateLocalization: {
+        command: './dist/build/localization/localization',
+        options: {
+          execOptions: {
+            cwd: '<%= yeoman.kontrakcja %>'
+          }
+        }
       }
     },
     copy: {
@@ -260,6 +286,8 @@ module.exports = function(grunt) {
               'newsletter/**/*',
               'pdf/**/*',
               'libs/tiny_mce/**/*',
+              // Static localization files
+              'localization/*.js',
 
               // Shims that need to be loaded separately
               'libs/html5shiv.js',
@@ -343,6 +371,13 @@ module.exports = function(grunt) {
     ]);
   });
 
+  grunt.registerTask('compileGenerateLocalization', function(target) {
+    return grunt.task.run([
+      'shell:compileLocalization',
+      'shell:generateLocalization'
+    ]);
+  });
+
   /**
    *  Get a production looking enviroment, i.e.
    *  serve files compiled files from dist/
@@ -379,6 +414,7 @@ module.exports = function(grunt) {
       'less:compile',
       'cssmin:dev',
       'compileJsxWatch',
+      'compileGenerateLocalization',
       'configureProxies:proxyserver',
       'connect:proxyserver',
       'connect:livereload',
@@ -413,6 +449,7 @@ module.exports = function(grunt) {
   grunt.registerTask('build', function(target) {
     var tasks = [
       'clean:dist',
+      'compileGenerateLocalization',
       'concurrent:dist',
       'shell:compileJsx'
     ];
