@@ -210,7 +210,7 @@ instance FromJSValueWithUpdate SignatoryPersonalNumberField where
           (Just v) -> do
               return $ Just $ PersonalNumberField {
                   spnfID = (maybe (unsafeSignatoryFieldID 0) spnfID msf)
-                , spnfValue = v
+                , spnfValue = strip v
                 , spnfObligatory = obligatory
                 , spnfShouldBeFilledBySender = filledbysender
                 , spnfPlacements = placements

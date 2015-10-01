@@ -23,6 +23,7 @@ return React.createClass({
           infotext={csvfield ? csvname : localization.designview.fullName}
           readonly={csvfield || sig.author()}
           value={sig.name()}
+          onTab={function (e) {if (self.props.last) {e.preventDefault();}}}
           onChange={function (val) {
             var str = val.trim();
             var i = str.indexOf(" ");
