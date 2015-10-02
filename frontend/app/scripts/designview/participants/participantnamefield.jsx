@@ -22,6 +22,7 @@ return React.createClass({
           }
           infotext={csvfield ? csvname : localization.designview.fullName}
           readonly={csvfield || sig.author()}
+          disabled={csvfield || sig.author()}
           value={sig.name()}
           onTab={function (e) {if (self.props.last) {e.preventDefault();}}}
           onChange={function (val) {

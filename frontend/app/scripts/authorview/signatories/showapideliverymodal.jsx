@@ -4,9 +4,6 @@ define(["legacy_code", "React", "Backbone", "common/infotextinput"],
   function (Legacy, React, Backbone, InfoTextInput) {
 
   var ShowAPIDeliveryModalView = React.createClass({
-    getBackboneModels: function () {
-      return [this.props.signatory];
-    },
 
     propTypes: {
       signatory: React.PropTypes.object.isRequired
@@ -17,10 +14,9 @@ define(["legacy_code", "React", "Backbone", "common/infotextinput"],
       return window.location.origin + signatory.signlink();
     },
 
-    selectAllOnClick: function (e, t) {
-      var input = t.children[0];
-      input.focus();
-      input.setSelectionRange(0, input.value.length);
+    selectText: function () {
+      this.refs.input.focus();
+      this.refs.input.selectText();
     },
 
     render: function () {
@@ -32,9 +28,11 @@ define(["legacy_code", "React", "Backbone", "common/infotextinput"],
           <InfoTextInput
             className="api-delivery-url"
             inputtype="text"
+            ref="input"
             readonly={true}
+            disabled={false}
             value={this.getAPIDeliveryURL()}
-            onClick={this.selectAllOnClick}
+            onClick={this.selectText}
           />
         </div>
       );
@@ -44,7 +42,7 @@ define(["legacy_code", "React", "Backbone", "common/infotextinput"],
   return function (args) {
     var content = $("<div class='docview-showapidelivery-modal'>");
 
-    React.render(React.createElement(ShowAPIDeliveryModalView, {
+    var contentComp = React.render(React.createElement(ShowAPIDeliveryModalView, {
       signatory: args.signatory
     }), content[0]);
 
@@ -57,8 +55,7 @@ define(["legacy_code", "React", "Backbone", "common/infotextinput"],
       width: 420
     });
 
-    var input = $(".api-delivery-url input", content)[0];
-    input.focus();
-    input.setSelectionRange(0, input.value.length);
+    // Text selection needs to happend after input is appended somewhere in body
+    contentComp.selectText();
   }
 });

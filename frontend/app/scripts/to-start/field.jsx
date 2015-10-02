@@ -70,6 +70,7 @@ return React.createClass({
               style={style} onChange={c}
               className={classes}
               readonly={readonly}
+              disabled={readonly}
             />
           }
 
