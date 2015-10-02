@@ -6,19 +6,18 @@
    width: 1020px;
 
   .domain-management-top-bar {
-    margin-bottom: 10px;
+    margin-bottom: 3px;
 
-    .select-theme-for-view {
-      display: inline-block;
-      margin-right:10px;
-      width:158px;
-
+    .select-theme-for-view-labels {
       h5.select-theme-header {
         cursor: pointer;
+        display: inline-block;
         font-size: 15px;
         font-weight: 300;
         margin-bottom: 8px;
         margin-left: 2px;
+        margin-right: 8px;
+        width:158px;
 
         &.active {
           font-weight: normal;
@@ -26,14 +25,24 @@
       }
     }
 
+    .select-theme-for-view-selects {
+      display: inline-block;
+
+      .select {
+        display: inline-block;
+        margin-right: 10px;
+      }
+    }
+
     .select-theme-save {
-      line-height: 68px;
+      display: inline-block;
+      position: relative;
+      top: -2px;
 
       .save {
         vertical-align: bottom;
       }
     }
-
   }
  
   .domain-settings-edit {

@@ -74,44 +74,37 @@ return React.createClass({
       return (
         <div className="domain-management-top-bar">
 
-          <div className="select-theme-for-view">
+          <div className="select-theme-for-view-labels">
             <h5
               className={"select-theme-header " + (model.mailThemeMode() ? "active" : "")}
               onClick={function() {model.switchToMailThemeMode();}}
             >
               {localization.branding.emailThemeTitle}
             </h5>
-            {self.themeSelector(function() {return domain.mailTheme();}, function(t) {domain.setMailTheme(t);model.switchToMailThemeMode();})}
-          </div>
-
-          <div className="select-theme-for-view">
-
             <h5
               className={"select-theme-header " + (model.signviewThemeMode() ? "active" : "")}
               onClick={function() {model.switchToSignviewThemeMode();}}
             >
               {localization.branding.signviewThemeTitle}
             </h5>
-            {self.themeSelector(function() {return domain.signviewTheme();}, function(t) {domain.setSignviewTheme(t);model.switchToSignviewThemeMode();})}
-          </div>
-
-          <div className="select-theme-for-view">
             <h5
               className={"select-theme-header " + (model.serviceThemeMode() ? "active" : "")}
               onClick={function() {model.switchToServiceThemeMode();}}
             >
               {localization.branding.serviceThemeTitle}
             </h5>
-            {self.themeSelector(function() {return domain.serviceTheme();}, function(t) {domain.setServiceTheme(t);model.switchToServiceThemeMode();})}
-          </div>
-
-          <div className="select-theme-for-view">
             <h5
                 className={"select-theme-header " + (model.loginThemeMode() ? "active" : "")}
                 onClick={function() {model.switchToLoginThemeMode();}}
             >
               {localization.branding.loginThemeTitle}
             </h5>
+          </div>
+
+          <div className="select-theme-for-view-selects">
+            {self.themeSelector(function() {return domain.mailTheme();}, function(t) {domain.setMailTheme(t);model.switchToMailThemeMode();})}
+            {self.themeSelector(function() {return domain.signviewTheme();}, function(t) {domain.setSignviewTheme(t);model.switchToSignviewThemeMode();})}
+            {self.themeSelector(function() {return domain.serviceTheme();}, function(t) {domain.setServiceTheme(t);model.switchToServiceThemeMode();})}
             {self.themeSelector(function() {return domain.loginTheme();}, function(t) {domain.setLoginTheme(t);model.switchToLoginThemeMode();})}
           </div>
 
