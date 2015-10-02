@@ -46,8 +46,8 @@
 "_elegBankIDRFA9":"Skriv in din säkerhetskod i BankID-appen och välj Signera.",
 "_elegBankInvalidParametersCanChange":"Fel personnummer. Ändra och försök igen.",
 "_elegBankInvalidParametersCantChange":"Fel personnummer. Kontakta dokumentets avsändare för att ändra.",
-"_elegSignConfirmationText":"",
-"_elegSignConfirmationTitle":"",
+"_elegSignConfirmationText":"<strong class='put-signatory-name-here'></strong>, du kommer att signera med svenskt BankID. När du har signerat kommer din signatur att registreras av e-signeringstjänsten Scrive.",
+"_elegSignConfirmationTitle":"Signera med svenskt BankID",
 "_email":"E-post",
 "_enterPhoneForPinDelivery":"Skriv in ditt telefonnummer",
 "_enterSMSPin":"Skriv in din SMS PIN",
@@ -168,5 +168,5 @@
 "_subtitleSignedNotClosedByEmail":"När alla parter har signerat kommer det färdigställda dokumentet att skickas till dig med e-post.",
 "_subtitleSignedNotClosedByEmailMobile":"När alla parter har signerat kommer det färdigställda dokumentet att skickas till dig med e-post och SMS.",
 "_subtitleSignedNotClosedByMobile":"När alla parter har signerat kommer det färdigställda dokumentet att skickas till dig med SMS.",
-"_unavailableForSign":"Dokumentet går ej längre att signera"
+"_unavailableForSign":"Dokumentet går inte längre att signera"
 }
