@@ -313,6 +313,9 @@ window.Signatory = Backbone.Model.extend({
     undeliveredSMSInvitation: function() {
           return this.get("undeliveredSMSInvitation");
     },
+    signlink: function() {
+          return this.get("signlink");
+    },
     signorder: function() {
          return this.get("signorder");
     },
@@ -676,6 +679,9 @@ window.Signatory = Backbone.Model.extend({
         this.set({confirmationdelivery:"email_mobile"});
       }
       else if (this.padDelivery()) {
+        this.set({confirmationdelivery:"email"});
+      }
+      else if (this.apiDelivery()) {
         this.set({confirmationdelivery:"email"});
       }
     },

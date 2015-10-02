@@ -48,6 +48,7 @@ define(['React'], function(React) {
       suppressSpace : React.PropTypes.bool,
       autocomplete  : React.PropTypes.bool,
       readonly      : React.PropTypes.bool,
+      disabled      : React.PropTypes.bool,
       focus         : React.PropTypes.bool,
       autoGrowth    : React.PropTypes.bool,
       restrictInput : React.PropTypes.func,
@@ -79,6 +80,7 @@ define(['React'], function(React) {
           "okStyle" : {},
           "autocomplete" : false,
           "readonly" : false,
+          "disabled" : false,
           "restrictInput": function () { return true; }
         };
       },
@@ -137,7 +139,13 @@ define(['React'], function(React) {
       //After calling focus - custor is sometimes at begining of text. If we will set the value to what is there - custor will be placed at the end
       $(this.refs.input.getDOMNode()).val($(this.refs.input.getDOMNode()).val());
     },
+    selectText : function() {
+      this.refs.input.getDOMNode().setSelectionRange(0, $(this.refs.input.getDOMNode()).val().length);
+    },
     onClick: function (e) {
+      if (this.props.onClick != undefined) {
+        this.props.onClick();
+      }
       // focus when clicking on the padding of the outer element,
       // but only when clicking on the outer element as we dont want to
       // break selecting.
@@ -202,7 +210,7 @@ define(['React'], function(React) {
             autoComplete={this.props.autocomplete}
             style={inputStyle}
             readOnly={this.props.readonly}
-            disabled={this.props.readonly}
+            disabled={this.props.disabled}
             className={fakePlaceholder ? "grayed" : ""}
             placeholder={this.props.infotext}
             maxLength={this.props.maxLength}

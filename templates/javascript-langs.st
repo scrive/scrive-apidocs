@@ -349,7 +349,6 @@ javascriptLocalisation =
              , whatField: "$_designViewWhatField()$"
              , customField: "$_designViewCustomField()$"
              , fieldName: "$_designViewFieldName()$"
-             , byAPI: "$_designViewByAPI()$"
              , addParty: "$_designViewAddParty()$"
              , moreSettings: "$_designViewMoreSettings()$"
              , selectField: "$_designViewSelectField()$"
@@ -363,6 +362,7 @@ javascriptLocalisation =
                , invitationNone : "$_designViewAddPartiesInvitationNone()$"
                , invitationSMS : "$_designViewAddPartiesInvitationSMS()$"
                , invitationEmailSMS : "$_designViewAddPartiesInvitationEmailSMS()$"
+               , invitationAPI : "$_designViewAddPartiesInvitationAPI()$"
                , role : "$_designViewAddPartiesRole()$"
                , roleSignatory : "$_designViewAddPartiesRoleSignatory()$"
                , roleViewer : "$_designViewAddPartiesRoleViewer()$"
@@ -619,6 +619,7 @@ javascriptLocalisation =
             signatory : {
                 editAuthenticationToViewMethod: "$_docviewSignatoryeditAuthenticationToViewMethod()$"
               , editAuthenticationToSignMethod: "$_docviewSignatoryeditAuthenticationToSignMethod()$"
+              , showAPIDelivery: "$_docviewSignatoryShowAPIDelivery()$"
               , invitationOrder: "$_docviewSignatoryInvitationOrderLabel()$"
               , invitationMethod: "$_docviewSignatoryInvitationMethodLabel()$"
               , invitationEmail: "$_docviewSignatoryInvitationEmail()$"
@@ -643,6 +644,11 @@ javascriptLocalisation =
               , confirmationSMS: "$_docviewSignatoryConfirmationSMS()$"
               , confirmationEmailSMS: "$_docviewSignatoryConfirmationEmailSMS()$"
               , confirmationNone: "$_docviewSignatoryConfirmationNone()$"
+            },
+            showAPIDelivery : {
+                title: "$_docviewShowAPIDeliveryModalTitle()$"
+              , accept: "$_docviewShowAPIDeliveryModalAccept()$"
+              , description: "$_docviewShowAPIDeliveryModalDescription()$"
             },
             changeAuthenticationToView : {
                 title: "$_docviewChangeAuthenticationToViewModalTitle()$"

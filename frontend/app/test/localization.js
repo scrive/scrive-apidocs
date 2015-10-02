@@ -10,7 +10,7 @@
              , identifyBankIdError: {
                failed: "Identification with Norwegian BankID failed."
                , canceled: "Identification with Norwegian BankID was canceled."
-               , useragent: "Norwegian BankID do not support your browser. Try another browser."
+               , useragent: "Norwegian BankID does not support your browser. Try another browser."
                , auth: "Norwegian BankID log in was not successful."
                , blocked: "Your Norwegian BankID is blocked. Contact your bank."
                , revoked: "Your Norwegian BankID has been revoked. Contact your bank."
@@ -344,7 +344,6 @@
              , whatField: "What field is it?"
              , customField: "New field"
              , fieldName: "Field name"
-             , byAPI: "by API"
              , addParty: "Add party"
              , moreSettings: "More settings"
              , selectField: "Field"
@@ -358,6 +357,7 @@
                , invitationNone : "None"
                , invitationSMS : "SMS"
                , invitationEmailSMS : "Email and SMS"
+               , invitationAPI : "API"
                , role : "Role"
                , roleSignatory : "Signing party"
                , roleViewer : "Viewer"
@@ -589,8 +589,8 @@
                       , modalThisDevice : "This device"
                       , mobilebankid: "Mobile BankID"
                       , faultModalTitle : "Problem signing with BankID"
-                      , signConfirmationTitle : "Sign with eID"
-                      , signConfirmationText : "<p><strong class='put-signatory-name-here'></strong>, you will sign using eID. When you have signed your signature will be registered by the e-signing service Scrive.</p>"
+                      , signConfirmationTitle : "Sign with Swedish BankID"
+                      , signConfirmationText : "<p><strong class='put-signatory-name-here'></strong>, you will sign using Swedish BankID. When you have signed your signature will be registered by the e-signing service Scrive.</p>"
                       , rfa1 : "Start your BankID App."
                       , rfa3 : "Action cancelled. Please try again."
                       , rfa5 : "Internal error. Please try again."
@@ -612,7 +612,9 @@
         }
         , docview : {
             signatory : {
-                editAuthenticationToSignMethod: "Edit"
+                editAuthenticationToViewMethod: "Edit"
+              , editAuthenticationToSignMethod: "Edit"
+              , showAPIDelivery: "Show"
               , invitationOrder: "Invitation order"
               , invitationMethod: "Invitation method"
               , invitationEmail: "email"
@@ -638,14 +640,34 @@
               , confirmationEmailSMS: "email and SMS"
               , confirmationNone: "none"
             },
-            changeAuthentication : {
-                title: "Authentication"
+            showAPIDelivery : {
+                title: "API"
+              , accept: "Close"
+              , description: "This link leads to the signing page. Give the link to the party that should sign."
+            },
+            changeAuthenticationToView : {
+                title: "Authentication to view"
               , accept: "Save"
-              , methodLabel: "Authentication method for <strong class='put-person-name'></strong>"
+              , methodLabel: "Authentication method"
+              , ssnSEBankIDLabel: "ID number"
+              , ssnSEBankIDPlaceholder: "YYMMDDNNNN"
+              , ssnNOBankIDLabel: "ID number"
+              , ssnNOBankIDPlaceholder: "DDMMYYNNNNN"
+              , phoneLabel: "Phone (+4712345678)"
+              , flashMessageInvalidSESSN: "Wrong format of ID number."
+              , flashMessageInvalidNOSSN: "Wrong format of ID number."
+              , flashMessageInvalidNOPhone: "Wrong format of phone number."
+              , flashMessageInvalidNOSSNAndPhone: "Wrong format of ID number and phone number."
+              , errorFlashMessage: "Something went wrong."
+            },
+            changeAuthentication : {
+                title: "Authentication to sign"
+              , accept: "Save"
+              , methodLabel: "Authentication method"
               , placeholderEID: "YYMMDDNNNN"
               , placeholderPhone: "E.g. +46712345678"
               , valueInfotext: "If left empty, the recipient will enter this information."
-              , errorSigned: "As the recipient has already signed, it's not possible to change the authentication."
+              , errorFlashMessage: "Something went wrong."
               , errorPhone: "Wrong format. Correct format is +46701234567"
               , errorEID: "Invalid personal ID number"
             }

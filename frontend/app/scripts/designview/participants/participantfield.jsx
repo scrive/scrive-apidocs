@@ -28,6 +28,7 @@ return React.createClass({
           }
           infotext={csvfield ? csvname : self.placeholderText()}
           readonly={csvfield || field.isAuthorUnchangeableField()}
+          disabled={csvfield || field.isAuthorUnchangeableField()}
           value={value}
           onChange={function (val) {
             field.setValue(val.trim());

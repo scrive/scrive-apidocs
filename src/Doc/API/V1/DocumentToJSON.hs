@@ -73,7 +73,7 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.value "autoremindtime" $ jsonDate $ documentautoremindtime doc
       J.value "status" $ show $ documentstatus doc
       J.value "state" $ show $ documentstatus doc
-      J.objects "signatories" $ map (signatoryJSON forapi forauthor doc msl) (documentsignatorylinks doc)
+      J.objects "signatories" $ map (signatoryJSON forauthor doc msl) (documentsignatorylinks doc)
       J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
       J.value "authentication" $ case nub (map signatorylinkauthenticationtosignmethod (documentsignatorylinks doc)) of
           [StandardAuthenticationToSign] -> ("standard"::String)
@@ -137,8 +137,8 @@ authenticationToSignJSON StandardAuthenticationToSign = toJSValue ("standard"::S
 authenticationToSignJSON SEBankIDAuthenticationToSign     = toJSValue ("eleg"::String)
 authenticationToSignJSON SMSPinAuthenticationToSign   = toJSValue ("sms_pin"::String)
 
-signatoryJSON :: (MonadDB m, MonadThrow m, AWS.AmazonMonad m, MonadLog m, MonadBase IO m) => Bool -> Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
-signatoryJSON forapi forauthor doc viewer siglink = do
+signatoryJSON :: (MonadDB m, MonadThrow m, AWS.AmazonMonad m, MonadLog m, MonadBase IO m) => Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
+signatoryJSON forauthor doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ isCurrent
     J.value "signorder" $ unSignOrder $ signatorysignorder siglink
@@ -169,7 +169,7 @@ signatoryJSON forapi forauthor doc viewer siglink = do
     J.value "hasAuthenticatedToView" $ signatorylinkidentifiedtoview siglink
     J.value "authentication" $ authenticationToSignJSON $ signatorylinkauthenticationtosignmethod siglink
 
-    when (not (isPreparation doc) && forauthor && forapi && signatorylinkdeliverymethod siglink == APIDelivery) $ do
+    when (not (isPreparation doc) && forauthor && signatorylinkdeliverymethod siglink == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc doc siglink
     where
       isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink) || (forauthor &&  isAuthor siglink)
