@@ -174,7 +174,7 @@ instance Unjson FieldPlacement where
   unjsonDef = unsonFieldPlacement
 
 unsonFieldPlacement :: UnjsonDef FieldPlacement
-unsonFieldPlacement =  objectOf $ pure FieldPlacement
+unsonFieldPlacement =  objectOf $ pure (FieldPlacement tempPlacementID)
   <*> field "xrel" placementxrel "Relative x position"
   <*> field "yrel" placementyrel "Relative y position"
   <*> field "wrel" placementwrel "Relative width"
@@ -191,7 +191,6 @@ unsonPlacementAnchor :: UnjsonDef PlacementAnchor
 unsonPlacementAnchor = objectOf $ pure PlacementAnchor
   <*> field "text" placementanchortext "Text to match with anchor"
   <*> field "index" placementanchorindex "Occurrence of text to match with"
-  <*> fieldOpt "pages" placementanchorpages "Page numbers on which to match"
 
 instance Unjson TipSide where
   unjsonDef = unjsonEnumBy "TipSide" [

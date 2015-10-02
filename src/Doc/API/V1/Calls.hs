@@ -611,43 +611,43 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
     guardAuthorOrAuthorsAdmin user "Permission problem. You don't have a permission to change this document"
     -- Document status and input checks
     unlessM (isPending <$> theDocument) $
-      throwIO . SomeKontraException $ badInput "Document status must be pending"
+      throwM . SomeKontraException $ badInput "Document status must be pending"
     sl <- getSigLinkFor slid <$> theDocument >>= \case
-      Nothing -> throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
+      Nothing -> throwM . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
       Just sl -> return sl
     when (not . signatoryispartner $ sl) $
-      throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " is a viewer and does not sign"
+      throwM . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " is a viewer and does not sign"
     when (isJust . maybesigninfo $ sl) $
-      throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already signed"
+      throwM . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already signed"
     when (signatorylinkidentifiedtoview sl) $
-      throwIO . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already identified to view"
+      throwM . SomeKontraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already identified to view"
     -- Get the POST data and check it
     authentication_type <- getField "authentication_type"
     personal_number <- getField "personal_number"
     mobile_number <- getField "mobile_number"
     when (isNothing authentication_type) $
-      throwIO . SomeKontraException $ badInput $
+      throwM . SomeKontraException $ badInput $
         "`authentication_type` must be given. Supported values are: `standard`, `se_bankid`, `no_bankid`."
     (authenticationMethod, mSSN, mPhone) <- case fromJSValue $ J.toJSValue $ fromMaybe "" authentication_type of
-      Nothing -> throwIO . SomeKontraException $ badInput $
+      Nothing -> throwM . SomeKontraException $ badInput $
         "Invalid authentication method: `" ++ fromMaybe "" authentication_type ++ "` was given. Supported values are: `standard`, `se_bankid`, `no_bankid`."
       Just StandardAuthenticationToView -> return (StandardAuthenticationToView, Nothing, Nothing)
       Just SEBankIDAuthenticationToView -> return (SEBankIDAuthenticationToView, personal_number, Nothing)
       Just NOBankIDAuthenticationToView -> return (NOBankIDAuthenticationToView, personal_number, mobile_number)
     -- Check conditions on signatory
     when (authenticationMethod == NOBankIDAuthenticationToView && signatorylinkauthenticationtosignmethod sl == SEBankIDAuthenticationToSign) $
-      throwIO . SomeKontraException $ badInput "Can't mix Norwegian and Swedish BankID for a signatory"
+      throwM . SomeKontraException $ badInput "Can't mix Norwegian and Swedish BankID for a signatory"
     case mSSN of
       -- Signatory must already have valid SSN set
       Nothing -> unless (isValidSSNForAuthenticationToView authenticationMethod $ getPersonalNumber sl) $
-        throwIO . SomeKontraException $ badInput "Signatory does not have a valid personal number for the authentication method and you did not provide one"
+        throwM . SomeKontraException $ badInput "Signatory does not have a valid personal number for the authentication method and you did not provide one"
       Just ssn -> unless (isValidSSNForAuthenticationToView authenticationMethod ssn) $
-        throwIO . SomeKontraException $ badInput "The personal number you provided is not valid for the authentication method"
+        throwM . SomeKontraException $ badInput "The personal number you provided is not valid for the authentication method"
     case mPhone of
       Nothing -> unless (isValidPhoneForAuthenticationToView authenticationMethod $ getMobile sl) $
-        throwIO . SomeKontraException $ badInput "Signatory does not have a valid phone number set for the authentication method and you did not provide one"
+        throwM . SomeKontraException $ badInput "Signatory does not have a valid phone number set for the authentication method and you did not provide one"
       Just phone -> unless (isValidPhoneForAuthenticationToView authenticationMethod phone) $
-        throwIO . SomeKontraException $ badInput "The phone number you provided is not valid for the authentication method"
+        throwM . SomeKontraException $ badInput "The phone number you provided is not valid for the authentication method"
     -- Change authentication method and return Document JSON
     dbUpdate $ ChangeAuthenticationToViewMethod slid authenticationMethod mSSN mPhone actor
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
