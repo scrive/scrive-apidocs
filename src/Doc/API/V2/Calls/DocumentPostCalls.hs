@@ -33,6 +33,7 @@ import Doc.API.V2.DocumentAccess
 import Doc.API.V2.DocumentUpdateUtils
 import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
+import Doc.API.V2.JSON.Misc
 import Doc.API.V2.Parameters
 import Doc.Action
 import Doc.Anchors
@@ -407,7 +408,7 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
     guardDocumentStatus Pending
     guardSignatoryHasNotSigned slid
     -- Parameters
-    authentication_type <- apiV2ParameterObligatory (ApiV2ParameterTextUnjson "authentication_type" unjsonDef)
+    authentication_type <- apiV2ParameterObligatory (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToSignMethod)
     authentication_value <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "authentication_value")
     -- API call actions
     dbUpdate $ ChangeAuthenticationToSignMethod slid authentication_type authentication_value actor

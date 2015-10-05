@@ -23,6 +23,8 @@ import Control.Monad.Catch
 import Data.Data
 import Data.Int
 import Database.PostgreSQL.PQTypes hiding (def)
+import Data.Unjson
+import Data.Functor.Invariant
 
 import DB.Derive
 import Doc.SignatoryFieldID
@@ -31,6 +33,9 @@ import KontraPrelude
 
 newtype NameOrder = NameOrder Int16
   deriving (Eq, Ord, Show)
+
+instance Unjson NameOrder where
+  unjsonDef = invmap NameOrder (\(NameOrder i) -> i) unjsonDef
 
 instance FromSQL NameOrder where
   type PQBase NameOrder = PQBase Int16

@@ -13,13 +13,17 @@ import Data.Char
 import Data.Typeable
 import Database.PostgreSQL.PQTypes
 import qualified Control.Exception.Lifted as E
-
+import Data.Unjson
+import Data.Functor.Invariant
 import KontraPrelude
 
 -- | Time zone names that the database backend accepts.  See also
 -- http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 newtype TimeZoneName = TimeZoneName String
   deriving (Eq, Show, Ord, Typeable)
+
+instance Unjson TimeZoneName where
+  unjsonDef = invmap unsafeTimeZoneName toString unjsonDef
 
 defaultTimeZoneName :: TimeZoneName
 defaultTimeZoneName = TimeZoneName "Europe/Stockholm"

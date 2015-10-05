@@ -5,13 +5,13 @@ module Doc.API.V2.Calls.SignatoryCallsUtils (
 , checkSignatoryPin
 ) where
 
-import Data.Unjson
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 
 import API.V2
 import DB
 import Doc.API.V2.JSON.Fields
+import Doc.API.V2.JSON.Misc
 import Doc.API.V2.Parameters
 import Doc.DocStateData
 import Doc.DocumentMonad
@@ -32,7 +32,7 @@ import Util.SignatoryLinkUtils
 {- | Check if provided authorization values for sign call patch -}
 checkAuthenticationToSignMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
 checkAuthenticationToSignMethodAndValue slid = do
-  mAuthType <- apiV2ParameterOptional (ApiV2ParameterTextUnjson "authentication_type" unjsonDef)
+  mAuthType <- apiV2ParameterOptional (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToSignMethod)
   case mAuthType of
     Nothing -> return ()
     Just authMethod -> do
@@ -57,7 +57,7 @@ checkAuthenticationToSignMethodAndValue slid = do
 
 getScreenshots :: (Kontrakcja m) => m SignatoryScreenshots
 getScreenshots = do
-  screenshots <- apiV2ParameterDefault emptySignatoryScreenshots (ApiV2ParameterJSON "screenshots" unjsonDef)
+  screenshots <- apiV2ParameterDefault emptySignatoryScreenshots (ApiV2ParameterJSON "screenshots" unjsonSignatoryScreenshots)
   resolvedScreenshots <- resolveReferenceScreenshotNames screenshots
   case resolvedScreenshots of
     Nothing -> apiError $ requestParameterInvalid "screenshots" "Could not resolve reference screenshot"

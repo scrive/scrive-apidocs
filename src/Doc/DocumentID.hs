@@ -8,6 +8,7 @@ import Data.Binary
 import Data.Int
 import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Happstack.Server
+import Data.Unjson
 
 import DB.Derive
 import KontraPrelude
@@ -22,6 +23,9 @@ instance Identifier DocumentID Int64 where
 
 instance FromReqURI DocumentID where
   fromReqURI = maybeRead
+
+instance Unjson DocumentID where
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse DocumentID")  return) . maybeRead) show unjsonDef
 
 instance Binary DocumentID where
   put (DocumentID did) = put did

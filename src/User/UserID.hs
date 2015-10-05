@@ -9,6 +9,7 @@ import Data.Int
 import Data.Typeable
 import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Happstack.Server
+import Data.Unjson
 
 import DB.Derive
 import KontraPrelude
@@ -27,6 +28,9 @@ instance Binary UserID where
 
 instance Identifier UserID Int64 where
   gidentifier f n = f "user_id" .= fmap (\(UserID k) -> k) n
+
+instance Unjson UserID where
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserID")  return) . maybeRead) show  unjsonDef
 
 instance FromSQL UserID where
   type PQBase UserID = PQBase Int64

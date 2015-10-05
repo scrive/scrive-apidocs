@@ -1,6 +1,7 @@
 module Doc.API.V2.JSON.DisplayOptions (
   documentDisplayOptions
 , applyDisplayOptionsToDocument
+, unjsonDocumentDisplayOptions
 ) where
 
 import Control.Applicative
@@ -32,8 +33,8 @@ applyDisplayOptionsToDocument displayOptions doc = doc {
     , documentshowfooter = showFooter displayOptions
   }
 
-instance Unjson DocumentDisplayOptions where
-  unjsonDef = objectOf $ pure DocumentDisplayOptions
+unjsonDocumentDisplayOptions :: UnjsonDef DocumentDisplayOptions
+unjsonDocumentDisplayOptions = objectOf $ pure DocumentDisplayOptions
     <*> field "show_header" showHeader "Show header while signing"
     <*> field "show_pdf_download" showPdfDownload "Show download option while signing"
     <*> field "show_reject_option" showReject "Show signatories option to reject document"

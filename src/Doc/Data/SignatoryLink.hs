@@ -16,6 +16,8 @@ import Control.Monad.Catch
 import Data.Default
 import Data.Int
 import Database.PostgreSQL.PQTypes
+import Data.Unjson
+import Data.Functor.Invariant
 
 import DB.Derive
 import Doc.Data.SignatoryAttachment
@@ -30,6 +32,9 @@ import User.UserID
 newtype SignOrder = SignOrder { unSignOrder :: Int32 }
   deriving (Eq, Ord, PQFormat)
 $(newtypeDeriveUnderlyingReadShow ''SignOrder)
+
+instance Unjson SignOrder where
+  unjsonDef = invmap SignOrder unSignOrder unjsonDef
 
 instance FromSQL SignOrder where
   type PQBase SignOrder = PQBase Int32
@@ -83,6 +88,9 @@ instance ToSQL DeliveryStatus where
 data CSVUpload = CSVUpload {
   csvcontents  :: ![[String]]
 } deriving (Eq, Ord, Show)
+
+instance Unjson CSVUpload where
+  unjsonDef = invmap CSVUpload csvcontents unjsonDef
 
 instance PQFormat [[String]] where
   pqFormat = const $ pqFormat ($undefined::String)

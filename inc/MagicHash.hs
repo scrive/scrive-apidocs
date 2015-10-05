@@ -14,6 +14,8 @@ import Data.Word
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import Numeric
+import Data.Unjson
+
 
 import Crypto.RNG
 import KontraPrelude
@@ -42,6 +44,9 @@ instance Read MagicHash where
 
 instance FromReqURI MagicHash where
   fromReqURI = maybeRead
+
+instance Unjson MagicHash where
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse access token")  return) . maybeRead) show  unjsonDef
 
 instance FromSQL MagicHash where
   type PQBase MagicHash = PQBase Int64

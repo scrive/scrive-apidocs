@@ -11,6 +11,7 @@ module Doc.SignatoryLinkID (
 import Data.Int
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+import Data.Unjson
 
 import DB.Derive
 import KontraPrelude
@@ -27,6 +28,9 @@ instance FromReqURI SignatoryLinkID where
 
 instance Identifier SignatoryLinkID Int64 where
   gidentifier f n = f "signatory_link_id" .= fmap (\(SignatoryLinkID k) -> k) n
+
+instance Unjson SignatoryLinkID where
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse SignatoryLinkID")  return) . maybeRead) show unjsonDef
 
 instance FromSQL SignatoryLinkID where
   type PQBase SignatoryLinkID = PQBase Int64

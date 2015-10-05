@@ -8,6 +8,8 @@ import Data.Default
 import Data.Unjson
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import Data.ByteString.Builder
+import qualified Data.Set as Set
+import Data.Functor.Invariant
 
 import Doc.API.V2.JSON.DisplayOptions
 import Doc.API.V2.DocumentAccess
@@ -30,23 +32,23 @@ unjsonDocument da = objectOf $
         <**> (pure (\sl d ->d { documentsignatorylinks = sl }) ))
   <*   fieldReadonlyBy "file" documentfile "Document main file" unjsonMaybeMainFile
   <*   fieldReadonlyBy "sealed_file" documentsealedfile "Document sealed file" unjsonMaybeMainFile
-  <*   fieldReadonly "author_attachments" documentauthorattachments "Document author attachments"
+  <*   fieldReadonlyBy "author_attachments" documentauthorattachments "Document author attachments" (arrayOf unjsonAuthorAttachment)
   <*   fieldReadonly "ctime" (utcTimeToAPIFormat . documentctime) "Document creation time"
   <*   fieldReadonly "mtime" (utcTimeToAPIFormat . documentmtime) "Document modification time"
   <*   fieldReadOnlyOpt "timeout_time" (fmap utcTimeToAPIFormat . documenttimeouttime) "Document timeout time"
   <*   fieldReadOnlyOpt "auto_remind_time" (fmap utcTimeToAPIFormat . documentautoremindtime) "Document autoremind time"
-  <*   fieldReadonly "status" documentstatus "Document status"
+  <*   fieldReadonlyBy "status" documentstatus "Document status" unjsonDocumentStatus
   <**> (field "days_to_sign" documentdaystosign "Days to sign document"
         <**> (pure $ \days d -> d { documentdaystosign = days }))
   <**> (fieldOpt "days_to_remind" documentdaystoremind "Days before reminding to sign document"
         <**> (pure $ \mdays d -> d { documentdaystoremind = mdays }))
-  <**> (field "display_options" documentDisplayOptions "Document display options"
+  <**> (fieldBy "display_options" documentDisplayOptions "Document display options" unjsonDocumentDisplayOptions
         <**> (pure (applyDisplayOptionsToDocument)))
   <**> (field "invitation_message" documentinvitetext "Document invitation text"
         <**> (pure $ \t d -> d { documentinvitetext = t }))
   <**> (field "confirmation_message" documentconfirmtext "Document confirmation text"
         <**> (pure $ \t d -> d { documentconfirmtext = t }))
-  <**> (field "lang" documentlang "Document language"
+  <**> (fieldBy "lang" documentlang "Document language" unjsonLang
         <**> (pure $ \l d -> d { documentlang = l }))
   <**> (fieldOpt "api_callback_url" documentapiv2callbackurl "Document callback url (for V2)"
         <**> (pure $ \mcu d -> d { documentapiv2callbackurl = mcu }))
@@ -54,7 +56,7 @@ unjsonDocument da = objectOf $
   <*   fieldAccessToken da
   <**> (field "timezone" documenttimezonename "Document timezone"
         <**> (pure $ \tz d -> d { documenttimezonename = tz }))
-  <**> (field "tags" documenttags "Document tags"
+  <**> (fieldBy "tags" documenttags "Document tags" (invmap Set.fromList Set.toList $ arrayOf unjsonDocumentTag)
         <**> (pure $ \tags d -> d { documenttags = tags }))
   <**> (field "is_template" isTemplate "Whether document is a template"
         <**> (pure (\t d -> if t then d { documenttype = Template } else d)))
@@ -95,18 +97,18 @@ unjsonSignatory da =  objectOf $
         <**> (pure $ \mrd s -> s { signatorylinksignredirecturl = mrd }))
   <**> (fieldOpt "reject_redirect_url" signatorylinkrejectredirecturl ("URL to redirect the signatory after rejecting the document")
         <**> (pure $ \mrd s -> s { signatorylinkrejectredirecturl = mrd }))
-  <*   (fieldReadonly "email_delivery_status" mailinvitationdeliverystatus "Email invitation delivery status")
-  <*   (fieldReadonly "mobile_delivery_status" smsinvitationdeliverystatus "SMS invitation delivery status")
+  <*   (fieldReadonlyBy "email_delivery_status" mailinvitationdeliverystatus "Email invitation delivery status" unjsonDeliveryStatus)
+  <*   (fieldReadonlyBy "mobile_delivery_status" smsinvitationdeliverystatus "SMS invitation delivery status" unjsonDeliveryStatus)
   <**> (fieldOpt "csv" signatorylinkcsvupload ("CSV upload for multipart") <**> (pure $ \mcsv s -> s { signatorylinkcsvupload = mcsv })) -- Check only one csv for whole doc
-  <**> (fieldDef "delivery_method" (signatorylinkdeliverymethod def) signatorylinkdeliverymethod "Signatory invitation delivery method"
+  <**> (fieldDefBy "delivery_method" (signatorylinkdeliverymethod def) signatorylinkdeliverymethod "Signatory invitation delivery method" unjsonDeliveryMethod
         <**> (pure $ \sd s -> s { signatorylinkdeliverymethod = sd }))
-  <**> (fieldDef "authentication_method_to_view" (signatorylinkauthenticationtoviewmethod def) signatorylinkauthenticationtoviewmethod "Signatory authentication to view method"
+  <**> (fieldDefBy "authentication_method_to_view" (signatorylinkauthenticationtoviewmethod def) signatorylinkauthenticationtoviewmethod "Signatory authentication to view method" unjsonAuthenticationToViewMethod
         <**> (pure $ \satv s -> s { signatorylinkauthenticationtoviewmethod = satv }))
-  <**> (fieldDef "authentication_method_to_sign" (signatorylinkauthenticationtosignmethod def) signatorylinkauthenticationtosignmethod "Signatory authentication to sign method"
+  <**> (fieldDefBy "authentication_method_to_sign" (signatorylinkauthenticationtosignmethod def) signatorylinkauthenticationtosignmethod "Signatory authentication to sign method" unjsonAuthenticationToSignMethod
         <**> (pure $ \sats s -> s { signatorylinkauthenticationtosignmethod = sats }))
-  <**> (fieldDef "confirmation_delivery_method" (signatorylinkconfirmationdeliverymethod def) signatorylinkconfirmationdeliverymethod "Signatory confirmation delivery method"
+  <**> (fieldDefBy "confirmation_delivery_method" (signatorylinkconfirmationdeliverymethod def) signatorylinkconfirmationdeliverymethod "Signatory confirmation delivery method" unjsonConfirmationDeliveryMethod
         <**> (pure $ \scd s -> s { signatorylinkconfirmationdeliverymethod = scd }))
-  <**> (fieldDef "attachments"  (signatoryattachments def) signatoryattachments "Signatory attachments"
+  <**> (fieldDefBy "attachments"  (signatoryattachments def) signatoryattachments "Signatory attachments" (arrayOf unjsonSignatoryAttachment)
         <**> (pure $ \sa s -> s { signatoryattachments = sa }))
   <*   (fieldReadOnlyOpt "api_delivery_url" (\sl ->
           if (daStatus da /= Preparation && signatorylinkdeliverymethod sl == APIDelivery && canSeeSignlinks da)
@@ -114,7 +116,6 @@ unjsonSignatory da =  objectOf $
              else Nothing
           ) "Link for signing document by API delivery"
        )
-
 
 -- We can't implement lists as Unjson - since we would have to do unjsonToJSON on each document parser. And this will make us loose the order
 listToJSONBS ::  (Int,[(DocumentAccess,Document)]) -> BSC.ByteString

@@ -95,7 +95,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
-  olddoc `withDocument` ( do
+  olddoc `withDocument` do
     -- Guards
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending
@@ -124,7 +124,6 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     -- Return
     doc <- theDocument
     return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
-   )
 
 docApiV2SigSendSmsPin :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSendSmsPin did slid = logDocumentAndSignatory did slid . api $ do

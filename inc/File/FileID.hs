@@ -8,6 +8,7 @@ import Data.Int
 import Data.Typeable
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+import Data.Unjson
 
 import DB.Derive
 import KontraPrelude
@@ -22,6 +23,9 @@ instance Identifier FileID Int64 where
 
 instance FromReqURI FileID where
   fromReqURI = maybeRead
+
+instance Unjson FileID where
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse FileID")  return) . maybeRead) show unjsonDef
 
 instance FromSQL FileID where
   type PQBase FileID = PQBase Int64

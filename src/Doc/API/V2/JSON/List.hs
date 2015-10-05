@@ -8,7 +8,7 @@ import Data.Unjson
 import qualified Data.Text as T
 
 import DB
-import Doc.API.V2.JSON.Misc()
+import Doc.API.V2.JSON.Misc
 import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.Model.OrderBy
@@ -103,7 +103,7 @@ instance Unjson DocumentAPIFilter where
 unjsonDocumentAPIFilterStatuses:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterStatuses = pure DocumentAPIFilterStatuses
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> field "statuses" unsafeDocumentAPIFilterStatuses "Statuses to filter on"
+  <*> fieldBy "statuses" unsafeDocumentAPIFilterStatuses "Statuses to filter on" (arrayOf unjsonDocumentStatus)
   where
     unsafeDocumentAPIFilterStatuses:: DocumentAPIFilter ->  [DocumentStatus]
     unsafeDocumentAPIFilterStatuses(DocumentAPIFilterStatuses fs) = fs
