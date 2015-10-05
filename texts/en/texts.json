@@ -911,6 +911,7 @@
 "_setAllFields":"Please name all created fields",
 "_share":"Share",
 "_shared":"Shared",
+"_sharedBy":"Shared by",
 "_showAnyStatusClass":"All statuses",
 "_sign":"Sign",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Select PDF",
