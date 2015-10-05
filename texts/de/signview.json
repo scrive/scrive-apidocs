@@ -47,7 +47,7 @@
 "_elegBankInvalidParametersCanChange":"Falsche persönliche ID-Nummer. Austauschen und erneut versuchen.",
 "_elegBankInvalidParametersCantChange":"Falsche persönliche ID-Nummer. Veranlassen Sie den Absender des Dokuments, diese auszutauschen.",
 "_elegSignConfirmationText":"",
-"_elegSignConfirmationTitle":"",
+"_elegSignConfirmationTitle":"Signieren mit schwedischer BankID",
 "_email":"E-Mail",
 "_enterPhoneForPinDelivery":"Geben Sie Ihre Telefonnummer ein",
 "_enterSMSPin":"Geben Sie Ihre SMS-PIN ein",
