@@ -28,6 +28,8 @@ import API.V2
 import Attachment.Model
 import DB
 import DB.TimeZoneName (defaultTimeZoneName)
+import Doc.Action
+import Doc.Anchors
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.DocumentUpdateUtils
@@ -35,15 +37,13 @@ import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.Misc
 import Doc.API.V2.Parameters
-import Doc.Action
-import Doc.Anchors
 import Doc.AutomaticReminder.Model (setAutoreminder)
 import Doc.DocInfo (isPending, isTimedout)
 import Doc.DocMails (sendAllReminderEmailsExceptAuthor, sendForwardEmail)
 import Doc.DocStateData
-import Doc.DocUtils
 import Doc.DocumentID
 import Doc.DocumentMonad
+import Doc.DocUtils
 import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID

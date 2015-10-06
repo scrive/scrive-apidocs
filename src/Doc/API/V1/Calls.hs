@@ -20,9 +20,8 @@ module Doc.API.V1.Calls (
   ) where
 
 import Control.Conditional ((<|), (|>), whenM, unlessM, ifM)
-import Control.Monad.IO.Class
 import Control.Monad.Catch
-
+import Control.Monad.IO.Class
 import Data.Aeson (Value(..))
 import Data.Char
 import Data.Int

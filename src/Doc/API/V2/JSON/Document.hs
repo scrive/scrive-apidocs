@@ -4,15 +4,15 @@ module Doc.API.V2.JSON.Document (
 ) where
 
 import Control.Applicative.Free
+import Data.ByteString.Builder
 import Data.Default
+import Data.Functor.Invariant
 import Data.Unjson
 import qualified Data.ByteString.Lazy.Char8 as BSC
-import Data.ByteString.Builder
 import qualified Data.Set as Set
-import Data.Functor.Invariant
 
-import Doc.API.V2.JSON.DisplayOptions
 import Doc.API.V2.DocumentAccess
+import Doc.API.V2.JSON.DisplayOptions
 import Doc.API.V2.JSON.DocumentViewer
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.JSON.Misc

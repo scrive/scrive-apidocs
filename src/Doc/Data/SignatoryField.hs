@@ -21,10 +21,10 @@ module Doc.Data.SignatoryField (
 
 import Control.Monad.Catch
 import Data.Data
-import Data.Int
-import Database.PostgreSQL.PQTypes hiding (def)
-import Data.Unjson
 import Data.Functor.Invariant
+import Data.Int
+import Data.Unjson
+import Database.PostgreSQL.PQTypes hiding (def)
 
 import DB.Derive
 import Doc.SignatoryFieldID

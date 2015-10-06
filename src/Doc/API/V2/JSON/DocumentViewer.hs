@@ -15,7 +15,6 @@ import Doc.SignatoryLinkID
 import KontraPrelude
 import Util.SignatoryLinkUtils
 
-
 -- Document viewer is returned by API as a part of document json structure,
 -- and describes relationship between document, and user authorizing current API call.
 -- It is needed so frontend should present user with operations that are available to him.

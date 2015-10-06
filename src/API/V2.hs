@@ -17,14 +17,13 @@ module API.V2 (
   , module API.V2.User
 ) where
 
-import API.V2.Errors
-import API.V2.Monad
-import API.V2.User
-
 import Happstack.Server (askRq)
 import Happstack.Server.Types (Response, rqUri)
 import qualified Data.Text as T
 
+import API.V2.Errors
+import API.V2.Monad
+import API.V2.User
 import Kontra (Kontrakcja)
 import KontraPrelude
 

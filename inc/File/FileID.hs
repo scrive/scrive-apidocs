@@ -6,9 +6,9 @@ module File.FileID (
 
 import Data.Int
 import Data.Typeable
+import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
-import Data.Unjson
 
 import DB.Derive
 import KontraPrelude

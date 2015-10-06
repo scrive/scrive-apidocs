@@ -2,10 +2,10 @@ module Doc.API.V2 (
   documentAPIV2
 ) where
 
-import Doc.API.V2.Calls
 import Happstack.Server.Types
 import Happstack.StaticRouting
 
+import Doc.API.V2.Calls
 import Kontra
 import KontraPrelude
 import Routing

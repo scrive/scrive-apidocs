@@ -14,10 +14,10 @@ module Doc.Data.SignatoryLink (
 
 import Control.Monad.Catch
 import Data.Default
-import Data.Int
-import Database.PostgreSQL.PQTypes
-import Data.Unjson
 import Data.Functor.Invariant
+import Data.Int
+import Data.Unjson
+import Database.PostgreSQL.PQTypes
 
 import DB.Derive
 import Doc.Data.SignatoryAttachment

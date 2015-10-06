@@ -6,10 +6,10 @@ module Doc.API.V1.DocumentUpdateUtils (
   ) where
 
 import Control.Conditional (whenM, unlessM)
+import Control.Monad.Catch
 import Data.Functor
 import Log
 import qualified Control.Exception.Lifted as E
-import Control.Monad.Catch
 
 import API.Monad.V1 (serverError,badInput)
 import DB

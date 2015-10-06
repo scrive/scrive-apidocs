@@ -10,11 +10,12 @@ module DB.TimeZoneName
 
 import Control.Monad.Catch
 import Data.Char
+import Data.Functor.Invariant
 import Data.Typeable
+import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import qualified Control.Exception.Lifted as E
-import Data.Unjson
-import Data.Functor.Invariant
+
 import KontraPrelude
 
 -- | Time zone names that the database backend accepts.  See also

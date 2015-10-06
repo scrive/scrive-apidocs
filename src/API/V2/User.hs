@@ -7,7 +7,6 @@ module API.V2.User (
   , getDocumentSignatoryMagicHash
 ) where
 
-import MagicHash (MagicHash)
 import qualified Data.Text as T
 
 import API.V2.Errors
@@ -21,6 +20,7 @@ import Doc.SignatoryLinkID
 import Doc.Tokens.Model
 import Kontra
 import KontraPrelude
+import MagicHash (MagicHash)
 import OAuth.Model
 import OAuth.Util
 import User.Model

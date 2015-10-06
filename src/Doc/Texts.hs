@@ -3,14 +3,12 @@ module Doc.Texts (
 ) where
 
 import Control.Monad.IO.Class
+import Data.Text
 import Log
-import Log.Utils (equalsExternalBSL)
 import System.Exit
 import Text.JSON hiding (Ok)
-import Text.JSON.Convert (jsonToAeson)
 import Text.JSON.FromJSValue
 import Text.JSON.Gen
-import Data.Text
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
@@ -20,6 +18,8 @@ import qualified Text.JSON.Pretty as J (pp_value)
 
 import Kontra
 import KontraPrelude
+import Log.Utils (equalsExternalBSL)
+import Text.JSON.Convert (jsonToAeson)
 import Utils.Directory
 import Utils.IO
 

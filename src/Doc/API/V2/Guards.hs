@@ -27,9 +27,9 @@ import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocStateQuery
-import Doc.DocUtils
 import Doc.DocumentID
 import Doc.DocumentMonad
+import Doc.DocUtils
 import Doc.Model.Query
 import Doc.SignatoryLinkID
 import InputValidation
@@ -117,6 +117,8 @@ guardThatDocumentCanBeStarted = do
        apiError $ documentStateError "Some signatories have invalid personal numbers, their 'authentication_to_view' requires it to be valid and not empty."
     unlessM (((all signatoryHasValidAuthSettings) . documentsignatorylinks) <$> theDocument) $ do
        apiError $ documentStateError "Some signatories have invalid personal numbers, their 'authentication_to_sign' requires it to be valid or empty."
+    unlessM (((all signatoryHasValidPhoneForIdentifyToView) . documentsignatorylinks) <$> theDocument) $ do
+       apiError $ documentStateError "Some signatories have invalid phone number and it is required for identification to view document."
     whenM (isNothing . documentfile <$> theDocument) $ do
        apiError $ documentStateError "Document must have a file before it can be started"
     return ()
@@ -134,6 +136,11 @@ guardThatDocumentCanBeStarted = do
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN   $ getPersonalNumber sl
       NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
       _ -> True
+    signatoryHasValidPhoneForIdentifyToView sl =
+      let resultValidPhone = asValidPhoneForNorwegianBankID $ getMobile sl in
+      if (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView)
+         then isGood resultValidPhone || isEmpty resultValidPhone
+         else True
 
 -- | For the given DocumentID:
 --

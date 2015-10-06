@@ -10,12 +10,12 @@ import qualified Data.Vector as V
 
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Document
-import Doc.DocumentID (DocumentID)
 import Doc.Data.DocumentStatus (DocumentStatus(..))
+import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
+import File.FileID
 import KontraPrelude
 import TestKontra
-import File.FileID
 
 valueFromBS :: BS.ByteString -> TestEnv Value
 valueFromBS bs = case decode bs of

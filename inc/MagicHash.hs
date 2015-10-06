@@ -10,12 +10,11 @@ module MagicHash
 
 import Control.Arrow
 import Data.Int
+import Data.Unjson
 import Data.Word
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import Numeric
-import Data.Unjson
-
 
 import Crypto.RNG
 import KontraPrelude

@@ -11,23 +11,23 @@ import qualified Data.Text as T
 
 import API.V2
 import DB
+import Doc.Action
 import Doc.API.V2.Calls.SignatoryCallsUtils
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.Parameters
-import Doc.Action
 import Doc.DocControl
 import Doc.DocMails (sendPinCode)
 import Doc.DocStateData
-import Doc.DocUtils (getSignatoryAttachment)
 import Doc.DocumentID
 import Doc.DocumentMonad
+import Doc.DocUtils (getSignatoryAttachment)
 import Doc.Logging
 import Doc.Model
-import Doc.SMSPin.Model (GetSignatoryPin(..))
 import Doc.SignatoryLinkID
+import Doc.SMSPin.Model (GetSignatoryPin(..))
 import EID.Signature.Model
 import File.File (File(..))
 import InputValidation (Result(..), asValidPhoneForSMS)

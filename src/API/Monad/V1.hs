@@ -34,14 +34,13 @@ module API.Monad.V1 (
 
 import Control.Monad.Catch
 import Data.Typeable
+import Data.Unjson
 import Happstack.Server (toResponse)
 import Happstack.Server.Types
 import Log as Log
 import Text.JSON hiding (Ok)
 import Text.JSON.Gen hiding (object)
 import qualified Happstack.Server.Response as Web
-import Data.Unjson
-
 
 import DB
 import Doc.Rendering

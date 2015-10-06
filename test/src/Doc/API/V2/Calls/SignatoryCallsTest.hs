@@ -11,8 +11,8 @@ import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.DocumentPostCallsTest (testDocApiV2New')
 import Doc.API.V2.Calls.SignatoryCalls
 import KontraPrelude
-import TestKontra
 import TestingUtil
+import TestKontra
 
 apiV2SignatoryCallsTests :: TestEnvSt -> Test
 apiV2SignatoryCallsTests env = testGroup "APIv2SignatoryCalls" $

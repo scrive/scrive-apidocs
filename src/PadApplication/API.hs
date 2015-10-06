@@ -3,7 +3,6 @@ module PadApplication.API (
   ) where
 
 import Control.Monad.Catch
-
 import Data.Unjson as Unjson
 import Happstack.Server.Types
 import Happstack.StaticRouting

@@ -11,7 +11,6 @@ module User.API (
 
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
-
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Text.JSON.Gen

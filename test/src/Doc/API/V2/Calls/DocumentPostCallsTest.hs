@@ -18,8 +18,8 @@ import Doc.DocumentID (DocumentID)
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Update (TimeoutDocument(..))
 import KontraPrelude
-import TestKontra
 import TestingUtil
+import TestKontra
 import Util.Actor (userActor)
 
 apiV2DocumentPostCallsTests :: TestEnvSt -> Test

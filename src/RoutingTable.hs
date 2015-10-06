@@ -8,8 +8,8 @@ module RoutingTable (
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 import Happstack.StaticRouting(Route, choice, dir, remainingPath)
 
-import AppView
 import API.V2 (noAPIV2CallFoundHandler)
+import AppView
 import Doc.API
 import Happstack.Server.ReqHandler
 import Kontra

@@ -16,25 +16,25 @@ module Doc.API.V2.JSON.Misc (
 , evidenceAttachmentsToJSONBS
 ) where
 
+import Data.ByteString.Builder
+import Data.Functor.Invariant
 import Data.Text.Encoding
 import Data.Time.Clock
 import Data.Time.Format
+import Data.Unjson
 import Database.PostgreSQL.PQTypes.Binary
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSC
-import Data.ByteString.Builder
-import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 
-import Data.Functor.Invariant
-import Data.Unjson
 import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.DocumentID
 import KontraLink
 import KontraPrelude
 import User.Lang
+import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots

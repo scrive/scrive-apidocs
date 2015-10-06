@@ -30,9 +30,9 @@ import Doc.API.V2.Parameters
 import Doc.Data.MainFile
 import Doc.DocSeal (presealDocumentFile)
 import Doc.DocStateData
-import Doc.DocUtils (fileFromMainFile)
 import Doc.DocumentID
 import Doc.DocumentMonad
+import Doc.DocUtils (fileFromMainFile)
 import Doc.Logging
 import Doc.Model
 import Doc.Texts

@@ -7,9 +7,9 @@ module User.UserID (
 import Data.Binary
 import Data.Int
 import Data.Typeable
+import Data.Unjson
 import Database.PostgreSQL.PQTypes hiding (Binary, put)
 import Happstack.Server
-import Data.Unjson
 
 import DB.Derive
 import KontraPrelude
