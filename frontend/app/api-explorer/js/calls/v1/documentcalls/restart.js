@@ -13,7 +13,7 @@ new APICallV1({
   needsAuthorization: true,
   tryToUseDocumentIDWithCopy: true,
   equivalentCalls: {
-    'v2': 'Restart'
+    "v2": "Restart"
   },
   params: [
           new APICallParam({

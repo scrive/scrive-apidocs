@@ -12,7 +12,7 @@ new APICallV1({
         },
   needsAuthorization: true,
   equivalentCalls: {
-    'v2': 'Prolong'
+    "v2": "Prolong"
   },
   params: [
           new APICallParam({

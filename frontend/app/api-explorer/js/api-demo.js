@@ -27,16 +27,14 @@ var ApiDemoModel = Backbone.Model.extend({
       var apiCalls;
       if (v == "v1") {
         apiCalls = APICalls.apiV1Calls();
-      }
-      else {
+      } else {
         apiCalls = APICalls.apiV2Calls();
       }
-      var findEquivalent = _.find(apiCalls, function(c) {return c.name() == equivalent});
-      if(findEquivalent != undefined) {
+      var findEquivalent = _.find(apiCalls, function (c) {return c.name() == equivalent});
+      if (findEquivalent != undefined) {
         this.setSelectedApiCall(findEquivalent);
-      }
-      else {
-        if(v == "v1") {
+      } else {
+        if (v == "v1") {
           this.setSelectedApiCall(APICalls.apiV1Calls()[0]);
         } else {
           var defaultV2Call = _.find(APICalls.apiV2Calls(), function (c) {return c.name() == "Get"});

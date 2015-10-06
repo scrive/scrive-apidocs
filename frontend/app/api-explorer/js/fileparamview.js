@@ -19,7 +19,7 @@ window.FileParamView  = Backbone.View.extend({
     $(this.el).append(mainRow);
 
     var sendEmptyMain = $("<div class='checkbox'>");
-    if(param.optionToSendEmpty()) {
+    if (param.optionToSendEmpty()) {
       var sendEmptyInput = $("<input type='checkbox' class=''/>");
       sendEmptyInput.prop("checked", false);
       call.setParamSendEmpty(param, sendEmptyInput.is(":checked"));
@@ -38,12 +38,15 @@ window.FileParamView  = Backbone.View.extend({
     if (slavesWithFiles.length < param.limit()) {
 
       var description = $("<p>");
-      if(param.optional()) description.append($("<em>Optional.</em>"));
+      if (param.optional()) {
+        description.append($("<em>Optional.</em>"));
+      }
       description.append($("<p>").text(param.description()));
 
       var inputColumn = $("<div class='col-xs-6'>").append($("<div class='form-group'/>").append(multifile.current));
-      if(param.optionToSendEmpty()) inputColumn.append(sendEmptyMain);
-
+      if (param.optionToSendEmpty()) {
+        inputColumn.append(sendEmptyMain);
+      }
       mainRow.append(inputColumn)
              .append($("<div class='col-xs-6'>").append($("<p/>").append(description)));
     }

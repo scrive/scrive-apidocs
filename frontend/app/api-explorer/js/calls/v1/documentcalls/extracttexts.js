@@ -12,7 +12,7 @@ new APICallV1({
         },
   needsAuthorization: true,
   equivalentCalls: {
-    'v2': 'Document Texts'
+    "v2": "Document Texts"
   },
   params: [
           new APICallParam({

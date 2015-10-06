@@ -12,7 +12,7 @@ new APICallV1({
         },
   needsAuthorization: true,
   equivalentCalls: {
-    'v2': 'Get'
+    "v2": "Get"
   },
   params: [
           new APICallParam({

@@ -12,7 +12,7 @@ new APICallV1({
         },
   needsAuthorization: true,
   equivalentCalls: {
-    'v2': 'Remind'
+    "v2": "Remind"
   },
   params: [
           new APICallParam({

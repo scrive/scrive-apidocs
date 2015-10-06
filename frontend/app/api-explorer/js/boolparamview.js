@@ -24,7 +24,9 @@ window.BoolParamView  = Backbone.View.extend({
       });
 
     var description = $("<p>");
-    if(param.optional()) description.append($("<em>Optional.</em>"));
+    if (param.optional()) {
+      description.append($("<em>Optional.</em>"));
+    }
     description.append($("<p>").text(param.description()));
 
     mainRow.append(

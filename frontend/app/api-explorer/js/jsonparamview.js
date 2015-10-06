@@ -16,7 +16,9 @@ window.JSONParamView  = Backbone.View.extend({
     var mainRow = $("<div class='row'>");
 
     var description = $("<p>");
-    if(param.optional()) description.append($("<em>Optional.</em>"));
+    if (param.optional()) {
+      description.append($("<em>Optional.</em>"));
+    }
     description.append($("<p>").text(param.description()));
 
     mainRow.append(

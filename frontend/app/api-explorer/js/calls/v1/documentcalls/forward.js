@@ -12,7 +12,7 @@ new APICallV1({
         },
   needsAuthorization: true,
   equivalentCalls: {
-    'v2': 'Forward'
+    "v2": "Forward"
   },
   params: [
           new APICallParam({

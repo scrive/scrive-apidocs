@@ -13,7 +13,7 @@ new APICallV1({
   needsAuthorization: true,
   expectBinaryResponse: true,
   equivalentCalls: {
-    'v2': 'Files: Get Main'
+    "v2": "Files: Get Main"
   },
   params: [
           new APICallParam({

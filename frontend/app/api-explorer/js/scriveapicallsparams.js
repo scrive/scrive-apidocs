@@ -22,10 +22,10 @@ window.APICallParam = Backbone.Model.extend({
   name: function () {
           return this.get("name");
         },
-  optional: function() {
+  optional: function () {
           return this.get("optional");
   },
-  optionToSendEmpty: function() {
+  optionToSendEmpty: function () {
           return this.get("optionToSendEmpty");
   },
   description: function () {

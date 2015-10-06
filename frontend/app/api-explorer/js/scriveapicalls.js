@@ -39,7 +39,7 @@ window.AbstractAPICall = Backbone.Model.extend({
             return p.type() == "file";
           });
         },
-  equivalentInVersion: function(v) {
+  equivalentInVersion: function (v) {
           var eqs = this.get("equivalentCalls");
           if (eqs != undefined) {
             return eqs[v];
@@ -96,7 +96,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
   getParamValue: function (p) {
           return this.get(p.argName())
         },
-  includeParam: function(p) {
+  includeParam: function (p) {
           return !p.optional() || (this.getParamValue(p) !== "" || this.getParamSendEmpty(p));
         },
   setParamValue: function (p, v) {
@@ -105,10 +105,10 @@ window.ApiCallInstance = AbstractAPICall.extend({
             LocalStorage.set("param", p.argName(), v);
           }
         },
-  getParamSendEmpty: function(p) {
+  getParamSendEmpty: function (p) {
           return this.get(p.argName() + "-sendEmpty");
         },
-  setParamSendEmpty: function(p, v) {
+  setParamSendEmpty: function (p, v) {
           this.set(p.argName() + "-sendEmpty", v);
         },
   getCallArgs: function () {

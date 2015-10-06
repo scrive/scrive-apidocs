@@ -12,7 +12,7 @@ new APICallV1({
         },
   needsAuthorization: true,
   equivalentCalls: {
-    'v2': 'Set File'
+    "v2": "Set File"
   },
   params: [
           new APICallParam({

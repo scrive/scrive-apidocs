@@ -12,7 +12,7 @@ new APICallV1({
         },
   needsAuthorization: true,
   equivalentCalls: {
-    'v2': 'Cancel'
+    "v2": "Cancel"
   },
   params: [
           new APICallParam({
