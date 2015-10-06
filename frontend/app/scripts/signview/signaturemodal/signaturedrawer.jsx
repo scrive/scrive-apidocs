@@ -30,6 +30,7 @@ var SignatureDrawerModel = Backbone.Model.extend({
       delayStartPreview: 3000,
       empty: false, // If something was drawn on canvas
       drawing: false, // Is drawing in progress
+      pointerId: undefined, // unique id of pointer being used for drawing (in multitouch scenarios)
       drawingMethod: undefined, // What tool is used for drawing (mouse or touch)
       drawnAnyLine: false, // Drawn line durring current drawing
       x_: undefined, // Previous x
@@ -66,17 +67,18 @@ var SignatureDrawerModel = Backbone.Model.extend({
   drawingInProgress: function () {
     return this.get("drawing");
   },
-  drawingInProgressWithDrawingMethod: function (method) {
-    return this.get("drawing") && this.get("drawingMethod") == method;
+  drawingInProgressWithDrawingMethodAndPointerId: function (method, pointerId) {
+    return this.get("drawing") && this.get("drawingMethod") === method && this.get("pointerId") === pointerId;
   },
   drawnAnyLine: function () {
     return this.get("drawnAnyLine");
   },
   // All changes that are happending while drawing are silent, since we don't need to rerender
   // view for performance reasons.
-  startDrawing: function (drawingMethod) {
+  startDrawing: function (drawingMethod, pointerId) {
     this.set({
       drawing: true,
+      pointerId: pointerId,
       drawingMethod: drawingMethod
     }, {silent: true});
   },
@@ -186,8 +188,8 @@ return React.createClass({
       this.setState({picture: picture});
       this.initDrawing();
     },
-    startDrawing: function (drawingMethod) {
-      this.state.model.startDrawing(drawingMethod);
+    startDrawing: function (drawingMethod, pointerId) {
+      this.state.model.startDrawing(drawingMethod, pointerId);
       this.props.onStartDrawing();
     },
     stopDrawing: function () {
@@ -197,43 +199,29 @@ return React.createClass({
     initDrawing: function () {
       var self = this;
       var drawingArea = this.refs.drawingArea.getDOMNode();
-      var drawing = function (fn) {
-        return function (type) {
-          return function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.target.style.cursor = "default";
-            fn(type, e);
-            return false;
-          };
+      var drawing = function (fn,type) {
+        return function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.target.style.cursor = "default";
+          fn(self.xPos(e), self.yPos(e), type, e);
+          return false;
         };
       };
 
-      var methods = {
-        start: drawing(function (type, e) {
-          self.drawingtoolDown(self.xPos(e), self.yPos(e), type);
-        }),
-        move: drawing(function (type, e) {
-          self.drawingtoolMove(self.xPos(e), self.yPos(e), type);
-        }),
-        end: drawing(function (type, e) {
-          self.drawingtoolUp(self.xPos(e), self.yPos(e), type);
-        })
-      };
-
       if ("ontouchstart" in document.documentElement) {
-        drawingArea.addEventListener("touchstart", methods.start("touch"));
-        drawingArea.addEventListener("touchmove", methods.move("touch"));
-        drawingArea.addEventListener("touchend", methods.end("touch"));
+        drawingArea.addEventListener("touchstart", drawing(self.drawingtoolDown,"touch"));
+        drawingArea.addEventListener("touchmove", drawing(self.drawingtoolMove,"touch"));
+        drawingArea.addEventListener("touchend", drawing(self.drawingtoolUp,"touch"));
       } else if (navigator.msPointerEnabled) {
-        drawingArea.addEventListener("MSPointerDown", methods.start("ms"), true);
-        drawingArea.addEventListener("MSPointerMove", methods.move("ms"), true);
-        drawingArea.addEventListener("MSPointerUp", methods.end("ms"), true);
+        drawingArea.addEventListener("MSPointerDown", drawing(self.drawingtoolDown,"ms"), true);
+        drawingArea.addEventListener("MSPointerMove", drawing(self.drawingtoolMove,"ms"), true);
+        drawingArea.addEventListener("MSPointerUp", drawing(self.drawingtoolUp,"ms"), true);
       }
 
-      $(drawingArea).mousedown(methods.start("mouse"));
-      $(drawingArea).mousemove(methods.move("mouse"));
-      $(drawingArea).mouseup(methods.end("mouse"));
+      $(drawingArea).mousedown(drawing(self.drawingtoolDown,"mouse"));
+      $(drawingArea).mousemove(drawing(self.drawingtoolMove,"mouse"));
+      $(drawingArea).mouseup(drawing(self.drawingtoolUp,"mouse"));
     },
     xPos: function (e) {
       if (e.changedTouches != undefined && e.changedTouches[0] != undefined) {
@@ -271,6 +259,15 @@ return React.createClass({
       }
       return e.pageY - canvasTop;
     },
+    eventPointerId: function (e) {
+      if (e.pointerId !== undefined) {
+        return e.pointerId;
+      } else if (e.changedTouches !== undefined) {
+        return e.changedTouches[0].identifier;
+      } else {
+        return undefined;
+      }
+    },
     lineWidth: function () {
       return 8;
     },
@@ -289,12 +286,12 @@ return React.createClass({
       this.drawDot(x, y, this.colorForRGBA(1), radius);
       this.state.picture.closePath();
     },
-    drawingtoolDown: function (x, y, drawingMethod) {
+    drawingtoolDown: function (x, y, drawingMethod, e) {
       if (!this.state.model.drawingInProgress()) {
         this.state.model.cancelPreview();
 
         this.state.model.setStartPoint(x, y);
-        this.startDrawing(drawingMethod);
+        this.startDrawing(drawingMethod, this.eventPointerId(e));
 
         this.state.picture.beginPath();
         this.state.picture.moveTo(x, y);
@@ -303,9 +300,9 @@ return React.createClass({
         this.state.picture.lineJoin = "round";
       }
     },
-    drawingtoolMove: function (x, y, drawingMethod) {
+    drawingtoolMove: function (x, y, drawingMethod, e) {
 
-      if (this.state.model.drawingInProgressWithDrawingMethod(drawingMethod)) {
+      if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e))) {
 
         var x_ = this.state.model.x();
         var y_ = this.state.model.y();
@@ -322,8 +319,8 @@ return React.createClass({
         this.state.model.lineDrawn(moved(x, x_), moved(y, y_), x, y);
       }
     },
-    drawingtoolUp: function (x, y, drawingMethod) {
-      if (this.state.model.drawingInProgressWithDrawingMethod(drawingMethod)) {
+    drawingtoolUp: function (x, y, drawingMethod, e) {
+      if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e))) {
         this.state.picture.lineTo(x, y);
         this.state.picture.closePath();
         if (!this.state.model.drawnAnyLine()) {
