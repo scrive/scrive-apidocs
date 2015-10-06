@@ -891,7 +891,8 @@ javascriptLocalisation =
                     ,  columns :{
                               time       : "$_SortTime()$"
                             , template   : "$_SortTemplate()$"
-                            , shared      : "$_shared()$"
+                            , shared     : "$_shared()$"
+                            , sharedBy   : "$_sharedBy()$"
                             , verificationMethod : "$_verificationMethod()$"
                        }
                 }

@@ -79,7 +79,7 @@ return React.createClass({
 
           <List.Column
             name={localization.archive.templates.columns.template}
-            width="360px"
+            width="310px"
             sorting="title"
             rendering={function(d) {
               var id = d.field("fields").id;
@@ -95,10 +95,10 @@ return React.createClass({
             }}
           />
           <List.Column
-            name={localization.archive.templates.columns.shared}
-            width="52px"
+            name={localization.archive.templates.columns.sharedBy}
+            width="102px"
             rendering={function(d) {
-              return (<div className={(d.field("fields").shared) ? "sharedIcon" : ""}/>);
+              return (<div>{(d.field("fields").shared) ? d.field("fields").author : ""}</div>);
             }}
           />
 
