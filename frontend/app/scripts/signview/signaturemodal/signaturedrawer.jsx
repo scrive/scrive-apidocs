@@ -199,7 +199,7 @@ return React.createClass({
     initDrawing: function () {
       var self = this;
       var drawingArea = this.refs.drawingArea.getDOMNode();
-      var drawing = function (fn,type) {
+      var drawing = function (fn, type) {
         return function (e) {
           e.preventDefault();
           e.stopPropagation();
@@ -210,18 +210,18 @@ return React.createClass({
       };
 
       if ("ontouchstart" in document.documentElement) {
-        drawingArea.addEventListener("touchstart", drawing(self.drawingtoolDown,"touch"));
-        drawingArea.addEventListener("touchmove", drawing(self.drawingtoolMove,"touch"));
-        drawingArea.addEventListener("touchend", drawing(self.drawingtoolUp,"touch"));
+        drawingArea.addEventListener("touchstart", drawing(self.drawingtoolDown, "touch"));
+        drawingArea.addEventListener("touchmove", drawing(self.drawingtoolMove, "touch"));
+        drawingArea.addEventListener("touchend", drawing(self.drawingtoolUp, "touch"));
       } else if (navigator.msPointerEnabled) {
-        drawingArea.addEventListener("MSPointerDown", drawing(self.drawingtoolDown,"ms"), true);
-        drawingArea.addEventListener("MSPointerMove", drawing(self.drawingtoolMove,"ms"), true);
-        drawingArea.addEventListener("MSPointerUp", drawing(self.drawingtoolUp,"ms"), true);
+        drawingArea.addEventListener("MSPointerDown", drawing(self.drawingtoolDown, "ms"), true);
+        drawingArea.addEventListener("MSPointerMove", drawing(self.drawingtoolMove, "ms"), true);
+        drawingArea.addEventListener("MSPointerUp", drawing(self.drawingtoolUp, "ms"), true);
       }
 
-      $(drawingArea).mousedown(drawing(self.drawingtoolDown,"mouse"));
-      $(drawingArea).mousemove(drawing(self.drawingtoolMove,"mouse"));
-      $(drawingArea).mouseup(drawing(self.drawingtoolUp,"mouse"));
+      $(drawingArea).mousedown(drawing(self.drawingtoolDown, "mouse"));
+      $(drawingArea).mousemove(drawing(self.drawingtoolMove, "mouse"));
+      $(drawingArea).mouseup(drawing(self.drawingtoolUp, "mouse"));
     },
     xPos: function (e) {
       if (e.changedTouches != undefined && e.changedTouches[0] != undefined) {
