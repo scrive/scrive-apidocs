@@ -77,7 +77,7 @@ return React.createClass({
                 onEnter={this.tryLogin}
                 focus={emailProvided && model.autofocus()}
                 buttonTitle={localization.loginModal.forgot}
-                onClick={function(){ model.goToReminderView();}}
+                onButtonClick={function(){ model.goToReminderView();}}
               />
             </div>
             <div className="position separated">
