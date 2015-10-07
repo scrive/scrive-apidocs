@@ -39,6 +39,7 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls" $
   , testThat "API v2 Set auto-reminder"                     env testDocApiV2SetAutoReminder
   , testThat "API v2 Clone"                                 env testDocApiV2Clone
   , testThat "API v2 Restart"                               env testDocApiV2Restart
+  , testThat "API v2 Set signatory authentication to-view"  env testDocApiV2SigSetAuthenticationToView
   , testThat "API v2 Set signatory authentication to-sign"  env testDocApiV2SigSetAuthenticationToSign
   ]
 
@@ -281,6 +282,22 @@ testDocApiV2Restart = do
   assertEqual "Successful `docApiV2Restart` response code" 201 (rsCode rsp)
   _ <- parseMockDocumentFromBS did (rsBody rsp)
   return ()
+
+testDocApiV2SigSetAuthenticationToView :: TestEnv ()
+testDocApiV2SigSetAuthenticationToView = do
+  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  (did, docJSON) <- testDocApiV2New' ctx
+  slid:_ <- signatoryLinkIDsFromValue docJSON
+
+  reqStart <- mkRequest POST []
+  _ <- runTestKontra reqStart ctx $ docApiV2Start did
+
+  req <- mkRequest POST [ ("authentication_type", inText "se_bankid")
+                        , ("personal_number", inText "123456789012")
+                        ]
+  (rsp,_) <- runTestKontra req ctx $ docApiV2SigSetAuthenticationToView did slid
+  assertEqual "Successful `docApiV2SigSetAuthenticationToView` response code" 200 (rsCode rsp)
 
 testDocApiV2SigSetAuthenticationToSign :: TestEnv ()
 testDocApiV2SigSetAuthenticationToSign = do
