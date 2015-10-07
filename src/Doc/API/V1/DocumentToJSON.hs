@@ -320,9 +320,7 @@ authorAttachmentJSON file = runJSONGen $ do
 -- Converting document to JSON/CSV for lists
 docForListJSONV1 :: TemplatesMonad m => User ->  Document -> m JSValue
 docForListJSONV1 user doc = do
-  let link = case getSigLinkFor user doc of
-        Just sl | not $ isAuthor sl -> LinkSignDoc (documentid doc) sl
-        _                           -> LinkIssueDoc $ documentid doc
+  let link = LinkIssueDoc $ documentid doc
       sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)
   runJSONGenT $ do
     J.object "fields" $ docFieldsListForJSON (userid user) doc
