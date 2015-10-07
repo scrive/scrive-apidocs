@@ -1,8 +1,12 @@
 module Doc.Model.OrderBy
   ( DocumentOrderBy(..)
+  , DocumentOrderByRep(..)
   , documentOrderByToSQL
   , documentOrderByAscDescToSQL
+  , addMTimeSorting
   ) where
+
+import Data.Default
 
 import DB
 import Doc.DocStateData
@@ -18,20 +22,55 @@ data DocumentOrderBy
   | DocumentOrderByType        -- ^ Order by document type.
   | DocumentOrderByPartners    -- ^ Order by partner names or emails
   | DocumentOrderByAuthor      -- ^ Order by author name or email
+  deriving (Eq)
 
+data DocumentOrderByRep = DocumentOrderByRep {
+    dobrExpr  :: !SQL
+  , dobrName  :: !SQL
+  , dobrOrder :: !SQL
+  }
+
+instance Default DocumentOrderByRep where
+  def = DocumentOrderByRep {
+      dobrExpr  = ""
+    , dobrName  = ""
+    , dobrOrder = ""
+    }
 
 -- | Convert DocumentOrderBy enumeration into proper SQL order by statement
-documentOrderByToSQL :: DocumentOrderBy -> SQL
-documentOrderByToSQL DocumentOrderByTitle = "documents.title"
-documentOrderByToSQL DocumentOrderByMTime = "documents.mtime"
-documentOrderByToSQL DocumentOrderByCTime = "documents.ctime"
-documentOrderByToSQL DocumentOrderByStatus = "documents.status"
-documentOrderByToSQL DocumentOrderByStatusClass = documentStatusClassExpression
-documentOrderByToSQL DocumentOrderByType = "documents.type"
-documentOrderByToSQL DocumentOrderByPartners =
-  parenthesize (selectSignatoryLinksSmartNames "NOT signatory_links.is_author AND signatory_links.is_partner")
-documentOrderByToSQL DocumentOrderByAuthor =
-  parenthesize (selectSignatoryLinksSmartNames "signatory_links.is_author")
+documentOrderByToSQL :: DocumentOrderBy -> DocumentOrderByRep
+documentOrderByToSQL DocumentOrderByTitle = def {
+    dobrExpr = "documents.title"
+  , dobrName = "doc_order_title"
+  }
+documentOrderByToSQL DocumentOrderByMTime = def {
+    dobrExpr = "documents.mtime"
+  , dobrName = "doc_order_mtime"
+  }
+documentOrderByToSQL DocumentOrderByCTime = def {
+    dobrExpr = "documents.ctime"
+  , dobrName = "doc_order_ctime"
+  }
+documentOrderByToSQL DocumentOrderByStatus = def {
+    dobrExpr = "documents.status"
+  , dobrName = "doc_order_status"
+  }
+documentOrderByToSQL DocumentOrderByStatusClass = def {
+    dobrExpr = documentStatusClassExpression
+  , dobrName = "doc_order_status_class"
+  }
+documentOrderByToSQL DocumentOrderByType = def {
+    dobrExpr = "documents.type"
+  , dobrName = "doc_order_type"
+  }
+documentOrderByToSQL DocumentOrderByPartners = def {
+    dobrExpr = parenthesize $ selectSignatoryLinksSmartNames "NOT signatory_links.is_author AND signatory_links.is_partner"
+  , dobrName = "doc_order_partners"
+  }
+documentOrderByToSQL DocumentOrderByAuthor = def {
+    dobrExpr = parenthesize $ selectSignatoryLinksSmartNames "signatory_links.is_author"
+  , dobrName = "doc_order_author"
+  }
 
 selectSignatoryLinksSmartNames :: SQL -> SQL
 selectSignatoryLinksSmartNames signatory_condition =
@@ -77,6 +116,15 @@ selectSignatoryLinksSmartNames signatory_condition =
                       " ON TRUE " <>
                       ") WHERE signatory_links.document_id = documents.id"
 
-documentOrderByAscDescToSQL :: AscDesc DocumentOrderBy -> SQL
-documentOrderByAscDescToSQL (Asc x) = documentOrderByToSQL x
-documentOrderByAscDescToSQL (Desc x) = documentOrderByToSQL x <> " DESC"
+documentOrderByAscDescToSQL :: AscDesc DocumentOrderBy -> DocumentOrderByRep
+documentOrderByAscDescToSQL (Asc x) = (documentOrderByToSQL x) { dobrOrder = "ASC" }
+documentOrderByAscDescToSQL (Desc x) = (documentOrderByToSQL x) { dobrOrder = "DESC" }
+
+-- | Add sorting by mtime in descending order if it's not there.
+addMTimeSorting :: [AscDesc DocumentOrderBy] -> [AscDesc DocumentOrderBy]
+addMTimeSorting orders = if any ((== DocumentOrderByMTime) . peekAscDesc) orders
+  then orders
+  else orders ++ [Desc DocumentOrderByMTime]
+  where
+    peekAscDesc (Asc x)  = x
+    peekAscDesc (Desc x) = x

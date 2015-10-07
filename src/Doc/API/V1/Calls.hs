@@ -73,6 +73,7 @@ import Doc.DocumentMonad (DocumentMonad, withDocument, withDocumentID, withDocum
 import Doc.DocUtils
 import Doc.Logging
 import Doc.Model
+import Doc.Model.OrderBy
 import Doc.Rendering
 import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryLinkID
@@ -833,18 +834,18 @@ apiCallV1List = api $ do
 
   doctype <- getField' "documentType"
   params <- getListParams
-  let (domain,filters1) = case doctype of
-                          "Document"          -> ([DocumentsVisibleToUser uid]
+  let (domain, filters1) = case doctype of
+                          "Document"          -> (DocumentsVisibleToUser uid
                                                  ,[DocumentFilterDeleted False, DocumentFilterSignable, DocumentFilterUnsavedDraft False])
-                          "Template"          -> ([DocumentsVisibleToUser uid]
+                          "Template"          -> (DocumentsVisibleToUser uid
                                                  ,[DocumentFilterDeleted False, DocumentFilterTemplate, DocumentFilterUnsavedDraft False])
-                          "MyTemplate"        -> ([DocumentsVisibleToUser uid] -- Sometimes we want to show only templates that user can change
+                          "MyTemplate"        -> (DocumentsVisibleToUser uid -- Sometimes we want to show only templates that user can change
                                                  ,[DocumentFilterByAuthor uid, DocumentFilterDeleted False, DocumentFilterTemplate, DocumentFilterUnsavedDraft False])
-                          "Rubbish"           -> ([DocumentsVisibleToUser uid]
+                          "Rubbish"           -> (DocumentsVisibleToUser uid
                                                  ,[DocumentFilterDeleted True, DocumentFilterUnsavedDraft False])
-                          "All"               -> ([DocumentsVisibleToUser uid],[DocumentFilterUnsavedDraft False])
-                          "DocumentsForPad"   -> ([DocumentsVisibleToUser uid],[DocumentFilterByAuthor uid, DocumentFilterSignNowOnPad])
-                          _ -> ([DocumentsVisibleToUser uid],[DocumentFilterDeleted False, DocumentFilterUnsavedDraft False])
+                          "All"               -> (DocumentsVisibleToUser uid,[DocumentFilterUnsavedDraft False])
+                          "DocumentsForPad"   -> (DocumentsVisibleToUser uid,[DocumentFilterByAuthor uid, DocumentFilterSignNowOnPad])
+                          _ -> (DocumentsVisibleToUser uid,[DocumentFilterDeleted False, DocumentFilterUnsavedDraft False])
       filters2 = concatMap fltSpec (listParamsFilters params)
       fltSpec ("time", tostr) = case reads tostr of
                                     (((Just from',Just to'),""):_) -> [DocumentFilterByMonthYearFrom from',DocumentFilterByMonthYearTo to']
@@ -896,7 +897,7 @@ apiCallV1List = api $ do
   where
     docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
     docSortingFromParams params =
-      (concatMap x (listParamsSorting params)) ++ [Desc DocumentOrderByMTime] -- default order by mtime
+      addMTimeSorting . concatMap x $ listParamsSorting params
       where
         x "status"            = [Asc DocumentOrderByStatusClass]
         x "statusREV"         = [Desc DocumentOrderByStatusClass]
@@ -932,10 +933,9 @@ apiCallV1CheckAvailable = api $ do
     throwM . SomeKontraException $ serverError "No ids parameter was provided or it had wrong format"
   let ids = $fromJust mids
   when (length ids > 10000) $ do
-    throwM . SomeKontraException $ serverError "This request can't check more then 10000 documents"
-  docids <- dbQuery $ GetDocumentsIDs [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
+    throwM . SomeKontraException $ serverError "This request can't check more than 10000 documents"
+  docids <- dbQuery $ GetDocumentsIDs (DocumentsVisibleToUser $ userid user) [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
   Ok <$> (J.runJSONGenT $ J.value "ids" (show <$> docids))
-
 
 
 apiCallV1History :: Kontrakcja m => DocumentID -> m Response

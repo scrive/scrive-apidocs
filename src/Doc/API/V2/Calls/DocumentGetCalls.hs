@@ -55,7 +55,7 @@ docApiV2Available = api $ do
   when (length ids > 10000) $ do
     apiError $ requestParameterInvalid "ids" "cannot contain more than 10,000 document IDs."
   -- API call actions
-  available <- fmap (sort . map fromDocumentID) $ dbQuery $ GetDocumentsIDs [DocumentsVisibleToUser $ userid user] [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
+  available <- fmap (sort . map fromDocumentID) $ dbQuery $ GetDocumentsIDs (DocumentsVisibleToUser $ userid user) [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
   -- Result
   return $ Ok $ Response 200 Map.empty nullRsFlags (unjsonToByteStringLazy unjsonDef available) Nothing
 
@@ -71,7 +71,7 @@ docApiV2List = api $ do
   -- API call actions
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
   let documentSorting = (toDocumentSorting <$> sorting)
-  (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit [DocumentsVisibleToUser $ userid user] documentFilters documentSorting (offset,1000,maxcount)
+  (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit (DocumentsVisibleToUser $ userid user) documentFilters documentSorting (offset, 1000, maxcount)
   -- Result
   return $ Ok $ Response 200 Map.empty nullRsFlags (listToJSONBS (allDocsCount,(\d -> (documentAccessForUser user d,d)) <$> allDocs)) Nothing
 

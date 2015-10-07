@@ -6,6 +6,7 @@ module Doc.Model.Domain
 import Control.Monad.State.Class
 import Data.Typeable
 
+import Company.CompanyID
 import DB
 import Doc.Conditions
 import Doc.DocStateData
@@ -28,8 +29,9 @@ import User.UserID
 -- parameters.
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
-  | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
   | DocumentsVisibleViaAccessToken MagicHash     -- ^ Documents accessed using 'accesstoken' field from json
+  | DocumentsOfCompany CompanyID                 -- ^ Documents created by a particular company.
+  | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
  deriving (Eq, Ord, Typeable, Show)
 --
 -- Document visibility rules:
@@ -39,70 +41,88 @@ data DocumentDomain
 -- Any of number points must be true, all of letter subpoints must be
 -- true.
 --
--- Visibility rules:
+-- Visibility rules for a specific user:
 --
 -- 1. User can see her own authored documents.
 -- 2. User can see a document when:
 --     a. document is signable
 --     b. document is not in Preparation
---     c. was invited to sign (is_partner = TRUE)
---     d. sign order says it is ok to see
+--     c. user was invited to sign (is_partner = TRUE)
+--     d. its sign order says it is ok to see
 -- 3. User can see a document when:
 --     a. document is signable
 --     b. document is not in Preparation
---     c. was invited to view (is_partner = FALSE)
+--     c. user was invited to view (is_partner = FALSE)
 -- 4. User can see a document when:
 --     a. document is template
---     b. author is in the same company
+--     b. its author is in the same company
 --     c. document has company sharing set
 -- 5. User can see a document when:
 --     a. user is company admin
---     b. there is another user in the same company that can see the document
+--     b. there is another user in the same company that created the document
 --     c. document is not in preparation state
 --
 -- To do anything with document a user has at least see it. Usually
 -- more strict rules apply.
-documentDomainToSQL :: (MonadState v m, SqlWhere v)
-                    => DocumentDomain
-                    -> m ()
-documentDomainToSQL (DocumentsOfWholeUniverse) = do
+
+documentDomainToSQL :: (MonadState v m, SqlFrom v, SqlWhere v)
+                     => DocumentDomain
+                     -> m ()
+documentDomainToSQL DocumentsOfWholeUniverse = do
   sqlWhereDocumentWasNotPurged
+
 documentDomainToSQL (DocumentsVisibleViaAccessToken token) = do
   sqlWhereDocumentWasNotPurged
   sqlWhereEq "documents.token" token
+
+documentDomainToSQL (DocumentsOfCompany cid) = do
+  sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
+  sqlJoinOn "users" "signatory_links.user_id = users.id"
+  sqlWhereDocumentWasNotPurged
+  sqlWhere "signatory_links.is_author"
+  sqlWhereEq "users.company_id" cid
+
 documentDomainToSQL (DocumentsVisibleToUser uid) = do
+  sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
+  sqlJoinOn "users" "signatory_links.user_id = users.id"
   sqlWhereDocumentWasNotPurged
   sqlWhereDocumentIsNotReallyDeleted
-  sqlWhereAny
-    [ do           -- 1: see own documents
-      sqlWhereEq "same_company_users.id" uid
-      sqlWhere "users.id = same_company_users.id"
-      sqlWhere "signatory_links.is_author"
-    , do           -- 2. see signables as partner
-      sqlWhereEq "same_company_users.id" uid
-      sqlWhere "users.id = same_company_users.id"
-      sqlWhereNotEq "documents.status" Preparation
-      sqlWhereEq "documents.type" $ Signable
-      sqlWhere "signatory_links.is_partner"
-      sqlWhereNotExists $ sqlSelect "signatory_links AS earlier_signatory_links" $ do
-                            sqlWhere "signatory_links.document_id = earlier_signatory_links.document_id"
-                            sqlWhere "earlier_signatory_links.is_partner"
-                            sqlWhere "earlier_signatory_links.sign_time IS NULL"
-                            sqlWhere "earlier_signatory_links.sign_order < signatory_links.sign_order"
-    , do           -- 3. see signables as viewer
-      sqlWhereEq "same_company_users.id" uid
-      sqlWhere "users.id = same_company_users.id"
-      sqlWhereNotEq "documents.status" Preparation
-      sqlWhereEq "documents.type" $ Signable
-      sqlWhere "NOT signatory_links.is_partner"
-    , do           -- 4. see shared templates
-      sqlWhereEq "same_company_users.id" uid
-      sqlWhereEq "documents.sharing" Shared
-      sqlWhereEq "documents.type" $ Template
-      sqlWhere "signatory_links.is_author"
-    , do           -- 5: see documents of subordinates
-      sqlWhereEq "same_company_users.id" uid
-      sqlWhere "same_company_users.is_company_admin"
-      sqlWhere "signatory_links.is_author"
-      sqlWhereNotEq "documents.status" Preparation
+  sqlWhere $ "users.company_id = (SELECT u.company_id FROM users u WHERE u.id =" <?> uid <> ")"
+  sqlWhereAny [
+      userIsAuthor
+    , userIsPartnerAndHasAppropriateSignOrder
+    , userIsViewer
+    , isCompanySharedTemplate
+    , isCompanyDocumentIfAdmin
     ]
+  where
+    userIsAuthor = do
+      sqlWhereEq "users.id" uid
+      sqlWhere "signatory_links.is_author"
+
+    userIsPartnerAndHasAppropriateSignOrder = do
+      sqlWhereEq "users.id" uid
+      sqlWhereEq "documents.type" Signable
+      sqlWhereNotEq "documents.status" Preparation
+      sqlWhere "signatory_links.is_partner"
+      sqlWhereNotExists . sqlSelect "signatory_links AS osl" $ do
+        sqlWhere "signatory_links.document_id = osl.document_id"
+        sqlWhere "osl.sign_time IS NULL"
+        sqlWhere "osl.is_partner"
+        sqlWhere "osl.sign_order < signatory_links.sign_order"
+
+    userIsViewer = do
+      sqlWhereEq "users.id" uid
+      sqlWhereEq "documents.type" Signable
+      sqlWhereNotEq "documents.status" Preparation
+      sqlWhere "NOT signatory_links.is_partner"
+
+    isCompanySharedTemplate = do
+      sqlWhere "signatory_links.is_author"
+      sqlWhereEq "documents.type" Template
+      sqlWhereEq "documents.sharing" Shared
+
+    isCompanyDocumentIfAdmin = do
+      sqlWhere $ "(SELECT u.is_company_admin FROM users u WHERE u.id =" <?> uid <> ")"
+      sqlWhere "signatory_links.is_author"
+      sqlWhereNotEq "documents.status" Preparation

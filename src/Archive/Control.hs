@@ -52,7 +52,7 @@ handleArchiveDocumentsAction actionStr docPermission m = do
   ctx <- getContext
   user <- guardJust $ getContextUser ctx
   ids <- getCriticalField asValidDocIDList "documentids"
-  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser $ userid user] [DocumentFilterByDocumentIDs ids] [] (0, 100)
+  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) [DocumentFilterByDocumentIDs ids] [] (0, 100)
   when (sort (map documentid docs) /= sort ids) $ failWithMsg user ids "Retrieved documents didn't match specified document ids"
   if all (docPermission user) docs
   then do

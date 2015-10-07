@@ -626,7 +626,7 @@ testReallyDeleteDocument = replicateM_ 10 $ do
   withDocument doc $ randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
   assertRaisesKontra (\DocumentIsReallyDeleted {} -> True) $
     withDocument doc $ randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
-  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByDocumentID (documentid doc)]
+  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [DocumentFilterByDocumentID (documentid doc)]
                      [] (0,1)
   assertEqual "Really deleted documents are not visible to user" [] (map documentid docs)
 
@@ -643,7 +643,7 @@ testReallyDeleteDocumentCompanyAdmin = replicateM_ 10 $ do
     randomUpdate $ \t->ReallyDeleteDocument (userid adminuser) (systemActor t)
     assertOneArchivedSigLink =<< theDocument
     doc <- theDocument
-    docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByDocumentID (documentid doc)]
+    docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [DocumentFilterByDocumentID (documentid doc)]
                        [] (0,1)
     assertEqual "Really deleted documents are not visible to user" [] (map documentid docs)
 
@@ -678,7 +678,7 @@ testPurgeDocument = replicateM_ 10 $ do
   archived2 <- dbUpdate $ PurgeDocuments 0 0
   assertEqual "Purged single document" 1 archived2
 
-  allDocs1 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+  allDocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
                          [DocumentFilterByDocumentID (documentid doc)] [] (0,-1)
   assertEqual "List documents does not include purged ones" [] (map documentid allDocs1)
 
@@ -1078,7 +1078,7 @@ testGetDocumentsSQLTextFiltered = replicateM_ 1 $ do
   _doc3 <- addRandomDocumentWithAuthorAndCondition author (isSignable && isPreparation)
   _doc4 <- addRandomDocumentWithAuthorAndCondition author2 (isSignable && isPreparation)
 
-  let domains = [ DocumentsVisibleToUser (userid author)]
+  let domain = DocumentsVisibleToUser $ userid author
       first_name = getFirstName $ $head $ documentsignatorylinks doc1
       last_name = getLastName $ $head $ documentsignatorylinks doc1
       email = getEmail . $head $ documentsignatorylinks doc1
@@ -1099,13 +1099,13 @@ testGetDocumentsSQLTextFiltered = replicateM_ 1 $ do
   assert success
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc1
 
-  docs0 <- dbQuery $ GetDocuments domains [] [] (0,maxBound)
-  docs1 <- dbQuery $ GetDocuments domains filters1 [] (0,maxBound)
-  docs2 <- dbQuery $ GetDocuments domains filters2 [] (0,maxBound)
-  docs3 <- dbQuery $ GetDocuments domains filters3 [] (0,maxBound)
-  docs4 <- dbQuery $ GetDocuments domains filters4 [] (0,maxBound)
-  docs5 <- dbQuery $ GetDocuments domains filters5 [] (0,maxBound)
-  docs6 <- dbQuery $ GetDocuments domains filters6 [] (0,maxBound)
+  docs0 <- dbQuery $ GetDocuments domain [] [] (0,maxBound)
+  docs1 <- dbQuery $ GetDocuments domain filters1 [] (0,maxBound)
+  docs2 <- dbQuery $ GetDocuments domain filters2 [] (0,maxBound)
+  docs3 <- dbQuery $ GetDocuments domain filters3 [] (0,maxBound)
+  docs4 <- dbQuery $ GetDocuments domain filters4 [] (0,maxBound)
+  docs5 <- dbQuery $ GetDocuments domain filters5 [] (0,maxBound)
+  docs6 <- dbQuery $ GetDocuments domain filters6 [] (0,maxBound)
 
   assertEqual ("GetDocuments fetches all documents without filter") 3 (length docs0)
   assertEqual ("Document title really got changed") title (documenttitle ndoc)
@@ -1122,10 +1122,9 @@ testGetDocumentsSQLSorted = replicateM_ 1 $ do
   author <- addNewRandomUser
   _doc <- addRandomDocumentWithAuthorAndCondition author (const True)
 
-  let domains = [ DocumentsVisibleToUser (userid author)
-                ]
+  let domain = DocumentsVisibleToUser $ userid author
       filters = []
-  _docs <- dbQuery $ GetDocuments domains filters
+  _docs <- dbQuery $ GetDocuments domain filters
             [ Desc DocumentOrderByTitle
             , Desc DocumentOrderByMTime
             , Desc DocumentOrderByStatusClass
@@ -1682,7 +1681,7 @@ testGetDocumentsByCompanyWithFilteringCompany = replicateM_ 10 $ do
     time <- currentTime
     let actor = systemActor time
     _ <- dbUpdate $ SetDocumentTags (S.singleton $ DocumentTag name value) actor
-    docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (0,maxBound)
+    docs' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [] [] (0,maxBound)
 
     assertEqual "Should have 1 document returned" 1 (length docs')
 
@@ -1695,8 +1694,8 @@ testGetDocumentsByCompanyWithFilteringFilters = replicateM_ 10 $ do
   _ <- dbUpdate $ SetUserCompany (userid author) (companyid company)
   Just author' <- dbQuery $ GetUserByID (userid author)
   did <- addRandomDocumentWithAuthor author'
-  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name value]] [] (0,maxBound)
-  docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (0,maxBound)
+  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [DocumentFilterByTags [DocumentTag name value]] [] (0,maxBound)
+  docs' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [] [] (0,maxBound)
 
   assertBool "Should have no documents returned" (null docs)
   assertEqual "Should have 1 document returned" [did] (map documentid docs')
@@ -1711,15 +1710,15 @@ testSetDocumentUnsavedDraft = replicateM_ 10 $ do
   withDocumentID did $ do
     isdraft <- (isSignable && isPreparation) <$> theDocument
 
-    docs1 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+    docs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
                        [DocumentFilterUnsavedDraft False, DocumentFilterByDocumentID did] [] (0,maxBound)
     _ <- dbUpdate $ SetDocumentUnsavedDraft True
-    docs2 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+    docs2 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
                        [DocumentFilterUnsavedDraft False, DocumentFilterByDocumentID did] [] (0,maxBound)
     _ <- dbUpdate $ SetDocumentUnsavedDraft False
-    docs3 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+    docs3 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
                        [DocumentFilterUnsavedDraft False, DocumentFilterByDocumentID did] [] (0,maxBound)
-    docs4 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)]
+    docs4 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
                        [DocumentFilterUnsavedDraft True, DocumentFilterByDocumentID did] [] (0,maxBound)
 
     assertEqual "Should return the document" [did] (map documentid docs1)
@@ -1739,8 +1738,8 @@ testGetDocumentsByCompanyWithFilteringFinds = replicateM_ 10 $ do
   time <- currentTime
   let actor = systemActor time
   _ <- withDocumentID did $ dbUpdate $ SetDocumentTags (S.singleton $ DocumentTag name value) actor
-  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name value]] [] (0,maxBound)
-  docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (0,maxBound)
+  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [DocumentFilterByTags [DocumentTag name value]] [] (0,maxBound)
+  docs' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [] [] (0,maxBound)
 
   assertEqual "Should have one document returned" [did] (map documentid docs)
   assertEqual "Should have one document returned" [did] (map documentid docs')
@@ -1761,11 +1760,11 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = replicateM_ 10 $ do
     did <- addRandomDocumentWithAuthor author'
 
     _ <- withDocumentID did $ dbUpdate $ SetDocumentTags (S.fromList [DocumentTag name1 value1, DocumentTag name2 value2]) actor
-    docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name1 value1]] [] (0,maxBound)
-    docs' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name2 value2]] [] (0,maxBound)
-    docs'' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2]] [] (0,maxBound)
-    docs''' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [] [] (0,maxBound)
-    docs'''' <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid author)] [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]] [] (0,maxBound)
+    docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [DocumentFilterByTags [DocumentTag name1 value1]] [] (0,maxBound)
+    docs' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [DocumentFilterByTags [DocumentTag name2 value2]] [] (0,maxBound)
+    docs'' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2]] [] (0,maxBound)
+    docs''' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [] [] (0,maxBound)
+    docs'''' <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]] [] (0,maxBound)
 
     assertEqual "Should have one document returned" [did] (map documentid docs)
     assertEqual "Should have one document returned" [did] (map documentid docs')

@@ -71,7 +71,7 @@ data DocumentAPIFilter = DocumentAPIFilterStatuses [DocumentStatus]
                     | DocumentAPIFilterCanBeSignedBy UserID
 
 
-filterType ::  DocumentAPIFilter -> T.Text
+filterType :: DocumentAPIFilter -> T.Text
 filterType (DocumentAPIFilterStatuses _) = "status"
 filterType (DocumentAPIFilterTime _ _) = "mtime"
 filterType (DocumentAPIFilterTag _ _) = "tag"

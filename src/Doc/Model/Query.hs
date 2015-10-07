@@ -54,7 +54,7 @@ import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
 import File.FileID
 import File.Storage
-import KontraPrelude hiding (all)
+import KontraPrelude
 import MagicHash
 import User.Email
 import User.Model
@@ -125,21 +125,37 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetSignatoryLinkByID SignatoryLi
       sqlWhereSignatoryLinkIDIs slid
       F.mapM_ sqlWhereSignatoryLinkMagicHashIs mmh
 
-selectDocuments :: [DocumentDomain]
+selectDocuments :: DocumentDomain
                 -> [DocumentFilter]
                 -> [AscDesc DocumentOrderBy]
+                -> (Int, Int)
                 -> State SqlSelect ()
                 -> SqlSelect
-selectDocuments domains filters orders extend = sqlSelect "documents" $ do
-  mapM_ (sqlOrderBy . documentOrderByAscDescToSQL) orders
-  sqlWhereExists . sqlSelect "signatory_links" $ do
-    sqlWhere "documents.id = signatory_links.document_id"
-    sqlLeftJoinOn "users" "signatory_links.user_id = users.id"
-    sqlLeftJoinOn "companies" "users.company_id = companies.id"
-    sqlLeftJoinOn "users AS same_company_users" "users.company_id = same_company_users.company_id OR users.id = same_company_users.id"
-    sqlWhereAny $ map documentDomainToSQL domains
-    mapM_ documentFilterToSQL filters
+selectDocuments domain filters orders (offset, limit) extend = sqlSelect "documents" $ do
+  -- We want to inject filters, offset and limit into domain as soon
+  -- as possible to avoid fetching unnecessary rows.
+  sqlWith "visible_document_ids" . sqlSelect "domain_ids" $ do
+    sqlWith "domain_ids" . sqlSelect "documents" $ do
+      -- When fetching documents of the whole universe don't apply
+      -- DISTINCT as it prevents usage of mtime index (when using
+      -- default sort order), which results in poor performance.
+      when (domain /= DocumentsOfWholeUniverse) $ do
+        sqlDistinct
+      mapM_ sqlResult $ "documents.id"
+        -- Include sort expressions as DISTINCT demands it.
+        : map (\dobr -> dobrExpr dobr <+> "AS" <+> dobrName dobr) orderList
+      documentDomainToSQL domain
+      mapM_ documentFilterToSQL filters
+      mapM_ (sqlOrderBy . (\dobr -> dobrName dobr <+> dobrOrder dobr)) orderList
+      sqlOffset offset
+      sqlLimit limit
+    sqlResult "ROW_NUMBER() OVER() AS position"
+    sqlResult "domain_ids.id"
+  sqlJoinOn "visible_document_ids" "documents.id = visible_document_ids.id"
+  sqlOrderBy "visible_document_ids.position"
   extend
+  where
+    orderList = map documentOrderByAscDescToSQL orders
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentID Document where
@@ -212,36 +228,34 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDSignatory
 -- GetDocuments returns documents in proper order, no reverse is needed.
 --
 
-data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int, Int)
+data GetDocuments = GetDocuments DocumentDomain [DocumentFilter] [AscDesc DocumentOrderBy] (Int, Int)
 instance MonadDB m => DBQuery m GetDocuments [Document] where
-  query (GetDocuments domains filters orders (offset, limit)) = do
-    runQuery_ . selectDocuments domains filters orders $ do
+  query (GetDocuments domain filters orders limits) = do
+    runQuery_ . selectDocuments domain filters orders limits $ do
       mapM_ sqlResult documentsSelectors
-      sqlOffset offset
-      sqlLimit limit
     fetchMany toComposite
 
-data GetDocument = GetDocument [DocumentDomain] [DocumentFilter]
+data GetDocument = GetDocument DocumentDomain [DocumentFilter]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocument Document where
-  query (GetDocument domains filters) = do
-    kRunAndFetch1OrThrowWhyNot toComposite . selectDocuments domains filters [] $ do
+  query (GetDocument domain filters) = do
+    -- Set limit to 2 so it can throw if more than 1 row is returned.
+    kRunAndFetch1OrThrowWhyNot toComposite . selectDocuments domain filters [] (0, 2) $ do
       mapM_ sqlResult documentsSelectors
 
-data GetDocumentsWithSoftLimit = GetDocumentsWithSoftLimit [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] (Int, Int, Int)
+data GetDocumentsWithSoftLimit = GetDocumentsWithSoftLimit DocumentDomain [DocumentFilter] [AscDesc DocumentOrderBy] (Int, Int, Int)
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, [Document]) where
-  query (GetDocumentsWithSoftLimit domains filters orders (offset, limit, soft_limit)) = do
+  query (GetDocumentsWithSoftLimit domain filters orders (offset, limit, soft_limit)) = do
     --analysis <- explainAnalyze $ toSQLCommand sql
     --trace ("ANALYSIS:" <+> analysis) $ return ()
+    --trace (show $ toSQLCommand sql) $ return ()
     runQuery_ sql
     (count :: Int64, CompositeArray1 documents) <- fetchOne id
     return (offset + fromIntegral count, documents)
     where
       sql = sqlSelect "" $ do
         -- get ids of documents for total count
-        sqlWith "selected_ids" . selectDocuments domains filters orders $ do
+        sqlWith "selected_ids" . selectDocuments domain filters orders (offset, limit) $ do
           sqlResult "documents.id AS id"
-          sqlOffset offset
-          sqlLimit limit
         -- restrict them with the soft limit
         sqlWith "relevant_ids" . sqlSelect "selected_ids" $ do
           sqlResult "ROW_NUMBER() OVER() AS position"
@@ -252,10 +266,11 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, 
         -- and a list of them, restricted by the soft limit
         sqlResult $ "ARRAY(SELECT (" <> mintercalate ", " documentsSelectors <> ")::document FROM relevant_ids ids JOIN documents USING (id) ORDER BY ids.position) AS documents"
 
-data GetDocumentsIDs = GetDocumentsIDs [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy]
+data GetDocumentsIDs = GetDocumentsIDs DocumentDomain [DocumentFilter] [AscDesc DocumentOrderBy]
 instance MonadDB m => DBQuery m GetDocumentsIDs [DocumentID] where
-  query (GetDocumentsIDs domains filters orders) = do
-    runQuery_ . selectDocuments domains filters orders $ do
+  query (GetDocumentsIDs domain filters orders) = do
+    let hardLimit = 10000
+    runQuery_ . selectDocuments domain filters orders (0, hardLimit) $ do
       sqlResult "documents.id"
     fetchMany runIdentity
 
@@ -263,7 +278,7 @@ instance MonadDB m => DBQuery m GetDocumentsIDs [DocumentID] where
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsByAuthor [Document] where
   query (GetDocumentsByAuthor uid) = query $ GetDocuments
-    [DocumentsVisibleToUser uid]
+    (DocumentsVisibleToUser uid)
     [DocumentFilterByAuthor uid, DocumentFilterDeleted False]
     [Asc DocumentOrderByMTime]
     (0, -1)
@@ -271,7 +286,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsByAuthor [Document] 
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetTemplatesByAuthor [Document] where
   query (GetTemplatesByAuthor uid) = query $ GetDocuments
-    [DocumentsVisibleToUser uid]
+    (DocumentsVisibleToUser uid)
     [DocumentFilterByAuthor uid, DocumentFilterDeleted False, DocumentFilterTemplate]
     [Asc DocumentOrderByMTime]
     (0, -1)
@@ -279,7 +294,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetTemplatesByAuthor [Document] 
 data GetAvailableTemplates = GetAvailableTemplates UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetAvailableTemplates [Document] where
   query (GetAvailableTemplates uid) = query $ GetDocuments
-    [DocumentsVisibleToUser uid]
+    (DocumentsVisibleToUser uid)
     [DocumentFilterTemplate, DocumentFilterDeleted False]
     [Asc DocumentOrderByMTime]
     (0, -1)
