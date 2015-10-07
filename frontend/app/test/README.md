@@ -19,11 +19,3 @@ Coverage reports can be founder under `frontend/coverage/$launcher/index.html`.
    "test/common/select.js" tests what is in the file "scripts/common/select.jsx".
 3. Use React's own test utilities (https://facebook.github.io/react/docs/test-utils.html)
    for testing components.
-
-
-## Updating localization.js
-
-The localization file can be updated from your localhost by running:
-
-  $ cd frontend/
-  $ grunt fetchlocalization

@@ -13,7 +13,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-jscs');
   require('./custom_grunt_tasks/deploybuild')(grunt);
-  require('./custom_grunt_tasks/fetchlocalization')(grunt);
 
   // configurable paths
   var yeomanConfig = {

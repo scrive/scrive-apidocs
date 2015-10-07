@@ -5,8 +5,8 @@ module.exports = function(config) {
     frameworks: ["requirejs", "mocha", "chai"],
 
     files: [
+      "./localization/en.js",
       "./test/env.js",
-      "./test/localization.js",
       "./test/setup.js",
       {pattern: "./bower_components/**/*.js", included: false},
       {pattern: "./libs/**/*.js", included: false},
