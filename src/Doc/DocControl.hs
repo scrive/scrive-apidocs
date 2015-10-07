@@ -62,6 +62,7 @@ import BrandedDomain.BrandedDomain
 import DB
 import DB.TimeZoneName
 import Doc.API.Callback.Model
+import Doc.Conditions (DocumentDoesNotExist(..))
 import Doc.DocInfo
 import Doc.DocMails
 import Doc.DocStateData
@@ -245,12 +246,12 @@ handleAfterSigning slid = logSignatory slid $ do
 -- be removed. To iPhone users with disabled cookies: tell them to
 -- call Apple service and enable cookies (again) on their phone.
 {-# NOINLINE handleSignShowSaveMagicHash #-}
-handleSignShowSaveMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
-handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $ do
+handleSignShowSaveMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
+handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $ (do
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
     dbUpdate $ AddDocumentSessionToken sid mh
     -- Redirect to propper page
-    return $ LinkSignDocNoMagicHash did sid
+    sendRedirect $ LinkSignDocNoMagicHash did sid) `catchKontra` (\(DocumentDoesNotExist _) -> respond404)
 
 -- |
 --   /s/[documentid]/[signatorylinkid]
