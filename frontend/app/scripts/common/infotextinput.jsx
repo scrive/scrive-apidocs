@@ -61,6 +61,7 @@ define(['React'], function(React) {
       onRemove      : React.PropTypes.func,
       onOk          : React.PropTypes.func,
       onClick       : React.PropTypes.func,
+      onButtonClick : React.PropTypes.func,
       onAutoGrowth  : React.PropTypes.func,
 
       // More
@@ -174,14 +175,6 @@ define(['React'], function(React) {
             this.props.onChange(newvalue);
         }
     },
-    onOk : function() {
-      if (this.props.onOk != undefined)
-        this.props.onOk();
-    },
-    onRemove : function() {
-      if (this.props.onRemove != undefined)
-        this.props.onRemove();
-    },
     onKeyDown : function(e) {
       if (e.keyCode == 13 && this.props.onEnter != undefined)
           this.props.onEnter();
@@ -223,13 +216,13 @@ define(['React'], function(React) {
           />
 
            {/*if*/ this.props.onRemove != undefined &&
-              <div ref="close" className="closer" onClick={this.onRemove}/>
+              <div ref="close" className="closer" onClick={this.props.onRemove}/>
            }
            {/*if*/ this.props.onOk != undefined &&
-              <div ref="ok" className="ok-button" style={this.props.okStyle} onClick={this.onOk}>OK</div>
+              <div ref="ok" className="ok-button" style={this.props.okStyle} onClick={this.props.onOk}>OK</div>
            }
-           {/*if*/ (this.props.buttonTitle != undefined && this.props.onClick != undefined) &&
-              <div className="internal-button-wrapper"><div className="internal-button" onClick={this.props.onClick}>{this.props.buttonTitle}</div></div>
+           {/*if*/ (this.props.buttonTitle != undefined && this.props.onButtonClick != undefined) &&
+              <div className="internal-button-wrapper"><div className="internal-button" onClick={this.props.onButtonClick}>{this.props.buttonTitle}</div></div>
            }
            {/*if*/ this.props.autoGrowth &&
               <div ref="growth" className="growth" style={this.props.inputStyle} />
