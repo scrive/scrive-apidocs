@@ -102,6 +102,14 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                       MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
                       MG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
                       _ -> return ()
+                  handleEv (SocketLabsEvent email ev) = do
+                    logEmails email
+                    case ev of
+                      SL_Opened -> handleOpenedInvitation slid email muid
+                      SL_Delivered -> handleDeliveredInvitation bd host mc slid
+                      SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
+                      _ -> return ()
+
               theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
         _ -> markEventAsRead eid
     processEvent (eid, _ , _, _) = markEventAsRead eid
