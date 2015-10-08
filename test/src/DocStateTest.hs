@@ -603,12 +603,12 @@ testChangeAuthenticationToSignMethod = replicateM_ 10 $ do
     ) `withDocumentM` do
       Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
 
-      randomUpdate $ \t->ChangeAuthenticationToSignMethod (signatorylinkid sl) SMSPinAuthenticationToSign Nothing (systemActor t)
+      randomUpdate $ \t->ChangeAuthenticationToSignMethod (signatorylinkid sl) SMSPinAuthenticationToSign Nothing Nothing (systemActor t)
       lg1 <- dbQuery . GetEvidenceLog  =<< theDocumentID
       assertJust $ find (\e -> evType e == Current ChangeAuthenticationToSignMethodStandardToSMSEvidence) lg1
       assertNothing $ find (\e -> evType e == Current UpdateFieldMobileEvidence) lg1
 
-      randomUpdate $ \t->ChangeAuthenticationToSignMethod (signatorylinkid sl) SMSPinAuthenticationToSign (Just "+486543222112") (systemActor t)
+      randomUpdate $ \t->ChangeAuthenticationToSignMethod (signatorylinkid sl) SMSPinAuthenticationToSign Nothing (Just "+486543222112") (systemActor t)
       lg2 <- dbQuery . GetEvidenceLog  =<< theDocumentID
       assertEqual "Too many evidence logs for change authentication method"
         (length $ filter (\e -> evType e == Current ChangeAuthenticationToSignMethodStandardToSMSEvidence) lg2) 1

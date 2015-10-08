@@ -439,10 +439,17 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
     guardSignatoryHasNotSigned slid
     -- Parameters
     authentication_type <- apiV2ParameterObligatory (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToSignMethod)
-    authentication_value <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "authentication_value")
+    (mSSN, mPhone) <- case authentication_type of
+      StandardAuthenticationToSign -> return (Nothing, Nothing)
+      SEBankIDAuthenticationToSign -> do
+        mSSN <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "personal_number")
+        return (mSSN, Nothing)
+      SMSPinAuthenticationToSign -> do
+        mPhone <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
+        return (Nothing, mPhone)
     -- Check conditions on parameters and signatory
-    guardCanSetAuthenticationToSignForSignatoryWithValue slid authentication_type authentication_value
+    guardCanSetAuthenticationToSignForSignatoryWithValue slid authentication_type mSSN mPhone
     -- API call actions
-    dbUpdate $ ChangeAuthenticationToSignMethod slid authentication_type authentication_value actor
+    dbUpdate $ ChangeAuthenticationToSignMethod slid authentication_type mSSN mPhone actor
     -- Return
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument

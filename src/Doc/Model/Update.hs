@@ -634,22 +634,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
       -- Finally, add event in EvidenceLog for changed authentication
       addChangeAuthenticationToViewEvidenceEvent sl (signatorylinkauthenticationtoviewmethod sl, newAuthToView)
 
-    where authToViewNeedsPersonalNumber :: AuthenticationToViewMethod -> Bool
-          authToViewNeedsPersonalNumber StandardAuthenticationToView = False
-          authToViewNeedsPersonalNumber SEBankIDAuthenticationToView = True
-          authToViewNeedsPersonalNumber NOBankIDAuthenticationToView = True
-
-          authToViewNeedsMobileNumber :: AuthenticationToViewMethod -> Bool
-          authToViewNeedsMobileNumber StandardAuthenticationToView = False
-          authToViewNeedsMobileNumber SEBankIDAuthenticationToView = False
-          authToViewNeedsMobileNumber NOBankIDAuthenticationToView = True
-
-          authToSignNeedsPersonalNumber :: AuthenticationToSignMethod -> Bool
-          authToSignNeedsPersonalNumber StandardAuthenticationToSign = False
-          authToSignNeedsPersonalNumber SMSPinAuthenticationToSign   = False
-          authToSignNeedsPersonalNumber SEBankIDAuthenticationToSign = True
-
-          insertEvidenceFor :: (DocumentMonad m, TemplatesMonad m, MonadThrow m) => SignatoryLink -> CurrentEvidenceEventType -> m ()
+    where insertEvidenceFor :: (DocumentMonad m, TemplatesMonad m, MonadThrow m) => SignatoryLink -> CurrentEvidenceEventType -> m ()
           insertEvidenceFor sl e = void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg e (return ()) (Just sl) Nothing actor
 
           addChangeAuthenticationToViewEvidenceEvent :: (DocumentMonad m, TemplatesMonad m, MonadThrow m) => SignatoryLink -> (AuthenticationToViewMethod, AuthenticationToViewMethod) -> m ()
@@ -663,88 +648,119 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
           addChangeAuthenticationToViewEvidenceEvent _  (SEBankIDAuthenticationToView, SEBankIDAuthenticationToView) = return ()
           addChangeAuthenticationToViewEvidenceEvent _  (NOBankIDAuthenticationToView, NOBankIDAuthenticationToView) = return ()
 
-data ChangeAuthenticationToSignMethod = ChangeAuthenticationToSignMethod SignatoryLinkID AuthenticationToSignMethod (Maybe String) Actor
+data ChangeAuthenticationToSignMethod = ChangeAuthenticationToSignMethod SignatoryLinkID AuthenticationToSignMethod (Maybe String) (Maybe String) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeAuthenticationToSignMethod () where
-  update (ChangeAuthenticationToSignMethod slid newAuthToSign mValue actor) = do
-    let extraInfoField StandardAuthenticationToSign = Nothing
-        extraInfoField SEBankIDAuthenticationToSign = Just PersonalNumberFI
-        extraInfoField SMSPinAuthenticationToSign   = Just MobileFI
+  update (ChangeAuthenticationToSignMethod slid newAuthToSign mSSN mPhone actor) = do
     updateDocumentWithID $ const $ do
+      -- Get the SignatoryLink before the updates
+      sl <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid Nothing
+      -- FIXME JJ: rename these to 'slSSNField' or something like that
+      let oldAuthToSign = signatorylinkauthenticationtosignmethod sl
+          ssnField    = getFieldByIdentity PersonalNumberFI $ signatoryfields sl
+          mobileField = getFieldByIdentity MobileFI $ signatoryfields sl
+          maybeFieldHasPlacements :: Maybe SignatoryField -> Bool
+          maybeFieldHasPlacements mF = not . null $ fromMaybe [] $ fmap fieldPlacements $ mF
       -- Set the new authentication method in signatory_links
-      -- Return the old authentication method
-      (oldAuthToSign :: AuthenticationToSignMethod) <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "signatory_links" $ do
-        sqlFrom "signatory_links AS signatory_links_old"
+      kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
         sqlSet "authentication_to_sign_method" newAuthToSign
-        sqlResult "signatory_links_old.authentication_to_sign_method"
-        sqlWhere "signatory_links.id = signatory_links_old.id"
-        sqlWhereEq "signatory_links.id" slid
+        sqlWhereEq "id" slid
+        sqlWhereSignatoryIsPartner
         sqlWhereSignatoryHasNotSigned
         sqlWhereExists $ sqlSelect "documents" $ do
           sqlWhere "documents.id = signatory_links.document_id"
           sqlWhereDocumentStatusIs Pending
-      -- Get the `SignatoryLink`
-      siglink <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid Nothing
-      -- When the old authentication method needed extra info and the new one
-      -- isin't the same type, then we need to make the field for the old
-      -- authentication method non obligatory
-      let signatoryLinkHasPlacementLike :: SignatoryLink -> FieldIdentity -> Bool
-          signatoryLinkHasPlacementLike sl fi = isJust $ getFieldByIdentity fi $ signatoryfields sl
-          authToViewNeedsFieldOf :: AuthenticationToViewMethod -> FieldIdentity -> Bool
-          authToViewNeedsFieldOf SEBankIDAuthenticationToView PersonalNumberFI = True
-          authToViewNeedsFieldOf NOBankIDAuthenticationToView PersonalNumberFI = True
-          authToViewNeedsFieldOf _ _ = False
-      case extraInfoField oldAuthToSign of
-        Nothing -> return ()
-        Just prvAuthField ->
-          when ( oldAuthToSign /= newAuthToSign
-                 && signatoryLinkHasPlacementLike siglink prvAuthField
-                 && (not $ authToViewNeedsFieldOf (signatorylinkauthenticationtoviewmethod siglink) prvAuthField)
-               )
-               ( kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
-                   sqlSet "obligatory" False
-                   sqlWhereEq "signatory_link_id" slid
-                   sqlWhereEq "type" $ fieldTypeFromFieldIdentity prvAuthField
-               )
-      -- When the new authentication method needs extra info then we need to
-      -- either add it (if provided) or make obligatory for the signatory
-      case extraInfoField newAuthToSign of
-        Nothing -> return ()
-        Just authMethodField ->
-          case getFieldByIdentity authMethodField (signatoryfields siglink) of
-               Just _  -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
-                 case mValue of
-                      Just a  -> sqlSet "value_text" a
-                      Nothing -> return ()
-                 sqlSet "obligatory" True
-                 sqlWhereEq "signatory_link_id" slid
-                 sqlWhereEq "type" $ fieldTypeFromFieldIdentity authMethodField
-               -- Note: default in table for `obligatory` is true
-               Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
-                 sqlSet "signatory_link_id" slid
-                 sqlSet "value_text" $ fromMaybe "" mValue
-                 sqlSet "type" $ fieldTypeFromFieldIdentity authMethodField
+      -- Make previously obligatory fields (due to authentication to sign)
+      -- non-obligatory when the new authentication is different and they don't
+      -- have placements
+      case (newAuthToSign == oldAuthToSign, oldAuthToSign) of
+        -- Nothing to change!
+        (True, _)                             -> return ()
+        (False, StandardAuthenticationToSign) -> return ()
+        -- Make PersonalNumber non-obligatory if conditions are satisfied
+        (False, SEBankIDAuthenticationToSign) -> when
+          ( maybeFieldHasPlacements ssnField
+            && (not $ authToViewNeedsPersonalNumber (signatorylinkauthenticationtoviewmethod sl))
+          )
+          ( kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+              sqlSet "obligatory" False
+              sqlWhereEq "signatory_link_id" slid
+              sqlWhereEq "type" PersonalNumberFT
+          )
+        -- Make MobileNumber non-obligatory if conditions are satisfied
+        (False, SMSPinAuthenticationToSign) -> when
+          ( maybeFieldHasPlacements mobileField
+            && (not $ authToViewNeedsMobileNumber (signatorylinkauthenticationtoviewmethod sl))
+          )
+          ( kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+              sqlSet "obligatory" False
+              sqlWhereEq "signatory_link_id" slid
+              sqlWhereEq "type" MobileFT
+          )
+      -- If newAuthToSign needs PersonalNumber we need to make sure the field
+      -- exists and is obligatory, and maybe set to the value provided
+      when (authToSignNeedsPersonalNumber newAuthToSign) $ do
+        let oldSSN = fromMaybe "" $ fieldTextValue =<< ssnField
+            newSSN = fromMaybe "" mSSN
+        case ssnField of
+             Just _  -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+               case mSSN of
+                    Just ssn -> sqlSet "value_text" ssn
+                    Nothing -> return ()
+               sqlSet "obligatory" True
+               sqlWhereEq "signatory_link_id" slid
+               sqlWhereEq "type" PersonalNumberFT
+             -- Note: default in table for `obligatory` is true
+             Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
+               sqlSet "signatory_link_id" slid
+               sqlSet "value_text" $ fromMaybe "" mSSN
+               sqlSet "type" PersonalNumberFT
+        -- Add an EvidenceLog event if the value changed
+        when (isJust mSSN && newSSN /= oldSSN) $
+          void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+            (getEvidenceTextForUpdateField sl PersonalNumberFI)
+            (do F.value "value" newSSN
+                F.value "previousvalue" oldSSN
+                when (newSSN == "") (F.value "newblank" True)
+                when (oldSSN == "") (F.value "prvblank" True)
+            )
+            (Just sl)
+            Nothing
+            actor
+      -- If newAuthToSign needs MobileNumber we need to make sure the field
+      -- exists and is obligatory, and maybe set to the value provided
+      when (authToSignNeedsMobileNumber newAuthToSign) $ do
+        let oldPhone = fromMaybe "" $ fieldTextValue =<< mobileField
+            newPhone = fromMaybe "" mPhone
+        case mobileField of
+             Just _  -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+               case mPhone of
+                    Just phone -> sqlSet "value_text" phone
+                    Nothing -> return ()
+               sqlSet "obligatory" True
+               sqlWhereEq "signatory_link_id" slid
+               sqlWhereEq "type" MobileFT
+             -- Note: default in table for `obligatory` is true
+             Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
+               sqlSet "signatory_link_id" slid
+               sqlSet "value_text" $ fromMaybe "" mPhone
+               sqlSet "type" MobileFT
+        -- Add an EvidenceLog event if the value changed
+        when (newPhone /= oldPhone) $
+          void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+            (getEvidenceTextForUpdateField sl MobileFI)
+            (do F.value "value" newPhone
+                F.value "previousvalue" oldPhone
+                when (newPhone == "") (F.value "newblank" True)
+                when (oldPhone == "") (F.value "prvblank" True)
+            )
+            (Just sl)
+            Nothing
+            actor
+      -- Update document mtime and object_version
       updateMTimeAndObjectVersion (actorTime actor)
-      -- Evidence Events
-      -- One for changing the value, the other for changing authentication method
-      case extraInfoField newAuthToSign of
-           Nothing -> return ()
-           Just authMethodField -> do
-             let previousValue = fromMaybe "" $ fieldTextValue =<< getFieldByIdentity authMethodField (signatoryfields siglink)
-                 value         = fromMaybe "" mValue
-             when (value /= previousValue)
-                  (void $ update $ InsertEvidenceEvent
-                    (getEvidenceTextForUpdateField siglink authMethodField)
-                    (do F.value "value" value
-                        F.value "previousvalue" previousValue
-                        when (value == "") $
-                            F.value "newblank" True
-                        when (previousValue == "") $
-                            F.value "prvblank" True
-                    )
-                    actor
-                  )
       let insertEvidence e = void $ update $
-            InsertEvidenceEventWithAffectedSignatoryAndMsg e (return ()) (Just siglink) Nothing actor
+            InsertEvidenceEventWithAffectedSignatoryAndMsg e (return ()) (Just sl) Nothing actor
+      -- Add event for changing AuthenticationToSignMethod
       case (oldAuthToSign, newAuthToSign) of
            (StandardAuthenticationToSign, SEBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodStandardToSEBankIDEvidence
            (StandardAuthenticationToSign, SMSPinAuthenticationToSign)   -> insertEvidence ChangeAuthenticationToSignMethodStandardToSMSEvidence

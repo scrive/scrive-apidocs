@@ -681,12 +681,12 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
       when (isNothing authentication_type) $
         throwM . SomeKontraException $ badInput
           "`authentication_type` must be given. Supported values are: `standard`, `eleg`, `sms_pin`."
-      (authenticationMethod, maybeAuthValue) <- case fromJSValue $ J.toJSValue $ fromMaybe "" authentication_type of
+      (authenticationMethod, mSSN, mPhone) <- case fromJSValue $ J.toJSValue $ fromMaybe "" authentication_type of
         Nothing -> throwM . SomeKontraException $ badInput
           "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
-        Just StandardAuthenticationToSign -> return (StandardAuthenticationToSign, Nothing)
-        Just SEBankIDAuthenticationToSign -> return (SEBankIDAuthenticationToSign, authentication_value)
-        Just SMSPinAuthenticationToSign   -> return (SMSPinAuthenticationToSign, authentication_value)
+        Just StandardAuthenticationToSign -> return (StandardAuthenticationToSign, Nothing, Nothing)
+        Just SEBankIDAuthenticationToSign -> return (SEBankIDAuthenticationToSign, authentication_value, Nothing)
+        Just SMSPinAuthenticationToSign   -> return (SMSPinAuthenticationToSign, Nothing, authentication_value)
       -- Check conditions for different authentication to sign methods
       case authenticationMethod of
         StandardAuthenticationToSign -> return ()
@@ -694,32 +694,32 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
           -- Can't mix SEBankID and NOBankID
           when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $
             throwM . SomeKontraException $ badInput $ "Can't mix Norwegian and Swedish Bank ID"
-          case maybeAuthValue of
+          case mSSN of
             Nothing -> return ()
             -- If we are given a Swedish SSN
-            Just val -> do
-              when (signatorylinkidentifiedtoview sl && val /= getPersonalNumber sl) $
+            Just ssn -> do
+              when (signatorylinkidentifiedtoview sl && ssn /= getPersonalNumber sl) $
                 throwM . SomeKontraException $ badInput "The signatory has authenticated to view, therefore you can't change the authentication value"
-              case asValidSwedishSSN val of
+              case asValidSwedishSSN ssn of
                 -- Empty is allowed only if we don't need it for AuthenticationToViewMethod
                 Empty -> when (signatorylinkauthenticationtoviewmethod sl == SEBankIDAuthenticationToView) $
                   throwM . SomeKontraException $ badInput "You provided an empty authentication value, needs a value for authentication to view"
                 Bad -> throwM . SomeKontraException $ badInput "The authentication value provided is not a valid for Swedish BankID"
                 Good _ -> return ()
-        SMSPinAuthenticationToSign -> case maybeAuthValue of
+        SMSPinAuthenticationToSign -> case mPhone of
           Nothing -> return ()
-          Just val -> do
+          Just phone -> do
             -- If the signatory has authenticated to view with NOBankIDAuthenticationToView and a valid number, then we can't change the phone number!
-            when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView && signatorylinkidentifiedtoview sl && getMobile sl /= "" && val /= getMobile sl) $
+            when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView && signatorylinkidentifiedtoview sl && getMobile sl /= "" && phone /= getMobile sl) $
               throwM . SomeKontraException $ badInput "The signatory has authenticated to view with Norwegian BankID, therefore you can't change the phone number"
             -- If given a phone number we need to make sure it doesn't invalidate NOBankIDAuthenticationToView
             when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $
-              case asValidPhoneForNorwegianBankID val of
+              case asValidPhoneForNorwegianBankID phone of
                 Bad -> throwM . SomeKontraException $ badInput "Phone number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
                 Empty -> return ()
                 Good _ -> return ()
       -- Change authentication to sign method and return Document JSON
-      dbUpdate $ ChangeAuthenticationToSignMethod slid authenticationMethod maybeAuthValue actor
+      dbUpdate $ ChangeAuthenticationToSignMethod slid authenticationMethod mSSN mPhone actor
       Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 apiCallV1Remind :: Kontrakcja m => DocumentID -> m Response
