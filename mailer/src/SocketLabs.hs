@@ -4,18 +4,17 @@ module SocketLabs (
   ) where
 
 import Data.String.Utils hiding (maybeRead)
-import qualified Control.Exception.Lifted as E
-
-import MailingServerConf
 import Happstack.Server
 import Log
-import Mailer
-import Mails.Model
+import qualified Control.Exception.Lifted as E
+
+import DB
 import Happstack.Fields
 import KontraPrelude
 import Log.Identifier
-import DB
-
+import Mailer
+import MailingServerConf
+import Mails.Model
 
 handleSocketLabsEvents :: MailingServerConf -> Mailer Response
 handleSocketLabsEvents conf = localDomain "handleSocketLabsEvents" $ do
