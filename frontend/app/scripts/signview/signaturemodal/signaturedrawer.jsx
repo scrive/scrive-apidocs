@@ -365,9 +365,9 @@ return React.createClass({
       var isTouchDevice = "ontouchstart" in window || "onmsgesturechange" in window;
       // fix for IE 10.
       if (BrowserInfo.isIE() && $.browser.version >= 10.0) {
-        isTouchDevice = !window.navigator.msMaxTouchPoints;
+        isTouchDevice = window.navigator.msMaxTouchPoints;
       }
-      return !isTouchDevice ? "/img/sign-preview-hand.gif" : "/img/sign-preview-mouse.gif";
+      return isTouchDevice ? "/img/sign-preview-hand.gif" : "/img/sign-preview-mouse.gif";
     },
     previewStyle: function () {
       var model = this.state.model;
