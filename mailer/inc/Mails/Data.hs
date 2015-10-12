@@ -9,6 +9,7 @@ module Mails.Data (
   , Address(..)
   , SendGridEvent(..)
   , MailGunEvent(..)
+  , SocketLabsEvent(..)
   , Event(..)
   , Mail(..)
   --, unjsonAddress
@@ -203,9 +204,19 @@ data MailGunEvent
   | MG_Dropped !String                  -- ^ drop reason
     deriving (Eq, Ord, Show, Data, Typeable)
 
+data SocketLabsEvent
+  = SL_Opened
+  | SL_Delivered
+  | SL_Failed Int Int                   -- ^ failure type, failure code
+  | SL_Clicked
+  | SL_Unsubscribed
+  | SL_Complained
+    deriving (Eq, Ord, Show, Data, Typeable)
+
 data Event
   = SendGridEvent !String !SendGridEvent !String   -- ^ email, event, category
   | MailGunEvent !String !MailGunEvent             -- ^ email, event
+  | SocketLabsEvent !String !SocketLabsEvent       -- ^ email, event
   deriving (Eq, Ord, Show, Data, Typeable)
 
 instance PQFormat Event where
