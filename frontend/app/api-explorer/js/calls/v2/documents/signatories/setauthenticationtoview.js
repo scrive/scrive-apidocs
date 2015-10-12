@@ -2,21 +2,21 @@
 
 new APICallV2({
   category: "signing",
-  name: "Signatory- Set Authentication to Sign",
-  description: "Set the signatory authentication to sign method after the\
+  name: "Signatory- Set Authentication to View",
+  description: "Set the signatory authentication to view method after the\
                 document has been started.\
                 Side-effects of this operation may include adding or modifying\
                 fields for the signatory.",
-  sampleUrl: "/api/v2/documents/$document_id$/$signatory_id$/setauthenticationtosign",
+  sampleUrl: "/api/v2/documents/$document_id$/$signatory_id$/setauthenticationtoview",
   method: "POST",
   getCallUrl: function () {
           return "/api/v2/documents/" + this.get("document_id") + "/"
                                       + this.get("signatory_id")
-                                      + "/setauthenticationtosign";
+                                      + "/setauthenticationtoview";
         },
   needsAuthorization: true,
   equivalentCalls: {
-    'v1': 'Change authentication to sign'
+    'v1': 'Change authentication to view'
   },
   params: [
           window.APIV2CallParamDocumentID,
@@ -33,7 +33,6 @@ new APICallV2({
             argName: "personal_number",
             name: "Personal Number",
             optional: true,
-            optionToSendEmpty: true,
             description: "TODO",
             defaultValue: ""
           }),

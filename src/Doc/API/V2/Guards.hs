@@ -11,6 +11,9 @@ module Doc.API.V2.Guards (
 , guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
 -- * Signatory guards
 , guardSignatoryNeedsToIdentifyToView
+, guardSignatoryHasNotIdentifiedToView
+, guardCanSetAuthenticationToViewForSignatoryWithValues
+, guardCanSetAuthenticationToSignForSignatoryWithValue
 , guardSignatoryHasNotSigned
 -- * Joined guard for read-only functions
 , guardDocumentReadAccess
@@ -101,9 +104,77 @@ guardSignatoryNeedsToIdentifyToView slid = do
   when (identifyToView && (not $ isAuthor msl))
     (apiError $ signatoryStateError "Authorization to view needed before signing")
 
+guardSignatoryHasNotIdentifiedToView :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
+guardSignatoryHasNotIdentifiedToView slid =
+  whenM (signatorylinkidentifiedtoview . $fromJust . getSigLinkFor slid <$> theDocument)
+    (apiError $ signatoryStateError "The signatory has already identified to view")
+
+guardCanSetAuthenticationToViewForSignatoryWithValues :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> AuthenticationToViewMethod -> Maybe String -> Maybe String -> m ()
+guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mPhone = do
+  sl <- $fromJust . getSigLinkFor slid <$> theDocument
+  -- Do not allow mixing of Swedish and Norwegian BankID
+  when (authToView == NOBankIDAuthenticationToView && signatorylinkauthenticationtosignmethod sl == SEBankIDAuthenticationToSign)
+    (apiError $ signatoryStateError "Can't mix Norwegian and Swedish BankID for the same signatory")
+  -- Check if either a valid SSN for authToView is set or is provided
+  case mSSN of
+    Nothing -> unless (isValidSSNForAuthenticationToView authToView $ getPersonalNumber sl) $
+      (apiError $ signatoryStateError "Signatory does not have a valid personal number for the authentication method and you did not provide one")
+    Just ssn -> unless (isValidSSNForAuthenticationToView authToView ssn) $
+      (apiError $ signatoryStateError "The personal number you provided is not valid for the authentication method")
+  -- Check if either a valid phone for authToView is set or is provided
+  case mPhone of
+    Nothing -> unless (isValidPhoneForAuthenticationToView authToView $ getMobile sl) $
+      (apiError $ signatoryStateError "Signatory does not have a valid phone number set for the authentication method and you did not provide one")
+    Just phone -> unless (isValidPhoneForAuthenticationToView authToView phone) $
+      (apiError $ signatoryStateError "The phone number you provided is not valid for the authentication method")
+  where
+    isValidSSNForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
+    isValidSSNForAuthenticationToView StandardAuthenticationToView _ = True
+    isValidSSNForAuthenticationToView SEBankIDAuthenticationToView ssn = isGood $ asValidSwedishSSN   ssn
+    isValidSSNForAuthenticationToView NOBankIDAuthenticationToView ssn = isGood $ asValidNorwegianSSN ssn
+    isValidPhoneForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
+    isValidPhoneForAuthenticationToView StandardAuthenticationToView _ = True
+    isValidPhoneForAuthenticationToView SEBankIDAuthenticationToView _ = True
+    isValidPhoneForAuthenticationToView NOBankIDAuthenticationToView phone = isGood phoneValidation || isEmpty phoneValidation
+      where phoneValidation = asValidPhoneForNorwegianBankID phone
+
+guardCanSetAuthenticationToSignForSignatoryWithValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> AuthenticationToSignMethod -> Maybe String -> Maybe String -> m ()
+guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mPhone = do
+  sl <- $fromJust . getSigLinkFor slid <$> theDocument
+  case authToSign of
+    StandardAuthenticationToSign -> return ()
+    SEBankIDAuthenticationToSign -> do
+      -- Do not allow mixing of Swedish and Norwegian BankID
+      when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $
+        apiError $ signatoryStateError "Can't mix Norwegian and Swedish BankID for the same signatory"
+      case mSSN of
+        Nothing -> return ()
+        -- If we are given a Swedish SSN
+        Just ssn -> do
+          when (signatorylinkidentifiedtoview sl && ssn /= getPersonalNumber sl) $
+            apiError $ signatoryStateError "The signatory has authenticated to view, therefore you can't change the authentication value"
+          case asValidSwedishSSN ssn of
+            -- Empty is allowed only if we don't need it for AuthenticationToViewMethod
+            Empty -> when (signatorylinkauthenticationtoviewmethod sl == SEBankIDAuthenticationToView) $
+              apiError $ signatoryStateError "You provided an empty authentication value, needs a value for authentication to view"
+            Bad -> apiError $ signatoryStateError "The authentication value provided is not a valid for Swedish BankID"
+            Good _ -> return ()
+    SMSPinAuthenticationToSign -> case mPhone of
+      Nothing -> return ()
+      Just phone -> do
+        -- If the signatory has authenticated to view with NOBankIDAuthenticationToView and a valid number, then we can't change the phone number!
+        when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView && signatorylinkidentifiedtoview sl && getMobile sl /= "" && phone /= getMobile sl) $
+          apiError $ signatoryStateError "The signatory has authenticated to view with Norwegian BankID, therefore you can't change the phone number"
+        -- If given a phone number we need to make sure it doesn't invalidate NOBankIDAuthenticationToView
+        when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $
+          case asValidPhoneForNorwegianBankID phone of
+            Bad -> apiError $ signatoryStateError "Phone number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
+            Empty -> return ()
+            Good _ -> return ()
+
 guardSignatoryHasNotSigned :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
 guardSignatoryHasNotSigned slid =
-  whenM (hasSigned . $fromJust . getSigLinkFor slid <$> theDocument) $ do
+  whenM (hasSigned . $fromJust . getSigLinkFor slid <$> theDocument)
     (apiError $ signatoryStateError "The signatory has already signed")
 
 -- Checks if document can be strated. Throws matching API exception if it does not

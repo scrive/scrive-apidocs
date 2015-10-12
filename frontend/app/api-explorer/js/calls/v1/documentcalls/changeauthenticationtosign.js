@@ -12,7 +12,7 @@ new APICallV1({
         },
   needsAuthorization: true,
   equivalentCalls: {
-    "v2": "Signatory- Set Authentication"
+    "v2": "Signatory- Set Authentication to Sign"
   },
   params: [
           new APICallParam({

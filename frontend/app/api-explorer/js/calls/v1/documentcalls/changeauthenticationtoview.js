@@ -11,6 +11,9 @@ new APICallV1({
           return "/api/v1/changeauthenticationtoview/" + this.get("documentid") + "/" + this.get("signatoryid");
         },
   needsAuthorization: true,
+  equivalentCalls: {
+    "v2": "Signatory- Set Authentication to View"
+  },
   params: [
           new APICallParam({
             type: "text",

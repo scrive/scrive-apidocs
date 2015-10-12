@@ -30,7 +30,11 @@ module Util.SignatoryLinkUtils (
   MaybeSignatoryLink(..),
   HasSignatoryLinks,
   filterSigLinksFor,
-  hasSigLinkFor
+  hasSigLinkFor,
+  authToViewNeedsPersonalNumber,
+  authToViewNeedsMobileNumber,
+  authToSignNeedsPersonalNumber,
+  authToSignNeedsMobileNumber
        ) where
 
 import Data.Functor
@@ -228,3 +232,26 @@ hasSigLinkFor i sls = isJust $ getSigLinkFor i sls
  -}
 getSigLinkFor :: (SignatoryLinkIdentity a, HasSignatoryLinks b) => a -> b -> Maybe SignatoryLink
 getSigLinkFor a d = find (isSigLinkFor a) (getSignatoryLinks d)
+
+-- Functions to determine if AuthenticationToViewMethod or
+-- AuthenticationToSignMethod needs Personal Number or Mobile Number
+
+authToViewNeedsPersonalNumber :: AuthenticationToViewMethod -> Bool
+authToViewNeedsPersonalNumber StandardAuthenticationToView = False
+authToViewNeedsPersonalNumber SEBankIDAuthenticationToView = True
+authToViewNeedsPersonalNumber NOBankIDAuthenticationToView = True
+
+authToViewNeedsMobileNumber :: AuthenticationToViewMethod -> Bool
+authToViewNeedsMobileNumber StandardAuthenticationToView = False
+authToViewNeedsMobileNumber SEBankIDAuthenticationToView = False
+authToViewNeedsMobileNumber NOBankIDAuthenticationToView = True
+
+authToSignNeedsPersonalNumber :: AuthenticationToSignMethod -> Bool
+authToSignNeedsPersonalNumber StandardAuthenticationToSign = False
+authToSignNeedsPersonalNumber SMSPinAuthenticationToSign   = False
+authToSignNeedsPersonalNumber SEBankIDAuthenticationToSign = True
+
+authToSignNeedsMobileNumber :: AuthenticationToSignMethod -> Bool
+authToSignNeedsMobileNumber StandardAuthenticationToSign = False
+authToSignNeedsMobileNumber SMSPinAuthenticationToSign   = True
+authToSignNeedsMobileNumber SEBankIDAuthenticationToSign = False
