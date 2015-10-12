@@ -17,9 +17,9 @@ import Happstack.Server.ReqHandler
 import KontraPrelude
 import Mailer
 import MailGun
-import SocketLabs
-import SendGrid
 import MailingServerConf
+import SendGrid
+import SocketLabs
 
 router :: CryptoRNGState -> ConnectionSource -> Mailer Response -> ReqHandlerT (LogT IO) Response
 router rng cs routes = withPostgreSQL cs $
