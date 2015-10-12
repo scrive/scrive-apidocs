@@ -135,8 +135,8 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mPhon
     isValidPhoneForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
     isValidPhoneForAuthenticationToView StandardAuthenticationToView _ = True
     isValidPhoneForAuthenticationToView SEBankIDAuthenticationToView _ = True
-    isValidPhoneForAuthenticationToView NOBankIDAuthenticationToView phone =
-      let phoneValidation = asValidPhoneForNorwegianBankID phone in isGood phoneValidation || isEmpty phoneValidation
+    isValidPhoneForAuthenticationToView NOBankIDAuthenticationToView phone = isGood phoneValidation || isEmpty phoneValidation
+      where phoneValidation = asValidPhoneForNorwegianBankID phone
 
 guardCanSetAuthenticationToSignForSignatoryWithValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> AuthenticationToSignMethod -> Maybe String -> Maybe String -> m ()
 guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mPhone = do
