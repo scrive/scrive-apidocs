@@ -97,7 +97,7 @@ return React.createClass({
     }
 
     // This should be $(openParticipantNode).outerHeight(), but before the animation ends it's lower than is should be
-    var bottomOfOpenParticipantBox = topOfOpenParticipantBox + 254;
+    var bottomOfOpenParticipantBox = topOfOpenParticipantBox + 345;
 
     if (bottomOfOpenParticipantBox > lowestVisiblePositionInBox ||
         topOfOpenParticipantBox < highestVisiblePositionInBox) {

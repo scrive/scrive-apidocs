@@ -53,7 +53,7 @@ return React.createClass({
           <div className="content-container" style={{"fontFamily": model.font()}}>
             <div className="content">
               <InfoTextInput infotext="Email address" style={{"width":"200px"}} readonly={true} disabled={true} />
-              <InfoTextInput infotext="Password" style={{"width": "200px"}} readonly={true} disabled={true} buttonTitle="Forgot?" onClick={function() {}} />
+              <InfoTextInput infotext="Password" style={{"width": "200px"}} readonly={true} disabled={true} buttonTitle="Forgot?" onButtonClick={function() {}} />
               <Button type="main" text="Log in" style={{"backgroundColor": model.brandColor(), "borderColor": model.brandTextColor(), "color": model.brandTextColor()}}/>
               <p style={{"color": model.brandTextColor()}}>Don't have an account? <a style={{"color": model.brandTextColor()}}>Sign up for free</a></p>
 
