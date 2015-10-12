@@ -30,17 +30,20 @@ new APICallV2({
           }),
           new APICallParam({
             type: "text",
-            argName: "authentication_value",
-            name: "Authentication Value",
+            argName: "personal_number",
+            name: "Personal Number",
             optional: true,
             optionToSendEmpty: true,
-            description: "Including this parameter will set the value\
-                          associated with `authentication_type` to this value\
-                          (e.g. phone number for SMS PIN).\
-                          Setting it to empty string will clear the associated\
-                          value, if present.\
-                          Excluding it will not affect any signatory properties\
-                          other than necessary side-effects.",
+            description: "TODO",
+            defaultValue: ""
+          }),
+          new APICallParam({
+            type: "text",
+            argName: "mobile_number",
+            name: "Mobile Number",
+            optional: true,
+            optionToSendEmpty: true,
+            description: "TODO",
             defaultValue: ""
           }),
           window.APIV2CallParamObjectVersion
