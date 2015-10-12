@@ -3,6 +3,7 @@ module MailingServerConf (
   , SenderConfig(..)
   , SMTPUser(..)
   , SMTPDedicatedUser(..)
+  , CallbackValidationKeys(..)
   , unjsonMailingServerConf
   ) where
 
@@ -26,9 +27,28 @@ data MailingServerConf = MailingServerConf {
 , testReceivers      :: ![Address]
 } deriving (Eq, Ord, Show)
 
+-- | SMTP callback key authentication will be used to receive callbacks
+-- Right now it's used only for SocketLabs
+
+data CallbackValidationKeys = CallbackValidationKeys {
+  callbackValidationSecretKey :: !String
+, callbackValidationValidationKey :: !String
+} deriving (Eq, Ord, Show)
+
+unjsonCallbackValidationKeys :: UnjsonDef CallbackValidationKeys
+unjsonCallbackValidationKeys = objectOf $ CallbackValidationKeys
+  <$> field "secret_key"
+      callbackValidationSecretKey
+      "Secret key for callback validation"
+  <*> field "validation_key"
+      callbackValidationValidationKey
+      "Validation key for callback validation"
+
+
 data SMTPUser = SMTPUser {
   smtpAccount  :: !String
 , smtpPassword :: !String
+, callbackValidationKeys :: !(Maybe CallbackValidationKeys)
 } deriving (Eq, Ord, Show)
 
 unjsonSMTPUser :: UnjsonDef SMTPUser
@@ -39,6 +59,10 @@ unjsonSMTPUser = objectOf $ SMTPUser
   <*> field "smtp_password"
       smtpPassword
       "SMTP account password"
+  <*> fieldOptBy "callback_validation"
+      callbackValidationKeys
+      "Callback validation keys connected with this account"
+      unjsonCallbackValidationKeys
 
 -- | SMTP user that is dedicated only to email
 -- where from address matched given address.

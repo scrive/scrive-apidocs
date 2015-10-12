@@ -58,7 +58,6 @@ import Kontra
 import KontraPrelude
 import Log.Identifier
 import Log.Utils
-import MinutesTime
 import Templates
 import Util.Actor
 import Util.HasSomeCompanyInfo
@@ -277,13 +276,30 @@ evidenceOfIntentAttachment sim doc = do
                                }
 
 {-
- formatCalendarTime does not support %z as modifier. We have to implement it ourselves here.
+ We need to handle all timezones that postgres handles, so date formatting must be done through the db.
 -}
 formatUTCTimeForVerificationPage :: (MonadDB m, MonadMask m) => TimeZoneName -> UTCTime -> m String
 formatUTCTimeForVerificationPage tz mt = withTimeZone tz $ do
-  runQuery_ $ rawSQL "SELECT $1, to_char($1, 'TZ')" (Identity mt)
-  (t::ZonedTime, tmz) <- fetchOne id
-  return $ formatTime' ("%Y-%m-%d %H:%M:%S" <+> tmz <+> "(%z)") t
+  -- We can't retrieve ZonedTime, because libpq always applies local machine's time zone (by design)
+  -- so let's format everything on the db
+  -- withTimeZone is only needed for 'TZ' format specifier to handle nice timezone names (e.g. Europe/Berlin -> CEST)
+  -- all other calculations are not session timezone related
+
+  -- version for postgres-9.4
+  -- runQuery_ $ rawSQL "SELECT TO_CHAR(($1 AT TIME ZONE $2)::timestamptz, 'YYYY-MM-DD HH24:MI:SS TZ (OF00)')" (mt, toString tz)
+
+  -- but postgres < 9.4 does not support timezone offset specifier, so we have to do it by hand
+  -- $1 is timestamp input, $2 is timezone input
+  let intervalFromUTC = "AGE(($1 AT TIME ZONE 'UTC')::TIMESTAMP, ($1 AT TIME ZONE $2)::TIMESTAMP)"
+      offsetHours = "-EXTRACT(HOURS FROM " ++ intervalFromUTC ++ ")"
+      niceOffsetHours' = "TO_CHAR(" ++ offsetHours ++ ", 'S00')" -- e.g. 2 -> +02
+      niceOffsetHours = "CONCAT(" ++ niceOffsetHours' ++ ", '00')" -- append two trailing zeros
+
+      datetimeWithoutOffset = "TO_CHAR(($1 AT TIME ZONE $2)::TIMESTAMPTZ, 'YYYY-MM-DD HH24:MI:SS TZ')"
+
+      sqlConcat ss = "CONCAT(" ++ intercalate ", " ss ++ ")"
+  runQuery_ $ rawSQL (BS.fromString $ "SELECT " ++ sqlConcat [datetimeWithoutOffset, "' ('", niceOffsetHours, "')'"]) (mt, toString tz)
+  fetchOne runIdentity
 
 createSealingTextsForDocument :: (TemplatesMonad m) => Document -> String -> m Seal.SealingTexts
 createSealingTextsForDocument document hostpart = do

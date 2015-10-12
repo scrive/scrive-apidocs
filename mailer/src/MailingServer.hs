@@ -83,7 +83,7 @@ main = do
     startServer LogRunner{..} conf pool rng = do
       let (iface, port) = mscHttpBindAddress conf
           handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
-      routes <- case R.compile handlers of
+      routes <- case R.compile (handlers conf) of
         Left e -> do
           logInfo "Error while compiling routes" $ object [
               "error" .= e
@@ -210,6 +210,7 @@ main = do
 
         isDelivered (_, _, _, SendGridEvent _ SG_Delivered{} _) = True
         isDelivered (_, _, _, MailGunEvent _ MG_Delivered) = True
+        isDelivered (_, _, _, SocketLabsEvent _ SL_Delivered) = True
         isDelivered _ = False
 
         testSender = Address {
