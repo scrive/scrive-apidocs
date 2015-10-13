@@ -55,7 +55,7 @@ handleServiceBranding brandinghash _ = do
 getServiceTheme ::  Kontrakcja m =>  m Theme
 getServiceTheme = do
   ctx <- getContext
-  case (mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)) of
+  case getContextUser ctx of
        Just user -> do
          company <- getCompanyForUser user
          companyui <- dbQuery $ GetCompanyUI (companyid company)
@@ -129,7 +129,7 @@ handleSignviewBrandingWithoutDocument brandinghash _ = do
 getSignviewThemeWithoutDocument ::  Kontrakcja m =>  m Theme
 getSignviewThemeWithoutDocument = do
   ctx <- getContext
-  user <-  guardJust $ mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)
+  user <-  guardJust $ getContextUser ctx
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   dbQuery $ GetTheme $ fromMaybe (bdSignviewTheme $ ctxbrandeddomain ctx) (companySignviewTheme $ companyui)
@@ -139,7 +139,7 @@ getSignviewThemeWithoutDocument = do
 handleSignviewBrandingInternal :: Kontrakcja m => String -> String -> m Response
 handleSignviewBrandingInternal brandinghash _ = do
   ctx <- getContext
-  user <-  guardJust $ mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)
+  user <-  guardJust $ getContextUser ctx
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   theme <- dbQuery $ GetTheme $ fromMaybe (bdServiceTheme $ ctxbrandeddomain ctx) (companyServiceTheme $ companyui)
@@ -166,7 +166,7 @@ serviceLogo _ = do
 emailLogo :: Kontrakcja m => String  -> m Response
 emailLogo _ = do
   ctx <- getContext
-  user <-  guardJust $ mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)
+  user <-  guardJust $ getContextUser ctx
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme $ ctxbrandeddomain ctx) (companyMailTheme $ companyui)
@@ -205,7 +205,7 @@ signviewLogoWithoutDocument _ = do
 faviconIcon :: Kontrakcja m => String  -> m Response
 faviconIcon _ = do
   ctx <- getContext
-  companyFavicon <- case (mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)) of
+  companyFavicon <- case getContextUser ctx of
     Nothing -> return Nothing
     Just user -> do
       company <- getCompanyForUser user

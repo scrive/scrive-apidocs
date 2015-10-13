@@ -58,11 +58,10 @@ getDocByDocID docid = getDocByDocIDEx docid Nothing
 
 getDocByDocIDEx :: Kontrakcja m => DocumentID -> Maybe MagicHash -> m Document
 getDocByDocIDEx docid maccesstoken = do
-  Context{ctxmaybeuser, ctxmaybepaduser} <- getContext
+  ctx <- getContext
   -- document will be returned if ANY of the below is true (logical OR)
   let visibility = catMaybes [
-          DocumentsVisibleToUser . userid <$> ctxmaybeuser
-        , DocumentsVisibleToUser . userid <$> ctxmaybepaduser
+          DocumentsVisibleToUser . userid <$> getContextUser ctx
         , DocumentsVisibleViaAccessToken  <$> maccesstoken
         ]
   dbQuery $ GetDocument
@@ -72,8 +71,8 @@ getDocByDocIDEx docid maccesstoken = do
 -- | Same as getDocByDocID, but works only for author
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthor docid = do
-  Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
-  case (ctxmaybeuser `mplus` ctxmaybepaduser) of
+  ctx <- getContext
+  case getContextUser ctx of
     Nothing -> do
       -- we should never come to this place as user being loggen in is
       -- guarded up in the call stack
@@ -85,8 +84,8 @@ getDocByDocIDForAuthor docid = do
 -- | Same as getDocByDocID, but works only for author or authors company admin
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid = do
-  Context { ctxmaybeuser, ctxmaybepaduser} <- getContext
-  case (ctxmaybeuser `mplus` ctxmaybepaduser) of
+  ctx <- getContext
+  case getContextUser ctx of
     Nothing -> do
       -- we should never come to this place as user being loggen in is
       -- guarded up in the call stack

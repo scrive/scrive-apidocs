@@ -27,7 +27,7 @@ brandingAdler32 ctx mcompanyui = do
     Just cui1 -> companyUIAdler32 cui1
     Nothing  -> return ""
   ad3 <- do
-    case ((ctxmaybeuser ctx) `mplus` (ctxmaybepaduser ctx)) of
+    case getContextUser ctx of
       Nothing -> return ""
       Just user -> do
         cui2 <- dbQuery $ GetCompanyUI $ usercompany user

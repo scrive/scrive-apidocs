@@ -24,7 +24,7 @@ import User.Model
 import Util.HasSomeUserInfo
 
 mkAuthorActor :: Context -> Maybe Actor
-mkAuthorActor ctx = case (ctxmaybeuser ctx) `mplus` (ctxmaybepaduser ctx) of
+mkAuthorActor ctx = case getContextUser ctx of
   Just user -> Just $ authorActor ctx user
   Nothing   -> Nothing
 

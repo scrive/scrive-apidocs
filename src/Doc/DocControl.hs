@@ -376,7 +376,7 @@ handleIssueGoToSignviewPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m
 handleIssueGoToSignviewPad docid slid= do
   ctx <- getContext
   doc <- getDocByDocIDForAuthor docid
-  user <-  guardJust $ mplus (ctxmaybeuser ctx) (ctxmaybepaduser ctx)
+  user <- guardJust $ getContextUser ctx
   case (isAuthor <$> getMaybeSignatoryLink (doc,user), getMaybeSignatoryLink (doc,slid)) of
     (Just True,Just sl) | signatorylinkdeliverymethod sl == PadDelivery -> do
       dbUpdate $ AddDocumentSessionToken (signatorylinkid sl) (signatorymagichash sl)
@@ -592,7 +592,7 @@ handlePadList :: Kontrakcja m => m Response
 handlePadList = do
   ctx <- getContext
   ad <- getAnalyticsData
-  case (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx) of
+  case getContextUser ctx of
     Just _ -> simpleHtmlResonseClrFlash =<< pageDocumentPadList ctx  ad
     _ -> simpleHtmlResonseClrFlash =<< pageDocumentPadListLogin ctx  ad
 
