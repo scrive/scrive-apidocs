@@ -475,6 +475,9 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
             var emailinput = $('<input type="text" id="input-email" name="email" />')
                                  .attr('placeholder', localization.email)
                                  .val(model.email() || '');
+            if (model.type() === 'user') {
+              emailinput.attr('disabled', 'disabled');
+            }
             email.append($('<div class="input" />')
                          .append(emailinput));
             ul.append(email);
