@@ -165,12 +165,9 @@ main = do
         Ok . RerunAt . nextDayMidnight <$> currentTime
 
       PerformServiceTest -> case mscSlaveSender conf of
-        -- If there is no slave sender, retry periodically to be
+        -- If there is no slave sender/test receivers, retry periodically to be
         -- able to start the process if the configuration changes.
-        Nothing -> withPostgreSQL pool $ do
-          dbUpdate $ CollectServiceTestResultIn $ iseconds 50
-          return $ Ok MarkProcessed
-        Just _ -> withPostgreSQL pool . runCryptoRNGT rng $ do
+        Just _ | not $ null $ testReceivers conf -> withPostgreSQL pool . runCryptoRNGT rng $ do
           logInfo_ "Running service checker"
           token <- random
           mid <- dbUpdate $ CreateServiceTest (token, testSender, testReceivers conf, Just testSender, "test", "test", [], mempty)
@@ -178,6 +175,9 @@ main = do
               identifier_ mid
             ]
           dbUpdate $ CollectServiceTestResultIn $ iminutes 10
+          return $ Ok MarkProcessed
+        _ -> withPostgreSQL pool $ do
+          dbUpdate $ CollectServiceTestResultIn $ iseconds 50
           return $ Ok MarkProcessed
 
       CollectServiceTestResult -> case mscSlaveSender conf of
