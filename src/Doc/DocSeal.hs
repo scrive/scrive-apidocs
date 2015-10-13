@@ -289,7 +289,7 @@ formatUTCTimeForVerificationPage tz mt = withTimeZone tz $ do
   -- runQuery_ $ rawSQL "SELECT TO_CHAR(($1 AT TIME ZONE $2)::timestamptz, 'YYYY-MM-DD HH24:MI:SS TZ (OF00)')" (mt, toString tz)
 
   -- but postgres < 9.4 does not support timezone offset specifier, so we have to do it by hand
-  -- $1 is timestamp input, $2 is timezone input
+  -- ($1) is timestamp input, ($2) is timezone input
   let intervalFromUTC = "AGE(($1 AT TIME ZONE 'UTC')::TIMESTAMP, ($1 AT TIME ZONE $2)::TIMESTAMP)"
       offsetHours = "-EXTRACT(HOURS FROM " ++ intervalFromUTC ++ ")"
       niceOffsetHours' = "TO_CHAR(" ++ offsetHours ++ ", 'S00')" -- e.g. 2 -> +02
