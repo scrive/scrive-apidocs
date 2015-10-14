@@ -911,7 +911,7 @@ apiCallV1List = api $ do
         x "type"              = [Asc DocumentOrderByType]
         x "typeREV"           = [Desc DocumentOrderByType]
         x "author"            = [Asc DocumentOrderByAuthor]
-        x "authorRev"         = [Desc DocumentOrderByAuthor]
+        x "authorREV"         = [Desc DocumentOrderByAuthor]
         x _                   = []
 
     docSearchingFromParams :: ListParams -> [DocumentFilter]

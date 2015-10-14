@@ -29,18 +29,18 @@ documentOrderByToSQL DocumentOrderByStatus = "documents.status"
 documentOrderByToSQL DocumentOrderByStatusClass = documentStatusClassExpression
 documentOrderByToSQL DocumentOrderByType = "documents.type"
 documentOrderByToSQL DocumentOrderByPartners =
-  parenthesize (selectSignatoryLinksSmartNames False True)
+  parenthesize (selectSignatoryLinksSmartNames "NOT signatory_links.is_author AND signatory_links.is_partner")
 documentOrderByToSQL DocumentOrderByAuthor =
-  parenthesize (selectSignatoryLinksSmartNames True False)
+  parenthesize (selectSignatoryLinksSmartNames "signatory_links.is_author")
 
-selectSignatoryLinksSmartNames :: Bool -> Bool -> SQL
-selectSignatoryLinksSmartNames is_author is_partner =
+selectSignatoryLinksSmartNames :: SQL -> SQL
+selectSignatoryLinksSmartNames signatory_condition =
       "SELECT COALESCE(string_agg(x.value,' '),'no fields') FROM " <>
       "(SELECT (" <>
       selectSmartName <>
       ") AS value FROM signatory_links" <>
            " WHERE signatory_links.document_id = documents.id" <>
-           "   AND signatory_links.is_author =" <?> is_author <+> "AND signatory_links.is_partner =" <?> is_partner <>
+           "   AND " <> signatory_condition <>
            " ORDER BY signatory_links.id) AS x"
   where
     selectFieldAs xtype name = "(SELECT signatory_link_fields.value_text AS value" <+>
