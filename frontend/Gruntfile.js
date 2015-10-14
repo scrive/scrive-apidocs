@@ -38,7 +38,7 @@ module.exports = function(grunt) {
           '<%= yeoman.kontrakcja %>/texts/**/*.json',
           '<%= yeoman.kontrakcja %>/templates/javascript-langs.st'
         ],
-        tasks: ["shell:generateLocalization"]
+        tasks: ["updateLocalization"]
       },
       livereload: {
         options: {
@@ -213,12 +213,18 @@ module.exports = function(grunt) {
       ]
     },
     deploybuild: {
+      localization: {
+        files: {
+          src: [
+            '<%= yeoman.app %>/localization/*.js'
+          ]
+        }
+      },
       dist: {
         files: {
           src: [
             '<%= yeoman.dist %>/*.js',
-            '<%= yeoman.dist %>/*.css',
-            '<%= yeoman.dist %>/localization/*.js'
+            '<%= yeoman.dist %>/*.css'
           ]
         }
       }
@@ -285,8 +291,8 @@ module.exports = function(grunt) {
               'newsletter/**/*',
               'pdf/**/*',
               'libs/tiny_mce/**/*',
-              // Static localization files
-              'localization/*.js',
+              // Static localization files - already versioned
+              'localization/*.*.js',
 
               // Shims that need to be loaded separately
               'libs/html5shiv.js',
@@ -296,7 +302,7 @@ module.exports = function(grunt) {
             ]
           },
         ]
-      },
+      }
     },
     gjslint: {
       options: {
@@ -373,7 +379,15 @@ module.exports = function(grunt) {
   grunt.registerTask('compileGenerateLocalization', function(target) {
     return grunt.task.run([
       'shell:compileLocalization',
-      'shell:generateLocalization'
+      'shell:generateLocalization',
+      'deploybuild:localization'
+    ]);
+  });
+
+  grunt.registerTask('updateLocalization', function(target) {
+    return grunt.task.run([
+      'shell:generateLocalization',
+      'deploybuild:localization'
     ]);
   });
 

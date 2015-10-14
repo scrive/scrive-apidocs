@@ -6,8 +6,8 @@ module.exports = function(config) {
 
     files: [
       // Include EN localisation for tests but all others for JSCS pre-processor
-      "./localization/en.js",
-      {pattern: "./localization/*.js", included: false},
+      "./localization/*.en.js",
+      {pattern: "./localization/*.*.js", included: false},
       "./test/env.js",
       "./test/setup.js",
       {pattern: "./bower_components/**/*.js", included: false},
@@ -22,7 +22,7 @@ module.exports = function(config) {
 
     preprocessors: {
       "./compiled_jsx/**/*.js": ["coverage"],
-      "./localization/*.js" : ["jscs"]
+      "./localization/*.*.js" : ["jscs"]
     },
 
     jscsPreprocessor: {

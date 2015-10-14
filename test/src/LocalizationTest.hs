@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module LocalizationTest (localizationTest) where
 
-import Control.Monad.Reader (asks)
 import Data.Function
 import Data.Map ((!))
 import Data.String.Utils
@@ -10,31 +9,25 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertBool, Assertion)
 import Text.JSON
 import Text.StringTemplate
-import Text.StringTemplates.Templates (renderTemplate)
 import Text.StringTemplates.TextTemplates
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
-import qualified Text.StringTemplates.Fields as F
 
-import Doc.DocumentMonad (withDocumentID)
 import KontraPrelude
-import Templates (runTemplatesT)
+import TestingUtil (assertFailure)
 import TestKontra
-import TestingUtil (addNewRandomUser, addRandomDocumentWithAuthor)
-import TestingUtil (testThat, assertFailure)
 import User.Lang
 import Utils.Enum
 
 localizationTest :: TestEnvSt -> Test
-localizationTest env = testGroup "Localization Test"
+localizationTest _env = testGroup "Localization Test"
     [ testGroup "static checks"
       [
           testCase "tests if translations are valid JSONS and are ordered" testTranslationFilesAreJSONSAndSorted
         , testCase "text templates have same structure" testTranslationsHaveSameStructure
         , testCase "text templates have same html structure" testTranslationsHaveSameHtmlStructure
         , testCase "text templates have same number of excaped \\\" " testTranslationsHaveSameEscapeSequences
-        , testThat "Localisation templates render for all languages" env testLocalizationTemplatesRender
       ]
     ]
 
@@ -205,12 +198,3 @@ compareEscapeSequeces s t =
     countEOLs str = length $ split "\n" str
     countGTs str = length $ split ">" str
     countLTs str = length $ split "<" str
-
-testLocalizationTemplatesRender :: TestEnv ()
-testLocalizationTemplatesRender = do
-  author <- addNewRandomUser
-  did <- addRandomDocumentWithAuthor author
-  withDocumentID did $ forM_ allLangs $ \lang -> do
-    gts <- asks teGlobalTemplates
-    runTemplatesT (lang, gts) $
-        renderTemplate "javascriptLocalisation" $ F.value "code" $ codeFromLang lang

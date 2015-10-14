@@ -18,11 +18,7 @@ enableCookies=<!DOCTYPE html>
 <link href='/css/fonts/SourceSansPro.css' rel='stylesheet' type='text/css'/>
 <link href='/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
 <link rel=" icon" href="/favicon/$brandinghash$" />
-$if(production)$
 <script src="/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
-$else$
-<script src="/localization/$ctxlang$.js"  type="text/javascript"></script>
-$endif$
 <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
 
 $if(production)$

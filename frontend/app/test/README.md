@@ -8,6 +8,7 @@
 ## Run
 
     $ cd frontend/
+    $ grunt build
     $ grunt test
 
 Coverage reports can be founder under `frontend/coverage/$launcher/index.html`.
