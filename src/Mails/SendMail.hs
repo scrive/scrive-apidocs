@@ -26,7 +26,7 @@ import DB
 import Doc.DocumentID
 import Doc.Model
 import InputValidation
-import KontraPrelude
+import KontraPrelude hiding (join)
 import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)
@@ -116,7 +116,9 @@ kontramailHelper :: T.TemplatesMonad m => BrandedDomain -> Theme ->  (String -> 
 kontramailHelper bd theme renderFunc tname fields = do
 
     wholemail <- renderFunc tname fields
-    let (title,content) = span (/= '\n') $ dropWhile (isControl || isSpace) wholemail
+    let (title, content) = case split "\r\n" $ dropWhile (isControl || isSpace) wholemail of
+                             [] -> $unexpectedError "Couldnt separate email content from title"
+                             (title':contentChunks) -> (title', join "\r\n" contentChunks)
         noreplyAddress = case strip $ bdNoreplyEmail bd of
                            -- add a fallback noreply address if it's not set in bd settings
                            -- otherwise emails will not be sent
