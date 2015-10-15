@@ -6,7 +6,6 @@ module Doc.Model.Filter
 import Control.Conditional ((<|), (|>))
 import qualified Control.Monad.State.Lazy as State
 
-import Company.Model
 import DB
 import Doc.DocStateData
 import Doc.DocumentID
@@ -37,7 +36,6 @@ data DocumentFilter
   | DocumentFilterByTimeAfter UTCTime         -- ^ Document time after UTC time
   | DocumentFilterByTimeBefore UTCTime        -- ^ Document time before UTC time
   | DocumentFilterByAuthor UserID             -- ^ Only documents created by this user
-  | DocumentFilterByAuthorCompany CompanyID   -- ^ Onl documents where author is in given company
   | DocumentFilterByCanSign UserID            -- ^ Only if given person can sign right now given document
   | DocumentFilterSignNowOnPad                -- ^ Only documents where someone can sign now on pad
   | DocumentFilterByDocumentID DocumentID     -- ^ Document by specific ID
@@ -117,7 +115,7 @@ documentFilterToSQL (DocumentFilterByString string) = do
                                sqlConcatAND (map sqlMatch (words string)))
       sqlMatch word = "EXISTS (SELECT TRUE" <>
                                    "  FROM signatory_link_fields JOIN signatory_links AS sl5" <>
-                                                                 "  ON sl5.document_id = signatory_links.document_id" <>
+                                                                 "  ON sl5.document_id = documents.id" <>
                                                                  " AND sl5.id = signatory_link_fields.signatory_link_id" <>
                                    -- " FROM signatory_link_fields " <>
                                    " WHERE (signatory_link_fields.type != " <?> SignatureFT <> ") " <>
@@ -149,12 +147,6 @@ documentFilterToSQL (DocumentFilterUnsavedDraft flag) =
 documentFilterToSQL (DocumentFilterByAuthor userid) = do
   sqlWhere "signatory_links.is_author"
   sqlWhereEq "signatory_links.user_id" userid
-
-documentFilterToSQL (DocumentFilterByAuthorCompany companyid) = do
-  sqlWhere "signatory_links.is_author"
-  sqlWhere "signatory_links.user_id = users.id"
-  sqlWhereEq "users.company_id" companyid
-
 
 documentFilterToSQL (DocumentFilterByCanSign userid) = do
   sqlWhere "signatory_links.is_partner"

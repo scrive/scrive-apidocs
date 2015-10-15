@@ -46,7 +46,7 @@ getAPIUserWithPrivileges :: Kontrakcja m => [APIPrivilege] -> m (User, Actor)
 getAPIUserWithPrivileges privs = getAPIUserWith ctxmaybeuser privs
 
 getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor)
-getAPIUserWithPad priv = getAPIUserWith (\c -> ctxmaybeuser c `mplus` ctxmaybepaduser c) [priv]
+getAPIUserWithPad priv = getAPIUserWith getContextUser [priv]
 
 -- | Get the `MagicHash` from the session for the `DocumentID` and
 -- `SignatoryLinkID`

@@ -224,7 +224,7 @@ test_removingCompanyAccountWorks = do
   ctx <- (\c -> c { ctxmaybeuser = Just adminuser })
     <$> mkContext def
 
-  companydocs1 <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [DocumentFilterUnsavedDraft False] [] (0,maxBound)
+  companydocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser) [DocumentFilterUnsavedDraft False] [] (0,maxBound)
   assertEqual "Company admin sees users docs before user delete" 1 (length companydocs1)
   assertEqual "Docid matches before user delete" docid (documentid $ $head companydocs1)
 
@@ -241,7 +241,7 @@ test_removingCompanyAccountWorks = do
 
   assertCompanyInvitesAre company []
 
-  companydocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [DocumentFilterUnsavedDraft False] [] (0,maxBound)
+  companydocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser) [DocumentFilterUnsavedDraft False] [] (0,maxBound)
   assertEqual "Company admin sees users docs after user delete" 1 (length companydocs)
   assertEqual "Docid matches after user delete" docid (documentid $ $head companydocs)
 
@@ -268,10 +268,10 @@ test_privateUserTakoverWorks = do
                                             (companyid company)
   assertBool "User is a standard user" (not $ useriscompanyadmin updateduser)
 
-  companydocs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid adminuser)] [DocumentFilterUnsavedDraft False] [] (0,maxBound)
+  companydocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser) [DocumentFilterUnsavedDraft False] [] (0,maxBound)
   assertEqual "Company owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ $head companydocs)
-  docs <- dbQuery $ GetDocuments [DocumentsVisibleToUser (userid user)] [DocumentFilterUnsavedDraft False, DocumentFilterSignable] [] (0,maxBound)
+  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) [DocumentFilterUnsavedDraft False, DocumentFilterSignable] [] (0,maxBound)
   templates <- dbQuery $ GetTemplatesByAuthor $ userid user
   let userdocids = nub (documentid <$> docs ++ templates)
   assertEqual "User is still linked to their docs" 1 (length userdocids)

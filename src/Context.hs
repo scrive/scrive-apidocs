@@ -1,8 +1,9 @@
 module Context (
-      Context(..),
-      anonymousContext,
-      contextToMailContext
-    ) where
+    Context(..)
+  , getContextUser
+  , anonymousContext
+  , contextToMailContext
+  ) where
 
 import qualified Control.Concurrent.Thread as T
 import qualified Data.ByteString as BS
@@ -68,6 +69,10 @@ data Context = Context
     -- | Contains actions that join threads spawned with forkAction
     , ctxthreadjoins       :: [IO (T.Result ())]
     }
+
+-- | Get a user from `Context` (user takes precedence over pad user).
+getContextUser :: Context -> Maybe User
+getContextUser Context{..} = ctxmaybeuser `mplus` ctxmaybepaduser
 
 -- | anonymousContext changes given context into one that does not hold any user details.
 -- | use this if your action requires different for of authentication

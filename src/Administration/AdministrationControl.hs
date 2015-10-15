@@ -47,6 +47,7 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model
+import Doc.Model.OrderBy
 import Doc.SignatoryLinkID
 import EvidenceLog.Model
 import File.Model
@@ -510,22 +511,20 @@ getUserInfoChange = do
 
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
-
   params <- getListParams
-  muserid <- readField "userid"
-  mcompanyid <- readField "companyid"
+  muid <- readField "userid"
+  mcid <- readField "companyid"
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
       pagination = (listParamsOffset params, listParamsLimit params, docsPageSize)
-      filters    =  case mcompanyid of
-                     Nothing -> []
-                     Just companyid ->   [DocumentFilterByAuthorCompany companyid]
-      domain     = case muserid of
-                     Nothing -> [DocumentsOfWholeUniverse]
-                     Just userid ->   [DocumentsVisibleToUser userid]
+      domain     = case (mcid, muid) of
+        (Nothing, Nothing)  -> DocumentsOfWholeUniverse
+        (Just cid, Nothing) -> DocumentsOfCompany cid
+        (Nothing, Just uid) -> DocumentsVisibleToUser uid
+        _                   -> $unexpectedError "Can't pass both user id and company id"
       docsPageSize = 100
 
-  (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain (searching ++ filters) sorting pagination
+  (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain searching sorting pagination
 
   let documents = PagedList { list       = allDocs
                             , params     = params
@@ -550,7 +549,7 @@ jsonDocuments = onlySalesOrAdmin $ do
 
 docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
 docSortingFromParams params =
-   (concatMap x (listParamsSorting params)) ++ [Desc DocumentOrderByMTime] -- default order by mtime
+  addMTimeSorting . concatMap x $ listParamsSorting params
   where
     x "status"            = [Asc DocumentOrderByStatusClass]
     x "statusREV"         = [Desc DocumentOrderByStatusClass]
