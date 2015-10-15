@@ -570,10 +570,7 @@ docSortingFromParams params =
 
 
 docSearchingFromParams :: ListParams -> [DocumentFilter]
-docSearchingFromParams params =
-  case listParamsSearching params of
-    "" -> []
-    x -> [DocumentFilterByString x]
+docSearchingFromParams params = processSearchStringToFilter $ listParamsSearching params
 
 
 handleBackdoorQuery :: Kontrakcja m => m Response

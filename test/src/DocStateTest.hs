@@ -28,6 +28,7 @@ import Doc.DocStateData
 import Doc.DocumentMonad (DocumentT, theDocument, theDocumentID, withDocumentM, withDocument, withDocumentID)
 import Doc.DocUtils
 import Doc.Model
+import Doc.Model.Filter
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.TestInvariants
 import EvidenceLog.Model
@@ -63,6 +64,7 @@ docStateTests env = testGroup "DocState" [
   testThat "Documents are shared in company properly" env testGetDocumentsSharedInCompany,
   testThat "SetDocumentUnsavedDraft and filtering based on unsaved_draft works" env testSetDocumentUnsavedDraft,
   testThat "Documents sorting SQL syntax is correct" env testGetDocumentsSQLSorted,
+  testThat "Search string pre-processing works" env testProcessSearchStringToFilter,
   testThat "Documents searching by text works" env testGetDocumentsSQLTextFiltered,
 
   testThat "PreparationToPending adds to the log" env testPreparationToPendingEvidenceLog,
@@ -1067,54 +1069,149 @@ testGetDocumentsSharedInCompany = replicateM_ 10 $ do
   assertEqual "Documents properly shared in company (1) by user 1" 2 (length dlist1)
   assertEqual "Documents properly shared in company (1) by user 2" 2 (length dlist2)
 
+testProcessSearchStringToFilter :: TestEnv ()
+testProcessSearchStringToFilter = do
+  let stripDocumentFilter (DocumentFilterByString s) = s
+      stripDocumentFilter _ = $unexpectedError "This should not happen!"
+      t0 = ""
+      e0 = []
+      t1 = "h"
+      e1 = [Unquoted "h"]
+      t2 = "hey"
+      e2 = [Unquoted "hey"]
+      t3 = "hey there"
+      e3 = [Unquoted "hey", Unquoted "there"]
+      t4 = "hey there \"street 23\" after"
+      e4 = [Unquoted "hey", Unquoted "there", Quoted "street 23", Unquoted "after"]
+      t5 = "hey there \"street 23\""
+      e5 = [Unquoted "hey", Unquoted "there", Quoted "street 23"]
+      t6 = "\"search term\""
+      e6 = [Quoted "search term"]
+      t7 = "\"search\""
+      e7 = [Quoted "search"]
+      t8 = "hey \"there 23\" and \"missing some"
+      e8 = [Unquoted "hey", Quoted "there 23", Unquoted "and", Unquoted "missing", Unquoted "some"]
+      t9 = "hey \"there 23\" missing \""
+      e9 = [Unquoted "hey", Quoted "there 23", Unquoted "missing"]
+      tA = "hey \"there 23\" missing\""
+      eA = [Unquoted "hey", Quoted "there 23", Unquoted "missing"]
+      tB = "hey \"there 23\"missing is not"
+      eB = [Unquoted "hey", Quoted "there 23", Unquoted "missing", Unquoted "is", Unquoted "not"]
+      tC = "hey \"there 23 \" missing is not"
+      eC = [Unquoted "hey", Quoted "there 23", Unquoted "missing", Unquoted "is", Unquoted "not"]
+      tD = "hey \" there 23 \" missing is not"
+      eD = [Unquoted "hey", Quoted "there 23", Unquoted "missing", Unquoted "is", Unquoted "not"]
+      tE = "hey \"\" woah"
+      eE = [Unquoted "hey", Unquoted "woah"]
+      tF = "hey \"  \" woah"
+      eF = [Unquoted "hey", Unquoted "woah"]
+      tG = "hey \" there      23 \" missing is not"
+      eG = [Unquoted "hey", Quoted "there 23", Unquoted "missing", Unquoted "is", Unquoted "not"]
+      tH = "hey \" there\t23 \" missing is not"
+      eH = [Unquoted "hey", Quoted "there 23", Unquoted "missing", Unquoted "is", Unquoted "not"]
+      tI = "hey \" there\n23 \" missing is not"
+      eI = [Unquoted "hey", Quoted "there 23", Unquoted "missing", Unquoted "is", Unquoted "not"]
+      tJ = "hey \"there 23\" and \"missing some not\" at all \"boooyah!\""
+      eJ = [Unquoted "hey", Quoted "there 23", Unquoted "and", Quoted "missing some not", Unquoted "at"]
+
+  assertEqual "Should match" e0 (map stripDocumentFilter $ processSearchStringToFilter t0)
+  assertEqual "Should match" e1 (map stripDocumentFilter $ processSearchStringToFilter t1)
+  assertEqual "Should match" e2 (map stripDocumentFilter $ processSearchStringToFilter t2)
+  assertEqual "Should match" e3 (map stripDocumentFilter $ processSearchStringToFilter t3)
+  assertEqual "Should match" e4 (map stripDocumentFilter $ processSearchStringToFilter t4)
+  assertEqual "Should match" e5 (map stripDocumentFilter $ processSearchStringToFilter t5)
+  assertEqual "Should match" e6 (map stripDocumentFilter $ processSearchStringToFilter t6)
+  assertEqual "Should match" e7 (map stripDocumentFilter $ processSearchStringToFilter t7)
+  assertEqual "Should match" e8 (map stripDocumentFilter $ processSearchStringToFilter t8)
+  assertEqual "Should match" e9 (map stripDocumentFilter $ processSearchStringToFilter t9)
+  assertEqual "Should match" eA (map stripDocumentFilter $ processSearchStringToFilter tA)
+  assertEqual "Should match" eB (map stripDocumentFilter $ processSearchStringToFilter tB)
+  assertEqual "Should match" eC (map stripDocumentFilter $ processSearchStringToFilter tC)
+  assertEqual "Should match" eD (map stripDocumentFilter $ processSearchStringToFilter tD)
+  assertEqual "Should match" eE (map stripDocumentFilter $ processSearchStringToFilter tE)
+  assertEqual "Should match" eF (map stripDocumentFilter $ processSearchStringToFilter tF)
+  assertEqual "Should match" eG (map stripDocumentFilter $ processSearchStringToFilter tG)
+  assertEqual "Should match" eH (map stripDocumentFilter $ processSearchStringToFilter tH)
+  assertEqual "Should match" eI (map stripDocumentFilter $ processSearchStringToFilter tI)
+  assertEqual "Should match" eJ (map stripDocumentFilter $ processSearchStringToFilter tJ)
 
 testGetDocumentsSQLTextFiltered :: TestEnv ()
 testGetDocumentsSQLTextFiltered = replicateM_ 1 $ do
   -- setup
-  Just author <- addNewUser "Bob" "Blue" "bill@zonk.com"
+  Just author1 <- addNewUser "Bob" "Blue" "bill@zonk.com"
   Just author2 <- addNewUser "Anna" "Max" "herm@qqq.com"
-  doc1 <- addRandomDocumentWithAuthorAndCondition author (isSignable && isPreparation)
-  _doc2 <- addRandomDocumentWithAuthorAndCondition author (isSignable && isPreparation)
-  _doc3 <- addRandomDocumentWithAuthorAndCondition author (isSignable && isPreparation)
+  doc1 <- addRandomDocumentWithAuthorAndCondition author1 (isSignable && isPreparation)
+  _doc2 <- addRandomDocumentWithAuthorAndCondition author1 (isSignable && isPreparation)
+  _doc3 <- addRandomDocumentWithAuthorAndCondition author1 (isSignable && isPreparation)
   _doc4 <- addRandomDocumentWithAuthorAndCondition author2 (isSignable && isPreparation)
 
-  let domain = DocumentsVisibleToUser $ userid author
-      first_name = getFirstName $ $head $ documentsignatorylinks doc1
-      last_name = getLastName $ $head $ documentsignatorylinks doc1
-      email = getEmail . $head $ documentsignatorylinks doc1
-      filters1 = [DocumentFilterByString "Bob"]
-      filters2 = [DocumentFilterByString "Blue"]
-      filters3 = [DocumentFilterByString "bill@"]
-      filters4 = [DocumentFilterByString title]
-      filters5 = [DocumentFilterByString title1]
-      filters6 = [DocumentFilterByString title2]
-      -- we want to check case-insensitivity and Swedish characters
-      title  = "thisshouldbeuniquetitleöåä"
-      title1 = "thisshouldbeuniquetitle"
-      title2 = "THISshouldbeuniquetitleÖÅÄ"
+  let domain = DocumentsVisibleToUser $ userid author1
+      doc1Title = "Magic Unique Title 42"
 
   actor <- arbitraryAuthorActor
-
-  success <- withDocument doc1 $ dbUpdate $ SetDocumentTitle title (actor)
+  success <- withDocument doc1 $ dbUpdate $ SetDocumentTitle doc1Title (actor)
   assert success
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc1
+  assertEqual ("Document title really got changed") doc1Title (documenttitle ndoc)
 
-  docs0 <- dbQuery $ GetDocuments domain [] [] maxBound
-  docs1 <- dbQuery $ GetDocuments domain filters1 [] maxBound
-  docs2 <- dbQuery $ GetDocuments domain filters2 [] maxBound
-  docs3 <- dbQuery $ GetDocuments domain filters3 [] maxBound
-  docs4 <- dbQuery $ GetDocuments domain filters4 [] maxBound
-  docs5 <- dbQuery $ GetDocuments domain filters5 [] maxBound
-  docs6 <- dbQuery $ GetDocuments domain filters6 [] maxBound
+  getDocs0 <- dbQuery $ GetDocuments domain [] [] (0,maxBound)
+  assertEqual ("GetDocuments fetches all documents by author without filter") 3 (length getDocs0)
 
-  assertEqual ("GetDocuments fetches all documents without filter") 3 (length docs0)
-  assertEqual ("Document title really got changed") title (documenttitle ndoc)
-  assertEqual ("GetDocuments and filter by title: " ++ title1) 1 (length docs5)
-  assertEqual ("GetDocuments and filter by title: " ++ title) 1 (length docs4)
-  assertEqual ("GetDocuments and filter by title: " ++ title2) 1 (length docs6)
-  assertEqual ("GetDocuments and filter by first name: " ++ first_name) 3 (length docs1)
-  assertEqual ("GetDocuments and filter by last name: " ++ last_name) 3 (length docs2)
-  assertEqual ("GetDocuments and filter by email: " ++ email) 3 (length docs3)
+  let matchTitleFilter1 = processSearchStringToFilter "Magic Unique Title 42"
+  matchTitleFilter1Matches <- dbQuery $ GetDocuments domain matchTitleFilter1 [] (0,maxBound)
+  assertEqual ("With filter " ++ show matchTitleFilter1) 1 (length matchTitleFilter1Matches)
+
+  let matchTitleFilter2 = processSearchStringToFilter "\"Magic Unique Title 42\""
+  matchTitleFilter2Matches <- dbQuery $ GetDocuments domain matchTitleFilter2 [] (0,maxBound)
+  assertEqual ("With filter " ++ show matchTitleFilter2) 1 (length matchTitleFilter2Matches)
+
+  let matchTitleFilter3 = processSearchStringToFilter "\"Unique Title 42\""
+  matchTitleFilter3Matches <- dbQuery $ GetDocuments domain matchTitleFilter3 [] (0,maxBound)
+  assertEqual ("With filter " ++ show matchTitleFilter3) 1 (length matchTitleFilter3Matches)
+
+  let matchTitleFilter4 = processSearchStringToFilter "agic nique itle"
+  matchTitleFilter4Matches <- dbQuery $ GetDocuments domain matchTitleFilter4 [] (0,maxBound)
+  assertEqual ("With filter " ++ show matchTitleFilter4) 1 (length matchTitleFilter4Matches)
+
+  let matchTitleFilter5 = processSearchStringToFilter "Magic \"Unique Title\" 42"
+  matchTitleFilter5Matches <- dbQuery $ GetDocuments domain matchTitleFilter5 [] (0,maxBound)
+  assertEqual ("With filter " ++ show matchTitleFilter5) 1 (length matchTitleFilter5Matches)
+
+  let matchTitleFilter6 = processSearchStringToFilter "42 Unique \"Title\" Magic"
+  matchTitleFilter6Matches <- dbQuery $ GetDocuments domain matchTitleFilter6 [] (0,maxBound)
+  assertEqual ("With filter " ++ show matchTitleFilter6) 1 (length matchTitleFilter6Matches)
+
+  let notMatchTitleFilter1 = processSearchStringToFilter "\"Magic Unique Title 4\""
+  notMatchTitleFilter1Matches <- dbQuery $ GetDocuments domain notMatchTitleFilter1 [] (0,maxBound)
+  assertEqual ("With filter " ++ show notMatchTitleFilter1) 0 (length notMatchTitleFilter1Matches)
+
+  let notMatchTitleFilter2 = processSearchStringToFilter "\"agic Unique Title 42\""
+  notMatchTitleFilter2Matches <- dbQuery $ GetDocuments domain notMatchTitleFilter2 [] (0,maxBound)
+  assertEqual ("With filter " ++ show notMatchTitleFilter2) 0 (length notMatchTitleFilter2Matches)
+
+  let matchFirstNameFilter = processSearchStringToFilter "Bob Blue"
+  matchFirstNameFilterMatches <- dbQuery $ GetDocuments domain matchFirstNameFilter [] (0,maxBound)
+  assertEqual ("With filter " ++ show matchFirstNameFilter) 3 (length matchFirstNameFilterMatches)
+
+  let notMatchFirstNameFilter = processSearchStringToFilter "\"Bob Blue\""
+  notMatchFirstNameFilterMatches <- dbQuery $ GetDocuments domain notMatchFirstNameFilter [] (0,maxBound)
+  assertEqual ("With filter " ++ show notMatchFirstNameFilter) 0 (length notMatchFirstNameFilterMatches)
+
+  let matchEmailFilter1 = processSearchStringToFilter "bill@"
+  matchEmailFilter1Matches <- dbQuery $ GetDocuments domain matchEmailFilter1 [] (0,maxBound)
+  assertEqual ("With filter " ++ show matchEmailFilter1) 3 (length matchEmailFilter1Matches)
+
+  let matchEmailFilter2 = processSearchStringToFilter "\"bill@zonk.com\""
+  matchEmailFilter2Matches <- dbQuery $ GetDocuments domain matchEmailFilter2 [] (0,maxBound)
+  assertEqual ("With filter " ++ show matchEmailFilter2) 3 (length matchEmailFilter2Matches)
+
+  let notMatchEmailFilter1 = processSearchStringToFilter "\"bill@\""
+  notMatchEmailFilter1Matches <- dbQuery $ GetDocuments domain notMatchEmailFilter1 [] (0,maxBound)
+  assertEqual ("With filter " ++ show notMatchEmailFilter1) 0 (length notMatchEmailFilter1Matches)
+
+  let notMatchEmailFilter2 = processSearchStringToFilter "herm@"
+  notMatchEmailFilter2Matches <- dbQuery $ GetDocuments domain notMatchEmailFilter2 [] (0,maxBound)
+  assertEqual ("With filter " ++ show notMatchEmailFilter2) 0 (length notMatchEmailFilter2Matches)
 
 testGetDocumentsSQLSorted :: TestEnv ()
 testGetDocumentsSQLSorted = replicateM_ 1 $ do
