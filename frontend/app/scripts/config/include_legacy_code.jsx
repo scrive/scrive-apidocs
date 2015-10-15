@@ -52,7 +52,6 @@ define([
   '../js/authorview/authorsviewhistory',
   '../js/authorview/authorviewsignatoriesattachments',
   '../js/authorview/authorview',
-  '../js/attachmentview',
   '../js/tasks',
   '../js/doctools/docauthorattachments',
   '../js/doctools/docevidenceattachments',

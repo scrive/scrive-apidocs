@@ -2,8 +2,6 @@
 module Attachment.Control
   ( handleCreateNew
   , handleShare
-  , handleRename
-  , handleShow
   , handleDelete
   , handleDownloadAttachment
   , jsonAttachment
@@ -17,16 +15,13 @@ import Log
 import System.FilePath
 import Text.JSON
 import Text.JSON.Gen as J
-import Text.StringTemplates.Templates
 import qualified Data.ByteString.Lazy as BSL
-import qualified Text.StringTemplates.Fields as F
 
 import AppView (respondWithPDF)
 import Attachment.AttachmentID
 import Attachment.Model
 import DB
 import Doc.Rendering
-import File.Model
 import File.Storage
 import Happstack.Fields
 import InputValidation
@@ -40,15 +35,6 @@ import User.Model
 import User.Utils
 import Util.Actor
 import Util.MonadUtils
-
-handleRename :: Kontrakcja m => AttachmentID -> m JSValue
-handleRename attid = do
-  _ <- guardJustM $ ctxmaybeuser <$> getContext
-  title <- getCriticalField return "docname"
-  actor <- guardJustM $ mkAuthorActor <$> getContext
-  dbUpdate $ SetAttachmentTitle attid title actor
-  J.runJSONGenT $ return ()
-
 
 handleShare :: Kontrakcja m => m JSValue
 handleShare =  do
@@ -68,15 +54,14 @@ handleDelete = do
 -- | This handler downloads a file by file id. As specified in
 -- handlePageOfDocument rules of access need to be obeyd. This handler
 -- download file as is.
-handleDownloadAttachment :: Kontrakcja m => AttachmentID -> FileID -> String -> m Response
-handleDownloadAttachment attid fid _nameForBrowser = do
+handleDownloadAttachment :: Kontrakcja m => AttachmentID -> String -> m Response
+handleDownloadAttachment attid _nameForBrowser = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
                                             , AttachmentsOfAuthorDeleteValue (userid user) True
                                             , AttachmentsOfAuthorDeleteValue (userid user) False
                                             ]
                                             [ AttachmentFilterByID [attid]
-                                            , AttachmentFilterByFileID [fid]
                                             ]
                                             []
                                             (0,1)
@@ -91,7 +76,7 @@ handleCreateNew = do
   _mdoc <- makeAttachmentFromFile input
   J.runJSONGenT $ return ()
 
-attachmentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => Attachment -> m JSValue
+attachmentJSON :: (KontraMonad m, MonadDB m) => Attachment -> m JSValue
 attachmentJSON att = do
     runJSONGenT $ do
       J.value "id" $ show $ attachmentid att
@@ -138,14 +123,14 @@ jsonAttachmentsList = withUserGet $ do
     J.value "list" attsJSONs
     J.value "paging" $ pagingParamsJSON atts
 
-attForListJSON :: TemplatesMonad m => User -> Attachment -> m JSValue
+attForListJSON :: Monad m => User -> Attachment -> m JSValue
 attForListJSON _user att = do
-  let link = LinkAttachmentView (attachmentid att)
+  let link = LinkAttachmentDownload (attachmentid att) (attachmenttitle att)
   runJSONGenT $ do
     J.object "fields" $ attFieldsListForJSON att
     J.value "link" $ show link
 
-attFieldsListForJSON :: TemplatesMonad m =>  Attachment -> JSONGenT m ()
+attFieldsListForJSON :: Monad m =>  Attachment -> JSONGenT m ()
 attFieldsListForJSON att = do
     J.value "id" $ show $ attachmentid att
     J.value "title" $ attachmenttitle att
@@ -193,30 +178,3 @@ makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
         att <- dbUpdate $ NewAttachment (userid $ $fromJust $ ctxmaybeuser ctx) title filename content' actor
         return $ Just att
 makeAttachmentFromFile _ = internalError -- to complete the patterns
-
-{- |
-   Handles the request to show an attachment to a logged in user.
-   URL: /a/{attachmentid}
-   Method: GET
- -}
-handleShow :: Kontrakcja m => AttachmentID -> m (Either KontraLink (Either Response String))
-handleShow attid = checkUserTOSGet $ do
-  ctx <- getContext
-  let Just user = ctxmaybeuser ctx
-  mattachment <- listToMaybe <$> dbQuery (GetAttachments
-    [AttachmentsSharedInUsersCompany (userid user), AttachmentsOfAuthorDeleteValue  (userid user) False]
-    [AttachmentFilterByID [attid]]
-    []
-    (0,1))
-  case mattachment of
-    Nothing -> respond404
-    Just at -> Right <$> pageAttachment' at
-
-pageAttachment' :: TemplatesMonad m
-                => Attachment
-                -> m String
-pageAttachment' Attachment{attachmentid, attachmenttitle} =
-    renderTemplate "pageAttachment" $ do
-      F.value "id" $ show attachmentid
-      F.value "title" attachmenttitle
-      F.value "editable" $ True

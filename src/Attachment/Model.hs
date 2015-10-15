@@ -3,7 +3,6 @@ module Attachment.Model
   ( NewAttachment(..)
   , Attachment(..)
   , DeleteAttachments(..)
-  , SetAttachmentTitle(..)
   , SetAttachmentsSharing(..)
   , GetAttachments(..)
   , AttachmentDomain(..)
@@ -86,15 +85,6 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m DeleteAttachments () where
       sqlWhereIn "id" attids
       sqlWhereEq "user_id" uid
       sqlWhereEq "deleted" False
-
-data SetAttachmentTitle = SetAttachmentTitle AttachmentID String Actor
-instance (CryptoRNG m, MonadDB m) => DBUpdate m SetAttachmentTitle () where
-  update (SetAttachmentTitle attid title actor) = do
-    let atime = actorTime actor
-    runQuery_ . sqlUpdate "attachments" $ do
-      sqlSet "mtime" atime
-      sqlSet "title" title
-      sqlWhereEq "id" attid
 
 data AttachmentFilter
   = AttachmentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere

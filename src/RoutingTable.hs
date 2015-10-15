@@ -81,14 +81,12 @@ staticRoutes production = choice
      , dir "ts" $ hGet $ toK1 $ DocControl.handleToStartShow
 
      -- Attachments
-     , dir "a" $ dir "rename"      $ hPost $ toK1 $ AttachmentControl.handleRename
      , dir "a" $ dir "share"       $ hPost $ toK0 $ AttachmentControl.handleShare
      , dir "a" $ dir "delete"      $ hPost $ toK0 $ AttachmentControl.handleDelete
      , dir "a"                     $ hPost $ toK0 $ AttachmentControl.handleCreateNew
      , dir "a"                     $ hGet  $ toK0 $ AttachmentControl.jsonAttachmentsList
-     , dir "a"                     $ hGet  $ toK1 $ AttachmentControl.handleShow
      , dir "att"                   $ hGet  $ toK1 $ AttachmentControl.jsonAttachment
-     , dir "a" $ dir "download"    $ hGet  $ toK3 $ AttachmentControl.handleDownloadAttachment
+     , dir "a" $ dir "download"    $ hGet  $ toK2 $ AttachmentControl.handleDownloadAttachment
 
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
