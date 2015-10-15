@@ -51,7 +51,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button",
                 style={{marginBottom: "38px"}}
                 text={localization.docsignview.eleg.bankid.rfa18}
                 onClick={function () {
-                  window.location = this.props.model.transaction().bankIdUrlWithRedirectIfNeeded();
+                  window.location = self.props.model.transaction().bankIdUrlWithRedirectIfNeeded();
                 }}
               />
             </div>

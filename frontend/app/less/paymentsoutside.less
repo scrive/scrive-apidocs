@@ -328,6 +328,10 @@ section.pricing-cases header {
   margin: 0;
   padding: 7px 10px;
   width: 298px;
+
+  &[disabled] {
+    background: #f1f1f1;
+  }
 }
 
 // These need to be separate because browsers suck
@@ -399,7 +403,7 @@ div.plan-container form div.field input:-ms-input-placeholder {
 }
 
 .plan-container form ul.fields li.field .input input:not(.button):focus,
-.plan-container form ul.fields li.field .input input:not(.button):hover {
+.plan-container form ul.fields li.field .input input:not(.button):not([disabled]):hover {
   border-color: @blue-medium;
   outline: none;
 }
