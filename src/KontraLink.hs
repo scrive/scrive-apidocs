@@ -62,7 +62,7 @@ data KontraLink
     | LoopBack
     | LinkDaveDocument DocumentID
     | LinkDaveFile FileID String
-    | LinkAttachmentView AttachmentID
+    | LinkAttachmentDownload AttachmentID String
     | LinkEnableCookies
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
     | LinkOAuthAuthorization APIToken
@@ -126,7 +126,7 @@ instance Show KontraLink where
       (++) (show $ setParams url [("oauth_token", show token), ("oauth_verifier", show verifier)])
     showsPrec _ (LinkOAuthCallback url token Nothing) =
       (++) (show $ setParams url [("oauth_token", show token), ("denied", "true")])
-    showsPrec _ (LinkAttachmentView attid) = (++) ("/a/" ++ show attid)
+    showsPrec _ (LinkAttachmentDownload attid attname) = (++) ("/a/download/" ++ show attid ++ "/" ++ attname ++ ".pdf")
     showsPrec _ (LinkDesignView) = (++) "/newdocument"
     showsPrec _ (LinkPadList) = (++) "/to-sign"
     showsPrec _ (LinkExternal s) = (++) s
