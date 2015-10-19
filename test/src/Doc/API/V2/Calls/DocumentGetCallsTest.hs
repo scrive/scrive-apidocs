@@ -1,6 +1,6 @@
 module Doc.API.V2.Calls.DocumentGetCallsTest (apiV2DocumentGetCallsTests) where
 
-import Data.Aeson (Value(String,Array))
+import Data.Aeson (Value(String))
 import Data.Default
 import Happstack.Server
 import Test.Framework
@@ -88,11 +88,9 @@ testDocApiV2History = do
         req <- mkRequest GET []
         (rsp,_) <- runTestKontra req ctx $ docApiV2History did
         historyJSON <- valueFromBS (rsBody rsp)
-        case historyJSON of
-          Array a ->
-            when (V.length a /= n) ($unexpectedErrorM $
-              "History did not have " ++ show n ++ " items")
-          _ -> $unexpectedErrorM "History did not return a JSON array"
+        historyArray <- lookupObjectArray "events" historyJSON
+        when (V.length historyArray /= n)
+          ($unexpectedErrorM $ "History did not have " ++ show n ++ " items")
 
   checkHistoryHasNItems 0
 
@@ -123,9 +121,7 @@ testDocApiV2EvidenceAttachments = do
   (rsp,_) <- runTestKontra req ctx $ docApiV2EvidenceAttachments did
   assertEqual "Successful `docApiV2EvidenceAttachments` response code" 200 (rsCode rsp)
   eaJSON <- valueFromBS (rsBody rsp)
-  eaList <- case eaJSON of
-    Array a -> return $ V.toList a
-    _ -> $unexpectedError "Evidence attachments did not return a JSON array"
+  eaList <- V.toList <$> lookupObjectArray "attachments" eaJSON
   attachmentNames <- forM eaList (lookupObjectString "name")
   assertEqual "Evidence attachment file names and order should match"
     [ "Evidence Quality of Scrive E-signed Documents.html"

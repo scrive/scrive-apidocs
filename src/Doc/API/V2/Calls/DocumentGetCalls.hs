@@ -99,7 +99,7 @@ docApiV2History did = logDocument did . api $ do
   doc <- dbQuery $ GetDocumentByDocumentID did
   events <- eventsJSListFromEvidenceLog doc evidenceLog
   -- Result
-  return $ Ok (JSArray events)
+  return $ Ok $ JSObject (J.toJSObject $ [("events", JSArray events)])
 
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
 docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ do
