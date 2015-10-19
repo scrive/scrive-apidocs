@@ -93,6 +93,10 @@ main = do
       socket <- liftBase . listenOn (htonl iface) $ fromIntegral port
       fork . liftBase . runReqHandlerT socket handlerConf . mapReqHandlerT (withLogger) $ router rng pool routes
 
+    hasFailoverTests conf = case mscSlaveSender conf of
+                              Just _ -> not $ null $ testReceivers conf
+                              Nothing -> False
+
     mailsConsumer :: AWS.AmazonConfig -> Sender -> Maybe Sender -> ConnectionSource
                   -> CryptoRNGState -> ConsumerConfig MainM MailID Mail
     mailsConsumer awsconf master mslave pool rng = ConsumerConfig {
@@ -164,45 +168,44 @@ main = do
           ]
         Ok . RerunAt . nextDayMidnight <$> currentTime
 
-      PerformServiceTest -> case mscSlaveSender conf of
-        -- If there is no slave sender/test receivers, retry periodically to be
-        -- able to start the process if the configuration changes.
-        Just _ | not $ null $ testReceivers conf -> withPostgreSQL pool . runCryptoRNGT rng $ do
-          logInfo_ "Running service checker"
-          token <- random
-          mid <- dbUpdate $ CreateServiceTest (token, testSender, testReceivers conf, Just testSender, "test", "test", [], mempty)
-          logInfo "Service testing email created" $ object [
-              identifier_ mid
-            ]
-          dbUpdate $ CollectServiceTestResultIn $ iminutes 10
-          return $ Ok MarkProcessed
-        _ -> withPostgreSQL pool $ do
-          dbUpdate $ CollectServiceTestResultIn $ iseconds 50
-          return $ Ok MarkProcessed
-
-      CollectServiceTestResult -> case mscSlaveSender conf of
-        Nothing -> withPostgreSQL pool $ do
-          dbUpdate ScheduleServiceTest
-          return $ Ok MarkProcessed
-        Just _ -> withPostgreSQL pool . runCryptoRNGT rng $ do
-          events <- dbQuery GetServiceTestEvents
-          result <- if any isDelivered events
-            then do
-              logInfo_ "Service testing emails were delivered successfully"
-              return Ok
-            else do
-              logInfo_ "Service testing emails failed to be delivered within 10 minutes"
-              sender <- dbQuery GetCurrentSenderType
-              when (sender == MasterSender) $ do
-                logInfo_ "Switching to slave sender and resending all emails that were sent within this time"
-                dbUpdate SwitchToSlaveSenderImmediately
-                resent <- dbUpdate ResendEmailsSentAfterServiceTest
-                logInfo "Emails set to be resent" $ object [
-                    "emails" .= resent
-                  ]
-              return Failed
-          dbUpdate ScheduleServiceTest
-          return $ result MarkProcessed
+      PerformServiceTest -> withPostgreSQL pool $
+                             if hasFailoverTests conf then
+                               -- If there is no slave sender/test receivers, retry periodically to be
+                               -- able to start the process if the configuration changes.
+                               runCryptoRNGT rng $ do
+                                 logInfo_ "Running service checker"
+                                 token <- random
+                                 mid <- dbUpdate $ CreateServiceTest (token, testSender, testReceivers conf, Just testSender, "test", "test", [], mempty)
+                                 logInfo "Service testing email created" $ object [identifier_ mid]
+                                 dbUpdate $ CollectServiceTestResultIn $ iminutes 10
+                                 return $ Ok MarkProcessed
+                             else do
+                               dbUpdate $ CollectServiceTestResultIn $ iseconds 50
+                               return $ Ok MarkProcessed
+      CollectServiceTestResult -> withPostgreSQL pool $
+                                   if hasFailoverTests conf then
+                                     runCryptoRNGT rng $ do
+                                       events <- dbQuery GetServiceTestEvents
+                                       result <- if any isDelivered events
+                                         then do
+                                           logInfo_ "Service testing emails were delivered successfully"
+                                           return Ok
+                                         else do
+                                           logInfo_ "Service testing emails failed to be delivered within 10 minutes"
+                                           sender <- dbQuery GetCurrentSenderType
+                                           when (sender == MasterSender) $ do
+                                             logInfo_ "Switching to slave sender and resending all emails that were sent within this time"
+                                             dbUpdate SwitchToSlaveSenderImmediately
+                                             resent <- dbUpdate ResendEmailsSentAfterServiceTest
+                                             logInfo "Emails set to be resent" $ object [
+                                                 "emails" .= resent
+                                               ]
+                                           return Failed
+                                       dbUpdate ScheduleServiceTest
+                                       return $ result MarkProcessed
+                                   else do
+                                     dbUpdate ScheduleServiceTest
+                                     return $ Ok MarkProcessed
     , ccOnException = \_ _ -> return . RerunAfter $ ihours 1
     }
       where
