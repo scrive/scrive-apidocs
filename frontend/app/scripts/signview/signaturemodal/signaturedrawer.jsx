@@ -222,6 +222,7 @@ return React.createClass({
       $(drawingArea).mousedown(drawing(self.drawingtoolDown, "mouse"));
       $(drawingArea).mousemove(drawing(self.drawingtoolMove, "mouse"));
       $(drawingArea).mouseup(drawing(self.drawingtoolUp, "mouse"));
+      $(drawingArea).mouseout(drawing(self.drawingtoolUp, "mouse"));
     },
     xPos: function (e) {
       if (e.changedTouches != undefined && e.changedTouches[0] != undefined) {
