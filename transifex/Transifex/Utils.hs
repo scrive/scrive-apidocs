@@ -1,4 +1,4 @@
-module Transifex.Utils (TranslationResource(..), allResources, readResource, translationFile, allLangs, sourceLang , encodeTranslationJSON, textsToJSON,textsFromStringJSON, textsFromJSON, Change(..), compareTranslations,parsePushResponse, applyChange) where
+module Transifex.Utils (TranslationResource(..), allResources, readResource, translationFile, allLangs, sourceLang , encodeTranslationJSON, textsToJSON,textsFromStringJSON, textsFromJSON, Change(..), compareTranslations,parsePushResponse) where
 
 
 import Data.CSV (csvFile)
@@ -82,14 +82,6 @@ instance Show Change where
   show (Remove n v) = "--- \"" ++ n ++ "\" " ++ "\"" ++ v ++ "\""
   show (Add n v) = "+++ \"" ++ n ++ "\" " ++ "\"" ++ v ++ "\""
   show (Change n v1 v2 ) = show (Remove n v1) ++ "\n" ++ show (Add n v2)
-
-
-applyChange :: Change -> [(String,String)] -> [(String,String)]
-applyChange (Remove n v) list = filter (\(n',_) -> n' /= n) list
-applyChange (Add n v)    list = sort $ (n,v) : list
-applyChange (Change n v1 v2)    list = (applyChange (Add n v2)) $ (applyChange (Remove n v1)) $ list
-
-
 
 compareTranslations :: [(String,String)] -> [(String,String)] -> [Change]
 compareTranslations [] ts = map (\t -> (Add (fst t) (snd t))) ts

@@ -76,34 +76,12 @@ merge user password lang resource = do
   if (length changes == 0)
     then putStrLn "Up to date."
     else do
-      putStrLn $ "Found " ++ show (length changes) ++ " changes on Transifex server. Do you want to: overwrite local file[o], merge changes on-by-one[m], show diff[d] or skip[q]?"
-      c <- getOneOfChars ['o','m','d','q']
-      putStrLn $ ""
-      case c of
-        'o' -> do
-                  putStrLn "Overwriting local file."
-                  withFile (translationFile lang resource) WriteMode $ \h -> do
-                    hSetEncoding h utf8
-                    hPutStr h (encodeTranslationJSON $ textsToJSON $ sort external)
-                    hClose h
-                    putStrLn $ "Done."
-        'm' -> do
-                  putStrLn "Listing all changes for merge."
-                  newtexts <- foldM askAndApply external changes
-                  putStrLn $ ""
-                  putStrLn $ "Done with changes. Saving to file"
-                  withFile (translationFile lang resource) WriteMode $ \h -> do
-                    hSetEncoding h utf8
-                    hPutStr h (encodeTranslationJSON $ textsToJSON $ sort newtexts)
-                    hClose h
-                    putStrLn $ "Done."
-        'd' -> do
-                  putStrLn "Listing all changes. +++ means something was added on your local machine. --- means it is removed on your local machine."
-                  mapM_  (putStrLn . show) changes
-        'q' -> putStrLn "Done."
-
-
-
+      putStrLn $ "Found " ++ show (length changes) ++ " changes on Transifex server. Overwriting local file."
+      withFile (translationFile lang resource) WriteMode $ \h -> do
+        hSetEncoding h utf8
+        hPutStr h (encodeTranslationJSON $ textsToJSON $ sort external)
+        hClose h
+        putStrLn $ "Done."
 
 getOneOfChars :: [Char] -> IO Char
 getOneOfChars l = do
@@ -111,18 +89,6 @@ getOneOfChars l = do
   if (c `elem` l)
      then return c
      else getOneOfChars l
-
-askAndApply ::  [(String,String)] -> Change -> IO [(String,String)]
-askAndApply l ch = do
-  putStrLn $ ""
-  case ch of
-    (Remove n v)       -> putStrLn $ "Text " ++ n ++ " in transifex but not locally. Did you intended to remove it [y/n]? "
-    (Add n v)          -> putStrLn $ "Text " ++ n ++ " available locally but not in transifex. Do you want to keep it [y/n]? "
-    (Change n _ _)    ->  putStrLn $ "Text " ++ n ++ " changed .\n Do you want to use local version [y/n]? "
-  c <- getOneOfChars ['y','n']
-  case c of
-    'y' -> return $ applyChange ch l
-    'n' -> return l
 
 diff :: String -> String -> String -> TranslationResource ->  IO ()
 diff user password lang resource = do

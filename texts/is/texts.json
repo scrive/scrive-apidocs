@@ -911,6 +911,7 @@
 "_setAllFields":"Vinsamlegast skírðu alla reiti sem búnir hafa verið til",
 "_share":"Deila",
 "_shared":"Deilt",
+"_sharedBy":"",
 "_showAnyStatusClass":"Allar stöður",
 "_sign":"Skrifa undir",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Veldu PDF-skrá",

@@ -911,6 +911,7 @@
 "_setAllFields":"Παρακαλώ ονοματίστε όλα τα δημιουργηθέντα πεδία ",
 "_share":"Κοινοποίηση ",
 "_shared":"Κοινοποιήθηκε ",
+"_sharedBy":"",
 "_showAnyStatusClass":"Όλα τα status",
 "_sign":"Υπογραφή ",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Επιλέξτε PDF ",

@@ -911,6 +911,7 @@
 "_setAllFields":"Rinomina tutti i campi creati",
 "_share":"Condividi",
 "_shared":"Condiviso",
+"_sharedBy":"",
 "_showAnyStatusClass":"Tutti gli status",
 "_sign":"Firma",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Seleziona PDF",

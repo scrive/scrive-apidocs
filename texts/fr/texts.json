@@ -911,6 +911,7 @@
 "_setAllFields":"Veuillez attribuer un nom à tous les champs créés",
 "_share":"Partager",
 "_shared":"Partagé",
+"_sharedBy":"",
 "_showAnyStatusClass":"Tous les statuts",
 "_sign":"Signer",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"Sélectionner le PDF",

@@ -911,6 +911,7 @@
 "_setAllFields":"Benennen Sie bitte alle erstellten Felder ",
 "_share":"Teilen",
 "_shared":"Geteilt",
+"_sharedBy":"",
 "_showAnyStatusClass":"Alle Status",
 "_sign":"Signieren",
 "_signStepsBodyUploadBoxStepButtonChooseFile":"PDF auswählen",
