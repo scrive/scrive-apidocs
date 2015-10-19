@@ -30,11 +30,18 @@ data Person =
            }
     deriving (Eq,Ord,Show,Read)
 
+-- This should not be used in this module, when this is fixed
+-- https://github.com/bos/aeson/issues/304
+isControlButNotNewLine :: Char -> Bool
+isControlButNotNewLine '\n' = False
+isControlButNotNewLine c = isControl c
+
 unjsonPerson :: Unjson.UnjsonDef Person
 unjsonPerson = Unjson.objectOf $ pure Person
-    <*> Unjson.field "fullname"
-        fullname
+    <*> Unjson.fieldBy "fullname"
+        (filter (not isControlButNotNewLine) .fullname)
         ""
+        Unjson.unjsonDef
     <*> Unjson.field "company"
         company
         ""
@@ -128,7 +135,7 @@ unjsonField :: Unjson.UnjsonDef Field
 unjsonField = Unjson.unionOf
               [ (isField,
                  pure Field
-                 <*> Unjson.field "value" value ""
+                 <*> Unjson.fieldBy "value" (filter (not isControlButNotNewLine) . value) "" Unjson.unjsonDef
                  <*> Unjson.field "x" x ""
                  <*> Unjson.field "y" y ""
                  <*> Unjson.field "page" page ""
@@ -241,7 +248,7 @@ data HistEntry = HistEntry
 unjsonHistEntry :: Unjson.UnjsonDef HistEntry
 unjsonHistEntry = Unjson.objectOf $ pure HistEntry
     <*> Unjson.field "date" histdate ""
-    <*> Unjson.field "comment" histcomment ""
+    <*> Unjson.fieldBy "comment" (filter (not isControlButNotNewLine) . histcomment) "" Unjson.unjsonDef
     <*> Unjson.field "address" histaddress ""
 
 
