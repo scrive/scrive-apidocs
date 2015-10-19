@@ -33,6 +33,7 @@ var SignatureDrawerModel = Backbone.Model.extend({
       pointerId: undefined, // unique id of pointer being used for drawing (in multitouch scenarios)
       drawingMethod: undefined, // What tool is used for drawing (mouse or touch)
       drawnAnyLine: false, // Drawn line durring current drawing
+      pointerOutside: false, // Mouse left the canvas while still drawing
       x_: undefined, // Previous x
       y_: undefined,  // Previous y
       x: undefined,   // Current x
@@ -119,6 +120,12 @@ var SignatureDrawerModel = Backbone.Model.extend({
   },
   y_: function () {
     return this.get("y_");
+  },
+  pointerOutside: function () {
+    return this.get("pointerOutside");
+  },
+  setPointerOutside: function (pointerOutside) {
+    this.set("pointerOutside", pointerOutside, {silent: true});
   },
   value: function () {
     return this.field().value();
@@ -222,7 +229,7 @@ return React.createClass({
       $(drawingArea).mousedown(drawing(self.drawingtoolDown, "mouse"));
       $(drawingArea).mousemove(drawing(self.drawingtoolMove, "mouse"));
       $(drawingArea).mouseup(drawing(self.drawingtoolUp, "mouse"));
-      $(drawingArea).mouseout(drawing(self.drawingtoolUp, "mouse"));
+      $(drawingArea).mouseout(drawing(self.drawingtoolOutside, "mouse"));
     },
     xPos: function (e) {
       if (e.changedTouches != undefined && e.changedTouches[0] != undefined) {
@@ -301,9 +308,19 @@ return React.createClass({
         this.state.picture.lineJoin = "round";
       }
     },
+    drawingtoolOutside: function (x, y, drawingMethod, e) {
+      this.state.model.setPointerOutside(true);
+    },
     drawingtoolMove: function (x, y, drawingMethod, e) {
-
       if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e))) {
+
+        if (this.state.model.pointerOutside()) {
+          // not anymore
+          this.state.model.setPointerOutside(false);
+          this.stopDrawing();
+          this.drawingtoolDown(x, y, drawingMethod, e);
+          return;
+        }
 
         var x_ = this.state.model.x();
         var y_ = this.state.model.y();
