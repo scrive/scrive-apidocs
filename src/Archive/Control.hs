@@ -7,6 +7,7 @@ module Archive.Control
        handleShare,
        handleCancel,
        handleZip,
+       handleListCSV,
        showArchive
        )
        where
@@ -14,6 +15,7 @@ module Archive.Control
 import Codec.Archive.Zip
 import Control.Conditional (unlessM)
 import Data.Char
+import Data.Unjson (unjsonDef)
 import Happstack.Server(Response)
 import Log
 import Text.JSON
@@ -28,6 +30,9 @@ import Archive.View
 import Company.Model (GetCompany(..))
 import DB
 import Doc.Action
+import Doc.API.V1.DocumentToJSON (docForListCSVV1, docForListCSVHeaderV1)
+import Doc.API.V2.JSON.List
+import Doc.API.V2.Parameters (ApiV2Parameter(..), apiV2ParameterDefault)
 import Doc.DocInfo (isPending)
 import Doc.DocMails
 import Doc.DocStateData
@@ -43,6 +48,7 @@ import Log.Identifier
 import User.Model
 import User.Utils
 import Util.Actor
+import Util.CSVUtil
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Util.ZipUtil
@@ -123,6 +129,26 @@ handleZip = do
   mentries <- handleArchiveDocumentsAction "download zipped documents" isDocumentVisibleToUser $ const $ do
                docToEntry =<< theDocument
   return $ ZipArchive "selectedfiles.zip" $ foldr addEntryToArchive emptyArchive $ catMaybes $ mentries
+
+
+-- Fetch a csv file for documents from archive. It's not API call for V2 - just internal functionality used in archive.
+-- It is still a part of list API call for V1 and this is why some V1 modules are imported.
+-- It uses same format for sorting and filtering as current API list call and this is why some V2 modules are imported
+handleListCSV :: Kontrakcja m => m CSV
+handleListCSV= do
+  logInfo_ "Downloading CSV list"
+  ctx <- getContext
+  user <- guardJust $ getContextUser ctx
+  filters <- apiV2ParameterDefault []  (ApiV2ParameterJSON "filter" unjsonDef)
+  sorting <- apiV2ParameterDefault []  (ApiV2ParameterJSON "sorting" unjsonDef)
+  let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
+  let documentSorting = (toDocumentSorting <$> sorting)
+  allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) documentFilters documentSorting (0, 1000)
+  let docsCSVs = concat $ zipWith docForListCSVV1  [1..] allDocs
+  return $ CSV { csvFilename = "documents.csv"
+               , csvHeader = docForListCSVHeaderV1
+               , csvContent = docsCSVs
+               }
 
 -- | Main view of the archive
 showArchive :: Kontrakcja m => m (Either KontraLink Response)

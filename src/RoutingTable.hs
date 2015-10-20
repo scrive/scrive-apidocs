@@ -98,6 +98,7 @@ staticRoutes production = choice
      , dir "d" $ dir "share"        $ hPost $ toK0 $ ArchiveControl.handleShare
      , dir "d" $ dir "cancel"       $ hPost $ toK0 $ ArchiveControl.handleCancel
      , dir "d" $ dir "zip"          $ hGet  $ toK0 $ ArchiveControl.handleZip
+     , dir "d" $ dir "csv"          $ hGet  $ toK0 $ ArchiveControl.handleListCSV
      , dir "d" $ dir "signview"     $ hPost $ toK1 $ DocControl.handleIssueAuthorGoToSignview
      , dir "d" $ dir "evidenceattachment" $ hGet $ toK2 $ DocControl.handleEvidenceAttachment
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
