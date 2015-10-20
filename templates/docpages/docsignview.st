@@ -151,6 +151,8 @@ $htmlopentag()$
           } else if (target == "to-start") {
             link.text = localization.toStart.backFromSigningPage;
             link.onClick = function() {window.location = "/ts/$documentid$"};
+          } else if (target == "none") {
+            link = undefined;
           } else {
             link.text = localization.pad.backToDocument;
             link.onClick = function() {window.location = "/d/$documentid$"};

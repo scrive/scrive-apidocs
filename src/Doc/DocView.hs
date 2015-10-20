@@ -115,11 +115,15 @@ pageDocumentSignForPadView :: Kontrakcja m
                     -> AnalyticsData
                     -> m String
 pageDocumentSignForPadView ctx document siglink ad = do
+  let authorid = $fromJust $ getAuthorSigLink document >>= maybesignatory
+  auser <- fmap $fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
   mcompany <- companyUIForPage
   renderTemplate "pageDocumentSignPadView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
       F.value "documenttitle" $ documenttitle document
+      F.value "authorFullname" $ getFullName auser
+      F.value "authorPhone" $ getMobile auser
       standardPageFields ctx mcompany ad
 
 
