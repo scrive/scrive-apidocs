@@ -14,18 +14,20 @@ module.exports = function(grunt) {
     // Rename files with to have versionId in their name
     this.files.forEach(function(filePair) {
       filePair.src.forEach(function(f) {
-        var versionId = generateVersionId(),
-        renamed = [versionId, path.basename(f)].join('.'),
-        outPath = path.resolve(path.dirname(f), renamed);
+        var versionId = generateVersionId();
+        if (path.basename(f).indexOf(versionId) == -1) { // Add version only to files that don't have it
+          var renamed = [versionId, path.basename(f)].join('.');
+          var outPath = path.resolve(path.dirname(f), renamed);
 
-	if(renamed.indexOf('.css') != -1) {
-	  cssFiles.push(renamed);
-	} else if(renamed.indexOf('.js') != -1) {
-	  jsFiles.push(renamed);
-	}
+          if(renamed.indexOf('.css') != -1) {
+            cssFiles.push(renamed);
+          } else if(renamed.indexOf('.js') != -1) {
+            jsFiles.push(renamed);
+          }
 
-        fs.renameSync(f, outPath);
-        grunt.log.write(f + ' ').ok(renamed);
+          fs.renameSync(f, outPath);
+          grunt.log.write(f + ' ').ok(renamed);
+        }
       });
     });
   });
