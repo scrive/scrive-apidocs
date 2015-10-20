@@ -229,6 +229,7 @@ return React.createClass({
       $(drawingArea).mousedown(drawing(self.drawingtoolDown, "mouse"));
       $(drawingArea).mousemove(drawing(self.drawingtoolMove, "mouse"));
       $(drawingArea).mouseup(drawing(self.drawingtoolUp, "mouse"));
+      $(drawingArea).mouseenter(drawing(self.drawingtoolInside, "mouse"));
       $(drawingArea).mouseout(drawing(self.drawingtoolOutside, "mouse"));
     },
     xPos: function (e) {
@@ -309,14 +310,21 @@ return React.createClass({
       }
     },
     drawingtoolOutside: function (x, y, drawingMethod, e) {
+      this.drawingtoolMove(x, y, drawingMethod, e);
       this.state.model.setPointerOutside(true);
+    },
+    drawingtoolInside: function (x, y, drawingMethod, e) {
+      this.drawingtoolMove(x, y, drawingMethod, e);
     },
     drawingtoolMove: function (x, y, drawingMethod, e) {
       if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e))) {
         if (this.state.model.pointerOutside()) {
           this.state.model.setPointerOutside(false);
           this.stopDrawing();
-          this.drawingtoolDown(x, y, drawingMethod, e);
+          if (e.buttons !== 0) {
+            // start drawing again only if any button is pressed
+            this.drawingtoolDown(x, y, drawingMethod, e);
+          }
         } else {
           var x_ = this.state.model.x();
           var y_ = this.state.model.y();
