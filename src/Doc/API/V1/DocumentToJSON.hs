@@ -367,7 +367,7 @@ docFieldsListForJSON userid doc = do
                                             (   (any (== Undelivered) $ mailinvitationdeliverystatus <$> documentsignatorylinks doc)
                                              || (any (== Undelivered) $ smsinvitationdeliverystatus  <$> documentsignatorylinks doc)
                                             )
-    J.value "shared" $ documentsharing doc == Shared
+    J.value "shared" $ isDocumentShared doc
     J.value "file" $ show <$> mainfileid <$> (documentsealedfile doc `mplus` documentfile doc)
     J.value "inpadqueue" $ False
     J.value "deleted" $ documentDeletedForUser doc userid

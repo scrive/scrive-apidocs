@@ -146,7 +146,7 @@ unjsonSignatoryScreenshots = objectOf $ pure combineSignatoryScreenshots
       combineSignatoryScreenshots f s _ _ = SignatoryScreenshots.SignatoryScreenshots f s Nothing
 
 evidenceAttachmentsToJSONBS :: DocumentID -> [EvidenceAttachments.Attachment] -> BSC.ByteString
-evidenceAttachmentsToJSONBS did eas = toLazyByteString $ "["  <> (eaList (sortBy eaSorter eas)) <> "]"
+evidenceAttachmentsToJSONBS did eas = toLazyByteString $ "{ \"attachments\": ["  <> (eaList (sortBy eaSorter eas)) <> "]}"
   where
     eaList :: [EvidenceAttachments.Attachment] -> Builder
     eaList [] = ""

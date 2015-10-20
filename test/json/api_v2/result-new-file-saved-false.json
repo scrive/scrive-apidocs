@@ -86,6 +86,7 @@
   "tags": [],
   "is_template": false,
   "is_saved": false,
+  "is_shared": false,
   "is_trashed": false,
   "is_deleted": false,
   "viewer": {
