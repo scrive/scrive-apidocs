@@ -313,28 +313,25 @@ return React.createClass({
     },
     drawingtoolMove: function (x, y, drawingMethod, e) {
       if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e))) {
-
         if (this.state.model.pointerOutside()) {
-          // not anymore
           this.state.model.setPointerOutside(false);
           this.stopDrawing();
           this.drawingtoolDown(x, y, drawingMethod, e);
-          return;
-        }
-
-        var x_ = this.state.model.x();
-        var y_ = this.state.model.y();
-        var x__ = this.state.model.x_();
-        var y__ = this.state.model.y_();
-
-        var moved = function (x1, x2) { return (x1 * 2 + x2 * 1) / 3; };
-        if (x__ != undefined && y__ != undefined) {
-          this.drawNiceCurve(x__, y__, x_, y_, moved(x_, x), moved(y_, y));
-          this.drawNiceLine(moved(x_, x), moved(y_, y), moved(x, x_), moved(y, y_));
         } else {
-          this.drawNiceLine(x_, y_, moved(x, x_), moved(y, y_));
+          var x_ = this.state.model.x();
+          var y_ = this.state.model.y();
+          var x__ = this.state.model.x_();
+          var y__ = this.state.model.y_();
+
+          var moved = function (x1, x2) { return (x1 * 2 + x2 * 1) / 3; };
+          if (x__ != undefined && y__ != undefined) {
+            this.drawNiceCurve(x__, y__, x_, y_, moved(x_, x), moved(y_, y));
+            this.drawNiceLine(moved(x_, x), moved(y_, y), moved(x, x_), moved(y, y_));
+          } else {
+            this.drawNiceLine(x_, y_, moved(x, x_), moved(y, y_));
+          }
+          this.state.model.lineDrawn(moved(x, x_), moved(y, y_), x, y);
         }
-        this.state.model.lineDrawn(moved(x, x_), moved(y, y_), x, y);
       }
     },
     drawingtoolUp: function (x, y, drawingMethod, e) {
