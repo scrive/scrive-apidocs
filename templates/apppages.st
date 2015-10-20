@@ -49,7 +49,7 @@ standardHeaderContents=
         <link href='/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
         <link rel=" icon" href="/favicon/$brandinghash$" />
 
-        <script src="/$ctxlang$/localization/$versioncode$.js"  type="text/javascript"></script>
+        <script src="/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
         <script type="text/javascript"> window.hubspotConf = $analytics.hubspotConf:noescape()$;</script>
         $if(production)$

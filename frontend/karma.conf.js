@@ -5,8 +5,10 @@ module.exports = function(config) {
     frameworks: ["requirejs", "mocha", "chai"],
 
     files: [
+      // Include EN localisation for tests but all others for JSCS pre-processor
+      "./localization/*.en.js",
+      {pattern: "./localization/*.*.js", included: false},
       "./test/env.js",
-      "./test/localization.js",
       "./test/setup.js",
       {pattern: "./bower_components/**/*.js", included: false},
       {pattern: "./libs/**/*.js", included: false},
@@ -19,7 +21,15 @@ module.exports = function(config) {
     ],
 
     preprocessors: {
-      "./compiled_jsx/**/*.js": ["coverage"]
+      "./compiled_jsx/**/*.js": ["coverage"],
+      "./localization/*.*.js" : ["jscs"]
+    },
+
+    jscsPreprocessor: {
+      rules: {
+        // Single rule to check that localisation is valid JavaScript
+        "esnext": true
+      }
     },
 
     reporters: ["progress", "coverage"],

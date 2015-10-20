@@ -22,6 +22,8 @@ regular-css-compiled.css
 .cabal-sandbox/
 cabal.sandbox.config
 
+frontend/app/localization/*.js
+
 \#*\#
 /.emacs.desktop
 /.emacs.desktop.lock

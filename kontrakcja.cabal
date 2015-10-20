@@ -817,3 +817,57 @@ Executable kontrakcja-test
     TypeOperators,
     TypeSynonymInstances,
     UndecidableInstances
+
+Executable localization
+
+  Hs-source-dirs: misc inc src localization/src
+
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -threaded -rtsopts
+  ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
+
+  Main-Is: LocalizationMain.hs
+  GHC-options: -main-is LocalizationMain
+
+  Build-depends: base < 6
+  Build-depends: cond
+  Build-depends: data-default
+  Build-depends: directory
+  Build-depends: exceptions
+  Build-depends: happstack-server
+  Build-depends: hpqtypes
+  Build-depends: kontrakcja-templates
+  Build-depends: lifted-base
+  Build-depends: mtl
+  Build-depends: split
+  Build-depends: template-haskell
+  Build-depends: text
+  Build-depends: time
+
+  Default-Language: Haskell2010
+  Default-Extensions:
+    BangPatterns,
+    ConstraintKinds,
+    DeriveDataTypeable,
+    DeriveFunctor,
+    FlexibleContexts,
+    FlexibleInstances,
+    FunctionalDependencies,
+    GeneralizedNewtypeDeriving,
+    LambdaCase,
+    MultiParamTypeClasses,
+    MultiWayIf,
+    NamedFieldPuns,
+    NoImplicitPrelude,
+    OverloadedStrings,
+    PatternGuards,
+    RankNTypes,
+    RecordWildCards,
+    ScopedTypeVariables,
+    StandaloneDeriving,
+    TemplateHaskell,
+    TupleSections,
+    TypeFamilies,
+    TypeOperators,
+    TypeSynonymInstances,
+    UndecidableInstances

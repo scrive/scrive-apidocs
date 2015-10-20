@@ -13,12 +13,12 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-jscs');
   require('./custom_grunt_tasks/deploybuild')(grunt);
-  require('./custom_grunt_tasks/fetchlocalization')(grunt);
 
   // configurable paths
   var yeomanConfig = {
     app: 'app',
-    dist: 'dist'
+    dist: 'dist',
+    kontrakcja: '../'
   };
 
   try {
@@ -32,6 +32,13 @@ module.exports = function(grunt) {
       less: {
         files: ["<%= yeoman.app %>/less/**/*.less", "<%= yeoman.app %>/scripts/temporary_less_directory/**/*.less"],
         tasks: ["less:compile"]
+      },
+      localization: {
+        files: [
+          '<%= yeoman.kontrakcja %>/texts/**/*.json',
+          '<%= yeoman.kontrakcja %>/templates/javascript-langs.st'
+        ],
+        tasks: ["updateLocalization"]
       },
       livereload: {
         options: {
@@ -57,7 +64,7 @@ module.exports = function(grunt) {
     },
     connect: {
       proxyserver: {
-        // Proxy connections to either kontraktcja or angularjs
+        // Proxy connections to either kontratcja or angularjs
         options: {
           debug: true,
           hostname: '*',
@@ -83,7 +90,7 @@ module.exports = function(grunt) {
             port: 9001,
             https: false
           },
-          // this gives access to kontraktcja under root
+          // this gives access to kontrakcja under root
           {
             context: ['/'],
             host: '127.0.0.1',
@@ -175,6 +182,7 @@ module.exports = function(grunt) {
             src: [
               '.tmp',
               '<%= yeoman.app %>/compiled_jsx/',
+              '<%= yeoman.app %>/localization/',
               '<%= yeoman.dist %>/*',
               '!<%= yeoman.dist %>/.git*'
             ]
@@ -205,6 +213,13 @@ module.exports = function(grunt) {
       ]
     },
     deploybuild: {
+      localization: {
+        files: {
+          src: [
+            '<%= yeoman.app %>/localization/*.js'
+          ]
+        }
+      },
       dist: {
         files: {
           src: [
@@ -239,6 +254,22 @@ module.exports = function(grunt) {
       },
       compileJsx: {
         command: './node_modules/react-tools/bin/jsx -x jsx <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/'
+      },
+      compileLocalization: {
+        command: 'cabal build localization',
+        options: {
+          execOptions: {
+            cwd: '<%= yeoman.kontrakcja %>'
+          }
+        }
+      },
+      generateLocalization: {
+        command: './dist/build/localization/localization',
+        options: {
+          execOptions: {
+            cwd: '<%= yeoman.kontrakcja %>'
+          }
+        }
       }
     },
     copy: {
@@ -260,6 +291,8 @@ module.exports = function(grunt) {
               'newsletter/**/*',
               'pdf/**/*',
               'libs/tiny_mce/**/*',
+              // Static localization files - already versioned
+              'localization/*.*.js',
 
               // Shims that need to be loaded separately
               'libs/html5shiv.js',
@@ -269,7 +302,7 @@ module.exports = function(grunt) {
             ]
           },
         ]
-      },
+      }
     },
     gjslint: {
       options: {
@@ -343,6 +376,21 @@ module.exports = function(grunt) {
     ]);
   });
 
+  grunt.registerTask('compileGenerateLocalization', function(target) {
+    return grunt.task.run([
+      'shell:compileLocalization',
+      'shell:generateLocalization',
+      'deploybuild:localization'
+    ]);
+  });
+
+  grunt.registerTask('updateLocalization', function(target) {
+    return grunt.task.run([
+      'shell:generateLocalization',
+      'deploybuild:localization'
+    ]);
+  });
+
   /**
    *  Get a production looking enviroment, i.e.
    *  serve files compiled files from dist/
@@ -379,6 +427,7 @@ module.exports = function(grunt) {
       'less:compile',
       'cssmin:dev',
       'compileJsxWatch',
+      'compileGenerateLocalization',
       'configureProxies:proxyserver',
       'connect:proxyserver',
       'connect:livereload',
@@ -413,6 +462,7 @@ module.exports = function(grunt) {
   grunt.registerTask('build', function(target) {
     var tasks = [
       'clean:dist',
+      'compileGenerateLocalization',
       'concurrent:dist',
       'shell:compileJsx'
     ];

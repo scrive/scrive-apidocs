@@ -11,8 +11,7 @@ var notTestFiles = [
   "/base/test/setup.js",
   "/base/test/backend.js",
   "/base/test/util.js",
-  "/base/test/image.js",
-  "/base/test/localization.js"
+  "/base/test/image.js"
 ];
 
 Object.keys(window.__karma__.files).forEach(function(file) {

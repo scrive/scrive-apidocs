@@ -54,7 +54,6 @@ import qualified User.UserControl as UserControl
 staticRoutes :: Bool -> Route (Kontra Response)
 staticRoutes production = choice
      [  allLangDirs $                          hGet $ toK0 $ sendRedirect $ LinkDesignView
-     ,  allLangDirs $  dir "localization"    $ hGet $ toK1 localizationScript
      ,  allLangDirs $  dir "pricing"         $ hGet $ toK0 priceplanPage
 
      -- Top level handlers - buttons on top bar, when user is logged in
