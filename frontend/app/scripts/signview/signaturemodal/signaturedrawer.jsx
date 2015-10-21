@@ -311,35 +311,34 @@ return React.createClass({
     },
     drawingtoolOutside: function (x, y, drawingMethod, e) {
       this.drawingtoolMove(x, y, drawingMethod, e);
+      this.drawingtoolMove(x, y, drawingMethod, e);
       this.state.model.setPointerOutside(true);
     },
     drawingtoolInside: function (x, y, drawingMethod, e) {
-      this.drawingtoolMove(x, y, drawingMethod, e);
+      if (this.state.model.pointerOutside()) {
+        this.state.model.setPointerOutside(false);
+        this.stopDrawing();
+        if (e.buttons !== 0) {
+          // start drawing again only if any button is pressed
+          this.drawingtoolDown(x, y, drawingMethod, e);
+        }
+      }
     },
     drawingtoolMove: function (x, y, drawingMethod, e) {
       if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e))) {
-        if (this.state.model.pointerOutside()) {
-          this.state.model.setPointerOutside(false);
-          this.stopDrawing();
-          if (e.buttons !== 0) {
-            // start drawing again only if any button is pressed
-            this.drawingtoolDown(x, y, drawingMethod, e);
-          }
-        } else {
-          var x_ = this.state.model.x();
-          var y_ = this.state.model.y();
-          var x__ = this.state.model.x_();
-          var y__ = this.state.model.y_();
+        var x_ = this.state.model.x();
+        var y_ = this.state.model.y();
+        var x__ = this.state.model.x_();
+        var y__ = this.state.model.y_();
 
-          var moved = function (x1, x2) { return (x1 * 2 + x2 * 1) / 3; };
-          if (x__ != undefined && y__ != undefined) {
-            this.drawNiceCurve(x__, y__, x_, y_, moved(x_, x), moved(y_, y));
-            this.drawNiceLine(moved(x_, x), moved(y_, y), moved(x, x_), moved(y, y_));
-          } else {
-            this.drawNiceLine(x_, y_, moved(x, x_), moved(y, y_));
-          }
-          this.state.model.lineDrawn(moved(x, x_), moved(y, y_), x, y);
+        var moved = function (x1, x2) { return (x1 * 2 + x2 * 1) / 3; };
+        if (x__ != undefined && y__ != undefined) {
+          this.drawNiceCurve(x__, y__, x_, y_, moved(x_, x), moved(y_, y));
+          this.drawNiceLine(moved(x_, x), moved(y_, y), moved(x, x_), moved(y, y_));
+        } else {
+          this.drawNiceLine(x_, y_, moved(x, x_), moved(y, y_));
         }
+        this.state.model.lineDrawn(moved(x, x_), moved(y, y_), x, y);
       }
     },
     drawingtoolUp: function (x, y, drawingMethod, e) {
