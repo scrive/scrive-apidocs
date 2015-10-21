@@ -739,11 +739,15 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
             var en = form.find('.email input');
             en.val(model.email());
-            en.attr('placeholder', en.parent().find('.placeholder').text());
-            en.change();
-            en.change(function(e) {
+            if (model.email().trim() === "") {
+              en.attr('placeholder', en.parent().find('.placeholder').text());
+              en.change();
+              en.change(function(e) {
                 model.setEmail($(e.target).val());
-            });
+              });
+            } else {
+              en.attr("disabled", "disabled");
+            }
             var m = form.find('.month select');
             m.val(model.month());
             m.change();

@@ -315,11 +315,11 @@ section.pricing-cases header {
   width: 320px;
 }
 
-.plan-container form ul.fields li.field .input input[type=text],
-.plan-container form ul.fields li.field .input input[type=email],
-.plan-container form ul.fields li.field .input input[type=password],
-.plan-container form ul.fields li.field .input input[type=number],
-.plan-container form ul.fields li.field .input textarea {
+.plan-container form .field input[type=text],
+.plan-container form .field input[type=email],
+.plan-container form .field input[type=password],
+.plan-container form .field input[type=number],
+.plan-container form .field textarea {
   border: 1px solid #ccc;
   color: @primary-font-color;
   display: block;
@@ -402,8 +402,8 @@ div.plan-container form div.field input:-ms-input-placeholder {
   line-height: 1.5em;
 }
 
-.plan-container form ul.fields li.field .input input:not(.button):focus,
-.plan-container form ul.fields li.field .input input:not(.button):not([disabled]):hover {
+.plan-container form .field input:not([disabled]):focus,
+.plan-container form .field input:not([disabled]):hover {
   border-color: @blue-medium;
   outline: none;
 }
@@ -590,7 +590,7 @@ div.plan-container form div.field input:-ms-input-placeholder {
     padding: 4px 0;
     width: 320px;
     
-    input:focus, input:hover {
+    input:not([disabled]):focus, input:not([disabled]):hover {
       border-color: @blue-medium;
       outline: none;
     }
