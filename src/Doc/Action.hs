@@ -249,7 +249,7 @@ findAndDoPostDocumentClosedActions
              , DocumentFilterBySealStatus [Missing] -- sealed file lacks digital signature, or no sealed file at all
              , DocumentFilterByLatestSignTimeBefore (5 `minutesBefore` now) -- avoid documents that the server is processing in its post-closed thread.
              ] ++ signtimefilter)
-            [] (0,100)
+            [] 100
   when (not (null docs)) $ do
     logInfo "findAndDoPostDocumentClosedActions: considering documents" $ object [
         "documents" .= length docs
@@ -273,7 +273,7 @@ findAndExtendDigitalSignatures = do
               [ Guardtime{ extended = False, private = True }
               , Guardtime{ extended = False, private = False }
               ]
-            ] [] (0,50)
+            ] [] 50
   when (not (null docs)) $ do
     logInfo "findAndExtendDigitalSignatures: considering documents" $ object [
         "documents" .= length docs

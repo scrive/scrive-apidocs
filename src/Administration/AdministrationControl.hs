@@ -529,7 +529,8 @@ jsonDocuments = onlySalesOrAdmin $ do
   let documents = PagedList { list       = allDocs
                             , params     = params
                             , pageSize   = docsPageSize
-                            , listLength = allDocsCount
+                            -- Backward compatibility. When offset is set, we always return list length equal or greater then offset.
+                            , listLength = max (listParamsOffset params) allDocsCount
                             }
   runJSONGenT $ do
             valueM "list" $ forM (take docsPageSize $ list documents) $ \doc-> runJSONGenT $ do

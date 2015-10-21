@@ -877,7 +877,7 @@ apiCallV1List = api $ do
   format <- getField "format"
   case format of
        Just "csv" -> do
-          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting (0, 1000)
+          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting 1000
           let docsCSVs = concat $ zipWith docForListCSVV1  [1..] allDocs
           return $ Left $ CSV { csvFilename = "documents.csv"
                               , csvHeader = docForListCSVHeaderV1
@@ -888,7 +888,8 @@ apiCallV1List = api $ do
           let docs = PagedList {  list       = allDocs
                                 , params     = params
                                 , pageSize   = docsPageSize
-                                , listLength = allDocsCount
+                                -- Backward compatibility. When offset is set, we always return list length equal or greater then offset.
+                                , listLength = max (listParamsOffset params) allDocsCount
                                 }
           docsJSONs <- mapM (docForListJSONV1 user) $ list docs
           return $ Right $ J.runJSONGen $ do
