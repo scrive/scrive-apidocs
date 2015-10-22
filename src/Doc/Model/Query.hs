@@ -2,6 +2,7 @@
 module Doc.Model.Query
   ( isTemplate -- fromUtils
   , DocumentFilter(..)
+  , processSearchStringToFilter
   , DocumentDomain(..)
   , DocumentOrderBy(..)
   , FileInDocument(..)

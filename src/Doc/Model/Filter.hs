@@ -1,10 +1,13 @@
 module Doc.Model.Filter
   ( DocumentFilter(..)
   , documentFilterToSQL
+  , FilterString(..) -- ^ Exported for Tests
+  , processSearchStringToFilter
   ) where
 
 import Control.Conditional ((<|), (|>))
 import qualified Control.Monad.State.Lazy as State
+import qualified Data.Text as T
 
 import DB
 import Doc.DocStateData
@@ -29,7 +32,7 @@ data DocumentFilter
   | DocumentFilterBySealStatus [SealStatus]   -- ^ Any of listed seal statuses
   | DocumentFilterByStatusClass [StatusClass] -- ^ Any of listed status classes
   | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags (warning: this is ALL tags)
-  | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
+  | DocumentFilterByString FilterString       -- ^ Contains the string in title, list of people involved or anywhere
   | DocumentFilterByDelivery DeliveryMethod   -- ^ Only documents that use selected delivery method
   | DocumentFilterByMonthYearFrom (Int,Int)   -- ^ Document time after or in (month,year)
   | DocumentFilterByMonthYearTo   (Int,Int)   -- ^ Document time before or in (month,year)
@@ -108,25 +111,27 @@ documentFilterToSQL (DocumentFilterByTags tags) = do
       sqlWhere "documents.id = document_tags.document_id"
       sqlWhereEq "document_tags.name" (tagname tag)
       sqlWhereEq "document_tags.value" (tagvalue tag)
-documentFilterToSQL (DocumentFilterByString string) = do
-  sqlWhere result
-  where
-      result = parenthesize $ (("documents.title ILIKE" <?> sqlpat string) `sqlOR`
-                               sqlConcatAND (map sqlMatch (words string)))
-      sqlMatch word = "EXISTS (SELECT TRUE" <>
-                                   "  FROM signatory_link_fields JOIN signatory_links AS sl5" <>
-                                                                 "  ON sl5.document_id = documents.id" <>
-                                                                 " AND sl5.id = signatory_link_fields.signatory_link_id" <>
-                                   -- " FROM signatory_link_fields " <>
-                                   " WHERE (signatory_link_fields.type != " <?> SignatureFT <> ") " <>
-                                           " AND (signatory_link_fields.value_text ILIKE" <?> sqlpat word <> "))"
-                                   --" WHERE TRUE)") []
 
-      sqlpat text = "%" ++ concatMap escape text ++ "%"
-      escape '\\' = "\\\\"
-      escape '%' = "\\%"
-      escape '_' = "\\_"
-      escape c = [c]
+documentFilterToSQL (DocumentFilterByString filterString) =
+  let escape str = concatMap escape' str
+      escape' :: Char -> String
+      escape' ' ' = "[\\s]+"
+      escape' '\\' = "\\\\"
+      escape' x = let regexEscape = ".^$*+?()[{\\|"
+                  in case find (==x) regexEscape of
+                          Just _ -> "\\" ++ [x]
+                          Nothing -> [x]
+      matchFilter (Quoted str)   = "(^|\\W)" ++ escape (T.unpack str) ++ "($|\\W)"
+      matchFilter (Unquoted str) = escape (T.unpack str)
+      result = parenthesize $ ("documents.title ~*" <?> matchFilter filterString) `sqlOR` matchSLFields
+      matchSLFields = "EXISTS (SELECT TRUE" <>
+                      "  FROM signatory_link_fields JOIN signatory_links AS sl" <>
+                      "  ON sl.document_id = documents.id" <>
+                      "  AND sl.id = signatory_link_fields.signatory_link_id" <>
+                      "  WHERE (signatory_link_fields.type != " <?> SignatureFT <> ") " <>
+                      "  AND (signatory_link_fields.value_text ~*" <?> matchFilter filterString <> ")"
+                      <> ")"
+  in sqlWhere result
 
 documentFilterToSQL (DocumentFilterByDelivery delivery) = do
   sqlWhereEq "documents.delivery_method" delivery
@@ -181,3 +186,38 @@ documentFilterToSQL (DocumentFilterDeleted flag1) = do
   if flag1
      then sqlWhere "signatory_links.deleted IS NOT NULL"
      else sqlWhere "signatory_links.deleted IS NULL"
+
+data FilterString = Quoted T.Text | Unquoted T.Text
+  deriving (Show, Eq)
+
+-- | Converts a search string into a list of `DocumentFilterByString FilterString`
+--
+-- Search string is split into words, but anything between quotes is treated as
+-- a literal search and gets Quoted.
+-- In case of mismatch quotes, last quote is ignored and we just use
+-- Unquoted for all words.
+--
+-- >>> processSearchStringToFilter "my search"
+-- [DocumentFilterByString (Unquoted "my"), DocumentFilterByString (Unquoted "search")]
+--
+-- >>> processSearchStringToFilter "my search \"for life\""
+-- [DocumentFilterByString (Unquoted "my"), DocumentFilterByString (Unquoted "search")
+-- , DocumentFilterByQuotedString (Quoted "for life")]
+--
+processSearchStringToFilter :: T.Text -> [DocumentFilter]
+processSearchStringToFilter str = take 5 . map DocumentFilterByString . convert $ str
+  where
+    convert s = mergeAroundQuotes [] Nothing (T.words $ spaceAroundQuotes s)
+    spaceAroundQuotes s = T.concatMap (\c -> if c == '"' then " \" " else T.singleton c) s
+    -- Usage: mergeAroundQuotes [] Nothing yourWords
+    -- Expects a list of words, where quotation marks (") are their own word
+    -- Collapses words within quotation marks into a single space-delimited word
+    -- Ignores unmatched quotes
+    mergeAroundQuotes :: [FilterString] -> Maybe [T.Text] -> [T.Text] -> [FilterString]
+    mergeAroundQuotes acc Nothing  []           = acc
+    mergeAroundQuotes acc (Just q) []           = acc ++ (map Unquoted q)
+    mergeAroundQuotes acc Nothing  ("\"" : ws)  = mergeAroundQuotes acc (Just []) ws
+    mergeAroundQuotes acc Nothing  (w:ws)       = mergeAroundQuotes (acc ++ [Unquoted w]) Nothing ws
+    mergeAroundQuotes acc (Just q) ("\"" : ws)  = if not . null $ q then mergeAroundQuotes (acc ++ [Quoted $ T.intercalate " " q]) Nothing ws
+                                                                    else mergeAroundQuotes acc Nothing ws
+    mergeAroundQuotes acc (Just q) (w:ws)       = mergeAroundQuotes acc (Just $ q ++ [w]) ws

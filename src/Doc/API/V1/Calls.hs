@@ -25,7 +25,7 @@ import Control.Monad.IO.Class
 import Data.Aeson (Value(..))
 import Data.Char
 import Data.Int
-import Data.String.Utils (replace,splitWs, strip)
+import Data.String.Utils (replace, strip)
 import Data.Text (unpack)
 import Data.Time
 import Happstack.Server.RqData
@@ -44,6 +44,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.HashMap.Strict as Hash
 import qualified Data.Map as Map hiding (map)
+import qualified Data.Text as T
 import qualified Data.Traversable as T
 import qualified Data.Vector as Vec
 import qualified Text.JSON as J
@@ -870,7 +871,7 @@ apiCallV1List = api $ do
                       Right js ->[DocumentFilterByTags $ join $ maybeToList $ (fromJSValueCustomMany fromJSValue js)]
                       _ -> []
   let sorting    = docSortingFromParams params
-      searching  = docSearchingFromParams params
+      searching  = processSearchStringToFilter . T.pack . listParamsSearching $ params
       pagination = (listParamsOffset params, listParamsLimit params, docsPageSize)
       filters = filters1 ++ filters2 ++ tagsFilters
 
@@ -915,12 +916,6 @@ apiCallV1List = api $ do
         x "author"            = [Asc DocumentOrderByAuthor]
         x "authorREV"         = [Desc DocumentOrderByAuthor]
         x _                   = []
-
-    docSearchingFromParams :: ListParams -> [DocumentFilter]
-    docSearchingFromParams params =
-      case listParamsSearching params of
-        "" -> []
-        x -> map DocumentFilterByString $ take 5 (splitWs x)
 
     docsPageSize :: Int
     docsPageSize = 100
