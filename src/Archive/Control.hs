@@ -58,7 +58,7 @@ handleArchiveDocumentsAction actionStr docPermission m = do
   ctx <- getContext
   user <- guardJust $ getContextUser ctx
   ids <- getCriticalField asValidDocIDList "documentids"
-  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) [DocumentFilterByDocumentIDs ids] [] (0, 100)
+  docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) [DocumentFilterByDocumentIDs ids] [] 100
   when (sort (map documentid docs) /= sort ids) $ failWithMsg user ids "Retrieved documents didn't match specified document ids"
   if all (docPermission user) docs
   then do
@@ -143,7 +143,7 @@ handleListCSV= do
   sorting <- apiV2ParameterDefault []  (ApiV2ParameterJSON "sorting" unjsonDef)
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
   let documentSorting = (toDocumentSorting <$> sorting)
-  allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) documentFilters documentSorting (0, 1000)
+  allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) documentFilters documentSorting 1000
   let docsCSVs = concat $ zipWith docForListCSVV1  [1..] allDocs
   return $ CSV { csvFilename = "documents.csv"
                , csvHeader = docForListCSVHeaderV1

@@ -70,7 +70,7 @@ getDocByDocIDEx did = \case
       (DocumentsVisibleViaAccessToken accessToken)
       [DocumentFilterByDocumentID did]
       []
-      (0, 1)
+      1
     case mdoc of
       [doc] -> return doc
       _ -> do
@@ -121,7 +121,7 @@ getMagicHashForDocumentSignatoryWithUser did sigid user = do
            (DocumentsVisibleToUser $ userid user)
            [DocumentFilterByDocumentID did]
            []
-           (0, 1)
+           1
    case mdoc of
      [doc] ->  case getMaybeSignatoryLink (doc,sigid) of
        Just sig -> if ((isAuthor (doc, user) && signatorylinkdeliverymethod sig == PadDelivery) || (isSigLinkFor user sig))
