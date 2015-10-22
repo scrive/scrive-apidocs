@@ -211,3 +211,13 @@ if __name__ == '__main__':
         time.sleep(1)  # wait for signinginprogress modal to be shown
         send_keys(['CONTROL', 'SUBTRACT', 'NULL'], times=3)
         save_screenshot(driver, '/tmp/mobile2.png')
+
+
+# STEPS:
+# run this script
+# x = concatLines base64 /tmp/author.png
+# authorJson = {"time":str(now()), in format 2015-09-22T16:00:00Z
+#               "image":"data:image/jpeg;base64," + x}
+# writeFile files/reference_screenshots/author.json (dumps(authorJson))
+# same thing for /tmp/desktop2.png into files/reference_screenshots/standard.json
+# same thing for /tmp/mobile2.png into files/reference_screenshots/mobile.json
