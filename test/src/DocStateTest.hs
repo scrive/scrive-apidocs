@@ -1154,63 +1154,63 @@ testGetDocumentsSQLTextFiltered = replicateM_ 1 $ do
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc1
   assertEqual ("Document title really got changed") doc1Title (documenttitle ndoc)
 
-  getDocs0 <- dbQuery $ GetDocuments domain [] [] (0,maxBound)
+  getDocs0 <- dbQuery $ GetDocuments domain [] [] maxBound
   assertEqual ("GetDocuments fetches all documents by author without filter") 3 (length getDocs0)
 
   let matchTitleFilter1 = processSearchStringToFilter "Magic Unique Title 42"
-  matchTitleFilter1Matches <- dbQuery $ GetDocuments domain matchTitleFilter1 [] (0,maxBound)
+  matchTitleFilter1Matches <- dbQuery $ GetDocuments domain matchTitleFilter1 [] maxBound
   assertEqual ("With filter " ++ show matchTitleFilter1) 1 (length matchTitleFilter1Matches)
 
   let matchTitleFilter2 = processSearchStringToFilter "\"Magic Unique Title 42\""
-  matchTitleFilter2Matches <- dbQuery $ GetDocuments domain matchTitleFilter2 [] (0,maxBound)
+  matchTitleFilter2Matches <- dbQuery $ GetDocuments domain matchTitleFilter2 [] maxBound
   assertEqual ("With filter " ++ show matchTitleFilter2) 1 (length matchTitleFilter2Matches)
 
   let matchTitleFilter3 = processSearchStringToFilter "\"Unique Title 42\""
-  matchTitleFilter3Matches <- dbQuery $ GetDocuments domain matchTitleFilter3 [] (0,maxBound)
+  matchTitleFilter3Matches <- dbQuery $ GetDocuments domain matchTitleFilter3 [] maxBound
   assertEqual ("With filter " ++ show matchTitleFilter3) 1 (length matchTitleFilter3Matches)
 
   let matchTitleFilter4 = processSearchStringToFilter "agic nique itle"
-  matchTitleFilter4Matches <- dbQuery $ GetDocuments domain matchTitleFilter4 [] (0,maxBound)
+  matchTitleFilter4Matches <- dbQuery $ GetDocuments domain matchTitleFilter4 [] maxBound
   assertEqual ("With filter " ++ show matchTitleFilter4) 1 (length matchTitleFilter4Matches)
 
   let matchTitleFilter5 = processSearchStringToFilter "Magic \"Unique Title\" 42"
-  matchTitleFilter5Matches <- dbQuery $ GetDocuments domain matchTitleFilter5 [] (0,maxBound)
+  matchTitleFilter5Matches <- dbQuery $ GetDocuments domain matchTitleFilter5 [] maxBound
   assertEqual ("With filter " ++ show matchTitleFilter5) 1 (length matchTitleFilter5Matches)
 
   let matchTitleFilter6 = processSearchStringToFilter "42 Unique \"Title\" Magic"
-  matchTitleFilter6Matches <- dbQuery $ GetDocuments domain matchTitleFilter6 [] (0,maxBound)
+  matchTitleFilter6Matches <- dbQuery $ GetDocuments domain matchTitleFilter6 [] maxBound
   assertEqual ("With filter " ++ show matchTitleFilter6) 1 (length matchTitleFilter6Matches)
 
   let notMatchTitleFilter1 = processSearchStringToFilter "\"Magic Unique Title 4\""
-  notMatchTitleFilter1Matches <- dbQuery $ GetDocuments domain notMatchTitleFilter1 [] (0,maxBound)
+  notMatchTitleFilter1Matches <- dbQuery $ GetDocuments domain notMatchTitleFilter1 [] maxBound
   assertEqual ("With filter " ++ show notMatchTitleFilter1) 0 (length notMatchTitleFilter1Matches)
 
   let notMatchTitleFilter2 = processSearchStringToFilter "\"agic Unique Title 42\""
-  notMatchTitleFilter2Matches <- dbQuery $ GetDocuments domain notMatchTitleFilter2 [] (0,maxBound)
+  notMatchTitleFilter2Matches <- dbQuery $ GetDocuments domain notMatchTitleFilter2 [] maxBound
   assertEqual ("With filter " ++ show notMatchTitleFilter2) 0 (length notMatchTitleFilter2Matches)
 
   let matchFirstNameFilter = processSearchStringToFilter "Bob Blue"
-  matchFirstNameFilterMatches <- dbQuery $ GetDocuments domain matchFirstNameFilter [] (0,maxBound)
+  matchFirstNameFilterMatches <- dbQuery $ GetDocuments domain matchFirstNameFilter [] maxBound
   assertEqual ("With filter " ++ show matchFirstNameFilter) 3 (length matchFirstNameFilterMatches)
 
   let notMatchFirstNameFilter = processSearchStringToFilter "\"Bob Blue\""
-  notMatchFirstNameFilterMatches <- dbQuery $ GetDocuments domain notMatchFirstNameFilter [] (0,maxBound)
+  notMatchFirstNameFilterMatches <- dbQuery $ GetDocuments domain notMatchFirstNameFilter [] maxBound
   assertEqual ("With filter " ++ show notMatchFirstNameFilter) 0 (length notMatchFirstNameFilterMatches)
 
   let matchEmailFilter1 = processSearchStringToFilter "bill@"
-  matchEmailFilter1Matches <- dbQuery $ GetDocuments domain matchEmailFilter1 [] (0,maxBound)
+  matchEmailFilter1Matches <- dbQuery $ GetDocuments domain matchEmailFilter1 [] maxBound
   assertEqual ("With filter " ++ show matchEmailFilter1) 3 (length matchEmailFilter1Matches)
 
   let matchEmailFilter2 = processSearchStringToFilter "\"bill@zonk.com\""
-  matchEmailFilter2Matches <- dbQuery $ GetDocuments domain matchEmailFilter2 [] (0,maxBound)
+  matchEmailFilter2Matches <- dbQuery $ GetDocuments domain matchEmailFilter2 [] maxBound
   assertEqual ("With filter " ++ show matchEmailFilter2) 3 (length matchEmailFilter2Matches)
 
   let notMatchEmailFilter1 = processSearchStringToFilter "\"bill@\""
-  notMatchEmailFilter1Matches <- dbQuery $ GetDocuments domain notMatchEmailFilter1 [] (0,maxBound)
+  notMatchEmailFilter1Matches <- dbQuery $ GetDocuments domain notMatchEmailFilter1 [] maxBound
   assertEqual ("With filter " ++ show notMatchEmailFilter1) 0 (length notMatchEmailFilter1Matches)
 
   let notMatchEmailFilter2 = processSearchStringToFilter "herm@"
-  notMatchEmailFilter2Matches <- dbQuery $ GetDocuments domain notMatchEmailFilter2 [] (0,maxBound)
+  notMatchEmailFilter2Matches <- dbQuery $ GetDocuments domain notMatchEmailFilter2 [] maxBound
   assertEqual ("With filter " ++ show notMatchEmailFilter2) 0 (length notMatchEmailFilter2Matches)
 
 testGetDocumentsSQLSorted :: TestEnv ()
