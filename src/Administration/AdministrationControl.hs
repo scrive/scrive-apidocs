@@ -29,6 +29,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
+import qualified Data.Text as T
 import qualified Data.Unjson as Unjson
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
@@ -570,7 +571,7 @@ docSortingFromParams params =
 
 
 docSearchingFromParams :: ListParams -> [DocumentFilter]
-docSearchingFromParams params = processSearchStringToFilter $ listParamsSearching params
+docSearchingFromParams params = processSearchStringToFilter . T.pack . listParamsSearching $ params
 
 
 handleBackdoorQuery :: Kontrakcja m => m Response

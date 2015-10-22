@@ -44,6 +44,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.HashMap.Strict as Hash
 import qualified Data.Map as Map hiding (map)
+import qualified Data.Text as T
 import qualified Data.Traversable as T
 import qualified Data.Vector as Vec
 import qualified Text.JSON as J
@@ -870,7 +871,7 @@ apiCallV1List = api $ do
                       Right js ->[DocumentFilterByTags $ join $ maybeToList $ (fromJSValueCustomMany fromJSValue js)]
                       _ -> []
   let sorting    = docSortingFromParams params
-      searching  = processSearchStringToFilter $ listParamsSearching params
+      searching  = processSearchStringToFilter . T.pack . listParamsSearching $ params
       pagination = (listParamsOffset params, listParamsLimit params, docsPageSize)
       filters = filters1 ++ filters2 ++ tagsFilters
 
