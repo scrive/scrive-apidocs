@@ -113,25 +113,30 @@ documentFilterToSQL (DocumentFilterByTags tags) = do
       sqlWhereEq "document_tags.value" (tagvalue tag)
 
 documentFilterToSQL (DocumentFilterByString filterString) =
-  let escape str = concatMap escape' str
-      escape' :: Char -> String
-      escape' ' ' = "[\\s]+"
-      escape' '\\' = "\\\\"
-      escape' x = let regexEscape = ".^$*+?()[{\\|"
-                  in case find (==x) regexEscape of
-                          Just _ -> "\\" ++ [x]
-                          Nothing -> [x]
-      matchFilter (Quoted str)   = "(^|\\W)" ++ escape (T.unpack str) ++ "($|\\W)"
-      matchFilter (Unquoted str) = escape (T.unpack str)
-      result = parenthesize $ ("documents.title ~*" <?> matchFilter filterString) `sqlOR` matchSLFields
-      matchSLFields = "EXISTS (SELECT TRUE" <>
-                      "  FROM signatory_link_fields JOIN signatory_links AS sl" <>
-                      "  ON sl.document_id = documents.id" <>
-                      "  AND sl.id = signatory_link_fields.signatory_link_id" <>
-                      "  WHERE (signatory_link_fields.type != " <?> SignatureFT <> ") " <>
-                      "  AND (signatory_link_fields.value_text ~*" <?> matchFilter filterString <> ")"
-                      <> ")"
-  in sqlWhere result
+  sqlWhere $ parenthesize $ ("documents.title ~*" <?> matchFilter filterString) `sqlOR` matchSLFields
+  where
+    matchFilter = \case
+      Quoted   str -> "(^|\\W)" <> escape False str <> "($|\\W)"
+      Unquoted str -> escape True str
+      where
+        escape unquoted = T.concatMap $ \case
+          ' ' -> if unquoted
+                 then $unexpectedError "Unexpected space in unquoted string"
+                 else "[\\s]+"
+          x   -> let regexEscape = ".^$*+?()[{\\|"
+                 in case T.find (== x) regexEscape of
+                      Just _  -> "\\" <> T.singleton x
+                      Nothing -> T.singleton x
+
+    matchSLFields = smconcat [
+        "EXISTS ("
+      , "SELECT TRUE"
+      , " FROM signatory_links AS sl JOIN signatory_link_fields slf"
+      , "   ON sl.id = slf.signatory_link_id"
+      , "WHERE sl.document_id = documents.id"
+      , "  AND (slf.value_text ~*" <?> matchFilter filterString <> ")"
+      , ")"
+      ]
 
 documentFilterToSQL (DocumentFilterByDelivery delivery) = do
   sqlWhereEq "documents.delivery_method" delivery
