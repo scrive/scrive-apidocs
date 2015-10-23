@@ -19,7 +19,6 @@ import Happstack.Fields
 import Kontra
 import KontraLink
 import KontraPrelude
-import ListUtil
 import OAuth.Model
 import OAuth.Util
 import OAuth.View
@@ -129,8 +128,7 @@ apiDashboardPersonalTokens = do
   user <- guardJust ctxmaybeuser
   ls <- map jsonFromPersonalToken <$> maybeToList <$> (dbQuery $ GetPersonalToken (userid user))
   return $ J.runJSONGen $ do
-    J.objects "list" $ map (J.value "fields") ls
-    J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams, listLength = length ls}
+    J.value "personal_tokens" $ ls
 
 apiDashboardAPITokens :: Kontrakcja m => m JSValue
 apiDashboardAPITokens = do
@@ -138,8 +136,7 @@ apiDashboardAPITokens = do
   user <- guardJust ctxmaybeuser
   ls <- map jsonFromAPIToken <$> (dbQuery $ GetAPITokensForUser (userid user))
   return $ J.runJSONGen $ do
-    J.objects "list" $ map (J.value "fields") ls
-    J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams, listLength = length ls}
+    J.value "api_tokens" $  ls
 
 apiDashboardGrantedPrivileges :: Kontrakcja m => m JSValue
 apiDashboardGrantedPrivileges = do
@@ -148,8 +145,7 @@ apiDashboardGrantedPrivileges = do
   ds <- mapKeepM privilegeDescription [APIDocCreate, APIDocSend, APIDocCheck]
   ls <- concatMap (\p->jsonFromGrantedPrivilege p ds) <$> (dbQuery $ GetGrantedPrivileges (userid user))
   return $ J.runJSONGen $ do
-    J.objects "list" $ map (J.value "fields") ls
-    J.value "paging" $ pagingParamsJSON $ PagedList {list = ls, pageSize = 100, params = emptyListParams, listLength = length ls}
+    J.value "granted_privileges" $ ls
 
 -- Manipulate dashboard stuff
 

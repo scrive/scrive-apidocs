@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['lists/paginationmodel','lists/sortingmodel','lists/textfilteringmodel','lists/selectfilteringmodel','legacy_code'], function(PagingModel,SortingModel,TextFilteringModel,SelectFilteringModel) {
+define(['lists/sortingmodel','lists/textfilteringmodel','lists/selectfilteringmodel','legacy_code'], function(SortingModel,TextFilteringModel,SelectFilteringModel) {
 
     var ListObject = Backbone.Model.extend({
         defaults: function() {
@@ -101,6 +101,7 @@ define(['lists/paginationmodel','lists/sortingmodel','lists/textfilteringmodel',
 
 return Backbone.Model.extend({
     defaults: function() {
+      var self = this;
       return {
             list : undefined,
             url : undefined,
@@ -109,10 +110,14 @@ return Backbone.Model.extend({
             idFetcher : function(d) {return d.field("id");},
             onReload : function() {},
             namespace : Math.random() + "",
-            paging: new PagingModel({}),
             sorting: new SortingModel({}),
             textfiltering : new TextFilteringModel({}),
-            selectfiltering : new SelectFilteringModel({})
+            selectfiltering : new SelectFilteringModel({}),
+            paramsFunction : function() { return {};},
+            offset: 0,
+            maxPageSize: 100,
+            totalCountFunction: function(d) {return self.dataFetcher()(d),length},
+            totalCount: 0
       };
     },
     initialize : function(args) {
@@ -125,15 +130,7 @@ return Backbone.Model.extend({
         this.reload();
     },
     urlParams : function() {
-      var params = {};
-      params.page = this.paging().pageCurrent();
-      params.offset = params.page * this.paging().pageSize();
-      params.sort = this.sorting().current();
-      params.sortReversed = this.sorting().isAsc();
-      params.textfilter = this.textfiltering().text();
-      params.selectfilter = this.selectfiltering().asJSON();
-
-      return params;
+      return this.get("paramsFunction")( this.textfiltering().text(), this.selectfiltering(), this.sorting(), this.offset(), this.maxPageSize());
     },
     dataFetcher : function() {
       return this.get("dataFetcher");
@@ -147,9 +144,6 @@ return Backbone.Model.extend({
     list : function() {
       return this.get("list");
     },
-    paging : function() {
-      return this.get("paging");
-    },
     namespace : function() {
       return this.get("namespace");
     },
@@ -161,6 +155,19 @@ return Backbone.Model.extend({
     },
     selectfiltering : function() {
       return this.get("selectfiltering");
+    },
+    offset: function() {
+      return this.get("offset");
+    },
+    changeOffsetWithReload: function(offset) {
+      this.set({"offset" : offset}, {silent: true});
+      this.reload();
+    },
+    maxPageSize: function() {
+      return this.get("maxPageSize");
+    },
+    totalCount : function() {
+      return this.get("totalCount");
     },
     checkIfChangedAndCallback : function(changedcallback,errorcallback) {
       var self = this;
@@ -195,15 +202,20 @@ return Backbone.Model.extend({
     parse : function(data) {
       var self = this;
       var list = new ListOfObjects(this.dataFetcher()(data), {namespace : this.namespace(),idFetcher : this.idFetcher()});
-      var paging = new PagingModel(data.paging);
       list.on("change", function() {self.trigger("change")});
-      paging.on("change", function() {self.reload()});
-      paging.switchToEarlierPageIfThatsNeeded(); // If needed this has to be trigger after binding on change
-      return {
-        ready: true,
-        list : list,
-        paging : paging
-      };
+      var totalCount = self.get("totalCountFunction")(data, this.offset());
+      // After getting new data we may discover that we are on page that is empty
+      if (totalCount <= this.offset() && this.offset() > 0) {
+        console.log("Changing offset to " + Math.floor((totalCount -1) / this.maxPageSize()) * this.maxPageSize());
+        this.changeOffsetWithReload(Math.floor((totalCount -1) / this.maxPageSize()) * this.maxPageSize());
+        return {};
+      } else {
+        return {
+          ready: true,
+          list : list,
+          totalCount : totalCount
+        };
+      }
     }
 
 });

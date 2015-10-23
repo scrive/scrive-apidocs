@@ -61,6 +61,7 @@ import Doc.API.Callback.Model
 import Doc.API.V1.DocumentFromJSON()
 import Doc.API.V1.DocumentToJSON
 import Doc.API.V1.DocumentUpdateUtils
+import Doc.API.V1.ListUtil
 import Doc.AutomaticReminder.Model
 import Doc.Conditions
 import Doc.DocControl
@@ -83,7 +84,8 @@ import Doc.SMSPin.Model
 import Doc.Texts
 import Doc.Tokens.Model
 import EID.Signature.Model
-import EvidenceLog.Control
+import EvidenceLog.Model
+import EvidenceLog.View
 import File.File
 import File.Model
 import File.Storage
@@ -91,7 +93,6 @@ import Happstack.Fields
 import InputValidation
 import Kontra
 import KontraPrelude
-import ListUtil
 import LiveDocx
 import MagicHash (MagicHash)
 import MinutesTime
@@ -324,9 +325,8 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
                                                 , AttachmentsOfAuthorDeleteValue (userid user) True
                                                 , AttachmentsOfAuthorDeleteValue (userid user) False
                                                ]
-                                              [ AttachmentFilterByFileID [fid]]
+                                              [ AttachmentFilterByFileID fid]
                                               []
-                                              (0,1)
               return $ not $ null atts
 
 apiCallV1Ready :: Kontrakcja m => DocumentID -> m Response
@@ -941,7 +941,14 @@ apiCallV1History did = logDocument did . api $ do
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
   mlang <- (join . (fmap langFromCode)) <$> getField "lang"
   switchLang $ fromMaybe (lang $ usersettings user) mlang
-  res <- jsonDocumentEvidenceLog did
+
+  doc <- getDocByDocID did
+  evidenceLog <- dbQuery $ GetEvidenceLog $ did
+  events <- eventsJSListFromEvidenceLog  doc evidenceLog
+  res <- J.runJSONGenT $ do
+      J.value "list" $ for (reverse events) $ J.runJSONGen . (J.value "fields")
+      J.value "paging" $ pagingParamsJSON (PagedList events 1000 emptyListParams (length events))
+
   modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
   return res
 

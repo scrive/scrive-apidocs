@@ -6,7 +6,7 @@ define(['React','common/select'], function(React,Select) {
 return React.createClass({
     propTypes: {
       name : React.PropTypes.string,
-      defaultName : React.PropTypes.string,
+      defaultOption : React.PropTypes.object,
       optionsURL : React.PropTypes.string,
       optionsParse : React.PropTypes.func
     },
@@ -39,18 +39,18 @@ return React.createClass({
     render: function() {
       var self = this;
       var model = self.props.model;
-      var options = [{name : this.props.defaultName, value : ""}];
+      var options = [this.props.defaultOption];
       if (this.state.ajaxOptions != undefined)
         options = options.concat(this.state.ajaxOptions);
-      var selectedValue = model.selectfiltering().filteringValue(self.props.name);
+      var selectedValue = model.selectfiltering().filteringValue(self.props.name) || options[0].value;
       var availableOptions = [];
 
       var selectedOptionName = "";
       for(var i=0;i< options.length;i++) {
-         if (options[i].value != selectedValue) {
-           availableOptions.push(options[i]);
-         } else {
+         if (_.isEqual(options[i].value,selectedValue)) { 
            selectedOptionName = options[i].name;
+         } else {
+           availableOptions.push(options[i]);
          }
 
       }

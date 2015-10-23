@@ -10,14 +10,14 @@ return React.createClass({
           <List.List
             ref='list'
             url={self.props.url}
-            dataFetcher={function(d) {return d.list;}}
+            dataFetcher={function(d) {return d.stats;}}
           >
 
             <List.Column
               name={localization.account.stats.columnDate}
               width="60px"
               rendering={function(d) {
-                return (<div>{d.field("fields").date}</div>);
+                return (<div>{d.field("date")}</div>);
               }}
             />
             {/*if*/ (self.props.withCompany) &&
@@ -27,7 +27,7 @@ return React.createClass({
                   width="100px"
                   className="sender"
                   rendering={function(d) {
-                    return (<div onClick={function() {d.toggleExpand();}}>{d.field("fields").name}</div>);
+                    return (<div onClick={function() {d.toggleExpand();}}>{d.field("name")}</div>);
                   }}
                 />
              )
@@ -36,14 +36,14 @@ return React.createClass({
             {/*if*/ (self.props.withCompany) &&
               (
                 <List.Sublist
-                  count={function(d) {return d.field("subfields") != undefined ? d.field("subfields").length : 0}}
+                  count={function(d) {return d.field("user_stats") != undefined ? d.field("user_stats").length : 0}}
                   rendering={function(d,i) {
                     return [
-                      <td key="1"><div style={{"marginLeft":"10px"}}>{d.field("subfields")[i].date}</div></td>,
-                      <td key="2"><div style={{"marginLeft":"10px"}}>{d.field("subfields")[i].name}</div></td>,
-                      <td key="3"><div style={{"marginLeft":"10px"}}>{d.field("subfields")[i].closed}</div></td>,
-                      <td key="4"><div style={{"marginLeft":"10px"}}>{d.field("subfields")[i].sent}</div></td>,
-                      <td key="5"><div style={{"marginLeft":"10px"}}>{d.field("subfields")[i].signatures}</div></td>
+                      <td key="1"><div style={{"marginLeft":"10px"}}>{d.field("user_stats")[i].date}</div></td>,
+                      <td key="2"><div style={{"marginLeft":"10px"}}>{d.field("user_stats")[i].name}</div></td>,
+                      <td key="3"><div style={{"marginLeft":"10px"}}>{d.field("user_stats")[i].closed}</div></td>,
+                      <td key="4"><div style={{"marginLeft":"10px"}}>{d.field("user_stats")[i].sent}</div></td>,
+                      <td key="5"><div style={{"marginLeft":"10px"}}>{d.field("user_stats")[i].signatures}</div></td>
                     ];
                    }}
                 />
@@ -54,7 +54,7 @@ return React.createClass({
               name={localization.account.stats.columnClosedDocuments}
               width="70px"
               rendering={function(d) {
-                return (<div>{d.field("fields").closed}</div>);
+                return (<div>{d.field("closed")}</div>);
               }}
             />
 
@@ -62,7 +62,7 @@ return React.createClass({
               name={localization.account.stats.columnSendDocuments}
               width="70px"
               rendering={function(d) {
-                return (<div>{d.field("fields").sent}</div>);
+                return (<div>{d.field("sent")}</div>);
               }}
             />
 
@@ -70,7 +70,7 @@ return React.createClass({
               name={localization.account.stats.columnClosedSignatures}
               width="80"
               rendering={function(d) {
-                return (<div>{d.field("fields").signatures}</div>);
+                return (<div>{d.field("signatures")}</div>);
               }}
             />
 

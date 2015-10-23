@@ -331,9 +331,8 @@ docApiV2SetAttachments did = logDocument did . api $ do
                                                   , AttachmentsOfAuthorDeleteValue  (userid user) True
                                                   , AttachmentsOfAuthorDeleteValue  (userid user) False
                                                   ]
-                                                  [AttachmentFilterByFileID [fid]]
+                                                  [AttachmentFilterByFileID fid]
                                                   []
-                                                  (0,1)
 
 
 docApiV2SetAutoReminder :: Kontrakcja m => DocumentID -> m Response

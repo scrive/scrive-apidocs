@@ -102,17 +102,36 @@ var openCreateUserModal = function(callback) {
  });
 };
 
+var usersLimit = 100;
 
 return React.createClass({
     mixins : [List.ReloadableContainer],
+    userLink : function(d) {
+      return "/adminonly/useradmin/" + d.field("id");
+    },
     render: function() {
       var self = this;
       return (
         <List.List
           url={"/adminonly/userslist"}
-          dataFetcher={function(d) {return d.list;}}
-          idFetcher={function(d) {return d.field("fields").id;}}
+          dataFetcher={function(d) {return _.first(d.users,usersLimit);}}
+          totalCountFunction={function(data,list_offset){ return data.users.length + list_offset;}}
+          idFetcher={function(d) {return d.field("id");}}
           loadLater={self.props.loadLater}
+          paramsFunction = {function(text,_selectfiltering,sorting,offset) {
+            var params  = {
+              // Limit is set to more then amount of companies we are displaing. This way we can get information if there are more pages.
+              limit: usersLimit + 1,
+              offset : offset
+            };
+            if (text) {
+              params.text = text;
+            }
+            if (sorting.current() == "tos") {
+              params.tosSorting = sorting.isAsc() ? "ascending" : "descending";
+            }
+            return params;
+          }}
           ref='list'
         >
          <List.TextFiltering text={"Username, email or company name"} />
@@ -137,18 +156,16 @@ return React.createClass({
          <List.Column
            name="Username"
            width="130px"
-           sorting="username"
            rendering={function(d) {
-             return (<a href={d.field("link")}>{d.field("fields").username}</a>);
+             return (<a href={self.userLink(d)}>{d.field("username")}</a>);
            }}
          />
 
          <List.Column
            name="Email"
            width="130px"
-           sorting="email"
            rendering={function(d) {
-             return (<a href={d.field("link")}>{d.field("fields").email}</a>);
+             return (<a href={self.userLink(d)}>{d.field("email")}</a>);
            }}
          />
 
@@ -156,25 +173,23 @@ return React.createClass({
            name="Company"
            width="100px"
            rendering={function(d) {
-             return (<a href={d.field("link")}>{d.field("fields").company}</a>);
+             return (<a href={self.userLink(d)}>{d.field("company")}</a>);
            }}
          />
 
          <List.Column
            name="Position"
            width="100px"
-           sorting="companyposition"
            rendering={function(d) {
-             return (<a href={d.field("link")}>{d.field("fields").companyposition}</a>);
+             return (<a href={self.userLink(d)}>{d.field("companyposition")}</a>);
            }}
          />
 
          <List.Column
            name="Phone"
            width="100px"
-           sorting="phone"
            rendering={function(d) {
-             return (<a href={d.field("link")}>{d.field("fields").phone}</a>);
+             return (<a href={self.userLink(d)}>{d.field("phone")}</a>);
            }}
          />
 
@@ -183,7 +198,7 @@ return React.createClass({
            width="100px"
            sorting="tos"
            rendering={function(d) {
-             var time = d.field("fields").tos;
+             var time = d.field("tos");
              if (time != undefined && time != "") {
                return (<small> {moment(time).toDate().toTimeAbrev()}</small>);
              } else
@@ -192,7 +207,7 @@ return React.createClass({
          />
 
 
-         <List.Pagination/>
+         <List.Pagination maxNextPages={1}/>
        </List.List>
      );
    }

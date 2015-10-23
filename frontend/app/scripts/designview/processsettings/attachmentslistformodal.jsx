@@ -17,8 +17,8 @@ return React.createClass({
       return (
         <List.List
           url='/a?domain=All'
-          dataFetcher={function(d) {return d.list;}}
-          idFetcher={function(d) {return d.field("fields").id;}}
+          dataFetcher={function(d) {return d.attachments;}}
+          idFetcher={function(d) {return d.field("id");}}
           ref='list'
         >
           <List.Column
@@ -26,8 +26,8 @@ return React.createClass({
             width="400px"
             rendering={function(d) {
               return (
-                <a onClick={function() {self.addAttachment(d.field("fields").title,d.field("fields").file)}}>
-                  {d.field("fields").title}
+                <a onClick={function() {self.addAttachment(d.field("title"),d.field("file"))}}>
+                  {d.field("title")}
                 </a>
               );
             }}

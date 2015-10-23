@@ -85,7 +85,6 @@ staticRoutes production = choice
      , dir "a" $ dir "delete"      $ hPost $ toK0 $ AttachmentControl.handleDelete
      , dir "a"                     $ hPost $ toK0 $ AttachmentControl.handleCreateNew
      , dir "a"                     $ hGet  $ toK0 $ AttachmentControl.jsonAttachmentsList
-     , dir "att"                   $ hGet  $ toK1 $ AttachmentControl.jsonAttachment
      , dir "a" $ dir "download"    $ hGet  $ toK2 $ AttachmentControl.handleDownloadAttachment
 
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive

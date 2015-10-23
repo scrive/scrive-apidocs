@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'lists/list','archive/statustooltipmixin', 'common/select', 'moment', 'legacy_code'], function(React, List, StatusTooltipMixin, Select, moment) {
+define(['React', 'archive/utils', 'lists/list','archive/statustooltipmixin', 'common/select', 'moment', 'legacy_code'], function(React, Utils, List, StatusTooltipMixin, Select, moment) {
 
 
 var SelectPartyModal = function(signingIndexes,doc) {
@@ -12,14 +12,14 @@ var SelectPartyModal = function(signingIndexes,doc) {
             div.append(label);
             var options = [];
             for(var i=0;i<signingIndexes.length;i++) {
-                var currentName = doc.field("subfields")[signingIndexes[i]].name.trim();
+                var currentName = Utils.signatorySmartName(doc.field("signatories")[signingIndexes[i]]).trim();
                 if (i != self.current)
                 options.push({
                   name: (currentName != "" ? currentName : localization.process.signatoryname + " " + (signingIndexes[i] + 1)),
                   value : i
                 });
             }
-            var currentName = doc.field("subfields")[signingIndexes[self.current]].name.trim();
+            var currentName = Utils.signatorySmartName(doc.field("signatories")[signingIndexes[self.current]]).trim();
 
             var $select1 = $("<span>");
             React.render(React.createElement(Select, {
@@ -46,7 +46,7 @@ var SelectPartyModal = function(signingIndexes,doc) {
             onAccept : function() {
                 mixpanel.track('Give for pad signing to some pad signatory - opening signview -from list');
                 new Submit({
-                   url : "/padsign/" + doc.field("fields").id + "/" + doc.field("subfields")[signingIndexes[self.current]].id,
+                   url : "/padsign/" + doc.field("id") + "/" + doc.field("signatories")[signingIndexes[self.current]].id,
                    method : "POST"
                 }).send();
             }
@@ -85,8 +85,8 @@ return React.createClass({
       var signingIndexes = [];
       LocalStorage.set("backlink","target","to-sign");
 
-      for(var i=0; i< doc.field("subfields").length; i++) {
-        if (doc.field("subfields")[i].cansignnow == true &&  doc.field("subfields")[i].delivery =="pad")
+      for(var i=0; i< doc.field("signatories").length; i++) {
+        if (Utils.signatoryCanSignNow(doc, doc.field("signatories")[i]) &&  doc.field("signatories")[i].delivery_method =="pad")
           signingIndexes.push(i);
       }
       if (signingIndexes.length > 1) {
@@ -94,7 +94,7 @@ return React.createClass({
       }
       else {
         new Submit({
-          url : "/padsign/" + doc.field("fields").id + "/" + doc.field("subfields")[signingIndexes[0]].id,
+          url : "/padsign/" + doc.field("id") + "/" + doc.field("signatories")[signingIndexes[0]].id,
           method : "POST"
         }).send();
       }
@@ -104,7 +104,7 @@ return React.createClass({
       var confirmtext = $('<span />').html(localization.archive.documents.remove.body);
       var listElement = confirmtext.find('.put-one-or-more-things-to-be-deleted-here');
       if (docs.length == 1) {
-        listElement.html($('<strong />').text(docs[0].field("fields").title));
+        listElement.html($('<strong />').text(docs[0].field("title")));
       } else {
         listElement.text(docs.length + (" " + localization.documents).toLowerCase());
       }
@@ -118,7 +118,7 @@ return React.createClass({
           new Submit({
             url: "/d/delete",
             method: "POST",
-            documentids: "[" + _.map(docs, function(doc){return doc.field("fields").id;}) + "]",
+            documentids: "[" + _.map(docs, function(doc){return doc.field("id");}) + "]",
             ajaxsuccess : function() {
               new FlashMessage({type : "success", content : localization.archive.documents.remove.successMessage});
               self.reload();
@@ -133,9 +133,18 @@ return React.createClass({
       var self = this;
       return (
         <List.List
-          url='/api/frontend/list?documentType=DocumentsForPad'
-          dataFetcher={function(d) {return d.list;}}
-          idFetcher={function(d) {return d.field("fields").id;}}
+          maxPageSize={Utils.maxPageSize}
+          totalCountFunction={Utils.totalCountFunction}
+          url={Utils.listCallUrl}
+          paramsFunction={Utils.paramsFunctionWithFilter([
+              {"filter_by" : "trash", "is_trashed" : false},
+              {"filter_by" : "template", "is_template" : false},
+              {"filter_by" : "is_signable_on_pad"},
+              {"filter_by" : "is_author"}
+            ])}
+          dataFetcher={Utils.dataFetcher}
+          idFetcher={Utils.idFetcher}
+          loadLater={self.props.loadLater}
           minRows={8}
           ref='list'
         >
@@ -163,63 +172,77 @@ return React.createClass({
           />
 
           <List.Column
+            key="checkbox"
             select={true}
             width="30px"
           />
           <List.Column
+            key="status"
             name={localization.archive.documents.columns.status}
             width="62px"
             rendering={function(d) {
+              var status = Utils.documentStatus(d);
               return (
                 <div
-                  onMouseOver={function(e) {self.showToolTip(d.field("fields").status,e)}}
-                  onMouseOut={function() {self.hideToolTip()}}
-                  className={"icon status "+d.field("fields").status}
+                  onMouseOver={function(e) {self.showToolTip(status,e);}}
+                  onMouseOut={function() {self.hideToolTip();}}
+                  className={"icon status "+status}
                 />);
             }}
           />
 
           <List.Column
+            key="time"
             name={localization.archive.documents.columns.time}
             width="105px"
-            sorting="time"
+            sorting="mtime"
             rendering={function(d) {
-              var time = moment(d.field("fields").time).toDate();
+              var time = moment(d.field("mtime")).toDate();
               return (<span title={time.fullTime()}>{time.toTimeAbrev()}</span>);
             }}
           />
           <List.Column
+            key="party"
             name={localization.archive.documents.columns.party}
             width="210px"
             rendering={function(d) {
               return (
                 <div onClick={function() {d.toggleExpand();}}>
-                 {d.field("fields").party}
+                 {Utils.documentParty(d)}
                 </div>);
             }}
           />
 
           <List.Column
+            key="title"
             name={localization.archive.documents.columns.title}
             width="230px"
             sorting="title"
             rendering={function(d) {
-              return (<a className='s-archive-document-title' href='#' onClick={function() {self.openPadSigningView(d);return false;}}> {d.field("fields").title} </a>);
+              return (<a className='s-archive-document-title' href='#' onClick={function() {self.openPadSigningView(d);return false;}}> {d.field("title")} </a>);
             }}
           />
 
 
           <List.Sublist
-            count={function(d) {return d.field("subfields") != undefined ? d.field("subfields").length : 0}}
+            key="signatories"
+            count={function(d) {
+              if (d.field("status") == "preparation") {
+                return 0;
+              } else {
+                return _.filter(d.field("signatories"), function(s) { return s.is_signatory;}).length;
+              }
+            }}
             rendering={function(d,i) {
-              var time = d.field("subfields")[i].time ? moment(d.field("subfields")[i].time).toDate() : undefined;
+              var signatory = _.filter(d.field("signatories"), function(s) { return s.is_signatory;})[i];
+              var time = Utils.signatoryTime(signatory) && moment(Utils.signatoryTime(signatory)).toDate();
               return [
                 <td key="1"></td>,
                 <td key="2">
                   <div
                     style={{"marginLeft":"10px"}}
-                    className={"icon status "+d.field("subfields")[i].status}
-                    onMouseOver={function(e) {self.showToolTip(d.field("subfields")[i].status,e)}}
+                    className={"icon status "+Utils.signatoryStatus(d,signatory)}
+                    onMouseOver={function(e) {self.showToolTip(Utils.signatoryStatus(d,signatory),e)}}
                     onMouseOut={function() {self.hideToolTip()}}
                   />
                 </td>,
@@ -232,7 +255,7 @@ return React.createClass({
                 </td>,
                 <td key="4">
                   <div style={{"marginLeft":"10px"}}>
-                    {d.field("subfields")[i].name}
+                    {Utils.signatorySmartName(signatory)}
                   </div>
                 </td>,
                 <td key="5"></td>

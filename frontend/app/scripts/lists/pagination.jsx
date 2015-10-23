@@ -4,7 +4,13 @@ define(['React','legacy_code'], function(React) {
 
 return React.createClass({
     propTypes: {
+      maxNextPages : React.PropTypes.number,
       showOnlyForMultiplePages : React.PropTypes.bool
+    },
+    getDefaultProps: function() {
+      return {
+        maxNextPages: 9
+      };
     },
     hasManyPages : function() {
             return this.pageSize() <= this.itemMax();
@@ -12,34 +18,37 @@ return React.createClass({
     render: function() {
       var self = this;
       var model = this.props.model;
-      var maxNextPages = model.maxNextPages();
-      var maxPage = model.pageCurrent() + maxNextPages - 1;
+      var offset = model.offset();
+      var pageSize = model.maxPageSize();
+      var total = model.totalCount();
+      var pageCurrent = Math.floor(offset / pageSize);
+      var maxPage = Math.ceil(total / pageSize);
       var pages = [];
-      for(var i=0;i < maxPage && i*model.pageSize() <= model.itemMax();i++)
+      for(var i=0; i <  maxPage && i - pageCurrent < this.props.maxNextPages; i++) {
           pages.push(i);
-
+      }
       return (
         <div className='table-paginate'>
           <div className='pages'>
-            { /*if*/ (this.props.showOnlyForMultiplePages != true || model.itemMax() > model.pageSize() ) &&
+            { /*if*/ (this.props.showOnlyForMultiplePages != true || total > pageSize ) &&
               (
                 <span>
                 { pages.map(function(i) {
                     return (
                       <span
                         key={i}
-                        className={"page-change " + (i == model.pageCurrent() ? "current" : "")}
-                        onClick={function() { model.changePage(i)}}
+                        className={"page-change " + (i == pageCurrent ? "current" : "")}
+                        onClick={function() { model.changeOffsetWithReload(i * pageSize);}}
                       >
                         {i+1}
                       </span>
                     );
                   })
                 }
-                { /*if*/ (maxPage*model.pageSize() < model.itemMax()) &&
+                { /*if*/ (pages.length * pageSize < total) &&
                   (<span
-                    className={"page-change " + (i == model.pageCurrent() ? "current" : "")}
-                    onClick={function() { model.changePage(maxPage)}}
+                    className={"page-change " + (i == pageCurrent ? "current" : "")}
+                    onClick={function() { model.changeOffsetWithReload(pages.length * pageSize)}}
                   >
                     &gt;
                   </span>)

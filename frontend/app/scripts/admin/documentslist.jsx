@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'lists/list','legacy_code'], function(React, List) {
+define(["React", "archive/utils", "lists/list", "legacy_code"], function(React, Utils, List) {
 
 return React.createClass({
     mixins : [List.ReloadableContainer],
@@ -21,9 +21,39 @@ return React.createClass({
       return (
         <List.List
           url={self.url()}
-          dataFetcher={function(d) {return d.list;}}
-          idFetcher={function(d) {return d.field("fields").id;}}
-          loadLater={self.props.loadLater}
+          dataFetcher={function(d) {return d.documents;}}
+          idFetcher={function(d) {return d.field("id");}}
+          totalCountFunction={function(data){ return data.total_matching;}}
+          maxPageSize={100}
+          paramsFunction = {function(text,selectfiltering,sorting, offset, maxPageSize) {
+            var filters = [];
+            if (text) {
+              filters.push({"filter_by" : "text", "text" : text});
+            }
+            if (selectfiltering) {
+              _.each(selectfiltering.filters(), function(f) {
+                filters = filters.concat(f.value);
+              });
+            }
+            var sortingBy;
+            if (sorting.current()) {
+              sortingBy = {
+                sort_by : sorting.current(),
+                order : sorting.isAsc() ? "ascending" : "descending"
+              };
+            } else {
+              sortingBy = {
+                sort_by : "mtime",
+                order: "descending"
+              };
+            }
+            return {
+              filter : JSON.stringify(filters),
+              sorting: JSON.stringify([sortingBy]),
+              offset : offset,
+              max : maxPageSize
+            };
+          }}
           ref='list'
         >
 
@@ -33,13 +63,13 @@ return React.createClass({
           <List.Column
             name="Dates"
             width="80px"
-            sorting={self.allowSortingAndFiltering() ? "ctime" : undefined}
+            sorting={self.allowSortingAndFiltering() ? "mtime" : undefined}
             rendering={function(d) {
               return (
                 <small>
-                  {d.field("fields").ctime}
+                  {d.field("ctime")}
                   <br/>
-                  {d.field("fields").mtime}
+                  {d.field("mtime")}
                 </small>
               );
             }}
@@ -52,11 +82,11 @@ return React.createClass({
             rendering={function(d) {
               return (
                 <small>
-                  {d.field("fields").author.name}
+                  {Utils.signatoryName(Utils.documentAuthor(d))}
                   <br/>
-                  {d.field("fields").author.email}
+                  {Utils.signatoryEmail(Utils.documentAuthor(d))}
                   <br/>
-                  {d.field("fields").author.company}
+                  {Utils.signatoryCompany(Utils.documentAuthor(d))}
                 </small>
               );
             }}
@@ -69,7 +99,7 @@ return React.createClass({
             rendering={function(d) {
               return (
                 <small>
-                  {d.field("fields").title}
+                  {d.field("title")}
                 </small>
               );
             }}
@@ -82,7 +112,7 @@ return React.createClass({
             rendering={function(d) {
               return (
                 <small>
-                  {d.field("fields").status}
+                  {Utils.documentStatus(d)}
                 </small>
               );
             }}
@@ -91,11 +121,10 @@ return React.createClass({
           <List.Column
             name="Type"
             width="40px"
-            sorting={self.allowSortingAndFiltering() ? "type" : undefined}
             rendering={function(d) {
               return (
                 <small>
-                  {d.field("fields").type}
+                  {d.field("is_template") ? "Template" : "Signable"}
                 </small>
               );
             }}
@@ -103,15 +132,15 @@ return React.createClass({
           <List.Column
             name="Signatories"
             width="120px"
-            sorting={self.allowSortingAndFiltering() ? "signs" : undefined}
             rendering={function(d) {
               return (
                 <small>
                   {
-                    d.field("fields").signs &&
-                      _.map(d.field("fields").signs, function(signatory) {
-                           return [<span>{signatory}</span>,<br/>];
-                        })
+                    _.map(d.field("signatories"), function(s) {
+                      if (s.is_signatory) {
+                        return [<span>{Utils.signatorySmartName(s)}</span>,<br/>];
+                      }
+                    })
                   }
                 </small>
               );
@@ -123,7 +152,7 @@ return React.createClass({
               width="30px"
               rendering={function(d) {
                 return (
-                  <a className="gotodave" href={"/dave/document/" + d.field("fields").id }/>
+                  <a className="gotodave" href={"/dave/document/" + d.field("id")}/>
                 );
               }}
             />)

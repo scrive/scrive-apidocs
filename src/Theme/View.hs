@@ -70,9 +70,9 @@ unjsonTheme = objectOf $ pure Theme
 
 unjsonThemesList :: UnjsonDef [Theme]
 unjsonThemesList = objectOf $
-  fieldBy "list"
+  fieldBy "themes"
   id
-  "Propper list"
+  "List of themes"
   (arrayOf unjsonTheme)
 
 instance Unjson Theme where

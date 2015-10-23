@@ -5,38 +5,14 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- Datatype for sorting,searching and filtering params for all pages with lists of elements.
--- Used for every user-visible element table in our system. We support only operations on a server.
---
--- HOW To
--- 1) Define sorting rules, searchin rules and page size with types matching
---      type SortingFunction a = (String -> a -> a -> Ordering)
---      type SearchingFunction a = (String -> a -> Bool)
---      type PageSize = Int
--- 2) Define local aplication of 'listSortSearchPage' to them
--- 3) Use getListParams to get current request params for sorting etc. It uses some constant names for search params
--- 4) Call 2) 'listSortSearchPage' to get change input list to PagedList
---      PagedList is part of list that You want to show to the user with some extra info.
---      Basic list is avaible by call 'list'
--- 5) Pass this list to templates.
--- 6) You may also want to pagedListFields. Then You will be avaible to use some utils (like paging) from listutil.st
---    It requires a currentlink field to be set.
---
--- For example look in subaccounts list
+-- Utils for API V1 lists. No used anywhere else anymore - should be removed when V1 is dropped.
 -----------------------------------------------------------------------------
-module ListUtil(
+module Doc.API.V1.ListUtil(
               PagedList(..)
             , ListParams
             , emptyListParams
             , getListParams
-            , listSortSearchPage
-            , SortingFunction
-            , SearchingFunction
-            , PageSize
-            , viewComparing
-            , viewComparingRev
             , pagingParamsJSON
-            , singlePageListToJSON
             , listParamsSearching
             , listParamsSorting
             , listParamsOffset
@@ -46,8 +22,6 @@ module ListUtil(
 
 import Control.Monad.Identity
 import Control.Monad.Trans
-import Data.Char (toUpper)
-import Data.Ord
 import Happstack.Server hiding (simpleHTTP)
 import Network.HTTP.Base (urlEncode)
 import Text.JSON
@@ -148,56 +122,3 @@ pagingParamsJSON (PagedList{pageSize,params,listLength}) = runJSONGen $ do
     value "itemMax" $ listLength - 1
     value "maxNextPages" $ (limit params) `div` pageSize
     value "pageSize" $ pageSize
-
-singlePageListToJSON :: ToJSValue a => [a] -> JSValue
-singlePageListToJSON items =
-    runJSONGen $ do
-      let itemCount = length items
-      value "list" items
-      object "paging" $ do
-        value "pageSize"    itemCount
-        value "pageCurrent" (0 :: Int)
-        value "itemMin"     (0 :: Int)
-        value "itemMax"     (itemCount - 1)
-
-
-{- | Applying  params to the list -}
-type SortingFunction a = (String -> a -> a -> Ordering)
-type SearchingFunction a = (String -> a -> Bool)
-type PageSize = Int
-
-listSortSearchPage ::
-    SortingFunction a ->
-    SearchingFunction a ->
-    PageSize ->
-    ListParams ->
-    [a] -> PagedList a
-
-listSortSearchPage sortFunc searchFunc pageSize params list =
-    let
-        searched = doSearching searchFunc (search params) list
-        sorted = doSorting sortFunc (sorting params) searched
-        paged = doPaging pageSize (offset params)  sorted
-    in  PagedList { list = paged
-                  , params = params
-                  , pageSize = pageSize
-                  , listLength = length list
-                  }
-
-doSorting :: SortingFunction a -> [String] -> [a] -> [a]
-doSorting sortFunc  = sortBy . compareList . map sortFunc
-    where compareList l a1 a2 = foldMap (\f -> f a1 a2) l
-
-
-viewComparing:: (Show a) => (b -> a) -> b -> b -> Ordering
-viewComparing f a1 a2 = comparing (map toUpper . show) (f a1) (f a2)
-
-viewComparingRev:: (Show a) =>  (b -> a) -> b -> b -> Ordering
-viewComparingRev f a1 a2 = comparing (map toUpper . show) (f a2) (f a1)
-
-doSearching::SearchingFunction a -> Maybe String -> [a] -> [a]
-doSearching _ Nothing = id
-doSearching searchFunc (Just s) = filter (searchFunc s)
-
-doPaging:: Int -> Int -> [a] -> [a]
-doPaging pageSize offset = (take pageSize) . (drop offset)

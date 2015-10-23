@@ -23,7 +23,7 @@ return React.createClass({
           url='/adminonly/brandeddomainslist'
           dataFetcher={function(d) {
             // We don't show main domain on this list
-            var domainsWithoutMain = _.filter(d.list,function(d) {return d["mainDomain"] != true});
+            var domainsWithoutMain = _.filter(d.domains,function(d) {return d.mainDomain != true});
             return domainsWithoutMain;
           }}
           idFetcher={function(d) {return d.field("id");}}

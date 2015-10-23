@@ -11,15 +11,15 @@ return React.createClass({
       var self = this;
       var model = self.props.model;
       var options = this.props.options;
-      var selectedValue = model.selectfiltering().filteringValue(self.props.name);
+      var selectedValue = model.selectfiltering().filteringValue(self.props.name) || options[0].value;
       var availableOptions = [];
       var selectedOptionName = "";
       for(var i=0;i< options.length;i++) {
-         if (options[i].value != selectedValue) {
-           availableOptions.push(options[i]);
-         } else {
+         if (_.isEqual(options[i].value,selectedValue)) {
            selectedOptionName = options[i].name;
-         }
+         } else {
+           availableOptions.push(options[i]);
+        }
 
       }
       return (

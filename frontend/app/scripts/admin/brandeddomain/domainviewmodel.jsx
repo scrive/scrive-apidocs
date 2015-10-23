@@ -18,7 +18,7 @@ return Backbone.Model.extend({
       domain : new BrandedDomain({id : this.domainid()}),
       themeList     : new ListModel({
         url:'/adminonly/brandeddomain/themes/' + this.domainid(),
-        dataFetcher:function(d) {return d.list;},
+        dataFetcher:function(d) {return d.themes;},
         idFetcher:function(d) {return d.field("id");},
         loadLater:false
       })

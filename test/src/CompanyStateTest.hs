@@ -26,7 +26,7 @@ test_createCompany = do
 test_getCompanies :: TestEnv ()
 test_getCompanies = do
   companies <- forM [(),()] $ \_ -> dbUpdate $ CreateCompany
-  result <- dbQuery $ GetCompanies [] [] 0 (-1)
+  result <- dbQuery $ GetCompanies [] 0 (-1)
   assertBool "GetCompanies returned correct result" $ and $ map (`elem` result) companies
 
 test_getCompany :: TestEnv ()

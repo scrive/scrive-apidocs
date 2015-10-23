@@ -656,11 +656,10 @@ checkFileAccessWith fid msid mmh mdid mattid =
                                             , AttachmentsOfAuthorDeleteValue (userid user) True
                                             , AttachmentsOfAuthorDeleteValue (userid user) False
                                             ]
-                                            [ AttachmentFilterByID [attid]
-                                            , AttachmentFilterByFileID [fid]
+                                            [ AttachmentFilterByID attid
+                                            , AttachmentFilterByFileID fid
                                             ]
                                             []
-                                            (0,1)
        when (length atts /= 1) $
                 internalError
     _ -> internalError

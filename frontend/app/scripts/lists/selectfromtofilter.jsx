@@ -15,33 +15,33 @@ return React.createClass({
       var options = self.props.options;
       var fromValue = model.selectfiltering().filteringValue("from_"+self.props.name);
       var toValue = model.selectfiltering().filteringValue("to_" + self.props.name);
-      var currentFromOption = _.find(options,function(o) { return o.value == fromValue});
-      var currentToOption = _.find(options,function(o) { return o.value == toValue});
+      var currentFromOption = _.find(options,function(o) { return _.isEqual(o.fromValue,fromValue);});
+      var currentToOption = _.find(options,function(o) { return _.isEqual(o.toValue,toValue);});
       var currentFromName = currentFromOption != undefined ? this.props.fromText + " " + currentFromOption.name : this.props.fromText;
       var currentToName = currentToOption != undefined ? this.props.toText + " " + currentToOption.name : this.props.toText;
 
       var optionsFrom = [];
       for(var i=0;i<options.length;i++)
       {
-        optionsFrom.push(_.clone(options[i]));
-        if (options[i].value == toValue)
+        optionsFrom.push({ name: options[i].name, value: options[i].fromValue });
+        if (_.isEqual(options[i].toValue,toValue))
           break; // Stop adding, else limits can overlap
       }
       optionsFrom.reverse();
 
-      if (fromValue != "")
-        optionsFrom.unshift({name : this.props.fromText, value: ""});
-
+      if (!_.isEqual(fromValue,this.props.emptyValue)) {
+        optionsFrom.unshift({name : this.props.fromText, value: this.props.emptyValue});
+      }
 
       var optionsTo = [];
       for(var i=options.length - 1 ;i>=0;i--)
       {
-        optionsTo.push(_.clone(options[i]));
-        if (options[i].value == fromValue)
+        optionsTo.push({ name: options[i].name, value: options[i].toValue });
+        if (_.isEqual(options[i].fromValue,fromValue))
           break;  // Stop adding, else limits can overlap
       }
-      if (toValue != "")
-        optionsTo.unshift({name : this.props.toText, value: ""});
+      if (!_.isEqual(toValue,this.props.emptyValue))
+        optionsTo.unshift({name : this.props.toText, value: this.props.emptyValue});
 
       return (
         <div className='float-left'>

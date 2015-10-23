@@ -1,7 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'archive/statustooltipmixin','lists/list','archive/document_columns','archive/document_filters','legacy_code'], function(React, StatusTooltipMixin, List, DocumentColumns,DocumentFilters) {
-
+define(['React', 'archive/utils', 'archive/statustooltipmixin','lists/list','archive/document_columns','archive/document_filters','legacy_code'], function(React, Utils, StatusTooltipMixin, List, DocumentColumns,DocumentFilters) {
 
 return React.createClass({
     mixins: [StatusTooltipMixin,List.ReloadableContainer],
@@ -10,7 +9,7 @@ return React.createClass({
       var content = jQuery("<p/>");
       if (selected.length == 1) {
         var span = $('<span />').html(localization.archive.documents.sendreminder.bodysingle);
-        span.find('.put-document-name-here').html(jQuery("<strong/>").text(selected[0].field("fields").title));
+        span.find('.put-document-name-here').html(jQuery("<strong/>").text(selected[0].field("title")));
         content.append(span);
       } else {
         var span = $('<span />').html(localization.archive.documents.sendreminder.bodymulti);
@@ -27,7 +26,7 @@ return React.createClass({
           new Submit({
             url: "/d/remind",
             method: "POST",
-            documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
+            documentids: "[" + _.map(selected, function(doc){return doc.field("id");}) + "]",
             ajaxsuccess : function() {
               new FlashMessage({type: 'success', content : localization.archive.documents.sendreminder.successMessage});
               self.reload();
@@ -55,7 +54,7 @@ return React.createClass({
           new Submit({
             url: "/d/cancel",
             method: "POST",
-            documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
+            documentids: "[" + _.map(selected, function(doc){return doc.field("id");}) + "]",
             ajaxsuccess : function() {
               new FlashMessage({type: 'success', content : localization.archive.documents.cancel.successMessage});
               self.reload();
@@ -75,7 +74,7 @@ return React.createClass({
       var confirmationText = $('<span />').html(localization.archive.documents.remove.body);
       var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here');
       if (selected.length == 1) {
-        listElement.html($('<strong />').text(selected[0].field("fields").title));
+        listElement.html($('<strong />').text(selected[0].field("title")));
       } else {
         listElement.text(selected.length + (" " + localization.documents).toLowerCase());
       }
@@ -90,7 +89,7 @@ return React.createClass({
           new Submit({
             url: "/d/delete",
             method: "POST",
-            documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
+            documentids: "[" + _.map(selected, function(doc){return doc.field("id");}) + "]",
             ajaxsuccess : function() {
               new FlashMessage({type: 'success', content : localization.archive.documents.remove.successMessage});
               self.reload();
@@ -113,9 +112,15 @@ return React.createClass({
       }
       return (
         <List.List
-          url='/api/frontend/list?documentType=Document'
-          dataFetcher={function(d) {return d.list;}}
-          idFetcher={function(d) {return d.field("fields").id;}}
+          maxPageSize={Utils.maxPageSize}
+          totalCountFunction={Utils.totalCountFunction}
+          url={Utils.listCallUrl}
+          paramsFunction={Utils.paramsFunctionWithFilter([
+              {"filter_by" : "template", "is_template" : false},
+              {"filter_by" : "trash", "is_trashed" : false}
+            ])}
+          dataFetcher={Utils.dataFetcher}
+          idFetcher={Utils.idFetcher}
           loadLater={self.props.loadLater}
           ref='list'
         >
@@ -129,10 +134,7 @@ return React.createClass({
                 return false;
               }
               var allSelectedArePending = _.all(selected, function(doc) {
-                     return doc.field("fields").status == "sent"      ||
-                            doc.field("fields").status == "delivered" ||
-                            doc.field("fields").status == "read"      ||
-                            doc.field("fields").status == "opened";
+                     return doc.field("status") == "pending";
               });
               if (!allSelectedArePending) {
                 new FlashMessage({type: 'error', content: localization.archive.documents.sendreminder.notAvailableMessage});
@@ -150,7 +152,7 @@ return React.createClass({
                 return false;
               }
               var allCanBeCancelled = _.all(selected, function(doc) {
-                return _.contains(['sent', 'delivered', 'read', 'opened'], doc.field('fields').status) && (doc.field('isauthor') || ((doc.field('docauthorcompanysameasuser')  && self.props.forCompanyAdmin)));
+                return doc.field("status") == "pending" && (Utils.documentAuthor(doc).id == doc.field("viewer").signatory_id || (doc.field("viewer").role = "company_admin"  && self.props.forCompanyAdmin));
               });
               if (!allCanBeCancelled) {
                 new FlashMessage({type: 'error', content: localization.archive.documents.cancel.notAvailableMessage});
@@ -179,15 +181,10 @@ return React.createClass({
                 name: localization.archive.documents.csv.action,
                 onSelect : function(listmodel) {
                   mixpanel.track('Download CSV');
-                  var url;
-                  if (listmodel.url.indexOf('?') === -1) {
-                    url = listmodel.url + "?";
-                  } else {
-                    url = listmodel.url + "&";
-                  }
+                  var url = "/d/csv?";
                   var params =  listmodel.urlParams();
-                  _.each(params,function(a,b){url+=(b+"="+a+"&")});
-                    window.open(url + "format=csv");
+                  _.each(params,function(a,b){url+=(b+"="+a+"&");});
+                  window.open(url);
                   return true;
                 }
               },
@@ -201,12 +198,12 @@ return React.createClass({
                     return true;
                   }
                   else if (selected.length == 1) {
-                    var url =  "/api/frontend/downloadmainfile/" + selected[0].field("fields").id + "/" + encodeURIComponent(selected[0].field("fields").title) + ".pdf";
+                    var url =  "/api/frontend/downloadmainfile/" + selected[0].field("id") + "/" + encodeURIComponent(selected[0].field("title")) + ".pdf";
                     window.open(url);
                     return true;
                   } else {
                     var url =  "/d/zip?";
-                    url += "documentids=[" + _.map(selected,function(s){return s.field("fields").id}) + "]";
+                    url += "documentids=[" + _.map(selected,function(s){return s.field("id");}) + "]";
                     window.open(url);
                     return true;
                   }

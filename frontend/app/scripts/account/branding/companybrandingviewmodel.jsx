@@ -18,13 +18,13 @@ return Backbone.Model.extend({
       companybranding : new CompanyBranding({companyid : this.companyid()}),
       themeList     : new ListModel({
         url: (this.companyid() ?  ("/adminonly/companyadmin/branding/companybranding/themes/" + this.companyid()) : "/account/company/companybranding/themes"),
-        dataFetcher:function(d) {return d.list;},
+        dataFetcher:function(d) {return d.themes;},
         idFetcher:function(d) {return d.field("id");},
         loadLater:false
       }),
       domainThemesList : new ListModel({
         url: (this.companyid() ?  "/adminonly/companyadmin/branding/companybranding/domainthemes/" : "/account/company/companybranding/domainthemes"),
-        dataFetcher:function(d) {return d.list;},
+        dataFetcher:function(d) {return d.themes;},
         idFetcher:function(d) {return d.field("id");},
         loadLater:false
       })

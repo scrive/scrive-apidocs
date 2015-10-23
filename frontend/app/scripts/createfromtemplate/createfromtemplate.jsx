@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/backbone_mixin','lists/list', 'moment', 'legacy_code'], function(React, BackboneMixin, List, moment) {
+define(['React', 'common/backbone_mixin', 'archive/utils', 'lists/list', 'moment', 'legacy_code'], function(React, BackboneMixin, Utils, List, moment) {
 
 return React.createClass({
     createFromTemplate : function(id) {
@@ -24,39 +24,21 @@ return React.createClass({
         }
       }).send();
     },
-    deliveryMethodText : function(data) {
-      var dms = data.field("fields").deliveryMethods || [];
-      dms = _.map(dms,function(dm) {
-        if (dm == "email") {
-          return capitaliseFirstLetter(localization.delivery.email);
-        } else if (dm == "pad") {
-          return capitaliseFirstLetter(localization.delivery.pad);
-        } else if (dm == "mobile") {
-          return capitaliseFirstLetter(localization.delivery.mobile);
-        } else if (dm == "email_mobile") {
-          return capitaliseFirstLetter(localization.delivery.email_mobile);
-        } else if (dm == "api") {
-          return capitaliseFirstLetter(localization.delivery.api);
-        } else {
-          return "";
-        }
-      });
-      dms = _.uniq(dms);
-      dms.sort();
-
-      var text = dms[0] || "";
-      for(var i =1 ; i< dms.length; i++)
-        text += ", " + dms[i];
-      return text;
-    },
     render: function() {
       var self = this;
       return (
         <div className="create-from-template">
           <List.List
-            url="/api/frontend/list?documentType=Template"
-            dataFetcher={function(d) {return d.list;}}
-            idFetcher={function(d) {return d.field("fields").id;}}
+            maxPageSize={Utils.maxPageSize}
+            totalCountFunction={Utils.totalCountFunction}
+            url={Utils.listCallUrl}
+            paramsFunction={Utils.paramsFunctionWithFilter([
+                {"filter_by" : "template", "is_template" : true},
+                {"filter_by" : "trash", "is_trashed" : false}
+              ])}
+            dataFetcher={Utils.dataFetcher}
+            idFetcher={Utils.idFetcher}
+            loadLater={self.props.loadLater}
           >
           <List.ListHeader>
             <div className="headline">
@@ -69,9 +51,9 @@ return React.createClass({
           <List.Column
               name={localization.archive.templates.columns.time}
               width="100px"
-              sorting="time"
+              sorting="mtime"
               rendering={function(d) {
-                var time = moment(d.field("fields").time).toDate();
+                var time = moment(d.field("time")).toDate();
                 return (<div text={time.fullTime()}>{time.toYMDString()}</div>);
               }}
             />
@@ -82,8 +64,8 @@ return React.createClass({
             width="310px"
             sorting="title"
             rendering={function(d) {
-              var id = d.field("fields").id;
-              var title = d.field("fields").title;
+              var id = d.field("id");
+              var title = d.field("title");
               return (<a onClick={function(){self.createFromTemplate(id);return false;}}>{title}</a>);
             }}
           />
@@ -91,14 +73,14 @@ return React.createClass({
             name={localization.archive.templates.columns.verificationMethod}
             width="100px"
             rendering={function(d) {
-              return (<div>{self.deliveryMethodText(d)}</div>);
+              return (<div>{Utils.documentDeliveryText(d)}</div>);
             }}
           />
           <List.Column
             name={localization.archive.templates.columns.sharedBy}
             width="102px"
             rendering={function(d) {
-              return (<div>{(d.field("fields").shared) ? d.field("fields").author : ""}</div>);
+              return (<div>{(d.field("is_shared")) ? Utils.signatorySmartName(Utils.documentAuthor(d)) : ""}</div>);
             }}
           />
 
