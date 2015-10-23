@@ -1,7 +1,7 @@
 module Doc.Model.Filter
   ( DocumentFilter(..)
   , documentFilterToSQL
-  , FilterString(..) -- ^ Exported for Tests
+  , FilterString(..) -- Exported for Tests
   , processSearchStringToFilter
   ) where
 
