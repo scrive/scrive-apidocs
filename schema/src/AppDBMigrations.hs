@@ -71,6 +71,7 @@ kontraMigrations = [
   , unjsonFieldPlacements
   , filesAddPurgeAtColumn
   , createIndexOnEmailFields
+  , addSMSProviderToCompanies
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

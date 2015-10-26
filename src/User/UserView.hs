@@ -79,6 +79,7 @@ companyJSON company = runJSONGenT $ do
     value "ipaddressmasklist" $ intercalate "," $ fmap show $ companyipaddressmasklist $ companyinfo company
     value "allowsavesafetycopy" $ companyallowsavesafetycopy (companyinfo company)
     value "idledoctimeout" $ companyidledoctimeout $ companyinfo company
+    value "smsprovider" $ show . companysmsprovider . companyinfo $ company
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen $ objects "stats" $ for uuss $ \uus -> do

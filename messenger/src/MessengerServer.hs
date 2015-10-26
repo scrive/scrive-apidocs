@@ -63,7 +63,7 @@ main = do
 
     E.bracket (startServer lr pool rng conf) (liftBase killThread) . const $ do
       let cron = jobsWorker pool
-          sender = smsConsumer rng $ createSender $ mscMasterSender conf
+          sender = smsConsumer rng pool $ createSender $ sendersConfigFromMessengerConf conf
       finalize (localDomain "cron" $ runConsumer cron pool) $ do
         finalize (localDomain "sender" $ runConsumer sender pool) $ do
           liftBase waitForTermination
@@ -83,9 +83,9 @@ main = do
       socket <- liftBase (listenOn (htonl iface) $ fromIntegral port)
       fork . liftBase . runReqHandlerT socket handlerConf . mapReqHandlerT withLogger $ router rng pool routes
 
-    smsConsumer :: CryptoRNGState -> Sender
+    smsConsumer :: CryptoRNGState -> ConnectionSource -> Sender
                 -> ConsumerConfig MainM ShortMessageID ShortMessage
-    smsConsumer rng sender = ConsumerConfig {
+    smsConsumer rng pool sender = ConsumerConfig {
       ccJobsTable = "smses"
     , ccConsumersTable = "messenger_workers"
     , ccJobSelectors = smsSelectors
@@ -96,7 +96,7 @@ main = do
     , ccMaxRunningJobs = 10
     , ccProcessJob = \sms@ShortMessage{..} -> localData [identifier_ smID] . runCryptoRNGT rng $ do
       logInfo_ "Sending sms"
-      sendSMS sender sms >>= \case
+      withPostgreSQL pool $ sendSMS sender sms >>= \case
         True  -> return $ Ok MarkProcessed
         False -> Failed <$> sendoutFailed sms
     , ccOnException = const sendoutFailed

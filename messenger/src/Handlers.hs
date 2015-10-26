@@ -17,6 +17,7 @@ import GlobalMouth
 import Happstack.Server.ReqHandler
 import KontraPrelude
 import Messenger
+import TeliaCallGuide
 
 router :: CryptoRNGState -> ConnectionSource -> Messenger Response -> ReqHandlerT (LogT IO) Response
 router rng cs routes = withPostgreSQL cs $ do
@@ -31,6 +32,7 @@ handlers :: Route (Messenger Response)
 handlers = choice [
     hGet showHelloMessage
   , dir "sms" $ dir "globalmouth" $ hGet handleGlobalMouthEvents
+  , dir "sms" $ dir "telia"       $ hGet handleTeliaCallGuideEvents
   ]
   where
     hGet = path GET id

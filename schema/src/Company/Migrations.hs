@@ -342,3 +342,12 @@ removeSMSOriginatorFromCompany =
   , mgrDo = do
      runSQL_ $ "ALTER TABLE companies DROP COLUMN sms_originator"
   }
+
+addSMSProviderToCompanies :: MonadDB m => Migration m
+addSMSProviderToCompanies =
+  Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 18
+  , mgrDo = do
+      runSQL_ "ALTER TABLE companies ADD COLUMN sms_provider SMALLINT NOT NULL DEFAULT 1"
+  }

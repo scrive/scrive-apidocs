@@ -14,6 +14,7 @@ import Doc.DocStateData
 import KontraPrelude
 import Log.Identifier
 import MessageData
+import SMS.Data
 import SMS.Model
 
 data SMS = SMS {
@@ -21,6 +22,7 @@ data SMS = SMS {
   , smsData       :: MessageData -- ^ Message body
   , smsBody       :: String -- ^ Message body
   , smsOriginator :: String -- ^ SMS originator/sender name
+  , smsProvider   :: SMSProvider -- ^ SMS provider type
   } deriving (Eq, Ord, Show)
 
 -- | Schedule SMS sendout. Note that body/originator needs
@@ -32,9 +34,9 @@ scheduleSMS :: (MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
 scheduleSMS doc SMS{..} = do
   when (null smsMSISDN) $ do
     $unexpectedErrorM "no mobile phone number defined"
-  sid <- dbUpdate $ CreateSMS (fixOriginator smsOriginator) (fixPhoneNumber smsMSISDN) smsBody (show smsData)
+  sid <- dbUpdate $ CreateSMS smsProvider (fixOriginator smsOriginator) (fixPhoneNumber smsMSISDN) smsBody (show smsData)
   -- charge company of the author of the document for the smses
-  dbUpdate $ ChargeCompanyForSMS (documentid doc) sms_count
+  dbUpdate $ ChargeCompanyForSMS (documentid doc) smsProvider sms_count
   logInfo "SMS scheduled for sendout" $ object [
       identifier_ $ documentid doc
     , identifier_ sid
@@ -42,6 +44,7 @@ scheduleSMS doc SMS{..} = do
     , "sms_data" .= show smsData
     , "sms_body" .= smsBody
     , "sms_originator" .= smsOriginator
+    , "sms_provider" .= show smsProvider
     ]
   where
     -- Count the real smses; if the message length is less than
