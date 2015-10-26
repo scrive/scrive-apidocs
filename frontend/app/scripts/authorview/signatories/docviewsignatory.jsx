@@ -67,7 +67,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
         signatory.mobileConfirmationDelivery() ||
         signatory.emailMobileConfirmationDelivery();
       var isDocumentClosed = signatory.document().closed() && hasDelivery;
-      var hasSigningBegun = (signatory.document().signingInProcess() && !signatory.padDelivery()) || isDocumentClosed;
+      var hasSigningBegun = (signatory.document().signingInProcess() && !(signatory.padDelivery() || signatory.apiDelivery())) || isDocumentClosed;
 
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && !signatory.author()
