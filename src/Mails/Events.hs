@@ -107,6 +107,7 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                     case ev of
                       SL_Opened -> handleOpenedInvitation slid email muid
                       SL_Delivered -> handleDeliveredInvitation bd host mc slid
+                      SL_Failed 0 _ -> when (signemail == email) $ return () -- ignore temporary failures; http://www.socketlabs.com/api-reference/notification-api/#eventFailed
                       SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
                       _ -> return ()
 
