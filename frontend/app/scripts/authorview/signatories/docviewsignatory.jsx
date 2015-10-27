@@ -59,21 +59,22 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
       if (signatory.document().signingInProcess() && signatory.hasSigned()) {
         return false;
       }
-
-      var hasDelivery = signatory.emailDelivery() ||
-        signatory.mobileDelivery() ||
-        signatory.emailMobileDelivery() ||
-        signatory.emailConfirmationDelivery() ||
-        signatory.mobileConfirmationDelivery() ||
-        signatory.emailMobileConfirmationDelivery();
-      var isDocumentClosed = signatory.document().closed() && hasDelivery;
-      var hasSigningBegun = (signatory.document().signingInProcess() && !(signatory.padDelivery() || signatory.apiDelivery())) || isDocumentClosed;
+      var canGetInvitation = !signatory.hasSigned() && (
+           signatory.emailDelivery()
+        || signatory.mobileDelivery()
+        || signatory.emailMobileDelivery()
+      );
+      var canGetConfirmation = signatory.document().closed() && (
+           signatory.emailConfirmationDelivery()
+        || signatory.mobileConfirmationDelivery()
+        || signatory.emailMobileConfirmationDelivery()
+      );
 
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && !signatory.author()
         && signatory.signs()
         && signatory.reachedBySignorder()
-        && hasSigningBegun
+        && (canGetInvitation || canGetConfirmation)
         && !signatory.undeliveredInvitation();
     },
 
