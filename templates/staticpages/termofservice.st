@@ -22,7 +22,9 @@ $htmlopentag()$
       </script>
     </div>
   </div>
-  $pageFooter()$
+  <div class="terms-footer">
+    $pageFooter()$
+  </div>
 </body>
 $htmlclosingtag()$
 ###
