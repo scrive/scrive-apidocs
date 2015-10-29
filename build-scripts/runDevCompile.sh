@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+# This script assumes NGINX_CONF_PATH wich is a path to the include file that sends requests to php-fpm
+
 if [ ! -e cabal_config_freeze.sh ]; then
   echo "No cabal_config_freeze.sh found (this script must be run from the top directory)."
   exit 1
@@ -25,3 +27,6 @@ else
   cabal build --ghc-options="-O0 -optl -O0" 2>&1 | runghc build-scripts/Teamcity.hs ghc
   exit "${PIPESTATUS[0]}"
 fi
+
+echo "Generating urls"
+./scripts/UrlList.sh $NGINX_CONF_PATH
