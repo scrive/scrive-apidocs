@@ -8,7 +8,7 @@ import qualified Data.ByteString.Lazy.Char8 as BSLC
 import qualified Data.Vector as V
 
 import Context
-import Doc.API.AesonTestUtils
+import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.DocumentGetCalls
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.DocumentPostCallsTest (testDocApiV2New')

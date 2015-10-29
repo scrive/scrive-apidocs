@@ -11,7 +11,7 @@ import qualified Data.Vector as V
 
 import Context
 import DB.Query (dbUpdate)
-import Doc.API.AesonTestUtils
+import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.DocumentID (DocumentID)

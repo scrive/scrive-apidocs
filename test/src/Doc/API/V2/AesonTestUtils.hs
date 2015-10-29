@@ -1,4 +1,4 @@
-module Doc.API.AesonTestUtils where
+module Doc.API.V2.AesonTestUtils where
 
 import Data.Aeson
 import Data.Scientific
@@ -33,7 +33,7 @@ documentIDFromValue v = do
 -- TODO comment
 signatoryLinkIDsFromValue :: Value -> TestEnv [SignatoryLinkID]
 signatoryLinkIDsFromValue v = do
-  slArray <- lookupObjectArray "signatories" v
+  slArray <- lookupObjectArray "parties" v
   forM (V.toList slArray) (\sigValue -> do
       slidStr <- lookupObjectString "id" sigValue
       case (maybeRead $ unpack slidStr) of

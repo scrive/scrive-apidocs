@@ -56,7 +56,7 @@ applyDraftDataToDocument draft actor = do
     whenM ((\doc -> isTemplate draft && (not $ isTemplate doc)) <$> theDocument) $ do
          dbUpdate $ TemplateFromDocument actor
     documentsignatorylinks <$> theDocument >>= \siglinks -> case (mergeAuthorDetails siglinks $ mergeSignatoriesIDs siglinks $ documentsignatorylinks draft) of
-         Nothing   -> apiError $ requestParameterInvalid "document" "signatories list is empty"
+         Nothing   -> apiError $ requestParameterInvalid "document" "parties list is empty"
          Just sigs -> do
            res <- dbUpdate $ ResetSignatoryDetails sigs actor
            unless res $ apiError $ serverError "applyDraftDataToDocument failed"
