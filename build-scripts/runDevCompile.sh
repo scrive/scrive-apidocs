@@ -25,8 +25,8 @@ if [ "$TEAMCITY_VERSION" = "" ]; then
   cabal build --ghc-options="-O0 -optl -O0"
 else
   cabal build --ghc-options="-O0 -optl -O0" 2>&1 | runghc build-scripts/Teamcity.hs ghc
-  exit "${PIPESTATUS[0]}"
+  RESULT="${PIPESTATUS[0]}"
+  echo "Generating urls"
+  ./scripts/UrlList.sh $NGINX_CONF_PATH
+  exit "${RESULT}"
 fi
-
-echo "Generating urls"
-./scripts/UrlList.sh $NGINX_CONF_PATH
