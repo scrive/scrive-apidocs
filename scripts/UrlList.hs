@@ -58,7 +58,7 @@ baz = nub . map ("/" ++) . foo
 main :: IO ()
 main = do
   [include] <- getArgs
-  withFile "/tmp/urls.txt" WriteMode $ \h -> do
+  withFile "urls.txt" WriteMode $ \h -> do
     forM_ (baz $ staticRoutes True) $ \url -> do
       hPutStrLn h $ "location " ++ url ++ " {"
       hPutStrLn h $ "    include " ++ include ++ ";"

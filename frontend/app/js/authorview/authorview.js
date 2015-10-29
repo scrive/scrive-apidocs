@@ -133,7 +133,7 @@ window.AuthorViewView = Backbone.View.extend({
         return this;
     if (document.mainfile() == undefined)
         return this;
-    this.container.empty();
+    this.container.children().detach();
     this.container.append(this.model.title().el());
     this.container.append(this.model.history().el());
     var subcontainer = $("<div class='subcontainer'/>");
