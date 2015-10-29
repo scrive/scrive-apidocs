@@ -6,7 +6,7 @@ import Test.Framework
 import qualified Data.Vector as V
 
 import Context
-import Doc.API.AesonTestUtils
+import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.DocumentPostCallsTest (testDocApiV2New')
 import Doc.API.V2.Calls.SignatoryCalls
@@ -39,7 +39,7 @@ testDocApiV2SigReject = do
   docJSONRejected <- parseMockDocumentFromBS did (rsBody rsp)
   docStatus <- lookupObjectString "status" docJSONRejected
   assertEqual "Document status should match" "rejected" docStatus
-  sigValue:_ <- liftM V.toList $ lookupObjectArray "signatories" docJSONRejected
+  sigValue:_ <- liftM V.toList $ lookupObjectArray "parties" docJSONRejected
   _ <- lookupObjectString "rejected_time" sigValue
   return ()
 
@@ -73,7 +73,7 @@ testDocApiV2SigSign = do
   docJSONSigned <- parseMockDocumentFromBS did (rsBody rsp)
   docStatus <- lookupObjectString "status" docJSONSigned
   assertEqual "Document status after signing" "closed" docStatus
-  sl:_ <- liftM V.toList $ lookupObjectArray "signatories" docJSONSigned
+  sl:_ <- liftM V.toList $ lookupObjectArray "parties" docJSONSigned
   _ <- lookupObjectString "sign_time" sl
   return ()
 
@@ -85,7 +85,7 @@ testDocApiV2SigSendSmsPin = do
   slid:_ <- signatoryLinkIDsFromValue docJSON
 
   reqUpdate <- mkRequest POST [("document", inText
-                          ("{\"signatories\": ["
+                          ("{\"parties\": ["
                           ++ "{\"id\":\"" ++ show slid ++ "\","
                           ++ " \"authentication_method_to_sign\":\"sms_pin\""
                           ++ "}]}")
@@ -107,7 +107,7 @@ testDocApiV2SigSetAttachment = do
   slid:_ <- signatoryLinkIDsFromValue docJSON
 
   reqUpdate <- mkRequest POST [("document", inText
-                          ("{\"signatories\": ["
+                          ("{\"parties\": ["
                           ++ "{\"id\":\"" ++ show slid ++ "\","
                           ++ " \"attachments\": ["
                           ++ "    {\"name\":\"Foo2\", \"description\":\"FooDee\"}"
@@ -123,7 +123,7 @@ testDocApiV2SigSetAttachment = do
   (rspSet,_) <- runTestKontra reqSet ctx $ docApiV2SigSetAttachment did slid
   assertEqual "Successful `docApiV2SigSetAttachment` response code" 200 (rsCode rspSet)
   docJSONSet <- parseMockDocumentFromBS did (rsBody rspSet)
-  slSet:_ <- liftM V.toList $ lookupObjectArray "signatories" docJSONSet
+  slSet:_ <- liftM V.toList $ lookupObjectArray "parties" docJSONSet
   slAttachment0Set:_ <- liftM V.toList $ lookupObjectArray "attachments" slSet
   _ <- lookupObjectString "file" slAttachment0Set
 
@@ -131,6 +131,6 @@ testDocApiV2SigSetAttachment = do
   (rspUnset,_) <- runTestKontra reqUnset ctx $ docApiV2SigSetAttachment did slid
   assertEqual "Successful `docApiV2SigSetAttachment` response code" 200 (rsCode rspUnset)
   docJSONUnset <- parseMockDocumentFromBS did (rsBody rspUnset)
-  slUnset:_ <- liftM V.toList $ lookupObjectArray "signatories" docJSONUnset
+  slUnset:_ <- liftM V.toList $ lookupObjectArray "parties" docJSONUnset
   slAttachment0Unset:_ <- liftM V.toList $ lookupObjectArray "attachments" slUnset
   lookupObjectNull "file" slAttachment0Unset

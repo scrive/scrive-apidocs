@@ -29,7 +29,7 @@ unjsonDocument da = objectOf $
   <*   fieldReadonly "id" documentid "Document ID"
   <**> (field "title" documenttitle "Document title"
         <**> (pure $ \t d -> d { documenttitle = t }))
-  <**> (fieldBy "signatories" documentsignatorylinks "Document signatories" (unjsonSignatoryArray da)
+  <**> (fieldBy "parties" documentsignatorylinks "Document parties" (unjsonSignatoryArray da)
         <**> (pure (\sl d ->d { documentsignatorylinks = sl }) ))
   <*   fieldReadonlyBy "file" documentfile "Document main file" unjsonMaybeMainFile
   <*   fieldReadonlyBy "sealed_file" documentsealedfile "Document sealed file" unjsonMaybeMainFile
