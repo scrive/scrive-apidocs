@@ -53,13 +53,13 @@ coerce :: Route (Kontra Response) -> MyRoute (Kontra Response)
 coerce = unsafeCoerce
 
 baz :: Route (Kontra Response) -> [String]
-baz = nub . map ("/" ++) . foo
+baz = filter (not . (== "/")) . nub . map ("/" ++) . foo
 
 main :: IO ()
 main = do
   [include] <- getArgs
   withFile "urls.txt" WriteMode $ \h -> do
     forM_ (baz $ staticRoutes True) $ \url -> do
-      hPutStrLn h $ "location " ++ url ++ " {"
+      hPutStrLn h $ "location ~ ^" ++ url ++ " {"
       hPutStrLn h $ "    include " ++ include ++ ";"
       hPutStrLn h "}"
