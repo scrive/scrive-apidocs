@@ -18,7 +18,7 @@ import Company.Model
 import Crypto.RNG
 import DB
 import Doc.DocStateData
-import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
+import Doc.DocumentMonad
 import Doc.Model
 import Happstack.Fields
 import InputValidation
@@ -74,7 +74,8 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
       identifier_ $ userid actvuser
     , "email" .= getEmail actvuser
     ]
-  when (isJust $ userhasacceptedtermsofservice actvuser) $ do  -- Don't remove - else people will be able to hijack accounts
+  -- Don't remove - else people will be able to hijack accounts
+  when (isJust $ userhasacceptedtermsofservice actvuser) $ do
     internalError
   switchLang (getLang actvuser)
   ctx <- getContext
@@ -87,61 +88,57 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
   companyname <- fromMaybe (getCompanyName company) <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
   case mtos of
-    (Just tos) -> do
-          if tos
-            then do
-              _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
-                  userfstname = fromMaybe "" mfstname
-                , usersndname = fromMaybe "" msndname
-                , userphone = phone
-                , usercompanyposition = position
-              }
-              _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
-                  companyname = companyname
-              }
-              _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
-                (ctxipnumber ctx) (ctxtime ctx) (userinfo actvuser)
-                ((userinfo actvuser) { userfstname = fromMaybe "" mfstname , usersndname =  fromMaybe "" msndname })
-                (userid <$> ctxmaybeuser ctx)
-              _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-              _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
-              _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-              _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
+    Just tos -> if tos
+      then do
+        _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
+            userfstname = fromMaybe "" mfstname
+          , usersndname = fromMaybe "" msndname
+          , userphone = phone
+          , usercompanyposition = position
+        }
+        _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
+            companyname = companyname
+        }
+        _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
+          (ctxipnumber ctx) (ctxtime ctx) (userinfo actvuser)
+          ((userinfo actvuser) { userfstname = fromMaybe "" mfstname , usersndname =  fromMaybe "" msndname })
+          (userid <$> ctxmaybeuser ctx)
+        _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
+        _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
+        _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
+        _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
 
-              ds <- dbQuery $ GetSignatoriesByEmail (Email $ getEmail actvuser) (14 `daysBefore` ctxtime ctx)
+        dbUpdate $ ConnectSignatoriesToUser (Email $ getEmail actvuser) (userid actvuser) (14 `daysBefore` ctxtime ctx)
 
-              forM_ ds $ \(d, s) -> do
-                withDocumentID d $ dbUpdate $ SaveDocumentForUser actvuser s
+        when (haspassword) $ do
+          mpassword <- getOptionalField asValidPassword "password"
+          _ <- case (mpassword) of
+              Just password -> do
+                  passwordhash <- createPassword password
+                  void $ dbUpdate $ SetUserPassword (userid actvuser) passwordhash
+              Nothing -> return () -- TODO what do I do here?
+          return ()
 
-              when (haspassword) $ do
-                mpassword <- getOptionalField asValidPassword "password"
-                _ <- case (mpassword) of
-                    Just password -> do
-                        passwordhash <- createPassword password
-                        void $ dbUpdate $ SetUserPassword (userid actvuser) passwordhash
-                    Nothing -> return () -- TODO what do I do here?
-                return ()
+        when (signupmethod == BySigning) $ do
+          scheduleNewAccountMail ctx actvuser
+        tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
 
-              when (signupmethod == BySigning) $
-                scheduleNewAccountMail ctx actvuser
-              tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
-
-              logInfo "Attempt successful, user logged in" $ object [
-                  identifier_ $ userid actvuser
-                , "email" .= getEmail actvuser
-                ]
-              when (not stoplogin) $ do
-                logUserToContext $ Just tosuser
-              when (callme) $ phoneMeRequest (Just tosuser) phone
-              when (promo) $ addCompanyPlanManual (companyid company) TrialPricePlan ActiveStatus
-              return $ Just tosuser
-            else do
-              logInfo_ "No TOS accepted, user cannot be activated"
-              addFlashM flashMessageMustAcceptTOS
-              return Nothing
-    _ -> do
-        logInfo_ "Attempt to create account failed, 'tos' parameter is missing"
+        logInfo "Attempt successful, user logged in" $ object [
+            identifier_ $ userid actvuser
+          , "email" .= getEmail actvuser
+          ]
+        when (not stoplogin) $ do
+          logUserToContext $ Just tosuser
+        when (callme) $ phoneMeRequest (Just tosuser) phone
+        when (promo) $ addCompanyPlanManual (companyid company) TrialPricePlan ActiveStatus
+        return $ Just tosuser
+      else do
+        logInfo_ "No TOS accepted, user cannot be activated"
+        addFlashM flashMessageMustAcceptTOS
         return Nothing
+    _ -> do
+      logInfo_ "Attempt to create account failed, 'tos' parameter is missing"
+      return Nothing
 
 scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => Context -> User -> m ()
 scheduleNewAccountMail ctx user = do

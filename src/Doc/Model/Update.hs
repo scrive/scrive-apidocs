@@ -60,7 +60,7 @@ module Doc.Model.Update
   , GetDocsSentBetween(..)
   , FixClosedErroredDocument(..)
   , GetDocsSent(..)
-  , GetSignatoriesByEmail(..)
+  , ConnectSignatoriesToUser(..)
 
    -- only for use in tests
   , updateMTimeAndObjectVersion
@@ -91,7 +91,7 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad (updateDocumentWithID, updateDocument, DocumentMonad, withDocument, theDocumentID)
 import Doc.DocUtils
-import Doc.Model.Query (GetSignatoryLinkByID(..), GetDocumentByDocumentID(..), GetDocumentTags(..), GetDocsSentBetween(..), GetDocsSent(..), GetSignatoriesByEmail(..))
+import Doc.Model.Query
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
@@ -106,6 +106,7 @@ import KontraPrelude
 import Log.Identifier
 import MagicHash
 import MinutesTime
+import User.Email
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -1637,6 +1638,30 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateD
     , update $ SetDocumentAPICallbackURL V2 (documentapiv2callbackurl document)
     , update $ SetDocumentTimeZoneName (documenttimezonename document)
     , updateMTimeAndObjectVersion (actorTime actor) >> return True
+    ]
+
+-- | Connect signatories who saw or signed the document not earlier
+-- than at a given time with supplied email address to a user.
+data ConnectSignatoriesToUser = ConnectSignatoriesToUser Email UserID UTCTime
+instance MonadDB m => DBUpdate m ConnectSignatoriesToUser () where
+  update (ConnectSignatoriesToUser email uid time) = runSQL_ $ smconcat [
+      "WITH ids AS ("
+    , "SELECT d.id AS doc_id, sl.id AS sl_id"
+    , "  FROM documents d"
+    , "  JOIN signatory_links sl"
+    , "    ON d.id = sl.document_id"
+    , "  JOIN signatory_link_fields slf"
+    , "    ON sl.id = slf.signatory_link_id"
+    , " WHERE slf.type =" <?> EmailFT
+    , "   AND slf.value_text =" <?> email
+    , "   AND (sl.sign_time >=" <?> time <+> "OR sl.seen_time >=" <?> time <> ")"
+    , "FOR UPDATE"
+    , ")"
+    , "UPDATE signatory_links"
+    , "   SET user_id =" <?> uid
+    , "  FROM ids"
+    , " WHERE id = ids.sl_id"
+    , "   AND document_id = ids.doc_id"
     ]
 
 unsavedDocumentLingerDays :: Int

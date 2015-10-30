@@ -367,7 +367,7 @@ ctPlacementAnchor = CompositeType {
 tableSignatoryLinkFields :: Table
 tableSignatoryLinkFields = tblTable {
     tblName = "signatory_link_fields"
-  , tblVersion = 11
+  , tblVersion = 12
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
@@ -398,6 +398,10 @@ tableSignatoryLinkFields = tblTable {
     ]
   , tblIndexes = [
       uniqueIndexOnColumns ["signatory_link_id", "type", "name_order", "custom_name"]
+    -- For efficient connection of documents to a new user.
+    , (indexOnColumn "value_text") {
+          idxWhere = Just "type = 6" -- email
+        }
     ]
   }
 
