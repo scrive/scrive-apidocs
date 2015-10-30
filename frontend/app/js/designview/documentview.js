@@ -6,7 +6,7 @@
 
 **/
 
-define(['Spinjs', 'designview/fileview/fileview', 'Backbone', 'legacy_code'], function(Spinner, FileView) {
+define(['legacy_code', 'Backbone', 'React', 'common/uploadbutton', 'Spinjs', 'designview/fileview/fileview'], function(_Legacy, Backbone, React, UploadButton, Spinner, FileView) {
 
     // expected model: document
     // expected viewmodel: DesignViewModel
@@ -170,23 +170,23 @@ define(['Spinjs', 'designview/fileview/fileview', 'Backbone', 'legacy_code'], fu
                             document.recall();
                         }
             });
-            return new UploadButton({
-                                     type: 'action',
-                                     size: 'big',
-                                     text: localization.uploadButton,
-                                     width: 250,
-                                     name: 'file',
-                                     maxlength: 2,
-                                     cssClass : 'design-view-document-buttons-upload-button',
-                                     onAppend: function(input, title, multifile) {
-                                       document.markAsNotReady();
-                                       submit.addInputs(input);
-                                       viewmodel.saveAndFlashMessageIfAlreadySaved();
-                                       document.afterSave(function() {
-                                           submit.sendAjax();
-                                       });
-                                     }
-                       }).el();
+            var div = $("<div class='design-view-document-buttons-upload-button'>");
+            React.render(React.createElement(UploadButton,{
+              type: 'action',
+              size: 'big',
+              text: localization.uploadButton,
+              width: 250,
+              name: 'file',
+              maxlength: 2,
+              onUploadComplete: function(input, title, multifile) {
+                document.markAsNotReady();
+                submit.addInputs(input);
+                viewmodel.saveAndFlashMessageIfAlreadySaved();
+                document.afterSave(function() {
+                    submit.sendAjax();
+                });
+              }}), div[0]);
+            return div;
         },
         afterInsert: function() {
             $(window).resize();

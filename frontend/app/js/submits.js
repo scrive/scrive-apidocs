@@ -58,7 +58,7 @@ window.Submit = Backbone.Model.extend({
         return this;
     },
     hasFile : function() {
-       return this.get("inputs").filter(":file").size() > 0 || this.get("inputs").find(":file").size() > 0;
+       return this.get("inputs").filter(":file").size() > 0 || this.get("inputs").find(".file").size() > 0;
     },
     sendAjax : function(callback,errorcallback) {
         this.set({ajax : true});

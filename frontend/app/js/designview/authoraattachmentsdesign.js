@@ -1,6 +1,6 @@
 /* This is component for uploding author attachments (with upload and for server attachments).
  */
-define(['React','designview/processsettings/attachmentslistformodal','Backbone', 'legacy_code'], function(React,AttachmentsListForModal) {
+define(['legacy_code', 'Backbone', 'React', 'designview/processsettings/attachmentslistformodal', 'common/uploadbutton'], function(_Legacy, Backbone, React, AttachmentsListForModal, UploadButton) {
 
 window.DesignAuthorAttachment = Backbone.Model.extend({
   defaults : {
@@ -73,32 +73,30 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
     },
     uploadButton : function() {
         var attachmentsList = this.model;
-        var uploadButton = new UploadButton({
-                size: 'big',
-                text: localization.authorattachments.selectFile,
-                width: 'auto',
-                maxlength: 2,
-                onAppend : function(input,title,multifile) {
-                    mixpanel.track('Upload attachment', {'File Title as supplied by browser': title});
-                    var name_parts = title.split("\\").reverse()[0].split(".");
-                    name_parts.pop(); // drop the extension
-                    title = name_parts.join('.');
-                    attachmentsList.addAttachment(
-                                              new DesignAuthorAttachment({
-                                                    name : title,
-                                                    fileUpload : $(input)
-                                              }));
-                },
-                onError : function() {}
-        });
-        return uploadButton.el();
+        var div = $("<div/>");
+        React.render(React.createElement(UploadButton,{
+          size: 'big',
+          text: localization.authorattachments.selectFile,
+          maxlength: 2,
+          onUploadComplete : function(input,title) {
+              mixpanel.track('Upload attachment', {'File Title as supplied by browser': title});
+              var name_parts = title.split("\\").reverse()[0].split(".");
+              name_parts.pop(); // drop the extension
+              title = name_parts.join('.');
+              attachmentsList.addAttachment(
+                                        new DesignAuthorAttachment({
+                                              name : title,
+                                              fileUpload : $(input)
+                                        }));
+          }
+        }), div[0]);
+        return div;
     },
     selectFromTemplateButton : function () {
         var view = this;
         var selectAttachmentButton = new Button({
             size: 'big',
             text: localization.authorattachments.selectAttachment,
-            width: 'auto',
             onClick : function() {
                 mixpanel.track('Click select attachment');
                 view.showAvaibleAttachmentsList = true;

@@ -170,10 +170,6 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
                   type="action"
                   className="attachment-upload-button"
                   text={localization.signatoryAttachmentUploadButton}
-                  onError={function () {
-                    model.notLoading();
-                    model.trigger("change");
-                  }}
                   onUploadComplete={function (input) {
                     var submit = self.createFileSubmit();
                     submit.addInputs(input);
