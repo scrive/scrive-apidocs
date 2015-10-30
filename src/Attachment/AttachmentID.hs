@@ -4,6 +4,7 @@ module Attachment.AttachmentID (
   ) where
 
 import Data.Int
+import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
@@ -16,6 +17,9 @@ $(newtypeDeriveUnderlyingReadShow ''AttachmentID)
 
 instance FromReqURI AttachmentID where
   fromReqURI = maybeRead
+
+instance Unjson AttachmentID where
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse AttachmentID")  return) . maybeRead) show  unjsonDef
 
 instance FromSQL AttachmentID where
   type PQBase AttachmentID = PQBase Int64

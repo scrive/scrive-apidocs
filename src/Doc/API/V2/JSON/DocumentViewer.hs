@@ -20,15 +20,16 @@ import Util.SignatoryLinkUtils
 -- It is needed so frontend should present user with operations that are available to him.
 data DocumentViewer =
     SignatoryDocumentViewer SignatoryLinkID
-  | AdminDocumentViewer
+  | CompanyAdminDocumentViewer
 
 viewerForDocument :: DocumentAccess -> Document -> DocumentViewer
 viewerForDocument (DocumentAccess { daAccessMode = SignatoryDocumentAccess sid}) _ = SignatoryDocumentViewer sid
-viewerForDocument (DocumentAccess { daAccessMode = AdminDocumentAccess}) _ = AdminDocumentViewer
+viewerForDocument (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess}) _ = CompanyAdminDocumentViewer
 viewerForDocument (DocumentAccess { daAccessMode = AuthorDocumentAccess}) doc =
   case (getAuthorSigLink doc) of
     Just sig -> SignatoryDocumentViewer $ signatorylinkid sig
     Nothing  -> $unexpectedError "Could not find author for document for DocumentViewer"
+viewerForDocument (DocumentAccess { daAccessMode = SystemAdminDocumentAccess}) _ = CompanyAdminDocumentViewer
 
 dvSignatoryLinkID :: DocumentViewer -> Maybe SignatoryLinkID
 dvSignatoryLinkID (SignatoryDocumentViewer sid) = Just sid
@@ -36,7 +37,7 @@ dvSignatoryLinkID _ = Nothing
 
 dvRole ::DocumentViewer -> T.Text
 dvRole (SignatoryDocumentViewer _) = "signatory"
-dvRole (AdminDocumentViewer) = "company_admin"
+dvRole (CompanyAdminDocumentViewer) = "company_admin"
 
 -- We should not introduce instance for DocumentViewer since this can't be really parsed. And instance for Maybe DocumentViewer would be missleading
 unjsonDocumentViewer :: UnjsonDef (Maybe DocumentViewer)

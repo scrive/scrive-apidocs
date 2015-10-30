@@ -20,7 +20,10 @@ var List = React.createClass({
         dataFetcher : props.dataFetcher,
         idFetcher : props.idFetcher,
         loadLater : this.props.loadLater,
-        onReload : props.onReload
+        onReload : props.onReload,
+        paramsFunction : props.paramsFunction,
+        maxPageSize : props.maxPageSize,
+        totalCountFunction : props.totalCountFunction
       });
       return {model: model};
     },
@@ -227,7 +230,7 @@ var List = React.createClass({
                   (footer)
               }
               {/*if*/ (pagination != undefined) &&
-                  (React.addons.cloneWithProps(pagination,{model: model.paging()}))
+                  (React.addons.cloneWithProps(pagination,{model: model}))
               }
           </div>
         </div>

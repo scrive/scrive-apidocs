@@ -1,35 +1,10 @@
 /** @jsx React.DOM */
 
-define(['React', 'lists/list', 'moment', 'legacy_code'], function(React, List, moment) {
+define(['React', 'archive/utils', 'lists/list', 'moment', 'legacy_code'], function(React, Utils, List, moment) {
 
 
 return React.createClass({
     mixins : [List.ReloadableContainer],
-    verificationMethodText : function(d) {
-      var dms = d.field("fields").deliveryMethods || [];
-      dms = _.map(dms,function(dm) {
-                        if (dm == "email") {
-                         return capitaliseFirstLetter(localization.delivery.email);
-                        } else if (dm == "pad") {
-                         return capitaliseFirstLetter(localization.delivery.pad);
-                        } else if (dm == "mobile") {
-                         return capitaliseFirstLetter(localization.delivery.mobile);
-                        } else if (dm == "email_mobile") {
-                         return capitaliseFirstLetter(localization.delivery.email_mobile);
-                        } else if (dm == "api") {
-                         return capitaliseFirstLetter(localization.delivery.api);
-                        } else {
-                         return "";
-                        }
-      });
-      dms = _.uniq(dms);
-      dms.sort();
-
-      var text = dms[0] || "";
-      for(var i =1 ; i< dms.length; i++)
-        text += ", " + dms[i];
-      return text;
-    },
     createNewTemplate : function() {
       new Submit({
         method : "POST",
@@ -61,7 +36,7 @@ return React.createClass({
             new Submit({
               url: "/d/share",
               method: "POST",
-              documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
+              documentids: "[" + _.map(selected, function(doc){return doc.field("id");}) + "]",
               ajaxsuccess : function() {
                 new FlashMessage({type: "success", content : localization.archive.templates.share.successMessage});
                 self.reload();
@@ -77,7 +52,7 @@ return React.createClass({
       var confirmationText = $('<span />').html(localization.archive.templates.remove.body);
       var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here');
       if (selected.length == 1) {
-        listElement.html($('<strong />').text(selected[0].field("fields").title));
+        listElement.html($('<strong />').text(selected[0].field("title")));
       } else {
         listElement.text(selected.length + (" " + localization.templates).toLowerCase());
       }
@@ -91,7 +66,7 @@ return React.createClass({
           new Submit({
             url: "/d/delete",
             method: "POST",
-            documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
+            documentids: "[" + _.map(selected, function(doc){return doc.field("id");}) + "]",
             ajaxsuccess : function() {
               new FlashMessage({type: "success", content : localization.archive.templates.remove.successMessage});
               self.reload();
@@ -106,9 +81,16 @@ return React.createClass({
       var self = this;
       return (
         <List.List
-          url='/api/frontend/list?documentType=MyTemplate'
-          dataFetcher={function(d) {return d.list;}}
-          idFetcher={function(d) {return d.field("fields").id;}}
+          maxPageSize={Utils.maxPageSize}
+          totalCountFunction={Utils.totalCountFunction}
+          url={Utils.listCallUrl}
+          paramsFunction={Utils.paramsFunctionWithFilter([
+              {"filter_by" : "template", "is_template" : true},
+              {"filter_by" : "is_author"},
+              {"filter_by" : "trash", "is_trashed" : false}
+            ])}
+          dataFetcher={Utils.dataFetcher}
+          idFetcher={Utils.idFetcher}
           loadLater={self.props.loadLater}
           ref='list'
         >
@@ -151,9 +133,9 @@ return React.createClass({
           <List.Column
             name={localization.archive.templates.columns.time}
             width="105px"
-            sorting="time"
+            sorting="mtime"
             rendering={function(d) {
-              var time = moment(d.field("fields").time).toDate();
+              var time = moment(d.field("mtime")).toDate();
               return (<span title={time.fullTime()}>{time.toTimeAbrev()}</span>);
             }}
           />
@@ -161,7 +143,7 @@ return React.createClass({
             name={localization.archive.templates.columns.verificationMethod}
             width="150px"
             rendering={function(d) {
-              return (<div>{self.verificationMethodText(d)}</div>);
+              return (<div>{Utils.documentDeliveryText(d)}</div>);
             }}
           />
          <List.Column
@@ -169,7 +151,7 @@ return React.createClass({
             width="535px"
             sorting="title"
             rendering={function(d) {
-              return (<a href={d.field("link")}>{d.field("fields").title}</a>);
+              return (<a href={Utils.documentLink(d)}>{d.field("title")}</a>);
             }}
           />
           <List.Column
@@ -177,7 +159,7 @@ return React.createClass({
             width="75px"
             className="archive-table-shared-column-header"
             rendering={function(d) {
-              return (<div className={"archive-table-shared-column " + ((d.field("fields").shared) ? "sharedIcon" : "")}/>);
+              return (<div className={"archive-table-shared-column " + ((d.field("is_shared")) ? "sharedIcon" : "")}/>);
             }}
           />
 

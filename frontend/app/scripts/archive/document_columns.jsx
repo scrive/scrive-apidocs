@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 /* List of columns used by out archive view. Used by both, Documents and Trash list*/
 
-define(['React','lists/list', 'moment', 'Backbone', 'legacy_code'], function(React, List, moment) {
+define(['React','archive/utils', 'lists/list', 'moment', 'Backbone', 'legacy_code'], function(React, Utils, List, moment) {
 
 return function(args) {
   var self = args.list;
@@ -19,19 +19,19 @@ return function(args) {
             rendering={function(d) {
               return (
                 <div
-                  onMouseOver={function(e) {self.showToolTip(d.field("fields").status,e)}}
+                  onMouseOver={function(e) {self.showToolTip(Utils.documentStatus(d),e)}}
                   onMouseOut={function() {self.hideToolTip()}}
-                  className={"icon status "+d.field("fields").status}
+                  className={"icon status "+Utils.documentStatus(d)}
                 />);
             }}
           />,
           <List.Column
             name={localization.archive.documents.columns.time}
             width="105px"
-            sorting="time"
+            sorting="mtime"
             key="time"
             rendering={function(d) {
-              var time = moment(d.field("fields").time).toDate();
+              var time = moment(d.field("mtime")).toDate();
               return (<span title={time.fullTime()}>{time.toTimeAbrev()}</span>);
             }}
           />,
@@ -42,16 +42,15 @@ return function(args) {
             sorting="author"
             key="author"
             rendering={function(d) {
-              return (<a href={d.field("link")}>{d.field("fields").author}</a>);
+              return (<a href={Utils.documentLink(d)}>{Utils.signatorySmartName(Utils.documentAuthor(d))}</a>);
             }}
           />,
           <List.Column
             name={localization.archive.documents.columns.party}
             width="210px"
             key="party"
-            sorting="party"
             rendering={function(d) {
-                return (<div onClick={function() {d.toggleExpand();}}>{d.field("fields").party}</div>);
+                return (<div onClick={function() {d.toggleExpand();}}>{Utils.documentParty(d)}</div>);
             }}
           />,
           <List.Column
@@ -60,23 +59,28 @@ return function(args) {
             key="title"
             sorting="title"
             rendering={function(d) {
-              return (<a className="s-archive-document-title" href={d.field("link")}>{d.field("fields").title}</a>);
+              return (<a className="s-archive-document-title" href={Utils.documentLink(d)}>{d.field("title")}</a>);
             }}
           />,
           <List.Sublist
             key="signatories"
-            count={function(d) {return d.field("subfields") != undefined ? d.field("subfields").length : 0}}
+            count={function(d) {
+              if (d.field("status") == "preparation") {
+                return 0;
+              } else {
+                return _.filter(d.field("parties"), function(s) { return s.is_signatory;}).length;
+              }
+            }}
             rendering={function(d,i) {
-              var time;
-              if (d.field("subfields")[i].time)
-                time = moment(d.field("subfields")[i].time).toDate();
+              var signatory = _.filter(d.field("parties"), function(s) { return s.is_signatory;})[i];
+              var time = Utils.signatoryTime(signatory) && moment(Utils.signatoryTime(signatory)).toDate();
               return [
                 <td key="1"></td>,
                 <td key="2">
                   <div
                     style={{"marginLeft":"10px"}}
-                    className={"icon status "+d.field("subfields")[i].status}
-                    onMouseOver={function(e) {self.showToolTip(d.field("subfields")[i].status,e)}}
+                    className={"icon status "+ Utils.signatoryStatus(d,signatory) }
+                    onMouseOver={function(e) {self.showToolTip(Utils.signatoryStatus(d,signatory),e)}}
                     onMouseOut={function() {self.hideToolTip()}}
                   />
                 </td>,
@@ -90,7 +94,7 @@ return function(args) {
                 <td key="4"></td>,
                 <td key="5">
                   <div style={{"marginLeft":"10px"}}>
-                    <span>{d.field("subfields")[i].name}</span>
+                    <span>{Utils.signatorySmartName(signatory)}</span>
                   </div>
                 </td>,
                 <td key="6"></td>];

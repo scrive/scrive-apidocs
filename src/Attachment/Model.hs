@@ -14,6 +14,8 @@ where
 import Control.Monad.Catch
 import Control.Monad.State.Class
 import Data.ByteString (ByteString)
+import Data.Default
+import qualified Data.Text as T
 
 import Attachment.AttachmentID
 import Crypto.RNG
@@ -27,13 +29,25 @@ import Util.Actor
 
 data Attachment = Attachment
   { attachmentid      :: AttachmentID
-  , attachmenttitle   :: String
+  , attachmenttitle   :: T.Text
   , attachmentctime   :: UTCTime
   , attachmentmtime   :: UTCTime
   , attachmentfile    :: FileID
   , attachmentuser    :: UserID
   , attachmentshared  :: Bool
   , attachmentdeleted :: Bool
+  }
+
+instance Default Attachment where
+  def = Attachment {
+    attachmentid = unsafeAttachmentID 0
+  , attachmenttitle = ""
+  , attachmentctime = unixEpoch
+  , attachmentmtime = unixEpoch
+  , attachmentfile = unsafeFileID 0
+  , attachmentuser = unsafeUserID 0
+  , attachmentshared = False
+  , attachmentdeleted = False
   }
 
 sqlAttachmentResults :: (MonadState v m, SqlResult v) => m ()
@@ -47,7 +61,7 @@ sqlAttachmentResults = do
   sqlResult "shared"
   sqlResult "deleted"
 
-fetchAttachment :: (AttachmentID, String, UTCTime, UTCTime, FileID, UserID, Bool, Bool) -> Attachment
+fetchAttachment :: (AttachmentID, T.Text, UTCTime, UTCTime, FileID, UserID, Bool, Bool) -> Attachment
 fetchAttachment (aid, title, ctime, mtime, file_id, user_id, shared, deleted) = Attachment {
   attachmentid      = aid
 , attachmenttitle   = title
@@ -87,18 +101,19 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m DeleteAttachments () where
       sqlWhereEq "deleted" False
 
 data AttachmentFilter
-  = AttachmentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
-  | AttachmentFilterByID [AttachmentID]         -- ^ Attachments with IDs on the list
-  | AttachmentFilterByFileID [FileID]           -- ^ Attachments with IDs on the list
+  = AttachmentFilterByString T.Text           -- ^ Contains the string in title, list of people involved or anywhere
+  | AttachmentFilterByID AttachmentID         -- ^ Attachments with IDs on the list
+  | AttachmentFilterByFileID FileID           -- ^ Attachments with IDs on the list
+  deriving Eq
 
 sqlWhereAttachmentFilter :: (MonadState v m, SqlWhere v) =>
                             AttachmentFilter -> m ()
 sqlWhereAttachmentFilter (AttachmentFilterByString string) =
-  sqlWhereILike "attachments.title" ("%" ++ string ++ "%")
-sqlWhereAttachmentFilter (AttachmentFilterByID ids) =
-  sqlWhereIn "attachments.id" ids
-sqlWhereAttachmentFilter (AttachmentFilterByFileID fileids) =
-  sqlWhereIn "attachments.file_id" fileids
+  sqlWhereILike "attachments.title" ("%" <> string <> "%")
+sqlWhereAttachmentFilter (AttachmentFilterByID aid) =
+  sqlWhereEq "attachments.id" aid
+sqlWhereAttachmentFilter (AttachmentFilterByFileID fileid) =
+  sqlWhereEq "attachments.file_id" fileid
 
 data AttachmentDomain
   = AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
@@ -108,29 +123,26 @@ data AttachmentDomain
 data AttachmentOrderBy
   = AttachmentOrderByTitle       -- ^ Order by title, alphabetically, case insensitive
   | AttachmentOrderByMTime       -- ^ Order by modification time
-  | AttachmentOrderByCTime       -- ^ Order by creation time
+  deriving Eq
 
 -- | GetAttachments is central switch for attachments list queries.
 --
--- GetAttachments domains filters sorting pagination
+-- GetAttachments domains filters sorting
 --
 -- * domains are connected with OR, so attachments falling into ANY of domains will be returned
 -- * filters weed out attachments from domains, are connected with AND so a attachments must pass through ALL filters
 -- * sortings returns attachments in order
--- * pagination is a place to put OFFSET and LIMIT values
 --
 -- GetAttachments returns attachments in proper order, no reverse is needed.
 --
-data GetAttachments = GetAttachments [AttachmentDomain] [AttachmentFilter] [AscDesc AttachmentOrderBy] (Int,Int)
+data GetAttachments = GetAttachments [AttachmentDomain] [AttachmentFilter] [AscDesc AttachmentOrderBy]
 instance MonadDB m => DBQuery m GetAttachments [Attachment] where
-  query (GetAttachments domains filters orderbys (offset,limit)) = do
+  query (GetAttachments domains filters orderbys) = do
     runQuery_ . sqlSelect "attachments" $ do
       sqlAttachmentResults
       sqlWhereAny (map (sqlWhere . domainToSQLCommand) domains)
       mapM_ sqlWhereAttachmentFilter filters
       mapM_ (sqlOrderBy . orderToSQLCommand) orderbys
-      sqlOffset offset
-      sqlLimit limit
     fetchMany fetchAttachment
    where
     domainToSQLCommand (AttachmentsOfAuthorDeleteValue uid del) =
@@ -143,8 +155,6 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
     orderToSQLCommand (Desc AttachmentOrderByTitle) = "attachments.title DESC"
     orderToSQLCommand (Asc AttachmentOrderByMTime)  = "attachments.mtime ASC"
     orderToSQLCommand (Desc AttachmentOrderByMTime) = "attachments.mtime DESC"
-    orderToSQLCommand (Asc AttachmentOrderByCTime)  = "attachments.ctime ASC"
-    orderToSQLCommand (Desc AttachmentOrderByCTime) = "attachments.ctime DESC"
 
 
 data SetAttachmentsSharing = SetAttachmentsSharing UserID [AttachmentID] Bool

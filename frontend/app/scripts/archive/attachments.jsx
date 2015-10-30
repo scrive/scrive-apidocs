@@ -5,6 +5,9 @@ define(['React','lists/list', 'moment', 'legacy_code','common/uploadbutton'], fu
 
 return React.createClass({
     mixins : [List.ReloadableContainer],
+    attachmentDownloadLink : function(d) {
+      return "/a/download/"+ d.field("id") + "/" + d.field("title") +".pdf";
+    },
     openShareModal: function(selected) {
       var self = this;
       new Confirmation({
@@ -16,7 +19,7 @@ return React.createClass({
            new Submit({
              url: "/a/share",
              method: "POST",
-             attachmentids: "["+ _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
+             attachmentids: "["+ _.map(selected, function(doc){return doc.field("id");}) + "]",
              ajaxsuccess : function() {
                new FlashMessage({type: 'success', content : localization.archive.attachments.share.successMessage});
                self.reload();
@@ -31,7 +34,7 @@ return React.createClass({
       var confirmationText = $('<span />').html(localization.archive.attachments.remove.body);
       var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here');
       if (selected.length == 1) {
-        listElement.html($('<strong />').text(selected[0].field("fields").title));
+        listElement.html($('<strong />').text(selected[0].field("title")));
       } else {
         listElement.text(selected.length + (" " + localization.attachments).toLowerCase());
       }
@@ -44,7 +47,7 @@ return React.createClass({
           new Submit({
             url: "/a/delete",
             method: "POST",
-            attachmentids: "["+ _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
+            attachmentids: "["+ _.map(selected, function(doc){return doc.field("id");}) + "]",
             ajaxsuccess : function() {
               new FlashMessage({type: 'success', content : localization.archive.attachments.remove.successMessage});
               self.reload();
@@ -59,8 +62,30 @@ return React.createClass({
       return (
         <List.List
           url='/a'
-          dataFetcher={function(d) {return d.list;}}
-          idFetcher={function(d) {return d.field("fields").id;}}
+          dataFetcher={function(d) {return d.attachments;}}
+          idFetcher={function(d) {return d.field("id");}}
+          paramsFunction = {function(text,_selectfiltering,sorting) {
+            var filters = [];
+            if (text) {
+              filters.push({"filter_by" : "text", "text" : text});
+            }
+            var sortingBy;
+            if (sorting.current()) {
+              sortingBy = {
+                sort_by : sorting.current(),
+                order : sorting.isAsc() ? "ascending" : "descending"
+              };
+            } else {
+              sortingBy = {
+                sort_by : "time",
+                order: "descending"
+              };
+            }
+            return {
+              filter : JSON.stringify(filters),
+              sorting: JSON.stringify([sortingBy])
+            };
+          }}
           loadLater={self.props.loadLater}
           ref='list'
         >
@@ -119,7 +144,7 @@ return React.createClass({
             width="105px"
             sorting="time"
             rendering={function(d) {
-              var time = moment(d.field("fields").time).toDate();
+              var time = moment(d.field("time")).toDate();
               return (<span title={time.fullTime()}>{time.toTimeAbrev()}</span>);
             }}
           />
@@ -128,7 +153,7 @@ return React.createClass({
             width="680px"
             sorting="title"
             rendering={function(d) {
-              return (<a href={d.field("link")}>{d.field("fields").title}</a>);
+              return (<a target="_blank" href={self.attachmentDownloadLink(d)}>{d.field("title")}</a>);
             }}
           />
           <List.Column
@@ -136,11 +161,10 @@ return React.createClass({
             width="75px"
             className="archive-table-shared-column-header"
             rendering={function(d) {
-              return (<div className={"archive-table-shared-column " + ((d.field("fields").shared) ? "sharedIcon" : "")}/>);
+              return (<div className={"archive-table-shared-column " + ((d.field("shared")) ? "sharedIcon" : "")}/>);
             }}
           />
 
-          <List.Pagination/>
         </List.List>
       );
     }

@@ -64,20 +64,20 @@ return React.createClass({
               <List.List
                 ref='grantedprivilegeslist'
                 url="/oauth/dashboard/grantedprivileges"
-                dataFetcher={function(d) {return d.list;}}
+                dataFetcher={function(d) {return d.granted_privileges;}}
               >
                 <List.Column
                   name={localization.apiDashboard.personOrCompany}
                   width="240px"
                   rendering={function(d) {
-                    return (<div>{d.field("fields").name}</div>);
+                    return (<div>{d.field("name")}</div>);
                   }}
                 />
                 <List.Column
                   name={localization.apiDashboard.privilige}
                   width="240px"
                   rendering={function(d) {
-                    return (<div>{d.field("fields").privilegedescription}</div>);
+                    return (<div>{d.field("privilegedescription")}</div>);
                   }}
                 />
                 <List.Column
@@ -85,7 +85,7 @@ return React.createClass({
                   width="70px"
                   rendering={function(d) {
                     return (
-                      <label className='oauth-delete-token' onClick={function() {self.deleteGrantedPrivilige(d.field("fields").tokenid,d.field("fields").privilege)}}>
+                      <label className='oauth-delete-token' onClick={function() {self.deleteGrantedPrivilige(d.field("tokenid"),d.field("privilege"))}}>
                         {localization.apiDashboard.deleteToken}
                       </label>);
                   }}
@@ -100,13 +100,13 @@ return React.createClass({
               <List.List
                 ref='personaltokenlist'
                 url="/oauth/dashboard/personaltoken"
-                dataFetcher={function(d) {return d.list;}}
+                dataFetcher={function(d) {return d.personal_tokens;}}
               >
                 <List.Column
                   name="Client credentials identifier"
                   width="120px"
                   rendering={function(d) {
-                    return (<div>{d.field("fields").apitoken}</div>);
+                    return (<div>{d.field("apitoken")}</div>);
                   }}
                 />
                 <List.Column
@@ -114,7 +114,7 @@ return React.createClass({
                   width="120px"
                   rendering={function(d) {
                       if (d.getProperty("hiddenSecret"))
-                        return (<div>{d.field("fields").apisecret}</div>);
+                        return (<div>{d.field("apisecret")}</div>);
                       else
                         return (
                           <span
@@ -130,7 +130,7 @@ return React.createClass({
                   name="Token credentials identifier"
                   width="120px"
                   rendering={function(d) {
-                    return (<div>{d.field("fields").accesstoken}</div>);
+                    return (<div>{d.field("accesstoken")}</div>);
                   }}
                 />
                 <List.Column
@@ -138,7 +138,7 @@ return React.createClass({
                   width="120px"
                   rendering={function(d) {
                       if (d.getProperty("hiddenAccess"))
-                        return (<div>{d.field("fields").accesssecret}</div>);
+                        return (<div>{d.field("accesssecret")}</div>);
                       else
                         return (
                           <span
@@ -183,14 +183,14 @@ return React.createClass({
              <List.List
               ref='apitokenlist'
               url="/oauth/dashboard/apitokens"
-              idFetcher={function(d) {return d.field("fields").apitoken;}}
-              dataFetcher={function(d) {return d.list;}}
+              idFetcher={function(d) {return d.field("apitoken");}}
+              dataFetcher={function(d) {return d.api_tokens;}}
              >
               <List.Column
                 name="Client credentials identifier"
                 width="240px"
                 rendering={function(d) {
-                  return (<div>{d.field("fields").apitoken}</div>);
+                  return (<div>{d.field("apitoken")}</div>);
                 }}
               />
               <List.Column
@@ -198,7 +198,7 @@ return React.createClass({
                 width="240px"
                 rendering={function(d) {
                   if (d.getProperty("hidden"))
-                    return (<div>{d.field("fields").apisecret}</div>);
+                    return (<div>{d.field("apisecret")}</div>);
                   else
                     return (
                       <span
@@ -215,7 +215,7 @@ return React.createClass({
                 width="70px"
                 rendering={function(d) {
                   return (
-                    <label className='oauth-delete-token' onClick={function() {self.deleteApiToken(d.field("fields").apitoken)}}>
+                    <label className='oauth-delete-token' onClick={function() {self.deleteApiToken(d.field("apitoken"))}}>
                       {localization.apiDashboard.deleteToken}
                     </label>);
                 }}

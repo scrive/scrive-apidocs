@@ -29,9 +29,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
-import qualified Data.Text as T
 import qualified Data.Unjson as Unjson
-import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
 import Administration.AddPaymentPlan
@@ -43,12 +41,14 @@ import Company.Model
 import CompanyAccounts.Model
 import DB
 import Doc.Action (postDocumentClosedActions)
+import Doc.API.V2.DocumentAccess
+import Doc.API.V2.JSON.Document
+import Doc.API.V2.JSON.List
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model
-import Doc.Model.OrderBy
 import Doc.SignatoryLinkID
 import EvidenceLog.Model
 import File.Model
@@ -62,7 +62,6 @@ import IPAddress ()
 import Kontra
 import KontraLink
 import KontraPrelude
-import ListUtil
 import Mails.Model
 import MinutesTime
 import Payments.Action
@@ -213,107 +212,48 @@ paymentPlanJSON mpaymentplan mci recurlysubdomain =  runJSONGenT $ do
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
-    params <- getListParams
-    let
-      filters = companySearchingFromParams params
-      sorting = companySortingFromParams params
-      (offset, limit) = companyPaginationFromParams companiesPageSize params
-      companiesPageSize = 100
-    allCompanies <- dbQuery $ GetCompanies filters sorting offset limit
-    let companies = PagedList { list       = allCompanies
-                              , params     = params
-                              , pageSize   = companiesPageSize
-                              , listLength = length allCompanies
-                              }
+    limit    <- guardJustM $ readField "limit"
+    offset   <- guardJustM $ readField "offset"
+    textFilter <- getField "text" >>= \case
+                     Nothing -> return []
+                     Just s -> return [CompanyFilterByString s]
+    usersFilter <- isFieldSet "allCompanies" >>= \case
+                     True ->  return []
+                     False -> return [CompanyManyUsers]
+    allCompanies <- dbQuery $ GetCompanies (textFilter ++ usersFilter) offset limit
     runJSONGenT $ do
-            valueM "list" $ forM (take companiesPageSize $ allCompanies) $ \company -> runJSONGenT $ do
-                J.object "fields" $ do
-                    value "id"            $ show . companyid $ company
-                    value "companyname"   $ getCompanyName $ company
-                    value "companynumber" $ getCompanyNumber $ company
-                    value "companyaddress" $ companyaddress . companyinfo $ company
-                    value "companyzip"     $ companyzip . companyinfo $ company
-                    value "companycity"    $ companycity . companyinfo $ company
-                    value "companycountry" $ companycountry . companyinfo $ company
-                value "link" $ show $ LinkCompanyAdmin $ companyid $ company
-            value "paging" $ pagingParamsJSON companies
-
-companySearchingFromParams :: ListParams -> [CompanyFilter]
-companySearchingFromParams params =
-  (case listParamsSearching params of
-    "" -> []
-    x -> [CompanyFilterByString x])
-  ++
-  (case (listParamsFilters params) of
-    (("users","all"):_) -> []
-    _ -> [CompanyManyUsers])
-
-companySortingFromParams :: ListParams -> [AscDesc CompanyOrderBy]
-companySortingFromParams params =
-   concatMap x (listParamsSorting params)
-  where
-    x "companyname"       = [Asc CompanyOrderByName]
-    x "companynameREV"    = [Desc CompanyOrderByName]
-    x "companynumber"     = [Asc CompanyOrderByNumber]
-    x "companynumberREV"  = [Desc CompanyOrderByNumber]
-    x "companyaddress"    = [Asc CompanyOrderByAddress]
-    x "companyaddressREV" = [Desc CompanyOrderByAddress]
-    x "companyzip"        = [Asc CompanyOrderByZip]
-    x "companyzipREV"     = [Desc CompanyOrderByZip]
-    x "companycity"       = [Asc CompanyOrderByCity]
-    x "companycityREV"    = [Desc CompanyOrderByCity]
-    x "companycountry"    = [Asc CompanyOrderByCountry]
-    x "companycountryREV" = [Desc CompanyOrderByCountry]
-    x _                   = []
-
-companyPaginationFromParams :: Int -> ListParams -> (Integer,Integer)
-companyPaginationFromParams pageSize params = (fromIntegral (listParamsOffset params), fromIntegral pageSize)
-
-userSearchingFromParams :: ListParams -> [UserFilter]
-userSearchingFromParams params =
-  case listParamsSearching params of
-    "" -> []
-    x -> [UserFilterByString x]
-
-userSortingFromParams :: ListParams -> [AscDesc UserOrderBy]
-userSortingFromParams params =
-   (concatMap x (listParamsSorting params)) ++ [Asc UserOrderByName]
-  where
-    x "username"    = [Asc UserOrderByName]
-    x "usernameREV" = [Desc UserOrderByName]
-    x "email"       = [Asc UserOrderByEmail]
-    x "emailREV"    = [Desc UserOrderByEmail]
-    x "tos"         = [Asc UserOrderByAccountCreationDate]
-    x "tosREV"      = [Desc UserOrderByAccountCreationDate]
-    x _             = [Asc UserOrderByName]
-
+            valueM "companies" $ forM allCompanies $ \company -> runJSONGenT $ do
+              value "id"            $ show . companyid $ company
+              value "companyname"   $ getCompanyName $ company
+              value "companynumber" $ getCompanyNumber $ company
+              value "companyaddress" $ companyaddress . companyinfo $ company
+              value "companyzip"     $ companyzip . companyinfo $ company
+              value "companycity"    $ companycity . companyinfo $ company
+              value "companycountry" $ companycountry . companyinfo $ company
 
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = onlySalesOrAdmin $ do
-    params <- getListParams
-    let filters = userSearchingFromParams params
-        sorting = userSortingFromParams params
-        pagination = ((listParamsOffset params),(usersPageSize * 4))
-        usersPageSize = 100
-    allUsers <- dbQuery $ GetUsersWithCompanies filters sorting pagination
-    let users = PagedList { list       = allUsers
-                          , params     = params
-                          , pageSize   = usersPageSize
-                          , listLength = length allUsers + listParamsOffset params
-                          }
+    limit    <- guardJustM $ readField "limit"
+    offset   <- guardJustM $ readField "offset"
+    textFilter <- getField "text" >>= \case
+                     Nothing -> return []
+                     Just s -> return [UserFilterByString s]
+    sorting <- getField "tosSorting" >>= \case
+                     Just "ascending"   -> return [Asc UserOrderByAccountCreationDate]
+                     Just "descending" -> return [Desc UserOrderByAccountCreationDate]
+                     _ -> return [Asc UserOrderByName]
+    allUsers <- dbQuery $ GetUsersWithCompanies textFilter sorting (offset,limit)
 
     runJSONGenT $ do
-            valueM "list" $ forM (take usersPageSize $ list users) $ \(user,mcompany) -> runJSONGenT $ do
-                J.object "fields" $ do
-                    value "id" $ show $ userid user
-                    value "username" $ getFullName user
-                    value "email"    $ getEmail user
-                    value "companyposition" $ usercompanyposition $ userinfo user
-                    value "company"  $ getCompanyName mcompany
-                    value "phone"    $ userphone $ userinfo user
-                    value "tos"      $ formatTimeISO <$> (userhasacceptedtermsofservice user)
-                value "link" $ show $ LinkUserAdmin $ userid user
-            value "paging" $ pagingParamsJSON users
+      valueM "users" $ forM (allUsers) $ \(user,mcompany) -> runJSONGenT $ do
+        value "id" $ show $ userid user
+        value "username" $ getFullName user
+        value "email"    $ getEmail user
+        value "companyposition" $ usercompanyposition $ userinfo user
+        value "company"  $ getCompanyName mcompany
+        value "phone"    $ userphone $ userinfo user
+        value "tos"      $ formatTimeISO <$> (userhasacceptedtermsofservice user)
+
 
 {- | Handling user details change. It reads user info change -}
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
@@ -510,68 +450,39 @@ getUserInfoChange = do
       , useremail           = fromMaybe useremail museremail
     }
 
-jsonDocuments :: Kontrakcja m => m JSValue
+jsonDocuments :: Kontrakcja m => m Response
 jsonDocuments = onlySalesOrAdmin $ do
-  params <- getListParams
+  adminUser <- guardJustM $ ctxmaybeuser <$> getContext
   muid <- readField "userid"
   mcid <- readField "companyid"
-  let sorting    = docSortingFromParams params
-      searching  = docSearchingFromParams params
-      pagination = (listParamsOffset params, listParamsLimit params, docsPageSize)
-      domain     = case (mcid, muid) of
-        (Nothing, Nothing)  -> DocumentsOfWholeUniverse
-        (Just cid, Nothing) -> DocumentsOfCompany cid
-        (Nothing, Just uid) -> DocumentsVisibleToUser uid
+  offset   <- guardJustM $ readField "offset"
+  maxcount <- guardJustM $ readField  "max"
+
+  requestedFilters <- getFieldBS "filter" >>= \case
+      Just paramValue -> case Aeson.eitherDecode paramValue of
+         Right js -> case (Unjson.parse Unjson.unjsonDef js) of
+            (Result res []) -> return $ join $ toDocumentFilter (userid adminUser) <$> res
+            _ -> internalError
+         Left _ -> internalError
+      Nothing -> return []
+
+  requestedSorting <- getFieldBS "sorting" >>= \case
+      Just paramValue -> case Aeson.eitherDecode paramValue of
+         Right js -> case (Unjson.parse Unjson.unjsonDef js) of
+            (Result res []) -> return $ toDocumentSorting <$> res
+            _ -> internalError
+         Left _ -> internalError
+      Nothing -> return []
+
+  let (domain,filtering, sorting)     = case (mcid, muid) of
+        -- When fetching all documents, we don't allow any filtering, and only default sort is allowed
+        (Nothing, Nothing)  -> (DocumentsOfWholeUniverse,[],[Desc DocumentOrderByMTime])
+        (Just cid, Nothing) -> (DocumentsOfCompany cid,requestedFilters,requestedSorting)
+        (Nothing, Just uid) -> (DocumentsVisibleToUser uid, (DocumentFilterByAuthor uid) : requestedFilters,requestedSorting)
         _                   -> $unexpectedError "Can't pass both user id and company id"
-      docsPageSize = 100
-
-  (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain searching sorting pagination
-
-  let documents = PagedList { list       = allDocs
-                            , params     = params
-                            , pageSize   = docsPageSize
-                            -- Backward compatibility. When offset is set, we always return list length equal or greater then offset.
-                            , listLength = max (listParamsOffset params) allDocsCount
-                            }
-  runJSONGenT $ do
-            valueM "list" $ forM (take docsPageSize $ list documents) $ \doc-> runJSONGenT $ do
-                 J.object "fields" $ do
-                   value "id" $ show $ documentid doc
-                   value "ctime" $ formatTimeAPI $ documentctime doc
-                   value "mtime" $ formatTimeAPI $ documentmtime doc
-                   J.object "author" $ do
-                          value "name" $ getAuthorName doc
-                          value "email" $ maybe "" getEmail $ getAuthorSigLink doc
-                          value "company" $ maybe "" getCompanyName $ getAuthorSigLink doc
-                   value "title"  $ documenttitle doc
-                   value "status" $ take 20 $ show $ documentstatus doc
-                   value "type"   $ show $ documenttype doc
-                   value "signs"  $ map (getSmartName) $ documentsignatorylinks doc
-            value "paging" $  pagingParamsJSON documents
-
-docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
-docSortingFromParams params =
-  addMTimeSorting . concatMap x $ listParamsSorting params
-  where
-    x "status"            = [Asc DocumentOrderByStatusClass]
-    x "statusREV"         = [Desc DocumentOrderByStatusClass]
-    x "title"             = [Asc DocumentOrderByTitle]
-    x "titleREV"          = [Desc DocumentOrderByTitle]
-    x "time"              = [Asc DocumentOrderByMTime]
-    x "timeREV"           = [Desc DocumentOrderByMTime]
-    x "ctime"             = [Asc DocumentOrderByCTime]
-    x "ctimeREV"          = [Desc DocumentOrderByCTime]
-    x "signs"             = [Asc DocumentOrderByPartners]
-    x "signsREV"          = [Desc DocumentOrderByPartners]
-    x "type"              = [Asc DocumentOrderByType]
-    x "typeREV"           = [Desc DocumentOrderByType]
-    x "author"            = [Asc DocumentOrderByAuthor]
-    x "authorRev"         = [Desc DocumentOrderByAuthor]
-    x _                   = []
-
-
-docSearchingFromParams :: ListParams -> [DocumentFilter]
-docSearchingFromParams params = processSearchStringToFilter . T.pack . listParamsSearching $ params
+  (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain filtering sorting (offset, 1000, maxcount)
+  let json = listToJSONBS (allDocsCount,(\d -> (documentAccessForAdminonly d,d)) <$> allDocs)
+  return $ Response 200 Map.empty nullRsFlags json Nothing
 
 
 handleBackdoorQuery :: Kontrakcja m => m Response
@@ -818,9 +729,9 @@ unjsonBrandedDomain = objectOf $ pure BrandedDomain
 
 unjsonBrandedDomainsList :: UnjsonDef [BrandedDomain]
 unjsonBrandedDomainsList = objectOf $
-  fieldBy "list"
+  fieldBy "domains"
   id
-  "Propper list"
+  "List of branded domains"
   (arrayOf unjsonBrandedDomain)
 
 

@@ -12,7 +12,6 @@ module Company.Model (
   , SetCompanyIPAddressMaskList(..)
 
   , CompanyFilter(..)
-  , CompanyOrderBy(..)
   ) where
 
 import Control.Monad.Catch
@@ -74,37 +73,13 @@ companyFilterToWhereClause (CompanyManyUsers) = do
     , sqlWhere $ "((SELECT count(*) FROM companyinvites WHERE companyinvites.company_id = companies.id) > 0)"
     ]
 
-
-data CompanyOrderBy
-  = CompanyOrderByName    -- ^ Order by title, alphabetically, case insensitive
-  | CompanyOrderByNumber  -- ^ Order by modification time
-  | CompanyOrderByAddress -- ^ Order by creation time
-  | CompanyOrderByZip     -- ^ Order by status class.
-  | CompanyOrderByCity    -- ^ Order by document type.
-  | CompanyOrderByCountry -- ^ Order by process
-  | CompanyOrderByID      -- ^ Order by process
-
-companyOrderByToOrderBySQL :: CompanyOrderBy -> SQL
-companyOrderByToOrderBySQL order =
-  case order of
-    CompanyOrderByName    -> "companies.name"
-    CompanyOrderByNumber  -> "companies.number"
-    CompanyOrderByAddress -> "companies.address"
-    CompanyOrderByZip     -> "companies.zip"
-    CompanyOrderByCity    -> "companies.city"
-    CompanyOrderByCountry -> "companies.country"
-    CompanyOrderByID      -> "companies.id"
-
-data GetCompanies = GetCompanies [CompanyFilter] [AscDesc CompanyOrderBy] Integer Integer
+data GetCompanies = GetCompanies [CompanyFilter] Integer Integer
 instance MonadDB m => DBQuery m GetCompanies [Company] where
-  query (GetCompanies filters sorting offset limit) = do
+  query (GetCompanies filters offset limit) = do
     runQuery_ $ sqlSelect "companies" $ do
        sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
        selectCompaniesSelectors
        mapM_ companyFilterToWhereClause filters
-       let ascdesc (Asc x) = companyOrderByToOrderBySQL x
-           ascdesc (Desc x) = companyOrderByToOrderBySQL x <> " DESC"
-       mapM_ (sqlOrderBy . ascdesc) sorting
        sqlOffset offset
        sqlLimit limit
        sqlOrderBy "companies.id"

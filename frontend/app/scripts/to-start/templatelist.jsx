@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/backbone_mixin','lists/list', 'to-start/deliverymethodtooltip', 'legacy_code'], function(React, BackboneMixin, List, DeliveryMethodTooltipMixin) {
+define(['React', 'common/backbone_mixin', 'archive/utils', 'lists/list', 'to-start/deliverymethodtooltip', 'legacy_code'], function(React, BackboneMixin, Utils, List, DeliveryMethodTooltipMixin) {
 
 return React.createClass({
   mixins: [DeliveryMethodTooltipMixin],
@@ -27,7 +27,7 @@ return React.createClass({
       }).send();
     },
     deliveryMethodIcons: function(data) {
-      var dms = data.field("fields").deliveryMethods || [];
+      var dms = _.map(data.field("parties"),function(s) {return s.delivery_method;});
       var self = this;
       uniqdms = _.uniq(dms);
 
@@ -56,24 +56,30 @@ return React.createClass({
         <div className="create-from-template">
 
           <List.List
-            url="/api/frontend/list?documentType=Template"
+            maxPageSize={1000} // This view will not work well when there are more templates
+            url={Utils.listCallUrl}
+            paramsFunction={Utils.paramsFunctionWithFilter([
+                {"filter_by" : "template", "is_template" : true},
+                {"filter_by" : "trash", "is_trashed" : false}
+              ])}
             dataFetcher={function(d) {
-              var list = d.list;
-              var onlyTemplatesWithFile = _.reject(list, function(doc) { 
-                return doc.fields['file'] == null;
+              var list = Utils.dataFetcher(d);
+              var onlyTemplatesWithFile = _.reject(list, function(doc) {
+                return doc.file == null;
               });
 
               return onlyTemplatesWithFile;
             }}
-            idFetcher={function(d) {return d.field("fields").id;}}
+            idFetcher={Utils.idFetcher}
+            loadLater={self.props.loadLater}
           >
 
           <List.Column
             name={localization.archive.templates.columns.template}
             sorting="title"
             rendering={function(d) {
-              var id = d.field("fields").id;
-              var title = d.field("fields").title;
+              var id = d.field("id");
+              var title = d.field("title");
               return (<a onClick={function(){self.createFromTemplate(id);return false;}}>{title}</a>);
             }}
           />

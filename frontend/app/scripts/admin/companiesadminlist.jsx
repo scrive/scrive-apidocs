@@ -2,17 +2,40 @@
 
 define(['React', 'lists/list','legacy_code'], function(React, List) {
 
+var companyLimit = 100;
 
 return React.createClass({
     mixins : [List.ReloadableContainer],
+    companyLink : function(d) {
+      return "/adminonly/companyadmin/" + d.field("id");
+    },
     render: function() {
       var self = this;
       return (
         <List.List
           url='/adminonly/companies'
-          dataFetcher={function(d) {return d.list;}}
-          idFetcher={function(d) {return d.field("fields").id;}}
+          dataFetcher={function(d) {return _.first(d.companies,companyLimit);}}
+          totalCountFunction={function(data,list_offset){ return data.companies.length + list_offset;}}
+          idFetcher={function(d) {return d.field("id");}}
           loadLater={self.props.loadLater}
+          paramsFunction = {function(text,selectfiltering,_sorting,offset) {
+            var params  = {
+              // Limit is set to more then amount of companies we are displaing. This way we can get information if there are more pages.
+              limit: companyLimit + 1,
+              offset : offset
+            };
+            if (text) {
+              params.text = text;
+            }
+            if (selectfiltering) {
+              _.each(selectfiltering.filters(), function(f) {
+                if (f.value === "allCompanies") {
+                  params.allCompanies =  "true";
+                }
+              });
+            }
+            return params;
+          }}
           ref='list'
         >
 
@@ -23,67 +46,61 @@ return React.createClass({
             width={200}
             options={[
               {name: "With more than one user", value: ""},
-              {name: "All", value: "all"}
+              {name: "All", value: "allCompanies"}
             ]}
           />
           <List.Column
             name="Name"
             width="120px"
-            sorting="companyname"
             rendering={function(d) {
-              return (<a href={d.field("link")}>{d.field("fields").companyname}</a>);
+              return (<a href={self.companyLink(d)}>{d.field("companyname")}</a>);
             }}
           />
           <List.Column
             name="Number"
             width="100px"
-            sorting="companynumber"
             rendering={function(d) {
-              return (<a href={d.field("link")}>{d.field("fields").companynumber}</a>);
+              return (<a href={self.companyLink(d)}>{d.field("companynumber")}</a>);
             }}
           />
 
           <List.Column
             name="Address"
             width="100px"
-            sorting="companyaddress"
             rendering={function(d) {
-              return (<a href={d.field("link")}>{d.field("fields").companyaddress}</a>);
+              return (<a href={self.companyLink(d)}>{d.field("companyaddress")}</a>);
             }}
           />
           <List.Column
             name="Zip"
             width="50px"
-            sorting="companyzip"
             rendering={function(d) {
-              return (<a href={d.field("link")}>{d.field("fields").companyzip}</a>);
+              return (<a href={self.companyLink(d)}>{d.field("companyzip")}</a>);
             }}
           />
           <List.Column
             name="City"
             width="100px"
-            sorting="companycity"
             rendering={function(d) {
-              return (<a href={d.field("link")}>{d.field("fields").companycity}</a>);
+              return (<a href={self.companyLink(d)}>{d.field("companycity")}</a>);
             }}
           />
           <List.Column
             name="Country"
             width="100px"
-            sorting="companycountry"
             rendering={function(d) {
-              return (<a href={d.field("link")}>{d.field("fields").companycountry}</a>);
+              return (<a href={self.companyLink(d)}>{d.field("companycountry")}</a>);
             }}
           />
           <List.Column
             name="ID"
             width="100px"
             rendering={function(d) {
-              return (<a href={d.field("link")}>{d.field("fields").id}</a>);
+              return (<a href={self.companyLink(d)}>{d.field("id")}</a>);
             }}
           />
 
-          <List.Pagination/>
+          <List.Pagination maxNextPages={1}/>
         </List.List>
       );
     }

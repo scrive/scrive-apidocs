@@ -1364,6 +1364,7 @@ javascriptLocalisation =
             , faviconDescription : "$_brandingCompanySettingsFaviconDescription()$"
             , uploadFavicon : "$_brandingCompanySettingsUploadFavicon()$"
           }
-      }
+      },
+      notNamedParty : "$_notNamedParty()$"
     };
 ###

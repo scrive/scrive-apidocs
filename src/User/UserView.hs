@@ -83,17 +83,31 @@ companyJSON company = runJSONGenT $ do
     value "allowsavesafetycopy" $ companyallowsavesafetycopy (companyinfo company)
     value "idledoctimeout" $ companyidledoctimeout $ companyinfo company
 
-userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> [JSValue]
-userStatsToJSON formatTime uuss = map tojson uuss
-  where
-    tojson uus = runJSONGen . object "fields" $ do
+userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue
+userStatsToJSON formatTime uuss = runJSONGen $ objects "stats" $ for uuss $ \uus -> do
       value "date" (formatTime (fst (uusTimeSpan uus)))
       value "closed" (uusDocumentsClosed uus)
       value "sent" (uusDocumentsSent uus)
       value "signatures" (uusSignaturesClosed uus)
 
-companyStatsToJSON :: (UTCTime -> String) -> String -> [UserUsageStats] -> [JSValue]
-companyStatsToJSON formatTime totalText uuss = map f summarized
+companyStatsToJSON :: (UTCTime -> String) -> String -> [UserUsageStats] -> JSValue
+companyStatsToJSON formatTime totalText uuss = runJSONGen $ objects "stats" $ for summarized $ \uus -> do
+        value "date" (formatTime (fst (uusTimeSpan uus)))
+        value "closed" (uusDocumentsClosed uus)
+        value "sent" (uusDocumentsSent uus)
+        value "signatures" (uusSignaturesClosed uus)
+        value "name" totalText
+        objects "user_stats" $ do
+          [do value "date" (formatTime (fst (uusTimeSpan uus')))
+              value "closed" (uusDocumentsClosed uus')
+              value "sent" (uusDocumentsSent uus')
+              value "signatures" (uusSignaturesClosed uus')
+              value "name" ((\(_,_,n) -> n) <$> uusUser uus')
+              value "email" ((\(_,e,_) -> e) <$> uusUser uus')
+            | uus' <- uuss,
+              uusTimeSpan uus' == uusTimeSpan uus,
+              ((uusDocumentsClosed uus' > 0) || (uusDocumentsSent uus' > 0) || (uusSignaturesClosed uus' > 0))
+              ]
   where
     uusGrouped :: [[UserUsageStats]]
     uusGrouped = groupBy sameTimespan uuss
@@ -106,25 +120,6 @@ companyStatsToJSON formatTime totalText uuss = map f summarized
                       , uusSignaturesClosed = uusSignaturesClosed u1 + uusSignaturesClosed u2
                       }
     sameTimespan u1 u2 = uusTimeSpan u1 == uusTimeSpan u2
-    f uus = runJSONGen $ do
-      object "fields" $ do
-        value "date" (formatTime (fst (uusTimeSpan uus)))
-        value "closed" (uusDocumentsClosed uus)
-        value "sent" (uusDocumentsSent uus)
-        value "signatures" (uusSignaturesClosed uus)
-        value "name" totalText
-      objects "subfields" $ do
-         [do value "date" (formatTime (fst (uusTimeSpan uus')))
-             value "closed" (uusDocumentsClosed uus')
-             value "sent" (uusDocumentsSent uus')
-             value "signatures" (uusSignaturesClosed uus')
-             value "name" ((\(_,_,n) -> n) <$> uusUser uus')
-             value "email" ((\(_,e,_) -> e) <$> uusUser uus')
-           | uus' <- uuss,
-             uusTimeSpan uus' == uusTimeSpan uus,
-             ((uusDocumentsClosed uus' > 0) || (uusDocumentsSent uus' > 0) || (uusSignaturesClosed uus' > 0))
-             ]
-
 
 
 pageAcceptTOS :: TemplatesMonad m => m String

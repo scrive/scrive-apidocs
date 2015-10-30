@@ -3,9 +3,9 @@
 define(['React', 'common/backbone_mixin', 'common/hubspot_service', 'lists/list','legacy_code'], function(React, BackboneMixin, HubSpot, List) {
 
 var userFullName = function(d) {
-    var fullname = d.field("fields").fullname;
+    var fullname = d.field("fullname");
     if (fullname== undefined || fullname.length < 2) {
-      fullname = d.field("fields").email;
+      fullname = d.field("email");
     }
     return fullname;
 };
@@ -111,8 +111,8 @@ var openRemoveUserPopup = function(d,callback) {
             new FlashMessage({type : "error", content : localization.account.companyAccounts.deleteFailedHasDocuments});
           callback();
         },
-      removeid: d.field("fields").id,
-      removeemail: d.field("fields").email,
+      removeid: d.field("id"),
+      removeemail: d.field("email"),
       mixpanel : {name : 'Accept', props : {'Accept' : 'delete user'}}
     }).sendAjax();
     }
@@ -133,7 +133,7 @@ var openResendInvitationPopup = function(d,callback) {
                                           callback();
                                         },
                                         method: "POST",
-                                        resendid: d.field("fields").id,
+                                        resendid: d.field("id"),
                                         mixpanel : {name : 'Accept',
                                                       props : {'Accept' : 'resend confirmation'}}
                                       }).sendAjax();
@@ -153,19 +153,19 @@ return React.createClass({
       new Submit({
         url: "/account/companyaccounts/changerole",
         method: "POST",
-        makeadmin: d.field("fields").role == "RoleStandard",
-        changeid: d.field("fields").id
+        makeadmin: d.field("role") == "RoleStandard",
+        changeid: d.field("id")
       }).sendAjax(function() {
         self.reload();
       });
     },
     roleText : function(d) {
        var label = localization.account.companyAccounts.roleStandard;
-       if (d.field("fields").role =="RoleInvite" || d.field("fields").tos == undefined) {
+       if (d.field("role") == "RoleInvite" || d.field("tos") == undefined) {
          label =  localization.account.companyAccounts.rolePending;
-       } else if (d.field("fields").role =="RoleAdmin") {
+       } else if (d.field("role") =="RoleAdmin") {
          label = localization.account.companyAccounts.roleAdmin;
-       } else if (d.field("fields").role =="RoleStandard") {
+       } else if (d.field("role") =="RoleStandard") {
          label =  localization.account.companyAccounts.roleStandard;
        }
        return label;
@@ -176,7 +176,19 @@ return React.createClass({
           <List.List
             ref='list'
             url="/companyaccounts"
-            dataFetcher={function(d) {return d.list;}}
+            dataFetcher={function(d) {return d.accounts;}}
+            loadLater={self.props.loadLater}
+            paramsFunction = {function(text,_selectfiltering,sorting,offset) {
+              var params  = {};
+              if (text) {
+                params.text = text;
+              }
+              if (sorting.current()) {
+                params.sorting = sorting.current();
+                params.order = sorting.isAsc() ? "ascending" : "descending";
+              }
+              return params;
+            }}
           >
             <List.TextFiltering text={localization.account.companyAccounts.search}/>
 
@@ -192,7 +204,7 @@ return React.createClass({
               sorting="fullname"
               width="260px"
               rendering={function(d) {
-                return (<div>{d.field("fields").fullname}</div>);
+                return (<div>{d.field("fullname")}</div>);
               }}
             />
 
@@ -201,7 +213,7 @@ return React.createClass({
               sorting="email"
               width="260px"
               rendering={function(d) {
-                return (<div>{d.field("fields").email}</div>);
+                return (<div>{d.field("email")}</div>);
               }}
             />
 
@@ -210,7 +222,7 @@ return React.createClass({
               sorting="role"
               width="260px"
               rendering={function(d) {
-                var canChangeRole = !d.field("fields").isctxuser || !d.field("fields").role =="RoleInvite";
+                var canChangeRole = !d.field("isctxuser") || !d.field("role") =="RoleInvite";
                 if (canChangeRole) {
                   return (<a onClick={function() {self.changeRole(d);}}>{self.roleText(d)}</a>);
                 } else {
@@ -224,7 +236,7 @@ return React.createClass({
               width="16px"
               sorting="activated"
               rendering={function(d) {
-                var canBeReinvited = !d.field("fields").activated;
+                var canBeReinvited = !d.field("activated");
                 if (canBeReinvited) {
                   return (
                       <a className='remind icon' style={{marginTop : "3px"}} onClick={function() {openResendInvitationPopup(d,function() {self.reload();})} }/>
@@ -240,7 +252,7 @@ return React.createClass({
               width="32px"
               sorting="deletable"
               rendering={function(d) {
-                var canBeDeleted = (!d.field("fields").isctxuser) && d.field("fields").deletable;
+                var canBeDeleted = (!d.field("isctxuser")) && d.field("deletable");
                 if (canBeDeleted) {
                   return (
                       <a className='icon delete' style={{marginTop : "3px"}} onClick={function() {openRemoveUserPopup(d,function() {self.reload();})} }/>
@@ -250,7 +262,6 @@ return React.createClass({
                 }
               }}
             />
-            <List.Pagination/>
           </List.List>
       );
     }

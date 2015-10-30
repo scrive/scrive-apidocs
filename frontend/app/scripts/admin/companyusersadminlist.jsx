@@ -108,6 +108,11 @@ var openNewUserModal = function(companyid,callback) {
 
 return React.createClass({
     mixins : [List.ReloadableContainer],
+    accountLink : function(d) {
+      if (d.field("id") != "") {
+        return "/adminonly/useradmin/" + d.field("id");
+      }
+    },
     openDeleteInvitationModal : function(d) {
       var self = this;
       var popup = new Confirmation({
@@ -117,7 +122,7 @@ return React.createClass({
                      + " User will still exist in his original company.</div>"),
         onAccept : function() {
           new Submit({
-            url: "/adminonly/useradmin/deleteinvite/" + self.props.companyid + "/" + d.field("fields").id,
+            url: "/adminonly/useradmin/deleteinvite/" + self.props.companyid + "/" + d.field("id"),
             method: "POST",
             ajaxsuccess: function() {
               popup.clear();
@@ -137,9 +142,19 @@ return React.createClass({
       return (
         <List.List
           url={"/adminonly/companyaccounts/" + self.props.companyid}
-          dataFetcher={function(d) {return d.list;}}
-          idFetcher={function(d) {return d.field("fields").id;}}
+          dataFetcher={function(d) {return d.accounts;}}
           loadLater={self.props.loadLater}
+          paramsFunction = {function(text,_selectfiltering,sorting,offset) {
+            var params  = {};
+            if (text) {
+              params.text = text;
+            }
+            if (sorting.current()) {
+              params.sorting = sorting.current();
+              params.order = sorting.isAsc() ? "ascending" : "descending";
+            }
+            return params;
+          }}
           ref='list'
         >
          <List.TextFiltering text={"Company Accounts" } />
@@ -158,7 +173,7 @@ return React.createClass({
            width="100px"
            sorting="fullname"
            rendering={function(d) {
-             return (<a href={d.field("link")}>{d.field("fields").fullname}</a>);
+             return (<a href={self.accountLink(d)}>{d.field("fullname")}</a>);
            }}
          />
          <List.Column
@@ -166,7 +181,7 @@ return React.createClass({
            width="100px"
            sorting="email"
            rendering={function(d) {
-              return (<a href={d.field("link")}>{d.field("fields").email}</a>);
+              return (<a href={self.accountLink(d)}>{d.field("email")}</a>);
            }}
          />
 
@@ -175,11 +190,11 @@ return React.createClass({
            width="100px"
            sorting="role"
            rendering={function(d) {
-             if (d.field("fields").role =="RoleAdmin") {
+             if (d.field("role") =="RoleAdmin") {
                return (<span>Admin</span>);
-             } else if (d.field("fields").role =="RoleStandard") {
+             } else if (d.field("role") =="RoleStandard") {
                return (<span>Standard</span>);
-             } else if (d.field("fields").role =="RoleInvite") {
+             } else if (d.field("role") =="RoleInvite") {
                return (<span>!User in different company!</span>);
              } else {
                return (<span/>);
@@ -191,10 +206,10 @@ return React.createClass({
            name="TOS date"
            width="100px"
            rendering={function(d) {
-             if (d.field("fields").role =="RoleInvite") {
+             if (d.field("role") =="RoleInvite") {
                return (<a style={{color:"red"}} href="#" onClick={function() {self.openDeleteInvitationModal(d)}}> Click to delete this invitation </a>);
              }
-             var time = d.field("fields").tos;
+             var time = d.field("tos");
              if (time != undefined && time != "") {
                return (<small> {moment(time).toDate().toTimeAbrev()}</small>);
              } else
@@ -202,8 +217,6 @@ return React.createClass({
            }}
          />
 
-
-         <List.Pagination/>
        </List.List>
      );
    }

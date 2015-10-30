@@ -5,6 +5,7 @@ module Doc.API.V2.DocumentAccess (
 , propertyForCurrentSignatory
 , documentAccessForUser
 , documentAccessForSlid
+, documentAccessForAdminonly
 ) where
 
 import Doc.DocStateData
@@ -23,11 +24,12 @@ data DocumentAccess = DocumentAccess {
 data DocumentAccessMode =
     SignatoryDocumentAccess SignatoryLinkID -- Person looking at document is this signatory
   | AuthorDocumentAccess -- Person looking at document is an author
-  | AdminDocumentAccess  -- Person looking at document is an admin of author
+  | CompanyAdminDocumentAccess  -- Person looking at document is an admin of author
+  | SystemAdminDocumentAccess  -- Person looking at document is an admin of author
 
 canSeeSignlinks :: DocumentAccess -> Bool
 canSeeSignlinks (DocumentAccess { daAccessMode = AuthorDocumentAccess}) = True
-canSeeSignlinks (DocumentAccess { daAccessMode = AdminDocumentAccess})  = True
+canSeeSignlinks (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess})  = True
 canSeeSignlinks _ = False
 
 propertyForCurrentSignatory :: DocumentAccess -> (SignatoryLink -> a) -> Document -> a
@@ -38,13 +40,21 @@ propertyForCurrentSignatory da f doc =
   where
     slForAccess :: DocumentAccess -> Document -> Maybe SignatoryLink
     slForAccess (DocumentAccess { daAccessMode = SignatoryDocumentAccess sid}) = getSigLinkFor sid
-    slForAccess (DocumentAccess { daAccessMode = AdminDocumentAccess})         = getAuthorSigLink
+    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess})  = getAuthorSigLink
     slForAccess (DocumentAccess { daAccessMode = AuthorDocumentAccess})        = getAuthorSigLink
+    slForAccess (DocumentAccess { daAccessMode = SystemAdminDocumentAccess})   = getAuthorSigLink
 
 documentAccessForUser :: User -> Document -> DocumentAccess
 documentAccessForUser user document = DocumentAccess {
       daDocumentID = documentid document
     , daAccessMode = documentAccessModeForUser user document
+    , daStatus = documentstatus document
+  }
+
+documentAccessForAdminonly :: Document -> DocumentAccess
+documentAccessForAdminonly document =  DocumentAccess {
+      daDocumentID = documentid document
+    , daAccessMode = SystemAdminDocumentAccess
     , daStatus = documentstatus document
   }
 
@@ -55,7 +65,7 @@ documentAccessModeForUser user document =
                  then AuthorDocumentAccess
                  else SignatoryDocumentAccess $ signatorylinkid sl
     Nothing -> if (documentauthorcompanyid document == Just (usercompany user) && useriscompanyadmin user)
-                 then AdminDocumentAccess
+                 then CompanyAdminDocumentAccess
                  else $unexpectedError $ "User " ++ show (userid user) ++ " accessing document " ++ show (documentid document) ++ " without any permission. This should be cought earlier."
 
 documentAccessForSlid :: SignatoryLinkID -> Document -> DocumentAccess

@@ -41,8 +41,8 @@ var DocumentHistoryView =  React.createClass({
       return (
         <div className="document-history-container">
           <List.List
-            url={"/api/frontend/history/" + this.props.documentid}
-            dataFetcher={function(d) {return d.list;}}
+            url={"/api/v2/documents/"+ this.props.documentid + "/history" }
+            dataFetcher={function(d) {return d.events;}}
             ref='list'
             onReload={function() {self.forceUpdate();}}
             showLimit={this.state.expanded ? undefined : 15}
@@ -52,7 +52,7 @@ var DocumentHistoryView =  React.createClass({
               width="46px"
               rendering={function(d) {
                 return (
-                <div className={"icon status "+d.field("fields").status}></div>
+                <div className={"icon status "+d.field("status")}></div>
                 );
               }}
             />
@@ -62,8 +62,8 @@ var DocumentHistoryView =  React.createClass({
               rendering={function(d) {
                 return (
                   <span>
-                      {/*if*/ (d.field("fields").time != undefined && d.field("fields").time != "" ) &&
-                        <span>{moment(d.field("fields").time).toDate().toTimeAbrevWithMinutes()}</span>
+                      {/*if*/ (d.field("time") != undefined && d.field("time") != "" ) &&
+                        <span>{moment(d.field("time")).toDate().toTimeAbrevWithMinutes()}</span>
                       }
                   </span>
                 );
@@ -74,7 +74,7 @@ var DocumentHistoryView =  React.createClass({
               width="200px"
               rendering={function(d) {
                 return (
-                  <div>{d.field("fields").party}</div>
+                  <div>{d.field("party")}</div>
                 );
               }}
             />
@@ -83,7 +83,7 @@ var DocumentHistoryView =  React.createClass({
               width="460px"
               rendering={function(d) {
                 return (
-                <div style={{"marginRight":"30px"}} dangerouslySetInnerHTML={{__html: d.field("fields").text}}/>
+                <div style={{"marginRight":"30px"}} dangerouslySetInnerHTML={{__html: d.field("text")}}/>
                 );
               }}
             />

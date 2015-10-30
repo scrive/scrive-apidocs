@@ -49,7 +49,6 @@ import InputValidation
 import Kontra
 import KontraLink
 import KontraPrelude
-import ListUtil
 import Log.Identifier
 import MagicHash (MagicHash)
 import Mails.SendMail
@@ -216,11 +215,11 @@ getDaysStats euc = do
   case euc of
     Left uid -> do
       stats <- dbQuery $ GetUsageStats (Left uid) timespans
-      return $ singlePageListToJSON $ userStatsToJSON formatTimeYMD stats
+      return $ userStatsToJSON formatTimeYMD stats
     Right cid -> do
       totalS <- renderTemplate_ "statsOrgTotal"
       stats <- dbQuery $ GetUsageStats (Right cid) timespans
-      return $ singlePageListToJSON $ companyStatsToJSON formatTimeYMD totalS stats
+      return $ companyStatsToJSON formatTimeYMD totalS stats
 
 getMonthsStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
 getMonthsStats euc = do
@@ -232,11 +231,11 @@ getMonthsStats euc = do
   case euc of
     Left uid -> do
       stats <- dbQuery $ GetUsageStats (Left uid) timespans
-      return $ singlePageListToJSON $ userStatsToJSON (formatTime' "%Y-%m") stats
+      return $ userStatsToJSON (formatTime' "%Y-%m") stats
     Right cid -> do
       totalS <- renderTemplate_ "statsOrgTotal"
       stats <- dbQuery $ GetUsageStats (Right cid) timespans
-      return $ singlePageListToJSON $ companyStatsToJSON (formatTime' "%Y-%m") totalS stats
+      return $ companyStatsToJSON (formatTime' "%Y-%m") totalS stats
 
 {- |
     Checks for live documents owned by the user.

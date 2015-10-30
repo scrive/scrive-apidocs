@@ -1,5 +1,6 @@
 module Doc.API.V2 (
-  documentAPIV2
+    limitedDocumentAPIV2
+  , documentAPIV2
 ) where
 
 import Happstack.Server.Types
@@ -9,6 +10,14 @@ import Doc.API.V2.Calls
 import Kontra
 import KontraPrelude
 import Routing
+
+-- Subset of v2 limited to list and history call. Rewrite to frontend was splited into two parts, and first part
+-- of rewite requires only this calls. Should be removed when documentAPIV2 is connected in main routing table.
+limitedDocumentAPIV2 :: Route (Kontra Response)
+limitedDocumentAPIV2 = dir "documents" $ choice [
+    dir "list" $ hGet $ toK0 $ docApiV2List
+  , param $ dir "history" $ hGet $ toK1 $ docApiV2History
+  ]
 
 documentAPIV2 ::  Route (Kontra Response)
 documentAPIV2  = dir "documents" $ choice [

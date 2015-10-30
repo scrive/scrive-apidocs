@@ -4,7 +4,6 @@ module Attachment.Control
   , handleShare
   , handleDelete
   , handleDownloadAttachment
-  , jsonAttachment
   , jsonAttachmentsList
   )
 where
@@ -15,10 +14,14 @@ import Log
 import System.FilePath
 import Text.JSON
 import Text.JSON.Gen as J
+import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Map as Map
+import qualified Data.Unjson as Unjson
 
 import AppView (respondWithPDF)
 import Attachment.AttachmentID
+import Attachment.JSON
 import Attachment.Model
 import DB
 import Doc.Rendering
@@ -28,8 +31,6 @@ import InputValidation
 import Kontra
 import KontraLink
 import KontraPrelude
-import ListUtil
-import MinutesTime
 import Redirect
 import User.Model
 import User.Utils
@@ -61,10 +62,8 @@ handleDownloadAttachment attid _nameForBrowser = do
                                             , AttachmentsOfAuthorDeleteValue (userid user) True
                                             , AttachmentsOfAuthorDeleteValue (userid user) False
                                             ]
-                                            [ AttachmentFilterByID [attid]
-                                            ]
+                                            [ AttachmentFilterByID attid ]
                                             []
-                                            (0,1)
   case atts of
        [att] -> getFileIDContents (attachmentfile att) >>= return . respondWithPDF False
        _ -> internalError
@@ -76,86 +75,32 @@ handleCreateNew = do
   _mdoc <- makeAttachmentFromFile input
   J.runJSONGenT $ return ()
 
-attachmentJSON :: (KontraMonad m, MonadDB m) => Attachment -> m JSValue
-attachmentJSON att = do
-    runJSONGenT $ do
-      J.value "id" $ show $ attachmentid att
-      J.value "title" $ attachmenttitle att
-      J.value "file" $ show $ attachmentfile att
-      J.value "user" $ show $ attachmentuser att
-      --J.value "ctime" $ attachmentctime att
-      --J.value "mtime" $ attachmentmtime att
-      J.value "shared" $ attachmentshared att
-      J.value "deleted" $ attachmentdeleted att
-
-jsonAttachment :: Kontrakcja m => AttachmentID -> m JSValue
-jsonAttachment attid = do
-    ctx <- getContext
-    let Just user = ctxmaybeuser ctx
-    atts <- dbQuery $ GetAttachments [AttachmentsSharedInUsersCompany (userid $ $fromJust $ ctxmaybeuser ctx),  AttachmentsOfAuthorDeleteValue  (userid user) False]
-            [AttachmentFilterByID [attid]] [] (0,10)
-    case atts of
-      [att] -> attachmentJSON att
-      _ -> $unexpectedErrorM "not found"
-
-jsonAttachmentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
+jsonAttachmentsList ::  Kontrakcja m => m (Either KontraLink Response)
 jsonAttachmentsList = withUserGet $ do
-  Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
-  params <- getListParams
-  domainParam <- getField "domain"
+  uid <- userid <$> guardJustM (ctxmaybeuser <$> getContext)
 
-  let (domain,filters) = case domainParam of
-                           (Just "All") ->  ([AttachmentsOfAuthorDeleteValue uid False, AttachmentsSharedInUsersCompany uid],[])
-                           _ ->  ([AttachmentsOfAuthorDeleteValue uid False],[])
+  domain <- getField "domain" >>= \case
+    (Just "All") -> return [AttachmentsOfAuthorDeleteValue uid False, AttachmentsSharedInUsersCompany uid]
+    _ -> return [AttachmentsOfAuthorDeleteValue uid False]
 
-  let sorting    = attachmentSortingFromParams params
-      searching  = attachmentSearchingFromParams params
-      pagination = (listParamsOffset params, listParamsLimit params)
-      attachmentsPageSize = 100 :: Int
-  allAtts <- dbQuery $ GetAttachments domain (searching ++ filters) sorting pagination
-  let atts = PagedList { list       = allAtts
-                       , params     = params
-                       , pageSize   = attachmentsPageSize
-                       , listLength = length allAtts
-                       }
-  attsJSONs <- mapM (attForListJSON  user) $ take attachmentsPageSize $ list atts
-  runJSONGenT $ do
-    J.value "list" attsJSONs
-    J.value "paging" $ pagingParamsJSON atts
+  filters <- getFieldBS "filter" >>= \case
+    Just paramValue -> case Aeson.eitherDecode paramValue of
+        Right js -> case (Unjson.parse unjsonAttachmentFiltering js) of
+          (Unjson.Result res []) -> return $ res
+          _ -> internalError
+        Left _ -> internalError
+    Nothing -> return []
 
-attForListJSON :: Monad m => User -> Attachment -> m JSValue
-attForListJSON _user att = do
-  let link = LinkAttachmentDownload (attachmentid att) (attachmenttitle att)
-  runJSONGenT $ do
-    J.object "fields" $ attFieldsListForJSON att
-    J.value "link" $ show link
+  sorting <- getFieldBS "sorting" >>= \case
+    Just paramValue -> case Aeson.eitherDecode paramValue of
+        Right js -> case (Unjson.parse unjsonAttachmentSorting js) of
+          (Unjson.Result res []) -> return $ res
+          _ -> internalError
+        Left _ -> internalError
+    Nothing -> return []
 
-attFieldsListForJSON :: Monad m =>  Attachment -> JSONGenT m ()
-attFieldsListForJSON att = do
-    J.value "id" $ show $ attachmentid att
-    J.value "title" $ attachmenttitle att
-    J.value "time" $ formatTimeISO (attachmentmtime att)
-    J.value "shared" $ attachmentshared att
-    J.value "file" $ show $ attachmentfile att
-
-attachmentSortingFromParams :: ListParams -> [AscDesc AttachmentOrderBy]
-attachmentSortingFromParams params =
-   (concatMap x (listParamsSorting params)) ++ [Desc AttachmentOrderByMTime] -- default order by mtime
-  where
-    x "title"             = [Asc AttachmentOrderByTitle]
-    x "titleREV"          = [Desc AttachmentOrderByTitle]
-    x "mtime"             = [Asc AttachmentOrderByMTime]
-    x "mtimeREV"          = [Desc AttachmentOrderByMTime]
-    x "ctime"             = [Asc AttachmentOrderByCTime]
-    x "ctimeREV"          = [Desc AttachmentOrderByCTime]
-    x _                   = []
-
-
-attachmentSearchingFromParams :: ListParams -> [AttachmentFilter]
-attachmentSearchingFromParams params =
-  case listParamsSearching params of
-    "" -> []
-    x -> [AttachmentFilterByString x]
+  attachments <- dbQuery $ GetAttachments domain filters sorting
+  return $ Response 200 Map.empty nullRsFlags (Unjson.unjsonToByteStringLazy unjsonAttachments attachments) Nothing
 
 
 makeAttachmentFromFile :: Kontrakcja m => Input -> m (Maybe Attachment)

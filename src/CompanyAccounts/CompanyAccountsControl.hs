@@ -15,6 +15,7 @@ module CompanyAccounts.CompanyAccountsControl (
 import Control.Monad.State
 import Data.Char
 import Data.Functor
+import Data.Ord
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
 
@@ -29,7 +30,6 @@ import InputValidation
 import Kontra
 import KontraLink
 import KontraPrelude
-import ListUtil
 import Mails.SendMail
 import MinutesTime
 import Payments.Model
@@ -73,8 +73,6 @@ handleCompanyAccountsInternal cid = do
       ++ map mkAccountFromInvite (filter (not . isUser) companyinvites)
     mkAccountFromUser u = CompanyAccount {
         camaybeuserid = userid u
-      , cafstname = getFirstName u
-      , casndname = getLastName u
       , cafullname = getFullName u
       , caemail = getEmail u
       , carole = if (useriscompanyadmin u)
@@ -86,8 +84,6 @@ handleCompanyAccountsInternal cid = do
       }
     mkAccountFromInvite (i,fn,ln,em) = CompanyAccount {
         camaybeuserid = inviteduserid i
-      , cafstname = fn
-      , casndname = ln
       , cafullname = fn ++ " " ++ ln
       , caemail = em
       , carole = RoleInvite
@@ -95,22 +91,29 @@ handleCompanyAccountsInternal cid = do
       , caactivated = False
       , catos = Nothing
       }
-  params <- getListParams
-  let companypage = companyAccountsSortSearchPage params companyaccounts
-  runJSONGenT $ do
-    objects "list" $ for (take companyAccountsPageSize $ list companypage) $ \f -> do
-           value "link" $ show $ LinkUserAdmin $ camaybeuserid f            -- Used in admins only
-           object "fields" $ do
-                value "id" $ show $ camaybeuserid f
-                value "fullname" $ cafullname f
-                value "email" $ caemail f
-                value "role" $ show $ carole f
-                value "deletable" $ cadeletable f
-                value "activated" $ caactivated f
-                value "isctxuser" $ userid user == camaybeuserid f
-                value "tos"       $ formatTimeISO <$> (catos f)
 
-    value "paging" $ pagingParamsJSON companypage
+  textFilter <- getField "text" >>= \case
+    Nothing -> return $ const True
+    Just s -> return  $ companyAccountsTextSearch s
+
+  (sorting :: CompanyAccount -> CompanyAccount -> Ordering) <- getField "sorting" >>= \case
+    Nothing  -> return $ \_ _ -> EQ
+    Just s   -> return $ companyAccountsSorting s
+
+  sortingWithOrder <- getField "order" >>= \case
+    Just "ascending"   -> return sorting
+    _ -> return $ flip sorting
+
+  runJSONGenT $ do
+    objects "accounts" $ for (sortBy sortingWithOrder $ filter textFilter companyaccounts) $ \f -> do
+      value "id" $ show $ camaybeuserid f
+      value "fullname" $ cafullname f
+      value "email" $ caemail f
+      value "role" $ show $ carole f
+      value "deletable" $ cadeletable f
+      value "activated" $ caactivated f
+      value "isctxuser" $ userid user == camaybeuserid f
+      value "tos"       $ formatTimeISO <$> (catos f)
 
 {- |
     A special data type used for just displaying stuff in the list
@@ -118,8 +121,6 @@ handleCompanyAccountsInternal cid = do
 -}
 data CompanyAccount = CompanyAccount
   { camaybeuserid :: UserID       -- ^ the account's or invites userid
-  , cafstname     :: String       -- ^ the account's or invitesfirst name
-  , casndname     :: String       -- ^ the account's or inviteslast name
   , cafullname    :: String       -- ^ the account's or invites fullname
   , caemail       :: String       -- ^ the account's or invites email
   , carole        :: Role         -- ^ the account's role (always Standard for invites)
@@ -133,41 +134,22 @@ data Role = RoleAdmin    -- ^ an admin user
           | RoleInvite   -- ^ an invite for a user that is in different company
   deriving (Eq, Ord, Show)
 
--- Searching, sorting and paging
-companyAccountsSortSearchPage :: ListParams -> [CompanyAccount] -> PagedList CompanyAccount
-companyAccountsSortSearchPage  =
-  listSortSearchPage companyAccountsSortFunc companyAccountsSearchFunc companyAccountsPageSize
 
-companyAccountsSearchFunc :: SearchingFunction CompanyAccount
-companyAccountsSearchFunc s ca = accountMatch ca s
-  where
-      match s' m = map toUpper s' `isInfixOf` map toUpper m
-      accountMatch ca' s' = match s' (cafstname ca')
-                            || match s' (casndname ca')
-                            || match s' (cafullname ca')
-                            || match s' (caemail ca')
+companyAccountsTextSearch :: String -> CompanyAccount -> Bool
+companyAccountsTextSearch s ca = match (cafullname ca) || match (caemail ca)
+  where match m = map toUpper s `isInfixOf` map toUpper m
 
-companyAccountsSortFunc :: SortingFunction CompanyAccount
-companyAccountsSortFunc "fstname" = viewComparing cafstname
-companyAccountsSortFunc "fstnameRev" = viewComparingRev cafstname
-companyAccountsSortFunc "sndname" = viewComparing casndname
-companyAccountsSortFunc "sndnameRev" = viewComparingRev casndname
-companyAccountsSortFunc "fullname" = viewComparing cafullname
-companyAccountsSortFunc "fullnameREV" = viewComparingRev cafullname
-companyAccountsSortFunc "email" = viewComparing caemail
-companyAccountsSortFunc "emailREV" = viewComparingRev caemail
-companyAccountsSortFunc "role" = viewComparing carole
-companyAccountsSortFunc "roleREV" = viewComparingRev carole
-companyAccountsSortFunc "deletable" = viewComparing cadeletable
-companyAccountsSortFunc "deletableREV" = viewComparingRev cadeletable
-companyAccountsSortFunc "activated" = viewComparing caactivated
-companyAccountsSortFunc "activatedREV" = viewComparingRev caactivated
-companyAccountsSortFunc "id" = viewComparing camaybeuserid
-companyAccountsSortFunc "idREV" = viewComparingRev camaybeuserid
-companyAccountsSortFunc _ = const $ const EQ
+companyAccountsSorting :: String -> CompanyAccount -> CompanyAccount -> Ordering
+companyAccountsSorting "fullname" = companyAccountsSortingBy cafullname
+companyAccountsSorting "email" = companyAccountsSortingBy caemail
+companyAccountsSorting "role" = companyAccountsSortingBy carole
+companyAccountsSorting "deletable" = companyAccountsSortingBy cadeletable
+companyAccountsSorting "activated" = companyAccountsSortingBy caactivated
+companyAccountsSorting "id" = companyAccountsSortingBy camaybeuserid
+companyAccountsSorting _ = const $ const EQ
 
-companyAccountsPageSize :: Int
-companyAccountsPageSize = 100
+companyAccountsSortingBy :: Show a => (CompanyAccount -> a) -> CompanyAccount -> CompanyAccount -> Ordering
+companyAccountsSortingBy f ca1 ca2 = compare (map toUpper $ show $ f ca1) (map toUpper $ show $ f ca2)
 
 {- |
     Handles adding a company user either by creating them or

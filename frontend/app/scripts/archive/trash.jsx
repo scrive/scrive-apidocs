@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React','archive/statustooltipmixin','lists/list','archive/document_columns','archive/document_filters','legacy_code'], function(React, StatusTooltipMixin, List, DocumentColumns,DocumentFilters) {
+define(['React','archive/utils','archive/statustooltipmixin','lists/list','archive/document_columns','archive/document_filters','legacy_code'], function(React, Utils, StatusTooltipMixin, List, DocumentColumns,DocumentFilters) {
 
 
 return React.createClass({
@@ -17,7 +17,7 @@ return React.createClass({
           new Submit({
             url: "/d/restore",
             method: "POST",
-            documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
+            documentids: "[" + _.map(selected, function(doc){return doc.field("id");}) + "]",
               ajaxsuccess : function() {
                 new FlashMessage({
                   color : "green", content : localization.archive.trash.restore.successMessage});
@@ -36,7 +36,7 @@ return React.createClass({
       confirmationText.append($('<span />').html(localization.archive.trash.remove.cannotUndo));
       var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here');
       if (selected.length == 1) {
-        listElement.html($('<strong />').text(selected[0].field("fields").title));
+        listElement.html($('<strong />').text(selected[0].field("title")));
       } else {
         listElement.text(selected.length + (" " + localization.documents).toLowerCase());
       }
@@ -50,7 +50,7 @@ return React.createClass({
           new Submit({
             url: "/d/reallydelete",
             method: "POST",
-            documentids: "[" + _.map(selected, function(doc){return doc.field("fields").id;}) + "]",
+            documentids: "[" + _.map(selected, function(doc){return doc.field("id");}) + "]",
             ajaxsuccess : function() {
               new FlashMessage({type: "success", content : localization.archive.trash.remove.successMessage});
               self.reload();
@@ -64,9 +64,15 @@ return React.createClass({
       var self = this;
       return (
         <List.List
-          url='/api/frontend/list?documentType=Rubbish'
-          dataFetcher={function(d) {return d.list;}}
-          idFetcher={function(d) {return d.field("fields").id;}}
+          maxPageSize={Utils.maxPageSize}
+          totalCountFunction={Utils.totalCountFunction}
+          url={Utils.listCallUrl}
+          paramsFunction={Utils.paramsFunctionWithFilter([
+              {"filter_by" : "trash", "is_trashed" : true},
+              {"filter_by" : "template", "is_template" : false}
+            ])}
+          dataFetcher={Utils.dataFetcher}
+          idFetcher={Utils.idFetcher}
           loadLater={self.props.loadLater}
           ref='list'
         >
