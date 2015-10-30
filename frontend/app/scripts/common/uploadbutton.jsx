@@ -1,17 +1,16 @@
 /** @jsx React.DOM */
 
 /**
- * A upload button component in React. Internallly it uses standard buttons, and can take many UI propperties of buttons - but not all of them.
- * Instead it has
+ * A upload button component in React. Internallly it uses standard buttons, and can take many UI propperties of buttons.
  *
  * Properties:
       text        : string , text on button,  default ""
       type:       : string, "action | optional | cancel | inactive | main",
       size        : string, tiny | small | big
-      textcolor   : string, color for text on button, else default value for predefined color will be used.
       width       : integer, final width of button, if not set, button will adjust to text
       className   : additional css classes
       style       : style object (react format)
+      onUploadComplete : function(input, title)
 
  *
  * Example usage:
@@ -41,79 +40,88 @@ define(['React','common/button'], function(React,Button) {
         "style"     : {}
       };
     },
-    fileinput: null,
+    // Don't depend on this calls, since it will not work well in IE8 and IE9 (access denied on file upload)
     openFileDialogue: function () {
-      if (this.fileinput) {
-        var targetElm = $(this.fileinput.data("MultiFile").current);
-        if (targetElm.length == 1 && targetElm.click) {
-          targetElm.click();
-          return true;
+      if (this.isMounted()) {
+        var targetElm = $(this.getDOMNode()).find("input.file-input").last();
+        targetElm.click();
+        return true;
+      }
+    },
+    fileName: function(fileinput) {
+      var fullPath = fileinput[0].value;
+      if (fullPath) {
+        var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
+        var filename = fullPath.substring(startIndex);
+        if (filename.indexOf('\\') === 0 || filename.indexOf('/') === 0) {
+          filename = filename.substring(1);
+        }
+        return filename;
+      } else {
+        return "";
+      }
+    },
+    updateFileInputWidth: function(fileinput) {
+      var self = this;
+      if (self.props.width) {
+        fileinput.css("width",self.props.width  + "px");
+      } else if (self.isMounted()) {
+        if ($(self.refs.button.getDOMNode()).width() > 0) {
+          fileinput.css("width",$(self.refs.button.getDOMNode()).width()  + "px");
+        } else {
+          setTimeout(function() {self.updateFileInputWidth(fileinput),100});
         }
       }
     },
-    componentDidMount : function() {
+    createFileInput : function() {
       var self = this;
-      var fileinput = $("<input class='multiFileInput' type='file'/>");
-      self.fileinput = fileinput;
-      if (self.props.fileType != "")
-          fileinput.attr("accept",self.props.fileType );
-      fileinput.attr("maxlength",1);
-      fileinput.attr("name",self.props.name);
+      if (self.isMounted()) {
+        var fileinput = $("<input class='file-input' type='file'/>");
+        if (BrowserInfo.isIE8orLower()) {
+          // make input invisible
+          fileinput.css('filter', 'alpha(opacity=0)');
+        }
+        self.updateFileInputWidth(fileinput);
 
+        if (self.props.fileType) {
+          fileinput.attr("accept",self.props.fileType);
+        }
 
-      fileinput.css("width",(self.refs.button.width() + 30)  + "px");
-      fileinput.css("height", "66px");
-
-      if (BrowserInfo.isIE8orLower()) {
-        // make input invisible
-        fileinput.css('filter', 'alpha(opacity=0)');
-      }
-
-      var list = $("<div style='display:none'/>");
-      $(self.refs.button.getDOMNode()).append(list);
-
-      fileinput.MultiFile({
-        list: list,
-        onError: function(a,b,c,d) {
-          var splittype = model.type().split(",")[0].split("/");
-          var lasttype = splittype[splittype.length - 1].toUpperCase();
-          var msg = $("<span>" + localization.onlyFiletypeAllowed + "</span>");
-          msg.find('.put-filetype').text(lasttype);
-          new FlashMessage({content: msg, type: "error"});
-          if (self.props.onError)
-            self.props.onError(a,b,c,d);
-        },
-        afterFileAppend : function(input,title,fileinput) {
+        fileinput.attr("name",self.props.name);
+        fileinput.change(function() {
           if (self.props.onUploadComplete != undefined) {
             // IE8 requires delay before inputs are available.
             setTimeout(function () {
-              self.props.onUploadComplete(input,title,fileinput);
+              fileinput.detach();
+              self.props.onUploadComplete(fileinput, self.fileName(fileinput));
+              self.createFileInput();
             }, 100);
-            fileinput.n--;
-            _.each(fileinput.slaves, function(slave) {
-               $(slave).remove();
-            });
-            fileinput.slaves = [];
-            return false;
+          } else {
+            fileinput.remove();
+            self.createFileInput();
           }
-        }
-      });
-      $(self.refs.button.getDOMNode()).append(fileinput);
+        });
+        $(self.refs.button.getDOMNode()).append(fileinput);
+      }
+    },
+    componentDidMount : function() {
+      this.createFileInput();
     },
     render: function() {
+      var self = this;
       return (
-          <Button
-            text={this.props.text}
-            type={this.props.type}
-            size={this.props.size}
-            width={this.props.width}
-            className={this.props.className + " upload-button" }
-            style={{position:"relative",overflow:"hidden"}}
-            onClick={function() {
-              return false; // Button clicks are ignored
-            }}
-            ref="button"
-          />
+        <Button
+          text={this.props.text}
+          type={this.props.type}
+          size={this.props.size}
+          width={this.props.width}
+          className={this.props.className + " upload-button" }
+          style={this.props.style}
+          onClick={function() {
+            // do nothing. It should never happend since users should click on transparent file input
+          }}
+          ref="button"
+        />
       );
     }
   });

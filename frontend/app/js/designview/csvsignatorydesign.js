@@ -1,6 +1,6 @@
 /*Popup when someone want to select a csv signatory. At the end it can set signatory csv.
  */
-define(['Backbone', 'legacy_code'], function() {
+define(['legacy_code', 'Backbone', 'React', 'common/uploadbutton'], function(_Legacy, Backbone, React, UploadButton) {
 
 var CsvProblem = Backbone.Model.extend({
       defaults : {
@@ -197,22 +197,21 @@ var CsvSignatoryDesignView = Backbone.View.extend({
       return table;
     },
     uploadButton : function(){
-         var model = this.model;
-         var uploadButton = new UploadButton({
-                    name: "csv",
-                    color : "black",
-                    width: 280,
-                    size: "big",
-                    text: localization.csv.selectFile,
-                    fileType: "application/csv",
-                    style: 'font-size: 15px; font-weight: 300;',
-                    onAppend : function(input) {
-                        setTimeout(function() {model.upload($(input));},100);
-
-                    },
-                    onError : function() {}
-            });
-         return $("<div class='buttonbox'/>").append(uploadButton.el());
+      var model = this.model;
+      var div = $("<div class='buttonbox'/>");
+      React.render(React.createElement(UploadButton,{
+        name: "csv",
+        color : "black",
+        width: 280,
+        size: "big",
+        text: localization.csv.selectFile,
+        fileType: ".csv",
+        style: {fontSize: "15px", fontWeight: "300"},
+        onUploadComplete : function(input) {
+          model.upload($(input));
+        }
+      }), div[0]);
+      return div;
     },
     render: function () {
         var view = this;

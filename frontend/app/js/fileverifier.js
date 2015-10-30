@@ -2,7 +2,7 @@
  *
  */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['legacy_code', 'Backbone', 'React', 'common/uploadbutton'], function(_Legacy, Backbone, React, UploadButton) {
 
 var FileVerifierModel = Backbone.Model.extend({});
 
@@ -45,17 +45,16 @@ var FileVerifierView = Backbone.View.extend({
     },
     uploadButton : function() {
         var view = this;
-        return  new UploadButton({
-            name: "file",
-            type: "action",
-            width: 380,
-            size: "big",
-            text: localization.uploadButton,
-            submitOnUpload: true,
-            onError: function() {
-              LoadingDialog.close();
-            },
-            submit: new Submit({
+        var div = $("<div/>");
+        React.render(React.createElement(UploadButton,{
+          name: "file",
+          type: "action",
+          width: 380,
+          size: "big",
+          text: localization.uploadButton,
+          submitOnUpload: true,
+          onUploadComplete: function(input) {
+            var submit = new Submit({
               method : "POST",
               ajax: true,
               url : "/verify",
@@ -71,12 +70,16 @@ var FileVerifierView = Backbone.View.extend({
                 view.showResultDialog(JSON.parse(res));
                 view.render();
               }
-            })
-          });
+            });
+            submit.addInputs(input);
+            submit.send();
+          }
+        }), div[0]);
+        return div;
     },
     render: function () {
         var box = $(this.el);
-        box.html(this.uploadButton().el());
+        box.html(this.uploadButton());
         return box;
     }
 });

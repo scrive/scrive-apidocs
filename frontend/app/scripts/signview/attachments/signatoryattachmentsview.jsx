@@ -1,6 +1,5 @@
-define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutton",
-        "signview/attachments/signatoryattachmentrowview"],
-  function (legacy_code, React, Backbone, NewButton, UploadButton, SignatoryAttachmentRow) {
+define(["legacy_code", "React", "Backbone", "signview/attachments/signatoryattachmentrowview"],
+  function (legacy_code, React, Backbone, SignatoryAttachmentRow) {
 
   return React.createClass({
     propTypes: {
