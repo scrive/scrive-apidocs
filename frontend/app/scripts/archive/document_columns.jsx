@@ -68,11 +68,11 @@ return function(args) {
               if (d.field("status") == "preparation") {
                 return 0;
               } else {
-                return _.filter(d.field("signatories"), function(s) { return s.is_signatory;}).length;
+                return _.filter(d.field("parties"), function(s) { return s.is_signatory;}).length;
               }
             }}
             rendering={function(d,i) {
-              var signatory = _.filter(d.field("signatories"), function(s) { return s.is_signatory;})[i];
+              var signatory = _.filter(d.field("parties"), function(s) { return s.is_signatory;})[i];
               var time = Utils.signatoryTime(signatory) && moment(Utils.signatoryTime(signatory)).toDate();
               return [
                 <td key="1"></td>,

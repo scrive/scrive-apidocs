@@ -159,7 +159,7 @@ return Backbone.Model.extend({
     offset: function() {
       return this.get("offset");
     },
-    changeOffsetWithReload: function(offset) {
+    changeOffsetAndReload: function(offset) {
       this.set({"offset" : offset}, {silent: true});
       this.reload();
     },
@@ -206,8 +206,8 @@ return Backbone.Model.extend({
       var totalCount = self.get("totalCountFunction")(data, this.offset());
       // After getting new data we may discover that we are on page that is empty
       if (totalCount <= this.offset() && this.offset() > 0) {
-        console.log("Changing offset to " + Math.floor((totalCount -1) / this.maxPageSize()) * this.maxPageSize());
-        this.changeOffsetWithReload(Math.floor((totalCount -1) / this.maxPageSize()) * this.maxPageSize());
+        var numberOfFullPages = Math.floor((totalCount -1) / this.maxPageSize());
+        this.changeOffsetAndReload(numberOfFullPages * this.maxPageSize());
         return {};
       } else {
         return {

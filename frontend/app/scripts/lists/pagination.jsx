@@ -38,7 +38,7 @@ return React.createClass({
                       <span
                         key={i}
                         className={"page-change " + (i == pageCurrent ? "current" : "")}
-                        onClick={function() { model.changeOffsetWithReload(i * pageSize);}}
+                        onClick={function() { model.changeOffsetAndReload(i * pageSize);}}
                       >
                         {i+1}
                       </span>
@@ -48,7 +48,7 @@ return React.createClass({
                 { /*if*/ (pages.length * pageSize < total) &&
                   (<span
                     className={"page-change " + (i == pageCurrent ? "current" : "")}
-                    onClick={function() { model.changeOffsetWithReload(pages.length * pageSize)}}
+                    onClick={function() { model.changeOffsetAndReload(pages.length * pageSize)}}
                   >
                     &gt;
                   </span>)

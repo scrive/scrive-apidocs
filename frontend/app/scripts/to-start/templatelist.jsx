@@ -27,7 +27,7 @@ return React.createClass({
       }).send();
     },
     deliveryMethodIcons: function(data) {
-      var dms = _.map(data.field("signatories"),function(s) {return s.delivery_method;});
+      var dms = _.map(data.field("parties"),function(s) {return s.delivery_method;});
       var self = this;
       uniqdms = _.uniq(dms);
 

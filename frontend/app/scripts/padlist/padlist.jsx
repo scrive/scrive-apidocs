@@ -12,14 +12,14 @@ var SelectPartyModal = function(signingIndexes,doc) {
             div.append(label);
             var options = [];
             for(var i=0;i<signingIndexes.length;i++) {
-                var currentName = Utils.signatorySmartName(doc.field("signatories")[signingIndexes[i]]).trim();
+                var currentName = Utils.signatorySmartName(doc.field("parties")[signingIndexes[i]]).trim();
                 if (i != self.current)
                 options.push({
                   name: (currentName != "" ? currentName : localization.process.signatoryname + " " + (signingIndexes[i] + 1)),
                   value : i
                 });
             }
-            var currentName = Utils.signatorySmartName(doc.field("signatories")[signingIndexes[self.current]]).trim();
+            var currentName = Utils.signatorySmartName(doc.field("parties")[signingIndexes[self.current]]).trim();
 
             var $select1 = $("<span>");
             React.render(React.createElement(Select, {
@@ -46,7 +46,7 @@ var SelectPartyModal = function(signingIndexes,doc) {
             onAccept : function() {
                 mixpanel.track('Give for pad signing to some pad signatory - opening signview -from list');
                 new Submit({
-                   url : "/padsign/" + doc.field("id") + "/" + doc.field("signatories")[signingIndexes[self.current]].id,
+                   url : "/padsign/" + doc.field("id") + "/" + doc.field("parties")[signingIndexes[self.current]].id,
                    method : "POST"
                 }).send();
             }
@@ -85,8 +85,8 @@ return React.createClass({
       var signingIndexes = [];
       LocalStorage.set("backlink","target","to-sign");
 
-      for(var i=0; i< doc.field("signatories").length; i++) {
-        if (Utils.signatoryCanSignNow(doc, doc.field("signatories")[i]) &&  doc.field("signatories")[i].delivery_method =="pad")
+      for(var i=0; i< doc.field("parties").length; i++) {
+        if (Utils.signatoryCanSignNow(doc, doc.field("parties")[i]) &&  doc.field("parties")[i].delivery_method =="pad")
           signingIndexes.push(i);
       }
       if (signingIndexes.length > 1) {
@@ -94,7 +94,7 @@ return React.createClass({
       }
       else {
         new Submit({
-          url : "/padsign/" + doc.field("id") + "/" + doc.field("signatories")[signingIndexes[0]].id,
+          url : "/padsign/" + doc.field("id") + "/" + doc.field("parties")[signingIndexes[0]].id,
           method : "POST"
         }).send();
       }
@@ -230,11 +230,11 @@ return React.createClass({
               if (d.field("status") == "preparation") {
                 return 0;
               } else {
-                return _.filter(d.field("signatories"), function(s) { return s.is_signatory;}).length;
+                return _.filter(d.field("parties"), function(s) { return s.is_signatory;}).length;
               }
             }}
             rendering={function(d,i) {
-              var signatory = _.filter(d.field("signatories"), function(s) { return s.is_signatory;})[i];
+              var signatory = _.filter(d.field("parties"), function(s) { return s.is_signatory;})[i];
               var time = Utils.signatoryTime(signatory) && moment(Utils.signatoryTime(signatory)).toDate();
               return [
                 <td key="1"></td>,

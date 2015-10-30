@@ -481,7 +481,8 @@ jsonDocuments = onlySalesOrAdmin $ do
         (Nothing, Just uid) -> (DocumentsVisibleToUser uid, (DocumentFilterByAuthor uid) : requestedFilters,requestedSorting)
         _                   -> $unexpectedError "Can't pass both user id and company id"
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain filtering sorting (offset, 1000, maxcount)
-  return $ Response 200 Map.empty nullRsFlags (listToJSONBS (allDocsCount,(\d -> (documentAccessForUser adminUser d,d)) <$> allDocs)) Nothing
+  let json = listToJSONBS (allDocsCount,(\d -> (documentAccessForAdminonly d,d)) <$> allDocs)
+  return $ Response 200 Map.empty nullRsFlags json Nothing
 
 
 handleBackdoorQuery :: Kontrakcja m => m Response

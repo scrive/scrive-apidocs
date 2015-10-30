@@ -96,7 +96,7 @@ define(['legacy_code'], function() {
   };
 
   e.documentAuthor = function(d) {
-    return _.find(d.field("signatories"), function(s) {
+    return _.find(d.field("parties"), function(s) {
       return s.is_author;
     });
   };
@@ -129,7 +129,7 @@ define(['legacy_code'], function() {
 
   e.signatoryCanSignNow = function(d,s) {
     var so = s.sign_order;
-    _.each(d.field("signatories"),function(sig) {
+    _.each(d.field("parties"),function(sig) {
        if (sig.is_signatory && !s.sign_time) {
         so = Math.min(so,sig.sign_order);
        }
@@ -138,7 +138,7 @@ define(['legacy_code'], function() {
   };
 
   e.documentStatus = function(d) {
-    var signingParties = _.filter(d.field("signatories"), function(s) {
+    var signingParties = _.filter(d.field("parties"), function(s) {
       return s.is_signatory;
     });
     var someSignatoryHasDeliveryProblem = _.some(signingParties, function(s) {
@@ -180,7 +180,7 @@ define(['legacy_code'], function() {
   };
 
   e.documentParty = function(d) {
-    var signingParties = _.filter(d.field("signatories"), function(s) {
+    var signingParties = _.filter(d.field("parties"), function(s) {
       return s.is_signatory;
     });
     var signingPartiesSmartNames =  _.map(signingParties, function(s) {
@@ -190,7 +190,7 @@ define(['legacy_code'], function() {
   };
 
   e.documentDeliveryText = function(d) {
-    var dms = _.map(d.field("signatories"),function(s) {
+    var dms = _.map(d.field("parties"),function(s) {
       var dm = s.delivery_method;
       if (dm == "email") {
         return capitaliseFirstLetter(localization.delivery.email);

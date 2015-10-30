@@ -136,7 +136,7 @@ return React.createClass({
               return (
                 <small>
                   {
-                    _.map(d.field("signatories"), function(s) {
+                    _.map(d.field("parties"), function(s) {
                       if (s.is_signatory) {
                         return [<span>{Utils.signatorySmartName(s)}</span>,<br/>];
                       }

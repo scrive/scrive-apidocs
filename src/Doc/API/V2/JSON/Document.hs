@@ -72,7 +72,7 @@ fieldAccessToken :: DocumentAccess -> Ap (FieldDef Document) ()
 fieldAccessToken (DocumentAccess { daAccessMode }) =
   case daAccessMode of
        AuthorDocumentAccess -> accessTokenField
-       AdminDocumentAccess -> accessTokenField
+       CompanyAdminDocumentAccess -> accessTokenField
        _ -> pure ()
   where accessTokenField = fieldReadonly "access_token" documentmagichash "Document access token"
 
