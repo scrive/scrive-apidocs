@@ -53,7 +53,17 @@ coerce :: Route (Kontra Response) -> MyRoute (Kontra Response)
 coerce = unsafeCoerce
 
 baz :: Route (Kontra Response) -> [String]
-baz = filter (not . (== "/")) . nub . map ("/" ++) . foo
+baz = nub . concatMap exceptions . filter (not . (== "/")) . map ("/" ++) . foo
+
+-- handle exceptions
+-- urls like /s are special, they need to both handle "/s" and "/s/1/2/3"
+-- but we can't use "/s" because that would catch all urls starting with letter s (e.g. /something)
+-- so turn those cases (/s, /d, /a) into two rules, one with explicit end of line regex match $,
+-- and one rule that matches longer urls with additional path elems after another slash
+exceptions :: String -> [String]
+exceptions s@('/':c:[]) | c `elem` "asd" = ['/':c:'/':[], '/':c:'$':[]]
+                        | otherwise = [s]
+exceptions s = [s]
 
 main :: IO ()
 main = do
