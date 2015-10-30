@@ -310,12 +310,15 @@ return React.createClass({
       }
     },
     drawingtoolOutside: function (x, y, drawingMethod, e) {
-      this.drawingtoolMove(x, y, drawingMethod, e);
-      this.drawingtoolMove(x, y, drawingMethod, e);
-      this.state.model.setPointerOutside(true);
+      if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e))) {
+        this.drawingtoolMove(x, y, drawingMethod, e);
+        this.drawingtoolMove(x, y, drawingMethod, e);
+        this.state.model.setPointerOutside(true);
+      }
     },
     drawingtoolInside: function (x, y, drawingMethod, e) {
-      if (this.state.model.pointerOutside()) {
+      if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e))
+          && this.state.model.pointerOutside()) {
         this.state.model.setPointerOutside(false);
         this.stopDrawing();
         if (e.buttons !== 0) {
