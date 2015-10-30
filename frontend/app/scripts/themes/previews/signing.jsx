@@ -104,14 +104,15 @@ return React.createClass({
                               <div className="section attachments">
                                   <div className="attachments-container">
                                       <h2>{localization.sampleSignView.attachmentsTitle}</h2>
-                                      <div className="file-container"><img src="/img/attachment-icon.png" className="icon" /><span className="name">{localization.sampleSignView.attachmentFilename}</span>
-                                          <Button
-                                      size="small"
-                                      type="optional"
-                                      text={localization.sampleSignView.reviewPDF}
-                                      style={{'backgroundColor': model.actionSecondaryColor(), 'color': model.actionSecondaryTextColor()}}
-
-                                    />
+                                      <div className="file-container">
+                                        <img src="/img/attachment-icon.png" className="icon" />
+                                        <span className="name">{localization.sampleSignView.attachmentFilename}</span>
+                                        <Button
+                                          size="small"
+                                          type="optional"
+                                          text={localization.sampleSignView.reviewPDF}
+                                          style={{'backgroundColor': model.actionSecondaryColor(), 'color': model.actionSecondaryTextColor()}}
+                                        />
                                       </div>
                                   </div>
                               </div>

@@ -73,7 +73,7 @@ define(['React'], function(React) {
         return 0;
     },
     labelPadding: function() {
-        if (this.props.size == "tiny" || this.propssize == "small")
+        if (this.props.size == "tiny" || this.props.size == "small")
             return 16;
         else if (this.props.size == "big")
             return 30;
