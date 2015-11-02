@@ -44,7 +44,7 @@ bar (MyHandler (Nothing, _) _ _) = [] -- ["<SERVING FILES FROM SOME DIRECTORY>"]
 bar (MyHandler (Just 0, _method') _ _) = [""]
 bar (MyHandler (Just n, _method') _ _) = [intersperse '/' (replicate n 'X')]
 bar (MyChoice routes) = concatMap bar routes
-bar (MyParam _) = $unexpectedError "Params"
+bar (MyParam route) = map ("[a-zA-Z0-9_-]+/" ++) $ bar route
 
 foo :: Route (Kontra Response) -> [String]
 foo = bar . coerce
