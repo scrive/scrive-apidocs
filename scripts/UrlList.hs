@@ -1,5 +1,6 @@
 module UrlList where
 
+import Control.Monad.State
 import Unsafe.Coerce (unsafeCoerce)
 import System.Environment (getArgs)
 import System.IO
@@ -21,7 +22,7 @@ data MyRoute a =
 instance Show (MyRoute a) where
     show (MyDir seg x) = "Dir " ++ show seg ++ " (" ++ show x ++ ")"
     show (MyParam x) = "Param (" ++ show x ++ ")"
-    show (MyHandler _ _ _) = "Handler"
+    show (MyHandler segment _ _) = "Handler(" ++ show segment ++ ")"
     show (MyChoice xs) = "Choice (" ++ show xs  ++ ")"
 
 data MySegment = MyStringS String
@@ -35,19 +36,25 @@ type MyEndSegment = (Maybe Int, Method)
 
 type MyCheckApply = [String] -> Bool
 
-bar :: MyRoute (Kontra Response) -> [String]
-bar (MyDir _segment (MyHandler (Nothing, _) _ _)) = [] -- [segment ++ " <SERVING FILES FROM SOME DIRECTORY>"]
-bar (MyDir segment (MyHandler (Just 0, _method') _ _)) = [show segment]
-bar (MyDir segment (MyHandler (Just _n, _method') _ _)) = [show segment ++ "/"]
-bar (MyDir segment route) = map (\s -> show segment ++ "/" ++ s) $ bar route
-bar (MyHandler (Nothing, _) _ _) = [] -- ["<SERVING FILES FROM SOME DIRECTORY>"]
-bar (MyHandler (Just 0, _method') _ _) = [""]
-bar (MyHandler (Just n, _method') _ _) = [intersperse '/' (replicate n 'X')]
-bar (MyChoice routes) = concatMap bar routes
-bar (MyParam route) = map ("[a-zA-Z0-9_-]+/" ++) $ bar route
+bar :: MyRoute (Kontra Response) -> State Int [String]
+bar (MyDir _segment (MyHandler (Nothing, _) _ _)) = return [] -- [segment ++ " <SERVING FILES FROM SOME DIRECTORY>"]
+bar (MyDir segment (MyHandler (Just n, _method') _ _)) = do
+  nParams <- get
+  let n' = n - nParams
+  case n' of
+    0 -> return [show segment]
+    _ -> return [show segment ++ "/"]
+bar (MyDir segment route) = mapM (\s -> return $ show segment ++ "/" ++ s) =<< bar route
+bar (MyHandler (Nothing, _) _ _) = return [] -- ["<SERVING FILES FROM SOME DIRECTORY>"]
+bar (MyHandler (Just 0, _method') _ _) = return [""]
+bar (MyHandler (Just n, _method') _ _) = return [intersperse '/' (replicate n 'X')]
+bar (MyChoice routes) = concat <$> mapM bar routes
+bar (MyParam route) = do
+  modify (+1)
+  mapM (\s -> return $ "[a-zA-Z0-9_-]+/" ++ s) =<< bar route
 
 foo :: Route (Kontra Response) -> [String]
-foo = bar . coerce
+foo = fst . flip runState 0 . bar . coerce
 
 coerce :: Route (Kontra Response) -> MyRoute (Kontra Response)
 coerce = unsafeCoerce
