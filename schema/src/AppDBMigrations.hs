@@ -70,6 +70,7 @@ kontraMigrations = [
   , createTablePlacementAnchors
   , unjsonFieldPlacements
   , filesAddPurgeAtColumn
+  , filesAddIndexesToSpeedUpQueries
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations
