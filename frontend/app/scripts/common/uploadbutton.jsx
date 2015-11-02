@@ -66,8 +66,12 @@ define(['React','common/button'], function(React,Button) {
       if (self.props.width) {
         fileinput.css("width",self.props.width  + "px");
       } else if (self.isMounted()) {
-        if ($(self.refs.button.getDOMNode()).width() > 0) {
-          fileinput.css("width",$(self.refs.button.getDOMNode()).width()  + "px");
+        // To compute width component needs to be added to DOM.
+        // isMounted doesn't guarantee that
+        if (   $.contains(document.documentElement, self.refs.button.getDOMNode())
+            && $(self.refs.button.getDOMNode()).outerWidth() > 0
+        ) {
+          fileinput.css("width",$(self.refs.button.getDOMNode()).outerWidth()  + "px");
         } else {
           setTimeout(function() {self.updateFileInputWidth(fileinput),100});
         }
