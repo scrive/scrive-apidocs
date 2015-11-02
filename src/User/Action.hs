@@ -3,7 +3,6 @@ module User.Action (
   , handleActivate
   , createUser
   , phoneMeRequest
-  , checkPasswordsMatch
   ) where
 
 import Control.Monad.Catch
@@ -196,9 +195,3 @@ phoneMeRequest muser phone = do
                                 IPProp (ctxipnumber ctx),
                                 someProp "Phone Request" now]
     return ()
-
-checkPasswordsMatch :: TemplatesMonad m => String -> String -> Either (m FlashMessage) ()
-checkPasswordsMatch p1 p2 =
-    if p1 == p2
-       then Right ()
-       else Left flashMessagePasswordsDontMatch

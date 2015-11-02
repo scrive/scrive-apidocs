@@ -6,10 +6,6 @@ flashMessageMustAcceptTOS=
 flashMessageUserDetailsSaved=
 	<div>$_flashMessageUserDetailsSaved()$</div>
 ####
-flashMessagePasswordsDontMatch=
-	$_flashMessagePasswordsDontMatch()$
-
-###
 flashMessageUserPasswordChanged=
 	$_flashMessageUserPasswordChanged()$
 

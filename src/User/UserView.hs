@@ -17,11 +17,9 @@ module User.UserView (
     flashMessageLoginRedirectReason,
     flashMessageUserDetailsSaved,
     flashMessageMustAcceptTOS,
-    flashMessagePasswordsDontMatch,
     flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
     flashMessageAccessNewAccountLinkNotValid,
-    flashMessageUserWithSameEmailExists,
     flashMessageUserActivated,
     flashMessageNewActivationLinkSend,
     flashMessageProblemWithEmailChange,
@@ -204,11 +202,6 @@ flashMessageMustAcceptTOS :: TemplatesMonad m => m FlashMessage
 flashMessageMustAcceptTOS =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageMustAcceptTOS"
 
-flashMessagePasswordsDontMatch :: TemplatesMonad m => m FlashMessage
-flashMessagePasswordsDontMatch =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessagePasswordsDontMatch"
-
-
 flashMessageUserPasswordChanged :: TemplatesMonad m => m FlashMessage
 flashMessageUserPasswordChanged =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserPasswordChanged"
@@ -221,16 +214,9 @@ flashMessageAccessNewAccountLinkNotValid :: TemplatesMonad m => m FlashMessage
 flashMessageAccessNewAccountLinkNotValid =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageAccessNewAccountLinkNotValid"
 
-
-flashMessageUserWithSameEmailExists :: TemplatesMonad m => m FlashMessage
-flashMessageUserWithSameEmailExists =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserWithSameEmailExists"
-
-
 flashMessageUserActivated :: TemplatesMonad m => m FlashMessage
 flashMessageUserActivated =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserActivated"
-
 
 flashMessageNewActivationLinkSend :: TemplatesMonad m => m FlashMessage
 flashMessageNewActivationLinkSend =
