@@ -3,27 +3,6 @@
 define(['React', 'Backbone'], function(React, Backbone) {
   var expose = {};
 
-  expose.BrandedBanner = React.createClass({
-    propTypes: {
-      registerUser: React.PropTypes.func.isRequired
-    },
-
-    render: function() {
-      var containerClasses = ['save',
-                              'branded-banner',
-                              this.props.bannerType,
-                              this.props.language].join(' ');
-      return (
-          <div className={ containerClasses }>
-            <div></div>
-            <a onClick={this.props.registerUser} className="green button button-large action">
-              <div className="label">{ localization.docsignview.promoBannerButton }</div>
-            </a>
-          </div>
-      );
-    }
-  });
-
   expose.SaveBackupCopy = React.createClass({
     propTypes: {
       registerUser: React.PropTypes.func.isRequired,
