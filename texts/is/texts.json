@@ -532,6 +532,7 @@
 "_flashMessageCompanyAccountDeleted":"Reikningurinn var fjarlægður.",
 "_flashMessageContractRestarted":"Þú hefur endurræst ferlið og getur núna breytt stillingunum og sent boðin að nýju.",
 "_flashMessageDocumentArchiveDone":"Völdum skjölum hefur verið eytt.",
+"_flashMessageDocumentArchiveInvalid":"",
 "_flashMessageInvalidCharsInPassword":"Lykilorðið inniheldur ógilda stafi.",
 "_flashMessageInvalidEmailFormat":"Netfangið er ekki á réttu sniði.",
 "_flashMessageLoginPageRedirectReasonNotAdmin":"Þér er ekki heimilt að skoða þessa síðu.",

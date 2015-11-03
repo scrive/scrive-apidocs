@@ -532,6 +532,7 @@
 "_flashMessageCompanyAccountDeleted":"L'account è stato rimosso con successo.",
 "_flashMessageContractRestarted":"Hai ricominciato il processo e ora puoi sistemare le impostazioni e spedire nuovamente l'invito.",
 "_flashMessageDocumentArchiveDone":"I documenti selezionati sono stati eliminati.",
+"_flashMessageDocumentArchiveInvalid":"",
 "_flashMessageInvalidCharsInPassword":"La password contiene caratteri non validi.",
 "_flashMessageInvalidEmailFormat":"L'indirizzo email non è formattato correttamente.",
 "_flashMessageLoginPageRedirectReasonNotAdmin":"Non sei autorizzato a visualizzare questa pagina.",

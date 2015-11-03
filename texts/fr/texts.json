@@ -532,6 +532,7 @@
 "_flashMessageCompanyAccountDeleted":"Le compte a bien été supprimé.",
 "_flashMessageContractRestarted":"Vous avez redémarré le processus et pouvez désormais régler les paramètres et envoyer l'invitation à nouveau.",
 "_flashMessageDocumentArchiveDone":"Les documents sélectionnés ont été supprimés.",
+"_flashMessageDocumentArchiveInvalid":"",
 "_flashMessageInvalidCharsInPassword":"Le mot de passe contient des caractères invalides.",
 "_flashMessageInvalidEmailFormat":"L'adresse mail n'est pas au bon format.",
 "_flashMessageLoginPageRedirectReasonNotAdmin":"Vous n'êtes pas autorisé à consulter cette page.",
