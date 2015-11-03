@@ -3,7 +3,9 @@
 .colored-button(@color,@textcolor) {
   background-color: @color;
   color:@textcolor;
-  &:hover {
+  &:hover,
+  .upload-button:hover &
+  {
     background-color: lighten(@color,10%);
   }
 
@@ -36,7 +38,8 @@
   .border-radius(1px, 1px, 1px, 1px);
   .transition(.15s, ease-in-out);
 
-  &:hover {
+  &:hover,
+  .upload-button:hover & {
     background-color: darken(@grey, 5%);
     .transition(0s, ease-in-out);
   }
@@ -44,11 +47,6 @@
   &:active,
   &.active {
     background-color: darken(@grey, 5%);
-  }
-
-  &.upload-button {
-    overflow: hidden;
-    height:16px;
   }
 
   &.button-small {
