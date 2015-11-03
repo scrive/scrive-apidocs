@@ -92,6 +92,7 @@ import Kontra
 import KontraPrelude
 import ListUtil
 import LiveDocx
+import Log.Identifier
 import MagicHash (MagicHash)
 import MinutesTime
 import OAuth.Model
@@ -928,14 +929,17 @@ apiCallV1List = api $ do
 apiCallV1CheckAvailable :: Kontrakcja m => m Response
 apiCallV1CheckAvailable = api $ do
   (user, _actor, _) <- getAPIUser APIDocCheck
-  (mids :: Maybe [DocumentID]) <- readField "ids"
-  when (isNothing mids) $ do
-    throwM . SomeKontraException $ serverError "No ids parameter was provided or it had wrong format"
-  let ids = $fromJust mids
-  when (length ids > 10000) $ do
-    throwM . SomeKontraException $ serverError "This request can't check more than 10000 documents"
-  docids <- dbQuery $ GetDocumentsIDs (DocumentsVisibleToUser $ userid user) [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
-  Ok <$> (J.runJSONGenT $ J.value "ids" (show <$> docids))
+  readField "ids" >>= \case
+    Nothing -> throwM . SomeKontraException $ serverError "No ids parameter was provided or it had wrong format"
+    Just (ids::[DocumentID]) -> do
+      when (length ids > 10000) $ do
+        throwM . SomeKontraException $ serverError "This request can't check more than 10000 documents"
+      logInfo "Checking availability of user's documents" $ object [
+          identifier_ $ userid user
+        , identifiers ids
+        ]
+      docids <- dbQuery $ GetDocumentsIDs (DocumentsVisibleToUser $ userid user) [DocumentFilterDeleted False, DocumentFilterByDocumentIDs ids] []
+      Ok <$> (J.runJSONGenT $ J.value "ids" (show <$> docids))
 
 
 apiCallV1History :: Kontrakcja m => DocumentID -> m Response
