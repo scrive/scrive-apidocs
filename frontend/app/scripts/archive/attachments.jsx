@@ -97,7 +97,6 @@ return React.createClass({
                 name="doc"
                 text={localization.archive.attachments.createnew.action}
                 className="float-left actionButton"
-                width={118}
                 onUploadComplete={function(input) {
                         new Submit({
                         method : "POST",

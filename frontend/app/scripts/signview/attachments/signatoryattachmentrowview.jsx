@@ -131,7 +131,7 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
                   <NewButton
                     text={localization.reviewPDF}
                     size="small"
-                    className="s-review-sigattachment"
+                    className="s-review-sigattachment view-attachment"
                     onClick={function () {
                       window.open(model.file().downloadLink(), "_blank");
                     }}
@@ -140,6 +140,7 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
                     <NewButton
                       type="cancel"
                       text={localization.deletePDF}
+                      className="cancel-attachment"
                       size="small"
                       onClick={function () {
                         model.loading();

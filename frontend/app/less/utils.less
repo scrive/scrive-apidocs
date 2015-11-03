@@ -190,19 +190,23 @@
 // Transparent file inpit - displayed over button
 // -------------------------
 
-.button input.file-input {
+.upload-button {
+  overflow: hidden;
+  position: relative;
+  display: inline-block;
+}
+
+.upload-button input.file-input {
   cursor: pointer;
+  display: block;
   -ms-filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
   filter: 'progid:DXImageTransform.Microsoft.Alpha(Opacity=0)';
-  float: right;
   font-size: 90px;
-  left: 10;
   height: 66px;
   opacity: 0;
-  position: relative;
-  right: -30px;
-  top: -50px;
-  width: 0px; // With will be overwriten by inline styles. Has to be initially set to 0, so we can fetch actuall size in javascript.
+  position: absolute;
+  right: -30px; // Not whole area of input is clickable in all browsers
+  top: -10px;
   z-index: 10;
 }
 

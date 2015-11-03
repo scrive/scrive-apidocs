@@ -61,32 +61,14 @@ define(['React','common/button'], function(React,Button) {
         return "";
       }
     },
-    updateFileInputWidth: function(fileinput) {
-      var self = this;
-      if (self.props.width) {
-        fileinput.css("width",self.props.width  + "px");
-      } else if (self.isMounted()) {
-        // To compute width component needs to be added to DOM.
-        // isMounted doesn't guarantee that
-        if (   $.contains(document.documentElement, self.refs.button.getDOMNode())
-            && $(self.refs.button.getDOMNode()).outerWidth() > 0
-        ) {
-          fileinput.css("width",$(self.refs.button.getDOMNode()).outerWidth()  + "px");
-        } else {
-          setTimeout(function() {self.updateFileInputWidth(fileinput),100});
-        }
-      }
-    },
     createFileInput : function() {
       var self = this;
       if (self.isMounted()) {
-        var fileinput = $("<input class='file-input' type='file'/>");
+        var fileinput = $("<input class='file-input' type='file' />");
         if (BrowserInfo.isIE8orLower()) {
           // make input invisible
           fileinput.css('filter', 'alpha(opacity=0)');
         }
-        self.updateFileInputWidth(fileinput);
-
         if (self.props.fileType) {
           fileinput.attr("accept",self.props.fileType);
         }
@@ -105,7 +87,7 @@ define(['React','common/button'], function(React,Button) {
             self.createFileInput();
           }
         });
-        $(self.refs.button.getDOMNode()).append(fileinput);
+        $(this.getDOMNode()).prepend(fileinput);
       }
     },
     componentDidMount : function() {
@@ -114,18 +96,20 @@ define(['React','common/button'], function(React,Button) {
     render: function() {
       var self = this;
       return (
-        <Button
-          text={this.props.text}
-          type={this.props.type}
-          size={this.props.size}
-          width={this.props.width}
-          className={this.props.className + " upload-button" }
+        <div
+          className={"upload-button " + this.props.className}
           style={this.props.style}
-          onClick={function() {
-            // do nothing. It should never happend since users should click on transparent file input
-          }}
-          ref="button"
-        />
+          >
+          <Button
+            text={this.props.text}
+            type={this.props.type}
+            size={this.props.size}
+            width={this.props.width}
+            onClick={function() {
+              // do nothing. It should never happend since users should click on transparent file input
+            }}
+          />
+        </div>
       );
     }
   });
