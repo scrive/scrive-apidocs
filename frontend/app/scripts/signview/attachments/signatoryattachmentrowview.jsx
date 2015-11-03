@@ -19,7 +19,9 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
         },
         el: $(self.refs.uploadArea.getDOMNode()),
         onArrowClick: function () {
-          self.refs.uploadButton.openFileDialogue();
+          if (!BrowserInfo.isIE9orLower()) {
+            self.refs.uploadButton.openFileDialogue();
+          }
         },
         onActivate: function () {
           mixpanel.track("Begin attachment task");
