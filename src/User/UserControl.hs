@@ -317,21 +317,16 @@ handleAccountSetupPost uid token sm = do
     else do
       mfstname <- getOptionalField asValidName "fstname"
       msndname <- getOptionalField asValidName "sndname"
-      mactivateduser <- handleActivate mfstname msndname (user,company) sm
-      case mactivateduser of
-        Nothing -> J.runJSONGenT $ do
-                    J.value "ok" False
-                    J.value "error" ("reload" :: String)
-        Just _ -> do
-          _ <- dbUpdate $ DeleteAction userAccountRequest uid
-          ctx <- getContext
-          _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = ctxlang ctx }
-          addFlashM flashMessageUserActivated
-          link <- getHomeOrDesignViewLink
-          J.runJSONGenT $ do
-            J.value "ok" True
-            J.value "location" $ show link
-            J.value "userid" $ show uid
+      _ <- handleActivate mfstname msndname (user,company) sm
+      _ <- dbUpdate $ DeleteAction userAccountRequest uid
+      ctx <- getContext
+      _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = ctxlang ctx }
+      addFlashM flashMessageUserActivated
+      link <- getHomeOrDesignViewLink
+      J.runJSONGenT $ do
+        J.value "ok" True
+        J.value "location" $ show link
+        J.value "userid" $ show uid
 
 {- |
     This is where we get to when the user clicks the link in their new-account

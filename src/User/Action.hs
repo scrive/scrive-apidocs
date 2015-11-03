@@ -5,10 +5,12 @@ module User.Action (
   , phoneMeRequest
   ) where
 
+import Control.Conditional (whenM)
 import Control.Monad.Catch
 import Data.Functor
 import Log
 import Text.StringTemplates.Templates
+import qualified Data.Foldable as F
 
 import ActionQueue.AccessNewAccount (newAccessNewAccountLink)
 import Administration.AddPaymentPlan
@@ -18,7 +20,7 @@ import Company.Model
 import Crypto.RNG
 import DB
 import Doc.DocStateData
-import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
+import Doc.DocumentMonad
 import Doc.Model
 import Happstack.Fields
 import InputValidation
@@ -34,12 +36,11 @@ import User.Email
 import User.History.Model
 import User.Model
 import User.UserView
-import Util.FlashUtil
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 
-handleAccountSetupFromSign :: (Kontrakcja m, DocumentMonad m) => SignatoryLink -> m (Maybe User)
+handleAccountSetupFromSign :: (Kontrakcja m, DocumentMonad m) => SignatoryLink -> m User
 handleAccountSetupFromSign signatorylink = do
   let firstname = getFirstName signatorylink
       lastname = getLastName signatorylink
@@ -60,88 +61,72 @@ handleAccountSetupFromSign signatorylink = do
                 }
                guardJustM $ documentlang <$> theDocument >>= createUser (Email email) (firstname, lastname) (companyid company,True)
   company <- dbQuery $ GetCompanyByUserID (userid user)
-  mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) (user,company) BySigning
-  case mactivateduser of
-    Just activateduser -> do
-      _ <- dbUpdate $ SaveDocumentForUser activateduser (signatorylinkid signatorylink)
+  activateduser <- handleActivate (Just $ firstname) (Just $ lastname) (user,company) BySigning
+  _ <- dbUpdate $ SaveDocumentForUser activateduser (signatorylinkid signatorylink)
+  return activateduser
 
-      return $ Just activateduser
-    Nothing -> return Nothing
-
-handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> (User,Company) -> SignupMethod -> m (Maybe User)
+handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> (User,Company) -> SignupMethod -> m User
 handleActivate mfstname msndname (actvuser,company) signupmethod = do
   logInfo "Attempting to activate account for user" $ object [
       identifier_ $ userid actvuser
     , "email" .= getEmail actvuser
     ]
-  when (isJust $ userhasacceptedtermsofservice actvuser) $ do  -- Don't remove - else people will be able to hijack accounts
+  -- Don't remove - else people will be able to hijack accounts
+  when (isJust $ userhasacceptedtermsofservice actvuser) $ do
     internalError
+
+  whenM (not <$> isFieldSet "tos") $ do
+    logInfo_ "Can't activate account, 'tos' parameter is missing"
+    internalError
+
   switchLang (getLang actvuser)
   ctx <- getContext
-  mtos <- getDefaultedField False asValidCheckBox "tos"
-  callme <- isFieldSet "callme"
-  stoplogin <- isFieldSet "stoplogin"
-  promo <- isFieldSet "promo"
-  haspassword <- isFieldSet "password"
   phone <-  fromMaybe (getMobile actvuser) <$> getField "phone"
   companyname <- fromMaybe (getCompanyName company) <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
-  case mtos of
-    (Just tos) -> do
-          if tos
-            then do
-              _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
-                  userfstname = fromMaybe "" mfstname
-                , usersndname = fromMaybe "" msndname
-                , userphone = phone
-                , usercompanyposition = position
-              }
-              _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
-                  companyname = companyname
-              }
-              _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
-                (ctxipnumber ctx) (ctxtime ctx) (userinfo actvuser)
-                ((userinfo actvuser) { userfstname = fromMaybe "" mfstname , usersndname =  fromMaybe "" msndname })
-                (userid <$> ctxmaybeuser ctx)
-              _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-              _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
-              _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-              _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
 
-              ds <- dbQuery $ GetSignatoriesByEmail (Email $ getEmail actvuser) (14 `daysBefore` ctxtime ctx)
+  _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
+      userfstname = fromMaybe "" mfstname
+    , usersndname = fromMaybe "" msndname
+    , userphone = phone
+    , usercompanyposition = position
+  }
+  _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
+      companyname = companyname
+  }
+  _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
+    (ctxipnumber ctx) (ctxtime ctx) (userinfo actvuser)
+    ((userinfo actvuser) { userfstname = fromMaybe "" mfstname , usersndname =  fromMaybe "" msndname })
+    (userid <$> ctxmaybeuser ctx)
+  _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
+  _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
+  _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
+  _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
 
-              forM_ ds $ \(d, s) -> do
-                withDocumentID d $ dbUpdate $ SaveDocumentForUser actvuser s
+  dbUpdate $ ConnectSignatoriesToUser (Email $ getEmail actvuser) (userid actvuser) (14 `daysBefore` ctxtime ctx)
 
-              when (haspassword) $ do
-                mpassword <- getOptionalField asValidPassword "password"
-                _ <- case (mpassword) of
-                    Just password -> do
-                        passwordhash <- createPassword password
-                        void $ dbUpdate $ SetUserPassword (userid actvuser) passwordhash
-                    Nothing -> return () -- TODO what do I do here?
-                return ()
+  mpassword <- getOptionalField asValidPassword "password"
+  F.forM_ mpassword $ \password -> do
+    passwordhash <- createPassword password
+    void . dbUpdate $ SetUserPassword (userid actvuser) passwordhash
 
-              when (signupmethod == BySigning) $
-                scheduleNewAccountMail ctx actvuser
-              tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
+  when (signupmethod == BySigning) $ do
+    scheduleNewAccountMail ctx actvuser
+  tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
 
-              logInfo "Attempt successful, user logged in" $ object [
-                  identifier_ $ userid actvuser
-                , "email" .= getEmail actvuser
-                ]
-              when (not stoplogin) $ do
-                logUserToContext $ Just tosuser
-              when (callme) $ phoneMeRequest (Just tosuser) phone
-              when (promo) $ addCompanyPlanManual (companyid company) TrialPricePlan ActiveStatus
-              return $ Just tosuser
-            else do
-              logInfo_ "No TOS accepted, user cannot be activated"
-              addFlashM flashMessageMustAcceptTOS
-              return Nothing
-    _ -> do
-        logInfo_ "Attempt to create account failed, 'tos' parameter is missing"
-        return Nothing
+  logInfo "Attempt successful, user logged in" $ object [
+      identifier_ $ userid actvuser
+    , "email" .= getEmail actvuser
+    ]
+
+  whenM (not <$> isFieldSet "stoplogin") $ do
+    logUserToContext $ Just tosuser
+  whenM (isFieldSet "callme") $ do
+    phoneMeRequest (Just tosuser) phone
+  whenM (isFieldSet "promo") $ do
+    addCompanyPlanManual (companyid company) TrialPricePlan ActiveStatus
+
+  return tosuser
 
 scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => Context -> User -> m ()
 scheduleNewAccountMail ctx user = do

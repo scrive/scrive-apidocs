@@ -24,7 +24,6 @@ module Doc.Model.Query
   , GetDocsSentBetween(..)
   , GetDocsSent(..)
   , GetDocumentTags(..)
-  , GetSignatoriesByEmail(..)
   , CheckDocumentObjectVersionIs(..)
   , DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor(..)
   ) where
@@ -57,7 +56,6 @@ import File.FileID
 import File.Storage
 import KontraPrelude
 import MagicHash
-import User.Email
 import User.Model
 import qualified Amazon
 
@@ -337,21 +335,6 @@ instance MonadDB m => DBQuery m GetDocsSent Int64 where
                "AND documents.type =" <?> Signable <>
                "AND documents.status <>" <?> Preparation
     foldlDB (\acc (Identity n) -> return $ acc + n) 0
-
--- | Get the signatories that belong to this email that were viewed or signed
---   since time
-data GetSignatoriesByEmail = GetSignatoriesByEmail Email UTCTime
-instance MonadDB m => DBQuery m GetSignatoriesByEmail [(DocumentID, SignatoryLinkID)] where
-  query (GetSignatoriesByEmail email time) = do
-    runQuery_ $ "SELECT DISTINCT signatory_links.document_id, signatory_links.id " <+>
-            "FROM signatory_links " <+>
-            "JOIN signatory_link_fields ON (signatory_link_fields.signatory_link_id = signatory_links.id " <+>
-            "                           AND signatory_link_fields.type = " <?> EmailFT <+>
-            "                           AND signatory_link_fields.value_text = " <?> email <+>
-            "                              )" <+>
-            "WHERE sign_time > " <?> time <+>
-            "   OR seen_time > " <?> time
-    fetchMany id
 
 data CheckDocumentObjectVersionIs = CheckDocumentObjectVersionIs DocumentID Int64
 instance (MonadDB m, MonadThrow m) => DBQuery m CheckDocumentObjectVersionIs () where

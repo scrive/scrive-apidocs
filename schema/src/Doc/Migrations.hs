@@ -17,6 +17,15 @@ import Doc.Tables
 import KontraPrelude
 import Utils.String
 
+createIndexOnEmailFields :: MonadDB m => Migration m
+createIndexOnEmailFields = Migration {
+    mgrTable = tableSignatoryLinkFields
+  , mgrFrom = 11
+  , mgrDo = do
+      let tname = tblName tableSignatoryLinkFields
+      runQuery_ $ sqlCreateIndex tname $ (indexOnColumn "value_text") { idxWhere = Just "type = 6" }
+  }
+
 createTablePlacementAnchors :: MonadDB m => Migration m
 createTablePlacementAnchors = Migration {
     mgrTable = tablePlacementAnchors
