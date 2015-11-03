@@ -95,10 +95,20 @@ define(['legacy_code'], function() {
     return e.signatoryName(s) || e.signatoryEmail(s) || e.signatoryPhone(s) || localization.notNamedParty;
   };
 
+  e.currentViewerParty = function(d) {
+    return _.find(d.field("parties"), function(s) {
+      return s.id == d.field("viewer").signatory_id;
+    });
+  };
+
   e.documentAuthor = function(d) {
     return _.find(d.field("parties"), function(s) {
       return s.is_author;
     });
+  };
+
+  e.viewerIsAuthor = function(d) {
+    return e.documentAuthor(d).id == d.field("viewer").signatory_id;
   };
 
   e.signatoryStatus = function(d,s) {

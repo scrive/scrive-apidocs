@@ -852,6 +852,7 @@ javascriptLocalisation =
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
                             , successMessage : "$_flashMessageDocumentArchiveDone()$"
+                            , invalidMessage : "$_flashMessageDocumentArchiveInvalid()$"
                         }
                     , csv : {
                               action : "$_archiveCSV()$"

@@ -532,6 +532,7 @@
 "_flashMessageCompanyAccountDeleted":"The account was successfully removed.",
 "_flashMessageContractRestarted":"You have restarted the process and can now adjust the settings and send the invitation again.",
 "_flashMessageDocumentArchiveDone":"The selected documents have been deleted.",
+"_flashMessageDocumentArchiveInvalid":"Some of the selected documents can't be deleted.",
 "_flashMessageInvalidCharsInPassword":"The password contains invalid characters.",
 "_flashMessageInvalidEmailFormat":"The email address is incorrectly formatted.",
 "_flashMessageLoginPageRedirectReasonNotAdmin":"You are not authorised to see this page.",

@@ -131,16 +131,16 @@ return React.createClass({
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
                 new FlashMessage({type: 'error', content: localization.archive.documents.sendreminder.emptyMessage});
-                return false;
+              } else {
+                var allSelectedArePending = _.all(selected, function(doc) {
+                      return doc.field("status") == "pending";
+                });
+                if (!allSelectedArePending) {
+                  new FlashMessage({type: 'error', content: localization.archive.documents.sendreminder.notAvailableMessage});
+                } else {
+                  self.openSendReminderModal(selected);
+                }
               }
-              var allSelectedArePending = _.all(selected, function(doc) {
-                     return doc.field("status") == "pending";
-              });
-              if (!allSelectedArePending) {
-                new FlashMessage({type: 'error', content: localization.archive.documents.sendreminder.notAvailableMessage});
-                return false;
-              }
-              self.openSendReminderModal(selected);
             }}
           />
 
@@ -149,16 +149,18 @@ return React.createClass({
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
                 new FlashMessage({type: 'error', content: localization.archive.documents.cancel.emptyMessage});
-                return false;
+              } else {
+                var allCanBeCancelled = _.all(selected, function(doc) {
+                  return doc.field("status") == "pending" &&
+                    (Utils.viewerIsAuthor(doc) || (doc.field("viewer").role == "company_admin"  && self.props.forCompanyAdmin)
+                  );
+                });
+                if (!allCanBeCancelled) {
+                  new FlashMessage({type: 'error', content: localization.archive.documents.cancel.notAvailableMessage});
+                } else {
+                  self.openCancelModal(selected);
+                }
               }
-              var allCanBeCancelled = _.all(selected, function(doc) {
-                return doc.field("status") == "pending" && (Utils.documentAuthor(doc).id == doc.field("viewer").signatory_id || (doc.field("viewer").role = "company_admin"  && self.props.forCompanyAdmin));
-              });
-              if (!allCanBeCancelled) {
-                new FlashMessage({type: 'error', content: localization.archive.documents.cancel.notAvailableMessage});
-                return false;
-              }
-              self.openCancelModal(selected);
             }}
           />
 
@@ -167,9 +169,19 @@ return React.createClass({
             onSelect={function(selected,model) {
               if (selected.length ==0 ) {
                 new FlashMessage({type: 'error', content: localization.archive.documents.cancel.emptyMessage});
-                return false;
+              } else {
+                var canDeleteAll = _.all(selected, function (doc) {
+                  return (doc.field("status") !== "pending" ||
+                    (Utils.viewerIsAuthor(doc) || (doc.field("viewer").role == "company_admin"  && self.props.forCompanyAdmin)) ||
+                    (Utils.currentViewerParty(doc) && Utils.signatoryCanSignNow(doc,Utils.currentViewerParty(doc)))
+                  );
+                });
+                if (!canDeleteAll) {
+                  new FlashMessage({type: 'error', content: localization.archive.documents.remove.invalidMessage});
+                } else {
+                  self.openRemoveModal(selected);
+                }
               }
-              self.openRemoveModal(selected);
             }}
           />
 
