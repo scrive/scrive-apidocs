@@ -1652,7 +1652,13 @@ instance MonadDB m => DBUpdate m ConnectSignatoriesToUser () where
     , "    ON d.id = sl.document_id"
     , "  JOIN signatory_link_fields slf"
     , "    ON sl.id = slf.signatory_link_id"
-    , " WHERE slf.type =" <?> EmailFT
+    -- Connect only signatory links that belong to a document that is
+    -- not a template nor draft and are not already connected to an
+    -- existing user.
+    , " WHERE d.type =" <?> Signable
+    , "   AND d.status <>" <?> Preparation
+    , "   AND sl.user_id IS NULL"
+    , "   AND slf.type =" <?> EmailFT
     , "   AND slf.value_text =" <?> email
     , "   AND (sl.sign_time >=" <?> time <+> "OR sl.seen_time >=" <?> time <> ")"
     , "FOR UPDATE"

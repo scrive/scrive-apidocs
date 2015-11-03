@@ -1,7 +1,3 @@
-#####
-flashMessageMustAcceptTOS=
-	$_flashMessageMustAcceptTOS()$
-
 ####
 flashMessageUserDetailsSaved=
 	<div>$_flashMessageUserDetailsSaved()$</div>

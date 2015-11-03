@@ -16,7 +16,6 @@ module User.UserView (
     -- flash messages
     flashMessageLoginRedirectReason,
     flashMessageUserDetailsSaved,
-    flashMessageMustAcceptTOS,
     flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
     flashMessageAccessNewAccountLinkNotValid,
@@ -197,10 +196,6 @@ flashMessageLoginRedirectReason reason =
 flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
 flashMessageUserDetailsSaved =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserDetailsSaved"
-
-flashMessageMustAcceptTOS :: TemplatesMonad m => m FlashMessage
-flashMessageMustAcceptTOS =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageMustAcceptTOS"
 
 flashMessageUserPasswordChanged :: TemplatesMonad m => m FlashMessage
 flashMessageUserPasswordChanged =

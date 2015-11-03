@@ -23,7 +23,6 @@ import Util.HasSomeUserInfo
 signupTests :: TestEnvSt -> Test
 signupTests env = testGroup "Signup" [
       testThat "can self signup and activate an account" env testSignupAndActivate
-    , testThat "must accept tos to activate an account" env testAcceptTOSToActivate
     , testThat "login event recorded when logged in after activation" env testLoginEventRecordedWhenLoggedInAfterActivation
     ]
 
@@ -58,18 +57,6 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
   -- activate the account using the signup details
   ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" Nothing
   assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" ctx3
-
-testAcceptTOSToActivate :: TestEnv ()
-testAcceptTOSToActivate = do
-  ctx <- mkContext def
-
-  -- enter the email to signup
-  ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
-  UserAccountRequest{..} <- assertSignupSuccessful ctx1
-
-  -- activate the account without accepting the tos
-  ctx3 <- activateAccount ctx1 uarUserID uarToken False "Andrzej" "Rybczak" "password12" "password12" Nothing
-  assertAccountActivationFailed ctx3
 
 signupForAccount :: Context -> String -> TestEnv Context
 signupForAccount ctx email = do
@@ -120,11 +107,6 @@ assertAccountActivated fstname sndname ctx = do
   assertBool "Accepted TOS" $ isJust ((ctxmaybeuser ctx) >>= userhasacceptedtermsofservice)
   assertEqual "First name was set" (Just fstname) (getFirstName <$> ctxmaybeuser ctx)
   assertEqual "Second name was set" (Just sndname) (getLastName <$> ctxmaybeuser ctx)
-
-assertAccountActivationFailed :: Context -> TestEnv ()
-assertAccountActivationFailed ctx = do
-  assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
-  -- if they don't accept the tos then the flash is signing related, not sure why
 
 getAccountCreatedActions :: TestEnv [UserAccountRequest]
 getAccountCreatedActions = do

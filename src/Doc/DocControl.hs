@@ -203,12 +203,9 @@ handleAcceptAccountFromSign did slid = logDocumentAndSignatory did slid $ do
   magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash) `withDocumentM` do
     signatorylink <- guardJust . getSigLinkFor slid =<< theDocument
-    muser <- User.Action.handleAccountSetupFromSign signatorylink
-    case muser of
-      Just user -> J.runJSONGenT $ do
-        J.value "userid" (show $ userid user)
-      Nothing -> J.runJSONGenT $ do
-        return ()
+    user <- User.Action.handleAccountSetupFromSign signatorylink
+    J.runJSONGenT $ do
+      J.value "userid" (show $ userid user)
 
 {- |
     Call after signing in order to save the document for any user, and
