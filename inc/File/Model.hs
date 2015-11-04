@@ -55,9 +55,10 @@ data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
 instance (MonadDB m, MonadThrow m) => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) where
   query GetFileThatShouldBeMovedToAmazon = do
     runQuery_ $ sqlSelect "files" $ do
-      sqlWhere "content IS NOT NULL"
-      sqlLimit 1
       mapM_ sqlResult filesSelectors
+      sqlWhere "content IS NOT NULL"
+      sqlOrderBy "id"
+      sqlLimit 1
     fetchMaybe fetchFile
 
 data PurgeFile = PurgeFile FileID

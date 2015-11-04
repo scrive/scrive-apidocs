@@ -179,7 +179,8 @@ main = do
           runScheduler Mails.Events.processEvents
           return . RerunAfter $ iseconds 5
         MarkOrphanFilesForPurge -> do
-          let maxMarked = 1000
+          let maxMarked = 100000
+              -- Share the string between all the log messages.
               orphanFileMarked = "Orphan file marked for purge"
           fids <- runDB . dbUpdate . MarkOrphanFilesForPurgeAfter maxMarked $ idays 7
           forM_ fids $ \fid -> logInfo orphanFileMarked $ object [identifier_ fid]
