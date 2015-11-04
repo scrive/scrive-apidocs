@@ -532,6 +532,7 @@
 "_flashMessageCompanyAccountDeleted":"Ο λογαριασμός αφαιρέθηκε επιτυχώς. ",
 "_flashMessageContractRestarted":"Έχετε επανεκκινήσει τη διαδικασία και τώρα μπορείτε να προσαρμόσετε τις ρυθμίσεις και να στείλετε την πρόσκληση ξανά. ",
 "_flashMessageDocumentArchiveDone":"Τα επιλεγμένα έγγραφα έχουν διαγραφεί. ",
+"_flashMessageDocumentArchiveInvalid":"",
 "_flashMessageInvalidCharsInPassword":"Ο κωδικός πρόσβασης περιέχει άκυρους χαρακτήρες. ",
 "_flashMessageInvalidEmailFormat":"Η διεύθυνση email είναι λανθασμένη.  ",
 "_flashMessageLoginPageRedirectReasonNotAdmin":"Δεν είστε εξουσιοδοτημένος να δείτε αυτή τη σελίδα. ",

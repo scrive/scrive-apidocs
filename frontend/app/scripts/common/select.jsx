@@ -70,7 +70,10 @@ define(["legacy_code", "React"], function (legacy_code, React) {
     render: function () {
       var parent = this.props.parent;
 
-      var mainStyle = {border: parent.props.border, color: parent.props.color};
+      var mainStyle = {color: parent.props.color};
+      if (parent.props.border !== "") {
+        mainStyle.border = parent.props.border;
+      }
 
       if (this.props.expanded) {
         mainStyle.position = "absolute";
@@ -94,9 +97,11 @@ define(["legacy_code", "React"], function (legacy_code, React) {
 
       var optionStyle = {
         minWidth: parent.props.width + "px",
-        maxWidth: (parent.props.maxOptionsWidth || 2 * parent.props.width) + "px",
-        border: parent.props.border
+        maxWidth: (parent.props.maxOptionsWidth || 2 * parent.props.width) + "px"
       };
+      if (parent.props.border !== "") {
+        optionStyle.border = parent.props.border;
+      }
 
       var selectClass = React.addons.classSet({
         "select": true,

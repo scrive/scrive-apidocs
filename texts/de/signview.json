@@ -46,7 +46,7 @@
 "_elegBankIDRFA9":"Geben Sie Ihren Sicherheitscode in die BankID-App ein und wählen Sie Signieren.",
 "_elegBankInvalidParametersCanChange":"Falsche persönliche ID-Nummer. Austauschen und erneut versuchen.",
 "_elegBankInvalidParametersCantChange":"Falsche persönliche ID-Nummer. Veranlassen Sie den Absender des Dokuments, diese auszutauschen.",
-"_elegSignConfirmationText":"",
+"_elegSignConfirmationText":"<strong class='put-signatory-name-here'></strong>, Sie signieren mit schwedischer BankID. Nach dem Signieren wird Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",
 "_elegSignConfirmationTitle":"Signieren mit schwedischer BankID",
 "_email":"E-Mail",
 "_enterPhoneForPinDelivery":"Geben Sie Ihre Telefonnummer ein",
