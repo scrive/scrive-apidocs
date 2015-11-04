@@ -48,7 +48,14 @@ bar (MyDir segment route) = mapM (\s -> return $ show segment ++ "/" ++ s) =<< b
 bar (MyHandler (Nothing, _) _ _) = return [] -- ["<SERVING FILES FROM SOME DIRECTORY>"]
 bar (MyHandler (Just 0, _method') _ _) = return [""]
 bar (MyHandler (Just n, _method') _ _) = return [intersperse '/' (replicate n 'X')]
-bar (MyChoice routes) = concat <$> mapM bar routes
+bar (MyChoice routes) = do
+  let localState :: State s a -> State s a
+      localState f = do
+        s <- get
+        x <- f
+        put s
+        return x
+  concat <$> mapM (localState . bar) routes
 bar (MyParam route) = do
   modify (+1)
   mapM (\s -> return $ "[a-zA-Z0-9_-]+/" ++ s) =<< bar route
