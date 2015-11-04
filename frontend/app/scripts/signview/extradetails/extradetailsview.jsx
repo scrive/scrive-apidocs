@@ -116,7 +116,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
                 ref="name"
                 className={nameClass}
                 infotext={localization.personalName}
-                value={self.nameInputValue && self.nameInputValue.trim() === sig.name() ? self.nameInputValue : sig.name()}
+                value={(self.nameInputValue && self.nameInputValue.trim() === sig.name() ?
+                            self.nameInputValue : sig.name())}
                 onChange={function (value) {
                   self.nameInputValue = value; // We don't store it in state, since this would trigger rerendering
                   var str = value.trim();
