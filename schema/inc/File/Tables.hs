@@ -6,7 +6,7 @@ import KontraPrelude
 tableFiles :: Table
 tableFiles = tblTable {
     tblName = "files"
-  , tblVersion = 7
+  , tblVersion = 8
   , tblColumns = [
       tblColumn { colName = "id",            colType = BigSerialT,  colNullable = False }
     , tblColumn { colName = "name",          colType = TextT,       colNullable = False }
@@ -22,6 +22,13 @@ tableFiles = tblTable {
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblIndexes = [
-      (indexOnColumn "purge_at") { idxWhere = Just "purged_time IS NOT NULL" }
+      -- For fetching files to be purged.
+      (indexOnColumn "purge_at") {
+        idxWhere = Just "purge_at IS NOT NULL AND purged_time IS NULL"
+      }
+      -- For fetching files to be uploaded to Amazon.
+    , (indexOnColumn "id") {
+        idxWhere = Just "content IS NOT NULL"
+      }
     ]
   }
