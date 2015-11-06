@@ -114,6 +114,13 @@ return Backbone.View.extend({
     }
   },
 
+  updateTypeSetter: function () {
+    var placement = this.model;
+    if (this.hasTypeSetter()) {
+      placement.typeSetter.update();
+    }
+  },
+
   updateErrorBackground: function () {
     var placement = this.model;
     var field = placement.field();
@@ -190,6 +197,7 @@ return Backbone.View.extend({
         editor.focus();
         self.setShouldFocusEditor(false);
       }
+      self.updateTypeSetter();
     } else {
       place.append(placewrapper.append(new TextPlacementView({model: field, fontSize: this.fontSize()}).el));
     }
