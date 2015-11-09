@@ -1169,7 +1169,9 @@ apiCallV1SetSignatoryAttachment did sid aname = logDocumentAndSignatory did sid 
                   Right content -> return content
                 content <- if (".pdf" `isSuffixOf` (map toLower filename))
                   then apiGuardL (badInput "The PDF was invalid.") $ preCheckPDF (BSL.toStrict content1)
-                  else if (".png" `isSuffixOf` (map toLower filename) || ".jpg" `isSuffixOf` (map toLower filename))
+                  else if ( ".png" `isSuffixOf` (map toLower filename)
+                          || ".jpg" `isSuffixOf` (map toLower filename)
+                          || ".jpeg" `isSuffixOf` (map toLower filename))
                     then return $ Binary $ BSL.toStrict content1
                     else throwM . SomeKontraException $ badInput "Only pdf files or images can be attached."
                 (dbUpdate $ NewFile (dropFilePathFromWindows filename) content)
