@@ -931,7 +931,7 @@
 "_smsClosedNotification":"Het document is nu ondertekend. Bekijk het document via deze link: $link$$if(withEmail)$. We hebben het document tevens naar uw e-mailadres verstuurd.$endif$",
 "_smsCorrectedNotification":"We hebben gemerkt dat we u eerder een document hebben gestuurd dat incorrect was omdat het geen digitale handtekening had, maar we hebben dit probleem nu opgelost. Het document met de juiste digitale handtekening vindt u hier: $link$$if(withEmail)$. We hebben het correcte document tevens naar uw e-mailadres verstuurd. $endif$",
 "_smsInvitationToAuthor":"Het is uw beurt om het document $documenttitle$ te ondertekenen. Open de link om het document te bekijken: $link$",
-"_smsInvitationToView":"$personname$, $partylist$ zal binnenkort een document e-ondertekenen. U bent uitgenodigd door $creatorname$ als een waarnemer van de ondertekeningsprocedure. Open de link om het document te lezen: $link$",
+"_smsInvitationToView":"",
 "_smsOriginator":"SMS-label",
 "_smsOriginatorDescription":"De naam die de ontvanger te zien krijgt wanneer hij/zij een document via SMS ontvangt. Maximaal 11 alfanumerieke tekens. ",
 "_standard":"Standaard",

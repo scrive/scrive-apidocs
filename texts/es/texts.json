@@ -931,7 +931,7 @@
 "_smsClosedNotification":"El documento ya ha sido firmado. Encuentre el documento siguiendo este link: $link$$if(withEmail)$. También hemos enviado el documento firmado a su email.$endif$",
 "_smsCorrectedNotification":"Hemos notado que anteriormente le enviamos un documento que era incorrecto en el que faltaba una firma digital, pero ahora hemos corregido ese error. Encuentre el documento con la firma digital apropiada en el siguiente link: $link$$if(withEmail)$. Hemos enviado también el documento corregido a su email.$endif$",
 "_smsInvitationToAuthor":"Es tu turno para firmar el documento $documenttitle$. Abra el link para revisar el documento: $link$",
-"_smsInvitationToView":"$personname$, un documento está a punto de ser firmado electrónicamente por $partylist$. Usted ha sido invitado por $creatorname$ como observador del proceso de firma. Abra el link para leer el documento: $link$",
+"_smsInvitationToView":"",
 "_smsOriginator":"Término SMS",
 "_smsOriginatorDescription":"El nombre que es expuesto en el destinatario cuando reciba un documento por SMS. Máximo 11 alfanuméricos caracteres. ",
 "_standard":"Común",
