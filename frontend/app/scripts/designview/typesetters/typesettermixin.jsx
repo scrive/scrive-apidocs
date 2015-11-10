@@ -65,6 +65,10 @@ define(["jquery", "Underscore", "Backbone", "React",
       this.forceUpdate();
     },
 
+    update: function () {
+      this.forceUpdate();
+    },
+
     clear: function () {
       this.unmount();
     },
