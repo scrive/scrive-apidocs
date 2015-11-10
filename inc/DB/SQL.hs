@@ -632,7 +632,9 @@ sqlWhereILikeE exc name value = sqlWhereEV (exc value, name) $ name <+> "ILIKE" 
 sqlWhereIn :: (MonadState v m, SqlWhere v, Show a, ToSQL a) => SQL -> [a] -> m ()
 sqlWhereIn _name [] = sqlWhere "FALSE"
 sqlWhereIn name [value] = sqlWhereEq name value
-sqlWhereIn name values = sqlWhere $ name <+> "= ANY(" <?> Array1 values <+> ")"
+sqlWhereIn name values = do
+  -- Unpack the array to give query optimizer more options.
+  sqlWhere $ name <+> "IN (SELECT UNNEST(" <?> Array1 values <+> "))"
 
 sqlWhereInSql :: (MonadState v m, Sqlable a, SqlWhere v) => SQL -> a -> m ()
 sqlWhereInSql name sql = sqlWhere $ name <+> "IN" <+> parenthesize (toSQLCommand sql)
@@ -642,12 +644,12 @@ sqlWhereInE :: (MonadState v m, SqlWhere v, KontraException e, Show a, ToSQL a, 
 sqlWhereInE exc name [] = sqlWhereEV (exc [], name) "FALSE"
 sqlWhereInE exc name [value] = sqlWhereEqE (exc . (\x -> [x])) name value
 sqlWhereInE exc name values =
-  sqlWhereEV (exc values, name) $ name <+> "= ANY(" <?> Array1 values <+> ")"
+  sqlWhereEV (exc values, name) $ name <+> "IN (SELECT UNNEST(" <?> Array1 values <+> "))"
 
 sqlWhereNotIn :: (MonadState v m, SqlWhere v, Show a, ToSQL a) => SQL -> [a] -> m ()
 sqlWhereNotIn _name [] = sqlWhere "TRUE"
 sqlWhereNotIn name [value] = sqlWhereNotEq name value
-sqlWhereNotIn name values = sqlWhere $ name <+> "<> ALL(" <?> Array1 values <+> ")"
+sqlWhereNotIn name values = sqlWhere $ name <+> "NOT IN (SELECT UNNEST(" <?> Array1 values <+> "))"
 
 sqlWhereNotInSql :: (MonadState v m, Sqlable a, SqlWhere v) => SQL -> a -> m ()
 sqlWhereNotInSql name sql = sqlWhere $ name <+> "NOT IN" <+> parenthesize (toSQLCommand sql)
@@ -657,7 +659,7 @@ sqlWhereNotInE :: (MonadState v m, SqlWhere v, KontraException e, Show a, ToSQL 
 sqlWhereNotInE exc name [] = sqlWhereEV (exc [], name) "TRUE"
 sqlWhereNotInE exc name [value] = sqlWhereNotEqE (exc . (\x -> [x])) name value
 sqlWhereNotInE exc name values =
-  sqlWhereEV (exc values, name) $ name <+> "<> ALL(" <?> Array1 values <+> ")"
+  sqlWhereEV (exc values, name) $ name <+> "NOT IN (SELECT UNNEST(" <?> Array1 values <+> "))"
 
 sqlWhereExists :: (MonadState v m, SqlWhere v) => SqlSelect -> m ()
 sqlWhereExists sql = do
