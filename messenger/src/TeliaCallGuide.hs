@@ -44,24 +44,29 @@ handleTeliaCallGuideEvents = localDomain "handleTeliaCallGuideEvents" . flip E.c
     , "StatusText" .= xStatusText
     ]
 
-  let event = case xStatusCode of
-              Just 0 -> SMSEvent xMSISDN SMSDelivered
-              Just 2 -> SMSEvent xMSISDN (SMSUndelivered xStatusText)
-              Nothing -> $unexpectedError "Could not parse StatusCode as Int"
-              _ -> $unexpectedError "Unknown Telia CallGuide StatusCode"
-      updateEvent = do
-        res <- dbUpdate $ UpdateWithSMSEventForTeliaID xID event
-        logInfo "UpdateWithSMSEventForTeliaID returned" $ object [
-            "telia_id" .= xID
-          , "event"    .= show event
-          , "result"   .= res
-          ]
-      handleMissingSMS (e :: DBException) = do
-        logInfo "UpdateWithSMSEventForTeliaID failed (probably original SMS got purged)" $ object [
-            "telia_id"  .= xID
-          , "event"     .= show event
-          , "exception" .= show e
-          ]
-
-  updateEvent `E.catch` handleMissingSMS
-  ok $ toResponse "<DeliveryResponse ack=\"true\"/>"
+  let mEvent = case xStatusCode of
+                 Just 0 -> Just $ SMSEvent xMSISDN SMSDelivered
+                 Just 2 -> Just $ SMSEvent xMSISDN (SMSUndelivered xStatusText)
+                 _ -> Nothing
+  case mEvent of
+    Just event -> do
+      let updateEvent = do
+            res <- dbUpdate $ UpdateWithSMSEventForTeliaID xID event
+            logInfo "UpdateWithSMSEventForTeliaID returned" $ object [
+                "telia_id" .= xID
+              , "event"    .= show event
+              , "result"   .= res
+              ]
+      let handleMissingSMS (e :: DBException) = do
+            logInfo "UpdateWithSMSEventForTeliaID failed (probably original SMS got purged)" $ object [
+                "telia_id"  .= xID
+              , "event"     .= show event
+              , "exception" .= show e
+              ]
+      updateEvent `E.catch` handleMissingSMS
+      ok $ toResponse "<DeliveryResponse ack=\"true\"/>"
+    Nothing -> do
+      logInfo "UpdateWithSMSEventForTeliaID not run: could not read StatusCode" $ object [
+          "StatusCode" .= xStatusCode
+        ]
+      ok $ toResponse "Could not read StatusCode"
