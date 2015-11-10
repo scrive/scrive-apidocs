@@ -33,11 +33,12 @@ define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocumen
     },
 
     checkboxFactory: function () {
+      var signatory = this.firstSignatoryOrAuthor();
       return new Field({
         fresh: false,
         type: "checkbox",
-        value: "checked",
-        signatory: this.firstSignatoryOrAuthor(),
+        value: signatory.author() ? "checked" : "",
+        signatory: signatory,
         name: "temp-checkbox"
       });
     },
