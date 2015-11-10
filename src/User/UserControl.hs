@@ -206,36 +206,24 @@ handleUsageStatsJSONForUserMonths = do
     else getMonthsStats (Left $ userid user)
 
 getDaysStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
-getDaysStats euc = do
-  ctxtime <- ctxtime <$> getContext
-  let timespans = [ (formatTimeYMD t, formatTimeYMD $ daysAfter 1 t)
-                     | daysBack <- [0 .. 30]
-                     , t <- [daysBefore daysBack ctxtime]
-                    ]
-  case euc of
-    Left uid -> do
-      stats <- dbQuery $ GetUsageStats (Left uid) timespans
-      return $ userStatsToJSON formatTimeYMD stats
-    Right cid -> do
-      totalS <- renderTemplate_ "statsOrgTotal"
-      stats <- dbQuery $ GetUsageStats (Right cid) timespans
-      return $ companyStatsToJSON formatTimeYMD totalS stats
+getDaysStats = \case
+  Left uid -> do
+    stats <- dbQuery $ GetUsageStats (Left uid) PartitionByDay $ idays 30
+    return $ userStatsToJSON formatTimeYMD stats
+  Right cid -> do
+    totalS <- renderTemplate_ "statsOrgTotal"
+    stats <- dbQuery $ GetUsageStats (Right cid) PartitionByMonth $ imonths 6
+    return $ companyStatsToJSON formatTimeYMD totalS stats
 
 getMonthsStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
-getMonthsStats euc = do
-  ctxtime <- ctxtime <$> getContext
-  let timespans = [ (formatTime' "%Y-%m-01" t, formatTime' "%Y-%m-01" (monthsBefore (-1) t))
-                     | monthsBack <- [0 .. 6]
-                     , t <- [monthsBefore monthsBack ctxtime]
-                    ]
-  case euc of
-    Left uid -> do
-      stats <- dbQuery $ GetUsageStats (Left uid) timespans
-      return $ userStatsToJSON (formatTime' "%Y-%m") stats
-    Right cid -> do
-      totalS <- renderTemplate_ "statsOrgTotal"
-      stats <- dbQuery $ GetUsageStats (Right cid) timespans
-      return $ companyStatsToJSON (formatTime' "%Y-%m") totalS stats
+getMonthsStats = \case
+  Left uid -> do
+    stats <- dbQuery $ GetUsageStats (Left uid) PartitionByDay $ idays 30
+    return $ userStatsToJSON (formatTime' "%Y-%m") stats
+  Right cid -> do
+    totalS <- renderTemplate_ "statsOrgTotal"
+    stats <- dbQuery $ GetUsageStats (Right cid) PartitionByMonth $ imonths 6
+    return $ companyStatsToJSON (formatTime' "%Y-%m") totalS stats
 
 {- |
     Checks for live documents owned by the user.

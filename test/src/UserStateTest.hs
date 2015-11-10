@@ -4,6 +4,7 @@ import Test.Framework
 
 import Company.Model
 import DB
+import Doc.DocInfo
 import KontraPrelude
 import MinutesTime
 import TestingUtil
@@ -146,28 +147,31 @@ test_getCompanyAccounts = do
 
 test_userUsageStatisticsByUser :: TestEnv ()
 test_userUsageStatisticsByUser = do
-  Just user <- addNewUser "Emily" "Green" "emily@green.com"
-  res <- dbQuery $ GetUsageStats (Left (userid user)) [("2012-12-01"::String,"2012-12-02"),
-                                                                   ("2012-12-02","2012-12-03"),
-                                                                   ("2012-12-04","2012-12-05"),
-                                                                   ("2012-12-06","2012-12-07")]
-  assertEqual "Stats were returned for all periods requested" 4 (length res)
-  forM_ res $ \r ->
-     assertEqual "Stats were for the proper user" (Just (userid user)) ((\(a,_,_) -> a) <$> uusUser r)
+  let email = "emily@green.com"
+  Just user <- addNewUser "Emily" "Green" email
+  _ <- addRandomDocumentWithAuthorAndCondition user isClosed
+  res <- dbQuery $ GetUsageStats (Left $ userid user) PartitionByMonth $ iyears 2000
+  assertEqual "Document present in stats" 1 (length res)
+  let [UserUsageStats{..}] = res
+  assertEqual "Email in statistics is correct" email uusUserEmail
+  assertEqual "Name in statistics is correct" "Emily Green" uusUserName
+  assertEqual "Statistics are correct" 1 $ dsDocumentsClosed uusDocumentStats
 
 test_userUsageStatisticsByCompany :: TestEnv ()
 test_userUsageStatisticsByCompany = do
+  let email1 = "emily@green.com"
+      email2 = "bob@gblue.com"
   Company{companyid = cid} <- dbUpdate $ CreateCompany
-  Just _user1 <- addNewCompanyUser "Emily" "Green" "emily@green.com" cid
-  Just _user2 <- addNewCompanyUser "Emily" "Green" "emil2y@green.com" cid
-  res <- dbQuery $ GetUsageStats (Right cid) [("2012-12-01"::String,"2012-12-02"),
-                                                         ("2012-12-02","2012-12-03"),
-                                                         ("2012-12-04","2012-12-05"),
-                                                         ("2012-12-06","2012-12-07")]
-
-  forM_ res $ \r ->
-     assertEqual "Stats were for the proper company" (Just cid) ((\(a,_) -> a) <$> uusCompany r)
-  assertEqual "Stats were returned for all periods requested times users" (4*2) (length res)
+  Just user1 <- addNewCompanyUser "Emily" "Green" email1 cid
+  Just user2 <- addNewCompanyUser "Bob" "Blue" email2 cid
+  _ <- addRandomDocumentWithAuthorAndCondition user1 isClosed
+  _ <- addRandomDocumentWithAuthorAndCondition user2 isClosed
+  res <- dbQuery $ GetUsageStats (Right cid) PartitionByDay $ iyears 2000
+  assertEqual "Documents present in stats" 2 $ length res
+  let Just uus1 = find ((email1 ==) . uusUserEmail) res
+      Just uus2 = find ((email2 ==) . uusUserEmail) res
+  assertEqual "Statistics for Emily are correct" 1 $ dsDocumentsClosed $ uusDocumentStats uus1
+  assertEqual "Statistics for Bob are correct" 1 $ dsDocumentsClosed $ uusDocumentStats uus2
 
 test_setUserCompany :: TestEnv ()
 test_setUserCompany = do
