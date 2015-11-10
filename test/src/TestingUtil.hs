@@ -49,6 +49,7 @@ import KontraPrelude
 import MagicHash (MagicHash, unsafeMagicHash)
 import MinutesTime
 import Session.SessionID
+import SMS.Data (SMSProvider(..))
 import System.Random.CryptoRNG ()
 import TestKontra
 import User.Email
@@ -111,6 +112,11 @@ instance Arbitrary Company where
 instance Arbitrary CompanyID where
   arbitrary = unsafeCompanyID . abs <$> arbitrary
 
+instance Arbitrary SMSProvider where
+  arbitrary = elements [ SMSDefault
+                       , SMSTeliaCallGuide
+                       ]
+
 instance Arbitrary CompanyInfo where
   arbitrary = do
     a <- arbitrary
@@ -121,6 +127,7 @@ instance Arbitrary CompanyInfo where
     f <- arbitrary
     h <- arbitrary
     i <- arbitrary
+    j <- arbitrary
     return $ CompanyInfo { companyname       = a
                          , companynumber     = b
                          , companyaddress    = c
@@ -131,6 +138,7 @@ instance Arbitrary CompanyInfo where
                          , companyallowsavesafetycopy = True
                          , companyidledoctimeout = h
                          , companycgidisplayname = i
+                         , companysmsprovider = j
                          }
 
 instance Arbitrary MagicHash where
@@ -539,6 +547,7 @@ addNewCompany = do
          , companyallowsavesafetycopy = True
          , companyidledoctimeout = Nothing
          , companycgidisplayname = Nothing
+         , companysmsprovider = SMSDefault
          }
     Just company <- dbQuery $ GetCompany cid
     return company

@@ -72,6 +72,7 @@ kontraMigrations = [
   , filesAddPurgeAtColumn
   , filesAddIndexesToSpeedUpQueries
   , createIndexOnEmailFields
+  , addSMSProviderToCompanies
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

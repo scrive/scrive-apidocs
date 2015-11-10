@@ -23,6 +23,7 @@ import Company.CompanyID
 import DB
 import IPAddress
 import KontraPrelude
+import SMS.Data (SMSProvider)
 import User.UserID
 
 data Company = Company {
@@ -41,6 +42,7 @@ data CompanyInfo = CompanyInfo {
   , companyallowsavesafetycopy :: Bool
   , companyidledoctimeout :: Maybe Int16
   , companycgidisplayname :: Maybe String
+  , companysmsprovider    :: SMSProvider
   } deriving (Eq, Ord, Show)
 
 -- Synchronize these definitions with frontend/app/js/account/company.js
@@ -143,6 +145,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyInfo Bool where
       sqlSet "allow_save_safety_copy" companyallowsavesafetycopy
       sqlSet "idle_doc_timeout" companyidledoctimeout
       sqlSet "cgi_display_name" companycgidisplayname
+      sqlSet "sms_provider" companysmsprovider
       sqlWhereEq "id" cid
 
 -- helpers
@@ -160,9 +163,10 @@ selectCompaniesSelectors = do
   sqlResult "companies.allow_save_safety_copy"
   sqlResult "companies.idle_doc_timeout"
   sqlResult "companies.cgi_display_name"
+  sqlResult "companies.sms_provider"
 
-fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, Bool, Maybe Int16, Maybe String) -> Company
-fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, allow_save_safety_copy, idle_doc_timeout,cgi_display_name) = Company {
+fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider) -> Company
+fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, allow_save_safety_copy, idle_doc_timeout,cgi_display_name, sms_provider) = Company {
   companyid = cid
 , companyinfo = CompanyInfo {
     companyname = name
@@ -175,5 +179,6 @@ fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_l
   , companyallowsavesafetycopy = allow_save_safety_copy
   , companyidledoctimeout = idle_doc_timeout
   , companycgidisplayname = cgi_display_name
+  , companysmsprovider = sms_provider
   }
 }

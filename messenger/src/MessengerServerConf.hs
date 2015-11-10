@@ -1,5 +1,7 @@
 module MessengerServerConf (
     MessengerServerConf(..)
+  , sendersConfigFromMessengerConf
+  , SendersConfig(..)
   , SenderConfig(..)
   , unjsonMessengerServerConf
   ) where
@@ -11,14 +13,25 @@ import Data.Word
 
 import KontraPrelude
 import Log.Configuration
+import SMS.Data
 import Utils.TH
 
 data MessengerServerConf = MessengerServerConf {
   mscHttpBindAddress :: !(Word32, Word16)
 , mscDBConfig        :: !Text
 , mscLogConfig       :: !LogConfig
-, mscMasterSender    :: !SenderConfig
+, mscSenderDefault   :: !SenderConfig
+, mscSenderTelia     :: !SenderConfig
 } deriving (Eq, Ord, Show)
+
+newtype SendersConfig = SendersConfig (SMSProvider -> SenderConfig)
+
+sendersConfigFromMessengerConf :: MessengerServerConf -> SendersConfig
+sendersConfigFromMessengerConf MessengerServerConf{..} = SendersConfig
+  (\p -> case p of
+    SMSDefault -> mscSenderDefault
+    SMSTeliaCallGuide -> mscSenderTelia
+  )
 
 unjsonMessengerServerConf :: UnjsonDef MessengerServerConf
 unjsonMessengerServerConf = objectOf $ MessengerServerConf
@@ -37,9 +50,12 @@ unjsonMessengerServerConf = objectOf $ MessengerServerConf
   <*> field "logging"
       mscLogConfig
       "Logging configuration"
-  <*> field "master_sender"
-      mscMasterSender
-      "Master sender"
+  <*> field "sender_default"
+      mscSenderDefault
+      "Default Sender configuration"
+  <*> field "sender_telia"
+      mscSenderTelia
+      "Telia Sender configuration"
 
 instance Unjson MessengerServerConf where
   unjsonDef = unjsonMessengerServerConf
@@ -48,6 +64,10 @@ data SenderConfig = GlobalMouthSender {
 gmSenderUser       :: !String
 , gmSenderPassword :: !String
 , gmURL            :: !String -- "https://gw3.mcm.globalmouth.com:8443/api/mcm"
+} | TeliaCallGuideSender {
+  tcgSenderUrl      :: !String -- "https://sms.ccs.teliasonera.com/smsplus/smsextended"
+, tcgSenderUser     :: !String
+, tcgSenderPassword :: !String
 } | LocalSender {
   localDirectory   :: !FilePath
 , localOpenCommand :: !(Maybe String)
@@ -66,6 +86,17 @@ instance Unjson SenderConfig where
             gmURL
             "GlobalMouth address to contact"
       )
+    , ("telia_callguide", $(isConstr 'TeliaCallGuideSender), TeliaCallGuideSender
+        <$> field "url"
+            tcgSenderUrl
+            "URL for Telia CallGuide service"
+        <*> field "username"
+            tcgSenderUser
+            "Username for Telia CallGuide service"
+        <*> field "password"
+            tcgSenderPassword
+            "Password for Telia CallGuide service"
+      )
     , ("local", $(isConstr 'LocalSender), LocalSender
         <$> field "dir"
             localDirectory
@@ -81,8 +112,12 @@ instance Default MessengerServerConf where
       mscHttpBindAddress = (0x7f000001, 6668)
     , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
     , mscLogConfig = def
-    , mscMasterSender = LocalSender {
-        localDirectory = "/tmp"
+    , mscSenderDefault = LocalSender {
+        localDirectory = "/tmp/default"
+      , localOpenCommand = Nothing
+    }
+    , mscSenderTelia = LocalSender {
+        localDirectory = "/tmp/telia"
       , localOpenCommand = Nothing
     }
   }

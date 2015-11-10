@@ -6,7 +6,9 @@ module SMS.Model (
   , smsFetcher
   , CreateSMS(..)
   , CleanSMSesOlderThanDays(..)
+  , UpdateSMSWithTeliaID(..)
   , UpdateWithSMSEvent(..)
+  , UpdateWithSMSEventForTeliaID(..)
   , GetUnreadSMSEvents(..)
   , MarkSMSEventAsRead(..)
   ) where
@@ -36,6 +38,7 @@ smsNotificationChannel = "sms"
 smsSelectors :: [SQL]
 smsSelectors = [
     "id"
+  , "provider"
   , "originator"
   , "msisdn"
   , "body"
@@ -43,9 +46,10 @@ smsSelectors = [
   , "attempts"
   ]
 
-smsFetcher :: (ShortMessageID, String, String, String, String, Int32) -> ShortMessage
-smsFetcher (smsid, originator, msisdn, body, sdata, attempts) = ShortMessage {
+smsFetcher :: (ShortMessageID, SMSProvider, String, String, String, String, Int32) -> ShortMessage
+smsFetcher (smsid, provider, originator, msisdn, body, sdata, attempts) = ShortMessage {
   smID         = smsid
+, smProvider   = provider
 , smOriginator = originator
 , smMSISDN     = msisdn
 , smBody       = body
@@ -55,10 +59,11 @@ smsFetcher (smsid, originator, msisdn, body, sdata, attempts) = ShortMessage {
 
 ----------------------------------------
 
-data CreateSMS = CreateSMS String String String String
+data CreateSMS = CreateSMS SMSProvider String String String String
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSMS ShortMessageID where
-  update (CreateSMS originator msisdn body sdata) = do
+  update (CreateSMS provider originator msisdn body sdata) = do
     runQuery_ . sqlInsert "smses" $ do
+      sqlSet "provider" provider
       sqlSet "originator" originator
       sqlSet "msisdn" msisdn
       sqlSet "body" body
@@ -76,9 +81,27 @@ instance (MonadDB m, MonadTime m) => DBUpdate m CleanSMSesOlderThanDays Int wher
     runQuery . sqlDelete "smses" $ do
       sqlWhere $ "finished_at <=" <?> past
 
+data UpdateSMSWithTeliaID = UpdateSMSWithTeliaID ShortMessageID String
+instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSMSWithTeliaID Bool where
+  update (UpdateSMSWithTeliaID mid tid) = do
+    runQuery01 . sqlUpdate "smses" $ do
+      sqlSet "telia_id" tid
+      sqlWhereEq "id" mid
+
 data UpdateWithSMSEvent = UpdateWithSMSEvent ShortMessageID SMSEvent
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEvent Bool where
   update (UpdateWithSMSEvent mid ev) = do
+    runQuery01 . sqlInsert "sms_events" $ do
+      sqlSet "sms_id" mid
+      sqlSet "event" ev
+
+data UpdateWithSMSEventForTeliaID = UpdateWithSMSEventForTeliaID String SMSEvent
+instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEventForTeliaID Bool where
+  update (UpdateWithSMSEventForTeliaID tid ev) = do
+    runQuery_ . sqlSelect "smses" $ do
+      sqlWhereEq "telia_id" tid
+      sqlResult "id"
+    (mid :: ShortMessageID) <- fetchOne runIdentity
     runQuery01 . sqlInsert "sms_events" $ do
       sqlSet "sms_id" mid
       sqlSet "event" ev

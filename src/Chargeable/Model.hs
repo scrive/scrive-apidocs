@@ -14,9 +14,11 @@ import Company.CompanyID
 import DB
 import Doc.DocumentID
 import KontraPrelude
+import SMS.Data (SMSProvider(..))
 import User.UserID
 
-data ChargeableItem = SMS | SEBankIDSignature | SEBankIDAuthentication | NOBankIDAuthentication
+data ChargeableItem = SMS | SMSTelia
+  | SEBankIDSignature | SEBankIDAuthentication | NOBankIDAuthentication
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -31,8 +33,9 @@ instance FromSQL ChargeableItem where
       2 -> return SEBankIDSignature
       3 -> return SEBankIDAuthentication
       4 -> return NOBankIDAuthentication
+      5 -> return SMSTelia
       _ -> throwM RangeError {
-        reRange = [(1, 4)]
+        reRange = [(1, 5)]
       , reValue = n
       }
 
@@ -42,6 +45,7 @@ instance ToSQL ChargeableItem where
   toSQL SEBankIDSignature      = toSQL (2::Int16)
   toSQL SEBankIDAuthentication = toSQL (3::Int16)
   toSQL NOBankIDAuthentication = toSQL (4::Int16)
+  toSQL SMSTelia               = toSQL (5::Int16)
 
 ----------------------------------------
 
@@ -51,9 +55,10 @@ instance ToSQL ChargeableItem where
 -- company.
 
 -- | Charge company of the author of the document for SMSes.
-data ChargeCompanyForSMS = ChargeCompanyForSMS DocumentID Int32
+data ChargeCompanyForSMS = ChargeCompanyForSMS DocumentID SMSProvider Int32
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForSMS () where
-  update (ChargeCompanyForSMS document_id sms_count) =  update (ChargeCompanyFor SMS sms_count document_id)
+  update (ChargeCompanyForSMS document_id SMSDefault sms_count)        = update (ChargeCompanyFor SMS sms_count document_id)
+  update (ChargeCompanyForSMS document_id SMSTeliaCallGuide sms_count) = update (ChargeCompanyFor SMSTelia sms_count document_id)
 
 -- | Charge company of the author of the document for swedish bankid signature while signing.
 data ChargeCompanyForSEBankIDSignature = ChargeCompanyForSEBankIDSignature DocumentID

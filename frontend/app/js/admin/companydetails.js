@@ -1,7 +1,7 @@
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
 
-define(['Backbone', 'legacy_code'], function() {
+define(['legacy_code', 'Backbone', 'React', 'common/select'], function(legacy_code, Backbone, React, Select) {
 
 var AdminCompanyDetailsModel = Backbone.Model.extend({
   initialize : function(args) {
@@ -84,6 +84,12 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
   setCompanyallowsavesafetycopy: function(v) {
     return this.set({"companyallowsavesafetycopy":v});
   },
+  companysmsprovider: function() {
+    return this.get("companysmsprovider");
+  },
+  setCompanysmsprovider: function(v) {
+    this.set({"companysmsprovider" : v});
+  },
   newcompanyid : function() {
     return this.get("newcompanyid");
   },
@@ -103,6 +109,7 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
       , companycgidisplayname : this.company().cgidisplayname()
       , companyidledoctimeout : this.company().idledoctimeout()
       , companyallowsavesafetycopy : this.company().allowsavesafetycopy()
+      , companysmsprovider : this.company().smsprovider()
     }, {silent : true});
     this.trigger("reset");
   },
@@ -119,7 +126,8 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
         companyipaddressmasklist : this.companyipaddressmasklist(),
         companycgidisplayname : this.companycgidisplayname(),
         companyidledoctimeout : this.companyidledoctimeout(),
-        companyallowsavesafetycopy : this.companyallowsavesafetycopy()
+        companyallowsavesafetycopy : this.companyallowsavesafetycopy(),
+        companysmsprovider : this.companysmsprovider()
     });
   },
   mergeToDifferentCompany : function() {
@@ -141,7 +149,29 @@ var AdminCompanyDetailsView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
         this.model.bind('reset', this.render);
+        this.model.bind('change:companysmsprovider', this.render);
         this.render();
+    },
+    smsProviderSelect: function() {
+      var self = this;
+      var model = this.model;
+
+      var smsProviders = [
+          {name: "Default", value: "SMSDefault"}
+        , {name: "Telia", value: "SMSTeliaCallGuide"}
+      ];
+      var pname = _.findWhere(smsProviders, {value : model.companysmsprovider()}).name;
+
+      var $select = $("<span>");
+
+      React.render(React.createElement(Select, {
+        name : pname,
+        onSelect : function(v) {model.setCompanysmsprovider(v); return true;},
+        options: _.filter(smsProviders, function(p) { return p.value !=  model.companysmsprovider() && !p.hidden;}),
+        textWidth : 240
+      }), $select[0]);
+
+      return $select;
     },
     accountDetails: function() {
       var self = this;
@@ -213,6 +243,8 @@ var AdminCompanyDetailsView = Backbone.View.extend({
               model.setCompanyallowsavesafetycopy(companyallowsavesafetycopyinput.is(":checked"));
       });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Allow to save document"))).append($("<td/>").append(companyallowsavesafetycopyinput)).append($("<td/>").text("Users might be offered to save documents after they have signed.")));
+
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("SMS provider"))).append($("<td/>").append(this.smsProviderSelect())));
 
       return box;
     },

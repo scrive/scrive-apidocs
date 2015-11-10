@@ -18,6 +18,7 @@ messengerMigrations =
   , createTableMessengerWorkers
   , makeSMSesTableJobQueue
   , createTableMessengerJobs
+  , createProviderAndTeliaIDColumns
   ]
 
 ----------------------------------------
@@ -146,4 +147,14 @@ addAttemptCountToSMSes =
   , mgrFrom = 1
   , mgrDo = do
       runSQL_ "ALTER TABLE smses ADD COLUMN attempt INTEGER NOT NULL DEFAULT 0"
+  }
+
+createProviderAndTeliaIDColumns :: MonadDB m => Migration m
+createProviderAndTeliaIDColumns =
+  Migration {
+    mgrTable = tableSMSes
+  , mgrFrom = 3
+  , mgrDo = do
+      runSQL_ "ALTER TABLE smses ADD COLUMN provider SMALLINT NOT NULL DEFAULT 1"
+      runSQL_ "ALTER TABLE smses ADD COLUMN telia_id text"
   }

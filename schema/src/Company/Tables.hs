@@ -6,7 +6,7 @@ import KontraPrelude
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 18
+  , tblVersion = 19
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False, colDefault = Just "''::text" }
@@ -19,6 +19,7 @@ tableCompanies = tblTable {
     , tblColumn { colName = "allow_save_safety_copy", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "idle_doc_timeout", colType = SmallIntT }
     , tblColumn { colName = "cgi_display_name", colType = TextT }
+    , tblColumn { colName = "sms_provider", colType = SmallIntT, colNullable = False, colDefault = Just "1"}
     ]
   , tblPrimaryKey = pkOnColumn "id"
   }
@@ -35,7 +36,6 @@ tableCompanyUIs = tblTable {
     , tblColumn { colName = "browser_title",               colType = TextT}
     , tblColumn { colName = "sms_originator",              colType = TextT}
     , tblColumn { colName = "favicon",                     colType = BinaryT}
-
     ]
   , tblPrimaryKey = pkOnColumn "company_id"
   , tblForeignKeys = [

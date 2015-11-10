@@ -1,6 +1,7 @@
 module SMS.Data (
     JobType(..)
   , MessengerJob(..)
+  , SMSProvider(..)
   , ShortMessageID
   , ShortMessage(..)
   , SMSEventID
@@ -53,6 +54,32 @@ data MessengerJob = MessengerJob {
 
 ----------------------------------------
 
+data SMSProvider = SMSDefault
+                 | SMSTeliaCallGuide
+   deriving (Eq, Ord, Show, Read)
+
+instance PQFormat SMSProvider where
+  pqFormat = const $ pqFormat ($undefined::Int16)
+
+instance FromSQL SMSProvider where
+  type PQBase SMSProvider = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return SMSDefault
+      2 -> return SMSTeliaCallGuide
+      _ -> throwM RangeError {
+        reRange = [(1,2)]
+      , reValue = n
+      }
+
+instance ToSQL SMSProvider where
+  type PQDest SMSProvider = PQDest Int16
+  toSQL SMSDefault        = toSQL (1::Int16)
+  toSQL SMSTeliaCallGuide = toSQL (2::Int16)
+
+----------------------------------------
+
 newtype ShortMessageID = ShortMessageID Int64
   deriving (Eq, Ord, PQFormat)
 $(newtypeDeriveUnderlyingReadShow ''ShortMessageID)
@@ -70,6 +97,7 @@ instance ToSQL ShortMessageID where
 
 data ShortMessage = ShortMessage {
   smID         :: !ShortMessageID
+, smProvider   :: !SMSProvider
 , smOriginator :: !String
 , smMSISDN     :: !String
 , smBody       :: !String

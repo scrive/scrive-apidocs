@@ -13,6 +13,7 @@ window.Company = Backbone.Model.extend({
       cgidisplayname : "",
       ipaddressmasklist : "",
       allowsavesafetycopy : false,
+      smsprovider : "",
       ready : false
   },
   initialize : function(args) {
@@ -58,6 +59,9 @@ window.Company = Backbone.Model.extend({
   allowsavesafetycopy: function() {
      return this.get("allowsavesafetycopy");
   },
+  smsprovider: function() {
+    return this.get("smsprovider");
+  },
   ready : function() {
      return this.get("ready");
 
@@ -75,6 +79,7 @@ window.Company = Backbone.Model.extend({
       cgidisplayname : args.cgidisplayname,
       idledoctimeout : args.idledoctimeout,
       allowsavesafetycopy : args.allowsavesafetycopy,
+      smsprovider : args.smsprovider,
       ready : true
     };
   }
