@@ -18,7 +18,7 @@ class DocHelper
     puts "Creating document"
     @driver.navigate().to(@ctx.createKontrakcjaURL "/newdocument")
     puts "Uploading PDF"
-    (@h.wait_until { @driver.find_element :css => ".design-view-document-buttons-upload-button input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
+    (@h.wait_until { @driver.find_element :css => ".design-view-document-buttons-upload-button input.file-input" }).send_keys @ctx.props.contract_pdf_path
     puts "waiting for pages"
     @h.wait_until { @driver.find_element :css => "#page1" }
     @h.wait_until { (@driver.find_element :xpath => "(//div[contains(@class,'design-view-action-participant-container-participants-box')]//div[contains(@class,'design-view-action-participant-close')])[1]").displayed? }
