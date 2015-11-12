@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
-define(["legacy_code", "React", "Backbone", "common/infotextinput"],
-  function (Legacy, React, Backbone, InfoTextInput) {
+define(["legacy_code", "React", "Backbone", "common/infotextinput", "utils/location"],
+  function (Legacy, React, Backbone, InfoTextInput, LocationUtils) {
 
   var ShowAPIDeliveryModalView = React.createClass({
 
@@ -11,7 +11,7 @@ define(["legacy_code", "React", "Backbone", "common/infotextinput"],
 
     getAPIDeliveryURL: function () {
       var signatory = this.props.signatory;
-      return window.location.origin + signatory.signlink();
+      return LocationUtils.origin() + signatory.signlink();
     },
 
     selectText: function () {

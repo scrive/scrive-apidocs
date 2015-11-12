@@ -1,7 +1,7 @@
 // ignore model in coverage for now.
 /* istanbul ignore next */
-define(["legacy_code", "Underscore", "Backbone", "base64"],
-  function (legacy_code, _, Backbone, _Base64) {
+define(["legacy_code", "Underscore", "Backbone", "base64", "utils/location"],
+  function (legacy_code, _, Backbone, _Base64, LocationUtils) {
   return Backbone.Model.extend({
     defaults: {
       doc: undefined,
@@ -106,7 +106,7 @@ define(["legacy_code", "Underscore", "Backbone", "base64"],
         link = link + "&celnr8=" + encodeURIComponent(Base64.encode(this.mobileFormatted()));
         link = link + "&dob6=" + encodeURIComponent(Base64.encode(this.dateOfBirth()));
       }
-      var target = "(\"" + window.location.origin + "\"," + this.doc().documentid() +
+      var target = "(\"" + LocationUtils.origin() + "\"," + this.doc().documentid() +
                      "," + this.siglinkid() + ",\"" + window.location  + "\")";
       link = link + "&TARGET=" + encodeURIComponent(Base64.encode(target));
 

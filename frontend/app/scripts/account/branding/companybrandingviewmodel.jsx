@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 /* View model for  */
-define(['lists/listmodel', 'themes/theme', 'Backbone', 'legacy_code','account/branding/companybranding'], function(ListModel,Theme,_Backbone,_Legacy,CompanyBranding) {
+define(['lists/listmodel', 'themes/theme', 'Backbone', 'legacy_code','account/branding/companybranding', "utils/location"], function(ListModel,Theme,_Backbone,_Legacy,CompanyBranding, LocationUtils) {
 
 
 return Backbone.Model.extend({
@@ -173,7 +173,7 @@ return Backbone.Model.extend({
      return this.set({"mode" : "additional-settings"});
   },
   additonalSettingsUrl : function() {
-     return location.origin + location.pathname + "#branding-settings";
+     return LocationUtils.origin() + location.pathname + "#branding-settings";
   },
   themeMode : function() {
     return this.mailThemeMode() || this.signviewThemeMode() || this.serviceThemeMode();

@@ -1,4 +1,4 @@
-define(['Backbone', 'legacy_code'], function(Backbone) {
+define(['Backbone', "utils/location", 'legacy_code'], function(Backbone, LocationUtils) {
 
 return Backbone.Model.extend({
     defaults: {
@@ -188,7 +188,7 @@ return Backbone.Model.extend({
         if (BrowserInfo.isIpad() || BrowserInfo.isIphone() || BrowserInfo.isWindowsPhone() || BrowserInfo.isAndroid()) {
           // We set redirect only for selected devices (and Android, as Android is advertised to close itself but it's not working 100% of the time).
           // On other platform BankID app can close itself
-          var returnUrl =  window.location.origin + "/s/eid/cgi/grp/collectWithRedirect/" + this.document().documentid() + "/" + this.signatory().signatoryid() +
+          var returnUrl =  LocationUtils.origin() + "/s/eid/cgi/grp/collectWithRedirect/" + this.document().documentid() + "/" + this.signatory().signatoryid() +
                           '?type='+this.type() + "&session_id=" + this.sessionID() + "&url=" + encodeURIComponent(window.location) +'&_=' + Math.random();
           return 'bankid:///?autostarttoken=' + this.autoStartToken() + "&redirect=" + encodeURIComponent(returnUrl);
         }
