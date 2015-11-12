@@ -210,7 +210,7 @@ propValidNameWhitespaceIsEmpty = propWhitespaceIsEmpty asValidName
 
 propValidNameRestrictsChars :: String -> Property
 propValidNameRestrictsChars =
-   propJustAllowed asValidName (isAlpha : map (==) " \'-")
+   propJustAllowed asValidName (isAlphaNum : isMark : isNumber : isPunctuation : isSpace : isSymbol : [])
 
 propValidNameGoodExamples :: [NameChar] -> Property
 propValidNameGoodExamples ns =
@@ -238,7 +238,7 @@ propValidCompanyNameWhitespaceIsEmpty = propWhitespaceIsEmpty asValidCompanyName
 
 propValidCompanyNameRestrictsChars :: String -> Property
 propValidCompanyNameRestrictsChars =
-   propJustAllowed asValidCompanyName (isAlphaNum : map (==) "\t &\'@():,!.-?")
+   propJustAllowed asValidCompanyName (isAlphaNum : isMark : isNumber : isPunctuation : isSpace : isSymbol : [])
 
 propValidCompanyNameGoodExamples :: [CompanyNameChar] -> Property
 propValidCompanyNameGoodExamples ns =

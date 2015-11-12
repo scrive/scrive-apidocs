@@ -317,7 +317,7 @@ asDirtyPassword input = checkIfEmpty input
 
 {- |
     Creates a clean and validated name (works for first or second)
-    White list: Space, Apostrophe ', Hyphen -, Alphabetic characters
+    White list: Alphanumeric characters, Marks, Numbers (incl. Roman numerals, etc), Punctuation, Whitespace, Symbols
     Size: Up to 100 chars
 -}
 asValidName :: String -> Result String
@@ -325,12 +325,12 @@ asValidName input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 100
-    >>= checkOnly (isAlpha : isMark : map (==) " \'-")
+    >>= checkOnly [isPrint]
 
 
 {- |
     Creates a clean and validated company name.
-    White list: Space, Ampersand &, Apostrophe \', At \@, Open and close brackets (), Colon :, Comma , Exclamation !, Full-stop ., Hyphen -, Question mark ?, Alphabetic characters, Numeric characters
+    White list: Alphanumeric characters, Marks, Numbers (incl. Roman numerals, etc), Punctuation, Whitespace, Symbols
     Size: Up to 100 chars
 -}
 asValidCompanyName :: String -> Result String
@@ -339,7 +339,7 @@ asValidCompanyName input =
     >>= stripWhitespace
     >>= checkIfEmpty
     >>= checkLengthIsMax 100
-    >>= checkOnly (isAlphaNum : map (==) " &\'@():,!.-?")
+    >>= checkOnly [isPrint]
 
 {- |
     Creates a clean and validated company number.

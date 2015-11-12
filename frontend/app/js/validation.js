@@ -127,17 +127,23 @@ window.PhoneValidationNO = Validation.extend({
     }
 });
 
+// we want to match international characters
+// http://stackoverflow.com/questions/1073412/javascript-validation-issue-with-international-characters
+// u0021-007E is ASCII special characters (see http://www.unicode.org/charts/PDF/U0000.pdf)
+// If we want to match more see: http://www.unicode.org/charts/
+var nameCharactersRegex = /[^a-z\u0021-\u007E\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/;
+
 window.NameValidation = Validation.extend({
     defaults: {
             validates: function(t) {
                 var t = $.trim(t);
 
-                if (t.length === 0 || t.length > 100)
+                if (t.length === 0 || t.length > 100) {
                     return false;
-                // we want to match international characters
-                // http://stackoverflow.com/questions/1073412/javascript-validation-issue-with-international-characters
-                if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(t))
+                }
+                if (nameCharactersRegex.test(t)) {
                     return false;
+                }
 
                 return true;
             },
@@ -191,16 +197,12 @@ window.UserNameValidation = Validation.extend({
                     this.setMessage(text);
                     return false;
                 }
-
-                // we want to match international characters
-                // http://stackoverflow.com/questions/1073412/javascript-validation-issue-with-international-characters
-
-                if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(firstName)) {
+                if (nameCharactersRegex.test(firstName)) {
                     var text = this.makeCopyForField(this.firstName(), localization.validation.invalidnamechars);
                     this.setMessage(text);
                     return false;
                 }
-                if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(lastName)) {
+                if (nameCharactersRegex.test(lastName)) {
                     var text = this.makeCopyForField(this.lastName(), localization.validation.invalidnamechars);
                     this.setMessage(text);
                     return false;
