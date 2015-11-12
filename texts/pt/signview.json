@@ -111,7 +111,7 @@
 "_phonePlaceholder":"Telefone (+46701234567)",
 "_pinWillBeSentTo":"O PIN será enviado por SMS para",
 "_reloadPage":"Recarregar página",
-"_remindMailNotSignedContractBody":"<strong>$authorname$</strong> gostaria de o lembrar que ainda não assinou electronicamente o documento <strong>$documenttitle$</strong>.",
+"_remindMailNotSignedContractBody":"",
 "_remindMailNotSignedContractBodyFurther":"Clique no botão para obter instruções adicionais.",
 "_remindMailNotSignedTitleContract":"Lembrete para e-assinar o documento: $documenttitle$",
 "_remindMailSignedContractStandardHeaderSendRequest":"Previamente, assinou electronicamente o documento <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> solicitou o reenvio do documento finalizado para si.",

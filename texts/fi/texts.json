@@ -532,7 +532,7 @@
 "_flashMessageCompanyAccountDeleted":"Tili on poistettu onnistuneesti.",
 "_flashMessageContractRestarted":"Olet aloittanut prosessin uudelleen, ja voit nyt muuttaa asetuksia ja lähettää kutsut uudelleen.",
 "_flashMessageDocumentArchiveDone":"Valitut dokumentit on poistettu.",
-"_flashMessageDocumentArchiveInvalid":"",
+"_flashMessageDocumentArchiveInvalid":"Osaa valituista dokumenteista ei voida poistaa.",
 "_flashMessageInvalidCharsInPassword":"Salasana sisältää virheellisiä merkkejä.",
 "_flashMessageInvalidEmailFormat":"Sähköpostiosoite on virheellisessä muodossa.",
 "_flashMessageLoginPageRedirectReasonNotAdmin":"Sinulla ei ole valtuuksia tämän sivun näkemiseen.",

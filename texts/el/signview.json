@@ -111,7 +111,7 @@
 "_phonePlaceholder":"Τηλέφωνο (+46701234567)",
 "_pinWillBeSentTo":"Το PIN θα αποσταλεί μέσω SMS στο ",
 "_reloadPage":"Επανοφόρτωση σελίδας",
-"_remindMailNotSignedContractBody":"<strong>$authorname$</strong> θέλει να σας υπενθυμίσει ότι δεν έχετε υπογράψει ηλεκτρονικά το έγγραφο <strong>$documenttitle$</strong>. ",
+"_remindMailNotSignedContractBody":"",
 "_remindMailNotSignedContractBodyFurther":"Πιέστε την ένδειξη για περαιτέρω οδηγίες. ",
 "_remindMailNotSignedTitleContract":"Υπενθύμιση για υπογραφή εγγράφου με ηλεκτρονική υπογραφή: $documenttitle$ ",
 "_remindMailSignedContractStandardHeaderSendRequest":"Έχετε προηγουμένως υπογράψει ηλεκτρονικά το έγγραφο <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> έχει ζητήσει να αποσταλεί ξανά το ολοκληρωμένο έγγραφο σε εσάς. ",

@@ -111,7 +111,7 @@
 "_phonePlaceholder":"Telefoon (+46701234567)",
 "_pinWillBeSentTo":"De PIN wordt verstuurd via SMS naar",
 "_reloadPage":"Ververs pagina",
-"_remindMailNotSignedContractBody":"<strong>$authorname$</strong> wil u eraan herinneren dat u het document <strong>$documenttitle$</strong>nog niet heeft ondertekend.",
+"_remindMailNotSignedContractBody":"",
 "_remindMailNotSignedContractBodyFurther":"Klik op de knop voor verdere instructies.",
 "_remindMailNotSignedTitleContract":"Herinnering om het document $documenttitle$ te e-ondertekenen",
 "_remindMailSignedContractStandardHeaderSendRequest":"U heeft eerder het document <strong>$documenttitle$</strong> ondertekend. <strong>$creatorname$</strong> heeft ons gevraagd het voltooide document opnieuw aan u te sturen.",

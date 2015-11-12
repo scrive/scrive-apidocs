@@ -111,7 +111,7 @@
 "_phonePlaceholder":"Numéro de téléphone (+46701234567)",
 "_pinWillBeSentTo":"Le code PIN sera envoyé par SMS au",
 "_reloadPage":"Recharger la page",
-"_remindMailNotSignedContractBody":"<strong>$authorname$</strong> voudrais vous rappeler que vous n'avez pas encore e-signé le document<strong>$documenttitle$</strong>.",
+"_remindMailNotSignedContractBody":"",
 "_remindMailNotSignedContractBodyFurther":"Cliquer sur le bouton pour recevoir d'autres instructions.",
 "_remindMailNotSignedTitleContract":"Rappel d'e-signature du document: $documenttitle$",
 "_remindMailSignedContractStandardHeaderSendRequest":"Vous avez précédemment signé le document  <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> nous a demandé de vous renvoyer le document finalisé.",

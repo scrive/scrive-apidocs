@@ -111,7 +111,7 @@
 "_phonePlaceholder":"Sími (+46701234567)",
 "_pinWillBeSentTo":"PIN-númerið verður sent með textaskilaboðum til",
 "_reloadPage":"Endurhlaða síðu",
-"_remindMailNotSignedContractBody":"<strong>$authorname$</strong> vill minna þig á að þú hefur ekki enn skrifað rafrænt undir skjalið <strong>$documenttitle$</strong>.",
+"_remindMailNotSignedContractBody":"",
 "_remindMailNotSignedContractBodyFurther":"Smelltu á hnappinn til að fá frekari upplýsingar.",
 "_remindMailNotSignedTitleContract":"Áminning um að skrifa rafrænt undir skjal: $documenttitle$",
 "_remindMailSignedContractStandardHeaderSendRequest":"Þú skrifaðir áður rafrænt undir skjalið <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> hefur óskað eftir að endursenda lokaútgáfu skjalsins til þíns.",

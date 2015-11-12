@@ -931,7 +931,7 @@
 "_smsClosedNotification":"Dokumentet er nå signert. Finn dokumentet ved å følge denne lenken: $link$$if(withEmail)$. Vi har også sendt det signerte dokumentet til din e-post.$endif$",
 "_smsCorrectedNotification":"Vi la merke til at vi tidligere har sendt deg et dokument som var feilaktig ved at det manglet en digital signatur, men vi har nå rettet feilen. Du finner dokumentet med riktig digital signatur ved å følge denne lenken: $link$$if(withEmail)$. Vi har også sendt det rettede dokumentet til din e-post.$endif$",
 "_smsInvitationToAuthor":"Det er din tur til å signere dokumentet $documenttitle$. Åpne lenken for å lese gjennom dokumentet: $link$",
-"_smsInvitationToView":"",
+"_smsInvitationToView":"Hei, et dokument er i ferd med å signeres av  $partylist$. Du har blitt invitert av $creatorname$ til å gå gjennom signeringsprosessen. Åpne lenken for å se dokumentet: $link$",
 "_smsOriginator":"SMS-navn",
 "_smsOriginatorDescription":"Navnet som vises for mottakeren når denne mottar et dokument via SMS. Maksimum 11 alfanumeriske tegn.",
 "_standard":"Standard",
