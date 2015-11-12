@@ -135,8 +135,8 @@ class DocHelper
     (@h.wait_until { @driver.find_element :css => "a.design-view-action-process-left-column-attachments-author-button" }).click
     sleep 1
     puts "Uploading attachment"
-    @h.wait_until { @driver.find_element :css => ".modal.active .selectAuthorAttachmentPopupContent input.multiFileInput" }
-    (@h.wait_until { @driver.find_element :css => ".modal.active .selectAuthorAttachmentPopupContent input.multiFileInput" }).send_keys filepath
+    @h.wait_until { @driver.find_element :css => ".modal.active .selectAuthorAttachmentPopupContent input.file-input" }
+    (@h.wait_until { @driver.find_element :css => ".modal.active .selectAuthorAttachmentPopupContent input.file-input" }).send_keys filepath
     sleep 1
     puts "Closing attachment modal"
     @h.screenshot options[:screenshot_name] if options[:screenshot_name]
@@ -184,7 +184,7 @@ class DocHelper
     uploaded = (@driver.find_elements :css => ".s-review-sigattachment").length
     puts "uploading attachment: " + pdf_path
     @h.screenshot options[:screenshot_name] if options[:screenshot_name]
-    (@driver.find_elements :css => ".multiFileInput")[0].send_keys pdf_path
+    (@driver.find_elements :css => ".file-input")[0].send_keys pdf_path
     puts "review attachment"
     @h.wait_until { (@driver.find_elements :css => ".s-review-sigattachment").length == uploaded + 1 }
     puts "Checking length"
