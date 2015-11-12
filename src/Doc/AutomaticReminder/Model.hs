@@ -79,5 +79,5 @@ setAutoreminder did mdays tzn = do
             withTimeZone defaultTimeZoneName $
               void . runQuery_ . sqlInsert "document_automatic_reminders" $ do
                 sqlSetCmd "expires" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
-                                <+> "+ ((interval '1 day') * " <?> days <+> " ) + (interval '7 hours 30 minutes')"
+                                <+> "+ ((interval '1 day') * " <?> days <+> " ) + (interval '10 hours 15 minutes')"
                 sqlSet "document_id" did
