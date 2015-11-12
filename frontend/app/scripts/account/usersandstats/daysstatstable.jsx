@@ -10,6 +10,7 @@ return React.createClass({
           <List.List
             ref='list'
             url={self.props.url}
+            loadLater={true}
             dataFetcher={function(d) {return d.stats;}}
           >
 

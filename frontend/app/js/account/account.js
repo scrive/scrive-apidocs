@@ -61,15 +61,18 @@ var AccountModel = Backbone.Model.extend({
   companySettingsTab : function() {
                     var account = this;
                     var div = $('<div/>');
-                    var brandingPanel = React.render(React.createElement(CompanyBrandingPanel,{
-                    }),div[0]);
+                    var brandingPanel;
 
                     return new Tab({
                         name: localization.account.companySettings,
                         elems: [function() { return div; }],
                         pagehash : ["branding-themes-email","branding-themes-signing-page", "branding-themes-service","branding-settings"],
                         onActivate : function() {
-                           brandingPanel.reload();
+                           if (brandingPanel === undefined) {
+                             brandingPanel = React.render(React.createElement(CompanyBrandingPanel,{}), div[0]);
+                           } else {
+                             brandingPanel.reload();
+                           }
                            mixpanel.register({Subcontext : 'Company settings tab'});
                            mixpanel.track('View Company Settings Tab');
                         }

@@ -177,7 +177,7 @@ return React.createClass({
             ref='list'
             url="/companyaccounts"
             dataFetcher={function(d) {return d.accounts;}}
-            loadLater={self.props.loadLater}
+            loadLater={true}
             paramsFunction = {function(text,_selectfiltering,sorting,offset) {
               var params  = {};
               if (text) {
