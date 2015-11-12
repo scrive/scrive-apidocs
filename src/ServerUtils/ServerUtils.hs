@@ -18,6 +18,7 @@ import System.Exit
 import System.FilePath ((</>), takeBaseName)
 import System.Path (secureAbsNormPath)
 import System.Process hiding (readProcessWithExitCode)
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.JSON
 import Text.JSON.Gen hiding (object)
 import qualified Data.ByteString as BS
@@ -34,7 +35,6 @@ import ServerUtils.BrandedImagesCache
 import Util.CSVUtil
 import Util.MonadUtils
 import Utils.Directory
-import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import qualified MemCache as MemCache
 
 -- Read a csv file from POST, and returns a JSON with content
