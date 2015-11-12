@@ -8,7 +8,8 @@ import Control.Monad.Catch
 import Data.List hiding (head)
 import Log
 import System.Exit
-import System.Process
+import System.Process hiding (readProcessWithExitCode)
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import qualified  Data.Foldable as F
 import qualified Data.ByteString.Lazy as BSL
 
@@ -20,7 +21,6 @@ import Log.Identifier
 import Log.Utils
 import MailingServerConf
 import Mails.Model
-import Utils.IO
 import qualified Amazon as AWS
 
 data Sender = Sender {
@@ -47,7 +47,7 @@ createExternalSender cs name program createArgs = Sender {
   senderName = name
 , sendMail = \mail@Mail{..} -> localData [identifier_ mailID] $ do
   content <- runDBT cs ts $ assembleContent mail
-  (code, _, bsstderr) <- liftBase $ readProcessWithExitCode' program (createArgs mail) content
+  (code, _, bsstderr) <- liftBase $ readProcessWithExitCode program (createArgs mail) content
   case code of
     ExitFailure retcode -> do
       logInfo "Error while sending email, execution of external program failed" $ object [

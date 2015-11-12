@@ -128,6 +128,7 @@ Executable kontrakcja-server
   Build-depends: pretty-show
   Build-depends: primitive
   Build-depends: process
+  Build-depends: process-extras
   Build-depends: QuickCheck
   Build-depends: random
   Build-depends: recurly
@@ -255,6 +256,7 @@ Executable cron
   Build-depends: network-uri
   Build-depends: pretty-show
   Build-depends: process
+  Build-depends: process-extras
   Build-depends: QuickCheck
   Build-depends: random
   Build-depends: recurly
@@ -510,6 +512,7 @@ Executable mailing-server
   Build-depends: network-uri
   Build-depends: pretty-show
   Build-depends: process
+  Build-depends: process-extras
   Build-depends: QuickCheck
   Build-depends: random
   Build-depends: recurly
@@ -632,6 +635,7 @@ Executable messenger-server
   Build-depends: network-uri
   Build-depends: pretty-show
   Build-depends: process
+  Build-depends: process-extras
   Build-depends: QuickCheck
   Build-depends: random
   Build-depends: recurly
@@ -755,6 +759,7 @@ Executable kontrakcja-test
   Build-depends: network-uri
   Build-depends: pretty-show
   Build-depends: process
+  Build-depends: process-extras
   Build-depends: QuickCheck
   Build-depends: random
   Build-depends: recurly

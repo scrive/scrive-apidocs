@@ -19,6 +19,7 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftWith, defaultRestoreT, defaultLiftBaseWith, defaultRestoreM)
 import Log
 import System.Exit
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.JSON
 import Text.JSON.FromJSValue
 import Text.JSON.Gen hiding (object)
@@ -29,7 +30,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import GuardTime.Class
 import KontraPrelude
 import Log.Utils
-import Utils.IO
 
 newtype GuardTimeConfT m a = GuardTimeConfT { unGuardTimeConfT :: ReaderT GuardTimeConf m a }
   deriving (Alternative, Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b, MonadThrow, MonadCatch, MonadMask)
@@ -58,7 +58,7 @@ invokeGuardtimeTool :: MonadIO m => String -> [String] -> m (ExitCode, BSL.ByteS
 invokeGuardtimeTool tool args = do
   let a = ([ "-jar", "GuardTime/" ++ tool ++ ".jar"
              ] ++ args)
-  liftIO $ readProcessWithExitCode' "java" a BSL.empty
+  liftIO $ readProcessWithExitCode "java" a BSL.empty
 
 digitallySign :: (MonadLog m, MonadIO m) => GuardTimeConf -> String -> m ExitCode
 digitallySign conf inputFileName = do

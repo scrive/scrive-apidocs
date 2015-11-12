@@ -8,8 +8,7 @@ import System.IO
 import System.Posix.IO (stdInput)
 import System.Posix.Signals
 import System.Posix.Terminal (queryTerminal)
-import System.Process
-import qualified Control.Exception.Lifted as C
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import qualified Data.Text as T
@@ -27,61 +26,6 @@ waitForTermination = do
     return ()
   takeMVar mv
 
--- | Create an external process with arguments. Feed it input, collect
--- exit code, stdout and stderr.
---
--- Standard input is first written to a temporary file. GHC 6.12.1
--- seemed to have trouble doing multitasking when writing to a slow
--- process like curl upload.
-readProcessWithExitCode'
-    :: MonadIO m
-    => FilePath                                      -- ^ command to run
-    -> [String]                                      -- ^ any arguments
-    -> BSL.ByteString                                -- ^ standard input
-    -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
-readProcessWithExitCode' cmd args input = liftIO $ do
-
-    (Just inh, Just outh, Just errh, pid) <- createProcess (proc cmd args) {
-        std_in  = CreatePipe
-      , std_out = CreatePipe
-      , std_err = CreatePipe
-    }
-
-    outM <- newEmptyMVar
-    errM <- newEmptyMVar
-
-    -- fork so that if process decides to not read everything we are
-    -- not stuck
-    _ <- forkIO $ do
-      BSL.hPutStr inh input
-      hClose inh
-
-    -- fork off a thread to start consuming stdout
-    _ <- forkIO $ do
-      out <- BSL.hGetContents outh
-      _ <- C.evaluate (BSL.length out)
-      putMVar outM out
-      -- here handle should get garbage collected but to close it
-      -- faster we close explicitly
-      hClose outh
-
-    -- fork off a thread to start consuming stderr
-    _ <- forkIO $ do
-      err  <- BSL.hGetContents errh
-      _ <- C.evaluate (BSL.length err)
-      putMVar errM err
-      hClose errh
-
-
-    -- wait on the output
-    out <- readMVar outM
-    err <- readMVar errM
-
-    -- wait on the process
-    ex <- waitForProcess pid
-
-    return (ex, out, err)
-
 curl_exe :: String
 curl_exe = "curl"
 
@@ -90,16 +34,16 @@ readCurl :: MonadIO m
          => [String]                 -- ^ any arguments
          -> BSL.ByteString           -- ^ standard input
          -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
-readCurl args input = readProcessWithExitCode' curl_exe (["--max-time", "10", "-s", "-S"] ++ args) input
+readCurl args input = liftIO $ readProcessWithExitCode curl_exe (["--max-time", "10", "-s", "-S"] ++ args) input
 
 checkPathToExecutable :: FilePath -> IO FilePath
 checkPathToExecutable filepath = do
-    (_code',stdout',_stderr') <- readProcessWithExitCode' "which" [filepath] (BSL.empty)
+    (_code',stdout',_stderr') <- readProcessWithExitCode "which" [filepath] (BSL.empty)
     return $ BSL.toString stdout'
 
 checkExecutableVersion :: FilePath -> [String] -> IO String
 checkExecutableVersion path options = do
-    (_code',stdout',stderr') <- readProcessWithExitCode' path options (BSL.empty)
+    (_code',stdout',stderr') <- readProcessWithExitCode path options (BSL.empty)
     return $ BSL.toString stdout' ++ BSL.toString stderr'
 
 

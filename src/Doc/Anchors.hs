@@ -8,6 +8,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Int
 import Log
 import System.Exit
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.JSON.FromJSValue
 import Text.JSON.Gen hiding (object)
 import qualified Data.ByteString as BS
@@ -28,7 +29,6 @@ import KontraMonad
 import KontraPrelude
 import Log.Utils
 import Utils.Directory
-import Utils.IO
 
 getAnchorPositions :: (Monad m, MonadBaseControl IO m, MonadLog m, MonadIO m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int32, Double, Double))
 getAnchorPositions _pdfcontent [] = return Map.empty
@@ -47,7 +47,7 @@ getAnchorPositions pdfcontent anchors = do
     liftIO $ BSL.writeFile configpath (BSL.fromString $ show $ J.pp_value (toJSValue config))
 
     (code,stdout,stderr) <- liftIO $ do
-      readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "find-texts", configpath] (BSL.empty)
+      readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "find-texts", configpath] (BSL.empty)
 
     case code of
       ExitSuccess -> do

@@ -17,7 +17,7 @@ import System.Directory (getCurrentDirectory)
 import System.Exit
 import System.FilePath ((</>), takeBaseName)
 import System.Path (secureAbsNormPath)
-import System.Process
+import System.Process hiding (readProcessWithExitCode)
 import Text.JSON
 import Text.JSON.Gen hiding (object)
 import qualified Data.ByteString as BS
@@ -34,7 +34,7 @@ import ServerUtils.BrandedImagesCache
 import Util.CSVUtil
 import Util.MonadUtils
 import Utils.Directory
-import Utils.IO
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import qualified MemCache as MemCache
 
 -- Read a csv file from POST, and returns a JSON with content
@@ -77,7 +77,7 @@ handleScaleImage = do
             let publicDir = cwd </> "frontend/app"
             logoPath <- guardJust $ secureAbsNormPath publicDir $ $tail (BSUTF8.toString logo) -- strip leading slash from logo path
             liftIO $ BS.readFile logoPath
-  (procResult, out, _) <- readProcessWithExitCode' "convert" ["-", "-resize", "60%", "-"] $ strictBStoLazyBS logo'
+  (procResult, out, _) <- liftIO $ readProcessWithExitCode "convert" ["-", "-resize", "60%", "-"] $ strictBStoLazyBS logo'
   case procResult of
     ExitFailure msg -> do
       logScalingProblem msg
@@ -162,7 +162,7 @@ brandImage file color = do
     cwd <- liftIO getCurrentDirectory
     let imgDir = cwd </> "frontend/app/img"
     fpath <- guardJust $ secureAbsNormPath imgDir file
-    (procResult, out, _) <- readProcessWithExitCode' "convert" [fpath
+    (procResult, out, _) <- liftIO $ readProcessWithExitCode "convert" [fpath
                                                   , "-colorspace", "Gray"
                                                   , "+level-colors", color ++ ",white"
                                                   , "-"] ""

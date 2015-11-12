@@ -27,6 +27,7 @@ import Numeric
 import System.Directory
 import System.Exit
 import System.IO
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -41,7 +42,6 @@ import ForkAction
 import Kontra
 import KontraPrelude
 import Log.Identifier
-import Utils.IO
 import qualified Amazon as AWS
 import qualified MemCache as MemCache
 
@@ -87,7 +87,7 @@ runRendering _renderedPages fid widthInPixels renderingMode = do
     -- supposed to finish.
 
     (exitcode,_outcontent,_errcontent) <-
-      liftIO $ readProcessWithExitCode' "mudraw"
+      liftIO $ readProcessWithExitCode "mudraw"
                (concat [ ["-o", tmppath ++ "/output-%d.png"]
                        , ["-w", show widthInPixels]
                        , ["-b", "8"]
@@ -181,7 +181,7 @@ preCheckPDFHelper content tmppath =
 
       -- dont rely on mutool exit code - for mupdf-1.6 it's always 1
       -- just check if the output file is there
-      (_, stdout1, stderr1) <- liftIO $ readProcessWithExitCode' "mutool"
+      (_, stdout1, stderr1) <- liftIO $ readProcessWithExitCode "mutool"
                                    [ "clean"
                                    , "-ggg"
                                    , sourcepath
@@ -252,7 +252,7 @@ getNumberOfPDFPages content = do
   (path, handle) <- openTempFile systmp "mutool-input.pdf"
   BS.hPutStr handle content
   hClose handle
-  (exitCode, stdout', stderr') <- readProcessWithExitCode' "mutool" ["info", "-m", path] BSL.empty
+  (exitCode, stdout', stderr') <- readProcessWithExitCode "mutool" ["info", "-m", path] BSL.empty
   removeFile path
   return $ case exitCode of
     ExitSuccess -> case find ("Pages: " `BSL.isPrefixOf`) $ BSL.lines stdout' of

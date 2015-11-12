@@ -25,6 +25,7 @@ import System.Directory
 import System.Exit
 import System.FilePath (takeFileName, takeExtension, (</>))
 import System.IO hiding (stderr)
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.HTML.TagSoup (Tag(..), parseTags)
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Char8 as BS
@@ -64,7 +65,6 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Directory
-import Utils.IO
 import Utils.Read
 import qualified Amazon as AWS
 import qualified Doc.SealSpec as Seal
@@ -539,7 +539,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     (code,_stdout,stderr) <- liftIO $ do
       let sealspecpath = tmppath ++ "/sealspec.json"
       liftIO $ BSL.writeFile sealspecpath json_config
-      readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
+      readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
 
     logInfo "Sealing completed" $ object [
         "code" .= show code
@@ -592,7 +592,7 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     (code,_stdout,stderr) <- liftIO $ do
       let sealspecpath = tmppath ++ "/sealspec.json"
       liftIO $ BSL.writeFile sealspecpath json_config
-      readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
+      readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
     logInfo "Presealing completed" $ object [
         "code" .= show code
       ]

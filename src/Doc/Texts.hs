@@ -6,6 +6,7 @@ import Control.Monad.IO.Class
 import Data.Text
 import Log
 import System.Exit
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.JSON hiding (Ok)
 import Text.JSON.FromJSValue
 import Text.JSON.Gen
@@ -21,7 +22,6 @@ import KontraPrelude
 import Log.Utils (equalsExternalBSL)
 import Text.JSON.Convert (jsonToAeson)
 import Utils.Directory
-import Utils.IO
 
 {- |
 Java scrivepdftools extract-text expect as input JSON in the following format:
@@ -62,7 +62,7 @@ runJavaTextExtract json content = do
     liftIO $ BS.writeFile tmpin content
     liftIO $ BS.writeFile specpath (BS.fromString $ show $ J.pp_value (toJSValue config))
     (code, stdout, stderr) <- liftIO $ do
-      readProcessWithExitCode' "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "extract-texts", specpath, tmpin] (BSL.empty)
+      readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "extract-texts", specpath, tmpin] (BSL.empty)
     case code of
       ExitSuccess -> do
           let (decoderesult :: Result JSValue) = decode $ BSL.toString stdout

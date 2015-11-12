@@ -10,6 +10,7 @@ module Branding.CSS (
 import Control.Monad.Trans
 import Log as Log
 import System.Exit
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 
@@ -19,13 +20,12 @@ import Log.Utils
 import Theme.Model
 import Utils.Color
 import Utils.Font
-import Utils.IO
 
 -- Signview branding CSS. Generated using less
 signviewBrandingCSS :: (MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
 signviewBrandingCSS theme = do
     (code,stdout,stderr) <- liftIO $ do
-      readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
+      readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
         (BSL.fromString $ signviewBrandingLess theme)
     case code of
       ExitSuccess -> do
@@ -55,7 +55,7 @@ signviewBrandingLess theme = unlines $
 serviceBrandingCSS :: (MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
 serviceBrandingCSS theme = do
     (code,stdout,stderr) <- liftIO $ do
-      readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
+      readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
         (BSL.fromString $ serviceBrandingLess theme)
     case code of
       ExitSuccess -> do
@@ -87,7 +87,7 @@ serviceBrandingLess theme = unlines $
 loginBrandingCSS :: (MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
 loginBrandingCSS theme = do
     (code,stdout,stderr) <- liftIO $ do
-      readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
+      readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
         (BSL.fromString $ loginBrandingLess theme)
     case code of
       ExitSuccess -> do
@@ -119,7 +119,7 @@ loginBrandingLess theme = unlines $
 scriveBrandingCSS :: (MonadLog m,MonadIO m) => m BSL.ByteString
 scriveBrandingCSS = do
     (code,stdout,stderr) <- liftIO $ do
-      readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
+      readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
         (BSL.fromString scriveBrandingLess)
     case code of
       ExitSuccess -> do
@@ -158,7 +158,7 @@ lessVariablesFromTheme theme = [
 domainBrandingCSS :: (MonadLog m,MonadIO m) => BrandedDomain -> m BSL.ByteString
 domainBrandingCSS bd = do
     (code,stdout,stderr) <- liftIO $ do
-      readProcessWithExitCode' "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
+      readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
         (BSL.fromString $ domainBrandingLess bd)
     case code of
       ExitSuccess -> do
