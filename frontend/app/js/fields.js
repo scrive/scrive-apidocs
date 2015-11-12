@@ -111,27 +111,37 @@ window.Field = Backbone.Model.extend({
       return _.any(this.placements(), function(p) {if (p.step() != 'field' && p.step != 'edit') return (p.step() != 'field' && p.step() != 'edit');});
     },
     readyForSign : function(){
-        if (this.isEmail() && this.isOptional() && this.value() != "")
+        if (this.isEmail() && this.isOptional() && this.value() != "") {
           return new EmailValidation().validateData(this.value());
-        else if (this.isOptional())
+        } else if (this.isOptional()) {
             return true;
-        else if (this.isFstName() || this.isSndName())
+        } else if (this.isFstName() || this.isSndName()) {
             return new NotEmptyValidation().validateData(this.value());
-        else if (this.isEmail())
+        } else if (this.isEmail()) {
             return new EmailValidation().validateData(this.value());
-        if (this.isSSN() && (this.signatory().noBankIDAuthenticationToView()))
+        }
+        if (this.isSSN() && (this.signatory().noBankIDAuthenticationToView())) {
             return new SSNForNOBankIDValidation().validateData(this.value());
-        if (this.isSSN() && (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView()))
+        }
+        if (this.isSSN() && (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView())) {
             return new SSNForSEBankIDValidation().validateData(this.value());
-        else if (this.isText() && (this.value() != ""))
+        }
+        if (this.isMobile() &&
+              (   this.signatory().mobileConfirmationDelivery()
+               || this.signatory().emailMobileConfirmationDelivery()
+               || this.signatory().smsPinAuthenticationToSign()
+              )
+           ) {
+            return new PhoneValidation().validateData(this.value());
+        } else if (this.isText() && (this.value() != "")) {
             return true;
-        else if (this.canBeIgnored())
+        } else if (this.canBeIgnored()) {
             return true;
-        else if (this.isSignature())
+        } else if (this.isSignature()) {
             return (this.value() != "" || this.placements().length == 0);
-        else if (this.isObligatory() && this.value() != "")
+        } else if (this.isObligatory() && this.value() != "") {
             return true;
-
+        }
         return false;
     },
     nicename : function() {
