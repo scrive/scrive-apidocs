@@ -147,12 +147,17 @@ selectDocuments domain filters orders limit extend = sqlSelect "documents" $ do
       mapM_ documentFilterToSQL filters
       mapM_ (sqlOrderBy . (\dobr -> dobrName dobr <+> dobrOrder dobr)) orderList
       sqlLimit limit
-    sqlResult "ROW_NUMBER() OVER() AS position"
+    -- Enumerate rows only if order is specified.
+    when orderSpecified $ do
+      sqlResult "ROW_NUMBER() OVER() AS position"
     sqlResult "domain_ids.id"
   sqlJoinOn "visible_document_ids" "documents.id = visible_document_ids.id"
-  sqlOrderBy "visible_document_ids.position"
+  -- Retain original order only if it was specified in the first place.
+  when orderSpecified $ do
+    sqlOrderBy "visible_document_ids.position"
   extend
   where
+    orderSpecified = not $ null orders
     orderList = map documentOrderByAscDescToSQL orders
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
