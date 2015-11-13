@@ -135,7 +135,7 @@ unjsonField :: Unjson.UnjsonDef Field
 unjsonField = Unjson.unionOf
               [ (isField,
                  pure Field
-                 <*> Unjson.fieldBy "value" (filter (not isControlButNotNewLine) . value) "" Unjson.unjsonDef
+                 <*> Unjson.field "value" value ""
                  <*> Unjson.field "x" x ""
                  <*> Unjson.field "y" y ""
                  <*> Unjson.field "page" page ""
