@@ -82,43 +82,34 @@ companyJSON company = runJSONGenT $ do
     value "smsprovider" $ show . companysmsprovider . companyinfo $ company
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue
-userStatsToJSON formatTime uuss = runJSONGen $ objects "stats" $ for uuss $ \uus -> do
-      value "date" (formatTime (fst (uusTimeSpan uus)))
-      value "closed" (uusDocumentsClosed uus)
-      value "sent" (uusDocumentsSent uus)
-      value "signatures" (uusSignaturesClosed uus)
+userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do
+  let DocumentStats{..} = uusDocumentStats uus
+  value "date" . formatTime $ uusTimeWindowStart uus
+  value "sent" dsDocumentsSent
+  value "closed" dsDocumentsClosed
+  value "signatures" dsSignaturesClosed
 
 companyStatsToJSON :: (UTCTime -> String) -> String -> [UserUsageStats] -> JSValue
-companyStatsToJSON formatTime totalText uuss = runJSONGen $ objects "stats" $ for summarized $ \uus -> do
-        value "date" (formatTime (fst (uusTimeSpan uus)))
-        value "closed" (uusDocumentsClosed uus)
-        value "sent" (uusDocumentsSent uus)
-        value "signatures" (uusSignaturesClosed uus)
-        value "name" totalText
-        objects "user_stats" $ do
-          [do value "date" (formatTime (fst (uusTimeSpan uus')))
-              value "closed" (uusDocumentsClosed uus')
-              value "sent" (uusDocumentsSent uus')
-              value "signatures" (uusSignaturesClosed uus')
-              value "name" ((\(_,_,n) -> n) <$> uusUser uus')
-              value "email" ((\(_,e,_) -> e) <$> uusUser uus')
-            | uus' <- uuss,
-              uusTimeSpan uus' == uusTimeSpan uus,
-              ((uusDocumentsClosed uus' > 0) || (uusDocumentsSent uus' > 0) || (uusSignaturesClosed uus' > 0))
-              ]
+companyStatsToJSON formatTime textName uuss = runJSONGen . objects "stats" . for uussGrouped $ \uusGroup -> do
+  let summary = foldMap uusDocumentStats uusGroup
+  value "date" . formatTime . uusTimeWindowStart $ $head uusGroup
+  value "name" textName
+  value "sent" $ dsDocumentsSent summary
+  value "closed" $ dsDocumentsClosed summary
+  value "signatures" $ dsSignaturesClosed summary
+  objects "user_stats" . for uusGroup $ \uus -> do
+    let DocumentStats{..} = uusDocumentStats uus
+    value "date" . formatTime $ uusTimeWindowStart uus
+    value "email" $ uusUserEmail uus
+    value "name" $ uusUserName uus
+    value "sent" dsDocumentsSent
+    value "closed" dsDocumentsClosed
+    value "signatures" dsSignaturesClosed
   where
-    uusGrouped :: [[UserUsageStats]]
-    uusGrouped = groupBy sameTimespan uuss
-    summarized :: [UserUsageStats]
-    summarized = map summarize uusGrouped
-    summarize :: [UserUsageStats] -> UserUsageStats
-    summarize uuss' = foldl1' addTwo uuss'
-    addTwo u1 u2 = u1 { uusDocumentsSent    = uusDocumentsSent u1    + uusDocumentsSent u2
-                      , uusDocumentsClosed  = uusDocumentsClosed u1  + uusDocumentsClosed u2
-                      , uusSignaturesClosed = uusSignaturesClosed u1 + uusSignaturesClosed u2
-                      }
-    sameTimespan u1 u2 = uusTimeSpan u1 == uusTimeSpan u2
-
+    uussGrouped :: [[UserUsageStats]]
+    uussGrouped = groupBy sameTimeWindow uuss
+      where
+        sameTimeWindow u1 u2 = uusTimeWindowStart u1 == uusTimeWindowStart u2
 
 pageAcceptTOS :: TemplatesMonad m => m String
 pageAcceptTOS = renderTemplate_ "pageAcceptTOS"
