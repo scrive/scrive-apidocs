@@ -931,7 +931,7 @@
 "_smsClosedNotification":"Skrifað hefur verið undir skjalið. Finna má skjalið með því að smella á þennan hlekk: $link$$if(withEmail)$. Við höfum einnig sent undirskrifaða skjalið á netfangið þitt.$endif$",
 "_smsCorrectedNotification":"Við tókum eftir því að við sendum þér áður skjal sem skorti rafræna undirskrift. Við höfum núna leiðrétt það. Finna má skjalið með viðeigandi stafrænni undirskrift með því að smella á þennan hlekk: $link$$if(withEmail)$. Við höfum einnig leiðrétt skjal á netfangið þitt.$endif$",
 "_smsInvitationToAuthor":"Komið er að þér að skrifa undir skjalið $documenttitle$. Smelltu á hlekkinn til að fara yfir skjalið: $link$",
-"_smsInvitationToView":"$personname$, verið er að fara skrifa rafrænt undir skjal af $partylist$. Þér hefur verið boðið af $creatorname$ að fylghjast með undirskriftaferlinu. Smelltu á hlekkinn til að lesa skjalið: $link$",
+"_smsInvitationToView":"",
 "_smsOriginator":"Merki textaskilaboða",
 "_smsOriginatorDescription":"Nafnið sem birtist viðtakandum þegar hann/hún fær skjal með textaskilaboðum. Hámarksfjöldi stafa eru 11 bók- og tölustafir.",
 "_standard":"Hefðbundið",

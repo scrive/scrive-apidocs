@@ -9,6 +9,7 @@ return React.createClass({
       return (
           <List.List
             url={self.props.url}
+            loadLater={true}
             dataFetcher={function(d) {return d.stats;}}
           >
 

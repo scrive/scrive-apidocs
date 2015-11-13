@@ -931,7 +931,7 @@
 "_smsClosedNotification":"Le document est désormais signé. Pour accéder à ce document, suivez le lien ci-après: $link$$if(withEmail)$. Nous avons également envoyé le document signé à votre boîte de réception.$endif$",
 "_smsCorrectedNotification":"Nous avons constaté que nous vous avons précédemment envoyé un document incorrect dans ce sens qu'il ne portait pas de signature numérique, cependant nous avons corrigé cette erreur. Veuillez trouver ci-joint le document portant la signature numérique en suivant ce lien: $link$$if(withEmail)$. Nous avons également envoyé le document corrigé à votre boîte de réception.$endif$",
 "_smsInvitationToAuthor":"C'est à votre tour de signer le document $documenttitle$. Suivez le lien pour consulter le document: $link$",
-"_smsInvitationToView":"$personname$, un document est sur le point d'être signé de façon numérique par $partylist$. Vous avez été invité par $creatorname$ en tant qu'observateur de la procédure de signature. Ouvrir le lien pour consulter le document: $link$",
+"_smsInvitationToView":"",
 "_smsOriginator":"Intitulé SMS",
 "_smsOriginatorDescription":"Le nom de l'expéditeur visible lorsque le destinataire reçoit un document par SMS. 11 caractères alphanumériques au maximum.",
 "_standard":"Standard",

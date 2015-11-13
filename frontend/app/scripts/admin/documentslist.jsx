@@ -25,6 +25,7 @@ return React.createClass({
           idFetcher={function(d) {return d.field("id");}}
           totalCountFunction={function(data){ return data.total_matching;}}
           maxPageSize={100}
+          loadLater={self.props.loadLater}
           paramsFunction = {function(text,selectfiltering,sorting, offset, maxPageSize) {
             var filters = [];
             if (text) {

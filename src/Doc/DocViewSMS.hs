@@ -12,6 +12,7 @@ module Doc.DocViewSMS (
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Trans
+import Data.String.Utils (strip)
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
@@ -94,5 +95,5 @@ smsFields document siglink = do
     F.value "creatorname" $ getSmartName <$> getAuthorSigLink document
     F.value "personname" $ getSmartName siglink
     F.value "documenttitle" $ documenttitle document
-    F.value "partylist" partylist
+    F.value "partylist" $ strip partylist
     F.value "link" $ mctxhostpart mctx ++ show (LinkSignDoc (documentid document) siglink)

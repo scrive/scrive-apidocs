@@ -931,7 +931,7 @@
 "_smsClosedNotification":"The document has now been signed. Find the document by following this link: $link$$if(withEmail)$. We have also sent the signed document to your email.$endif$",
 "_smsCorrectedNotification":"We noticed that we previously sent you a document that was incorrect in that it lacked a digital signature, but we have now corrected this error. Find the document with proper digital signature by following this link: $link$$if(withEmail)$. We have also sent the corrected document to your email.$endif$",
 "_smsInvitationToAuthor":"It is your turn to sign the document $documenttitle$. Open the link to review the document: $link$",
-"_smsInvitationToView":"$personname$, a document is about to be e-signed by $partylist$. You have been invited by $creatorname$ as an observer to the signing procedure. Open the link to read the document: $link$",
+"_smsInvitationToView":"Hi, a document is about to be signed by $partylist$. You have been invited by $creatorname$ to review the signing process. Open the link to view the document: $link$",
 "_smsOriginator":"SMS label",
 "_smsOriginatorDescription":"The name that is displayed to the recipient when receiving a document via SMS. Maximum 11 alpha-numeric characters.",
 "_standard":"Standard",

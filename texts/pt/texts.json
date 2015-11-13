@@ -931,7 +931,7 @@
 "_smsClosedNotification":"O documento já foi assinado. Poderá ver o documento seguindo esta hiperligação: $link$$if(withEmail)$. O documento assinado foi igualmente enviado para o seu correio electrónico.$endif$",
 "_smsCorrectedNotification":"Foi-lhe enviado previamente um documento incorrecto, visto que lhe faltava uma assinatura digital; este erro foi agora corrigido. O documento com a assinatura digital correcta está disponível através desta hiperligação: $link$$if(withEmail)$. O documento corrigido foi também enviado para o seu correio electrónico.$endif$",
 "_smsInvitationToAuthor":"É a sua vez de assinar o documento $documenttitle$. Abra a hiperligação para rever o documento: $link$",
-"_smsInvitationToView":"$personname$, um documento está prestes a ser assinado electronicamente por $partylist$. Foi convidado por $creatorname$ como observador do processo de assinatura. Abra a hiperligação para ler o documento: $link$",
+"_smsInvitationToView":"",
 "_smsOriginator":"Etiqueta do SMS",
 "_smsOriginatorDescription":"O nome apresentado ao destinatário ao receber um documento via SMS. O máximo são 11 caracteres alfanuméricos.",
 "_standard":"Padrão",

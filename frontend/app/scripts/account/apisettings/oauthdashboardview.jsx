@@ -64,6 +64,7 @@ return React.createClass({
               <List.List
                 ref='grantedprivilegeslist'
                 url="/oauth/dashboard/grantedprivileges"
+                loadLater={true}
                 dataFetcher={function(d) {return d.granted_privileges;}}
               >
                 <List.Column
@@ -100,6 +101,7 @@ return React.createClass({
               <List.List
                 ref='personaltokenlist'
                 url="/oauth/dashboard/personaltoken"
+                loadLater={true}
                 dataFetcher={function(d) {return d.personal_tokens;}}
               >
                 <List.Column
@@ -184,6 +186,7 @@ return React.createClass({
               ref='apitokenlist'
               url="/oauth/dashboard/apitokens"
               idFetcher={function(d) {return d.field("apitoken");}}
+              loadLater={true}
               dataFetcher={function(d) {return d.api_tokens;}}
              >
               <List.Column

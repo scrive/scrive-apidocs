@@ -8,7 +8,6 @@ import Control.Arrow
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Char
-import Data.List.Split (chunksOf)
 import Log
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Entity
@@ -131,14 +130,39 @@ mailEncode mFirstLineLength source | all asciiPrintable source = asciiMailEncode
 
 -- only line breaking
 asciiMailEncode :: Maybe Int -> String -> String
-asciiMailEncode mFirstLineLength source = concat $ intersperse "\r\n\t" chunks
+asciiMailEncode mFirstLineLength source = concat $ intersperse "\r\n " $ map unwords linesWithWords
   where
-    cleanedUpSource = unwords $ words source
-    (firstLine, rest) = splitAt (fromMaybe 75 mFirstLineLength) cleanedUpSource
-    chunks = if null rest then
-                 [firstLine] -- Lets not encode empty lines
-             else
-                 firstLine:chunksOf 75 rest
+    lineLength = 10
+    linesWithWords = aux [] [] (fromMaybe lineLength mFirstLineLength) $ words source
+
+    -- this function tries to rearrenge long text into lines
+    -- where every line takes at most 78 characters (including \r\n and leading space)
+    -- but if there is a single word longer than 78 it will occupy whole line.
+    -- we cannot split words
+    -- w=word, ws=words, l=line, ls=lines, rsil=remaining space in line
+    aux :: [[String]] -- list of lines generated so far (line is a list of words)
+        -> [String]   -- new line we are generating (list of words)
+        -> Int        -- remaining number of characters in the current line
+        -> [String]   -- list of words left to arrange in lines
+        -> [[String]] -- list of lines
+    aux ls [] _ [] = ls -- if current line is empty and no more words to arrange
+    aux ls l _ [] = ls ++ [l] -- no more words to arrange -> return all the lines and current line
+    aux ls l rsil (w:ws) | length w >= lineLength = -- this word will never fit with anything else
+                             case l of
+                               -- current line is empty, so append new line consisting of only this new mega-word
+                               [] -> aux (ls ++ [[w]]) [] lineLength ws
+                               -- finish current line by adding it to all the lines, and also append new line consisting of only this new mega-word
+                               _ -> aux (ls ++ [l, [w]]) [] lineLength ws
+                         -- in current empty line there is enough space for the new word
+                         -- append this new word to the current line, and adjust remaining space counter
+                         | null l && length w <= rsil = aux ls [w] (rsil - length w) ws
+                         -- in current non-empty line there is enough space for the new word and a space char
+                         -- append this new word to the current line, and adjust remaining space counter
+                         | length w + 1 <= rsil = aux ls (l ++ [w]) (rsil - length w - 1) ws
+                         -- this new word will not fit in current line,
+                         -- move current line to other lines (so this line is done)
+                         -- and start a new line with only this new word
+                         | otherwise = aux (ls ++ [l]) [w] (lineLength - length w) ws
 
 -- from simple utf-8 to =?UTF-8?B?zzzzzzz?=
 unicodeMailEncode :: Maybe Int -> String -> String
