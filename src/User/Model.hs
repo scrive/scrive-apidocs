@@ -380,32 +380,36 @@ instance MonadDB m => DBQuery m GetUsageStats [UserUsageStats] where
     -- achieve desired partitioning. It is also worth noting that it
     -- doesn't return time windows where all numbers would equal 0.
     runQuery_ . sqlSelect "docs_sent FULL JOIN docs_closed USING (time_window, uid) FULL JOIN sigs_closed USING (time_window, uid) JOIN users u ON (uid = u.id)" $ do
-      -- Get the number of sent documents per time window / user
-      sqlWith "docs_sent" . selectDataWithDateAs "d.invite_time" $ do
+      -- Use intermediate CTE to fetch all the relevant documents up
+      -- front as the majority of them will be both sent and
+      -- closed. We also save time by traversing the table only once.
+      sqlWith "stats_data" selectStatsData
+      -- Get the number of sent documents per time window / user.
+      sqlWith "docs_sent" . sqlSelect "stats_data" $ do
+        sqlResult "sent_time_window AS time_window"
+        sqlResult "uid"
         sqlResult "COUNT(*) AS docs_sent"
+        sqlWhere "document_sent"
         sqlGroupBy "time_window"
         sqlGroupBy "uid"
-      -- Use intermediate CTE for calculation of both documents and
-      -- signatures closed as they are very similar to each other.
-      sqlWith "closed" . selectDataWithDateAs maxSignTime $ do
-        sqlResult "d.id AS did"
-        sqlWhereEq "d.status" Closed
       -- Get the number of closed documents per time window / user.
-      sqlWith "docs_closed" . sqlSelect "closed" $ do
-        sqlResult "time_window"
+      sqlWith "docs_closed" . sqlSelect "stats_data" $ do
+        sqlResult "closed_time_window AS time_window"
         sqlResult "uid"
         sqlResult "COUNT(*) AS docs_closed"
+        sqlWhere "document_closed"
         sqlGroupBy "time_window"
         sqlGroupBy "uid"
       -- Get the number of closed signatures per time window / user.
-      sqlWith "sigs_closed" . sqlSelect "closed c" $ do
-        sqlJoinOn "signatory_links sl" "c.did = sl.document_id"
-        sqlResult "c.time_window"
-        sqlResult "c.uid"
+      sqlWith "sigs_closed" . sqlSelect "stats_data sd" $ do
+        sqlJoinOn "signatory_links sl" "sd.did = sl.document_id"
+        sqlResult "sd.closed_time_window AS time_window"
+        sqlResult "sd.uid"
         sqlResult "COUNT(*) AS sigs_closed"
+        sqlWhere "document_closed"
         sqlWhereIsNotNULL "sl.sign_time"
-        sqlGroupBy "c.time_window"
-        sqlGroupBy "c.uid"
+        sqlGroupBy "time_window"
+        sqlGroupBy "sd.uid"
       -- Fetch joined data and sort it appropriately.
       sqlResult "time_window"
       sqlResult "u.email"
@@ -426,18 +430,30 @@ instance MonadDB m => DBQuery m GetUsageStats [UserUsageStats] where
         sqlWhere "osl.document_id = d.id"
         sqlWhere "osl.is_partner"
 
-      selectDataWithDateAs :: SQL -> State SqlSelect () -> SqlSelect
-      selectDataWithDateAs ts refine = sqlSelect "documents d" $ do
+      selectStatsData :: SqlSelect
+      selectStatsData = sqlSelect "documents d" $ do
         sqlJoinOn "signatory_links sl" "d.id = sl.document_id"
         sqlJoinOn "users u" "sl.user_id = u.id"
-        sqlResult $ dateTrunc ts <+> "AS time_window"
+        sqlResult $ dateTrunc "d.invite_time" <+> "AS sent_time_window"
+        sqlResult $ dateTrunc maxSignTime     <+> "AS closed_time_window"
+        sqlResult "d.id AS did"
         sqlResult "u.id AS uid"
+        sqlResult $ documentSent   <+> "AS document_sent"
+        sqlResult $ documentClosed <+> "AS document_closed"
         sqlWhere "sl.is_author"
-        sqlWhere $ dateTrunc ts <+> ">=" <+> dateTrunc ("now() -" <?> interval)
+        sqlWhere $ documentSent `sqlOR` documentClosed
         case eid of
           Left  uid -> sqlWhereEq "u.id" uid
           Right cid -> sqlWhereEq "u.company_id" cid
-        refine
+        where
+          documentSent = dateTrunc "d.invite_time" <+> ">=" <+> startingDate
+
+          documentClosed = sqlConcatAND [
+              "d.status =" <?> Closed
+            , dateTrunc maxSignTime <+> ">=" <+> startingDate
+            ]
+
+          startingDate = dateTrunc ("now() -" <?> interval)
 
       dateTrunc :: SQL -> SQL
       dateTrunc time = "date_trunc('" <> granularity <> "', " <> time <> ")"
