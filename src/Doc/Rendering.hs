@@ -183,7 +183,7 @@ preCheckPDFHelper content tmppath =
       -- just check if the output file is there
       (_, stdout1, stderr1) <- liftIO $ readProcessWithExitCode' "mutool"
                                    [ "clean"
-                                   , "-ggg"
+                                   , "-gg"
                                    , sourcepath
                                    , normalizedpath
                                    ] BSL.empty
