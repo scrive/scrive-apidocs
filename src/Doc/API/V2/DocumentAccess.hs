@@ -8,6 +8,7 @@ module Doc.API.V2.DocumentAccess (
 , documentAccessForAdminonly
 ) where
 
+import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryLinkID
@@ -25,6 +26,7 @@ data DocumentAccessMode =
     SignatoryDocumentAccess SignatoryLinkID -- Person looking at document is this signatory
   | AuthorDocumentAccess -- Person looking at document is an author
   | CompanyAdminDocumentAccess  -- Person looking at document is an admin of author
+  | CompanySharedDocumentAccess  -- Person looking at document is in company of author and document is shared
   | SystemAdminDocumentAccess  -- Person looking at document is an admin of author
 
 canSeeSignlinks :: DocumentAccess -> Bool
@@ -42,6 +44,7 @@ propertyForCurrentSignatory da f doc =
     slForAccess (DocumentAccess { daAccessMode = SignatoryDocumentAccess sid}) = getSigLinkFor sid
     slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess})  = getAuthorSigLink
     slForAccess (DocumentAccess { daAccessMode = AuthorDocumentAccess})        = getAuthorSigLink
+    slForAccess (DocumentAccess { daAccessMode = CompanySharedDocumentAccess}) = getAuthorSigLink
     slForAccess (DocumentAccess { daAccessMode = SystemAdminDocumentAccess})   = getAuthorSigLink
 
 documentAccessForUser :: User -> Document -> DocumentAccess
@@ -66,7 +69,9 @@ documentAccessModeForUser user document =
                  else SignatoryDocumentAccess $ signatorylinkid sl
     Nothing -> if (documentauthorcompanyid document == Just (usercompany user) && useriscompanyadmin user)
                  then CompanyAdminDocumentAccess
-                 else $unexpectedError $ "User " ++ show (userid user) ++ " accessing document " ++ show (documentid document) ++ " without any permission. This should be cought earlier."
+                 else if (documentauthorcompanyid document == Just (usercompany user) && isDocumentShared document)
+                  then CompanySharedDocumentAccess
+                  else $unexpectedError $ "User " ++ show (userid user) ++ " accessing document " ++ show (documentid document) ++ " without any permission. This should be cought earlier."
 
 documentAccessForSlid :: SignatoryLinkID -> Document -> DocumentAccess
 documentAccessForSlid slid document = DocumentAccess {
