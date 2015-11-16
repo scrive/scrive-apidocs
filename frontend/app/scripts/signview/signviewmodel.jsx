@@ -1,10 +1,9 @@
 define(["React", "signview/create_account_section_view", "signview/signatories/docviewsignatories",
         "signview/attachments/signatoryattachmentsview", "signview/instructionsview/instructionsview",
-        "signview/attachments/authorattachmentsview", "signview/extradetails/extradetailsview",
-        "signview/signsection/signsectionview", "common/retargeting_service",
+        "signview/extradetails/extradetailsview", "signview/signsection/signsectionview", "common/retargeting_service",
          "Backbone", "Underscore", "legacy_code"],
   function (React, CreateAccountSection, DocumentViewSignatories,
-            SignatoryAttachmentsView, InstructionsView, AuthorAttachmentsView,
+            SignatoryAttachmentsView, InstructionsView,
             ExtraDetailsView, SignSectionView, RetargetingService,
             Backbone, _) {
 
@@ -93,7 +92,7 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
     },
 
     hasRejectOption: function () {
-      return this.document().showrejectoption();
+      return this.document().showrejectoption() && !BrowserInfo.isSmallScreen();
     },
 
     hasSignSection: function () {
@@ -126,10 +125,12 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
     },
 
     hasExtraInputs: function () {
+      var askForSSN = this.askForSSN();
+
       return this.askForName()
           || this.askForEmail()
-          || this.askForSSN()
-          || this.askForPhone();
+          || this.askForSSNIfNotEID()
+          || this.askForPhoneIfNotPin();
     },
 
     askForName: function () {
@@ -164,11 +165,25 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
       }
     },
 
+    askForSSNIfNotEID: function () {
+      var document = this.document();
+      var signatory = document.currentSignatory();
+
+      return this.askForSSN() && !signatory.seBankIDAuthenticationToSign();
+    },
+
     askForPhone: function () {
       var signatory = this.document().currentSignatory();
       var field = signatory.mobileField();
       return field != undefined
         && !new PhoneValidation().validateData(field.value()) && (!field.hasPlacements()) && field.obligatory();
+    },
+
+    askForPhoneIfNotPin: function () {
+      var document = this.document();
+      var signatory = document.currentSignatory();
+
+      return this.askForPhone() && !signatory.smsPinAuthenticationToSign();
     },
 
     hasSignatoriesAttachmentsSection: function () {
@@ -247,15 +262,15 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
     addTask: function (task) {
       var tasks = this.get("tasks");
       var newTasks = tasks.concat([task]);
-      this.set({tasks: newTasks});
       this.clearArrow();
+      this.set({tasks: newTasks});
     },
 
     removeTask: function (task) {
       var tasks = this.get("tasks");
       tasks = _.without(tasks, task);
-      this.set({tasks: tasks});
       this.clearArrow();
+      this.set({tasks: tasks});
     },
 
     tasks: function () {

@@ -1,0 +1,40 @@
+@import "vars";
+
+.instructions {
+  margin-top: 0;
+
+  text-align: center;
+
+  .follow {
+    font-weight: 300;
+  }
+
+  .arrowtext {
+    cursor: pointer;
+    color: @brand-secondary;
+    font-weight: 600;
+  }
+
+  .give-for-signing {
+    margin-top: 10px;
+  }
+
+  .change-party-text {
+    margin-bottom: 10px;
+  }
+
+  .give-for-signing {
+    .button {
+      margin-left: @signview-gutter;
+
+      &:first-child {
+        margin-left: 0;
+      }
+    }
+  }
+
+  .menu-options {
+    overflow: hidden;
+    transition: height 0.2s ease-out;
+  }
+}

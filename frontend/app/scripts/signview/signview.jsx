@@ -4,7 +4,7 @@ define([
   "React",
   "common/retargeting_service",
   "common/backbone_mixin",
-  "signview/create_account_section_view",
+  "common/onelementheightchange",
   "signview/signatories/docviewsignatories",
   "signview/attachments/signatoryattachmentsview",
   "signview/instructionsview/instructionsview",
@@ -15,14 +15,16 @@ define([
   "signview/fileview/fileview",
   "signview/header",
   "signview/footer",
-  "signview/tasks/taskarrows"
+  "signview/create_account_section_view",
+  "signview/tasks/taskarrows",
+  "signview/overlay"
 ], function (
   legacy_code,
   Backbone,
   React,
   RetargetingService,
   BackboneMixin,
-  CreateAccountSection,
+  onElementHeightChange,
   DocumentViewSignatories,
   SignatoryAttachmentsView,
   InstructionsView,
@@ -33,7 +35,9 @@ define([
   FileView,
   Header,
   Footer,
-  TaskArrows
+  CreateAccountSection,
+  TaskArrows,
+  Overlay
 ) {
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -45,8 +49,7 @@ define([
       useStandardHeaders: React.PropTypes.bool.isRequired,
       authorFullname: React.PropTypes.string,
       authorPhone: React.PropTypes.string,
-      link: React.PropTypes.object,
-      forceShowing: React.PropTypes.bool
+      link: React.PropTypes.object
     },
 
     getInitialState: function () {
@@ -59,7 +62,7 @@ define([
         allowsavesafetycopy: this.props.allowSaveSafetyCopy
       });
 
-      return {model: model};
+      return {model: model, overlay: false, pixelWidth: 950};
     },
 
     childContextTypes: {
@@ -88,8 +91,19 @@ define([
     },
 
     componentDidMount: function () {
-      this.state.model.recall();
-      ReloadManager.pushBlock(this.state.model.blockReload);
+      var self = this;
+      var model = self.state.model;
+      model.recall();
+      ReloadManager.pushBlock(model.blockReload);
+      onElementHeightChange(self.getDOMNode(), function () {
+        model.updateArrowPosition();
+      });
+
+      $(window).on("beforeunload", function () {
+        if (!ReloadManager.isBlocking()) {
+          $(window).scrollTop(0);
+        }
+      });
     },
 
     componentDidUpdate: function () {
@@ -101,25 +115,40 @@ define([
     },
 
     getBackboneModels: function () {
-      return [this.state.model, this.state.model.document()];
+      var model = this.state.model;
+      var doc = model.document();
+      var attachments = [];
+
+      if (doc.currentSignatory()) {
+        attachments = doc.currentSignatory().attachments();
+        attachments = attachments.concat(doc.authorattachments());
+      }
+
+      return [model, doc].concat(attachments);
+    },
+
+    enableOverlay: function () {
+      this.setState({overlay: true});
+    },
+
+    disableOverlay: function () {
+      this.setState({overlay: false});
     },
 
     render: function () {
+      var self = this;
       var model = this.state.model;
       var doc = model.document();
-      var arrow = function () {
-        return model.arrow();
-      };
+      var isSmallScreen = BrowserInfo.isSmallScreen();
 
       return (
         <div className="signview">
-          {/* if */ !this.props.useStandardHeaders &&
+          {/* if */ !this.props.useStandardHeaders && doc.showheader() && !isSmallScreen &&
             <Header
               document={doc}
               documentid={this.props.documentId}
-              link={this.props.link}
-              forceShowing={this.props.forceShowing}
               signatorylinkid={this.props.sigLinkId}
+              link={this.props.link}
               authorFullname={this.props.authorFullname}
               authorPhone={this.props.authorPhone}
             />
@@ -127,49 +156,59 @@ define([
           {/* if */ model.hasArrows() &&
             <TaskArrows model={model} />
           }
-          <div className="mainContainer">
-            {/* if */ !model.isReady() &&
-              <div className="subcontainerWrapper">
-                <div className="subcontainer">
-                  <br/>
-                  <div className="document-pages">
-                    <div className="waiting4page" />
-                  </div>
+          {/* if */ !model.isReady() &&
+            <div className="main">
+              <div className="section loading">
+                <div className="col-xs-12 center">
+                  <img src="/img/wait30trans.gif" />
                 </div>
               </div>
-            }
-            {/* else */ model.isReady() &&
-              <div className="subcontainerWrapper">
-                <InstructionsView model={model} />
-                <div className="subcontainer">
-                  {/* if */ model.hasCreateAccountSection() &&
-                    <CreateAccountSection document={doc} />
-                  }
-                  <FileView model={doc.mainfile()} signview={model} arrow={arrow} />
-                  {/* if */ model.hasAuthorAttachmentsSection() &&
-                    <AuthorAttachmentsView model={doc} />
-                  }
-                  {/* if */ model.hasSignatoriesAttachmentsSection() &&
-                    <SignatoryAttachmentsView model={model} />
-                  }
-                  {/* if */ model.hasExtraDetailsSection() &&
-                    <ExtraDetailsView model={doc.currentSignatory()} signview={model} />
-                  }
-                  {/* if */ model.hasSignatoriesSection() &&
-                    <DocumentViewSignatories document={doc} />
-                  }
-                  {/* if */ model.hasSignSection() &&
-                    <SignSectionView model={model} />
-                  }
-                  {/* if */ model.hasAnySection() && <div className="clearfix" />}
-                </div>
-              </div>
-            }
-            <div className="clearfix" />
-            <div className="spacer40" />
-          </div>
-          {/* if */ !this.props.useStandardHeaders &&
-            <Footer document={doc} />
+            </div>
+          }
+          {/* else */ model.isReady() &&
+            <div className="main">
+              <Overlay on={this.state.overlay} />
+              <InstructionsView
+                model={doc}
+                arrow={function () { return model.arrow(); }}
+              />
+              {/* if */ model.hasCreateAccountSection() &&
+                <CreateAccountSection document={doc} />
+              }
+              <FileView
+                ref="fileView"
+                pixelWidth={this.state.pixelWidth}
+                model={doc.mainfile()}
+                signview={model}
+                arrow={function () { return model.arrow(); }}
+              />
+              {/* if */ model.hasAuthorAttachmentsSection() &&
+                <AuthorAttachmentsView
+                  model={doc}
+                  canStartFetching={self.refs.fileView != undefined && self.refs.fileView.ready()}
+                />
+              }
+              {/* if */ model.hasSignatoriesAttachmentsSection() &&
+                <SignatoryAttachmentsView model={doc} />
+              }
+              {/* if */ model.hasExtraDetailsSection() &&
+                <ExtraDetailsView model={doc.currentSignatory()} signview={model} />
+              }
+              {/* if */ model.hasSignatoriesSection() &&
+                <DocumentViewSignatories model={doc} />
+              }
+              {/* if */ model.hasSignSection() &&
+                <SignSectionView
+                  pixelWidth={this.state.pixelWidth}
+                  model={model}
+                  enableOverlay={this.enableOverlay}
+                  disableOverlay={this.disableOverlay}
+                />
+              }
+              {/* if */ doc.showfooter() && !isSmallScreen &&
+                <Footer/>
+              }
+            </div>
           }
         </div>
       );

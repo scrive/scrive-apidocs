@@ -68,49 +68,53 @@ input.daystosign {
   margin: auto;
   width: 610px;
 
-  .attachmentsButtonsTable {
-    height: 130px;
-    padding: 26px 15px 25px 15px;
-    text-align: center;
-
-    // Following code will be removed when attachment design is rewriten to React
-    td {
-      vertical-align : top;
-
-      .button.button-singleline {
-        max-height: 18px;
-      }
-    }
-
+  .name-input {
+    width: 300px;
   }
 
-  table {
-    .header-td {
-      vertical-align: top;
+  .attachmentsList {
+    padding : 8px;
+    width: 100%;
+
+    .view-link {
+      background: url(~"@{img-base-url}/sprite-grey-eye.png") no-repeat scroll 0 0 transparent;
+      cursor: pointer;
+      display: block;
+      height: 14px;
+      width: 25px;
+
+      &:hover {
+        background-position: -25px 0;
+      }
     }
-    td {
-      padding: 0 10px 0 10px;
-      width: 305px;
 
-      .button {
-        width: 200px;
-      }
+    .remove-link {
+      background: url(~"@{img-base-url}/sprite-grey-X.png") no-repeat scroll 0 0 transparent;
+      cursor: pointer;
+      display: block;
+      height: 12px;
+      width: 12px;
 
-      .header {
-        color: @text-dark;
-        font-size: 16px;
-        margin: 5px 5px 13px 5px;
-      }
-
-      .label {
-        font-size: 17px;
+      &:hover {
+        background-position: -12px 0;
       }
     }
   }
-}
 
-.selectAuthorAttachmentPopupContent .option-top-box {
-  display: none;
+  .select {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  a.add-attachment.button {
+    float: right;
+    color: white;
+
+    &:hover {
+      color: white;
+    }
+  }
+
 }
 
 .designCSVSignatoryPopupContent .option-box {
@@ -129,56 +133,6 @@ input.daystosign {
 .designCSVSignatoryPopupScroll {
   margin-bottom: 30px;
   overflow-x: auto;
-}
-
-.designCSVSignatoryPopupContent .header {
-  color: @text-dark;
-  font-size: 16px;
-  height: 30px;
-  margin: 5px;
-}
-
-.selectAuthorAttachmentPopupContent .sheader,
-.designCSVSignatoryPopupContent .sheader {
-  margin: 5px;
-  height: 35px;
-}
-
-.selectAuthorAttachmentPopupContent .table {
-  background: none;
-  border-radius: 0;
-  border-width: 0;
-  padding: 0;
-}
-
-.selectAuthorAttachmentPopupContent .attachmentsList {
-  border-bottom: 1px #ddd solid;
-  border-top: 1px #ddd solid;
-  color: @text-medium;
-  margin: auto;
-  padding : 8px;
-  width: 560px;
-}
-
-.selectAuthorAttachmentPopupContent .attachmentsList .attachmentBox {
-  margin-top: 5px;
-}
-
-.selectAuthorAttachmentPopupContent .attachmentsList .removeLink {
-  cursor: pointer;
-  float: right;
-  font-size: 17px;
-  margin-left: 10px;
-  text-decoration: none;
-}
-
-.selectAuthorAttachmentPopupContent .back {
-  background: url(~"@{img-base-url}/back.png") no-repeat scroll 0 0 transparent;
-  cursor: pointer;
-  display: block;
-  height: 16px;
-  margin-left: 5px;
-  width: 16px;
 }
 
 .removeSignatoryAttachmentIcon {

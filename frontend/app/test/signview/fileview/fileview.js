@@ -26,6 +26,7 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/f
         var fileView = TestUtils.renderIntoDocument(React.createElement(FileView, {
           model: file,
           signview: new SignView(),
+          pixelWidth: 950,
           arrow: function () { }
         }));
       });

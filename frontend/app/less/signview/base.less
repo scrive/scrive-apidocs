@@ -1,0 +1,307 @@
+@import "vars";
+
+.small-screen {
+  @small: @signview-font-size-small * 2;
+  @large: @signview-font-size-large * 2;
+  @padding: @signview-button-padding-tb * 2 @signview-button-padding-lr * 2;
+  @input: 30px * 2;
+
+  h1 {
+    font-size: @large;
+  }
+
+  .arrowtext {
+    font-size: @large;
+  }
+
+  p, label, textarea, td {
+    font-size: @small;
+  }
+
+  h1, p, label, textarea, td {
+    line-height: normal;
+  }
+
+  .button {
+    font-size: @small;
+    padding: @padding;
+  }
+
+  .button-block {
+    font-size: @large;
+  }
+
+  .transparent-button {
+    font-size: @small;
+  }
+
+  .obligatory-input {
+    font-size: @small;
+
+    input {
+      height: @input;
+      line-height: @input;
+    }
+  }
+}
+
+.main {
+  position: relative;
+}
+
+b, strong {
+  font-weight: 400;
+}
+
+p {
+  .font-normal();
+}
+
+label {
+  .font-normal();
+}
+
+h1 {
+  .font-normal();
+  letter-spacing: -1px;
+  font-size: @signview-font-size-large;
+  font-weight: 400;
+}
+
+h2 {
+  .font-normal();
+  font-size: @signview-font-size-large;
+  font-weight: 300;
+}
+
+h4 {
+  .font-normal()
+}
+
+.section {
+  background-color: @signview-section-bg;
+  width: auto;
+  margin-top: @signview-half-gutter;
+  padding: 45px;
+}
+
+dl {
+  width: 100%;
+
+  dt {
+    margin-bottom: @signview-half-gutter;
+  }
+
+  .item {
+    margin-top: @signview-gutter;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+}
+
+textarea {
+  .font-normal();
+  padding: 10px;
+  height: 104px;
+  width: 378px;
+}
+
+.info-text-input {
+  cursor: text;
+  width: 100%;
+
+  input {
+    line-height: 30px;
+  }
+}
+
+.button {
+  @trans-time: 200ms;
+
+  box-sizing: content-box; // fix IE issues with min-width;
+  user-select: none;
+  background-color: @signview-bg;
+  transition: background-color @trans-time ease-out, opacity @trans-time ease-out;
+  font-size: @signview-font-size-small;
+  font-weight: 400;
+  min-width: 140px - @signview-button-padding-lr * 2;
+  padding: @signview-button-padding-tb @signview-button-padding-lr;
+
+  &:hover {
+    transition: background-color 0ms ease-out;
+    background-color: darken(@signview-bg, 5%);
+  }
+
+  &:active,
+  &.active {
+    background-color: darken(@signview-bg, 5%);
+  }
+}
+
+.button-block {
+  display: block;
+  font-size: @signview-font-size-large;
+  font-weight: 400;
+  line-height: normal;
+  width: auto;
+  margin-top: @signview-gutter;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+.obligatory-input {
+  @trans-time1: 100ms;
+  @trans-time2: 80ms;
+  @padding-tb: 6px;
+  @padding-lr: 14px;
+
+  transition: background-color @trans-time1 ease-out, border-color @trans-time1 ease-out;
+  .font-normal();
+  padding: @padding-tb @padding-lr;
+
+  input {
+    transition: width @trans-time2 step-end;
+    background-color: transparent;
+    line-height: 30px;
+    width: 100%;
+  }
+
+  .after {
+    transition: opacity @trans-time2, height @trans-time2 step-end, width @trans-time2 step-end, transform @trans-time2 step-end;
+    display: inline-block;
+    opacity: 0;
+    height: 0;
+    width: 0;
+    position: relative;
+    transform: scale(0);
+    background-repeat: no-repeat;
+    top: 3px;
+    right: 0px;
+    right: calc(-@signview-half-gutter);
+  }
+}
+
+.valid {
+  @trans-time: 200ms;
+
+  background-color: #FFFFFF !important;
+  border: 1px solid #ccc;
+
+  &:hover {
+    border: 1px solid #ccc !important;
+  }
+
+  input {
+    transition: width @trans-time step-start;
+    width: 93%;
+    width: calc(~"100% - 17px - " @signview-half-gutter);
+  }
+
+  .after {
+    opacity: 1;
+    height: 13px;
+    width: 17px;
+    transform: scale(1);
+    transition: transform @trans-time cubic-bezier(0.13, 1.5, 1, 1.38);
+  }
+}
+
+.button-group {
+  .button {
+    margin-left: @signview-gutter;
+
+    &:first-child {
+      margin-left: 0;
+    }
+  }
+}
+
+.small-buttons {
+  .button {
+    min-width: 124px - @signview-button-padding-lr * 2;
+  }
+}
+
+.transparent-button {
+  font-weight: 300;
+  font-size: @signview-font-size-small;
+  background: transparent;
+  text-decoration: underline;
+  color: @signview-fg;
+
+  &:hover {
+    background: transparent;
+  }
+
+  &:active {
+    background: transparent;
+  }
+}
+
+.vertical {
+  display: table;
+  width: 100%;
+  height: 100%;
+
+  .middle {
+    display: table-cell;
+    vertical-align: middle;
+  }
+}
+
+.inline-img {
+  margin-right: @signview-half-gutter;
+}
+
+.large-checkbox {
+  @dim: 18px;
+  @color: @signview-fg;
+  height: @dim;
+
+  .checkbox {
+    background-color: @signview-bg;
+    border: none;
+    width: @dim;
+    height: @dim;
+    margin-right: 7px;
+    border: 2px solid @color;
+  }
+
+  .checkmark {
+    width: @dim;
+    height: @dim;
+    @url: %("/colored_image?file=valid-input-check.png&color=%D", #FFFFFF);
+    background-image: url(@url);
+    background-position: 0px 2px;
+    background-size: 80%;
+    display: none;
+  }
+
+  label {
+    margin: 0;
+    margin-top: -7px;
+    vertical-align: middle;
+    line-height: @dim;
+  }
+
+  .checkbox.checked {
+    background: @color;
+
+    .checkmark {
+      display: block;
+    }
+  }
+}
+
+.positioned {
+  position: relative;
+}
+
+.full-height {
+  position: absolute;
+  height: 100%;
+}

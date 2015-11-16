@@ -8,25 +8,28 @@ import File.FileID
 import KontraPrelude
 
 data AuthorAttachment = AuthorAttachment {
-  authorattachmentfileid :: FileID,
-  authorattachmentfilename :: String
+  authorattachmentname :: String,
+  authorattachmentrequired :: Bool,
+  authorattachmentfileid :: FileID
 } deriving (Eq, Ord, Show)
 
 ---------------------------------
 
 authorAttachmentsSelectors :: [SQL]
 authorAttachmentsSelectors = [
-    "author_attachments.file_id",
-    "files.name"
+    "author_attachments.name",
+    "author_attachments.required",
+    "author_attachments.file_id"
   ]
 
-type instance CompositeRow AuthorAttachment = (FileID,String)
+type instance CompositeRow AuthorAttachment = (String, Bool, FileID)
 
 instance PQFormat AuthorAttachment where
   pqFormat _ = "%author_attachment"
 
 instance CompositeFromSQL AuthorAttachment where
-  toComposite (fid,fname) = AuthorAttachment {
-    authorattachmentfileid = fid,
-    authorattachmentfilename = fname
+  toComposite (aname, areq,afid) = AuthorAttachment {
+    authorattachmentname = aname,
+    authorattachmentrequired = areq,
+    authorattachmentfileid = afid
   }

@@ -376,7 +376,7 @@
 "_designViewAnchor":"Ankkuri",
 "_designViewAnchorIndex":"Esiintymisideksi",
 "_designViewAnchorSearchPhrase":"Etsittävä lause",
-"_designViewAttached":"Lisätyt liitteet",
+"_designViewAttached":"",
 "_designViewAttachmentRequestedFlashMessage":"Tarvitset ainakin yhden allekirjoittajan enemmän ennen liitteiden pyytämistä.",
 "_designViewAttachmentRequestedFrom":"Pyydetty liite <span class='put-attachment-name'></span>, osapuoli <span class='put-person-name'></span>",
 "_designViewChooseParticipant":"Osoita kenttä",

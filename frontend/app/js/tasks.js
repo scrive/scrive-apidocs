@@ -25,8 +25,8 @@
             isComplete   : function() {return el.val() == "abc";},          // Check if task is compleated
             onActivate   : function() {el.css("border", "1px solid red");}, // Code performed when task is being activated
             onDeactivate : function() {el.css("border", "");},              // Code performed when task stops being active
-            label        : "Put 'abc' here",                                // Text on arrow that will be pointing to el
-            tipSide      : "right"                                           // Side (left or right) of such arrow
+            tipSide      : "right"                                          // Side (left or right) of such arrow
+            margin       : -22                                              // Margin to element it's pointing at.
             })
         el.change(function() {task.update();});
 
@@ -43,6 +43,7 @@ define(['Backbone', 'legacy_code'], function() {
 
 window.PageTask = Backbone.Model.extend({
   defaults: {
+    active: false,
     complete   : false, // Cache for isCompleate
     isComplete : function() {return false;},
     onActivate : function() {return false;},
@@ -50,15 +51,14 @@ window.PageTask = Backbone.Model.extend({
     onArrowClick : function() { return false; },
     onDeactivate : function() {return false;},
     tipSide : "right",
-    label:"",
     pointSelector : undefined,
+    margin: -22,
     type: undefined,
     field: undefined
   },
   initialize: function(args) {
     _.bindAll(this, 'update');
     this.model = args.model;
-    this.update();
   },
   el: function() {
     if (this.pointSelector() != undefined && $(this.pointSelector(),this.get("el")).size() > 0)
@@ -68,26 +68,38 @@ window.PageTask = Backbone.Model.extend({
   pointSelector : function() {
     return this.get("pointSelector");
   },
+  active: function () {
+    return this.get("active");
+  },
+  margin: function () {
+    return this.get("margin");
+  },
   onActivate: function() {
-    return this.get("onActivate")();
+    if (!this.active()) {
+      this.set("active", true, {silent: true});
+      return this.get("onActivate")();
+    }
   },
   onScrollWhenActive: function() {
     return this.get("onScrollWhenActive")();
   },
   onDeactivate : function() {
-    return this.get("onDeactivate")();
+    if (this.active()) {
+      this.set("active", false, {silent: true});
+      return this.get("onDeactivate")();
+    }
   },
   onDelete : function() {
     this.stopListening();
   },
   isComplete: function() {
-    return this.get("complete");
-  },
-  label : function() {
-    return this.get("label");
+    return this.get("isComplete")();
   },
   isSignatoryAttachmentTask : function() {
     return this.get("type") == 'signatory-attachment';
+  },
+  isRequiredAuthorAttachmentTask : function() {
+    return this.get("type") == 'author-attachment';
   },
   field : function() {
     return this.get("field");
@@ -105,7 +117,7 @@ window.PageTask = Backbone.Model.extend({
     return this.get("tipSide");
   },
   update: function() {
-    this.set({ complete: this.get("isComplete")()});
+    this.trigger("change");
   },
   triggerUIChange : function() {
     this.trigger("change:ui");
@@ -216,8 +228,8 @@ var PageTasksArrowView = Backbone.View.extend({
         }
         else if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
             return new Arrow({      type: task.tipSide() != "right" ? 'point-left' : 'point-right'
+                                   , margin: task.margin()
                                    , point : $(task.el())
-                                   , text : task.label()
                                    , onClick : function () { task.onArrowClick(); }
                               });
         }
@@ -330,6 +342,7 @@ window.PageTasksArrow = function(args){
             , disable  : function()    { view.disable(); }
             , updatePosition: function() { view.updatePosition();}
             , updateArrow: function() { view.updateArrow();}
+            , click: function () { if (view.task) {view.task.onArrowClick();} }
             , goToCurrentTask: function() { view.goToCurrentTask();}
             , deletePageTasksArrow: function() { view.deletePageTasksArrowView(); model.deletePageTasks(); }
             , notCompletedTasks: function() { return model.notCompletedTasks(); }

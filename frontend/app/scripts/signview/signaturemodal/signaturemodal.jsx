@@ -20,17 +20,11 @@ define(["legacy_code", "Backbone", "React",
        function (_legacy, Backbone, React, SignatureDrawer, SignatureTyper) {
 
 var SignatureDrawOrTypeModel = Backbone.Model.extend({
-  onClose: function () {
-    return this.get("onClose")();
+  onClose: function (shouldScroll, shouldSign) {
+    return this.get("onClose")(shouldScroll, shouldSign);
   },
   modal: function () {
     return this.get("modal");
-  },
-  container: function () {
-    return this.get("container");
-  },
-  containerTop: function () {
-    return this.container().offset().top - $(window).scrollTop();
   },
   field: function () {
     return this.get("field");
@@ -55,7 +49,7 @@ var SignatureDrawOrTypeModel = Backbone.Model.extend({
     var incompleteTasks = this.arrow().notCompletedTasks();
     var incompleteFieldTasks = _.filter(incompleteTasks, function (task) { return task.isFieldTask(); });
     var incompleteSignatoryAttachmentsTasks = _.filter(incompleteTasks, function (task) {
-      return task.isSignatoryAttachmentTask();
+      return task.isSignatoryAttachmentTask() || task.isRequiredAuthorAttachmentTask();
     });
     var numberOfIncompleteFieldTasks = incompleteFieldTasks.length;
 
@@ -96,56 +90,15 @@ var SignatureDrawOrTypeModel = Backbone.Model.extend({
     }
   },
   acceptText: function () {
-    if (this.actionButtonIsSignNow()) {
-      return localization.next;
-    } else if (this.actionButtonIsFillInExtraDetails()) {
-      return localization.pad.fillInExtraDetails;
-    } else if (this.actionButtonIsApply()) {
-      return localization.signature.confirmSignature;
-    }
+    return localization.next;
   },
   onAccept: function () {
-    var self = this;
     if (this.actionButtonIsSignNow()) {
-      if (!self.hasImage()) {
-        self.onClose();
-      } else {
-        new DocumentSignConfirmation({
-          model: self.signview(),
-          fast: true,
-          signaturesPlaced: true,
-          margin: self.containerTop() + "px auto 0",
-          arrow: self.arrow()
-        });
-
-        self.modal().remove();
-        self.onClose();
-
-        if (self.arrow()) {
-          self.arrow().disable();
-        }
-      }
+      this.onClose(true, true);
     } else if (this.actionButtonIsFillInExtraDetails()) {
-      if (!self.hasImage()) {
-        self.onClose();
-      } else {
-        var modal = new DocumentExtraDetailsModal({
-          model: self.signview(),
-          arrow:  self.arrow(),
-          margin: self.containerTop() + "px auto 0",
-          bottom: true
-        });
-
-        modal.popup();
-        self.modal().remove();
-        self.onClose();
-
-        if (self.arrow()) {
-          self.arrow().disable();
-        }
-      }
+      this.onClose(true, false);
     } else if (this.actionButtonIsApply()) {
-      self.onClose();
+      this.onClose(false, false);
     }
   }
 });
@@ -153,22 +106,9 @@ var SignatureDrawOrTypeModel = Backbone.Model.extend({
 return function (args) {
   var self = this;
   var arrow = args.arrow();
-  var width = BrowserInfo.isSmallScreen() ? 980 : 900;
-  var left = Math.floor(($(window).width() - width) / 2);
-  var modal = $("<div class='modal'></div>").css("height", $(document).height()).css("min-width", "1018px");
-  var container = $("<div class='modal-container drawing-modal'/>").css("width", width);
-  var innerHeight = 820 * args.height / args.width;
-
-  // SalesForce1 displays our signing page in a android WebView in which $(window).height() returns 0.
-  var windowHeight = $(window).height() || window.innerHeight;
-  var containerTop = windowHeight - innerHeight - 240;
-
-  container
-    .css("top", $(window).scrollTop())
-    .css("margin-top", containerTop)
-    .css("left", "0px")
-    .css("margin-left", left > 20 ? left : 20)
-    .toggleClass("small-screen", BrowserInfo.isSmallScreen());
+  var modal = $("<div class='drawer' />");
+  var transTime = 300; // sync with @trans-time in 'signview/drawer.less';
+  var onClose = args.onClose;
 
   var model = new SignatureDrawOrTypeModel({
     field: args.field,
@@ -177,22 +117,35 @@ return function (args) {
     arrow: arrow,
     signview: args.signview,
     modal: modal,
-    container: container,
-    onClose: function () {
+    onClose: function (shouldScroll, shouldSign) {
       modal.removeClass("active");
       document.ontouchmove = function (e) {
         return true;
       };
+
+      if (onClose) {
+        onClose();
+      }
+
       if (arrow) {
         arrow.enable();
+        if (shouldScroll) {
+          setTimeout(function () {
+            arrow.goToCurrentTask();
+          }, 5);
+        }
       }
-      setTimeout(function () {modal.detach();}, 500);
+
+      modal.removeClass("active");
+
+      setTimeout(function () {
+        modal.remove();
+      }, transTime);
     }
   });
 
   if (!BrowserInfo.isIE8orLower()) {
-    var view  = $("<div/>");
-    var processSettings = React.render(React.createElement(SignatureDrawer, {
+    React.render(React.createElement(SignatureDrawer, {
       field: args.field,
       width: args.width,
       height: args.height,
@@ -211,51 +164,36 @@ return function (args) {
         };
         modal.css("-ms-touch-action", "auto");
       }
-    }), view[0]);
-    modal.append(container.append(view));
+    }), modal[0]);
   } else {
-    var view  = $("<div/>");
-    var processSettings = React.render(React.createElement(SignatureTyper, {
+    React.render(React.createElement(SignatureTyper, {
       field: args.field,
       width: args.width,
       height: args.height,
       acceptText: model.acceptText(),
       onClose: function () {model.onClose();},
       onAccept:  function () {model.onAccept();}
-    }), view[0]);
-    modal.append(container.append(view));
+    }), modal[0]);
   }
 
   if (arrow) {
     arrow.disable();
   }
 
-  $("body").append(modal);
-
-  // If the modal (+ margin) doesn't fit when positioned at the bottom
-  // position it at the top.
-  if (container.height() > (window.innerHeight - 150)) {
-    container.css("margin-top", 15);
-  }
-
-  modal.addClass("active");
-  setTimeout(function () {
-    var height = $(document).height();
-    if (BrowserInfo.isIE8orLower()) {
-      // WORKAROUND FOR IE8 BUG
-      // overlay is absolute and has opacity filter
-      // which breaks IE8 calculation of the document height
-      // we temporarily disable opacity, calculate the height
-      // of the overlay and use it later.
-      // when we reenable opacity the document height is calculated properly
-      // because of explicitly set overlay height
-      var filter = modal.css("filter");
-      modal.css("filter", "");
-      height = $(document).height();
-      modal.css("filter", filter);
+  var closeOverlay = function (e) {
+    var onOverlay = e.target === modal[0];
+    if (onOverlay) {
+      model.onClose();
     }
-    modal.height(height);
-  }, 600);
+  };
+
+  modal.mousedown(closeOverlay);
+  modal.on("touchstart", closeOverlay);
+
+  $(".signview").append(modal);
+  setTimeout(function () {
+    modal.addClass("active show");
+  }, 1);
 };
 
 });

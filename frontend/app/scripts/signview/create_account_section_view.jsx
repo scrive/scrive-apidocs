@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/language_service', 'postsignview/questionnaire_view', 'postsignview/create_account_views', 'postsignview/user_service', 'Backbone', 'Underscore', 'legacy_code'], function(React, LanguageService, QuestionareView, CreateAccountViews, UserService, Backbone, _) {
+define(['React', 'Backbone', 'postsignview/create_account_views', 'postsignview/user_service', 'signview/feedback/feedbackview', 'legacy_code'], function(React, Backbone, CreateAccountViews, UserService, FeedbackView) {
   var expose = {};
 
   /**
@@ -44,7 +44,7 @@ define(['React', 'common/language_service', 'postsignview/questionnaire_view', '
       if(this.isHidden()) {
         return (<div/>);
       } else if(this.isQuestionaire()) {
-        return (<QuestionareView document={document}/>);
+        return <FeedbackView doc={document} />;
       } else if (this.isSaveCopy()) {
         var SaveBackupCopy = CreateAccountViews.SaveBackupCopy;
         return (<SaveBackupCopy

@@ -31,7 +31,9 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
   },
   authorAttachmentDesc: function(attachment) {
     var container = $("<div class='item' />");
-    container.append($("<div class='icon' />"));
+    var icon = $("<div class='icon' />");
+    icon.addClass(attachment.isRequired() ? "required" : "optional");
+    container.append(icon);
     var label = $("<div class='label' />");
     var name = $("<div class='name' />");
     label.append(name.text(attachment.name()));

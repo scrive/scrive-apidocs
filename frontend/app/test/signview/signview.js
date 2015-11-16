@@ -28,7 +28,11 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/signview"]
           allowSaveSafetyCopy: true
         }));
 
-        util.waitUntil(signView.isReady, function () {
+        var allReady = function () {
+          return signView.isReady() && signView.refs.fileView && signView.refs.fileView.ready();
+        };
+
+        util.waitUntil(allReady, function () {
           done();
         });
       });

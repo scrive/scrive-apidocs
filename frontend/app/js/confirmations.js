@@ -14,8 +14,7 @@ var ConfirmationModel = Backbone.Model.extend({
       cancelVisible : true,
       extraOption : undefined,
       margin: undefined,
-      oneClick: false,
-      signview: false
+      oneClick: false
   },
   initialize : function(args) {
     var width = args.width;
@@ -29,9 +28,6 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   content : function(){
        return this.get("content");
-  },
-  signview: function() {
-       return this.get("signview");
   },
   onAccept : function() {
       if (this.get("onAccept") != undefined )
@@ -303,33 +299,16 @@ window.Confirmation = function (args) {
 
           var view = new ConfirmationView({model : model, el : overlay});
 
-          // Hide the modal so that we can get its size and move it without any flickering.
-          if (model.signview()) {
-            view.container.css("opacity", 0);
-            view.container.addClass("no-transition");
-          }
-
           // Initiate the view
           if (args.fast != undefined && args.fast == true) {
             overlay.addClass("no-transition");
-            $("body").append(overlay.addClass('active')).each(function() {
-              if (model.signview() && (window.innerHeight - bottomMargin) > view.container.height()) {
-                // We have to do this here as I'm not able to get the height() of the container until we've appended it.
-                view.container.css("margin-top", window.innerHeight - view.container.height() - bottomMargin);
-              }
-            });
+            $("body").append(overlay.addClass('active'));
             overlay.removeClass("no-transition");
             view.container.css("opacity", 1);
             view.fixHeight();
             view.onRender();
           } else {
-            $("body").append(overlay).each(function() {
-              if (model.signview() && (window.innerHeight - bottomMargin) > view.container.height()) {
-                overlay.addClass("no-transition");
-                view.container.css("margin-top", window.innerHeight - view.container.height() - bottomMargin);
-                overlay.removeClass("no-transition");
-              }
-            });
+            $("body").append(overlay);
             setTimeout(function() {
               overlay.addClass("active");
               view.container.css("opacity", 1);
@@ -372,7 +351,6 @@ window.Confirmation = function (args) {
            close      : function(silent) { model.close(silent);}, // Silent will close modal, but not trigger reject action.
            margin     : function() { return model.margin(); },
            absoluteTop: function() { console.log(view.container.offset()); return view.container.offset().top - $(window).scrollTop(); },
-           signview   : function() { return model.signview(); },
            showAccept : function() { model.setAcceptVisible(true);},
            hideAccept : function() { model.setAcceptVisible(false);},
            showClose  : function() { model.setCloseVisible(true);},

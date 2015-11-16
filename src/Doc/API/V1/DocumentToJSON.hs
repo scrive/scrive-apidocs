@@ -313,9 +313,10 @@ mainfileJSON file = runJSONGen $ do
     J.value "name" $ mainfilename file
 
 authorAttachmentJSON :: AuthorAttachment -> JSValue
-authorAttachmentJSON file = runJSONGen $ do
-    J.value "id" $ show $ authorattachmentfileid file
-    J.value "name" $ authorattachmentfilename file
+authorAttachmentJSON att = runJSONGen $ do
+    J.value "id" $ show $ authorattachmentfileid att
+    J.value "name" $ authorattachmentname att
+    J.value "required" $ authorattachmentrequired att
 
 -- Converting document to JSON/CSV for lists
 docForListJSONV1 :: TemplatesMonad m => User ->  Document -> m JSValue

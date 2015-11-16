@@ -19,7 +19,7 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
           return placement.field().readyForSign();
         },
         el: $(self.getDOMNode()),
-        label: localization.docsignview.checkbox,
+        margin: 5,
         onArrowClick: function () {
           self.toggleCheck();
         },
@@ -29,11 +29,16 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
 
     toggleCheck: function () {
       var field = this.props.model.field();
+      var doc = field.signatory().document();
+      var current = field.signatory() == doc.currentSignatory() &&
+        doc.currentSignatoryCanSign();
 
-      if (field.value() == "") {
-        field.setValue("CHECKED");
-      } else {
-        field.setValue("");
+      if (current) {
+        if (field.value() == "") {
+          field.setValue("CHECKED");
+        } else {
+          field.setValue("");
+        }
       }
     },
 
@@ -45,6 +50,7 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
 
       var divClass = React.addons.classSet({
         "placedfield": true,
+        "js-checkbox": true,
         "to-fill-now": current,
         "obligatory": field.obligatory()
       });
@@ -53,9 +59,12 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
         cursor: current ? "pointer" : ""
       };
 
+      var size = this.size(Math.round);
+      var backgroundSize = {backgroundSize: size.width + "px " + size.height + "px"};
+
       _.extend(divStyle, this.position(FieldPlacementGlobal.placementBorder,
         FieldPlacementGlobal.placementBorder, Math.round));
-      _.extend(divStyle, this.size(Math.round));
+      _.extend(divStyle, size);
 
       var boxClass = React.addons.classSet({
         "placedcheckbox": current,
@@ -65,7 +74,7 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
 
       return (
         <div className={divClass} style={divStyle}>
-          <div onClick={this.toggleCheck} className={boxClass} />
+          <div onClick={this.toggleCheck} className={boxClass} style={backgroundSize} />
         </div>
       );
     }

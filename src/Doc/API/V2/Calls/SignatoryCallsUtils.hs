@@ -5,6 +5,7 @@ module Doc.API.V2.Calls.SignatoryCallsUtils (
 , checkSignatoryPin
 ) where
 
+import Text.StringTemplates.Templates
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 
@@ -66,8 +67,8 @@ getScreenshots = do
 
 
 signDocument :: (Kontrakcja m, DocumentMonad m) =>
-  SignatoryLinkID -> MagicHash -> [(FieldIdentity, SignatoryFieldTMPValue)] -> Maybe ESignature -> Maybe String -> SignatoryScreenshots -> m ()
-signDocument slid mh fields mesig mpin screenshots = do
+  SignatoryLinkID -> MagicHash -> [(FieldIdentity, SignatoryFieldTMPValue)] -> [FileID] -> Maybe ESignature -> Maybe String -> SignatoryScreenshots -> m ()
+signDocument slid mh fields acceptedAuthorAttachments mesig mpin screenshots = do
   switchLang =<< getLang <$> theDocument
   ctx <- getContext
   -- Note that the second 'getSigLinkFor' call below may return a
@@ -76,6 +77,10 @@ signDocument slid mh fields mesig mpin screenshots = do
   -- actor identities may get wrong in the evidence log.
   fieldsWithFiles <- fieldsToFieldsWithFiles fields
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) =<< signatoryActor ctx sl
+  theDocument >>= \doc -> do
+    let sl = $fromJust (getSigLinkFor slid doc)
+    acceptanceText <- renderTemplate_ "_authorAttachmentsUnderstoodContent"
+    dbUpdate . AddAcceptedAuthorAttachmentsEvents acceptanceText sl acceptedAuthorAttachments (documentauthorattachments doc)  =<< signatoryActor ctx sl
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 

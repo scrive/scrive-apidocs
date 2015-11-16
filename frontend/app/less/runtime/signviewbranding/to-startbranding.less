@@ -10,7 +10,7 @@
 .mainContainer .to-start {
   .form-container {
     .needs-sender-action .checkbox {
-      border-color: @actioncolor; 
+      border-color: @actioncolor;
       .background_with_ie_support(fade(@actioncolor, 20%));
     }
 
@@ -25,5 +25,256 @@
         border-color: @actioncolor;
       }
     }
+  }
+}
+
+/* Signview in general */
+.to-start-signview {
+
+  .section.highlight {
+    border-color: @actioncolor;
+  }
+}
+/* Header */
+.to-start-signview .pageheader {
+  background-color: @brandcolor;
+  color: @brandtextcolor;
+  font-family : @font;
+
+  .content .sender {
+    color: @brandtextcolor;
+    font-family : @font;
+
+    .inner.clickable {
+      color: @brandtextcolor;
+      font-family : @font;
+
+      &:hover {
+        color: lighten(@brandtextcolor,20%);
+      }
+    }
+  }
+}
+/* Instructions */
+.to-start-signview .instructions.section {
+
+  .headline,.subheadline {
+    font-family: @font;
+   }
+
+  .download {
+    color: #4A4A49;
+    font-family: @font;
+    text-decoration: underline;
+
+    &:hover {
+      text-decoration: none;
+    }
+    &:active {
+      text-decoration: underline;
+    }
+  }
+
+  .arrowtext {
+    color : @actioncolor;
+
+    &:hover {
+      color: lighten(@actioncolor,10%);
+    }
+  }
+
+  .arrow-legend {
+
+    .mandatory {
+      @url : %('/colored_image?file=icon-legend-mandatory.png&color=%D',@actioncolor);
+      background : url(@url) ;
+    }
+
+    .optional {
+      @url : %('/colored_image?file=icon-legend-mandatory.png&color=%D',@actionsecondarycolor);
+      background : url(@url) ;
+    }
+  }
+}
+/* Signatories section */
+.to-start-signview .signatories.section {
+  font-family: @font;
+
+  h2, .name, .statustext, .titleinfo, .field, .statusbox {
+    font-family: @font;
+  }
+}
+/* Arrows */
+.to-start-signview .arrows {
+
+  .action-arrow.left {
+
+    .front {
+      @url : %('/colored_image?file=sign-arrow-action-left-front.png&color=%D',@actioncolor);
+      background : url(@url);
+    }
+
+    .back {
+      @url : %('/colored_image?file=sign-arrow-action-left-back.png&color=%D',@actioncolor);
+      background : url(@url);
+    }
+
+    .label {
+      @url : %('/colored_image?file=sign-arrow-action-label.png&color=%D',@actioncolor);
+      background : url(@url);
+      color : @actiontextcolor;
+      font-family: @font;
+    }
+  }
+
+  .action-arrow.right {
+
+    .front {
+      @url : %('/colored_image?file=sign-arrow-action-right-front.png&color=%D',@actioncolor);
+      background : url(@url);
+    }
+
+    .back {
+      @url : %('/colored_image?file=sign-arrow-action-right-back.png&color=%D',@actioncolor);
+      background : url(@url);
+    }
+
+    .label {
+      @url : %('/colored_image?file=sign-arrow-action-label.png&color=%D',@actioncolor);
+      background : url(@url);
+      color : @actiontextcolor;
+      font-family: @font;
+    }
+  }
+
+  .arrow.up {
+    @url : %('/colored_image?file=sign-arrow-up.png&color=%D',@actioncolor);
+    background : url(@url);
+  }
+
+  .arrow.down {
+    @url : %('/colored_image?file=sign-arrow-down.png&color=%D',@actioncolor);
+    background : url(@url);
+  }
+}
+/* Extra details section */
+.to-start-signview .extradetails.section {
+
+  h2, .descriptionbox {
+    font-family: @font;
+  }
+
+  .obligatory-input{
+    border-color: @actioncolor; /* Fallback IE */
+    border-color: fade(@actioncolor,60%);
+
+    &:hover, &.active {
+      border-color: @actioncolor;
+    }
+
+    &.valid {
+      border-color: #ddd;
+    }
+  }
+}
+
+
+/* Signatory attachments section */
+.to-start-signview .section .signatoryattachments {
+
+  h2, .subtitle, .filename .label, .name, .description {
+    font-family: @font;
+  }
+}
+/* Author attachments section */
+.to-start-signview .section .authorattachments {
+
+  h2, .name {
+    font-family: @font;
+  }
+
+}
+
+/* Placements */
+.to-start-signview .document-pages {
+  /* Texts and checkboxes */
+  .placedfield.to-fill-now {
+    border-color: @actionsecondarycolor; /* Fallback IE */
+    border-color: fade(@actionsecondarycolor,60%);
+
+    .text-inline-editing {
+      .background_with_ie_support(fade(@actionsecondarycolor,20%));
+    }
+
+    &:hover, &.active {
+      border-color: @actionsecondarycolor;
+
+      &.active {
+        background-color:#FFFFFF;
+      }
+    }
+
+    &.obligatory {
+      border-color: @actioncolor; /* Fallback IE */
+      border-color: fade(@actioncolor,60%);
+
+      .text-inline-editing {
+        .background_with_ie_support(fade(@actioncolor,20%));
+      }
+
+      &:hover, &.active {
+        border-color: @actioncolor;
+
+        &.active {
+          background-color:#FFFFFF;
+        }
+      }
+    }
+
+    &.empty-text-field {
+      .background_with_ie_support(fade(@actionsecondarycolor,20%));
+
+      &.obligatory {
+        .background_with_ie_support(fade(@actioncolor,20%));
+      }
+
+      &.active {
+        background-color: #FFFFFF;
+      }
+    }
+  }
+
+  .signatureBox.forDrawing {
+    border-color: @actionsecondarycolor;
+    border-color: fade(@actionsecondarycolor,60%);
+
+    &:hover {
+      border-color: @actionsecondarycolor;
+    }
+
+    &.signaturePlaceholder {
+      .background_with_ie_support(fade(@actionsecondarycolor,20%));
+    }
+
+    &.obligatory {
+      border-color: @actioncolor;
+      border-color: fade(@actioncolor,60%);
+
+      &:hover {
+        border-color: @actioncolor;
+      }
+
+      &.signaturePlaceholder {
+        .background_with_ie_support(fade(@actioncolor,20%));
+      }
+    }
+  }
+}
+
+
+.questionnaire {
+
+  .green-text {
+    color: @actioncolor;
   }
 }

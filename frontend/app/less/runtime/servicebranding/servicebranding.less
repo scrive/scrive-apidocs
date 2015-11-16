@@ -43,3 +43,24 @@
      }
   }
 }
+
+
+.authorattachments {
+  .icon {
+    float: left;
+    height: 14px;
+    margin-right: 2px;
+    margin-top: 3px;
+    width: 13px;
+
+    &.required {
+      @url :  %('/colored_image?file=attachment-icon.png&color=%D',@actioncolor);
+      background-image: url(@url) ;
+    }
+
+    &.optional {
+      @url :  %('/colored_image?file=attachment-icon.png&color=%D',@actionsecondarycolor);
+      background-image: url(@url) ;
+    }
+  }
+}

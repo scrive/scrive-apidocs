@@ -20,50 +20,6 @@
   }
 }
 
-.flash-content-wrapper {
-  border: 6px solid rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-  margin: 0 auto;
-  overflow: hidden;
-  position: relative;
-  width: 1018px;
-}
-
-.flash-content {
-  color: @white;
-  border-radius: 3px;
-  height: 64px - 4px; // TODO(johan.nilo): is this a valid rule?
-}
-
-.flash-body {
-  font-family: @font-family-source;
-  font-size: 1.25em;
-  float: left;
-  line-height: 60px;
-  max-width: 840px;
-  padding-left: 16px;
-  text-align: left;
-
-  .multiline & {
-    line-height: 22px;
-    padding-bottom: 8px;
-    padding-top: 8px;
-  }
-}
-
-.flash-close {
-  cursor: pointer;
-  font-size: 36px;
-  font-weight: 300;
-  line-height: 60px;
-  padding: 0px 20px;
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 22px;
-}
-
-
 .flash {
   background: transparent;
   left: 0;
@@ -80,7 +36,7 @@
   }
 
   &.success {
-    
+
     .flash-content {
       background-color: @positivecolor;
       color: @positivetextcolor;
@@ -91,7 +47,7 @@
   }
 
   &.error {
-    
+
     .flash-content {
       background-color: @negativecolor;
       color: @negativetextcolor;
@@ -101,5 +57,48 @@
         color: lighten(@negativetextcolor,10%);
     }
 
+  }
+
+  .flash-content-wrapper {
+    border: 6px solid rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+    width: 1018px;
+  }
+
+  .flash-content {
+    color: @white;
+    border-radius: 3px;
+    height: 64px - 4px; // TODO(johan.nilo): is this a valid rule?
+  }
+
+  .flash-body {
+    font-family: @font-family-source;
+    font-size: 1.25em;
+    float: left;
+    line-height: 60px;
+    max-width: 840px;
+    padding-left: 16px;
+    text-align: left;
+
+    .multiline & {
+      line-height: 22px;
+      padding-bottom: 8px;
+      padding-top: 8px;
+    }
+  }
+
+  .flash-close {
+    cursor: pointer;
+    font-size: 36px;
+    font-weight: 300;
+    line-height: 60px;
+    padding: 0px 20px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 22px;
   }
 }

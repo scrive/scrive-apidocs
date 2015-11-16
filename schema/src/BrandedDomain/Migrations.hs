@@ -261,3 +261,31 @@ changeScriveLoginLogo =
               sqlWhere "main_domain"
               sqlWhere "login_theme = themes.id"
   }
+
+changeScriveSignviewLogo :: (MonadDB m, MonadThrow m) => Migration m
+changeScriveSignviewLogo =
+  Migration {
+    mgrTable = tableBrandedDomains
+  , mgrFrom = 7
+  , mgrDo = do
+      let signviewLogo = "iVBORw0KGgoAAAANSUhEUgAAAPAAAAAuCAMAAAAhv2T/AAAAq1BMVEUAAAD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Nr6iZAAAAOHRSTlMA7/wK+usO99IkBvO/eBrWAo22UxIE4saTOhWrmYN9YjQpzbGlMOaHTtpzoEk+X7otHt5pZlpDbQqMiCkAAAcBSURBVGjevVpng6IwEJUqIHZFLCj23k7Xzf//ZVcMvABJwNO792k3Ccm8TMlMYimBWns9nHmKriorqzX6PmolObTDel43yrpSbwUPp5SPzqbZqiv6n78JxZ9/fk+x3pi5E1zoR1Z64naztVX0ymq2qIaNUiFMA4ukUHa/a8Lxjc28zA6u7Ps52zNxVXAEYfyjn79y9nhNP9qxjc6JTkxh+NN8uscz4UIfXvh0T/XsYFdCuRMYdBSfMMWqKqX84zlKZfTQvXkkg+FSTnewIEKoI46lhTP+4H1HYA430OUSBry2RC10TAtNfYuvqKZs45YekeHHNC1+VReODXkLXF2MEBEGhh2RoCM64iuWZKwSAeoXId+wQuRQkgaitSRjy22OYgxSgDCwFcjq0HkqWhFJKhsB3ysrjuHu18F4PWr9SISBK+uNPSKDSrcfOOmkEGFAOXIl3USOQ/835ZLoX3zCLqxgZzN+PUEH6TWg3x5DrjfeTK92v920mMZHcv4Jq//5d3/gZAkvjxO/zmqHG/6GtJcu4LjMou7uaGuafdy5KhqhY548yind1UdomsRe04IeAkbxy70at9vsJAcI4O3gnSDMTKFjbs7JYpbpNA3q0dDliFnSHsXTVDizOB4cNdsZz1mPmsYkwqiTCn2x6mddZnkl1u4YgTNBGLgO4cfZs+FEu9bPf7/isVbK5y9W3JON1W3okIf4vKLbEUb6UrLm0l0TiiraZvGW0Rl4hIEvI47VmfmjVOGptkG8k76TUZQf9TWFjCoOP18wEhwakfyrC9c9VKrMODGoxklJpyQhDNjbqCMd7mt08hkMGpIByXX1jFFH889ykrlhwuEN8OVa3SgSshLx1UpywuAVSeSlPtnR9u/nxqjQIQ9NkaGUozgsINxn0/UuFUY9YAB3nfLg+a8f2bNZyiEM2AZfdTOqs0FCwW5DkNu5VFQ71VGJdCb40Ix8FgchdjULp84KW9Mp/0splzBwiERKqHhKW+eJiK0Iq5uawpfVhcvkY04dGJKIpLUSnjQuvUAYceXGNgYJOU+wbxHGVNiG6Bg+5PI1dRRnhWBRb3ReIQzP73EKJUUruvXa6jnmmD2HKc4n2IcstSt3CvK9Qg2vEIY27WQsQThsUHsNZMsHfPO6JYqd4bh9Ee7aGl5UCBNs0GuEa2pGVp9AX3BocaWPQWd+mGGx6i3W98NUE7jwrShhHxv0CmFEli0SGINqBOlSUXgFqkMQ3/UZn6db0y9KuIcNeokwIks/HbkD5BWFkVHcoSwbvmrGJQJ1nEFRwh6kfpGwSZXgpwO3DecqjGxkCn/I60pfS8joFCVcxgYVIwzs6VFM19IQt+EsRWFzIvhYITLUp39FGCb1ImHcXm2SldHtTcKAeT/rRAzj8jcmDUqvEMaxi1S4hXj/iknL5XXCSbDoGYLLuY40aH2ecEApmn9KQR30UUjkophFmsv2bnTepvU9wrH0/T8I22yZ/g0Df2KDePQpdO3HbrEFYfWKxOPfE8ZR7DLnm+Gkt+Or9GFc9oSgADjAk/494VO00aDno3cFG/8scHN0RvFQ/feEcRJVcY8WoneB4vizwN3oFk5smOLhD5SH7xBGiV+Pg2WdcxUXyApViAIotNXMVbGCZYQXALiXqL5LGPXRMuRU1RoVvFKTXEXwilmLth5yH7BWvyOZl3fFc8MVz3uEcd3WbMKbgSbe1QDegEonk8LJvf/EWsYt5xIvRA78PuEq3ekV4jVQ03HzJRObrPnVsL6U1Hh40OlGFuFxK9GlAUN7izCqYmDC1yA58b69R98apmDSmaDsH0Sp1506FoXBseoH7hvfJ4yEEjkXC9OjHeq3+EkAV3Xa1G7Qop7izI1bmkuSB0BAIvhmamgQb173TcKIl8CCcx5QDAf8Rx88NJp+hRCj+ptyiHR5w/FJK71e44yKotphqw+PeUx7nzBCsTCsYu+VMSPJdA9X6GlP4SyGxB5zWjs7kc7eXRgU7cHHeP3UauFkUUb5/Hgz8QBGWGrV5V3nQpLhLRw4nelmPSNAHe8B8HdzSxh4LX98u9+rwd5V2PY749UzIoPe/kimhYghPvqdFpHCqtFxFcK+r9geEUCwnOnKf2jwNmEAF4zcU8RZEAlancjIYQjPSD0jcqjVVBAMVNHQLQT7BOFqrCzBgJ0utLRxA7VVBIUSGJelltHP2pol/InTRwnX9GR+WPwHVD1m5xsrks7Lrn5FSHfS5ZXL9x8cGwrfqJakR7Eq+UUgjgdg1ua+tJIH2szJnMN56x+FNwTtecKclBHofo5wG68HQnS/zmpCkn1a6MaQm4Z2w3tz3vOUX8QVo+4ugvZVLo25aZ7rhq4b1nz8gB18krBj8NNH7o9L1bJhDatHnkVOehWl9Uu/PwFHFY/VJCptfQAAAABJRU5ErkJggg=="
+      runQuery_ . sqlInsert "themes" $ do
+        sqlSet "name" ("Scrive signing theme" :: String)
+        sqlSet "logo" $ Binary $ B64.decodeLenient $ BS.fromString $ signviewLogo
+        sqlSet "brand_color" $ ("#495259":: String)
+        sqlSet "brand_text_color" $ ("#ffffff":: String)
+        sqlSet "action_color" $ ("#53b688":: String)
+        sqlSet "action_text_color" $ ("#ffffff":: String)
+        sqlSet "action_secondary_color" $ ("#33b1dd":: String)
+        sqlSet "action_secondary_text_color" $ ("#ffffff":: String)
+        sqlSet "positive_color" $ ("#53b688":: String)
+        sqlSet "positive_text_color" $ ("#ffffff":: String)
+        sqlSet "negative_color" $ ("#b9322f":: String)
+        sqlSet "negative_text_color" $ ("#ffffff":: String)
+        sqlSet "font" $ ("\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif" :: String)
+        sqlResult "id"
+      (signviewThemeId::Int64) <- fetchOne runIdentity
+      runQuery_ . sqlUpdate "branded_domains" $ do
+        sqlSet "signview_theme" signviewThemeId
+        sqlWhere "main_domain"
+  }

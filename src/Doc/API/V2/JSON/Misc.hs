@@ -101,8 +101,9 @@ unjsonLang = unjsonEnum "Lang" (langFromCode . T.unpack) (T.pack . codeFromLang)
 
 unjsonAuthorAttachment :: UnjsonDef AuthorAttachment
 unjsonAuthorAttachment = objectOf $ pure AuthorAttachment
-    <*> field "id" authorattachmentfileid  "Id of file"
-    <*> field "name" authorattachmentfilename "Name of file"
+    <*> field "name" authorattachmentname "Name of file"
+    <*> field "required" authorattachmentrequired "Are signatories required to accept attachment before signing"
+    <*> field "file_id" authorattachmentfileid  "Id of file"
 
 unjsonSignatoryAttachment :: UnjsonDef SignatoryAttachment
 unjsonSignatoryAttachment = objectOf $ pure (SignatoryAttachment Nothing)

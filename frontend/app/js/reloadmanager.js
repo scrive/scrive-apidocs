@@ -38,6 +38,11 @@ ReloadManagerClass.prototype.popBlock = function (fn) {
   this._updateBlocking();
 };
 
+// is blocking
+ReloadManagerClass.prototype.isBlocking = function (fn) {
+  return this.blocking;
+};
+
 window.ReloadManager = new ReloadManagerClass();
 
 });

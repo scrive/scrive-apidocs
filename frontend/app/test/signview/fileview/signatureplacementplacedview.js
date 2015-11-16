@@ -2,6 +2,7 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/s
 
   var TestUtils = React.addons.TestUtils;
 
+  /*
   var SignView = Backbone.Model.extend({
     hasExtraInputs: function () {
       return false;
@@ -53,4 +54,5 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/s
       server.restore();
     });
   });
+  */
 });

@@ -49,6 +49,14 @@ fileIDFromFileValue v = do
     Just fid -> return fid
     Nothing -> $unexpectedErrorM "Could not read FileID using `maybeRead`"
 
+-- | TODO comment
+authorAttachmentFileValue :: Value -> TestEnv FileID
+authorAttachmentFileValue v = do
+  attFileID <- lookupObjectString "file_id" v
+  case (maybeRead $ unpack attFileID) of
+    Just fid -> return $ fid
+    _ -> $unexpectedErrorM "Could not read FileID for author attachments using `maybeRead`"
+
 -- | TODO comment (internal function)
 lookupObject :: Text -> Value -> TestEnv Value
 lookupObject k (Object o) = case (H.lookup k o) of

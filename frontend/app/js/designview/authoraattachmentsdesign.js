@@ -1,234 +1,96 @@
 /* This is component for uploding author attachments (with upload and for server attachments).
  */
-define(['legacy_code', 'Backbone', 'React', 'designview/processsettings/attachmentslistformodal', 'common/uploadbutton'], function(_Legacy, Backbone, React, AttachmentsListForModal, UploadButton) {
+define(['React','designview/authorattachments/designviewattachments','designview/authorattachments/attachmentsdesign','Backbone', 'legacy_code'], function(React,DesignAuthorAttachments, AttachmentsDesign) {
 
-window.DesignAuthorAttachment = Backbone.Model.extend({
-  defaults : {
-      name : "",
-      serverFileId : undefined,
-      fileUpload: undefined
-  },
-  name: function() {
-       return this.get("name");
-  },
-  isFile : function(){
-       return this.get("fileUpload") != undefined;
-  },
-  isServerFile : function(){
-       return this.get("serverFileId") != undefined;
-  },
-  fileUpload: function() {
-       return this.get("fileUpload");
-  },
-  serverFileId : function(){
-       return this.get("serverFileId");
-  }
-});
+  window.DesignAuthorAttachmentsPopup = function(args) {
+    var self = this;
+    var onStartShowingList = function() {
+      if (self.popup) {
+          self.popup.hideCancel();
+          // TODO - we are changing button to label - with display:block on one and display:none on other.
+          // This should be droped with rewrite of modals to react
+          self.acceptButton.el().css("display","none");
+          self.backLabel.css("display","block");
+      }
+    };
+    var onStopShowingList = function() {
+      if (self.popup) {
+        self.popup.showCancel();
+        // TODO - we are changing button to label - with display:block on one and display:none on other.
+        // This should be droped with rewrite of modals to react
+        self.acceptButton.el().css("display","block");
+        self.backLabel.css("display","none");
+      }
+    };
+    var viewmodel = args.viewmodel;
+    var document = viewmodel.document();
+    var model = new DesignAuthorAttachments({ document : document});
+    var contentDiv = $("<div/>");
+    var view = React.render(React.createElement(AttachmentsDesign,{model : model, onStartShowingList : onStartShowingList, onStopShowingList : onStopShowingList}), contentDiv[0]);
 
+    this.acceptButton = new Button({
+      type: "action",
+      size: "small",
+      text: localization.save,
+      onClick :function() {
+        mixpanel.track('Save attachments', {documentid:document.documentid()});
+        document.afterSave( function() {
+          var submit = document.setAttachments();
+          var counter = 0;
+          _.each(model.attachments(), function(att){
 
-  var DesignAuthorAttachments = Backbone.Model.extend({
-  defaults : {
-      attachments : []
-  },
-  initialize: function (args) {
-      var attachments = new Array();
-      _.each(args.document.authorattachments(), function(attachment) {
-          attachments.push(new DesignAuthorAttachment({
-              serverFileId : attachment.fileid(),
-              name: attachment.name()
-          }));
-        });
-      this.set({"attachments":attachments});
-    },
-  attachments : function(){
-       return this.get("attachments");
-  },
-  addAttachment : function(newAttachment){
-        this.attachments().push(newAttachment);
-        this.trigger("change:attachments");
-  },
-  removeAttachment: function(attachment) {
-       var newattachments = new Array();
-       for(var i=0;i<this.attachments().length;i++)
-          if (attachment !== this.attachments()[i])
-             newattachments.push(this.attachments()[i]);
-       this.set({attachments : newattachments});
-       this.trigger("change:attachments");
+              var name = "attachment_" + counter;
+              if (att.isServerFile()) {
+                submit.add(name, att.serverFileId());
+              } else {
+                submit.addInputs(att.fileUpload().attr("name", name));
+              }
+              var detailsName = "attachment_details_" + counter;
+              submit.add(detailsName, JSON.stringify({name : att.name() || att.originalName(), required: att.isRequired()}));
 
-  },
-  isEmpty: function() {
-     return this.attachments().length == 0;
-  }
-});
-
-/*
- */
-var DesignAuthorAttachmentsView = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render', 'renderAttachmentsList');
-        this.model.bind('change:attachments', this.renderAttachmentsList);
-        this.showAvaibleAttachmentsList = false;
-        this.model = args.model;
-        this.render();
-    },
-    uploadButton : function() {
-        var attachmentsList = this.model;
-        var div = $("<div/>");
-        React.render(React.createElement(UploadButton,{
-          size: 'big',
-          text: localization.authorattachments.selectFile,
-          maxlength: 2,
-          onUploadComplete : function(input,title) {
-              mixpanel.track('Upload attachment', {'File Title as supplied by browser': title});
-              var name_parts = title.split("\\").reverse()[0].split(".");
-              name_parts.pop(); // drop the extension
-              title = name_parts.join('.');
-              attachmentsList.addAttachment(
-                                        new DesignAuthorAttachment({
-                                              name : title,
-                                              fileUpload : $(input)
-                                        }));
-          }
-        }), div[0]);
-        return div;
-    },
-    selectFromTemplateButton : function () {
-        var view = this;
-        var selectAttachmentButton = new Button({
-            size: 'big',
-            text: localization.authorattachments.selectAttachment,
-            onClick : function() {
-                mixpanel.track('Click select attachment');
-                view.showAvaibleAttachmentsList = true;
-                view.render();
+              counter++;
+          });
+          submit.sendAjax(
+            function() {
+                document.recall(function() {
+                    document.trigger("change");
+                    LoadingDialog.close();
+                    viewmodel.saveAndFlashMessageIfAlreadySaved();
+                    self.popup.close();
+                });
+            },
+            function(xhr) {
+              var errorMsg;
+              if (xhr.status == 413) {
+                if (model.attachments().length > 1) {
+                  errorMsg = localization.authorattachments.tooLargeAttachments;
+                } else {
+                  errorMsg = localization.authorattachments.tooLargeAttachment;
+                }
+              } else {
+                errorMsg = localization.authorattachments.invalidAttachments;
+              }
+              new FlashMessage({type: 'error', content: errorMsg});
+              LoadingDialog.close();
             }
+          );
+          LoadingDialog.open();
         });
-        return selectAttachmentButton.el();
-    },
-    attachmentButtonsTable : function () {
-        var table = $('<table>').append($('<tbody>'));
 
-        var headlineRow = $('<tr>');
-        var uploadHeader = $('<div class="header"/>').text(localization.selectFileToUpload);
-        var selectHeader = $('<div class="header"/>').text(localization.authorattachments.selectFromScrive);
-        headlineRow.append($('<td class="header-td">').append(uploadHeader))
-                   .append($('<td class="header-td">').append(selectHeader));
+      }
+    });
+    this.backLabel = $("<label class='close' style='display:none;'/>").text(localization.authorattachments.back);
+    this.backLabel.click(function() {
+      view.stopShowingAttachmentList();
+      return false; // Need to return false here - since else modal will close due to close class
+    });
 
-        var buttonsRow = $('<tr>').append($('<td>').append(this.uploadButton()))
-                                  .append($('<td>').append(this.selectFromTemplateButton()));
-
-        table.append(headlineRow).append(buttonsRow);
-
-        return $('<div class="attachmentsButtonsTable">').append(table);
-    },
-    avaibleAttachmentsList : function() {
-        var box = $("<div>");
-        var attachmentsList = this.model;
-        var view = this;
-
-        var arrowBack = $("<div class='back'>");
-        arrowBack.click(function() {
-            mixpanel.track('Click back (author attachment)');
-              view.showAvaibleAttachmentsList = false;
-              view.render();
-              return false;
-        });
-        box.append(arrowBack);
-        var attachmentTable = $('<div/>');
-        React.render(React.createElement(AttachmentsListForModal,{model : attachmentsList}), attachmentTable[0]);
-        box.append(attachmentTable);
-        return box;
-    },
-    attachmentList : function() {
-        var box = $("<div>");
-        var attachmentsList = this.model;
-        if (attachmentsList.isEmpty()) return box;
-        box.addClass("attachmentsList");
-        _.each(attachmentsList.attachments(),function(attachment){
-            var attachmentBox = $("<div class='attachmentBox'>");
-            attachmentBox.append($("<span/>").text(attachment.name()));
-            var removeLink = $("<span class='removeLink'>X</span>");
-            removeLink.click(function() {attachmentsList.removeAttachment(attachment); return false;});
-            attachmentBox.append(removeLink);
-            box.append(attachmentBox);
-        });
-        return box;
-    },
-    renderAttachmentsList : function() {
-        this.attachmentListBox.empty();
-        this.attachmentListBox.append(this.attachmentList());
-    },
-    render: function () {
-        this.container = $(this.el);
-        this.container.addClass("selectAuthorAttachmentPopupContent");
-        this.container.empty();
-        if (!this.showAvaibleAttachmentsList) {
-            this.container.append(this.attachmentButtonsTable());
-        }
-        else
-        {
-            this.container.append(this.avaibleAttachmentsList());
-        }
-        this.attachmentListBox = $("<div/>");
-        this.container.append(this.attachmentListBox);
-        this.renderAttachmentsList();
-    return this;
-    }
-});
-
-
-window.DesignAuthorAttachmentsPopup = function(args) {
-         var viewmodel = args.viewmodel;
-         var document = viewmodel.document();
-         var model = new DesignAuthorAttachments({ document : document  });
-         var view = new DesignAuthorAttachmentsView({model : model, el : $("<div/>")});
-         var popup = new Confirmation({
-              title  : localization.authorattachments.selectAttachments,
-              content: $("<div>").append($("<div class='modal-subtitle centered'>").html(localization.selectFiles)).append($(view.el)),
-              acceptText: localization.save,
-              width: 740,
-              onAccept : function() {
-                  mixpanel.track('Save attachments', {documentid:document.documentid()});
-                  document.afterSave( function() {
-                      var submit = document.setAttachments();
-                      var counter = 0;
-                      _.each(model.attachments(), function(att){
-                          var name = "attachment_" + counter;
-                          if (att.isServerFile())
-                            submit.add(name, att.serverFileId());
-                          else
-                            submit.addInputs(att.fileUpload().attr("name", name));
-                          counter++;
-                      });
-                      submit.sendAjax(
-                        function() {
-                            document.recall(function() {
-                                document.trigger("change");
-                                LoadingDialog.close();
-                                viewmodel.saveAndFlashMessageIfAlreadySaved();
-                                popup.close();
-                            });
-                        },
-                        function(xhr) {
-                          var errorMsg;
-                          if (xhr.status == 413) {
-                            if (model.attachments().length > 1) {
-                              errorMsg = localization.authorattachments.tooLargeAttachments;
-                            } else {
-                              errorMsg = localization.authorattachments.tooLargeAttachment;
-                            }
-                          } else {
-                            errorMsg = localization.authorattachments.invalidAttachments;
-                          }
-                          new FlashMessage({type: 'error', content: errorMsg});
-                          LoadingDialog.close();
-                        }
-                      );
-                      LoadingDialog.open();
-                  });
-                  return false;
-            }
-         });
-};
+    this.popup = new Confirmation({
+        title  : localization.authorattachments.selectAttachments,
+        content: contentDiv,
+        width: 740,
+        acceptButton : this.acceptButton.el().add($("<div/>").append(this.backLabel))
+    });
+  };
 
 });

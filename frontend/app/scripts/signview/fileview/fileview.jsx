@@ -4,7 +4,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
     propTypes: {
       model: React.PropTypes.instanceOf(File).isRequired,
       signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      arrow: React.PropTypes.func.isRequired
+      arrow: React.PropTypes.func.isRequired,
+      pixelWidth: React.PropTypes.number.isRequired
     },
 
     mixins: [BackboneMixin.BackboneMixin],
@@ -47,6 +48,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var self = this;
       var file = self.props.model;
       var fileid = file.fileid();
+      var pixelWidth = this.props.pixelWidth;
 
       _.each(self.state.images, function (img) {
         if (BrowserInfo.isIE8orLower()) {
@@ -57,7 +59,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       });
 
       var images = _.map(file.pages(), function (page, index) {
-        var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart({"pixelwidth": page.width()});
+        var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart({"pixelwidth": pixelWidth});
         var img = new Image();
         var callback = function () {
           if (!img.complete) {
@@ -88,7 +90,6 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         this.props.model.trigger("view:ready");
         this.props.model.trigger("change");
         this.props.signview.trigger("change");
-
       }
     },
 
@@ -99,6 +100,12 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         return <span key={index} />;
       }
 
+      var imageWidth = image.width;
+      var imageHeight = image.height;
+
+      var width = imageWidth;
+      var height = imageHeight;
+
       return (
         <FilePageView
           key={index}
@@ -107,8 +114,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
           signview={this.props.signview}
           imageSrc={image.src}
           imageComplete={image.complete}
-          imageWidth={image.width}
-          imageHeight={image.height}
+          imageWidth={width}
+          imageHeight={height}
         />
       );
     },
@@ -116,10 +123,17 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
     render: function () {
       var file = this.props.model;
 
+      var sectionClass = React.addons.classSet({
+        "section": true,
+        "document-pages": file.ready()
+      });
+
       return (
-        <div className="document-pages">
+        <div className={sectionClass}>
           {/* if */ !file.ready() &&
-            <div className="waiting4page" />
+            <div className="col-xs-12 center">
+              <img src="/img/wait30trans.gif" />
+            </div>
           }
           {/* else */ file.ready() &&
             _.map(file.pages(), this.renderPage)

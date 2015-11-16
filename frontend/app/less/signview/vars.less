@@ -1,0 +1,66 @@
+@import "../branding/variables";
+
+/* Grid */
+@screen-xs: 480px;
+@screen-sm: 768px;
+@screen-md: 992px;
+@screen-lg: 1000px;
+@grid-columns: 12;
+@grid-gutter-width: 20px;
+@container-tablet: 720px + @grid-gutter-width;
+@container-desktop: 940px + @grid-gutter-width;
+@container-large-desktop: @screen-lg + @grid-gutter-width * 2;
+
+/* Grid legacy */
+@screen-xs-min: @screen-xs;
+@screen-phone: @screen-xs-min;
+@screen-sm-min: @screen-sm;
+@screen-tablet: @screen-sm-min;
+@screen-md-min: @screen-md;
+@screen-desktop: @screen-md-min;
+@screen-lg-min: @screen-lg;
+@screen-lg-desktop: @screen-lg-min;
+@screen-xs-max: (@screen-sm-min - 1);
+@screen-sm-max: (@screen-md-min - 1);
+@screen-md-max: (@screen-lg-min - 1);
+@grid-float-breakpoint: @screen-sm-min;
+@grid-float-breakpoint-max: (@grid-float-breakpoint - 1);
+@container-sm: @container-tablet;
+@container-md: @container-desktop;
+@container-lg: @container-large-desktop;
+
+/* Sign view */
+@signview-gutter: @grid-gutter-width;
+@signview-half-gutter: @signview-gutter / 2;
+@signview-bg: #F1F1F1;
+@signview-fg: #505050;
+@signview-grey: #CCCCCC;
+@signview-section-bg: #FFFFFF;
+@signview-font-face: "Source Sans Pro", sans-serif;
+@signview-font-size-large: 28px;
+@signview-font-size-small: 18px;
+@signview-header-height: 74px;
+@signview-button-padding-lr: 28px;
+@signview-button-padding-tb: 24px;
+@signview-overlay-z-index: 1000;
+@signview-drawer-z-index: 1000;
+@signview-large: @container-lg;
+
+/* mixins */
+.font-normal() {
+  font-family: @signview-font-face;
+  font-size: @signview-font-size-small;
+  font-weight: 300;
+  color: @signview-fg;
+}
+
+.background-alpha(@bcolor) {
+  @filter: %("progid:DXImageTransform.Microsoft.gradient(startColorstr=%s,endColorstr=%s)",argb(@bcolor),argb(@bcolor));
+  background: transparent; /* Fallback IE */
+  filter: e(@filter);
+  background-color: @bcolor;
+}
+
+.noclick-ie() {
+  background: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7);
+}

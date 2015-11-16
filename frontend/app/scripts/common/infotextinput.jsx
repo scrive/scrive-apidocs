@@ -52,6 +52,7 @@ define(['React'], function(React) {
       focus         : React.PropTypes.bool,
       autoGrowth    : React.PropTypes.bool,
       restrictInput : React.PropTypes.func,
+      tabIndex      : React.PropTypes.number,
 
       // Events
       onChange      : React.PropTypes.func,
@@ -120,17 +121,18 @@ define(['React'], function(React) {
 
       var $growth = $(this.refs.growth.getDOMNode());
       $growth.text(text);
-      return $growth.width();
+      return $growth.width() + 1;
     },
     textWidth: function () {
       var valueWidth = this.measureText(this.state.value);
       var infotextWidth = this.measureText(this.props.infotext);
       var textWidth = Math.max(valueWidth, infotextWidth);
 
-      var width = textWidth + 20;
+      var width = textWidth;
 
+      var okButtonSize = 10;
       if (this.props.onOk) {
-        width += 10;
+        width += okButtonSize;
       }
 
       return width;
@@ -159,10 +161,10 @@ define(['React'], function(React) {
       if (this.props.onFocus != undefined)
         this.props.onFocus();
     },
-    onBlur : function() {
+    onBlur : function(e) {
       this.setState({focus : false});
       if (this.props.onBlur != undefined)
-        this.props.onBlur();
+        this.props.onBlur(e);
     },
     onChange : function(event) {
         var newvalue = event.target.value;
@@ -198,12 +200,14 @@ define(['React'], function(React) {
           onClick={this.onClick}
         >
           <input
+            id={this.props.id}
             name={this.props.name}
             type={this.props.inputtype}
-            autoComplete={this.props.autocomplete}
+            autoComplete={this.props.autocomplete ? "on" : "off"}
             style={inputStyle}
             readOnly={this.props.readonly}
-            disabled={this.props.disabled}
+            disabled={this.props.readonly}
+            tabIndex={this.props.tabIndex}
             className={fakePlaceholder ? "grayed" : ""}
             placeholder={this.props.infotext}
             maxLength={this.props.maxLength}
@@ -227,6 +231,7 @@ define(['React'], function(React) {
            {/*if*/ this.props.autoGrowth &&
               <div ref="growth" className="growth" style={this.props.inputStyle} />
            }
+          <div className="after" />
         </div>
       );
     }

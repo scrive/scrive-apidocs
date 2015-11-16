@@ -327,6 +327,12 @@ window.Document = Backbone.Model.extend({
         });
         return fields;
     },
+    acceptedAuthorAttachmentsForSigning : function() {
+      var acceptedAttachments = _.filter(this.authorattachments(), function(a) {return a.isAccepted()});
+      return _.map(acceptedAttachments,function(a) {
+        return a.fileid();
+      });
+    },
     requestPin : function(successCallback,errorCallback) {
         var document = this;
         return new Submit({
@@ -343,6 +349,7 @@ window.Document = Backbone.Model.extend({
         var document = this;
         var signatory = document.currentSignatory();
         var fields = this.fieldsForSigning();
+        var acceptedAuthorAttachments = this.acceptedAuthorAttachmentsForSigning();
         extraSignFields = extraSignFields || {};
         return new Submit({
             url : "/api/frontend/checksign/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
@@ -350,6 +357,7 @@ window.Document = Backbone.Model.extend({
             fields: JSON.stringify(fields),
             authentication_type: signatory.authenticationToSign(),
             authentication_value: signatory.authenticationToSignFieldValue(),
+            accepted_author_attachments: JSON.stringify(acceptedAuthorAttachments),
             ajax: true,
             expectedType : "text",
             ajaxsuccess : successCallback,
@@ -360,6 +368,7 @@ window.Document = Backbone.Model.extend({
         var document = this;
         var signatory = document.currentSignatory();
         var fields = this.fieldsForSigning();
+        var acceptedAuthorAttachments = this.acceptedAuthorAttachmentsForSigning();
         extraSignFields = extraSignFields || {};
         return new Submit({
             url : "/api/frontend/sign/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
@@ -368,6 +377,7 @@ window.Document = Backbone.Model.extend({
             fields: JSON.stringify(fields),
             authentication_type: signatory.authenticationToSign(),
             authentication_value: signatory.authenticationToSignFieldValue(),
+            accepted_author_attachments: JSON.stringify(acceptedAuthorAttachments),
             ajax: true,
             expectedType : "text",
             ajaxsuccess : function(newDocumentRaw) {
@@ -600,6 +610,10 @@ window.Document = Backbone.Model.extend({
             return false;
         }
 
+        if (_.any(this.authorattachments(),function (a) { return a.isRequired();})) {
+            // We don't support accepting attachments from design view
+            return false;
+        }
         var aidx = this.author().signorder();
         return ! _.any(this.signatories(), function(sig) {
             return sig.signs() && sig.signorder() < aidx;
@@ -706,7 +720,7 @@ window.Document = Backbone.Model.extend({
                       ? new File(_.defaults(args.sealedfile, dataForFile))
                       : null,
        authorattachments: _.map(args.authorattachments, function(fileargs) {
-         return new File(_.defaults(fileargs, dataForFile));
+         return new AuthorAttachment(_.defaults(fileargs, dataForFile));
        }),
        signatories: _.map(signatories, function(signatoryargs) {
          return new Signatory(_.defaults(signatoryargs, { document: self, isLastViewer : !signatoryargs.signs && signatoryargs.signorder > maxSignsSignorder }));

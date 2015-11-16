@@ -24,12 +24,28 @@ define(["legacy_code", "backend", "util", "React", "signview/signsection/signsec
       };
     },
 
-    arrow: function () {
-      return {
-        blink: function () { },
-        disable: function () { },
-        enable: function () { }
-      };
+    askForName: function () {
+      return true;
+    },
+
+    askForEmail: function () {
+      return true;
+    },
+
+    askForSSN: function () {
+      return false;
+    },
+
+    askForSSNIfNotEID: function () {
+      return false;
+    },
+
+    askForPhone: function () {
+      return false;
+    },
+
+    askForPhoneIfNotPin: function () {
+      return false;
     }
   });
 
@@ -51,31 +67,10 @@ define(["legacy_code", "backend", "util", "React", "signview/signsection/signsec
 
         var container = TestUtils.renderIntoDocument(util.taskContextContainer(SignSectionView, {
           model: signview,
-          noScreenshot: true
+          pixelWidth: 950,
+          enableOverlay: function () { },
+          disableOverlay: function () { }
         }));
-
-        var sectionView = container.refs.comp;
-
-        TestUtils.Simulate.click(sectionView.signButtonNode());
-        TestUtils.Simulate.click(sectionView.refs.rejectButton.getDOMNode());
-      });
-
-      it("should test component in small screen", function (done) {
-        util.withSmallScreen(function () {
-          var signview = new SignView();
-          signview.setDocument(doc);
-
-          var container = TestUtils.renderIntoDocument(util.taskContextContainer(SignSectionView, {
-            model: signview,
-            noScreenshot: true
-          }));
-
-          var sectionView = container.refs.comp;
-
-          TestUtils.Simulate.click(sectionView.signButtonNode());
-
-          done();
-        });
       });
     });
 

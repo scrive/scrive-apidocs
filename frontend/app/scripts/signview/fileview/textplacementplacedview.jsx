@@ -2,10 +2,13 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
   "legacy_code"],
   function (React, InfoTextInput, PlacementMixin, TaskMixin) {
   return React.createClass({
+    _shouldBlur: true,
+
     mixins: [PlacementMixin, TaskMixin],
 
     getInitialState: function () {
-      return {editing: false};
+      var field = this.props.model.field();
+      return {editing: false, active: false};
     },
 
     componentDidUpdate: function (prevProps, prevState) {
@@ -31,26 +34,37 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
         type: "field",
         field: field,
         isComplete: function () {
-          return placement.field().readyForSign();
+          return field.readyForSign();
         },
         el: $(self.getDOMNode()),
-        label: localization.docsignview.textfield,
         onArrowClick: function () {
           self.startInlineEditing();
         },
         onActivate: function () {
+          setTimeout(function () {
+            self.setState({active: true});
+          }, 1);
           // It the window does not have focus (for some old browsers we can't really tell), we should not start
           // inline editing.
+          var nothingHasFocus = $(":focus").size() == 0;
           var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
-          if (!field.readyForSign() && windowIsFocused) {
-            self.startInlineEditing();
+          if (nothingHasFocus && !field.readyForSign() && windowIsFocused) {
+            setTimeout(function () {
+              self.startInlineEditing();
+            }, 1);
             mixpanel.track("Begin editing field", {Label: field.name()});
           }
+        },
+        onDeactivate: function () {
+          setTimeout(function () {
+            self.setState({active: false});
+          }, 1);
         },
         onScrollWhenActive: function () {
           var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
           var nothingHasFocus = $(":focus").size() == 0;
-          if (!field.readyForSign() && windowIsFocused && nothingHasFocus) {
+          var noSignatureDrawer = $(".drawer").size() == 0;
+          if (!field.readyForSign() && windowIsFocused && nothingHasFocus && noSignatureDrawer) {
             self.startInlineEditing();
           }
         },
@@ -59,11 +73,15 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
     },
 
     focusInput: function () {
-      if (this.refs.input) {
+      var self = this;
+      if (self.refs.input) {
         var $window = $(window);
-        var $input = $(this.refs.input.getDOMNode());
+        var $input = $(self.refs.input.getDOMNode());
         if ($window.scrollTop() + $window.height() > $input.offset().top && $window.scrollTop() < $input.offset().top) {
-          this.refs.input.focus();
+          // BROWSER FIX: Safari 9.01
+          setTimeout(function () {
+            self.refs.input.focus();
+          }, 1);
         }
       }
     },
@@ -83,12 +101,32 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
     },
 
     accept: function () {
-      var field = this.props.model.field();
-      var val = this.refs.input.value();
-      field.setValue(val);
-      field.signatory().trigger("change");
-      field.trigger("change:inlineedited");
       this.stopInlineEditing();
+    },
+
+    handleBlur: function (e) {
+      if (this._shouldBlur) {
+        this.accept();
+      }
+    },
+
+    handleChange: function (value) {
+      var field = this.props.model.field();
+      field.setValue(value);
+    },
+
+    handleMouseDown: function (e) {
+      this._shouldBlur = false;
+    },
+
+    handleMouseUp: function (e) {
+      this._shouldBlur = true;
+    },
+
+    handleClick: function (e) {
+      if (e.target === this.getDOMNode()) {
+        this.startInlineEditing();
+      }
     },
 
     render: function () {
@@ -104,14 +142,17 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
 
       var divClass = React.addons.classSet({
         "placedfield": true,
+        "placement-text": true,
         "to-fill-now": canSign,
         "obligatory": field.obligatory(),
+        "optional": !field.obligatory(),
         "empty-text-field": field.value() === "",
+        "invalid": !field.readyForSign(),
         "active": editing
       });
 
       var divStyle = {
-        cursor: current ? "pointer" : ""
+        cursor: current ? "text" : ""
       };
 
       if (!canSign && field.value() === "") {
@@ -143,6 +184,16 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
         padding: FieldPlacementGlobal.textPlacementSpacingString
       };
 
+      var paddingRight = FieldPlacementGlobal.textPlacementHorSpace;
+      var extraPadding = 8;
+
+      if (this.state.active) {
+        paddingRight += extraPadding;
+      }
+
+      textStyle.paddingRight = paddingRight;
+      boxStyle.paddingRight = paddingRight;
+
       var inputStyle = {
         fontSize: divStyle.fontSize + "px",
         lineHeight: (divStyle.fontSize + FieldPlacementGlobal.textPlacementExtraLineHeight) + "px",
@@ -150,14 +201,14 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
         background: "transparent"
       };
 
-      var okStyle = {
-        fontSize: divStyle.fontSize + "px",
-        lineHeight: (divStyle.fontSize + FieldPlacementGlobal.textPlacementExtraLineHeight) + "px",
-        height: (divStyle.fontSize + FieldPlacementGlobal.textPlacementExtraLineHeight / 2) + "px"
-      };
-
       return (
-        <div className={divClass} style={divStyle}>
+        <div
+          onMouseDown={this.handleMouseDown}
+          onMouseUp={this.handleMouseUp}
+          onClick={this.handleClick}
+          className={divClass}
+          style={divStyle}
+        >
           {/* if */ !editing &&
             <div className="placedfield-placement-wrapper">
               <div
@@ -174,20 +225,19 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
               ref="input"
               infotext={field.nicename()}
               value={field.value()}
+              onChange={this.handleChange}
               style={textStyle}
               inputStyle={inputStyle}
-              okStyle={okStyle}
               className="text-inline-editing"
-              onEnter={self.accept}
               autoGrowth={true}
               onAutoGrowth={function () {
                 if (self.props.arrow()) {
                   self.props.arrow().updatePosition();
                 }
               }}
+              onEnter={self.accept}
               onTab={self.accept}
-              onBlur={self.accept}
-              onOk={self.accept}
+              onBlur={self.handleBlur}
             />
           }
         </div>

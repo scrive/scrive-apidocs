@@ -5,78 +5,56 @@ define(['React', 'Backbone', 'common/backbone_mixin', 'tinycolor'], function(Rea
 
   return React.createClass({
     propTypes: {
-      document: React.PropTypes.object,
-      fullWidth : React.PropTypes.bool,
+      document: React.PropTypes.instanceOf(Backbone.Model).isRequired,
+      documentid: React.PropTypes.string.isRequired,
+      signatorylinkid: React.PropTypes.string.isRequired,
       link : React.PropTypes.object,
       authorFullname: React.PropTypes.string,
-      authorPhone: React.PropTypes.string,
-      forceShowing: React.PropTypes.bool // Overrides sign view branding setting "showheader"
+      authorPhone: React.PropTypes.string
     },
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
-      if (this.props.document) {
-        return [this.props.document];
-      } else {
-        return [];
-      }
+      return [this.props.document];
     },
     logoLink : function() {
-      if (this.props.documentid && this.props.signatorylinkid) {
-        return "/signview_logo/" + this.props.documentid + "/" + this.props.signatorylinkid + "/" + window.brandinghash;
-      } else {
-        return "/signview_logo_without_document/" + window.brandinghash;
-      }
+      return "/signview_logo/" + this.props.documentid + "/" + this.props.signatorylinkid + "/" + window.brandinghash;
     },
     render: function() {
-      var document = this.props.document;
-      var documentUndefinedOrDocumentReady = document == undefined || document.ready();
-      var documentUndefinedOrDocumentReadyWithShowFooter = document == undefined || (document.ready() && document.showfooter());
-
-      var showHeader = documentUndefinedOrDocumentReadyWithShowFooter && !BrowserInfo.isSmallScreen();
-
-      if (documentUndefinedOrDocumentReady && this.props.forceShowing) {
-        showHeader = true;
-      }
       var hasLink = this.props.link != undefined;
 
-      $('.signview').toggleClass("noheader",!showHeader); // We need to toogle this class here
-      if (!showHeader)
-        return (<div/>);
-      else {
-        return (
-          <div className={"pageheader " + (this.props.fullWidth ? "full-width-header" : "")} >
-            <div className="content">
-              <div className="logowrapper">
-                <img className="logo"
-                     src={this.logoLink()}>
-                </img>
+      return (
+        <div className={"header"} >
+          <div className="main">
+            <div className="row">
+              <div className="col-xs-6 left">
+                <div className="vertical left">
+                  <div className="middle">
+                    <img className="logo" src={this.logoLink()} />
+                  </div>
+                </div>
               </div>
-              {/*if*/ hasLink &&
-                <div className="sender">
-                  <div className="inner clickable" onClick={this.props.link.onClick}>
-                      <a className='link'>
+              <div className="col-xs-6 right">
+                <div className="vertical">
+                  <div className="middle">
+                    {/* if */ hasLink &&
+                      <a className="link" onClick={this.props.link.onClick}>
                         {this.props.link.text}
                       </a>
+                    }
+                    {/* else */ !hasLink &&
+                      <span>
+                        <h4 className="info">{this.props.authorFullname}</h4>
+                        <h4 className="info">{this.props.authorPhone}</h4>
+                      </span>
+                    }
                   </div>
                 </div>
-              }
-              {/*else*/ !hasLink &&
-                <div className="sender">
-                  <div className="inner">
-                    <div className='name'>
-                      {this.props.authorFullname}
-                    </div>
-                    <div className='phone'>
-                      {this.props.authorPhone}
-                    </div>
-                  </div>
-                </div>
-              }
-              <div className="clearfix"/>
+              </div>
             </div>
           </div>
-      );
-      }
+          <div className="clearfix" />
+        </div>
+    );
     }
   });
 

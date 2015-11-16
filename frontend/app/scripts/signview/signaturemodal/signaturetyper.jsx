@@ -6,17 +6,21 @@ define(["legacy_code", "Backbone", "React", "common/infotextinput", "common/butt
 
 // Number used to generate bigger final images. Quality thing. Scale has to be small. IE8 has 32k limit.
 var signaturePictureScale = 2;
+var canvasWidth = 772;
 
 var SignatureTyperModel = Backbone.Model.extend({
   defaults: {
     text: "",
-    font: "JenniferLynne"
+    font: "TalkingToTheMoon"
   },
   initialize: function (args) {
     this.loadFromTMPValue();
   },
   text: function () {
     return this.get("text");
+  },
+  empty: function () {
+    return this.text() === "";
   },
   setText: function (v) {
     this.set({text: v});
@@ -61,10 +65,10 @@ var SignatureTyperModel = Backbone.Model.extend({
       "&text=" + encodeURIComponent(this.text());
   },
   imageHeight: function () {
-    return Math.floor(820 * this.height() / this.width());
+    return Math.floor(canvasWidth * this.height() / this.width());
   },
   imageWidth: function () {
-    return 820;
+    return canvasWidth;
   },
   saveImage: function (callback) {
     var field = this.field();
@@ -89,9 +93,11 @@ var SignatureTyperModel = Backbone.Model.extend({
 
 return React.createClass({
   mixins: [BackboneMixin.BackboneMixin],
+
   getBackboneModels: function () {
     return [this.state.model];
   },
+
   propTypes: {
     field: React.PropTypes.object,
     width: React.PropTypes.number,
@@ -100,6 +106,7 @@ return React.createClass({
     onClose: React.PropTypes.func,
     onAccept: React.PropTypes.func
   },
+
   getInitialState: function () {
     var model =  new SignatureTyperModel({
       field:  this.props.field,
@@ -111,9 +118,11 @@ return React.createClass({
       imageSrc: model.imageSrc()
     };
   },
+
   componentDidUpdate: function () {
     this.refreshImg();
   },
+
   refreshImg: function () {
     var self = this;
     if (this.isMounted() && this.state.imageSrc != this.state.model.imageSrc()) {
@@ -124,6 +133,7 @@ return React.createClass({
       }
     }
   },
+
   fontStyle: function (fontName, width, height, bgPos) {
     var style = {display: "inline-block", height:height, width: width, backgroundPosition: bgPos};
     var text = "";
@@ -138,105 +148,100 @@ return React.createClass({
       fontName + "&text=" + encodeURIComponent(text) + ")";
     return style;
   },
+
   render: function () {
     var self = this;
     var model = this.state.model;
+    var text = localization.signviewDrawSignatureHere;
+
+    var bodyWidth = $("body").width();
+    var bodyHeight = $("body").height();
+    var contentWidth = 772;
+    var canvasHeight = Math.round(canvasWidth * model.height() / model.width());
+    var footerHeight = 100;
+    var headerHeight = 0;
+    var contentHeight = canvasHeight + footerHeight;
+
+    var left = (bodyWidth - contentWidth) / 2;
+    var top = (bodyHeight - contentHeight) / 2;
+
+    var largestWidth = 1040;
+
+    console.log(canvasHeight);
+
+    var contentStyle;
+    if (bodyWidth < largestWidth) {
+      contentStyle = {
+        top: (bodyHeight - (canvasHeight + footerHeight + headerHeight)) + "px",
+        left: left + "px"
+      };
+    } else {
+      contentStyle = {
+        top: top,
+        left: left + "px"
+      };
+    }
+
+    var backgroundStyle = {
+      width: canvasWidth + "px",
+      height: canvasHeight + "px"
+    };
+
     return (
-      <div>
-        <div className="header" style={{textAlign:"left", margin: "25px 39px 0px 39px"}}>
-          <div style={{fontSize:"28px", lineHeight: "32px"}}>
-            {localization.pad.typeSignatureBoxHeader}
+      <div style={contentStyle} className="content">
+        <div style={backgroundStyle} ref="drawingArea" className="drawing-area">
+          <div style={backgroundStyle} className="background">
+            <div className="instruction">
+              <hr />
+            </div>
           </div>
-          <div/>
-          <a className="modal-close" onClick={function () {self.props.onClose()}}/>
-          <div style={{margin:"13px 0px", height:"42px"}}>
+          <img
+            ref="img"
+            width={model.imageWidth()}
+            height={model.imageHeight()}
+            style={{
+              width:model.imageWidth(),
+              height:model.imageHeight()
+            }}
+            src={this.state.imageSrc}
+          />
+        </div>
+        <div className="footer">
+          <Button
+            className="transparent-button float-left"
+            text={model.empty() ? localization.cancel : localization.pad.cleanImage}
+            onClick={function () {
+              if (model.empty()) {
+                self.props.onClose();
+              } else {
+                model.setText("");
+                model.saveImage();
+              }
+            }}
+          />
+          <div className="typer">
+            <label htmlFor="type">{localization.pad.typeSignatureNameField}</label>
             <InfoTextInput
-              ref="textInput"
-              infotext={localization.pad.typeSignatureNameField}
-              className="float-left"
-              style={{marginRight:"10px", border: "1px solid #7A94B8", width:"170px"}}
+              id="type"
               value={model.text()}
               onChange={function (val) {
                 model.setText(val);
-                }
-              }
-            />
-            <div style={{width:"200px", float:"left"}}>
-              <Select
-                name=""
-                className="float-left"
-                style={self.fontStyle(model.font(), "200px", "40px", "10px -3px")}
-                width={200}
-                options={[
-                  {
-                    name: "",
-                    disabled: (model.font() == "JenniferLynne"),
-                    style: self.fontStyle("JenniferLynne", "120px", "40px", "0px -15px"),
-                    onSelect: function () {model.setFont("JenniferLynne");}
-                  },
-                  {
-                    name: "",
-                    disabled: (model.font() == "TalkingToTheMoon"),
-                    style: self.fontStyle("TalkingToTheMoon", "120px", "40px", "0px -15px"),
-                    onSelect: function () {model.setFont("TalkingToTheMoon");}
-                  },
-                  {
-                    name: "",
-                    disabled: (model.font() == "TheOnlyException"),
-                    style: self.fontStyle("TheOnlyException", "120px", "40px", "0px -15px"),
-                    onSelect: function () {model.setFont("TheOnlyException");}
-                  }
-                ]}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="signatureDrawingBoxWrapper" style={{width: "820px"}}>
-          <div className="signatureDrawingBox">
-            <img
-              ref="img"
-              width={model.imageWidth()}
-              height={model.imageHeight()}
-              style={{
-                width:model.imageWidth(),
-                height:model.imageHeight()
               }}
-              src={this.state.imageSrc}
             />
           </div>
-        </div>
-        <div>
-          <div  className="modal-footer">
-            <Button
-              type="action"
-              size="small"
-              className="bottom-button accept-button"
-              text={self.props.acceptText}
-              onClick={function () {
+          <Button
+            type="action"
+            text={self.props.acceptText}
+            className={model.empty() ? "inactive" : ""}
+            onClick={function () {
+              if (!model.empty()) {
                 model.saveImage(function () {
                   self.props.onAccept();
                 });
-              }}
-            />
-            <label
-              className="delete"
-              style={{float:"left", marginRight:"20px", lineHeight: "40px"}}
-              onClick={function () {
-                self.props.onClose();
-              }}
-            >
-              {localization.cancel}
-            </label>
-            <Button
-              size="small"
-              style={{float:"left", marginTop: "-2px;"}}
-              text={localization.pad.cleanImage}
-              onClick={function () {
-                model.setText("");
-                self.refs.textInput.focus();
-              }}
-            />
-          </div>
+              }
+            }}
+          />
+          <div className="clearfix" />
         </div>
       </div>
     );

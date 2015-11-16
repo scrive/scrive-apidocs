@@ -121,7 +121,6 @@ $htmlopentag()$
      });
    </script>
     $if(usestandardheaders)$
-    $pageFooter()$
     $wrapperclosingtag()$
     $endif$
   </body>
@@ -142,12 +141,10 @@ $htmlopentag()$
      require(['jquery', 'React', 'signview/signview', 'legacy_code'], function(jQuery, React, SignView) {
         jQuery(function(){
           var link = {};
-          var forceShowing = false;
           var target = LocalStorage.get("backlink", "target");
           if (target == "to-sign") {
             link.text= localization.pad.backToList;
             link.onClick = function() {window.location = "/to-sign"};
-            forceShowing = true;
           } else if (target == "to-start") {
             link.text = localization.toStart.backFromSigningPage;
             link.onClick = function() {window.location = "/ts/$documentid$"};
@@ -165,8 +162,7 @@ $htmlopentag()$
             authorFullname: "$authorFullname$",
             authorPhone: "$authorPhone$",
             useStandardHeaders: $if(usestandardheaders)$ true $else$ false $endif$,
-            link: link,
-            forceShowing: forceShowing
+            link: link
           }), jQuery(".place-for-signview")[0]);
         });
 

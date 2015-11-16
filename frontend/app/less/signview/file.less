@@ -1,0 +1,97 @@
+@import "vars";
+
+.document-pages {
+  background-color: @signview-bg;
+  text-align: left;
+  box-shadow: inset 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  margin-top: 0;
+  margin-bottom: -@signview-half-gutter;
+
+  * {
+    box-sizing: content-box;
+  }
+
+  .signatureBox.forDrawing {
+    border-width: 2px;
+    margin-left: -2px;
+    margin-top: -2px;
+
+    &.signaturePlaceholder {
+      color: @text-dark;
+      font-size: 16px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      border-width: 2px;
+      border-style: solid;
+    }
+  }
+
+  .info-text-input {
+    width: auto;
+  }
+
+  .pagediv {
+    width: 100%;
+    margin-top: @signview-half-gutter;
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+
+    img {
+      width: 100%;
+    }
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  .placedfield {
+
+   .placedcheckbox,
+   .placedcheckbox.checked {
+      background-position: center;
+      margin-left: -10px;
+      margin-top: -10px;
+      padding: 10px;
+    }
+
+    &.to-fill-now {
+      border-style: solid;
+      border-width : 2px;
+      z-index: 1;
+
+      .placedfield-placement-wrapper {
+        overflow: hidden;
+      }
+
+      .placedcheckbox {
+        background: url("/img/checkbox-unchecked.png") no-repeat center center;
+        padding: 9px;
+
+        &:active {
+          background: url("/img/checkbox-active.png") no-repeat center center;
+        }
+
+        &.checked {
+          background: url("/img/checkbox-checked.png") no-repeat center center;
+        }
+      }
+    }
+
+    input:-webkit-input-placeholder {
+      color: @text-medium;
+    }
+
+    input:-moz-placeholder {
+      color: @text-medium;
+    }
+
+    input:-ms-input-placeholder {
+      color: @text-medium;
+    }
+
+    input.grayed {
+      color: @text-medium;
+    }
+  }
+}

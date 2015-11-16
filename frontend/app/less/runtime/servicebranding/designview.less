@@ -90,3 +90,31 @@
 .modal-content .body .designview-cant-sign-modal .highlight {
   color: @actioncolor;
 }
+
+
+.required-author-attachment-icon {
+  @url :  %('/colored_image?file=editor-view-attachment.png&color=%D',@actioncolor);
+  background-image: url(@url) ;
+  display: inline-block;
+  height: 20px;
+  vertical-align: middle;
+  width: 18px;
+}
+
+.optional-author-attachment-icon {
+  @url :  %('/colored_image?file=editor-view-attachment.png&color=%D',@actionsecondarycolor);
+  background-image: url(@url) ;
+  display: inline-block;
+  height: 20px;
+  vertical-align: middle;
+  width: 18px;
+}
+
+.signatory-attachment-icon {
+  @url :  %('/colored_image?file=editor-view-attachment.png&color=%D',@actioncolor);
+  background-image: url(@url) ;
+  display: inline-block;
+  height: 20px;
+  vertical-align : middle;
+  width: 18px;
+}

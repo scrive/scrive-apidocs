@@ -376,7 +376,7 @@
 "_designViewAnchor":"Anchor",
 "_designViewAnchorIndex":"Forekomst indeks",
 "_designViewAnchorSearchPhrase":"Søgefrase",
-"_designViewAttached":"Vedhæftet fil er tilføjet",
+"_designViewAttached":"",
 "_designViewAttachmentRequestedFlashMessage":"Det er påkrævet, at du som minimum tilføjer endnu en signeringspart, inden du anmoder om at vedhæfte filer.",
 "_designViewAttachmentRequestedFrom":"Følgende fil <span class='put-attachment-name'></span>, der er vedhæftet, er anmodet af <span class='put-person-name'></span>",
 "_designViewChooseParticipant":"Tildel felt til",

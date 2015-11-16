@@ -376,7 +376,7 @@
 "_designViewAnchor":"Ankare",
 "_designViewAnchorIndex":"Förekomst",
 "_designViewAnchorSearchPhrase":"Fras att söka efter",
-"_designViewAttached":"Bifogat bilaga",
+"_designViewAttached":"",
 "_designViewAttachmentRequestedFlashMessage":"Du behöver lägga till åtminstone en till part innan du kan begära bilagor.",
 "_designViewAttachmentRequestedFrom":"Bilaga <span class='put-attachment-name'></span> begärd från <span class='put-person-name'></span>",
 "_designViewChooseParticipant":"Tilldela fältet till",

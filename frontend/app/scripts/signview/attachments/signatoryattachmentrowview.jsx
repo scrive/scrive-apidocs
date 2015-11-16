@@ -1,39 +1,10 @@
 define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutton", "common/backbone_mixin",
   "signview/tasks/task_mixin"],
-  function (legacy_code, React, Backbone, NewButton, UploadButton, BackboneMixin, TaskMixin) {
+  function (legacy_code, React, Backbone, Button, UploadButton, BackboneMixin, TaskMixin) {
 
-  return React.createClass({
+  var UploadArea = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model)
-    },
-
-    mixins: [BackboneMixin.BackboneMixin, TaskMixin],
-
-    createTasks: function () {
-      var self = this;
-
-      return [new PageTask({
-        type: "signatory-attachment",
-        isComplete: function () {
-          return self.props.model.hasFile();
-        },
-        el: $(self.refs.uploadArea.getDOMNode()),
-        onArrowClick: function () {
-          if (!BrowserInfo.isIE9orLower()) {
-            self.refs.uploadButton.openFileDialogue();
-          }
-        },
-        onActivate: function () {
-          mixpanel.track("Begin attachment task");
-        },
-        onDeactivate: function () {
-          mixpanel.track("Finish attachment task");
-        }
-      })];
-    },
-
-    getBackboneModels: function () {
-      return [this.props.model];
     },
 
     attachmentURL: function () {
@@ -43,6 +14,10 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
       return "/api/frontend/setsignatoryattachment/" + doc.documentid() +
         "/" + doc.viewer().signatoryid() + "/" +
         encodeURIComponent(model.name()) + doc.viewer().urlPart();
+    },
+
+    uploadButton: function () {
+      return this.refs.uploadButton;
     },
 
     createFileSubmit: function () {
@@ -73,9 +48,10 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
             content.text(localization.signviewAttachmentUploadedInOtherWindow);
             content.append($("<div style='margin-top: 40px;' />"));
             content.append(button.el());
+            ReloadManager.stopBlocking();
             ScreenBlockingDialog.open({header: content});
           } else {
-            new FlashMessage({content: localization.couldNotUpload, type: "error"});
+            new FlashMessage({content: localization.couldNotUpload, className: "flash-signview", type: "error"});
           }
 
           model.notLoading();
@@ -101,49 +77,120 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
     render: function () {
       var self = this;
       var model = self.props.model;
+
+      var uploadClass = React.addons.classSet({
+        "signview-button": true,
+        "signview-upload-button": true
+      });
+
+      return (
+        <div>
+          <UploadButton
+            ref="uploadButton"
+            size="small"
+            name="file"
+            type="action"
+            className={uploadClass}
+            text={localization.signatoryAttachmentUploadButton}
+            onError={function () {
+              model.notLoading();
+              model.trigger("change");
+            }}
+            onUploadComplete={function (input) {
+              var submit = self.createFileSubmit();
+              submit.addInputs(input);
+              submit.send();
+            }}
+          />
+          <p className="help">{localization.signviewPdfOrPhoto}</p>
+        </div>
+      );
+    }
+  });
+
+  return React.createClass({
+    propTypes: {
+      model: React.PropTypes.instanceOf(Backbone.Model)
+    },
+
+    mixins: [BackboneMixin.BackboneMixin, TaskMixin],
+
+    createTasks: function () {
+      var self = this;
+      var model = self.props.model;
+      var uploadArea = self.refs.uploadArea;
+
+      return [new PageTask({
+        type: "signatory-attachment",
+        isComplete: function () {
+          return !model.get("loading") && model.hasFile();
+        },
+        el: $(uploadArea.uploadButton().getDOMNode()),
+        onArrowClick: function () {
+          uploadArea.uploadButton().openFileDialogue();
+        },
+        onActivate: function () {
+          mixpanel.track("Begin attachment task");
+        },
+        onDeactivate: function () {
+          mixpanel.track("Finish attachment task");
+        }
+      })];
+    },
+
+    getBackboneModels: function () {
+      return [this.props.model];
+    },
+
+    attachmentURL: function () {
+      var model = this.props.model;
+      var doc = model.document();
+
+      return "/api/frontend/setsignatoryattachment/" + doc.documentid() +
+        "/" + doc.viewer().signatoryid() + "/" +
+        encodeURIComponent(model.name()) + doc.viewer().urlPart();
+    },
+
+    render: function () {
+      var self = this;
+      var model = self.props.model;
       var doc = model.document();
 
       var isLoading = model.get("loading");
       var hasFile = model.hasFile();
-      var canUpload = doc.pending() || doc.currentSignatoryCanSign();
+      var canUpload = doc.currentSignatoryCanSign();
+
+      var showUploadArea = canUpload && !hasFile && !isLoading;
+      var uploadStyle = {display: showUploadArea ? "inline" : "none"};
 
       return (
-        <tr>
-          <td className="desc">
-            <div className="item">
-              {/* if */ hasFile &&
-                <div className="filename">
-                  <div className="icon" />
-                  <div className="label">
-                    {model.file().name()}
-                  </div>
-                </div>
-              }
-              <div className="name">{model.name()}</div>
-              <div className="description">{model.description()}</div>
-            </div>
-          </td>
-          <td className="file">
-            <div ref="uploadArea" className="item">
-              {/* if */ isLoading && !hasFile &&
+        <div className="section signatory-attachment">
+          <div className="col-xs-7 left">
+            <table>
+              <tbody>
+                <tr>
+                  <td rowSpan="2"><img className="paperclip" src="/img/paperclip.png" /></td>
+                  <td><h1>{model.name()}</h1></td>
+                </tr>
+                <tr>
+                  <td><p className="desc">{model.description()}</p></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="col-xs-5 right">
+            {/* if */ isLoading && !hasFile &&
+              <div>
                 <img className="loading" src="/img/wait30trans.gif" />
-              }
-              {/* if */ hasFile && !isLoading &&
-                <span>
-                  <NewButton
-                    text={localization.reviewPDF}
-                    size="small"
-                    className="s-review-sigattachment view-attachment"
-                    onClick={function () {
-                      window.open(model.file().downloadLink(), "_blank");
-                    }}
-                  />
+              </div>
+            }
+            {/* if */ hasFile && !isLoading &&
+              <span>
+                <div className="button-group small-buttons">
                   {/* if */ canUpload &&
-                    <NewButton
-                      type="cancel"
+                    <Button
                       text={localization.deletePDF}
-                      className="cancel-attachment"
-                      size="small"
+                      className="transparent-button"
                       onClick={function () {
                         model.loading();
                         new Submit({
@@ -162,28 +209,21 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
                       }}
                     />
                   }
-                </span>
-              }
-              {/* if */ canUpload && !isLoading && !hasFile &&
-                <UploadButton
-                  ref="uploadButton"
-                  width={230}
-                  size="small"
-                  name="file"
-                  type="action"
-                  className="attachment-upload-button"
-                  text={localization.signatoryAttachmentUploadButton}
-                  onUploadComplete={function (input) {
-                    var submit = self.createFileSubmit();
-                    submit.addInputs(input);
-                    submit.send();
-                  }}
-                />
-              }
-              <div className="clearfix"></div>
-            </div>
-          </td>
-        </tr>
+                  <Button
+                    text={localization.reviewPDF}
+                    onClick={function () {
+                      window.open(model.file().downloadLink(), "_blank");
+                    }}
+                  />
+                </div>
+                <p className="help">{model.file().name()}</p>
+              </span>
+            }
+            <span style={uploadStyle}>
+              <UploadArea ref="uploadArea" model={model} />
+            </span>
+          </div>
+        </div>
       );
     }
   });
