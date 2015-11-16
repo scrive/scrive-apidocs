@@ -63,7 +63,7 @@ return React.createClass({
           }
           <List.Column
             name="Dates"
-            width="80px"
+            width="100px"
             sorting={self.allowSortingAndFiltering() ? "mtime" : undefined}
             rendering={function(d) {
               return (
