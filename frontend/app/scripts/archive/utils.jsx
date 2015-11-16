@@ -166,7 +166,10 @@ define(['legacy_code'], function() {
       return s.read_invitation_time || s.seen_time || s.sign_time;
     });
     var everySignatoryDelivered = _.every(signingParties, function(s) {
-      return s.email_delivery_status === "delivered" || s.mobile_delivery_status === "delivered";
+      return s.delivery_method === "api" || 
+             s.delivery_method === "pad" ||
+             s.email_delivery_status === "delivered" || 
+             s.mobile_delivery_status === "delivered";
     });
 
     if (d.field("status") === "document_error") {
