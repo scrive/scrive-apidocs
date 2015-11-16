@@ -21,10 +21,12 @@ import Util.SignatoryLinkUtils
 data DocumentViewer =
     SignatoryDocumentViewer SignatoryLinkID
   | CompanyAdminDocumentViewer
+  | CompanySharedDocumentViewer
 
 viewerForDocument :: DocumentAccess -> Document -> DocumentViewer
 viewerForDocument (DocumentAccess { daAccessMode = SignatoryDocumentAccess sid}) _ = SignatoryDocumentViewer sid
 viewerForDocument (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess}) _ = CompanyAdminDocumentViewer
+viewerForDocument (DocumentAccess { daAccessMode = CompanySharedDocumentAccess}) _ = CompanySharedDocumentViewer
 viewerForDocument (DocumentAccess { daAccessMode = AuthorDocumentAccess}) doc =
   case (getAuthorSigLink doc) of
     Just sig -> SignatoryDocumentViewer $ signatorylinkid sig
@@ -38,6 +40,7 @@ dvSignatoryLinkID _ = Nothing
 dvRole ::DocumentViewer -> T.Text
 dvRole (SignatoryDocumentViewer _) = "signatory"
 dvRole (CompanyAdminDocumentViewer) = "company_admin"
+dvRole (CompanySharedDocumentViewer) = "company_shared"
 
 -- We should not introduce instance for DocumentViewer since this can't be really parsed. And instance for Maybe DocumentViewer would be missleading
 unjsonDocumentViewer :: UnjsonDef (Maybe DocumentViewer)
