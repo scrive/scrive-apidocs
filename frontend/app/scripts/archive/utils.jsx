@@ -92,7 +92,12 @@ define(['legacy_code'], function() {
   };
 
   e.signatorySmartName = function(s) {
-    return e.signatoryName(s) || e.signatoryEmail(s) || e.signatoryPhone(s) || localization.notNamedParty;
+    if (s) {
+      return e.signatoryName(s) || e.signatoryEmail(s) || e.signatoryPhone(s) || localization.notNamedParty;
+    }
+    else {
+      return "undefined";
+    }
   };
 
   e.currentViewerParty = function(d) {
