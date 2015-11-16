@@ -35,29 +35,6 @@ $entries:{entry|
 }$
 </table>
 ###
-EvidenceLogClockErrorHistory=<table>
-  <tr>
-    <td class="time-stats-column">Maximum offset</td>
-    <td>$ce_max$</td>
-  </tr>
-  <tr>
-    <td>Sample mean</td>
-    <td>$ce_mean$</td>
-  </tr>
-  <tr>
-    <td>Sample standard deviation</td>
-    <td>$ce_std_dev$</td>
-  </tr>
-  <tr>
-    <td>Number of collected offset samples</td>
-    <td>$ce_collected$</td>
-  </tr>
-  <tr>
-    <td>Number of failed collection attempts</td>
-    <td>$ce_missed$</td>
-  </tr>
-</table>
-###
 EvidenceOfIntentTable=<table>
   <tr>
     <th id="time"><em>Time</em></th>

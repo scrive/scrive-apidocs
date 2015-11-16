@@ -6,7 +6,6 @@
 javascriptLocalisation =
   window.localization =
         {      code : "$code$"
-             , welcomeback : "$_welcomeback()$"
              , reloadPage : "$_reloadPage()$"
              , identifyDocument: "$_IdentifyDocument()$"
              , identifyBankId: "$_IdentifyBankId()$"
@@ -27,7 +26,6 @@ javascriptLocalisation =
              , identifyPhoneNumber8: "$_IdentifyPhoneNumber8()$"
              , identifyDateOfBirth: "$_IdentifyDateOfBirth()$"
              , openBankId: "$_OpenBankId()$"
-             , startBankId: "$_StartBankId()$"
              , yourIdNumber: "$_YourIdNumber()$"
              , idNumber: "$_IdNumber()$"
              , verifyIdentityWithName : "$_VerifyIdentityWithName()$"
@@ -35,15 +33,8 @@ javascriptLocalisation =
              , problemContactingServer : "$_problemContactingServer()$"
              , esigningpoweredbyscrive : "$PoweredByScrive()$"
              , sessionTimedoutInSignview : "$_sessionTimedoutInSignview()$"
-             , sessionTimedoutInSignviewAfterHistoryBackMessage : "$_sessionTimedoutInSignviewAfterHistoryBackMessage()$"
-             , sessionTimedoutInSignviewAfterHistoryBackTitle : "$_sessionTimedoutInSignviewAfterHistoryBackTitle()$"
              , signviewSigningFailed : "$_signviewSigningFailed()$"
-             , resetYourPassword : "$_resetYourPassword()$"
-             , resetYourPasswordCheckEmail : "$_resetYourPasswordCheckEmail()$"
-             , getStartedInstantly : "$_getStartedInstantly()$"
-             , freeDocumentPerMonth : "$_freeDocumentPerMonth()$"
              , signup : "$_signUp()$"
-             , loadingFile : "$_loadingFile()$"
              , more : "$_more()$"
              , signviewAttachmentUploadedInOtherWindow : "$_signviewAttachmentUploadedInOtherWindow()$"
              , personalName : "$_fullName()$"
@@ -73,11 +64,9 @@ javascriptLocalisation =
              , listand : "$_listand()$"
              , you : "$_you()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
-             , downloadPDF : "$_DownloadPDF()$"
              , reviewAttachment: "$_ReviewAttachment()$"
              , reviewPDF: "$_ReviewPDF()$"
              , deletePDF: "$_DeletePDF()$"
-             , attachmentType : "$_pageAttachmentAttachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
              , accept : "$_Accept()$"
              , send : "$_send()$"
@@ -125,7 +114,6 @@ javascriptLocalisation =
                        ]
 
             , selectFileToUpload : "$_selectFileToUpload()$"
-            , onlyFiletypeAllowed : "$_onlyFiletypeAllowed()$"
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
             , flashDocumentRestarted : "$_flashMessageContractRestarted()$"
@@ -167,10 +155,7 @@ javascriptLocalisation =
                cancelmodaltext: "$_contractcancelmodaltext()$",
                cancelmodaltextwithsignatures: "$_contractcancelmodaltextwithsignatures()$",
                rejectbuttontext: "$_contractrejectbuttontext()$",
-               signatorysignmodaltitlefromsignatorydrawing: "$_contractsignatorysignmodaltitlefromsignaturedrawing()$",
                signatorysignmodalcontent: "<p>$_contractsignatorysignmodalcontent()$ </p>",
-               signatorysignmodalcontentfromsignaturedrawing: "<p>$_contractsignatorysignmodalcontentfromsignaturedrawing()$ </p>",
-               signatorysignmodalcontentauthoronly: "<p>$_contractsignatorysignmodalcontentauthoronly()$ </p>",
                signbuttontext: "$_contractsignbuttontext()$",
                signbuttontextfromsignaturedrawing: "$_contractsignbuttontextfromsignaturedrawing()$",
                signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",
@@ -296,8 +281,6 @@ javascriptLocalisation =
          , designview : {
               dndDisabled: "$_designViewDNDDisabled()$",
               editMessagePlaceholder: "$_editMessagePlaceholder()$",
-              chooseParticipant: "$_designViewChooseParticipant()$",
-              selectField: "$_selectField()$",
               validation : {
                       notReadyField : "$_setAllFields()$"
                     , requestAttachmentFlashMessage : "$_designViewAttachmentRequestedFlashMessage()$"
@@ -318,11 +301,8 @@ javascriptLocalisation =
                     , remove : "$_textFieldRemove()$"
              }
              , checkboxes : {
-                      checkbox : "$_checkboxCheckbox()$"
-                    , prechecked : "$_checkboxPrechecked()$"
+                      prechecked : "$_checkboxPrechecked()$"
                     , obligatory: "$_checkboxObligatory()$"
-                    , forThis : "$_checkboxFor()$"
-                    , done : "$_checkboxDone()$"
              }
              , cantSignModal : {
                  title : "$_designviewCantSignModalTitle()$"
@@ -394,14 +374,12 @@ javascriptLocalisation =
              , editInvitation: "$_designViewEditInvitation()$"
              , editConfirmation: "$_designViewEditConfirmation()$"
              , signatureBox: "$_designViewSignatureBox()$"
-             , signatureBoxSettings: "$_designViewSignatureBoxSettings()$"
              , freeTextBox: "$_designViewFreeTextBox()$"
              , checkbox: "$_checkBoxFieldName()$"
              , signature: "$_signatureFieldName()$"
              , removeThisDocument: "$_designViewRemoveThisDocument()$"
              , attached : "$_designViewAttached()$"
              , attachmentRequestedFrom : "$_designViewAttachmentRequestedFrom()$"
-             , requestFieldFrom : "$_designViewRequestFieldFrom()$"
              , draggablehelp1 : "$_designviewdraggablehelp1()$"
              , draggablehelp2 : "$_designviewdraggablehelp2()$"
              , days :"$_designviewdays()$"
@@ -419,8 +397,6 @@ javascriptLocalisation =
              , numPartOfNum : "$_numPartOfNum()$"
              , preparingDocument : "$_preparingDocument()$"
              , fieldWithSameNameExists : "$_fieldWithSameNameExists()$"
-             , emailCanBeChangedInAccountSection : "$_emailCanBeChangedInAccountSection()$"
-             , nameCanBeChangedInAccountSection : "$_nameCanBeChangedInAccountSection()$"
              , customMessage : {
                  invitation   : "$_designViewCustomMessageInvitation()$"
                , confirmation : "$_designViewCustomMessageConfirmation()$"
@@ -484,14 +460,12 @@ javascriptLocalisation =
          }
          , changePhone : "$_changePhone()$"
          , accessNewAccountModal: {
-             header: "$_accessNewAccountHeader()$"
-           , body: "$_accessNewAccountBody()$"
+             body: "$_accessNewAccountBody()$"
            , button: "$_accessNewAccountButton()$"
          }
          , newPasswordModal: {
              modalNewPasswordViewNewPassword: "$_modalNewPasswordViewNewPassword()$"
            , modalNewPasswordViewRepeatPassword: "$_modalNewPasswordViewRepeatPassword()$"
-           , modalNewPasswordViewHeader: "$_modalNewPasswordViewHeader()$"
            , modalNewPasswordViewFooterSave: "$_modalNewPasswordViewFooterSave()$"
            , flashMessagePasswordsDontMatch: "$_flashMessagePasswordsDontMatch()$"
            , flashMessageMissingRequiredField: "$_flashMessageMissingRequiredField()$"
@@ -504,7 +478,6 @@ javascriptLocalisation =
              modalAccountSetupFooter: "$_modalAccountSetupFooter()$"
            , alreadyHaveAnAccount : "$_alreadyHaveAccount()$"
          }
-         , visitOurPricingPage : "$_visitOurPricingPage()$"
          , accountSetupModal: {
              modalAccountSetupTOS: "$_modalAccountSetupTOS()$"
            , modalAccountSetupChoosePassword: "$_modalAccountSetupChoosePassword()$"
@@ -572,7 +545,6 @@ javascriptLocalisation =
              , additionalFieldsMissingInModal : "$_filladitionfieldsdescription()$"
              , mandatoryAction: "$_mandatoryAction()$"
              , optionalAction: "$_optionalAction()$"
-             , promoBannerButton: "$_promoBannerButton()$"
              , signupButtonText: "$_signupButtonText()$"
              , titleText: "$_titleText()$"
              , subtitleText: "$_subtitleText()$"
@@ -704,7 +676,6 @@ javascriptLocalisation =
                   EUR: "$_paymentPriceUnitEUR()$"
                 , SEK: "$_paymentPriceUnitSEK()$"
             }
-           , documentUnit: "$_paymentDocumentsUnit()$"
            , allFeaturesIncluded: "$_paymentAllFeaturesIncluded()$"
            , payMonthly: "$_paymentPayMonthly()$"
            , payYearly: "$_paymentPayYearly()$"
@@ -946,12 +917,10 @@ javascriptLocalisation =
       , padlist : {
               updateAction : "$_padlistUpdateAction()$"
         }
-      , login : "$_login()$"
       , loginModal : {
              login : "$_login()$"
            , email : "$_email()$"
            , password : "$_password()$"
-           , forgotpassword : "$_forgotpassword()$"
            , forgot : "$_forgot()$"
            , sendNewPassword : "$_loginModalForgotPasswordSendNewPassword()$"
            , loginFailed : "$_flashMessageLoginPageRedirectReasonWrongMailOrPassword()$"
@@ -1059,7 +1028,6 @@ javascriptLocalisation =
            , loginAndAccept : "$_apiConfiramtionLoginAndAccept()$"
            , createAccount : "$_apiConfiramtionCreateAccount()$"
            , enterEmailAdress : "$_apiConfiramtionEnterEmailAdress()$"
-           , deny : "$_apiConfiramtionDeny()$"
       }
       , apiDashboard : {
             reveal : "$_apiOauthReveal()$"
@@ -1104,8 +1072,6 @@ javascriptLocalisation =
               , invalidEmail : "$_flashMessageInvalidEmailFormat()$"
               , emailAlreadyInUse : "$_flashCantChangeEmail()$"
               , changeEmailMailSent : "$_flashMessageChangeEmailMailSent()$"
-              , smsOriginator : "$_smsOriginator()$"
-              , smsOriginatorDescription : "$_smsOriginatorDescription()$"
             }
           , apiSettings : {
                 name : "$_apiSettings()$"
@@ -1157,17 +1123,9 @@ javascriptLocalisation =
             }
           , subscription : "$_Subscription()$"
       }
-      , sampleServiceView : {
-            headerSend: "$_sampleServiceViewHeaderSend()$"
-          , headerTemplate: "$_sampleServiceViewHeaderTemplate()$"
-          , headerArchive: "$_sampleServiceViewHeaderArchive()$"
-          , headerAccount: "$_sampleServiceViewHeaderAccount()$"
-          , headerLogOut: "$_sampleServiceViewHeaderLogOut()$"
-      }
       , sampleSignView : {
             mandatoryAction: "$_sampleSignViewMandatoryAction()$"
           , optionalAction: "$_sampleSignViewOptionalAction()$"
-          , followTheArrow: "$_sampleSignViewFollowTheArrow()$"
           , phone : "$_sampleSignViewPhone()$"
           , email : "$_sampleSignViewEmail()$"
           , textField : "$_sampleSignViewTextField()$"
@@ -1176,32 +1134,10 @@ javascriptLocalisation =
           , signButton : "$_sampleSignViewSignButton()$"
           , attachmentsTitle : "$_sampleSignViewAttachmentsTitle()$"
           , attachmentFilename : "$_sampleSignViewAttachmentFilename()$"
-          , demoDocumentName : "$_sampleSignViewDemoDocumentName()$"
           , signViewHeader : "$_sampleSignViewHeader()$"
       }
       , companyBranding : {
-               customiseFontLabel : "$_customiseFontLabel()$"
-             , customiseSignViewBackgroundColour : "$_customiseSignViewBackgroundColour()$"
-             , signviewBranding : "$_signviewBranding()$"
-             , serviceBranding : "$_serviceBranding()$"
-             , customiseBorderColourLabel : "$_customiseBorderColourLabel()$"
-             , customiseButtonColourLabel : "$_customiseButtonColourLabel()$"
-             , customiseEmailBackgroundColour : "$_customiseEmailBackgroundColourLabel()$"
-             , primaryColour: "$_companyBrandingPrimaryColour()$"
-             , primaryTextColour: "$_companyBrandingPrimaryTextColour()$"
-             , secondaryColour: "$_companyBrandingSecondaryColour()$"
-             , secondaryTextColour: "$_companyBrandingSecondaryTextColour()$"
-             , barsColour : "$_companyBrandingBarsColour()$"
-             , barsTextColour : "$_companyBrandingBarsTextColour()$"
-             , barsSecondaryColour : "$_companyBrandingbarsSecondaryColour()$"
-             , saveBranding: "$_SaveSettings()$"
-             , emailBranding: "$_EmailBranding()$"
-             , customiseLogo: "$_CustomiseLogo()$"
-             , customiseBackgroundColour: "$_CustomiseBackgroundColour()$"
-             , customiseTextColour: "$_CustomiseTextColour()$"
-             , selectImageLabel: "$_SelectImageLabel()$"
-             , customize : "$_companyBrandingCustomize()$"
-             , brandingPreview: {
+             brandingPreview: {
                    emailButtonLabel : "$_sampleEmailButtonLabel()$"
                  , emailContent: "$_SampleEmailContent()$"
                  , emailInstructions: "$_SampleEmailInstructions()$"

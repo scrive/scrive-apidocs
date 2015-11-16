@@ -340,10 +340,9 @@ handleCookieFail slid did = logDocumentAndSignatory did slid $ do
       ctx <- getContext
       ad <- getAnalyticsData
       let fields = standardPageFields ctx Nothing ad
-      content <- flip renderTemplate fields $
-        if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx)
-          then "sessionTimeOut"
-          else "sessionTimeOutWithoutHeaders"
+      content <- if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx)
+        then renderTemplate "sessionTimeOut" fields
+        else renderTemplate "sessionTimeOutWithoutHeaders" fields
       simpleHtmlResonseClrFlash content
 
 {- |

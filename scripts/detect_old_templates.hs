@@ -1,4 +1,4 @@
---- run with: runhaskell -isrc scripts/detect_old_templates.hs
+--- run with: runhaskell -itransifex -isrc scripts/detect_old_templates.hs
 {-# OPTIONS_GHC -Wall -Werror #-}
 {- needed packages:
     MissingH
@@ -28,6 +28,10 @@ whiteList = S.fromList [ "newTemplateTitle"
                        , "nomorethanonelist"
                        , "nomorethanonelistnormal"
                        , "dumpAllEvidenceTexts"
+                       , "javascriptLocalisation"
+                       -- Old evidence events. Calls for rendering are convoluted, so it's try to autodetect that they are needed
+                       , "CancelDocumenElegEvidenceText"
+                       , "SignatoryLinkVisitedArchive"
                        ]
 
 kontraExtensions :: [Extension]
@@ -52,6 +56,7 @@ kontraExtensions = map EnableExtension [
   , TypeSynonymInstances
   , UndecidableInstances
   , LambdaCase
+  , MultiWayIf
   ]
 
 ------------------------------
@@ -237,11 +242,14 @@ templateDeps tmpl = fromMaybe S.empty $ S.fromList <$> deps
 -- set of already seen templates (empty in the beginning)
 -- names of templates that we wish to recursively scan for dependencies
 -- returns list of all (indirectly) dependent template names (of that ^^ set)
-go :: Map.Map String String -> S.Set String -> S.Set String -> S.Set String
-go allTmpls seenTmpls tmpls | S.null tmpls = seenTmpls
-                            | otherwise = go allTmpls seenTmpls' $ newDeps `S.union` tmpls'
+go :: S.Set String -> Map.Map String String -> S.Set String -> S.Set String -> S.Set String
+go elogTemplates allTmpls seenTmpls tmpls | S.null tmpls = seenTmpls
+                            | otherwise = go elogTemplates allTmpls seenTmpls' $ newDeps `S.union` tmpls'
     where (tmpl, tmpls') = S.deleteFindMin tmpls
-          tmplDef = fromMaybe (trace ("Missing template definition: " ++ tmpl) "") $ Map.lookup tmpl allTmpls
+          tmplDef = fromMaybe traceNotFound $ Map.lookup tmpl allTmpls
+          traceNotFound = if tmpl `S.member` elogTemplates
+                           then ""
+                           else trace ("Missing template definition: " ++ tmpl) ""
           deps = templateDeps tmplDef
           seenTmpls' = tmpl `S.insert` seenTmpls
           newDeps = deps S.\\ seenTmpls
@@ -255,14 +263,14 @@ main = do
   exps <- S.unions <$> mapM fileExps files
   let topLevelTemplatesFromSources = setCatMaybes $ S.map expTemplateName exps
   events <- elogEvents
-  let elogTemplates = S.map (++"Text") events
+  let elogTemplates = S.unions [S.map (++"Log") events, S.map (++"Archive") events, S.map (++"VerificationPages") events]
   let topLevelTemplates = S.unions [elogTemplates, topLevelTemplatesFromSources, whiteList]
   translations <- fmap concat $ mapM (fetchLocal "en") allResources
   templatesFilesPath <-filter (".st" `isSuffixOf`) <$>  directoryFilesRecursive "templates"
   templates <- concat <$> mapM getTemplates templatesFilesPath
   let templatesMap = Map.fromList $ templates ++ translations
       allTemplates = S.fromList $ Map.keys templatesMap
-      knownTemplates = go templatesMap S.empty topLevelTemplates
+      knownTemplates = go elogTemplates templatesMap S.empty topLevelTemplates
       unusedTemplates = allTemplates S.\\ knownTemplates
   putStrLn "Templates that could be removed. Please double check them:"
   putStr $ unlines $ filter (not.null) $ S.toList $ unusedTemplates
