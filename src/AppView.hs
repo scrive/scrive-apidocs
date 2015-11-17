@@ -207,10 +207,9 @@ enableCookiesPage = do
       -- internalServerError is a happstack function, it's not our internalError
       -- this will not rollback the transaction
       let fields = standardPageFields ctx Nothing ad
-      content <- flip renderTemplate fields $ if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx) then
-                                                 "sessionTimeOut"
-                                             else
-                                                 "sessionTimeOutWithoutHeaders"
+      content <- if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx)
+                    then renderTemplate "sessionTimeOut" fields
+                    else renderTemplate "sessionTimeOutWithoutHeaders" fields
       pageWhereLanguageCanBeInUrl $ simpleHtmlResonseClrFlash content >>= internalServerError
   where
     cookieToJson Cookie{..} = object [

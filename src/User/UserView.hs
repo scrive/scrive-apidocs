@@ -178,11 +178,11 @@ flashMessageLoginRedirectReason :: TemplatesMonad m => LoginRedirectReason -> m 
 flashMessageLoginRedirectReason reason =
   case reason of
        LoginTry             -> return Nothing
-       NotLogged            -> render "notlogged"
-       NotLoggedAsSuperUser -> render "notsu"
-       InvalidLoginInfo _   -> render "invloginfo"
+       NotLogged            -> flashWith "notlogged"
+       NotLoggedAsSuperUser -> flashWith "notsu"
+       InvalidLoginInfo _   -> flashWith "invloginfo"
   where
-    render msg = Just . toFlashMsg OperationFailed <$>
+    flashWith msg = Just . toFlashMsg OperationFailed <$>
       (renderTemplate "flashMessageLoginPageRedirectReason" $ F.value msg True)
 
 flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
