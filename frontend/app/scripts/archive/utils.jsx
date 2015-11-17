@@ -165,6 +165,12 @@ define(['legacy_code'], function() {
     var everySignatoryReadInvitation = _.every(signingParties, function(s) {
       return s.read_invitation_time || s.seen_time || s.sign_time;
     });
+    var everySignatoryDelivered = _.every(signingParties, function(s) {
+      return s.delivery_method === "api" || 
+             s.delivery_method === "pad" ||
+             s.email_delivery_status === "delivered" || 
+             s.mobile_delivery_status === "delivered";
+    });
 
     if (d.field("status") === "document_error") {
       return "problem";
@@ -184,6 +190,8 @@ define(['legacy_code'], function() {
       return "opened";
     } else if (everySignatoryReadInvitation) {
       return "read";
+    } else if (everySignatoryDelivered) {
+      return "delivered";
     } else {
       return "sent";
     }

@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(["React", "archive/utils", "lists/list", "legacy_code"], function(React, Utils, List) {
+define(["React", "archive/utils", "lists/list", "moment", "legacy_code"], function(React, Utils, List, moment) {
 
 return React.createClass({
     mixins : [List.ReloadableContainer],
@@ -66,11 +66,13 @@ return React.createClass({
             width="80px"
             sorting={self.allowSortingAndFiltering() ? "mtime" : undefined}
             rendering={function(d) {
+              var ctime = moment(d.field("ctime")).format("YYYY-MM-DD HH:mm");
+              var mtime = moment(d.field("mtime")).format("YYYY-MM-DD HH:mm");
               return (
                 <small>
-                  {d.field("ctime")}
+                  {ctime}
                   <br/>
-                  {d.field("mtime")}
+                  {mtime}
                 </small>
               );
             }}
