@@ -376,7 +376,7 @@
 "_designViewAnchor":"Afirmar",
 "_designViewAnchorIndex":"Índice de incidentes",
 "_designViewAnchorSearchPhrase":"Frase para buscar",
-"_designViewAttached":"Anexo añadido",
+"_designViewAttached":"",
 "_designViewAttachmentRequestedFlashMessage":"Usted tiene que añadir al menos un signatorio más antes de solicitar los archivos adjuntos.",
 "_designViewAttachmentRequestedFrom":"Solicitado anexo <span class='put-attachment-name'></span> por <span class='put-person-name'></span>",
 "_designViewChooseParticipant":"Asignar campo a",

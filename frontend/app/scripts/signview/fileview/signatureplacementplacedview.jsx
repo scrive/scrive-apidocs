@@ -1,8 +1,11 @@
 define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin",
-        "signview/signaturemodal/signaturemodal", "legacy_code"],
-  function (React, PlacementMixin, TaskMixin, SignatureModal) {
+        "signview/signaturemodal/signaturemodal", "common/zoomtools", "legacy_code"],
+  function (React, PlacementMixin, TaskMixin, SignatureModal, zoomTools) {
 
   return React.createClass({
+    _openTry: 0,
+    _openModal: false,
+
     mixins: [PlacementMixin, TaskMixin],
 
     createTasks: function () {
@@ -18,10 +21,9 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
         type: "field",
         field: field,
         isComplete: function () {
-          return placement.field().readyForSign();
+          return !self._openModal && placement.field().readyForSign();
         },
         el: $(self.getDOMNode()),
-        label: localization.docsignview.signature,
         pointSelector: ".button",
         onArrowClick: function () {
           self.activateSignatureModal();
@@ -31,16 +33,40 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
     },
 
     activateSignatureModal: function () {
+      var self = this;
       var size = this.size();
       var field = this.props.model.field();
 
-      new SignatureModal({
-        field: field,
-        width: size.width,
-        height: size.height,
-        arrow: this.props.arrow,
-        signview: this.props.signview
-      });
+      var width = window.innerWidth;
+      var zoom = zoomTools.zoomLevel();
+
+      if (zoom > 1 && width < 772) {
+        if (self._openTry === 0) {
+          alert(localization.zoomOut);
+        } else {
+          alert(localization.zoomOutMore);
+        }
+
+        self._openTry += 1;
+
+        return;
+      }
+
+      if (!self._openModal) {
+        self._openModal = true;
+        self._openTry = 0;
+        new SignatureModal({
+          field: field,
+          width: size.width,
+          height: size.height,
+          arrow: this.props.arrow,
+          signview: this.props.signview,
+          onClose: function () {
+            self._openModal = false;
+            field.trigger("change");
+          }
+        });
+      }
     },
 
     render: function () {
@@ -77,7 +103,8 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
       var size = this.size(_.identity);
 
       var boxStyle = {
-        lineHeight: size.height + "px"
+        lineHeight: size.height + "px",
+        cursor: drawing ? "pointer" : ""
       };
 
       _.extend(boxStyle, size);

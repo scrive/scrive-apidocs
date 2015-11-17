@@ -23,11 +23,17 @@ define(["legacy_code", "Backbone", "React", "common/button", "common/backbone_mi
  * NOTE: We are not drawing lines, but curves. This is why x_,y_ are there and are position of middle of last curve.
  *
  */
+
+var canvasWidth = 772;
+
 var SignatureDrawerModel = Backbone.Model.extend({
   defaults: function () {
     return {
       preview: false,
       delayStartPreview: 3000,
+      animationLength: 4400,
+      pauseLength: 5000,
+      previewNonce: 0,
       empty: false, // If something was drawn on canvas
       drawing: false, // Is drawing in progress
       pointerId: undefined, // unique id of pointer being used for drawing (in multitouch scenarios)
@@ -44,11 +50,13 @@ var SignatureDrawerModel = Backbone.Model.extend({
     _.bindAll(this, "cancelPreview");
     var self = this;
     this.set("empty", !this.value());
-    if (self.empty()) {
-      this.previewTimeout = setTimeout(function () {
-        self.set({preview: true});
-      }, self.get("delayStartPreview"));
-    }
+    var previewImg = new Image();
+    previewImg.src = this.previewSrc();
+    previewImg.onload = function () {
+      if (self.empty()) {
+        self.startPreviewTimer();
+      }
+    };
   },
   height: function () {
      return this.get("height");
@@ -64,6 +72,7 @@ var SignatureDrawerModel = Backbone.Model.extend({
   },
   setEmpty: function () {
     this.set("empty", true);
+    this.startPreviewTimer();
   },
   drawingInProgress: function () {
     return this.get("drawing");
@@ -74,6 +83,28 @@ var SignatureDrawerModel = Backbone.Model.extend({
   drawnAnyLine: function () {
     return this.get("drawnAnyLine");
   },
+  startPreviewTimer: function () {
+    var self = this;
+    this.set("previewNonce", Date.now());
+    this.previewTimeout = setTimeout(function () {
+      self.set({preview: true});
+      self.set({animation: true});
+      self.startAnimationTimer();
+    }, self.get("delayStartPreview"));
+  },
+  startAnimationTimer: function () {
+    var self = this;
+    self.animationTimeout = setTimeout(function () {
+      self.set("animation", false);
+      self.animationTimeout = setTimeout(function () {
+        self.set("animation", true);
+        if (self.get("preview")) {
+          self.startAnimationTimer();
+        }
+      }, self.get("pauseLength"));
+    }, self.get("animationLength"));
+  },
+
   // All changes that are happending while drawing are silent, since we don't need to rerender
   // view for performance reasons.
   startDrawing: function (drawingMethod, pointerId) {
@@ -82,6 +113,9 @@ var SignatureDrawerModel = Backbone.Model.extend({
       pointerId: pointerId,
       drawingMethod: drawingMethod
     }, {silent: true});
+
+    // FIXME: replace this with something more performant.
+    this.trigger("change");
   },
   stopDrawing: function () {
     this.set({
@@ -133,10 +167,27 @@ var SignatureDrawerModel = Backbone.Model.extend({
   showPreview: function () {
     return this.get("preview");
   },
+  showAnimation: function () {
+    return this.get("animation");
+  },
+  previewNonce: function () {
+    return this.get("previewNonce");
+  },
+  previewSrc: function () {
+    var nonce = this.previewNonce();
+    var isTouchDevice = "ontouchstart" in window || "onmsgesturechange" in window;
+    // fix for IE 10.
+    if (BrowserInfo.isIE() && $.browser.version >= 10.0) {
+      isTouchDevice = !window.navigator.msMaxTouchPoints;
+    }
+    var src = isTouchDevice ? "/img/sign-preview-hand.gif" : "/img/sign-preview-mouse.gif";
+    return src + "?" + nonce;
+  },
   cancelPreview: function () {
     clearTimeout(this.previewTimeout);
+    clearTimeout(this.animationTimeout);
     if (this.get("preview")) {
-      this.set("preview", false);
+      this.set({preview: false, animation: false});
     }
   },
   saveImage: function (canvas, callback) {
@@ -147,8 +198,8 @@ var SignatureDrawerModel = Backbone.Model.extend({
       }
     } else {
       var field = this.field();
-      var height = Math.floor(820 * this.height() / this.width());
-      ImageUtil.addTransparentBGAndSerializeCanvas(canvas, 820, height, function (imageData) {
+      var height = Math.floor(canvasWidth * this.height() / this.width());
+      ImageUtil.addTransparentBGAndSerializeCanvas(canvas, canvasWidth, height, function (imageData) {
         field.setValue(imageData);
         if (typeof callback === "function") {
           callback();
@@ -172,7 +223,6 @@ return React.createClass({
       onAccept:  React.PropTypes.func,
       onStartDrawing: React.PropTypes.func,
       onStopDrawing: React.PropTypes.func
-
     },
     getInitialState: function () {
       var model =  new SignatureDrawerModel({
@@ -181,25 +231,34 @@ return React.createClass({
         height: this.props.height
       });
       return {
-        model: model
+        model: model,
+        show: false
       };
     },
     componentDidMount: function () {
+      var self = this;
       var picture =  this.refs.canvas.getDOMNode().getContext("2d");
       if (this.state.model.value() && this.state.model.value() != "") {
         var img = new Image();
         img.type = "image/png";
         img.src =  this.state.model.value();
-        picture.drawImage(img, 0, 0, 820, 820 * this.state.model.height() / this.state.model.width());
+        picture.drawImage(img, 0, 0, canvasWidth, canvasWidth * this.state.model.height() / this.state.model.width());
       }
-      this.setState({picture: picture});
+      this.setState({picture: picture, show: true});
       this.initDrawing();
+      $(window).resize(function () {
+        self.forceUpdate();
+      });
+      $(window).on("gestureend", function () {
+        self.forceUpdate();
+      });
     },
     startDrawing: function (drawingMethod, pointerId) {
       this.state.model.startDrawing(drawingMethod, pointerId);
       this.props.onStartDrawing();
     },
     stopDrawing: function () {
+      this.saveImage();
       this.state.model.stopDrawing();
       this.props.onStopDrawing();
     },
@@ -387,105 +446,113 @@ return React.createClass({
       this.state.picture.stroke();
     },
     previewSrc: function () {
+      var nonce = this.state.model.previewNonce();
       var isTouchDevice = "ontouchstart" in window || "onmsgesturechange" in window;
       // fix for IE 10.
       if (BrowserInfo.isIE() && $.browser.version >= 10.0) {
         isTouchDevice = window.navigator.msMaxTouchPoints;
       }
-      return isTouchDevice ? "/img/sign-preview-hand.gif" : "/img/sign-preview-mouse.gif";
-    },
-    previewStyle: function () {
-      var model = this.state.model;
-      var ratio  = model.height() / model.width();
-      var height = 820 * ratio;
-      if (height > 323) {
-        return {
-          width: "820px",
-          height: "323px",
-          marginTop: ((height - 323) / 2) + "px",
-          display: (model.showPreview() ? "block" : "none")
-        };
-      } else {
-        return {
-          width: (820 / ratio) + "px",
-          height: height + "px",
-          marginRight: ((820 - (820 / ratio)) / 2) + "px",
-          display: (model.showPreview() ? "block" : "none")
-        };
-      }
+      var src = isTouchDevice ? "/img/sign-preview-hand.gif" : "/img/sign-preview-mouse.gif";
+      return src + "?" + nonce;
     },
     saveImage: function (callback) {
       this.state.model.saveImage(this.refs.canvas.getDOMNode(), callback);
     },
     clear: function () {
-      this.state.picture.clearRect(0, 0, 820, 820 * this.state.model.height() / this.state.model.width());
+      this.state.picture.clearRect(0, 0, canvasWidth,
+        canvasWidth * this.state.model.height() / this.state.model.width());
       this.state.model.setEmpty();
+      this.saveImage();
     },
     render: function () {
       var self = this;
       var model = this.state.model;
+      var text = localization.signviewDrawSignatureHere;
+
+      var bodyWidth = window.innerWidth;
+      var bodyHeight = window.innerHeight;
+
+      var contentWidth = 772;
+      var canvasHeight = Math.round(canvasWidth * model.height() / model.width());
+      var footerHeight = BrowserInfo.isSmallScreen() ? 148 : 100;
+      var contentHeight = canvasHeight + footerHeight;
+
+      var left = (bodyWidth - contentWidth) / 2;
+      var top = (bodyHeight - contentHeight) / 2;
+
+      var largestWidth = 1040;
+
+      left = left < 0 ? 0 : left;
+      top = top < 0 ? 0 : top;
+
+      var contentStyle = {left: left + "px"};
+      if (bodyWidth <= largestWidth || contentHeight >= bodyHeight) {
+        contentStyle.bottom = 0;
+      } else {
+        contentStyle.top = top;
+      }
+
+      var backgroundStyle = {
+        width: canvasWidth + "px",
+        height: canvasHeight + "px"
+      };
+
+      var instructionStyle = {
+        opacity: model.empty() && !model.showAnimation() ? "1" : "0"
+      };
+
+      var footerClass = React.addons.classSet({
+        "footer": true,
+        "small-screen": BrowserInfo.isSmallScreen()
+      });
+
       return (
-        <div>
-          <div className="header" style={{textAlign:"left", margin: "25px 39px 25px 39px"}}>
-            <div style={{fontSize:"28px", lineHeight: "32px"}}>
-              {localization.pad.drawSignatureBoxHeader}
-            </div>
-            <div/>
-            <a className='modal-close' onClick={function () {self.props.onClose()}}/>
-          </div>
-          <div className="signatureDrawingBoxWrapper" style={{width: "820px", borderColor: "#7A94B8"}}>
-            <div
-              ref="drawingArea"
-              className="signatureDrawingBox"
-              style={{height: (820 * model.height() / model.width()) + "px"}}
-            >
-              <canvas
-                ref="canvas"
-                className="signatureCanvas"
-                width={820}
-                height={820 * model.height() / model.width()}
-                style={{
-                  width:"820px",
-                  height: (820 * model.height() / model.width()) + "px",
-                  display: (model.showPreview() ? "none" : "block")
-                }}
-              />
+        <div style={contentStyle} className="content">
+          <div style={backgroundStyle} ref="drawingArea" className="drawing-area">
+            <div style={backgroundStyle} className="background">
               <img
                 ref="preview"
-                className="signatureCanvas"
-                src={self.previewSrc()}
-                style={self.previewStyle()}
+                className="preview"
+                style={{display: model.showPreview() ? "block" : "none"}}
+                src={model.previewSrc()}
               />
+              <div className="instruction">
+                <h1 style={instructionStyle}>{text}</h1>
+                <hr />
+              </div>
             </div>
+            <canvas
+              ref="canvas"
+              className="canvas"
+              width={canvasWidth}
+              height={canvasHeight}
+            />
           </div>
           <div>
-            <div  className="modal-footer">
+            <div className={footerClass}>
               <Button
-                type="action"
-                size="small"
-                className="bottom-button accept-button"
-                text={self.props.acceptText}
+                className="transparent-button float-left"
+                text={model.empty() ? localization.cancel : localization.pad.cleanImage}
                 onClick={function () {
-                  self.saveImage(function () {
-                    self.props.onAccept();
-                  });
+                  if (model.empty()) {
+                    self.setState({show: false});
+                    self.props.onClose();
+                  } else {
+                    self.clear();
+                  }
                 }}
               />
-              <label
-                className="delete"
-                style={{float:"left", marginRight:"20px", lineHeight: "40px"}}
-                onClick={function () {
-                  self.props.onClose();
-                }}
-              >
-                {localization.cancel}
-              </label>
               <Button
-                size="small"
-                style={{float:"left", marginTop: "-2px;"}}
-                text={localization.pad.cleanImage}
+                type="action"
+                text={self.props.acceptText}
+                className={model.empty() ? "inactive" : ""}
                 onClick={function () {
-                  self.clear();
+                  if (!model.empty()) {
+                    self.saveImage(function () {
+                      self.setState({show: false});
+                      self.props.onAccept();
+                    });
+                  }
                 }}
               />
             </div>

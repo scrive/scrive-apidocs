@@ -35,6 +35,7 @@ import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.DocumentUpdateUtils
 import Doc.API.V2.Guards
+import Doc.API.V2.JSON.AttachmentDetails
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.Misc
 import Doc.API.V2.Parameters
@@ -49,7 +50,6 @@ import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
 import File.File (File(..))
-import File.FileID (FileID)
 import InputValidation (Result(..), asValidEmail)
 import Kontra
 import KontraPrelude
@@ -290,43 +290,26 @@ docApiV2SetAttachments did = logDocument did . api $ do
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Preparation
     -- Parameters
-    attachments <- processAttachmentParameters
-    (mFileIDsInt :: Maybe [Int]) <- apiV2ParameterOptional (ApiV2ParameterAeson "file_ids")
-    let mFileIDs :: Maybe [FileID] = fmap ($read . show) mFileIDsInt
-    fileIDs <- case mFileIDs of
-      Nothing -> return []
-      Just fids -> do
-        doc <- theDocument
-        forM fids (\fid -> do
-          let fidAlreadyInDoc = fid `elem` (authorattachmentfileid <$> documentauthorattachments doc)
-          hasAccess <- (not null) <$> dbQuery (attachmentsQueryFor user fid)
-          when (not (fidAlreadyInDoc || hasAccess)) $
-            apiError $ resourceNotFound $ "No file with file_id" <+> (T.pack . show $ fid)
-              <+> "found. It may not exist or you don't have permission to use it."
-          return fid
-          )
-    let allAttachments = fileIDs ++ attachments
-    -- API call actions
+    attachmentDetails <- apiV2ParameterObligatory (ApiV2ParameterJSON "attachments" $ arrayOf unjsonAttachmentDetails)
+
+    -- We fetch a function for checking if attachment was part of document before call. This has to be here - since next step is purging all attachmnets.
+    fileWasAlreadAnAttachmnet <- theDocument >>= (\d -> return $ \fid -> fid `elem` (authorattachmentfileid <$> documentauthorattachments d))
+
     (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachment (authorattachmentfileid att) actor
-    forM_ allAttachments $ \att -> dbUpdate $ AddDocumentAttachment att actor
-    -- Return
+
+    forM_ attachmentDetails $ \ad ->  case (aadFileOrFileParam ad) of
+      Left fid -> do
+        attachmentFromAttachmentArchive <- (not null) <$> dbQuery (attachmentsQueryFor user fid)
+        when (not (fileWasAlreadAnAttachmnet fid || attachmentFromAttachmentArchive)) $
+            apiError $ resourceNotFound $ "File id " <+> (T.pack . show $ fid)
+              <+> " can't be used. It may not exist or you don't have permission to use it."
+        dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) fid actor
+      Right fp -> do
+        newFile <- apiV2ParameterObligatory (ApiV2ParameterFilePDF $ fp)
+        dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (fileid newFile) actor
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
   where
-    processAttachmentParameters :: (Kontrakcja m) => m [FileID]
-    processAttachmentParameters = sequenceOfFileIDsWith getAttachmentParmeter [] 0
-    getAttachmentParmeter :: (Kontrakcja m) => Int -> m (Maybe FileID)
-    getAttachmentParmeter i = (fmap fileid) <$> apiV2ParameterOptional (ApiV2ParameterFilePDF $ "attachment_" <> (T.pack . show $ i))
-    sequenceOfFileIDsWith :: (Kontrakcja m) => (Int -> m (Maybe FileID)) -> [FileID] -> Int -> m [FileID]
-    sequenceOfFileIDsWith fidFunc lf i = do
-      mAttachment <- fidFunc i
-      case mAttachment of
-        Nothing -> return lf
-        Just attachment -> do
-          let attList | attachment `elem` lf = lf
-                      | otherwise            = attachment : lf
-          sequenceOfFileIDsWith fidFunc attList (i + 1)
-
     attachmentsQueryFor user fid = GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
                                                   , AttachmentsOfAuthorDeleteValue  (userid user) True
                                                   , AttachmentsOfAuthorDeleteValue  (userid user) False

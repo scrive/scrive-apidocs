@@ -114,7 +114,7 @@ testDocApiV2EvidenceAttachments = do
   reqStart <- mkRequest POST []
   _ <- runTestKontra reqStart ctx $ docApiV2Start did
 
-  reqSign <- mkRequest POST [("fields", inText "[]")]
+  reqSign <- mkRequest POST [("fields", inText "[]"),("accepted_author_attachments", inText "[]")]
   _ <- runTestKontra reqSign ctx $ docApiV2SigSign did slid
 
   req <- mkRequest GET []
@@ -150,11 +150,12 @@ testDocApiV2FilesGet = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   (did,_) <- testDocApiV2New' ctx
 
-  reqSet <- mkRequest POST [("attachment_0", inFile "test/pdfs/simple-rotate-90.pdf")]
+  reqSet <- mkRequest POST [("attachments", inText $ "[{\"name\" : \"simple-rotate-90.pdf\", \"required\" : false, \"file_param\" : \"afile\"}]")
+                           ,("afile", inFile "test/pdfs/simple-rotate-90.pdf")]
   (rspSet,_) <- runTestKontra reqSet ctx $ docApiV2SetAttachments did
   docJSONSet <- parseMockDocumentFromBS did (rsBody rspSet)
   firstAttachmentValue <- liftM V.head $ lookupObjectArray "author_attachments" docJSONSet
-  attachmentFid <- fileIDFromFileValue firstAttachmentValue
+  attachmentFid <- authorAttachmentFileValue firstAttachmentValue
 
   req <- mkRequest GET []
   (rsp,_) <- runTestKontra req ctx $ docApiV2FilesGet did attachmentFid "somefile.pdf"

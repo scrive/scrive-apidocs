@@ -1,0 +1,29 @@
+@import "vars";
+
+.header {
+  height: @signview-header-height;
+
+  .main, .row, .col-xs-6 {
+    height: @signview-header-height;
+  }
+
+  .main {
+    padding: 0;
+
+    .link {
+      display: inline-block;
+      line-height: @signview-header-height;
+    }
+
+    .logo {
+      max-width: 172px;
+      max-height: 52px;
+    }
+
+    .info {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}

@@ -1,0 +1,26 @@
+@import "vars";
+
+body {
+  background-color: @signview-bg;
+}
+
+.signview {
+  word-wrap: break-word;
+
+  @import "grid";
+  @import "base";
+
+  .font-normal();
+
+  @import "overlay";
+  @import "header";
+  @import "instructions";
+  @import "file";
+  @import "attachments";
+  @import "signatories";
+  @import "sign";
+  @import "footer";
+  @import "drawer";
+  @import "arrows";
+  @import "feedback";
+}

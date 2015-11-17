@@ -2,6 +2,7 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/c
 
   var TestUtils = React.addons.TestUtils;
 
+  /*
   var SignView = Backbone.Model.extend({});
 
   describe("signview/fileview/checkboxplacementplacedview", function () {
@@ -49,4 +50,5 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/c
       server.restore();
     });
   });
+  */
 });

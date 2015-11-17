@@ -376,7 +376,7 @@
 "_designViewAnchor":"Ancre",
 "_designViewAnchorIndex":"Index de l'occurrence",
 "_designViewAnchorSearchPhrase":"Expression à rechercher",
-"_designViewAttached":"Pièces jointes",
+"_designViewAttached":"",
 "_designViewAttachmentRequestedFlashMessage":"Vous devez encore ajouter au moins un signataire avant de demander des pièces jointes.",
 "_designViewAttachmentRequestedFrom":"Pièce jointe requise <span class='put-attachment-name'></span> par <span class='put-person-name'></span>",
 "_designViewChooseParticipant":"Assigner le champ à",

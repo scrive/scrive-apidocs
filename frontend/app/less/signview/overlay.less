@@ -1,0 +1,27 @@
+@import "vars";
+
+.overlay {
+  @trans-time: .2s;
+  .noclick-ie();
+  .background-alpha(fade(#000000, 0%));
+  transition: background-color @trans-time ease-in-out, z-index @trans-time step-end;
+  height: 0;
+  left: 0px;
+  position: fixed;
+  top: 0px;
+  height: 100%;
+  width: 100%;
+  z-index: -1;
+
+  &.active {
+    .background-alpha(fade(#000000, 40%));
+    transition: background-color @trans-time ease-in-out, z-index @trans-time step-start;
+    z-index: @signview-overlay-z-index;
+  }
+}
+
+.above-overlay {
+  z-index: @signview-overlay-z-index + 1;
+  transform: translate3d(0,0,0);
+  position: relative;
+}

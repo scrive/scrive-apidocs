@@ -73,6 +73,8 @@ kontraMigrations = [
   , filesAddIndexesToSpeedUpQueries
   , createIndexOnEmailFields
   , addSMSProviderToCompanies
+  , changeScriveSignviewLogo
+  , addRequiredAndNameToAuthorAttachments
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

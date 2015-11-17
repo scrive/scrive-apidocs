@@ -26,6 +26,7 @@ module Doc.DocUtils(
   , documentReallyDeletedForUser
   , userCanPerformSigningAction
   , fileFromMainFile
+  , allRequiredAttachmentsAreOnList
   , MaybeTemplate(..)
   , HasFields(..)
   , MaybeUser(..)
@@ -310,3 +311,11 @@ userCanPerformSigningAction uid doc =
   where
     msl = getSigLinkFor uid doc
     sl  = $fromJust msl
+
+
+allRequiredAttachmentsAreOnList :: [FileID] -> Document -> Bool
+allRequiredAttachmentsAreOnList acceptedAttachments doc =
+  all (\i -> i `elem` acceptedAttachments) $ map authorattachmentfileid $ requiredAuthorAttachments doc
+
+requiredAuthorAttachments :: Document -> [AuthorAttachment]
+requiredAuthorAttachments doc = filter authorattachmentrequired $ documentauthorattachments doc

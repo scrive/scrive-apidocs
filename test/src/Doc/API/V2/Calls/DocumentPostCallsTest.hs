@@ -189,7 +189,7 @@ testDocApiV2Forward = do
   reqStart <- mkRequest POST []
   _ <- runTestKontra reqStart ctx $ docApiV2Start did
 
-  reqSign <- mkRequest POST [("fields", inText "[]")]
+  reqSign <- mkRequest POST [("fields", inText "[]"),("accepted_author_attachments", inText "[]")]
   _ <- runTestKontra reqSign ctx $ docApiV2SigSign did slid
 
   req <- mkRequest POST [("email", inText "2.a2@22.e.aa")]
@@ -221,15 +221,19 @@ testDocApiV2SetAttachments = do
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   (did,_) <- testDocApiV2New' ctx
 
-  reqSet <- mkRequest POST [("attachment_0", inFile "test/pdfs/simple-rotate-90.pdf")
-                           ,("attachment_1", inFile "test/pdfs/simple-rotate-180.pdf")]
+  reqSet <- mkRequest POST [("attachments", inText $ "[" <>
+                               "{\"name\" : \"A1\", \"required\" : false, \"file_param\" : \"attachment_0\"}," <>
+                               "{\"name\" : \"A2\", \"required\" : false, \"file_param\" : \"other_attachment\"}" <>
+                             "]")
+                           ,("attachment_0", inFile "test/pdfs/simple-rotate-90.pdf")
+                           ,("other_attachment", inFile "test/pdfs/simple-rotate-180.pdf")]
   (rspSet,_) <- runTestKontra reqSet ctx $ docApiV2SetAttachments did
   assertEqual "Successful `docApiV2SetAttachments` response code" 200 (rsCode rspSet)
   docJSONSet <- parseMockDocumentFromBS did (rsBody rspSet)
   attachmentsArraySet <- lookupObjectArray "author_attachments" docJSONSet
   assertEqual "Number of 'author_attachments' should be equal" 2 (V.length attachmentsArraySet)
 
-  reqUnSet <- mkRequest POST []
+  reqUnSet <- mkRequest POST [("attachments", inText "[]")]
   (rspUnSet,_) <- runTestKontra reqUnSet ctx $ docApiV2SetAttachments did
   assertEqual "Successful `docApiV2SetAttachments` response code" 200 (rsCode rspUnSet)
   docJSONUnSet <- parseMockDocumentFromBS did (rsBody rspUnSet)

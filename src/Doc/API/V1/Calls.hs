@@ -58,7 +58,7 @@ import DB.TimeZoneName (mkTimeZoneName, defaultTimeZoneName)
 import Doc.Action
 import Doc.Anchors
 import Doc.API.Callback.Model
-import Doc.API.V1.DocumentFromJSON()
+import Doc.API.V1.DocumentFromJSON(AuthorAttachmentDetails(..))
 import Doc.API.V1.DocumentToJSON
 import Doc.API.V1.DocumentUpdateUtils
 import Doc.API.V1.ListUtil
@@ -278,22 +278,35 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
           checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
     when (not $ (auid == userid user)) $ do
           throwM . SomeKontraException $ serverError "Permission problem. Not an author."
-    attachments <- getAttachments 0 =<< theDocument
+    attachmentFilesWithDetails <- getAttachments 0 =<< theDocument
     (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachment (authorattachmentfileid att) actor
-    forM_ attachments $ \att -> dbUpdate $ AddDocumentAttachment att actor
+    forM_ attachmentFilesWithDetails $ \(attfile, maad) -> do
+      dbUpdate $ AddDocumentAttachment (fromMaybe (T.pack $ filename attfile) (aadName <$> maad))  (fromMaybe False (aadRequired <$> maad)) (fileid attfile) actor
     Ok <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
      where
-          getAttachments :: Kontrakcja m => Int -> Document -> m [FileID]
+          getAttachments :: Kontrakcja m => Int -> Document -> m [(File,Maybe AuthorAttachmentDetails)]
           getAttachments i doc = do
               mf <- tryGetFile doc i
               case mf of
                    Just f -> do
                               atts <- getAttachments (i+1) doc
-                              if (f `elem` atts)
+                              if (f `elem` (map fst atts))
                                 then return atts
-                                else return $ f: atts
+                                else do
+                                  maad <- tryGetAttachmentDetails i
+                                  return $ (f,maad): atts
                    Nothing -> return []
-          tryGetFile ::  Kontrakcja m => Document -> Int -> m  (Maybe FileID)
+
+          tryGetAttachmentDetails ::  Kontrakcja m => Int -> m (Maybe AuthorAttachmentDetails)
+          tryGetAttachmentDetails i = getField ("attachment_details_" ++ show i) >>= \case
+            Nothing -> return Nothing
+            Just s ->  case decode s of
+              J.Ok js -> case (fromJSValue js) of
+                 Just aad -> return aad
+                 _ -> throwM . SomeKontraException $ (badInput $ "Details for author attachment " ++ show i ++ " are invalid")
+              _ -> throwM . SomeKontraException $ (badInput $ "Details for author attachment " ++ show i ++ " is not a valid JSON")
+
+          tryGetFile ::  Kontrakcja m => Document -> Int -> m  (Maybe File)
           tryGetFile doc i = do
               inp <- getDataFn' (lookInput $ "attachment_" ++ show i)
               case inp of
@@ -304,14 +317,14 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
                          Left _ -> do
                            throwM . SomeKontraException $ (badInput $ "AttachFile " ++ show i ++ " file is not a valid PDF")
                          Right content' -> do
-                           fileid' <- dbUpdate $ NewFile filename content'
-                           return (Just fileid')
+                            fid <- dbUpdate $ NewFile filename content'
+                            Just <$> dbQuery (GetFileByFileID fid)
                    Just (Input  (Right c)  _ _)  -> do
                         case maybeRead (BSL.toString c) of
                             Just fid -> do
                               access <- hasAccess doc fid
                               if access
-                                then return (Just fid)
+                                then Just <$> dbQuery (GetFileByFileID fid)
                                 else throwM . SomeKontraException $ (forbidden $ "Access to attachment " ++ show i ++ " forbiden")
                             Nothing -> throwM . SomeKontraException $ (badInput $ "Can parse attachment id for attachment " ++ show i)
                    _ -> return Nothing
@@ -428,6 +441,10 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
     checkAuthenticationToSignMethodAndValue slid
     authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
     fields <- getFieldForSigning
+    unlessM (allRequiredAuthorAttachmentsAreAccepted =<< getAcceptedAuthorAttachments) $ do
+      (throwM . SomeKontraException $ badInput $ "Some required attachments where not accepted")
+
+
     case authorization of
        StandardAuthenticationToSign -> return $ Right $ Ok () -- If we have a document with standard auth, it can be always signed if its not closed and signed
        SMSPinAuthenticationToSign -> do
@@ -455,6 +472,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
                    Nothing -> throwM . SomeKontraException $ badInput "Illegal reference screenshot name"
                    Just s -> return s
   fields <- getFieldForSigning
+  acceptedAuthorAttachments <- getAcceptedAuthorAttachments
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
   olddoc `withDocument` ( do
     whenM (not <$> isPending <$> theDocument ) $ do
@@ -463,12 +481,14 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
       (throwM . SomeKontraException $ conflictError $ "Document already signed")
     whenM (signatoryNeedsToIdentifyToView =<< $fromJust . getSigLinkFor slid <$> theDocument) $ do
       (throwM . SomeKontraException $ forbidden "Authorization to view is needed")
+    unlessM (allRequiredAuthorAttachmentsAreAccepted acceptedAuthorAttachments) $ do
+      (throwM . SomeKontraException $ badInput $ "Some required attachments where not accepted")
     checkAuthenticationToSignMethodAndValue slid
     authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
 
     case authorization of
       StandardAuthenticationToSign -> do
-        signDocument slid mh fields Nothing Nothing screenshots
+        signDocument slid mh fields acceptedAuthorAttachments Nothing Nothing screenshots
         postDocumentPendingChange olddoc
         handleAfterSigning slid
         (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
@@ -477,7 +497,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
         validPin <- getValidPin slid fields
         if (isJust validPin)
           then do
-            signDocument slid mh fields Nothing validPin screenshots
+            signDocument slid mh fields acceptedAuthorAttachments Nothing validPin screenshots
             postDocumentPendingChange olddoc
             handleAfterSigning slid
             (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
@@ -485,7 +505,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
 
       SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
         mesig@(Just _) -> do
-          signDocument slid mh fields mesig Nothing screenshots
+          signDocument slid mh fields acceptedAuthorAttachments mesig Nothing screenshots
           postDocumentPendingChange olddoc
           handleAfterSigning slid
           (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
@@ -531,11 +551,12 @@ signDocument :: (Kontrakcja m, DocumentMonad m)
              => SignatoryLinkID
              -> MagicHash
              -> [(FieldIdentity, FieldTmpValue)]
+             -> [FileID]
              -> Maybe ESignature
              -> Maybe String
              -> SignatoryScreenshots
              -> m ()
-signDocument slid mh fields mesig mpin screenshots = do
+signDocument slid mh fields acceptedAuthorAttachments mesig mpin screenshots = do
   switchLang =<< getLang <$> theDocument
   ctx <- getContext
   -- Note that the second 'getSigLinkFor' call below may return a
@@ -544,6 +565,10 @@ signDocument slid mh fields mesig mpin screenshots = do
   -- actor identities may get wrong in the evidence log.
   fieldsWithFiles <- fieldsToFieldsWithFiles fields
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) =<< signatoryActor ctx sl
+  theDocument >>= \doc -> do
+    let sl = $fromJust (getSigLinkFor slid doc)
+    acceptanceText <- renderTemplate_ "_authorAttachmentsUnderstoodContent"
+    dbUpdate . AddAcceptedAuthorAttachmentsEvents acceptanceText sl acceptedAuthorAttachments (documentauthorattachments doc)  =<< signatoryActor ctx sl
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 {- End of utils-}
@@ -1285,3 +1310,19 @@ fieldsToFieldsWithFiles (field:fields) = do
                           else do
                             fileid <- dbUpdate $ NewFile "signature.png" (Binary bs)
                             return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')
+
+-- Mandatory attachments parameters
+getAcceptedAuthorAttachments :: (Kontrakcja m) => m [FileID]
+getAcceptedAuthorAttachments = do
+  eAttachmentJSON <- getFieldJSON "accepted_author_attachments"
+  case eAttachmentJSON of
+    Nothing -> return [] -- Backward compatibility. This field was not required
+    Just attachmentJSON -> do
+      case (fromJSValueCustomMany ((join . fmap maybeRead) <$> fromJSValueM) attachmentJSON) of
+        Nothing -> throwM . SomeKontraException $ badInput "accepted_author_attachments is not a valid list of ids"
+        Just values -> return values
+
+
+allRequiredAuthorAttachmentsAreAccepted :: (Kontrakcja m, DocumentMonad m) => [FileID] -> m Bool
+allRequiredAuthorAttachmentsAreAccepted acceptedAttachments = allRequiredAttachmentsAreOnList acceptedAttachments <$> theDocument
+

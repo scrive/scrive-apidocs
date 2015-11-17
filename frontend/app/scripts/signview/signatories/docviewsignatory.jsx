@@ -1,9 +1,9 @@
 /** @jsx React.DOM */
 
-define(["React", "common/button", "common/backbone_mixin", "Backbone", "legacy_code"],
-  function (React, Button, BackboneMixin, Backbone) {
+define(["React", "common/backbone_mixin", "Backbone", "common/language_service", "legacy_code"],
+  function (React, BackboneMixin, Backbone, LanguageService) {
 
-  return DocumentViewSignatoryView = React.createClass({
+  return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
     getBackboneModels: function () {
@@ -36,15 +36,6 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone", "legacy_c
       } else {
         return localization.signatoryMessage.other;
       }
-    },
-
-    hasAnyDetails: function () {
-     var signatory = this.props.signatory;
-     return signatory.company()
-       || signatory.email()
-       || signatory.mobile()
-       || signatory.companynumber()
-       || signatory.personalnumber();
     },
 
     getDeliveryMethod: function () {
@@ -112,59 +103,41 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone", "legacy_c
       var signatory = this.props.signatory;
 
       return (
-        <div className="grey-box">
-          <div className="titleinfo spacing">
-            <div className="name">
-              {signatory.nameOrEmailOrMobile()}{"\u00A0"}
-            </div>
-          </div>
-          <div className={this.hasAnyDetails() ? "inner fields" : ""} >
+        <div className="col-xs-4">
+          <h2 className="name">{signatory.nameOrEmailOrMobile() || localization.pad.notNamedParty}</h2>
+          <ul>
             {/* if */ signatory.company() &&
-              <div className="fieldrow">
-                <span className="company field" title={signatory.company()}>
-                  {localization.company}: {signatory.company()}
-                </span>
-              </div>
+              <li>
+                {localization.company}: <b>{signatory.company()}</b>
+              </li>
             }
             {/* if */ signatory.email() &&
-              <div className="fieldrow">
-                <span className="email field" display={false} title={signatory.email()}>
-                  {localization.email}: {signatory.email()}
-                </span>
-              </div>
+              <li>
+                {localization.email}: <b>{signatory.email()}</b>
+              </li>
             }
             {/* if */ signatory.mobile() &&
-              <div className="fieldrow">
-                <span className="mobile field" title={signatory.mobile()}>
-                  {localization.phone}: {signatory.mobile()}
-                </span>
-              </div>
+              <li>
+                {localization.phone}: <b>{signatory.mobile()}</b>
+              </li>
             }
             {/* if */ signatory.companynumber() &&
-              <div className="fieldrow">
-                <span className="orgnum field" title={signatory.companynumber()}>
-                  {localization.docsignview.companyNumberLabel + ": " +
-                    (signatory.companynumber().trim() || localization.docsignview.notEntered)}
-                </span>
-              </div>
+              <li>
+                {localization.docsignview.companyNumberLabel + ": "}
+                <b>{signatory.companynumber().trim() || localization.docsignview.notEntered}</b>
+              </li>
             }
             {/* if */ signatory.personalnumber() &&
-              <div className="fieldrow">
-                <span className="persnum field" title={signatory.personalnumber()}>
-                  {localization.docsignview.personalNumberLabel + ": " +
-                    (signatory.personalnumber().trim() || localization.docsignview.notEntered)}
-                </span>
-              </div>
+              <li>
+                {localization.docsignview.personalNumberLabel + ": "}
+                <b>{signatory.personalnumber().trim() || localization.docsignview.notEntered}</b>
+              </li>
             }
-          </div>
-          <div className="statusbox">
-            <div className="spacing butt" >
-              <span className={"icon status " + signatory.status()}></span>
-              <span className={"status statustext " + signatory.status()}>
-                {this.signatorySummary()}
-              </span>
-            </div>
-          </div>
+          </ul>
+          <span className={"icon status " + signatory.status()}></span>
+          <span className={"status statustext " + signatory.status()}>
+            {this.signatorySummary()}
+          </span>
         </div>
       );
     }

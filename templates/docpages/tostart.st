@@ -41,13 +41,13 @@ $htmlopentag()$
     <link href='/padlist_signview_branding/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
-    <div class="signview responsive">
+    <div class="to-start-signview responsive">
       <div class="mainContainer" >
         $flashmessages()$
         <div class="to-start">
           <div class="form-container"></div>
           <script>
-           require(['jquery', 'React' , 'signview/header', 'signview/footer',  'to-start/to-start', 'legacy_code'], function(jQuery,React,Header,Footer,ToStart) {
+           require(['jquery', 'React' , 'pages/special/header', 'pages/special/footer',  'to-start/to-start', 'legacy_code'], function(jQuery,React,Header,Footer,ToStart) {
 
               jQuery(function(){
                 doc = new Document({id: "$documentid$"});
@@ -61,19 +61,14 @@ $htmlopentag()$
 
               var headerDiv = jQuery('<div/>');
               var component = React.render(React.createElement(Header,{
-                   fullWidth: true,
-                   forceShowing: true,
-                   link : {
-                      text : localization.pad.backToList,
-                      onClick : function() {
-                        window.location.href = '/to-start';
-                      }
+                   linkText : localization.pad.backToList,
+                   linkOnClick : function() {
+                      window.location.href = '/to-start';
                    }
                 }), headerDiv[0]);
 
               var footerDiv = jQuery('<div/>');
               var component = React.render(React.createElement(Footer,{
-                   forceShowing: true
                 }), footerDiv[0]);
 
               jQuery(".to-start").prepend(headerDiv);
@@ -99,13 +94,13 @@ $htmlopentag()$
     <link href='/padlist_signview_branding/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
-    <div class="signview responsive">
+    <div class="to-start-signview responsive">
       <div class="mainContainer" >
         $flashmessages()$
         <div class="to-start">
           <div class="list-container"></div>
           <script>
-           require(['jquery', 'React' , 'signview/header', 'signview/footer', 'to-start/templatelist', 'legacy_code'], function(jQuery,React,Header,Footer, ToStartList) {
+           require(['jquery', 'React' , 'pages/special/header', 'pages/special/footer', 'to-start/templatelist', 'legacy_code'], function(jQuery,React,Header,Footer, ToStartList) {
 
               jQuery(function(){
 
@@ -115,24 +110,19 @@ $htmlopentag()$
 
               var headerDiv = jQuery('<div/>');
               var component = React.render(React.createElement(Header,{
-                   fullWidth: true,
-                   forceShowing: true,
-                   link : {
-                      text : "$_headerLogOut()$",
-                      onClick : function() {
-                        new Submit({
-                          url : "/logout_ajax",
-                          ajax : true,
-                          ajaxsuccess : function() {
-                            window.location.reload();}
-                        }).send();
-                      }
+                   linkText : "$_headerLogOut()$",
+                   linkOnClick : function() {
+                     new Submit({
+                        url : "/logout_ajax",
+                        ajax : true,
+                        ajaxsuccess : function() {
+                          window.location.reload();}
+                     }).send();
                    }
                 }), headerDiv[0]);
 
               var footerDiv = jQuery('<div/>');
               var component = React.render(React.createElement(Footer,{
-                   forceShowing: true
                 }), footerDiv[0]);
 
               jQuery(".to-start").prepend(headerDiv);

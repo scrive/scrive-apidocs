@@ -331,6 +331,25 @@ addFileNameToAuthorAttachments = Migration {
 
     }
 
+addRequiredAndNameToAuthorAttachments :: MonadDB m  => Migration m
+addRequiredAndNameToAuthorAttachments = Migration {
+      mgrTable = tableAuthorAttachments
+    , mgrFrom = 2
+    , mgrDo = do
+        runQuery_ $ sqlAlterTable "author_attachments" [
+            sqlAddColumn tblColumn { colName = "name", colType = TextT, colNullable = False, colDefault = Just "''::text"}
+          , sqlAddColumn tblColumn { colName = "required", colType = BoolT, colNullable = False, colDefault = Just "false"}
+          ]
+        runSQL_ $ "UPDATE author_attachments"
+          <+> "SET name = f.name"
+          <+> "FROM (SELECT id,name FROM files) AS f"
+          <+> "WHERE f.id = author_attachments.file_id"
+        runQuery_ $ sqlAlterTable "author_attachments" [
+            sqlAlterColumn "required" "DROP DEFAULT"
+          , sqlAlterColumn "name" "DROP DEFAULT"
+          ]
+    }
+
 
 dropErrorTextFromDocuments :: MonadDB m  => Migration m
 dropErrorTextFromDocuments = Migration {

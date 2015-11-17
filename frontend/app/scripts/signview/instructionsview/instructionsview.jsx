@@ -1,16 +1,41 @@
-define(["legacy_code", "Backbone", "React", "signview/instructionsview/padgivetonextview"],
-  function (legacy_code, Backbone, React, PadGiveToNextView) {
+define(["legacy_code", "Backbone", "React", "common/button", "signview/instructionsview/padgivetonextview"],
+  function (legacy_code, Backbone, React, Button, PadGiveToNextView) {
+
+  var Menu = React.createClass({
+    getInitialState: function () {
+      return {open: false};
+    },
+
+    toggleOpen: function () {
+      this.setState({open: !this.state.open});
+    },
+
+    render: function () {
+      var open = this.state.open;
+      var openStyle = {height: open ? "64px" : "0"};
+
+      return (
+        <span>
+          <Button
+            className="transparent-button"
+            text={this.props.title}
+            onClick={this.toggleOpen}
+          />
+          <div style={openStyle} className="menu-options button-group">
+            <Button onClick={this.props.onDownload} text="Download" />
+          </div>
+        </span>
+      );
+    }
+  });
 
   return React.createClass({
     propTypes: {
-      model: React.PropTypes.instanceOf(Backbone.Model).isRequired
+      model: React.PropTypes.instanceOf(Document).isRequired,
+      arrow: React.PropTypes.func.isRequired
     },
 
     componentDidMount: function () {
-      this.setupJqueryListeners();
-    },
-
-    componentDidUpdate: function () {
       this.setupJqueryListeners();
     },
 
@@ -22,7 +47,7 @@ define(["legacy_code", "Backbone", "React", "signview/instructionsview/padgiveto
     },
 
     headline: function () {
-      var doc = this.props.model.document();
+      var doc = this.props.model;
       var sig = doc.currentSignatory();
       var welcomeUser = sig && sig.name() != "" && sig.canSign();
 
@@ -47,50 +72,8 @@ define(["legacy_code", "Backbone", "React", "signview/instructionsview/padgiveto
       return {__html: $el.html()};
     },
 
-    subtext: function () {
-      var doc = this.props.model.document();
-      var sig = doc.currentSignatory();
-
-      if (!(sig.hasSigned() && (doc.pending() || doc.closed()))) {
-        return "";
-      }
-
-      var text = "";
-
-      if (doc.closed()) {
-        if (sig.emailConfirmationDelivery()) {
-          text = localization.docsignview.subtitleSignedClosedByEmail;
-        } else if (sig.mobileConfirmationDelivery()) {
-          text = localization.docsignview.subtitleSignedClosedByMobile;
-        } else if (sig.emailMobileConfirmationDelivery()) {
-          text = localization.docsignview.subtitleSignedClosedByEmailMobile;
-        }
-      } else {
-        if (sig.emailConfirmationDelivery()) {
-          text = localization.docsignview.subtitleSignedNotClosedByEmail;
-        } else if (sig.mobileConfirmationDelivery()) {
-          text = localization.docsignview.subtitleSignedNotClosedByMobile;
-        } else if (sig.emailMobileConfirmationDelivery()) {
-          text = localization.docsignview.subtitleSignedNotClosedByEmailMobile;
-        }
-      }
-
-      return text;
-    },
-
-    hasArrowLegend: function () {
-      var doc = this.props.model.document();
-      var sig = doc.currentSignatory();
-      var hasOptionalFields = _.any(sig.fields(), function (f) {
-        return f.hasPlacements() && !f.obligatory() && !f.isClosed();
-      });
-      var hasAttachments = doc.authorattachments().length > 0;
-
-      return doc.currentSignatoryCanSign() && (hasOptionalFields || hasAttachments);
-    },
-
     hasPadSigning: function () {
-      var doc = this.props.model.document();
+      var doc = this.props.model;
       var sig = doc.currentSignatory();
 
       return doc.currentSignatory().padDelivery() &&
@@ -99,65 +82,50 @@ define(["legacy_code", "Backbone", "React", "signview/instructionsview/padgiveto
     },
 
     handleArrowTextClick: function () {
-      var model = this.props.model;
+      var arrow = this.props.arrow;
       mixpanel.track("Click arrow text");
-      model.arrow().goToCurrentTask();
+      arrow().goToCurrentTask();
     },
 
     handleDownloadClick: function () {
-      var doc = this.props.model.document();
+      var doc = this.props.model;
       var sig = doc.currentSignatory();
+      var downloadUrl = doc.mainfile().downloadLinkForMainFile(doc.title());
 
       mixpanel.track("Download pdf", {
         "Can sign": doc.currentSignatoryCanSign() ? "yes" : "no",
         "Delivery method": sig.delivery()
       });
+
+      window.open(downloadUrl, "_blank");
     },
 
     render: function () {
-      var doc = this.props.model.document();
+      var self = this;
+      var doc = this.props.model;
       var sig = doc.currentSignatory();
       var isSmallScreen = BrowserInfo.isSmallScreen();
       var hasDownloadButton = doc.showpdfdownload() && !isSmallScreen;
       var downloadUrl = doc.mainfile().downloadLinkForMainFile(doc.title());
 
-      var divClass = React.addons.classSet({
-        "instructions": true,
+      var sectionClass = React.addons.classSet({
         "section": true,
-        "spacing": true,
+        "instructions": true,
         "small-screen": isSmallScreen
       });
 
       return (
-        <div className={divClass}>
-          <div ref="headline" className="headline" dangerouslySetInnerHTML={this.headline()} />
-          <div className="subheadline">
-            {this.subtext()}
-          </div>
-          {/* if */ this.hasPadSigning() &&
-            <PadGiveToNextView sigs={doc.signatoriesThatCanSignNowOnPad()} />
-          }
-          <div className="subheadline">
-            <div className="smaller-bits">
-              {/* if */ hasDownloadButton &&
-                <a target="_blank" className="download" href={downloadUrl} onClick={this.handleDownloadClick}>
-                  {doc.title() + ".pdf"}
-                </a>
-              }
-            </div>
-          </div>
-          {/* if */ this.hasArrowLegend() &&
-            <div className="arrow-legend">
-              <p className="row">
-                <span className="icon-legend mandatory"></span>
-                <span className="copy">{localization.docsignview.mandatoryAction}</span>
-              </p>
-              <p className="row">
-                <span className="icon-legend optional"></span>
-                <span className="copy">{localization.docsignview.optionalAction}</span>
-              </p>
-            </div>
-          }
+        <div className={sectionClass}>
+            <h1 className="follow" ref="headline" dangerouslySetInnerHTML={this.headline()} />
+            {/* if */ hasDownloadButton &&
+              <Menu
+                title={doc.title()}
+                onDownload={this.handleDownloadClick}
+              />
+            }
+            {/* if */ this.hasPadSigning() &&
+              <PadGiveToNextView sigs={doc.signatoriesThatCanSignNowOnPad()} />
+            }
         </div>
       );
     }

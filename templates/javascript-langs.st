@@ -7,6 +7,42 @@ javascriptLocalisation =
   window.localization =
         {      code : "$code$"
              , reloadPage : "$_reloadPage()$"
+             , signviewDrawSignatureHere: "$_drawSignatureHere()$"
+             , signviewMessage: "$_signviewMessage()$"
+             , signviewHide: "$_signviewHide()$"
+             , ssnInfoText: "$_SsnInfoText()$"
+             , emailInfoText: "$_EmailInfoText()$"
+             , nameInfoText: "$_NameInfoText()$"
+             , phoneInfoText: "$_PhoneInfoText()$"
+             , zoomOutMore: "$_ZoomOutMore()$"
+             , zoomOut: "$_ZoomOut()$"
+             , signviewConfirmation: "$_contractSignConfirmation()$"
+             , feedbackQ7Subtitle: "$_FeedbackQ7Subtitle()$"
+             , feedbackQ7Title: "$_FeedbackQ7Title()$"
+             , feedbackQ6Subtitle: "$_FeedbackQ6Subtitle()$"
+             , feedbackQ6Title: "$_FeedbackQ6Title()$"
+             , feedbackYesLink: "$_FeedbackYesLink()$"
+             , feedbackQ5Subtitle: "$_FeedbackQ5Subtitle()$"
+             , feedbackQ5Title: "$_FeedbackQ5Title()$"
+             , feedbackPhoneNumber: "$_FeedbackPhoneNumber()$"
+             , feedbackYesPlease: "$_FeedbackYesPlease()$"
+             , feedbackNo: "$_FeedbackNo()$"
+             , feedbackQ4Subtitle: "$_FeedbackQ4Subtitle()$"
+             , feedbackQ4Title: "$_FeedbackQ4Title()$"
+             , feedbackOften: "$_FeedbackOften()$"
+             , feedbackSometimes: "$_FeedbackSometimes()$"
+             , feedbackNever: "$_FeedbackNever()$"
+             , feedbackQ3Subtitle: "$_FeedbackQ3Subtitle()$"
+             , feedbackQ3Title: "$_FeedbackQ3Title()$"
+             , feedbackFeedback: "$_FeedbackFeedback()$"
+             , feedbackSend: "$_FeedbackSend()$"
+             , feedbackSkip: "$_FeedbackSkip()$"
+             , feedbackQ2Subtitle: "$_FeedbackQ2Subtitle()$"
+             , feedbackQ2Title: "$_FeedbackQ2Title()$"
+             , feedbackGood: "$_FeedbackGood()$"
+             , feedbackBad: "$_FeedbackBad()$"
+             , feedbackQ1: "$_FeedbackQ1()$"
+             , signviewPdfOrPhoto: "$_pdfOrPhoto()$"
              , identifyDocument: "$_IdentifyDocument()$"
              , identifyBankId: "$_IdentifyBankId()$"
              , identifyBankIdNo: "$_IdentifyBankIdNO()$"
@@ -67,7 +103,6 @@ javascriptLocalisation =
              , reviewAttachment: "$_ReviewAttachment()$"
              , reviewPDF: "$_ReviewPDF()$"
              , deletePDF: "$_DeletePDF()$"
-             , requestedAttachments : "$_RequestedAttachments()$"
              , accept : "$_Accept()$"
              , send : "$_send()$"
              , csvFilePersons : "$_csvFilePersons()$"
@@ -113,7 +148,6 @@ javascriptLocalisation =
                          "$_december()$"
                        ]
 
-            , selectFileToUpload : "$_selectFileToUpload()$"
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
             , flashDocumentRestarted : "$_flashMessageContractRestarted()$"
@@ -143,8 +177,8 @@ javascriptLocalisation =
             , process : {
                signModalTitle: "$_contractSignatorySignModalTitle()$",
                signModalBody: "<p> $_contractSignatorySignModalBody()$ </p>",
+               signModalBodyNoName: "<p> $_contractSignatorySignModalBodyNoName()$ </p>",
                sendbuttontext: "$_contractsendbuttontext()$",
-               changesignatorybuttontext: "$_changeSignatoryButtonText()$",
                startsigningbuttontext: "$_contractstartsigningbuttontext()$",
                confirmsendtitle: "$_contractconfirmsendtitle()$",
                startsigningtitle: "$_contractstartsigningtitle()$",
@@ -155,7 +189,6 @@ javascriptLocalisation =
                cancelmodaltext: "$_contractcancelmodaltext()$",
                cancelmodaltextwithsignatures: "$_contractcancelmodaltextwithsignatures()$",
                rejectbuttontext: "$_contractrejectbuttontext()$",
-               signatorysignmodalcontent: "<p>$_contractsignatorysignmodalcontent()$ </p>",
                signbuttontext: "$_contractsignbuttontext()$",
                signbuttontextfromsignaturedrawing: "$_contractsignbuttontextfromsignaturedrawing()$",
                signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",
@@ -165,8 +198,7 @@ javascriptLocalisation =
                authorname: "$_contractauthorname()$",
                authorsignatoryname: "$_contractauthorsignatoryname()$",
                signatoryname: "$_contractsignatoryname()$",
-               nonsignatoryname: "$_contractnonsignatoryname()$",
-               cancel: "$_cancel()$"
+               nonsignatoryname: "$_contractnonsignatoryname()$"
               }
             , filterByTime: {
                 filterForm: "$_fromFilter()$",
@@ -189,10 +221,15 @@ javascriptLocalisation =
                   selectAttachments: "$_updateAttachmentsDialogHead()$"
                 , selectAttachment : "$_updateAttachmentsDialogUpLoadChooseAttachment()$"
                 , selectFile: "$_updateAttachmentsDialogUpLoadChooseFile()$"
-                , selectFromScrive : "$_updateAttachmentsDialogChooseFromScrive()$"
                 , invalidAttachments : "$_invalidAttachments()$"
                 , tooLargeAttachment : "$_tooLargeAttachment()$"
                 , tooLargeAttachments : "$_tooLargeAttachments()$"
+                , required : "$_authorAttachmentRequired()$"
+                , optional : "$_authorAttachmentOptional()$"
+                , nameOfAttachment : "$_authorAttachmentName()$"
+                , typeOfAttachment :  "$_authorAttachmentType()$"
+                , back : "$_authorAttachmentBack()$"
+                , add : "$_authorAttachmentAdd()$"
             }
           , signatoryAttachments : {
                 addAttachment:      "$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$"
@@ -243,7 +280,6 @@ javascriptLocalisation =
             }
          , signature : {
                placeFor : "$_signaturePlaceFor()$"
-             , confirmSignature : "$_signatureConfirm()$"
              , clickToDraw : "$_clickToDraw()$"
 
            }
@@ -253,30 +289,6 @@ javascriptLocalisation =
                , backFromSigningPage: "$_afterErrorGoBack()$"
                , someFieldsNotFilledInCorrectly: "$_flashMessageSomeFieldsAreIncorrectlyFilledIn()$"
           }
-          , questionnaire : {
-               heyImViktorFromScrive: "$_questionnaireHeyImViktorFromScrive()$"
-             , ourEsignService: "$_questionnaireOurEsignService()$"
-             , quickQuestion: "$_questionnaireQuickQuestion()$"
-             , enjoySigning: "$_questionnaireEnjoySigning()$"
-             , yes: "$_questionnaireYes()$"
-             , no: "$_questionnaireNo()$"
-             , great: "$_questionnaireGreat()$"
-             , sendDownP: "$_questionnaireSendDownP()$"
-             , sendDown2: "$_questionnaireSendDown2()$"
-             , closeFaster: "$_questionnaireCloseFaster()$"
-             , showDemo: "$_questionnaireShowDemo()$"
-             , seeHowSimple: "$_questionnaireSeeHowSimple()$"
-             , easyToSign: "$_questionnaireEasyToSign()$"
-             , otherBenefitsP: "$_questionnaireOtherBenefitsP()$"
-             , thanksForYourTime: "$_questionnaireThanksForYourTime()$"
-             , haveAGreatDay: "$_questionnaireHaveAGreatDay()$"
-             , sorry: "$_questionnaireSorry()$"
-             , improvements: "$_questionnaireImprovements()$"
-             , sendFeedback: "$_questionnaireSendFeedback()$"
-             , lastQuestion: "$_questionnaireLastQuestion()$"
-             , anyoneElse: "$_questionnaireAnyoneElse()$"
-             , phoneNumber: "$_questionnairePhoneNumber()$"
-         }
          , phonePlaceholder: "$_phonePlaceholder()$"
          , designview : {
               dndDisabled: "$_designViewDNDDisabled()$",
@@ -429,10 +441,7 @@ javascriptLocalisation =
               , passwordOldPasswordNotValid : "$_flashMessageBadOldPassword()$"
          }
          , pad : {
-                drawSignatureBoxHeader : "$_padDrawSignatureBoxHeader()$"
-             ,  typeSignatureBoxHeader : "$_padTypeSignatureBoxHeader()$"
-             ,  typeSignatureNameField : "$_padTypeSignatureNameField()$"
-             ,  fillInExtraDetails : "$_padFillInExtraDetails()$"
+                typeSignatureNameField : "$_padTypeSignatureNameField()$"
              ,  cleanImage : "$_padCleanImage()$"
              ,  notNamedParty : "$_notNamedParty()$"
              ,  changePartyTo : "$_changePartyTo()$"
@@ -518,33 +527,15 @@ javascriptLocalisation =
              , reviewDocument: "$_reviewDocument()$"
              , signedNotClosed: "$_signedNotClosed()$"
              , signedAndClosed: "$_signedAndClosed()$"
-             , subtitleSignedClosedByEmail: "$_subtitleSignedClosedByEmail()$"
-             , subtitleSignedClosedByMobile: "$_subtitleSignedClosedByMobile()$"
-             , subtitleSignedClosedByEmailMobile: "$_subtitleSignedClosedByEmailMobile()$"
-             , subtitleSignedNotClosedByEmail: "$_subtitleSignedNotClosedByEmail()$"
-             , subtitleSignedNotClosedByMobile: "$_subtitleSignedNotClosedByMobile()$"
-             , subtitleSignedNotClosedByEmailMobile: "$_subtitleSignedNotClosedByEmailMobile()$"
              , unavailableForSign: "$_unavailableForSign()$"
              , dueDate: "$_dueDate()$"
              , companyNumberLabel: "$_companyNumberLabel()$"
              , personalNumberLabel: "$_personalNumberLabel()$"
-             , authorAttachmentsTitleForOne: "$_signViewAuthorAttachmentsTitleForOne()$"
-             , authorAttachmentsTitleForLots: "$_signViewAuthorAttachmentsTitleForLots()$"
-             , signatoryAttachmentsTitleForOne: "$_signViewSignatoryAttachmentsTitleForOne()$"
-             , signatoryAttachmentsTitleForLots: "$_signViewSignatoryAttachmentsTitleForLots()$"
-             , signatoryAttachmentsSupportedFormats : "$_signatoryAttachmentsSupportedFormats()$"
+             , authorAttachmentsUnderstoodContent : "$_authorAttachmentsUnderstoodContent()$"
              , signatoriesTitle: "$_signViewSignatoriesTitle()$"
              , acceptTOS: "$_acceptTOS()$"
              , notEntered: "$_notEntered()$"
-             , checkbox: "$_signViewCheckbox()$"
-             , signature: "$_signViewSignature()$"
-             , signArrowLabel: "$_signViewSignArrowLabel()$"
-             , textfield: "$_signViewTextField()$"
-             , filladitionfields : "$_filladitionfields()$"
              , filladitionfieldslabel: "$_filladitionfieldslabel()$"
-             , additionalFieldsMissingInModal : "$_filladitionfieldsdescription()$"
-             , mandatoryAction: "$_mandatoryAction()$"
-             , optionalAction: "$_optionalAction()$"
              , signupButtonText: "$_signupButtonText()$"
              , titleText: "$_titleText()$"
              , subtitleText: "$_subtitleText()$"
@@ -555,19 +546,15 @@ javascriptLocalisation =
                 , invalidPin      : "$_invalidPin()$"
                 , enterSMSPin     : "$_enterSMSPin()$"
                 , pinWillBeSentTo : "$_pinWillBeSentTo()$"
-                , enterPhoneForPinDelivery : "$_enterPhoneForPinDelivery()$"
-                , next : "$_next()$"
                 , checkYourPhone : "$_checkYourPhone()$"
 
              }
              , eleg : {
                   bankid : {
-                        modalAnotherDevice : "$_elegBankIDModalAnotherDevice()$"
-                      , modalThisDevice : "$_elegBankIDModalThisDevice()$"
-                      , mobilebankid: "$_mobileBankID()$"
-                      , faultModalTitle : "$_elegBankIDFaultModalTitle()$"
+                        faultModalTitle : "$_elegBankIDFaultModalTitle()$"
                       , signConfirmationTitle : "$_elegSignConfirmationTitle()$"
                       , signConfirmationText : "<p>$_elegSignConfirmationText()$</p>"
+                      , signConfirmationTextNoName : "$_elegSignConfirmationTextNoName()$"
                       , rfa1 : "$_elegBankIDRFA1()$"
                       , rfa3 : "$_elegBankIDRFA3()$"
                       , rfa5 : "$_elegBankIDRFA5()$"
@@ -580,7 +567,6 @@ javascriptLocalisation =
                       , rfa16 : "$_elegBankIDRFA16()$"
                       , rfa17 : "$_elegBankIDRFA17()$"
                       , rfa18 : "$_elegBankIDRFA18()$"
-                      , rfa20 : "$_elegBankIDRFA20()$"
                       , accessDenied : "$_elegBankAccessDenied()$"
                       , invalidParametersCanChange : "$_elegBankInvalidParametersCanChange()$"
                       , invalidParametersCantChange : "$_elegBankInvalidParametersCantChange()$"
@@ -1187,8 +1173,7 @@ javascriptLocalisation =
              , api          : "$_deliveryAPI()$"
       }
       , signinginprogressmodal : {
-               title : "$_signinginprogressmodalTitle()$"
-             , action1 : "$_signinginprogressmodalAction1()$"
+               action1 : "$_signinginprogressmodalAction1()$"
              , action2 : "$_signinginprogressmodalAction2()$"
              , youHaveSignedPleaseWait : "$_signinginprogressmodalYouHaveSignedPleaseWait()$"
       }

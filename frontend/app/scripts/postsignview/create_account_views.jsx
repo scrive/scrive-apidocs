@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'Backbone'], function(React, Backbone) {
+define(['React', 'Backbone', 'common/button'], function(React, Backbone, Button) {
   var expose = {};
 
   expose.SaveBackupCopy = React.createClass({
@@ -28,28 +28,20 @@ define(['React', 'Backbone'], function(React, Backbone) {
       });
 
       return (
-          <div>
-            <div className={mainContainerClasses}>
-
-              { /*if*/ !this.props.isSmallScreen &&
-              <div>
-                <div className="title">{ localization.docsignview.titleText }</div>
-                <div className="subtitle">{ localization.docsignview.subtitleText }</div>
-              </div>
-              }
-              { /*else*/ this.props.isSmallScreen &&
-              <div className="title">{ localization.docsignview.subtitleText }</div>
-              }
-
-              <div className="clearfix"></div>
-              <div className="acceptbutton">
-                <div className="label" dangerouslySetInnerHTML={{__html: this.makeTOSCopyWithLink()}} />
-                <a onClick={this.props.registerUser} className="green button button-large action">
-                  <div className="label">{ localization.docsignview.signupButtonText }</div>
-                </a>
-              </div>
-            </div>
+        <div className="section safety-copy">
+          <div className="col-xs-6">
+            <h1>{localization.docsignview.titleText}</h1>
+            <p>{localization.docsignview.subtitleText}</p>
           </div>
+          <div className="col-xs-6 right">
+            <Button
+              type="action"
+              text={localization.docsignview.signupButtonText}
+              onClick={this.props.registerUser}
+            />
+            <p className="bottom-label" dangerouslySetInnerHTML={{__html: this.makeTOSCopyWithLink()}} />
+          </div>
+        </div>
       );
     }
   });

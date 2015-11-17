@@ -127,10 +127,12 @@ ctMainFile = CompositeType {
 tableAuthorAttachments :: Table
 tableAuthorAttachments = tblTable {
     tblName = "author_attachments"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblColumns = [
       tblColumn { colName = "file_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "name", colType = TextT, colNullable = False }
+    , tblColumn { colName = "required", colType = BoolT, colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumns ["file_id", "document_id"]
   , tblForeignKeys = [
@@ -147,8 +149,10 @@ ctAuthorAttachment :: CompositeType
 ctAuthorAttachment = CompositeType {
   ctName = "author_attachment"
 , ctColumns = [
-    CompositeColumn { ccName = "id", ccType = BigIntT }
-  , CompositeColumn { ccName = "file_name", ccType = TextT }
+    CompositeColumn { ccName = "name", ccType = TextT }
+  , CompositeColumn { ccName = "required", ccType = BoolT }
+  , CompositeColumn { ccName = "file_id", ccType = BigIntT }
+
   ]
 }
 

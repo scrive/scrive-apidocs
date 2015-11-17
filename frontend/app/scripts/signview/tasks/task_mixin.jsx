@@ -1,11 +1,19 @@
 define(["React"], function (React) {
   return {
     contextTypes: {
-      addTask: React.PropTypes.func.isRequired,
-      removeTask: React.PropTypes.func.isRequired
+      addTask: React.PropTypes.func,
+      removeTask: React.PropTypes.func
     },
 
-    componentDidMount: function () {
+    hasTaskContext: function () {
+      return typeof this.context.addTask === "function" && typeof this.context.removeTask === "function";
+    },
+
+    addTasks: function () {
+      if (!this.hasTaskContext()) {
+        return;
+      }
+
       var self = this;
 
       if (typeof self.createTasks !== "function") {
@@ -23,6 +31,26 @@ define(["React"], function (React) {
       }
     },
 
+    removeTasks: function () {
+      if (!this.hasTaskContext()) {
+        return;
+      }
+
+      var self = this;
+      var tasks = self._tasks;
+
+      if (tasks instanceof Array) {
+        tasks.forEach(function (task) {
+          self.context.removeTask(task);
+        });
+      }
+    },
+
+    forceUpdateTasks: function () {
+      this.removeTasks();
+      this.addTasks();
+    },
+
     componentDidUpdate: function () {
       var self = this;
       var tasks = self._tasks;
@@ -34,15 +62,12 @@ define(["React"], function (React) {
       }
     },
 
-    componentWillUnmount: function () {
-      var self = this;
-      var tasks = self._tasks;
+    componentDidMount: function () {
+      this.addTasks();
+    },
 
-      if (tasks instanceof Array) {
-        tasks.forEach(function (task) {
-          self.context.removeTask(task);
-        });
-      }
+    componentWillUnmount: function () {
+      this.removeTasks();
     }
   };
 });

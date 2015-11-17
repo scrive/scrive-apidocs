@@ -53,7 +53,7 @@ testDocApiV2SigCheck = do
   reqStart <- mkRequest POST []
   _ <- runTestKontra reqStart ctx $ docApiV2Start did
 
-  req <- mkRequest POST [("fields", inText "[]")]
+  req <- mkRequest POST [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
   (rsp,_) <- runTestKontra req ctx $ docApiV2SigCheck did slid
   assertEqual "Successful `docApiV2SigCheck` response code" 200 (rsCode rsp)
 
@@ -67,7 +67,7 @@ testDocApiV2SigSign = do
   reqStart <- mkRequest POST []
   _ <- runTestKontra reqStart ctx $ docApiV2Start did
 
-  req <- mkRequest POST [("fields", inText "[]")]
+  req <- mkRequest POST [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
   (rsp,_) <- runTestKontra req ctx $ docApiV2SigSign did slid
   assertEqual "Successful `docApiV2SigSign` response code" 200 (rsCode rsp)
   docJSONSigned <- parseMockDocumentFromBS did (rsBody rsp)

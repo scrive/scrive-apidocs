@@ -2,6 +2,7 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/t
 
   var TestUtils = React.addons.TestUtils;
 
+  /*
   var SignView = Backbone.Model.extend({});
 
   describe("signview/fileview/textplacementplacedview", function () {
@@ -45,4 +46,5 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/t
       server.restore();
     });
   });
+  */
 });

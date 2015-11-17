@@ -1,0 +1,31 @@
+@import "vars";
+
+.signatory-attachment, .author-attachment {
+  table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  td {
+    vertical-align: middle;
+  }
+
+  td:first-child {
+    width: 40px;
+    padding-right: @signview-half-gutter;
+  }
+
+  .paperclip {
+    margin-top: 6px;
+    margin-bottom: 6px;
+    margin-right: @signview-half-gutter;
+  }
+
+  .help {
+    margin-top: @signview-half-gutter;
+  }
+
+  .desc {
+    margin-left: 2px;
+  }
+}

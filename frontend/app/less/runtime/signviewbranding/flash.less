@@ -1,0 +1,72 @@
+.flash-signview {
+  @line-height: 100px;
+  @padding: 50px;
+  @container-lg: 1040px;
+
+  background: transparent;
+  left: 0;
+  margin-top: 4px;
+  position: fixed;
+  top: -(@line-height + 4);
+  width: 100%;
+  z-index: 100001;
+
+  transition: all .25s ease-in-out;
+
+  &.active {
+    top: 0;
+  }
+
+  &.success {
+    .flash-content {
+      background-color: @positivecolor;
+      color: @positivetextcolor;
+    }
+  }
+
+  &.error {
+    .flash-content {
+      background-color: @negativecolor;
+      color: @negativetextcolor;
+    }
+  }
+
+  .flash-content-wrapper {
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+    width: @container-lg;
+  }
+
+  .flash-content {
+    height: @line-height;
+  }
+
+  .flash-body {
+    float: left;
+    font-size: 18px;
+    font-weight: 300;
+    line-height: @line-height;
+    max-width: 840px;
+    padding-left: @padding;
+    text-align: left;
+
+    .multiline & {
+      line-height: 22px;
+      padding-bottom: 8px;
+      padding-top: 8px;
+    }
+  }
+
+  .flash-close {
+    cursor: pointer;
+    font-size: 30px;
+    font-weight: 300;
+    line-height: @line-height;
+    padding: 0px @padding;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 22px;
+  }
+}

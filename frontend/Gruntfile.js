@@ -31,7 +31,7 @@ module.exports = function(grunt) {
     watch: {
       less: {
         files: ["<%= yeoman.app %>/less/**/*.less", "<%= yeoman.app %>/scripts/temporary_less_directory/**/*.less"],
-        tasks: ["less:compile"]
+        tasks: ["less:compile", "autoprefixer:compile"]
       },
       localization: {
         files: [
@@ -348,6 +348,14 @@ module.exports = function(grunt) {
         'copy:dist',
       ]
     },
+    autoprefixer: {
+      options: {
+        browsers: ["ie >= 8", "chrome >= 31", "ff >= 38"]
+      },
+      compile: {
+        src: "<%= yeoman.app %>/less/less-compiled.css"
+      }
+    },
     less: {
       compile: {
         options: {
@@ -425,6 +433,7 @@ module.exports = function(grunt) {
     grunt.task.run([
       'clean:server',
       'less:compile',
+      'autoprefixer:compile',
       'cssmin:dev',
       'compileJsxWatch',
       'compileGenerateLocalization',
@@ -475,6 +484,7 @@ module.exports = function(grunt) {
 
     tasks = tasks.concat([
       'less:compile',
+      'autoprefixer:compile',
       'cssmin:dist',
       'deploybuild:dist',
       'shell:updateLastBuilt'

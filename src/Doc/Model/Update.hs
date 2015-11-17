@@ -46,6 +46,7 @@ module Doc.Model.Update
   , SetShowPDFDownload(..)
   , SetShowRejectOption(..)
   , SetShowFooter(..)
+  , AddAcceptedAuthorAttachmentsEvents(..)
   , SignDocument(..)
   , CloneDocumentWithUpdatedAuthor(..)
   , StoreDocumentForTesting(..)
@@ -252,6 +253,8 @@ insertAuthorAttachments :: MonadDB m => DocumentID -> [AuthorAttachment] -> m ()
 insertAuthorAttachments _ [] = return ()
 insertAuthorAttachments did atts = runQuery_ . sqlInsert "author_attachments" $ do
   sqlSet "document_id" did
+  sqlSetList "name" $ authorattachmentname <$> atts
+  sqlSetList "required" $ authorattachmentrequired <$> atts
   sqlSetList "file_id" $ authorattachmentfileid <$> atts
 
 insertMainFiles :: MonadDB m => DocumentID -> [MainFile] -> m ()
@@ -1247,6 +1250,25 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocu
       sqlSet "unsaved_draft" flag
       sqlWhereDocumentIDIs did
 
+data AddAcceptedAuthorAttachmentsEvents = AddAcceptedAuthorAttachmentsEvents String SignatoryLink [FileID] [AuthorAttachment] Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpdate m AddAcceptedAuthorAttachmentsEvents () where
+  update (AddAcceptedAuthorAttachmentsEvents acceptanceText sl acceptedAttachments allAuthorAttachments actor) = generateEvents allAuthorAttachments
+    where
+      generateEvents [] = return ()
+      generateEvents (a:as) = do
+        when (authorattachmentrequired a && (authorattachmentfileid a) `elem` acceptedAttachments) $ do
+          void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+              AuthorAttachmentAccepted
+              (do
+                F.value "attachment_name" (authorattachmentname a)
+                F.value "attachment_acceptance_text"  acceptanceText
+              )
+              (Just sl)
+              Nothing
+            actor
+        generateEvents as
+
+
 data SignDocument = SignDocument SignatoryLinkID MagicHash (Maybe ESignature) (Maybe String) SignatoryScreenshots Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpdate m SignDocument () where
   update (SignDocument slid mh mesig mpin screenshots actor) = do
@@ -1573,12 +1595,14 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateP
                (F.value "oldphone" oldphone >> F.value "newphone" newphone) (Just sl) Nothing actor
 
 
-data AddDocumentAttachment = AddDocumentAttachment FileID Actor
+data AddDocumentAttachment = AddDocumentAttachment T.Text Bool FileID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AddDocumentAttachment Bool where
-  update (AddDocumentAttachment fid _actor) = updateDocumentWithID $ \did -> do
+  update (AddDocumentAttachment aname arequired afid _actor) = updateDocumentWithID $ \did -> do
     runQuery01 . sqlInsertSelect "author_attachments" "" $ do
         sqlSet "document_id" did
-        sqlSet "file_id" fid
+        sqlSet "name" aname
+        sqlSet "required" arequired
+        sqlSet "file_id" afid
         sqlWhereExists $ sqlSelect "documents" $ do
           sqlWhereEq "id" did
           sqlWhereEq "status" Preparation

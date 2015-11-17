@@ -4,10 +4,13 @@
 
 define(['Backbone', 'legacy_code'], function() {
 
+var pixelSpeed = 800;
+var maxScrollTime = 2000;
+
 var ArrowModel = Backbone.Model.extend({
   defaults : {
       type : undefined,
-      text  : undefined,
+      margin : undefined,
       point : undefined,
       onClick : function() { return false; },
       blinks : 0 // Persistent blinking. If > 0 then arrow is in middle of blinking.
@@ -18,11 +21,11 @@ var ArrowModel = Backbone.Model.extend({
   blinks : function() {
       return this.get("blinks");
   },
+  margin: function () {
+    return this.get("margin");
+  },
   setBlinks : function(i) {
       return this.set({"blinks" : i});
-  },
-  text : function(){
-       return this.get("text");
   },
   point: function() {
        return this.get("point");
@@ -91,7 +94,8 @@ var PointLeftArrowView = Backbone.View.extend({
     updatePosition: function() {
        var container = $(this.el);
        if (this.model.point() != undefined) {
-          this.right = ($(document).width() - this.model.point().offset().left );
+          this.right = ($(document).width() - this.model.point().offset().left);
+          this.right += this.model.margin();
           container.css("top", (this.model.point().offset().top + (this.model.point().outerHeight() / 2) - 19) + "px");
           container.css("right", this.right + "px");
        }
@@ -103,12 +107,7 @@ var PointLeftArrowView = Backbone.View.extend({
 
        container.click(function () { self.model.onClick(); });
        var front = $('<div class="front" />');
-       var label = $('<div class="label" />');
-       var back = $('<div class="back" />');
-
        container.append(front);
-       container.append(label.text(this.model.text() || "" ));
-       container.append(back);
        this.updatePosition();
        return this;
     }
@@ -148,7 +147,8 @@ var PointRightArrowView = Backbone.View.extend({
             top = p.children().offset().top;
           if (p.children().size() == 1 && p.children().outerHeight() > height)
             height = p.children().outerHeight();
-          this.left = (this.model.point().offset().left + this.model.point().outerWidth() + 6);
+          this.left = (this.model.point().offset().left + this.model.point().outerWidth() + 8);
+          this.left += this.model.margin();
           container.css("top", (top + (height / 2) - 19) + "px");
           container.css("left", this.left + "px");
        }
@@ -159,13 +159,7 @@ var PointRightArrowView = Backbone.View.extend({
        container.addClass('action-arrow').addClass('right');
        container.click(function () { self.model.onClick(); });
        var front = $('<div class="front" />');
-       var label = $('<div class="label" />');
-       var back = $('<div class="back" />');
-
        container.append(front);
-       container.append(label.text(this.model.text() || "" ));
-       container.append(back);
-
        this.updatePosition();
        return this;
     }
@@ -209,9 +203,16 @@ var ScrollUpArrowView = Backbone.View.extend({
        var model = this.model;
        var task = this.model.point();
        if (task == undefined) return;
+       var scrollTop = task.offset().top - 150;
+       var currentScrollTop = $(window).scrollTop();
+       var distanceToTask = currentScrollTop - scrollTop;
+       var timeToScroll = (distanceToTask / pixelSpeed) * 1000;
+        if (timeToScroll > maxScrollTime) {
+          timeToScroll = maxScrollTime;
+        }
        $('html,body').animate({
-          scrollTop: task.offset().top - 150
-       }, 1000, function() {
+          scrollTop: scrollTop
+       }, timeToScroll, function() {
          this.alreadyScrolling = false;
          model.scrollDone();
        });
@@ -253,7 +254,7 @@ var ScrollDownArrowView = Backbone.View.extend({
       $(this.el).css("right", arrow_margin + "px");
     },
     checkIfDownArrowInFooter : function() {
-      if ($(".pagefooter").size() == 0 || $(".nofooter .pagefooter").size() > 0) return; //We need to do such ugly check, since footer sometimes is just hidden
+      if ($(".pagefooter").size() == 0) return; //We need to do such ugly check, since footer sometimes is just hidden
       var footertop = $(".pagefooter").offset().top;
       var downarrowbottom = $(this.el).offset().top + $(this.el).height();
       if (downarrowbottom + 100 > footertop) {
@@ -272,9 +273,18 @@ var ScrollDownArrowView = Backbone.View.extend({
         var task = this.model.point();
         if (task == undefined) return;
         var scrollbottom = task.offset().top + task.height() + 150;
+        var scrollTop = scrollbottom - (window.innerHeight ? window.innerHeight : $(window).height());
+        var currentScrollTop = $(window).scrollTop();
+        var distanceToTask = scrollTop - currentScrollTop;
+        var timeToScroll = (distanceToTask / pixelSpeed) * 1000;
+
+        if (timeToScroll > maxScrollTime) {
+          timeToScroll = maxScrollTime;
+        }
+
         $('html,body').animate({
-          scrollTop: scrollbottom - (window.innerHeight ? window.innerHeight : $(window).height())
-        }, 2000, function() {
+          scrollTop: scrollTop
+        }, timeToScroll, function() {
           this.alreadyScrolling = false;
           model.scrollDone();
         });
@@ -288,8 +298,8 @@ var ScrollDownArrowView = Backbone.View.extend({
 
 window.Arrow = function (args) {
   var model = new ArrowModel({
-    type  : args.type,
-      text  : args.text,
+      type  : args.type,
+      margin : args.margin,
       point : args.point,
       scrollDone : args.scrollDone,
       onClick : args.onClick

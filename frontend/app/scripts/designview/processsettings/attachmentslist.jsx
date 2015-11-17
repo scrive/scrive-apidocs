@@ -22,14 +22,17 @@ return React.createClass({
               </tr>
             </thead>
             <tbody>
-              {_.map(authorattachments, function(a) {
+              {_.map(authorattachments, function(a,i) {
+                var nameDiv = $("<div>" + localization.designview.attached + "</div>");
+                $(".put-attachment-name",nameDiv).append($("<b/>").text(a.name()));
+
                 return (
-                  <tr>
+                  <tr key={i}>
                     <td className='icon-td'>
-                      <div className='author-attachment-icon'/>
+                      <div className={a.isRequired() ? "required-author-attachment-icon" : "optional-author-attachment-icon"}/>
                     </td>
                     <td className='name-td'>
-                      {localization.designview.attached + " " + a.name()}
+                      <div dangerouslySetInnerHTML={{__html: nameDiv.html()}} />
                     </td>
                     <td className='remove-td'>
                       <div
@@ -44,22 +47,22 @@ return React.createClass({
                 );
               })}
               { _.map(document.signatories(),function(sig) {
-                  return _.map(sig.attachments(),function(a) {
+                  return _.map(sig.attachments(),function(a,i) {
                     var sigName = sig.nameOrEmail();
                     if (sig.isCsv())
                       sigName = localization.csv.title;
                     if (sigName == "")
                       sigName = sig.nameInDocument();
                     var nameDiv = $("<div>" + localization.designview.attachmentRequestedFrom + "</div>");
-                    $('.put-attachment-name',nameDiv).text(a.name());
-                    $('.put-person-name',nameDiv).text(sigName.trim());
+                    $(".put-attachment-name",nameDiv).append($("<b/>").text(a.name()));
+                    $(".put-person-name",nameDiv).append($("<b/>").text(sigName.trim()));
                     return (
-                      <tr>
+                      <tr key={i}>
                         <td className='icon-td'>
                           <div className='signatory-attachment-icon'/>
                         </td>
                         <td className='name-td'>
-                          {nameDiv.text()}
+                          <div dangerouslySetInnerHTML={{__html: nameDiv.html()}} />
                         </td>
                         <td className='remove-td'>
                           <div

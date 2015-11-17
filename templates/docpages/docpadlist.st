@@ -7,13 +7,13 @@ $htmlopentag()$
     <link href='/padlist_signview_branding/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
-    <div class="signview">
+    <div class="to-start-signview">
       <div class="mainContainer" >
         $flashmessages()$
         <div class="pad-list">
           <div class="list-container"></div>
           <script>
-           require(['jquery', 'React' , 'signview/header', 'signview/footer', 'padlist/padlist',  'legacy_code'], function(jQuery,React,Header,Footer,PadList) {
+           require(['jquery', 'React' , 'pages/special/header', 'pages/special/footer', 'padlist/padlist',  'legacy_code'], function(jQuery,React,Header,Footer,PadList) {
 
              jQuery(function(){
               var padlistDiv = jQuery('<div/>')
@@ -27,18 +27,14 @@ $htmlopentag()$
               refresherPadListStep();
               var headerDiv = jQuery('<div/>');
               React.render(React.createElement(Header,{
-                   fullWidth: true,
-                   forceShowing: true,
-                   link : {
-                      text : "$_headerLogOut()$",
-                      onClick : function() {
-                        new Submit({
-                          url : "/logout_ajax",
-                          ajax : true,
-                          ajaxsuccess : function() {
-                            window.location.reload();}
-                        }).send();
-                      }
+                   linkText : "$_headerLogOut()$",
+                   linkOnClick : function() {
+                     new Submit({
+                       url : "/logout_ajax",
+                       ajax : true,
+                       ajaxsuccess : function() {
+                         window.location.reload();}
+                     }).send();
                    }
                 }), headerDiv[0]);
 

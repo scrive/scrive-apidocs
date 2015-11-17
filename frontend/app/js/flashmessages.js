@@ -109,7 +109,9 @@ window.FlashMessage = function(args) {
           return;
         }
         var model = new FlashMessageModel(args);
-        var view = new FlashMessageView({model : model, el : $("<div class='flash'/>")});
+        var $el = $("<div />");
+        $el.addClass(args.className || "flash");
+        var view = new FlashMessageView({model : model, el : $el});
 
         setTimeout(function() {$(view.el).addClass("active");},100);
         setTimeout(function() {view.clear();},10000);

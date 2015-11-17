@@ -2,6 +2,43 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
   "signview/tasks/task_mixin"],
   function (legacy_code, _, Backbone, React, BackboneMixin, InfoTextInput, TaskMixin) {
 
+  var DetailsList = React.createClass({
+    render: function () {
+      var childs = React.Children.map(this.props.children, function (child) {
+        return child;
+      });
+      childs = _.compact(childs);
+
+      return (
+        <div className="row">
+          {/* if */ (childs[1] || childs[2]) &&
+            <dl className="col-xs-5 pull-right">
+              {childs[1]}
+              {childs[2]}
+            </dl>
+          }
+          {/* if */ (childs[0] || childs[3]) &&
+            <dl className="col-xs-5 pull-right">
+              {childs[0]}
+              {childs[3]}
+            </dl>
+          }
+        </div>
+      );
+    }
+  });
+
+  var DetailsItem = React.createClass({
+    render: function () {
+      return (
+        <div className="item">
+          <dt><label htmlFor={this.props.htmlFor}>{this.props.title}</label></dt>
+          <dd>{this.props.children}</dd>
+        </div>
+      );
+    }
+  });
+
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin, TaskMixin],
 
@@ -25,8 +62,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       this.setState({
         askForName: signview.askForName(),
         askForEmail: signview.askForEmail(),
-        askForSSN: signview.askForSSN(),
-        askForPhone: signview.askForPhone()
+        askForSSN: signview.askForSSNIfNotEID(),
+        askForPhone: signview.askForPhoneIfNotPin()
       });
     },
 
@@ -37,7 +74,6 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
     createTaskFromRef: function (ref, isComplete) {
       return new PageTask({
         type: "extra-details",
-        label: localization.docsignview.textfield,
         onArrowClick: function () {
           ref.focus();
         },
@@ -64,13 +100,13 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
 
       if (this.state.askForSSN) {
         tasks.push(this.createTaskFromRef(this.refs.ssn, function () {
-          return !signview.askForSSN();
+          return !signview.askForSSNIfNotEID();
         }));
       }
 
       if (this.state.askForPhone) {
         tasks.push(this.createTaskFromRef(this.refs.phone, function () {
-          return !signview.askForPhone();
+          return !signview.askForPhoneIfNotPin();
         }));
       }
 
@@ -85,90 +121,114 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var fstnameField = sig.fstnameField();
       var sndnameField = sig.sndnameField();
       var nameClass = React.addons.classSet({
+        "signview-input": true,
         "obligatory-input": true,
         "valid": !signview.askForName()
       });
 
       var emailField = sig.emailField();
       var emailClass = React.addons.classSet({
+        "signview-input": true,
         "obligatory-input": true,
         "valid": !signview.askForEmail()
       });
 
       var ssnField = sig.personalnumberField();
       var ssnClass = React.addons.classSet({
+        "signview-input": true,
         "obligatory-input": true,
-        "valid": !signview.askForSSN()
+        "valid": !signview.askForSSNIfNotEID()
       });
 
       var phoneField = sig.mobileField();
       var phoneClass = React.addons.classSet({
+        "signview-input": true,
         "obligatory-input": true,
-        "valid": !signview.askForPhone()
+        "valid": !signview.askForPhoneIfNotPin()
       });
 
       return (
-        <div className="section spacing extradetails">
-          <h2 className="title">{localization.docsignview.filladitionfieldslabel}</h2>
-          <div className="column spacing fillbox">
-            {/* if */ this.state.askForName &&
-              <InfoTextInput
-                ref="name"
-                className={nameClass}
-                infotext={localization.personalName}
-                value={self.nameInputValue && self.nameInputValue.trim() === sig.name() ?
-                         self.nameInputValue : sig.name()}
-                onChange={function (value) {
-                  self.nameInputValue = value; // We don't store it in state, since this would trigger rerendering
-                  var str = value.trim();
-                  var i = str.indexOf(" ");
-                  var f = "";
-                  var s = "";
-                  if (i >= 0) {
-                    f = str.slice(0, i).trim();
-                    s = str.slice(i + 1).trim();
-                  } else {
-                    f = str.trim();
-                    s = "";
-                  }
-                  if (sndnameField != undefined) {
-                    fstnameField.setValue(f);
-                    sndnameField.setValue(s);
-                  } else {
-                    fstnameField.setValue(str);
-                  }
-                }}
-              />
-            }
-            {/* if */ this.state.askForEmail &&
-              <InfoTextInput
-                ref="email"
-                className={emailClass}
-                infotext={localization.email}
-                value={emailField.value()}
-                onChange={function (value) {emailField.setValue(value);}}
-              />
-            }
-            {/* if */ this.state.askForSSN &&
-              <InfoTextInput
-                ref="ssn"
-                className={ssnClass}
-                infotext={localization.personalNumber}
-                value={ssnField.value()}
-                onChange={function (value) {ssnField.setValue(value);}}
-              />
-            }
-            {/* if */ this.state.askForPhone &&
-              <InfoTextInput
-                ref="phone"
-                className={phoneClass}
-                infotext={localization.phonePlaceholder}
-                value={phoneField.value()}
-                onChange={function (value) {phoneField.setValue(value);}}
-              />
-            }
+        <div className="section extradetails">
+          <div className="col-xs-2">
+            <h1>{localization.docsignview.filladitionfieldslabel}</h1>
           </div>
-          <div className="clearfix" />
+          <div className="col-xs-10">
+            <DetailsList>
+              {/* if */ this.state.askForName &&
+                <DetailsItem htmlFor="name" title={localization.personalName}>
+                  <InfoTextInput
+                    id="name"
+                    infotext={localization.nameInfoText}
+                    ref="name"
+                    tabIndex={1}
+                    className={nameClass}
+                    value={sig.name()}
+                    onChange={function (value) {
+                      var str = value.trim();
+                      var i = str.indexOf(" ");
+                      var f = "";
+                      var s = "";
+                      if (i >= 0) {
+                        f = str.slice(0, i).trim();
+                        s = str.slice(i + 1).trim();
+                      } else {
+                        f = str.trim();
+                        s = "";
+                      }
+                      if (sndnameField != undefined) {
+                        fstnameField.setValue(f);
+                        sndnameField.setValue(s);
+                      } else {
+                        fstnameField.setValue(str);
+                      }
+                    }}
+                  />
+                </DetailsItem>
+              }
+              {/* if */ this.state.askForEmail &&
+                <DetailsItem htmlFor="email" title={localization.email}>
+                  <InfoTextInput
+                    id="email"
+                    infotext={localization.emailInfoText}
+                    ref="email"
+                    inputtype="email"
+                    tabIndex={2}
+                    className={emailClass}
+                    value={emailField.value()}
+                    onChange={function (value) {emailField.setValue(value);}}
+                  />
+                </DetailsItem>
+              }
+              {/* if */ this.state.askForSSN &&
+                <DetailsItem htmlFor="ssn" title={localization.personalNumber}>
+                  <InfoTextInput
+                    id="ssn"
+                    infotext={localization.ssnInfoText}
+                    ref="ssn"
+                    inputtype="number"
+                    tabIndex={3}
+                    className={ssnClass}
+                    value={ssnField.value()}
+                    onChange={function (value) {ssnField.setValue(value);}}
+                  />
+                </DetailsItem>
+              }
+              {/* if */ this.state.askForPhone &&
+                <DetailsItem htmlFor="phone" title={localization.phonePlaceholder}>
+                  <InfoTextInput
+                    id="phone"
+                    infotext={localization.phoneInfoText}
+                    ref="phone"
+                    inputtype="tel"
+                    tabIndex={4}
+                    className={phoneClass}
+                    value={phoneField.value()}
+                    onChange={function (value) {phoneField.setValue(value);}}
+                  />
+                </DetailsItem>
+              }
+            </DetailsList>
+          </div>
         </div>
       );
     }

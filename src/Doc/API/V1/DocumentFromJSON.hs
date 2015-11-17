@@ -1,11 +1,12 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Doc.API.V1.DocumentFromJSON () where
+module Doc.API.V1.DocumentFromJSON (AuthorAttachmentDetails(..)) where
 
 import Data.Default
 import Data.String.Utils (strip)
 import Text.JSON.FromJSValue
 import qualified Data.Set as Set
+import qualified Data.Text as T
 
 import DB.TimeZoneName
 import Doc.DocStateData
@@ -449,7 +450,8 @@ instance FromJSValueWithUpdate Document where
             documentshowrejectoption = updateWithDefaultAndField True documentshowrejectoption showrejectoption,
             documentshowfooter = updateWithDefaultAndField True documentshowfooter showfooter,
             documentsignatorylinks = mapAuth authentication $ mapDL delivery $ updateWithDefaultAndField [] documentsignatorylinks signatories,
-            documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap (\fid -> AuthorAttachment fid "-") <$> authorattachments), -- Name of author attachment file can't be changed
+            -- Author attachments read by V1 for update call can be only used for deletion - this is why we can actually set name to "-" and required to False
+            documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap (\fid -> AuthorAttachment "-" False fid) <$> authorattachments),
             documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags),
             documenttype = updateWithDefaultAndField Signable documenttype doctype,
             documentapiv1callbackurl = updateWithDefaultAndField Nothing documentapiv1callbackurl apicallbackurl,
@@ -465,3 +467,18 @@ instance FromJSValueWithUpdate Document where
        mapAuth :: Maybe AuthenticationToSignMethod -> [SignatoryLink] -> [SignatoryLink]
        mapAuth Nothing sls = sls
        mapAuth (Just au) sls = map (\sl -> sl {signatorylinkauthenticationtosignmethod = au}) sls
+
+
+-- Author attachment utils. Used only for set author attachment call.
+data AuthorAttachmentDetails = AuthorAttachmentDetails {
+    aadName :: T.Text,
+    aadRequired :: Bool
+  } deriving (Eq,Show)
+
+instance FromJSValue AuthorAttachmentDetails where
+  fromJSValue = do
+    name   <- fromJSValueField "name"
+    required  <- fromJSValueField "required"
+    case (name, required) of
+      (Just n, Just r) -> return $ Just $ AuthorAttachmentDetails (T.pack n) r
+      _ -> return Nothing

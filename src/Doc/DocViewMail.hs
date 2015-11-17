@@ -82,7 +82,7 @@ remindMailNotSigned forMail customMessage document signlink = do
         F.value "timetosign" $ show <$> documenttimeouttime document
         F.value "link" $ protectLink forMail mctx $ LinkSignDoc (documentid document) signlink
         F.value "isattachments" $ length (documentauthorattachments document) > 0
-        F.value "attachments" $ map authorattachmentfilename $ documentauthorattachments document
+        F.value "attachments" $ map authorattachmentname $ documentauthorattachments document -- TODO - check if this can be removed
         F.value "ispreview" $ not $ forMail
         F.value "previewLink" $  case (signatorylinkauthenticationtoviewmethod $ signlink) of
           StandardAuthenticationToView -> Just $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
@@ -209,7 +209,7 @@ mailInvitation forMail
         F.value "someonesigned" $ not $ null $ filter (isSignatory && hasSigned) (documentsignatorylinks document)
         F.value "timetosign" $ show <$> documenttimeouttime document
         F.value "isattachments" $ length (documentauthorattachments document) > 0
-        F.value "attachments" $ map authorattachmentfilename $ documentauthorattachments document
+        F.value "attachments" $ map authorattachmentname $ documentauthorattachments document -- TODO - check if this can be removed
         F.value "ispreview" $ not $ forMail
         F.value "previewLink" $  case (fromMaybe StandardAuthenticationToView $ signatorylinkauthenticationtoviewmethod <$> msiglink) of
           StandardAuthenticationToView -> Just $ show $ LinkDocumentPreview (documentid document) (msiglink <| forMail |> Nothing) (mainfile)

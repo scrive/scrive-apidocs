@@ -15,6 +15,7 @@ module Doc.API.V2.Guards (
 , guardCanSetAuthenticationToViewForSignatoryWithValues
 , guardCanSetAuthenticationToSignForSignatoryWithValue
 , guardSignatoryHasNotSigned
+, guardThatAllAttachmentsAreAccepted
 -- * Joined guard for read-only functions
 , guardDocumentReadAccess
 ) where
@@ -35,6 +36,7 @@ import Doc.DocumentMonad
 import Doc.DocUtils
 import Doc.Model.Query
 import Doc.SignatoryLinkID
+import File.FileID
 import InputValidation
 import Kontra
 import KontraPrelude
@@ -212,6 +214,11 @@ guardThatDocumentCanBeStarted = do
       if (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView)
          then isGood resultValidPhone || isEmpty resultValidPhone
          else True
+
+guardThatAllAttachmentsAreAccepted :: (Kontrakcja m, DocumentMonad m) => [FileID] -> m ()
+guardThatAllAttachmentsAreAccepted acceptedAttachments = do
+  unlessM (allRequiredAttachmentsAreOnList acceptedAttachments <$> theDocument) $
+    apiError $ (signatoryStateError "Some mandatory author attachments aren't accepted")
 
 -- | For the given DocumentID:
 --

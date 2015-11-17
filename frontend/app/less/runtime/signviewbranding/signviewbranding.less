@@ -1,4 +1,4 @@
-@import 'runtime/common/flash';
+@import 'runtime/signviewbranding/flash';
 @import 'runtime/common/buttons';
 @import 'runtime/common/utils';
 @import 'runtime/common/service-header';
@@ -40,6 +40,49 @@
     }
   }
 }
+
+.signview {
+  .branded-checkbox {
+    .checkbox {
+      .background_with_ie_support(fade(@actioncolor, 20%));
+      border: 2px solid @actioncolor;
+    }
+
+    .checkmark {
+      @url: %("/colored_image?file=valid-input-check.png&color=%D", #FFFFFF);
+      background-image: url(@url);
+    }
+
+    .checkbox.checked {
+      background: @actioncolor;
+    }
+  }
+}
+
+.signview .sign {
+  .check-done {
+    @url: %('/colored_image?file=check-done.png&color=%D', @actioncolor);
+    background: url(@url);
+  }
+}
+
+.signview .header {
+  background-color: @brandcolor;
+  color: @brandtextcolor;
+
+  .main {
+    background-color: @brandcolor;
+
+    .link {
+      color: @brandtextcolor;
+    }
+
+    h4 {
+      color: @brandtextcolor;
+    }
+  }
+}
+
 /* Instructions */
 .signview .instructions.section {
 
@@ -95,7 +138,7 @@
   .action-arrow.left {
 
     .front {
-      @url : %('/colored_image?file=sign-arrow-action-left-front.png&color=%D',@actioncolor);
+      @url : %('/colored_image?file=sign-arrow-action-left.png&color=%D',@actioncolor);
       background : url(@url);
     }
 
@@ -115,7 +158,7 @@
   .action-arrow.right {
 
     .front {
-      @url : %('/colored_image?file=sign-arrow-action-right-front.png&color=%D',@actioncolor);
+      @url : %('/colored_image?file=sign-arrow-action-right.png&color=%D',@actioncolor);
       background : url(@url);
     }
 
@@ -142,16 +185,11 @@
     background : url(@url);
   }
 }
-/* Extra details section */
-.signview .extradetails.section {
-
-  h2, .descriptionbox {
-    font-family: @font;
-  }
-
+.signview {
   .obligatory-input{
     border-color: @actioncolor; /* Fallback IE */
     border-color: fade(@actioncolor,60%);
+    .background_with_ie_support(fade(@actioncolor, 5%));
 
     &:hover, &.active {
       border-color: @actioncolor;
@@ -162,86 +200,14 @@
     }
   }
 }
-/* Modal for extra details */
-.extradetails-modal {
 
-  .standard-input-table {
-
-    .obligatory-input{
-      border-color: @actioncolor; /* Fallback IE */
-      border-color: fade(@actioncolor,60%);
-
-      &:hover, &.active {
-        border-color: @actioncolor;
-      }
-
-      &.valid {
-        border-color: #ddd;
-      }
-    }
-  }
-
-}
-
-
-/* Signing in progress modal */
-.post-sign-modal-content.grey .modal-container {
-
-  .modal-title,.modal-content {
-    font-family: @font;
+.obligatory-input {
+  .after {
+    @url: %("/colored_image?file=valid-input-check.png&color=%D", @actioncolor);
+    background-image: url(@url);
   }
 }
-/* Reject modal */
-.reject-modal.grey {
 
-  .modal-container {
-
-    .modal-title,.modal-content {
-      font-family: @font;
-    }
-
-    .modal-textarea {
-      width: 100%;
-      height: 100px;
-      -webkit-box-sizing: border-box;
-      -moz-box-sizing: border-box;
-      box-sizing: border-box;
-      resize: none;
-
-    }
-  }
-
-  .modal-footer {
-    font-family: @font;
-
-    .button {
-      font-family: @font;
-    }
-  }
-}
-/* Sign modal */
-.sign-confirmation-modal.grey {
-
-  .modal-container {
-
-    .modal-title,.modal-content {
-      font-family: @font;
-    }
-    /* We sometimes ask for pin in this modal */
-    .pin-input {
-      border-color: @actioncolor; /* Fallback IE */
-      border-color: fade(@actioncolor,60%);
-
-      &:hover, &.active {
-        border-color: @actioncolor;
-      }
-    }
-  }
-
-  .modal-footer {
-    font-family: @font;
-  }
-}
 /* Signatory attachments section */
 .signview .section .signatoryattachments {
 
@@ -257,42 +223,16 @@
   }
 
 }
-/* SMS pin modal */
-.sms-pin-modal.grey {
-
-  .modal-container {
-
-    .modal-title, .modal-content {
-      font-family: @font;
-    }
-
-    .phone-input {
-      border-color: @actioncolor; /* Fallback IE */
-      border-color: fade(@actioncolor,60%);
-
-      &:hover,&.active {
-        border-color: @actioncolor;
-      }
-
-      &.valid {
-        border-color: #ddd;
-      }
-    }
-  }
-
-  .modal-footer {
-    font-family: @font;
-  }
-}
 /* Placements */
 .signview .document-pages {
   /* Texts and checkboxes */
+
   .placedfield.to-fill-now {
     border-color: @actionsecondarycolor; /* Fallback IE */
     border-color: fade(@actionsecondarycolor,60%);
 
-    .text-inline-editing {
-      .background_with_ie_support(fade(@actionsecondarycolor,20%));
+    .info-text-input {
+      background-color: transparent;
     }
 
     &:hover, &.active {
@@ -306,21 +246,32 @@
     &.obligatory {
       border-color: @actioncolor; /* Fallback IE */
       border-color: fade(@actioncolor,60%);
+      background: transparent;
 
-      .text-inline-editing {
-        .background_with_ie_support(fade(@actioncolor,20%));
-      }
-
-      &:hover, &.active {
+      &.active {
         border-color: @actioncolor;
-
-        &.active {
-          background-color:#FFFFFF;
-        }
+        background: #FFFFF;
       }
     }
 
     &.empty-text-field {
+      .background_with_ie_support(fade(@actionsecondarycolor,20%));
+
+      &.optional {
+        .background_with_ie_support(fade(@actionsecondarycolor,20%));
+      }
+
+      &.active {
+        background-color: #FFFFFF;
+        &.optional {
+          .text-inline-editing {
+            .background_with_ie_support(fade(@actionsecondarycolor,20%));
+          }
+        }
+      }
+    }
+
+    &.invalid {
       .background_with_ie_support(fade(@actionsecondarycolor,20%));
 
       &.obligatory {
@@ -329,6 +280,15 @@
 
       &.active {
         background-color: #FFFFFF;
+        .text-inline-editing {
+          .background_with_ie_support(fade(@actionsecondarycolor,20%));
+        }
+
+        &.obligatory {
+          .text-inline-editing {
+            .background_with_ie_support(fade(@actioncolor,20%));
+          }
+        }
       }
     }
   }
@@ -360,11 +320,6 @@
   }
 }
 
-.post-sign-modal-content .spinner-checkbox-list .checkmark {
-  @url : %('/colored_image?file=shared.png&color=%D',@positivecolor);
-  background : url(@url) no-repeat 0 7px;
-
-}
 
 .questionnaire {
 
