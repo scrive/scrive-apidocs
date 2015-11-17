@@ -30,7 +30,6 @@ project = "kontrakcja"
 resourceslug :: TranslationResource -> String
 resourceslug Texts = "textsjson"
 resourceslug Events = "eventsjson"
-resourceslug Questionnaire = "questionnairejson"
 resourceslug Signview = "signviewjson"
 
 fetch :: String -> String -> String -> TranslationResource -> IO [(String,String)]

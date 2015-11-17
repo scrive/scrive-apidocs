@@ -37,7 +37,7 @@ if [ $# -lt 1 ]; then
   echo
 
   echo "Available languages : en | sv | de | fr | it | es | pt | nl | da | no | fi"
-  echo "Available resources : texts | events | questionnaire"
+  echo "Available resources : texts | events | signview"
   exit 0
 fi
 
