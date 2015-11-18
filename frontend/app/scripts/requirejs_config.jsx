@@ -20,7 +20,6 @@ var require = {
     Backbone: '../bower_components/backbone/backbone',
     Underscore: '../bower_components/underscore/underscore-min',
     text: '../bower_components/requirejs-text/text',
-    Q: '../bower_components/q/q',
     Spinjs: '../bower_components/spin.js/spin',
     eventie: '../bower_components/eventie',
     eventEmitter: '../bower_components/eventEmitter',
