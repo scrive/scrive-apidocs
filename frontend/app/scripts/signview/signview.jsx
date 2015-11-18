@@ -2,7 +2,6 @@ define([
   "legacy_code",
   "Backbone",
   "React",
-  "common/retargeting_service",
   "common/backbone_mixin",
   "common/onelementheightchange",
   "signview/signatories/docviewsignatories",
@@ -15,14 +14,13 @@ define([
   "signview/fileview/fileview",
   "signview/header",
   "signview/footer",
-  "signview/create_account_section_view",
+  "signview/postsignview",
   "signview/tasks/taskarrows",
   "signview/overlay"
 ], function (
   legacy_code,
   Backbone,
   React,
-  RetargetingService,
   BackboneMixin,
   onElementHeightChange,
   DocumentViewSignatories,
@@ -35,7 +33,7 @@ define([
   FileView,
   Header,
   Footer,
-  CreateAccountSection,
+  PostSignView,
   TaskArrows,
   Overlay
 ) {
@@ -172,8 +170,8 @@ define([
                 model={doc}
                 arrow={function () { return model.arrow(); }}
               />
-              {/* if */ model.hasCreateAccountSection() &&
-                <CreateAccountSection document={doc} />
+              {/* if */ model.hasPostSignView() &&
+                <PostSignView document={doc} />
               }
               <FileView
                 ref="fileView"

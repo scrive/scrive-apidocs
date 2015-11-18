@@ -55,6 +55,10 @@ define(["React", "signview/feedback/questionview", "common/hubspot_service"], fu
       return {question: "Q1"};
     },
 
+    propTypes: {
+      document: React.PropTypes.object.isRequired
+    },
+
     onChangeQuestion: function (event, from, to, text) {
       var endPoints = ["Q7", "Q6"];
       var isDone = endPoints.indexOf(to) > -1;
@@ -68,7 +72,7 @@ define(["React", "signview/feedback/questionview", "common/hubspot_service"], fu
       }
 
       if (isDone) {
-        var doc = this.props.doc;
+        var doc = this.props.document;
 
         var hubspotData = {
           fullname: doc.currentSignatory().name(),
