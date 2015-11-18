@@ -33,12 +33,9 @@ describe "rejecting document" do
     @h.dochelper.checkOpened
 
     puts "reject the document"
-    (@h.wait_until { @h.driver.find_element :css => ".rejectwrapper a" }).click
+    (@h.wait_until { @h.driver.find_element :css => ".button-block" }).click
     sleep 2
     @h.screenshot 'sign_view_basic_reject_1'
-    @h.driver.execute_script "$('.modal-container a.button.float-right').click();"
-
-    puts "make sure there's a cancelled signatory"
-    @h.wait_until { @h.driver.find_elements :css => ".summary.cancelled" }
+    @h.driver.execute_script "$('.modal-container a.button.button-reject').click();"
   end
 end

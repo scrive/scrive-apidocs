@@ -50,6 +50,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button"],
                   onClick={this.props.onBack}
                 />
                 <Button
+                  className="button-reject"
                   text={localization.reject.send}
                   onClick={this.handleReject}
                 />

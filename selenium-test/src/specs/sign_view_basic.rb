@@ -45,7 +45,7 @@ describe "basic signing" do
     puts "sign the document"
     sleep 1
     @h.screenshot 'sign_view_basic_10'
-    @h.click("div.modal-footer a.float-right")
+    @h.click("div.above-overlay a.button.action")
     sleep 1
     @h.screenshot 'sign_view_basic_11'
     sleep 7

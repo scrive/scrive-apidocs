@@ -211,6 +211,7 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
                   }
                   <Button
                     text={localization.reviewPDF}
+                    className="show-attachment"
                     onClick={function () {
                       window.open(model.file().downloadLink(), "_blank");
                     }}

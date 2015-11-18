@@ -181,14 +181,14 @@ class DocHelper
   end
 
   def uploadAttachment(pdf_path, options = {})
-    uploaded = (@driver.find_elements :css => ".s-review-sigattachment").length
+    uploaded = (@driver.find_elements :css => ".signatory-attachment .button.show-attachment").length
     puts "uploading attachment: " + pdf_path
     @h.screenshot options[:screenshot_name] if options[:screenshot_name]
     (@driver.find_elements :css => ".file-input")[0].send_keys pdf_path
     puts "review attachment"
-    @h.wait_until { (@driver.find_elements :css => ".s-review-sigattachment").length == uploaded + 1 }
+    @h.wait_until { (@driver.find_elements :css => ".signatory-attachment .button.show-attachment").length == uploaded + 1 }
     puts "Checking length"
-    #(@h.wait_until { @driver.find_elements :css => ".s-review-sigattachment" })[uploaded].click
+    #(@h.wait_until { @driver.find_elements :css => ".signatory-attachment .button.show-attachment" })[uploaded].click
     puts "reviewed attachment"
   end
 
@@ -206,7 +206,7 @@ class DocHelper
     partSignStart
     puts "sign the document"
     sleep 1
-    click "div.modal-footer a.float-right"
+    click "div.above-overlay a.button.action"
     sleep 8
 
   end
