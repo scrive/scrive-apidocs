@@ -77,7 +77,7 @@ define(["React", "Backbone", "Underscore", "legacy_code"],
         || this.hasAuthorAttachmentsSection()
         || this.hasExtraDetailsSection()
         || this.hasSignatoriesAttachmentsSection()
-        || this.hasCreateAccountSection()
+        || this.hasPostSignView()
         || this.hasSignSection();
     },
 
@@ -190,7 +190,7 @@ define(["React", "Backbone", "Underscore", "legacy_code"],
         && file.ready() && file.view && file.view.ready();
     },
 
-    hasCreateAccountSection: function () {
+    hasPostSignView: function () {
       var document = this.document();
       return document.currentSignatory() != undefined
          && !document.currentSignatory().saved()

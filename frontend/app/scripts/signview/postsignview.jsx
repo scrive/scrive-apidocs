@@ -1,15 +1,5 @@
-/** @jsx React.DOM */
+define(['React', 'Backbone', 'signview/createaccount/createaccountview', 'signview/feedback/feedbackview', 'legacy_code'], function(React, Backbone, CreateAccountView, FeedbackView) {
 
-define(['React', 'Backbone', 'postsignview/create_account_views', 'postsignview/user_service', 'signview/feedback/feedbackview', 'legacy_code'], function(React, Backbone, CreateAccountViews, UserService, FeedbackView) {
-  var expose = {};
-
-  /**
-   *  @description
-   *  Render different types of create account section on postsignview,
-   *  depending on a few different conditions.
-   *
-   *
-   */
   return React.createClass({
     propTypes: {
       document : React.PropTypes.object.isRequired
@@ -44,17 +34,9 @@ define(['React', 'Backbone', 'postsignview/create_account_views', 'postsignview/
       if(this.isHidden()) {
         return (<div/>);
       } else if(this.isQuestionaire()) {
-        return <FeedbackView doc={document} />;
+        return <FeedbackView document={document} />;
       } else if (this.isSaveCopy()) {
-        var SaveBackupCopy = CreateAccountViews.SaveBackupCopy;
-        return (<SaveBackupCopy
-          isSmallScreen = {BrowserInfo.isSmallScreen()}
-          registerUser =  {function() {
-            UserService.registerUser(document).then(function() {
-              window.location = '/d';
-            });
-          }}
-        />);
+        return (<CreateAccountView document={document}/>);
       }
     }
   });
