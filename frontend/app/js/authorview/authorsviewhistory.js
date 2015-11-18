@@ -1,4 +1,4 @@
-define(['Backbone', 'moment', 'legacy_code', 'doctools/dochistory'], function(Backbone, moment, _legacy, DocumentHistory) {
+define(['Backbone', 'moment', 'legacy_code', 'authorview/dochistory'], function(Backbone, moment, _legacy, DocumentHistory) {
 
 var AuthorViewHistoryModel = Backbone.Model.extend({
   defaults : {
