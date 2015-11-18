@@ -9,6 +9,7 @@ import Happstack.Server
 import Test.Framework
 import qualified Data.Vector as V
 
+import Company.Model
 import Context
 import DB.Query (dbUpdate)
 import Doc.API.V2.AesonTestUtils
@@ -16,7 +17,7 @@ import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.DocumentID (DocumentID)
 import Doc.DocumentMonad (withDocumentID)
-import Doc.Model.Update (TimeoutDocument(..))
+import Doc.Model.Update (SetDocumentSharing(..), TimeoutDocument(..))
 import KontraPrelude
 import TestingUtil
 import TestKontra
@@ -26,6 +27,7 @@ apiV2DocumentPostCallsTests :: TestEnvSt -> Test
 apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls" $
   [ testThat "API v2 New"                                   env testDocApiV2New
   , testThat "API v2 New from template"                     env testDocApiV2NewFromTemplate
+  , testThat "API v2 New from template for company shared"  env testDocApiV2NewFromTemplateShared
   , testThat "API v2 Update"                                env testDocApiV2Update
   , testThat "API v2 Start"                                 env testDocApiV2Start
   , testThat "API v2 Prolong"                               env testDocApiV2Prolong
@@ -67,6 +69,26 @@ testDocApiV2NewFromTemplate = do
 
   reqUpdate <- mkRequest POST [("document", inText "{\"is_template\":true}")]
   _ <- runTestKontra reqUpdate ctx $ docApiV2Update did
+
+  req <- mkRequest POST []
+  (rsp,_) <- runTestKontra req ctx $ docApiV2NewFromTemplate did
+  assertEqual "Successful `docApiV2NewFromTemplate` response code" 201 (rsCode rsp)
+  _ <- parseMockDocumentFromBS did (rsBody rsp)
+  return ()
+
+testDocApiV2NewFromTemplateShared :: TestEnv ()
+testDocApiV2NewFromTemplateShared = do
+  (Company {companyid}) <- addNewCompany
+  (Just author) <- addNewCompanyUser "N1" "N2" "n1n2@domain.tld" companyid
+  ctxauthor <- (\c -> c { ctxmaybeuser = Just author }) <$> mkContext def
+  (did,_) <- testDocApiV2New' ctxauthor
+
+  reqUpdate <- mkRequest POST [("document", inText "{\"is_template\":true}")]
+  _ <- runTestKontra reqUpdate ctxauthor $ docApiV2Update did
+  _ <- randomUpdate $ SetDocumentSharing [did] True
+
+  (Just user) <- addNewCompanyUser "MM" "DD" "mm@dood.ade" companyid
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
 
   req <- mkRequest POST []
   (rsp,_) <- runTestKontra req ctx $ docApiV2NewFromTemplate did
