@@ -1,11 +1,5 @@
-define(["React", "signview/create_account_section_view", "signview/signatories/docviewsignatories",
-        "signview/attachments/signatoryattachmentsview", "signview/instructionsview/instructionsview",
-        "signview/extradetails/extradetailsview", "signview/signsection/signsectionview", "common/retargeting_service",
-         "Backbone", "Underscore", "legacy_code"],
-  function (React, CreateAccountSection, DocumentViewSignatories,
-            SignatoryAttachmentsView, InstructionsView,
-            ExtraDetailsView, SignSectionView, RetargetingService,
-            Backbone, _) {
+define(["React", "Backbone", "Underscore", "legacy_code"],
+  function (React, Backbone, _) {
 
     return Backbone.Model.extend({
     defaults: {
@@ -205,14 +199,6 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
          && !document.currentSignatory().apiDelivery()
          && document.currentSignatory().hasSigned()
          && this.allowsavesafetycopy();
-    },
-
-    showRetargetingPixel: function () {
-      if (this.get("retargeted") == undefined) {
-        this.set({"retargeted": true}, {silent: true});
-        // At the moment, nothing has to be added to the DOM.
-        RetargetingService.addRetargeting();
-      }
     },
 
     hasDonePostRenderTasks: function () {
