@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(["legacy_code", "React", "Backbone", "common/infotextinput", "utils/location"],
+define(["legacy_code", "React", "Backbone", "common/infotextinput", "common/location"],
   function (Legacy, React, Backbone, InfoTextInput, LocationUtils) {
 
   var ShowAPIDeliveryModalView = React.createClass({
