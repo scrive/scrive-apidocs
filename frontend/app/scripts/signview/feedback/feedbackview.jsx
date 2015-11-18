@@ -54,7 +54,7 @@ define(["React", "signview/feedback/questionview", "common/hubspot_service"], fu
     getInitialState: function () {
       return {question: "Q1"};
     },
-    
+
     propTypes: {
       document: React.PropTypes.object.isRequired
     },
