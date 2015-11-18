@@ -26,5 +26,6 @@
   "./app/js/takeScreenshot.js",
   "./app/api-explorer/js/*.js",
   "./app/api-explorer/js/calls/v1/*.js",
-  "./app/api-explorer/js/calls/v1/*/*.js"
+  "./app/api-explorer/js/calls/v1/*/*.js",
+  "./Gruntfile.js"
 ]
