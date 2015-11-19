@@ -14,8 +14,7 @@ define([
   "signview/signsection/signpin",
   "signview/signsection/signinputpinview",
   "signview/signsection/signeidview",
-  "signview/signsection/signeidprocessview",
-  "signview/signsection/signfinishview"
+  "signview/signsection/signeidprocessview"
 ], function (
   legacy_code,
   _,
@@ -32,8 +31,7 @@ define([
   SignPin,
   SignInputPin,
   SignEID,
-  SignEIDProcess,
-  SignFinish
+  SignEIDProcess
 ) {
   return React.createClass({
     mixins: [TransitionMixin],
@@ -83,15 +81,12 @@ define([
         return "eid";
       }
 
-      if (!hasPlacements) {
-        return "sign";
-      }
+      return "sign";
 
-      return "finish";
     },
 
     isValidStep: function (step) {
-      var steps = ["sign", "signing", "finish", "process", "eid", "eid-process", "pin", "input-pin", "reject"];
+      var steps = ["sign", "signing", "process", "eid", "eid-process", "pin", "input-pin", "reject"];
       var valid = steps.indexOf(step) > -1;
 
       if (!valid) {
@@ -143,7 +138,7 @@ define([
 
     shouldHaveOverlay: function (step) {
       step = step || this.state.step;
-      var noOverlayStep = ["sign", "pin", "eid", "finish"];
+      var noOverlayStep = ["sign", "pin", "eid"];
       return !(noOverlayStep.indexOf(step) > -1);
     },
 
@@ -326,15 +321,6 @@ define([
 
       return (
         <div className={sectionClass}>
-          {/* if */ this.isOnStep("finish") &&
-            <SignFinish
-              model={this.props.model}
-              name={sig.name()}
-              canSign={this.canSignDocument()}
-              onSign={this.handleSign}
-              onReject={this.handleSetStep("reject")}
-            />
-          }
           {/* if */ this.isOnStep("sign") &&
             <SignSign
               model={this.props.model}

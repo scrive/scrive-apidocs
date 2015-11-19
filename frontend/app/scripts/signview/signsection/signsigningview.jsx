@@ -46,10 +46,12 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
       return (
         <div className={divClass}>
           <h1>{localization.process.signbuttontext}</h1>
-          <RenderLocalization
-            subs={{"put-document-title-here": this.props.title, "put-signatory-name-here": this.props.name}}
-            text={localization.signviewConfirmation}
-          />
+          <p>
+            <RenderLocalization
+              subs={{"put-document-title-here": this.props.title, "put-signatory-name-here": this.props.name}}
+              text={localization.signviewConfirmation}
+            />
+          </p>
           <Button
             type="action"
             ref="signButton"
