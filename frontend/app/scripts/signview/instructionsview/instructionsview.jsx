@@ -17,7 +17,7 @@ define(["legacy_code", "Backbone", "React", "common/button", "signview/instructi
       return (
         <span>
           <Button
-            className="transparent-button"
+            className="transparent-button download-button"
             text={this.props.title}
             onClick={this.toggleOpen}
           />

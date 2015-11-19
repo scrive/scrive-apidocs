@@ -184,7 +184,7 @@ class DocHelper
     uploaded = (@driver.find_elements :css => ".signatory-attachment .button.show-attachment").length
     puts "uploading attachment: " + pdf_path
     @h.screenshot options[:screenshot_name] if options[:screenshot_name]
-    (@driver.find_elements :css => ".file-input")[0].send_keys pdf_path
+    (@driver.find_elements :css => ".file-input")[uploaded].send_keys pdf_path
     puts "review attachment"
     @h.wait_until { (@driver.find_elements :css => ".signatory-attachment .button.show-attachment").length == uploaded + 1 }
     puts "Checking length"
