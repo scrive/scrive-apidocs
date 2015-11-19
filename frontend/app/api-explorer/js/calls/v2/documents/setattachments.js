@@ -16,13 +16,24 @@ new APICallV2({
   params: [
           window.APIV2CallParamDocumentID,
           new APICallParam({
+            type: "json",
+            argName: "attachments",
+            optional: false,
+            name: "Attachments",
+            sendAsParam: true,
+            description: "List of attachments. Replaces any existing attachments.",
+            defaultValue: "[]"
+          }),
+          new APICallParam({
             type: "file",
-            argName: function (i) { return "attachment_" + i;},
-            name: "attachments (application/pdf)",
+            argName: function (i) { return "attachment_file_" + i;},
+            name: "Attachment Files (application/pdf)",
             sendAsParam: true,
             optional: true,
             description: "The PDFs to attach to the document.\
-                          These and ‘file_ids’ will be used to replace any existing attachments.",
+                          The parameter names can be used in the attachments\
+                          JSON as ‘file’ values.\
+                          See API documentation for more details.",
             limit: 100,
             defaultValue: function (self) {
               var input = $("<input type='file' class='form-control multiFileInput'/>");
@@ -34,16 +45,6 @@ new APICallV2({
               return input.data("MultiFile");
             }
           }),
-          new APICallParam({
-            type: "json",
-            argName: "file_ids",
-            name: "File Ids",
-            sendAsParam: true,
-            optional: true,
-            description: "The existing attachment ‘file_ids’ to attach to the document.\
-                          These and the ‘attachment_x’ will be used to replace any existing attachments.",
-            defaultValue: "[]"
-          })
           , window.APIV2CallParamObjectVersion
         ]
 });
