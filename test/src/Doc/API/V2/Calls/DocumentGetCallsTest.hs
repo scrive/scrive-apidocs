@@ -4,7 +4,6 @@ import Data.Aeson (Value(String))
 import Data.Default
 import Happstack.Server
 import Test.Framework
-import qualified Data.ByteString.Lazy.Char8 as BSLC
 import qualified Data.Vector as V
 
 import Context
@@ -19,8 +18,7 @@ import TestKontra
 
 apiV2DocumentGetCallsTests :: TestEnvSt -> Test
 apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
-  [ testThat "API v2 Available"             env testDocApiV2Available
-  , testThat "API v2 List"                  env testDocApiV2List
+  [ testThat "API v2 List"                  env testDocApiV2List
   , testThat "API v2 Get"                   env testDocApiV2Get
   , testThat "API v2 History"               env testDocApiV2History
   , testThat "API v2 Evidence attachments"  env testDocApiV2EvidenceAttachments
@@ -28,27 +26,6 @@ apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
   , testThat "API v2 Files - Get"           env testDocApiV2FilesGet
   , testThat "API v2 Texts"                 env testDocApiV2Texts
   ]
-
-testDocApiV2Available :: TestEnv ()
-testDocApiV2Available = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-
-  (did1,_) <- testDocApiV2New' ctx
-  (did2,_) <- testDocApiV2New' ctx
-  (did3,_) <- testDocApiV2New' ctx
-
-  let dids = "[0,"
-              ++ show did1 ++ ","
-              ++ show did2 ++ ","
-              ++ show did3 ++ "]"
-  req <- mkRequest GET [("ids", inText dids)]
-  (rsp,_) <- runTestKontra req ctx $ docApiV2Available
-  assertEqual "Successful `docApiV2Available` response code" 200 (rsCode rsp)
-  let expectedDids = "[" ++ show did1 ++ ","
-                         ++ show did2 ++ ","
-                         ++ show did3 ++ "]"
-  assertEqual "Expected response for `docApiV2Available`" (BSLC.pack expectedDids) (rsBody rsp)
 
 testDocApiV2List :: TestEnv ()
 testDocApiV2List = do
