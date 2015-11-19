@@ -1,6 +1,5 @@
 module Doc.API.V2.Calls.DocumentGetCalls (
-  docApiV2Available
-, docApiV2List
+  docApiV2List
 , docApiV2Get
 , docApiV2History
 , docApiV2EvidenceAttachments
@@ -45,19 +44,6 @@ import KontraPrelude
 import OAuth.Model
 import User.Model
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
-
-docApiV2Available :: Kontrakcja m => m Response
-docApiV2Available = api $ do
-  -- Permissions
-  (user, _) <- getAPIUser APIDocCheck
-  -- Parameters
-  (ids :: [DocumentID]) <- apiV2ParameterObligatory (ApiV2ParameterRead "ids")
-  when (length ids > 10000) $ do
-    apiError $ requestParameterInvalid "ids" "cannot contain more than 10,000 document IDs."
-  -- API call actions
-  available <- fmap (sort . map fromDocumentID) $ dbQuery $ GetDocumentsIDs (DocumentsVisibleToUser $ userid user) [DocumentFilterDeleted False,DocumentFilterByDocumentIDs ids] []
-  -- Result
-  return $ Ok $ Response 200 Map.empty nullRsFlags (unjsonToByteStringLazy unjsonDef available) Nothing
 
 docApiV2List :: Kontrakcja m => m Response
 docApiV2List = api $ do
