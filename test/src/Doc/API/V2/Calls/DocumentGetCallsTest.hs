@@ -7,12 +7,16 @@ import Test.Framework
 import qualified Data.ByteString.Lazy.Char8 as BSLC
 import qualified Data.Vector as V
 
+import Company.Model
 import Context
+import DB.Query (dbUpdate)
 import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.DocumentGetCalls
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.DocumentPostCallsTest (testDocApiV2New')
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
+import Doc.DocumentMonad (withDocumentID)
+import Doc.Model.Update (SetDocumentSharing(..))
 import KontraPrelude
 import TestingUtil
 import TestKontra
@@ -22,6 +26,8 @@ apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
   [ testThat "API v2 Available"             env testDocApiV2Available
   , testThat "API v2 List"                  env testDocApiV2List
   , testThat "API v2 Get"                   env testDocApiV2Get
+  , testThat "API v2 Get by Company Admin"  env testDocApiV2GetByAdmin
+  , testThat "API v2 Get for Shared doc"    env testDocApiV2GetShared
   , testThat "API v2 History"               env testDocApiV2History
   , testThat "API v2 Evidence attachments"  env testDocApiV2EvidenceAttachments
   , testThat "API v2 Files - Main"          env testDocApiV2FilesMain
@@ -76,6 +82,48 @@ testDocApiV2Get = do
   (rspGet,_) <- runTestKontra reqGet ctx $ docApiV2Get did
   getJSON <- parseMockDocumentFromBS did (rsBody rspGet)
   assertEqual "JSON from `docApiV2Get` should match from `docApiV2New`" getJSON newJSON
+  viewer <- lookupObjectObjectValue "viewer" getJSON
+  role <- lookupObjectString "role" viewer
+  assertEqual "document.viewer.role should be equal" "signatory" role
+
+testDocApiV2GetByAdmin :: TestEnv ()
+testDocApiV2GetByAdmin = do
+  (Company {companyid}) <- addNewCompany
+  (Just author) <- addNewCompanyUser "N1" "N2" "n1n2@domain.tld" companyid
+  ctxauthor <- (\c -> c { ctxmaybeuser = Just author }) <$> mkContext def
+  (did,_) <- testDocApiV2New' ctxauthor
+
+  admin <- addNewRandomCompanyUser companyid True
+  ctx <- (\c -> c { ctxmaybeuser = Just admin }) <$> mkContext def
+  reqGet <- mkRequest GET []
+  (rspGet,_) <- runTestKontra reqGet ctx $ docApiV2Get did
+  docJSON <- parseMockDocumentFromBS did (rsBody rspGet)
+  viewer <- lookupObjectObjectValue "viewer" docJSON
+  role <- lookupObjectString "role" viewer
+  assertEqual "document.viewer.role should be equal" "company_admin" role
+
+testDocApiV2GetShared :: TestEnv ()
+testDocApiV2GetShared = do
+  (Company {companyid}) <- addNewCompany
+  (Just author) <- addNewCompanyUser "N1" "N2" "n1n2@domain.tld" companyid
+  ctxauthor <- (\c -> c { ctxmaybeuser = Just author }) <$> mkContext def
+  (did,_) <- testDocApiV2New' ctxauthor
+  reqUpdate <- mkRequest POST [("document", inText "{\"is_template\":true}")]
+  _ <- runTestKontra reqUpdate ctxauthor $ docApiV2Update did
+  setshare <- withDocumentID did $ do
+    dbUpdate $ SetDocumentSharing [did] True
+  assert setshare
+
+  user <- addNewRandomCompanyUser companyid False
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  reqGet <- mkRequest GET []
+  (rspGet,_) <- runTestKontra reqGet ctx $ docApiV2Get did
+  docJSON <- parseMockDocumentFromBS did (rsBody rspGet)
+  viewer <- lookupObjectObjectValue "viewer" docJSON
+  role <- lookupObjectString "role" viewer
+  assertEqual "document.viewer.role should be equal" "company_shared" role
+
+  assert True
 
 testDocApiV2History :: TestEnv ()
 testDocApiV2History = do
