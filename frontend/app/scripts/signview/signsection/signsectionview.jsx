@@ -67,11 +67,6 @@ define([
       var signatory = document.currentSignatory();
       var hasPinAuth = signatory.smsPinAuthenticationToSign();
       var hasEIDAuth = signatory.seBankIDAuthenticationToSign();
-      var hasFinish = false;
-      var model = this.props.model;
-      var hasPlacements = document.allPlacements().filter(function (placement) {
-        return placement.field().signatory().current() && placement.field().isSignature();
-      }).length > 0;
 
       if (hasPinAuth) {
         return "pin";
