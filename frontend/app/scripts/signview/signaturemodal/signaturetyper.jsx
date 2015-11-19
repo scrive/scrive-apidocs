@@ -5,8 +5,8 @@ define(["legacy_code", "Backbone", "React", "common/infotextinput", "common/butt
         function (_legacy, Backbone, React, InfoTextInput, Button, Select, BackboneMixin) {
 
 // Number used to generate bigger final images. Quality thing. Scale has to be small. IE8 has 32k limit.
-var signaturePictureScale = 2;
-var canvasWidth = 772;
+var SIGNATURE_PICTURE_SCALE = 2;
+var TYPING_CANVAS_WIDTH = 772;
 
 var SignatureTyperModel = Backbone.Model.extend({
   defaults: {
@@ -60,15 +60,15 @@ var SignatureTyperModel = Backbone.Model.extend({
 
   },
   imageBase64Url: function () {
-    return "/text_to_image?base64=true&width=" + (signaturePictureScale * this.width()) +
-      "&height=" + (signaturePictureScale * this.height()) + "&font=" + this.font() +
+    return "/text_to_image?base64=true&width=" + (SIGNATURE_PICTURE_SCALE * this.width()) +
+      "&height=" + (SIGNATURE_PICTURE_SCALE * this.height()) + "&font=" + this.font() +
       "&text=" + encodeURIComponent(this.text());
   },
   imageHeight: function () {
-    return Math.floor(canvasWidth * this.height() / this.width());
+    return Math.floor(TYPING_CANVAS_WIDTH * this.height() / this.width());
   },
   imageWidth: function () {
-    return canvasWidth;
+    return TYPING_CANVAS_WIDTH;
   },
   saveImage: function (callback) {
     var field = this.field();
@@ -156,18 +156,15 @@ return React.createClass({
 
     var bodyWidth = $("body").width();
     var bodyHeight = $("body").height();
-    var contentWidth = 772;
-    var canvasHeight = Math.round(canvasWidth * model.height() / model.width());
+    var canvasHeight = Math.round(TYPING_CANVAS_WIDTH * model.height() / model.width());
     var footerHeight = 100;
     var headerHeight = 0;
     var contentHeight = canvasHeight + footerHeight;
 
-    var left = (bodyWidth - contentWidth) / 2;
+    var left = (bodyWidth - TYPING_CANVAS_WIDTH) / 2;
     var top = (bodyHeight - contentHeight) / 2;
 
     var largestWidth = 1040;
-
-    console.log(canvasHeight);
 
     var contentStyle;
     if (bodyWidth < largestWidth) {
@@ -183,7 +180,7 @@ return React.createClass({
     }
 
     var backgroundStyle = {
-      width: canvasWidth + "px",
+      width: TYPING_CANVAS_WIDTH + "px",
       height: canvasHeight + "px"
     };
 

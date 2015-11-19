@@ -24,7 +24,8 @@ define(["legacy_code", "Backbone", "React", "common/button", "common/backbone_mi
  *
  */
 
-var canvasWidth = 772;
+var DRAWING_CANVAS_WIDTH = BrowserInfo.isSmallScreen() ? 900 : 772 ;
+var FOOTER_HEIGHT = BrowserInfo.isSmallScreen() ? 148 : 100;
 
 var SignatureDrawerModel = Backbone.Model.extend({
   defaults: function () {
@@ -198,8 +199,8 @@ var SignatureDrawerModel = Backbone.Model.extend({
       }
     } else {
       var field = this.field();
-      var height = Math.floor(canvasWidth * this.height() / this.width());
-      ImageUtil.addTransparentBGAndSerializeCanvas(canvas, canvasWidth, height, function (imageData) {
+      var height = Math.floor(DRAWING_CANVAS_WIDTH * this.height() / this.width());
+      ImageUtil.addTransparentBGAndSerializeCanvas(canvas, DRAWING_CANVAS_WIDTH, height, function (imageData) {
         field.setValue(imageData);
         if (typeof callback === "function") {
           callback();
@@ -242,7 +243,8 @@ return React.createClass({
         var img = new Image();
         img.type = "image/png";
         img.src =  this.state.model.value();
-        picture.drawImage(img, 0, 0, canvasWidth, canvasWidth * this.state.model.height() / this.state.model.width());
+        var imageHeight = DRAWING_CANVAS_WIDTH * this.state.model.height() / this.state.model.width();
+        picture.drawImage(img, 0, 0, DRAWING_CANVAS_WIDTH, imageHeight);
       }
       this.setState({picture: picture, show: true});
       this.initDrawing();
@@ -459,8 +461,8 @@ return React.createClass({
       this.state.model.saveImage(this.refs.canvas.getDOMNode(), callback);
     },
     clear: function () {
-      this.state.picture.clearRect(0, 0, canvasWidth,
-        canvasWidth * this.state.model.height() / this.state.model.width());
+      this.state.picture.clearRect(0, 0, DRAWING_CANVAS_WIDTH,
+        DRAWING_CANVAS_WIDTH * this.state.model.height() / this.state.model.width());
       this.state.model.setEmpty();
       this.saveImage();
     },
@@ -472,12 +474,10 @@ return React.createClass({
       var bodyWidth = window.innerWidth;
       var bodyHeight = window.innerHeight;
 
-      var contentWidth = 772;
-      var canvasHeight = Math.round(canvasWidth * model.height() / model.width());
-      var footerHeight = BrowserInfo.isSmallScreen() ? 148 : 100;
-      var contentHeight = canvasHeight + footerHeight;
+      var canvasHeight = Math.round(DRAWING_CANVAS_WIDTH * model.height() / model.width());
+      var contentHeight = canvasHeight + FOOTER_HEIGHT;
 
-      var left = (bodyWidth - contentWidth) / 2;
+      var left = (bodyWidth - DRAWING_CANVAS_WIDTH) / 2;
       var top = (bodyHeight - contentHeight) / 2;
 
       var largestWidth = 1040;
@@ -485,7 +485,7 @@ return React.createClass({
       left = left < 0 ? 0 : left;
       top = top < 0 ? 0 : top;
 
-      var contentStyle = {left: left + "px"};
+      var contentStyle = {left: left + "px", width: DRAWING_CANVAS_WIDTH + "px"};
       if (bodyWidth <= largestWidth || contentHeight >= bodyHeight) {
         contentStyle.bottom = 0;
       } else {
@@ -493,7 +493,7 @@ return React.createClass({
       }
 
       var backgroundStyle = {
-        width: canvasWidth + "px",
+        width: DRAWING_CANVAS_WIDTH + "px",
         height: canvasHeight + "px"
       };
 
@@ -524,7 +524,7 @@ return React.createClass({
             <canvas
               ref="canvas"
               className="canvas"
-              width={canvasWidth}
+              width={DRAWING_CANVAS_WIDTH}
               height={canvasHeight}
             />
           </div>
