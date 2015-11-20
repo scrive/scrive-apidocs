@@ -2,14 +2,6 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
   "eleg/bankidsigning"],
   function (legacy_code, _, Backbone, React, BackboneMixin, Button, BankIDSigning) {
 
-  var addBankIDIframeIfItsNeeded = function (bankID) {
-    if (!bankID.isFaultStatus() && !bankID.isWaitingForToken() && bankID.thisDevice() &&
-        ($("#bankid-" + bankID.autoStartToken()).size() == 0) && !BrowserInfo.isAndroid()) {
-      $("body").append($("<iframe width='0' height='0' class='bankid-iframe'/>")
-        .attr("id", "bankid-" + bankID.autoStartToken()).attr("src", bankID.bankIdUrl()));
-    }
-  };
-
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
@@ -18,6 +10,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       signatory: React.PropTypes.instanceOf(Signatory).isRequired,
       thisDevice: React.PropTypes.bool.isRequired,
       onError: React.PropTypes.func.isRequired,
+      onBack: React.PropTypes.func.isRequired,
       onSuccess: React.PropTypes.func.isRequired
     },
 
@@ -29,7 +22,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         signatory: this.props.signatory,
         thisDevice: this.props.thisDevice,
         onStatusChange: function () {
-          addBankIDIframeIfItsNeeded(model);
+          self.addBankIDIframeIfItsNeeded(model);
         },
         onSuccess: function () {
           self.props.onSuccess();
@@ -43,7 +36,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         }
       });
 
-      return {model: model, error: false};
+      return {model: model, error: false, hasBeenRedirected : false};
     },
 
     getBackboneModels: function () {
@@ -52,6 +45,31 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
 
     componentDidMount: function () {
       this.state.model.initiateTransaction();
+    },
+
+    addBankIDIframeIfItsNeeded : function (bankID) {
+      if (!bankID.isFaultStatus() && !bankID.isWaitingForToken() && bankID.thisDevice()) {
+        if (BrowserInfo.isAndroid()) {
+          if (!this.state.hasBeenRedirected) {
+            // on android devices, dont wait 5s, fall back to the other method immediately
+            // since iframes dont work at all, as a bonus, there's no need to click
+            // another button
+
+            // but first changing window.location from https:// to bankid:// scheme
+            // when window.onbeforeunload is set causes alert on android devices
+            // so disable onbeforeunload for some time
+            ReloadManager.stopBlocking();
+            setTimeout(function() {
+              ReloadManager.startBlocking();
+            }, 5000);
+            window.location = bankID.bankIdUrl();
+            this.setState({hasBeenRedirected : true})
+          }
+        } else if ($("#bankid-" + bankID.autoStartToken()).size() == 0) {
+          $("body").append($("<iframe width='0' height='0' class='bankid-iframe'/>")
+            .attr("id", "bankid-" + bankID.autoStartToken()).attr("src", bankID.bankIdUrl()));
+        }
+      }
     },
 
     render: function () {
@@ -78,6 +96,13 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
               type="action"
               className="button-block"
               text={localization.ok}
+              onClick={this.props.onError}
+            />
+          }
+          {/* if */ !hasError &&
+            <Button
+              className="transparent-button button-block"
+              text={localization.cancel}
               onClick={this.props.onError}
             />
           }
