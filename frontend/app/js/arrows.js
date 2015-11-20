@@ -94,7 +94,7 @@ var PointLeftArrowView = Backbone.View.extend({
     updatePosition: function() {
        var container = $(this.el);
        if (this.model.point() != undefined) {
-          this.right = ($(document).width() - this.model.point().offset().left);
+          this.right = ($(window).width() - this.model.point().offset().left);
           this.right += this.model.margin();
           container.css("top", (this.model.point().offset().top + (this.model.point().outerHeight() / 2) - 19) + "px");
           container.css("right", this.right + "px");
