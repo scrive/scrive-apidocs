@@ -16,8 +16,8 @@ signviewAnalyticsVariables=
   ]);
 </script>
 ####
-scaleReset=
-    <meta name="viewport" content="width=1020, user-scalable=no" />
+signviewScaleReset=
+    <meta name="viewport" content="width=1040, user-scalable=no" />
     <script type="text/javascript">
       require(['legacy_code'], function() {
         jQuery(document).ready(function() {
@@ -25,16 +25,16 @@ scaleReset=
             // In firefox on android initial scale computing is broken, and we need to recompute it.
             // Also for FF meta tags needs to be appended to head, not only changed
             setTimeout(function() {
-              var scale = (window.innerWidth / 1020);
+              var scale = (window.innerWidth / 1040);
               scale = scale > 1 ? "1.0" : (scale + "").substring(0,4)
-              jQuery('head').append("<meta name='viewport' content='width=1020, user-scalable=no, initial-scale="+scale+"'/>");
+              jQuery('head').append("<meta name='viewport' content='width=1040, user-scalable=no, initial-scale="+scale+"'/>");
               setTimeout(function() {
-                  jQuery('head').append("<meta name='viewport' content='width=1020, user-scalable=yes'/>");
+                  jQuery('head').append("<meta name='viewport' content='width=1040, user-scalable=yes'/>");
                 }, 200);
               }, 200);
           } else {
             setTimeout(function() {
-              jQuery('meta[name=viewport]').attr('content','width=1020, user-scalable=yes');
+              jQuery('meta[name=viewport]').attr('content','width=1040, user-scalable=yes');
             }, 200);
           }
 
@@ -79,6 +79,7 @@ pageDocumentSignView=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    <meta name="format-detection" content="telephone=no"/>
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true')$
     $if(!usestandardheaders)$
@@ -86,7 +87,7 @@ $htmlopentag()$
     $else$
       <link href='/internal_signview_branding/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     $endif$
-    $scaleReset()$
+    $signviewScaleReset()$
   </head>
 
   <body  $if(usestandardheaders)$ $if(custombackground)$style="background:$custombackground$;"$endif$    $endif$ >
@@ -130,10 +131,11 @@ pageDocumentSignPadView=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    <meta name="format-detection" content="telephone=no"/>
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true')$
     <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
-    $scaleReset()$
+    $signviewScaleReset()$
   </head>
   <body>
     <div class="place-for-signview"></div>
