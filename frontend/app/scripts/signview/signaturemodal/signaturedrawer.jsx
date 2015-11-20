@@ -26,6 +26,7 @@ define(["legacy_code", "Backbone", "React", "common/button", "common/backbone_mi
 
 var DRAWING_CANVAS_WIDTH = BrowserInfo.isSmallScreen() ? 900 : 772 ;
 var FOOTER_HEIGHT = BrowserInfo.isSmallScreen() ? 148 : 100;
+var LARGEST_WIDTH = 1040;
 
 var SignatureDrawerModel = Backbone.Model.extend({
   defaults: function () {
@@ -480,13 +481,11 @@ return React.createClass({
       var left = (bodyWidth - DRAWING_CANVAS_WIDTH) / 2;
       var top = (bodyHeight - contentHeight) / 2;
 
-      var largestWidth = 1040;
-
       left = left < 0 ? 0 : left;
       top = top < 0 ? 0 : top;
 
       var contentStyle = {left: left + "px", width: DRAWING_CANVAS_WIDTH + "px"};
-      if (bodyWidth <= largestWidth || contentHeight >= bodyHeight) {
+      if (bodyWidth < LARGEST_WIDTH || contentHeight >= bodyHeight) {
         contentStyle.bottom = 0;
       } else {
         contentStyle.top = top;
