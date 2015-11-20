@@ -81,7 +81,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     <meta name="format-detection" content="telephone=no"/>
     $signviewAnalyticsVariables()$
-    $standardHeaderContents(nobranding='true'; noviewport='true')$
+    $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
     $if(!usestandardheaders)$
       <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     $else$
@@ -133,7 +133,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     <meta name="format-detection" content="telephone=no"/>
     $signviewAnalyticsVariables()$
-    $standardHeaderContents(nobranding='true'; noviewport='true')$
+    $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
     <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     $signviewScaleReset()$
   </head>
