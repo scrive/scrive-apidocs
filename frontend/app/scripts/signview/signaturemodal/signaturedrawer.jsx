@@ -462,7 +462,7 @@ return React.createClass({
     },
     clear: function () {
       var drawingCanvasHeight = Math.round(DRAWING_CANVAS_WIDTH * this.state.model.height() / this.state.model.width());
-      this.state.picture.clearRect(0, 0, DRAWING_CANVAS_WIDTH,drawingCanvasHeight);
+      this.state.picture.clearRect(0, 0, DRAWING_CANVAS_WIDTH, drawingCanvasHeight);
       this.state.model.setEmpty();
       this.saveImage();
     },
