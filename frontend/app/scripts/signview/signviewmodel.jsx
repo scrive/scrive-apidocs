@@ -26,6 +26,8 @@ define(["React", "signview/create_account_section_view", "signview/signatories/d
         model.trigger("change");
       });
 
+      document.setReferenceScreenshot(BrowserInfo.isSmallScreen() ? "mobile" : "standard");
+
       document.bind("change", function () {
           if (!model.isReady()) {
             model.trigger("change");
