@@ -461,8 +461,8 @@ return React.createClass({
       this.state.model.saveImage(this.refs.canvas.getDOMNode(), callback);
     },
     clear: function () {
-      this.state.picture.clearRect(0, 0, DRAWING_CANVAS_WIDTH,
-        DRAWING_CANVAS_WIDTH * this.state.model.height() / this.state.model.width());
+      var drawingCanvasHeight = Math.round(DRAWING_CANVAS_WIDTH * this.state.model.height() / this.state.model.width());
+      this.state.picture.clearRect(0, 0, DRAWING_CANVAS_WIDTH, drawingCanvasHeight);
       this.state.model.setEmpty();
       this.saveImage();
     },
