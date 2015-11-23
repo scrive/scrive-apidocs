@@ -364,7 +364,6 @@ define([
               ssn={sig.personalnumber()}
               signatory={sig}
               thisDevice={this.state.eidThisDevice}
-              onError={this.handleSetStep("eid")}
               onBack={this.handleSetStep("eid")}
               onSuccess={this.handleSign}
             />

@@ -552,6 +552,7 @@ javascriptLocalisation =
              , eleg : {
                   bankid : {
                         faultModalTitle : "$_elegBankIDFaultModalTitle()$"
+                      , startAppNow : "$_elegBankIDStartAppNow()$"
                       , signConfirmationTitle : "$_elegSignConfirmationTitle()$"
                       , signConfirmationText : "<p>$_elegSignConfirmationText()$</p>"
                       , signConfirmationTextNoName : "$_elegSignConfirmationTextNoName()$"
