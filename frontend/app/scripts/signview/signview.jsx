@@ -99,11 +99,6 @@ define([
         model.updateArrowPosition();
       });
 
-      $(window).on("beforeunload", function () {
-        if (!ReloadManager.isBlocking()) {
-          $(window).scrollTop(0);
-        }
-      });
     },
 
     componentDidUpdate: function () {

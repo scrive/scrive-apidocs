@@ -157,6 +157,9 @@ define([
           if (shouldRedirect) {
             window.location = doc.currentSignatory().rejectredirect();
            } else {
+            $(window).on("beforeunload", function () {
+              $(window).scrollTop(0);
+            });
             window.location.reload();
            }
         }, function (xhr) {
@@ -239,6 +242,9 @@ define([
                   if (redirect) {
                     window.location = redirect;
                   } else {
+                    $(window).on("beforeunload", function () {
+                      $(window).scrollTop(0);
+                    });
                     new Submit().send();
                   }
                 }, 500);
@@ -358,7 +364,7 @@ define([
               ssn={sig.personalnumber()}
               signatory={sig}
               thisDevice={this.state.eidThisDevice}
-              onError={this.handleSetStep("eid")}
+              onBack={this.handleSetStep("eid")}
               onSuccess={this.handleSign}
             />
           }
