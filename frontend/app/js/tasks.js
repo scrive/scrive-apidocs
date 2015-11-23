@@ -80,6 +80,9 @@ window.PageTask = Backbone.Model.extend({
       return this.get("onActivate")();
     }
   },
+  forceOnActivate: function () {
+    return this.get("onActivate")();
+  },
   onScrollWhenActive: function() {
     return this.get("onScrollWhenActive")();
   },
@@ -175,6 +178,15 @@ window.PageTasks = Backbone.Model.extend({
     }
 
   },
+
+  forceActivate: function () {
+    var active = this.get("active");
+
+    if (active) {
+      active.forceOnActivate();
+    }
+  },
+
   notCompletedTasks : function() {
          var tasks = [];
          for (var i=0;i< this.tasks().length ; i++ )
@@ -344,6 +356,7 @@ window.PageTasksArrow = function(args){
             , updateArrow: function() { view.updateArrow();}
             , click: function () { if (view.task) {view.task.onArrowClick();} }
             , goToCurrentTask: function() { view.goToCurrentTask();}
+            , forceActivate: function() { model.forceActivate();}
             , deletePageTasksArrow: function() { view.deletePageTasksArrowView(); model.deletePageTasks(); }
             , notCompletedTasks: function() { return model.notCompletedTasks(); }
          };

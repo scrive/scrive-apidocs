@@ -95,8 +95,14 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
     },
 
     stopInlineEditing: function () {
-      if (this.state.editing) {
-        this.setState({editing: false});
+      var self = this;
+      var field = self.props.model.field();
+      if (self.state.editing) {
+        self.setState({editing: false}, function () {
+          if (field.readyForSign()) {
+            self.activateCurrentTask();
+          }
+        });
       }
     },
 

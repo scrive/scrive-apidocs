@@ -67,7 +67,8 @@ define([
 
     childContextTypes: {
       addTask: React.PropTypes.func.isRequired,
-      removeTask: React.PropTypes.func.isRequired
+      removeTask: React.PropTypes.func.isRequired,
+      getArrow: React.PropTypes.func.isRequired
     },
 
     // Contexts are an undocumented built in feature of React.
@@ -82,6 +83,10 @@ define([
 
         removeTask: function (task) {
           model.removeTask(task);
+        },
+
+        getArrow: function () {
+          return model.arrow();
         }
       };
     },
