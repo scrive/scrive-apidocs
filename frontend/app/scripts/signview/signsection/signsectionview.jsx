@@ -157,6 +157,9 @@ define([
           if (shouldRedirect) {
             window.location = doc.currentSignatory().rejectredirect();
            } else {
+            $(window).on("beforeunload", function () {
+              $(window).scrollTop(0);
+            });
             window.location.reload();
            }
         }, function (xhr) {
@@ -239,6 +242,9 @@ define([
                   if (redirect) {
                     window.location = redirect;
                   } else {
+                    $(window).on("beforeunload", function () {
+                      $(window).scrollTop(0);
+                    });
                     new Submit().send();
                   }
                 }, 500);
