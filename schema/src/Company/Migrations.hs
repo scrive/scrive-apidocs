@@ -334,6 +334,7 @@ companiesAddCgiDisplayName = Migration {
     sqlAddColumn $ tblColumn { colName = "cgi_display_name", colType = TextT }
   ]
 }
+
 removeSMSOriginatorFromCompany:: MonadDB m => Migration m
 removeSMSOriginatorFromCompany =
   Migration {
@@ -351,3 +352,12 @@ addSMSProviderToCompanies =
   , mgrDo = do
       runSQL_ "ALTER TABLE companies ADD COLUMN sms_provider SMALLINT NOT NULL DEFAULT 1"
   }
+
+companiesAddCgiServiceID :: MonadDB m => Migration m
+companiesAddCgiServiceID = Migration {
+  mgrTable = tableCompanies
+, mgrFrom = 19
+, mgrDo = runQuery_ $ sqlAlterTable (tblName tableCompanies) [
+    sqlAddColumn $ tblColumn { colName = "cgi_service_id", colType = TextT }
+  ]
+}

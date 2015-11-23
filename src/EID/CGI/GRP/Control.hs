@@ -59,6 +59,7 @@ handleAuthRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
   (doc,_) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
+  mcompany_service_id   <- getCompanyServiceID doc
   pn <- getField "personal_number" `onNothing` do
     logInfo_ "No personal number"
     respond404
@@ -67,7 +68,7 @@ handleAuthRequest did slid = do
   debugFunction <- mkDebugFunction
   let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway id certErrorHandler debugFunction
       req = AuthRequest {
-        arqPolicy = cgServiceID
+        arqPolicy = fromMaybe cgServiceID mcompany_service_id
       , arqDisplayName = fromMaybe cgDisplayName mcompany_display_name
       , arqPersonalNumber = T.pack pn
       , arqProvider = "bankid"
@@ -94,6 +95,7 @@ handleSignRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
   (doc,_) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
+  mcompany_service_id   <- getCompanyServiceID doc
   tbs <- textToBeSigned doc
   pn <- getField "personal_number" `onNothing` do
     logInfo_ "No personal number"
@@ -103,7 +105,7 @@ handleSignRequest did slid = do
   debugFunction <- mkDebugFunction
   let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway id certErrorHandler debugFunction
       req = SignRequest {
-        srqPolicy = cgServiceID
+        srqPolicy = fromMaybe cgServiceID mcompany_service_id
       , srqDisplayName = fromMaybe cgDisplayName mcompany_display_name
       , srqPersonalNumber = T.pack pn
       , srqUserVisibleData = T.decodeUtf8 . B64.encode . BSU.fromString $ tbs
@@ -150,6 +152,7 @@ collectRequest did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
   (doc,sl) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
+  mcompany_service_id   <- getCompanyServiceID doc
   ttype <- getField "type" >>= \case
     Just "auth" -> return CgiGrpAuth
     Just "sign" -> return CgiGrpSign
@@ -171,7 +174,7 @@ collectRequest did slid = do
       debugFunction <- mkDebugFunction
       let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway id certErrorHandler debugFunction
           req = CollectRequest {
-            crqPolicy = cgServiceID
+            crqPolicy = fromMaybe cgServiceID mcompany_service_id
           , crqTransactionID = cgiTransactionID cgiTransaction
           , crqOrderRef = cgiOrderRef cgiTransaction
           , crqDisplayName = fromMaybe cgDisplayName mcompany_display_name
@@ -241,6 +244,12 @@ collectRequest did slid = do
 
 getCompanyDisplayName :: (MonadDB m, MonadThrow m) => Document -> m (Maybe T.Text)
 getCompanyDisplayName doc = fmap T.pack . companycgidisplayname . companyinfo
+  <$> dbQuery (GetCompanyByUserID $ $fromJust $ maybesignatory author)
+  where
+    author = $fromJust $ getSigLinkFor signatoryisauthor doc
+
+getCompanyServiceID :: (MonadDB m, MonadThrow m) => Document -> m (Maybe T.Text)
+getCompanyServiceID doc = fmap T.pack . companycgiserviceid . companyinfo
   <$> dbQuery (GetCompanyByUserID $ $fromJust $ maybesignatory author)
   where
     author = $fromJust $ getSigLinkFor signatoryisauthor doc
