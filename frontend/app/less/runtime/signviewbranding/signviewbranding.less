@@ -9,8 +9,8 @@
         @filter :  %("progid:DXImageTransform.Microsoft.gradient(startColorstr=%s,endColorstr=%s)",argb(@bcolor),argb(@bcolor));
         background:transparent; /* Fallback IE */
         filter: e(@filter);
-
         background-color: @bcolor;
+        background-image: url("/img/transparent-pixel.png"); // Make click area work in IE8.
 }
 
 /* Signview in general */
@@ -49,7 +49,7 @@
     }
 
     .checkmark {
-      @url: %("/colored_image?file=valid-input-check.png&color=%D", #FFFFFF);
+      @url: %("/colored_image?file=valid-input-checkbox.png&color=%D", #FFFFFF);
       background-image: url(@url);
     }
 

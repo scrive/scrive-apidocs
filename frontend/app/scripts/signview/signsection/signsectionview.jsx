@@ -14,8 +14,7 @@ define([
   "signview/signsection/signpin",
   "signview/signsection/signinputpinview",
   "signview/signsection/signeidview",
-  "signview/signsection/signeidprocessview",
-  "signview/signsection/signfinishview"
+  "signview/signsection/signeidprocessview"
 ], function (
   legacy_code,
   _,
@@ -32,8 +31,7 @@ define([
   SignPin,
   SignInputPin,
   SignEID,
-  SignEIDProcess,
-  SignFinish
+  SignEIDProcess
 ) {
   return React.createClass({
     mixins: [TransitionMixin],
@@ -69,11 +67,6 @@ define([
       var signatory = document.currentSignatory();
       var hasPinAuth = signatory.smsPinAuthenticationToSign();
       var hasEIDAuth = signatory.seBankIDAuthenticationToSign();
-      var hasFinish = false;
-      var model = this.props.model;
-      var hasPlacements = document.allPlacements().filter(function (placement) {
-        return placement.field().signatory().current() && placement.field().isSignature();
-      }).length > 0;
 
       if (hasPinAuth) {
         return "pin";
@@ -83,15 +76,12 @@ define([
         return "eid";
       }
 
-      if (!hasPlacements) {
-        return "sign";
-      }
+      return "sign";
 
-      return "finish";
     },
 
     isValidStep: function (step) {
-      var steps = ["sign", "signing", "finish", "process", "eid", "eid-process", "pin", "input-pin", "reject"];
+      var steps = ["sign", "signing", "process", "eid", "eid-process", "pin", "input-pin", "reject"];
       var valid = steps.indexOf(step) > -1;
 
       if (!valid) {
@@ -143,7 +133,7 @@ define([
 
     shouldHaveOverlay: function (step) {
       step = step || this.state.step;
-      var noOverlayStep = ["sign", "pin", "eid", "finish"];
+      var noOverlayStep = ["sign", "pin", "eid"];
       return !(noOverlayStep.indexOf(step) > -1);
     },
 
@@ -167,6 +157,9 @@ define([
           if (shouldRedirect) {
             window.location = doc.currentSignatory().rejectredirect();
            } else {
+            $(window).on("beforeunload", function () {
+              $(window).scrollTop(0);
+            });
             window.location.reload();
            }
         }, function (xhr) {
@@ -249,6 +242,9 @@ define([
                   if (redirect) {
                     window.location = redirect;
                   } else {
+                    $(window).on("beforeunload", function () {
+                      $(window).scrollTop(0);
+                    });
                     new Submit().send();
                   }
                 }, 500);
@@ -326,15 +322,6 @@ define([
 
       return (
         <div className={sectionClass}>
-          {/* if */ this.isOnStep("finish") &&
-            <SignFinish
-              model={this.props.model}
-              name={sig.name()}
-              canSign={this.canSignDocument()}
-              onSign={this.handleSign}
-              onReject={this.handleSetStep("reject")}
-            />
-          }
           {/* if */ this.isOnStep("sign") &&
             <SignSign
               model={this.props.model}
@@ -377,7 +364,7 @@ define([
               ssn={sig.personalnumber()}
               signatory={sig}
               thisDevice={this.state.eidThisDevice}
-              onError={this.handleSetStep("eid")}
+              onBack={this.handleSetStep("eid")}
               onSuccess={this.handleSign}
             />
           }

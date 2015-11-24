@@ -39,6 +39,7 @@
 "_elegBankIDRFA6":"Η ενέργεια ακυρώθηκε. ",
 "_elegBankIDRFA8":"Η εφαρμογή BankID App δεν ανταποκρίνεται. Παρακαλώ ελέγξτε ότι η εφαρμογή BankID App ξεκίνησε και ότι έχετε πρόσβαση στο internet. Στη συνέχεια προσπαθήστε ξανά.",
 "_elegBankIDRFA9":"Εισάγετε τον κωδικό ασφαλείας της εφαρμογής BankID App και επιλέξτε Υπογραφή.",
+"_elegBankIDStartAppNow":"",
 "_elegBankInvalidParametersCanChange":"Λανθασμένος Α.Δ.Τ. Αλλάξτε τον και προσπαθήστε ξανά. ",
 "_elegBankInvalidParametersCantChange":"Λανθασμένος Α.Δ.Τ. Επικοινωνήστε με τον αποστολέα του εγγράφου για να τον αλλάξετε. ",
 "_elegSignConfirmationText":"",

@@ -15,10 +15,6 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
       if (this.props.arrow()) {
         this.props.arrow().updatePosition();
       }
-
-      if (!prevState.editing && this.state.editing) {
-        this.focusInput();
-      }
     },
 
     createTasks: function () {
@@ -87,16 +83,26 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
     },
 
     startInlineEditing: function () {
-      if (this.state.editing) {
-        this.focusInput();
-      } else {
-        this.setState({editing: true});
+      if (this.canSign()) {
+        if (this.state.editing) {
+          this.focusInput();
+        } else {
+          this.setState({editing: true}, function () {
+            this.focusInput();
+          });
+        }
       }
     },
 
     stopInlineEditing: function () {
-      if (this.state.editing) {
-        this.setState({editing: false});
+      var self = this;
+      var field = self.props.model.field();
+      if (self.state.editing) {
+        self.setState({editing: false}, function () {
+          if (field.readyForSign()) {
+            self.activateCurrentTask();
+          }
+        });
       }
     },
 
@@ -124,9 +130,18 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
     },
 
     handleClick: function (e) {
-      if (e.target === this.getDOMNode()) {
-        this.startInlineEditing();
-      }
+      this.startInlineEditing();
+    },
+
+    canSign: function () {
+      var self = this;
+      var field = self.props.model.field();
+      var signatory = field.signatory();
+      var doc = signatory.document();
+      var current = signatory == doc.currentSignatory() && doc.currentSignatoryCanSign();
+      return signatory.canSign() && !field.isClosed() &&
+        field.signatory().current() && self.inlineediting != true &&
+        !doc.readOnlyView();
     },
 
     render: function () {
@@ -135,15 +150,12 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
       var signatory = field.signatory();
       var doc = signatory.document();
       var current = signatory == doc.currentSignatory() && doc.currentSignatoryCanSign();
-      var canSign = signatory.canSign() && !field.isClosed() &&
-        field.signatory().current() && self.inlineediting != true &&
-        !doc.readOnlyView();
       var editing = self.state.editing;
 
       var divClass = React.addons.classSet({
         "placedfield": true,
         "placement-text": true,
-        "to-fill-now": canSign,
+        "to-fill-now": self.canSign(),
         "obligatory": field.obligatory(),
         "optional": !field.obligatory(),
         "empty-text-field": field.value() === "",
@@ -155,7 +167,7 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
         cursor: current ? "text" : ""
       };
 
-      if (!canSign && field.value() === "") {
+      if (!self.canSign() && field.value() === "") {
         divStyle.display = "none";
       }
 
@@ -205,6 +217,7 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
         <div
           onMouseDown={this.handleMouseDown}
           onMouseUp={this.handleMouseUp}
+          onTouchStart={this.handleClick}
           onClick={this.handleClick}
           className={divClass}
           style={divStyle}
@@ -214,7 +227,6 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
               <div
                 className={boxClass}
                 style={boxStyle}
-                onClick={/* if */ canSign && self.startInlineEditing}
               >
                 {field.nicetext()}
               </div>

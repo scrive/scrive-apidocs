@@ -1,8 +1,10 @@
 import StringIO
+from datetime import datetime
 import contextlib
 import json
 import os.path as path
 import time
+import base64
 import ipdb
 
 import requests
@@ -153,6 +155,14 @@ def send_keys(keys, times=1):
         webdriver.ActionChains(driver).send_keys(*keys).perform()
 
 
+def screenshot_json(file_path):
+    with open(file_path, 'rb') as f:
+        contents = base64.b64encode(f.read())
+        now = datetime.now()
+        return {'time': now.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'image': 'data:image/jpeg;base64,' + contents}
+
+
 def wait_and_js_click(driver, css):
     wait_for_element(driver, css)
     driver.execute_script('$("' + css + '").click();')
@@ -187,12 +197,12 @@ if __name__ == '__main__':
         driver.get(URL + desktop_siglink)
         time.sleep(2)  # wait for pages to load
         save_screenshot(driver, '/tmp/desktop1.png')
-        wait_for_element(driver, '.sign-button').click()
+        wait_for_element(driver, '.button.action').click()
         time.sleep(1)  # wtf?
-        wait_for_element(driver, '.modal .signbutton').click()
+        wait_for_element(driver, '.above-overlay .button.action').click()
         time.sleep(1)  # wait for signinginprogress modal to be shown
         save_screenshot(driver, '/tmp/desktop2.png')
-        wait_for_element_to_disappear(driver, '.signwrapper')
+        wait_for_element_to_disappear(driver, '.above-overlay')
 
         # user smaller size, so small screen mode is enabled
         driver.set_window_size(702, 731)
@@ -206,12 +216,18 @@ if __name__ == '__main__':
         send_keys(['HOME'])
         save_screenshot(driver, '/tmp/mobile1.png')
         send_keys(['CONTROL', 'ADD', 'NULL'], times=3)
-        wait_for_element(driver, '.sign-button').click()
-        wait_and_js_click(driver, '.modal .signbutton')
+        wait_for_element(driver, '.button.action').click()
+        wait_and_js_click(driver, '.above-overlay .button.action')
         time.sleep(1)  # wait for signinginprogress modal to be shown
         send_keys(['CONTROL', 'SUBTRACT', 'NULL'], times=3)
         save_screenshot(driver, '/tmp/mobile2.png')
 
+    with open('files/reference_screenshots/author.json', 'wb') as f:
+        json.dump(screenshot_json('/tmp/author.png'), f)
+    with open('files/reference_screenshots/standard.json', 'wb') as f:
+        json.dump(screenshot_json('/tmp/desktop2.png'), f)
+    with open('files/reference_screenshots/mobile.json', 'wb') as f:
+        json.dump(screenshot_json('/tmp/mobile2.png'), f)
 
 # STEPS:
 # run this script

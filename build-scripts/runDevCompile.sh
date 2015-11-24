@@ -30,6 +30,3 @@ else
   ./scripts/UrlList.sh $NGINX_CONF_PATH
   exit "${RESULT}"
 fi
-
-echo "Generating urls"
-./scripts/UrlList.sh $NGINX_CONF_PATH

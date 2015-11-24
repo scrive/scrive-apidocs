@@ -38,7 +38,7 @@ describe "sign up after signing a document" do
     puts "we should be given the option to save the doc in the archive and create an account"
     sleep 10 # wait 10s so we make sure that we know how and what emails are sent.
     @h.screenshot 'sign_up_after_signing_1'
-    @h.wait_until { @h.driver.find_element :css => "a.button.button-large" }.click
+    @h.wait_until { @h.driver.find_element :css => ".safety-copy a.button.action" }.click
 
     puts "should be logged in and able to upload a document"
     @h.wait_until { @h.driver.find_element :css => ".archive" }

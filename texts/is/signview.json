@@ -39,6 +39,7 @@
 "_elegBankIDRFA6":"Hætt var við aðgerð.",
 "_elegBankIDRFA8":"BankID appið svarar ekki. Vinsamlegast gakktu úr skugga um að BankID appið sé opið og að þú sért með Internetaðgang, reyndu síðan aftur.",
 "_elegBankIDRFA9":"Sláðu inn öryggiskóðann þinn og BankID appið og veldu Skrifa undir.",
+"_elegBankIDStartAppNow":"",
 "_elegBankInvalidParametersCanChange":"Röng kennitala. Breyttu henni og reyndu aftur.",
 "_elegBankInvalidParametersCantChange":"Röng kennitala. Hafðu samband við sendanda skjalsins svo hægt sé að breyta henni.",
 "_elegSignConfirmationText":"",

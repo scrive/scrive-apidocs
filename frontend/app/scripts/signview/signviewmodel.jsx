@@ -20,6 +20,8 @@ define(["React", "Backbone", "Underscore", "legacy_code"],
         model.trigger("change");
       });
 
+      document.setReferenceScreenshot(BrowserInfo.isSmallScreen() ? "mobile" : "standard");
+
       document.bind("change", function () {
           if (!model.isReady()) {
             model.trigger("change");

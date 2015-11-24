@@ -2,7 +2,8 @@ define(["React"], function (React) {
   return {
     contextTypes: {
       addTask: React.PropTypes.func,
-      removeTask: React.PropTypes.func
+      removeTask: React.PropTypes.func,
+      getArrow: React.PropTypes.func
     },
 
     hasTaskContext: function () {
@@ -43,6 +44,14 @@ define(["React"], function (React) {
         tasks.forEach(function (task) {
           self.context.removeTask(task);
         });
+      }
+    },
+
+    activateCurrentTask: function () {
+      var arrow = this.context.getArrow();
+
+      if (arrow) {
+        arrow.forceActivate();
       }
     },
 

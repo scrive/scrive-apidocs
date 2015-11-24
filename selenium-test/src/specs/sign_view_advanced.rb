@@ -97,7 +97,7 @@ describe "sign view all functionalities" do
 #    (@h.wait_until { @h.driver.find_element :css => ".modal-container a.btn-small.float-right" }).click
 
     puts "make sure there are two signed icons"
-    @h.wait_until { (@h.driver.find_elements :css => "div.icon.status.signed").length==2 }
+    @h.wait_until { (@h.driver.find_elements :css => "span.icon.status.signed").length==2 }
     @h.screenshot 'sign_view_advanced_12'
 
     puts "now sign as the second person"
@@ -118,7 +118,7 @@ describe "sign view all functionalities" do
     @h.dochelper.partSign
 
     puts "make sure there are three signed icons"
-    @h.wait_until { (@h.driver.find_elements :css => "div.icon.status.signed").length==3 }
+    @h.wait_until { (@h.driver.find_elements :css => "span.icon.status.signed").length==3 }
     @h.screenshot 'sign_view_advanced_14'
 
     puts "now sign as the third person"
@@ -130,6 +130,6 @@ describe "sign view all functionalities" do
     @h.dochelper.partSign
 
     puts "make sure we get a link for downloading the document"
-    @h.wait_until { @h.driver.find_element :css => "a.download" }
+    @h.wait_until { @h.driver.find_element :css => "a.download-button" }
   end
 end
