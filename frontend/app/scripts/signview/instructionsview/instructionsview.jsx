@@ -1,5 +1,6 @@
-define(["legacy_code", "Backbone", "React", "common/button", "signview/instructionsview/padgivetonextview"],
-  function (legacy_code, Backbone, React, Button, PadGiveToNextView) {
+define(["legacy_code", "Backbone", "React", "common/button",
+        "signview/instructionsview/padgivetonextview", "common/htmltextwithsubstitution"],
+function (legacy_code, Backbone, React, Button, PadGiveToNextView, HtmlTextWithSubstitution) {
 
   var Menu = React.createClass({
     getInitialState: function () {
@@ -36,40 +37,28 @@ define(["legacy_code", "Backbone", "React", "common/button", "signview/instructi
     },
 
     componentDidMount: function () {
-      this.setupJqueryListeners();
     },
 
-    setupJqueryListeners: function () {
-      if (this.refs.headline) {
-        var $headline = $(this.refs.headline.getDOMNode());
-        $headline.find(".arrowtext").off().click(this.handleArrowTextClick);
-      }
-    },
-
-    headline: function () {
+    headlineText: function () {
       var doc = this.props.model;
       var sig = doc.currentSignatory();
       var welcomeUser = sig && sig.name() != "" && sig.canSign();
 
-      var $el = null;
       if (doc.isSigning() && welcomeUser) {
-        $el = $("<span>" + localization.docsignview.followTheArrowWithUserName + "</span>");
-        $el.find(".signatory-name").text(sig.name());
+        return localization.docsignview.followTheArrowWithUserName;
       } else if (doc.isSigning()) {
-        $el = $("<span>" + localization.docsignview.followTheArrow + "</span>");
+        return localization.docsignview.followTheArrow;
       } else if (doc.isReviewing()) {
-        $el = $("<span>" + localization.docsignview.reviewDocument + "</span>");
+        return localization.docsignview.reviewDocument;
       } else if (doc.isSignedAndClosed()) {
-        $el = $("<span>" + localization.docsignview.signedAndClosed + "</span>");
+        return localization.docsignview.signedAndClosed;
       } else if (doc.isSignedNotClosed()) {
-        $el = $("<span>" + localization.docsignview.signedNotClosed + "</span>");
+        return localization.docsignview.signedNotClosed;
       } else if (doc.isUnavailableForSign()) {
-        $el = $("<span>" + localization.docsignview.unavailableForSign + "</span>");
+        return localization.docsignview.unavailableForSign;
       } else {
-        $el = $("<span>" + localization.docsignview.unavailableForSign + "</span>");
+        return localization.docsignview.unavailableForSign;
       }
-
-      return {__html: $el.html()};
     },
 
     hasPadSigning: function () {
@@ -116,7 +105,13 @@ define(["legacy_code", "Backbone", "React", "common/button", "signview/instructi
 
       return (
         <div className={sectionClass}>
-            <h1 className="follow" ref="headline" dangerouslySetInnerHTML={this.headline()} />
+            <h1 className="follow" ref="headline">
+              <HtmlTextWithSubstitution
+                secureText={self.headlineText()}
+                subs={{".signatory-name": sig.name()}}
+                onClicks={{".arrowtext": function () {self.handleArrowTextClick();}}}
+              />
+            </h1>
             {/* if */ hasDownloadButton &&
               <Menu
                 title={doc.title()}

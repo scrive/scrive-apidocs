@@ -204,8 +204,6 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
 
     render: function () {
       var model = this.props.model;
-      var signatory = model.signatory();
-      var methodLabel = $("<div>").html(localization.docview.changeAuthenticationToView.methodLabel);
 
       var personalNumberClass = React.addons.classSet({
         "obligatory-input": !model.isPersonalNumberValid()
@@ -216,7 +214,9 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
 
       return (
         <div>
-          <label dangerouslySetInnerHTML={{__html: methodLabel.html()}} />
+          <label>
+            {localization.docview.changeAuthenticationToView.methodLabel}
+          </label>
           <Select
             name={this.getAuthenticationMethodNameText()}
             onSelect={this.setAuthenticationMethod}

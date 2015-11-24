@@ -72,8 +72,8 @@ return React.createClass({
           <div
             className="color-sample"
             style={{color: this.props.getTextColor(), backgroundColor: this.props.getColor()}}
-            dangerouslySetInnerHTML={{__html: this.props.sampleText}}
-            >
+          >
+            {this.props.sampleText}
           </div>
           <div className="theme-edit-editor-edit-colors">
             <div className="theme-edit-editor-edit-color">

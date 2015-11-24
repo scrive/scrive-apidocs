@@ -1,5 +1,5 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/render_localization"],
-  function (legacy_code, _, Backbone, React, Button, RenderLocalization) {
+define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/htmltextwithsubstitution"],
+  function (legacy_code, _, Backbone, React, Button, HtmlTextWithSubstitution) {
 
   var Status = React.createClass({
     render: function () {
@@ -45,9 +45,9 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
         <div className={divClass}>
           <h1>{localization.docsignview.signedNotClosed}</h1>
           <p>
-            <RenderLocalization
-              text={localization.signinginprogressmodal.youHaveSignedPleaseWait}
-              subs={{"put-doctitle": this.props.docTitle}}
+            <HtmlTextWithSubstitution
+              secureText={localization.signinginprogressmodal.youHaveSignedPleaseWait}
+              subs={{".put-doctitle": this.props.docTitle}}
             />
           </p>
           <div className="status-box">

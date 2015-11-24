@@ -1,6 +1,7 @@
 /** @jsx React.DOM */
 
-define(["React", "Backbone", "legacy_code", "common/button"], function (React, Backbone, _legacy, Button) {
+define(["React", "Backbone", "legacy_code", "common/button", "common/htmltextwithsubstitution"],
+function (React, Backbone, _legacy, Button, HtmlTextWithSubstitution) {
 
   return React.createClass({
     propTypes: {
@@ -50,15 +51,6 @@ define(["React", "Backbone", "legacy_code", "common/button"], function (React, B
       }).send();
     },
 
-    makeTOSCopyWithLink: function () {
-      var res = $("<span>" + localization.docsignview.acceptTOS + "</span>");
-      $(".is-TOS", res)
-        .addClass("terms clickable")
-        .attr("target", "_blank")
-        .attr("href", "/terms");
-      return res.html();
-    },
-
     render: function () {
       var cx = React.addons.classSet;
       var mainContainerClasses = cx({
@@ -81,7 +73,13 @@ define(["React", "Backbone", "legacy_code", "common/button"], function (React, B
               text={localization.docsignview.signupButtonText}
               onClick={this.registerUser}
             />
-            <p className="bottom-label" dangerouslySetInnerHTML={{__html: this.makeTOSCopyWithLink()}} />
+            <p className="bottom-label">
+              <HtmlTextWithSubstitution
+                secureText={localization.docsignview.acceptTOS}
+                classes={{".is-TOS": "terms clickable"}}
+                links={{".is-TOS": "/terms"}}
+              />
+            </p>
           </div>
         </div>
       );
