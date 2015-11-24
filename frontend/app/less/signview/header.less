@@ -1,6 +1,7 @@
 @import "vars";
 
 .header {
+  @breakpoint: 1040px + 20px; // for some reason @container-lg + @signview-gutter does not work here, bug in LESS?
   height: @signview-header-height;
 
   .main, .row, .col-xs-6 {
@@ -8,7 +9,13 @@
   }
 
   .main {
-    padding: 0;
+    @media (min-width: @breakpoint) {
+      padding: 0;
+    }
+
+    @media not all and (min-width: @breakpoint) {
+      padding: 0 @signview-gutter;
+    }
 
     .link {
       display: inline-block;
