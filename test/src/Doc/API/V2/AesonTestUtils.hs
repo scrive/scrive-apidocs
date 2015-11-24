@@ -1,122 +1,111 @@
-module Doc.API.V2.AesonTestUtils where
+module Doc.API.V2.AesonTestUtils (
+  jsonTestRequestHelper
+-- * Aeson Value deconstructors
+, lookupObjectArray
+, lookupObjectString
+-- * Not currently used, but could be useful
+, _lookupObjectObjectValue
+, _lookupObjectNumber
+, _lookupObjectBool
+, _lookupObjectNull
+) where
 
 import Data.Aeson
 import Data.Scientific
-import Data.Text
-import Data.Unjson
-import qualified Data.ByteString.Lazy as BS
+import Happstack.Server
 import qualified Data.HashMap.Strict as H
+import qualified Data.Text as T
 import qualified Data.Vector as V
 
-import Doc.API.V2.DocumentAccess
-import Doc.API.V2.JSON.Document
-import Doc.Data.DocumentStatus (DocumentStatus(..))
-import Doc.DocumentID (DocumentID)
-import Doc.SignatoryLinkID (SignatoryLinkID)
-import File.FileID
+import Context (Context)
+import Kontra (Kontra)
 import KontraPrelude
+import TestingUtil (assertEqual)
 import TestKontra
 
-valueFromBS :: BS.ByteString -> TestEnv Value
-valueFromBS bs = case decode bs of
-                      Just j -> return j
-                      Nothing -> $unexpectedErrorM "Could not parse JSON from ByteString"
+-- | Used to succinctly construct a API requests, test response code, and parse
+-- the response body into a JSON Value.
+--
+-- Example usage:
+--
+-- @
+--   docJSON <- jsonTestRequestHelper ctx GET [] (docApiV2Get did) 200
+--   testSomething docJSON
+-- @
+jsonTestRequestHelper :: Context -> Method -> [(String, Input)] -> Kontra Response -> Int
+       -> TestEnv Value
+jsonTestRequestHelper ctx httpMethod params func expectedRsCode = do
+  req <- mkRequest httpMethod params
+  (rsp,_) <- runTestKontra req ctx func
+  let showTestDetails = "Method: " ++ show httpMethod ++ "\n"
+                     ++ "Params: " ++ concatMap (\(s,i) -> "\n\t" ++ s ++ ": " ++ show i) params ++ "\n"
+                     ++ "Response:\n" ++ show (rsBody rsp)
+  assertEqual ("Response code should match for:\n" ++ showTestDetails) expectedRsCode (rsCode rsp)
+  let rspJSON = case decode . rsBody $ rsp of
+                Just j -> j
+                Nothing -> $unexpectedError $
+                    "Could not parse JSON from ByteString response:\n" ++ showTestDetails
+  return rspJSON
 
--- | TODO comment
-documentIDFromValue :: Value -> TestEnv DocumentID
-documentIDFromValue v = do
-  idStr <- lookupObjectString "id" v
-  case (maybeRead $ unpack idStr) of
-    Just did -> return did
-    Nothing -> $unexpectedErrorM "Could not read DocumentID using `maybeRead`"
-
--- TODO comment
-signatoryLinkIDsFromValue :: Value -> TestEnv [SignatoryLinkID]
-signatoryLinkIDsFromValue v = do
-  slArray <- lookupObjectArray "parties" v
-  forM (V.toList slArray) (\sigValue -> do
-      slidStr <- lookupObjectString "id" sigValue
-      case (maybeRead $ unpack slidStr) of
-        Just slid -> return slid
-        Nothing -> $unexpectedErrorM "Could not read SignatoryLinkID using `maybeRead`"
-      )
-
--- | TODO comment
-fileIDFromFileValue :: Value -> TestEnv FileID
-fileIDFromFileValue v = do
-  fidStr <- lookupObjectString "id" v
-  case (maybeRead $ unpack fidStr) of
-    Just fid -> return fid
-    Nothing -> $unexpectedErrorM "Could not read FileID using `maybeRead`"
-
--- | TODO comment
-authorAttachmentFileValue :: Value -> TestEnv FileID
-authorAttachmentFileValue v = do
-  attFileID <- lookupObjectString "file_id" v
-  case (maybeRead $ unpack attFileID) of
-    Just fid -> return $ fid
-    _ -> $unexpectedErrorM "Could not read FileID for author attachments using `maybeRead`"
-
--- | TODO comment (internal function)
-lookupObject :: Text -> Value -> TestEnv Value
-lookupObject k (Object o) = case (H.lookup k o) of
-                              Just v -> return v
-                              Nothing -> $unexpectedErrorM $ "Could not look up key: '" ++ unpack k ++ "'"
-lookupObject _ _ = $unexpectedErrorM "Value was not an Object"
-
--- | TODO comment
-lookupObjectObjectValue :: Text -> Value -> TestEnv Value
-lookupObjectObjectValue k v = do
+-- | Given a `Value` that should be an `Object`, lookup a key which should be
+-- an JSON `Object`.
+_lookupObjectObjectValue :: String -> Value -> TestEnv Value
+_lookupObjectObjectValue k v = do
   val <- lookupObject k v
   case val of
     ov@(Object _) -> return ov
     _ -> $unexpectedErrorM "Lookup did not give Object"
 
--- | TODO comment
-lookupObjectArray :: Text -> Value -> TestEnv (V.Vector Value)
+-- | Given a `Value` that should be an `Object`, lookup a key which should be
+-- an JSON `Array`.
+lookupObjectArray :: String -> Value -> TestEnv (V.Vector Value)
 lookupObjectArray k v = do
   val <- lookupObject k v
   case val of
     Array a -> return a
     _ -> $unexpectedErrorM "Lookup did not give Array"
 
--- | TODO comment
-lookupObjectString :: Text -> Value -> TestEnv Text
+-- | Given a `Value` that should be an `Object`, lookup a key which should be
+-- an JSON `String`.
+lookupObjectString :: String -> Value -> TestEnv String
 lookupObjectString k v = do
   val <- lookupObject k v
   case val of
-    String s -> return s
+    String s -> return $ T.unpack s
     _ -> $unexpectedErrorM "Lookup did not give String"
 
--- | TODO comment
-lookupObjectNumber :: Text -> Value -> TestEnv Scientific
-lookupObjectNumber k v = do
+-- | Given a `Value` that should be an `Object`, lookup a key which should be
+-- an JSON `Number`.
+_lookupObjectNumber :: String -> Value -> TestEnv Scientific
+_lookupObjectNumber k v = do
   val <- lookupObject k v
   case val of
     Number n -> return n
     _ -> $unexpectedErrorM "Lookup did not give Number"
 
--- | TODO comment
-lookupObjectBool :: Text -> Value -> TestEnv Bool
-lookupObjectBool k v = do
+-- | Given a `Value` that should be an `Object`, lookup a key which should be
+-- an JSON `Bool`.
+_lookupObjectBool :: String -> Value -> TestEnv Bool
+_lookupObjectBool k v = do
   val <- lookupObject k v
   case val of
     Bool b -> return b
     _ -> $unexpectedErrorM "Lookup did not give Bool"
 
--- | TODO comment
-lookupObjectNull :: Text -> Value -> TestEnv ()
-lookupObjectNull k v = do
+-- | Given a `Value` that should be an `Object`, lookup a key which should be
+-- an JSON `Null`.
+_lookupObjectNull :: String -> Value -> TestEnv ()
+_lookupObjectNull k v = do
   val <- lookupObject k v
   case val of
     Null -> return ()
     _ -> $unexpectedErrorM "Lookup did not give Null"
 
--- | TODO comment
-parseMockDocumentFromBS :: DocumentID -> BS.ByteString -> TestEnv Value
-parseMockDocumentFromBS did bs = do
-  docJSON <- valueFromBS bs
-  let da = DocumentAccess { daDocumentID = did, daAccessMode = AuthorDocumentAccess , daStatus = Pending}
-  case parse (unjsonDocument da) docJSON of
-    (Result _ []) -> return docJSON
-    (Result _ _) -> $unexpectedErrorM "Could not parse Document JSON"
+-- * Internal Functions
+
+-- | Internal Utility Function
+lookupObject :: String -> Value -> TestEnv Value
+lookupObject k (Object o) = case (H.lookup (T.pack k) o) of
+                              Just v -> return v
+                              Nothing -> $unexpectedErrorM $ "Could not look up key: '" ++ k ++ "'"
+lookupObject _ _ = $unexpectedErrorM "Value was not an Object"
