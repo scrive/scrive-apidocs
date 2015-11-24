@@ -166,8 +166,13 @@ define(['legacy_code'], function() {
       return s.read_invitation_time || s.seen_time || s.sign_time;
     });
     var everySignatoryDelivered = _.every(signingParties, function(s) {
+      // We handle the author separately as we often end up in the situation 
+      // where the author is invited with email, sign_order=1 and then we 
+      // never get a delivery report, so we end up with email_delivery_status = unknown.
+      // This method doesn't care about sign orders, so this is OK.
       return s.delivery_method === "api" || 
              s.delivery_method === "pad" ||
+             s.is_author ||
              s.email_delivery_status === "delivered" || 
              s.mobile_delivery_status === "delivered";
     });
