@@ -78,9 +78,6 @@ window.Field = Backbone.Model.extend({
     isClosed : function() {
         return this.get("closed");
     },
-    isFake : function() {
-        return this.type() == 'fake';
-    },
     placements : function() {
         return this.get("placements");
     },
@@ -106,9 +103,6 @@ window.Field = Backbone.Model.extend({
     },
     canBeIgnored: function(){
         return this.value() == "" && this.placements().length == 0 && (this.isStandard() || this.isSignature());
-    },
-    hasNotReadyPlacements : function() {
-      return _.any(this.placements(), function(p) {if (p.step() != 'field' && p.step != 'edit') return (p.step() != 'field' && p.step() != 'edit');});
     },
     readyForSign : function(){
         if (this.isEmail() && this.isOptional() && this.value() != "") {
@@ -175,14 +169,11 @@ window.Field = Backbone.Model.extend({
 
         return res;
     },
-    // Validate the state of the field (not fake, not blank, etc) and the input
+    // Validate the state of the field (not blank, etc) and the input
     validation: function() {
       var field = this;
       var signatory = field.signatory();
 
-      if(field.isFake()) {
-        return new NoValidation();
-      }
       if(field.isBlank()) {
         return new Validation({validates: function() {
           return field.type() && field.name();
@@ -402,7 +393,7 @@ window.Field = Backbone.Model.extend({
     addPlacement : function(placement) {
         if(!_.contains(this.placements(), placement)) {
             this.placements().push(placement);
-            this.trigger('change change:placements');
+            this.trigger('change');
         }
     },
    removePlacement : function(placement) {

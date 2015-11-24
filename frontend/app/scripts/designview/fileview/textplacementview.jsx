@@ -22,7 +22,7 @@ return Backbone.View.extend({
   },
 
   updateSignatoryCSSClass: function () {
-    FieldPlacementGlobal.updateSignatoryCSSClass($(this.el), !this.model.isFake() && this.model.signatory());
+    FieldPlacementGlobal.updateSignatoryCSSClass($(this.el), this.model.signatory());
   },
 
   render: function () {
