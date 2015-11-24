@@ -39,6 +39,7 @@
 "_elegBankIDRFA6":"Action annulée.",
 "_elegBankIDRFA8":"L'application BankID ne répond pas. Veuillez vérifier que l'application BankID a été démarrée et que vous avez accès à Internet, puis réessayez.",
 "_elegBankIDRFA9":"Entrez votre code de sécurité dans l'application BankID et sélectionnez Signer.",
+"_elegBankIDStartAppNow":"",
 "_elegBankInvalidParametersCanChange":"Numéro d'identifiant personnel incorrect. Modifiez et réessayez.",
 "_elegBankInvalidParametersCantChange":"Numéro d'identifiant personnel incorrect. Contactez l'émetteur du document pour le modifier.",
 "_elegSignConfirmationText":"",
