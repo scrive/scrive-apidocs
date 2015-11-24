@@ -1,6 +1,7 @@
 /** @jsx React.DOM */
 
-define(['React','common/backbone_mixin','common/button','common/infotextinput', 'login/loginmodel','pages/languageselect','legacy_code'], function(React, BackboneMixin, Button, InfoTextInput, LoginModel, LanguageSelect) {
+define(['React','common/backbone_mixin','common/button','common/infotextinput', 'login/loginmodel','pages/languageselect','common/htmltextwithsubstitution', 'legacy_code'],
+       function(React, BackboneMixin, Button, InfoTextInput, LoginModel, LanguageSelect, HtmlTextWithSubstitution) {
 
 
 return React.createClass({
@@ -10,15 +11,6 @@ return React.createClass({
     },
     propTypes: {
       model: React.PropTypes.object
-    },
-    componentDidMount: function () {
-      // Link is hidden inside a text - so we need to bind to it dynamically
-      if (this.refs.signupLink != undefined) {
-        var model = this.props.model;
-        $(".put-link-to-signup-here",this.refs.signupLink.getDOMNode()).click(function () {
-          model.goToSignupView();
-        });
-      }
     },
     loginCallback : function(resp) {
       var model = this.props.model;
@@ -89,12 +81,11 @@ return React.createClass({
             </div>
             {/*if*/ (!model.nolinks()) &&
               <div className="position separated">
-                <span
-                  ref="signupLink"
-                  className='label-with-link'
-                  dangerouslySetInnerHTML={{__html:localization.loginModal.dontHaveAccount}}
-                >
-                </span>
+                <HtmlTextWithSubstitution
+                  className="label-with-link"
+                  secureText={localization.loginModal.dontHaveAccount}
+                  onClicks={{".put-link-to-signup-here": function () {  model.goToSignupView(); }}}
+                />
               </div>
             }
           </div>

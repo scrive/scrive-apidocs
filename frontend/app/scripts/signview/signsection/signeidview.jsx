@@ -1,6 +1,6 @@
 define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/checkbox", "common/infotextinput",
-  "common/render_localization", "signview/tasks/task_mixin"],
-  function (legacy_code, _, Backbone, React, Button, Checkbox, InfoTextInput, RenderLocalization, TaskMixin) {
+  "common/htmltextwithsubstitution", "signview/tasks/task_mixin"],
+  function (legacy_code, _, Backbone, React, Button, Checkbox, InfoTextInput, HtmlTextWithSubstitution, TaskMixin) {
 
   return React.createClass({
     mixins: [TaskMixin],
@@ -100,9 +100,9 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
             {localization.docsignview.eleg.bankid.signConfirmationTitle}
           </h1>
           {/* if */ name !== "" &&
-            <RenderLocalization
-              text={localization.docsignview.eleg.bankid.signConfirmationText}
-              subs={{"put-signatory-name-here": name}}
+            <HtmlTextWithSubstitution
+              secureText={localization.docsignview.eleg.bankid.signConfirmationText}
+              subs={{".put-signatory-name-here": name}}
             />
           }
           {/* else */ name === "" &&

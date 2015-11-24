@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 
-define(['React', 'common/backbone_mixin','lists/list', 'moment', 'legacy_code'], function(React, BackboneMixin, List, moment, _legacyCode) {
+define(['React', 'common/backbone_mixin','lists/list', 'moment', 'legacy_code', 'common/htmltextwithsubstitution'], function(React, BackboneMixin, List, moment, _legacyCode, HtmlTextWithSubstitution) {
 
 var DocumentHistoryView =  React.createClass({
     getDefaultProps: function() {
@@ -83,7 +83,11 @@ var DocumentHistoryView =  React.createClass({
               width="460px"
               rendering={function(d) {
                 return (
-                <div style={{"marginRight":"30px"}} dangerouslySetInnerHTML={{__html: d.field("text")}}/>
+                <div style={{"marginRight":"30px"}}>
+                  <HtmlTextWithSubstitution
+                    secureText={d.field("text")} // We need to trust that backend server will not return anything dangerous here
+                  />
+                </div>
                 );
               }}
             />

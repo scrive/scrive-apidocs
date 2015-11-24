@@ -1,17 +1,12 @@
 /** @jsx React.DOM */
 
-define(['React','common/backbone_mixin','account/apisettings/callbackscheme'], function(React, BackboneMixin, CallbackScheme) {
+define(['React','common/backbone_mixin','account/apisettings/callbackscheme','common/htmltextwithsubstitution'], function(React, BackboneMixin, CallbackScheme, HtmlTextWithSubstitution) {
 
 
 return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.model];
-    },
-    constantUrlCallbackDescription : function() {
-      var res = $("<div>" + localization.integrations.constantUrlCallbackDescription + "</div>");
-      res.find('.put-url-here').text( this.props.model.constantUrl());
-      return res.html();
     },
     reload : function() {
       this.props.model.fetch();
@@ -39,9 +34,12 @@ return React.createClass({
               <div className='oauth-section-header'>
                 {localization.integrations.constantUrlCallback}
               </div>
-              <div className='oauth-section-label'
-                  dangerouslySetInnerHTML={{__html: this.constantUrlCallbackDescription()}}
-              />
+              <div className='oauth-section-label'>
+                <HtmlTextWithSubstitution
+                  secureText={localization.integrations.constantUrlCallbackDescription}
+                  subs={{".put-url-here": model.constantUrl()}}
+                />
+              </div>
             </div>
           }
           {/*else if*/ (model.basicAuthScheme()) &&

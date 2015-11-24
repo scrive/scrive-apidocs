@@ -1,6 +1,6 @@
 define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/infotextinput",
-  "common/render_localization"],
-  function (legacy_code, _, Backbone, React, Button, InfoTextInput, RenderLocalization) {
+  "common/htmltextwithsubstitution"],
+  function (legacy_code, _, Backbone, React, Button, InfoTextInput, HtmlTextWithSubstitution) {
 
   return React.createClass({
     propTypes: {
@@ -23,9 +23,9 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
         <div className={divClass}>
           <h1>{localization.process.signbuttontext}</h1>
           <p>
-            <RenderLocalization
-              subs={{"put-document-title-here": this.props.title, "put-signatory-name-here": this.props.name}}
-              text={localization.signviewConfirmation}
+            <HtmlTextWithSubstitution
+              subs={{".put-document-title-here": this.props.title, ".put-signatory-name-here": this.props.name}}
+              secureText={localization.signviewConfirmation}
             />
           </p>
           <dl>
