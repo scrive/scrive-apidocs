@@ -11,13 +11,6 @@ define(['lists/sortingmodel','lists/textfilteringmodel','lists/selectfilteringmo
           };
         },
         initialize: function (args) {
-            if (this.collection != undefined && this.collection.namespace() != undefined &&  this.id() != undefined)
-            {
-                var namespace =this.collection.namespace();
-                var val = SessionStorage.get(namespace, "expanded" + this.id());
-                if (val != undefined && val != "")
-                  this.set({ "expanded": val == "true" });
-            }
         },
         id : function() {
           if (this.collection.idFetcher)
@@ -50,11 +43,7 @@ define(['lists/sortingmodel','lists/textfilteringmodel','lists/selectfilteringmo
             return this.get("expanded") == true;
         },
         toggleExpand: function() {
-            var val = this.isExpanded();
-            var namespace = this.collection.namespace();
-            var id = this.id();
-            SessionStorage.set(namespace, "expanded" + id, "" + !val);
-            this.set({ "expanded": !val });
+            this.set({ "expanded": !this.isExpanded() });
             return false;
         }
     });
