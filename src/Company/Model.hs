@@ -43,6 +43,7 @@ data CompanyInfo = CompanyInfo {
   , companyidledoctimeout :: Maybe Int16
   , companycgidisplayname :: Maybe String
   , companysmsprovider    :: SMSProvider
+  , companycgiserviceid   :: Maybe String
   } deriving (Eq, Ord, Show)
 
 -- Synchronize these definitions with frontend/app/js/account/company.js
@@ -146,6 +147,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyInfo Bool where
       sqlSet "idle_doc_timeout" companyidledoctimeout
       sqlSet "cgi_display_name" companycgidisplayname
       sqlSet "sms_provider" companysmsprovider
+      sqlSet "cgi_service_id" companycgiserviceid
       sqlWhereEq "id" cid
 
 -- helpers
@@ -164,9 +166,10 @@ selectCompaniesSelectors = do
   sqlResult "companies.idle_doc_timeout"
   sqlResult "companies.cgi_display_name"
   sqlResult "companies.sms_provider"
+  sqlResult "companies.cgi_service_id"
 
-fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider) -> Company
-fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, allow_save_safety_copy, idle_doc_timeout,cgi_display_name, sms_provider) = Company {
+fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String) -> Company
+fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id) = Company {
   companyid = cid
 , companyinfo = CompanyInfo {
     companyname = name
@@ -180,5 +183,6 @@ fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_l
   , companyidledoctimeout = idle_doc_timeout
   , companycgidisplayname = cgi_display_name
   , companysmsprovider = sms_provider
+  , companycgiserviceid = cgi_service_id
   }
 }

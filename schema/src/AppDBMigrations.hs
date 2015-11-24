@@ -75,6 +75,7 @@ kontraMigrations = [
   , addSMSProviderToCompanies
   , changeScriveSignviewLogo
   , addRequiredAndNameToAuthorAttachments
+  , companiesAddCgiServiceID
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

@@ -76,6 +76,7 @@ companyJSON company = runJSONGenT $ do
     value "companyname" $ getCompanyName company
     value "companynumber" $ getCompanyNumber company
     value "cgidisplayname" $ companycgidisplayname $ companyinfo company
+    value "cgiserviceid" $ companycgiserviceid $ companyinfo company
     value "ipaddressmasklist" $ intercalate "," $ fmap show $ companyipaddressmasklist $ companyinfo company
     value "allowsavesafetycopy" $ companyallowsavesafetycopy (companyinfo company)
     value "idledoctimeout" $ companyidledoctimeout $ companyinfo company
@@ -154,7 +155,7 @@ mailNewAccountCreatedByAdmin ctx lang personname email setpasslink = do
     F.value "passwordlink"  $ show setpasslink
     F.value "creatorname"   $ maybe "" getSmartName (ctxmaybeuser ctx)
     F.value "ctxhostpart"   $ ctxhostpart ctx
-    brandingMailFields theme 
+    brandingMailFields theme
 
 
 mailEmailChangeRequest :: (TemplatesMonad m, HasSomeUserInfo a,MonadDB m,MonadThrow m) => Context -> a -> Email -> KontraLink -> m Mail
