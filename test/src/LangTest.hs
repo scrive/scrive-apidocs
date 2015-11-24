@@ -16,7 +16,6 @@ import Login
 import MinutesTime
 import TestingUtil
 import TestKontra as T
-import User.API
 import User.Lang
 import User.Model
 
@@ -30,37 +29,21 @@ langTests env = testGroup "Lang" [
     ]
 
 {- |
-    Logs in as an english user, and then switches to swedish lang and
-    then back to english lang.
-    Checks along the way that the user has the correct lang, and also that the
-    context has the correct lang.
+    Creates user in english and logs him from swedish page
 -}
 testLoggedInLangSwitching :: TestEnv ()
 testLoggedInLangSwitching = do
-    --create a new uk user and login
-    user <- createTestUser LANG_EN
+    --create a new swedish user - after login from english page - he should still use swedish
+    user <- createTestUser LANG_SV
     ctx0 <- (\c -> c { ctxlang = LANG_EN })
       <$> mkContext def
     req0 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
     (_, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost
 
     assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx1) == Just (userid user)
-    assertUserLang (userid user) LANG_EN
-    assertContextLang (userid user) ctx1 LANG_EN
-
-    --from the /upload page switch lang to swedish
-    req1 <- mkRequest POST [("lang", inText "sv")]
-    (_res2, ctx2) <- runTestKontra req1 ctx1 $ apiCallChangeUserLanguage
-    assertLoggedIn (userid user) ctx2
     assertUserLang (userid user) LANG_SV
-    assertContextLang (userid user) ctx2 LANG_SV
+    assertContextLang (userid user) ctx1 LANG_SV
 
-    --now switch back again to uk
-    req2 <- mkRequest POST [("lang", inText "en")]
-    (_res3, ctx3) <- runTestKontra req2 ctx2 $ apiCallChangeUserLanguage
-    assertLoggedIn (userid user) ctx3
-    assertUserLang (userid user) LANG_EN
-    assertContextLang (userid user) ctx3 LANG_EN
   where
     assertUserLang uid lang = do
       Just user <- dbQuery $ GetUserByID uid
@@ -72,9 +55,6 @@ testLoggedInLangSwitching = do
       assertLang userlang lang
     assertLang :: HasLang a => a -> Lang -> TestEnv ()
     assertLang langlike lang = assertEqual "Lang" lang (getLang langlike)
-    assertLoggedIn uid ctx = do
-      assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx) == Just uid
-      assertBool "No flash messages were added" $ null $ ctxflashmessages ctx
 
 testDocumentLangSwitchToEnglish :: TestEnv ()
 testDocumentLangSwitchToEnglish = do
