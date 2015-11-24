@@ -57,8 +57,8 @@ return React.createClass({
             key={Math.random()} // This is needed, else react will not regenerate styles
             className="font-sample"
             style={{fontFamily: this.props.getFont()}}
-            dangerouslySetInnerHTML={{__html: this.props.sampleText}}
             >
+            {this.props.sampleText}
           </div>
           <div className="theme-edit-font-select">
               <Select

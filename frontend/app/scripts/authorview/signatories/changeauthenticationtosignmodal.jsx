@@ -194,8 +194,6 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
 
     render: function () {
       var model = this.props.model;
-      var signatory = model.signatory();
-      var selectLabel = $("<div>").html(localization.docview.changeAuthentication.methodLabel);
 
       var authenticationValueClass = React.addons.classSet({
         "obligatory-input": model.isAuthenticationValueInvalid()
@@ -203,7 +201,9 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
 
       return (
         <div>
-          <label dangerouslySetInnerHTML={{__html: selectLabel.html()}} />
+          <label>
+            {localization.docview.changeAuthentication.methodLabel}
+          </label>
           <Select
             name={this.getAuthenticationMethodNameText()}
             onSelect={this.setAuthenticationMethod}

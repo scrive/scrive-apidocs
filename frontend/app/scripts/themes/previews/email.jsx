@@ -1,6 +1,10 @@
 /** @jsx React.DOM */
 
-define(["React","common/backbone_mixin","admin/brandeddomain/domainviewmodel","themes/theme"  ,"legacy_code","common/button","common/uploadimagebutton","common/select","common/infotextinput"], function(React, BackboneMixin, DomainViewModel,Theme,_Legacy, Button, UploadImageButton,Select,InfoTextInput) {
+define(["React", "common/backbone_mixin", "admin/brandeddomain/domainviewmodel", "themes/theme",
+        "legacy_code", "common/button", "common/uploadimagebutton", "common/select",
+        "common/infotextinput", "common/htmltextwithsubstitution"],
+       function(React, BackboneMixin, DomainViewModel,Theme, _Legacy, Button,
+                UploadImageButton, Select, InfoTextInput, HtmlTextWithSubstitution) {
 
 return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -23,8 +27,14 @@ return React.createClass({
                 <img src="/img/document.png" />
               </div>
               <div className="invitation">
-                <p  dangerouslySetInnerHTML={{__html: localization.companyBranding.brandingPreview.emailContent}}></p>
-                <p>{localization.companyBranding.brandingPreview.emailInstructions}</p>
+                <p>
+                  <HtmlTextWithSubstitution
+                    secureText={localization.companyBranding.brandingPreview.emailContent}
+                  />
+                </p>
+                <p>
+                  {localization.companyBranding.brandingPreview.emailInstructions}
+                </p>
 
                 <Button
                   size="small"
