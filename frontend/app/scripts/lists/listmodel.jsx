@@ -54,11 +54,7 @@ define(['lists/sortingmodel','lists/textfilteringmodel','lists/selectfilteringmo
 
         },
         initialize: function(models,args) {
-          this._namespace = args.namespace;
           this._idFetcher = args.idFetcher;
-        },
-        namespace : function() {
-          return this._namespace;
         },
         idFetcher : function() {
           return this._idFetcher;
@@ -98,7 +94,6 @@ return Backbone.Model.extend({
             dataFetcher : function(d) {return d;},
             idFetcher : function(d) {return d.field("id");},
             onReload : function() {},
-            namespace : Math.random() + "",
             sorting: new SortingModel({}),
             textfiltering : new TextFilteringModel({}),
             selectfiltering : new SelectFilteringModel({}),
@@ -132,9 +127,6 @@ return Backbone.Model.extend({
     },
     list : function() {
       return this.get("list");
-    },
-    namespace : function() {
-      return this.get("namespace");
     },
     sorting : function() {
       return this.get("sorting");
@@ -190,7 +182,7 @@ return Backbone.Model.extend({
     },
     parse : function(data) {
       var self = this;
-      var list = new ListOfObjects(this.dataFetcher()(data), {namespace : this.namespace(),idFetcher : this.idFetcher()});
+      var list = new ListOfObjects(this.dataFetcher()(data), {idFetcher : this.idFetcher()});
       list.on("change", function() {self.trigger("change")});
       var totalCount = self.get("totalCountFunction")(data, this.offset());
       // After getting new data we may discover that we are on page that is empty
