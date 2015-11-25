@@ -556,13 +556,6 @@ window.Signatory = Backbone.Model.extend({
                 editWidth: (this.canSign() && !this.hasSigned()) ? 300 : 540
         });
     },
-    rejectMail: function() {
-        return new Mail({
-                        document: this.document(),
-                        signatory: this,
-                        type: "reject"
-                       });
-    },
     addNewField : function(t) {
         var field = this.newField(t);
         this.addField(field);

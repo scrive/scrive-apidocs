@@ -4,7 +4,6 @@ module Doc.DocViewMail
     , mailDocumentErrorForAuthor
     , mailDocumentErrorForSignatory
     , mailDocumentRejected
-    , mailDocumentRejectedContent
     , mailDocumentRemind
     , mailDocumentRemindContent
     , mailForwardSigned
@@ -153,16 +152,6 @@ mailDocumentRejected forMail customMessage forAuthor rejector document = do
                        templateName "mailAuthorRejectContractMail"
                    else
                        templateName "mailRejectContractMail"
-
-
-
-mailDocumentRejectedContent :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m)
-                            => Maybe String
-                            -> SignatoryLink
-                            -> Document
-                            -> m String
-mailDocumentRejectedContent customMessage rejector document =
-     content <$> mailDocumentRejected False customMessage False rejector document
 
 mailDocumentErrorForAuthor :: (HasLang a, MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m) => a -> Document -> m Mail
 mailDocumentErrorForAuthor authorlang document = do

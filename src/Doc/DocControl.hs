@@ -669,12 +669,6 @@ prepareEmailPreview docid slid = do
              Just sl <- return $ getSigLinkFor slid doc
              mailattachments <- makeMailAttachments doc
              mailDocumentRemindContent Nothing doc sl (not (null mailattachments))
-         "reject" -> do
-             Just mh <- dbQuery $ GetDocumentSessionToken slid
-             doc <- dbQuery $ GetDocumentByDocumentID docid
-             Just sl <- return $ getSigLinkFor (slid,mh) doc
-             x :: String <- mailDocumentRejectedContent Nothing sl doc
-             return x
          "invite" -> do
              doc <- getDocByDocID docid
              mailInvitationContent False Sign Nothing doc
