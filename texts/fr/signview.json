@@ -23,6 +23,7 @@
 "_deliveryEmailMobile":"mail et SMS",
 "_deliveryMobile":"SMS",
 "_dialogConfirmSignByAuthorHead":"Signer",
+"_downloadDocumentButtonText":"",
 "_drawSignatureHere":"",
 "_dueDate":"Date butoir",
 "_elegBankAccessDenied":"Erreur interne. Veuillez réessayer.",
