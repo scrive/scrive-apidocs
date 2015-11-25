@@ -3,10 +3,10 @@ define(["legacy_code", "Backbone", "legacy_code"], function (legacy_code, Backbo
 return Backbone.View.extend({
   initialize: function (args) {
     _.bindAll(this, "render", "clear");
-    var view = this;
+    var self = this;
     this.fontSize = args.fontSize;
     if (this.model) {
-      this.model.bind("removed", this.clear);
+      self.listenTo(this.model, "removed", this.clear);
     }
     this.dragging = args.dragging;
     this.render();
@@ -15,10 +15,7 @@ return Backbone.View.extend({
   clear: function () {
     this.off();
     $(this.el).remove();
-    if (this.model) {
-      this.model.unbind("removed", this.clear);
-    }
-
+    this.stopListening();
   },
 
   updateSignatoryCSSClass: function () {
