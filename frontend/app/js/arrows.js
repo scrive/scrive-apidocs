@@ -271,9 +271,23 @@ var ScrollDownArrowView = Backbone.View.extend({
         mixpanel.track('Click fat arrow down');
         var model = this.model;
         var task = this.model.point();
+
         if (task == undefined) return;
-        var scrollbottom = task.offset().top + task.height() + 150;
-        var scrollTop = scrollbottom - (window.innerHeight ? window.innerHeight : $(window).height());
+
+        var marginTop = 50;
+        var viewportHeight = window.innerHeight ? window.innerHeight : $(window).height();
+        var documentHeight = $(document).height();
+        var elementWithBottom = $(document).height() - task.offset().top;
+        var fitsWithBottom = elementWithBottom + marginTop < viewportHeight;
+
+        var scrollTop = 0;
+        if (fitsWithBottom) {
+          scrollTop = documentHeight - viewportHeight;
+        } else{
+          var scrollbottom = task.offset().top + task.height() + 150;
+          scrollTop = scrollbottom - viewportHeight;
+        }
+
         var currentScrollTop = $(window).scrollTop();
         var distanceToTask = scrollTop - currentScrollTop;
         var timeToScroll = (distanceToTask / pixelSpeed) * 1000;
@@ -288,6 +302,7 @@ var ScrollDownArrowView = Backbone.View.extend({
           this.alreadyScrolling = false;
           model.scrollDone();
         });
+
        return false;
     }
 

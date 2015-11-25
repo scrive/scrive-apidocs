@@ -40,6 +40,7 @@ apiV1CallsTests env = testGroup "CallsAPIV1" $
     testThat "settings auto reminder works" env testSetAutoReminder
   , testThat "change main file works" env testChangeMainFile
   , testThat "change main file moves placements" env testChangeMainFileMovePlacements
+  , testThat "change main file moves placements with negative index" env testChangeMainFileMovePlacementsWithNegativeIndex
   , testThat "Changing authentication to view method works" env testChangeAuthenticationToViewMethod
   , testThat "Changing authentication to sign method works" env testChangeAuthenticationToSignMethod
   , testThat "Changing authentication to sign method without changing existing info works" env testChangeAuthenticationToSignMethodWithEmptyAuthenticationValue
@@ -434,6 +435,90 @@ mapObjectEntry key func old@(JSObject obj) =
 
 mapObjectEntry _key _func somethingElse = somethingElse
 
+-- this test is checking if negative field placements are
+-- working as AVIS expects them to be (meaning if you have anchors
+-- Signature w/ index -1 & Unterschrift w/ index -1
+-- both match, we should pick the one that is last (when things are negative?)
+testChangeMainFileMovePlacementsWithNegativeIndex :: TestEnv ()
+testChangeMainFileMovePlacementsWithNegativeIndex = do
+  let anchorpdf1 = "test/pdfs/anchor-avis-contract-1.pdf"
+  let anchorpdf2 = "test/pdfs/anchor-avis-contract-2.pdf"
+
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+
+  req <- mkRequest POST [ ("expectedType", inText "text")
+                        , ("file", inFile anchorpdf1)]
+  (rsp1, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
+
+  let rspString = BS.toString $ rsBody rsp1
+      Ok jsvalue@(JSObject response) = decode rspString
+      Just (JSString sts) = lookup "id" $ fromJSObject response
+
+  docid <- liftIO $ readIO (fromJSString sts)
+
+
+  -- update field placement:
+  {-
+     "anchors":[{"text":"Signature","index": -1},
+                {"text":"Unterschrift","index":-1}]
+  -}
+  let updatejs = mapObjectEntry "signatories"
+                 (fmap (mapFirstInArray (mapObjectEntry "fields" (fmap (addAnchoredField)))))
+                 jsvalue
+      mapFirstInArray :: (JSValue -> JSValue) -> JSValue -> JSValue
+      mapFirstInArray func (JSArray (x:xs)) = JSArray (func x : xs)
+      mapFirstInArray _func x = x
+      addAnchoredField :: JSValue -> JSValue
+      addAnchoredField (JSArray arr) =
+        JSArray (arr ++ [runJSONGen $ do
+                            value "name" ("anchored-field" :: String)
+                            value "type" ("custom" :: String)
+                            value "value" ("value!!" :: String)
+                            objects "placements" [do
+                              value "xrel" (0.5 :: Double)
+                              value "yrel" (0.5 :: Double)
+                              value "wrel" (0.2 :: Double)
+                              value "hrel" (0.2 :: Double)
+                              value "fsrel" (0.02 :: Double)
+                              value "page" (1 :: Int)
+                              objects "anchors" [do
+                                                    value "text" ("Signature" :: String)
+                                                    value "index" (-1::Int),
+                                                 do
+                                                    value "text" ("Unterschrift" :: String)
+                                                    value "index" (-1::Int)]]])
+      addAnchoredField x = x
+
+  let getPositionsFromResponse :: Response -> TestEnv [(Int,Double,Double)]
+      getPositionsFromResponse rsp = do
+        let rspString1 = BS.toString $ rsBody rsp
+            Ok js = decode rspString1
+        Just (positions :: [[[(Int,Double,Double)]]]) <- withJSValue js $ do
+              fromJSValueFieldCustom "signatories" . fromJSValueCustomMany $ do
+                fromJSValueFieldCustom "fields" . fromJSValueCustomMany $ do
+                  fromJSValueFieldCustom "placements" . fromJSValueCustomMany $ do
+                    xrel <- fromJSValueField "xrel"
+                    yrel <- fromJSValueField "yrel"
+                    page <- fromJSValueField "page"
+                    return ((,,) <$> page <*> xrel <*> yrel)
+        return (concat (concat positions))
+
+  do
+    liftIO $ putStrLn "POST update"
+    req' <- mkRequest POST [("json", inText (encode updatejs))]
+    (rsp,_) <- runTestKontra req' ctx $ apiCallV1Update $ docid
+    assertEqual "update call suceeded" 200 (rsCode rsp)
+    poss <- getPositionsFromResponse rsp
+    assertEqualDouble "positions in initial anchors-Signature" [(1,0.5,0.5)] poss
+
+  do
+    req' <- mkRequest POST [ ("file", inFile anchorpdf2)]
+    (rsp,_) <- runTestKontra req' ctx $ apiCallV1ChangeMainFile $ docid
+    assertEqual "suceeded" 202 (rsCode rsp)
+    poss <- getPositionsFromResponse rsp
+    assertEqualDouble "positions after change to anchors-Unterschrift" [(6,0.5,0.513)] poss
+
 testChangeMainFileMovePlacements :: TestEnv ()
 testChangeMainFileMovePlacements = do
   let anchorpdf1 = "test/pdfs/anchor-Signature.pdf"
@@ -490,7 +575,7 @@ testChangeMainFileMovePlacements = do
                                                     value "text" ("Unterschrift" :: String)
                                                     value "index" (2::Int)
                                                     -- note: "pages" is a backward compatibility mode that should be removed someday
-                                                    value "pages" [1,2,3::Int]]]])
+                                                    ]]])
       addAnchoredField x = x
 
   let getPositionsFromResponse :: Response -> TestEnv [(Int,Double,Double)]
@@ -507,15 +592,6 @@ testChangeMainFileMovePlacements = do
                     return ((,,) <$> page <*> xrel <*> yrel)
         return (concat (concat positions))
 
-
-  -- TEMPORARY HACK TO MAKE TIM HAPPY AND MAKE THIS TEST PASS ON A WEIRD SYSTEM
-  -- THIS NEEDS TO BE DONE PROPERLY AND EVERYWHERE WHERE WE COMPARE DOUBLES!!!
-  let round' z = floor $ 1000 * z + 0.5
-  let assertEqualDouble msg [(x1,x2,x3)] [(y1,y2,y3)] = do
-        assertEqual msg x1 y1
-        assertEqual msg (round' x2) (round' y2)
-        assertEqual msg (round' x3) (round' y3)
-      assertEqualDouble msg x y = do assertEqual msg x y
   do
     liftIO $ putStrLn "POST update"
     req' <- mkRequest POST [("json", inText (encode updatejs))]
@@ -562,10 +638,17 @@ testChangeMainFileMovePlacements = do
     -- assertEqual "positions after change to anchors-Signature" [(1,0.5,0.5)] poss
     assertEqualDouble "positions after change to anchors-Signature" [(1,0.5,0.5)] poss
 
+-- TEMPORARY HACK TO MAKE TIM HAPPY AND MAKE THIS TEST PASS ON A WEIRD SYSTEM
+-- THIS NEEDS TO BE DONE PROPERLY AND EVERYWHERE WHERE WE COMPARE DOUBLES!!!
+round' :: Double -> Int
+round' z = floor $ 1000 * z + 0.5
 
-
-
-  return ()
+assertEqualDouble :: (MonadIO m) => String -> [(Int, Double, Double)] -> [(Int, Double, Double)] -> m()
+assertEqualDouble msg [(x1,x2,x3)] [(y1,y2,y3)] = do
+  assertEqual msg x1 y1
+  assertEqual msg (round' x2) (round' y2)
+  assertEqual msg (round' x3) (round' y3)
+assertEqualDouble msg x y = do assertEqual msg x y
 
 testCloseEvidenceAttachments :: TestEnv ()
 testCloseEvidenceAttachments = do

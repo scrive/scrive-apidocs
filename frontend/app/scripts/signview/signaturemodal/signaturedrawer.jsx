@@ -376,6 +376,10 @@ return React.createClass({
         this.drawingtoolMove(x, y, drawingMethod, e);
         this.drawingtoolMove(x, y, drawingMethod, e);
         this.state.model.setPointerOutside(true);
+      } else if (this.state.model.drawingInProgress()) {
+        // this is for touch-enabled devices, where drawing happens with ms events, bout mouseout is a mouse event
+        // it's not possible to support the perfect behaviour in that case, so let's stop drawing
+        this.stopDrawing();
       }
     },
     drawingtoolInside: function (x, y, drawingMethod, e) {

@@ -9,8 +9,9 @@ define(['legacy_code'],function() {
       var cookieMap = {};
 
       cookies.forEach(function (cookie) {
-        var cookieName = cookie.split('=')[0].trim();
-        var cookieValue = cookie.split('=')[1].trim();
+        var cookieElems = cookie.split('=');
+        var cookieName = cookieElems[0].trim();
+        var cookieValue = cookieElems.splice(1, cookieElems.length - 1).join("=").trim();
         var cookieValues = cookieMap[cookieName];
         if (cookieValues === undefined) {
           cookieMap[cookieName] = cookieValues = [];

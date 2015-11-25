@@ -15,6 +15,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.Map as Map hiding (map)
+import qualified Data.Ord as Ord
 import qualified Text.JSON as J
 import qualified Text.JSON.Pretty as J (pp_value)
 import qualified Text.JSON.String as J
@@ -80,6 +81,15 @@ getAnchorPositions pdfcontent anchors = do
           ]
         return Map.empty
 
+anchorSorter :: Maybe (Int32, Double, Double) -> Maybe (Int32, Double, Double) -> Ord.Ordering
+anchorSorter (Just (a1page, _, _))  (Just (a2page, _, _)) | a1page < a2page = Ord.LT
+anchorSorter (Just (a1page, _, _))  (Just (a2page, _, _)) | a1page > a2page = Ord.GT
+anchorSorter (Just (a1page, a1yrel, _))  (Just (a2page, a2yrel, _)) | a1page == a2page && a1yrel <= a2yrel = Ord.LT
+anchorSorter (Just (a1page, a1yrel, _))  (Just (a2page, a2yrel, _)) | a1page == a2page && a1yrel > a2yrel = Ord.GT
+anchorSorter (Just _) _ = Ord.GT
+anchorSorter _ (Just _) = Ord.LT
+anchorSorter Nothing Nothing = Ord.EQ
+
 recalcuateAnchoredFieldPlacements :: (Kontrakcja m,DocumentMonad m) => FileID -> FileID -> m ()
 recalcuateAnchoredFieldPlacements oldfileid newfileid | oldfileid == newfileid = do
     return ()
@@ -108,13 +118,15 @@ recalcuateAnchoredFieldPlacements oldfileid newfileid = do
     -- anchor was found in the documents. In that case we just do not
     -- move a field and that should be good enough as debugging
     -- information.
+
     let maybeMoveFieldPlacement :: FieldPlacement -> Maybe FieldPlacement
         maybeMoveFieldPlacement plc = do
           -- find first anchor that was found
           (_oldAnchorPosPage,oldAnchorPosX,oldAnchorPosY) <-
             msum (map (\anchor -> Map.lookup anchor oldAnchorPositions) (placementanchors plc))
           (newAnchorPosPage,newAnchorPosX,newAnchorPosY) <-
-            msum (map (\anchor -> Map.lookup anchor newAnchorPositions) (placementanchors plc))
+            maximumBy anchorSorter (map (\anchor -> Map.lookup anchor newAnchorPositions) (placementanchors plc))
+
           return (plc { placementxrel = placementxrel plc - oldAnchorPosX + newAnchorPosX,
                         placementyrel = placementyrel plc - oldAnchorPosY + newAnchorPosY,
                         placementpage = newAnchorPosPage })
@@ -122,6 +134,7 @@ recalcuateAnchoredFieldPlacements oldfileid newfileid = do
                  fld <- signatoryfields sig ] $ \fld -> do
       let plcpairs :: [(FieldPlacement, Maybe FieldPlacement)]
           plcpairs = map (\p -> (p,maybeMoveFieldPlacement p)) (fieldPlacements fld)
+
       when (any (isJust . snd) plcpairs) $ do
         let newplc = map (\(k,v) -> fromMaybe k v) plcpairs
         dbUpdate $ SetFieldPlacements (fieldID fld) newplc
