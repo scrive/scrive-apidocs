@@ -278,7 +278,7 @@ var ScrollDownArrowView = Backbone.View.extend({
         var viewportHeight = window.innerHeight ? window.innerHeight : $(window).height();
         var documentHeight = $(document).height();
         var elementWithBottom = $(document).height() - task.offset().top;
-        var fitsWithBottom = elementWithBottom - marginTop < viewportHeight;
+        var fitsWithBottom = elementWithBottom + marginTop < viewportHeight;
 
         var scrollTop = 0;
         if (fitsWithBottom) {
