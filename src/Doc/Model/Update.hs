@@ -117,16 +117,13 @@ import Utils.Monad
 import qualified DB.TimeZoneName as TimeZoneName
 import qualified Doc.Screenshot as Screenshot
 
--- For this to work well we assume that signatories are ordered: author first, then all with ids set, then all with id == 0
--- FIXME: this assumption needs to be encoded in the type.
-insertSignatoryLinks :: MonadDB m => DocumentID -> [SignatoryLink] -> m ()
+insertSignatoryLinks :: (MonadDB m, MonadLog m, MonadThrow m) => DocumentID -> [SignatoryLink] -> m ()
 insertSignatoryLinks _ [] = return ()
 insertSignatoryLinks did links = do
   runQuery_ . sqlInsert "signatory_links" $ do
     sqlSet "document_id" did
     sqlSetListWithDefaults "id" $ map (\sl -> if (unsafeSignatoryLinkID 0 == signatorylinkid sl) then Nothing else (Just $ signatorylinkid sl)) links
     sqlSetList "user_id" $ maybesignatory <$> links
-    sqlSetList "is_author" $ signatoryisauthor <$> links
     sqlSetList "is_partner" $ signatoryispartner <$> links
     sqlSetList "token" $ signatorymagichash <$> links
     sqlSetList "sign_order"$ signatorysignorder <$> links
@@ -150,15 +147,29 @@ insertSignatoryLinks did links = do
     sqlSetList "confirmation_delivery_method" $ signatorylinkconfirmationdeliverymethod <$> links
     sqlResult "id"
 
-  -- update ids
-  links' <- zipWith (\sl slid -> sl { signatorylinkid = slid }) links
+  -- Update IDs.
+  linksWithID <- zipWith (\sl slid -> sl { signatorylinkid = slid }) links
     <$> fetchMany runIdentity
 
+  -- Update the document to reference the author and bail if there
+  -- isn't exactly one.
+  case filter signatoryisauthor linksWithID of
+    [author] -> do
+      runQuery_ . sqlUpdate "documents" $ do
+        sqlSet "author_id" $ signatorylinkid author
+        sqlWhereEq "id" did
+    authors -> do
+      logAttention "Document doesn't have exactly one author" $ object [
+          identifier_ did
+        , identifiers $ map signatorylinkid authors
+        ]
+      $unexpectedErrorM "Invalid document"
+
   insertSignatoryAttachments
-    [(signatorylinkid sl, att) | sl <- links', att <- signatoryattachments sl]
+    [(signatorylinkid sl, att) | sl <- linksWithID, att <- signatoryattachments sl]
 
   insertSignatoryLinkFields
-    [(signatorylinkid sl, fld) | sl <- links', fld <- signatoryfields sl]
+    [(signatorylinkid sl, fld) | sl <- linksWithID, fld <- signatoryfields sl]
 
 insertSignatoryAttachments :: MonadDB m => [(SignatoryLinkID, SignatoryAttachment)] -> m ()
 insertSignatoryAttachments [] = return ()
@@ -311,6 +322,7 @@ insertDocument document@(Document{..}) = do
     sqlSet "api_v2_callback_url" documentapiv2callbackurl
     sqlSet "token" documentmagichash
     sqlSet "time_zone_name" documenttimezonename
+    sqlSet "author_id" $ unsafeDocumentID 0
     sqlResult "documents.id"
   did <- fetchOne runIdentity
   insertSignatoryLinks did documentsignatorylinks
@@ -1739,7 +1751,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         <+> "                     AND companies.allow_save_safety_copy"
                                    -- linger time hasn't elapsed yet
         <+> "                     AND documents.mtime +" <?> idays (fromIntegral unsavedDocumentLingerDays') <+> ">" <?> now
-        <+> "                     AND signatory_links.is_author"
+        <+> "                     AND documents.author_id = signatory_links.id"
         <+> "                     AND users.id = signatory_links.user_id"
         <+> "                     AND users.company_id = companies.id)"
 
@@ -1792,7 +1804,7 @@ instance MonadDB m => DBUpdate m ArchiveIdleDocuments Int where
          <+> "               FROM documents"
          <+> "               JOIN signatory_links AS author_sl"
          <+> "                 ON author_sl.document_id = documents.id"
-         <+> "                AND author_sl.is_author"
+         <+> "                AND documents.author_id = author_sl.id"
          <+> "               JOIN users AS author"
          <+> "                 ON author.id = author_sl.user_id"
          <+> "               JOIN companies as author_company"

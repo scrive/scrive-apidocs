@@ -43,16 +43,14 @@ SELECT escape_for_csv(companies.name) AS "Company name"
          WHERE EXISTS (SELECT TRUE
                          FROM signatory_links
                          JOIN users ON users.id = signatory_links.user_id
-                        WHERE signatory_links.is_author
-                          AND signatory_links.document_id = documents.id
+                        WHERE documents.author_id = signatory_links.id
                           AND users.company_id = companies.id)) AS "All docs"
      , (SELECT count(*)
           FROM documents
          WHERE EXISTS (SELECT TRUE
                          FROM signatory_links
                          JOIN users ON users.id = signatory_links.user_id
-                        WHERE signatory_links.is_author
-                          AND signatory_links.document_id = documents.id
+                        WHERE documents.author_id = signatory_links.id
                           AND users.company_id = companies.id
                           AND date_trunc('month', documents.invite_time) = thetime.time)) AS "Docs sent"
      , (SELECT count(*)
@@ -60,8 +58,7 @@ SELECT escape_for_csv(companies.name) AS "Company name"
          WHERE EXISTS (SELECT TRUE
                          FROM signatory_links
                          JOIN users ON users.id = signatory_links.user_id
-                        WHERE signatory_links.is_author
-                          AND signatory_links.document_id = documents.id
+                        WHERE documents.author_id = signatory_links.id
                           AND users.company_id = companies.id
                           AND documents.status = 3 -- Closed
                           AND (SELECT date_trunc('month', max(signatory_links.sign_time))
@@ -75,8 +72,7 @@ SELECT escape_for_csv(companies.name) AS "Company name"
            AND EXISTS (SELECT TRUE
                          FROM signatory_links
                          JOIN users ON users.id = signatory_links.user_id
-                        WHERE signatory_links.is_author
-                          AND signatory_links.document_id = documents.id
+                        WHERE documents.author_id = signatory_links.id
                           AND users.company_id = companies.id
                           AND documents.status = 3 -- Closed
                           AND (SELECT date_trunc('month', max(signatory_links.sign_time))
