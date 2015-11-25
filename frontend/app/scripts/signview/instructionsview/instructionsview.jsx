@@ -22,7 +22,7 @@ define(["legacy_code", "Backbone", "React", "common/button", "signview/instructi
             onClick={this.toggleOpen}
           />
           <div style={openStyle} className="menu-options button-group">
-            <Button onClick={this.props.onDownload} text="Download" />
+            <Button onClick={this.props.onDownload} text={localization.docsignview.downloadDocumentButtonText} />
           </div>
         </span>
       );

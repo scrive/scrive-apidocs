@@ -539,6 +539,7 @@ javascriptLocalisation =
              , signupButtonText: "$_signupButtonText()$"
              , titleText: "$_titleText()$"
              , subtitleText: "$_subtitleText()$"
+             , downloadDocumentButtonText: "$_downloadDocumentButtonText()$"
              , pinSigning : {
                   invalidPhone   :  "$_invalidPhone()$"
                 , signWithSMSPin :  "$_signWithSMSPin()$"
