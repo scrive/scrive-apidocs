@@ -128,12 +128,12 @@ mailRejectLoginButton=
 </div>
 ####
 mailRejectMailContentHeader=
-$if(customMessage)$
+$if(hascustommessage)$
   <br/>
   <br/>
   $_mailRejectionCustomInvitationHeader()$:
   <br/>
-  <i>$customMessage:br()$</i>
+  <i>$custommessage:br()$</i>
 $else$
   <div class="editable" name="custommessage"></div>
 $endif$

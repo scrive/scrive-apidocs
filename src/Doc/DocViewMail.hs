@@ -145,7 +145,8 @@ mailDocumentRejected forMail customMessage forAuthor rejector document = do
         F.value "ispreview" $ not $ forMail
         F.value "documentid" $ show $ documentid document
         F.value "signatorylinkid" $ show $ signatorylinkid rejector
-        F.value "customMessage" $ asCustomMessage <$> customMessage
+        F.value "custommessage" $ asCustomMessage <$> customMessage
+        F.value "hascustommessage" $ isJust customMessage
         F.value "companyname" $ emptyToNothing $ getCompanyName document
         F.value "loginlink" $ show $ LinkIssueDoc $ documentid document
   where template = if forAuthor then

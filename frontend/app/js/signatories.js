@@ -511,7 +511,7 @@ window.Signatory = Backbone.Model.extend({
               url: "/api/frontend/reject/" + this.document().documentid() + "/" + this.document().viewer().signatoryid(),
               method: "POST",
               ajax : true,
-              customtext: customtext
+              customtext: customtext.trim() || undefined,
           });
     },
     padSigningURL : function() {
