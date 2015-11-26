@@ -404,7 +404,7 @@ TimeoutDocumentEvidenceArchive=$_TimeoutDocumentEvidenceTextSimple()$
 ###
 TimeoutDocumentEvidenceVerificationPages=$_TimeoutDocumentEvidenceTextSimple()$
 ###
-AuthorAttachmentAcceptedLog=The signatory <span class="actor"/> checked the checkbox "$attachment_name$". The text next to the checkbox was "$attachment_acceptance_text$".
+AuthorAttachmentAcceptedLog=The signatory <span class="actor"/> ticked the checkbox "$attachment_name$". The text next to the checkbox was "$attachment_acceptance_text$".
 ###
 UpdateFieldCheckboxEvidenceLog=The signatory <span class="actor"/> $if(checked)$checked$else$unchecked$endif$ the checkbox “$fieldname$”.$if(placements)$ The checkbox’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
