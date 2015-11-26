@@ -187,9 +187,6 @@ define(['legacy_code', 'Backbone', 'React', 'common/uploadbutton', 'Spinjs', 'de
                 });
               }}), div[0]);
             return div;
-        },
-        afterInsert: function() {
-            $(window).resize();
         }
 
     });

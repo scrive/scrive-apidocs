@@ -26,7 +26,7 @@ $htmlopentag()$
                         .append(dv.el())
                         .children()
       );
-      dv.afterInsert();
+      jQuery(window).resize();
 
     });
      });

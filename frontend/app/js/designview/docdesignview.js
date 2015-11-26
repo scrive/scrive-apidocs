@@ -566,10 +566,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             var view = this;
             view.$el.html(view.frame());
             return view;
-        },
-        afterInsert: function() {
-            var view = this;
-            view.documentView.afterInsert();
         }
     });
 
@@ -588,9 +584,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
 
         this.el = function() {
             return $(view.el);
-        };
-        this.afterInsert = function() {
-            view.afterInsert();
         };
         this.model = function() {
             return model;
