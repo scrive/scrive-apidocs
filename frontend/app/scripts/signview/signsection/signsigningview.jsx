@@ -51,7 +51,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
           <p>
             <RenderLocalization
               subs={{"put-document-title-here": this.props.title, "put-signatory-name-here": this.props.name}}
-              text={hasSignaturesPlaced ? localization.signviewConfirmationSignaturesPlaced : localization.signviewConfirmation}
+              text={hasSignaturesPlaced ? localization.signviewConfirmationSignaturesPlaced :
+                                          localization.signviewConfirmation}
             />
           </p>
           <Button
@@ -59,7 +60,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
             ref="signButton"
             className="button-block"
             onClick={this.props.onSign}
-            text={hasSignaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing : localization.process.signbuttontext}
+            text={hasSignaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing :
+                                        localization.process.signbuttontext}
           />
           <Button
             className="transparent-button button-block"
