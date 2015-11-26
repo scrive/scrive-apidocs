@@ -53,7 +53,7 @@ return React.createClass({
               width="100px"
               sorting="mtime"
               rendering={function(d) {
-                var time = moment(d.field("time")).toDate();
+                var time = moment(d.field("mtime")).toDate();
                 return (<div text={time.fullTime()}>{time.toYMDString()}</div>);
               }}
             />

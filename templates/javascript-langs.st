@@ -17,6 +17,7 @@ javascriptLocalisation =
              , zoomOutMore: "$_ZoomOutMore()$"
              , zoomOut: "$_ZoomOut()$"
              , signviewConfirmation: "$_contractSignConfirmation()$"
+             , signviewConfirmationSignaturesPlaced: "$_contractSignConfirmationSignaturePlaced()$"
              , feedbackQ7Subtitle: "$_FeedbackQ7Subtitle()$"
              , feedbackQ7Title: "$_FeedbackQ7Title()$"
              , feedbackQ6Subtitle: "$_FeedbackQ6Subtitle()$"
@@ -539,6 +540,7 @@ javascriptLocalisation =
              , signupButtonText: "$_signupButtonText()$"
              , titleText: "$_titleText()$"
              , subtitleText: "$_subtitleText()$"
+             , downloadDocumentButtonText: "$_downloadDocumentButtonText()$"
              , pinSigning : {
                   invalidPhone   :  "$_invalidPhone()$"
                 , signWithSMSPin :  "$_signWithSMSPin()$"

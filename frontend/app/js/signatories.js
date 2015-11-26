@@ -452,7 +452,7 @@ window.Signatory = Backbone.Model.extend({
               url: "/api/frontend/reject/" + this.document().documentid() + "/" + this.document().viewer().signatoryid(),
               method: "POST",
               ajax : true,
-              customtext: customtext
+              customtext: customtext.trim() || undefined
           });
     },
     padSigningURL : function() {
@@ -496,13 +496,6 @@ window.Signatory = Backbone.Model.extend({
                 type: "remind",
                 editWidth: (this.canSign() && !this.hasSigned()) ? 300 : 540
         });
-    },
-    rejectMail: function() {
-        return new Mail({
-                        document: this.document(),
-                        signatory: this,
-                        type: "reject"
-                       });
     },
     addNewField : function(t) {
         var field = this.newField(t);
