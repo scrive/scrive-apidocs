@@ -8,6 +8,7 @@
 "_company":"Bedrijf",
 "_companyNumberLabel":"Bedrijfsregistratienr.",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, door op de knop te klikken ondertekent u het document <strong class='put-document-title-here'></strong> en wordt uw handtekening geregistreerd door de e-signing service Scrive.",
+"_contractSignConfirmationSignaturePlaced":"",
 "_contractSignatorySignModalBody":"<strong class='put-signatory-name-here'></strong>, door op de knop te klikken wordt uw handtekening geregistreerd door de e-signing service Scrive.",
 "_contractSignatorySignModalBodyNoName":"Door op de knop te klikken wordt uw handtekening geregistreerd door de e-ondertekeningsservice Scrive. ",
 "_contractSignatorySignModalTitle":"Klaar?",
