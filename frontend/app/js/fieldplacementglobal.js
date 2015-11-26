@@ -41,11 +41,14 @@ FieldPlacementGlobal.fontSizeHuge   = 24;
 /* Margins for checkbox placement. */
 FieldPlacementGlobal.checkboxSprite = 10;
 FieldPlacementGlobal.checkboxSpriteBorder = 1;
-FieldPlacementGlobal.checkboxPlacementMargin = FieldPlacementGlobal.placementBorder + 1;
 
-/* Margins for signature placement. */
-FieldPlacementGlobal.signaturePlacementTopMargin = FieldPlacementGlobal.placementBorder + 1;
-FieldPlacementGlobal.signaturePlacementLeftMargin = FieldPlacementGlobal.placementBorder + 1;
+FieldPlacementGlobal.checkboxPlacementDDTopOffset  = FieldPlacementGlobal.placementBorder + 1;
+FieldPlacementGlobal.checkboxPlacementDDLeftOffset = FieldPlacementGlobal.placementBorder + 1;
+
+/* D&D for signatures needs to be adjusted. */
+FieldPlacementGlobal.signaturePlacementDDTopOffset = 1;
+FieldPlacementGlobal.signaturePlacementDDLeftOffset = 1;
+FieldPlacementGlobal.signatureBorderWidth = 2;
 
 /* Offsets for type setter placements */
 FieldPlacementGlobal.textTypeSetterVerticalOffset = -19;

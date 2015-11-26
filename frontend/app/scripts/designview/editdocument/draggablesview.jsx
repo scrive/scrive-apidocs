@@ -1,91 +1,51 @@
 /** @jsx React.DOM */
 
-define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocument/draggablehelp", "designview/editdocument/draggable"],
-  function (legacy_code, React, BackboneMixin, DraggableHelp, Draggable) {
+define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocument/draggablecheckbox",
+        "designview/editdocument/draggablesignature", "designview/editdocument/draggabletext"],
+  function (legacy_code, React, BackboneMixin, DraggableCheckbox, DraggableSignature, DraggableText) {
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
     propTypes: {
-      model: React.PropTypes.instanceOf(Backbone.Model)
+      model: React.PropTypes.instanceOf(Document),
+      showCoordinateAxes: React.PropTypes.func.isRequired,
+      hideCoordinateAxes: React.PropTypes.func.isRequired,
+      moveCoordinateAxes: React.PropTypes.func.isRequired,
+      openTypeSetterFor: React.PropTypes.func.isRequired
     },
 
     getBackboneModels: function () {
-      return [this.props.model, this.props.model.document()];
-    },
-
-    firstSignatoryOrAuthor: function () {
-      var doc = this.props.model.document();
-      return doc.signatoriesWhoSign()[0] || doc.author();
-    },
-
-    textboxFactory: function () {
-      return this.firstSignatoryOrAuthor().field("fstname", "standard");
-    },
-
-    signatureFactory: function () {
-      return new Field({
-        fresh: false,
-        ddSignature: true,
-        type: "signature",
-        signatory: this.firstSignatoryOrAuthor(),
-        name: "temp-signature"
-      });
-    },
-
-    checkboxFactory: function () {
-      var signatory = this.firstSignatoryOrAuthor();
-      return new Field({
-        fresh: false,
-        type: "checkbox",
-        value: signatory.author() ? "checked" : "",
-        signatory: signatory,
-        name: "temp-checkbox"
-      });
-    },
-
-    isEnabledCheckWithCallbackForSignature: function (field) {
-        if (this.props.model.document().signatoriesWhoSign().length > 0) {
-          return true;
-        } else {
-          new FlashMessage({type: "error", content: localization.designview.dndDisabled});
-          return false;
-        }
+      return [this.props.model];
     },
 
     render: function () {
-      var doc = this.props.model.document();
-
       return (
         <div className="design-view-action-document-draggables">
-          <DraggableHelp className="help1" text={localization.designview.draggablehelp1} />
-          <DraggableHelp className="help2" text={localization.designview.draggablehelp2} />
-          {doc.ready() &&
+          <div className="design-view-action-document-draggables-help help1">
+            <div className="wrapper">
+              <div className="icon" />
+              <div className="text-wrapper">
+                <span className="text">
+                  {localization.designview.draggablehelp1}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="design-view-action-document-draggables-help help2">
+            <div className="wrapper">
+              <div className="icon" />
+              <div className="text-wrapper">
+                <span className="text">
+                  {localization.designview.draggablehelp2}
+                </span>
+              </div>
+            </div>
+          </div>
+          {this.props.model.ready() &&
             <span>
-              <Draggable
-                className="design-view-action-document-draggable-textbox"
-                buttonText={localization.designview.freeTextBox}
-                fieldFactory={this.textboxFactory}
-                isEnabledCheckWithCallback={function() {return true}}
-                fontSize={16}
-              />
-              <Draggable
-                className="design-view-action-document-draggable-signature"
-                buttonText={localization.designview.signatureBox}
-                fieldFactory={this.signatureFactory}
-                isEnabledCheckWithCallback={this.isEnabledCheckWithCallbackForSignature}
-                onAdd={function (f) {
-                  f.setName(doc.newSignatureName());
-                }}
-              />
-              <Draggable
-                className="design-view-action-document-draggable-checkbox"
-                buttonText={localization.designview.checkbox}
-                fieldFactory={this.checkboxFactory}
-                isEnabledCheckWithCallback={function() {return true}}
-                onAdd={function (f) {
-                  f.setName(doc.newCheckboxName());
-                }}
-              />
+             <DraggableText {...this.props}/>
+             <DraggableSignature {...this.props}/>
+             <DraggableCheckbox {...this.props}/>
             </span>
           }
         </div>

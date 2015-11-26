@@ -1,120 +1,137 @@
+define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin",
+        "designview/fileview/signatureview", "designview/fileview/checkboxview",
+        "designview/fileview/textview"],
+  function (legacy_code, _, Backbone, React, BackboneMixin, SignatureView,
+            CheckboxView, TextView) {
 
-define(["legacy_code", "Underscore", "Backbone", "designview/fileview/signatureplacementplacedview",
-        "designview/fileview/checkboxplacementplacedview", "designview/fileview/textplacementplacedview"],
-  function (legacy_code, _, Backbone, SignaturePlacementPlacedView,
-            CheckboxPlacementPlacedView, TextPlacementPlacedView) {
+  return React.createClass({
+    propTypes: {
+      model: React.PropTypes.instanceOf(FilePage).isRequired,
+      imageSrc: React.PropTypes.string.isRequired,
+      imageComplete: React.PropTypes.bool.isRequired,
+      imageWidth: React.PropTypes.number.isRequired,
+      imageHeight: React.PropTypes.number.isRequired,
+      showCoordinateAxes: React.PropTypes.func.isRequired,
+      hideCoordinateAxes: React.PropTypes.func.isRequired,
+      moveCoordinateAxes: React.PropTypes.func.isRequired,
+      closeAllTypeSetters: React.PropTypes.func.isRequired
+    },
 
-return Backbone.View.extend({
-  model: FilePage,
+    mixins: [BackboneMixin.BackboneMixin],
 
-  initialize: function (args) {
-    _.bindAll(this, "render", "renderDragables", "updateDragablesPosition");
-    this.listenTo(this.model, "change:dragables", this.renderDragables);
-    this.render();
-  },
+    // TODO: should be replaced with only `change` event later.
+    componentWillMount: function () {
+      this.props.model.on("change:dragables", this.handleChange);
+    },
 
-  destroy: function () {
-    _.each(this.model.placements(), function (p) {
-      if (p.typeSetter) { p.typeSetter.clear(); }
-    });
+    componentDidMount: function () {
+      this.initDroppable();
+    },
 
-    this.off();
-    this.stopListening();
+    componentWillUnmount: function () {
+      this.props.model.off("change:dragables", this.handleChange);
+    },
 
-    $(this.el).remove();
-  },
+    getBackboneModels: function () {
+      return [this.props.model];
+    },
 
-  makeDropable: function () {
-    var self = this;
-    var page = self.model;
-
-    $(self.el).droppable({
-      drop: function (event, ui) {
-        var helper = $(ui.helper);
-        var top = helper.offset().top - $(self.el).offset().top - 1;
-        var left = helper.offset().left - $(self.el).offset().left - 1;
-        var height = $(self.el).height();
-        var width = $(self.el).width();
-        var onDrop = $(ui.draggable).draggable("option", "onDrop");
-        onDrop(page, left, top, width, height);
-        return false;
-      }
-    });
-  },
-
-  renderDragables: function () {
-    var view = this;
-    var page = this.model;
-    var container = $(this.el);
-    var file = page.file();
-    _.each(page.placements(), function (placement) {
-      var placement = placement;
-      if (!placement.placed() && placement.page() == page.number()) {
-        var elem = $("<div />").appendTo(container);
-        var field = placement.field();
-        var args = {
-          model: placement,
-          el: elem
-        };
-
-        if (field.isSignature()) {
-          return new SignaturePlacementPlacedView(args);
+    initDroppable: function () {
+      var self = this;
+      var page = this.props.model;
+      var pageEl = $(this.getDOMNode());
+      pageEl.droppable({
+        drop: function (event, ui) {
+          var helper = $(ui.helper);
+          var top = helper.offset().top - pageEl.offset().top - 1;
+          var left = helper.offset().left - pageEl.offset().left - 1;
+          var height = pageEl.height();
+          var width = pageEl.width();
+          var onDrop = $(ui.draggable).draggable("option", "onDrop");
+          onDrop(page, left, top, width, height);
+          self.handleChange();
+          return false;
         }
-
-        if (field.isCheckbox()) {
-          return new CheckboxPlacementPlacedView(args);
-        }
-
-        if (field.isText()) {
-          return new TextPlacementPlacedView(args);
-        }
-
-        throw new Error("unknown field type");
+      });
+    },
+    openTypeSetterOnThisPageFor: function (placement) {
+      if (this.isMounted()) {
+        _.each(this.refs, function (v) {
+          if (v.closeTypeSetter && v.props.model !== placement) {
+            v.closeTypeSetter();
+          } else if (v.openTypeSetter && v.props.model === placement) {
+            v.openTypeSetter();
+          }
+        });
       }
-    });
-  },
+    },
 
-  updateDragablesPosition: function () {
-    var page = this.model;
-    _.each(page.placements(), function (placement) {
-      if (placement.placed() && placement.page() == page.number() && placement.view && placement.view.updatePosition) {
-        placement.view.updatePosition();
+    closeAllTypeSettersOnThisPage: function () {
+      if (this.isMounted()) {
+        _.each(this.refs, function (v) {
+          if (v.closeTypeSetter) {
+            v.closeTypeSetter();
+          }
+        });
       }
-    });
-  },
+    },
 
-  ready: function () {
-    var ready = this.pagejpg && this.pagejpg[0].complete;
+    renderFields: function () {
+      var self = this;
+      var page = self.props.model;
+      var file = page.file();
+      var imageWidth = self.props.imageWidth;
+      var imageHeight = self.props.imageHeight;
+      var doc = file.document();
+      return _.map(doc.allPlacements(), function (placement, index) {
+        if (placement.page() === page.number()) {
+          var field = placement.field();
+          var args = {
+            key: placement.cid,
+            ref: "placement-" + placement.cid,
+            model: placement,
+            pageWidth: imageWidth,
+            pageHeight: imageHeight,
+            showCoordinateAxes: self.props.showCoordinateAxes,
+            hideCoordinateAxes: self.props.hideCoordinateAxes,
+            moveCoordinateAxes: self.props.moveCoordinateAxes,
+            closeAllTypeSetters: self.props.closeAllTypeSetters
+          };
 
-    if (ready) {
-      this.model.setSize(this.pagejpg.width(), this.pagejpg.height());
+          if (field.isSignature()) {
+            return <SignatureView {...args} />;
+          } else if (field.isCheckbox()) {
+            return <CheckboxView {...args} />;
+          } if (field.isText()) {
+            return <TextView {...args} />;
+          } else {
+            throw new Error("unknown field type");
+          }
+        }
+      });
+    },
+
+    handleChange: function () {
+      if (this.isMounted()) {
+        this.forceUpdate();
+      }
+    },
+
+    render: function () {
+      var page = this.props.model;
+      var file = page.file();
+      var doc = file.document();
+      var imageSrc = this.props.imageSrc;
+      var imageComplete = this.props.imageComplete;
+
+      return (
+        <div id={"page" + page.number()} className="pagediv">
+          <img src={imageSrc} />
+          {/* if */ imageComplete &&
+            this.renderFields()
+          }
+        </div>
+      );
     }
-
-    return ready;
-  },
-
-  render: function () {
-    var page = this.model;
-    var file = page.file();
-    var fileid = file.fileid();
-    var container = $(this.el);
-
-    container.empty();
-    container.attr("id", "page" + page.number());
-    container.data("id", page.number());
-    container.addClass("pagediv");
-
-    this.pagejpg = $("<img class='pagejpg'/>");
-    var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart({"pixelwidth": page.width()});
-
-    this.pagejpg.attr("src", pagelink);
-    container.append(this.pagejpg);
-
-    this.makeDropable();
-    this.renderDragables();
-
-    return this;
-  }
-});
-
+  });
 });

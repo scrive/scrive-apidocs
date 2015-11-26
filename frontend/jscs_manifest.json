@@ -3,6 +3,8 @@
   "./app/scripts/designview/participants/*.jsx",
   "./app/scripts/designview/fileview/*.jsx",
   "./app/scripts/designview/authorattachments/*.jsx",
+  "./app/scripts/designview/editdocument/*.jsx",
+  "./app/scripts/designview/documentview.jsx",
   "./app/scripts/authorview/fileview/*.jsx",
   "./app/scripts/authorview/signatories/*.jsx",
   "./app/scripts/signview/signatories/*.jsx",

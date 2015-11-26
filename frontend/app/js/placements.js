@@ -9,7 +9,6 @@ window.FieldPlacement = Backbone.Model.extend({
       wrel: 0,
       hrel: 0,
       fsrel: 0.0168,
-      withTypeSetter : false,
       alive: true,
       anchors: []
     },
@@ -115,13 +114,6 @@ window.FieldPlacement = Backbone.Model.extend({
     tip : function(){
         return this.get("tip");
     },
-    withTypeSetter : function() {
-      return this.get("withTypeSetter") == true;
-    },
-    cleanTypeSetter : function() {
-       this.set({"withTypeSetter" : false});
-        this.trigger('clean');
-    },
     remove : function() {
        this.trigger("removed");
        var document = this.field().signatory().document();
@@ -145,12 +137,6 @@ window.FieldPlacement = Backbone.Model.extend({
       if (field && field.addedByMe && field.value() === "" && field.placements().length <= 1) {
         sig.deleteField(field);
         placement.setField(undefined);
-      }
-    },
-    fixWHRel : function(w,h) {
-      var page =  this.field().signatory().document().mainfile().page(this.get("page"));
-      if (page != undefined && page.width() != undefined && page.height() != undefined) {
-          this.set({ wrel : (w / page.width()) , hrel : (h / page.height()) },    {silent : true});
       }
     },
     draftData : function() {

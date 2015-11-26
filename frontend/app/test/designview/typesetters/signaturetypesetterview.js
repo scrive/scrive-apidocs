@@ -16,9 +16,10 @@ define(["legacy_code", "backend", "util", "React", "designview/typesetters/signa
     it("should test component", function () {
       var placement = util.addPlacement(doc);
 
-      var typesetter = placement.typeSetter = TestUtils.renderIntoDocument(React.createElement(SignatureTypeSetterView, {
-        model: placement
+      var typesetter = TestUtils.renderIntoDocument(React.createElement(SignatureTypeSetterView, {
+          model: placement
         , element: $("body")[0]
+        , hideFunc: function() {}
       }));
     });
 

@@ -770,18 +770,6 @@ window.Document = Backbone.Model.extend({
         });
         return out;
     },
-    removeTypeSetters: function() {
-        var document = this;
-        _.each(document.signatories(), function(sig) {
-            _.each(sig.fields(), function(field) {
-                _.each(field.placements(), function(placement) {
-                    placement.cleanTypeSetter();
-                    if(placement.view)
-                        placement.view.clear();
-                });
-            });
-        });
-    },
     killAllPlacements: function() {
         var document = this;
         _.each(document.signatories(), function(sig) {

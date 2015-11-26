@@ -25,7 +25,7 @@ define(["React", "designview/typesetters/typesettermixin",
             <Anchor model={this.props.model} />
           </More>
           <Done field={field} onDone={this.done} />
-          <Remove model={this.props.model} onRemove={this.clear} />
+          <Remove model={this.props.model} />
         </span>
       );
     }

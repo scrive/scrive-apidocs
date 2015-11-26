@@ -15,7 +15,11 @@ window.DesignViewTabsView = function(args) {
 
   var draggablesViewEl = $("<div/>");
   var draggablesView = React.render(React.createElement(DraggablesView, {
-    model: model
+    model: document,
+    showCoordinateAxes: args.showCoordinateAxes,
+    hideCoordinateAxes: args.hideCoordinateAxes,
+    moveCoordinateAxes: args.moveCoordinateAxes,
+    openTypeSetterFor : args.openTypeSetterFor
   }), draggablesViewEl[0]);
 
   var processSettingsEl      = $("<div/>");
