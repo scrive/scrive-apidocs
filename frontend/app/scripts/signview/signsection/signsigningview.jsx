@@ -37,6 +37,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
     },
 
     render: function () {
+      var hasSignaturesPlaced = this.props.model.document().currentSignatory().hasPlacedSignatures();
+
       var divClass = React.addons.classSet({
         "col-xs-6": !BrowserInfo.isSmallScreen(),
         "col-xs-12": BrowserInfo.isSmallScreen(),
@@ -45,11 +47,11 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
 
       return (
         <div className={divClass}>
-          <h1>{localization.process.signbuttontext}</h1>
+          <h1>{hasSignaturesPlaced ? localization.process.signModalTitle : localization.process.signbuttontext}</h1>
           <p>
             <RenderLocalization
               subs={{"put-document-title-here": this.props.title, "put-signatory-name-here": this.props.name}}
-              text={localization.signviewConfirmation}
+              text={hasSignaturesPlaced ? localization.signviewConfirmationSignaturesPlaced : localization.signviewConfirmation}
             />
           </p>
           <Button
@@ -57,7 +59,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
             ref="signButton"
             className="button-block"
             onClick={this.props.onSign}
-            text={localization.process.signbuttontext}
+            text={hasSignaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing : localization.process.signbuttontext}
           />
           <Button
             className="transparent-button button-block"
