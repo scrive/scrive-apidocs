@@ -201,17 +201,8 @@ module.exports = function (grunt) {
       },
       dist: {
         files: {
-          "<%= yeoman.dist %>/all-styling-minified.css": [
-            "<%= yeoman.app %>/css/*.css",
-            "<%= yeoman.app %>/less/less-compiled.css"
-          ]
-        }
-      },
-      dev: {
-        files: {
-          "<%= yeoman.app %>/less/regular-css-compiled.css": [
-            "<%= yeoman.app %>/css/*.css"
-          ]
+          "<%= yeoman.dist %>/all-styling-minified.css": "<%= yeoman.app %>/less/less-compiled.css",
+          "<%= yeoman.dist %>/signview-all-styling-minified.css": "<%= yeoman.app %>/less/signview-less-compiled.css"
         }
       }
     },
@@ -230,19 +221,36 @@ module.exports = function (grunt) {
       },
       compile: {
         src: "<%= yeoman.app %>/less/less-compiled.css"
+      },
+      signview: {
+        src: "<%= yeoman.app %>/less/signview-less-compiled.css"
       }
     },
 
     less: {
+      options: {
+        paths: ["<%= yeoman.app %>/less"],
+        sourceMap: true,
+      },
       compile: {
         options: {
-          paths: ["<%= yeoman.app %>/less"],
-          sourceMap: true,
           sourceMapFilename: "<%= yeoman.app %>/less/less-compiled.css.map",
           sourceMapURL: "/less/less-compiled.css.map"
         },
         files: {
-          "<%= yeoman.app %>/less/less-compiled.css": "<%= yeoman.app %>/less/index.less"
+          "<%= yeoman.app %>/less/less-compiled.css": [
+            "<%= yeoman.app %>/less/index.less",
+            "<%= yeoman.app %>/css/*.css"
+          ]
+        }
+      },
+      signview: {
+        options: {
+          sourceMapFilename: "<%= yeoman.app %>/less/signview-less-compiled.css.map",
+          sourceMapURL: "/less/signview-less-compiled.css.map"
+        },
+        files: {
+          "<%= yeoman.app %>/less/signview-less-compiled.css": "<%= yeoman.app %>/less/signview/index.less",
         }
       }
     }
@@ -291,14 +299,13 @@ module.exports = function (grunt) {
     grunt.task.run([
       "clean:server",
       "compileStyles",
-      "cssmin:dev",
       "compileGenerateLocalization",
       "shell:compileJsx",
       "concurrent:watch"
     ]);
   });
 
-  grunt.registerTask("compileStyles", ["less:compile", "autoprefixer:compile"]);
+  grunt.registerTask("compileStyles", ["less", "autoprefixer"]);
   grunt.registerTask("server:dist", ["build"]);
   grunt.registerTask("test", ["karma:unitSingleRun"]);
   grunt.registerTask("validateJs", ["gjslint"]);
