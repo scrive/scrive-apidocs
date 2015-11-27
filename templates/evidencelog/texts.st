@@ -253,7 +253,7 @@ ProlongDocumentEvidenceArchive=$_ProlongDocumentEvidenceTextArchive()$
 ProlongDocumentEvidenceVerificationPages=$_ProlongDocumentEvidenceTextNotArchive()$
 ###
 ###
-RejectDocumentEvidenceLog=The signatory <span class="actor"/> rejected the invitation to sign and Scrive eSign disabled the possibility to sign for all parties.$if(text)$ The rejection message from the signatory <span class="actor"/> was: <BR/> <i>$text:noescape()$</i>$endif$
+RejectDocumentEvidenceLog=The signatory <span class="actor"/> rejected the invitation to sign and Scrive eSign disabled the possibility to sign for all parties.$if(text)$ The rejection message from the signatory <span class="actor"/> was: <BR/> <i>$text$</i>$endif$
 ###
 RejectDocumentEvidenceArchive=$_RejectDocumentEvidenceTextSimpleArchive()$
 ###
