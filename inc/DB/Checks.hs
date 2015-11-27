@@ -13,7 +13,6 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Foldable as F
 import qualified Data.List as L
-import qualified Data.Set as S
 
 import DB.Model
 import DB.SQL
@@ -128,21 +127,28 @@ checkUnknownTables logger tables = do
   when (not (null absent)) $
     mapM_ (\t -> logger $ "Unknown table '" ++ t) absent
 
-createTable :: MonadDB m => Table -> m ()
-createTable table@Table{..} = do
-  forM_ createTableSQLs runQuery_
+createTable :: MonadDB m => Bool -> Table -> m ()
+createTable withConstraints table@Table{..} = do
+  -- Create empty table and add the columns.
+  runQuery_ $ sqlCreateTable tblName
+  runQuery_ $ sqlAlterTable tblName $ map sqlAddColumn tblColumns
+  -- Add all the other constraints if applicable.
+  when withConstraints $ createTableConstraints table
+  -- Register the table along with its version.
   runQuery_ . sqlInsert "table_versions" $ do
     sqlSet "name" (tblNameString table)
     sqlSet "version" tblVersion
+
+createTableConstraints :: MonadDB m => Table -> m ()
+createTableConstraints Table{..} = do
+  forM_ tblIndexes $ runQuery_ . sqlCreateIndex tblName
+  when (not $ null addConstraints) $ do
+    runQuery_ $ sqlAlterTable tblName addConstraints
   where
-    createTableSQLs :: [RawSQL ()]
-    createTableSQLs = concat
-      [ [sqlCreateTable tblName]
-      , [sqlAlterTable tblName $ map sqlAddColumn tblColumns | not (null tblColumns)]
-      , [sqlAlterTable tblName [sqlAddPK tblName pk] | Just pk <- return tblPrimaryKey ]
-      , [sqlAlterTable tblName $ map sqlAddCheck tblChecks | not (null tblChecks)]
-      , map (sqlCreateIndex tblName) tblIndexes
-      , [sqlAlterTable tblName $ map (sqlAddFK tblName) tblForeignKeys | not (null tblForeignKeys)]
+    addConstraints = concat [
+        [sqlAddPK tblName pk | Just pk <- return tblPrimaryKey]
+      , map sqlAddCheck tblChecks
+      , map (sqlAddFK tblName) tblForeignKeys
       ]
 
 checkDomainsStructure :: (MonadDB m, MonadThrow m)
@@ -329,7 +335,11 @@ checkDBConsistency logger domains tables migrations = do
       logger "Creating domains..."
       mapM_ createDomain domains
       logger "Creating tables..."
-      mapM_ createTable tables
+      -- Create all tables with no constraints first to allow cyclic
+      -- references.
+      mapM_ (createTable False) tables
+      logger "Creating table constraints..."
+      mapM_ createTableConstraints tables
       logger "Done."
       logger "Running initial setup for tables..."
       forM_ tables $ \t -> case tblInitialSetup t of
@@ -426,7 +436,7 @@ sqlGetIndexes table = toSQLCommand . sqlSelect "pg_catalog.pg_class c" $ do
   sqlResult "i.indisunique" -- is it unique?
   sqlResult "pg_catalog.pg_get_expr(i.indpred, i.indrelid, true)" -- if partial, get constraint def
   sqlJoinOn "pg_catalog.pg_index i" "c.oid = i.indexrelid"
-  sqlLeftJoinOn "pg_catalog.pg_constraint r" "r.conindid = i.indexrelid"
+  sqlLeftJoinOn "pg_catalog.pg_constraint r" "r.conrelid = i.indrelid AND r.conindid = i.indexrelid"
   sqlWhereEqSql "i.indrelid" $ sqlGetTableID table
   sqlWhereIsNULL "r.contype" -- fetch only "pure" indexes
   where
@@ -454,9 +464,9 @@ fetchTableIndex (name, Array1 columns, unique, mconstraint) = (TableIndex {
 sqlGetForeignKeys :: Table -> SQL
 sqlGetForeignKeys table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint r" $ do
   sqlResult "r.conname::text" -- fk name
-  sqlResult "array(SELECT a.attname::text FROM pg_catalog.pg_attribute a WHERE a.attrelid = r.conrelid AND a.attnum = ANY (r.conkey))" -- constrained columns
+  sqlResult $ "ARRAY(SELECT a.attname::text FROM pg_catalog.pg_attribute a JOIN (" <> unnestWithOrdinality "r.conkey" <> ") conkeys ON (a.attnum = conkeys.item) WHERE a.attrelid = r.conrelid ORDER BY conkeys.n)" -- constrained columns
   sqlResult "c.relname::text" -- referenced table
-  sqlResult "array(SELECT a.attname::text FROM pg_catalog.pg_attribute a WHERE a.attrelid = r.confrelid AND a.attnum = ANY (r.confkey)) as refcolumns" -- referenced columns
+  sqlResult $ "ARRAY(SELECT a.attname::text FROM pg_catalog.pg_attribute a JOIN (" <> unnestWithOrdinality "r.confkey" <> ") confkeys ON (a.attnum = confkeys.item) WHERE a.attrelid = r.confrelid ORDER BY confkeys.n)" -- referenced columns
   sqlResult "r.confupdtype" -- on update
   sqlResult "r.confdeltype" -- on delete
   sqlResult "r.condeferrable" -- deferrable?
@@ -464,12 +474,15 @@ sqlGetForeignKeys table = toSQLCommand . sqlSelect "pg_catalog.pg_constraint r" 
   sqlJoinOn "pg_catalog.pg_class c" "c.oid = r.confrelid"
   sqlWhereEqSql "r.conrelid" $ sqlGetTableID table
   sqlWhereEq "r.contype" 'f'
+  where
+    unnestWithOrdinality :: RawSQL () -> SQL
+    unnestWithOrdinality arr = "SELECT n, " <> raw arr <> "[n] AS item FROM generate_subscripts(" <> raw arr <> ", 1) AS n"
 
 fetchForeignKey :: (String, Array1 String, String, Array1 String, Char, Char, Bool, Bool) -> (ForeignKey, RawSQL ())
 fetchForeignKey (name, Array1 columns, reftable, Array1 refcolumns, on_update, on_delete, deferrable, deferred) = (ForeignKey {
-  fkColumns = S.fromList . map unsafeSQL $ columns
+  fkColumns = map unsafeSQL columns
 , fkRefTable = unsafeSQL reftable
-, fkRefColumns = S.fromList . map unsafeSQL $ refcolumns
+, fkRefColumns = map unsafeSQL refcolumns
 , fkOnUpdate = charToForeignKeyAction on_update
 , fkOnDelete = charToForeignKeyAction on_delete
 , fkDeferrable = deferrable

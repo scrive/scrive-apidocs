@@ -10,14 +10,13 @@ module DB.Model.ForeignKey (
 
 import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString as BS
-import qualified Data.Set as S
 
 import KontraPrelude
 
 data ForeignKey = ForeignKey {
-  fkColumns    :: S.Set (RawSQL ())
+  fkColumns    :: [RawSQL ()]
 , fkRefTable   :: RawSQL ()
-, fkRefColumns :: S.Set (RawSQL ())
+, fkRefColumns :: [RawSQL ()]
 , fkOnUpdate   :: ForeignKeyAction
 , fkOnDelete   :: ForeignKeyAction
 , fkDeferrable :: Bool
@@ -38,9 +37,9 @@ fkOnColumn column reftable refcolumn =
 
 fkOnColumns :: [RawSQL ()] -> RawSQL () -> [RawSQL ()] -> ForeignKey
 fkOnColumns columns reftable refcolumns = ForeignKey {
-  fkColumns    = S.fromList columns
+  fkColumns    = columns
 , fkRefTable   = reftable
-, fkRefColumns = S.fromList refcolumns
+, fkRefColumns = refcolumns
 , fkOnUpdate   = ForeignKeyCascade
 , fkOnDelete   = ForeignKeyNoAction
 , fkDeferrable = True
@@ -52,7 +51,7 @@ fkName tname ForeignKey{..} = shorten $ mconcat [
     "fk__"
   , tname
   , "__"
-  , mintercalate "__" $ S.toAscList fkColumns
+  , mintercalate "__" fkColumns
   , "__"
   , fkRefTable
   ]
@@ -63,9 +62,9 @@ fkName tname ForeignKey{..} = shorten $ mconcat [
 sqlAddFK :: RawSQL () -> ForeignKey -> RawSQL ()
 sqlAddFK tname fk@ForeignKey{..} = mconcat [
     "ADD CONSTRAINT" <+> fkName tname fk <+> "FOREIGN KEY ("
-  , mintercalate ", " $ S.toAscList fkColumns
+  , mintercalate ", " fkColumns
   , ") REFERENCES" <+> fkRefTable <+> "("
-  , mintercalate ", " $ S.toAscList fkRefColumns
+  , mintercalate ", " fkRefColumns
   , ") ON UPDATE" <+> foreignKeyActionToSQL fkOnUpdate
   , "  ON DELETE" <+> foreignKeyActionToSQL fkOnDelete
   , " " <> if fkDeferrable then "DEFERRABLE" else "NOT DEFERRABLE"

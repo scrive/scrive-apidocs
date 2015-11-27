@@ -142,7 +142,9 @@ documentFilterToSQL (DocumentFilterByDelivery delivery) = do
   sqlWhereEq "documents.delivery_method" delivery
 
 documentFilterToSQL (DocumentFilterLinkIsAuthor flag) = do
-  sqlWhereEq "signatory_links.is_author" flag
+  sqlWhere $ "documents.author_id" <+> op <+> "signatory_links.id"
+  where
+    op = if flag then "=" else "<>"
 
 documentFilterToSQL (DocumentFilterLinkIsPartner flag) = do
   sqlWhereEq "signatory_links.is_partner" flag
@@ -155,7 +157,7 @@ documentFilterToSQL (DocumentFilterUnsavedDraft flag) =
     ]
 
 documentFilterToSQL (DocumentFilterByAuthor userid) = do
-  sqlWhere "signatory_links.is_author"
+  sqlWhere "documents.author_id = signatory_links.id"
   sqlWhereEq "signatory_links.user_id" userid
 
 documentFilterToSQL (DocumentFilterByCanSign userid) = do

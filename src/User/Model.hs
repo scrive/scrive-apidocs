@@ -242,8 +242,7 @@ instance MonadDB m => DBQuery m IsUserDeletable Bool where
       sqlWhereEq "users.id" uid
       sqlJoinOn "signatory_links" "users.id = signatory_links.user_id"
       sqlWhere "signatory_links.deleted IS NULL"
-      sqlWhere "signatory_links.is_author"
-      sqlJoinOn "documents" "documents.id = signatory_links.document_id"
+      sqlJoinOn "documents" "signatory_links.id = documents.author_id"
       sqlWhereEq "documents.status" Pending
       sqlResult "documents.id"
       sqlLimit 1
@@ -440,7 +439,7 @@ instance MonadDB m => DBQuery m GetUsageStats [UserUsageStats] where
         sqlResult "u.id AS uid"
         sqlResult $ documentSent   <+> "AS document_sent"
         sqlResult $ documentClosed <+> "AS document_closed"
-        sqlWhere "sl.is_author"
+        sqlWhere "d.author_id = sl.id"
         sqlWhere $ documentSent `sqlOR` documentClosed
         case eid of
           Left  uid -> sqlWhereEq "u.id" uid
@@ -647,8 +646,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUse
   where
     whereSignatoryLinkCanBeChanged =
       sqlWhereExists $ sqlSelect "documents" $ do
-        sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"
+        sqlLeftJoinOn "signatory_links" "documents.author_id = signatory_links.id"
         sqlWhere "signatory_links.id = signatory_link_fields.signatory_link_id"
         sqlWhereEq "documents.status" Preparation
-        sqlWhereEq "signatory_links.is_author" True
         sqlWhereEq "signatory_links.user_id" userid

@@ -76,6 +76,8 @@ kontraMigrations = [
   , changeScriveSignviewLogo
   , addRequiredAndNameToAuthorAttachments
   , companiesAddCgiServiceID
+  , documentsAddAuthorID
+  , addUniqueConstraintForAuthorCheck
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

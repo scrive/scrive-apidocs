@@ -307,7 +307,7 @@ signatoryLinksSelectors :: [SQL]
 signatoryLinksSelectors = [
     "signatory_links.id"
   , "ARRAY(SELECT (" <> mintercalate ", " signatoryFieldsSelectors <> ")::signatory_field FROM signatory_link_fields WHERE signatory_links.id = signatory_link_fields.signatory_link_id ORDER BY signatory_link_fields.id)"
-  , "signatory_links.is_author"
+  , "documents.author_id = signatory_links.id"
   , "signatory_links.is_partner"
   , "signatory_links.sign_order"
   , "signatory_links.token"

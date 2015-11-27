@@ -45,7 +45,7 @@ createCronWorkersTable :: MonadDB m => Migration m
 createCronWorkersTable = Migration {
   mgrTable = tableCronWorkers
 , mgrFrom = 0
-, mgrDo = createTable tblTable {
+, mgrDo = createTable True tblTable {
     tblName = "cron_workers"
   , tblVersion = 1
   , tblColumns = [
@@ -61,7 +61,7 @@ createCronJobsTable = Migration {
   mgrTable = tableCronJobs
 , mgrFrom = 0
 , mgrDo = do
-  createTable tblTable {
+  createTable True tblTable {
     tblName = "cron_jobs"
   , tblVersion = 1
   , tblColumns = [

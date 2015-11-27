@@ -6,7 +6,7 @@ import KontraPrelude
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 41
+  , tblVersion = 42
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -34,13 +34,23 @@ tableDocuments = tblTable {
     , tblColumn { colName = "confirm_text", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "time_zone_name", colType = TextT, colNullable = False, colDefault = Just "'Europe/Stockholm'::text" }
     , tblColumn { colName = "api_v2_callback_url", colType = TextT }
+    , tblColumn { colName = "author_id", colType = BigIntT, colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumn "id"
+  , tblForeignKeys = [
+        -- Consistency check - author of a document needs to reference
+        -- it back (deferred to break cyclic dependency).
+        (fkOnColumns ["id", "author_id"] "signatory_links" ["document_id", "id"]) {
+            fkDeferred = True
+          }
+      ]
   , tblIndexes = [
       -- for list of documents in adminonly
       indexOnColumn "mtime"
       -- for filtering by status in archive
     , indexOnColumn "status"
+      -- for joining with signatory links
+    , uniqueIndexOnColumn "author_id"
     ]
   , tblChecks = [
         Check "check_documents_pending_are_not_purged"
@@ -194,7 +204,7 @@ ctSignatoryAttachment = CompositeType {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 29
+  , tblVersion = 30
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -210,7 +220,6 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "really_deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "csv_contents", colType = TextT }
     , tblColumn { colName = "sign_redirect_url", colType = TextT }
-    , tblColumn { colName = "is_author", colType = BoolT, colNullable = False }
     , tblColumn { colName = "is_partner", colType = BoolT, colNullable = False }
     , tblColumn { colName = "rejection_time", colType = TimestampWithZoneT }
     , tblColumn { colName = "rejection_reason", colType = TextT }
@@ -231,6 +240,9 @@ tableSignatoryLinks = tblTable {
   , tblIndexes = [
       indexOnColumn "user_id"
     , indexOnColumn "document_id"
+      -- Needed for the corresponding foreign key in documents table
+      -- (PostgreSQL whimsy).
+    , uniqueIndexOnColumns ["id", "document_id"]
     ]
   }
 

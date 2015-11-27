@@ -90,12 +90,12 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyFor (
 ----------------------------------------
 
 -- | Fetch id of the author of the document.
-getAuthorAndAuthorsCompanyIDs :: (MonadDB m, MonadThrow m) => DocumentID -> m (UserID,CompanyID)
-getAuthorAndAuthorsCompanyIDs document_id = do
-  runQuery_ . sqlSelect "signatory_links as sl, users as u" $ do
-    sqlResult "sl.user_id"
+getAuthorAndAuthorsCompanyIDs :: (MonadDB m, MonadThrow m) => DocumentID -> m (UserID, CompanyID)
+getAuthorAndAuthorsCompanyIDs did = do
+  runQuery_ . sqlSelect "documents d" $ do
+    sqlJoinOn "signatory_links sl" "d.author_id = sl.id"
+    sqlJoinOn "users u" "sl.user_id = u.id"
+    sqlResult "u.id"
     sqlResult "u.company_id"
-    sqlWhereEq "sl.document_id" document_id
-    sqlWhere "sl.is_author"
-    sqlWhere "u.id = sl.user_id"
+    sqlWhereEq "d.id" did
   fetchOne id
