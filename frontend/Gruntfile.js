@@ -230,7 +230,7 @@ module.exports = function (grunt) {
     less: {
       options: {
         paths: ["<%= yeoman.app %>/less"],
-        sourceMap: true,
+        sourceMap: true
       },
       compile: {
         options: {
@@ -250,7 +250,7 @@ module.exports = function (grunt) {
           sourceMapURL: "/less/signview-less-compiled.css.map"
         },
         files: {
-          "<%= yeoman.app %>/less/signview-less-compiled.css": "<%= yeoman.app %>/less/signview/index.less",
+          "<%= yeoman.app %>/less/signview-less-compiled.css": "<%= yeoman.app %>/less/signview/index.less"
         }
       }
     }

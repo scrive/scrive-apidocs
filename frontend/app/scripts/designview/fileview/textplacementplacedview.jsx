@@ -4,7 +4,8 @@ define(["legacy_code", "Backbone", "React", "designview/typesetters/texttypesett
 
 return Backbone.View.extend({
   initialize: function (args) {
-    _.bindAll(this, "render", "clear", "closeTypeSetter", "updateErrorBackground", "fixWHRel", "listenToField", "updatePosition");
+    _.bindAll(this, "render", "clear", "closeTypeSetter", "updateErrorBackground",
+                    "fixWHRel", "listenToField", "updatePosition");
     var view = this;
     var placement = this.model;
     var field =  placement.field();
@@ -21,7 +22,6 @@ return Backbone.View.extend({
     this.listenTo(field, "change", this.updateErrorBackground);
     this.listenTo(field, "change", this.fixWHRel);
     this.listenTo(doc, "change:signatories", this.render);
-
 
     this.model.view = this;
     this.render();
