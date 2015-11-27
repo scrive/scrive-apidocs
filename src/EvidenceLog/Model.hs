@@ -19,7 +19,6 @@ import Control.Monad.Catch
 import Control.Monad.Identity
 import Data.Int
 import Data.List.Utils (replace)
-import Utils.String (escapeHTML)
 import Data.Typeable
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
@@ -95,7 +94,7 @@ evidenceLogText event textFields masl mmsg = do
        -- Interim substitutions that can be eliminated if we switch from hstringtemplates to XML for representing holes in all event texts.
          F.value "actor" ("$actor$" :: String)
          F.value "signatory" ("$signatory$" :: String)
-         maybe (return ()) (F.value "text" . escapeHTML) (mmsg)
+         maybe (return ()) (F.value "text") (mmsg)
          case masl of
            Nothing -> return ()
            Just sl -> do
