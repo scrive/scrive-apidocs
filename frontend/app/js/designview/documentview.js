@@ -25,9 +25,6 @@ define(['legacy_code', 'Backbone', 'React', 'common/uploadbutton', 'Spinjs', 'de
                 var winHeight = $(window).height();
                 view.refreshMargins();
             });
-            view.viewmodel.bind('change:step', function() {
-                $(window).resize();
-            });
             $(window).resize();
         },
         render: function() {

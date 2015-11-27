@@ -20,7 +20,7 @@ define(["legacy_code"], function (legacy_code) {
   var placementRect = function (field) {
     var placementWidth = 0;
     var placementHeight = 0;
-    if (field.isText() || field.isFake()) {
+    if (field.isText()) {
       placementWidth = FieldPlacementGlobal.textfieldWidth;
       placementHeight = FieldPlacementGlobal.textfieldHeight;
     } else if (field.isCheckbox()) {

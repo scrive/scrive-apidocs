@@ -158,7 +158,7 @@ window.Signatory = Backbone.Model.extend({
         });
     },
     readyFields: function() {
-        return _.filter(this.fields(), function(f) {return f.isReady() && !f.isFake();});
+        return _.filter(this.fields(), function(f) {return f.isReady()});
     },
     customFields: function() {
         var cf = new Array();
@@ -276,7 +276,6 @@ window.Signatory = Backbone.Model.extend({
     makeSignatory: function() {
       this.set({ signs: true });
       this.document().checkLastViewerChange();
-      this.trigger("change:role");
     },
     makeViewer: function() {
       this.set({signs: false});
@@ -290,8 +289,6 @@ window.Signatory = Backbone.Model.extend({
 
       this.setAuthenticationToSign("standard");
       this.setAuthenticationToView("standard");
-
-      this.trigger("change:role");
     },
     hasAuthenticatedToView: function() {
         return this.get("hasAuthenticatedToView");
@@ -353,7 +350,6 @@ window.Signatory = Backbone.Model.extend({
           this.set({ confirmationdelivery : _.contains(["email", "mobile", "email_mobile"], this.get("delivery")) ? this.get("delivery") : "email"});
         }
         this.set({delivery: "pad"});
-        this.trigger("change:delivery");
       } else if (previousLastViewerState && !lastViewerState) {
         this.set({ delivery : this.get("deliveryGoldfishMemory") == null
                               ? "email"
@@ -362,7 +358,6 @@ window.Signatory = Backbone.Model.extend({
         if (this.get("confirmationDeliveryWasNone")) {
           this.set({confirmationdelivery: "none"});
         }
-        this.trigger("change:delivery");
       }
     },
     allAttachemntHaveFile: function() {
@@ -510,7 +505,7 @@ window.Signatory = Backbone.Model.extend({
     },
     addField : function(f) {
         this.fields().push(f);
-        this.trigger("change change:fields");
+        this.trigger("change");
     },
     deleteField: function(field) {
         this.set({fields : _.without(this.fields(), field)});
@@ -536,9 +531,6 @@ window.Signatory = Backbone.Model.extend({
     },
     setCsv : function(csv) {
         this.set({"csv" : csv});
-    },
-    inpadqueue : function() {
-       return this.get("inpadqueue");
     },
     removed : function() {
         this.isRemoved = true;
@@ -664,7 +656,7 @@ window.Signatory = Backbone.Model.extend({
     },
     hasProblems: function() {
         return _.some(this.fields(), function(field) {
-            return !field.isValid() || field.hasNotReadyPlacements();
+            return !field.isValid();
         });
     },
     role: function() {

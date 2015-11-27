@@ -101,7 +101,6 @@ define(["jquery", "Underscore", "Backbone", "React",
 
       if (allnames.indexOf(name) < 0) {
         field.setName(name);
-        sig.trigger("change:fields");
         return true;
       }
 

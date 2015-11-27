@@ -11,8 +11,7 @@ window.FieldPlacement = Backbone.Model.extend({
       fsrel: 0.0168,
       withTypeSetter : false,
       alive: true,
-      anchors: [],
-      step: 'edit'
+      anchors: []
     },
     initialize : function(args){
         var placement = this;
@@ -192,15 +191,6 @@ window.FieldPlacement = Backbone.Model.extend({
             placement.field().trigger('change');
           }
         });
-    },
-    step: function() {
-        return this.get('step');
-    },
-    goToStepField : function() {
-        this.set({step:'field'});
-    },
-    goToStepEdit : function() {
-        this.set({step:'edit'});
     }
 });
 
