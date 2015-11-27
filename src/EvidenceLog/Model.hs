@@ -19,6 +19,7 @@ import Control.Monad.Catch
 import Control.Monad.Identity
 import Data.Int
 import Data.List.Utils (replace)
+import Utils.String (escapeHTML)
 import Data.Typeable
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
@@ -40,7 +41,6 @@ import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo (getEmail)
 import Util.SignatoryLinkUtils (getSigLinkFor)
-import Utils.String (escapeHTML)
 import Version
 import qualified HostClock.Model as HC
 
