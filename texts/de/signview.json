@@ -8,7 +8,7 @@
 "_company":"Unternehmen",
 "_companyNumberLabel":"Unternehmens Reg.-Nr.",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, mit einem Klick auf die Schaltfläche signieren Sie das Dokument <strong class='put-document-title-here'></strong> und Ihre Signatur wird durch den E-Signierungsdienst von Scrive registriert.",
-"_contractSignConfirmationSignaturePlaced":"",
+"_contractSignConfirmationSignaturePlaced":"Sie haben das Dokument signiert. Wenn Sie auf die Schaltfläche klicken, wird Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",
 "_contractSignatorySignModalBody":"<strong class='put-signatory-name-here'></strong>, mit einem Klick auf die Schaltfläche wird Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",
 "_contractSignatorySignModalBodyNoName":"Mit einem Klick auf die Schaltfläche wird Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",
 "_contractSignatorySignModalTitle":"Fertig?",
