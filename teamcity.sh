@@ -49,7 +49,9 @@ function step_check_import_order()
 function step_validate_js()
 {
     github_notify_commit_state "validate-js" "pending" "Linting the JS";
-    if cd frontend && grunt validateJs; then
+    cd frontend/
+    npm install
+    if grunt validateJs && grunt jscs; then
         github_notify_commit_state "validate-js" "success" "All files passed";
         exit_code=0;
     else
