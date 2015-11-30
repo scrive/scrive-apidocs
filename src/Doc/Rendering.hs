@@ -252,7 +252,7 @@ getNumberOfPDFPages content = do
   (path, handle) <- openTempFile systmp "mutool-input.pdf"
   BS.hPutStr handle content
   hClose handle
-  (exitCode, stdout', stderr') <- readProcessWithExitCode "mutool" ["info", "-m", path] BSL.empty
+  (exitCode, stdout', stderr') <- readProcessWithExitCode "mutool" ["info", path] BSL.empty
   removeFile path
   return $ case exitCode of
     ExitSuccess -> case find ("Pages: " `BSL.isPrefixOf`) $ BSL.lines stdout' of
