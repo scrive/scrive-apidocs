@@ -87,10 +87,11 @@ runRendering _renderedPages fid widthInPixels renderingMode = do
     -- supposed to finish.
 
     (exitcode,_outcontent,_errcontent) <-
-      liftIO $ readProcessWithExitCode "mudraw"
-               (concat [ ["-o", tmppath ++ "/output-%d.png"]
+      liftIO $ readProcessWithExitCode "mutool"
+               (concat [ ["draw"]
+                       , ["-o", tmppath ++ "/output-%d.png"]
                        , ["-w", show widthInPixels]
-                       , ["-b", "8"]
+                       , ["-A", "8"]
                        , [sourcepath]
                        , ["1" | RenderingModeFirstPageOnly <- return renderingMode] -- render only first page if so desired
                        ]) BSL.empty
