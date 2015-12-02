@@ -699,7 +699,7 @@
 "_modalUserSignupDoneHeader":"Din konto er blevet oprettet! Du bedes tjekke din indbakke for at få aktiveret kontoen.",
 "_more":"Mere",
 "_name":"Navn",
-"_nameInvalidChars":"<span class='put-field-name'></span> må kun indeholde alfabetiske tegn, apostrof, bindestreg eller mellemrum.",
+"_nameInvalidChars":"",
 "_nameRequired":"<span class='put-field-name'></span> påkrævet.",
 "_nameTooLong":"<span class='put-field-name'></span> må indeholde op til 100 tegn.",
 "_newCompanyAccountButtonText":"Ny bruger",

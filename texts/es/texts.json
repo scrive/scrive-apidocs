@@ -699,7 +699,7 @@
 "_modalUserSignupDoneHeader":"¡Su cuenta ha sido creada! Por favor revise su email para activar su cuenta.",
 "_more":"Más",
 "_name":"Nombre",
-"_nameInvalidChars":"<span class='put-field-name'></span> sólo puede contener caracteres alfabéticos, apóstrofe, guión o espacio.",
+"_nameInvalidChars":"",
 "_nameRequired":"<span class='put-field-name'></span> requerido.",
 "_nameTooLong":"<span class='put-field-name'></span> puede contener hasta 100 caracteres.",
 "_newCompanyAccountButtonText":"Nuevo usuario",

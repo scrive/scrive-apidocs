@@ -699,7 +699,7 @@
 "_modalUserSignupDoneHeader":"Ο λογαριασμός σας έχει δημιουργηθεί! Παρακαλώ ελέγξτε το email σας για να ενεργοποιήσετε τον λογαριασμό σας. ",
 "_more":"Περισσότερα",
 "_name":"Όνομα",
-"_nameInvalidChars":"<span class='put-field-name'></span> μπορεί να περιέχει μόνο αλφαβητικούς χαρακτήρες, αποστρόφους, παύλες και κενά.",
+"_nameInvalidChars":"",
 "_nameRequired":"Απαιτείται <span class='put-field-name'></span>;.",
 "_nameTooLong":"<span class='put-field-name'></span> μπορεί να περιέχει έως 100 χαρακτήρες.",
 "_newCompanyAccountButtonText":"",

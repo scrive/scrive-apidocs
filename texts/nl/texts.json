@@ -699,7 +699,7 @@
 "_modalUserSignupDoneHeader":"Uw account is aangemaakt! Controleer a.u.b. uw mailbox om uw account te activeren. ",
 "_more":"Meer",
 "_name":"Naam",
-"_nameInvalidChars":"<span class='put-field-name'></span> mag alleen letters, apostrof, koppelteken of spatie bevatten.",
+"_nameInvalidChars":"",
 "_nameRequired":"<span class='put-field-name'></span> verplicht.",
 "_nameTooLong":"<span class='put-field-name'></span> mag maximaal 100 tekens bevatten.",
 "_newCompanyAccountButtonText":"Nieuwe gebruiker",
