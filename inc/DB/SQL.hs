@@ -921,7 +921,7 @@ sqlTurnIntoWhyNotSelect command =
     sqlSelect "" . sqlResult $ mconcat [
         "ARRAY["
       , mintercalate ", " $ map emitExists [0..(count-1)]
-      , "]"
+      , "]::boolean[]"
       ]
     where select = sqlTurnIntoSelect command
           count :: Int
