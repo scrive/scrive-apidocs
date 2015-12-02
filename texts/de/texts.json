@@ -699,7 +699,7 @@
 "_modalUserSignupDoneHeader":"Ihr Konto wurde erstellt! Bitte überprüfen Sie Ihren E-Mail-Eingang, um das Konto zu aktivieren.",
 "_more":"Mehr",
 "_name":"Name",
-"_nameInvalidChars":"<span class='put-field-name'></span> darf nur alphabetische Zeichen, Apostrophe, Bindestriche oder Leerzeichen enthalten.",
+"_nameInvalidChars":"",
 "_nameRequired":"<span class='put-field-name'></span> erforderlich.",
 "_nameTooLong":"<span class='put-field-name'></span> kann bis zu 100 Zeichen enthalten.",
 "_newCompanyAccountButtonText":"Neuer Benutzer",

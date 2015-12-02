@@ -699,7 +699,7 @@
 "_modalUserSignupDoneHeader":"Tilisi on luotu! Ole hyvä ja tarkista sähköpostisi tilisi aktivoimiseksi.",
 "_more":"Lisää",
 "_name":"Nimi",
-"_nameInvalidChars":"<span class='put-field-name'></span> voi sisältää vain aakkosia, heittomerkin, yhdysviivan tai välin.",
+"_nameInvalidChars":"",
 "_nameRequired":"<span class='put-field-name'></span> vaadittu.",
 "_nameTooLong":"<span class='put-field-name'></span> voi sisältää 100 merkkiä.",
 "_newCompanyAccountButtonText":"Uusi käyttäjä",

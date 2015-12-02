@@ -699,7 +699,7 @@
 "_modalUserSignupDoneHeader":"Kontoen din er opprettet! Vennligst sjekk e-posten din for å aktivere kontoen.",
 "_more":"Mer",
 "_name":"Navn",
-"_nameInvalidChars":"<span class='put-field-name'></span> kan kun inneholde alfabetiske tegn, apostrof, bindestrek eller mellomrom.",
+"_nameInvalidChars":"",
 "_nameRequired":"<span class='put-field-name'></span> obligatorisk.",
 "_nameTooLong":"<span class='put-field-name'></span> kan inneholde opp til 100 tegn.",
 "_newCompanyAccountButtonText":"Ny bruker",
