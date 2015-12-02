@@ -34,7 +34,7 @@ createMailerJobsTable = Migration {
   mgrTable = tableMailerJobs
 , mgrFrom = 0
 , mgrDo = do
-  createTable tblTable {
+  createTable True tblTable {
     tblName = "mailer_jobs"
   , tblVersion = 1
   , tblColumns = [
@@ -67,7 +67,7 @@ createMailerWorkersTable :: MonadDB m => Migration m
 createMailerWorkersTable = Migration {
   mgrTable = tableMailerWorkers
 , mgrFrom = 0
-, mgrDo = createTable tblTable {
+, mgrDo = createTable True tblTable {
     tblName = "mailer_workers"
   , tblVersion = 1
   , tblColumns = [

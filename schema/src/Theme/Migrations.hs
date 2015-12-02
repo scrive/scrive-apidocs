@@ -44,7 +44,7 @@ createThemesTable =
           , domChecks = mkChecks [Check "font_in_set" fontInSetSql]
         }
 
-        createTable $ tblTable {
+        createTable True tblTable {
           tblName = "themes"
           , tblVersion = 1
           , tblColumns = [
@@ -65,7 +65,7 @@ createThemesTable =
             ]
           , tblPrimaryKey = pkOnColumn "id"
           }
-}
+    }
 
 
 createThemeOwnersTable :: MonadDB m => Migration m
@@ -73,21 +73,19 @@ createThemeOwnersTable =
   Migration {
       mgrTable = tableThemeOwnership
     , mgrFrom = 0
-    , mgrDo = do
-
-        createTable $ tblTable {
-            tblName = "theme_owners"
-          , tblVersion = 1
-          , tblColumns = [
-              tblColumn { colName = "theme_id", colType = BigIntT, colNullable = False }
-            , tblColumn { colName = "company_id", colType = BigIntT, colNullable = True  }
-            , tblColumn { colName = "domain_id", colType = BigIntT, colNullable = True  }
-            ]
-          , tblPrimaryKey = pkOnColumn "theme_id"
-          , tblChecks = [Check "check_theme_is_owned_by_company_or_domain" "(company_id IS NULL OR domain_id IS NULL) AND (company_id IS NOT NULL OR domain_id IS NOT NULL)"] -- XOR
-          , tblForeignKeys = [
-              (fkOnColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyCascade },
-              (fkOnColumn "domain_id" "branded_domains" "id") { fkOnDelete = ForeignKeyCascade }
-            ]
-          }
-}
+    , mgrDo = createTable True $ tblTable {
+        tblName = "theme_owners"
+      , tblVersion = 1
+      , tblColumns = [
+          tblColumn { colName = "theme_id", colType = BigIntT, colNullable = False }
+        , tblColumn { colName = "company_id", colType = BigIntT, colNullable = True  }
+        , tblColumn { colName = "domain_id", colType = BigIntT, colNullable = True  }
+        ]
+      , tblPrimaryKey = pkOnColumn "theme_id"
+      , tblChecks = [Check "check_theme_is_owned_by_company_or_domain" "(company_id IS NULL OR domain_id IS NULL) AND (company_id IS NOT NULL OR domain_id IS NOT NULL)"] -- XOR
+      , tblForeignKeys = [
+          (fkOnColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyCascade },
+          (fkOnColumn "domain_id" "branded_domains" "id") { fkOnDelete = ForeignKeyCascade }
+        ]
+      }
+    }

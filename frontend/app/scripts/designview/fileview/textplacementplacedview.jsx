@@ -4,20 +4,23 @@ define(["legacy_code", "Backbone", "React", "designview/typesetters/texttypesett
 
 return Backbone.View.extend({
   initialize: function (args) {
-    _.bindAll(this, "render", "clear", "closeTypeSetter", "updateErrorBackground", "fixWHRel", "listenToField");
+    _.bindAll(this, "render", "clear", "closeTypeSetter", "updateErrorBackground",
+                    "fixWHRel", "listenToField", "updatePosition");
     var view = this;
     var placement = this.model;
     var field =  placement.field();
     var signatory = field ? field.signatory() : placement.signatory();
     var doc = signatory.document();
 
-    this.model.bind("removed", this.clear, this);
-    this.model.bind("change:field change:signatory change:step change:withTypeSetter change:fsrel", this.render);
-    this.model.bind("change:xrel change:yrel change:wrel change:hrel", this.updatePosition, this);
-    this.model.bind("clean", this.closeTypeSetter);
+    this.listenTo(placement, "removed", this.clear);
+    this.listenTo(placement, "change:field change:signatory change:withTypeSetter change:fsrel", this.render);
+    this.listenTo(placement, "change:xrel change:yrel change:wrel change:hrel", this.updatePosition);
+    this.listenTo(placement, "clean", this.closeTypeSetter);
     this.listenTo(placement, "change:field", this.listenToField);
-    placement.bind("change", this.updateErrorBackground);
-
+    this.listenTo(placement, "change", this.updateErrorBackground);
+    this.listenTo(field, "change:name", this.render);
+    this.listenTo(field, "change", this.updateErrorBackground);
+    this.listenTo(field, "change", this.fixWHRel);
     this.listenTo(doc, "change:signatories", this.render);
 
     this.model.view = this;
@@ -37,6 +40,7 @@ return Backbone.View.extend({
     this.stopListening(oldField);
     this.listenTo(field, "change:name", this.render);
     this.listenTo(field, "change", this.updateErrorBackground);
+    this.listenTo(field, "change", this.fixWHRel);
   },
 
   updatePosition: function () {
@@ -72,10 +76,6 @@ return Backbone.View.extend({
     var signatory = field ? field.signatory() : placement.signatory();
     this.off();
     $(this.el).remove();
-    this.model.unbind("removed", this.clear, this);
-    this.model.unbind("change:field change:signatory", this.render);
-    this.model.unbind("change:xrel change:yrel change:wrel change:hrel change:fsrel", this.updatePosition, this);
-    this.model.unbind("clean", this.closeTypeSetter);
     this.stopListening();
   },
 
@@ -209,7 +209,7 @@ return Backbone.View.extend({
         if (!self.hasTypeSetter()) {
           self.addTypeSetter();
           self.setShouldFocusEditor(!field.isCsvField() && !field.isAuthorUnchangeableField());
-          placement.trigger("change:step");
+          self.render();
         }
         return false;
       });
@@ -219,8 +219,6 @@ return Backbone.View.extend({
       this.addTypeSetter();
     }
 
-    this.stopListening(undefined, undefined, self.fixWHRel);
-    this.listenTo(placement.field(), "change", self.fixWHRel);
     this.fixWHRel();
     this.firstRender = false;
     return this;

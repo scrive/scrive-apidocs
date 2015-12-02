@@ -53,11 +53,18 @@ standardHeaderContents=
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
         <script type="text/javascript"> window.hubspotConf = $analytics.hubspotConf:noescape()$;</script>
         $if(production)$
+        $if(signview)$
+        <link href='/$versioncode$.signview-all-styling-minified.css' rel='stylesheet' type='text/css'/>
+        $else$
         <link href='/$versioncode$.all-styling-minified.css' rel='stylesheet' type='text/css'/>
+        $endif$
         <script src="/$versioncode$.optimized-system.js"></script>
         $else$
+        $if(signview)$
+        <link href='/less/signview-less-compiled.css' rel='stylesheet' type='text/css'/>
+        $else$
         <link href='/less/less-compiled.css' rel='stylesheet' type='text/css'/>
-        <link rel="stylesheet" href="/less/regular-css-compiled.css" />
+        $endif$
         <script src="/compiled_jsx/requirejs_config.js"></script>
         <script src="/bower_components/requirejs/require.js"></script>
         $endif$

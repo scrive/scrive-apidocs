@@ -3,7 +3,6 @@ module User.API (
     apiCallGetUserProfile,
     apiCallLoginUser,
     apiCallChangeUserPassword,
-    apiCallChangeUserLanguage,
     apiCallUpdateUserProfile,
     apiCallChangeEmail,
     apiCallSignup
@@ -67,7 +66,6 @@ userAPI' = choice [
   dir "sendpasswordresetmail" $ hPost $ toK0 $ apiCallSendPasswordReminder,
   dir "getprofile"      $ hGet $ toK0 $ apiCallGetUserProfile,
   dir "changepassword"  $ hPost $ toK0 $ apiCallChangeUserPassword,
-  dir "changelanguage"  $ hPost $ toK0 $ apiCallChangeUserLanguage,
   dir "updateprofile"   $ hPost $ toK0 $ apiCallUpdateUserProfile,
   dir "changeemail"     $ hPost $ toK0 $ apiCallChangeEmail,
   dir "addflash"        $ hPost $ toK0 $ apiCallAddFlash,
@@ -131,21 +129,6 @@ apiCallLoginUser = api $ do
   _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
   logUserToContext $ Just user
   sendRedirect $ LinkExternal redirectUrl
-
-
-apiCallChangeUserLanguage :: Kontrakcja m => m Response
-apiCallChangeUserLanguage = api $ do
-  (user, _ , _) <- getAPIUser APIPersonal
-  mlang <- (join . (fmap langFromCode)) <$> getField "lang"
-  case mlang of
-       Just lang -> do
-         _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-             lang = lang
-           }
-         Ok <$> (runJSONGenT $ value "changed" True)
-       Nothing -> do
-         Ok <$> (runJSONGenT $ value "changed" False)
-
 
 apiCallUpdateUserProfile :: Kontrakcja m => m Response
 apiCallUpdateUserProfile = api $ do

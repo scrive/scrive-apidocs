@@ -1,8 +1,10 @@
 module Doc.Migrations where
 
+import Control.Monad.Catch
 import Data.Char
 import Data.Int
 import Data.String.Utils
+import Log
 import Text.HTML.TagSoup.Entity
 import Text.XML.HaXml(render)
 import Text.XML.HaXml.Parse (xmlParse')
@@ -17,20 +19,131 @@ import Doc.Tables
 import KontraPrelude
 import Utils.String
 
+addUniqueConstraintForAuthorCheck :: MonadDB m => Migration m
+addUniqueConstraintForAuthorCheck = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 29
+  , mgrDo = do
+      let tname = tblName tableSignatoryLinks
+      runQuery_ $ sqlAlterTable tname [sqlDropColumn "is_author"]
+      runQuery_ . sqlCreateIndex tname $ uniqueIndexOnColumns ["id", "document_id"]
+
+      -- Add consistency foreign key to documents.
+      let tdocs = tblName tableDocuments
+      runQuery_ $ sqlAlterTable tdocs [
+          sqlAddFK tdocs $ (fkOnColumns ["id", "author_id"] "signatory_links" ["document_id", "id"]) { fkDeferred = True }
+        ]
+  }
+
+documentsAddAuthorID :: (MonadDB m, MonadLog m, MonadThrow m) => Migration m
+documentsAddAuthorID = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 41
+  , mgrDo = do
+      let tname = tblName tableDocuments
+      runQuery_ $ sqlAlterTable tname [sqlAddColumn tblColumn { colName = "author_id", colType = BigIntT, colNullable = False, colDefault = Just "0" }]
+
+      let linksCount = parenthesize $ smconcat [
+              "SELECT COUNT(*)"
+            , "  FROM signatory_links sl"
+            , " WHERE sl.document_id = d.id"
+            ]
+          authorsCount = parenthesize $ smconcat [
+              "SELECT COUNT(*)"
+            , "  FROM signatory_links sl"
+            , " WHERE sl.document_id = d.id"
+            , "   AND sl.is_author"
+            ]
+
+      -- For purged documents with zero authors pick the link with the
+      -- lowest id to be the author...
+      runQuery_ . sqlUpdate "signatory_links sl" $ do
+        sqlWith "zero_authors" . sqlSelect "documents d" $ do
+          sqlResult "d.id"
+          sqlWhere "d.purged_time IS NOT NULL"
+          sqlWhere $ linksCount <+> "> 0"
+          sqlWhere $ authorsCount <+> "= 0"
+        sqlSetCmd "is_author" . parenthesize $ "sl.id =" <+> parenthesize (smconcat [
+            "SELECT MIN(osl.id)"
+          , "  FROM signatory_links osl"
+          , " WHERE osl.document_id = sl.document_id"
+          ])
+        sqlWhere "document_id IN (SELECT id FROM zero_authors)"
+
+      -- ...or create one if there are no signatory links.
+      runQuery_ . sqlInsertSelect "signatory_links" "zero_authors" $ do
+        sqlWith "zero_authors" . sqlSelect "documents d" $ do
+          sqlResult "d.id"
+          sqlWhere "d.purged_time IS NOT NULL"
+          sqlWhere $ linksCount <+> "= 0"
+        sqlSetCmd "document_id" "zero_authors.id"
+        sqlSet "token" (1::Int64)
+        sqlSet "is_author" True
+        sqlSet "is_partner" True
+        sqlSet "delivery_method" (1::Int16)
+        sqlSet "authentication_to_sign_method" (1::Int16)
+        sqlSet "authentication_to_view_method" (1::Int16)
+
+      -- For purged documents with more than one author pick the one
+      -- with the lowest id.
+      runQuery_ . sqlUpdate "signatory_links sl" $ do
+        sqlWith "multiple_authors" . sqlSelect "documents d" $ do
+          sqlResult "d.id"
+          sqlWhere "d.purged_time IS NOT NULL"
+          sqlWhere $ authorsCount <+> "> 1"
+        sqlSetCmd "is_author" . parenthesize $ "sl.id =" <+> parenthesize (smconcat [
+            "SELECT MIN(osl.id)"
+          , "  FROM signatory_links osl"
+          , " WHERE osl.document_id = sl.document_id"
+          , "   AND osl.is_author"
+          ])
+        sqlWhere "document_id IN (SELECT id FROM multiple_authors)"
+
+      -- If there are any remaining (non-purged) documents with zero
+      -- or multiple authors, bail out as they need to be corrected
+      -- manually.
+      badDocuments <- runQuery . sqlSelect "documents d" $ do
+        sqlResult "d.id"
+        sqlResult authorsCount
+        sqlWhere $ authorsCount <+> "<> 1"
+      when (badDocuments > 0) $ do
+        mapDB_ $ \(did::Int64, authors::Int64) -> do
+          logInfo "Document has invalid number of authors" $ object [
+              "document_id" .= did
+            , "authors" .= authors
+            ]
+        $unexpectedErrorM "Migration failed"
+
+      -- Import authors from signatory links table.
+      runQuery_ . sqlUpdate "documents d" $ do
+        sqlSetCmd "author_id" . parenthesize $ smconcat [
+            "SELECT sl.id"
+          , "FROM signatory_links sl"
+          , "WHERE sl.document_id = d.id"
+          , "  AND sl.is_author"
+          ]
+        sqlWhere "TRUE"
+
+      -- Create index on author_id.
+      runQuery_ $ sqlCreateIndex tname $ uniqueIndexOnColumn "author_id"
+      -- Drop default value.
+      runQuery_ $ sqlAlterTable tname [sqlAlterColumn "author_id" "DROP DEFAULT"]
+  }
+
 createIndexOnEmailFields :: MonadDB m => Migration m
 createIndexOnEmailFields = Migration {
     mgrTable = tableSignatoryLinkFields
   , mgrFrom = 11
   , mgrDo = do
       let tname = tblName tableSignatoryLinkFields
-      runQuery_ $ sqlCreateIndex tname $ (indexOnColumn "value_text") { idxWhere = Just "type = 6" }
+      runQuery_ . sqlCreateIndex tname $ (indexOnColumn "value_text") { idxWhere = Just "type = 6" }
   }
 
 createTablePlacementAnchors :: MonadDB m => Migration m
 createTablePlacementAnchors = Migration {
     mgrTable = tablePlacementAnchors
   , mgrFrom = 0
-  , mgrDo = createTable tblTable {
+  , mgrDo = createTable True tblTable {
       tblName = "placement_anchors"
     , tblVersion = 1
     , tblColumns = [
@@ -48,7 +161,7 @@ createTableFieldPlacements :: MonadDB m => Migration m
 createTableFieldPlacements = Migration {
     mgrTable = tableFieldPlacements
   , mgrFrom = 0
-  , mgrDo = createTable tblTable {
+  , mgrDo = createTable True tblTable {
       tblName = "field_placements"
     , tblVersion = 1
     , tblColumns = [

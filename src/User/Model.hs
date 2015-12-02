@@ -242,8 +242,7 @@ instance MonadDB m => DBQuery m IsUserDeletable Bool where
       sqlWhereEq "users.id" uid
       sqlJoinOn "signatory_links" "users.id = signatory_links.user_id"
       sqlWhere "signatory_links.deleted IS NULL"
-      sqlWhere "signatory_links.is_author"
-      sqlJoinOn "documents" "documents.id = signatory_links.document_id"
+      sqlJoinOn "documents" "signatory_links.id = documents.author_id"
       sqlWhereEq "documents.status" Pending
       sqlResult "documents.id"
       sqlLimit 1
@@ -440,7 +439,7 @@ instance MonadDB m => DBQuery m GetUsageStats [UserUsageStats] where
         sqlResult "u.id AS uid"
         sqlResult $ documentSent   <+> "AS document_sent"
         sqlResult $ documentClosed <+> "AS document_closed"
-        sqlWhere "sl.is_author"
+        sqlWhere "d.author_id = sl.id"
         sqlWhere $ documentSent `sqlOR` documentClosed
         case eid of
           Left  uid -> sqlWhereEq "u.id" uid
@@ -560,12 +559,13 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> ", c.idle_doc_timeout"
   <> ", c.cgi_display_name"
   <> ", c.sms_provider"
+  <> ", c.cgi_service_id"
   <> "  FROM users"
   <> "  LEFT JOIN companies c ON users.company_id = c.id"
   <> "  WHERE users.deleted IS NULL"
 
-fetchUserWithCompany :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider) -> (User, Company)
-fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, cid, name, number, address, zip', city, country, ip_address_mask, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider) = (user, company)
+fetchUserWithCompany :: (UserID, Maybe (Binary ByteString), Maybe (Binary ByteString), Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String) -> (User, Company)
+fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, cid, name, number, address, zip', city, country, ip_address_mask, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id) = (user, company)
   where
     user = User {
       userid = uid
@@ -600,6 +600,7 @@ fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, 
       , companyidledoctimeout = idle_doc_timeout
       , companycgidisplayname = cgi_display_name
       , companysmsprovider = sms_provider
+      , companycgiserviceid = cgi_service_id
       }
     }
 
@@ -645,8 +646,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUse
   where
     whereSignatoryLinkCanBeChanged =
       sqlWhereExists $ sqlSelect "documents" $ do
-        sqlLeftJoinOn "signatory_links" "documents.id = signatory_links.document_id"
+        sqlLeftJoinOn "signatory_links" "documents.author_id = signatory_links.id"
         sqlWhere "signatory_links.id = signatory_link_fields.signatory_link_id"
         sqlWhereEq "documents.status" Preparation
-        sqlWhereEq "signatory_links.is_author" True
         sqlWhereEq "signatory_links.user_id" userid

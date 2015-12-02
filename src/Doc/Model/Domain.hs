@@ -79,7 +79,7 @@ documentDomainToSQL (DocumentsOfCompany cid) = do
   sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
   sqlJoinOn "users" "signatory_links.user_id = users.id"
   sqlWhereDocumentWasNotPurged
-  sqlWhere "signatory_links.is_author"
+  sqlWhere "documents.author_id = signatory_links.id"
   sqlWhereEq "users.company_id" cid
 
 documentDomainToSQL (DocumentsVisibleToUser uid) = do
@@ -98,7 +98,7 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = do
   where
     userIsAuthor = do
       sqlWhereEq "users.id" uid
-      sqlWhere "signatory_links.is_author"
+      sqlWhere "documents.author_id = signatory_links.id"
 
     userIsPartnerAndHasAppropriateSignOrder = do
       sqlWhereEq "users.id" uid
@@ -118,11 +118,11 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = do
       sqlWhere "NOT signatory_links.is_partner"
 
     isCompanySharedTemplate = do
-      sqlWhere "signatory_links.is_author"
+      sqlWhere "documents.author_id = signatory_links.id"
       sqlWhereEq "documents.type" Template
       sqlWhereEq "documents.sharing" Shared
 
     isCompanyDocumentIfAdmin = do
       sqlWhere $ "(SELECT u.is_company_admin FROM users u WHERE u.id =" <?> uid <> ")"
-      sqlWhere "signatory_links.is_author"
+      sqlWhere "documents.author_id = signatory_links.id"
       sqlWhereNotEq "documents.status" Preparation

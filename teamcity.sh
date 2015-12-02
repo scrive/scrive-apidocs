@@ -22,6 +22,9 @@ function main()
             check-import-order)
                 step_check_import_order;
                 ;;
+            validate-js)
+                step_validate_js;
+                ;;
             *)
                 echo "Unknown command '$1', ignoring";
                 ;;
@@ -39,6 +42,20 @@ function step_check_import_order()
         exit_code=0;
     else
         github_notify_commit_state "check-import-order" "error" "Some Haskell imports are in wrong order";
+        exit_code=1;
+    fi
+}
+
+function step_validate_js()
+{
+    github_notify_commit_state "validate-js" "pending" "Linting the JS";
+    cd frontend/
+    npm install
+    if grunt validateJs && grunt jscs; then
+        github_notify_commit_state "validate-js" "success" "All files passed";
+        exit_code=0;
+    else
+        github_notify_commit_state "validate-js" "error" "Some files are not well formed according. Run grunt validateJs to find out which.";
         exit_code=1;
     fi
 }

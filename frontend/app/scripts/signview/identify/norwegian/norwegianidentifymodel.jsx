@@ -1,6 +1,6 @@
 // ignore model in coverage for now.
 /* istanbul ignore next */
-define(["legacy_code", "Underscore", "Backbone", "base64", "utils/location"],
+define(["legacy_code", "Underscore", "Backbone", "base64", "common/location"],
   function (legacy_code, _, Backbone, _Base64, LocationUtils) {
   return Backbone.Model.extend({
     defaults: {

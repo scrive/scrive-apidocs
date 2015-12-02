@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 /* View model for  */
-define(['lists/listmodel', 'themes/theme', 'Backbone', 'legacy_code','account/branding/companybranding', "utils/location"], function(ListModel,Theme,_Backbone,_Legacy,CompanyBranding, LocationUtils) {
+define(['lists/listmodel', 'themes/theme', 'Backbone', 'legacy_code','account/branding/companybranding', "common/location"], function(ListModel,Theme,_Backbone,_Legacy,CompanyBranding, LocationUtils) {
 
 
 return Backbone.Model.extend({

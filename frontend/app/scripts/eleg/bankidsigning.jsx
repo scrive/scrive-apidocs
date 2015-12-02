@@ -1,4 +1,4 @@
-define(['Backbone', "utils/location", 'legacy_code'], function(Backbone, LocationUtils) {
+define(['Backbone', "common/location", 'legacy_code'], function(Backbone, LocationUtils) {
 
 return Backbone.Model.extend({
     defaults: {

@@ -24,7 +24,6 @@ documentAPIV2  = dir "documents" $ choice [
     dir "new"             $ hPost $ toK0 $ docApiV2New
   , dir "newfromtemplate" $ hPost $ toK1 $ docApiV2NewFromTemplate
 
-  , dir "available" $ hGet $ toK0 $ docApiV2Available
   , dir "list"      $ hGet $ toK0 $ docApiV2List
 
   , param $ dir "get" $ hGet $ toK1 $ docApiV2Get

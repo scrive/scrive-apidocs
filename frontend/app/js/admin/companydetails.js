@@ -66,6 +66,12 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
   setCompanycgidisplayname : function(v) {
      this.set({"companycgidisplayname" : v});
   },
+  companycgiserviceid: function() {
+     return this.get("companycgiserviceid");
+  },
+  setCompanycgiserviceid : function(v) {
+     this.set({"companycgiserviceid": v});
+  },
   companyidledoctimeout: function() {
      return this.get("companyidledoctimeout");
   },
@@ -107,6 +113,7 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
       , companycountry :  this.company().country()
       , companyipaddressmasklist : this.company().ipaddressmasklist()
       , companycgidisplayname : this.company().cgidisplayname()
+      , companycgiserviceid : this.company().cgiserviceid()
       , companyidledoctimeout : this.company().idledoctimeout()
       , companyallowsavesafetycopy : this.company().allowsavesafetycopy()
       , companysmsprovider : this.company().smsprovider()
@@ -125,6 +132,7 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
         companycountry : this.companycountry(),
         companyipaddressmasklist : this.companyipaddressmasklist(),
         companycgidisplayname : this.companycgidisplayname(),
+        companycgiserviceid : this.companycgiserviceid(),
         companyidledoctimeout : this.companyidledoctimeout(),
         companyallowsavesafetycopy : this.companyallowsavesafetycopy(),
         companysmsprovider : this.companysmsprovider()
@@ -230,6 +238,12 @@ var AdminCompanyDetailsView = Backbone.View.extend({
               model.setCompanycgidisplayname(companycgidisplaynameinput.val());
       });
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("CGI display name (BankID only)"))).append($("<td/>").append(companycgidisplaynameinput)).append($("<td/>").text("This has to be accepted by CGI. Else BankID will not work.")));
+
+      var companycgiserviceidinput = $("<input type='text' maxlength=30/>").val(model.companycgiserviceid());
+      companycgiserviceidinput.change(function() {
+              model.setCompanycgiserviceid(companycgiserviceidinput.val());
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("CGI service ID (BankID only)"))).append($("<td/>").append(companycgiserviceidinput)).append($("<td/>").text("This has to be accepted by CGI. Else BankID will not work.")));
 
 
       var companyidledoctimeoutinput = $("<input type='number' min='"+model.company().minidledoctimeout()+"' max='"+model.company().maxidledoctimeout()+"'/>").val(model.companyidledoctimeout());

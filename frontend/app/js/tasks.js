@@ -149,7 +149,6 @@ window.PageTasks = Backbone.Model.extend({
    _.each(tasks, function(t) {model.listenTo(t, 'change', model.activateTask)});
    _.each(tasks, function(t) {model.listenTo(t, 'change:ui', function() {this.trigger("change");});});
    this.activateTask();
-   window.xxxx = args.tasks;
   },
   active : function() {
     return this.get("active");

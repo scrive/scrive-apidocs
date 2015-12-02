@@ -1,6 +1,6 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/render_localization",
+define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/htmltextwithsubstitution",
   "signview/tasks/task_mixin"],
-  function (legacy_code, _, Backbone, React, Button, RenderLocalization, TaskMixin) {
+  function (legacy_code, _, Backbone, React, Button, HtmlTextWithSubstitution, TaskMixin) {
 
   return React.createClass({
     mixins: [TaskMixin],
@@ -49,10 +49,10 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
         <div className={divClass}>
           <h1>{hasSignaturesPlaced ? localization.process.signModalTitle : localization.process.signbuttontext}</h1>
           <p>
-            <RenderLocalization
-              subs={{"put-document-title-here": this.props.title, "put-signatory-name-here": this.props.name}}
-              text={hasSignaturesPlaced ? localization.signviewConfirmationSignaturesPlaced :
-                                          localization.signviewConfirmation}
+            <HtmlTextWithSubstitution
+              secureText={hasSignaturesPlaced ? localization.signviewConfirmationSignaturesPlaced :
+                                                localization.signviewConfirmation}
+              subs={{".put-document-title-here": this.props.title, ".put-signatory-name-here": this.props.name}}
             />
           </p>
           <Button

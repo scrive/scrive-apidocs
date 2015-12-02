@@ -52,6 +52,17 @@ new APICallV2({
                           This is independant of other parameters in this call.",
             defaultValue: ""
           }),
+          new APICallParam({
+            type: "text",
+            optional: false,
+            argName: "accepted_author_attachments",
+            name: "Accepted Author Attachments",
+            description: "The list of author attachments which the signatory\
+                          has seen and therefore accepted. The call will fail\
+                          if not all author attachments with required set to\
+                          “true” are included here.",
+            defaultValue: "[]"
+          }),
           window.APIV2CallParamObjectVersion
         ]
 });

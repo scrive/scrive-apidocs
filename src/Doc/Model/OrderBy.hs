@@ -64,11 +64,11 @@ documentOrderByToSQL DocumentOrderByType = def {
   , dobrName = "doc_order_type"
   }
 documentOrderByToSQL DocumentOrderByPartners = def {
-    dobrExpr = parenthesize $ selectSignatoryLinksSmartNames "NOT signatory_links.is_author AND signatory_links.is_partner"
+    dobrExpr = parenthesize $ selectSignatoryLinksSmartNames "documents.author_id <> signatory_links.id AND signatory_links.is_partner"
   , dobrName = "doc_order_partners"
   }
 documentOrderByToSQL DocumentOrderByAuthor = def {
-    dobrExpr = parenthesize $ selectSignatoryLinksSmartNames "signatory_links.is_author"
+    dobrExpr = parenthesize $ selectSignatoryLinksSmartNames "documents.author_id = signatory_links.id"
   , dobrName = "doc_order_author"
   }
 

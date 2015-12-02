@@ -173,7 +173,6 @@ tryToConvertConditionalExceptionIntoAPIError  =  foldr (.) id [
     , convertSignatoryLinkDoesNotExist
     , convertSignatoryHasNotYetSigned
     , convertSignatoryIsNotPartner
-    , convertSignatoryIsAuthor
     , convertSignatoryHasAlreadySigned
     , convertSignatoryTokenDoesNotMatch
     , convertDocumentObjectVersionDoesNotMatch
@@ -232,12 +231,6 @@ convertSignatoryIsNotPartner :: SomeKontraException -> SomeKontraException
 convertSignatoryIsNotPartner (SomeKontraException ex) =
   case cast ex of
     Just (SignatoryIsNotPartner {}) ->  SomeKontraException $ signatoryStateError $ "Signatory should not sign this document"
-    Nothing -> (SomeKontraException ex)
-
-convertSignatoryIsAuthor :: SomeKontraException -> SomeKontraException
-convertSignatoryIsAuthor (SomeKontraException ex) =
-  case cast ex of
-    Just (SignatoryIsAuthor {}) -> SomeKontraException $ signatoryStateError $ "Signatory is author"
     Nothing -> (SomeKontraException ex)
 
 convertSignatoryHasAlreadySigned :: SomeKontraException -> SomeKontraException

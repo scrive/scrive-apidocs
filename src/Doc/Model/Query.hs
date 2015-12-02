@@ -119,6 +119,7 @@ data GetSignatoryLinkByID = GetSignatoryLinkByID DocumentID SignatoryLinkID (May
 instance (MonadDB m, MonadThrow m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
   query (GetSignatoryLinkByID did slid mmh) = do
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "signatory_links" $ do
+      sqlJoinOn "documents" "signatory_links.document_id = documents.id"
       mapM_ sqlResult signatoryLinksSelectors
       sqlWhereDocumentIDForSignatoryIs did
       sqlWhereSignatoryLinkIDIs slid
@@ -322,7 +323,7 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int64 where
                "JOIN signatory_links ON documents.id = signatory_links.document_id " <>
                "JOIN users ON signatory_links.user_id = users.id " <>
                "WHERE users.company_id =" <?> cid <>
-               "AND is_author " <>
+               "AND documents.author_id = signatory_links.id " <>
                "AND documents.invite_time >=" <?> start <>
                "AND documents.invite_time <" <?> end <>
                "AND documents.type =" <?> Signable <>
@@ -336,7 +337,7 @@ instance MonadDB m => DBQuery m GetDocsSent Int64 where
                "FROM documents " <>
                "JOIN signatory_links ON documents.id = signatory_links.document_id " <>
                "WHERE signatory_links.user_id =" <?> uid <>
-               "AND is_author " <>
+               "AND documents.author_id = signatory_links.id " <>
                "AND documents.type =" <?> Signable <>
                "AND documents.status <>" <?> Preparation
     foldlDB (\acc (Identity n) -> return $ acc + n) 0
@@ -358,7 +359,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m DocumentExistsAndIsNotPurgedOrRe
       sqlWhereDocumentIDIs did
       sqlWhereDocumentWasNotPurged
       sqlWhereNotExists $ sqlSelect "signatory_links" $ do
-        sqlWhere "signatory_links.is_author IS TRUE"
+        sqlWhere "documents.author_id = signatory_links.id"
         sqlWhere "signatory_links.really_deleted IS NOT NULL"
         sqlWhere "signatory_links.document_id = documents.id"
     result <- fetchMaybe runIdentity

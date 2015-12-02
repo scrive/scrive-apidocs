@@ -6,7 +6,7 @@ import KontraPrelude
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 19
+  , tblVersion = 20
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False, colDefault = Just "''::text" }
@@ -20,6 +20,7 @@ tableCompanies = tblTable {
     , tblColumn { colName = "idle_doc_timeout", colType = SmallIntT }
     , tblColumn { colName = "cgi_display_name", colType = TextT }
     , tblColumn { colName = "sms_provider", colType = SmallIntT, colNullable = False, colDefault = Just "1"}
+    , tblColumn { colName = "cgi_service_id", colType = TextT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   }

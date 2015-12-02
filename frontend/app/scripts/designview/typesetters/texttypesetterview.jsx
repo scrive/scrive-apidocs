@@ -87,7 +87,7 @@ define(["Underscore", "React", "common/button", "common/select",
       mixpanel.track("Click save inline field");
       field.makeReady();
       model.cleanTypeSetter();
-      model.trigger("change:step");
+      model.trigger("change");
     },
 
     handleSelectSig: function (sig) {

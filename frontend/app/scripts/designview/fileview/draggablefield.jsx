@@ -38,9 +38,7 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
         field = fieldOrPlacement;
       }
 
-      if (field.isFake()) {
-        verticaloffset = -1;
-      } else if (field.isText()) {
+      if (field.isText()) {
         verticaloffset = -1;
       } else if (field.isSignature()) {
         verticaloffset = 0;
@@ -83,7 +81,7 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
   }
 
   var onDrop = function (page, x, y, w, h) {
-    if (field.isText() || field.isFake()) {
+    if (field.isText()) {
       x += FieldPlacementGlobal.textPlacementXOffset;
       y += FieldPlacementGlobal.textPlacementYOffset;
     } else if (field.isCheckbox()) {
@@ -134,8 +132,7 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
           wrel: $(helper).width() / w,
           hrel: $(helper).height() / h,
           fsrel: fontSize / w,
-          tip: placement.tip(),
-          step: placement.step()
+          tip: placement.tip()
         });
         field.addPlacement(newPlacement);
       }
@@ -162,7 +159,7 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
         hrel: $(helper).height() / h,
         fsrel: fontSize / w,
         withTypeSetter: true,
-        step: (field.isFake() ? "signatory" : "edit")
+        step: "edit"
       });
       field.addPlacement(newPlacement);
       signatory.trigger("drag:checkbox");
@@ -192,7 +189,7 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
       if (field.signatory().document().mainfile() != undefined) {
         var xAxisOffset = 0;
         var yAxisOffset = 0;
-        if (field.isText() || field.isFake()) {
+        if (field.isText()) {
           xAxisOffset = FieldPlacementGlobal.textPlacementXOffset;
           yAxisOffset = FieldPlacementGlobal.textPlacementYOffset;
         }
@@ -217,7 +214,7 @@ return function (dragHandler, fieldOrPlacementFN, widthFunction, heightFunction,
       if (field.signatory().document().mainfile() != undefined) {
         var xAxisOffset = 0;
         var yAxisOffset = 0;
-        if (field.isText() || field.isFake()) {
+        if (field.isText()) {
           xAxisOffset = FieldPlacementGlobal.textPlacementXOffset;
           yAxisOffset = FieldPlacementGlobal.textPlacementYOffset;
         }
