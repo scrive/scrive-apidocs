@@ -164,36 +164,43 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
       });
 
       var divStyle = {
-        cursor: current ? "text" : ""
+        cursor: current ? "text" : "",
+        lineHeight: "normal"
       };
 
       if (!self.canSign() && field.value() === "") {
         divStyle.display = "none";
       }
 
-      var position = self.position(FieldPlacementGlobal.textPlacementXOffset - 1.5,
-        FieldPlacementGlobal.textPlacementYOffset - 1.5);
+      var position = self.position(
+        this.scale() * (FieldPlacementGlobal.textPlacementXOffset - 1.5),
+        this.scale() * (FieldPlacementGlobal.textPlacementYOffset - 1.5)
+      );
 
       _.extend(divStyle, position);
+      _.extend(divStyle, this.border());
 
       var boxClass = React.addons.classSet({
         "placedfieldvalue": true,
         "value": true
       });
 
+      var extraLineHeight = this.scale() * FieldPlacementGlobal.textPlacementExtraLineHeight;
+      var spacingString = (this.scale() * FieldPlacementGlobal.textPlacementVerSpace) + "px " +
+        (this.scale() * FieldPlacementGlobal.textPlacementHorSpace) + "px";
+
       var boxStyle = {
-        padding: FieldPlacementGlobal.textPlacementSpacingString,
+        padding: spacingString,
         fontSize: divStyle.fontSize + "px",
-        lineHeight: divStyle.fontSize +
-          FieldPlacementGlobal.textPlacementExtraLineHeight + "px"
+        lineHeight: (divStyle.fontSize + extraLineHeight) + "px"
       };
 
       var textStyle = {
         fontSize: divStyle.fontSize + "px",
         lineHeight: "1",
-        height: (divStyle.fontSize + 4) + "px",
+        height: (divStyle.fontSize + extraLineHeight) + "px",
         borderWidth: "0px",
-        padding: FieldPlacementGlobal.textPlacementSpacingString
+        padding: spacingString
       };
 
       var paddingRight = FieldPlacementGlobal.textPlacementHorSpace;
@@ -203,13 +210,13 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
         paddingRight += extraPadding;
       }
 
-      textStyle.paddingRight = paddingRight;
-      boxStyle.paddingRight = paddingRight;
+      textStyle.paddingRight = this.scale() * paddingRight;
+      boxStyle.paddingRight = this.scale() * paddingRight;
 
       var inputStyle = {
         fontSize: divStyle.fontSize + "px",
-        lineHeight: (divStyle.fontSize + FieldPlacementGlobal.textPlacementExtraLineHeight) + "px",
-        height: (divStyle.fontSize + FieldPlacementGlobal.textPlacementExtraLineHeight) + "px",
+        lineHeight: (divStyle.fontSize + extraLineHeight) + "px",
+        height: (divStyle.fontSize + extraLineHeight) + "px",
         background: "transparent"
       };
 

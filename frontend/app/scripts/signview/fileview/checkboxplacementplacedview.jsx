@@ -55,16 +55,22 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
         "obligatory": field.obligatory()
       });
 
+      var size = this.size(Math.round);
+
       var divStyle = {
         cursor: current ? "pointer" : ""
       };
 
-      var size = this.size(Math.round);
-      var backgroundSize = {backgroundSize: size.width + "px " + size.height + "px"};
+      var backgroundStyle = {
+        backgroundSize: size.width + "px " + size.height + "px",
+        width: size.width + "px",
+        height: size.height + "px"
+      };
 
       _.extend(divStyle, this.position(FieldPlacementGlobal.placementBorder,
         FieldPlacementGlobal.placementBorder, Math.round));
       _.extend(divStyle, size);
+      _.extend(divStyle, this.border());
 
       var boxClass = React.addons.classSet({
         "placedcheckbox": current,
@@ -73,8 +79,8 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
       });
 
       return (
-        <div className={divClass} style={divStyle}>
-          <div onClick={this.toggleCheck} className={boxClass} style={backgroundSize} />
+        <div onClick={this.toggleCheck} className={divClass} style={divStyle}>
+          <div className={boxClass} style={backgroundStyle} />
         </div>
       );
     }

@@ -1,4 +1,6 @@
 define(["Backbone", "React", "common/backbone_mixin", "legacy_code"], function (Backbone, React, BackboneMixin) {
+  var STANDARD_WIDTH = 950;
+
   return {
     propTypes: {
       model: React.PropTypes.instanceOf(FieldPlacement).isRequired,
@@ -40,6 +42,16 @@ define(["Backbone", "React", "common/backbone_mixin", "legacy_code"], function (
         width: fn(placement.wrel() * dim.width),
         height: fn(placement.hrel() * dim.height)
       };
+    },
+
+    scale: function () {
+      var dim = this.dimensions();
+      return dim.width / STANDARD_WIDTH;
+    },
+
+    border: function () {
+      var normalBorder = 2;
+      return {borderWidth: this.scale() * normalBorder};
     }
   };
 });

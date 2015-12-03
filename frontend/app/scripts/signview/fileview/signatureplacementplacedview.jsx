@@ -84,12 +84,16 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
         "empty-signature": !hasImage
       });
 
+      var size = this.size(_.identity);
+
       var divStyle = {
         cursor: drawing ? "pointer" : "",
         zIndex: drawing ? "1" : ""
       };
 
       _.extend(divStyle, this.position(0, 0, Math.round));
+
+      divStyle.fontSize = (this.scale() * 16) + "px";
 
       var boxClass = React.addons.classSet({
         "signatureBox": drawing,
@@ -100,12 +104,14 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
         "optional": !field.obligatory()
       });
 
-      var size = this.size(_.identity);
-
       var boxStyle = {
         lineHeight: size.height + "px",
-        cursor: drawing ? "pointer" : ""
+        cursor: drawing ? "pointer" : "",
+        marginLeft: (-2 * this.scale()) + "px",
+        marginTop: (-2 * this.scale()) + "px"
       };
+
+      _.extend(boxStyle, this.border());
 
       _.extend(boxStyle, size);
 
