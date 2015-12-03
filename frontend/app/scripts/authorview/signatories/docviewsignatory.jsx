@@ -55,8 +55,9 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
 
     hasRemindOption: function () {
       var signatory = this.props.signatory;
+      var document = signatory.document();
 
-      if (signatory.document().signingInProcess() && signatory.hasSigned()) {
+      if (document.rejected() || (document.signingInProcess() && signatory.hasSigned())) {
         return false;
       }
       var canGetInvitation = !signatory.hasSigned() && (
@@ -64,13 +65,13 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
         || signatory.mobileDelivery()
         || signatory.emailMobileDelivery()
       );
-      var canGetConfirmation = signatory.document().closed() && (
+      var canGetConfirmation = document.closed() && (
            signatory.emailConfirmationDelivery()
         || signatory.mobileConfirmationDelivery()
         || signatory.emailMobileConfirmationDelivery()
       );
 
-      return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
+      return (document.currentViewerIsAuthor() || document.currentViewerIsAuthorsCompanyAdmin())
         && !signatory.author()
         && signatory.signs()
         && signatory.reachedBySignorder()
