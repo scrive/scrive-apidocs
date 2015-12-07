@@ -52,7 +52,6 @@ importantExecutables =
   [ ("java", ["-version"])
   , ("curl", ["-V"])
   , ("mutool", [])
-  , ("mudraw", [])
   , ("convert", [])
   , ("lessc", ["-v"])
   , ("gnuplot", ["--version"])
