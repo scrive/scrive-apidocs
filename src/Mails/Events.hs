@@ -110,6 +110,17 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                       SL_Failed 0 _ -> when (signemail == email) $ return () -- ignore temporary failures; http://www.socketlabs.com/api-reference/notification-api/#eventFailed
                       SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
                       _ -> return ()
+                  handleEv (SendinBlueEvent email ev) = do
+                    logEmails email
+                    case ev of
+                      SiB_Delivered -> handleDeliveredInvitation bd host mc slid
+                      SiB_Opened -> handleOpenedInvitation slid email muid
+                      SiB_Deferred _ -> when (signemail == email) $ handleDeferredInvitation bd host mc slid email
+                      SiB_HardBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
+                      SiB_SoftBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
+                      SiB_Blocked      _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
+                      SiB_InvalidEmail _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
+                      _ -> return ()
 
               theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
         _ -> markEventAsRead eid
