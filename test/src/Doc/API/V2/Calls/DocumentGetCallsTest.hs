@@ -10,12 +10,12 @@ import Company.Model
 import Context
 import DB.Query (dbUpdate)
 import Doc.API.V2.AesonTestUtils
+import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.DocumentGetCalls
 import Doc.API.V2.Calls.DocumentPostCalls
-import Doc.API.V2.Calls.DocumentPostCallsTest (testDocApiV2New', testDocApiV2Start')
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
-import Doc.API.V2.MockTestUtils
-import Doc.API.V2.MockUnjson
+import Doc.API.V2.Mock.TestUtils
+import Doc.Data.DocumentStatus (DocumentStatus(..))
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Update (SetDocumentSharing(..))
 import KontraPrelude
@@ -48,37 +48,37 @@ testDocApiV2List = do
   listArray <- lookupObjectArray "documents" listJSON
   assertEqual "`docApiV2List` should return same number of docs" 3 (V.length listArray)
   let docs = map mockDocFromValue $ V.toList listArray
-  forM_ docs $ \d -> assertEqual "Status should be" "preparation" (mockDocStatus d)
+  forM_ docs $ \d -> assertEqual "Status should be" Preparation (getMockDocStatus d)
 
 testDocApiV2Get :: TestEnv ()
 testDocApiV2Get = do
   user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   newMockDoc <- testDocApiV2New' ctx
-  let did = documentIDFromMockDoc newMockDoc
+  let did = getMockDocId newMockDoc
 
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Mock Document from `docApiV2Get` should match from `docApiV2New`" getMockDoc newMockDoc
-  assertEqual "Document viewer should be" "signatory" (mockDocViewerRole . mockDocViewer $ getMockDoc)
+  assertEqual "Document viewer should be" "signatory" (getMockDocViewerRole getMockDoc)
 
 testDocApiV2GetByAdmin :: TestEnv ()
 testDocApiV2GetByAdmin = do
   (Company {companyid}) <- addNewCompany
   author <- addNewRandomCompanyUser companyid False
   ctxauthor <- (\c -> c { ctxmaybeuser = Just author }) <$> mkContext def
-  did <- documentIDFromMockDoc <$> testDocApiV2New' ctxauthor
+  did <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   admin <- addNewRandomCompanyUser companyid True
   ctx <- (\c -> c { ctxmaybeuser = Just admin }) <$> mkContext def
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
-  assertEqual "Document viewer should be" "company_admin" (mockDocViewerRole . mockDocViewer $ getMockDoc)
+  assertEqual "Document viewer should be" "company_admin" (getMockDocViewerRole getMockDoc)
 
 testDocApiV2GetShared :: TestEnv ()
 testDocApiV2GetShared = do
   (Company {companyid}) <- addNewCompany
   author <- addNewRandomCompanyUser companyid False
   ctxauthor <- (\c -> c { ctxmaybeuser = Just author }) <$> mkContext def
-  did <- documentIDFromMockDoc <$> testDocApiV2New' ctxauthor
+  did <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   _ <- mockDocTestRequestHelper ctxauthor POST [("document", inText "{\"is_template\":true}")] (docApiV2Update did) 200
   setshare <- withDocumentID did $ do
@@ -88,15 +88,15 @@ testDocApiV2GetShared = do
   user <- addNewRandomCompanyUser companyid False
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
-  assertEqual "Document viewer should be" "company_shared" (mockDocViewerRole . mockDocViewer $ getMockDoc)
-  assertEqual "Document should be template" True (mockDocIsTemplate getMockDoc)
-  assertEqual "Document should be shared" True (mockDocIsShared getMockDoc)
+  assertEqual "Document viewer should be" "company_shared" (getMockDocViewerRole getMockDoc)
+  assertEqual "Document should be template" True (getMockDocIsTemplate getMockDoc)
+  assertEqual "Document should be shared" True (getMockDocIsShared getMockDoc)
 
 testDocApiV2History :: TestEnv ()
 testDocApiV2History = do
   user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  did <- documentIDFromMockDoc <$> testDocApiV2New' ctx
+  did <- getMockDocId <$> testDocApiV2New' ctx
 
   let checkHistoryHasNItems :: Int -> TestEnv ()
       checkHistoryHasNItems n = do
@@ -115,7 +115,7 @@ testDocApiV2History = do
 testDocApiV2EvidenceAttachments :: TestEnv ()
 testDocApiV2EvidenceAttachments = do
   (_, ctx, did, mockDoc) <- testDocApiV2Start'
-  let slid = signatoryLinkIDFromMockDoc 1 mockDoc
+  let slid = getMockDocSigLinkId 1 mockDoc
 
   _ <- mockDocTestRequestHelper ctx
     POST [("fields", inText "[]"),("accepted_author_attachments", inText "[]")]
@@ -139,7 +139,7 @@ testDocApiV2FilesMain :: TestEnv ()
 testDocApiV2FilesMain = do
   user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  did <- documentIDFromMockDoc <$> testDocApiV2New' ctx
+  did <- getMockDocId <$> testDocApiV2New' ctx
 
   req <- mkRequest GET []
   (rsp,_) <- runTestKontra req ctx $ docApiV2FilesMain did "filename.pdf"
@@ -149,14 +149,14 @@ testDocApiV2FilesGet :: TestEnv ()
 testDocApiV2FilesGet = do
   user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  did <- documentIDFromMockDoc <$> testDocApiV2New' ctx
+  did <- getMockDocId <$> testDocApiV2New' ctx
 
   mockDocSet <- mockDocTestRequestHelper ctx POST [
       ("attachments", inText $ "[{\"name\" : \"simple-rotate-90.pdf\", \"required\" : false, \"file_param\" : \"afile\"}]")
     , ("afile", inFile "test/pdfs/simple-rotate-90.pdf")
     ] (docApiV2SetAttachments did) 200
 
-  let fid = fileIDFromMockAuthorAttachment . mockDocAuthorAttachmentNumber 1 $ mockDocSet
+  let fid = getMockDocAuthorAttachmentFileId 1 mockDocSet
   req <- mkRequest GET []
   (rsp,_) <- runTestKontra req ctx $ docApiV2FilesGet did fid "somefile.pdf"
   assertEqual "Successful `docApiV2FilesGet` response code" 200 (rsCode rsp)
@@ -165,10 +165,10 @@ testDocApiV2Texts :: TestEnv ()
 testDocApiV2Texts = do
   user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  did <- documentIDFromMockDoc <$> testDocApiV2New' ctx
+  did <- getMockDocId <$> testDocApiV2New' ctx
 
   mockDocSetFile <- mockDocTestRequestHelper ctx POST [("file", inFile "test/pdfs/simple.pdf")] (docApiV2SetFile did) 200
-  let fid = fileIDFromMockDocFile mockDocSetFile
+  let fid = getMockDocFileId mockDocSetFile
 
   rspJSON <- jsonTestRequestHelper ctx
     GET [("json", inText "{ \"rects\":[{ \"rect\": [0,0,1,1] , \"page\": 1 }]}")]

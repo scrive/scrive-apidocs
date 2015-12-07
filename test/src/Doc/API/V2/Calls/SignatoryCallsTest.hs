@@ -5,11 +5,13 @@ import Happstack.Server
 import Test.Framework
 
 import Context
+import Doc.API.V2.AesonTestUtils
+import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.DocumentPostCalls
-import Doc.API.V2.Calls.DocumentPostCallsTest (testDocApiV2New', testDocApiV2Start')
 import Doc.API.V2.Calls.SignatoryCalls
-import Doc.API.V2.MockTestUtils
-import Doc.API.V2.MockUnjson
+import Doc.API.V2.Mock.TestUtils
+import Doc.Data.DocumentStatus (DocumentStatus(..))
+import Doc.Data.SignatoryLink (AuthenticationToSignMethod(SMSPinAuthenticationToSign))
 import KontraPrelude
 import TestingUtil
 import TestKontra
@@ -26,18 +28,18 @@ apiV2SignatoryCallsTests env = testGroup "APIv2SignatoryCalls" $
 testDocApiV2SigReject :: TestEnv ()
 testDocApiV2SigReject = do
   (_,ctx,did,mockDoc) <- testDocApiV2Start'
-  let slid = signatoryLinkIDFromMockDoc 1 mockDoc
+  let slid = getMockDocSigLinkId 1 mockDoc
 
   mockDocRejected <- mockDocTestRequestHelper ctx POST [] (docApiV2SigReject did slid) 200
-  assertEqual "Document status after reject call should match" "rejected" (mockDocStatus mockDocRejected)
-  assertJust $ getForSigNumberFromMockDoc mockSigLinkRejectedTime mockDocRejected 1
+  assertEqual "Document status after reject call should match" Rejected (getMockDocStatus mockDocRejected)
+  assertBool "Signatory should have rejected the document" (getMockDocSigLinkHasRejected 1 mockDocRejected)
 
 testDocApiV2SigCheck :: TestEnv ()
 testDocApiV2SigCheck = do
   (_,ctx,did,mockDoc) <- testDocApiV2Start'
-  let slid = signatoryLinkIDFromMockDoc 1 mockDoc
+  let slid = getMockDocSigLinkId 1 mockDoc
 
-  _ <- mockDocTestRequestHelper ctx
+  _ <- testRequestHelper ctx
     POST [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
     (docApiV2SigCheck did slid) 200
   return ()
@@ -45,29 +47,28 @@ testDocApiV2SigCheck = do
 testDocApiV2SigSign :: TestEnv ()
 testDocApiV2SigSign = do
   (_,ctx,did,mockDoc) <- testDocApiV2Start'
-  let slid = signatoryLinkIDFromMockDoc 1 mockDoc
+  let slid = getMockDocSigLinkId 1 mockDoc
 
   mockDocSigned <- mockDocTestRequestHelper ctx
     POST [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
     (docApiV2SigSign did slid) 200
-  assertEqual "Document status after signing should match" "closed" (mockDocStatus mockDocSigned)
-  assertJust $ getForSigNumberFromMockDoc mockSigLinkSignTime mockDocSigned 1
+  assertEqual "Document status after signing should match" Closed (getMockDocStatus mockDocSigned)
+  assertBool "Signatory should have signed" (getMockDocSigLinkHasSigned 1 mockDocSigned)
 
 testDocApiV2SigSendSmsPin :: TestEnv ()
 testDocApiV2SigSendSmsPin = do
   user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   mockDoc <- testDocApiV2New' ctx
-  let did = documentIDFromMockDoc mockDoc
-  let slid = signatoryLinkIDFromMockDoc 1 mockDoc
+  let did = getMockDocId mockDoc
+  let slid = getMockDocSigLinkId 1 mockDoc
 
-  let updateDoc = mockDocToInput $ setForSigNumberFromMockDoc
-        (\msl -> msl { mockSigLinkAuthMethodToSign = "sms_pin" }) mockDoc 1
+  let updateDoc = mockDocToInput $ setMockDocSigLinkAuthToSignMethod 1 SMSPinAuthenticationToSign mockDoc
   _update <- mockDocTestRequestHelper ctx POST [("document", updateDoc)] (docApiV2Update did) 200
 
   _start <- mockDocTestRequestHelper ctx POST [] (docApiV2Start did) 200
 
-  _send_pin <- jsonTestRequestHelper ctx POST [("phone", inText "+46123456789")] (docApiV2SigSendSmsPin did slid) 202
+  _send_pin <- testRequestHelper ctx POST [("phone", inText "+46123456789")] (docApiV2SigSendSmsPin did slid) 202
   return ()
 
 testDocApiV2SigSetAttachment :: TestEnv ()
@@ -75,17 +76,11 @@ testDocApiV2SigSetAttachment = do
   user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   mockDoc <- testDocApiV2New' ctx
-  let did = documentIDFromMockDoc mockDoc
-  let slid = signatoryLinkIDFromMockDoc 1 mockDoc
+  let did = getMockDocId mockDoc
+  let slid = getMockDocSigLinkId 1 mockDoc
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
-    let updateDoc = mockDocToInput $ setForSigNumberFromMockDoc
-          (\msl -> msl { mockSigLinkAttachments = [
-              MockSigAttachment { mockSigAttachmentName = "Foo2"
-                                , mockSigAttachmentDescription = "FooDee"
-                                , mockSigAttachmentFile = Nothing
-                                }
-                      ] }) mockDoc 1
+    let updateDoc = mockDocToInput $ setMockDocSigLinkAttachments 1 [("Foo2","FooDee")] mockDoc
     _update <- mockDocTestRequestHelper ctx POST [("document", updateDoc)] (docApiV2Update did) 200
     _start <- mockDocTestRequestHelper ctx POST [] (docApiV2Start did) 200
     return ()
@@ -94,14 +89,10 @@ testDocApiV2SigSetAttachment = do
     mockDocSetAttachment <- mockDocTestRequestHelper ctx
       POST [("name", inText "Foo2") ,("attachment", inFile "test/pdfs/simple-rotate-90.pdf")]
       (docApiV2SigSetAttachment did slid) 200
-    let sig_attachments = getForSigNumberFromMockDoc mockSigLinkAttachments mockDocSetAttachment 1
-    assertEqual "Party should have one attachment" 1 (length sig_attachments)
-    let att1:_ = sig_attachments
-    assertJust (mockSigAttachmentFile att1)
+    assertEqual "Party should have one attachment" 1 (getMockDocSigLinkAttachmentsLength 1 mockDocSetAttachment)
+    assertBool "The attachment should have a file set" (getMockDocSigLinkAttachmentHasFile 1 1 mockDocSetAttachment)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocUnsetAttachment <- mockDocTestRequestHelper ctx POST [("name", inText "Foo2")] (docApiV2SigSetAttachment did slid) 200
-    let sig_attachments_unset = getForSigNumberFromMockDoc mockSigLinkAttachments mockDocUnsetAttachment 1
-    assertEqual "Party should still have one attachment" 1 (length sig_attachments_unset)
-    let att1_unset:_ = sig_attachments_unset
-    assertNothing (mockSigAttachmentFile att1_unset)
+    assertEqual "Party should still have one attachment" 1 (getMockDocSigLinkAttachmentsLength 1 mockDocUnsetAttachment)
+    assertBool "The attachment should have no file" (not $ getMockDocSigLinkAttachmentHasFile 1 1 mockDocUnsetAttachment)

@@ -1,4 +1,4 @@
-module Doc.API.V2.MockUnjson where
+module Doc.API.V2.Mock.MockDocInternal where
 
 import Data.Unjson
 
@@ -38,7 +38,7 @@ data MockDoc = MockDoc {
   , mockDocIsShared           :: Bool
   , mockDocIsTrashed          :: Bool
   , mockDocIsDeleted          :: Bool
-  , mockDocViewer             :: MockDocViewer
+  , mockDocViewer             :: MockViewer
 } deriving (Show, Eq)
 
 mockDocUnjson :: UnjsonDef MockDoc
@@ -105,14 +105,14 @@ instance Unjson MockDocDisplayOptions where
     <*> field "show_reject_option"  mockDocDisplayOptionsShowRejectButton "MockDocDisplayOptions ShowRejectButton"
     <*> field "show_footer"         mockDocDisplayOptionsShowFooter       "MockDocDisplayOptions ShowFooter"
 
-data MockDocViewer = MockDocViewer {
-    mockDocViewerRole   :: String
-  , mockDocViewerSigId  :: Maybe String
+data MockViewer = MockViewer {
+    mockViewerRole   :: String
+  , mockViewerSigId  :: Maybe String
 } deriving (Show, Eq)
-instance Unjson MockDocViewer where
-  unjsonDef = objectOf $ pure MockDocViewer
-    <*> field     "role"          mockDocViewerRole   "MockDocViewer Role"
-    <*> fieldOpt  "signatory_id"  mockDocViewerSigId  "MockDocViewer SigId"
+instance Unjson MockViewer where
+  unjsonDef = objectOf $ pure MockViewer
+    <*> field     "role"          mockViewerRole   "MockViewer Role"
+    <*> fieldOpt  "signatory_id"  mockViewerSigId  "MockViewer SigId"
 
 data MockSigLink = MockSigLink {
     mockSigLinkId                     :: String
