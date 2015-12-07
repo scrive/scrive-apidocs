@@ -88,12 +88,15 @@ define(["React", "signview/feedback/questionview", "common/hubspot_service"], fu
           language: doc.lang().simpleCode()
         };
 
-        if (from === "Q2") {
-          HubSpot.track(HubSpot.FORM_NO_SENDS_DOCS, hubspotData);
+        if (from === "Q4" && event === "yes") {
+          HubSpot.track(HubSpot.FORM_YES_SENDS_DOCS, hubspotData);
           return ;
         }
 
-        HubSpot.track(HubSpot.FORM_YES_SENDS_DOCS, hubspotData);
+        if (from === "Q5" && event === "yes") {
+          HubSpot.track(HubSpot.FORM_NO_SENDS_DOCS, hubspotData);
+          return ;
+        }
       }
     },
 
