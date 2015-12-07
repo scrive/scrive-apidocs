@@ -206,24 +206,24 @@ handleUsageStatsJSONForUserMonths = do
     else getMonthsStats (Left $ userid user)
 
 getDaysStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
-getDaysStats = \case
-  Left uid -> do
-    stats <- dbQuery $ GetUsageStats (Left uid) PartitionByDay $ idays 30
-    return $ userStatsToJSON formatTimeYMD stats
-  Right cid -> do
-    totalS <- renderTemplate_ "statsOrgTotal"
-    stats <- dbQuery $ GetUsageStats (Right cid) PartitionByMonth $ imonths 6
-    return $ companyStatsToJSON formatTimeYMD totalS stats
+getDaysStats = getStats PartitionByDay
 
 getMonthsStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
-getMonthsStats = \case
+getMonthsStats = getStats PartitionByMonth
+
+getStats :: Kontrakcja m => StatsPartition -> Either UserID CompanyID -> m JSValue
+getStats statsPartition = \case
   Left uid -> do
-    stats <- dbQuery $ GetUsageStats (Left uid) PartitionByDay $ idays 30
-    return $ userStatsToJSON (formatTime' "%Y-%m") stats
+    stats <- dbQuery $ GetUsageStats (Left uid) statsPartition $ idays 30
+    return $ userStatsToJSON timeFormat stats
   Right cid -> do
     totalS <- renderTemplate_ "statsOrgTotal"
-    stats <- dbQuery $ GetUsageStats (Right cid) PartitionByMonth $ imonths 6
-    return $ companyStatsToJSON (formatTime' "%Y-%m") totalS stats
+    stats <- dbQuery $ GetUsageStats (Right cid) statsPartition $ imonths 6
+    return $ companyStatsToJSON timeFormat totalS stats
+  where timeFormat :: UTCTime -> String
+        timeFormat = case statsPartition of
+                       PartitionByDay   -> formatTimeYMD
+                       PartitionByMonth -> formatTime' "%Y-%m"
 
 {- |
     Checks for live documents owned by the user.
