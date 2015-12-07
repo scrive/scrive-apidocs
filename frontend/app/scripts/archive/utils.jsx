@@ -145,7 +145,7 @@ define(['legacy_code'], function() {
   e.signatoryCanSignNow = function(d,s) {
     var so = s.sign_order;
     _.each(d.field("parties"),function(sig) {
-       if (sig.is_signatory && !s.sign_time) {
+       if (sig.is_signatory && !sig.sign_time) {
         so = Math.min(so,sig.sign_order);
        }
     });
