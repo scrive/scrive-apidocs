@@ -163,22 +163,21 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
         "active": editing
       });
 
+      var top = this.top() - this.scale() * (FieldPlacementGlobal.textPlacementYOffset - 1.5);
+      var left = this.left() - this.scale() * (FieldPlacementGlobal.textPlacementXOffset - 1.5);
+
       var divStyle = {
         cursor: current ? "text" : "",
-        lineHeight: "normal"
+        lineHeight: "normal",
+        top: top,
+        left: left,
+        fontSize: this.fontSize(),
+        borderWidth: this.borderWidth()
       };
 
       if (!self.canSign() && field.value() === "") {
         divStyle.display = "none";
       }
-
-      var position = self.position(
-        this.scale() * (FieldPlacementGlobal.textPlacementXOffset - 1.5),
-        this.scale() * (FieldPlacementGlobal.textPlacementYOffset - 1.5)
-      );
-
-      _.extend(divStyle, position);
-      _.extend(divStyle, this.border());
 
       var boxClass = React.addons.classSet({
         "placedfieldvalue": true,

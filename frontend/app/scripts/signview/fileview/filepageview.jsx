@@ -45,8 +45,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
 
           var args = {
             model: placement,
-            width: width,
-            height: height,
+            pageWidth: width,
+            pageHeight: height,
             signview: self.props.signview,
             arrow: self.props.arrow
           };

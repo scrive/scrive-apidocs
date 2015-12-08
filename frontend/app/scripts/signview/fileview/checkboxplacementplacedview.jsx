@@ -47,6 +47,7 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
       var doc = field.signatory().document();
       var current = field.signatory() == doc.currentSignatory() &&
         doc.currentSignatoryCanSign();
+      var checked = field.value() !== "";
 
       var divClass = React.addons.classSet({
         "placedfield": true,
@@ -55,32 +56,41 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
         "obligatory": field.obligatory()
       });
 
-      var size = this.size(Math.round);
-
-      var divStyle = {
-        cursor: current ? "pointer" : ""
-      };
-
-      var backgroundStyle = {
-        backgroundSize: size.width + "px " + size.height + "px",
-        width: size.width + "px",
-        height: size.height + "px"
-      };
-
-      _.extend(divStyle, this.position(FieldPlacementGlobal.placementBorder,
-        FieldPlacementGlobal.placementBorder, Math.round));
-      _.extend(divStyle, size);
-      _.extend(divStyle, this.border());
-
       var boxClass = React.addons.classSet({
         "placedcheckbox": current,
         "placedcheckbox-noactive": !current,
-        "checked": field.value() !== ""
+        "checked": checked
       });
+
+      var width = Math.round(this.width());
+      var height = Math.round(this.height());
+      var top = Math.round(this.top() - FieldPlacementGlobal.placementBorder);
+      var left = Math.round(this.left() - FieldPlacementGlobal.placementBorder);
+      var borderWidth = this.borderWidth();
+
+      if (!current && checked) {
+        width += borderWidth;
+        height += borderWidth;
+      }
+
+      var divStyle = {
+        cursor: current ? "pointer" : "",
+        top: top,
+        left: left,
+        width: width,
+        height: height,
+        borderWidth: borderWidth
+      };
+
+      var boxStyle = {
+        backgroundSize: width + "px " + height + "px",
+        width: width,
+        height: height
+      };
 
       return (
         <div onClick={this.toggleCheck} className={divClass} style={divStyle}>
-          <div className={boxClass} style={backgroundStyle} />
+          <div className={boxClass} style={boxStyle} />
         </div>
       );
     }
