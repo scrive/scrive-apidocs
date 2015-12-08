@@ -107,7 +107,7 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
                        <a href="mailto:info@scrive.com">info@scrive.com</a>
                    </li>
                    <li className="branch">
-                      <a href="https://scrive.ideas.aha.io" id="nav-give-feedback">{localization.footer.giveFeedback}</a>
+                      <a href="http://ideas.scrive.com/" id="nav-give-feedback">{localization.footer.giveFeedback}</a>
                    </li>
                    <li className="branch">
                       <a href="http://blog.scrive.com" id="nav-blog">{localization.footer.blog}</a>
