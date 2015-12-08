@@ -12,7 +12,6 @@ import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import DB
-import Happstack.Fields
 import KontraPrelude
 import Log.Identifier
 import Mailer
@@ -45,7 +44,7 @@ handleSendinBlueEvents = localDomain "handleSendinBlueEvents" $ do
                         "token" .= show token
                       ]
                     Just Mail{..} -> localData [identifier_ mailID] $ do
-                      email <- fromMaybe "" <$> getField "email"
+                      email <- fromMaybe "" <$> fromJSValueField "email"
                       let ev = SendinBlueEvent email event
                       res <- dbUpdate (UpdateWithEvent mailID ev) `E.catch` \(e::DBException) -> do
                         logInfo "DBException thrown while executing UpdateWithEvent" $ object [
@@ -74,7 +73,7 @@ handleSendinBlueEvents = localDomain "handleSendinBlueEvents" $ do
 sendinBlueEventFromJSValueM :: ReaderT JSValue Mailer (Maybe SendinBlueEvent)
 sendinBlueEventFromJSValueM = do
   (event :: Maybe String)  <- fromJSValueField "event"
-  (reason :: String) <- fromMaybe "" <$> fromJSValueField "reson"
+  (reason :: String) <- fromMaybe "" <$> fromJSValueField "reason"
   case event of
     (Just "request")        -> return $ Just SiB_Request
     (Just "delivered")      -> return $ Just SiB_Delivered
