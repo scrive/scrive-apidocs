@@ -19,6 +19,7 @@ import Mailer
 import MailGun
 import MailingServerConf
 import SendGrid
+import SendinBlue
 import SocketLabs
 
 router :: CryptoRNGState -> ConnectionSource -> Mailer Response -> ReqHandlerT (LogT IO) Response
@@ -28,8 +29,9 @@ router rng cs routes = withPostgreSQL cs $
 handlers :: MailingServerConf -> Route (Mailer Response)
 handlers conf = choice [
     hGet showHelloMessage
-  , dir "mail" $ dir "sendgrid" $ hPost $ handleSendGridEvents
-  , dir "mail" $ dir "mailgun" $ hPost $ withDecodedBody_ handleMailGunEvents
+  , dir "mail" $ dir "sendgrid"   $ hPost $ handleSendGridEvents
+  , dir "mail" $ dir "sendinblue" $ hPost $ handleSendinBlueEvents
+  , dir "mail" $ dir "mailgun"    $ hPost $ withDecodedBody_ handleMailGunEvents
   , dir "mail" $ dir "socketlabs" $ hPost $ withDecodedBody_ $ handleSocketLabsEvents conf
   ]
   where
@@ -40,7 +42,7 @@ showHelloMessage :: Mailer Response
 showHelloMessage = ok $ toResponse "Mailer says hello!"
 
 -- All providers except SendGrid send a valid POST request that should be decoded for further processing
--- SendGrid events have JSON in body but not as parameter, and should not be decoded.
+-- SendGrid and SendinBlue events have JSON in body but not as parameter, and should not be decoded.
 withDecodedBody_ :: Mailer Response -> Mailer Response
 withDecodedBody_ action = do
   tempDir <- liftIO getTemporaryDirectory
