@@ -8,7 +8,7 @@
 "_company":"Företag",
 "_companyNumberLabel":"Org. nr",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, genom att klicka på knappen kommer du att signera dokumentet <strong class='put-document-title-here'></strong> och din signatur kommer att registreras av e-signeringstjänsten Scrive.",
-"_contractSignConfirmationSignaturePlaced":"Du har signerat dokumentet. När du klickar på knappen kommer din signatur att registreras av e-signeringstjänsten Scrive.",
+"_contractSignConfirmationSignaturePlaced":"",
 "_contractSignatorySignModalBody":"<strong class='put-signatory-name-here'></strong>, genom att klicka på knappen kommer din signatur att registreras av e-signeringstjänsten Scrive.",
 "_contractSignatorySignModalBodyNoName":"Genom att klicka på knappen kommer din signatur att registreras av e-signeringstjänsten Scrive.",
 "_contractSignatorySignModalTitle":"Klar?",

@@ -8,7 +8,7 @@
 "_company":"Fyrirtæki",
 "_companyNumberLabel":"Skráningarnr. fyrirtækis",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, með því að smella á hnappinn skrifar þú undir skjalið <strong class='put-document-title-here'></strong> og undirskrift þín verður skráð af rafrænni undirskriftarþjónustu Scrive.",
-"_contractSignConfirmationSignaturePlaced":"Þú hefur skrifað undir skjalið. Þegar þú smellir á hnappinn verður undirskrift þín skráð af rafrænni undirskriftarþjónustu Scrive.",
+"_contractSignConfirmationSignaturePlaced":"",
 "_contractSignatorySignModalBody":"<strong class='put-signatory-name-here'></strong>, með því að smella á hnappinn verður undirskrift þín skráð af rafrænni undirskriftarþjónustu Scrive.",
 "_contractSignatorySignModalBodyNoName":"Með því að smella á hnappinn verður undirskrift þín skráð af rafrænni undirskriftarþjónustu Scrive.",
 "_contractSignatorySignModalTitle":"Ertu búin/n?",

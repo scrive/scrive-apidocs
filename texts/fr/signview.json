@@ -8,7 +8,7 @@
 "_company":"Société",
 "_companyNumberLabel":"Numéro immat. société",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, cliquez sur le bouton afin de signer le document <strong class='put-document-title-here'></strong> et votre signature sera enregistrée par le service de signature numérique Scrive.",
-"_contractSignConfirmationSignaturePlaced":"Vous avez signé le document. Une fois que vous cliquez sur le bouton, votre signature sera enregistrée par le service de signature numérique Scrive.",
+"_contractSignConfirmationSignaturePlaced":"",
 "_contractSignatorySignModalBody":"<strong class='put-signatory-name-here'></strong>, Cliquez sur le bouton afin de signer le document et votre signature sera enregistrée par le service de signature numérique Scrive.",
 "_contractSignatorySignModalBodyNoName":"Une fois que vous cliquez sur le bouton, votre signature sera enregistrée par le service de signature numérique Scrive.",
 "_contractSignatorySignModalTitle":"Terminé?",
