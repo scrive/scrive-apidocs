@@ -10,8 +10,13 @@ return React.createClass({
     render: function() {
       var self = this;
       var doc = this.props.document;
-      var emailInvitationMessageEditable = _.any(doc.signatories(), function(s) { return s.emailDelivery() || s.emailMobileDelivery();});
-      var emailConfirmationMessageEditable = _.any(doc.signatories(), function(s) { return s.emailConfirmationDelivery() || s.emailMobileConfirmationDelivery();});
+      var emailInvitationMessageEditable = _.any(doc.signatories(), function(s) {
+        return !s.author() && (s.emailDelivery() || s.emailMobileDelivery());
+      });
+      var emailConfirmationMessageEditable = _.any(doc.signatories(), function(s) {
+        return !s.author() && (s.emailConfirmationDelivery() || s.emailMobileConfirmationDelivery());
+      });
+
       if (!doc.ready()) {
         return <div/>;
       } else {
@@ -26,7 +31,7 @@ return React.createClass({
               previewLabel = {localization.designview.customMessage.preview}
               onChange = {function(c) {doc.setInvitationMessage(c);}}
               placeholder = {localization.designview.editInvitation}
-              disabledPlaceholder = {localization.designview.editMessagePlaceholder}
+              disabledPlaceholder = {localization.designview.editInvitationMessagePlaceholder}
               onPreview = {function() {
                 mixpanel.track('Open invitation preview');
                 doc.save();
@@ -51,7 +56,7 @@ return React.createClass({
               label = {localization.designview.customMessage.confirmation}
               previewLabel = {localization.designview.customMessage.preview}
               placeholder  = {localization.designview.editConfirmation}
-              disabledPlaceholder = {localization.designview.editMessagePlaceholder}
+              disabledPlaceholder = {localization.designview.editConfirmationMessagePlaceholder}
               onChange = {function(c) {doc.setConfirmationMessage(c);}}
               onPreview = {function() {
                 mixpanel.track('Open confirmation preview');
