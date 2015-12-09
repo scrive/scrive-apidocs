@@ -122,7 +122,7 @@ return function (args) {
       document.ontouchmove = function (e) {
         return true;
       };
-
+      React.unmountComponentAtNode(modal[0]);
       if (onClose) {
         onClose();
       }
