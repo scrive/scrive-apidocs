@@ -19,20 +19,20 @@ var require = {
     React: '../bower_components/react/react-with-addons',
     Backbone: '../bower_components/backbone/backbone',
     Underscore: '../bower_components/underscore/underscore-min',
-    text: '../bower_components/requirejs-text/text',
-    Spinjs: '../bower_components/spin.js/spin',
-    eventie: '../bower_components/eventie',
-    eventEmitter: '../bower_components/eventEmitter',
-    imagesLoaded: '../bower_components/imagesloaded/imagesloaded',
+    //text: '../bower_components/requirejs-text/text',
+    //Spinjs: '../bower_components/spin.js/spin',
+    //eventie: '../bower_components/eventie',
+    //eventEmitter: '../bower_components/eventEmitter',
+    //imagesLoaded: '../bower_components/imagesloaded/imagesloaded',
     moment: '../bower_components/moment/min/moment-with-langs.min',
-    StateMachine: '../bower_components/javascript-state-machine/state-machine',
+    //StateMachine: '../bower_components/javascript-state-machine/state-machine',
     tinycolor : '../libs/tinycolor-min',
     html2canvas: '../libs/html2canvas',
     base64: '../libs/base64',
     /**
      *  Legacy code imports
      */
-    'legacy_code': 'config/include_legacy_code'
+    'legacy_code': 'config/include_legacy_code_for_signview'
   },
   shim: {
     'Underscore': {

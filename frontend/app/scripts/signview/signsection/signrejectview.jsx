@@ -1,5 +1,5 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/button"],
-  function (legacy_code, _, Backbone, React, Button) {
+define(["Underscore", "Backbone", "React", "common/button"],
+  function (_, Backbone, React, Button) {
 
   return React.createClass({
     mixins: [React.addons.LinkedStateMixin],

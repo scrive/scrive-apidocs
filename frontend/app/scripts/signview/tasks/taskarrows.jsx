@@ -1,4 +1,4 @@
-define(["legacy_code", "Backbone", "React"], function (legacy_code, Backbone, React) {
+define(["Backbone", "React"], function (Backbone, React) {
   return React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model)

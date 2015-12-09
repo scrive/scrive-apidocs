@@ -1,4 +1,4 @@
-define(['React', 'Backbone', 'signview/createaccount/createaccountview', 'signview/feedback/feedbackview', 'legacy_code'], function(React, Backbone, CreateAccountView, FeedbackView) {
+define(['React', 'Backbone', 'signview/createaccount/createaccountview', 'signview/feedback/feedbackview'], function(React, Backbone, CreateAccountView, FeedbackView) {
 
   return React.createClass({
     propTypes: {
