@@ -71,7 +71,7 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     guardDocumentStatus Pending
     guardSignatoryHasNotSigned slid
     guardSignatoryNeedsToIdentifyToView slid
-    guardThatAllAttachmentsAreAccepted =<< apiV2ParameterObligatory (ApiV2ParameterJSON "accepted_author_attachments" unjsonDef)
+    guardThatAllAttachmentsAreAcceptedOrIsAuthor slid =<< apiV2ParameterObligatory (ApiV2ParameterJSON "accepted_author_attachments" unjsonDef)
     -- Parameters
     checkAuthenticationToSignMethodAndValue slid
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValues)
@@ -109,7 +109,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     acceptedAttachments <- apiV2ParameterObligatory (ApiV2ParameterJSON "accepted_author_attachments" unjsonDef)
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValues)
     -- API call actions + extra conditional parameter
-    guardThatAllAttachmentsAreAccepted acceptedAttachments
+    guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments
     authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
     (mesig, mpin) <- case authorization of
       StandardAuthenticationToSign -> return (Nothing, Nothing)

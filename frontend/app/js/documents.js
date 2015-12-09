@@ -566,10 +566,6 @@ window.Document = Backbone.Model.extend({
             return false;
         }
 
-        if (_.any(this.authorattachments(),function (a) { return a.isRequired();})) {
-            // We don't support accepting attachments from design view
-            return false;
-        }
         var aidx = this.author().signorder();
         return ! _.any(this.signatories(), function(sig) {
             return sig.signs() && sig.signorder() < aidx;

@@ -188,6 +188,7 @@ postPageCode=
   var google_conversion_label = "bYPcCKyX6QMQtO6w4QM";
   var google_custom_params = window.google_tag_params;
   var google_remarketing_only = true;
+  var google_conversion_format = 3;
   /* ]]> */
   </script>
   <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>

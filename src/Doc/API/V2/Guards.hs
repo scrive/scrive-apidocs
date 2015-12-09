@@ -15,7 +15,7 @@ module Doc.API.V2.Guards (
 , guardCanSetAuthenticationToViewForSignatoryWithValues
 , guardCanSetAuthenticationToSignForSignatoryWithValue
 , guardSignatoryHasNotSigned
-, guardThatAllAttachmentsAreAccepted
+, guardThatAllAttachmentsAreAcceptedOrIsAuthor
 -- * Joined guard for read-only functions
 , guardDocumentReadAccess
 ) where
@@ -215,10 +215,11 @@ guardThatDocumentCanBeStarted = do
          then isGood resultValidPhone || isEmpty resultValidPhone
          else True
 
-guardThatAllAttachmentsAreAccepted :: (Kontrakcja m, DocumentMonad m) => [FileID] -> m ()
-guardThatAllAttachmentsAreAccepted acceptedAttachments = do
+guardThatAllAttachmentsAreAcceptedOrIsAuthor :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [FileID] -> m ()
+guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments = do
   unlessM (allRequiredAttachmentsAreOnList acceptedAttachments <$> theDocument) $
-    apiError $ (signatoryStateError "Some mandatory author attachments aren't accepted")
+    unlessM (isAuthor <$> $fromJust . getSigLinkFor slid <$> theDocument) $ -- Author does not need to accept attachments
+      apiError $ (signatoryStateError "Some mandatory author attachments aren't accepted")
 
 -- | For the given DocumentID:
 --

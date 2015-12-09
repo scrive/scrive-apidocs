@@ -442,7 +442,8 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
     authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
     fields <- getFieldForSigning
     unlessM (allRequiredAuthorAttachmentsAreAccepted =<< getAcceptedAuthorAttachments) $ do
-      (throwM . SomeKontraException $ badInput $ "Some required attachments where not accepted")
+      unlessM (isAuthor <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- Author does not need to accept attachments
+        (throwM . SomeKontraException $ badInput $ "Some required attachments where not accepted")
 
 
     case authorization of
@@ -482,7 +483,8 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
     whenM (signatoryNeedsToIdentifyToView =<< $fromJust . getSigLinkFor slid <$> theDocument) $ do
       (throwM . SomeKontraException $ forbidden "Authorization to view is needed")
     unlessM (allRequiredAuthorAttachmentsAreAccepted acceptedAuthorAttachments) $ do
-      (throwM . SomeKontraException $ badInput $ "Some required attachments where not accepted")
+      unlessM (isAuthor <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- Author does not need to accept attachments
+        (throwM . SomeKontraException $ badInput $ "Some required attachments where not accepted")
     checkAuthenticationToSignMethodAndValue slid
     authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
 
