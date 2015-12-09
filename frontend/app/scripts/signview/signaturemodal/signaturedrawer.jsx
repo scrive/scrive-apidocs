@@ -357,7 +357,7 @@ return React.createClass({
         return undefined;
       }
     },
-    isLeftMouseButton: function (drawingMethod, e){
+    isLeftMouseButton: function (drawingMethod, e) {
       if (drawingMethod !== "mouse") {
         // other drawing methods don't have buttons
         return true;
@@ -431,8 +431,10 @@ return React.createClass({
       }
     },
     drawingtoolMove: function (x, y, drawingMethod, e) {
-      // we have to check for pointerOutside, because <=IE10 is retarded, and fires a few mousemove events before firing mouseenter event
-      if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e)) && !this.state.model.pointerOutside()) {
+      // we have to check for pointerOutside, because <=IE10 is retarded,
+      // and fires a few mousemove events before firing mouseenter event
+      if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e)) &&
+          !this.state.model.pointerOutside()) {
         var x_ = this.state.model.x();
         var y_ = this.state.model.y();
         var x__ = this.state.model.x_();
