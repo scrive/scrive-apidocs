@@ -147,7 +147,7 @@ main = do
           return . RerunAfter $ iminutes 1
         DocumentsPurge -> do
           runScheduler $ do
-            purgedCount <- dbUpdate $ PurgeDocuments 30 unsavedDocumentLingerDays
+            purgedCount <- dbUpdate . PurgeDocuments 30 $ fromIntegral unsavedDocumentLingerDays
             logInfo "Purged documents" $ object [
                 "purged" .= purgedCount
               ]

@@ -1709,80 +1709,72 @@ instance MonadDB m => DBUpdate m ConnectSignatoriesToUser () where
 unsavedDocumentLingerDays :: Int
 unsavedDocumentLingerDays = 30
 
-data PurgeDocuments = PurgeDocuments Int Int
+-- | We purge documents that:
+-- 1) Were deleted by all signatories with an account
+-- 2) Don't have an access token in an existing session.
+-- 3) Belong to a company that didn't set wait time after save or it was exceeded.
+data PurgeDocuments = PurgeDocuments Int32 Int32
 instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
   update (PurgeDocuments savedDocumentLingerDays unsavedDocumentLingerDays') = do
     now <- currentTime
-    runQuery_ $ "UPDATE signatory_links"
-            <+> "  SET really_deleted =" <?> now
-            <+> "WHERE signatory_links.user_id IS NOT NULL" -- document belongs to somebody
-            <+> "  AND signatory_links.deleted IS NOT NULL" -- somebody deleted that document long time ago
-            <+> "  AND signatory_links.deleted +" <?> idays (fromIntegral savedDocumentLingerDays) <+> "<=" <?> now
-            <+> "  AND signatory_links.really_deleted IS NULL" -- we did not notice this until now
+    -- Unlink documents that were in thrash long enough.
+    runQuery_ . sqlUpdate "signatory_links" $ do
+      sqlSet "really_deleted" now
+      -- Document belongs to somebody.
+      sqlWhere "user_id IS NOT NULL"
+      -- It was deleted sufficient amount of time ago.
+      sqlWhere $ "deleted +" <?> idays savedDocumentLingerDays <+> "<=" <?> now
+      -- It wasn't yet unlinked.
+      sqlWhere "really_deleted IS NULL"
 
-    runQuery_ $ "CREATE TEMP TABLE documents_to_purge(id, title) AS"
-        <+> "SELECT documents.id, documents.title"
-        <+> "  FROM documents"
-        -- document wasn't purged yet
-        <+> " WHERE documents.purged_time IS NULL"
-        -- has not been deleted at least in a single account
-        <+> "   AND NOT EXISTS(SELECT TRUE"
-        <+> "                    FROM signatory_links"
-        <+> "                   WHERE signatory_links.document_id = documents.id"
-        <+> "                     AND signatory_links.user_id IS NOT NULL"
-                                  -- not really_deleted yet
-        <+> "                     AND signatory_links.really_deleted IS NULL)"
+    rows <- runQuery . sqlUpdate "documents" $ do
+      sqlWith "documents_to_purge" . sqlSelect "documents d" $ do
+        sqlResult "d.id"
+          -- Document wasn't purged yet.
+        sqlWhere "d.purged_time IS NULL"
+        -- All signatories with an account deleted the document.
+        sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
+          sqlWhere "sl.document_id = d.id"
+          sqlWhere "sl.user_id IS NOT NULL"
+          sqlWhere "sl.really_deleted IS NULL"
+        -- Document is not referenced by any session.
+        sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
+          sqlJoinOn "document_session_tokens dst" "sl.id = dst.signatory_link_id"
+          sqlWhere "sl.document_id = d.id"
+        -- Company settings require to wait to allow saving (we wait
+        -- even if there is nobody to wait for to make things simple
+        -- and more predictable).
+        sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
+          sqlJoinOn "users u" "sl.user_id = u.id"
+          sqlJoinOn "companies c" "u.company_id = c.id"
+          sqlWhere "d.author_id = sl.id"
+          -- Linger time is allowed by author's company settings.
+          sqlWhere "c.allow_save_safety_copy"
+          -- Linger time was not yet exceeded.
+          sqlWhere $ "d.mtime +" <?> idays unsavedDocumentLingerDays' <+> ">" <?> now
 
-        -- session is still in progress
-        <+> "   AND NOT EXISTS(SELECT TRUE"
-        <+> "                    FROM signatory_links"
-        <+> "                   WHERE signatory_links.document_id = documents.id"
-        <+> "                     AND EXISTS (SELECT TRUE"
-        <+> "                                   FROM document_session_tokens"
-        <+> "                                  WHERE document_session_tokens.signatory_link_id = signatory_links.id))"
+      -- Blank out sensitive data.
+      sqlWith "purged_signatory_links" . sqlUpdate "signatory_links" $ do
+        sqlResult "id"
+        sqlSet "sign_ip" (0::Int32)
+        sqlSet "seen_ip" (0::Int32)
+        sqlWhere "document_id IN (SELECT id FROM documents_to_purge)"
 
-        -- company settings require to wait time to allow saving (we
-        -- wait even if there is nobody to wait for to make things
-        -- simple and more predictable).
-        <+> "   AND NOT EXISTS(SELECT TRUE"
-        <+> "                    FROM companies, users, signatory_links"
-        <+> "                   WHERE signatory_links.document_id = documents.id"
-                                   -- linger time is allowed by author's company settings
-        <+> "                     AND companies.allow_save_safety_copy"
-                                   -- linger time hasn't elapsed yet
-        <+> "                     AND documents.mtime +" <?> idays (fromIntegral unsavedDocumentLingerDays') <+> ">" <?> now
-        <+> "                     AND documents.author_id = signatory_links.id"
-        <+> "                     AND users.id = signatory_links.user_id"
-        <+> "                     AND users.company_id = companies.id)"
+      -- Blank out sensitive data in fields.
+      sqlWith "purged_signatory_fields" . sqlUpdate "signatory_link_fields" $ do
+        sqlSetCmd "value_text" "CASE WHEN value_text IS NULL THEN NULL ELSE '' END"
+        sqlSetCmd "value_bool" "CASE WHEN value_bool IS NULL THEN NULL ELSE FALSE END"
+        sqlSetCmd "value_file_id" "NULL"
+        sqlWhere "signatory_link_id IN (SELECT id FROM purged_signatory_links)"
 
-    -- set purged time on documents
-    rows <- runSQL $ "UPDATE documents"
-        <+> "   SET purged_time =" <?> now
-        <+> " WHERE documents.id IN (SELECT id"
-        <+> "                          FROM documents_to_purge)"
+      -- Remove whole evidence log as it is sensitive data.
+      sqlWith "purged_evidence_log" . sqlDelete "evidence_log" $ do
+        sqlWhere "document_id IN (SELECT id FROM documents_to_purge)"
 
-    -- blank out sensitive data
-    runSQL_ $ "UPDATE signatory_links"
-        <+> "   SET sign_ip = 0"
-        <+> "     , seen_ip = 0"
-        <+> " WHERE signatory_links.document_id IN (SELECT id FROM documents_to_purge)"
+      -- Set purged_time on documents.
+      sqlSet "purged_time" now
+      sqlWhere "id IN (SELECT id FROM documents_to_purge)"
 
-    -- blank out sensitive data in fields
-    runSQL_ $ "UPDATE signatory_link_fields"
-        <+> "   SET value_text   = CASE WHEN value_text   IS NULL THEN NULL ELSE '' END"
-        <+> "   ,   value_bool = CASE WHEN value_bool IS NULL THEN NULL ELSE FALSE END"
-        <+> "   ,   value_file_id = NULL"
-        <+> " WHERE signatory_link_fields.signatory_link_id IN"
-        <+> "       (SELECT id"
-        <+> "          FROM signatory_links"
-        <+> "         WHERE signatory_links.document_id IN (SELECT id FROM documents_to_purge))"
-
-    -- remove whole evidence log as it is sensitive data
-    runSQL_ $ "DELETE"
-        <+> "  FROM evidence_log"
-        <+> " WHERE document_id IN (SELECT id FROM documents_to_purge)"
-
-    runSQL_ $ "DROP TABLE documents_to_purge"
     return rows
 
 {- | Archive (move to trash) idle documents for signatories.  A
