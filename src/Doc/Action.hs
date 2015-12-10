@@ -56,11 +56,11 @@ import Util.MonadUtils
 import Util.SignatoryLinkUtils
 
 -- | Log a document event, adding some standard properties.
-logDocEvent :: (MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m) => EventName -> User -> [EventProperty] -> Document -> m ()
+logDocEvent :: (KontraMonad m, MonadDB m, MonadThrow m, MonadTime m) => EventName -> User -> [EventProperty] -> Document -> m ()
 logDocEvent name user extraProps doc = do
   comp <- getCompanyForUser user
   now <- currentTime
-  ip <- mctxipnumber <$> getMailContext
+  ip <- ctxipnumber <$> getContext
   let uid = userid user
       email = Email $ getEmail user
       fullname = getFullName user

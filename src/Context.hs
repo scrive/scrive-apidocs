@@ -81,15 +81,13 @@ anonymousContext :: Context -> Context
 anonymousContext ctx = ctx { ctxmaybeuser = Nothing, ctxmaybepaduser = Nothing, ctxsessionid = tempSessionID }
 
 contextToMailContext :: Context -> MailContext
-contextToMailContext ctx = MailContext { mctxhostpart = ctxhostpart ctx
-
-                                       , mctxmailsconfig = ctxmailsconfig ctx
-                                       , mctxlang = ctxlang ctx
-                                       , mctxcurrentBrandedDomain = ctxbrandeddomain ctx
-                                       , mctxipnumber = ctxipnumber ctx
-                                       , mctxtime = ctxtime ctx
-                                       , mctxmaybeuser = ctxmaybeuser ctx
-                                       }
+contextToMailContext ctx = MailContext {
+    mctxhostpart = ctxhostpart ctx
+  , mctxmailsconfig = ctxmailsconfig ctx
+  , mctxlang = ctxlang ctx
+  , mctxcurrentBrandedDomain = ctxbrandeddomain ctx
+  , mctxtime = ctxtime ctx
+  }
 
 instance HasSalesforceConf Context where
   getSalesforceConf = ctxsalesforceconf

@@ -5,7 +5,6 @@ import Control.Monad.Trans
 import Data.Time
 
 import BrandedDomain.BrandedDomain
-import IPAddress
 import KontraPrelude
 import Mails.MailsConfig
 import User.Model
@@ -15,9 +14,7 @@ data MailContext = MailContext {
 , mctxmailsconfig :: MailsConfig
 , mctxlang :: Lang
 , mctxcurrentBrandedDomain :: BrandedDomain
-, mctxipnumber :: IPAddress
 , mctxtime :: UTCTime
-, mctxmaybeuser :: Maybe User
 } deriving Show
 
 class Monad m => MailContextMonad m where
