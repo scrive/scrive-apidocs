@@ -364,10 +364,10 @@ return React.createClass({
       } else if (drawingMethod !== "mouse") {
         // other drawing methods don't have buttons
         return true;
-      } else if (e.buttons !== undefined) {
+      } else if (!BrowserInfo.isIE9orLower() && e.buttons !== undefined) {
         // 1 is "left" click
         return e.buttons === 1;
-      } else if (BrowserInfo.isSafari() && e.which !== undefined) {
+      } else if ((BrowserInfo.isSafari() || BrowserInfo.isIE9orLower()) && e.which !== undefined) {
         // 1 is "left" click
         return e.which === 1;
       } else {
