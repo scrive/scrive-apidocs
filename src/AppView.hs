@@ -301,6 +301,7 @@ contextInfoFields ctx@Context{ ctxlang } = do
   F.objects "flashmessages" $ map flashMessageFields $ ctxflashmessages ctx
   F.value "hostpart" $ ctxhostpart ctx
   F.value "production" (ctxproduction ctx)
+  F.value "cdnbaseurl" (ctxcdnbaseurl ctx)
   F.value "ctxlang" $ codeFromLang ctxlang
 
 
