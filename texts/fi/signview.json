@@ -8,7 +8,7 @@
 "_company":"Yritys",
 "_companyNumberLabel":"Yrityksen rek. nro.",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, painamalla kuvaketta, allekirjoitat dokumentin <strong class='put-document-title-here'></strong> ja allekirjoituksesi tullaan rekisteröimään Scrive e-allekirjoituspalveluun.",
-"_contractSignConfirmationSignaturePlaced":"Olet allekirjoittanut dokumentin. Kun klikkaat painiketta, allekirjoituksesi rekisteröidään e-allekirjoituspalvelu Scriven toimesta.",
+"_contractSignConfirmationSignaturePlaced":"",
 "_contractSignatorySignModalBody":"<strong class='put-signatory-name-here'></strong>, painamalla kuvaketta, sinun allekirjoituksesi tullaan rekisteröimään Scrive e-allekirjoituspalveluun.",
 "_contractSignatorySignModalBodyNoName":"Painamalla kuvaketta, sinun allekirjoituksesi tullaan rekisteröimään Scrive e-allekirjoituspalveluun.",
 "_contractSignatorySignModalTitle":"Valmis?",

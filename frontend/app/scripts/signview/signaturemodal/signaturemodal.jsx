@@ -122,7 +122,7 @@ return function (args) {
       document.ontouchmove = function (e) {
         return true;
       };
-
+      React.unmountComponentAtNode(modal[0]);
       if (onClose) {
         onClose();
       }
@@ -191,9 +191,11 @@ return function (args) {
   modal.on("touchstart", closeOverlay);
 
   $(".signview").append(modal);
+
+  // 1ms is too short for some browsers, the animation was sometimes triggered immediately.
   setTimeout(function () {
     modal.addClass("active show");
-  }, 1);
+  }, 5);
 };
 
 });

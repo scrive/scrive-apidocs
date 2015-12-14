@@ -346,6 +346,7 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
         , ctxnormalizeddocuments = docscache appGlobals
         , ctxipnumber = peerip
         , ctxproduction = production appConf
+        , ctxcdnbaseurl = cdnBaseUrl appConf
         , ctxtemplates = localizedVersion userlang templates2
         , ctxglobaltemplates = templates2
         , ctxlang = userlang

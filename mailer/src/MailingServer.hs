@@ -214,6 +214,7 @@ main = do
         isDelivered (_, _, _, SendGridEvent _ SG_Delivered{} _) = True
         isDelivered (_, _, _, MailGunEvent _ MG_Delivered) = True
         isDelivered (_, _, _, SocketLabsEvent _ SL_Delivered) = True
+        isDelivered (_, _, _, SendinBlueEvent _ SiB_Delivered) = True
         isDelivered _ = False
 
         testSender = Address {

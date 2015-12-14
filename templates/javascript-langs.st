@@ -293,7 +293,8 @@ javascriptLocalisation =
          , phonePlaceholder: "$_phonePlaceholder()$"
          , designview : {
               dndDisabled: "$_designViewDNDDisabled()$",
-              editMessagePlaceholder: "$_editMessagePlaceholder()$",
+              editInvitationMessagePlaceholder: "$_editInvitationMessagePlaceholder()$",
+              editConfirmationMessagePlaceholder: "$_editConfirmationMessagePlaceholder()$",
               validation : {
                       notReadyField : "$_setAllFields()$"
                     , requestAttachmentFlashMessage : "$_designViewAttachmentRequestedFlashMessage()$"

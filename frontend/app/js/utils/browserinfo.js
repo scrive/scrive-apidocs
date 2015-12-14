@@ -36,6 +36,9 @@ window.BrowserInfo = {
     isIETouch: function() {
         return navigator.msPointerEnabled;
     },
+    isSafari: function() {
+      return !BrowserInfo.isChrome() && navigator.userAgent.match(/Safari/i) != null;
+    },
     isIE9orLower : function() {
       return BrowserInfo.isIE() && !BrowserInfo.isWindowsPhone() && ($.browser.version > "3" && $.browser.version <= "9.0");
     },

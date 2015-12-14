@@ -113,6 +113,7 @@ var SignatureDrawerModel = Backbone.Model.extend({
     this.set({
       drawing: true,
       pointerId: pointerId,
+      pointerOutside: false,
       drawingMethod: drawingMethod
     }, {silent: true});
 
@@ -249,12 +250,24 @@ return React.createClass({
       }
       this.setState({picture: picture, show: true});
       this.initDrawing();
-      $(window).resize(function () {
-        self.forceUpdate();
-      });
-      $(window).on("gestureend", function () {
-        self.forceUpdate();
-      });
+      $(window).resize(self.forceUpdate);
+      $(window).on("gestureend", self.forceUpdate);
+      if ("ontouchstart" in document.documentElement) {
+        $(document)[0].addEventListener("touchend", this.mouseupCallback);
+      } else if (navigator.msPointerEnabled) {
+        $(document)[0].addEventListener("MSPointerUp", this.mouseupCallback);
+      }
+      $(document).mouseup(self.mouseupCallback);
+    },
+    componentWillUnmount: function () {
+      $(window).off("resize", self.forceUpdate);
+      $(window).off("gestureend", self.forceUpdate);
+      if ("ontouchstart" in document.documentElement) {
+        $(document)[0].removeEventListener("touchend", this.mouseupCallback);
+      } else if (navigator.msPointerEnabled) {
+        $(document)[0].removeEventListener("MSPointerUp", this.mouseupCallback);
+      }
+      $(document).off("mouseup", this.mouseupCallback);
     },
     startDrawing: function (drawingMethod, pointerId) {
       this.state.model.startDrawing(drawingMethod, pointerId);
@@ -264,6 +277,11 @@ return React.createClass({
       this.saveImage();
       this.state.model.stopDrawing();
       this.props.onStopDrawing();
+    },
+    mouseupCallback: function () {
+      if (this.state.model.drawingInProgress()) {
+        this.stopDrawing();
+      }
     },
     initDrawing: function () {
       var self = this;
@@ -339,6 +357,24 @@ return React.createClass({
         return undefined;
       }
     },
+    isLeftMouseButton: function (drawingMethod, e) {
+      if (drawingMethod !== "mouse") {
+        // other drawing methods don't have buttons
+        return true;
+      } else if (e.buttons !== undefined) {
+        // 1 is "left" click
+        return e.buttons === 1;
+      } else if (BrowserInfo.isSafari() && e.which !== undefined) {
+        // 1 is "left" click
+        return e.which === 1;
+      } else {
+        // this is for other broken browsers - default mode
+        // if we don't know which button was pressed,
+        // unfortunately we have to assume this was left button click
+        // even if it was right and we will draw with right button :(
+        return true;
+      }
+    },
     lineWidth: function () {
       return 8;
     },
@@ -357,12 +393,15 @@ return React.createClass({
       this.drawDot(x, y, this.colorForRGBA(1), radius);
       this.state.picture.closePath();
     },
-    drawingtoolDown: function (x, y, drawingMethod, e) {
-      if (!this.state.model.drawingInProgress()) {
+    drawingtoolDown: function (x, y, drawingMethod, e, eventPointerId) {
+      if (!this.state.model.drawingInProgress() && this.isLeftMouseButton(drawingMethod, e)) {
         this.state.model.cancelPreview();
 
         this.state.model.setStartPoint(x, y);
-        this.startDrawing(drawingMethod, this.eventPointerId(e));
+        if (eventPointerId === undefined) {
+          eventPointerId = this.eventPointerId(e);
+        }
+        this.startDrawing(drawingMethod, eventPointerId);
 
         this.state.picture.beginPath();
         this.state.picture.moveTo(x, y);
@@ -372,29 +411,30 @@ return React.createClass({
       }
     },
     drawingtoolOutside: function (x, y, drawingMethod, e) {
-      if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e))) {
-        this.drawingtoolMove(x, y, drawingMethod, e);
-        this.drawingtoolMove(x, y, drawingMethod, e);
+      // drawingMethod is always mouse, but initial method could be different (e.g. ms),
+      // use the initial method to draw
+      if (this.state.model.drawingInProgress()) {
+        this.drawingtoolMove(x, y, this.state.model.get("drawingMethod"), e);
+        this.drawingtoolMove(x, y, this.state.model.get("drawingMethod"), e);
         this.state.model.setPointerOutside(true);
-      } else if (this.state.model.drawingInProgress()) {
-        // this is for touch-enabled devices, where drawing happens with ms events, bout mouseout is a mouse event
-        // it's not possible to support the perfect behaviour in that case, so let's stop drawing
-        this.stopDrawing();
       }
     },
     drawingtoolInside: function (x, y, drawingMethod, e) {
-      if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e))
-          && this.state.model.pointerOutside()) {
+      if (this.state.model.drawingInProgress() && this.state.model.pointerOutside()) {
+        drawingMethod = this.state.model.get("drawingMethod");
+        var eventPointerId = this.state.model.get("pointerId");
         this.state.model.setPointerOutside(false);
         this.stopDrawing();
-        if (e.buttons !== 0) {
-          // start drawing again only if any button is pressed
-          this.drawingtoolDown(x, y, drawingMethod, e);
-        }
+        // start drawing unconditionally, because if button was depressed
+        // drawing was already stopped, and we would not get to this point
+        this.drawingtoolDown(x, y, drawingMethod, e, eventPointerId);
       }
     },
     drawingtoolMove: function (x, y, drawingMethod, e) {
-      if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e))) {
+      // we have to check for pointerOutside, because <=IE10 is retarded,
+      // and fires a few mousemove events before firing mouseenter event
+      if (this.state.model.drawingInProgressWithDrawingMethodAndPointerId(drawingMethod, this.eventPointerId(e)) &&
+          !this.state.model.pointerOutside()) {
         var x_ = this.state.model.x();
         var y_ = this.state.model.y();
         var x__ = this.state.model.x_();

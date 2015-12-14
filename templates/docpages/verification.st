@@ -7,7 +7,7 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
-      <link href='/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
 <body>
 <div class="wrapper-position-footer">

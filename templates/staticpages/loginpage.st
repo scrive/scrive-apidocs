@@ -4,7 +4,7 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
-    <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    <link href='$cdnbaseurl$/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body >
   $flashmessages()$
@@ -45,7 +45,7 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
-    <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    <link href='$cdnbaseurl$/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
   <div class='global-table'>
@@ -69,7 +69,7 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
-    <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    <link href='$cdnbaseurl$/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
   <div class='global-table'>
@@ -97,14 +97,14 @@ accountSetupPage=$doctype()$
     <head>
       <title>$pagetitle()$</title>
       $standardHeaderContents(nobranding='true')$
-      <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     </head>
     <body>
       $flashmessages()$
 
       <div class='mainContainer create-account-box'>
         <div style="margin-bottom: 20px; margin-top: 64px; text-align: center" >
-          <img alt='logo' src="/login_logo/$brandinghash$" />
+          <img alt='logo' src="$cdnbaseurl$/login_logo/$brandinghash$" />
           <div class='divider-line'></div>
           <span class='label' style="text-align :center; width:275px">
             $PoweredByScrive()$

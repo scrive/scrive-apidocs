@@ -39,26 +39,26 @@ standardHeaderContents=
         $else$
           <meta name="viewport" content="width=1020" />
         $endif$
-	<script src="/bower_components/es5-shim/es5-shim.js"></script>
-	<script src="/bower_components/es5-shim/es5-sham.js"></script>
+	<script src="$cdnbaseurl$/bower_components/es5-shim/es5-shim.js"></script>
+	<script src="$cdnbaseurl$/bower_components/es5-shim/es5-sham.js"></script>
         <!--[if lt IE 9]>
-	<script src="/libs/html5shiv.js"></script>
-	<script src="/bower_components/json3/lib/json3.min.js"></script>
+	<script src="$cdnbaseurl$/libs/html5shiv.js"></script>
+	<script src="$cdnbaseurl$/bower_components/json3/lib/json3.min.js"></script>
         <![endif]-->
-        <link href='/css/fonts/SourceSansPro.css' rel='stylesheet' type='text/css'/>
-        <link href='/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
-        <link rel=" icon" href="/favicon/$brandinghash$" />
+        <link href='$cdnbaseurl$/css/fonts/SourceSansPro.css' rel='stylesheet' type='text/css'/>
+        <link href='$cdnbaseurl$/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
+        <link rel=" icon" href="$cdnbaseurl$/favicon/$brandinghash$" />
 
-        <script src="/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
+        <script src="$cdnbaseurl$/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
         <script type="text/javascript"> window.hubspotConf = $analytics.hubspotConf:noescape()$;</script>
         $if(production)$
         $if(signview)$
-        <link href='/$versioncode$.signview-all-styling-minified.css' rel='stylesheet' type='text/css'/>
+        <link href='$cdnbaseurl$/$versioncode$.signview-all-styling-minified.css' rel='stylesheet' type='text/css'/>
         $else$
-        <link href='/$versioncode$.all-styling-minified.css' rel='stylesheet' type='text/css'/>
+        <link href='$cdnbaseurl$/$versioncode$.all-styling-minified.css' rel='stylesheet' type='text/css'/>
         $endif$
-        <script src="/$versioncode$.optimized-system.js"></script>
+        <script src="$cdnbaseurl$/$versioncode$.optimized-system.js"></script>
         $else$
         $if(signview)$
         <link href='/less/signview-less-compiled.css' rel='stylesheet' type='text/css'/>
@@ -69,14 +69,14 @@ standardHeaderContents=
         <script src="/bower_components/requirejs/require.js"></script>
         $endif$
 
-        <link href='/domain_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+        <link href='$cdnbaseurl$/domain_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
 
         $if(nobranding)$
         $else$
           $if(logged)$
           <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
             $else$
-          <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+          <link href='$cdnbaseurl$/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
           $endif$
         $endif$
         <script>
@@ -248,7 +248,7 @@ contactUsVivocha=
   <ul>
     <li class="call">
       <a class="" href="tel:+46851977900">
-        <div class="icon"><img src="/img/phone.png" width="32" height="32" alt="Call"/></div>
+        <div class="icon"><img src="$cdnbaseurl$/img/phone.png" width="32" height="32" alt="Call"/></div>
         <div class="hover">
           <p>$_vivochaCallUsNow()$</p>
           <small>+46 8 519 779 00</small>
@@ -257,7 +257,7 @@ contactUsVivocha=
     </li>
     <li class="email">
       <a class="" href="mailto:info@scrive.com">
-        <div class="icon"><img src="/img/mail-us.png" width="32" height="32" alt="Email"/></div>
+        <div class="icon"><img src="$cdnbaseurl$/img/mail-us.png" width="32" height="32" alt="Email"/></div>
         <div class="hover">
           <p>$_vivochaSendEmail()$</p>
           <small>info@scrive.com</small>
@@ -266,7 +266,7 @@ contactUsVivocha=
     </li>
     <li class="chat-vivocha vivocha_widget_openmedia_chat">
       <a class="" href="#vivocha-chat-url">
-        <div class="icon"><img src="/img/chat.png" width="32" height="32" alt="Chat"/></div>
+        <div class="icon"><img src="$cdnbaseurl$/img/chat.png" width="32" height="32" alt="Chat"/></div>
         <div class="hover">
           <p>$_vivochaChatNow()$</p>
           <small>$_vivochaLiveChat()$</small>

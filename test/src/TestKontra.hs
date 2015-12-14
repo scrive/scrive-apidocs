@@ -295,6 +295,7 @@ mkContext lang = do
         , ctxnormalizeddocuments = docs
         , ctxipnumber = noIP
         , ctxproduction = False
+        , ctxcdnbaseurl = ""
         , ctxtemplates = localizedVersion lang globaltemplates
         , ctxglobaltemplates = globaltemplates
         , ctxlang = lang
