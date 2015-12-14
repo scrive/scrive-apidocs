@@ -358,7 +358,10 @@ return React.createClass({
       }
     },
     isLeftMouseButton: function (drawingMethod, e) {
-      if (drawingMethod !== "mouse") {
+      if (BrowserInfo.isIE10() && drawingMethod === "ms") {
+        // 1 is "left" click
+        return e.buttons === 1;
+      } else if (drawingMethod !== "mouse") {
         // other drawing methods don't have buttons
         return true;
       } else if (e.buttons !== undefined) {

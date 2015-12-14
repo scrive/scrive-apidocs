@@ -39,6 +39,9 @@ window.BrowserInfo = {
     isSafari: function() {
       return !BrowserInfo.isChrome() && navigator.userAgent.match(/Safari/i) != null;
     },
+    isIE10 : function() {
+      return BrowserInfo.isIE() && !BrowserInfo.isWindowsPhone() && $.browser.version === "10.0";
+    },
     isIE9orLower : function() {
       return BrowserInfo.isIE() && !BrowserInfo.isWindowsPhone() && ($.browser.version > "3" && $.browser.version <= "9.0");
     },
