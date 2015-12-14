@@ -12,8 +12,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       arrow: React.PropTypes.func.isRequired,
       imageSrc: React.PropTypes.string.isRequired,
       imageComplete: React.PropTypes.bool.isRequired,
-      imageWidth: React.PropTypes.number.isRequired,
-      imageHeight: React.PropTypes.number.isRequired
+      width: React.PropTypes.number.isRequired,
+      height: React.PropTypes.number.isRequired
     },
 
     mixins: [BackboneMixin.BackboneMixin],
@@ -35,8 +35,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var self = this;
       var page = self.props.model;
       var file = page.file();
-      var imageWidth = self.props.imageWidth;
-      var imageHeight = self.props.imageHeight;
+      var width = self.props.width;
+      var height = self.props.height;
       var doc = file.document();
 
       return _.map(doc.allPlacements(), function (placement, index) {
@@ -45,8 +45,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
 
           var args = {
             model: placement,
-            width: imageWidth,
-            height: imageHeight,
+            pageWidth: width,
+            pageHeight: height,
             signview: self.props.signview,
             arrow: self.props.arrow
           };
@@ -81,8 +81,13 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var imageSrc = this.props.imageSrc;
       var imageComplete = this.props.imageComplete;
 
+      var pageStyle = {
+        width: this.props.width + "px",
+        height: this.props.height + "px"
+      };
+
       return (
-        <div id={"page" + page.number()} className="pagediv">
+        <div style={pageStyle} id={"page" + page.number()} className="pagediv">
           <img src={imageSrc} />
           {/* if */ imageComplete && !doc.closed() &&
             this.renderFields()

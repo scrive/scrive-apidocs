@@ -1,6 +1,9 @@
 @import "vars";
+@import "../branding/elements";
 
 .document-pages {
+  position: relative;
+  text-align: center;
   background-color: @signview-bg;
   text-align: left;
   box-shadow: inset 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
@@ -11,18 +14,61 @@
     box-sizing: content-box;
   }
 
-  .signatureBox.forDrawing {
-    border-width: 2px;
-    margin-left: -2px;
-    margin-top: -2px;
+  .signatureBox {
+    background-color: @white;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=95)";
+    min-width: 10px;
+    text-align: center;
+    opacity: .95;
 
+    &.withImage {
+      background-color: transparent;
+    }
+
+    img {
+      -moz-opacity: 0.95;
+      filter: ~"alpha(opacity=95)";
+      opacity: 0.95;
+    }
+  }
+
+  .placedfield {
+    position: absolute;
+    &.active {
+      z-index: 1;
+    }
+  }
+
+  .placedcheckbox-noactive {
+    background: url(~"@{img-base-url}/checkbox-blue-unchecked.png") no-repeat scroll 0 0;
+
+    &.checked {
+      background: url(~"@{img-base-url}/checkbox-blue-checked.png") no-repeat scroll 0 0;
+    }
+  }
+
+  .waiting4page {
+    background-color: #fafafa;
+    background-image: url(~"@{img-base-url}/wait30trans.gif");
+    background-position: center center;
+    background-repeat: no-repeat;
+    border: 1px solid #777;
+    height: 100px;
+    margin: 10px auto;
+    width: 100%;
+    .box-shadow(0 0 8px rgba(80, 80, 80, 0.31));
+  }
+
+  .pagejpg {
+    width: 100%;
+  }
+
+  .signatureBox.forDrawing {
     &.signaturePlaceholder {
       color: @text-dark;
-      font-size: 16px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      border-width: 2px;
       border-style: solid;
     }
   }
@@ -32,6 +78,7 @@
   }
 
   .pagediv {
+    position: relative;
     width: 100%;
     margin-top: @signview-half-gutter;
     box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
@@ -46,18 +93,13 @@
   }
 
   .placedfield {
-
    .placedcheckbox,
    .placedcheckbox.checked {
       background-position: center;
-      margin-left: -10px;
-      margin-top: -10px;
-      padding: 10px;
     }
 
     &.to-fill-now {
       border-style: solid;
-      border-width : 2px;
       z-index: 1;
 
       .placedfield-placement-wrapper {
@@ -66,7 +108,6 @@
 
       .placedcheckbox {
         background: url("/img/checkbox-unchecked.png") no-repeat center center;
-        padding: 9px;
 
         &:active {
           background: url("/img/checkbox-active.png") no-repeat center center;

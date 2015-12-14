@@ -34,7 +34,6 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
 
     activateSignatureModal: function () {
       var self = this;
-      var size = this.size();
       var field = this.props.model.field();
 
       var width = window.innerWidth;
@@ -57,8 +56,8 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
         self._openTry = 0;
         new SignatureModal({
           field: field,
-          width: size.width,
-          height: size.height,
+          width: this.width(),
+          height: this.height(),
           arrow: this.props.arrow,
           signview: this.props.signview,
           onClose: function () {
@@ -84,13 +83,6 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
         "empty-signature": !hasImage
       });
 
-      var divStyle = {
-        cursor: drawing ? "pointer" : "",
-        zIndex: drawing ? "1" : ""
-      };
-
-      _.extend(divStyle, this.position(0, 0, Math.round));
-
       var boxClass = React.addons.classSet({
         "signatureBox": drawing,
         "forDrawing": drawing,
@@ -100,14 +92,29 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
         "optional": !field.obligatory()
       });
 
-      var size = this.size(_.identity);
+      var width = this.width();
+      var height = this.height();
+      var top = Math.round(this.top());
+      var left = Math.round(this.left());
 
-      var boxStyle = {
-        lineHeight: size.height + "px",
-        cursor: drawing ? "pointer" : ""
+      var divStyle = {
+        cursor: drawing ? "pointer" : "",
+        zIndex: drawing ? "1" : "",
+        top: top,
+        left: left
       };
 
-      _.extend(boxStyle, size);
+      divStyle.fontSize = (this.scale() * 16) + "px";
+
+      var boxStyle = {
+        lineHeight: height + "px",
+        cursor: drawing ? "pointer" : "",
+        marginLeft: (-2 * this.scale()) + "px",
+        marginTop: (-2 * this.scale()) + "px",
+        borderWidth: this.borderWidth(),
+        width: width,
+        height: height
+      };
 
       return (
           <div className={divClass} style={divStyle}>
@@ -117,7 +124,7 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
                   <span>{localization.signature.clickToDraw}</span>
                 }
                 {/* else if */ hasImage &&
-                  <img src={image} style={size} />
+                  <img src={image} style={{width: width, height: height}} />
                 }
               </div>
             }

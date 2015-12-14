@@ -5,6 +5,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       model: React.PropTypes.instanceOf(File).isRequired,
       signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
       arrow: React.PropTypes.func.isRequired,
+      width: React.PropTypes.number.isRequired,
       pixelWidth: React.PropTypes.number.isRequired
     },
 
@@ -103,8 +104,10 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var imageWidth = image.width;
       var imageHeight = image.height;
 
-      var width = imageWidth;
-      var height = imageHeight;
+      var ratio = this.props.width / imageWidth;
+
+      var width = this.props.width;
+      var height = ratio * imageHeight;
 
       return (
         <FilePageView
@@ -112,10 +115,10 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
           model={page}
           arrow={this.props.arrow}
           signview={this.props.signview}
+          width={width}
+          height={height}
           imageSrc={image.src}
           imageComplete={image.complete}
-          imageWidth={width}
-          imageHeight={height}
         />
       );
     },

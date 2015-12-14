@@ -176,6 +176,7 @@ define([
               <FileView
                 ref="fileView"
                 pixelWidth={this.state.pixelWidth}
+                width={this.state.pixelWidth}
                 model={doc.mainfile()}
                 signview={model}
                 arrow={function () { return model.arrow(); }}
