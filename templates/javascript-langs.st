@@ -1209,7 +1209,6 @@ javascriptLocalisation =
             , workday              : "$_pageFooterWorkDay()$"
             , address              : "$_pageFooterAddress()$"
             , address1             : "$_pageFooterAddress1()$"
-            , address2             : "$_pageFooterAddress2()$"
             , address3             : "$_pageFooterAddress3()$"
             , address4             : "$_pageFooterAddress4()$"
             , giveFeedback          : "$_pageFooterGiveFeedback()$"
