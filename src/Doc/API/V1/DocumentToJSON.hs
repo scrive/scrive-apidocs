@@ -9,7 +9,6 @@ module Doc.API.V1.DocumentToJSON (
     , docForListCSVHeaderV1
   ) where
 
-import Control.Conditional ((<|), (|>))
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -420,31 +419,29 @@ signatoryStatusClass doc sl =
     _ -> SCSent
 
 -- Converting document into entries in CSV
-docForListCSVV1::  Int -> Document -> [[String]]
-docForListCSVV1 agr doc = map (signatoryForListCSV agr doc) $ [Nothing] <| null interestingLinks |> map Just interestingLinks
-    where interestingLinks = filter (\x-> isSignatory x && getSmartName x /= "") (documentsignatorylinks doc)
+docForListCSVV1 :: Document -> [[String]]
+docForListCSVV1 doc = map (signatoryForListCSV doc) $ documentsignatorylinks doc
 
-
-
-signatoryForListCSV::  Int -> Document -> (Maybe SignatoryLink) -> [String]
-signatoryForListCSV _agr doc msl = [
+signatoryForListCSV :: Document -> SignatoryLink -> [String]
+signatoryForListCSV doc sl = [
               ("'" ++ show (documentid doc) ++ "'") -- Exel trick
             , documenttitle doc
             , show $ documentstatusclass doc
             , getAuthorName $ doc
             , formatTimeSimple $ (documentctime doc)
             , maybe "" formatTimeSimple $ signtime <$> documentinvitetime doc
-            , maybe "" formatTimeSimple $ join $ maybereadinvite <$> msl
-            , maybe "" formatTimeSimple $ signtime <$> (join $ maybeseeninfo <$> msl)
-            , maybe "" formatTimeSimple $ signtime <$> (join $ maybesigninfo <$> msl)
-            , fromMaybe  "" $ getFullName <$> msl
-            , fromMaybe  "" $ getEmail <$> msl
-            , fromMaybe  "" $ getPersonalNumber <$> msl
-            , fromMaybe  "" $ getCompanyName <$> msl
-            , fromMaybe  "" $ getCompanyNumber <$> msl
+            , maybe "" formatTimeSimple $ maybereadinvite sl
+            , maybe "" formatTimeSimple $ signtime <$> maybeseeninfo sl
+            , maybe "" formatTimeSimple $ signtime <$> maybesigninfo sl
+            , if signatoryispartner sl then "Signing party" else "Viewer"
+            , getFullName sl
+            , getEmail sl
+            , getPersonalNumber sl
+            , getCompanyName sl
+            , getCompanyNumber sl
             ] ++ (map fieldValue $ sortBy fieldNameSort customFieldsOrCheckbox)
     where
-        customFieldsOrCheckbox = filter isCustomOrCheckbox  $ concat $ maybeToList $ signatoryfields <$> msl
+        customFieldsOrCheckbox = filter isCustomOrCheckbox $ signatoryfields sl
         fieldNameSort sf1 sf2 = case (fieldIdentity sf1, fieldIdentity sf2) of
                                   (TextFI n1 , TextFI n2 ) -> compare n1 n2
                                   (TextFI _ ,_) -> GT
@@ -461,6 +458,7 @@ signatoryForListCSV _agr doc msl = [
                                  (TextFT) -> True
                                  (CheckboxFT) -> True
                                  _ -> False
+
 docForListCSVHeaderV1 :: [String]
 docForListCSVHeaderV1 = [
                           "Id"
@@ -472,6 +470,7 @@ docForListCSVHeaderV1 = [
                         , "Party read invitation"
                         , "Party seen document"
                         , "Party signed document"
+                        , "Party role"
                         , "Party name"
                         , "Party mail"
                         , "Party personal number"
