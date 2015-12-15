@@ -208,6 +208,7 @@ var PageTasksArrowView = Backbone.View.extend({
     view.listenTo(view.model, "change", view.render);
     $(window).on("resize", view.updateArrow);
     $(window).on("scroll", view.onScroll);
+    this.startDisabled = args.disabled;
     this.render();
   },
   blink : function() {
@@ -219,8 +220,10 @@ var PageTasksArrowView = Backbone.View.extend({
         this.arrow.disable();
   },
   enable: function() {
-    if (this.arrow != undefined)
+    if (this.arrow != undefined) {
+        this.startDisabled = false;
         this.arrow.enable();
+    }
   },
   taskArrow : function(task) {
         var view = this;
@@ -297,6 +300,9 @@ var PageTasksArrowView = Backbone.View.extend({
       if (this.model.active() != undefined)
           {
               this.arrow = this.taskArrow(this.model.active());
+              if (this.arrow && this.startDisabled) {
+                this.arrow.disable();
+              }
               if (this.arrow != undefined)
                   $(this.el).append(this.arrow.el());
               this.trigger("change:arrow");
@@ -343,8 +349,10 @@ var PageTasksArrowView = Backbone.View.extend({
 
 window.PageTasksArrow = function(args){
         var model = args.tasks;
+        var disabled = args.disabled;
         var view = new PageTasksArrowView({
                         model: model,
+                        disabled: disabled,
                         el : $("<div/>")
                     });
         return {

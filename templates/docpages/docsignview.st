@@ -11,30 +11,8 @@ signviewAnalyticsVariables=
 </script>
 ####
 signviewScaleReset=
-    <meta name="viewport" content="width=1040, user-scalable=no" />
-    <script type="text/javascript">
-      require(['legacy_code'], function() {
-        jQuery(document).ready(function() {
-          if (BrowserInfo.isAndroid() && BrowserInfo.isFirefox()) {
-            // In firefox on android initial scale computing is broken, and we need to recompute it.
-            // Also for FF meta tags needs to be appended to head, not only changed
-            setTimeout(function() {
-              var scale = (window.innerWidth / 1040);
-              scale = scale > 1 ? "1.0" : (scale + "").substring(0,4)
-              jQuery('head').append("<meta name='viewport' content='width=1040, user-scalable=no, initial-scale="+scale+"'/>");
-              setTimeout(function() {
-                  jQuery('head').append("<meta name='viewport' content='width=1040, user-scalable=yes'/>");
-                }, 200);
-              }, 200);
-          } else {
-            setTimeout(function() {
-              jQuery('meta[name=viewport]').attr('content','width=1040, user-scalable=yes');
-            }, 200);
-          }
-
-        });
-      });
-    </script>
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
+    <script type="text/javascript"></script>
 ####
 padLogin=$doctype()$
 $htmlopentag()$

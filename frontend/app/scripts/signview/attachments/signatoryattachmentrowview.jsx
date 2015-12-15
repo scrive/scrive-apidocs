@@ -1,6 +1,6 @@
 define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutton", "common/backbone_mixin",
-  "signview/tasks/task_mixin"],
-  function (legacy_code, React, Backbone, Button, UploadButton, BackboneMixin, TaskMixin) {
+  "signview/tasks/task_mixin", "signview/is_small_view"],
+  function (legacy_code, React, Backbone, Button, UploadButton, BackboneMixin, TaskMixin, isSmallView) {
 
   var UploadArea = React.createClass({
     propTypes: {
@@ -78,11 +78,6 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
       var self = this;
       var model = self.props.model;
 
-      var uploadClass = React.addons.classSet({
-        "signview-button": true,
-        "signview-upload-button": true
-      });
-
       return (
         <div>
           <UploadButton
@@ -90,7 +85,6 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
             size="small"
             name="file"
             type="action"
-            className={uploadClass}
             text={localization.signatoryAttachmentUploadButton}
             onError={function () {
               model.notLoading();
@@ -165,28 +159,32 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
 
       return (
         <div className="section signatory-attachment">
-          <div className="col-xs-7 left">
-            <table>
-              <tbody>
-                <tr>
-                  <td rowSpan="2"><div className="paperclip" /></td>
-                  <td><h1>{model.name()}</h1></td>
-                </tr>
-                <tr>
-                  <td><p className="desc">{model.description()}</p></td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="col-sm-6 left">
+            <h1>
+              <span className="paperclip" />
+              {model.name()}
+            </h1>
+            <p className="desc">{model.description()}</p>
           </div>
-          <div className="col-xs-5 right">
+          <div className="col-sm-6 right">
             {/* if */ isLoading && !hasFile &&
-              <div>
+              <div className="loader">
                 <div className="loading" />
               </div>
             }
             {/* if */ hasFile && !isLoading &&
               <span>
-                <div className="button-group small-buttons">
+                <div className={canUpload && "button-group small-buttons"}>
+                  {/* if */ isSmallView() &&
+                    <p className="file-name">{model.file().name()}</p>
+                  }
+                  <Button
+                    text={localization.reviewPDF}
+                    className="show-attachment"
+                    onClick={function () {
+                      window.open(model.file().downloadLink(), "_blank");
+                    }}
+                  />
                   {/* if */ canUpload &&
                     <Button
                       text={localization.deletePDF}
@@ -209,15 +207,10 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
                       }}
                     />
                   }
-                  <Button
-                    text={localization.reviewPDF}
-                    className="show-attachment"
-                    onClick={function () {
-                      window.open(model.file().downloadLink(), "_blank");
-                    }}
-                  />
                 </div>
-                <p className="help">{model.file().name()}</p>
+                {/* if */ !isSmallView() &&
+                  <p className="file-name">{model.file().name()}</p>
+                }
               </span>
             }
             <span style={uploadStyle}>

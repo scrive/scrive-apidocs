@@ -3,10 +3,19 @@
 .parties {
   ul {
     margin-bottom: @signview-gutter;
+
+    .on-small-view({
+      margin-bottom: @signview-gutter;
+    });
   }
 
   li {
     margin-top: 5px;
+
+    .on-small-view({
+      margin-top: 0;
+    });
+
     white-space: normal;
 
     &:first-child {
@@ -15,7 +24,11 @@
   }
 
   .row {
-    margin-top: @signview-gutter;
+    margin-bottom: @signview-gutter;
+
+    .on-small-view({
+      margin-bottom: @signview-gutter;
+    });
 
     &:first-child {
       margin-top: 0;
@@ -23,11 +36,21 @@
   }
 
   .title {
-    margin-bottom: 45px;
+    margin-bottom: @signview-section-padding;
+
+    .on-small-view({
+      margin-bottom: @signview-gutter;
+    });
   }
 
   .name {
     margin-bottom: @signview-gutter;
+    font-weight: 300;
+
+    .on-small-view({
+      margin-bottom: @signview-gutter;
+      font-size: @signview-small-font-size-large;
+    });
   }
 
   .statustext {

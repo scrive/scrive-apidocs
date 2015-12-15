@@ -1,9 +1,5 @@
 @import "vars";
 
-body {
-  background-color: @signview-bg;
-}
-
 @import "../branding/reset";
 @import "../branding/elements";
 
@@ -17,6 +13,13 @@ body {
 
 @import "../utils";
 @import "../hubspot";
+
+@import "flash";
+
+body {
+  background-color: @signview-bg !important;
+  line-height: 1.2em !important;
+}
 
 .signview {
   word-wrap: break-word;
@@ -37,5 +40,7 @@ body {
   @import "drawer";
   @import "arrows";
   @import "feedback";
-  @import "../postsignview/create_account_section";
+  @import "loading";
+  @import "create_account_section";
+  @import "extradetails";
 }

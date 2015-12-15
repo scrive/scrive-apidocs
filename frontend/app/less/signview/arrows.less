@@ -1,5 +1,6 @@
 @import '../branding/elements';
 @import '../branding/variables';
+@import "vars";
 
 .arrows {
   @scroll-arrow-size: 102px; // this must be synced with arrows.js
@@ -23,7 +24,7 @@
     height: @scroll-arrow-size;
     min-width: @scroll-arrow-size;
     position: fixed;
-    z-index: 999;
+    z-index: @signview-overlay-z-index + 2;
   }
 
   .down.arrow {
@@ -45,7 +46,7 @@
   .action-arrow {
     display: block;
     position: absolute;
-    z-index: 999;
+    z-index: @signview-overlay-z-index + 2;
   }
 
   .front {

@@ -42,7 +42,8 @@ define(["Backbone", "React", "common/backbone_mixin", "legacy_code"], function (
     },
 
     borderWidth: function () {
-      return this.scale() * STANDARD_BORDER;
+      var border = this.scale() * STANDARD_BORDER;
+      return border < 1 ? 1 : border;
     }
   };
 });

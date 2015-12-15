@@ -75,7 +75,6 @@ define([
       }
 
       return "sign";
-
     },
 
     isValidStep: function (step) {
@@ -218,10 +217,10 @@ define([
 
       var pinParam = signatory.smsPinAuthenticationToSign() ? {pin: pin} : {};
 
-      self.setStep("process");
-      self.setSignedStatus(0);
-
       document.checksign(function () {
+        self.setStep("process");
+        self.setSignedStatus(0);
+
         new FlashMessagesCleaner();
 
         document.takeSigningScreenshot(function () {

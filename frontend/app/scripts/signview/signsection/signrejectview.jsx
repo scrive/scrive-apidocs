@@ -21,15 +21,15 @@ define(["Underscore", "Backbone", "React", "common/button"],
       return (
         <div>
           <div className="row">
-            <div className="col-xs-12">
+            <div className="col-sm-12">
               <h1>{localization.process.signatorycancelmodaltitle}</h1>
             </div>
           </div>
           <div className="row">
-            <div className="col-xs-5 left">
+            <div className="col-sm-6 left">
               <p>{localization.process.signatorycancelmodaltext}</p>
             </div>
-            <div className="col-xs-7 right">
+            <div className="col-sm-6 right">
               <div className="reject-textarea">
                 <p className="label"><label htmlFor="text">{localization.signviewMessage}</label></p>
                 <textarea
@@ -42,17 +42,17 @@ define(["Underscore", "Backbone", "React", "common/button"],
             </div>
           </div>
           <div className="row">
-            <div className="col-xs-12 right">
+            <div className="col-sm-12 right">
               <div className="button-group">
-                <Button
-                  className="transparent-button"
-                  text={localization.toStart.backFromSigningPage}
-                  onClick={this.props.onBack}
-                />
                 <Button
                   className="button-reject"
                   text={localization.reject.send}
                   onClick={this.handleReject}
+                />
+                <Button
+                  className="transparent-button"
+                  text={localization.toStart.backFromSigningPage}
+                  onClick={this.props.onBack}
                 />
               </div>
             </div>

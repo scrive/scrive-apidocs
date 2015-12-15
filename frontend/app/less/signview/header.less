@@ -1,11 +1,19 @@
 @import "vars";
 
 .header {
-  @breakpoint: 1040px + 20px; // for some reason @container-lg + @signview-gutter does not work here, bug in LESS?
+  @breakpoint: (@container-lg + @signview-gutter * 2);
   height: @signview-header-height;
+
+  .on-small-view({
+    height: @signview-header-height-small;
+  });
 
   .main, .row, .col-xs-6 {
     height: @signview-header-height;
+
+    .on-small-view({
+      height: @signview-header-height-small;
+    });
   }
 
   .main {
@@ -17,19 +25,37 @@
       padding: 0 @signview-gutter;
     }
 
+    .on-small-view({
+      padding: 0 @signview-half-gutter;
+    });
+
     .link {
       display: inline-block;
       line-height: @signview-header-height;
+
+      .on-small-view({
+        line-height: @signview-header-height-small;
+      });
     }
 
     .logo {
       max-width: 172px;
       max-height: 52px;
+
+      .on-small-view({
+        max-width: 104px;
+        max-height: 20px;
+      });
+    }
+
+    .content {
+      text-align: right;
     }
 
     .info {
       white-space: nowrap;
       overflow: hidden;
+      line-height: 1em;
       text-overflow: ellipsis;
     }
   }

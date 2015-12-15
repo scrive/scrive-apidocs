@@ -9,7 +9,7 @@
   height: 100%;
   left: 0px;
   position: fixed;
-  overflow: auto;
+  overflow: hidden;
   top: 0px;
   width: 100%;
   z-index: @signview-drawer-z-index;
@@ -59,6 +59,37 @@
       background-color: @signview-bg;
       border-top: @signview-grey;
       padding: 18px;
+
+      .on-small-view({
+        padding: 0px;
+      });
+
+      .small-block-button() {
+        display: block;
+        font-size: @signview-small-font-size-large;
+        font-weight: 400;
+        line-height: normal;
+        width: auto;
+      }
+
+      .cancel-clear {
+        float: left;
+
+        .on-small-view({
+          .small-block-button();
+          float: none;
+          font-size: @signview-small-font-size-small;
+        });
+      }
+
+      .next {
+        float: right;
+
+        .on-small-view({
+          .small-block-button();
+          float: none;
+        });
+      }
     }
 
     .drawing-area {
@@ -74,7 +105,7 @@
           position: absolute;
           width: 100%;
           bottom: @margin-bottom;
-          margin-bottom: -50px;
+          margin-bottom: -6%;
         }
 
         .instruction {

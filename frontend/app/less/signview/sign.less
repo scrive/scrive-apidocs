@@ -5,6 +5,10 @@
 
   h1, p, dl, .checkbox-box {
     margin-bottom: @signview-gutter;
+
+    .on-small-view({
+      margin-bottom: @signview-half-gutter;
+    });
   }
 
   .pin-phone {
@@ -25,6 +29,14 @@
     &:first-child {
       margin-top: 0;
     }
+  }
+
+  .center-block {
+    width: 475px !important;
+
+    .on-small-view({
+      width: 100% !important;
+    });
   }
 
   .inactive {
@@ -55,6 +67,11 @@
     }
 
     width: 378px;
+    max-width: 100%;
+
+    .on-small-view({
+      width: 100%;
+    });
   }
 
   .status-box {

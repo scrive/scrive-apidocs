@@ -4,10 +4,18 @@
   table {
     table-layout: fixed;
     width: 100%;
+
+    .on-small-view({
+      margin-bottom: @signview-half-gutter;
+    });
   }
 
   td {
     vertical-align: middle;
+  }
+
+  h1, .checkbox-box, .desc {
+    margin-bottom: @signview-half-gutter;
   }
 
   td:first-child {
@@ -15,13 +23,12 @@
     padding-right: @signview-half-gutter;
   }
 
-  .paperclip {
-    margin-top: 6px;
-    margin-bottom: 6px;
-    margin-right: @signview-half-gutter;
-    background-image: url(/img/paperclip.png);
-    width: 30px;
-    height: 39px;
+  .loader {
+    text-align: right;
+
+    .on-small-view({
+      text-align: center;
+    });
   }
 
   .loading {
@@ -33,9 +40,46 @@
 
   .help {
     margin-top: @signview-half-gutter;
+
+    .on-small-view({
+      display: block;
+      text-align: left;
+    });
   }
 
-  .desc {
-    margin-left: 2px;
+  .file-name {
+    margin-top: @signview-half-gutter;
+
+    .on-small-view({
+      display: block;
+      text-align: left;
+      margin-bottom: @signview-half-gutter;
+    });
+  }
+
+  .loader {
+    .on-small-view({
+      text-align: center;
+    });
+  }
+
+  .hide-button {
+    float: right;
+
+    .on-small-view({
+      float: none;
+    });
+  }
+
+  .upload-button {
+    .on-small-view({
+      display: block;
+      width: 100%;
+
+      .button {
+        display: block;
+        width: 100%;
+      }
+    });
   }
 }

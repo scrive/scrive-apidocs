@@ -1,6 +1,6 @@
 define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/infotextinput",
-  "signview/tasks/task_mixin"],
-  function (legacy_code, _, Backbone, React, Button, InfoTextInput, TaskMixin) {
+  "signview/tasks/task_mixin", "signview/is_small_view"],
+  function (legacy_code, _, Backbone, React, Button, InfoTextInput, TaskMixin, isSmallView) {
 
   return React.createClass({
     mixins: [TaskMixin],
@@ -82,8 +82,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
       });
 
       var divClass = React.addons.classSet({
-        "col-xs-6": !BrowserInfo.isSmallScreen(),
-        "col-xs-12": BrowserInfo.isSmallScreen(),
+        "col-xs-6": !isSmallView(),
+        "col-xs-12": isSmallView(),
         "center-block": true
       });
 
@@ -96,6 +96,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
               <dd>
                 <InfoTextInput
                   id="phone"
+                  inputtype="tel"
                   infotext={localization.phoneInfoText}
                   autocomplete={false}
                   ref="phoneInput"

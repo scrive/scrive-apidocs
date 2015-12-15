@@ -6,6 +6,7 @@ define(["React", "Backbone", "Underscore"],
       hasChangedPin: false,
       hasTakenFirstScreenshot: false,
       hasSentTrackingData: false,
+      arrowDisabled: false,
       tasks: []
     },
 
@@ -92,7 +93,7 @@ define(["React", "Backbone", "Underscore"],
     },
 
     hasRejectOption: function () {
-      return this.document().showrejectoption() && !BrowserInfo.isSmallScreen();
+      return this.document().showrejectoption();
     },
 
     hasSignSection: function () {
@@ -102,8 +103,7 @@ define(["React", "Backbone", "Underscore"],
 
     hasSignatoriesSection: function () {
       return !this.document().closed()
-             && !BrowserInfo.isSmallScreen()
-             && _.filter(this.document().signatories(), function (sig) {return sig.signs();}).length > 1;
+        && _.filter(this.document().signatories(), function (sig) {return sig.signs();}).length > 1;
     },
 
     hasAuthorAttachmentsSection: function () {
@@ -270,13 +270,22 @@ define(["React", "Backbone", "Underscore"],
     },
 
     clearArrow: function () {
+      var arrow = this.get("arrow");
+      var disabled = this.get("arrowDisabled");
+
+      if (arrow && arrow.view() && arrow.view().arrow) {
+        disabled = arrow.view().arrow.isDisabled();
+      }
+
+      this.set("arrowDisabled", disabled, {silent: true});
       this.set("arrow", undefined, {silent: true});
     },
 
     arrow: function () {
       if (this.get("arrow") == undefined) {
         var arrow = new PageTasksArrow({
-          tasks: this.tasks()
+          tasks: this.tasks(),
+          disabled: this.get("arrowDisabled")
         });
 
         this.set({arrow: arrow}, {silent: true});

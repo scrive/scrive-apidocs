@@ -33,7 +33,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
             self.props.model.setAccepted(true);
           },
           tipSide: "left",
-          el: $(self.getDOMNode()),
+          el: $(self.refs.checkbox.getDOMNode()),
           pointSelector: ".checkbox",
           margin: 5
         })];
@@ -77,33 +77,30 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         "for-signing": canSign
       });
 
+      var fullClass = React.addons.classSet({
+        "col-sm-7": true,
+        "full-height": model.isRequired() && canSign
+      });
+
       return (
         <span>
           <div className="section author-attachment">
-            <div className="col-xs-7 left">
-              <table>
-                <tbody>
-                  <tr>
-                    <td rowSpan="2"><div className="paperclip"/></td>
-                    <td><h1>{model.name()}</h1></td>
-                  </tr>
-                  <tr>
-                    <td>
-                      { /* if */ model.isRequired() && canSign && !showPages &&
-                        <Checkbox
-                          ref="checkbox"
-                          className="large-checkbox branded-checkbox"
-                          checked={model.isAccepted()}
-                          label={localization.docsignview.authorAttachmentsUnderstoodContent}
-                          onChange={function (v) { model.setAccepted(v);}}
-                        />
-                      }
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div className="col-sm-7 left">
+              <h1>
+                <span className="paperclip"/>
+                {model.name()}
+              </h1>
+              {/* if */ model.isRequired() && canSign && !showPages &&
+                <Checkbox
+                  ref="checkbox"
+                  className="large-checkbox branded-checkbox"
+                  checked={model.isAccepted()}
+                  label={localization.docsignview.authorAttachmentsUnderstoodContent}
+                  onChange={function (v) { model.setAccepted(v);}}
+                />
+              }
             </div>
-            <div className="col-xs-5 right">
+            <div className="col-sm-5 right">
               <div className="button-group small-buttons">
                 <Button
                   className={buttonClass}
@@ -132,12 +129,12 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
             </div>
           }
           {/* if */ showPages &&
-            <div className="section">
+            <div className="section author-attachment">
               <div className="positioned">
-                <div className="col-xs-7 full-height">
+                <div className={fullClass}>
                   <div className="vertical">
                     <div className="middle">
-                      { /* if */ model.isRequired() && canSign &&
+                      {/* if */ model.isRequired() && canSign &&
                         <Checkbox
                           ref="checkbox"
                           className="large-checkbox branded-checkbox"
@@ -149,7 +146,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
                     </div>
                   </div>
                 </div>
-                <div className="col-xs-5 pull-right right">
+                <div className="col-sm-5 right hide-button">
                   <div className="button-group small-buttons">
                     <Button
                       className={buttonClass}

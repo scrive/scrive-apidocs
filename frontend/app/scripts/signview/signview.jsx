@@ -15,7 +15,9 @@ define([
   "signview/footer",
   "signview/postsignview",
   "signview/tasks/taskarrows",
-  "signview/overlay"
+  "signview/overlay",
+  "signview/is_small_view",
+  "signview/is_medium_view"
 ], function (
   Backbone,
   React,
@@ -33,7 +35,9 @@ define([
   Footer,
   PostSignView,
   TaskArrows,
-  Overlay
+  Overlay,
+  isSmallView,
+  isMediumView
 ) {
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -98,12 +102,12 @@ define([
     componentDidMount: function () {
       var self = this;
       var model = self.state.model;
+      $(window).resize(this.handleResize);
       model.recall();
       ReloadManager.pushBlock(model.blockReload);
       onElementHeightChange(self.getDOMNode(), function () {
         model.updateArrowPosition();
       });
-
     },
 
     componentDidUpdate: function () {
@@ -135,6 +139,21 @@ define([
       this.setState({overlay: false});
     },
 
+    handleResize: function () {
+      this.forceUpdate();
+    },
+
+    documentWidth: function () {
+      if (!this.refs.fileView) {
+        return 0;
+      }
+
+      var $main = $(this.refs.fileView.getDOMNode());
+      var width = $main.width();
+
+      return width;
+    },
+
     render: function () {
       var self = this;
       var model = this.state.model;
@@ -143,7 +162,7 @@ define([
 
       return (
         <div className="signview">
-          {/* if */ doc.showheader() && !isSmallScreen &&
+          {/* if */ doc.showheader() &&
             <Header
               document={doc}
               documentid={this.props.documentId}
@@ -179,7 +198,7 @@ define([
               <FileView
                 ref="fileView"
                 pixelWidth={this.state.pixelWidth}
-                width={this.state.pixelWidth}
+                width={this.documentWidth()}
                 model={doc.mainfile()}
                 signview={model}
                 arrow={function () { return model.arrow(); }}
@@ -194,7 +213,11 @@ define([
                 <SignatoryAttachmentsView model={doc} />
               }
               {/* if */ model.hasExtraDetailsSection() &&
-                <ExtraDetailsView model={doc.currentSignatory()} signview={model} />
+                <ExtraDetailsView
+                  model={doc.currentSignatory()}
+                  signview={model}
+                  isVertical={isSmallView() || isMediumView()}
+                />
               }
               {/* if */ model.hasSignatoriesSection() &&
                 <DocumentViewSignatories model={doc} />
@@ -207,7 +230,7 @@ define([
                   disableOverlay={this.disableOverlay}
                 />
               }
-              {/* if */ doc.showfooter() && !isSmallScreen &&
+              {/* if */ doc.showfooter() &&
                 <Footer/>
               }
             </div>
