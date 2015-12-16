@@ -10,11 +10,11 @@ import Mails.MailsConfig
 import User.Model
 
 data MailContext = MailContext {
-  mctxhostpart :: String
-, mctxmailsconfig :: MailsConfig
-, mctxlang :: Lang
-, mctxcurrentBrandedDomain :: BrandedDomain
-, mctxtime :: UTCTime
+  mctxhostpart             :: !String
+, mctxmailsconfig          :: !MailsConfig
+, mctxlang                 :: !Lang
+, mctxcurrentBrandedDomain :: !BrandedDomain
+, mctxtime                 :: !UTCTime
 } deriving Show
 
 class Monad m => MailContextMonad m where

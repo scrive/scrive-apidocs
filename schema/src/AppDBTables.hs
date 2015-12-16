@@ -17,6 +17,7 @@ import DB.Model
 import DB.SQLFunction
 import Doc.API.Callback.Tables
 import Doc.AutomaticReminder.Tables
+import Doc.Sealing.Tables
 import Doc.SMSPin.Tables
 import Doc.Tables
 import Doc.Tokens.Tables
@@ -101,6 +102,8 @@ kontraTables =
   , tablePaymentStats
   , tableDocumentApiCallbackConsumers
   , tableDocumentApiCallbacks
+  , tableDocumentSealingConsumers
+  , tableDocumentSealingJobs
   , tableSessions
   , tableDocumentSessionTokens
   , tableCgiGrpTransactions

@@ -46,7 +46,7 @@ import BrandedDomain.Model
 import Crypto.RNG
 import DB
 import EID.CGI.GRP.Config
-import GuardTime (GuardTimeConf(..))
+import GuardTime
 import Happstack.Server.ReqHandler
 import HubSpot.Conf
 import IPAddress

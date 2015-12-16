@@ -1,10 +1,8 @@
 module Cron (main) where
 
-import Control.Concurrent.Lifted
 import Control.Monad
 import Control.Monad.Base
 import Data.Maybe
-import Data.Time
 import Database.PostgreSQL.Consumers
 import Log
 import System.Console.CmdArgs hiding (def)
@@ -30,6 +28,7 @@ import Doc.Action
 import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.Model
+import Doc.Sealing.Consumer
 import HostClock.Collector (collectClockError)
 import KontraPrelude hiding (All)
 import Log.Configuration
@@ -82,7 +81,7 @@ main = do
       checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
 
     pool <- liftBase . createPoolSource (liftBase . withLogger . logAttention_ . T.pack) $ connSettings kontraComposites
-    templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
+    templates <- liftBase readGlobalTemplates
     rng <- newCryptoRNGState
     filecache <- MemCache.new BS.length 52428800
 
@@ -100,17 +99,19 @@ main = do
         runScheduler :: Scheduler r -> CronM r
         runScheduler = runDB . CronEnv.runScheduler appConf filecache templates
 
+        docSealing = documentSealing appConf templates filecache pool
         apiCallbacks = documentAPICallback appConf runScheduler
         cron = cronQueue appConf mmixpanel templates runScheduler runDB
 
-    runCryptoRNGT rng $ do
-      finalize (localDomain "api callbacks" $ runConsumer apiCallbacks pool) $ do
-        finalize (localDomain "cron" $ runConsumer cron pool) $ do
-          liftBase waitForTermination
+    runCryptoRNGT rng
+      . finalize (localDomain "document sealing" $ runConsumer docSealing pool)
+      . finalize (localDomain "api callbacks" $ runConsumer apiCallbacks pool)
+      . finalize (localDomain "cron" $ runConsumer cron pool) $ do
+      liftBase waitForTermination
   where
     cronQueue :: AppConf
               -> Maybe (EventProcessor (DBCronM))
-              -> MVar (UTCTime, KontrakcjaGlobalTemplates)
+              -> KontrakcjaGlobalTemplates
               -> (forall r. Scheduler r -> CronM r)
               -> (forall r. DBCronM r -> CronM r)
               -> ConsumerConfig CronM JobType CronJob
@@ -164,11 +165,8 @@ main = do
           runScheduler $ actionQueue emailChangeRequest
           return . RerunAfter $ ihours 1
         FindAndDoPostDocumentClosedActions -> do
-          runScheduler $ findAndDoPostDocumentClosedActions Nothing
+          runScheduler findAndDoPostDocumentClosedActions
           return . RerunAfter $ ihours 6
-        FindAndDoPostDocumentClosedActionsNew -> do
-          runScheduler $ findAndDoPostDocumentClosedActions (Just 6) -- hours
-          return . RerunAfter $ iminutes 10
         FindAndExtendDigitalSignatures -> do
           runScheduler findAndExtendDigitalSignatures
           return . RerunAfter $ iminutes 30
@@ -220,9 +218,8 @@ main = do
         RecurlySynchronization -> do
           time <- runDB $ do
             time <- currentTime
-            temps <- snd <$> readMVar templates
             handleSyncWithRecurly appConf (mailsConfig appConf)
-              temps (recurlyAPIKey $ recurlyConfig appConf) time
+              templates (recurlyAPIKey $ recurlyConfig appConf) time
             handleSyncNoProvider time
             return time
           return . RerunAt $ nextDayMidnight time

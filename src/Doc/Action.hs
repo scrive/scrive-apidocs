@@ -21,6 +21,7 @@ import Text.StringTemplates.Templates (TemplatesMonad)
 import ActionQueue.Scheduler
 import Amazon (AmazonMonad)
 import AppConf (guardTimeConf)
+import BrandedDomain.BrandedDomain
 import Crypto.RNG
 import DB
 import DB.TimeZoneName
@@ -35,9 +36,9 @@ import Doc.DocumentMonad
 import Doc.DocUtils
 import Doc.Logging
 import Doc.Model
+import Doc.Sealing.Model
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryLinkID
-import ForkAction (forkAction)
 import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
 import Kontra
 import KontraPrelude
@@ -158,12 +159,7 @@ postDocumentPendingChange olddoc = do
       theDocument >>= logDocEvent "Doc Closed" author []
       asyncLogEvent SetUserProps [UserIDProp (userid author),
                                   someProp "Last Doc Closed" time]
-      commit -- ... so that the forked thread can see our changes
-      theDocument >>= \d -> forkAction ("Sealing document #" ++ show (documentid d) ++ ": " ++ (documenttitle d)) $ do
-        -- We fork so that the client can get the response to the
-        -- signing request without having to wait for the sealing
-        -- operations
-        postDocumentClosedActions True False)
+      dbUpdate . ScheduleDocumentSealing . bdid . ctxbrandeddomain =<< getContext)
   {-else-} $ do
       theDocument >>= triggerAPICallbackIfThereIsOne
       whenM ((\d -> documentcurrentsignorder d /= documentcurrentsignorder olddoc) <$> theDocument) $ do
@@ -233,24 +229,20 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
       theDocument >>= triggerAPICallbackIfThereIsOne
 
 -- | Post-process documents that lack final PDF or digital signature
-findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, MonadMask m, MonadIO m, MonadLog m, AmazonMonad m)
-  => Maybe Int -- ^ Only consider documents signed within the latest number of hours given.
-  -> m ()
-findAndDoPostDocumentClosedActions
-  mhours
-  = do
+findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, MonadMask m, MonadIO m, MonadLog m, AmazonMonad m) => m ()
+findAndDoPostDocumentClosedActions = do
   now <- currentTime
-  let signtimefilter = case mhours of
-        Nothing    -> []
-        Just hours -> [DocumentFilterByLatestSignTimeAfter ((60 * hours) `minutesBefore` now)]
 
-  docs <- dbQuery $ GetDocuments DocumentsOfWholeUniverse
-            ([ DocumentFilterStatuses [Closed] -- here we could include DocumentError as well to get automatic resealing attempted periodically
-             , DocumentFilterBySealStatus [Missing] -- sealed file lacks digital signature, or no sealed file at all
-             , DocumentFilterByLatestSignTimeBefore (5 `minutesBefore` now) -- avoid documents that the server is processing in its post-closed thread.
-             ] ++ signtimefilter)
-            [] 100
-  when (not (null docs)) $ do
+  docs <- dbQuery $ GetDocuments DocumentsOfWholeUniverse [
+      -- Here we could include DocumentError as well to get automatic
+      -- resealing attempted periodically.
+      DocumentFilterStatuses [Closed]
+      -- Sealed file lacks digital signature, or no sealed file at all.
+    , DocumentFilterBySealStatus [Missing]
+      -- Avoid documents that the server is processing in its post-closed thread.
+    , DocumentFilterByLatestSignTimeBefore (5 `minutesBefore` now)
+    ] [] 100
+  when (not $ null docs) $ do
     logInfo "findAndDoPostDocumentClosedActions: considering documents" $ object [
         "documents" .= length docs
       ]
