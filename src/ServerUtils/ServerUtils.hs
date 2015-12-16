@@ -8,7 +8,7 @@ module ServerUtils.ServerUtils (
 
 --import Happstack.Server hiding (dir, simpleHTTP)
 import Control.Monad.Trans
-import Data.Char (ord)
+import Data.Char (ord, toLower)
 import Data.Functor
 import Happstack.Server hiding (dir, simpleHTTP)
 import Log as Log
@@ -26,6 +26,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS (fromString)
 import qualified Data.ByteString.UTF8 as BSUTF8
+import qualified Happstack.Server.Response as Web
 import qualified Text.JSON.Gen as J
 
 import Happstack.Fields
@@ -56,11 +57,22 @@ handleParseCSV = do
   return res
 
 -- Read an image file from POST, and returns a its content encoded with Base64
-handleSerializeImage :: Kontrakcja m => m JSValue
+handleSerializeImage :: Kontrakcja m => m Response
 handleSerializeImage = do
-  logo <- guardJustM $ getFileField "logo"
-  runJSONGenT $ value "logo_base64" $ showJSON $ B64.encode logo
-
+  fileinput <- getDataFn' (lookInput "logo")
+  case fileinput of
+    Nothing -> badRequest' "Missing file"
+    Just (Input _ Nothing _) -> badRequest' "Missing file"
+    Just (Input contentspec (Just filename) _contentType) -> do
+      let hasExtension ext = ("." ++ ext) `isSuffixOf` map toLower filename
+      if hasExtension "png" || hasExtension "jpg" || hasExtension "jpeg" then do
+        content <- case contentspec of
+          Left filepath -> liftIO $ BS.readFile filepath
+          Right content' -> return $ BS.concat $ BSL.toChunks content'
+        goodRequest $ runJSONGen $ value "logo_base64" $ showJSON $ B64.encode content
+      else badRequest' "Not image"
+ where badRequest' s = return $ (setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ (s :: String)) {rsCode = 400}
+       goodRequest js = return $ (setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ encode js) {rsCode = 200}
 
 -- Read an image file from POST or /frontend/app directory, and return it scaled down to 60%, and base 64 encoded
 handleScaleImage :: Kontrakcja m => m JSValue
