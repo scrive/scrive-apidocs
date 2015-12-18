@@ -52,11 +52,10 @@ define(["React", "Backbone", "authorview/authorviewautomaticreminders",
     render: function () {
       var self = this;
       var document = this.props.document;
-      var signatories = document.signatories();
       var AuthorViewAutomaticReminders = Reminders.AuthorViewAutomaticReminders;
       var lastSignatoryIndex = self.hasList() ?
         self.currentIndex() : (self.isSingleSignatory() ? 0 : 1);
-      var lastSignatory = signatories[lastSignatoryIndex];
+      var lastSignatory = self.signatories()[lastSignatoryIndex];
 
       return (
         <div className="signatories section" >
