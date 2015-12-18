@@ -96,6 +96,7 @@ javascriptLocalisation =
                  , rejected :  "$_tooltiprejected()$"
                  , deliveryproblem : "$_tooltipdeliveryproblem()$"
                  , timeouted       : "$_tooltiptimedout()$"
+                 , template : "$_tooltiptemplate()$"
                  , problem           : "$_tooltiperror()$"
              }
              , listand : "$_listand()$"
