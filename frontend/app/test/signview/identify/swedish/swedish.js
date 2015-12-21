@@ -1,4 +1,4 @@
-define(["legacy_code", "backend", "util", "React", "signview/identify/swedish/swedishidentifymodel",
+define(["legacy_code_for_signview", "backend", "util", "React", "signview/identify/swedish/swedishidentifymodel",
         "signview/identify/swedish/swedishidentifyview", "signview/identify/swedish/swedishidentify",
         "signview/identify/swedish/swedishproblem", "signview/identify/swedish/swedishprocessing",
         "eleg/bankidsigning"],

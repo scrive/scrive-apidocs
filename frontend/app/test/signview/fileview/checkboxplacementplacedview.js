@@ -1,4 +1,4 @@
-define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/checkboxplacementplacedview"], function(legacy_code, backend, util, ImageShim, React, CheckboxPlacementPlacedView) {
+define(["legacy_code_for_signview", "backend", "util", "image", "React", "signview/fileview/checkboxplacementplacedview"], function(legacy_code, backend, util, ImageShim, React, CheckboxPlacementPlacedView) {
 
   var TestUtils = React.addons.TestUtils;
 
