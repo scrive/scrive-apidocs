@@ -1,14 +1,11 @@
 module Happstack.Fields where
 
-import Control.Monad.IO.Class
 import Happstack.Server
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Text.JSON as J
 
 import KontraPrelude
-import Utils.Monoid
 
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
 -- newer versions of happstack here is.  This should be droped when
@@ -48,17 +45,6 @@ readField name = (join . liftM maybeRead) `liftM` getField name
 getFieldBS :: (HasRqData m, ServerMonad m)
           => String -> m (Maybe BSLU.ByteString)
 getFieldBS name = (listToMaybe . reverse) `liftM` fromMaybe [] `liftM` getDataFn' (lookInputList name)
-
-
-getFileField :: (HasRqData m, MonadIO m, ServerMonad m)
-             => String -> m (Maybe BS.ByteString)
-getFileField name = do
-  finput <- getDataFn (lookInput name)
-  case finput of
-    Right (Input contentspec _ _) -> case contentspec of
-      Left filepath -> (emptyToNothing . BSL.toStrict) `liftM` liftIO (BSL.readFile filepath)
-      Right content -> return . emptyToNothing $ BSL.toStrict content
-    _ -> return Nothing
 
 -- | Useful inside the 'RqData' monad.  Gets the named input parameter
 -- (either from a @POST@ or a @GET@)

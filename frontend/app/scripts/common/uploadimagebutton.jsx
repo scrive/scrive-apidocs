@@ -49,8 +49,8 @@ define(['React','common/uploadbutton'], function(React,UploadButton) {
         url: '/serialize_image',
         ajax: true,
         ajaxerror: function (rs) {
-          if (rs.status === 400 && rs.responseText === "Not image") {
-            new FlashMessage({type: 'error', content : "File format is not supported. Select an image (PNG/JPG) instead."});
+          if (rs.status === 400) {
+            new FlashMessage({type: "error", content: localization.imageFileFormatNotSpported});
           }
         },
         ajaxsuccess: function (rs) {
