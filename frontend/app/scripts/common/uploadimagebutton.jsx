@@ -48,6 +48,11 @@ define(['React','common/uploadbutton'], function(React,UploadButton) {
         method: 'POST',
         url: '/serialize_image',
         ajax: true,
+        ajaxerror: function (rs) {
+          if (rs.status === 400) {
+            new FlashMessage({type: "error", content: localization.imageFileFormatNotSpported});
+          }
+        },
         ajaxsuccess: function (rs) {
           var response = JSON.parse(rs);
           var logo_base64 = response.logo_base64;
