@@ -36,7 +36,7 @@ data AppConf = AppConf {
   , dbConfig           :: T.Text                       -- ^ postgresql configuration
   , logConfig          :: LogConfig                    -- ^ logging configuration
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
-  , cdnBaseUrl         :: String                       -- ^ for CDN content in prod mode
+  , cdnBaseUrl         :: Maybe String                 -- ^ for CDN content in prod mode
   , guardTimeConf      :: GuardTimeConf
   , mailsConfig        :: MailsConfig                  -- ^ mail sendout configuration
   , liveDocxConfig     :: LiveDocxConf                 -- ^ LiveDocx doc conversion configuration
@@ -92,7 +92,7 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldDef "production" False
       production
       "Is this production server"
-  <*> fieldDef "cdn_base_url" ""
+  <*> fieldOpt "cdn_base_url"
       cdnBaseUrl
       "CDN base URL"
   <*> field "guardtime"
@@ -152,7 +152,7 @@ instance Default AppConf where
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
     , logConfig          = def
     , production         = True
-    , cdnBaseUrl         = ""
+    , cdnBaseUrl         = Nothing
     , guardTimeConf      = GuardTimeConf { guardTimeURL="http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
                                          , guardTimeExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
                                          , guardTimeControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"

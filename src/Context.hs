@@ -43,7 +43,7 @@ data Context = Context
     , ctxnormalizeddocuments :: RenderedPagesCache -- ^ Rendered jpeg pages
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
     , ctxproduction          :: Bool -- ^ Is this server the production server?
-    , ctxcdnbaseurl          :: String -- ^ CDN base URL, could be empty!
+    , ctxcdnbaseurl          :: Maybe String -- ^ CDN base URL if one shouild be used
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlang
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid langs
     , ctxlang                :: Lang -- ^ The current context lang
