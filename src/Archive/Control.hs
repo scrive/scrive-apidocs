@@ -144,7 +144,7 @@ handleListCSV= do
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
   let documentSorting = (toDocumentSorting <$> sorting)
   allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) documentFilters documentSorting 1000
-  let docsCSVs = concat $ zipWith docForListCSVV1  [1..] allDocs
+  let docsCSVs = concatMap docForListCSVV1 allDocs
   return $ CSV { csvFilename = "documents.csv"
                , csvHeader = docForListCSVHeaderV1
                , csvContent = docsCSVs

@@ -121,7 +121,7 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
              <div className="content">
                  <ul className="tree">
                      <li className="branch">{localization.footer.address1}</li>
-                     <li className="branch">{localization.footer.address2}</li>
+                     <li className="branch">Barnhusgatan 20</li>
                      <li className="branch">{localization.footer.address3}</li>
                      <li className="branch">{localization.footer.address4}</li>
                  </ul>

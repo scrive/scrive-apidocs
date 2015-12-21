@@ -206,19 +206,19 @@ handleUsageStatsJSONForUserMonths = do
     else getMonthsStats (Left $ userid user)
 
 getDaysStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
-getDaysStats = getStats PartitionByDay
+getDaysStats = getStats PartitionByDay (idays 30)
 
 getMonthsStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
-getMonthsStats = getStats PartitionByMonth
+getMonthsStats = getStats PartitionByMonth (imonths 6)
 
-getStats :: Kontrakcja m => StatsPartition -> Either UserID CompanyID -> m JSValue
-getStats statsPartition = \case
+getStats :: Kontrakcja m => StatsPartition -> Interval -> Either UserID CompanyID -> m JSValue
+getStats statsPartition interval = \case
   Left uid -> do
-    stats <- dbQuery $ GetUsageStats (Left uid) statsPartition $ idays 30
+    stats <- dbQuery $ GetUsageStats (Left uid) statsPartition interval
     return $ userStatsToJSON timeFormat stats
   Right cid -> do
     totalS <- renderTemplate_ "statsOrgTotal"
-    stats <- dbQuery $ GetUsageStats (Right cid) statsPartition $ imonths 6
+    stats <- dbQuery $ GetUsageStats (Right cid) statsPartition interval
     return $ companyStatsToJSON timeFormat totalS stats
   where timeFormat :: UTCTime -> String
         timeFormat = case statsPartition of

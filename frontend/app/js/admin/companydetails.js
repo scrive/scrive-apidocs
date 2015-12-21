@@ -256,7 +256,7 @@ var AdminCompanyDetailsView = Backbone.View.extend({
       companyallowsavesafetycopyinput.change(function() {
               model.setCompanyallowsavesafetycopy(companyallowsavesafetycopyinput.is(":checked"));
       });
-      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Allow to save document"))).append($("<td/>").append(companyallowsavesafetycopyinput)).append($("<td/>").text("Users might be offered to save documents after they have signed.")));
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Allow to save document"))).append($("<td/>").append(companyallowsavesafetycopyinput)).append($("<td/>").text("Signing parties might be offered to save documents or get questionnaire after they have signed.")));
 
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("SMS provider"))).append($("<td/>").append(this.smsProviderSelect())));
 

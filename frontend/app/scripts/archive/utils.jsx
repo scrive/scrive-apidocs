@@ -177,7 +177,9 @@ define(['legacy_code'], function() {
              s.mobile_delivery_status === "delivered";
     });
 
-    if (d.field("status") === "document_error") {
+    if (d.field("is_template")) {
+      return "template";
+    } else if (d.field("status") === "document_error") {
       return "problem";
     } else if (d.field("status") === "preparation") {
       return "draft";

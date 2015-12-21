@@ -907,7 +907,7 @@ apiCallV1List = api $ do
   case format of
        Just "csv" -> do
           allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting 1000
-          let docsCSVs = concat $ zipWith docForListCSVV1  [1..] allDocs
+          let docsCSVs = concatMap docForListCSVV1 allDocs
           return $ Left $ CSV { csvFilename = "documents.csv"
                               , csvHeader = docForListCSVHeaderV1
                               , csvContent = docsCSVs

@@ -68,8 +68,7 @@ return React.createClass({
           totalCountFunction={Utils.totalCountFunction}
           url={Utils.listCallUrl}
           paramsFunction={Utils.paramsFunctionWithFilter([
-              {"filter_by" : "trash", "is_trashed" : true},
-              {"filter_by" : "template", "is_template" : false}
+              {"filter_by" : "trash", "is_trashed" : true}
             ])}
           dataFetcher={Utils.dataFetcher}
           idFetcher={Utils.idFetcher}
