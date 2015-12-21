@@ -36,15 +36,8 @@ var realLoad = function () {
       React: '../bower_components/react/react-with-addons',
       Backbone: '../bower_components/backbone/backbone',
       Underscore: '../bower_components/underscore/underscore-min',
-      text: '../bower_components/requirejs-text/text',
-      Q: '../bower_components/q/q',
       Spinjs: '../bower_components/spin.js/spin',
-      eventie: '../bower_components/eventie',
-      eventEmitter: '../bower_components/eventEmitter',
-      imagesLoaded: '../bower_components/imagesloaded/imagesloaded',
       moment: '../bower_components/moment/min/moment-with-langs.min',
-      should: '../bower_components/should/should',
-      StateMachine: '../bower_components/javascript-state-machine/state-machine',
       tinycolor : '../libs/tinycolor-min',
       sinon: '../libs/sinon',
       backend: '../test/backend',
@@ -53,7 +46,8 @@ var realLoad = function () {
       /**
        *  Legacy code imports
        */
-      'legacy_code': 'config/include_legacy_code'
+      'legacy_code': 'config/include_legacy_code',
+      'legacy_code_for_signview': 'config/include_legacy_code_for_signview'
     },
     shim: {
       'Underscore': {
@@ -82,15 +76,8 @@ var mustLoadBefore = {
     React: '../bower_components/react/react-with-addons',
     Backbone: '../bower_components/backbone/backbone',
     Underscore: '../bower_components/underscore/underscore-min',
-    text: '../bower_components/requirejs-text/text',
-    Q: '../bower_components/q/q',
     Spinjs: '../bower_components/spin.js/spin',
-    eventie: '../bower_components/eventie',
-    eventEmitter: '../bower_components/eventEmitter',
-    imagesLoaded: '../bower_components/imagesloaded/imagesloaded',
     moment: '../bower_components/moment/min/moment-with-langs.min',
-    should: '../bower_components/should/should',
-    StateMachine: '../bower_components/javascript-state-machine/state-machine',
     tinycolor : '../libs/tinycolor-min',
     html2canvas: '../libs/html2canvas',
     base64: '../libs/base64',
@@ -98,7 +85,8 @@ var mustLoadBefore = {
     /**
      *  Legacy code imports
      */
-    'legacy_code': 'config/include_legacy_code'
+    'legacy_code': 'config/include_legacy_code',
+    'legacy_code_for_signview': 'config/include_legacy_code_for_signview'
   },
   shim: {
     'jquery': {

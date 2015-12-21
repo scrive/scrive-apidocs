@@ -1,5 +1,4 @@
 define([
-  "legacy_code",
   "Underscore",
   "Backbone",
   "React",
@@ -16,7 +15,6 @@ define([
   "signview/signsection/signeidview",
   "signview/signsection/signeidprocessview"
 ], function (
-  legacy_code,
   _,
   Backbone,
   React,

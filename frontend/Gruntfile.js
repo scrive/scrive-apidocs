@@ -49,19 +49,37 @@ module.exports = function (grunt) {
     requirejs: {
       options: {
         baseUrl: "<%= yeoman.app %>/compiled_jsx/",
-        mainConfigFile: "<%= yeoman.app %>/compiled_jsx/requirejs_config.js",
-        out: "<%= yeoman.dist %>/optimized-system.js",
         include: ["../bower_components/requirejs/require.js"],
         preserveLicenseComments: false
       },
-      withSourceMap: {
+      systemWithSourceMap: {
         options: {
+          mainConfigFile: "<%= yeoman.app %>/compiled_jsx/requirejs_system.js",
+          out: "<%= yeoman.dist %>/optimized-system.js",
           optimize: "uglify2",
           generateSourceMaps: true
         }
       },
-      noSourceMap: {
+      systemNoSourceMap: {
         options: {
+          mainConfigFile: "<%= yeoman.app %>/compiled_jsx/requirejs_system.js",
+          out: "<%= yeoman.dist %>/optimized-system.js",
+          optimize: "none",
+          generateSourceMaps: false
+        }
+      },
+      signviewWithSourceMap: {
+        options: {
+          mainConfigFile: "<%= yeoman.app %>/compiled_jsx/requirejs_signview.js",
+          out: "<%= yeoman.dist %>/optimized-signview.js",
+          optimize: "uglify2",
+          generateSourceMaps: true
+        }
+      },
+      signviewNoSourceMap: {
+        options: {
+          mainConfigFile: "<%= yeoman.app %>/compiled_jsx/requirejs_signview.js",
+          out: "<%= yeoman.dist %>/optimized-signview.js",
           optimize: "none",
           generateSourceMaps: false
         }
@@ -280,9 +298,11 @@ module.exports = function (grunt) {
     ];
 
     if (target === "sourcemap") {
-      tasks.push("requirejs:withSourceMap");
+      tasks.push("requirejs:systemWithSourceMap");
+      tasks.push("requirejs:signviewWithSourceMap");
     } else {
-      tasks.push("requirejs:noSourceMap");
+      tasks.push("requirejs:systemNoSourceMap");
+      tasks.push("requirejs:signviewNoSourceMap");
     }
 
     tasks = tasks.concat([

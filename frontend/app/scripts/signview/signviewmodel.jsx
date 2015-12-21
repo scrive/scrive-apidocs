@@ -1,4 +1,4 @@
-define(["React", "Backbone", "Underscore", "legacy_code"],
+define(["React", "Backbone", "Underscore"],
   function (React, Backbone, _) {
 
     return Backbone.Model.extend({

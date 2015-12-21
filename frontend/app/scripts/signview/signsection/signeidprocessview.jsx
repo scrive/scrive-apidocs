@@ -1,6 +1,6 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
+define(["Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
   "eleg/bankidsigning"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, Button, BankIDSigning) {
+  function (_, Backbone, React, BackboneMixin, Button, BankIDSigning) {
 
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],

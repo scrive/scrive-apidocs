@@ -1,4 +1,4 @@
-define(["legacy_code", "backend", "util", "React", "signview/signatories/docviewsignatories"], function(legacy_code, backend, util, React, DocumentViewSignatories) {
+define(["legacy_code_for_signview", "backend", "util", "React", "signview/signatories/docviewsignatories"], function(legacy_code, backend, util, React, DocumentViewSignatories) {
 
   var TestUtils = React.addons.TestUtils;
 

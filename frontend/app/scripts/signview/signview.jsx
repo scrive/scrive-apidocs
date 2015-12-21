@@ -1,5 +1,4 @@
 define([
-  "legacy_code",
   "Backbone",
   "React",
   "common/backbone_mixin",
@@ -18,7 +17,6 @@ define([
   "signview/tasks/taskarrows",
   "signview/overlay"
 ], function (
-  legacy_code,
   Backbone,
   React,
   BackboneMixin,

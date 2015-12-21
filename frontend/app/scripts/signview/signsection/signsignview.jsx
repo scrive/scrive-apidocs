@@ -1,7 +1,7 @@
 
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
+define(["Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
   "signview/tasks/task_mixin", "signview/signsection/signrejectview", "signview/signsection/signsigningview"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, Button, TaskMixin) {
+  function (_, Backbone, React, BackboneMixin, Button, TaskMixin) {
 
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin, TaskMixin],

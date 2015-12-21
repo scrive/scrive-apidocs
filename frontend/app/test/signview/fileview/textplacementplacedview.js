@@ -1,4 +1,4 @@
-define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/textplacementplacedview"], function(legacy_code, backend, util, ImageShim, React, TextPlacementPlacedView) {
+define(["legacy_code_for_signview", "backend", "util", "image", "React", "signview/fileview/textplacementplacedview"], function(legacy_code, backend, util, ImageShim, React, TextPlacementPlacedView) {
 
   var TestUtils = React.addons.TestUtils;
 

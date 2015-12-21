@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 
-define(['React', 'Backbone', 'tinycolor'], function(React, Backbone, tinycolor) {
+define(['React', 'Backbone'], function(React, Backbone) {
 
   return React.createClass({
     propTypes: {

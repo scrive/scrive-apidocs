@@ -55,17 +55,19 @@ standardHeaderContents=
         $if(production)$
         $if(signview)$
         <link href='$cdnbaseurl$/$versioncode$.signview-all-styling-minified.css' rel='stylesheet' type='text/css'/>
+        <script src="$cdnbaseurl$/$versioncode$.optimized-signview.js"></script>
         $else$
         <link href='$cdnbaseurl$/$versioncode$.all-styling-minified.css' rel='stylesheet' type='text/css'/>
-        $endif$
         <script src="$cdnbaseurl$/$versioncode$.optimized-system.js"></script>
+        $endif$
         $else$
         $if(signview)$
         <link href='/less/signview-less-compiled.css' rel='stylesheet' type='text/css'/>
+        <script src="/compiled_jsx/requirejs_signview.js"></script>
         $else$
         <link href='/less/less-compiled.css' rel='stylesheet' type='text/css'/>
+        <script src="/compiled_jsx/requirejs_system.js"></script>
         $endif$
-        <script src="/compiled_jsx/requirejs_config.js"></script>
         <script src="/bower_components/requirejs/require.js"></script>
         $endif$
 
@@ -211,7 +213,6 @@ postPageCode=
 langprefix=/$langcode$/
 ####
 header=
-$headerAddons()$
 <div class='place-for-header'>
   $postPageCode()$
 </div>
@@ -231,16 +232,6 @@ require(['jquery', 'React' , 'pages/header','legacy_code'], function(jQuery,Reac
 
 });
 </script>
-####
-headerAddons=
-$if(logged)$
-<script>
-
- require(['Backbone', 'legacy_code'], function() {
-   window.BlockingInfo = Blocking();
- });
-</script>
-$endif$
 ####
 contactUsVivocha=
 <aside class="contact">

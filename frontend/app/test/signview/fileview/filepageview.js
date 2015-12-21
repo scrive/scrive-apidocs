@@ -1,4 +1,4 @@
-define(["legacy_code", "backend", "util", "image", "React", "signview/fileview/filepageview"], function(legacy_code, backend, util, ImageShim, React, FilePageView) {
+define(["legacy_code_for_signview", "backend", "util", "image", "React", "signview/fileview/filepageview"], function(legacy_code, backend, util, ImageShim, React, FilePageView) {
 
   var TestUtils = React.addons.TestUtils;
 

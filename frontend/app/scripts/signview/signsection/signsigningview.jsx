@@ -1,6 +1,6 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/htmltextwithsubstitution",
+define(["Underscore", "Backbone", "React", "common/button", "common/htmltextwithsubstitution",
   "signview/tasks/task_mixin"],
-  function (legacy_code, _, Backbone, React, Button, HtmlTextWithSubstitution, TaskMixin) {
+  function (_, Backbone, React, Button, HtmlTextWithSubstitution, TaskMixin) {
 
   return React.createClass({
     mixins: [TaskMixin],
