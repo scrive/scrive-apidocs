@@ -162,8 +162,10 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
                     ref="name"
                     tabIndex={1}
                     className={nameClass}
-                    value={sig.name()}
+                    value={self.nameInputValue && self.nameInputValue.trim() === sig.name() ?
+                             self.nameInputValue : sig.name()}
                     onChange={function (value) {
+                      self.nameInputValue = value; // We don't store it in state, since this would trigger rerendering
                       var str = value.trim();
                       var i = str.indexOf(" ");
                       var f = "";
