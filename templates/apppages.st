@@ -47,7 +47,7 @@ standardHeaderContents=
         <![endif]-->
         <link href='$cdnbaseurl$/css/fonts/SourceSansPro.css' rel='stylesheet' type='text/css'/>
         <link href='$cdnbaseurl$/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
-        <link rel=" icon" href="$cdnbaseurl$/favicon/$brandinghash$" />
+        <link rel=" icon" href="/favicon/$brandinghash$" />
 
         <script src="$cdnbaseurl$/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
@@ -69,14 +69,14 @@ standardHeaderContents=
         <script src="/bower_components/requirejs/require.js"></script>
         $endif$
 
-        <link href='$cdnbaseurl$/domain_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+        <link href='/domain_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
 
         $if(nobranding)$
         $else$
           $if(logged)$
           <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
             $else$
-          <link href='$cdnbaseurl$/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+          <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
           $endif$
         $endif$
         <script>
