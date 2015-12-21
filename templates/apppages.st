@@ -213,7 +213,6 @@ postPageCode=
 langprefix=/$langcode$/
 ####
 header=
-$headerAddons()$
 <div class='place-for-header'>
   $postPageCode()$
 </div>
@@ -233,16 +232,6 @@ require(['jquery', 'React' , 'pages/header','legacy_code'], function(jQuery,Reac
 
 });
 </script>
-####
-headerAddons=
-$if(logged)$
-<script>
-
- require(['Backbone', 'legacy_code'], function() {
-   window.BlockingInfo = Blocking();
- });
-</script>
-$endif$
 ####
 contactUsVivocha=
 <aside class="contact">

@@ -12,25 +12,25 @@ $htmlopentag()$
     <div class="mainContainer" >
     <div class="body-container">
     <script>
-     require(['jquery', 'legacy_code'], function(jQuery) {
-    jQuery(function(){
-      var dv = new DesignView({
-                            id:"$documentid$"
-                      });
+      require(['jquery', 'legacy_code'], function(jQuery) {
+        window.BlockingInfo = Blocking();
+        jQuery(function(){
+          var dv = new DesignView({
+                                id:"$documentid$"
+                          });
 
-      mixpanel.register({DocumentID: "$documentid$", Context: "design view"});
-      mixpanel.track('View Design View');
+          mixpanel.register({DocumentID: "$documentid$", Context: "design view"});
+          mixpanel.track('View Design View');
 
-      jQuery(".body-container").replaceWith(
-        jQuery('<div />').append(BlockingInfo.el())
-                        .append(dv.el())
-                        .children()
-      );
-      jQuery(window).resize();
+          jQuery(".body-container").replaceWith(
+            jQuery('<div />').append(BlockingInfo.el())
+                            .append(dv.el())
+                            .children()
+          );
+          jQuery(window).resize();
 
-    });
-     });
-
+        });
+      });
     </script>
     </div>
     </div>
