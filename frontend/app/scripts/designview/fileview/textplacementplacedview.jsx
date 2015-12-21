@@ -151,6 +151,11 @@ return Backbone.View.extend({
       onChange: function (val) {
         field.setValue(val.trim());
       },
+      onBlur: function () {
+        view.closeTypeSetter();
+        view.model.cleanTypeSetter();
+        view.render();
+      },
       onEnter: function (val) {
         view.closeTypeSetter();
         view.model.cleanTypeSetter();
