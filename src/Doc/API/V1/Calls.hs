@@ -140,6 +140,7 @@ documentAPIV1  = choice [
 
   dir "list"               $ hGetAllowHttp $ apiCallV1List,
   dir "checkavailable"     $ hPostAllowHttp $ apiCallV1CheckAvailable,
+  dir "triggercallback"    $ hPost $ apiCallV1TriggerCallback,
 
   dir "history"           $ hGetAllowHttp $ apiCallV1History,
   dir "downloadmainfile"   $ hGetAllowHttp  $ toK2 $ apiCallV1DownloadMainFile,
@@ -632,6 +633,14 @@ apiCallV1SetAutoReminder did = logDocument did . api $ do
       setAutoreminder did days timezone
       triggerAPICallbackIfThereIsOne =<< theDocument
       Accepted <$> (documentJSONV1 (Just $ user) True True Nothing =<< theDocument)
+
+apiCallV1TriggerCallback :: Kontrakcja m => DocumentID -> m Response
+apiCallV1TriggerCallback did = logDocument did . api $ do
+  (user, _, _) <- getAPIUser APIDocSend
+  withDocumentID did $ do
+    guardAuthorOrAuthorsAdmin user "Permission problem. You don't have a permission to trigger a callback for this document"
+    triggerAPICallbackIfThereIsOne =<< theDocument
+    Accepted <$> (J.runJSONGenT $ return ())
 
 apiCallV1ChangeAuthenticationToView :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid . api $ do
