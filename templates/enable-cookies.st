@@ -15,8 +15,6 @@ enableCookies=<!DOCTYPE html>
 <script src="/libs/html5shiv.js"></script>
 <script src="/bower_components/json3/lib/json3.min.js"></script>
 <![endif]-->
-<link href='/css/fonts/SourceSansPro.css' rel='stylesheet' type='text/css'/>
-<link href='/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
 <link rel=" icon" href="/favicon/$brandinghash$" />
 <script src="/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
 <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
