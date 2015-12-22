@@ -189,7 +189,6 @@ staticRoutes production = choice
      -- public services
      , dir "parsecsv"        $ hPost $ toK0 $ ServerUtils.handleParseCSV
      , dir "serialize_image" $ hPost $ toK0 $ ServerUtils.handleSerializeImage
-     , dir "scale_image" $ hPost $ toK0 $ ServerUtils.handleScaleImage
      , dir "text_to_image" $ hGet $ toK0 $ ServerUtils.handleTextToImage
      , dir "colored_image" $ hGet $ toK0 $ ServerUtils.brandedImage
 

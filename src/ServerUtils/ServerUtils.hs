@@ -2,13 +2,12 @@ module ServerUtils.ServerUtils (
      handleParseCSV
    , handleSerializeImage
    , handleTextToImage
-   , handleScaleImage
    , brandedImage
   ) where
 
 --import Happstack.Server hiding (dir, simpleHTTP)
 import Control.Monad.Trans
-import Data.Char (ord)
+import Data.Char (toLower)
 import Data.Functor
 import Happstack.Server hiding (dir, simpleHTTP)
 import Log as Log
@@ -26,6 +25,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS (fromString)
 import qualified Data.ByteString.UTF8 as BSUTF8
+import qualified Happstack.Server.Response as Web
 import qualified Text.JSON.Gen as J
 
 import Happstack.Fields
@@ -56,42 +56,22 @@ handleParseCSV = do
   return res
 
 -- Read an image file from POST, and returns a its content encoded with Base64
-handleSerializeImage :: Kontrakcja m => m JSValue
+handleSerializeImage :: Kontrakcja m => m Response
 handleSerializeImage = do
-  logo <- guardJustM $ getFileField "logo"
-  runJSONGenT $ value "logo_base64" $ showJSON $ B64.encode logo
-
-
--- Read an image file from POST or /frontend/app directory, and return it scaled down to 60%, and base 64 encoded
-handleScaleImage :: Kontrakcja m => m JSValue
-handleScaleImage = do
-  logo <- guardJustM $ getFileField "logo"
-  logo' <- if base64ImgPrefix `BS.isPrefixOf` logo then
-            case B64.decode $ BS.drop (BS.length base64ImgPrefix) logo of
-              Left e -> do
-                logScalingProblem e
-                internalError
-              Right x -> return x
-          else do
-            cwd <- liftIO getCurrentDirectory
-            let publicDir = cwd </> "frontend/app"
-            logoPath <- guardJust $ secureAbsNormPath publicDir $ $tail (BSUTF8.toString logo) -- strip leading slash from logo path
-            liftIO $ BS.readFile logoPath
-  (procResult, out, _) <- liftIO $ readProcessWithExitCode "convert" ["-", "-resize", "60%", "-"] $ strictBStoLazyBS logo'
-  case procResult of
-    ExitFailure msg -> do
-      logScalingProblem msg
-      internalError
-    ExitSuccess -> do
-      let result64 = base64ImgPrefix `BS.append` B64.encode (lazyBStoStrictBS out)
-      runJSONGenT $ value "logo_base64" $ showJSON result64
-  where base64ImgPrefix = BS.pack $ map (fromIntegral . ord) "data:image/png;base64,"
-        strictBStoLazyBS = BSL.fromChunks . (:[])
-        lazyBStoStrictBS = BS.concat . BSL.toChunks
-
-        logScalingProblem err = logAttention "Error while scaling an image" $ object [
-            "error" .= err
-          ]
+  fileinput <- getDataFn' (lookInput "logo")
+  case fileinput of
+    Nothing -> badRequest' "Missing file"
+    Just (Input _ Nothing _) -> badRequest' "Missing file"
+    Just (Input contentspec (Just filename) _contentType) -> do
+      let hasExtension ext = ("." ++ ext) `isSuffixOf` map toLower filename
+      if hasExtension "png" || hasExtension "jpg" || hasExtension "jpeg" then do
+        content <- case contentspec of
+          Left filepath -> liftIO $ BS.readFile filepath
+          Right content' -> return $ BS.concat $ BSL.toChunks content'
+        goodRequest $ runJSONGen $ value "logo_base64" $ showJSON $ B64.encode content
+      else badRequest' "Not image"
+ where badRequest' s = return $ (setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ (s :: String)) {rsCode = 400}
+       goodRequest js = return $ (setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ encode js) {rsCode = 200}
 
 -- Based on text, returns an image of this text, drawn using `handwriting` font.
 -- Expected text, dimentions, font and format (base64 or plain) are passed as parameters.
