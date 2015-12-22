@@ -65,7 +65,7 @@
       color: @brandtextcolor;
     }
     .select-button-right {
-      @url : %('/colored_image?file=select-arrow.png&color=%D',@brandtextcolor);
+      @url : %('%s/colored_image?file=select-arrow.png&color=%D', @cdnbaseurl, @brandtextcolor);
       background-image: url(@url) ;
     }
   }

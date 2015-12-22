@@ -8,7 +8,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
       }
 
       if (this.props.active) {
-        return <img src="/img/wait30trans.gif" />;
+        return <img src={window.cdnbaseurl + "/img/wait30trans.gif"} />;
       }
 
       return <span />;

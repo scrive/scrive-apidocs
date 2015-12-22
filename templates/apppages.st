@@ -81,6 +81,7 @@ standardHeaderContents=
         $endif$
         <script>
           window.brandinghash = "$brandinghash$";
+          window.cdnbaseurl = "$cdnbaseurl$";
         </script>
 
         $analyticsLoaderKontrakcja()$

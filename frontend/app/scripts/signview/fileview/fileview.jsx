@@ -135,7 +135,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         <div className={sectionClass}>
           {/* if */ !file.ready() &&
             <div className="col-xs-12 center">
-              <img src="/img/wait30trans.gif" />
+              <img src={window.cdnbaseurl + "/img/wait30trans.gif"} />
             </div>
           }
           {/* else */ file.ready() &&

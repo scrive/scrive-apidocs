@@ -46,7 +46,7 @@ return React.createClass({
       }
     },
     generateBackgroundImageURL: function(imagePath, color) {
-      return "url(/colored_image?file=" + imagePath + "&color=" + encodeURIComponent(color) + ")";
+      return "url("+window.cdnbaseurl+"/colored_image?file=" + imagePath + "&color=" + encodeURIComponent(color) + ")";
     },
     render: function() {
       var self = this;
@@ -100,12 +100,12 @@ return React.createClass({
                                   <div className="placedfield optionalplacedfield" style={{"borderColor": model.actionSecondaryColor()}}>
                                       <div className="placedfieldvalue">{localization.sampleSignView.phone}</div>
                                   </div>
-                              </div><img className="exampledocument" src="/img/document_example.png" />
+                              </div><img className="exampledocument" src={window.cdnbaseurl + "/img/document_example.png"} />
                               <div className="section attachments">
                                   <div className="attachments-container">
                                       <h2>{localization.sampleSignView.attachmentsTitle}</h2>
                                       <div className="file-container">
-                                        <img src="/img/attachment-icon.png" className="icon" />
+                                        <img src={window.cdnbaseurl + "/img/attachment-icon.png"} className="icon" />
                                         <span className="name">{localization.sampleSignView.attachmentFilename}</span>
                                         <Button
                                           size="small"

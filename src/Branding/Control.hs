@@ -46,8 +46,9 @@ import qualified MemCache as MemCache
 
 handleServiceBranding :: Kontrakcja m => String -> String -> m Response
 handleServiceBranding brandinghash _ = do
+  ctx <- getContext
   theme <- getServiceTheme
-  brandingCSS <- withLessCache (ServiceBranding (themeID theme) brandinghash) $ serviceBrandingCSS theme
+  brandingCSS <- withLessCache (ServiceBranding (themeID theme) brandinghash) $ serviceBrandingCSS (fromMaybe "" $ ctxcdnbaseurl ctx) theme 
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $
            setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
@@ -65,8 +66,9 @@ getServiceTheme = do
 
 handleLoginBranding :: Kontrakcja m => String -> String -> m Response
 handleLoginBranding brandinghash _ = do
+  ctx <- getContext
   theme <- getLoginTheme
-  brandingCSS <- withLessCache (LoginBranding (themeID theme) brandinghash) $ loginBrandingCSS theme
+  brandingCSS <- withLessCache (LoginBranding (themeID theme) brandinghash) $ loginBrandingCSS (fromMaybe "" $ ctxcdnbaseurl ctx) theme 
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $
            setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
@@ -97,8 +99,9 @@ handleDomainBranding brandinghash _ = do
 -- Used to brand signview
 handleSignviewBranding :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> String -> String -> m Response
 handleSignviewBranding did slid brandinghash _ = do
+  ctx <- getContext -- now we getContext twice in this method (once here, once in getSignviewTheme), is that OK?
   theme <- getSignviewTheme did slid
-  brandingCSS <-  withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS theme
+  brandingCSS <-  withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (fromMaybe "" $ ctxcdnbaseurl ctx) theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $
            setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
@@ -120,8 +123,9 @@ getSignviewTheme did slid = do
 -- Used to brand some view with signview branding but without any particular document. It requires some user to be logged in.
 handleSignviewBrandingWithoutDocument :: Kontrakcja m => String -> String -> m Response
 handleSignviewBrandingWithoutDocument brandinghash _ = do
+  ctx <- getContext -- now we gegContext twice in this method, is that OK?
   theme <- getSignviewThemeWithoutDocument
-  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS theme
+  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (fromMaybe "" $ ctxcdnbaseurl ctx) theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $
            setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
@@ -143,7 +147,7 @@ handleSignviewBrandingInternal brandinghash _ = do
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   theme <- dbQuery $ GetTheme $ fromMaybe (bdServiceTheme $ ctxbrandeddomain ctx) (companyServiceTheme $ companyui)
-  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS theme
+  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (fromMaybe "" $ ctxcdnbaseurl ctx) theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $
            setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res

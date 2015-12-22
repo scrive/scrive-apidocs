@@ -82,7 +82,7 @@
   }
 
   .design-view-action-document-draggable-icon {
-    @url : %('/colored_image?file=place-fields-sprite.png&color=%D',@actiontextcolor);
+    @url : %('%s/colored_image?file=place-fields-sprite.png&color=%D', @cdnbaseurl, @actiontextcolor);
     background-image: url(@url) ;
   }
 }
@@ -93,7 +93,7 @@
 
 
 .required-author-attachment-icon {
-  @url :  %('/colored_image?file=editor-view-attachment.png&color=%D',@actioncolor);
+  @url :  %('%s/colored_image?file=editor-view-attachment.png&color=%D', @cdnbaseurl, @actioncolor);
   background-image: url(@url) ;
   display: inline-block;
   height: 20px;
@@ -102,7 +102,7 @@
 }
 
 .optional-author-attachment-icon {
-  @url :  %('/colored_image?file=editor-view-attachment.png&color=%D',@actionsecondarycolor);
+  @url :  %('%s/colored_image?file=editor-view-attachment.png&color=%D', @cdnbaseurl, @actionsecondarycolor);
   background-image: url(@url) ;
   display: inline-block;
   height: 20px;
@@ -111,7 +111,7 @@
 }
 
 .signatory-attachment-icon {
-  @url :  %('/colored_image?file=editor-view-attachment.png&color=%D',@actioncolor);
+  @url :  %('%s/colored_image?file=editor-view-attachment.png&color=%D', @cdnbaseurl, @actioncolor);
   background-image: url(@url) ;
   display: inline-block;
   height: 20px;

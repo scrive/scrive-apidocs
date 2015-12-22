@@ -22,11 +22,11 @@ import Utils.Color
 import Utils.Font
 
 -- Signview branding CSS. Generated using less
-signviewBrandingCSS :: (MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
-signviewBrandingCSS theme = do
+signviewBrandingCSS :: (MonadLog m,MonadIO m) => String -> Theme -> m BSL.ByteString
+signviewBrandingCSS cdnbaseurl theme = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
-        (BSL.fromString $ signviewBrandingLess theme)
+        (BSL.fromString $ signviewBrandingLess cdnbaseurl theme)
     case code of
       ExitSuccess -> do
           return $ stdout
@@ -36,8 +36,8 @@ signviewBrandingCSS theme = do
             ]
           return BSL.empty
 
-signviewBrandingLess :: Theme -> String
-signviewBrandingLess theme = unlines $
+signviewBrandingLess :: String -> Theme -> String
+signviewBrandingLess cdnbaseurl theme = unlines $
    [
     "@import 'branding/variables';", -- This is imported so we can use color variables from there
     "@import 'branding/elements';", -- This is imported so we can use some transform functions
@@ -47,16 +47,18 @@ signviewBrandingLess theme = unlines $
      ++
    lessVariablesFromTheme theme
      ++
+   lessVariablesFromCDN cdnbaseurl
+     ++
    [ -- Only last part will generate some css. Previews ones are just definitions
     "@import 'runtime/signviewbranding/signviewbranding';"
    ]
 
 -- Service branding CSS. Generated using less
-serviceBrandingCSS :: (MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
-serviceBrandingCSS theme = do
+serviceBrandingCSS :: (MonadLog m,MonadIO m) => String -> Theme -> m BSL.ByteString
+serviceBrandingCSS cdnbaseurl theme = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
-        (BSL.fromString $ serviceBrandingLess theme)
+        (BSL.fromString $ serviceBrandingLess cdnbaseurl theme)
     case code of
       ExitSuccess -> do
           return $ stdout
@@ -66,8 +68,8 @@ serviceBrandingCSS theme = do
             ]
           return BSL.empty
 
-serviceBrandingLess :: Theme -> String
-serviceBrandingLess theme = unlines $
+serviceBrandingLess :: String -> Theme -> String
+serviceBrandingLess cdnbaseurl theme = unlines $
    [
     "@import 'branding/variables';", -- This is imported so we can use color variables from there
     "@import 'branding/elements';", -- This is imported so we can use some transform functions
@@ -77,6 +79,8 @@ serviceBrandingLess theme = unlines $
      ++
    lessVariablesFromTheme theme
      ++
+   lessVariablesFromCDN cdnbaseurl
+     ++
    [ -- Only last part will generate some css. Previews ones are just definitions
     "@import 'runtime/servicebranding/servicebranding';"
    ]
@@ -84,11 +88,11 @@ serviceBrandingLess theme = unlines $
 
 
 -- Service branding CSS. Generated using less
-loginBrandingCSS :: (MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
-loginBrandingCSS theme = do
+loginBrandingCSS :: (MonadLog m,MonadIO m) => String -> Theme -> m BSL.ByteString
+loginBrandingCSS cdnbaseurl theme = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
-        (BSL.fromString $ loginBrandingLess theme)
+        (BSL.fromString $ loginBrandingLess cdnbaseurl theme)
     case code of
       ExitSuccess -> do
           return $ stdout
@@ -98,8 +102,8 @@ loginBrandingCSS theme = do
             ]
           return BSL.empty
 
-loginBrandingLess :: Theme -> String
-loginBrandingLess theme = unlines $
+loginBrandingLess :: String -> Theme -> String
+loginBrandingLess cdnbaseurl theme = unlines $
    [
     "@import 'branding/variables';", -- This is imported so we can use color variables from there
     "@import 'branding/elements';", -- This is imported so we can use some transform functions
@@ -109,6 +113,8 @@ loginBrandingLess theme = unlines $
    ]
      ++
    lessVariablesFromTheme theme
+     ++
+   lessVariablesFromCDN cdnbaseurl
      ++
    [ -- Only last part will generate some css. Previews ones are just definitions
     "@import 'runtime/loginbranding/loginbranding';"
@@ -153,7 +159,13 @@ lessVariablesFromTheme theme = [
     bcolor "negativetextcolor" $ themeNegativeTextColor theme,
     bfont "font" $ themeFont theme
   ]
-  where
+  where -- what's this where doing here?
+
+lessVariablesFromCDN :: String -> [String]
+lessVariablesFromCDN cdnbaseurl = [
+    "@cdnbaseurl: \"" ++ cdnbaseurl ++ "\";"
+  ]
+  
 
 domainBrandingCSS :: (MonadLog m,MonadIO m) => BrandedDomain -> m BSL.ByteString
 domainBrandingCSS bd = do

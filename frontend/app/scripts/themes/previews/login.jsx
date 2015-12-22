@@ -35,7 +35,7 @@ return React.createClass({
       }
     },
     generateBackgroundImageURL: function(imagePath, color) {
-      return "url(/colored_image?file=" + imagePath + "&color=" + encodeURIComponent(color) + ")";
+      return "url("+window.cdnbaseurl+"/colored_image?file=" + imagePath + "&color=" + encodeURIComponent(color) + ")";
     },
     render: function() {
       var self = this;
@@ -44,7 +44,7 @@ return React.createClass({
       return (
         <div className="login-preview" style={{"backgroundColor": model.brandColor()}}>
           <div className="logo-wrapper">
-            <img src={ model.logo() || "/img/logo_email.png"}/>
+            <img src={ model.logo() || window.cdnbaseurl + "/img/logo_email.png"}/>
             <div className="divider-line" style={{"backgroundImage": this.state.dividerLineBackgroundUrl}} />
 
             <p className="small" style={{"color": model.brandTextColor()}}>E-signing powered by Scrive</p>
