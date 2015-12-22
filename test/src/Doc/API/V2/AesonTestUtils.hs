@@ -52,11 +52,11 @@ jsonTestRequestHelper ctx httpMethod params func expectedRsCode = do
 
 -- | Given a `Value` that should be an `Object`, lookup a key which should be
 -- an JSON `Array`.
-lookupObjectArray :: String -> Value -> TestEnv (V.Vector Value)
+lookupObjectArray :: String -> Value -> TestEnv [Value]
 lookupObjectArray k v = do
   val <- lookupObject k v
   case val of
-    Array a -> return a
+    Array a -> return $ V.toList a
     _ -> $unexpectedErrorM "Lookup did not give Array"
 
 -- | Given a `Value` that should be an `Object`, lookup a key which should be

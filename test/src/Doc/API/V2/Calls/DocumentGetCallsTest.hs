@@ -4,7 +4,6 @@ import Data.Aeson (Value(String))
 import Data.Default
 import Happstack.Server
 import Test.Framework
-import qualified Data.Vector as V
 
 import Company.Model
 import Context
@@ -46,8 +45,8 @@ testDocApiV2List = do
 
   listJSON <- jsonTestRequestHelper ctx GET [] docApiV2List 200
   listArray <- lookupObjectArray "documents" listJSON
-  assertEqual "`docApiV2List` should return same number of docs" 3 (V.length listArray)
-  let docs = map mockDocFromValue $ V.toList listArray
+  assertEqual "`docApiV2List` should return same number of docs" 3 (length listArray)
+  let docs = map mockDocFromValue $ listArray
   forM_ docs $ \d -> assertEqual "Status should be" Preparation (getMockDocStatus d)
 
 testDocApiV2Get :: TestEnv ()
@@ -102,7 +101,7 @@ testDocApiV2History = do
       checkHistoryHasNItems n = do
         historyJSON <- jsonTestRequestHelper ctx GET [] (docApiV2History did) 200
         historyArray <- lookupObjectArray "events" historyJSON
-        assertEqual "History did not have same number of events" n (V.length historyArray)
+        assertEqual "History did not have same number of events" n (length historyArray)
 
   checkHistoryHasNItems 0
 
@@ -122,7 +121,7 @@ testDocApiV2EvidenceAttachments = do
     (docApiV2SigSign did slid) 200
 
   eaJSON <- jsonTestRequestHelper ctx GET [] (docApiV2EvidenceAttachments did) 200
-  eaList <- V.toList <$> lookupObjectArray "attachments" eaJSON
+  eaList <- lookupObjectArray "attachments" eaJSON
   attachmentNames <- forM eaList (lookupObjectString "name")
   assertEqual "Evidence attachment file names and order should match"
     [ "Evidence Quality of Scrive E-signed Documents.html"
@@ -173,9 +172,9 @@ testDocApiV2Texts = do
   rspJSON <- jsonTestRequestHelper ctx
     GET [("json", inText "{ \"rects\":[{ \"rect\": [0,0,1,1] , \"page\": 1 }]}")]
     (docApiV2Texts did fid) 200
-  rectsArrayFirstValue <- liftM V.head $ lookupObjectArray "rects" rspJSON
-  linesValueList <- liftM V.toList $ lookupObjectArray "lines" rectsArrayFirstValue
-  let toText (String s) = s
-      toText _ = $unexpectedError "Should have been 'String' constructor"
-      line:[] = map toText linesValueList
-  assertEqual "Lines in `docApiV2Texts` should match" "This is a test contract pdf." line
+  (rect1:_) <- lookupObjectArray "rects" rspJSON
+  (line1:_) <- lookupObjectArray "lines" rect1
+  let text1 = case line1 of
+                String s -> s
+                _ -> $unexpectedError "Should have been 'String' constructor"
+  assertEqual "Lines in `docApiV2Texts` should match" "This is a test contract pdf." text1
