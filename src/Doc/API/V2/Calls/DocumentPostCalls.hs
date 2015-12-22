@@ -14,6 +14,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2SetAutoReminder
 , docApiV2Clone
 , docApiV2Restart
+, docApiV2Callback
 , docApiV2SigSetAuthenticationToView
 , docApiV2SigSetAuthenticationToSign
 ) where
@@ -379,6 +380,21 @@ docApiV2Restart did = logDocument did . api $ do
       apiError $ serverError "Could not restart document"
     -- Result
     return $ Created $ (\d -> (unjsonDocument $ documentAccessForUser user d,d)) ($fromJust mNewDoc)
+
+docApiV2Callback :: Kontrakcja m => DocumentID -> m Response
+docApiV2Callback did = logDocument did . api $ do
+  -- Permissions
+  (user, _) <- getAPIUser APIDocSend
+  withDocumentID did $ do
+    -- Guards
+    guardThatUserIsAuthorOrCompanyAdmin user
+    guardThatObjectVersionMatchesIfProvided did
+    guardThatDocumentIs (\d -> not $ documentstatus d == Preparation)
+      "Can not send callbacks for documents in Preparation."
+    -- API call actions
+    triggerAPICallbackIfThereIsOne =<< theDocument
+    -- Return
+    return $ Accepted ()
 
 docApiV2SigSetAuthenticationToView :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSetAuthenticationToView did slid = logDocumentAndSignatory did slid . api $ do
