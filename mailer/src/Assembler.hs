@@ -7,6 +7,7 @@ module Assembler (
 import Control.Arrow
 import Control.Monad.Base
 import Control.Monad.Catch
+import Control.Monad.Time
 import Data.Char
 import Log
 import Text.HTML.TagSoup
@@ -27,10 +28,12 @@ import DB
 import File.Storage
 import KontraPrelude
 import Mails.Model
+import MinutesTime
 import qualified Amazon as AWS
 
-assembleContent :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadBase IO m, MonadLog m, AWS.AmazonMonad m) => Mail -> m BSL.ByteString
+assembleContent :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadBase IO m, MonadLog m, AWS.AmazonMonad m, MonadTime m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
+  time <- currentTime
   (boundaryMixed, boundaryAlternative,boundaryRelated) <- createBoundaries
   let datafields = do
         J.value "email_id" $ show mailID
@@ -47,6 +50,7 @@ assembleContent Mail{..} = do
         mailHeader "Subject" mailTitle ++
         "To: " ++ createMailTos mailTo ++ "\r\n" ++
         "From: " ++ createAddrString mailFrom ++ "\r\n" ++
+        "Date: " ++ formatTimeForMail time ++"\r\n" ++
         lineReplyTo ++
         "X-SMTPAPI: " ++ J.encode xsmtpapi ++ "\r\n" ++
         "X-Mailgun-Variables: " ++ J.encode mailgundata ++ "\r\n" ++
@@ -59,12 +63,14 @@ assembleContent Mail{..} = do
         "Content-Type: multipart/alternative; boundary=" ++ boundaryAlternative ++ "\r\n" ++ "\r\n"
       headerContentText = "\r\n--" ++ boundaryAlternative ++ "\r\n" ++
         "Content-type: text/plain; charset=utf-8\r\n" ++
+        "Content-Transfer-Encoding: 8bit\r\n" ++
         "\r\n"
       headerContentRelated = "\r\n--" ++ boundaryAlternative ++ "\r\n" ++
         "Content-Type: multipart/related; boundary=" ++ boundaryRelated ++ "\r\n" ++ "\r\n"
 
       headerContentHtml = "\r\n--" ++ boundaryRelated ++ "\r\n" ++
         "Content-type: text/html; charset=utf-8\r\n" ++
+        "Content-Transfer-Encoding: 8bit\r\n" ++
         "\r\n"
       footerRelated = "\r\n--" ++ boundaryRelated ++ "--\r\n"
       footerContent = "\r\n--" ++ boundaryAlternative ++ "--\r\n"

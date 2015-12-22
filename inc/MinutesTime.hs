@@ -13,6 +13,7 @@ module MinutesTime (
   , parseTimeISO
   , formatTimeSimple
   , parseTimeSimple
+  , formatTimeForMail
   , minutesAfter
   , minutesBefore
   , secondsAfter
@@ -88,6 +89,9 @@ parseTimeISO s = msum [
   , parseTime' "%Y-%m-%dT%H:%M:%S%Q%z" s
   ]
 
+-- | Formating time for mail header. RFC2822
+formatTimeForMail :: UTCTime -> String
+formatTimeForMail = formatTime' "%a, %d %b %Y %H:%M:%S %z"
 ----------------------------------------
 
 secondsAfter :: Int -> UTCTime -> UTCTime
