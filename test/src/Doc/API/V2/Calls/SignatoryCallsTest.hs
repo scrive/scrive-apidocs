@@ -3,13 +3,15 @@ module Doc.API.V2.Calls.SignatoryCallsTest (apiV2SignatoryCallsTests) where
 import Data.Default
 import Happstack.Server
 import Test.Framework
-import qualified Data.Vector as V
 
 import Context
 import Doc.API.V2.AesonTestUtils
+import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.DocumentPostCalls
-import Doc.API.V2.Calls.DocumentPostCallsTest (testDocApiV2New')
 import Doc.API.V2.Calls.SignatoryCalls
+import Doc.API.V2.Mock.TestUtils
+import Doc.Data.DocumentStatus (DocumentStatus(..))
+import Doc.Data.SignatoryLink (AuthenticationToSignMethod(SMSPinAuthenticationToSign))
 import KontraPrelude
 import TestingUtil
 import TestKontra
@@ -25,112 +27,81 @@ apiV2SignatoryCallsTests env = testGroup "APIv2SignatoryCalls" $
 
 testDocApiV2SigReject :: TestEnv ()
 testDocApiV2SigReject = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  (did, docJSON) <- testDocApiV2New' ctx
-  slid:_ <- signatoryLinkIDsFromValue docJSON
+  mockDoc <- testDocApiV2Start' ctx
+  let did = getMockDocId mockDoc
+  let slid = getMockDocSigLinkId 1 mockDoc
 
-  reqStart <- mkRequest POST []
-  _ <- runTestKontra reqStart ctx $ docApiV2Start did
-
-  req <- mkRequest POST []
-  (rsp,_) <- runTestKontra req ctx $ docApiV2SigReject did slid
-  assertEqual "Successful `docApiV2SigReject` response code" 200 (rsCode rsp)
-  docJSONRejected <- parseMockDocumentFromBS did (rsBody rsp)
-  docStatus <- lookupObjectString "status" docJSONRejected
-  assertEqual "Document status should match" "rejected" docStatus
-  sigValue:_ <- liftM V.toList $ lookupObjectArray "parties" docJSONRejected
-  _ <- lookupObjectString "rejected_time" sigValue
-  return ()
+  mockDocRejected <- mockDocTestRequestHelper ctx POST [] (docApiV2SigReject did slid) 200
+  assertEqual "Document status after reject call should match" Rejected (getMockDocStatus mockDocRejected)
+  assertBool "Signatory should have rejected the document" (getMockDocSigLinkHasRejected 1 mockDocRejected)
 
 testDocApiV2SigCheck :: TestEnv ()
 testDocApiV2SigCheck = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  (did, docJSON) <- testDocApiV2New' ctx
-  slid:_ <- signatoryLinkIDsFromValue docJSON
+  mockDoc <- testDocApiV2Start' ctx
+  let did = getMockDocId mockDoc
+  let slid = getMockDocSigLinkId 1 mockDoc
 
-  reqStart <- mkRequest POST []
-  _ <- runTestKontra reqStart ctx $ docApiV2Start did
-
-  req <- mkRequest POST [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
-  (rsp,_) <- runTestKontra req ctx $ docApiV2SigCheck did slid
-  assertEqual "Successful `docApiV2SigCheck` response code" 200 (rsCode rsp)
+  _ <- testRequestHelper ctx
+    POST [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
+    (docApiV2SigCheck did slid) 200
+  return ()
 
 testDocApiV2SigSign :: TestEnv ()
 testDocApiV2SigSign = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  (did, docJSON) <- testDocApiV2New' ctx
-  slid:_ <- signatoryLinkIDsFromValue docJSON
+  mockDoc <- testDocApiV2Start' ctx
+  let did = getMockDocId mockDoc
+  let slid = getMockDocSigLinkId 1 mockDoc
 
-  reqStart <- mkRequest POST []
-  _ <- runTestKontra reqStart ctx $ docApiV2Start did
-
-  req <- mkRequest POST [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
-  (rsp,_) <- runTestKontra req ctx $ docApiV2SigSign did slid
-  assertEqual "Successful `docApiV2SigSign` response code" 200 (rsCode rsp)
-  docJSONSigned <- parseMockDocumentFromBS did (rsBody rsp)
-  docStatus <- lookupObjectString "status" docJSONSigned
-  assertEqual "Document status after signing" "closed" docStatus
-  sl:_ <- liftM V.toList $ lookupObjectArray "parties" docJSONSigned
-  _ <- lookupObjectString "sign_time" sl
-  return ()
+  mockDocSigned <- mockDocTestRequestHelper ctx
+    POST [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
+    (docApiV2SigSign did slid) 200
+  assertEqual "Document status after signing should match" Closed (getMockDocStatus mockDocSigned)
+  assertBool "Signatory should have signed" (getMockDocSigLinkHasSigned 1 mockDocSigned)
 
 testDocApiV2SigSendSmsPin :: TestEnv ()
 testDocApiV2SigSendSmsPin = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  (did, docJSON) <- testDocApiV2New' ctx
-  slid:_ <- signatoryLinkIDsFromValue docJSON
+  mockDoc <- testDocApiV2New' ctx
+  let did = getMockDocId mockDoc
+  let slid = getMockDocSigLinkId 1 mockDoc
 
-  reqUpdate <- mkRequest POST [("document", inText
-                          ("{\"parties\": ["
-                          ++ "{\"id\":\"" ++ show slid ++ "\","
-                          ++ " \"authentication_method_to_sign\":\"sms_pin\""
-                          ++ "}]}")
-                        )]
-  _ <- runTestKontra reqUpdate ctx $ docApiV2Update did
+  let updateDoc = mockDocToInput $ setMockDocSigLinkAuthToSignMethod 1 SMSPinAuthenticationToSign mockDoc
+  _update <- mockDocTestRequestHelper ctx POST [("document", updateDoc)] (docApiV2Update did) 200
 
-  reqStart <- mkRequest POST []
-  _ <- runTestKontra reqStart ctx $ docApiV2Start did
+  _start <- mockDocTestRequestHelper ctx POST [] (docApiV2Start did) 200
 
-  req <- mkRequest POST [("phone", inText "+46123456789")]
-  (rsp,_) <- runTestKontra req ctx $ docApiV2SigSendSmsPin did slid
-  assertEqual "Successful `docApiV2SigSendSmsPin` response code" 202 (rsCode rsp)
+  _send_pin <- testRequestHelper ctx POST [("phone", inText "+46123456789")] (docApiV2SigSendSmsPin did slid) 202
+  return ()
 
 testDocApiV2SigSetAttachment :: TestEnv ()
 testDocApiV2SigSetAttachment = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  (did, docJSON) <- testDocApiV2New' ctx
-  slid:_ <- signatoryLinkIDsFromValue docJSON
+  mockDoc <- testDocApiV2New' ctx
+  let did = getMockDocId mockDoc
+  let slid = getMockDocSigLinkId 1 mockDoc
 
-  reqUpdate <- mkRequest POST [("document", inText
-                          ("{\"parties\": ["
-                          ++ "{\"id\":\"" ++ show slid ++ "\","
-                          ++ " \"attachments\": ["
-                          ++ "    {\"name\":\"Foo2\", \"description\":\"FooDee\"}"
-                          ++ "]}]}")
-                        )]
-  _ <- runTestKontra reqUpdate ctx $ docApiV2Update did
+  do -- Just to ensure limited scope so we don't test against the wrong thing
+    let updateDoc = mockDocToInput $ setMockDocSigLinkAttachments 1 [("Foo2","FooDee")] mockDoc
+    _update <- mockDocTestRequestHelper ctx POST [("document", updateDoc)] (docApiV2Update did) 200
+    _start <- mockDocTestRequestHelper ctx POST [] (docApiV2Start did) 200
+    return ()
 
-  reqStart <- mkRequest POST []
-  _ <- runTestKontra reqStart ctx $ docApiV2Start did
+  do -- Just to ensure limited scope so we don't test against the wrong thing
+    mockDocSetAttachment <- mockDocTestRequestHelper ctx
+      POST [("name", inText "Foo2") ,("attachment", inFile "test/pdfs/simple-rotate-90.pdf")]
+      (docApiV2SigSetAttachment did slid) 200
+    assertEqual "Party should have one attachment" 1 (getMockDocSigLinkAttachmentsLength 1 mockDocSetAttachment)
+    assertBool "The attachment should have a file set" (getMockDocSigLinkAttachmentHasFile 1 1 mockDocSetAttachment)
 
-  reqSet <- mkRequest POST [("name", inText "Foo2")
-                           ,("attachment", inFile "test/pdfs/simple-rotate-90.pdf")]
-  (rspSet,_) <- runTestKontra reqSet ctx $ docApiV2SigSetAttachment did slid
-  assertEqual "Successful `docApiV2SigSetAttachment` response code" 200 (rsCode rspSet)
-  docJSONSet <- parseMockDocumentFromBS did (rsBody rspSet)
-  slSet:_ <- liftM V.toList $ lookupObjectArray "parties" docJSONSet
-  slAttachment0Set:_ <- liftM V.toList $ lookupObjectArray "attachments" slSet
-  _ <- lookupObjectString "file" slAttachment0Set
-
-  reqUnset <- mkRequest POST [("name", inText "Foo2")]
-  (rspUnset,_) <- runTestKontra reqUnset ctx $ docApiV2SigSetAttachment did slid
-  assertEqual "Successful `docApiV2SigSetAttachment` response code" 200 (rsCode rspUnset)
-  docJSONUnset <- parseMockDocumentFromBS did (rsBody rspUnset)
-  slUnset:_ <- liftM V.toList $ lookupObjectArray "parties" docJSONUnset
-  slAttachment0Unset:_ <- liftM V.toList $ lookupObjectArray "attachments" slUnset
-  lookupObjectNull "file" slAttachment0Unset
+  do -- Just to ensure limited scope so we don't test against the wrong thing
+    mockDocUnsetAttachment <- mockDocTestRequestHelper ctx POST [("name", inText "Foo2")] (docApiV2SigSetAttachment did slid) 200
+    assertEqual "Party should still have one attachment" 1 (getMockDocSigLinkAttachmentsLength 1 mockDocUnsetAttachment)
+    assertBool "The attachment should have no file" (not $ getMockDocSigLinkAttachmentHasFile 1 1 mockDocUnsetAttachment)

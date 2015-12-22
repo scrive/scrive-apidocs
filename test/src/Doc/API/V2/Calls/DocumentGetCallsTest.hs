@@ -4,16 +4,17 @@ import Data.Aeson (Value(String))
 import Data.Default
 import Happstack.Server
 import Test.Framework
-import qualified Data.Vector as V
 
 import Company.Model
 import Context
 import DB.Query (dbUpdate)
 import Doc.API.V2.AesonTestUtils
+import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.DocumentGetCalls
 import Doc.API.V2.Calls.DocumentPostCalls
-import Doc.API.V2.Calls.DocumentPostCallsTest (testDocApiV2New')
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
+import Doc.API.V2.Mock.TestUtils
+import Doc.Data.DocumentStatus (DocumentStatus(..))
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Update (SetDocumentSharing(..))
 import KontraPrelude
@@ -35,118 +36,95 @@ apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
 
 testDocApiV2List :: TestEnv ()
 testDocApiV2List = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
 
   _ <- testDocApiV2New' ctx
   _ <- testDocApiV2New' ctx
   _ <- testDocApiV2New' ctx
 
-  req <- mkRequest GET []
-  (rsp,_) <- runTestKontra req ctx $ docApiV2List
-  assertEqual "Successful `docApiV2List` response code" 200 (rsCode rsp)
-  listJSON <- valueFromBS (rsBody rsp)
+  listJSON <- jsonTestRequestHelper ctx GET [] docApiV2List 200
   listArray <- lookupObjectArray "documents" listJSON
-  assertEqual "`docApiV2List` should return same number of docs" 3 (V.length listArray)
+  assertEqual "`docApiV2List` should return same number of docs" 3 (length listArray)
+  let docs = map mockDocFromValue $ listArray
+  forM_ docs $ \d -> assertEqual "Status should be" Preparation (getMockDocStatus d)
 
 testDocApiV2Get :: TestEnv ()
 testDocApiV2Get = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  (did, newJSON) <- testDocApiV2New' ctx
+  newMockDoc <- testDocApiV2New' ctx
+  let did = getMockDocId newMockDoc
 
-  reqGet <- mkRequest GET []
-  (rspGet,_) <- runTestKontra reqGet ctx $ docApiV2Get did
-  getJSON <- parseMockDocumentFromBS did (rsBody rspGet)
-  assertEqual "JSON from `docApiV2Get` should match from `docApiV2New`" getJSON newJSON
-  viewer <- lookupObjectObjectValue "viewer" getJSON
-  role <- lookupObjectString "role" viewer
-  assertEqual "document.viewer.role should be equal" "signatory" role
+  getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
+  assertEqual "Mock Document from `docApiV2Get` should match from `docApiV2New`" getMockDoc newMockDoc
+  assertEqual "Document viewer should be" "signatory" (getMockDocViewerRole getMockDoc)
 
 testDocApiV2GetByAdmin :: TestEnv ()
 testDocApiV2GetByAdmin = do
   (Company {companyid}) <- addNewCompany
-  (Just author) <- addNewCompanyUser "N1" "N2" "n1n2@domain.tld" companyid
+  author <- addNewRandomCompanyUser companyid False
   ctxauthor <- (\c -> c { ctxmaybeuser = Just author }) <$> mkContext def
-  (did,_) <- testDocApiV2New' ctxauthor
+  did <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   admin <- addNewRandomCompanyUser companyid True
   ctx <- (\c -> c { ctxmaybeuser = Just admin }) <$> mkContext def
-  reqGet <- mkRequest GET []
-  (rspGet,_) <- runTestKontra reqGet ctx $ docApiV2Get did
-  docJSON <- parseMockDocumentFromBS did (rsBody rspGet)
-  viewer <- lookupObjectObjectValue "viewer" docJSON
-  role <- lookupObjectString "role" viewer
-  assertEqual "document.viewer.role should be equal" "company_admin" role
+  getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
+  assertEqual "Document viewer should be" "company_admin" (getMockDocViewerRole getMockDoc)
 
 testDocApiV2GetShared :: TestEnv ()
 testDocApiV2GetShared = do
   (Company {companyid}) <- addNewCompany
-  (Just author) <- addNewCompanyUser "N1" "N2" "n1n2@domain.tld" companyid
+  author <- addNewRandomCompanyUser companyid False
   ctxauthor <- (\c -> c { ctxmaybeuser = Just author }) <$> mkContext def
-  (did,_) <- testDocApiV2New' ctxauthor
-  reqUpdate <- mkRequest POST [("document", inText "{\"is_template\":true}")]
-  _ <- runTestKontra reqUpdate ctxauthor $ docApiV2Update did
+  did <- getMockDocId <$> testDocApiV2New' ctxauthor
+
+  _ <- mockDocTestRequestHelper ctxauthor POST [("document", inText "{\"is_template\":true}")] (docApiV2Update did) 200
   setshare <- withDocumentID did $ do
     dbUpdate $ SetDocumentSharing [did] True
   assert setshare
 
   user <- addNewRandomCompanyUser companyid False
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  reqGet <- mkRequest GET []
-  (rspGet,_) <- runTestKontra reqGet ctx $ docApiV2Get did
-  docJSON <- parseMockDocumentFromBS did (rsBody rspGet)
-  viewer <- lookupObjectObjectValue "viewer" docJSON
-  role <- lookupObjectString "role" viewer
-  assertEqual "document.viewer.role should be equal" "company_shared" role
-
-  assert True
+  getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
+  assertEqual "Document viewer should be" "company_shared" (getMockDocViewerRole getMockDoc)
+  assertEqual "Document should be template" True (getMockDocIsTemplate getMockDoc)
+  assertEqual "Document should be shared" True (getMockDocIsShared getMockDoc)
 
 testDocApiV2History :: TestEnv ()
 testDocApiV2History = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  (did,_) <- testDocApiV2New' ctx
+  did <- getMockDocId <$> testDocApiV2New' ctx
 
   let checkHistoryHasNItems :: Int -> TestEnv ()
       checkHistoryHasNItems n = do
-        req <- mkRequest GET []
-        (rsp,_) <- runTestKontra req ctx $ docApiV2History did
-        historyJSON <- valueFromBS (rsBody rsp)
+        historyJSON <- jsonTestRequestHelper ctx GET [] (docApiV2History did) 200
         historyArray <- lookupObjectArray "events" historyJSON
-        when (V.length historyArray /= n)
-          ($unexpectedErrorM $ "History did not have " ++ show n ++ " items")
+        assertEqual "History did not have same number of events" n (length historyArray)
 
   checkHistoryHasNItems 0
 
-  reqStart <- mkRequest POST []
-  _ <- runTestKontra reqStart ctx $ docApiV2Start did
-
+  _ <- mockDocTestRequestHelper ctx POST [] (docApiV2Start did) 200
   checkHistoryHasNItems 1
 
-  reqSign <- mkRequest POST []
-  _ <- runTestKontra reqSign ctx $ docApiV2Cancel did
-
+  _ <- mockDocTestRequestHelper ctx POST [] (docApiV2Cancel did) 200
   checkHistoryHasNItems 2
 
 testDocApiV2EvidenceAttachments :: TestEnv ()
 testDocApiV2EvidenceAttachments = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  (did, docJSON) <- testDocApiV2New' ctx
-  slid:_ <- signatoryLinkIDsFromValue docJSON
+  mockDoc <- testDocApiV2Start' ctx
+  let did = getMockDocId mockDoc
+  let slid = getMockDocSigLinkId 1 mockDoc
 
-  reqStart <- mkRequest POST []
-  _ <- runTestKontra reqStart ctx $ docApiV2Start did
+  _ <- mockDocTestRequestHelper ctx
+    POST [("fields", inText "[]"),("accepted_author_attachments", inText "[]")]
+    (docApiV2SigSign did slid) 200
 
-  reqSign <- mkRequest POST [("fields", inText "[]"),("accepted_author_attachments", inText "[]")]
-  _ <- runTestKontra reqSign ctx $ docApiV2SigSign did slid
-
-  req <- mkRequest GET []
-  (rsp,_) <- runTestKontra req ctx $ docApiV2EvidenceAttachments did
-  assertEqual "Successful `docApiV2EvidenceAttachments` response code" 200 (rsCode rsp)
-  eaJSON <- valueFromBS (rsBody rsp)
-  eaList <- V.toList <$> lookupObjectArray "attachments" eaJSON
+  eaJSON <- jsonTestRequestHelper ctx GET [] (docApiV2EvidenceAttachments did) 200
+  eaList <- lookupObjectArray "attachments" eaJSON
   attachmentNames <- forM eaList (lookupObjectString "name")
   assertEqual "Evidence attachment file names and order should match"
     [ "Evidence Quality of Scrive E-signed Documents.html"
@@ -161,9 +139,9 @@ testDocApiV2EvidenceAttachments = do
 
 testDocApiV2FilesMain :: TestEnv ()
 testDocApiV2FilesMain = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  (did,_) <- testDocApiV2New' ctx
+  did <- getMockDocId <$> testDocApiV2New' ctx
 
   req <- mkRequest GET []
   (rsp,_) <- runTestKontra req ctx $ docApiV2FilesMain did "filename.pdf"
@@ -171,40 +149,35 @@ testDocApiV2FilesMain = do
 
 testDocApiV2FilesGet :: TestEnv ()
 testDocApiV2FilesGet = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  (did,_) <- testDocApiV2New' ctx
+  did <- getMockDocId <$> testDocApiV2New' ctx
 
-  reqSet <- mkRequest POST [("attachments", inText $ "[{\"name\" : \"simple-rotate-90.pdf\", \"required\" : false, \"file_param\" : \"afile\"}]")
-                           ,("afile", inFile "test/pdfs/simple-rotate-90.pdf")]
-  (rspSet,_) <- runTestKontra reqSet ctx $ docApiV2SetAttachments did
-  docJSONSet <- parseMockDocumentFromBS did (rsBody rspSet)
-  firstAttachmentValue <- liftM V.head $ lookupObjectArray "author_attachments" docJSONSet
-  attachmentFid <- authorAttachmentFileValue firstAttachmentValue
+  mockDocSet <- mockDocTestRequestHelper ctx POST [
+      ("attachments", inText $ "[{\"name\" : \"simple-rotate-90.pdf\", \"required\" : false, \"file_param\" : \"afile\"}]")
+    , ("afile", inFile "test/pdfs/simple-rotate-90.pdf")
+    ] (docApiV2SetAttachments did) 200
 
+  let fid = getMockDocAuthorAttachmentFileId 1 mockDocSet
   req <- mkRequest GET []
-  (rsp,_) <- runTestKontra req ctx $ docApiV2FilesGet did attachmentFid "somefile.pdf"
+  (rsp,_) <- runTestKontra req ctx $ docApiV2FilesGet did fid "somefile.pdf"
   assertEqual "Successful `docApiV2FilesGet` response code" 200 (rsCode rsp)
 
 testDocApiV2Texts :: TestEnv ()
 testDocApiV2Texts = do
-  (Just user) <- addNewUser "N1" "N2" "n1n2@domain.tld"
+  user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  (did,_) <- testDocApiV2New' ctx
+  did <- getMockDocId <$> testDocApiV2New' ctx
 
-  reqSetFile <- mkRequest POST [("file", inFile "test/pdfs/simple.pdf")]
-  (rspSetFile,_) <- runTestKontra reqSetFile ctx $ docApiV2SetFile did
-  docJSONSetFile <- parseMockDocumentFromBS did (rsBody rspSetFile)
-  fileJSON <- lookupObjectObjectValue "file" docJSONSetFile
-  fid <- fileIDFromFileValue fileJSON
+  mockDocSetFile <- mockDocTestRequestHelper ctx POST [("file", inFile "test/pdfs/simple.pdf")] (docApiV2SetFile did) 200
+  let fid = getMockDocFileId mockDocSetFile
 
-  req <- mkRequest GET [("json", inText "{ \"rects\":[{ \"rect\": [0,0,1,1] , \"page\": 1 }]}")]
-  (rsp,_) <- runTestKontra req ctx $ docApiV2Texts did fid
-  assertEqual "Successful `docApiV2Texts` response code" 200 (rsCode rsp)
-  rspJSON <- valueFromBS (rsBody rsp)
-  rectsArrayFirstValue <- liftM V.head $ lookupObjectArray "rects" rspJSON
-  linesValueList <- liftM V.toList $ lookupObjectArray "lines" rectsArrayFirstValue
-  let toText (String s) = s
-      toText _ = $unexpectedError "Should have been 'String' constructor"
-      line:[] = map toText linesValueList
-  assertEqual "Lines in `docApiV2Texts` should match" "This is a test contract pdf." line
+  rspJSON <- jsonTestRequestHelper ctx
+    GET [("json", inText "{ \"rects\":[{ \"rect\": [0,0,1,1] , \"page\": 1 }]}")]
+    (docApiV2Texts did fid) 200
+  (rect1:_) <- lookupObjectArray "rects" rspJSON
+  (line1:_) <- lookupObjectArray "lines" rect1
+  let text1 = case line1 of
+                String s -> s
+                _ -> $unexpectedError "Should have been 'String' constructor"
+  assertEqual "Lines in `docApiV2Texts` should match" "This is a test contract pdf." text1
