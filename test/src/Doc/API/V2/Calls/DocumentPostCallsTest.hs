@@ -9,6 +9,7 @@ import Context
 import DB.Query (dbUpdate)
 import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.CallsTestUtils
+import Doc.API.V2.Calls.DocumentGetCalls (docApiV2Get)
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.API.V2.Mock.TestUtils
@@ -39,6 +40,7 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls" $
   , testThat "API v2 Set auto-reminder"                     env testDocApiV2SetAutoReminder
   , testThat "API v2 Clone"                                 env testDocApiV2Clone
   , testThat "API v2 Restart"                               env testDocApiV2Restart
+  , testThat "API v2 Callback"                              env testDocApiV2Callback
   , testThat "API v2 Set signatory authentication to-view"  env testDocApiV2SigSetAuthenticationToView
   , testThat "API v2 Set signatory authentication to-sign"  env testDocApiV2SigSetAuthenticationToSign
   ]
@@ -253,6 +255,33 @@ testDocApiV2Restart = do
 
   mockDocRestart <- mockDocTestRequestHelper ctx POST [] (docApiV2Restart did) 201
   assertEqual "Restarted document should have same structure as original" (cleanMockDocForComparison mockDoc) (cleanMockDocForComparison mockDocRestart)
+
+testDocApiV2Callback :: TestEnv ()
+testDocApiV2Callback = do
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  mockDoc <- testDocApiV2New' ctx
+  let did = getMockDocId mockDoc
+
+  -- Should fail for documents in preparation
+  _ <- testRequestHelper ctx POST [] (docApiV2Callback did) 409
+
+  mockDocStart <- mockDocTestRequestHelper ctx POST [] (docApiV2Start did) 200
+
+  -- TODO
+  -- Right now as API v2 is not "active", V2 callbacks will not run
+  -- When it becomes active this test should expand to test that a callback URL
+  -- is actually called, by setting up some mock server or something...
+  _ <- testRequestHelper ctx POST [] (docApiV2Callback did) 202
+
+  mockDocAfterCallback <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
+  assertEqual "Document after callback should have same structure as original" (cleanMockDocForComparison mockDocStart) (cleanMockDocForComparison mockDocAfterCallback)
+  assertEqual "Document after callback should be exactly the same" mockDocStart mockDocAfterCallback
+
+  _cancel <- mockDocTestRequestHelper ctx POST [] (docApiV2Cancel did) 200
+  -- Should work after document is cancelled too
+  _ <- testRequestHelper ctx POST [] (docApiV2Callback did) 202
+  return ()
 
 testDocApiV2SigSetAuthenticationToView :: TestEnv ()
 testDocApiV2SigSetAuthenticationToView = do

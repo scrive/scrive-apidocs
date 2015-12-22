@@ -43,6 +43,7 @@ documentAPIV2  = dir "documents" $ choice [
   , param $ dir "setautoreminder" $ hPost $ toK1 $ docApiV2SetAutoReminder
   , param $ dir "clone"           $ hPost $ toK1 $ docApiV2Clone
   , param $ dir "restart"         $ hPost $ toK1 $ docApiV2Restart
+  , param $ dir "callback"        $ hPost $ toK1 $ docApiV2Callback
 
   , param $ dir "files" $ dir "main" $ hGet $ toK2 $ docApiV2FilesMain
   , param $ dir "files"              $ hGet $ toK3 $ docApiV2FilesGet

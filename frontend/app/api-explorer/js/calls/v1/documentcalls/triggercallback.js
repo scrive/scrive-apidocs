@@ -12,6 +12,7 @@ new APICallV1({
         },
   needsAuthorization: true,
   equivalentCalls: {
+    "v2": "Callback"
   },
   params: [
           new APICallParam({
