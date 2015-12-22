@@ -1,13 +1,21 @@
+-- Utility functions for working with document JSON for V2 API tests
+--
+-- NOTE:
+--   MocDoc structure represents Document JSON for V2 API calls
+--   This is why internals of MocDoc are NOT exported - because that are ~ JSON operations,
+--   and our tests should be based on more Scrive related semantic.
+--
+
 module Doc.API.V2.Mock.TestUtils (
 -- * Re-export
-  MockDoc
+  MockDoc -- DON'T EXPOSE INTERNALS
 , testRequestHelper
 , jsonTestRequestHelper
 -- * MockDoc Helper Functions
 , mockDocTestRequestHelper
 , mockDocFromValue
 , mockDocToInput
-, mockDocToCompare
+, cleanMockDocForComparison
 -- * MockDoc Accessor & Setter Functions
 , getMockDocId
 , getMockDocTitle
@@ -72,27 +80,24 @@ mockDocFromValue v = case parse mockDocUnjson v of
 mockDocToInput :: MockDoc -> Input
 mockDocToInput md = inTextBS $ unjsonToByteStringLazy mockDocUnjson md
 
--- | Remove things which are not comparable between Documents so that we can
--- check for equality between two `MockDoc`
---
--- NOTE: Only checked for current usage, you may find more things need to be
---       added here in some cases
-mockDocToCompare :: MockDoc -> MockDoc
-mockDocToCompare md = md { mockDocId = ""
-                         , mockDocParties = map mockSigLinkToCompare $ mockDocParties md
+-- | Remove things which are not comparable between MockDoc so that we can
+-- check for equality
+cleanMockDocForComparison :: MockDoc -> MockDoc
+cleanMockDocForComparison md = md { mockDocId = ""
+                         , mockDocParties = map cleanMockSigLinkForComparison $ mockDocParties md
                          , mockDocCTime = ""
                          , mockDocMTime = ""
                          , mockDocTimeoutTime = Nothing
                          , mockDocStatus = ""
                          , mockDocObjectVersion = 1
                          , mockDocAccessToken = Nothing
-                         , mockDocViewer = mockViewerToCompare . mockDocViewer $ md
+                         , mockDocViewer = cleanMockViewerForComparison . mockDocViewer $ md
                          }
   where
-    mockSigLinkToCompare :: MockSigLink -> MockSigLink
-    mockSigLinkToCompare msl = msl { mockSigLinkId = "" }
-    mockViewerToCompare :: MockViewer -> MockViewer
-    mockViewerToCompare mdv = mdv { mockViewerSigId = Nothing }
+    cleanMockSigLinkForComparison :: MockSigLink -> MockSigLink
+    cleanMockSigLinkForComparison msl = msl { mockSigLinkId = "" }
+    cleanMockViewerForComparison :: MockViewer -> MockViewer
+    cleanMockViewerForComparison mdv = mdv { mockViewerSigId = Nothing }
 
 -- * MockDoc Accessor & Setter Functions
 ----------------------------------------

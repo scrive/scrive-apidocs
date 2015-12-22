@@ -113,7 +113,10 @@ testDocApiV2History = do
 
 testDocApiV2EvidenceAttachments :: TestEnv ()
 testDocApiV2EvidenceAttachments = do
-  (_, ctx, did, mockDoc) <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  mockDoc <- testDocApiV2Start' ctx
+  let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
   _ <- mockDocTestRequestHelper ctx

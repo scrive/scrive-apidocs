@@ -100,12 +100,16 @@ testDocApiV2Update = do
 
 testDocApiV2Start :: TestEnv ()
 testDocApiV2Start = do
-  _ <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  _ <- testDocApiV2Start' ctx
   return ()
 
 testDocApiV2Prolong :: TestEnv ()
 testDocApiV2Prolong = do
-  (user, ctx, did, _) <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  did <- getMockDocId <$> testDocApiV2Start' ctx
 
   withDocumentID did $ do
     dbUpdate $ TimeoutDocument (userActor ctx user)
@@ -116,7 +120,9 @@ testDocApiV2Prolong = do
 
 testDocApiV2Cancel :: TestEnv ()
 testDocApiV2Cancel = do
-  (_, ctx, did, _) <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  did <- getMockDocId <$> testDocApiV2Start' ctx
 
   cancel_status <- getMockDocStatus <$> mockDocTestRequestHelper ctx POST [] (docApiV2Cancel did) 200
   assertEqual "Document status should match" Canceled cancel_status
@@ -144,13 +150,18 @@ testDocApiV2Delete = do
 
 testDocApiV2Remind :: TestEnv ()
 testDocApiV2Remind = do
-  (_, ctx, did, _) <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  did <- getMockDocId <$> testDocApiV2Start' ctx
   _ <- testRequestHelper ctx POST [] (docApiV2Remind did) 202
   return ()
 
 testDocApiV2Forward :: TestEnv ()
 testDocApiV2Forward = do
-  (_, ctx, did, mockDoc) <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  mockDoc <- testDocApiV2Start' ctx
+  let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
   _ <- mockDocTestRequestHelper ctx
@@ -211,7 +222,9 @@ testDocApiV2SetAttachments = do
 
 testDocApiV2SetAutoReminder :: TestEnv ()
 testDocApiV2SetAutoReminder = do
-  (_, ctx, did, _) <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  did <- getMockDocId <$> testDocApiV2Start' ctx
 
   _auto_remind_time <- getMockDocHasAutoRemindTime <$> mockDocTestRequestHelper ctx
     POST [("days", inText "89")] (docApiV2SetAutoReminder did) 200
@@ -227,20 +240,26 @@ testDocApiV2Clone = do
   let did = getMockDocId mockDoc
 
   mockDocClone <- mockDocTestRequestHelper ctx POST [] (docApiV2Clone did) 201
-  assertEqual "Cloned document should have same structure as original" (mockDocToCompare mockDoc) (mockDocToCompare mockDocClone)
+  assertEqual "Cloned document should have same structure as original" (cleanMockDocForComparison mockDoc) (cleanMockDocForComparison mockDocClone)
 
 testDocApiV2Restart :: TestEnv ()
 testDocApiV2Restart = do
-  (_, ctx, did, mockDoc) <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  mockDoc <- testDocApiV2Start' ctx
+  let did = getMockDocId mockDoc
 
   _ <- mockDocTestRequestHelper ctx POST [] (docApiV2Cancel did) 200
 
   mockDocRestart <- mockDocTestRequestHelper ctx POST [] (docApiV2Restart did) 201
-  assertEqual "Restarted document should have same structure as original" (mockDocToCompare mockDoc) (mockDocToCompare mockDocRestart)
+  assertEqual "Restarted document should have same structure as original" (cleanMockDocForComparison mockDoc) (cleanMockDocForComparison mockDocRestart)
 
 testDocApiV2SigSetAuthenticationToView :: TestEnv ()
 testDocApiV2SigSetAuthenticationToView = do
-  (_,ctx,did,mockDoc) <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  mockDoc <- testDocApiV2Start' ctx
+  let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
   let param_auth x = ("authentication_type", inText x)
@@ -333,7 +352,10 @@ testDocApiV2SigSetAuthenticationToView = do
 
 testDocApiV2SigSetAuthenticationToSign :: TestEnv ()
 testDocApiV2SigSetAuthenticationToSign = do
-  (_,ctx,did,mockDoc) <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  mockDoc <- testDocApiV2Start' ctx
+  let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
   let param_auth x = ("authentication_type", inText x)

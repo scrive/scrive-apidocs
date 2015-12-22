@@ -4,12 +4,6 @@ import Data.Unjson
 
 import KontraPrelude
 
--- FIXME follow names from Document JSON (e.g. s/MockSigLink/MockParty)
--- FIXME s/MockDocument/MockDoc
--- FIXME start accessors with mockFoo and have proper names rather than acronyms
---
--- TODO write utils for common accessors and setters, use those instead of full object
-
 data MockDoc = MockDoc {
     mockDocId                 :: String
   , mockDocTitle              :: String

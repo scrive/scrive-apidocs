@@ -27,7 +27,10 @@ apiV2SignatoryCallsTests env = testGroup "APIv2SignatoryCalls" $
 
 testDocApiV2SigReject :: TestEnv ()
 testDocApiV2SigReject = do
-  (_,ctx,did,mockDoc) <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  mockDoc <- testDocApiV2Start' ctx
+  let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
   mockDocRejected <- mockDocTestRequestHelper ctx POST [] (docApiV2SigReject did slid) 200
@@ -36,7 +39,10 @@ testDocApiV2SigReject = do
 
 testDocApiV2SigCheck :: TestEnv ()
 testDocApiV2SigCheck = do
-  (_,ctx,did,mockDoc) <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  mockDoc <- testDocApiV2Start' ctx
+  let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
   _ <- testRequestHelper ctx
@@ -46,7 +52,10 @@ testDocApiV2SigCheck = do
 
 testDocApiV2SigSign :: TestEnv ()
 testDocApiV2SigSign = do
-  (_,ctx,did,mockDoc) <- testDocApiV2Start'
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  mockDoc <- testDocApiV2Start' ctx
+  let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
   mockDocSigned <- mockDocTestRequestHelper ctx
