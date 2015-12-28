@@ -10,8 +10,6 @@ enableCookies=<!DOCTYPE html>
 <meta http-equiv="content-language" content="$ctxlang$" />
 <meta http-equiv="X-UA-Compatible" content="IE=10" />
 <!--[if lt IE 9]>
-<script src="/bower_components/es5-shim/es5-shim.js"></script>
-<script src="/bower_components/es5-shim/es5-sham.js"></script>
 <script src="/libs/html5shiv.js"></script>
 <script src="/bower_components/json3/lib/json3.min.js"></script>
 <![endif]-->

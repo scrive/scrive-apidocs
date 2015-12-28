@@ -39,8 +39,6 @@ standardHeaderContents=
         $else$
           <meta name="viewport" content="width=1020" />
         $endif$
-	<script src="$cdnbaseurl$/bower_components/es5-shim/es5-shim.js"></script>
-	<script src="$cdnbaseurl$/bower_components/es5-shim/es5-sham.js"></script>
         <!--[if lt IE 9]>
 	<script src="$cdnbaseurl$/libs/html5shiv.js"></script>
 	<script src="$cdnbaseurl$/bower_components/json3/lib/json3.min.js"></script>
