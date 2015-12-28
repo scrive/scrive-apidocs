@@ -102,7 +102,10 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
 
       return (
         <div className={divClass}>
-          <h1><img className="inline-img" src="/img/bankid3.png" />{localization.docsignview.eleg.bankid.signConfirmationTitle}</h1>
+          <h1>
+            <img className="inline-img" src="/img/bankid3.png" />
+            {localization.docsignview.eleg.bankid.signConfirmationTitle}
+          </h1>
           {model.statusMessage()}
           <p className="ssn-text">
             {!hasError && <img src="/img/wait30trans.gif" />}
