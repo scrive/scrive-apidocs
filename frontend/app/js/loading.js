@@ -15,7 +15,6 @@ window.LoadingDialog = {
       var dialogArgs = args || {};
       var src = window.cdnbaseurl + '/img/wait30trans.gif';
       var spinner = $("<img style='margin:30px'/>").attr('src', src);
-      console.log("spinner is", spinner);
       return ScreenBlockingDialog.open(_.extend(dialogArgs, {content: spinner}));
     },
     close : function() {
