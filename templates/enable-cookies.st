@@ -11,7 +11,6 @@ enableCookies=<!DOCTYPE html>
 <meta http-equiv="X-UA-Compatible" content="IE=10" />
 <!--[if lt IE 9]>
 <script src="/libs/html5shiv.js"></script>
-<script src="/bower_components/json3/lib/json3.min.js"></script>
 <![endif]-->
 <link rel=" icon" href="/favicon/$brandinghash$" />
 <script src="/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
