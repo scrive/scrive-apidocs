@@ -254,7 +254,11 @@ remindMailNotSignedContract=
     )$
 #####
 remindMailNotSignedContractBody=
-$_remindMailNotSignedContractBody()$
+$if(automatic)$
+        $_remindMailNotSignedContractBodyAutomatic()$
+$else$
+        $_remindMailNotSignedContractBody()$
+$endif$
 <BR/>
 <BR/>
 $_remindMailNotSignedContractBodyFurther()$

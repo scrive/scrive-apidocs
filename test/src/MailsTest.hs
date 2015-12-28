@@ -98,7 +98,8 @@ sendDocumentMails author = do
         checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxbrandeddomain ctx) (ctxhostpart ctx) sl =<< theDocument
         checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxbrandeddomain ctx) (ctxhostpart ctx) sl =<< theDocument
         --remind mails
-        checkMail "Reminder notsigned" $ mailDocumentRemind Nothing sl True =<< theDocument
+        checkMail "Reminder notsigned" $ mailDocumentRemind False Nothing sl True =<< theDocument
+        checkMail "Reminder notsigned" $ mailDocumentRemind True Nothing sl True =<< theDocument
         --reject mail
         checkMail "Reject"  $ mailDocumentRejected True Nothing True sl =<< theDocument
         checkMail "Reject"  $ mailDocumentRejected True Nothing False sl =<< theDocument
@@ -111,7 +112,7 @@ sendDocumentMails author = do
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed False sl False False =<< theDocument
         -- Reminder after send
-        checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind Nothing ($head $ documentsignatorylinks d) True d
+        checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind True Nothing ($head $ documentsignatorylinks d) True d
   commit
 
 
