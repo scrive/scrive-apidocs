@@ -48,7 +48,7 @@ handleServiceBranding :: Kontrakcja m => String -> String -> m Response
 handleServiceBranding brandinghash _ = do
   ctx <- getContext
   theme <- getServiceTheme
-  brandingCSS <- withLessCache (ServiceBranding (themeID theme) brandinghash) $ serviceBrandingCSS (fromMaybe "" $ ctxcdnbaseurl ctx) theme 
+  brandingCSS <- withLessCache (ServiceBranding (themeID theme) brandinghash) $ serviceBrandingCSS (ctxcdnbaseurl ctx) theme 
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $
            setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
@@ -68,7 +68,7 @@ handleLoginBranding :: Kontrakcja m => String -> String -> m Response
 handleLoginBranding brandinghash _ = do
   ctx <- getContext
   theme <- getLoginTheme
-  brandingCSS <- withLessCache (LoginBranding (themeID theme) brandinghash) $ loginBrandingCSS (fromMaybe "" $ ctxcdnbaseurl ctx) theme 
+  brandingCSS <- withLessCache (LoginBranding (themeID theme) brandinghash) $ loginBrandingCSS (ctxcdnbaseurl ctx) theme 
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $
            setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
@@ -101,7 +101,7 @@ handleSignviewBranding :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> Stri
 handleSignviewBranding did slid brandinghash _ = do
   ctx <- getContext -- now we getContext twice in this method (once here, once in getSignviewTheme), is that OK?
   theme <- getSignviewTheme did slid
-  brandingCSS <-  withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (fromMaybe "" $ ctxcdnbaseurl ctx) theme
+  brandingCSS <-  withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (ctxcdnbaseurl ctx) theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $
            setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
@@ -125,7 +125,7 @@ handleSignviewBrandingWithoutDocument :: Kontrakcja m => String -> String -> m R
 handleSignviewBrandingWithoutDocument brandinghash _ = do
   ctx <- getContext -- now we gegContext twice in this method, is that OK?
   theme <- getSignviewThemeWithoutDocument
-  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (fromMaybe "" $ ctxcdnbaseurl ctx) theme
+  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (ctxcdnbaseurl ctx) theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $
            setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
@@ -147,7 +147,7 @@ handleSignviewBrandingInternal brandinghash _ = do
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   theme <- dbQuery $ GetTheme $ fromMaybe (bdServiceTheme $ ctxbrandeddomain ctx) (companyServiceTheme $ companyui)
-  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (fromMaybe "" $ ctxcdnbaseurl ctx) theme
+  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (ctxcdnbaseurl ctx) theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $
            setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res

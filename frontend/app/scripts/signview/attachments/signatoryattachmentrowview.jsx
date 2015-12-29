@@ -169,7 +169,7 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
             <table>
               <tbody>
                 <tr>
-                  <td rowSpan="2"><img className="paperclip" src={window.cdnbaseurl + "/img/paperclip.png"} /></td>
+                  <td rowSpan="2"><div className="paperclip" /></td>
                   <td><h1>{model.name()}</h1></td>
                 </tr>
                 <tr>
@@ -179,12 +179,12 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
             </table>
           </div>
           <div className="col-xs-5 right">
-            {/* if */ isLoading && !hasFile &&
+            {/* if */ isLoading || hasFile &&
               <div>
-                <img className="loading" src={window.cdnbaseurl + "/img/wait30trans.gif"} />
+                <div className="loading" />
               </div>
             }
-            {/* if */ hasFile && !isLoading &&
+            {/* if */ false && 
               <span>
                 <div className="button-group small-buttons">
                   {/* if */ canUpload &&

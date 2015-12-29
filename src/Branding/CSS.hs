@@ -22,7 +22,7 @@ import Utils.Color
 import Utils.Font
 
 -- Signview branding CSS. Generated using less
-signviewBrandingCSS :: (MonadLog m,MonadIO m) => String -> Theme -> m BSL.ByteString
+signviewBrandingCSS :: (MonadLog m,MonadIO m) => Maybe String -> Theme -> m BSL.ByteString
 signviewBrandingCSS cdnbaseurl theme = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
@@ -36,7 +36,7 @@ signviewBrandingCSS cdnbaseurl theme = do
             ]
           return BSL.empty
 
-signviewBrandingLess :: String -> Theme -> String
+signviewBrandingLess :: Maybe String -> Theme -> String
 signviewBrandingLess cdnbaseurl theme = unlines $
    [
     "@import 'branding/variables';", -- This is imported so we can use color variables from there
@@ -54,7 +54,7 @@ signviewBrandingLess cdnbaseurl theme = unlines $
    ]
 
 -- Service branding CSS. Generated using less
-serviceBrandingCSS :: (MonadLog m,MonadIO m) => String -> Theme -> m BSL.ByteString
+serviceBrandingCSS :: (MonadLog m,MonadIO m) => Maybe String -> Theme -> m BSL.ByteString
 serviceBrandingCSS cdnbaseurl theme = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
@@ -68,7 +68,7 @@ serviceBrandingCSS cdnbaseurl theme = do
             ]
           return BSL.empty
 
-serviceBrandingLess :: String -> Theme -> String
+serviceBrandingLess :: Maybe String -> Theme -> String
 serviceBrandingLess cdnbaseurl theme = unlines $
    [
     "@import 'branding/variables';", -- This is imported so we can use color variables from there
@@ -88,7 +88,7 @@ serviceBrandingLess cdnbaseurl theme = unlines $
 
 
 -- Service branding CSS. Generated using less
-loginBrandingCSS :: (MonadLog m,MonadIO m) => String -> Theme -> m BSL.ByteString
+loginBrandingCSS :: (MonadLog m,MonadIO m) => Maybe String -> Theme -> m BSL.ByteString
 loginBrandingCSS cdnbaseurl theme = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
@@ -102,7 +102,7 @@ loginBrandingCSS cdnbaseurl theme = do
             ]
           return BSL.empty
 
-loginBrandingLess :: String -> Theme -> String
+loginBrandingLess :: Maybe String -> Theme -> String
 loginBrandingLess cdnbaseurl theme = unlines $
    [
     "@import 'branding/variables';", -- This is imported so we can use color variables from there
@@ -161,11 +161,10 @@ lessVariablesFromTheme theme = [
   ]
   where -- what's this where doing here?
 
-lessVariablesFromCDN :: String -> [String]
+lessVariablesFromCDN :: Maybe String -> [String]
 lessVariablesFromCDN cdnbaseurl = [
-    "@cdnbaseurl: \"" ++ cdnbaseurl ++ "\";"
+    "@cdnbaseurl: \"" ++ (fromMaybe "" cdnbaseurl) ++ "\";"
   ]
-  
 
 domainBrandingCSS :: (MonadLog m,MonadIO m) => BrandedDomain -> m BSL.ByteString
 domainBrandingCSS bd = do

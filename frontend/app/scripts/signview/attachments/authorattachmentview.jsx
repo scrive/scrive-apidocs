@@ -80,7 +80,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
               <table>
                 <tbody>
                   <tr>
-                    <td rowSpan="2"><img className="paperclip" src="/img/paperclip.png" /></td>
+                    <td rowSpan="2"><div className="paperclip"/></td>
                     <td><h1>{model.name()}</h1></td>
                   </tr>
                   <tr>

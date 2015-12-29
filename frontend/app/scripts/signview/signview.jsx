@@ -156,7 +156,7 @@ define([
             <div className="main">
               <div className="section loading">
                 <div className="col-xs-12 center">
-                  <img src={window.cdnbaseurl + "/img/wait30trans.gif"} />
+                  <div className="waiting4data" />
                 </div>
               </div>
             </div>

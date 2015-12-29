@@ -46,7 +46,7 @@ return React.createClass({
       }
     },
     generateBackgroundImageURL: function(imagePath, color) {
-      return "url("+window.cdnbaseurl+"/colored_image?file=" + imagePath + "&color=" + encodeURIComponent(color) + ")";
+      return "url(/colored_image?file=" + imagePath + "&color=" + encodeURIComponent(color) + ")";
     },
     render: function() {
       var self = this;
