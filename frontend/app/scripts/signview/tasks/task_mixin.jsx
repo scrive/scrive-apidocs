@@ -60,6 +60,14 @@ define(["React"], function (React) {
       this.addTasks();
     },
 
+    updateArrow: function () {
+      var arrow = this.context.getArrow();
+
+      if (arrow) {
+        arrow.updateArrow();
+      }
+    },
+
     componentDidUpdate: function () {
       var self = this;
       var tasks = self._tasks;
