@@ -10,8 +10,8 @@ var require = {
      *  Libraries
      */
     jquery: '../bower_components/jquery/jquery.min',
-    React: '../bower_components/react/react-with-addons',
-    Backbone: '../bower_components/backbone/backbone',
+    React: '../bower_components/react/react-with-addons.min',
+    Backbone: '../bower_components/backbone/backbone-min',
     Underscore: '../bower_components/underscore/underscore-min',
     moment: '../bower_components/moment/min/moment-with-langs.min',
     html2canvas: '../libs/html2canvas',
