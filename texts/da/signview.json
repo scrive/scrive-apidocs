@@ -8,7 +8,7 @@
 "_company":"Virksomhed",
 "_companyNumberLabel":"CVR-nr. ",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, ved at klikke på knappen vil du signere dokumentet <strong class='put-document-title-here'></strong>, og dit dokument bliver registreret af e-signeringsservicen Scrive.",
-"_contractSignConfirmationSignaturePlaced":"",
+"_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, du har signeret dokumentet <strong class='put-document-title-here'></strong>. Når du klikker på knappen, vil din signatur blive registreret af e-signeringstjenesten Scrive. ",
 "_contractSignatorySignModalBody":"<strong class='put-signatory-name-here'></strong>, ved at klikke på knappen bliver din signatur registreret af e-signeringstjenesten Scrive.",
 "_contractSignatorySignModalBodyNoName":"Når du klikker på knappen, vil din signatur blive registreret af e-signeringstjenesten Scrive.",
 "_contractSignatorySignModalTitle":"Færdig?",
