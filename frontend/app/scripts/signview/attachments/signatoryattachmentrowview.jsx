@@ -179,12 +179,12 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
             </table>
           </div>
           <div className="col-xs-5 right">
-            {/* if */ isLoading || hasFile &&
+            {/* if */ isLoading && !hasFile &&
               <div>
                 <div className="loading" />
               </div>
             }
-            {/* if */ false && 
+            {/* if */ hasFile && !isLoading &&
               <span>
                 <div className="button-group small-buttons">
                   {/* if */ canUpload &&
