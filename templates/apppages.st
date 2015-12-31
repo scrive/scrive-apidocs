@@ -45,8 +45,6 @@ standardHeaderContents=
 	<script src="$cdnbaseurl$/libs/html5shiv.js"></script>
 	<script src="$cdnbaseurl$/bower_components/json3/lib/json3.min.js"></script>
         <![endif]-->
-        <link href='$cdnbaseurl$/css/fonts/SourceSansPro.css' rel='stylesheet' type='text/css'/>
-        <link href='$cdnbaseurl$/css/fonts/HelveticaNeue.css' rel='stylesheet' type='text/css'/>
         <link rel=" icon" href="/favicon/$brandinghash$" />
 
         <script src="$cdnbaseurl$/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
@@ -83,6 +81,7 @@ standardHeaderContents=
         $endif$
         <script>
           window.brandinghash = "$brandinghash$";
+          window.cdnbaseurl = "$cdnbaseurl$";
         </script>
 
         $analyticsLoaderKontrakcja()$

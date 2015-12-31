@@ -3,7 +3,8 @@
   background:transparent; /* Fallback IE */
   filter: e(@filter);
   background-color: @bcolor;
-  background-image: url("/img/transparent-pixel.png"); // Make click area work in IE8.
+  @url : %('%s/img/transparent-pixel.png', @cdnbaseurl);
+  background-image: @url; // Make click area work in IE8.
 }
 
 .global-table {
@@ -154,6 +155,10 @@
 
   .identify-box-spinner {
     margin-bottom: 30px;
+    background-image: url(/img/wait30trans.gif);
+    display: inline-block;
+    width: 30px;
+    height: 30px;
   }
 
   .identify-box-cancel {

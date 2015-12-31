@@ -538,7 +538,7 @@ testSignviewBrandingBlocksNastyInput:: TestEnv ()
 testSignviewBrandingBlocksNastyInput = do
   bd <- ctxbrandeddomain <$> mkContext def -- We need to get default branded domain. And it can be fetched from default ctx
   theme <- dbQuery $ GetTheme $ (bdSignviewTheme $ bd)
-  emptyBrandingCSS <- signviewBrandingCSS theme
+  emptyBrandingCSS <- signviewBrandingCSS Nothing theme
   assertBool "CSS generated for empty branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
   let
     nasty1 = "nastyColor \n \n";
@@ -549,7 +549,7 @@ testSignviewBrandingBlocksNastyInput = do
       , themeBrandTextColor = nasty2
       , themeFont = nasty3
       }
-  nastyCSS <-  signviewBrandingCSS nastyTheme
+  nastyCSS <-  signviewBrandingCSS (Just "") nastyTheme
   assertBool "CSS generated for nasty company branding is not empty" (not $ BSL.null $ nastyCSS)
   assertBool "CSS generated for nasty company branding does not contain nasty strings" $
        (not $ nasty1 `isInfixOf ` (BSL.toString $ nastyCSS))

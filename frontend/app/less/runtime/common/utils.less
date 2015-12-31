@@ -6,7 +6,7 @@
 }
 
 .divider-line {
-  @url : %('/colored_image?file=divider-line.png&color=%D',@brandtextcolor);
+  @url : %('%s/colored_image?file=divider-line.png&color=%D', @cdnbaseurl, @brandtextcolor);
   background-image: url(@url) ;
   display: block;
   height: 2px;

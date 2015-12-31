@@ -41,7 +41,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button",
       return (
         <span>
           <h3 className="identify-box-heading">{this.props.model.statusText()}</h3>
-          <img className="identify-box-spinner" src="/img/wait30trans.gif" />
+          <div className="identify-box-spinner" />
           { /* if */ transaction.thisDevice() && transaction.activeForAtLeast5Sec() &&
                      (transaction.isStatusOutstanding() || transaction.isStatusNoClient()) &&
             <div className="identify-box-button">

@@ -177,7 +177,7 @@ module.exports = function (grunt) {
               "./*.{html,xml,jpg,png,ico,txt}",
               "api-explorer/**/*",
               "enable-cookies/**/*",
-              "css/fonts/*",
+              "css/fonts/*.woff",
               "css/assets/*",
               "fonts/**/*",
               "img/**/*",
@@ -258,7 +258,8 @@ module.exports = function (grunt) {
         files: {
           "<%= yeoman.app %>/less/less-compiled.css": [
             "<%= yeoman.app %>/less/index.less",
-            "<%= yeoman.app %>/css/*.css"
+            "<%= yeoman.app %>/css/*.css",
+            "<%= yeoman.app %>/css/fonts/*.css"
           ]
         }
       },
@@ -268,7 +269,10 @@ module.exports = function (grunt) {
           sourceMapURL: "/less/signview-less-compiled.css.map"
         },
         files: {
-          "<%= yeoman.app %>/less/signview-less-compiled.css": "<%= yeoman.app %>/less/signview/index.less"
+          "<%= yeoman.app %>/less/signview-less-compiled.css": [
+            "<%= yeoman.app %>/less/signview/index.less",
+            "<%= yeoman.app %>/css/fonts/*.css"
+          ]
         }
       }
     }

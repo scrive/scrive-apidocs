@@ -38,7 +38,7 @@ define(["legacy_code",  "React", "common/backbone_mixin",
     },
 
     bankidLogo: function () {
-      return this.state.model.isSwedish() ? "/img/bankid2.png" : "/img/bankid-no.png";
+      return window.cdnbaseurl + (this.state.model.isSwedish() ? "/img/bankid2.png" : "/img/bankid-no.png");
     },
     verifyIdentityText: function () {
       var model = this.state.model;

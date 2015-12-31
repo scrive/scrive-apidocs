@@ -44,7 +44,7 @@ return React.createClass({
       return (
         <div className="login-preview" style={{"backgroundColor": model.brandColor()}}>
           <div className="logo-wrapper">
-            <img src={ model.logo() || "/img/logo_email.png"}/>
+            <img src={ model.logo() || window.cdnbaseurl + "/img/logo_email.png"}/>
             <div className="divider-line" style={{"backgroundImage": this.state.dividerLineBackgroundUrl}} />
 
             <p className="small" style={{"color": model.brandTextColor()}}>E-signing powered by Scrive</p>

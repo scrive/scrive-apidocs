@@ -59,7 +59,7 @@ return React.createClass({
     var sent = signatory.document().signingInProcess();
     var minified = this.state.minified;
     var containerClasses = "party-container " + (minified ? "minified" : "");
-    var imageSource = this.state.minified ? '/img/to-send/arrow-up.png' : '/img/to-send/arrow-down.png';
+    var imageSource = window.cdnbaseurl + (this.state.minified ? '/img/to-send/arrow-up.png' : '/img/to-send/arrow-down.png');
 
     return (
       <div onClick={minified && this.toggleVisibility} className={containerClasses}>

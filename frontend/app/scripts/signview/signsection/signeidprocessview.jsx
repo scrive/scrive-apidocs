@@ -102,9 +102,9 @@ define(["Underscore", "Backbone", "React", "common/backbone_mixin", "common/butt
 
       return (
         <div className={divClass}>
-          <h1><img className="inline-img" src="/img/bankid3.png" />{model.statusMessage()}</h1>
+          <h1><img className="inline-img" src={window.cdnbaseurl + "/img/bankid3.png"} />{model.statusMessage()}</h1>
           <p className="ssn-text">
-            {!hasError && <img src="/img/wait30trans.gif" />}
+            {!hasError && <img src={window.cdnbaseurl + "/img/wait30trans.gif"} />}
             {localization.personalNumber} <b>{ssn}</b>
           </p>
           {/* if */ this.hasStartNowButton() &&

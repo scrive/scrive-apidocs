@@ -13,7 +13,8 @@ define(['Backbone', 'legacy_code'], function() {
 window.LoadingDialog = {
     open: function (args) { 
       var dialogArgs = args || {};
-      var spinner = $("<img src='/img/wait30trans.gif' style='margin:30px'/>");
+      var src = window.cdnbaseurl + '/img/wait30trans.gif';
+      var spinner = $("<img style='margin:30px'/>").attr('src', src);
       return ScreenBlockingDialog.open(_.extend(dialogArgs, {content: spinner}));
     },
     close : function() {
