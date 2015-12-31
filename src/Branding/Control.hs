@@ -99,7 +99,7 @@ handleDomainBranding brandinghash _ = do
 -- Used to brand signview
 handleSignviewBranding :: Kontrakcja m => DocumentID ->  SignatoryLinkID -> String -> String -> m Response
 handleSignviewBranding did slid brandinghash _ = do
-  ctx <- getContext -- now we getContext twice in this method (once here, once in getSignviewTheme), is that OK?
+  ctx <- getContext
   theme <- getSignviewTheme did slid
   brandingCSS <-  withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (ctxcdnbaseurl ctx) theme
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing

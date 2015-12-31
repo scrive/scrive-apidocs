@@ -18,7 +18,7 @@ return React.createClass({
       return (
         <div className="email-preview" style={{"backgroundColor": model.brandColor()}}>
           <div className="logo-wrapper">
-            <img src={ model.logo() || window.cdnbaseurl + "/img/logo_email.png"} />
+            <img src={ model.logo() || (window.cdnbaseurl + "/img/logo_email.png")} />
           </div>
 
           <div className="content-container" style={{"fontFamily": model.font()}}>

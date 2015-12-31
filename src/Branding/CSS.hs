@@ -159,7 +159,6 @@ lessVariablesFromTheme theme = [
     bcolor "negativetextcolor" $ themeNegativeTextColor theme,
     bfont "font" $ themeFont theme
   ]
-  where -- what's this where doing here?
 
 lessVariablesFromCDN :: Maybe String -> [String]
 lessVariablesFromCDN cdnbaseurl = [
