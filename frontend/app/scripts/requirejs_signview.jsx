@@ -16,9 +16,6 @@ var require = {
     moment: '../bower_components/moment/min/moment-with-langs.min',
     html2canvas: '../libs/html2canvas',
     base64: '../libs/base64',
-    es5shim: '../bower_components/es5-shim/es5-shim.min',
-    es5sham: '../bower_components/es5-shim/es5-sham.min',
-
     /**
      *  Legacy code imports
      */
@@ -33,7 +30,7 @@ var require = {
       exports: 'Backbone'
     }
   },
-  deps: ['es5shim', 'es5sham', 'jquery', 'Underscore', 'Backbone'],
+  deps: ['jquery', 'Underscore', 'Backbone'],
   // All scripts that are not used by other components, but refered from string templates should be listed here
   include: [ 'pages/header', 'pages/footer', 'signview/header', 'signview/footer', 'signview/identify/identifyview', 'signview/signview']
 };

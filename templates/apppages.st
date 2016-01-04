@@ -41,6 +41,8 @@ standardHeaderContents=
         $endif$
         <!--[if lt IE 9]>
 	<script src="$cdnbaseurl$/libs/html5shiv.js"></script>
+	<script src="$cdnbaseurl$/bower_components/es5-shim/es5-shim.min.js"></script>
+	<script src="$cdnbaseurl$/bower_components/es5-shim/es5-sham.min.js"></script>
         <![endif]-->
         <link rel=" icon" href="/favicon/$brandinghash$" />
 

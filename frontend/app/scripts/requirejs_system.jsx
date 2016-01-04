@@ -18,9 +18,6 @@ var require = {
     tinycolor : '../libs/tinycolor-min',
     html2canvas: '../libs/html2canvas',
     base64: '../libs/base64',
-    es5shim: '../bower_components/es5-shim/es5-shim.min',
-    es5sham: '../bower_components/es5-shim/es5-sham.min',
-
     /**
      *  Legacy code imports
      */
@@ -35,7 +32,7 @@ var require = {
       exports: 'Backbone'
     }
   },
-  deps: ['es5shim', 'es5sham', 'jquery', 'Underscore', 'Backbone'],
+  deps: ['jquery', 'Underscore', 'Backbone'],
   // All scripts that are not used by other components, but refered from string templates should be listed here
   include: ['login/login', 'pages/header', 'pages/special/header', 'pages/footer', 'pages/special/footer', 'lists/list', 'padlist/padlist', 'createfromtemplate/createfromtemplate', 'to-start/to-start', 'to-start/templatelist']
 };
