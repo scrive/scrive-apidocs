@@ -12,3 +12,9 @@ mapKeepM f = mapM (\a -> (a, ) `liftM` f a)
 
 rlookup :: Eq b => b -> [(a, b)] -> Maybe a
 rlookup v = fmap fst . find ((== v) . snd)
+
+lStripFrom :: [Char] -> String -> String
+lStripFrom chars = dropWhile (`elem` chars)
+
+rStripFrom :: [Char] -> String -> String
+rStripFrom chars = reverse . lStripFrom chars . reverse

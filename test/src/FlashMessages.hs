@@ -3,7 +3,7 @@ module FlashMessages (flashMessagesTests) where
 
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck (elements, oneof, Arbitrary(..), Property, mapSize)
+import Test.QuickCheck (elements, oneof, Arbitrary(..), Property, mapSize, ioProperty)
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 
@@ -27,8 +27,9 @@ instance Arbitrary FlashType where
 
 flashEncodeDecode :: Property
 flashEncodeDecode =
-  mapSize (`div` 2) $ \f -> -- scale back a bit or it takes too long
-  Just f == fromCookieValue (toCookieValue f)
+  mapSize (`div` 2) $ \f -> ioProperty $ do -- scale back a bit or it takes too long
+    mf <- fromCookieValue (toCookieValue f)
+    return $ Just f == mf
 
 
 -- Currently, this test raises an exception, so we avoid it.  However, it is
