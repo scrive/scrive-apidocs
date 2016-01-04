@@ -8,7 +8,7 @@
 "_company":"Foretak",
 "_companyNumberLabel":"Organisasjonsnr.",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, ved å klikke på knappen vil du signere dokumentet <strong class='put-document-title-here'></strong>, og signaturen din vil bli registrert av e-signeringstjenesten Scrive.",
-"_contractSignConfirmationSignaturePlaced":"",
+"_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, du har signert dokumentet <strong class='put-document-title-here'></strong>. Når du klikker på knappen vil signaturen din registreres av e-signeringstjenesten Scrive.",
 "_contractSignatorySignModalBody":"<strong class='put-signatory-name-here'></strong>, ved å klikke på knappen vil du signere dokumentet og signaturen din vil bli registrert av e-signeringstjenesten Scrive.",
 "_contractSignatorySignModalBodyNoName":"Ved å klikke på knappen vil signaturen din bli registrert av e-signeringstjenesten Scrive.",
 "_contractSignatorySignModalTitle":"Ferdig?",
