@@ -131,25 +131,13 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
     _gaq.push(['_setCustomVar', 2, 'User?', 'true', 2]);
   $endif$
   _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
 // end Google analytics
-
-// HubSpot js: Start of Async HubSpot Analytics Code
-  (function(d,s,i,r) {
-    if (d.getElementById(i)){return;}
-    var n=d.createElement(s),e=d.getElementsByTagName(s)[0];
-    n.id=i;n.src='//js.hs-analytics.net/analytics/'+(Math.ceil(new Date()/r)*r)+'/431732.js';
-    e.parentNode.insertBefore(n, e);
-  })(document,"script","hs-analytics",300000);
-// end Hubspot js
 ####
 analyticsLoaderKontrakcja=
 $loadScript(src="//js.hubspot.com/forms/current.js")$
+$loadScript(src="https://ssl.google-analytics.com/ga.js")$
+$loadScript(src="//js.hs-analytics.net/analytics/431732.js")$
+
 <script>
   $analyticsLoaderBase()$
   mixpanel.track_links('#logo', 'Click Logo');
@@ -271,7 +259,7 @@ $loadScript(src="https://www.vivocha.com/a/scrive/api/vivocha.js")$
 loadScript=
 <script>
  require(['jquery'], function(jQuery) {
-  jQuery(function(){
+  jQuery(window).load(function(){
     var script = document.createElement( 'script' );
     script.type = 'text/javascript';
     script.src = "$src$";
