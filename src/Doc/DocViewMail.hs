@@ -47,34 +47,37 @@ import Utils.Color
 import Utils.Monoid
 
 mailDocumentRemind :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
-                   => Maybe String
+                   => Bool
+                   -> Maybe String
                    -> SignatoryLink
                    -> Bool
                    -> Document
                    -> m Mail
-mailDocumentRemind cm s documentAttached d = case s of
-  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned True cm d s
+mailDocumentRemind automatic cm s documentAttached d = case s of
+  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned automatic True cm d s
   _                                       -> remindMailSigned    True cm d s documentAttached
 
 mailDocumentRemindContent :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
                           => Maybe String -> Document -> SignatoryLink -> Bool -> m String
 mailDocumentRemindContent cm d s documentAttached = content <$> case s of
-  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned False cm d s
+  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned False False cm d s
   _                                       -> remindMailSigned    False cm d s documentAttached
 
 remindMailNotSigned :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m)
                     => Bool
+                    -> Bool
                     -> Maybe String
                     -> Document
                     -> SignatoryLink
                     -> m Mail
-remindMailNotSigned forMail customMessage document signlink = do
+remindMailNotSigned automatic forMail customMessage document signlink = do
     mctx <- getMailContext
     let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document)
         authorname = getAuthorName document
     documentMailWithDocLang document (templateName "remindMailNotSignedContract") $ do
         F.value  "custommessage" $ asCustomMessage <$> customMessage
         F.value  "authorname" authorname
+        F.value  "automatic" automatic
         F.value "partners" $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
         F.value "partnerswhosigned" $ map getSmartName $  filter (isSignatory && hasSigned) (documentsignatorylinks document)
         F.value "someonesigned" $ not $ null $ filter (isSignatory && hasSigned) (documentsignatorylinks document)

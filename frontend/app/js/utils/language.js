@@ -15,7 +15,7 @@ window.Language = {
     changeForPageAndReload : function(code) {
         var p = window.location.pathname;
         Cookies.set("lang",code);
-        var hasLangPrefix = _.any(Language.allLanguagesCodes(), function(c) {return p.substring(0, 3) == ('/'+ c);});
+        var hasLangPrefix = _.any(Language.allLanguagesCodes(), function(c) {return p.substring(0, 4) == ("/" + c + "/");});
         if (hasLangPrefix) {
             p = "/" + code + p.substr(3);
             window.location.pathname = p;

@@ -11,8 +11,9 @@ module FlashMessage (
     ) where
 
 import Control.Monad.IO.Class
-import Happstack.Server
+import Happstack.Server hiding (lookCookieValue)
 import qualified Codec.Compression.GZip as GZip
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -21,7 +22,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import Cookies
 import KontraPrelude hiding (optional)
 import Utils.HTTP
-import Utils.Monoid
 
 data FlashType
     = OperationDone
@@ -74,20 +74,23 @@ toCookieValue flashes =
     BS.unpack . B64.encode . BS.concat
     . BSL.toChunks . GZip.compress . BSLU.fromString $ show flashes
 
--- Warning! This may throw exception id decoding is wrong!
-fromCookieValue :: String -> Maybe [FlashMessage]
+fromCookieValue :: String -> IO (Maybe [FlashMessage])
 fromCookieValue flashesdata = do
-    case B64.decode $ BS.pack flashesdata of
-         Right s -> maybeRead $ BSLU.toString $ GZip.decompress $ BSL.fromChunks [s]
-         _       -> Nothing
+  eflashes <- E.try $ E.evaluate flashes
+  case eflashes of
+    Left (_ :: E.SomeException) -> return Nothing
+    Right (x :: Maybe [FlashMessage]) -> return x
+  where flashes = case B64.decode $ BS.pack flashesdata of
+                    Right s -> maybeRead $ BSLU.toString $ GZip.decompress $ BSL.fromChunks [s]
+                    _       -> Nothing
 
 addFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => String -> m ()
 addFlashCookie flashesdata = do
     ishttps <- isHTTPS
     addHttpOnlyCookie ishttps (MaxAge $ 60*60*24) $ mkCookie "flashes" $ flashesdata
 
-flashDataFromCookie :: RqData (Maybe String)
-flashDataFromCookie = optional $ lookCookieValue "flashes"
+flashDataFromCookie :: ServerMonad m => m (Maybe String)
+flashDataFromCookie = lookCookieValue "flashes"
 
 removeFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => m ()
 removeFlashCookie = do

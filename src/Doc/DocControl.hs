@@ -36,11 +36,11 @@ module Doc.DocControl(
 
 import Control.Concurrent
 import Control.Conditional (unlessM, whenM)
-import Control.Monad.Catch (MonadMask, catch)
+import Control.Monad.Catch (MonadMask)
 import Control.Monad.Reader
 import Data.String.Utils (replace,strip)
 import Data.Time (ZonedTime)
-import Happstack.Server hiding (simpleHTTP)
+import Happstack.Server hiding (simpleHTTP, lookCookieValue)
 import Log
 import System.Directory
 import System.IO.Temp
@@ -59,6 +59,7 @@ import AppView
 import Attachment.AttachmentID (AttachmentID)
 import Attachment.Model
 import BrandedDomain.BrandedDomain
+import Cookies
 import DB
 import DB.TimeZoneName
 import Doc.API.Callback.Model
@@ -84,7 +85,6 @@ import File.File (fileid)
 import File.Model
 import File.Storage (getFileIDContents)
 import Happstack.Fields
-import Happstack.Server.ReqHandler
 import InputValidation
 import Kontra
 import KontraLink
@@ -113,11 +113,10 @@ handleNewDocument = do
         user <- guardJustM $ ctxmaybeuser <$> getContext
         title <- renderTemplate_ "newDocumentTitle"
         actor <- guardJustM $ mkAuthorActor <$> getContext
-        mtimezonename <- runPlusSandboxT (lookCookieValue "timezone") `catch` \(RqDataError errs) -> do
-          logInfo "Errors while looking up 'timezone' cookie" $ object [
-              "errors" .= unErrors errs
-            ]
-          return Nothing
+        mtimezonename <- lookCookieValue "timezone"
+        case mtimezonename of
+          Nothing -> logInfo_ "'timezone' cookie not found"
+          _ -> return ()
         timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
         timestamp <- formatTimeSimpleWithTZ timezone (ctxtime ctx)
         doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ timestamp) Signable timezone 1 actor

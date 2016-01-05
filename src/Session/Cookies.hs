@@ -7,7 +7,6 @@ module Session.Cookies (
 
 import Control.Arrow
 import Control.Monad.IO.Class
-import Data.Char
 import Happstack.Server hiding (Session, addCookie)
 
 import Cookies
@@ -54,17 +53,5 @@ sessionCookieInfoFromSession s = SessionCookieInfo {
   }
 
 -- | Read current session cookie from request.
-currentSessionInfoCookies :: RqData [SessionCookieInfo]
+currentSessionInfoCookies :: ServerMonad m => m [SessionCookieInfo]
 currentSessionInfoCookies = readCookiesValues "sessionId"
-
-{- IE 10 is sending cookies for both domain and subdomain (scrive.com & nj.scrive.com)
-   We need to read them both, since we have no idea which is the right one.
-
-   To protect against overload attack, we limit number of session cookies supported to 10.
--}
-readCookiesValues :: (Monad m, HasRqData m,Read a) => String -> m [a]
-readCookiesValues name = do
-  (_,_, cookiesWithNames) <- askRqEnv
-  let cookies = take 10 $ map snd $ filter (\c -> (fst c) == (map toLower name)) cookiesWithNames
-  return $ map $fromJust $ filter isJust $ maybeRead <$> cookieValue <$> cookies
-
