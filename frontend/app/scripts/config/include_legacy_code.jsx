@@ -7,6 +7,7 @@ define([
   '../libs/jquery.hashchange',
   '../libs/colorpicker',
   '../libs/json2',
+  '../bower_components/es6-promise/promise.min',
   '../libs/jstz.min',
   '../libs/jquery.form',
   '../libs/jquery.caret',
