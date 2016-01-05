@@ -160,7 +160,7 @@ sendReminderEmail custommessage actor automatic siglink = logSignatory (signator
   doc <- theDocument
   let domail = do
        mailattachments <- makeMailAttachments doc
-       mail <- mailDocumentRemind custommessage siglink (not (null mailattachments)) doc
+       mail <- mailDocumentRemind automatic custommessage siglink (not (null mailattachments)) doc
        docid <- theDocumentID
        scheduleEmailSendoutWithAuthorSenderThroughService docid (mctxmailsconfig mctx) $ mail {
            to = [getMailAddress siglink]
@@ -173,7 +173,7 @@ sendReminderEmail custommessage actor automatic siglink = logSignatory (signator
           then mailattachments
           else [])
        }
-      dosms = scheduleSMS doc =<< smsReminder doc siglink
+      dosms = scheduleSMS doc =<< smsReminder automatic doc siglink
 
   sent <- case maybesigninfo siglink of
            Just _ -> do
