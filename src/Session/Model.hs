@@ -17,7 +17,6 @@ import ActionQueue.Core
 import Context
 import Crypto.RNG
 import DB
-import Happstack.Server.ReqHandler
 import KontraMonad
 import KontraPrelude
 import Log.Identifier
@@ -55,8 +54,8 @@ getNonTempSessionID = do
 
 -- | Get current session based on cookies set.
 -- If no session is available, return new, empty session.
-getCurrentSession :: (CryptoRNG m, HasRqData m, MonadDB m, MonadThrow m, ServerMonad m, MonadLog m) => m Session
-getCurrentSession = withRqData currentSessionInfoCookies $ getSessionFromCookies
+getCurrentSession :: (CryptoRNG m, MonadDB m, MonadThrow m, ServerMonad m, MonadLog m) => m Session
+getCurrentSession = currentSessionInfoCookies >>= getSessionFromCookies
   where
     getSessionFromCookies (cs:css) = do
       domain <- currentDomain

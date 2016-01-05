@@ -21,7 +21,7 @@ import Data.Functor
 import Data.Time.Clock
 import Data.Typeable
 import GHC.Stack
-import Happstack.Server hiding (simpleHTTP, host, dir, path)
+import Happstack.Server hiding (simpleHTTP, host, dir, path, lookCookieValue)
 import Happstack.Server.Internal.Cookie
 import Log
 import Network.Socket
@@ -37,6 +37,7 @@ import AppConf
 import AppView as V
 import BrandedDomain.Model
 import Branding.Cache
+import Cookies (lookCookieValue)
 import Crypto.RNG
 import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
@@ -57,7 +58,6 @@ import Templates
 import Text.JSON.Convert
 import User.Model
 import Util.FinishWith
-import Util.FlashUtil
 import Utils.HTTP
 import qualified Amazon as AWS
 import qualified FlashMessage as F
@@ -80,15 +80,14 @@ data AppGlobals
     Determines the lang of the current user (whether they are logged in or not), by checking
     their settings, the request, and cookies.
 -}
-getStandardLang :: (HasLang a, HasRqData m, ServerMonad m, FilterMonad Response m, MonadIO m, Functor m, MonadLog m, MonadCatch m) => Maybe a -> m Lang
+getStandardLang :: (HasLang a, ServerMonad m, FilterMonad Response m, MonadIO m, Functor m, MonadLog m, MonadCatch m) => Maybe a -> m Lang
 getStandardLang muser = do
   rq <- askRq
-  langcookie <- runPlusSandboxT (lookCookie "lang") `catch` \(RqDataError errs) -> do
-    logInfo "Errors while looking up 'lang' cookie" $ object [
-        "errors" .= unErrors errs
-      ]
-    return Nothing
-  let mcookielang = join $ langFromCode <$> cookieValue <$> langcookie
+  langcookie <- lookCookieValue "lang"
+  case langcookie of
+    Nothing -> logInfo_ "'lang' cookie not found"
+    _ -> return ()
+  let mcookielang = join $ langFromCode <$> langcookie
   let browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
       newlang = fromMaybe browserlang $ msum [(getLang <$> muser), mcookielang]
       newlangcookie = mkCookie "lang" (codeFromLang newlang)
@@ -319,16 +318,18 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
       mpaduser <- getPadUserFromSession session
       brandeddomain <- dbQuery $ GetBrandedDomainByURL currhostpart
 
-      flashmessages <- withRqData F.flashDataFromCookie $ maybe (return []) $ \fval -> do
-        flashes <- liftIO $ (E.try (E.evaluate $ F.fromCookieValue fval) :: IO (Either  E.SomeException (Maybe [FlashMessage])))
-        case flashes of
-          Right (Just fs) -> return fs
-          _ -> do
-            logInfo "Couldn't read flash messages from value" $ object [
-                "value" .= fval
-              ]
+      let flashErrorHandler = do
+            logInfo_ "Couldn't read flash messages"
             F.removeFlashCookie
             return []
+      mflashmessages <- F.flashDataFromCookie
+      flashmessages <- case mflashmessages of
+                        Nothing -> flashErrorHandler
+                        Just fs -> do
+                          flashes <- liftIO $ F.fromCookieValue fs
+                          case flashes of
+                            Just fs' -> return fs'
+                            _ -> flashErrorHandler
 
       -- do reload templates in non-production code
       templates2 <- maybeReadTemplates (production appConf) (templates appGlobals)
