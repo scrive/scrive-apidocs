@@ -213,10 +213,10 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
 
       -- Make sure response is well defined before passing it further.
       res `deepseq` case res of
-        Right response -> return response
+        Right response -> return $ contentLength response
         Left response -> do
           rollback -- if exception was thrown, rollback everything
-          return response
+          return $ contentLength response
   where
     runHandler :: AWS.AmazonMonadT (CryptoRNGT (DBT HandlerM)) Response
                -> HandlerM Response
