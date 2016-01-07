@@ -207,12 +207,11 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
       });
 
       model.addValidator(function() {
-        return nameInput.value().validate(new UserNameValidation({
+        return nameInput.value().validate(new NameValidation({
           callback: function(t, e, v) {
             $("<div class='failed-validation validation-failed-msg' />").append(v.message()).appendTo(nameInput.el().parent());
           },
-          firstName: localization.validation.firstNameField,
-          lastName: localization.validation.lastNameField}));
+          message: localization.accountSetupModal.modalAccountSetupMissingName}));
       });
 
       body.append($("<div class='position first'/>").append(nameInput.el()));
