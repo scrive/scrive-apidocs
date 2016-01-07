@@ -482,7 +482,7 @@ jsonDocuments = onlySalesOrAdmin $ do
         -- When fetching all documents, we don't allow any filtering, and only default sort is allowed
         (Nothing, Nothing)  -> (DocumentsOfWholeUniverse,[],[Desc DocumentOrderByMTime])
         (Just cid, Nothing) -> (DocumentsOfCompany cid,requestedFilters,requestedSorting)
-        (Nothing, Just uid) -> (DocumentsVisibleToUser uid, (DocumentFilterByAuthor uid) : requestedFilters,requestedSorting)
+        (Nothing, Just uid) -> (DocumentsVisibleToUser uid, requestedFilters,requestedSorting)
         _                   -> $unexpectedError "Can't pass both user id and company id"
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain filtering sorting (offset, 1000, maxcount)
   let json = listToJSONBS (allDocsCount,(\d -> (documentAccessForAdminonly d,d)) <$> allDocs)
