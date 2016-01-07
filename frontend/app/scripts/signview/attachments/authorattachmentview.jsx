@@ -43,7 +43,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
 
     componentDidUpdate: function (prevProps, prevState) {
       if (this.state.showPages !== prevState.showPages) {
-        this.forceUpdateTasks();
+        this.updateArrow();
       }
     },
 
