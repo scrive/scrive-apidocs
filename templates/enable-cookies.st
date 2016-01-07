@@ -13,7 +13,6 @@ enableCookies=<!DOCTYPE html>
 <script src="/bower_components/es5-shim/es5-shim.js"></script>
 <script src="/bower_components/es5-shim/es5-sham.js"></script>
 <script src="/libs/html5shiv.js"></script>
-<script src="/bower_components/json3/lib/json3.min.js"></script>
 <![endif]-->
 <link rel=" icon" href="/favicon/$brandinghash$" />
 <script src="/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
