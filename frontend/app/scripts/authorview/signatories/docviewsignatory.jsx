@@ -84,7 +84,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.undeliveredMailInvitation()
         && signatory.document().signingInProcess()
-        && signatory.document().pending()
+        && !signatory.hasSigned()
         && (signatory.emailDelivery() || signatory.emailMobileDelivery());
     },
 
@@ -97,7 +97,6 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
       var signatory = this.props.signatory;
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
       && signatory.document().signingInProcess()
-      && signatory.document().pending()
       && signatory.signs()
       && !signatory.hasSigned()
       && !signatory.hasAuthenticatedToView();
@@ -106,7 +105,6 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
       var signatory = this.props.signatory;
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
       && signatory.document().signingInProcess()
-      && signatory.document().pending()
       && signatory.signs()
       && !signatory.hasSigned();
     },
@@ -116,7 +114,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.undeliveredSMSInvitation()
         && signatory.document().signingInProcess()
-        && signatory.document().pending()
+        && !signatory.hasSigned()
         && (signatory.mobileDelivery() || signatory.emailMobileDelivery());
     },
 
