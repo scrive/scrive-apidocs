@@ -292,7 +292,7 @@ window.Field = Backbone.Model.extend({
         return this.type() === '' && this.name() === '';
     },
     noName: function() {
-        return this.name() === '';
+        return this.name() === '' && this.type() == "custom";
     },
     isStandard: function() {
         return  this.type() == "standard";
