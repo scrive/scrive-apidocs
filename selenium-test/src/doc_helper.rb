@@ -88,7 +88,7 @@ class DocHelper
 
     fieldtab
     @driver.execute_script("window.scroll(0, 0)")
-    @driver.action.drag_and_drop((@driver.find_element :css => ".design-view-action-document-draggable.design-view-action-document-draggable-textbox .design-view-action-document-draggable-icon"), (@driver.find_element :css => "img.pagejpg")).perform
+    @driver.action.drag_and_drop((@driver.find_element :css => ".design-view-action-document-draggable.design-view-action-document-draggable-textbox .design-view-action-document-draggable-icon"), (@driver.find_element :css => ".pagediv img")).perform
     # set target party
 
     if not options[:skip_party_choice] then
