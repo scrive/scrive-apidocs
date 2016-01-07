@@ -3,14 +3,12 @@
 define(["Underscore", "Backbone", "React", "common/button", "legacy_code"], function (_, Backbone, React, Button) {
   var Remove = React.createClass({
     propTypes: {
-      model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      onRemove: React.PropTypes.func.isRequired
+      model: React.PropTypes.instanceOf(Backbone.Model).isRequired
     },
 
     handleClick: function () {
       this.props.model.remove();
       this.props.model.removeField();
-      this.props.onRemove();
     },
 
     render: function () {

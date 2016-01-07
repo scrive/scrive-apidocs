@@ -53,7 +53,7 @@ define([
   '../js/authorview/authorview',
   '../js/doctools/docauthorattachments',
   '../js/doctools/docevidenceattachments',
-  '../js/designview/documentview',
+  '../js/designview/docdesignviewmodel',
   '../js/designview/docdesignview',
   '../js/designview/authoraattachmentsdesign',
   '../js/designview/signatoryattachmentsdesignview',

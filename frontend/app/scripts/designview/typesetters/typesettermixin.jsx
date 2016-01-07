@@ -10,55 +10,26 @@ define(["jquery", "Underscore", "Backbone", "React",
 
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      element: React.PropTypes.instanceOf(Element).isRequired
+      element: React.PropTypes.instanceOf(Element).isRequired,
+      hideFunc: React.PropTypes.func.isRequired
     },
 
     getBackboneModels: function () {
-      var model = this.props.model;
-      return [model, model.field(), model.field().signatory(), model.field().signatory().document()];
+      // All changes to placement propagate up to document. This is why we only need to listen on document changes
+      return [this.props.model.field().signatory().document()];
     },
 
     componentDidUpdate: function () {
-      var model = this.props.model;
-      var field = model.field();
-      var sig = field.signatory();
-      var fields = sig.fields();
-
-      if (sig.isRemoved) {
-        this.clear();
-      }
-
-      if (fields.indexOf(field) === -1) {
-        this.clear();
-      }
     },
 
     componentWillMount: function () {
-      var self = this;
-      var model = self.props.model;
-
-      _.each(model.field().signatory().document().signatories(), function (s) {
-        _.each(s.fields(), function (f) {
-          _.each(f.placements(), function (p) {
-            if (model != p && p.typeSetter) {
-              p.typeSetter.clear();
-            }
-          });
-        });
-      });
-
-      $(window).bind("scroll", self.place);
-      $(window).bind("resize", self.place);
+      $(window).bind("scroll", this.place);
+      $(window).bind("resize", this.place);
     },
 
     componentWillUnmount: function () {
-      var self = this;
-      var model = self.props.model;
-
-      $(window).unbind("scroll", self.place);
-      $(window).unbind("resize", self.place);
-
-      model.typeSetter = undefined;
+      $(window).unbind("scroll", this.place);
+      $(window).unbind("resize", this.place);
     },
 
     place: function () {
@@ -66,17 +37,15 @@ define(["jquery", "Underscore", "Backbone", "React",
     },
 
     update: function () {
-      this.forceUpdate();
-    },
-
-    clear: function () {
-      this.unmount();
+      if (this.isMounted()) {
+        this.forceUpdate();
+      }
     },
 
     done: function () {
       var field = this.props.model.field();
       field.makeReady();
-      this.clear();
+      this.props.hideFunc();
     },
 
     rename: function (name) {

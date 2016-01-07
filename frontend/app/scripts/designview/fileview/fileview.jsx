@@ -1,177 +1,185 @@
-define(["legacy_code", "Underscore", "Backbone", "designview/fileview/filepageview"],
-  function (legacy_code, _, Backbone, FilePageView) {
 
-var FileView = Backbone.View.extend({
-  initialize: function (args) {
-    _.bindAll(this, "render");
+define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "designview/fileview/filepageview"],
+  function (legacy_code, _, Backbone, React, BackboneMixin, FilePageView) {
 
-    this.listenTo(this.model, "reset", this.render);
-    this.listenTo(this.model, "change", this.render);
+  return React.createClass({
+    propTypes: {
+      model: React.PropTypes.instanceOf(File).isRequired,
+      pixelWidth: React.PropTypes.number.isRequired
+    },
 
-    this.model.view = this;
-    this.pageviews = [];
+    mixins: [BackboneMixin.BackboneMixin],
 
-    this.model.fetch({
-      data: {signatoryid: this.model.signatoryid()},
-      processData:  true,
-      cache: false
-    });
+    getBackboneModels: function () {
+      return [this.props.model];
+    },
 
-    this.render();
-  },
+    getInitialState: function () {
+      return {images: [], visibleCoordinates: false, top: 0, width: 0, left: 0, height: 0};
+    },
 
-  destroy: function () {
-    this.stopListening();
-    this.destroyed = true;
-    _.each(this.pageviews || [], function (pv) {pv.destroy();});
-    $(this.el).remove();
-  },
+    componentDidUpdate: function (prevProps, prevState) {
+      if (this.props.model.pages().length !== this.state.images.length) {
+        this.updateImages();
+      }
+    },
 
-  vline: function () {
-    if (this.vlinediv != undefined) { return this.vlinediv; }
-    this.vlinediv = $("<div class='vline'>");
-    $(this.el).append(this.vlinediv);
-    return this.vlinediv;
-  },
+    showCoordinateAxes: function () {
+      this.setState({"visibleCoordinates": true});
+    },
 
-  hline: function () {
-    if (this.hlinediv != undefined) { return this.hlinediv; }
-    this.hlinediv = $("<div class='hline'>");
-    $(this.el).append(this.hlinediv);
-    return this.hlinediv;
-  },
+    hideCoordinateAxes: function () {
+      this.setState({"visibleCoordinates": false});
+    },
 
-  startReadyChecker: function () {
-    if (this.destroyed) { return; }
+    moveCoordinateAxes: function (helper, verticalOffset, xAxisOffset, yAxisOffset) {
+      var self = this;
+      if (this.isMounted()) {
+        var offset =  $(this.refs.pages.getDOMNode()).offset();
+        var top = helper.offset().top - offset.top + helper.outerHeight() + verticalOffset;
+        top -= yAxisOffset || 0;
+        var left = helper.offset().left - offset.left;
+        left += xAxisOffset || 0;
+        var height = $(this.getDOMNode()).height();
+        var width = $(this.getDOMNode()).width();
+        this.setState({top: top, width: width, left: left, height: height});
+      }
+    },
 
-    var view = this;
+    ready: function () {
+      var model = this.props.model;
+      return model.ready() && model.pages().length > 0 &&
+        this.state.images.length === model.pages().length &&
+        _.all(this.state.images, function (img) { return img.complete; });
+    },
 
-    if (view.ready()) {
-      view.model.trigger("ready");
-      if (view.pageviews != undefined) {
-        _.each(view.pageviews, function (pv) {
-          pv.updateDragablesPosition();
+    readyFirstPage: function () {
+      return this.state.images.length > 0 && this.state.images[0].complete;
+    },
+
+    updateImages: function () {
+      var self = this;
+      var file = self.props.model;
+      var fileid = file.fileid();
+      var pixelWidth = this.props.pixelWidth;
+      _.each(self.state.images, function (img) {
+        if (BrowserInfo.isIE8orLower()) {
+          img.detachEvent("onload", self.handleLoad);
+        } else {
+          img.removeEventListener("load", self.handleLoad);
+        }
+      });
+      var images = _.map(file.pages(), function (page, index) {
+        var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart({"pixelwidth": pixelWidth});
+        var img = new Image();
+        var callback = function () {
+          if (!img.complete) {
+            setTimeout(callback, 100);
+          } else {
+            self.handleLoad(index);
+          }
+        };
+        if (BrowserInfo.isIE8orLower()) {
+          img.attachEvent("onload", callback);
+        } else {
+          img.addEventListener("load", callback);
+        }
+        img.src = pagelink;
+        return img;
+      });
+      self.setState({images: images});
+    },
+
+    handleLoad: function (index) {
+      if (index === 0) {
+        this.props.model.trigger("FirstPageReady");
+      }
+      if (this.ready()) {
+        this.forceUpdate();
+        this.props.model.trigger("view:ready");
+        this.props.model.trigger("change");
+      }
+    },
+
+    openTypeSetterFor: function (placement) {
+      if (this.isMounted()) {
+        _.each(this.refs, function (v) {
+          if (v.openTypeSetterOnThisPageFor) {
+            v.openTypeSetterOnThisPageFor(placement);
+          }
         });
       }
-    } else {
-      setTimeout(function () {view.startReadyChecker()}, 100);
-    }
+    },
 
-  },
-
-  startReadyCheckerFirstPage: function () {
-    if (this.destroyed) { return; }
-
-    var view = this;
-
-    if (view.readyFirstPage()) {
-     view.model.trigger("FirstPageReady");
-    } else {
-     setTimeout(function () {view.startReadyCheckerFirstPage()}, 100);
-    }
-  },
-
-  ready: function () {
-    return (this.readyToConnectToPage() && $(this.el).parents("body").length > 0);
-  },
-
-  readyToConnectToPage: function () {
-    return (
-      this.model.ready() &&
-      (this.model.pages().length > 0) &&
-      (this.pageviews.length == this.model.pages().length) &&
-      _.all(this.pageviews, function (pv) {return pv.ready();})
-    );
-  },
-
-  readyFirstPage: function () {
-    return this.pageviews.length > 0 && this.pageviews[0].ready();
-  },
-
-  moveCoordinateAxes: function (helper, verticaloffset, xAxisOffset, yAxisOffset) {
-    var self = this;
-    _.defer(function () {
-      var top = helper.offset().top - $(self.el).offset().top + helper.outerHeight() + verticaloffset;
-      top -= yAxisOffset || 0;
-      var left = helper.offset().left - $(self.el).offset().left;
-      left += xAxisOffset || 0;
-      var height = $(self.el).height();
-      var width = $(self.el).width();
-      self.hline().css({top: top + "px", width: width + "px"});
-      self.vline().css({left: left + "px", height: height + "px"});
-    });
-  },
-
-  showCoordinateAxes: function (helper, verticaloffset, xAxisOffset, yAxisOffset) {
-    var view = this;
-    this.hline().show();
-    this.vline().show();
-    this.moveCoordinateAxes(helper, verticaloffset, xAxisOffset, yAxisOffset);
-  },
-
-  hideCoordinateAxes: function () {
-    this.vline().hide();
-    this.hline().hide();
-  },
-
-  render: function () {
-    var view = this;
-    var file = this.model;
-    var docbox = $(this.el);
-
-    docbox.empty();
-
-    if (!file.ready()) {
-      var waitbox = $("<div class='waiting4page'/>");
-      docbox.append(waitbox);
-    } else {
-      _.each(this.pageviews, function (p) { p.destroy(); });
-
-      this.pageviews = [];
-
-      _.each(file.pages(), function (page) {
-        var pageview = new FilePageView({
-          model: page,
-          el: $("<div/>")
+    closeAllTypeSetters: function () {
+      if (this.isMounted()) {
+        _.each(this.refs, function (v) {
+          if (v.closeAllTypeSettersOnThisPage) {
+            v.closeAllTypeSettersOnThisPage();
+          }
         });
+      }
+    },
 
-        view.pageviews.push(pageview);
-        docbox.append($(pageview.el));
-      });
+    renderPage: function (page, index) {
+      var image = this.state.images[index];
+      if (!image) {
+        return <span key={index} />;
+      }
+      var imageWidth = image.width;
+      var imageHeight = image.height;
+      var width = imageWidth;
+      var height = imageHeight;
+      return (
+        <FilePageView
+          ref={"page-" + index}
+          key={index}
+          model={page}
+          imageSrc={image.src}
+          imageComplete={image.complete}
+          imageWidth={width}
+          imageHeight={height}
+          showCoordinateAxes={this.showCoordinateAxes}
+          hideCoordinateAxes={this.hideCoordinateAxes}
+          moveCoordinateAxes={this.moveCoordinateAxes}
+          closeAllTypeSetters={this.closeAllTypeSetters}
+        />
+      );
+    },
 
-      view.startReadyCheckerFirstPage();
-      view.startReadyChecker();
+    render: function () {
+      var self = this;
+      var model = this.props.model;
+      return (
+        <div className="design-view-document-pages">
+          <div className="document-pages" ref="pages">
+            {/* if */ !model.ready() &&
+              <div className="waiting4page"/>
+            }
+            {/* else */ model.ready() &&
+              _.map(model.pages(), this.renderPage)
+            }
+            {/* if */ self.state.visibleCoordinates &&
+              <div>
+                <div
+                  className="vline"
+                  style={{
+                    left: this.state.left + "px",
+                    height: this.state.height + "px"
+                  }}
+                />
+                <div
+                  className="hline"
+                  style={{
+                    top: this.state.top + "px",
+                    width: this.state.width + "px"
+                  }}
+                />
+              </div>
+            }
+          </div>
+        </div>
+      );
     }
-  }
-});
-
-return function (args) {
-  if (args.file) {
-    this.model = args.file;
-  } else {
-    this.model = new File({
-      id: args.id,
-      name: args.name,
-      documentid: args.documentid,
-      attachmentid: args.attachmentid,
-      signatoryid: args.signatoryid
-    });
-  }
-
-  this.view = new FileView({
-    model: this.model,
-    el: $("<div class='document-pages'/>")
   });
-
-  this.destroy = function () {
-    this.view.destroy();
-  };
-
-  this.readyToConnectToPage = function () {
-    return this.view.readyToConnectToPage();
-  };
-
-  return this;
-};
-
 });

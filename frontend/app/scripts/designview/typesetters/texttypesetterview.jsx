@@ -86,7 +86,6 @@ define(["Underscore", "React", "common/button", "common/select",
       var field = model.field();
       mixpanel.track("Click save inline field");
       field.makeReady();
-      model.cleanTypeSetter();
       model.trigger("change");
     },
 
@@ -140,8 +139,8 @@ define(["Underscore", "React", "common/button", "common/select",
             <FontSelector model={model} />
             <Anchor model={model} />
           </More>
-          <Done field={field} onDone={this.handleDone} />
-          <Remove model={model} onRemove={this.clear} />
+          <Done field={field} onDone={this.done} />
+          <Remove model={model} />
         </span>
       );
     }

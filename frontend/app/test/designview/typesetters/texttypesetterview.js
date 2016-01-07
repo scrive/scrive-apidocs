@@ -23,9 +23,10 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
       var sig = field.signatory();
       var page = sig.document().mainfile().page(placement.get("page"));
 
-      var typesetter = placement.typeSetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
-        model: placement
+      var typesetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
+          model: placement
         , element: $("body")[0]
+        , hideFunc: function() {}
       }));
 
       var more = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
@@ -82,9 +83,11 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
       var placement = util.addPlacement(doc, undefined, 1);
       var field = placement.field();
 
-      var typesetter = placement.typeSetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
-        model: placement
+      var typesetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
+          model: placement
         , element: $("body")[0]
+        , hideFunc: function() {}
+
       }));
 
       var selects = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
@@ -118,12 +121,14 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
         , name: "email"
       });
 
-      placement1.typeSetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
-        model: placement1
+      var typeSetter1 = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
+          model: placement1
         , element: $("body")[0]
+        , hideFunc: function() {}
+
       }));
 
-      var selects = TestUtils.findAllInRenderedTree(placement1.typeSetter, function (comp) {
+      var selects = TestUtils.findAllInRenderedTree(typeSetter1, function (comp) {
         return TestUtils.isCompositeComponentWithType(comp, Select);
       });
 
@@ -138,9 +143,11 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
         , name: "sndname"
       });
 
-      placement2.typeSetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
-        model: placement2
+     var typeSetter2 = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
+          model: placement2
         , element: $("body")[0]
+        , hideFunc: function() {}
+
       }));
 
       var placement3 = util.addPlacement(doc, undefined, 1, {
@@ -148,12 +155,13 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
         , name: "email"
       });
 
-      placement3.typeSetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
-        model: placement3
+      var typeSetter3 = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
+          model: placement3
         , element: $("body")[0]
+        , hideFunc: function() {}
       }));
 
-      var select3 = TestUtils.findAllInRenderedTree(placement3.typeSetter, function (comp) {
+      var select3 = TestUtils.findAllInRenderedTree(typeSetter3, function (comp) {
         return TestUtils.isCompositeComponentWithType(comp, Select);
       })[2];
 
@@ -163,12 +171,14 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
     it("should test done", function () {
       var placement = util.addPlacement(doc);
 
-      placement.typeSetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
-        model: placement
+      var typeSetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
+          model: placement
         , element: $("body")[0]
+        , hideFunc: function() {}
+
       }));
 
-      var done = TestUtils.findAllInRenderedTree(placement.typeSetter, function (comp) {
+      var done = TestUtils.findAllInRenderedTree(typeSetter, function (comp) {
         return TestUtils.isCompositeComponentWithType(comp, Done);
       })[0];
 
@@ -179,8 +189,9 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
       var placement = util.addPlacement(doc);
 
       var typesetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
-        model: placement
+          model: placement
         , element: $("body")[0]
+        , hideFunc: function() {}
       }));
 
       var selects = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
@@ -208,8 +219,10 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
       var placement = util.addPlacement(doc);
 
       var typesetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
-        model: placement
+          model: placement
         , element: $("body")[0]
+        , hideFunc: function() {}
+
       }));
 
       var buttons1 = TestUtils.findAllInRenderedTree(typesetter, function (comp) {

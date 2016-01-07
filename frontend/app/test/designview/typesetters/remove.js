@@ -14,16 +14,12 @@ define(['legacy_code', 'backend', 'util', 'React', 'designview/typesetters/remov
     });
 
     describe('Remove', function () {
-      it('should test component', function (done) {
+      it('should test component', function () {
         var placement = util.addPlacement(doc);
         var field = placement.field();
 
         var removeComponent = TestUtils.renderIntoDocument(React.createElement(Remove, {
-          model: placement,
-          onRemove: function () {
-            assert.equal(field.placements().indexOf(placement), -1, 'placement should not exist in field placements');
-            done();
-          }
+          model: placement
         }));
 
         var button = TestUtils.findRenderedDOMComponentWithTag(removeComponent, 'a');
@@ -31,17 +27,19 @@ define(['legacy_code', 'backend', 'util', 'React', 'designview/typesetters/remov
         assert.ok(field.placements().indexOf(placement) > -1, 'placement should exist in field placements');
 
         TestUtils.Simulate.click(button);
+
+        assert.equal(field.placements().indexOf(placement), -1, 'placement should not exist in field placements');
+
       });
 
-      it('should test component when field not added by me', function (done) {
+      it('should test component when field not added by me', function () {
         var placement = util.addPlacement(doc);
         var field = placement.field();
 
         field.addedByMe = false;
 
         var removeComponent = TestUtils.renderIntoDocument(React.createElement(Remove, {
-          model: placement,
-          onRemove: done
+          model: placement
         }));
 
         var button = TestUtils.findRenderedDOMComponentWithTag(removeComponent, 'a');

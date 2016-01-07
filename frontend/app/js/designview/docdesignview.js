@@ -1,72 +1,8 @@
 /*
- * New Design view
- *
- * Eric Normand
+ * View for design view
  */
 
-define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
-
-    window.DesignViewModel = Backbone.Model.extend({
-        initialize: function (args) {
-            var self = this;
-            var model = this;
-        },
-        document : function() {
-            return this.get("document");
-        },
-        ready : function() {
-            return this.document().ready();
-        },
-        participantDetail: function() {
-            return this.get('participantDetail');
-        },
-        setParticipantDetail: function(s) {
-            if (s == undefined) {
-              this.trigger("visibility:participantclosed");
-            } else {
-              this.trigger("visibility:participantopen");
-            }
-            this.set({participantDetail : s});
-            return this;
-        },
-        saveDocument: function() {
-            var viewmodel = this;
-            var document = this.document();
-
-            var wasSaved = document.saved();
-            document.setSaved();
-            document.save(function () {
-              viewmodel.saveFlashMessage(wasSaved);
-            });
-        },
-        saveAndFlashMessageIfAlreadySaved: function() {
-            var self = this;
-            var isSaved = self.document().saved();
-            self.document().save(function () {
-              if(isSaved) {
-                self.saveFlashMessage(true);
-              }
-            });
-        },
-        saveFlashMessage: function(wasSaved) {
-            var flashMsg;
-            if(this.document().isTemplate()) {
-              if(wasSaved) {
-                flashMsg = localization.designview.saved.saveTemplate;
-              } else {
-                flashMsg = localization.designview.saved.savedAsTemplate;
-              }
-            }
-            else {
-              if(wasSaved) {
-                flashMsg = localization.designview.saved.saveDraft;
-              } else {
-                flashMsg = localization.designview.saved.savedAsDraft;
-              }
-            }
-            new FlashMessage({type: 'success', content: flashMsg});
-        }
-    });
+define(['Spinjs', "React", 'Backbone', 'designview/documentview', 'legacy_code'], function(Spinner, React, Backbone, DocumentView) {
 
   // expected model: DesignViewModel
     var DesignViewButtonBarView = Backbone.View.extend({
@@ -192,7 +128,6 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
                 onClick: function() {
                     mixpanel.track('Click remove file');
                     doc.markAsNotReady();
-                    doc.removeTypeSetters();
                     model.saveAndFlashMessageIfAlreadySaved();
                     doc.afterSave(function() {
                         new Submit({
@@ -504,10 +439,20 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
         className: 'design-view-frame',
         initialize: function (args) {
             var view = this;
-            view.tabsView    = new DesignViewTabsView({model : view.model});
+            view.documentViewEl = $("<div/>");
+            var documentView = React.render(React.createElement(DocumentView,{
+              model: view.model
+            }), view.documentViewEl[0]);
+
+            view.tabsView    = new DesignViewTabsView({
+              model : view.model,
+              showCoordinateAxes: documentView.showCoordinateAxes,
+              hideCoordinateAxes: documentView.hideCoordinateAxes,
+              moveCoordinateAxes: documentView.moveCoordinateAxes,
+              openTypeSetterFor:  documentView.openTypeSetterFor
+            });
             view.buttonBar   = new DesignViewButtonBarView({model : view.model});
-            view.documentView = new DesignViewDocumentView({model : view.model.document(),
-                                                            viewmodel : view.model});
+
             $(window).on('resize scroll', function() { view.affix();} );
             view.model.document().setReferenceScreenshot("author");
             view.render();
@@ -537,7 +482,7 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             var model = view.model;
 
             var st = $(window).scrollTop();
-            var docTop = view.docView.offset().top + view.topBarHeight;
+            var docTop = view.documentViewEl.offset().top + view.topBarHeight;
             var top = view.$el.offset().top;
             var barHeight = view.topBar.outerHeight();
             var barTop = view.topBar.offset().top;
@@ -555,11 +500,8 @@ define(['Spinjs', 'Backbone', 'legacy_code'], function(Spinner) {
             view.topBar.append(view.tabsView.el());
             var div = $('<div/>');
             div.append(view.topBar);
-            div.append(view.documentView.el);
+            div.append(view.documentViewEl);
             div.append(view.buttonBar.el);
-
-            view.docView = view.documentView.$el;
-
             return div.children();
         },
         render: function() {

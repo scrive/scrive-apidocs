@@ -17,9 +17,10 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
       var placement = util.addPlacement(doc);
       var field = placement.field();
 
-      var typesetter = placement.typeSetter = TestUtils.renderIntoDocument(React.createElement(CheckboxTypeSetterView, {
-        model: placement
+      var typesetter = TestUtils.renderIntoDocument(React.createElement(CheckboxTypeSetterView, {
+          model: placement
         , element: $("body")[0]
+        , hideFunc: function() {}
       }));
 
       // checkboxes on the typesetter.
