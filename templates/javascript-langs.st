@@ -497,6 +497,7 @@ javascriptLocalisation =
            , modalAccountSetupPhone: "$_modalAccountSetupPhone()$"
            , modalAccountSetupPosition : "$_modalAccountSetupPosition()$"
            , modalAccountSetupCompany : "$_modalAccountSetupCompany()$"
+           , modalAccountSetupMissingName : "$_modalAccountSetupMissingName()$"
            , modalAccountPasswordRequirements : "$_modalAccountPasswordRequirements()$"
            , flashMessageUserAlreadyActivated : "$_flashMessageUserAlreadyActivated()$"
          }
