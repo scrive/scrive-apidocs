@@ -103,6 +103,7 @@
 "_pinWillBeSentTo":"PIN-koden vil bli sendt via SMS til",
 "_reloadPage":"Last inn siden på nytt",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> ønsker å påminne deg om å signere dokumentet <strong>$documenttitle$</strong>.",
+"_remindMailNotSignedContractBodyAutomatic":"",
 "_remindMailNotSignedContractBodyFurther":"Klikk på knappen for videre instruksjoner.",
 "_remindMailNotSignedTitleContract":"Påminnelse om å e-signere dokument: $documenttitle$",
 "_remindMailSignedContractStandardHeaderSendRequest":"Du har tidligere e-signert dokumentet <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> har bedt om at det ferdigstilte dokumentet sendes til deg på nytt.",
@@ -139,6 +140,7 @@
 "_smsPinSendout":"Din PIN for $documenttitle$ er $pin$",
 "_smsRejectNotification":"Hei, $rejectorName$ har avslått å signere dokumentet $documenttitle$. Signeringsprosessen er derfor kansellert. Følg lenken for å se dokumentet: $link$",
 "_smsReminder":"Hei, $creatorname$ ønsker å påminne deg om å signere dokumentet $documenttitle$. Åpne lenken for å se dokumentet: $link$",
+"_smsReminderAutomatic":"",
 "_smsReminderSigned":"Hei, det signerte dokumentet $documenttitle$ har blitt sendt til deg på nytt etter forespørsel fra $creatorname$. Du finner dokumentet ved å følge denne lenken: $link$",
 "_unavailableForSign":"Dokumentet er ikke lenger tilgjengelig for signering"
 }

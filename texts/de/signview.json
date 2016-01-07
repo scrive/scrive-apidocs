@@ -103,6 +103,7 @@
 "_pinWillBeSentTo":"Die PIN wird per SMS gesendet an",
 "_reloadPage":"Seite neu laden",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> möchte Sie daran erinnern, das Dokument <strong>$documenttitle$</strong> zu signieren.",
+"_remindMailNotSignedContractBodyAutomatic":"",
 "_remindMailNotSignedContractBodyFurther":"Klicken Sie die Schaltfläche für weitere Instruktionen.",
 "_remindMailNotSignedTitleContract":"Erinnerung zur E-Signierung des Dokuments: $documenttitle$",
 "_remindMailSignedContractStandardHeaderSendRequest":"Sie haben das Dokument <strong>$documenttitle$</strong> bereits e-signiert. <strong>$creatorname$</strong> hat beantragt, Ihnen das endgültige Dokument erneut zuzusenden.",
@@ -139,6 +140,7 @@
 "_smsPinSendout":"Ihre PIN für $documenttitle$ lautet $pin$",
 "_smsRejectNotification":"Hallo, $rejectorName$ hat es abgelehnt, das Dokument $documenttitle$ zu signieren. Der Signierungs-Vorgang wurde deshalb abgebrochen. Um sich das Dokument anzuschauen, klicken Sie auf den Link: $link$",
 "_smsReminder":"Hallo, dies ist eine Erinnerung von $creatorname$, dass Sie das Dokument $documenttitle$ noch nicht signiert haben. Öffnen Sie den Link, um das Dokument anzuschauen: $link$",
+"_smsReminderAutomatic":"",
 "_smsReminderSigned":"Hallo, das signierte Dokument $documenttitle$ wurde Ihnen auf Antrag von $creatorname$ zugeschickt.  Zum Dokument kommen Sie mit folgendem Link: $link$",
 "_unavailableForSign":"Dieses Dokument kann nicht mehr signiert werden"
 }

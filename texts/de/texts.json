@@ -680,6 +680,7 @@
 "_modalAccountSetupChoosePassword":"Passwort wählen",
 "_modalAccountSetupCompany":"Unternehmen",
 "_modalAccountSetupFooter":"Konto anlegen",
+"_modalAccountSetupMissingName":"",
 "_modalAccountSetupPhone":"Telefon",
 "_modalAccountSetupPosition":"Position",
 "_modalAccountSetupRepeatPassword":"Passwort wiederholen",

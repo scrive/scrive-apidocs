@@ -8,7 +8,7 @@
 "_company":"Bedrijf",
 "_companyNumberLabel":"Bedrijfsregistratienr.",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, door op de knop te klikken ondertekent u het document <strong class='put-document-title-here'></strong> en wordt uw handtekening geregistreerd door de e-signing service Scrive.",
-"_contractSignConfirmationSignaturePlaced":"",
+"_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, u heeft het document <strong class='put-document-title-here'></strong> ondertekend. Wanneer u op de knop klikt wordt uw handtekening geregistreerd door de e-signing service Scrive. ",
 "_contractSignatorySignModalBody":"<strong class='put-signatory-name-here'></strong>, door op de knop te klikken wordt uw handtekening geregistreerd door de e-signing service Scrive.",
 "_contractSignatorySignModalBodyNoName":"Door op de knop te klikken wordt uw handtekening geregistreerd door de e-ondertekeningsservice Scrive. ",
 "_contractSignatorySignModalTitle":"Klaar?",
@@ -103,6 +103,7 @@
 "_pinWillBeSentTo":"De PIN wordt verstuurd via SMS naar",
 "_reloadPage":"Ververs pagina",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> wil u eraan herinneren het document <strong>$documenttitle$</strong> te ondertekenen.",
+"_remindMailNotSignedContractBodyAutomatic":"",
 "_remindMailNotSignedContractBodyFurther":"Klik op de knop voor verdere instructies.",
 "_remindMailNotSignedTitleContract":"Herinnering om het document $documenttitle$ te e-ondertekenen",
 "_remindMailSignedContractStandardHeaderSendRequest":"U heeft eerder het document <strong>$documenttitle$</strong> ondertekend. <strong>$creatorname$</strong> heeft ons gevraagd het voltooide document opnieuw aan u te sturen.",
@@ -139,6 +140,7 @@
 "_smsPinSendout":"Uw PIN voor $documenttitle$ is $pin$",
 "_smsRejectNotification":"Hallo, $rejectorName$ heeft geweigerd het document $documenttitle$ te ondertekenen. Het ondertekeningsproces is daarom afgebroken. Volg de link om het document te bekijken: $link$",
 "_smsReminder":"Hallo, $creatorname$ wil u eraan herinneren het document $documenttitle$ te ondertekenen. Open de link om het document te bekijken:$link$",
+"_smsReminderAutomatic":"",
 "_smsReminderSigned":"Hallo, het ondertekende document $documenttitle$ is opnieuw aan u verstuurd op verzoek van $creatorname$. Bekijk het document via de volgende link: $link$",
 "_unavailableForSign":"Het document is niet langer beschikbaar voor ondertekening"
 }

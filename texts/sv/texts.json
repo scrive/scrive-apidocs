@@ -680,6 +680,7 @@
 "_modalAccountSetupChoosePassword":"Välj lösenord",
 "_modalAccountSetupCompany":"Företag",
 "_modalAccountSetupFooter":"Skapa konto",
+"_modalAccountSetupMissingName":"",
 "_modalAccountSetupPhone":"Telefon",
 "_modalAccountSetupPosition":"Befattning",
 "_modalAccountSetupRepeatPassword":"Upprepa lösenord",

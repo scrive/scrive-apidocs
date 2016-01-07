@@ -680,6 +680,7 @@
 "_modalAccountSetupChoosePassword":"Επιλέξτε κωδικό πρόσβασης",
 "_modalAccountSetupCompany":"Εταιρεία ",
 "_modalAccountSetupFooter":"Δημιουργία λογαριασμού ",
+"_modalAccountSetupMissingName":"",
 "_modalAccountSetupPhone":"Τηλέφωνο ",
 "_modalAccountSetupPosition":"Θέση ",
 "_modalAccountSetupRepeatPassword":"Επαναλάβετε τον κωδικό πρόσβασης ",

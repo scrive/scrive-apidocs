@@ -103,6 +103,7 @@
 "_pinWillBeSentTo":"O PIN será enviado por SMS para",
 "_reloadPage":"Recarregar página",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> pretende lembrá-lo para assinar o documento <strong>$documenttitle$</strong>.",
+"_remindMailNotSignedContractBodyAutomatic":"",
 "_remindMailNotSignedContractBodyFurther":"Clique no botão para obter instruções adicionais.",
 "_remindMailNotSignedTitleContract":"Lembrete para e-assinar o documento: $documenttitle$",
 "_remindMailSignedContractStandardHeaderSendRequest":"Previamente, assinou electronicamente o documento <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> solicitou o reenvio do documento finalizado para si.",
@@ -139,6 +140,7 @@
 "_smsPinSendout":"O seu PIN para $documenttitle$ é $pin$",
 "_smsRejectNotification":"Olá, $rejectorName$ rejeitou a assinatura do documento $documenttitle$. O processo de assinatura foi, por isso, cancelado. Siga a hiperligação para visualizar o documento: $link$",
 "_smsReminder":"Olá, $creatorname$ pretende lembrá-lo para assinar o documento $documenttitle$. Abra a hiperligação para visualizar o documento: $link$",
+"_smsReminderAutomatic":"",
 "_smsReminderSigned":"Olá, o documento assinado $documenttitle$ foi reenviado para si, a pedido de $creatorname$. Aceda ao documento seguindo esta hiperligação: $link$",
 "_unavailableForSign":"O documento já não se encontra disponivel para assinar"
 }

@@ -103,6 +103,7 @@
 "_pinWillBeSentTo":"Το PIN θα αποσταλεί μέσω SMS στο ",
 "_reloadPage":"Επανοφόρτωση σελίδας",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> θέλει να σας υπενθυμίσει να υπογράψετε το έγγραφο <strong>$documenttitle$</strong>. ",
+"_remindMailNotSignedContractBodyAutomatic":"",
 "_remindMailNotSignedContractBodyFurther":"Πιέστε την ένδειξη για περαιτέρω οδηγίες. ",
 "_remindMailNotSignedTitleContract":"Υπενθύμιση για υπογραφή εγγράφου με ηλεκτρονική υπογραφή: $documenttitle$ ",
 "_remindMailSignedContractStandardHeaderSendRequest":"Έχετε προηγουμένως υπογράψει ηλεκτρονικά το έγγραφο <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> έχει ζητήσει να αποσταλεί ξανά το ολοκληρωμένο έγγραφο σε εσάς. ",
@@ -139,6 +140,7 @@
 "_smsPinSendout":"Το PIN σας για το $documenttitle$ είναι $pin$ ",
 "_smsRejectNotification":"Γεια σας, ο $rejectorName$ έχει αρνηθεί να υπογράψει το έγγραφο $documenttitle$. Για τον λόγο αυτό η διαδικασία υπογραφής έχει ακυρωθεί. Ακολουθήστε τον σύνδεσμο για να δείτε το έγγραφο: $link$  ",
 "_smsReminder":"Γεια σας, ο $creatorname$ θέλει να σας υπενθυμίσει να υπογράψετε το έγγραφο $documenttitle$. Ανοίξτε τον σύνδεσμο για να δείτε το έγγραφο: $link$  ",
+"_smsReminderAutomatic":"",
 "_smsReminderSigned":"Γεια σας, το υπογεγραμμένο έγγραφο $documenttitle$ σας έχει αποσταλεί ξανά μετά από αίτημα του $creatorname$. Βρείτε το έγγραφο στον σύνδεσμο που ακολουθεί: $link$  ",
 "_unavailableForSign":"Το έγγραφο δεν είναι πλέον διαθέσιμο προς υπογραφή "
 }

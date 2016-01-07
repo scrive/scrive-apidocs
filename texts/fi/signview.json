@@ -103,6 +103,7 @@
 "_pinWillBeSentTo":"PIN lähetetään tekstiviestillä,",
 "_reloadPage":"Lataa sivu uudelleen",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> haluaa muistuttaa sinua allekirjoittamaan dokumentin <strong>$documenttitle$</strong>.",
+"_remindMailNotSignedContractBodyAutomatic":"",
 "_remindMailNotSignedContractBodyFurther":"Paina kuvaketta lisäohjeiden saamiseksi.",
 "_remindMailNotSignedTitleContract":"Muistutus dokumentin e-allekirjoittamisesta: $documenttitle$",
 "_remindMailSignedContractStandardHeaderSendRequest":"Olet aiemmin e-allekirjoittanut dokumentin <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> on pyytänyt viimeistellyn dokumentin lähettämistä sinulle uudestaan.",
@@ -139,6 +140,7 @@
 "_smsPinSendout":"PIN-koodi dokumenttiin $documenttitle$ on $pin$",
 "_smsRejectNotification":"Hei, $rejectorName$ on kieltäytynyt allekirjoittamasta dokumenttia $documenttitle$. Allekirjoitusprosessi on tästä syystä peruutettu. Seuraa linkkiä nähdäksesi dokumentin: $link$",
 "_smsReminder":"Hei, $creatorname$ haluaa muistuttaa sinua allekirjoittamaan dokumentin $documenttitle$. Avaa linkki nähdäksesi dokumentin: $link$",
+"_smsReminderAutomatic":"",
 "_smsReminderSigned":"Hei, allekirjoitettu dokumentti $documenttitle$ on lähetetty uudestaan sinulle henkilön $creatorname$ pyynnöstä. Löydät dokumentin tätä linkkiä seuraamalla: $link$",
 "_unavailableForSign":"Dokumentti ei ole enää avoinna allekirjoittamista varten"
 }

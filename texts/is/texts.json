@@ -680,6 +680,7 @@
 "_modalAccountSetupChoosePassword":"Veldu lykilorð",
 "_modalAccountSetupCompany":"Fyrirtæki",
 "_modalAccountSetupFooter":"Búa til reikning",
+"_modalAccountSetupMissingName":"",
 "_modalAccountSetupPhone":"Sími",
 "_modalAccountSetupPosition":"Staða",
 "_modalAccountSetupRepeatPassword":"Endurtaka lykilorð",

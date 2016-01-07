@@ -103,6 +103,7 @@
 "_pinWillBeSentTo":"Il PIN sarà spedito via SMS a",
 "_reloadPage":"Ricarica pagina",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> ti ricorda di firmare il documento <strong>$documenttitle$</strong>.",
+"_remindMailNotSignedContractBodyAutomatic":"",
 "_remindMailNotSignedContractBodyFurther":"Clicca il pulsante per ulteriori istruzioni.",
 "_remindMailNotSignedTitleContract":"Promemoria per firmare il documento elettronicamente: $documenttitle$",
 "_remindMailSignedContractStandardHeaderSendRequest":"Hai precedentemente firmato elettronicamente il documento <strong>$documenttitle$</strong> . <strong>$creatorname$</strong> ha richiesto che ti inviassimo nuovamente il documento finalizzato.",
@@ -139,6 +140,7 @@
 "_smsPinSendout":"Il tuo PIN per $documenttitle$ è $pin$",
 "_smsRejectNotification":"Ciao, $rejectorName$ ha rifiutato di firmare il documento $documenttitle$. Il processo di firma è stato perciò annullato. Segui il link per vedere il documento: $link$",
 "_smsReminder":"Ciao, $creatorname$ ti ricorda di firmare il documento $documenttitle$. Apri il link per rivedere il documento: $link$",
+"_smsReminderAutomatic":"",
 "_smsReminderSigned":"Ciao, il documento firmato $documenttitle$ ti è stato inviato nuovamente su richiesta di $creatorname$. Troverai il documento a questo link: $link$",
 "_unavailableForSign":"Il documento non è più disponibile per la firma"
 }

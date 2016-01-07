@@ -103,6 +103,7 @@
 "_pinWillBeSentTo":"PIN-númerið verður sent með textaskilaboðum til",
 "_reloadPage":"Endurhlaða síðu",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> langar að minna þig á að skrifa undir skjalið <strong>$documenttitle$</strong>.",
+"_remindMailNotSignedContractBodyAutomatic":"",
 "_remindMailNotSignedContractBodyFurther":"Smelltu á hnappinn til að fá frekari upplýsingar.",
 "_remindMailNotSignedTitleContract":"Áminning um að skrifa rafrænt undir skjal: $documenttitle$",
 "_remindMailSignedContractStandardHeaderSendRequest":"Þú skrifaðir áður rafrænt undir skjalið <strong>$documenttitle$</strong>. <strong>$creatorname$</strong> hefur óskað eftir að endursenda lokaútgáfu skjalsins til þíns.",
@@ -139,6 +140,7 @@
 "_smsPinSendout":"PIN-númer þitt fyrir $documenttitle$ is $pin$",
 "_smsRejectNotification":"Sæl/l, $rejectorName$ hefur hafnað því að skrifa undir skjalið $documenttitle$. Því hefur verið hætt við undirskriftarferlið. Smelltu á hlekkinn til að skoða skjalið: $link$",
 "_smsReminder":"Sæl/l, $creatorname$ langar að minna þig á að skrifa undir skjalið $documenttitle$. Opnaðu hlekkinn til að skoða skjalið: $link$",
+"_smsReminderAutomatic":"",
 "_smsReminderSigned":"Sæl/l, undirskrifaða skjalið $documenttitle$ hefur verið endursent að beiðni $creatorname$. Nálgastu skjalið með því að smella á þennan hlekk: $link$",
 "_unavailableForSign":"Skjalið er ekki lengur fáanlegt til undirskriftar"
 }
