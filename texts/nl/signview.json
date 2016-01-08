@@ -72,7 +72,7 @@
 "_mailDocumentLinkedButton":"Document downloaden",
 "_mailGoToDocument":"Ga naar document",
 "_mailInvitationCustomInvitationHeader":"Bericht van <strong>$creatorname$</strong>",
-"_mailInvitationFromPart":"$authorname$ door $originator$",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> heeft u uitgenodigd om het document <strong>$documenttitle$</strong> te ondertekenen.",
 "_mailInvitationToSignFollowInstructions":"Klik op de knop voor verdere instructies.",
 "_mailInvitationToSignTitleContract":"Document om te e-ondertekenen: $documenttitle$",

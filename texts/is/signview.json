@@ -72,7 +72,7 @@
 "_mailDocumentLinkedButton":"Hala skjalinu niður",
 "_mailGoToDocument":"Fara í skjal",
 "_mailInvitationCustomInvitationHeader":"Skilaboð frá <strong>$creatorname$</strong>",
-"_mailInvitationFromPart":"$authorname$ í gegnum $originator$",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> hefur boðið þér að skrifa rafrænt undir skjalið <strong>$documenttitle$</strong>.",
 "_mailInvitationToSignFollowInstructions":"Smelltu á hnappinn til að fá frekari upplýsingar.",
 "_mailInvitationToSignTitleContract":"Skjal til rafrænnar undirskriftar: $documenttitle$",

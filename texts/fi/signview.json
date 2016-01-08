@@ -72,7 +72,7 @@
 "_mailDocumentLinkedButton":"Lataa dokumentti",
 "_mailGoToDocument":"Mene dokumenttiin",
 "_mailInvitationCustomInvitationHeader":"<strong>$creatorname$</strong> lähetti viestin",
-"_mailInvitationFromPart":"$authorname$ kautta $originator$",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> on kutsunut sinut e-allekirjoittamaan dokumentin <strong>$documenttitle$</strong>.",
 "_mailInvitationToSignFollowInstructions":"Paina kuvaketta lisäohjeiden saamiseksi.",
 "_mailInvitationToSignTitleContract":"E-allekirjoitettava dokumentti: $documenttitle$",
