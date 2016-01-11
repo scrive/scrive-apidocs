@@ -21,6 +21,10 @@ define(["React", "legacy_code"], function (React) {
       return this.props.model;
     },
 
+    getInitialState: function () {
+      return {clickedRecently: false};
+    },
+
     // Computing position of new placement, when dragable gets clicked.
     getPositionForNewPlacementFromClick: function (x, y, expectedDimensions) {
       var self = this;
@@ -95,6 +99,13 @@ define(["React", "legacy_code"], function (React) {
       var newPlacementFromPosition = args.newPlacementFromPosition;
 
       el.click(function () {
+        if (self.state.clickedRecently) {
+          return;
+        }
+        self.setState({clickedRecently: true});
+        setTimeout(function () {
+          self.setState({clickedRecently: false});
+        }, 200);
         if (isEnabledFunc()) {
           var x = el.offset().left + (el.width() / 2);
           var y = el.offset().top + (el.height() / 2);
