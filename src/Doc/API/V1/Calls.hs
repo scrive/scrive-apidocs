@@ -1209,7 +1209,7 @@ apiCallV1SetSignatoryAttachment did sid aname = logDocumentAndSignatory did sid 
                           || ".jpg" `isSuffixOf` (map toLower filename)
                           || ".jpeg" `isSuffixOf` (map toLower filename))
                     then return $ Binary $ BSL.toStrict content1
-                    else throwM . SomeKontraException $ badInput "Only pdf files or images can be attached."
+                    else throwM . SomeKontraException $ badInput ("Only pdf files or images can be attached. Uploaded filename was " ++ filename)
                 (dbUpdate $ NewFile (dropFilePathFromWindows filename) content)
       _ -> return Nothing
     ctx <- getContext
