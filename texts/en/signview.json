@@ -136,7 +136,7 @@
 "_signviewSigningFailed":"Sorry, something went wrong while signing the document. Please try again.",
 "_smsDocumentErrorAuthor":"Scrive could not handle the document $documenttitle$ and the signing process has been cancelled. If you have any questions, please contact us at support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive could not handle the document $documenttitle$ and the signing process has been cancelled. If you have any questions, please contact us at support@scrive.com",
-"_smsInvitationToSign":"Hi, $creatorname$ has invited you to e-sign. Click here to start: $link$",
+"_smsInvitationToSign":"Hi, $creatorname:noescape()$ has invited you to e-sign. Click here to start: $link$",
 "_smsPinSendout":"Your PIN for $documenttitle$ is $pin$",
 "_smsRejectNotification":"Hi, $rejectorName$ has rejected to sign the document $documenttitle$. The signing process has therefore been cancelled. Follow the link to view the document: $link$",
 "_smsReminder":"Hi, $creatorname$ wants to remind you to sign the document $documenttitle$. Open the link to view the document: $link$",
