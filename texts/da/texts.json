@@ -680,7 +680,7 @@
 "_modalAccountSetupChoosePassword":"Vælg adgangskode",
 "_modalAccountSetupCompany":"Virksomhed",
 "_modalAccountSetupFooter":"Opret konto",
-"_modalAccountSetupMissingName":"",
+"_modalAccountSetupMissingName":"Indtast dit navn",
 "_modalAccountSetupPhone":"Telefon",
 "_modalAccountSetupPosition":"Position",
 "_modalAccountSetupRepeatPassword":"Gentag adgangskode",
