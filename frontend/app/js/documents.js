@@ -467,6 +467,7 @@ window.Document = Backbone.Model.extend({
     // indicating if further attempts should be continued
     recall: function(successCallback, errorCallback) {
         console.log('recall');
+
         var self = this;
         var fetchOptions = { data: self.viewer().forFetch(),
                              processData: true,
@@ -490,6 +491,18 @@ window.Document = Backbone.Model.extend({
             successCallback();
           }
         };
+        
+        // See if we have document data in DOM, before calling the fetch function
+        var documentDataElement = $('#document-data');
+        if (documentDataElement.length > 0) {
+          console.log("reading data from DOM");
+          this.set(this.parse(JSON.parse(atob(documentDataElement.text()))));
+          fetchOptions.success();
+
+          // Don't read stale data, so remove the document data.
+          documentDataElement.remove();
+          return;
+        }
 
         fetchFunction();
 

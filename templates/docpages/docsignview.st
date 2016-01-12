@@ -76,6 +76,7 @@ $htmlopentag()$
     <meta name="format-detection" content="telephone=no"/>
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
+    <script type="application/base64" id="document-data">$b64documentdata$</script>
     <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     $signviewScaleReset()$
   </head>
