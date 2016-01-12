@@ -163,7 +163,6 @@ window.AuthorView = function(args) {
        var document = new Document({
                         id : args.id,
                         viewer: args.viewer,
-                        readOnlyView: true,
                         evidenceAttachments: true
                     });
        var model = new AuthorViewModel({
@@ -201,7 +200,6 @@ window.AuthorView = function(args) {
                  var newdocument = new Document({
                         id : args.id,
                         viewer: args.viewer,
-                        readOnlyView: true,
                         evidenceAttachments: true
                     });
                  var newmodel = new AuthorViewModel({

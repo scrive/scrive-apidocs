@@ -140,8 +140,7 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
       var doc = signatory.document();
       var current = signatory == doc.currentSignatory() && doc.currentSignatoryCanSign();
       return signatory.canSign() && !field.isClosed() &&
-        field.signatory().current() && self.inlineediting != true &&
-        !doc.readOnlyView();
+        field.signatory().current() && self.inlineediting != true;
     },
 
     render: function () {
