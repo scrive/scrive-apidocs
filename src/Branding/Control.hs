@@ -9,7 +9,6 @@ module Branding.Control(
               , handleDomainBranding
               , handleSignviewBranding
               , handleSignviewBrandingWithoutDocument
-              , handleSignviewBrandingInternal
               , loginLogo
               , serviceLogo
               , emailLogo
@@ -138,20 +137,6 @@ getSignviewThemeWithoutDocument = do
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   dbQuery $ GetTheme $ fromMaybe (bdSignviewTheme $ ctxbrandeddomain ctx) (companySignviewTheme $ companyui)
-
-
--- Used to brand signview with current logged in user service branding - if user entered document from archive, he should not be supprised by branding
-handleSignviewBrandingInternal :: Kontrakcja m => String -> String -> m Response
-handleSignviewBrandingInternal brandinghash _ = do
-  ctx <- getContext
-  user <-  guardJust $ getContextUser ctx
-  company <- getCompanyForUser user
-  companyui <- dbQuery $ GetCompanyUI (companyid company)
-  theme <- dbQuery $ GetTheme $ fromMaybe (bdServiceTheme $ ctxbrandeddomain ctx) (companyServiceTheme $ companyui)
-  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (ctxcdnbaseurl ctx) theme
-  let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
-  return $ setHeaderBS "Cache-Control" "max-age=31536000" $
-           setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res
 
 loginLogo :: Kontrakcja m => String  -> m Response
 loginLogo _ = do

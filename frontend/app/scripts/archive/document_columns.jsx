@@ -42,7 +42,14 @@ return function(args) {
             sorting="author"
             key="author"
             rendering={function(d) {
-              return (<a href={Utils.documentLink(d)}>{Utils.signatorySmartName(Utils.documentAuthor(d))}</a>);
+              return (
+                <a
+                  onClick={function() {LocalStorage.set("backlink", "target", "list")}}
+                  href={Utils.documentLink(d)}
+                >
+                  {Utils.signatorySmartName(Utils.documentAuthor(d))}
+                </a>
+              );
             }}
           />,
           <List.Column
@@ -59,7 +66,15 @@ return function(args) {
             key="title"
             sorting="title"
             rendering={function(d) {
-              return (<a className="s-archive-document-title" href={Utils.documentLink(d)}>{d.field("title")}</a>);
+              return (
+                <a
+                  className="s-archive-document-title"
+                  onClick={function() {LocalStorage.set("backlink", "target", "list")}}
+                  href={Utils.documentLink(d)}
+                >
+                  {d.field("title")}
+                </a>
+              );
             }}
           />,
           <List.Sublist

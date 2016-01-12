@@ -206,7 +206,11 @@ define(['legacy_code'], function() {
 
 
   e.documentLink = function(d) {
-    return "/d/" + d.field("id");
+    if (e.viewerIsAuthor(d) || (d.field("viewer").role === "company_admin") || d.field("is_template")) {
+      return "/d/" + d.field("id");
+    } else {
+      return "/d/signview/" + d.field("id");
+    }
   };
 
   e.documentParty = function(d) {

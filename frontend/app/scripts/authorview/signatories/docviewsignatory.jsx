@@ -281,7 +281,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
 
     goToSignView: function () {
       var signatory = this.props.signatory;
-      LocalStorage.set("backlink", "target", "");
+      LocalStorage.set("backlink", "target", "document");
       mixpanel.track("Accept", {"Signatory index":signatory.signIndex(), "Accept": "give for signing"});
       signatory.giveForPadSigning().send();
     },

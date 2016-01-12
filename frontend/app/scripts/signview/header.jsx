@@ -43,8 +43,8 @@ define(['React', 'Backbone', 'common/backbone_mixin'], function(React, Backbone,
                     }
                     {/* else */ !hasLink &&
                       <span>
-                        <h4 className="info">{this.props.authorFullname}</h4>
-                        <h4 className="info">{this.props.authorPhone}</h4>
+                        <h4 className="info">{_.unescape(this.props.authorFullname)}</h4>
+                        <h4 className="info">{_.unescape(this.props.authorPhone)}</h4>
                       </span>
                     }
                   </div>

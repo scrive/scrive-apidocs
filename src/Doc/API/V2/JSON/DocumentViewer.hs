@@ -20,26 +20,27 @@ import Util.SignatoryLinkUtils
 -- It is needed so frontend should present user with operations that are available to him.
 data DocumentViewer =
     SignatoryDocumentViewer SignatoryLinkID
-  | CompanyAdminDocumentViewer
+  | CompanyAdminDocumentViewer (Maybe SignatoryLinkID)
   | CompanySharedDocumentViewer
 
 viewerForDocument :: DocumentAccess -> Document -> DocumentViewer
 viewerForDocument (DocumentAccess { daAccessMode = SignatoryDocumentAccess sid}) _ = SignatoryDocumentViewer sid
-viewerForDocument (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess}) _ = CompanyAdminDocumentViewer
 viewerForDocument (DocumentAccess { daAccessMode = CompanySharedDocumentAccess}) _ = CompanySharedDocumentViewer
+viewerForDocument (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess msid}) _ = CompanyAdminDocumentViewer msid
 viewerForDocument (DocumentAccess { daAccessMode = AuthorDocumentAccess}) doc =
   case (getAuthorSigLink doc) of
     Just sig -> SignatoryDocumentViewer $ signatorylinkid sig
     Nothing  -> $unexpectedError "Could not find author for document for DocumentViewer"
-viewerForDocument (DocumentAccess { daAccessMode = SystemAdminDocumentAccess}) _ = CompanyAdminDocumentViewer
+viewerForDocument (DocumentAccess { daAccessMode = SystemAdminDocumentAccess}) _ = CompanyAdminDocumentViewer Nothing
 
 dvSignatoryLinkID :: DocumentViewer -> Maybe SignatoryLinkID
 dvSignatoryLinkID (SignatoryDocumentViewer sid) = Just sid
+dvSignatoryLinkID (CompanyAdminDocumentViewer msid) = msid
 dvSignatoryLinkID _ = Nothing
 
 dvRole ::DocumentViewer -> T.Text
 dvRole (SignatoryDocumentViewer _) = "signatory"
-dvRole (CompanyAdminDocumentViewer) = "company_admin"
+dvRole (CompanyAdminDocumentViewer _) = "company_admin"
 dvRole (CompanySharedDocumentViewer) = "company_shared"
 
 -- We should not introduce instance for DocumentViewer since this can't be really parsed. And instance for Maybe DocumentViewer would be missleading

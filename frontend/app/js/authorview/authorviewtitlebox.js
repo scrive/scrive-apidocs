@@ -35,13 +35,14 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
     }, errorcallback);
   },
   canGoToSignView : function() {
-    return this.document().currentViewerIsAuthor() && this.document().currentSignatoryCanSign() && this.document().pending();
+    return this.document().currentSignatoryCanSign() && this.document().pending();
   },
   canGiveToNextSignatoryPad : function() {
     return !this.canGoToSignView() && this.document().currentViewerIsAuthor() && this.document().pending() && this.document().signatoriesThatCanSignNowOnPad().length > 0;
   },
   goToSignView : function() {
-    new Submit({method: 'POST', url : '/d/signview/' + this.document().documentid()}).send();
+    LocalStorage.set("backlink", "target", "document");
+    new Submit({method: 'GET', url : '/d/signview/' + this.document().documentid()}).send();
   },
   padNextSignatory : function() {
     if (this.get("padNextSignatory") != undefined) return this.get("padNextSignatory");
@@ -212,7 +213,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
             content :self.padNextSignatoryModalContent,
             onAccept : function() {
                 mixpanel.track('Give for pad signing to some pad signatory - opening signview');
-                LocalStorage.set("backlink","target","authorview");
+                LocalStorage.set("backlink","target","document");
                 model.giveToPadSignatory(self.signatory);
             }
           });
