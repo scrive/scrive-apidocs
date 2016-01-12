@@ -47,7 +47,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         this.forceUpdateTasks(); // tasks need to be updated to refer to the correct checkbox
         setTimeout(function () {
           self.updateArrow();
-        }, 100); // we need to wait a bit until DOM realizes position/offset changed 
+        }, 100); // we need to wait a bit until DOM realizes position/offset changed
       }
     },
 
