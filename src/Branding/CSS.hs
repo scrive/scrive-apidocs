@@ -122,11 +122,11 @@ loginBrandingLess cdnbaseurl theme = unlines $
 
 -- Scrive branding CSS. Generated using less. No DB involved, hence takes no `Theme`.
 -- Should be used only for those pages that mimic the look of the company web ('Expression Engine').
-scriveBrandingCSS :: (MonadLog m,MonadIO m) => m BSL.ByteString
-scriveBrandingCSS = do
+scriveBrandingCSS :: (MonadLog m,MonadIO m) => Maybe String -> m BSL.ByteString
+scriveBrandingCSS cdnbaseurl = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
-        (BSL.fromString scriveBrandingLess)
+        (BSL.fromString $ scriveBrandingLess cdnbaseurl)
     case code of
       ExitSuccess -> do
           return $ stdout
@@ -136,14 +136,14 @@ scriveBrandingCSS = do
             ]
           return BSL.empty
 
-scriveBrandingLess :: String
-scriveBrandingLess = unlines $
+scriveBrandingLess :: Maybe String -> String
+scriveBrandingLess cdnbaseurl = unlines $
    [
     "@import 'branding/variables';", -- This is imported so we can use color variables from there
     "@import 'branding/elements';", -- This is imported so we can use some transform functions
     "@import 'runtime/scrivebranding/scrivebrandingdefaultvariables';",
     "@import 'runtime/scrivebranding/scrivebranding';"
-   ]
+   ] ++ lessVariablesFromCDN cdnbaseurl
 
 lessVariablesFromTheme :: Theme -> [String]
 lessVariablesFromTheme theme = [
