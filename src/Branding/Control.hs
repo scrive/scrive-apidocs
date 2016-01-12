@@ -82,7 +82,8 @@ getLoginTheme = do
 -- used to deliver CSS for those pages that mimic the look of the company web ('Expression Engine').
 handleScriveBranding :: Kontrakcja m => String -> String -> m Response
 handleScriveBranding brandinghash _ = do
-  brandingCSS <- withLessCache (ScriveBranding brandinghash) scriveBrandingCSS
+  ctx <- getContext
+  brandingCSS <- withLessCache (ScriveBranding brandinghash) $ scriveBrandingCSS $ ctxcdnbaseurl ctx
   let res = Response 200 Map.empty nullRsFlags brandingCSS Nothing
   return $ setHeaderBS "Cache-Control" "max-age=31536000" $
            setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css") res

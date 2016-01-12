@@ -72,7 +72,7 @@
 "_mailDocumentLinkedButton":"Descargar el documento",
 "_mailGoToDocument":"Ir al documento",
 "_mailInvitationCustomInvitationHeader":"Mensaje de <strong>$creatorname$</strong>",
-"_mailInvitationFromPart":"$authorname$ through $originator$",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> le ha invitado a firmar electrónicamente el documento <strong>$documenttitle$</strong>.",
 "_mailInvitationToSignFollowInstructions":"Haga clic en el botón para más intrucciones.",
 "_mailInvitationToSignTitleContract":"Documento a firmar electrónicamente: $documenttitle$",

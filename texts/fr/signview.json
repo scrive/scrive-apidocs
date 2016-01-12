@@ -72,7 +72,7 @@
 "_mailDocumentLinkedButton":"Télécharger le document",
 "_mailGoToDocument":"Accéder au document",
 "_mailInvitationCustomInvitationHeader":"Message de <strong>$creatorname$</strong>",
-"_mailInvitationFromPart":"$authorname$ via $originator$",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> vous a invité à e-signer le document <strong>$documenttitle$</strong>.",
 "_mailInvitationToSignFollowInstructions":"Cliquer sur le bouton pour recevoir d'autres instructions.",
 "_mailInvitationToSignTitleContract":"Document à e-signer: $documenttitle$",

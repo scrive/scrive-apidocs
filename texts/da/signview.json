@@ -72,7 +72,7 @@
 "_mailDocumentLinkedButton":"Download dokumentet",
 "_mailGoToDocument":"Gå til dokument",
 "_mailInvitationCustomInvitationHeader":"Besked fra <strong>$creatorname$</strong>",
-"_mailInvitationFromPart":"$authorname$ gennem $originator$ ",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> har inviteret dig til at e-signere dokumentet <strong>$documenttitle$</strong>.",
 "_mailInvitationToSignFollowInstructions":"Klik på knappen for at få yderligere instruktioner.",
 "_mailInvitationToSignTitleContract":"Dokument, der skal e-signeres: $documenttitle$",

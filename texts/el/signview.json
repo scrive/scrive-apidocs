@@ -72,7 +72,7 @@
 "_mailDocumentLinkedButton":"Λήψη εγγράφου ",
 "_mailGoToDocument":"Μεταβείτε στο έγγραφο ",
 "_mailInvitationCustomInvitationHeader":"Μήνυμα από <strong>$creatorname$</strong> ",
-"_mailInvitationFromPart":"$authorname$ μέσω $originator$ ",
+"_mailInvitationFromPart":"",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> σας έχει προσκαλέσει να υπογράψετε ηλεκτρονικά το έγγραφο <strong>$documenttitle$</strong>. ",
 "_mailInvitationToSignFollowInstructions":"Πιέστε την ένδειξη για περαιτέρω οδηγίες. ",
 "_mailInvitationToSignTitleContract":"Έγγραφο προς ηλεκτρονική υπογραφή: $documenttitle$",

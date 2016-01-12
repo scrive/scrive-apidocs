@@ -489,6 +489,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
               <Button
                 text={localization.changeEmail}
                 onClick={this.handleStartChangingEmail}
+                style={{"margin-bottom": "10px"}}
               />
             }
             {/* if */ this.hasChangePhoneOption() &&

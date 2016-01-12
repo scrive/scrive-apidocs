@@ -72,7 +72,7 @@
 "_mailDocumentLinkedButton":"Download the document",
 "_mailGoToDocument":"Go to document",
 "_mailInvitationCustomInvitationHeader":"Message from <strong>$creatorname$</strong>",
-"_mailInvitationFromPart":"$authorname$ through $originator$",
+"_mailInvitationFromPart":"$authorname:noescape()$ through $originator$",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> has invited you to e-sign the document <strong>$documenttitle$</strong>.",
 "_mailInvitationToSignFollowInstructions":"Click the button for further instructions.",
 "_mailInvitationToSignTitleContract":"Document to e-sign: $documenttitle$",
