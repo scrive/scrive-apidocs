@@ -492,19 +492,16 @@ window.Document = Backbone.Model.extend({
           }
         };
         
-        // See if we have document data in DOM, before calling the fetch function
-        var documentDataElement = $('#document-data');
-        if (documentDataElement.length > 0) {
-          console.log("reading data from DOM");
-          this.set(this.parse(JSON.parse(atob(documentDataElement.text()))));
+        // See if we have document data in DOM (and ability to decode base64), before calling the fetch function
+        if (window.documentdata && window.atob) {
+          this.set(this.parse(JSON.parse(window.atob(window.documentdata))));
           fetchOptions.success();
 
           // Don't read stale data, so remove the document data.
-          documentDataElement.remove();
-          return;
+          window.documentdata = undefined;
+        } else {
+          fetchFunction();
         }
-
-        fetchFunction();
 
     },
     author: function() {
