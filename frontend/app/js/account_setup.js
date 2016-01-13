@@ -338,7 +338,9 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
   });
 
   window.AccountSetup = function(args) {
-      mixpanel.track('Visit account setup');
+    mixpanel.track('Visit account setup');
+    args.fstname = _.unescape(args.fstname);
+    args.sndname = _.unescape(args.sndname);
     var model = new AccountSetupModel(args);
     var view =  new AccountSetupView({model: model, el: $("<div class='short-input-section account-setup'/>")});
     this.el = function() {return $(view.el);};
