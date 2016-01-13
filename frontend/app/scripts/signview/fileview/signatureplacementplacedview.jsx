@@ -74,8 +74,7 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
       var signatory = field.signatory();
       var doc = signatory.document();
       var image = field.value();
-      var drawing = doc.signingInProcess() && doc.currentSignatoryCanSign() &&
-        signatory.current() && !doc.readOnlyView();
+      var drawing = doc.signingInProcess() && doc.currentSignatoryCanSign() && signatory.current();
       var hasImage = image !== "";
 
       var divClass = React.addons.classSet({

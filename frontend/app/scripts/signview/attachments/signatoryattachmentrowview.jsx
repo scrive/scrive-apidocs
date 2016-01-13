@@ -13,7 +13,7 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
 
       return "/api/frontend/setsignatoryattachment/" + doc.documentid() +
         "/" + doc.viewer().signatoryid() + "/" +
-        encodeURIComponent(model.name()) + doc.viewer().urlPart();
+        encodeURIComponent(model.name());
     },
 
     uploadButton: function () {
@@ -148,7 +148,7 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
 
       return "/api/frontend/setsignatoryattachment/" + doc.documentid() +
         "/" + doc.viewer().signatoryid() + "/" +
-        encodeURIComponent(model.name()) + doc.viewer().urlPart();
+        encodeURIComponent(model.name());
     },
 
     render: function () {

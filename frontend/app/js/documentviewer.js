@@ -10,12 +10,6 @@ window.DocumentViewer = Backbone.Model.extend({
     signatoryid: function() {
       return this.get("signatoryid");
     },
-    urlPart: function() {
-        if (this.signatoryid() != undefined)
-          return "?signatorylinkid=" + this.signatoryid();
-        else return "";
-    },
-
     forFetch: function() {
         return {
             signatoryid: this.signatoryid()
