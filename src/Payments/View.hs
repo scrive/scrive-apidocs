@@ -43,10 +43,10 @@ mailSignup bd theme hp user company subscription = do
     brandingMailFields theme
   where amountInCentsWithVat = round $ (fromIntegral $ Recurly.subUnitAmountInCents subscription) * 1.25
 
-mailFailed :: (TemplatesMonad m) => BrandedDomain -> Theme ->  String -> User -> Company -> Recurly.Invoice -> m Mail
-mailFailed bd theme hp user company invoice = do
+mailFailed :: (TemplatesMonad m) => BrandedDomain -> Theme -> User -> Company -> Recurly.Invoice -> m Mail
+mailFailed bd theme user company invoice = do
   kontramail bd theme "paymentsDeclinedEmail" $ do
-    F.value "ctxhostpart" hp
+    F.value "ctxhostpart" $ bdUrl bd
     F.value "fullname" $ getFullName user
     when (not $ null $ getCompanyName company) $ do
       F.value "companyname" $ getCompanyName company

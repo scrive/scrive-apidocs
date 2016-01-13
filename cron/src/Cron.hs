@@ -218,7 +218,7 @@ main = do
         RecurlySynchronization -> do
           time <- runDB $ do
             time <- currentTime
-            handleSyncWithRecurly appConf (mailsConfig appConf)
+            handleSyncWithRecurly (mailsConfig appConf)
               templates (recurlyAPIKey $ recurlyConfig appConf) time
             handleSyncNoProvider time
             return time

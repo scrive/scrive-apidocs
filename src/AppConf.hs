@@ -30,7 +30,6 @@ data AppConf = AppConf {
     httpBindAddress    :: (Word32, Word16)             -- ^ tcp address to bind to and port to listen on
                                                        -- (0x7f000001, 8000) localhost:8000 (default)
                                                        -- (0, 80)   all interfaces port 80
-  , hostpart           :: String                       -- ^ hostname as it should looklike in emails for example
   , useHttps           :: Bool                         -- ^ should we redirect to https?
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
   , dbConfig           :: T.Text                       -- ^ postgresql configuration
@@ -63,9 +62,6 @@ unjsonAppConf = objectOf $ pure AppConf
          <*> field "bind_port"
             (snd . httpBindAddress)
             "Port to listen on")
-  <*> field "hostpart"
-      hostpart
-      "A string how this server is visible on outside"
   <*> fieldDef "https" True
       useHttps
       "Should use https"
@@ -146,7 +142,6 @@ instance Unjson AppConf where
 instance Default AppConf where
   def = AppConf {
       httpBindAddress    = (0x7f000001, 8000)
-    , hostpart           = "http://localhost:8000"
     , useHttps           = True
     , amazonConfig       = Nothing
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
