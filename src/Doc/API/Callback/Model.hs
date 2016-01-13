@@ -14,21 +14,26 @@ import Log
 
 import ActionQueue.Scheduler
 import API.APIVersion
+import AppConf (AppConf(..))
+import BrandedDomain.Model
 import DB
 import Doc.API.Callback.Data
 import Doc.API.Callback.Execute
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Logging
+import IPAddress (noIP)
 import KontraPrelude
+import MailContext (MailContext(..), runMailContextT)
 import MinutesTime
 import User.CallbackScheme.Model
+import User.Lang (Lang(..))
 import Util.SignatoryLinkUtils
 
 documentAPICallback :: (MonadIO m, MonadBase IO m, MonadLog m, MonadMask m)
-  => (forall r. Scheduler r -> m r)
+  => AppConf -> (forall r. Scheduler r -> m r)
   -> ConsumerConfig m CallbackID DocumentAPICallback
-documentAPICallback runExecute = ConsumerConfig {
+documentAPICallback appConf runExecute = ConsumerConfig {
   ccJobsTable = "document_api_callbacks"
 , ccConsumersTable = "document_api_callback_consumers"
 , ccJobSelectors = ["id", "document_id", "api_version", "url", "attempts"]
@@ -43,13 +48,26 @@ documentAPICallback runExecute = ConsumerConfig {
 , ccNotificationChannel = Just apiCallbackNotificationChannel
 , ccNotificationTimeout = 60 * 1000000 -- 1 minute
 , ccMaxRunningJobs = 32
-, ccProcessJob = \dac@DocumentAPICallback{..} -> logDocument dacDocumentID . runExecute $ execute dac >>= \case
-  True  -> return $ Ok Remove
-  False -> dbQuery (CheckQueuedCallbacksFor dacDocumentID) >>= \case
-    True -> do
-      logInfo_ "Callback for document failed and there are more queued, discarding"
-      return $ Failed Remove
-    False -> Failed <$> onFailure dac
+, ccProcessJob = \dac@DocumentAPICallback{..} -> logDocument dacDocumentID . runExecute $ do
+    now <- currentTime
+    bd <- dbQuery GetMainBrandedDomain
+    -- Dummy MailContext
+    let mc = MailContext {
+            mctxhostpart = ""
+          , mctxmailsconfig = mailsConfig appConf
+          , mctxlang = LANG_EN
+          , mctxcurrentBrandedDomain = bd
+          , mctxtime = now
+          , mctxipnumber = noIP
+          , mctxmaybeuser = Nothing
+          }
+    runMailContextT mc $ execute dac >>= \case
+      True  -> return $ Ok Remove
+      False -> dbQuery (CheckQueuedCallbacksFor dacDocumentID) >>= \case
+        True -> do
+          logInfo_ "Callback for document failed and there are more queued, discarding"
+          return $ Failed Remove
+        False -> Failed <$> onFailure dac
 , ccOnException = const onFailure
 }
   where

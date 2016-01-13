@@ -4,6 +4,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Reader
+import Data.Int (Int32)
 import Log
 import Network.HTTP as HTTP
 import System.Exit
@@ -15,6 +16,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 
 import Amazon
 import API.APIVersion
+import Crypto.RNG
 import DB
 import Doc.API.Callback.Data
 import Doc.API.V1.DocumentToJSON
@@ -25,13 +27,17 @@ import Doc.Model
 import KontraPrelude
 import Log.Identifier
 import Log.Utils
+import MailContext.Class
+import Mails.SendMail
 import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
 import User.CallbackScheme.Model
+import User.Model
+import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.IO
 
-execute :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadIO m, MonadBase IO m,  MonadReader c m, HasSalesforceConf c) => DocumentAPICallback -> m Bool
+execute :: (AmazonMonad m, MonadDB m, CryptoRNG m, MonadThrow m, MonadLog m, MonadIO m, MonadBase IO m,  MonadReader c m, HasSalesforceConf c, MailContextMonad m) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
   exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor dacDocumentID
   if not exists then do
@@ -41,10 +47,10 @@ execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
     doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
     case (maybesignatory =<< getAuthorSigLink doc) of
       Nothing -> $unexpectedErrorM $ "Document" <+> show dacDocumentID <+> "has no author"
-      Just userid -> do
-        mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
+      Just uid -> do
+        mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID uid
         case mcallbackschema of
-          Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL
+          Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL dacAttempts uid
           Just (BasicAuthScheme lg pwd) -> executeStandardCallback (Just (lg,pwd)) doc dacURL dacApiVersion
           _ -> executeStandardCallback Nothing doc dacURL dacApiVersion
   else do -- TODO APIv2: Get rid of this block too, see TODO above
@@ -97,11 +103,13 @@ executeStandardCallback mBasicAuth doc url apiVersion = logDocument (documentid 
         ) ++
         [ url]
 
-executeSalesforceCallback :: (MonadDB m, MonadLog m, MonadIO m, MonadBase IO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> m Bool
-executeSalesforceCallback doc rtoken url = logDocument (documentid doc) $ do
+executeSalesforceCallback :: (MonadDB m, CryptoRNG m, MonadLog m, MonadThrow m, MonadIO m, MonadBase IO m, MonadReader c m, HasSalesforceConf c, MailContextMonad m) => Document -> String ->  String -> Int32 -> UserID -> m Bool
+executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid doc) $ do
   mtoken <- getAccessTokenFromRefreshToken rtoken
   case mtoken of
-       Left _ -> return False
+       Left e -> do
+         emailErrorIfNeeded e
+         return False
        Right token -> do
         (exitcode, _ , stderr) <- readCurl [
                       "-X", "POST"
@@ -117,8 +125,30 @@ executeSalesforceCallback doc rtoken url = logDocument (documentid doc) $ do
                     ] BSL.empty
         case exitcode of
                     ExitSuccess -> return True
-                    ExitFailure _ -> do
+                    ExitFailure e -> do
                       logInfo "Salesforce API callback failed" $ object [
                           "stderr" `equalsExternalBSL` stderr
                         ]
+                      emailErrorIfNeeded $ "ExitFailure with error code: " ++ show e
                       return False
+
+  where emailErrorIfNeeded e = when (attempts == 4) $ do
+          logInfo "Salesforce API callback failed for 5th time, sending email" $ object []
+          sc <- getSalesforceConfM
+          mctx <- getMailContext
+          muser <- dbQuery $ GetUserByID uid
+          let user = $fromJust muser
+              cid = show $ usercompany user
+          let mail = emptyMail {
+                  to = [ MailAddress { fullname = "Salesforce Admin", email = salesforceErrorEmail sc } ]
+                , title = "[Salesforce Callback Error] [companyid:" ++ cid ++ "]"
+                , content = "# Salesforce Callback Failed" ++ "\r\n\r\n"
+                         ++ "Error message: " ++ e ++ "\r\n"
+                         ++ "Document ID: " ++ (show $ documentid doc) ++ "\r\n"
+                         ++ "User ID: " ++ (show $ uid) ++ "\r\n"
+                         ++ "User Name: " ++ getFullName user ++ "\r\n"
+                         ++ "User Email: " ++ getEmail user ++ "\r\n"
+                         ++ "User Company ID: " ++ cid ++ "\r\n"
+                         ++ "\r\n" ++ "# END\r\n"
+                }
+          scheduleEmailSendout (mctxmailsconfig mctx) mail

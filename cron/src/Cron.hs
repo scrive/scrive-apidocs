@@ -100,7 +100,7 @@ main = do
         runScheduler :: Scheduler r -> CronM r
         runScheduler = runDB . CronEnv.runScheduler appConf filecache templates
 
-        apiCallbacks = documentAPICallback runScheduler
+        apiCallbacks = documentAPICallback appConf runScheduler
         cron = cronQueue appConf mmixpanel templates runScheduler runDB
 
     runCryptoRNGT rng $ do

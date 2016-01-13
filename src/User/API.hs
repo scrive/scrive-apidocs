@@ -321,7 +321,7 @@ apiCallTestSalesforceIntegration = api $ do
   scheme <- dbQuery $ GetUserCallbackSchemeByUserID $ userid user
   murl <- getField "url"
   when (isNothing murl) $ do
-    throwM . SomeKontraException $ badInput $ "No url provided"
+    throwM . SomeKontraException $ badInput $ "No 'url' parameter provided"
   let url = $fromJust murl
   fmap Ok $ case scheme of
       Just (SalesforceScheme token)  -> do
@@ -329,5 +329,7 @@ apiCallTestSalesforceIntegration = api $ do
         res <- withSalesforceConf ctx $ testSalesforce token url
         case res of
           Nothing -> runJSONGenT $ value "status" ("ok"::String)
-          Just e  -> throwM . SomeKontraException $ badInput $ "Selesforce integration did not work. Message: " ++ show e
-      _ -> throwM . SomeKontraException $ conflictError "Selesforce callback scheme is not set for this user"
+          Just e  -> runJSONGenT $ do
+            value "status" ("error"::String)
+            value "error_message" (show e)
+      _ -> throwM . SomeKontraException $ conflictError "Salesforce callback scheme is not set for this user"
