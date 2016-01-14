@@ -328,8 +328,14 @@ apiCallTestSalesforceIntegration = api $ do
         ctx <- getContext
         res <- withSalesforceConf ctx $ testSalesforce token url
         case res of
-          Nothing -> runJSONGenT $ value "status" ("ok"::String)
-          Just e  -> runJSONGenT $ do
+          Right (http_code, resp)-> runJSONGenT $ do
+            value "status" ("ok"::String)
+            value "http_code" http_code
+            value "response" resp
+          Left (msg, curl_err, stderr, http_code) -> runJSONGenT $ do
             value "status" ("error"::String)
-            value "error_message" (show e)
+            value "error_message" msg
+            value "http_code" http_code
+            value "curl_exit_code" curl_err
+            value "curl_stderr" stderr
       _ -> throwM . SomeKontraException $ conflictError "Salesforce callback scheme is not set for this user"
