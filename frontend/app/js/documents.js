@@ -14,7 +14,6 @@ window.Document = Backbone.Model.extend({
         signatoryattachments: [],
         ready: false,
         viewer: new DocumentViewer(),
-        infotext: "",
         authentication: "standard",
         delivery: "email",
         template: false,
@@ -57,13 +56,6 @@ window.Document = Backbone.Model.extend({
           pad(date.getMinutes());
 
       this.setTitle(title);
-    },
-    hasDefaultTitle: function () {
-      var title = this.title();
-      if (title === "") return true;
-      var untitled = localization.designview.newDocumentTitle;
-      var re = new RegExp(untitled + " \\d{4}-\\d{2}-\\d{2}");
-      return re.test(title);
     },
     addExistingSignatory: function(sig) {
         var document = this;
@@ -148,12 +140,6 @@ window.Document = Backbone.Model.extend({
     setReferenceScreenshot: function(d) {
       this.get("screenshots").reference = d;
     },
-    hasReferenceScreenshot : function() {
-      return this.get("screenshots").reference != undefined;
-    },
-    infotext: function() {
-        return this.get("infotext");
-    },
     canberestarted: function() {
         return this.get("canberestarted");
     },
@@ -190,42 +176,31 @@ window.Document = Backbone.Model.extend({
               method: "POST"
           });
     },
-    cancelMail: function() {
-              return new Mail({
-                        document: this,
-                        type: "cancel"
-            });
-    },
-    canseeallattachments: function() {
-      return this.get("canseeallattachments");
-    },
-    setInvitationMessage: function(customtext)
-    {
+    setInvitationMessage: function(customtext) {
         this.set({invitationmessage: customtext });
     },
     invitationmessage : function() {
         return this.get("invitationmessage");
     },
     inviteMail: function() {
-                return new Mail({
-                                                document: this,
-                                                type: "invite",
-                                                editWidth: 300
-                        });
+      return new Mail({
+        document: this,
+        type: "invite",
+        editWidth: 300
+      });
     },
-    setConfirmationMessage: function(customtext)
-    {
-        this.set({confirmationmessage: customtext });
+    setConfirmationMessage: function(customtext) {
+      this.set({confirmationmessage: customtext });
     },
     confirmationmessage : function() {
         return this.get("confirmationmessage");
     },
     confirmMail: function() {
-                return new Mail({
-                                                document: this,
-                                                type: "confirm",
-                                                editWidth: 300
-                        });
+      return new Mail({
+        document: this,
+        type: "confirm",
+        editWidth: 300
+      });
     },
     takeFirstScreenshot: function() {
         var document = this;
@@ -424,12 +399,6 @@ window.Document = Backbone.Model.extend({
        return _.detect(this.signatories(), function(signatory) {
            return signatory.current();
         });
-
-    },
-    otherSignatories: function() {
-       return _.select(this.signatories(), function(signatory) {
-           return !signatory.current();
-       });
     },
     removeSignatory: function(sig) {
        if (this.signatories().length < 2)
@@ -476,33 +445,17 @@ window.Document = Backbone.Model.extend({
     closed: function() {
         return this.status() == "Closed";
     },
-    signingInProcess: function() {
-        return this.pending();
-    },
     timeouttime: function() {
         return this.get("timeouttime");
     },
     autoremindtime: function() {
         return this.get("autoremindtime");
     },
-    file: function()
-    {
+    file: function() {
         return this.get("file");
     },
     signorder: function() {
       return this.get("signorder");
-    },
-    elegTBS: function() {
-        var text = this.title() + " " + this.documentid();
-        _.each(this.signatories(), function(signatory) {
-            text += " " + signatory.name() + " " + signatory.personalnumber();
-        });
-        return text;
-    },
-    lastSignatoryLeft: function() {
-        return _.all(this.signatories(), function(signatory) {
-          return (signatory.signs() && signatory.hasSigned()) || !signatory.signs() || signatory.current();
-        });
     },
     isTemplate: function() {
        return this.get("template") == true;
@@ -574,27 +527,24 @@ window.Document = Backbone.Model.extend({
                     return false;
        return this.author().signs();
     },
-    allowsDD: function() {
-        return this.preparation();
-    },
     isSigning: function() {
         var signatory = this.currentSignatory();
-        return signatory != undefined && this.signingInProcess() && signatory.signs() && !signatory.hasSigned();
+        return signatory != undefined && this.pending() && signatory.signs() && !signatory.hasSigned();
     },
     isReviewing: function() {
         var signatory = this.currentSignatory();
-        return (signatory != undefined) && (this.signingInProcess() || this.closed()) && !signatory.signs();
+        return (signatory != undefined) && (this.pending() || this.closed()) && !signatory.signs();
     },
     isSignedNotClosed: function() {
         var signatory = this.currentSignatory();
-        return signatory != undefined && this.signingInProcess() && signatory.hasSigned();
+        return signatory != undefined && this.pending() && signatory.hasSigned();
     },
     isSignedAndClosed: function() {
         var signatory = this.currentSignatory();
         return signatory != undefined && signatory.hasSigned() && this.closed();
     },
     isUnavailableForSign: function() {
-        return !this.signingInProcess() && !this.closed();
+        return !this.pending() && !this.closed();
     },
     currentSignatoryCanSign: function() {
       return this.currentSignatory() && this.currentSignatory().canSign();
@@ -680,11 +630,9 @@ window.Document = Backbone.Model.extend({
            });
            return lang;
        }()),
-       infotext: args.infotext,
        canberestarted: args.canberestarted,
        canbeprolonged: args.canbeprolonged,
        canbecanceled: args.canbecanceled,
-       canseeallattachments: args.canseeallattachments,
        status: args.status,
        timeouttime: args.timeouttime == undefined ? undefined : moment(args.timeouttime).toDate(),
        autoremindtime: args.autoremindtime == undefined ? undefined : moment(args.autoremindtime).toDate(),

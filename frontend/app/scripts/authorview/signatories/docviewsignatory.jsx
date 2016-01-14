@@ -57,7 +57,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
       var signatory = this.props.signatory;
       var document = signatory.document();
 
-      if (document.rejected() || (document.signingInProcess() && signatory.hasSigned())) {
+      if (document.rejected() || (document.pending() && signatory.hasSigned())) {
         return false;
       }
       var canGetInvitation = !signatory.hasSigned() && (
@@ -83,7 +83,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
       var signatory = this.props.signatory;
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.undeliveredMailInvitation()
-        && signatory.document().signingInProcess()
+        && signatory.document().pending()
         && !signatory.hasSigned()
         && (signatory.emailDelivery() || signatory.emailMobileDelivery());
     },
@@ -96,7 +96,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     hasChangeAuthenticationToView: function () {
       var signatory = this.props.signatory;
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
-      && signatory.document().signingInProcess()
+      && signatory.document().pending()
       && signatory.signs()
       && !signatory.hasSigned()
       && !signatory.hasAuthenticatedToView();
@@ -104,7 +104,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     hasChangeAuthenticationToSign: function () {
       var signatory = this.props.signatory;
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
-      && signatory.document().signingInProcess()
+      && signatory.document().pending()
       && signatory.signs()
       && !signatory.hasSigned();
     },
@@ -113,7 +113,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
       var signatory = this.props.signatory;
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.undeliveredSMSInvitation()
-        && signatory.document().signingInProcess()
+        && signatory.document().pending()
         && !signatory.hasSigned()
         && (signatory.mobileDelivery() || signatory.emailMobileDelivery());
     },
@@ -121,7 +121,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     hasGoToSignviewOption: function () {
       var signatory = this.props.signatory;
       return signatory.document().currentViewerIsAuthor()
-      && signatory.document().signingInProcess()
+      && signatory.document().pending()
       && signatory.canSign()
       && signatory.padDelivery();
     },
@@ -289,7 +289,7 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
     hasShowAPIDelivery: function () {
       var signatory = this.props.signatory;
       return signatory.document().currentViewerIsAuthor()
-      && signatory.document().signingInProcess()
+      && signatory.document().pending()
       && signatory.canSign()
       && signatory.apiDelivery();
     },

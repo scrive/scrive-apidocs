@@ -47,7 +47,7 @@ var AuthorViewHistoryModel = Backbone.Model.extend({
     }
   },
   text: function() {
-    if ( this.document().timeouttime() != undefined && this.document().signingInProcess() )
+    if ( this.document().timeouttime() != undefined && this.document().pending() )
       return this.statusText() + " - " + this.dueDateDescription();
     else
       return this.statusText();

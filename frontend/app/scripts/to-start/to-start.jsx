@@ -29,10 +29,10 @@ return React.createClass({
     mixpanel.track('Initialized send in to-start');
 
     document.save();
-    var probs = document.hasProblems(true);
+    var probs = document.hasProblems();
     if (probs) {
       _.forEach(signatories, function(sig) {
-        if (sig.hasProblems(true)) {
+        if (sig.hasProblems()) {
           self.refs["signatory-" + sig.id].expandToShowError();
         }
       });

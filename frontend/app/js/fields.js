@@ -43,9 +43,6 @@ window.Field = Backbone.Model.extend({
     valueTMP : function() {
         return this.get("valueTMP");
     },
-    nameTMP : function() {
-        return this.get("nameTMP");
-    },
     obligatory : function() {
         return this.get("obligatory");
     },
@@ -71,9 +68,6 @@ window.Field = Backbone.Model.extend({
     },
     setName : function(name) {
         return this.set({"name" : name});
-    },
-    setNameTMP : function(value) {
-        this.set({"nameTMP" : value});
     },
     isClosed : function() {
         return this.get("closed");
@@ -156,8 +150,6 @@ window.Field = Backbone.Model.extend({
             if (name == "mobile")
                 return localization.phone;
         }
-        if (this.isCustom() && name == "" && this.nameTMP() != undefined)
-          name = this.nameTMP();
         return name;
     },
     nicetext : function() {

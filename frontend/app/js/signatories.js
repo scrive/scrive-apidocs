@@ -314,7 +314,7 @@ window.Signatory = Backbone.Model.extend({
         return this.signorder() <= this.document().signorder();
     },
     canSign: function() {
-        var canSign = this.document().signingInProcess() &&
+        var canSign = this.document().pending() &&
             this.signs() &&
             !this.hasSigned() &&
             this.signorder() == this.document().signorder();
@@ -360,26 +360,13 @@ window.Signatory = Backbone.Model.extend({
         }
       }
     },
-    allAttachemntHaveFile: function() {
-        return _.all(this.attachments(), function(attachment) {
-            return attachment.hasFile();
-        });
-    },
     signatures: function() {
         return this.fieldsByType("signature");
-    },
-    hasSignatureField : function() {
-      return this.signatures().length > 0 ;
     },
     hasPlacedSignatures: function() {
         return _.any(this.signatures(), function(signature) {
             return signature.hasPlacements();
         });
-    },
-    anySignatureHasImageOrPlacement : function() {
-      return _.any(this.signatures(), function (field) {
-           return field.value() != "" || field.hasPlacements();
-       });
     },
     standardAuthenticationToView: function() {
           return this.get("authenticationToView") == "standard" && this.signs();
@@ -450,9 +437,6 @@ window.Signatory = Backbone.Model.extend({
               customtext: customtext.trim() || undefined
           });
     },
-    padSigningURL : function() {
-        return "/padqueue";
-    },
     changeAuthenticationToView: function(authenticationType, personalNumber, mobileNumber) {
         return new Submit({
                 url: "/api/frontend/changeauthenticationtoview/" + this.document().documentid() + "/" + this.signatoryid(),
@@ -492,14 +476,6 @@ window.Signatory = Backbone.Model.extend({
                 editWidth: (this.canSign() && !this.hasSigned()) ? 300 : 540
         });
     },
-    addNewField : function(t) {
-        var field = this.newField(t);
-        this.addField(field);
-        return field;
-    },
-    addNewCustomField: function() {
-       return this.addNewField("custom", true);
-    },
     newField : function(t,f) {
         return new Field({signatory: this, fresh: (f != undefined ? f : true) , type : t});
     },
@@ -538,10 +514,7 @@ window.Signatory = Backbone.Model.extend({
         this.trigger("removed");
     },
     hasUser: function() {
-        return this.userid() != undefined;
-    },
-    userid : function() {
-        return this.get("userid");
+        return this.get("userid") != undefined;
     },
     draftData : function() {
         return {

@@ -56,7 +56,7 @@ return React.createClass({
   render: function() {
     var signatory = this.props.signatory;
     var fields = signatory.fields();
-    var sent = signatory.document().signingInProcess();
+    var sent = signatory.document().pending();
     var minified = this.state.minified;
     var containerClasses = "party-container " + (minified ? "minified" : "");
     var imageSource = window.cdnbaseurl + (this.state.minified ? '/img/to-send/arrow-up.png' : '/img/to-send/arrow-down.png');
