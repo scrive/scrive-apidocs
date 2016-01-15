@@ -16,6 +16,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 
 import Amazon
 import API.APIVersion
+import Company.Model
 import Crypto.RNG
 import DB
 import Doc.API.Callback.Data
@@ -133,33 +134,36 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                       logInfo "Salesforce API callback failed" $ object [
                           "stderr" `equalsExternalBSL` stderr
                         ]
-                      emailErrorIfNeeded ("curl to callback URL failed", err, BSL.unpack stderr, http_code)
+                      emailErrorIfNeeded ("Request to callback URL failed", err, BSL.unpack stderr, http_code)
                       return False
 
-  where emailErrorIfNeeded (msg, curl_err, stderr, http_code) = when (attempts == 1) $ do
-          logInfo_ "Salesforce API callback failed for 5th time, sending email."
+  where emailErrorIfNeeded (msg, curl_err, stderr, http_code) = do
           sc <- getSalesforceConfM
-          mctx <- getMailContext
-          muser <- dbQuery $ GetUserByID uid
-          let user = $fromJust muser
-              cid = show $ usercompany user
-              did = show $ documentid doc
-          let mail = emptyMail {
-                  to = [ MailAddress { fullname = "Salesforce Admin", email = salesforceErrorEmail sc } ]
-                , title = "[Salesforce Callback Error] (companyid:" ++ cid ++ ") (userid:" ++ (show uid) ++ ") (documentid:" ++ did ++ ")"
-                , content = "<h2>Salesforce Callback Failed</h2>" ++ "<br />\r\n"
-                         ++ "<strong>Error:</strong> " ++ msg ++ "<br />\r\n"
-                         ++ "<br />"
-                         ++ "<strong>Salesforce Token URL:</strong> " ++ salesforceTokenUrl sc ++ "<br />\r\n"
-                         ++ "<strong>Callback URL:</strong> " ++ url ++ "<br />\r\n"
-                         ++ "<strong>curl error code:</strong> " ++ show curl_err ++ "<br />\r\n"
-                         ++ "<strong>curl stderr:</strong> " ++ stderr ++ "<br />\r\n"
-                         ++ "<strong>HTTP response code:</strong> " ++ http_code ++ "<br />\r\n"
-                         ++ "<br />"
-                         ++ "<strong>User ID:</strong> " ++ (show uid) ++ "<br />\r\n"
-                         ++ "<strong>Document ID:</strong> " ++ did ++ "<br />\r\n"
-                         ++ "<strong>User Company ID:</strong> " ++ cid ++ "<br />\r\n"
-                         ++ "<strong>User Name:</strong> " ++ getFullName user ++ "<br />\r\n"
-                         ++ "<strong>User Email:</strong> " ++ getEmail user ++ "<br />\r\n"
-                }
-          scheduleEmailSendout (mctxmailsconfig mctx) mail
+          when (attempts == 4 && isJust (salesforceErrorEmail sc)) $ do
+            logInfo_ "Salesforce API callback failed for 5th time, sending email."
+            mctx <- getMailContext
+            user <- fmap $fromJust (dbQuery $ GetUserByID uid)
+            company <- dbQuery $ GetCompanyByUserID $ uid
+
+            let mail = emptyMail {
+                    to = [ MailAddress { fullname = "Salesforce Admin", email = $fromJust (salesforceErrorEmail sc) } ]
+                  , title = "[Salesforce Callback Error] " ++
+                            "(user: " ++ getEmail user ++ ") " ++
+                            "(company: " ++ companyname (companyinfo company) ++ ") " ++
+                            "(documentid: " ++ show (documentid doc) ++ ")"
+                  , content = "<h2>Salesforce Callback Failed</h2>" ++ "<br />\r\n"
+                          ++ "<strong>Error:</strong> " ++ msg ++ "<br />\r\n"
+                          ++ "<br />"
+                          ++ "<strong>Salesforce access token URL:</strong> " ++ salesforceTokenUrl sc ++ "<br />\r\n"
+                          ++ "<strong>Callback URL:</strong> " ++ url ++ "<br />\r\n"
+                          ++ "<strong>Curl error code:</strong> " ++ show curl_err ++ "<br />\r\n"
+                          ++ "<strong>Curl stderr:</strong> " ++ stderr ++ "<br />\r\n"
+                          ++ "<strong>HTTP response code:</strong> " ++ http_code ++ "<br />\r\n"
+                          ++ "<br />"
+                          ++ "<strong>User ID:</strong> " ++ show (userid user) ++ "<br />\r\n"
+                          ++ "<strong>Document ID:</strong> " ++ show (documentid doc) ++ "<br />\r\n"
+                          ++ "<strong>User Company ID:</strong> " ++ show (companyid company) ++ "<br />\r\n"
+                          ++ "<strong>User Name:</strong> " ++ getFullName user ++ "<br />\r\n"
+                          ++ "<strong>User Email:</strong> " ++ getEmail user ++ "<br />\r\n"
+                  }
+            scheduleEmailSendout (mctxmailsconfig mctx) mail

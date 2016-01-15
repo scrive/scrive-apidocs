@@ -7,6 +7,7 @@ module Salesforce.AuthorizationWorkflow (
 
 import Control.Monad.IO.Class
 import Control.Monad.Reader
+import Data.Int
 import Log
 import System.Exit
 import Text.JSON hiding (Ok)
@@ -70,7 +71,7 @@ getAccessTokenFromRefreshToken :: (MonadDB m, MonadIO m, MonadLog m, MonadReader
                                 => String -> m (Either (String, Int, String, String) String)
 getAccessTokenFromRefreshToken rtoken = do
   sc <- getSalesforceConfM
-  (exitcode, stdout_with_code, stderr) <- readCurl [
+  (exitcode, stdoutWithCode, stderr) <- readCurl [
       "-X", "POST"
     , "--write-out","\n%{http_code}"
     , "-d", "grant_type=refresh_token&" ++
@@ -79,17 +80,15 @@ getAccessTokenFromRefreshToken rtoken = do
             "client_secret=" ++ salesforceConsumerSecret sc
     , salesforceTokenUrl sc
     ] BSL.empty
-  let http_code = case reverse . lines . BSL.unpack $ stdout_with_code of
-        [] -> ""
-        c:_ -> c
-      stdout = BSL.pack . unlines . init . lines . BSL.unpack $ stdout_with_code
+  let httpCode = httpCodeFromStdoutWithHTTPCode stdoutWithCode
+      stdout = stdoutFromStdoutWithHTTPCode stdoutWithCode
   case exitcode of
       ExitFailure err -> do
         logInfo "curl failed to receive token from Salesforce" $ object [
             "curl_exit_code" .= err
           , "stderr" `equalsExternalBSL` stderr
           ]
-        return $ Left ("curl connection to Salesforce closed", err, BSL.unpack stderr, http_code)
+        return $ Left ("curl connection to Salesforce closed", err, BSL.unpack stderr, httpCode)
       ExitSuccess -> case (decode $ BSL.toString stdout) of
         J.Ok js -> do
           mrt <- withJSValue js $ fromJSValueField "access_token"
@@ -97,16 +96,16 @@ getAccessTokenFromRefreshToken rtoken = do
             Just rt -> return $ Right rt
             Nothing -> do
               logInfo "No token found while parsing Salesforce access response" $ object [
-                  "http_code" .= http_code
+                  "http_code" .= httpCode
                 , "stdout" `equalsExternalBSL` stdout
                 ]
-              return $ Left ("Salesforce access response is valid JSON, but no access token found", 0, BSL.unpack stderr, http_code)
+              return $ Left ("Salesforce access response is valid JSON, but no access token found", 0, BSL.unpack stderr, httpCode)
         _ -> do
           logInfo "Parsing JSON from Salesforce access response stdout failed" $ object [
-              "http_code" .= http_code
+              "http_code" .= httpCode
             , "stdout" `equalsExternalBSL` stdout
             ]
-          return $ Left ("Salesforce access response is not valid JSON", 0, BSL.unpack stderr, http_code)
+          return $ Left ("Salesforce access response is not valid JSON", 0, BSL.unpack stderr, httpCode)
 
 
 
@@ -116,10 +115,10 @@ testSalesforce :: (MonadDB m, MonadIO m, MonadLog m, MonadReader c m, HasSalesfo
 testSalesforce rtoken url = do
   matoken <- getAccessTokenFromRefreshToken rtoken
   case matoken of
-    Left (msg, curl_err, stderr, http_code) ->
-      return $ Left ("Getting access token failed: " ++ msg, curl_err, stderr, http_code)
+    Left (msg, curlErr, stderr, httpCode) ->
+      return $ Left ("Getting access token failed: " ++ msg, curlErr, stderr, httpCode)
     Right atoken -> do
-      (exitcode, stdout, stderr) <- readCurl [
+      (exitcode, stdoutWithCode, stderr) <- readCurl [
           "-X", "POST"
         , "--write-out","\n%{http_code}"
         , "-f" -- make curl return exit code (22) if it got anything else but 2XX
@@ -128,11 +127,20 @@ testSalesforce rtoken url = do
         , "-H", "Authorization: Bearer " ++ atoken
         , url
         ] BSL.empty
-      let http_code = case reverse . lines . BSL.unpack $ stdout of
-            [] -> ""
-            c:_ -> c
+      let httpCode = httpCodeFromStdoutWithHTTPCode stdoutWithCode
+          stdout = stdoutFromStdoutWithHTTPCode stdoutWithCode
       case exitcode of
         ExitSuccess ->
-          return $ Right (http_code, BSL.unpack stdout)
+          return $ Right (httpCode, BSL.unpack stdout)
         ExitFailure err ->
-          return $ Left ("Salesforce access token worked, but callback failed", err, BSL.unpack stderr, http_code)
+          return $ Left ("Salesforce access token worked, but callback failed", err, BSL.unpack stderr, httpCode)
+
+
+stdoutFromStdoutWithHTTPCode :: BSL.ByteString -> BSL.ByteString
+stdoutFromStdoutWithHTTPCode stdoutWithCode = BSL.take (lastEOLIndex stdoutWithCode) stdoutWithCode
+
+httpCodeFromStdoutWithHTTPCode :: BSL.ByteString -> String
+httpCodeFromStdoutWithHTTPCode stdoutWithCode = BSL.unpack $ BSL.drop (lastEOLIndex stdoutWithCode + 1) stdoutWithCode
+
+lastEOLIndex :: BSL.ByteString -> Int64
+lastEOLIndex bs = $last (BSL.elemIndices '\n' bs)

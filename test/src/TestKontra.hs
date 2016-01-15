@@ -328,7 +328,7 @@ mkContext lang = do
         , ctxhubspotconf = HubSpotConf "" M.empty
         , ctxgoogleanalyticstoken = "5b04329b972851feac0e9b853738e741"
         , ctxbrandeddomain = bd
-        , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" ""
+        , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" "" Nothing
         , ctxnetsconfig = Nothing
         , ctxthreadjoins = []
     }
