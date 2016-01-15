@@ -25,13 +25,13 @@ data DocumentAccess = DocumentAccess {
 data DocumentAccessMode =
     SignatoryDocumentAccess SignatoryLinkID -- Person looking at document is this signatory
   | AuthorDocumentAccess -- Person looking at document is an author
-  | CompanyAdminDocumentAccess  -- Person looking at document is an admin of author
+  | CompanyAdminDocumentAccess (Maybe SignatoryLinkID) -- Person looking at document is an admin of author
   | CompanySharedDocumentAccess  -- Person looking at document is in company of author and document is shared
   | SystemAdminDocumentAccess  -- Person looking at document is an admin of author
 
 canSeeSignlinks :: DocumentAccess -> Bool
 canSeeSignlinks (DocumentAccess { daAccessMode = AuthorDocumentAccess}) = True
-canSeeSignlinks (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess})  = True
+canSeeSignlinks (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess _})  = True
 canSeeSignlinks _ = False
 
 propertyForCurrentSignatory :: DocumentAccess -> (SignatoryLink -> a) -> Document -> a
@@ -42,10 +42,11 @@ propertyForCurrentSignatory da f doc =
   where
     slForAccess :: DocumentAccess -> Document -> Maybe SignatoryLink
     slForAccess (DocumentAccess { daAccessMode = SignatoryDocumentAccess sid}) = getSigLinkFor sid
-    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess})  = getAuthorSigLink
     slForAccess (DocumentAccess { daAccessMode = AuthorDocumentAccess})        = getAuthorSigLink
     slForAccess (DocumentAccess { daAccessMode = CompanySharedDocumentAccess}) = getAuthorSigLink
     slForAccess (DocumentAccess { daAccessMode = SystemAdminDocumentAccess})   = getAuthorSigLink
+    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess (Just sid)})  = getSigLinkFor sid
+    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess Nothing})  = getAuthorSigLink
 
 documentAccessForUser :: User -> Document -> DocumentAccess
 documentAccessForUser user document = DocumentAccess {
@@ -66,9 +67,11 @@ documentAccessModeForUser user document =
   case (getSigLinkFor user document) of
     Just sl -> if (isAuthor sl)
                  then AuthorDocumentAccess
-                 else SignatoryDocumentAccess $ signatorylinkid sl
+                 else if (documentauthorcompanyid document == Just (usercompany user) && useriscompanyadmin user)
+                  then CompanyAdminDocumentAccess $ Just $ signatorylinkid sl
+                  else SignatoryDocumentAccess $ signatorylinkid sl
     Nothing -> if (documentauthorcompanyid document == Just (usercompany user) && useriscompanyadmin user)
-                 then CompanyAdminDocumentAccess
+                 then CompanyAdminDocumentAccess $ Nothing
                  else if (documentauthorcompanyid document == Just (usercompany user) && isDocumentShared document)
                   then CompanySharedDocumentAccess
                   else $unexpectedError $ "User " ++ show (userid user) ++ " accessing document " ++ show (documentid document) ++ " without any permission. This should be cought earlier."

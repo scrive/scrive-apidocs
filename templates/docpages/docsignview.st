@@ -1,9 +1,3 @@
-####
-wrapperopentag=
-<div class="wrapper-position-footer">
-####
-wrapperclosingtag=
-</div>
 ########
 signviewAnalyticsVariables=
 <script>
@@ -82,31 +76,59 @@ $htmlopentag()$
     <meta name="format-detection" content="telephone=no"/>
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
-    $if(!usestandardheaders)$
-      <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
-    $else$
-      <link href='/internal_signview_branding/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
-    $endif$
+    <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     $signviewScaleReset()$
   </head>
 
-  <body  $if(usestandardheaders)$ $if(custombackground)$style="background:$custombackground$;"$endif$    $endif$ >
+  <body>
     $flashmessages()$
-    $if(usestandardheaders)$
-    $wrapperopentag()$
-    $header()$
-    $endif$
     <div class="place-for-signview"></div>
     <script>
      require(['jquery', 'React', 'signview/signview', 'legacy_code'], function(jQuery, React, SignView) {
         jQuery(function(){
+          var target = LocalStorage.get("backlink", "target");
+          var link = undefined;
+          $if(loggedinauthor)$
+            if (target == "to-sign") {
+              link = {
+                text: localization.pad.backToList,
+                onClick: function() {window.location = "/to-sign"}
+              };
+            } else if (target == "to-start") {
+              link = {
+                text: localization.toStart.backFromSigningPage,
+                onClick: function() {window.location = "/ts/$documentid$"}
+              };
+            } else if (target == "document") {
+              link = {
+                text: localization.pad.backToDocument,
+                onClick: function() {window.location = "/d/$documentid$"}
+              };
+            }
+          $endif$
+
+          $if(loggedinsignatory)$
+            if (target == "list") {
+             link = {
+                text: localization.pad.backToList,
+                onClick: function() {window.location =  "/d"}
+              };
+            } else if (target == "document") {
+              link = {
+                text: localization.pad.backToDocument,
+                onClick: function() {window.location = "/d/$documentid$"}
+              };
+            }
+          $endif$
+
           React.render(React.createElement(SignView, {
             documentId: "$documentid$",
             sigLinkId: "$siglinkid$",
             allowSaveSafetyCopy: $if(allowsavesafetycopy)$ true $else$ false $endif$,
+            loggedInAsAuthor: $if(loggedinauthor)$ true $else$ false $endif$,
             authorFullname: "$authorFullname$",
             authorPhone: "$authorPhone$",
-            useStandardHeaders: $if(usestandardheaders)$ true $else$ false $endif$
+            link: link
           }), jQuery(".place-for-signview")[0]);
         });
 
@@ -121,64 +143,6 @@ $htmlopentag()$
         });
      });
    </script>
-    $if(usestandardheaders)$
-    $wrapperclosingtag()$
-    $endif$
-  </body>
-$htmlclosingtag()$
-####
-pageDocumentSignPadView=$doctype()$
-$htmlopentag()$
-  <head>
-    <title>$pagetitle()$</title>
-    <meta name="format-detection" content="telephone=no"/>
-    $signviewAnalyticsVariables()$
-    $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
-    <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
-    $signviewScaleReset()$
-  </head>
-  <body>
-    <div class="place-for-signview"></div>
-    <script>
-     require(['jquery', 'React', 'signview/signview', 'legacy_code'], function(jQuery, React, SignView) {
-        jQuery(function(){
-          var link = {};
-          var target = LocalStorage.get("backlink", "target");
-          if (target == "to-sign") {
-            link.text= localization.pad.backToList;
-            link.onClick = function() {window.location = "/to-sign"};
-          } else if (target == "to-start") {
-            link.text = localization.toStart.backFromSigningPage;
-            link.onClick = function() {window.location = "/ts/$documentid$"};
-          } else if (target == "none") {
-            link = undefined;
-          } else {
-            link.text = localization.pad.backToDocument;
-            link.onClick = function() {window.location = "/d/$documentid$"};
-          }
-
-          React.render(React.createElement(SignView, {
-            documentId: "$documentid$",
-            sigLinkId: "$siglinkid$",
-            allowSaveSafetyCopy: $if(allowsavesafetycopy)$ true $else$ false $endif$,
-            authorFullname: "$authorFullname$",
-            authorPhone: "$authorPhone$",
-            useStandardHeaders: $if(usestandardheaders)$ true $else$ false $endif$,
-            link: link
-          }), jQuery(".place-for-signview")[0]);
-        });
-
-        mixpanel.register({
-          Context : 'Sign view for pad',
-          DocumentID : "$documentid$",
-          'Signatory ID' : $siglinkid$
-        });
-
-        mixpanel.people.set({
-         'Last document sign view' : new Date()
-        });
-     });
-    </script>
   </body>
 $htmlclosingtag()$
 ####

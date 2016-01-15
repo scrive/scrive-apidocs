@@ -24,7 +24,6 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/signview"]
         var signView = TestUtils.renderIntoDocument(React.createElement(SignView, {
           documentId: "2",
           sigLinkId: "1",
-          useStandardHeaders: false,
           allowSaveSafetyCopy: true
         }));
 

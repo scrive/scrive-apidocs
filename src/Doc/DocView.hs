@@ -12,7 +12,6 @@ module Doc.DocView (
   , pageDocumentView
   , pageDocumentSignView
   , pageDocumentIdentifyView
-  , pageDocumentSignForPadView
   , pageDocumentPadList
   , pageDocumentPadListLogin
   , pageDocumentToStartList
@@ -28,6 +27,7 @@ import qualified Text.StringTemplates.Fields as F
 import Analytics.Include
 import AppView (standardPageFields, companyUIForPage, simpleHtmlResonseClrFlash)
 import BrandedDomain.BrandedDomain
+import Company.CompanyUI
 import Company.Model
 import DB
 import Doc.DocStateData
@@ -79,17 +79,20 @@ pageDocumentSignView ctx document siglink ad = do
   let authorid = $fromJust $ getAuthorSigLink document >>= maybesignatory
   auser <- fmap $fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
   acompany <- getCompanyForUser auser
+  acompanyui <- dbQuery $ GetCompanyUI (companyid acompany)
+  let loggedAsSignatory = (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> ctxmaybeuser ctx);
+  let loggedAsAuthor = (Just authorid == (userid <$> ctxmaybeuser ctx)) || (Just authorid == (userid <$> ctxmaybeuser ctx));
 
-  mcompany <- companyUIForPage
   renderTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
       F.value "documenttitle" $ documenttitle document
-      F.value "usestandardheaders" $ (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> ctxmaybeuser ctx)
+      F.value "loggedinsignatory" $ loggedAsSignatory
+      F.value "loggedinauthor"   $ loggedAsAuthor
       F.value "allowsavesafetycopy" $ companyallowsavesafetycopy $ companyinfo acompany
       F.value "authorFullname" $ getFullName auser
       F.value "authorPhone" $ getMobile auser
-      standardPageFields ctx mcompany ad
+      standardPageFields ctx (Just acompanyui) ad -- | Branding for signview depends only on authors company
 
 pageDocumentIdentifyView :: Kontrakcja m
                     => Context
@@ -98,7 +101,11 @@ pageDocumentIdentifyView :: Kontrakcja m
                     -> AnalyticsData
                     -> m String
 pageDocumentIdentifyView ctx document siglink ad = do
-  mcompany <- companyUIForPage
+  let authorid = $fromJust $ getAuthorSigLink document >>= maybesignatory
+  auser <- fmap $fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
+  acompany <- getCompanyForUser auser
+  acompanyui <- dbQuery $ GetCompanyUI (companyid acompany)
+
   renderTemplate "pageDocumentIdentifyView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
@@ -106,26 +113,7 @@ pageDocumentIdentifyView ctx document siglink ad = do
       F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctxnetsconfig ctx
       F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctxnetsconfig ctx
       F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctxnetsconfig ctx
-      standardPageFields ctx mcompany ad
-
-pageDocumentSignForPadView :: Kontrakcja m
-                    => Context
-                    -> Document
-                    -> SignatoryLink
-                    -> AnalyticsData
-                    -> m String
-pageDocumentSignForPadView ctx document siglink ad = do
-  let authorid = $fromJust $ getAuthorSigLink document >>= maybesignatory
-  auser <- fmap $fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
-  mcompany <- companyUIForPage
-  renderTemplate "pageDocumentSignPadView" $ do
-      F.value "documentid" $ show $ documentid document
-      F.value "siglinkid" $ show $ signatorylinkid siglink
-      F.value "documenttitle" $ documenttitle document
-      F.value "authorFullname" $ getFullName auser
-      F.value "authorPhone" $ getMobile auser
-      standardPageFields ctx mcompany ad
-
+      standardPageFields ctx (Just acompanyui) ad -- | Branding for signview depends only on authors company
 
 pageDocumentPadList:: Kontrakcja m
                     => Context

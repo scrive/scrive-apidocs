@@ -11,11 +11,10 @@ module Doc.DocControl(
     , handleDownloadClosedFile
     , handleSignShow
     , handleSignShowSaveMagicHash
-    , handleSignPadShow
     , handleAcceptAccountFromSign
     , handleEvidenceAttachment
     , handleIssueShowGet
-    , handleIssueAuthorGoToSignview
+    , handleIssueGoToSignview
     , handleIssueGoToSignviewPad
     , prepareEmailPreview
     , handleResend
@@ -250,35 +249,33 @@ handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $ (do
     sendRedirect $ LinkSignDocNoMagicHash did sid) `catchKontra` (\(DocumentDoesNotExist _) -> respond404)
 
 -- |
---   /s/[documentid]/[signatorylinkid]
+--   /s/[documentid]/[signatorylinkid] and /sp/[documentid]/[signatorylinkid]
+
 {-# NOINLINE handleSignShow #-}
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignShow did slid = logDocumentAndSignatory did slid $ do
   mmagichash <- dbQuery $ GetDocumentSessionToken slid
-
   case mmagichash of
     Just magichash ->
       dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash) `withDocumentM` do
         invitedlink <- guardJust . getSigLinkFor slid =<< theDocument
 
-        -- We will switch to document langauge if no one is logged in or logged in user doesn't match signatory
-        ctx <- getContext
-        when (isNothing (ctxmaybeuser ctx) || not (isSigLinkFor (ctxmaybeuser ctx) invitedlink)) $  do
-          switchLang . getLang =<< theDocument
+        -- We always switch to document langauge in case of pad signing
+        switchLang . getLang =<< theDocument
+        ctx <- getContext -- Order is important since ctx after switchLang changes
         ad <- getAnalyticsData
-        ctx' <- getContext -- NOTE We need to refresh ctx since it could change with switchLang
         needsToIdentify <- signatoryNeedsToIdentifyToView invitedlink
         if (needsToIdentify)
            then do
              addEventForVisitingSigningPageIfNeeded VisitedViewForAuthenticationEvidence invitedlink
-             content <- theDocument >>= \d -> pageDocumentIdentifyView ctx' d invitedlink ad
+             content <- theDocument >>= \d -> pageDocumentIdentifyView ctx d invitedlink ad
              simpleHtmlResonseClrFlash content
            else do
              addEventForVisitingSigningPageIfNeeded VisitedViewForSigningEvidence invitedlink
              unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $ do
-               dbUpdate . MarkDocumentSeen slid magichash =<< signatoryActor ctx' invitedlink
+               dbUpdate . MarkDocumentSeen slid magichash =<< signatoryActor ctx invitedlink
                triggerAPICallbackIfThereIsOne =<< theDocument
-             content <- theDocument >>= \d -> pageDocumentSignView ctx' d invitedlink ad
+             content <- theDocument >>= \d -> pageDocumentSignView ctx d invitedlink ad
              simpleHtmlResonseClrFlash content
     Nothing -> handleCookieFail slid did
 
@@ -292,35 +289,6 @@ handleToStartShow documentid = checkUserTOSGet $ do
   ad <- getAnalyticsData
   content <- pageDocumentToStartView ctx document ad
   simpleHtmlResonseClrFlash content
-
--- |
---   /sp/[documentid]/[signatorylinkid]
-{-# NOINLINE handleSignPadShow #-}
-handleSignPadShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-handleSignPadShow documentid signatorylinkid = do
-  mmagichash <- dbQuery $ GetDocumentSessionToken signatorylinkid
-  case mmagichash of
-    Just magichash ->
-      dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash documentid signatorylinkid magichash) `withDocumentM` do
-        -- We always switch to document langauge in case of pad signing
-        switchLang . getLang =<< theDocument
-        ctx <- getContext -- Order is important since ctx after switchLang changes
-        invitedlink <- guardJust . getSigLinkFor signatorylinkid =<< theDocument
-        ad <- getAnalyticsData
-        needsToIdentify <- signatoryNeedsToIdentifyToView invitedlink
-        if (needsToIdentify)
-           then do
-             addEventForVisitingSigningPageIfNeeded VisitedViewForAuthenticationEvidence invitedlink
-             content <- theDocument >>= \d -> pageDocumentIdentifyView ctx d invitedlink ad
-             simpleHtmlResonseClrFlash content
-           else do
-             addEventForVisitingSigningPageIfNeeded VisitedViewForSigningEvidence invitedlink
-             unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $ do
-               dbUpdate . MarkDocumentSeen signatorylinkid magichash =<< signatoryActor ctx invitedlink
-               triggerAPICallbackIfThereIsOne =<< theDocument
-             content <- theDocument >>= \d -> pageDocumentSignForPadView ctx d invitedlink ad
-             simpleHtmlResonseClrFlash content
-    Nothing -> handleCookieFail signatorylinkid documentid
 
 
 -- If is not magic hash in session. It may mean that the
@@ -349,17 +317,16 @@ handleCookieFail slid did = logDocumentAndSignatory did slid $ do
    URL: /d/signview/{documentid}
    Method: POST
  -}
-handleIssueAuthorGoToSignview :: Kontrakcja m => DocumentID -> m KontraLink
-handleIssueAuthorGoToSignview docid = do
+handleIssueGoToSignview :: Kontrakcja m => DocumentID -> m KontraLink
+handleIssueGoToSignview docid = do
   guardLoggedIn
   ctx <- getContext
-  doc <- getDocByDocIDForAuthor docid
+  doc <- getDocByDocID docid
   user <-  guardJust (ctxmaybeuser ctx)
-  case (isAuthor <$> getMaybeSignatoryLink (doc,user)) of
-    Just True -> do
-      let asl = $fromJust $ getMaybeSignatoryLink (doc,user) -- Checked isJust in case
-      dbUpdate $ AddDocumentSessionToken (signatorylinkid asl) (signatorymagichash asl)
-      return $ LinkSignDocNoMagicHash docid (signatorylinkid asl)
+  case (getMaybeSignatoryLink (doc,user)) of
+    Just sl -> do
+      dbUpdate $ AddDocumentSessionToken (signatorylinkid sl) (signatorymagichash sl)
+      return $ LinkSignDocNoMagicHash docid (signatorylinkid sl)
     _ -> return LoopBack
 
 {- |

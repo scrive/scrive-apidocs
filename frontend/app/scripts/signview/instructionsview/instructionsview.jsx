@@ -33,6 +33,7 @@ function (legacy_code, Backbone, React, Button, PadGiveToNextView, HtmlTextWithS
   return React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Document).isRequired,
+      loggedInAsAuthor: React.PropTypes.bool.isRequired,
       arrow: React.PropTypes.func.isRequired
     },
 
@@ -118,7 +119,7 @@ function (legacy_code, Backbone, React, Button, PadGiveToNextView, HtmlTextWithS
                 onDownload={this.handleDownloadClick}
               />
             }
-            {/* if */ this.hasPadSigning() &&
+            {/* if */ this.props.loggedInAsAuthor && this.hasPadSigning() &&
               <PadGiveToNextView sigs={doc.signatoriesThatCanSignNowOnPad()} />
             }
         </div>

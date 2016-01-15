@@ -71,7 +71,7 @@ staticRoutes production = choice
 
      , dir "s" $ dir "acceptaccount"  $ hPostNoXToken $ toK2 $ DocControl.handleAcceptAccountFromSign
 
-     , dir "sp" $ hGet $ toK2 $ DocControl.handleSignPadShow
+     , dir "sp" $ hGet $ toK2 $ DocControl.handleSignShow
      , dir "padsign" $ hPost $ toK2 $ DocControl.handleIssueGoToSignviewPad
      , allLangDirs $ dir "to-sign" $ hGet $ toK0 $ DocControl.handlePadList
      , allLangDirs $ dir "padqueue" $ hGet $ toK0 $ return LinkPadList -- Backward compatibility, redirects back to /to-sign
@@ -98,7 +98,7 @@ staticRoutes production = choice
      , dir "d" $ dir "cancel"       $ hPost $ toK0 $ ArchiveControl.handleCancel
      , dir "d" $ dir "zip"          $ hGet  $ toK0 $ ArchiveControl.handleZip
      , dir "d" $ dir "csv"          $ hGet  $ toK0 $ ArchiveControl.handleListCSV
-     , dir "d" $ dir "signview"     $ hPost $ toK1 $ DocControl.handleIssueAuthorGoToSignview
+     , dir "d" $ dir "signview"     $ hGet  $ toK1 $ DocControl.handleIssueGoToSignview
      , dir "d" $ dir "evidenceattachment" $ hGet $ toK2 $ DocControl.handleEvidenceAttachment
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
      , dir "download" $ hGet $ toK4 $ DocControl.handleDownloadClosedFile
@@ -195,7 +195,6 @@ staticRoutes production = choice
 
      , dir "document_signview_branding" $ hGet $ toK4 $ Branding.handleSignviewBranding
      , dir "padlist_signview_branding" $ hGet $ toK2 $ Branding.handleSignviewBrandingWithoutDocument
-     , dir "internal_signview_branding" $ hGet $ toK2 $ Branding.handleSignviewBrandingInternal
      , dir "service_branding" $ hGet $ toK2 $ Branding.handleServiceBranding
      , dir "scrive_branding" $ hGet $ toK2 $ Branding.handleScriveBranding
      , dir "login_branding" $ hGet $ toK2 $ Branding.handleLoginBranding

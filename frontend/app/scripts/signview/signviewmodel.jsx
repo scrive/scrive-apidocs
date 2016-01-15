@@ -70,6 +70,10 @@ define(["React", "Backbone", "Underscore"],
       return this.get("allowsavesafetycopy");
     },
 
+    loggedInAsAuthor: function () {
+      return this.get("loggedInAsAuthor");
+    },
+
     isReady: function () {
       return this.document().ready() && this.document().mainfile() != undefined;
     },

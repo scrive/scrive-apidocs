@@ -42,7 +42,7 @@ define([
       documentId: React.PropTypes.string.isRequired,
       sigLinkId: React.PropTypes.string.isRequired,
       allowSaveSafetyCopy: React.PropTypes.bool.isRequired,
-      useStandardHeaders: React.PropTypes.bool.isRequired,
+      loggedInAsAuthor: React.PropTypes.bool.isRequired,
       authorFullname: React.PropTypes.string,
       authorPhone: React.PropTypes.string,
       link: React.PropTypes.object
@@ -55,7 +55,8 @@ define([
 
       var model = new SignViewModel({
         document: new Document({id: this.props.documentId, viewer: viewer}),
-        allowsavesafetycopy: this.props.allowSaveSafetyCopy
+        allowsavesafetycopy: this.props.allowSaveSafetyCopy,
+        loggedInAsAuthor: this.props.loggedInAsAuthor
       });
 
       return {model: model, overlay: false, pixelWidth: 950};
@@ -139,7 +140,7 @@ define([
 
       return (
         <div className="signview">
-          {/* if */ !this.props.useStandardHeaders && doc.showheader() && !isSmallScreen &&
+          {/* if */ doc.showheader() && !isSmallScreen &&
             <Header
               document={doc}
               documentid={this.props.documentId}
@@ -166,6 +167,7 @@ define([
               <Overlay on={this.state.overlay} />
               <InstructionsView
                 model={doc}
+                loggedInAsAuthor={model.loggedInAsAuthor()}
                 arrow={function () { return model.arrow(); }}
               />
               {/* if */ model.hasPostSignView() &&
