@@ -33,7 +33,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
             self.props.model.setAccepted(true);
           },
           tipSide: "left",
-          el: $(self.refs.checkbox.getDOMNode()),
+          el: $(self.getDOMNode()),
+          pointSelector: ".checkbox",
           margin: 5
         })];
       } else {
@@ -44,7 +45,6 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
     componentDidUpdate: function (prevProps, prevState) {
       var self = this;
       if (this.state.showPages !== prevState.showPages) {
-        this.forceUpdateTasks(); // tasks need to be updated to refer to the correct checkbox
         setTimeout(function () {
           self.updateArrow();
         }, 100); // we need to wait a bit until DOM realizes position/offset changed
