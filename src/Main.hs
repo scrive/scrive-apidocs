@@ -69,8 +69,9 @@ main = withCurlDo $ do
     checkExecutables
 
     let connSettings = pgConnSettings $ dbConfig appConf
-    withPostgreSQL (simpleSource $ connSettings []) $
+    withPostgreSQL (simpleSource $ connSettings []) $ do
       checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
+      dbUpdate $ SetMainDomainURL $ mainDomainUrl appConf
 
     appGlobals <- do
       templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)

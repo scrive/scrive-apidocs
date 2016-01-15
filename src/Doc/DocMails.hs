@@ -367,8 +367,7 @@ runMailTInScheduler doc m = do
   mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) $ join $ maybesignatory <$> getAuthorSigLink doc
   bd <- maybe (dbQuery GetMainBrandedDomain) (dbQuery . GetBrandedDomainByUserID) (userid <$> mauthor)
   let mctx = MailContext {
-          mctxhostpart = bdUrl $ bd
-        , mctxmailsconfig = mailsConfig appConf
+          mctxmailsconfig = mailsConfig appConf
         , mctxlang = documentlang doc
         , mctxcurrentBrandedDomain = bd
         , mctxtime = now

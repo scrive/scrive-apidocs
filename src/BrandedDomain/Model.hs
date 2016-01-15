@@ -8,6 +8,7 @@ module BrandedDomain.Model
     , GetBrandedDomainByID(..)
     , UpdateBrandedDomain(..)
     , NewBrandedDomain(..)
+    , SetMainDomainURL(..)
   ) where
 
 import Control.Monad.Catch
@@ -211,3 +212,12 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m NewBrandedDomain Br
     dbUpdate $  MakeThemeOwnedByDomain newdomainID (themeID newservicetheme)
     dbUpdate $  MakeThemeOwnedByDomain newdomainID (themeID newlogintheme)
     return newdomainID
+
+data SetMainDomainURL = SetMainDomainURL String
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetMainDomainURL () where
+  update (SetMainDomainURL url) = do
+    n <- runQuery . sqlUpdate "branded_domains" $ do
+      sqlSet "url" url
+      sqlWhere "main_domain"
+    when (n /= 1) $ do
+      $unexpectedErrorM "Main domain doesn't exist"

@@ -64,8 +64,7 @@ documentSealing appConf templates fileCache pool = ConsumerConfig {
             , A.fileCache = fileCache
             }
           mc = MailContext {
-              mctxhostpart = bdUrl bd
-            , mctxmailsconfig = mailsConfig appConf
+              mctxmailsconfig = mailsConfig appConf
             , mctxlang = lang
             , mctxcurrentBrandedDomain = bd
             , mctxtime = now

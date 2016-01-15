@@ -1,5 +1,6 @@
 module Context (
     Context(..)
+  , ctxDomainUrl
   , getContextUser
   , anonymousContext
   , contextToMailContext
@@ -35,7 +36,6 @@ import qualified MemCache
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
-    , ctxhostpart            :: String -- ^ The hostname of the URL for the request.
     , ctxflashmessages       :: [FlashMessage] -- ^ The flash messages for the NEXT request.
     , ctxtime                :: UTCTime -- ^ The time of the request.
     , ctxclientname          :: Maybe String -- ^ Client identification from header Client-Name or if that's missing: User-Agent
@@ -71,6 +71,9 @@ data Context = Context
     , ctxthreadjoins       :: [IO (T.Result ())]
     }
 
+ctxDomainUrl :: Context -> String
+ctxDomainUrl = bdUrl . ctxbrandeddomain
+
 -- | Get a user from `Context` (user takes precedence over pad user).
 getContextUser :: Context -> Maybe User
 getContextUser Context{..} = ctxmaybeuser `mplus` ctxmaybepaduser
@@ -82,8 +85,7 @@ anonymousContext ctx = ctx { ctxmaybeuser = Nothing, ctxmaybepaduser = Nothing, 
 
 contextToMailContext :: Context -> MailContext
 contextToMailContext ctx = MailContext {
-    mctxhostpart = ctxhostpart ctx
-  , mctxmailsconfig = ctxmailsconfig ctx
+    mctxmailsconfig = ctxmailsconfig ctx
   , mctxlang = ctxlang ctx
   , mctxcurrentBrandedDomain = ctxbrandeddomain ctx
   , mctxtime = ctxtime ctx

@@ -1,5 +1,9 @@
 {-# LANGUAGE OverlappingInstances #-}
-module MailContext.Class where
+module MailContext.Class (
+    MailContext(..)
+  , mctxDomainUrl
+  , MailContextMonad(..)
+  ) where
 
 import Control.Monad.Trans
 import Data.Time
@@ -10,12 +14,14 @@ import Mails.MailsConfig
 import User.Model
 
 data MailContext = MailContext {
-  mctxhostpart             :: !String
-, mctxmailsconfig          :: !MailsConfig
+  mctxmailsconfig          :: !MailsConfig
 , mctxlang                 :: !Lang
 , mctxcurrentBrandedDomain :: !BrandedDomain
 , mctxtime                 :: !UTCTime
 } deriving Show
+
+mctxDomainUrl :: MailContext -> String
+mctxDomainUrl = bdUrl . mctxcurrentBrandedDomain
 
 class Monad m => MailContextMonad m where
   getMailContext :: m MailContext

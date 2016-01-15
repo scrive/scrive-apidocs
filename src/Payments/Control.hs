@@ -464,7 +464,7 @@ sendInvoiceEmail user company subscription = do
   ctx <- getContext
   bd <- dbQuery $ GetBrandedDomainByUserID (userid user)
   theme <- dbQuery $ GetTheme (bdMailTheme bd)
-  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailSignup bd theme (ctxhostpart ctx) user company subscription
+  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailSignup bd theme user company subscription
   scheduleEmailSendout (ctxmailsconfig ctx)
                         (mail{to = [MailAddress{
                                      fullname = getFullName user
@@ -483,7 +483,7 @@ sendExpiredEmail user = do
   ctx <- getContext
   bd <- dbQuery $ GetBrandedDomainByUserID (userid user)
   theme <- dbQuery $ GetTheme (bdMailTheme bd)
-  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailExpired bd theme (ctxhostpart ctx)
+  mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailExpired bd theme
   scheduleEmailSendout (ctxmailsconfig ctx)
     (mail{to = [MailAddress { fullname = getFullName user
                             , email = getEmail user }]})

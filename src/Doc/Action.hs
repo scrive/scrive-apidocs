@@ -43,7 +43,7 @@ import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
 import Kontra
 import KontraPrelude
 import Log.Identifier
-import MailContext (MailContextMonad(..), MailContext(..))
+import MailContext
 import MinutesTime
 import Templates (runTemplatesT)
 import ThirdPartyStats.Core
@@ -188,7 +188,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
     whenM (isDocumentError <$> theDocument) $ do
       currentTime >>= dbUpdate . FixClosedErroredDocument . systemActor
 
-    sealDocument (mctxhostpart mcxt)
+    sealDocument $ mctxDomainUrl mcxt
 
     -- Here there is a race condition: when we commit, other callers
     -- of postDocumentClosedActions may see a document that lacks a

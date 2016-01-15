@@ -24,7 +24,7 @@ import Doc.DocStateData
 import Doc.DocUtils
 import KontraLink
 import KontraPrelude
-import MailContext (MailContextMonad(..), MailContext(..))
+import MailContext
 import Mails.SendMail
 import SMS.Data
 import SMS.SMS
@@ -98,4 +98,4 @@ smsFields document siglink = do
     F.value "personname" $ getSmartName siglink
     F.value "documenttitle" $ documenttitle document
     F.value "partylist" $ strip partylist
-    F.value "link" $ mctxhostpart mctx ++ show (LinkSignDoc (documentid document) siglink)
+    F.value "link" $ mctxDomainUrl mctx ++ show (LinkSignDoc (documentid document) siglink)

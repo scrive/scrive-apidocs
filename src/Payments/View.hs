@@ -23,10 +23,10 @@ import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
-mailSignup :: (TemplatesMonad m) => BrandedDomain -> Theme -> String -> User -> Company -> Recurly.Subscription -> m Mail
-mailSignup bd theme hp user company subscription = do
+mailSignup :: (TemplatesMonad m) => BrandedDomain -> Theme -> User -> Company -> Recurly.Subscription -> m Mail
+mailSignup bd theme user company subscription = do
   kontramail bd theme "paymentsSignupEmail" $ do
-    F.value "ctxhostpart" hp
+    F.value "ctxhostpart" $ bdUrl bd
     F.value "fullname" $ getFullName user
     F.value "startdate" $ showDate $ Recurly.subCurrentBillingStarted subscription
     F.value "enddate" $ showDate $ Recurly.subCurrentBillingEnds subscription
@@ -56,10 +56,10 @@ mailFailed bd theme user company invoice = do
     F.value "currency" $ Recurly.inCurrency invoice
     brandingMailFields theme
 
-mailExpired :: TemplatesMonad m => BrandedDomain -> Theme ->  String -> m Mail
-mailExpired bd theme hp = do
+mailExpired :: TemplatesMonad m => BrandedDomain -> Theme -> m Mail
+mailExpired bd theme = do
   kontramail bd theme "paymentsExpiredEmail" $ do
-    F.value "ctxhostpart" hp
+    F.value "ctxhostpart" $ bdUrl bd
     brandingMailFields theme
 
 showTotal :: Int -> Int -> String

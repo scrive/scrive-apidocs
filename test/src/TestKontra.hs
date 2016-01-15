@@ -287,7 +287,6 @@ mkContext lang = do
     brandedimagescache <- MemCache.new BSLU.length 52428800
     return Context {
           ctxmaybeuser = Nothing
-        , ctxhostpart = defaultUri
         , ctxflashmessages = []
         , ctxtime = time
         , ctxclientname = Nothing
