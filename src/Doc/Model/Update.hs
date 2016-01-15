@@ -1044,9 +1044,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                           }
       return doc {documentstatus = Preparation,
                   documenttimeouttime = Nothing,
-                  documentsignatorylinks = newSignLinks,
-                  documentapiv1callbackurl = Nothing,
-                  documentapiv2callbackurl = Nothing
+                  documentsignatorylinks = newSignLinks
                  }
 
 data RestoreArchivedDocument = RestoreArchivedDocument User Actor
