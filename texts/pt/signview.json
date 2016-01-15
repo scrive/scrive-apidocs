@@ -136,7 +136,7 @@
 "_signviewSigningFailed":"Lamentamos, mas ocorreu um problema ao assinar o documento. Tente novamente.",
 "_smsDocumentErrorAuthor":"Não foi possível o Scrive processar o documento $documenttitle$ e o processo de assinatura foi cancelado. Se pretende colocar qualquer questão, contacte-nos para support@scrive.com",
 "_smsDocumentErrorSignatory":"Não foi possível o Scrive processar o documento $documenttitle$ e o processo de assinatura foi cancelado. Se pretende colocar qualquer questão, contacte-nos para support@scrive.com",
-"_smsInvitationToSign":"Olá, $creatorname$ convidou-o a e-assinar. Clique aqui para começar: $link$",
+"_smsInvitationToSign":"",
 "_smsPinSendout":"O seu PIN para $documenttitle$ é $pin$",
 "_smsRejectNotification":"Olá, $rejectorName$ rejeitou a assinatura do documento $documenttitle$. O processo de assinatura foi, por isso, cancelado. Siga a hiperligação para visualizar o documento: $link$",
 "_smsReminder":"Olá, $creatorname$ pretende lembrá-lo para assinar o documento $documenttitle$. Abra a hiperligação para visualizar o documento: $link$",

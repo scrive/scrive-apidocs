@@ -136,7 +136,7 @@
 "_signviewSigningFailed":"Lo sentimos, hubo algún fallo durante la firma del documento. Por favor inténtelo de nuevo. ",
 "_smsDocumentErrorAuthor":"Scrive no pudo manejar el documento $documenttitle$ y el proceso de firma ha sido cancelado. Si tiene alguna pregunta, por favor contáctenos aquí support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive no pudo manejar el documento $documenttitle$ y el proceso de firma ha sido cancelado. Si tiene alguna pregunta, por favor contáctenos aquí support@scrive.com",
-"_smsInvitationToSign":"Hola, $creatorname$ le ha invitado a firmar electrónicamente. Presione aquí para empezar: $link$",
+"_smsInvitationToSign":"",
 "_smsPinSendout":"Su código PIN para $documenttitle$ es $pin$",
 "_smsRejectNotification":"Hola, $rejectorName$ ha rechazado firmar el documento $documenttitle$. Por lo tanto, el proceso de firma ha sido cancelado. Siga el link para ver el documento: $link$",
 "_smsReminder":"Hola, $creatorname$ quiere recordarle que firme el documento $documenttitle$. Abra el link para ver el documento: $link$",

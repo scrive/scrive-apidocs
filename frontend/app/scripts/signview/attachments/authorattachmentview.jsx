@@ -42,8 +42,12 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
     },
 
     componentDidUpdate: function (prevProps, prevState) {
+      var self = this;
       if (this.state.showPages !== prevState.showPages) {
-        this.updateArrow();
+        this.forceUpdateTasks(); // tasks need to be updated to refer to the correct checkbox
+        setTimeout(function () {
+          self.updateArrow();
+        }, 100); // we need to wait a bit until DOM realizes position/offset changed
       }
     },
 
