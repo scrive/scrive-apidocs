@@ -20,6 +20,7 @@ data SalesforceConf = SalesforceConf {
     -- plugin, but due to their policy it can't.
   , salesforceIntegrationAPIToken  :: String
   , salesforceIntegrationAPISecret :: String
+  , salesforceErrorEmail :: Maybe String
 } deriving (Show, Eq, Ord)
 
 unjsonSalesforceConf :: UnjsonDef SalesforceConf
@@ -45,6 +46,9 @@ unjsonSalesforceConf = objectOf $ pure SalesforceConf
   <*> field "api_secret"
       salesforceIntegrationAPISecret
       "SalesForce OAuth API secret"
+  <*> fieldOpt "error_email"
+      salesforceErrorEmail
+      "SalesForce Error email"
 
 instance Unjson SalesforceConf where
   unjsonDef = unjsonSalesforceConf

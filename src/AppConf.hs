@@ -184,6 +184,7 @@ instance Default AppConf where
                               , salesforceRedirectUrl = "https://scrive.com/salesforce/integration"
                               , salesforceIntegrationAPIToken  = "12ef3_22"
                               , salesforceIntegrationAPISecret = "a1033b2caa"
+                              , salesforceErrorEmail = Just "info@scrive.com"
                               }
      , netsConfig        = Just $ NetsConfig {
                                 netsMerchantIdentifier = "SRWUOEDLAXDV"
