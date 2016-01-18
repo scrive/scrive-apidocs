@@ -187,7 +187,7 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $signviewAnalyticsVariables()$
-    $standardHeaderContents(nobranding='true'; noviewport='true')$
+    $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
     <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2" />
   </head>
