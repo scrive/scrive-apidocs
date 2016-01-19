@@ -136,7 +136,7 @@
 "_signviewSigningFailed":"Beklager, noget gik galt under signeringsprocessen af dette dokument. Prøv venligst igen.",
 "_smsDocumentErrorAuthor":"Scrive kunne ikke håndtere dokumentet $documenttitle$, og signeringsprocessen er derfor blevet annulleret. Har du spørgsmål, bedes du kontakte os på support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive kunne ikke håndtere dokumentet $documenttitle$, og signeringsprocessen er derfor blevet annulleret. Har du spørgsmål, bedes du kontakte os på support@scrive.com.",
-"_smsInvitationToSign":"",
+"_smsInvitationToSign":"Hej, $creatorname:noescape()$ har inviteret dig til at e-signere. Klik her for at begynde: $link$",
 "_smsPinSendout":"Din PIN for $documenttitle$ er $pin$",
 "_smsRejectNotification":"Hej, $rejectorName$ har afvist at signere dokumentet $documenttitle$. Signeringsprocessen er derfor blevet annulleret. Følg linket for at se dokumentet: $link$",
 "_smsReminder":"Hej, $creatorname$ vil gerne påminde dig om, at du skal signere dokumentet $documenttitle$. Åbn linket og find dokumentet: $link$",
