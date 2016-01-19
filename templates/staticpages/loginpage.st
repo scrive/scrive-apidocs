@@ -115,10 +115,10 @@ accountSetupPage=$doctype()$
         require(['jquery', 'legacy_code'], function(jQuery) {
             jQuery(document).ready(function() {
               jQuery('.create-account-box').append( new AccountSetup({
-                                                    fstname: "$fstname$",
-                                                    sndname: "$sndname$",
+                                                    fstname: _.unescape("$fstname$"), // name can contain some funky chars like &
+                                                    sndname: _.unescape("$sndname$"), // -,,-
                                                     email: "$email$",
-                                                    company : _.unescape("$company$"), // company name can contain some funky chars like &
+                                                    company : _.unescape("$company$"),// -,,-
                                                     userid : "$userid$",
                                                     signupmethod : "$signupmethod$",
                                                     companyAdmin : $if(companyAdmin)$true$else$false$endif$
