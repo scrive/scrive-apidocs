@@ -92,7 +92,7 @@ pageDocumentSignView ctx document siglink ad = do
       F.value "allowsavesafetycopy" $ companyallowsavesafetycopy $ companyinfo acompany
       F.value "authorFullname" $ getFullName auser
       F.value "authorPhone" $ getMobile auser
-      standardPageFields ctx (Just acompanyui) ad -- | Branding for signview depends only on authors company
+      standardPageFields ctx (Just acompanyui) ad -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView :: Kontrakcja m
                     => Context
@@ -113,7 +113,7 @@ pageDocumentIdentifyView ctx document siglink ad = do
       F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctxnetsconfig ctx
       F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctxnetsconfig ctx
       F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctxnetsconfig ctx
-      standardPageFields ctx (Just acompanyui) ad -- | Branding for signview depends only on authors company
+      standardPageFields ctx (Just acompanyui) ad -- Branding for signview depends only on authors company
 
 pageDocumentPadList:: Kontrakcja m
                     => Context
