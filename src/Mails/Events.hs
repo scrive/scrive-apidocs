@@ -72,8 +72,7 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
               let muid = maybe Nothing maybesignatory msl
               let signemail = maybe "" getEmail msl
               templates <- getGlobalTemplates
-              let host = bdUrl $ bd
-                  logEmails email = logInfo "Comparing emails" $ object [
+              let logEmails email = logInfo "Comparing emails" $ object [
                         "signatory_email" .= signemail
                       , "event_email" .= email
                       ]
@@ -86,40 +85,40 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                     logEmails email
                     case ev of
                       SG_Opened -> handleOpenedInvitation slid email muid
-                      SG_Delivered _ -> handleDeliveredInvitation bd host mc slid
+                      SG_Delivered _ -> handleDeliveredInvitation bd mc slid
                       -- we send notification that email is reported deferred after
                       -- fifth attempt has failed - this happens after ~10 minutes
                       -- from sendout
-                      SG_Deferred _ 5 -> handleDeferredInvitation bd host mc slid email
-                      SG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
-                      SG_Bounce _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
+                      SG_Deferred _ 5 -> handleDeferredInvitation bd mc slid email
+                      SG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
+                      SG_Bounce _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
                       _ -> return ()
                   handleEv (MailGunEvent email ev) = do
                     logEmails email
                     case ev of
                       MG_Opened -> handleOpenedInvitation slid email muid
-                      MG_Delivered -> handleDeliveredInvitation bd host mc slid
-                      MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
-                      MG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
+                      MG_Delivered -> handleDeliveredInvitation bd mc slid
+                      MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
+                      MG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
                       _ -> return ()
                   handleEv (SocketLabsEvent email ev) = do
                     logEmails email
                     case ev of
                       SL_Opened -> handleOpenedInvitation slid email muid
-                      SL_Delivered -> handleDeliveredInvitation bd host mc slid
+                      SL_Delivered -> handleDeliveredInvitation bd mc slid
                       SL_Failed 0 _ -> when (signemail == email) $ return () -- ignore temporary failures; http://www.socketlabs.com/api-reference/notification-api/#eventFailed
-                      SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
+                      SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
                       _ -> return ()
                   handleEv (SendinBlueEvent email ev) = do
                     logEmails email
                     case ev of
-                      SiB_Delivered -> handleDeliveredInvitation bd host mc slid
+                      SiB_Delivered -> handleDeliveredInvitation bd mc slid
                       SiB_Opened -> handleOpenedInvitation slid email muid
-                      SiB_Deferred _ -> when (signemail == email) $ handleDeferredInvitation bd host mc slid email
-                      SiB_HardBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
-                      SiB_SoftBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
-                      SiB_Blocked      _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
-                      SiB_InvalidEmail _ -> when (signemail == email) $ handleUndeliveredInvitation bd host mc slid
+                      SiB_Deferred _ -> when (signemail == email) $ handleDeferredInvitation bd mc slid email
+                      SiB_HardBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
+                      SiB_SoftBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
+                      SiB_Blocked      _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
+                      SiB_InvalidEmail _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
                       _ -> return ()
 
               theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
@@ -133,13 +132,13 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
         logAttention_ "Couldn't mark event as read"
 
 handleDeliveredInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m)
-                          => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
-handleDeliveredInvitation bd hostpart mc slid = do
+                          => BrandedDomain -> MailsConfig -> SignatoryLinkID -> m ()
+handleDeliveredInvitation bd mc slid = do
   getSigLinkFor slid <$> theDocument >>= \case
     Just signlink -> do
       -- send it only if email was reported deferred earlier
       when (mailinvitationdeliverystatus signlink == Deferred) $ do
-        mail <- mailDeliveredInvitation bd hostpart signlink =<< theDocument
+        mail <- mailDeliveredInvitation bd signlink =<< theDocument
         theDocument >>= \d -> scheduleEmailSendout mc $ mail {
           to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
         }
@@ -156,59 +155,59 @@ handleOpenedInvitation slid email muid = do
           (mailSystemActor now muid email slid)
   return ()
 
-handleDeferredInvitation :: (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> String -> m ()
-handleDeferredInvitation bd hostpart mc slid email = do
+handleDeferredInvitation :: (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> MailsConfig -> SignatoryLinkID -> String -> m ()
+handleDeferredInvitation bd mc slid email = do
   time <- currentTime
   getSigLinkFor slid <$> theDocument >>= \case
     Just sl -> do
       let actor = mailSystemActor time (maybesignatory sl) email slid
       success <- dbUpdate $ SetEmailInvitationDeliveryStatus slid Deferred actor
       when success $ do
-        mail <- mailDeferredInvitation bd hostpart sl =<< theDocument
+        mail <- mailDeferredInvitation bd sl =<< theDocument
         theDocument >>= \d -> scheduleEmailSendout mc $ mail {
           to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
         }
     Nothing -> return ()
 
-handleUndeliveredInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
-handleUndeliveredInvitation bd hostpart mc slid = do
+handleUndeliveredInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> MailsConfig -> SignatoryLinkID -> m ()
+handleUndeliveredInvitation bd mc slid = do
   getSigLinkFor slid <$> theDocument >>= \case
     Just signlink -> do
       time <- currentTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) slid
       _ <- dbUpdate $ SetEmailInvitationDeliveryStatus slid Undelivered actor
-      mail <- mailUndeliveredInvitation bd hostpart signlink =<< theDocument
+      mail <- mailUndeliveredInvitation bd signlink =<< theDocument
       theDocument >>= \d -> scheduleEmailSendout mc $ mail {
         to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
       }
       triggerAPICallbackIfThereIsOne =<< theDocument
     Nothing -> return ()
 
-mailDeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => BrandedDomain -> String -> SignatoryLink -> Document -> m Mail
-mailDeliveredInvitation bd hostpart signlink doc =do
+mailDeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => BrandedDomain -> SignatoryLink -> Document -> m Mail
+mailDeliveredInvitation bd signlink doc =do
   theme <- dbQuery $ GetTheme $ bdMailTheme bd
   kontramail bd theme "invitationMailDeliveredAfterDeferred" $ do
     F.value "authorname" $ getFullName $ $fromJust $ getAuthorSigLink doc
     F.value "email" $ getEmail signlink
     F.value "documenttitle" $ documenttitle doc
-    F.value "ctxhostpart" hostpart
+    F.value "ctxhostpart" $ bdUrl bd
     brandingMailFields theme
 
 
-mailDeferredInvitation ::(TemplatesMonad m, MonadDB m, MonadThrow m) => BrandedDomain -> String -> SignatoryLink -> Document -> m Mail
-mailDeferredInvitation bd hostpart sl doc = do
+mailDeferredInvitation ::(TemplatesMonad m, MonadDB m, MonadThrow m) => BrandedDomain -> SignatoryLink -> Document -> m Mail
+mailDeferredInvitation bd sl doc = do
   theme <- dbQuery $ GetTheme $ bdMailTheme bd
   kontramail bd theme"invitationMailDeferred" $ do
     F.value "authorname" $ getFullName $ $fromJust $ getAuthorSigLink doc
     F.value "counterpartname" $ getFullName sl
     F.value "counterpartemail" $ getEmail sl
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
-    F.value "ctxhostpart" hostpart
+    F.value "ctxhostpart" $ bdUrl bd
     brandingMailFields theme
 
 
-mailUndeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => BrandedDomain -> String -> SignatoryLink -> Document -> m Mail
-mailUndeliveredInvitation bd hostpart signlink doc =do
+mailUndeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => BrandedDomain -> SignatoryLink -> Document -> m Mail
+mailUndeliveredInvitation bd signlink doc =do
   theme <- dbQuery $ GetTheme $ bdMailTheme bd
   kontramail bd theme "invitationMailUndelivered" $ do
     F.value "authorname" $ getFullName $ $fromJust $ getAuthorSigLink doc
@@ -216,5 +215,5 @@ mailUndeliveredInvitation bd hostpart signlink doc =do
     F.value "email" $ getEmail signlink
     F.value "name" $ getFullName signlink
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
-    F.value "ctxhostpart" hostpart
+    F.value "ctxhostpart" $ bdUrl bd
     brandingMailFields theme

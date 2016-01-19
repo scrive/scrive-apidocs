@@ -12,6 +12,7 @@ import Cron.Migrations
 import DB
 import Doc.API.Callback.Migrations
 import Doc.Migrations
+import Doc.Sealing.Migrations
 import EID.Authentication.Migrations
 import EID.CGI.GRP.Transaction.Migrations
 import EID.Signature.Migrations
@@ -78,6 +79,8 @@ kontraMigrations = [
   , companiesAddCgiServiceID
   , documentsAddAuthorID
   , addUniqueConstraintForAuthorCheck
+  , createDocumentSealingConsumersTable
+  , createDocumentSealingJobsTable
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

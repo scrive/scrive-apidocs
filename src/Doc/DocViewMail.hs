@@ -34,7 +34,7 @@ import Doc.Model (unsavedDocumentLingerDays)
 import File.FileID
 import KontraLink
 import KontraPrelude
-import MailContext (MailContextMonad(..), getMailContext, MailContext(..))
+import MailContext
 import Mails.SendMail
 import MinutesTime
 import Templates
@@ -241,11 +241,10 @@ mailDocumentClosed ispreview sl sealFixed documentAttached document = do
         F.value "signatoryname" $ getSmartName sl
         F.value "companyname" $ emptyToNothing $ getCompanyName document
         F.value "hasaccount" $ isJust $ maybesignatory sl
-        F.value "doclink" $ if ispreview
-                             then Nothing
-                             else Just $ if isAuthor sl
-                               then (++) (mctxhostpart mctx) $ show $ LinkIssueDoc (documentid document)
-                               else (++) (mctxhostpart mctx) $ show $ LinkSignDoc (documentid document) sl
+        F.value "doclink" $ if
+          | ispreview -> Nothing
+          | isAuthor sl -> Just $ makeFullLink mctx $ show (LinkIssueDoc $ documentid document)
+          | otherwise -> Just $ makeFullLink mctx $ show (LinkSignDoc (documentid document) sl)
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Nothing <| ispreview |> Just sl) (mainfile)
         F.value "sealFixed" $ sealFixed
         documentAttachedFields (not ispreview) sl documentAttached document
@@ -266,7 +265,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
     let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document) -- There always should be main file but tests fail without it
     documentMail authorlang document (templateName "mailDocumentAwaitingForAuthor") $ do
         F.value "authorname" $ getSmartName $ $fromJust $ getAuthorSigLink document
-        F.value "documentlink" $ (mctxhostpart mctx) ++ show (LinkSignDoc  (documentid document) $ $fromJust $ getAuthorSigLink document)
+        F.value "documentlink" $ makeFullLink mctx $ show $ LinkSignDoc (documentid document) $ $fromJust $ getAuthorSigLink document
         F.value "partylist" signatories
         F.value "partylistSigned" signatoriesThatSigned
         F.value "someonesigned" $ not $ null $ filter (isSignatory && hasSigned) (documentsignatorylinks document)
@@ -275,7 +274,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
 
 -- helpers
 makeFullLink :: MailContext -> String -> String
-makeFullLink mctx link = mctxhostpart mctx ++ link
+makeFullLink mctx link = mctxDomainUrl mctx ++ link
 
 protectLink :: Bool -> MailContext -> KontraLink -> Maybe String
 protectLink forMail mctx link
@@ -296,7 +295,7 @@ documentMailFields doc mctx = do
     let themeid = fromMaybe (bdMailTheme $ mctxcurrentBrandedDomain mctx) (join $ companyMailTheme <$> mcompanyui)
     theme <- dbQuery $ GetTheme themeid
     return $ do
-      F.value "ctxhostpart" (mctxhostpart mctx)
+      F.value "ctxhostpart" $ mctxDomainUrl mctx
       F.value "ctxlang" (codeFromLang $ mctxlang mctx)
       F.value "documenttitle" $ documenttitle doc
       F.value "creatorname" $ getSmartName $ $fromJust $ getAuthorSigLink doc

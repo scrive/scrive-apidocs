@@ -27,7 +27,6 @@ import InputValidation
 import Kontra
 import KontraPrelude
 import Log.Identifier
-import MailContext (MailContextMonad(..), MailContext(..))
 import Mails.SendMail
 import MinutesTime
 import Payments.Model
@@ -134,14 +133,14 @@ scheduleNewAccountMail ctx user = do
   mail <- accessNewAccountMail ctx user link
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
-createUser :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Email -> (String, String) -> (CompanyID,Bool) -> Lang -> m (Maybe User)
+createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Email -> (String, String) -> (CompanyID,Bool) -> Lang -> m (Maybe User)
 createUser email names companyandrole lang = do
-  mctx <- getMailContext
+  ctx <- getContext
   passwd <- createPassword =<< randomPassword
-  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyandrole lang (bdid $ mctxcurrentBrandedDomain mctx)
+  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyandrole lang (bdid $ ctxbrandeddomain ctx)
   case muser of
     Just user -> do
-      _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (mctxipnumber mctx) (mctxtime mctx) email (userid <$> mctxmaybeuser mctx)
+      _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> getContextUser ctx)
       return muser
     _ -> return muser
 

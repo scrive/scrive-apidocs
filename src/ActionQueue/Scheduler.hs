@@ -4,9 +4,7 @@ module ActionQueue.Scheduler (
   , getGlobalTemplates
   ) where
 
-import Control.Concurrent
 import Control.Monad.Reader
-import Data.Time (UTCTime)
 
 import ActionQueue.Monad
 import AppConf
@@ -16,7 +14,7 @@ import Templates
 
 data SchedulerData = SchedulerData {
     sdAppConf   :: AppConf
-  , sdTemplates :: MVar (UTCTime, KontrakcjaGlobalTemplates)
+  , sdTemplates :: KontrakcjaGlobalTemplates
   }
 
 type Scheduler = ActionQueue SchedulerData
@@ -27,12 +25,8 @@ type Scheduler = ActionQueue SchedulerData
 -- assigned to and since TemplatesMonad doesn't give us the way to get
 -- appropriate language version of templates, we need to do that manually.
 
-getGlobalTemplates :: (MonadReader SchedulerData m, MonadIO m) => m KontrakcjaGlobalTemplates
-getGlobalTemplates = do
-  sd <- ask
-  (_, templates) <- liftIO $ readMVar (sdTemplates sd)
-  return templates
-
+getGlobalTemplates :: MonadReader SchedulerData m => m KontrakcjaGlobalTemplates
+getGlobalTemplates = asks sdTemplates
 
 instance HasSalesforceConf SchedulerData where
   getSalesforceConf =  getSalesforceConf . sdAppConf

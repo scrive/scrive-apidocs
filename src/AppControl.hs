@@ -339,7 +339,6 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
 
       return Context {
           ctxmaybeuser = muser
-        , ctxhostpart = currhostpart
         , ctxflashmessages = flashmessages
         , ctxtime = minutestime
         , ctxclientname = clientName `mplus` userAgent

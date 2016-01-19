@@ -1,5 +1,6 @@
 module Cron.Migrations (cronMigrations) where
 
+import Control.Monad.Catch
 import Data.ByteString (ByteString)
 
 import Cron.Tables
@@ -7,14 +8,25 @@ import DB
 import DB.Checks
 import KontraPrelude
 
-cronMigrations :: MonadDB m => [Migration m]
+cronMigrations :: (MonadDB m, MonadThrow m) => [Migration m]
 cronMigrations = [
     createCronWorkersTable
   , createCronJobsTable
   , addNameToCronWorkers
   , addOldLogsRemovalToCronJobs
   , addMarkFilesForPurge
+  , removeFindAndDoPostDocumentClosedActionsNew
   ]
+
+removeFindAndDoPostDocumentClosedActionsNew :: (MonadDB m, MonadThrow m) => Migration m
+removeFindAndDoPostDocumentClosedActionsNew = Migration {
+    mgrTable = tableCronJobs
+  , mgrFrom = 3
+  , mgrDo = do
+      n <- runSQL "DELETE FROM cron_jobs WHERE id = 'find_and_do_post_document_closed_actions_new'"
+      when (n /= 1) $ do
+        $unexpectedErrorM "Wrong amount of rows deleted"
+  }
 
 addMarkFilesForPurge :: MonadDB m => Migration m
 addMarkFilesForPurge = Migration {

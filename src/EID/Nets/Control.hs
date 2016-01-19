@@ -60,10 +60,10 @@ handleResolve = do
       mnt <-  getField "TARGET"
       mart <- getField "SAMLart"
       case (join $ fmap decodeNetsTarget mnt,mart) of
-        (Just nt, _) | (ctxhostpart ctx) /= (netsTransactionDomain nt) -> do
+        (Just nt, _) | ctxDomainUrl ctx /= netsTransactionDomain nt -> do
           -- Nets can redirect us from branded domain to main domain. We need to jump back to branded domain for cookies
           link <- currentLink
-          return $ LinkExternal $ replace (ctxhostpart ctx) (netsTransactionDomain nt) link
+          return $ LinkExternal $ replace (ctxDomainUrl ctx) (netsTransactionDomain nt) link
         (Just nt, Just art) -> do
           (doc,sl) <- getDocumentAndSignatoryForEID (netsDocumentID nt) (netsSignatoryID nt)
           certErrorHandler <- mkCertErrorHandler

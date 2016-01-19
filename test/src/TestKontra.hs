@@ -46,7 +46,7 @@ import BrandedDomain.Model
 import Crypto.RNG
 import DB
 import EID.CGI.GRP.Config
-import GuardTime (GuardTimeConf(..))
+import GuardTime
 import Happstack.Server.ReqHandler
 import HubSpot.Conf
 import IPAddress
@@ -287,7 +287,6 @@ mkContext lang = do
     brandedimagescache <- MemCache.new BSLU.length 52428800
     return Context {
           ctxmaybeuser = Nothing
-        , ctxhostpart = defaultUri
         , ctxflashmessages = []
         , ctxtime = time
         , ctxclientname = Nothing

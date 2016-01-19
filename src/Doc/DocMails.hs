@@ -40,7 +40,6 @@ import EvidenceLog.Model (InsertEvidenceEventWithAffectedSignatoryAndMsg(..), Cu
 import File.File
 import File.Model
 import InputValidation
-import IPAddress (noIP)
 import Kontra
 import KontraPrelude
 import Log.Identifier
@@ -367,14 +366,12 @@ runMailTInScheduler doc m = do
   now <- currentTime
   mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) $ join $ maybesignatory <$> getAuthorSigLink doc
   bd <- maybe (dbQuery GetMainBrandedDomain) (dbQuery . GetBrandedDomainByUserID) (userid <$> mauthor)
-  let mctx = MailContext { mctxhostpart = bdUrl $ bd
-                         , mctxmailsconfig = mailsConfig appConf
-                         , mctxlang = documentlang doc
-                         , mctxcurrentBrandedDomain = bd
-                         , mctxipnumber = noIP
-                         , mctxtime = now
-                         , mctxmaybeuser = Nothing
-                         }
+  let mctx = MailContext {
+          mctxmailsconfig = mailsConfig appConf
+        , mctxlang = documentlang doc
+        , mctxcurrentBrandedDomain = bd
+        , mctxtime = now
+        }
   templates <- getGlobalTemplates
   runMailT (getLang doc, templates) mctx m
   where

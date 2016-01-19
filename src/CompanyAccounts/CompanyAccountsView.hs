@@ -40,7 +40,7 @@ mailNewCompanyUserInvite ctx invited inviter company companyui link expires = do
   theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme (ctxbrandeddomain ctx)) (companyMailTheme companyui)
   kontramail (ctxbrandeddomain ctx) theme "mailNewCompanyUserInvite" $ do
     basicCompanyInviteFields invited inviter company
-    basicLinkFields (ctxhostpart ctx) link
+    basicLinkFields (ctxDomainUrl ctx) link
     brandingMailFields theme
     F.value "creatorname" $ getSmartName inviter
     F.value "expiredate" $ formatTimeYMD expires
@@ -53,7 +53,7 @@ mailTakeoverSingleUserInvite ctx invited inviter company companyui link = do
   --invite in the language of the existing user rather than in the inviter's language
   kontramaillocal (ctxbrandeddomain ctx) theme invited  "mailTakeoverSingleUserInvite" $ do
     basicCompanyInviteFields invited inviter company
-    basicLinkFields (ctxhostpart ctx) link
+    basicLinkFields (ctxDomainUrl ctx) link
     brandingMailFields theme 
 
 basicCompanyInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b, HasSomeCompanyInfo c) => a -> b -> c -> Fields m ()

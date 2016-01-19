@@ -22,7 +22,6 @@ data JobType
   | DocumentsArchiveIdle
   | EmailChangeRequestsEvaluation
   | FindAndDoPostDocumentClosedActions
-  | FindAndDoPostDocumentClosedActionsNew
   | FindAndExtendDigitalSignatures
   | FindAndTimeoutDocuments
   | MailEventsProcessing
@@ -47,7 +46,6 @@ jobTypeMapper = [
   , (DocumentsArchiveIdle, "documents_archive_idle")
   , (EmailChangeRequestsEvaluation, "email_change_requests_evaluation")
   , (FindAndDoPostDocumentClosedActions, "find_and_do_post_document_closed_actions")
-  , (FindAndDoPostDocumentClosedActionsNew, "find_and_do_post_document_closed_actions_new")
   , (FindAndExtendDigitalSignatures, "find_and_extend_digital_signatures")
   , (FindAndTimeoutDocuments, "find_and_timeout_documents")
   , (MailEventsProcessing, "mail_events_processing")

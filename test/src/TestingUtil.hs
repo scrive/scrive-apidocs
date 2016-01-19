@@ -17,7 +17,6 @@ import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import Test.QuickCheck.Gen
-import Text.JSON
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
@@ -26,11 +25,13 @@ import qualified Test.HUnit as T
 import BrandedDomain.BrandedDomainID
 import BrandedDomain.Model
 import Company.Model
+import Context
 import Crypto.RNG
 import DB
+import Doc.Action
 import Doc.DocStateData
 import Doc.DocumentID
-import Doc.DocumentMonad (withDocumentID)
+import Doc.DocumentMonad
 import Doc.DocUtils
 import Doc.Model
 import Doc.SealStatus (SealStatus(..))
@@ -43,18 +44,22 @@ import File.File
 import File.FileID
 import File.Model
 import FlashMessage
+import GuardTime
 import IPAddress
 import KontraMonad
 import KontraPrelude
 import MagicHash (MagicHash, unsafeMagicHash)
+import MailContext
 import MinutesTime
 import Session.SessionID
 import SMS.Data (SMSProvider(..))
 import System.Random.CryptoRNG ()
+import Templates
 import TestKontra
 import User.Email
 import User.Model
 import Util.Actor
+import qualified Amazon as A
 import qualified KontraError as KE
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
@@ -736,6 +741,15 @@ addRandomDocumentWithFile fileid rda = do
           --liftIO $ print $ "rejecting doc: " ++ _problems
           worker now user p mcompany file
 
+-- | Synchronously seal a document.
+sealTestDocument :: Context -> DocumentID -> TestEnv ()
+sealTestDocument ctx@Context{..} did
+  = withDocumentID did
+  . runGuardTimeConfT ctxgtconf
+  . runTemplatesT (ctxlang, ctxglobaltemplates)
+  . A.runAmazonMonadT (A.AmazonConfig Nothing ctxfilecache)
+  . runMailContextT (contextToMailContext ctx)
+  $ postDocumentClosedActions False False
 
 rand :: CryptoRNG m => Int -> Gen a -> m a
 rand i a = do
@@ -840,17 +854,6 @@ instance Arbitrary IPAddress where
 
 instance Arbitrary SignInfo where
   arbitrary = SignInfo <$> arbitrary <*> arbitrary
-
-
-instance Arbitrary JSValue where
-  arbitrary =
-    oneof [ JSObject <$> toJSObject <$> (\(f,s) -> (maybeToList f) ++ (maybeToList s)) <$> arbitrary
-          , JSArray <$> (\(f,s) -> (maybeToList f) ++ (maybeToList s)) <$> arbitrary
-          , JSRational True <$> toRational <$> (arbitrary :: Gen Integer)
-          , JSBool <$> arbitrary
-          , JSString <$> toJSString <$> arbitrary
-          ]
-
 
 -- our asserts
 

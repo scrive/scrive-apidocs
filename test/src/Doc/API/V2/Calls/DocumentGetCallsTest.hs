@@ -122,6 +122,7 @@ testDocApiV2EvidenceAttachments = do
   _ <- mockDocTestRequestHelper ctx
     POST [("fields", inText "[]"),("accepted_author_attachments", inText "[]")]
     (docApiV2SigSign did slid) 200
+  sealTestDocument ctx did
 
   eaJSON <- jsonTestRequestHelper ctx GET [] (docApiV2EvidenceAttachments did) 200
   eaList <- lookupObjectArray "attachments" eaJSON

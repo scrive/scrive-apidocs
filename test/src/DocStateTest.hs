@@ -1,7 +1,6 @@
 module DocStateTest{- (docStateTests)-} where
 
 import Control.Arrow (first)
-import Control.Concurrent (newMVar)
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Base
 import Control.Monad.Trans
@@ -36,7 +35,7 @@ import EvidenceLog.View (getSignatoryIdentifierMap, simplyfiedEventText)
 import File.FileID
 import KontraPrelude
 import MinutesTime
-import Templates (getTemplatesModTime, readGlobalTemplates)
+import Templates
 import TestingUtil
 import TestKontra
 import Text.XML.DirtyContent (renderXMLContent)
@@ -217,7 +216,7 @@ testSealMissingSignatures = do
   filecontent <- liftIO $ BS.readFile filename
   file <- addNewFile filename filecontent
   doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
-  runScheduler $ findAndDoPostDocumentClosedActions Nothing
+  runScheduler findAndDoPostDocumentClosedActions
   doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   unless (hasGuardtimeSignature doc') $ do
     assertFailure $ "Unexpected seal status: " ++ show (documentsealstatus doc')
@@ -1881,7 +1880,7 @@ testStatusClassSignedWhenAllSigned = replicateM_ 10 $ do
 runScheduler :: MonadBase IO m => ActionQueueT (AWS.AmazonMonadT m) SchedulerData a -> m a
 runScheduler m = do
   let appConf = def { dbConfig = "" }
-  templates <- liftBase $ newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
+  templates <- liftBase readGlobalTemplates
   filecache <- MemCache.new BS.length 52428800
   CronEnv.runScheduler appConf filecache templates m
 

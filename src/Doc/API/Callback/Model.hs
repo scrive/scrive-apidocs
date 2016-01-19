@@ -22,7 +22,6 @@ import Doc.API.Callback.Execute
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Logging
-import IPAddress (noIP)
 import KontraPrelude
 import MailContext (MailContext(..), runMailContextT)
 import MinutesTime
@@ -53,13 +52,10 @@ documentAPICallback appConf runExecute = ConsumerConfig {
     bd <- dbQuery GetMainBrandedDomain
     -- Dummy MailContext
     let mc = MailContext {
-            mctxhostpart = ""
-          , mctxmailsconfig = mailsConfig appConf
+            mctxmailsconfig = mailsConfig appConf
           , mctxlang = LANG_EN
           , mctxcurrentBrandedDomain = bd
           , mctxtime = now
-          , mctxipnumber = noIP
-          , mctxmaybeuser = Nothing
           }
     runMailContextT mc $ execute dac >>= \case
       True  -> return $ Ok Remove

@@ -64,7 +64,7 @@ sendDocumentMails :: User -> TestEnv ()
 sendDocumentMails author = do
   forM_ allLangs $ \l ->  do
       -- make  the context, user and document all use the same lang
-      ctx <- mailingContext l
+      ctx <- mkContext l
       _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
       let aa = authorActor ctx author
       req <- mkRequest POST []
@@ -94,9 +94,9 @@ sendDocumentMails author = do
                               validMail s m
         checkMail "Invitation" $ mailInvitation True Sign (Just sl) =<< theDocument
         -- DELIVERY MAILS
-        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxbrandeddomain ctx) (ctxhostpart ctx) sl =<< theDocument
-        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxbrandeddomain ctx) (ctxhostpart ctx) sl =<< theDocument
-        checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxbrandeddomain ctx) (ctxhostpart ctx) sl =<< theDocument
+        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxbrandeddomain ctx) sl =<< theDocument
+        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxbrandeddomain ctx) sl =<< theDocument
+        checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxbrandeddomain ctx) sl =<< theDocument
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind False Nothing sl True =<< theDocument
         checkMail "Reminder notsigned" $ mailDocumentRemind True Nothing sl True =<< theDocument
@@ -120,7 +120,7 @@ testUserMails :: TestEnv ()
 testUserMails = do
   forM_ allLangs $ \l ->  do
     -- make a user and context that use the same lang
-    ctx <- mailingContext l
+    ctx <- mkContext l
     user <- addNewRandomUserWithLang l
 
     req <- mkRequest POST []
@@ -161,8 +161,3 @@ addNewRandomUserWithLang l = do
          }
   (Just uuser) <- dbQuery $ GetUserByID (userid user)
   return uuser
-
-mailingContext :: Lang -> TestEnv Context
-mailingContext lang = do
-    ctx <- mkContext lang
-    return $ ctx { ctxhostpart = "http://dev.skrivapa.se" }
