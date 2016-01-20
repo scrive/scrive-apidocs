@@ -330,7 +330,9 @@ var PageTasksArrowView = Backbone.View.extend({
     var view = this;
     var document = this.document;
     $(this.el).addClass('arrows');
-    view.updateArrow();
+    setTimeout(function () {
+      view.updateArrow();
+    }, 100);
   },
   deletePageTasksArrowView: function() {
     $(window).off("resize", this.updateArrow);

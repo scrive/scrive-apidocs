@@ -30,7 +30,9 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         this.updateImages();
       }
 
-      signview.updateArrow();
+      setTimeout(function () {
+        signview.updateArrow();
+      }, 100);
     },
 
     ready: function () {
