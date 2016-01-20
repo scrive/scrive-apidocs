@@ -214,7 +214,8 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                   , title = "[Salesforce Callback Error] " ++
                             "(user: " ++ getEmail user ++ ") " ++
                             "(company: " ++ companyname (companyinfo company) ++ ") " ++
-                            "(documentid: " ++ show (documentid doc) ++ ")"
+                            "(documentid: " ++ show (documentid doc) ++ ") " ++
+                            "(http_code: " ++ http_code ++ ")"
                   , content = "<h2>Salesforce Callback Failed</h2>" ++ "<br />\r\n"
                           ++ "<strong>Error:</strong> " ++ msg ++ "<br />\r\n"
                           ++ "<br />"
