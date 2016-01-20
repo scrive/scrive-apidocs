@@ -9,10 +9,12 @@ import Log
 import Network.HTTP as HTTP
 import System.Exit
 import Text.JSON
+import Text.JSON.FromJSValue
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
+import qualified Text.JSON as J
 
 import Amazon
 import API.APIVersion
@@ -53,6 +55,7 @@ execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
         case mcallbackschema of
           Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL dacAttempts uid
           Just (BasicAuthScheme lg pwd) -> executeStandardCallback (Just (lg,pwd)) doc dacURL dacApiVersion
+          Just (OAuth2Scheme lg pwd tokenUrl scope) -> executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dacURL dacApiVersion
           _ -> executeStandardCallback Nothing doc dacURL dacApiVersion
   else do -- TODO APIv2: Get rid of this block too, see TODO above
     logAttention "API callback was dropped as it is not a V1 callback: this is not yet implemented and shouldn't happen!" $ object [
@@ -63,18 +66,8 @@ execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
 
 executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) => Maybe (String,String) -> Document -> String -> APIVersion -> m Bool
 executeStandardCallback mBasicAuth doc url apiVersion = logDocument (documentid doc) $ do
-  dJSON <- case apiVersion of
-    -- TODO APIv2: Use correct JSON for the version given
-    _ -> documentJSONV1 Nothing False True Nothing doc
-  (exitcode, _ , stderr) <- readCurl
-    curlParams
-    (BSLU.fromString $ urlEncodeVars [
-        ("documentid", show (documentid doc))
-      , ("signedAndSealed", if isClosed doc && isJust (documentsealedfile doc)
-        then "true"
-        else "false")
-      , ("json", encode dJSON)
-      ])
+  callbackParams <- callbackParamsWithDocumentJSON apiVersion doc
+  (exitcode, _ , stderr) <- readCurl curlParams callbackParams
   case exitcode of
     ExitSuccess -> do
       logInfo "API callback executeStandardCallback succeeded" $ object [
@@ -103,6 +96,77 @@ executeStandardCallback mBasicAuth doc url apiVersion = logDocument (documentid 
             _ -> []
         ) ++
         [ url]
+
+executeOAuth2Callback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) =>
+                         (String,String,String,String) -> Document -> String -> APIVersion -> m Bool
+executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc callbackUrl apiVersion = logDocument (documentid doc) $ do
+   (exitcode1, stdout1 , stderr1) <- readCurl [
+          "-X", "POST"
+        , "-f" -- make curl return exit code (22) if it got anything else but 2XX
+        , "-L" -- make curl follow redirects
+        , "-d", "{\"login\":{\"scope\":[\"" ++ scope ++ "\"]}}\""
+        , "-H", "Content-Type: application/json; charset=UTF-8"
+        , "-H", "Authorization: Basic " ++ (BSC8.unpack $ B64.encode $ BSC8.pack $ lg ++ ":" ++  pwd)
+        , tokenUrl ] BSL.empty
+   case exitcode1 of
+    ExitFailure ec1 -> do
+      logAttention "API callback executeOAuth2Callback failed during authorization phase" $ object [
+          identifier_ apiVersion
+        , "curl_exitcode" .= show ec1
+        , "stderr" `equalsExternalBSL` stderr1
+        ]
+      return False
+    ExitSuccess -> case parseAccessToken stdout1 of
+      Nothing -> do
+       logAttention "API callback executeOAuth2Callback failed for token parsing" $ object [
+         "stdout" .= show stdout1
+         ]
+       return False
+      Just t -> do
+        callbackParams <- callbackParamsWithDocumentJSON apiVersion doc
+        (exitcode2, _ , stderr2) <- readCurl [
+            "-X", "POST"
+          , "-f" -- make curl return exit code (22) if it got anything else but 2XX
+          , "-L" -- make curl follow redirects
+          , "-H", "Authorization: Bearer " ++ t
+          , "--data-binary", "@-"          -- take binary data from stdin
+          , callbackUrl ] callbackParams
+        case exitcode2 of
+          ExitSuccess -> do
+            logInfo "API callback executeOAuth2Callback succeeded" $ object [
+                identifier_ apiVersion
+              , "url" .= callbackUrl
+              ]
+            return True
+          ExitFailure ec2 -> do
+            logAttention "API callback executeOAuth2Callback failed" $ object [
+                identifier_ apiVersion
+              , "url" .= callbackUrl
+              , "curl_exitcode" .= show ec2
+              , "stderr" `equalsExternalBSL` stderr2
+              ]
+            return False
+
+
+callbackParamsWithDocumentJSON :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) =>
+                                  APIVersion -> Document -> m BSLU.ByteString
+callbackParamsWithDocumentJSON apiVersion doc = do
+  dJSON <- case apiVersion of
+    -- TODO APIv2: Use correct JSON for the version given
+    _ -> documentJSONV1 Nothing False True Nothing doc
+  return $ BSLU.fromString $ urlEncodeVars [
+      ("documentid", show (documentid doc))
+    , ("signedAndSealed", if isClosed doc && isJust (documentsealedfile doc)
+        then "true"
+        else "false")
+    , ("json", encode dJSON)
+    ]
+
+parseAccessToken :: BSLU.ByteString -> Maybe String
+parseAccessToken str = do
+  case decode $ BSLU.toString str of
+    J.Ok js ->  join $ withJSValue js $ fromJSValueFieldCustom "auth" $ fromJSValueField "access_token"
+    _ -> Nothing
 
 executeSalesforceCallback :: (MonadDB m, CryptoRNG m, MonadLog m, MonadThrow m, MonadIO m, MonadBase IO m, MonadReader c m, HasSalesforceConf c, MailContextMonad m) => Document -> String ->  String -> Int32 -> UserID -> m Bool
 executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid doc) $ do
