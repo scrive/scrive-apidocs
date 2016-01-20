@@ -30,6 +30,7 @@ data UserCallbackScheme = ConstantUrlScheme String
                         | SalesforceScheme String
                         | ConstantUrlSchemeV2 String
                         | BasicAuthScheme String String -- Sample of DB value: {"BasicAuthScheme" : ["a","b"]}
+                        | OAuth2Scheme String String String String -- Sample of DB value: {"OAuth2Scheme" : ["name","secret","url","scope"]}
 
   deriving (Eq, Show, Data, Typeable)
 
