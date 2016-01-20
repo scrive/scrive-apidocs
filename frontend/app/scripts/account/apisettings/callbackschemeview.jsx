@@ -52,7 +52,7 @@ return React.createClass({
               </div>
             </div>
           }
-          {/*else*/ (model.emptyScheme() ) &&
+          {/*else*/ (model.oauth2Scheme() || model.emptyScheme() ) &&
             <div/>
           }
         </div>

@@ -21,6 +21,9 @@ define(['legacy_code'], function() {
     basicAuthScheme : function() {
        return this.get("scheme") == "basic_auth";
     },
+    oauth2Scheme : function() {
+       return this.get("scheme") == "oauth2";
+    },
     emptyScheme : function() {
        return this.get("scheme") == "none";
     },
