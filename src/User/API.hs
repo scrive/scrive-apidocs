@@ -103,7 +103,7 @@ apiCallGetUserProfile =  api $ do
 apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do
   ctx <- getContext
-  (user, _ , _) <- getAPIUser APIPersonal
+  (user, _ , _) <- getAPIUserWithAnyPrivileges
   oldpassword <- getField' "oldpassword"
   mpassword <- getOptionalField asValidPassword "password"
   case (mpassword) of
