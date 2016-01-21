@@ -68,14 +68,14 @@ standardHeaderContents=
         <script src="/bower_components/requirejs/require.js"></script>
         $endif$
 
-        <link href='/domain_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+        <link href='/domain_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
 
         $if(nobranding)$
         $else$
           $if(logged)$
-          <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+          <link href='/service_branding/$brandinguserid$/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
             $else$
-          <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+          <link href='/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
           $endif$
         $endif$
         <script>

@@ -4,7 +4,7 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
-    <link href='/padlist_signview_branding/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
+    <link href='/padlist_signview_branding/$brandingdomainid$/$brandinguserid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
     <div class="to-start-signview">

@@ -5,7 +5,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
     $if(logged)$
-      <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='/service_branding/$brandinguserid$/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     $else$
       <link href='/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     $endif$

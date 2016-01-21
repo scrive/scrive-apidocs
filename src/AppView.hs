@@ -302,6 +302,8 @@ contextInfoFields ctx@Context{ ctxlang } = do
   F.value "hostpart" $ ctxDomainUrl ctx
   F.value "production" (ctxproduction ctx)
   F.value "cdnbaseurl" (ctxcdnbaseurl ctx)
+  F.value "brandingdomainid" (show . bdid . ctxbrandeddomain $ ctx)
+  F.value "brandinguserid" (fromMaybe "_" . fmap (show . userid) . ctxmaybeuser $ ctx)
   F.value "ctxlang" $ codeFromLang ctxlang
 
 

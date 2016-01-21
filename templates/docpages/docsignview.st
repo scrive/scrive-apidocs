@@ -47,11 +47,11 @@ pageDocumentSignView=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="format-detection" content="telephone=no"/>
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
-    <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href='/document_signview_branding/$brandingdomainid$/$documentid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
   </head>
 
   <body>
@@ -136,7 +136,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
-    <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
+    <link href='/document_signview_branding/$brandingdomainid$/$documentid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2" />
   </head>
   <body>

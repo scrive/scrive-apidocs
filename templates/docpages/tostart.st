@@ -38,7 +38,7 @@ $htmlopentag()$
     <title>$documenttitle$ - $pagetitle()$</title>
     $standardHeaderContents()$
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2" />
-    <link href='/padlist_signview_branding/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
+    <link href='/padlist_signview_branding/$brandingdomainid$/$brandinguserid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
     <div class="to-start-signview responsive">
@@ -91,7 +91,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $standardHeaderContents()$
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2" />
-    <link href='/padlist_signview_branding/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
+    <link href='/padlist_signview_branding/$brandingdomainid$/$brandinguserid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
     <div class="to-start-signview responsive">

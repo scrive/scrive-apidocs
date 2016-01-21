@@ -4,7 +4,7 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
-    <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    <link href='/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body >
   $flashmessages()$
@@ -45,7 +45,7 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
-    <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    <link href='/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
   <div class='global-table'>
@@ -69,7 +69,7 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
-    <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    <link href='/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
   <div class='global-table'>
@@ -97,7 +97,7 @@ accountSetupPage=$doctype()$
     <head>
       <title>$pagetitle()$</title>
       $standardHeaderContents(nobranding='true')$
-      <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     </head>
     <body>
       $flashmessages()$
