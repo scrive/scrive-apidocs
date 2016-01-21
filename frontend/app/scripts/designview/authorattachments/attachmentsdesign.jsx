@@ -79,7 +79,7 @@ function (_Legacy, React, BackboneMixin, AttachmentsList,
                   <tr>
                     <td style={{width:"25px"}}></td>
                     <td style={{width:"330px"}}>{localization.authorattachments.nameOfAttachment}</td>
-                    <td style={{width:"182px"}}>{localization.authorattachments.typeOfAttachment}</td>
+                    <td style={{width:"242px"}}>{localization.authorattachments.typeOfAttachment}</td>
                     <td style={{width:"48px"}}></td>
                     <td style={{width:"25px"}}></td>
                   </tr>
