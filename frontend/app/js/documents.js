@@ -34,6 +34,12 @@ window.Document = Backbone.Model.extend({
     documentid: function() {
         return this.get("id");
     },
+    initialDocumentData: function() {
+        return this.get("initialdocumentdata");
+    },
+    unsetInitialDocumentData: function() {
+      this.unset("initialdocumentdata");
+    },
     signatories: function() {
         return this.get("signatories");
     },
@@ -492,17 +498,17 @@ window.Document = Backbone.Model.extend({
           }
         };
         
-        // See if we have document data in DOM (and ability to decode base64), before calling the fetch function
-        if (window.documentdata && window.atob) {
-          this.set(this.parse(JSON.parse(window.atob(window.documentdata))));
+        // See if we have document data in the object
+        var initialDocumentData = this.initialDocumentData();
+        if (initialDocumentData) {
+          this.set(this.parse(initialDocumentData));
           fetchOptions.success();
+          this.unsetInitialDocumentData();
 
-          // Don't read stale data, so remove the document data.
-          window.documentdata = undefined;
-        } else {
-          fetchFunction();
+          return;
         }
 
+        fetchFunction();
     },
     author: function() {
         return _.find(this.signatories(),

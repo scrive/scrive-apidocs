@@ -76,7 +76,6 @@ $htmlopentag()$
     <meta name="format-detection" content="telephone=no"/>
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
-    <script type="application/base64" id="document-data">$b64documentdata$</script>
     <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     $signviewScaleReset()$
   </head>
@@ -122,8 +121,17 @@ $htmlopentag()$
             }
           $endif$
 
+          try {
+            if (window.atob) {
+              var documentData = JSON.parse(window.atob("$b64documentdata$"));
+            }
+          } catch (e) {
+            console.log("Could not parse document data embedded in the DOM", e);
+          }
+
           React.render(React.createElement(SignView, {
             documentId: "$documentid$",
+            documentData: documentData,
             sigLinkId: "$siglinkid$",
             allowSaveSafetyCopy: $if(allowsavesafetycopy)$ true $else$ false $endif$,
             loggedInAsAuthor: $if(loggedinauthor)$ true $else$ false $endif$,
