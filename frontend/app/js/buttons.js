@@ -120,7 +120,6 @@ var ButtonView = Backbone.View.extend({
         $(this.el).toggleClass("inactive", this.model.oneClick() && this.model.isClicked());
 
         $(this.el).addClass("button");
-        $(this.el).addClass("button-singleline");
         if (this.model.size() == "tiny")
             $(this.el).addClass("button-small");
         else if (this.model.size() == "big")
