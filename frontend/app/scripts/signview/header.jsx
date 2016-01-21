@@ -17,7 +17,7 @@ define(['React', 'Backbone', 'common/backbone_mixin'], function(React, Backbone,
       return [this.props.document];
     },
     logoLink : function() {
-      return "/signview_logo/" + this.props.documentid + "/" + this.props.signatorylinkid + "/" + window.brandinghash;
+      return window.cdnbaseurl + "/signview_logo/" + window.brandingdomainid + "/" + this.props.documentid + "/" + window.brandinghash;
     },
     render: function() {
       var hasLink = this.props.link != undefined;

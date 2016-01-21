@@ -78,7 +78,7 @@ return React.createClass({
       return (
         <div className="login-box">
           <div className="logo-wrapper">
-            <img alt='logo' src={"/login_logo/" + window.brandinghash} />
+            <img alt='logo' src={window.cdnbaseurl + "/login_logo/" + window.brandingdomainid + "/" + window.brandinghash} />
             <div className='divider-line'/>
             <div className='label'>
               {localization.esigningpoweredbyscrive}

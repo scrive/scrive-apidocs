@@ -35,7 +35,7 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
             <li id="branding">
               <a id="logo" className="page" href="/newdocument">
                 {
-                  <img src={"/service_logo/" + window.brandinghash}   style={{"margin":"0px"}} />
+                  <img src={window.cdnbaseurl + "/service_logo/" + window.brandingdomainid + "/" + window.brandinghash}   style={{"margin":"0px"}} />
                 }
               </a>
             </li>

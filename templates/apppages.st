@@ -80,6 +80,7 @@ standardHeaderContents=
         $endif$
         <script>
           window.brandinghash = "$brandinghash$";
+          window.brandingdomainid = "$brandingdomainid$";
           window.cdnbaseurl = "$cdnbaseurl$";
         </script>
 
