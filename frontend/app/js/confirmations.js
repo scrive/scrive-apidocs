@@ -231,11 +231,6 @@ var ConfirmationView = Backbone.View.extend({
          this.container.append(footer);
        $(this.el).append(this.container);
 
-       // force redraw of everything, to avoid glitches in chrome
-       $('body')[0].style.webkitTransform = "scale(1)";
-       setTimeout(function () {
-         $('body')[0].style.webkitTransform = "";
-       }, 0);
        return this;
     },
     onRender: function() {
