@@ -6,13 +6,6 @@ define(["legacy_code", "Backbone", "React", "common/button", "common/backbone_mi
 var MAX_WIDTH = 772;
 var LARGEST_WIDTH = 1040;
 
-function isCanvasBlank(canvas) {
-  var blank = document.createElement("canvas");
-  blank.width = canvas.width;
-  blank.height = canvas.height;
-  return canvas.toDataURL() == blank.toDataURL();
-}
-
 var SignatureDrawerModel = Backbone.Model.extend({
   defaults: function () {
     return {
@@ -214,7 +207,7 @@ var SignatureDrawerModel = Backbone.Model.extend({
 });
 
 return React.createClass({
-    _canvasBuffer: null,
+    canvas: undefined,
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels: function () {
       return [this.state.model];
@@ -242,17 +235,17 @@ return React.createClass({
     },
     componentDidMount: function () {
       var self = this;
-      this._canvasBuffer = document.createElement("canvas");
-      this._canvasBuffer.width = 772;
-      this._canvasBuffer.height = 303;
-      var picture =  this.refs.canvas.getDOMNode().getContext("2d");
-      var canvasWidth = this.state.model.canvasWidth();
+      var canvasBox = this.refs.canvasBox;
+      var canvasWidth = this.canvasWidth();
+      var canvasHeight =  this.canvasHeight();
+      this.canvas = $("<canvas class='canvas'/>").attr("width",canvasWidth).attr("height",canvasHeight);
+      $(canvasBox.getDOMNode()).append(this.canvas);
+      var picture = this.canvas[0].getContext("2d");
       if (this.state.model.value() && this.state.model.value() != "") {
         var img = new Image();
         img.type = "image/png";
         img.src =  this.state.model.value();
-        var imageHeight = canvasWidth * this.state.model.height() / this.state.model.width();
-        picture.drawImage(img, 0, 0, canvasWidth, imageHeight);
+        picture.drawImage(img, 0, 0, canvasWidth, canvasHeight);
       }
       this.setState({picture: picture, show: true});
       this.initDrawing();
@@ -264,7 +257,6 @@ return React.createClass({
         $(document)[0].addEventListener("MSPointerUp", this.mouseupCallback);
       }
       $(document).mouseup(self.mouseupCallback);
-      this.dumpPictureToBuffer();
     },
     componentWillUnmount: function () {
       $(window).off("resize", this.handleResize);
@@ -280,40 +272,24 @@ return React.createClass({
       this.forceUpdate();
     },
     componentDidUpdate: function () {
-      var canvas = this.refs.canvas;
-      var buffer = this._canvasBuffer;
-
-      if (canvas && isCanvasBlank(canvas.getDOMNode()) && !isCanvasBlank(buffer)) {
-        this.restorePictureFromBuffer();
+      var canvas = this.canvas;
+      if (canvas.width() != this.canvasWidth() || canvas.height() != this.canvasHeight()) {
+        var picture = canvas[0].getContext("2d");
+        var img = new Image();
+        img.type = "image/png";
+        img.src =  this.state.model.value();
+        canvas.attr("width",this.canvasWidth()).attr("height",this.canvasHeight());
+        canvas[0].getContext("2d").drawImage(img, 0, 0, this.canvasWidth(), this.canvasHeight());
       }
     },
     startDrawing: function (drawingMethod, pointerId) {
       this.state.model.startDrawing(drawingMethod, pointerId);
       this.props.onStartDrawing();
     },
-    clearBuffer: function () {
-      var ctx = this._canvasBuffer.getContext("2d");
-      ctx.clearRect(0, 0, this._canvasBuffer.width, this._canvasBuffer.height);
-    },
-    dumpPictureToBuffer: function () {
-      var ctx = this._canvasBuffer.getContext("2d");
-      this.clearBuffer();
-      ctx.drawImage(this.refs.canvas.getDOMNode(), 0, 0, this._canvasBuffer.width, this._canvasBuffer.height);
-    },
-    restorePictureFromBuffer: function () {
-      var canvas = this.refs.canvas;
-
-      if (canvas) {
-        var width = canvas.props.width;
-        var height = canvas.props.height;
-        this.state.picture.drawImage(this._canvasBuffer, 0, 0, width, height);
-      }
-    },
     stopDrawing: function () {
       this.saveImage();
       this.state.model.stopDrawing();
       this.props.onStopDrawing();
-      this.dumpPictureToBuffer();
     },
     mouseupCallback: function () {
       if (this.state.model.drawingInProgress()) {
@@ -540,27 +516,32 @@ return React.createClass({
       return src + "?" + nonce;
     },
     saveImage: function (callback) {
-      this.state.model.saveImage(this.refs.canvas.getDOMNode(), callback);
+      this.state.model.saveImage(this.canvas[0], callback);
     },
     clear: function () {
       var model = this.state.model;
       var canvasWidth = model.canvasWidth();
       var drawingCanvasHeight = Math.round(canvasWidth * model.height() / model.width());
       this.state.picture.clearRect(0, 0, canvasWidth, drawingCanvasHeight);
-      this.clearBuffer();
       model.setEmpty();
       this.saveImage();
+    },
+    canvasWidth: function() {
+      return this.state.model.canvasWidth();
+    },
+    canvasHeight: function() {
+      return Math.round(this.state.model.canvasWidth() * this.state.model.height() / this.state.model.width());
     },
     render: function () {
       var self = this;
       var model = this.state.model;
       var text = localization.signviewDrawSignatureHere;
-      var canvasWidth = model.canvasWidth();
+      var canvasWidth = this.canvasWidth();
+      var canvasHeight = this.canvasHeight();
 
       var bodyWidth = $("body").innerWidth();
       var bodyHeight = $("body").innerHeight();
 
-      var canvasHeight = Math.round(canvasWidth * model.height() / model.width());
       var contentHeight = canvasHeight + model.footerHeight();
 
       var left = (bodyWidth - canvasWidth) / 2;
@@ -605,11 +586,12 @@ return React.createClass({
                 <hr />
               </div>
             </div>
-            <canvas
-              ref="canvas"
-              className="canvas"
-              width={canvasWidth}
-              height={canvasHeight}
+            <div
+              ref="canvasBox"
+              style={{
+                width: canvasWidth + "px",
+                height: canvasHeight + "px"
+              }}
             />
           </div>
           <div>
