@@ -24,6 +24,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 
 import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 import Branding.Cache
 import Branding.CSS
 import Company.CompanyUI
@@ -40,19 +41,17 @@ import User.Utils
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import qualified MemCache as MemCache
-import BrandedDomain.Model
 
 handleServiceBranding :: Kontrakcja m => BrandedDomainID -> String -> String -> String -> m Response
 handleServiceBranding bdid uidstr brandinghash _ = do
   let muid = case uidstr of
         "_" -> Nothing
         s -> maybeRead s
-  ctx <- getContext -- FIXME get rid of this
   muser <- case muid of
     Nothing -> return Nothing
     Just uid -> dbQuery $ GetUserByID uid
   theme <- getServiceTheme bdid muser
-  brandingCSS <- withLessCache (ServiceBranding (themeID theme) brandinghash) $ serviceBrandingCSS (ctxcdnbaseurl ctx) theme
+  brandingCSS <- withLessCache (ServiceBranding (themeID theme) brandinghash) $ serviceBrandingCSS theme
   return (cssResponse brandingCSS)
 
 getServiceTheme ::  Kontrakcja m => BrandedDomainID -> Maybe User -> m Theme
@@ -67,17 +66,15 @@ getServiceTheme bdid muser = do
 
 handleLoginBranding :: Kontrakcja m => BrandedDomainID -> String -> String -> m Response
 handleLoginBranding bdid brandinghash _ = do
-  ctx <- getContext -- FIXME get rid of this
   bd <- dbQuery $ GetBrandedDomainByID bdid
   theme <- dbQuery $ GetTheme (bdLoginTheme bd)
-  brandingCSS <- withLessCache (LoginBranding (themeID theme) brandinghash) $ loginBrandingCSS (ctxcdnbaseurl ctx) theme
+  brandingCSS <- withLessCache (LoginBranding (themeID theme) brandinghash) $ loginBrandingCSS theme
   return (cssResponse brandingCSS)
 
 -- used to deliver CSS for those pages that mimic the look of the company web ('Expression Engine').
 handleScriveBranding :: Kontrakcja m => String -> String -> m Response
 handleScriveBranding brandinghash _ = do
-  ctx <- getContext -- FIXME get rid of this
-  brandingCSS <- withLessCache (ScriveBranding brandinghash) $ scriveBrandingCSS $ ctxcdnbaseurl ctx
+  brandingCSS <- withLessCache (ScriveBranding brandinghash) $ scriveBrandingCSS
   return (cssResponse brandingCSS)
 
 -- Generates domain branding - enything that is onlu branded at domain level - i.e colors of status icons
@@ -90,9 +87,8 @@ handleDomainBranding bdid brandinghash _ = do
 -- Used to brand signview
 handleSignviewBranding :: Kontrakcja m => BrandedDomainID -> DocumentID -> String -> String -> m Response
 handleSignviewBranding bdid did brandinghash _ = do
-  ctx <- getContext -- FIXME get rid of this
   theme <- getSignviewTheme bdid did
-  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (ctxcdnbaseurl ctx) theme
+  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS theme
   return (cssResponse brandingCSS)
 
 getSignviewTheme :: Kontrakcja m => BrandedDomainID -> DocumentID -> m Theme
@@ -106,9 +102,8 @@ getSignviewTheme bdid did = do
 -- Used to brand some view with signview branding but without any particular document. It requires some user to be logged in.
 handleSignviewBrandingWithoutDocument :: Kontrakcja m => BrandedDomainID -> UserID -> String -> String -> m Response
 handleSignviewBrandingWithoutDocument bdid uid brandinghash _ = do
-  ctx <- getContext -- now we gegContext twice in this method, is that OK?
   theme <- getSignviewThemeWithoutDocument bdid uid
-  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS (ctxcdnbaseurl ctx) theme
+  brandingCSS <- withLessCache (SignviewBranding (themeID theme) brandinghash) $ signviewBrandingCSS theme
   return (cssResponse brandingCSS)
 
 getSignviewThemeWithoutDocument :: Kontrakcja m => BrandedDomainID -> UserID -> m Theme
