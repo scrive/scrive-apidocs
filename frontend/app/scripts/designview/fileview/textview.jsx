@@ -28,8 +28,25 @@ define(["Backbone", "React", "common/backbone_mixin", "designview/typesetters/te
       return {editing: false};
     },
 
+    // Ugly hack for P2E middlewares. wrel and hrel is not used by our frontend, but is used by this middlewares.
+    // Computation of this value is also hard - since it's almoust impossible to compute it in backend.
+
+    fixWHRel: function () {
+      if (this.isMounted()) {
+        var el = $(this.getDOMNode());
+        this.getPlacement().set({
+          wrel: el.width() / this.props.pageWidth,
+          hrel: el.height() / this.props.pageHeight
+        }, {silent: true});
+      }
+    },
+
     componentDidMount: function () {
       this.initDraggable();
+    },
+
+    componentDidUpdate: function () {
+      setTimeout(this.fixWHRel, 100);
     },
 
     initDraggable: function () {
