@@ -143,17 +143,6 @@ define([
       this.forceUpdate();
     },
 
-    documentWidth: function () {
-      if (!this.refs.fileView) {
-        return 0;
-      }
-
-      var $main = $(this.refs.fileView.getDOMNode());
-      var width = $main.width();
-
-      return width;
-    },
-
     render: function () {
       var self = this;
       var model = this.state.model;
@@ -198,7 +187,6 @@ define([
               <FileView
                 ref="fileView"
                 pixelWidth={this.state.pixelWidth}
-                width={this.documentWidth()}
                 model={doc.mainfile()}
                 signview={model}
                 arrow={function () { return model.arrow(); }}

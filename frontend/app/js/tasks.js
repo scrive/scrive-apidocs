@@ -208,7 +208,6 @@ var PageTasksArrowView = Backbone.View.extend({
     view.listenTo(view.model, "change", view.render);
     $(window).on("resize", view.updateArrow);
     $(window).on("scroll", view.onScroll);
-    this.startDisabled = args.disabled;
     this.render();
   },
   blink : function() {
@@ -220,10 +219,8 @@ var PageTasksArrowView = Backbone.View.extend({
         this.arrow.disable();
   },
   enable: function() {
-    if (this.arrow != undefined) {
-        this.startDisabled = false;
+    if (this.arrow != undefined)
         this.arrow.enable();
-    }
   },
   taskArrow : function(task) {
         var view = this;
@@ -293,6 +290,7 @@ var PageTasksArrowView = Backbone.View.extend({
   updateArrow : function() {
      var view = this;
      var oldArrow = view.arrow;
+
      if (view.arrow == undefined || view.arrowShouldChange(this.model.active()))
      {
       if (view.arrow != undefined)
@@ -300,9 +298,6 @@ var PageTasksArrowView = Backbone.View.extend({
       if (this.model.active() != undefined)
           {
               this.arrow = this.taskArrow(this.model.active());
-              if (this.arrow && this.startDisabled) {
-                this.arrow.disable();
-              }
               if (this.arrow != undefined)
                   $(this.el).append(this.arrow.el());
               this.trigger("change:arrow");
@@ -344,15 +339,19 @@ var PageTasksArrowView = Backbone.View.extend({
     $(window).off("resize", this.updateArrow);
     $(window).off("scroll", this.onScroll);
     this.stopListening();
+  },
+  replaceModel: function (model) {
+    this.stopListening(this.model, "change", this.render);
+    this.model = model;
+    this.listenTo(model, "change", this.render);
+    this.updateArrow();
   }
 });
 
 window.PageTasksArrow = function(args){
         var model = args.tasks;
-        var disabled = args.disabled;
         var view = new PageTasksArrowView({
                         model: model,
-                        disabled: disabled,
                         el : $("<div/>")
                     });
         return {
@@ -363,6 +362,7 @@ window.PageTasksArrow = function(args){
             , disable  : function()    { view.disable(); }
             , updatePosition: function() { view.updatePosition();}
             , updateArrow: function() { view.updateArrow();}
+            , replaceTasks: function (tasks) { view.replaceModel(tasks) }
             , click: function () { if (view.task) {view.task.onArrowClick();} }
             , goToCurrentTask: function() { view.goToCurrentTask();}
             , forceActivate: function() { model.forceActivate();}

@@ -33,7 +33,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
             self.props.model.setAccepted(true);
           },
           tipSide: "left",
-          el: $(self.refs.checkbox.getDOMNode()),
+          el: $(self.getDOMNode()),
           pointSelector: ".checkbox",
           margin: 5
         })];

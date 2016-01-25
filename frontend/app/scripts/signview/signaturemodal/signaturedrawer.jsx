@@ -4,7 +4,6 @@ define(["legacy_code", "Backbone", "React", "common/button", "common/backbone_mi
         function (_legacy, Backbone, React, Button, BackboneMixin, isSmallView) {
 
 var MAX_WIDTH = 772;
-var FOOTER_HEIGHT = 100;
 var LARGEST_WIDTH = 1040;
 
 function isCanvasBlank(canvas) {
@@ -60,7 +59,7 @@ var SignatureDrawerModel = Backbone.Model.extend({
     return width;
   },
   footerHeight: function () {
-    return isSmallView() ? 160 : 100;
+    return isSmallView() ? 56 : 100;
   },
   height: function () {
      return this.get("height");

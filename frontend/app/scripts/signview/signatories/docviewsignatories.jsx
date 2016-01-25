@@ -46,7 +46,7 @@ define(["React", "Backbone", "signview/signatories/docviewsignatory", "signview/
                           </div>
                         );
                       } else {
-                        return <DocumentViewSignatory key={String(s.signatoryid())} signatory={s} />;
+                        return <DocumentViewSignatory key={s.signatoryid()} signatory={s} />;
                       }
                     })}
                   </div>
@@ -57,7 +57,7 @@ define(["React", "Backbone", "signview/signatories/docviewsignatory", "signview/
           {/* else */ smallView &&
             <span>
               {_.map(sigs, function (s, index) {
-                return <DocumentViewSignatory first={index == 0} key={String(s.signatoryid())} signatory={s} />;
+                return <DocumentViewSignatory first={index == 0} key={s.signatoryid()} signatory={s} />;
               })}
             </span>
           }

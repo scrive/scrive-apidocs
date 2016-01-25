@@ -10,10 +10,6 @@ signviewAnalyticsVariables=
   ]);
 </script>
 ####
-signviewScaleReset=
-    <meta name="viewport" content="width=device-width, user-scalable=no" />
-    <script type="text/javascript"></script>
-####
 padLogin=$doctype()$
 $htmlopentag()$
   <head>
@@ -55,11 +51,13 @@ $htmlopentag()$
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
     <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
-    $signviewScaleReset()$
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script type="text/javascript"></script>
   </head>
 
   <body>
     $flashmessages()$
+    <div class="place-for-arrows"></div>
     <div class="place-for-signview"></div>
     <script>
      require(['jquery', 'React', 'signview/signview', 'legacy_code'], function(jQuery, React, SignView) {

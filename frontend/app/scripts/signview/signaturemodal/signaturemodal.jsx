@@ -180,12 +180,6 @@ return function (args) {
     args.arrow().disable();
   }
 
-  var closeOverlay = function (e) {
-  };
-
-  modal.mousedown(closeOverlay);
-  modal.on("touchstart", closeOverlay);
-
   $(".signview").append(modal);
 
   // 1ms is too short for some browsers, the animation was sometimes triggered immediately.
