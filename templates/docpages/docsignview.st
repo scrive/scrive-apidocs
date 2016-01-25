@@ -57,7 +57,6 @@ $htmlopentag()$
 
   <body>
     $flashmessages()$
-    <div class="place-for-arrows"></div>
     <div class="place-for-signview"></div>
     <script>
      require(['jquery', 'React', 'signview/signview', 'legacy_code'], function(jQuery, React, SignView) {
