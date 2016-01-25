@@ -22,10 +22,6 @@ $(newtypeDeriveUnderlyingReadShow ''UserID)
 instance FromReqURI UserID where
   fromReqURI = maybeRead
 
-instance FromReqURI (Maybe UserID) where
-  fromReqURI "_" = Nothing
-  fromReqURI a = Just $ maybeRead a
-
 instance Binary UserID where
   put (UserID uid) = put uid
   get = fmap UserID get

@@ -42,8 +42,11 @@ import Util.SignatoryLinkUtils
 import qualified MemCache as MemCache
 import BrandedDomain.Model
 
-handleServiceBranding :: Kontrakcja m => Maybe UserID -> BrandedDomainID -> String -> String -> m Response
-handleServiceBranding muid bdid brandinghash _ = do
+handleServiceBranding :: Kontrakcja m => BrandedDomainID -> String -> String -> String -> m Response
+handleServiceBranding bdid uidstr brandinghash _ = do
+  let muid = case uidstr of
+        "_" -> Nothing
+        s -> maybeRead s
   ctx <- getContext -- FIXME get rid of this
   muser <- case muid of
     Nothing -> return Nothing
@@ -96,10 +99,8 @@ getSignviewTheme :: Kontrakcja m => BrandedDomainID -> DocumentID -> m Theme
 getSignviewTheme bdid did = do
   bd <- dbQuery $ GetBrandedDomainByID bdid
   doc <- dbQuery $ GetDocumentByDocumentID did
-  authorid <- guardJustM $ return $ getAuthorSigLink doc >>= maybesignatory
-  user <- guardJustM $ dbQuery $ GetUserByIDIncludeDeleted authorid
-  company <- getCompanyForUser user
-  companyui <- dbQuery $ GetCompanyUI (companyid company)
+  cid <- guardJust (documentauthorcompanyid doc)
+  companyui <- dbQuery $ GetCompanyUI cid
   dbQuery $ GetTheme $ fromMaybe (bdSignviewTheme bd) (companySignviewTheme companyui)
 
 -- Used to brand some view with signview branding but without any particular document. It requires some user to be logged in.

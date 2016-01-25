@@ -9,10 +9,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
       linkOnClick : React.PropTypes.func
     },
     logoLink : function() {
-      // FIXME signview_logo_without_document needs userid, however I can find
-      // proper usage of this React component anywhere that would make sense...
-      // Otherwise I could pass userid into this component to use for the URL
-      return window.cdnbaseurl + "/signview_logo_without_document/" + window.brandingdomainid + "/" + window.brandinghash;
+      return window.cdnbaseurl + "/signview_logo_without_document/" + window.brandingdomainid + "/" + window.brandinguserid + "/" + window.brandinghash;
     },
     render: function() {
       return (

@@ -73,7 +73,7 @@ standardHeaderContents=
         $if(nobranding)$
         $else$
           $if(logged)$
-          <link href='$cdnbaseurl$/service_branding/$brandinguserid$/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+          <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
             $else$
           <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
           $endif$
@@ -82,6 +82,7 @@ standardHeaderContents=
           window.brandinghash = "$brandinghash$";
           window.brandingdomainid = "$brandingdomainid$";
           window.cdnbaseurl = "$cdnbaseurl$";
+          window.brandinguserid = "$brandinguserid$";
         </script>
 
         $analyticsLoaderKontrakcja()$
