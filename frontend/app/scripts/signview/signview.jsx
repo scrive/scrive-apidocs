@@ -55,7 +55,9 @@ define([
       });
 
       var model = new SignViewModel({
-        document: new Document({id: this.props.documentId, initialdocumentdata: this.props.documentData, viewer: viewer}),
+        document: new Document({id: this.props.documentId,
+                                initialdocumentdata: this.props.documentData,
+                                viewer: viewer}),
         allowsavesafetycopy: this.props.allowSaveSafetyCopy,
         loggedInAsAuthor: this.props.loggedInAsAuthor
       });
