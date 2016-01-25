@@ -5,9 +5,9 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
     $if(logged)$
-      <link href='/service_branding/$brandinguserid$/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/service_branding/$brandinguserid$/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     $else$
-      <link href='/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     $endif$
   </head>
 <body>
@@ -54,7 +54,7 @@ $htmlopentag()$
   <div class='mainContainer big error-page'>
    <div class="error-page-header">
      <div class="error-page-header-logo-wrapper" >
-        <img alt='logo' src="/login_logo/$brandinghash$" />
+        <img alt='logo' src="$cdnbaseurl$/login_logo/$brandinghash$" />
         <div class='divider-line'></div>
         <div class='label'>
           $PoweredByScrive()$
@@ -95,9 +95,9 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
     $if(logged)$
-      <link href='/service_branding/$brandinguserid$/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/service_branding/$brandinguserid$/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     $else$
-      <link href='/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     $endif$
   </head>
 <body>
@@ -144,7 +144,7 @@ $htmlopentag()$
   <div class='mainContainer big error-page'>
    <div class="error-page-header">
      <div class="error-page-header-logo-wrapper" >
-        <img alt='logo' src="/login_logo/$brandinghash$" />
+        <img alt='logo' src="$cdnbaseurl$/login_logo/$brandinghash$" />
         <div class='divider-line'></div>
         <div class='label'>
           $PoweredByScrive()$
@@ -185,9 +185,9 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
     $if(logged)$
-      <link href='/service_branding/$brandinguserid$/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/service_branding/$brandinguserid$/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     $else$
-      <link href='/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     $endif$
   </head>
   <body>
@@ -220,7 +220,7 @@ $htmlopentag()$
       <div class='mainContainer big error-page'>
         <div class="error-page-header">
           <div class="error-page-header-logo-wrapper" >
-            <img alt='logo' src="/login_logo/$brandinghash$" />
+            <img alt='logo' src="$cdnbaseurl$/login_logo/$brandinghash$" />
             <div class='divider-line'></div>
             <div class='label'>
               $PoweredByScrive()$

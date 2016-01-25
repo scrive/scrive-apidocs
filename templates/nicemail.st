@@ -136,9 +136,9 @@ nicemailfgcolour=#505050
 nicemaillogo=*
   $if(ispreview)$
     $if(documentid)$
-      $ctxhostpart$/email_logo_for_document/$brandingdomainid$/$documentid$/$logoAdler32$
+      $cdnbaseurl$/email_logo_for_document/$brandingdomainid$/$documentid$/$logoAdler32$
     $else$
-      $ctxhostpart$/email_logo/$brandingdomainid$/$brandinguserid$/$logoAdler32$
+      $cdnbaseurl$/email_logo/$brandingdomainid$/$brandinguserid$/$logoAdler32$
     $endif$
   $else$
     cid:logo-$logoAdler32$.png

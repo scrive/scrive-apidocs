@@ -4,7 +4,7 @@ pagePrivilegesConfirm =$doctype()$
       <head>
         <title>$pagetitle()$</title>
         $standardHeaderContents(nobranding='true')$
-        <link href='/service_branding/$brandinguserid$/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+        <link href='$cdnbaseurl$/service_branding/$brandinguserid$/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
        </head>
        <body>
         <header class="site">
@@ -12,7 +12,7 @@ pagePrivilegesConfirm =$doctype()$
             <ul class="ct">
               <li id="branding" >
                 <a id="logo" class="page" href="#" >
-                  <img src="/service_logo/$brandingdomainid$/$brandinghash$" style="margin:0px;" />
+                  <img src="$cdnbaseurl$/service_logo/$brandingdomainid$/$brandinghash$" style="margin:0px;" />
                 </a>
               </li>
               <ul class="right-container" >
