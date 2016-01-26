@@ -120,10 +120,11 @@ $htmlopentag()$
               };
             }
           $endif$
+          var documentData;
 
           try {
             if (window.atob) {
-              var documentData = JSON.parse(window.atob("$b64documentdata$"));
+              documentData = JSON.parse(window.atob("$b64documentdata$"));
             }
           } catch (e) {
             console.log("Could not parse document data embedded in the DOM", e);

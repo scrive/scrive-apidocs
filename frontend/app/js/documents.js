@@ -38,7 +38,7 @@ window.Document = Backbone.Model.extend({
         return this.get("initialdocumentdata");
     },
     unsetInitialDocumentData: function() {
-      this.unset("initialdocumentdata");
+      this.unset("initialdocumentdata", {silent: true});
     },
     signatories: function() {
         return this.get("signatories");
@@ -501,14 +501,12 @@ window.Document = Backbone.Model.extend({
         // See if we have document data in the object
         var initialDocumentData = this.initialDocumentData();
         if (initialDocumentData) {
+          this.unsetInitialDocumentData();
           this.set(this.parse(initialDocumentData));
           fetchOptions.success();
-          this.unsetInitialDocumentData();
-
-          return;
+        } else {
+          fetchFunction();
         }
-
-        fetchFunction();
     },
     author: function() {
         return _.find(this.signatories(),

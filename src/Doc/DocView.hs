@@ -87,7 +87,7 @@ pageDocumentSignView ctx document siglink ad = do
   let loggedAsSignatory = (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> ctxmaybeuser ctx);
   let loggedAsAuthor = (Just authorid == (userid <$> ctxmaybeuser ctx)) || (Just authorid == (userid <$> ctxmaybeuser ctx));
 
-  docjson <- documentJSONV1 Nothing True (isAuthor siglink) (Just siglink) document
+  docjson <- documentJSONV1 Nothing False (isAuthor siglink) (Just siglink) document
   renderTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
