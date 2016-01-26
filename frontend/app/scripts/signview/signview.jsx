@@ -40,6 +40,7 @@ define([
 
     propTypes: {
       documentId: React.PropTypes.string.isRequired,
+      documentData: React.PropTypes.object,
       sigLinkId: React.PropTypes.string.isRequired,
       allowSaveSafetyCopy: React.PropTypes.bool.isRequired,
       loggedInAsAuthor: React.PropTypes.bool.isRequired,
@@ -54,7 +55,9 @@ define([
       });
 
       var model = new SignViewModel({
-        document: new Document({id: this.props.documentId, viewer: viewer}),
+        document: new Document({id: this.props.documentId,
+                                initialdocumentdata: this.props.documentData,
+                                viewer: viewer}),
         allowsavesafetycopy: this.props.allowSaveSafetyCopy,
         loggedInAsAuthor: this.props.loggedInAsAuthor
       });

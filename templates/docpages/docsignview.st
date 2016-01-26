@@ -121,8 +121,17 @@ $htmlopentag()$
             }
           $endif$
 
+          try {
+            if (window.atob) {
+              var documentData = JSON.parse(window.atob("$b64documentdata$"));
+            }
+          } catch (e) {
+            console.log("Could not parse document data embedded in the DOM", e);
+          }
+
           React.render(React.createElement(SignView, {
             documentId: "$documentid$",
+            documentData: documentData,
             sigLinkId: "$siglinkid$",
             allowSaveSafetyCopy: $if(allowsavesafetycopy)$ true $else$ false $endif$,
             loggedInAsAuthor: $if(loggedinauthor)$ true $else$ false $endif$,

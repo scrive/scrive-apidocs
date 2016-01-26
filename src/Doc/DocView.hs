@@ -21,7 +21,10 @@ module Doc.DocView (
   ) where
 
 import Happstack.Server.SimpleHTTP
+import Text.JSON as JSON
 import Text.StringTemplates.Templates
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.UTF8 as BS
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
@@ -30,6 +33,7 @@ import BrandedDomain.BrandedDomain
 import Company.CompanyUI
 import Company.Model
 import DB
+import Doc.API.V1.DocumentToJSON
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
@@ -83,6 +87,7 @@ pageDocumentSignView ctx document siglink ad = do
   let loggedAsSignatory = (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> ctxmaybeuser ctx);
   let loggedAsAuthor = (Just authorid == (userid <$> ctxmaybeuser ctx)) || (Just authorid == (userid <$> ctxmaybeuser ctx));
 
+  docjson <- documentJSONV1 Nothing True (isAuthor siglink) (Just siglink) document
   renderTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
@@ -92,6 +97,7 @@ pageDocumentSignView ctx document siglink ad = do
       F.value "allowsavesafetycopy" $ companyallowsavesafetycopy $ companyinfo acompany
       F.value "authorFullname" $ getFullName auser
       F.value "authorPhone" $ getMobile auser
+      F.value "b64documentdata" $ B64.encode $ BS.fromString $ JSON.encode docjson
       standardPageFields ctx (Just acompanyui) ad -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView :: Kontrakcja m

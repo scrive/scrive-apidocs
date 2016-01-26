@@ -34,6 +34,12 @@ window.Document = Backbone.Model.extend({
     documentid: function() {
         return this.get("id");
     },
+    initialDocumentData: function() {
+        return this.get("initialdocumentdata");
+    },
+    unsetInitialDocumentData: function() {
+      this.unset("initialdocumentdata");
+    },
     signatories: function() {
         return this.get("signatories");
     },
@@ -467,6 +473,7 @@ window.Document = Backbone.Model.extend({
     // indicating if further attempts should be continued
     recall: function(successCallback, errorCallback) {
         console.log('recall');
+
         var self = this;
         var fetchOptions = { data: self.viewer().forFetch(),
                              processData: true,
@@ -490,9 +497,18 @@ window.Document = Backbone.Model.extend({
             successCallback();
           }
         };
+        
+        // See if we have document data in the object
+        var initialDocumentData = this.initialDocumentData();
+        if (initialDocumentData) {
+          this.set(this.parse(initialDocumentData));
+          fetchOptions.success();
+          this.unsetInitialDocumentData();
+
+          return;
+        }
 
         fetchFunction();
-
     },
     author: function() {
         return _.find(this.signatories(),
