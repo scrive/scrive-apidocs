@@ -26,20 +26,9 @@
 
   width: @container-lg;
 
-  // Skip responsiveness.
-  /*
-  @media (min-width: @screen-sm-min) {
-    width: @container-sm;
+  @media not all and (min-width: (@container-lg + @signview-gutter)) {
+    width: 100%;
   }
-
-  @media (min-width: @screen-md-min) {
-    width: @container-md;
-  }
-
-  @media (min-width: @screen-lg-min) {
-    width: @container-lg;
-  }
-  */
 
   .row {
     .make-row();
@@ -62,16 +51,51 @@
       .make-grid(lg);
     }
 
+    // only use inner gutters, slow, but modifying the grid mixins does not seem to work.
+    [class^="col-"]:first-child {
+      padding-left: 0;
+    }
+
+    [class^="col-"]:last-child {
+      padding-right: 0;
+    }
+
+    .on-medium-view({
+      [class^="col-md-"] {
+        padding-left: 0;
+        padding-right: 0;
+      }
+    });
+
+    .on-small-view({
+      [class^="col-sm-"] {
+        padding-left: 0;
+        padding-right: 0;
+      }
+    });
+
     .left {
       text-align: left;
+
+      .on-small-view({
+        text-align: left;
+      });
     }
 
     .center {
       text-align: center;
+
+      .on-small-view({
+        text-align: left;
+      });
     }
 
     .right {
       text-align: right;
+
+      .on-small-view({
+        text-align: left;
+      });
     }
   }
 

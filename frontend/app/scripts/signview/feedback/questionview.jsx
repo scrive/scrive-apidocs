@@ -30,11 +30,11 @@ define(["React", "common/button", "common/infotextinput"], function (React, Butt
 
       return (
         <span>
-          <div className="col-xs-6 left">
+          <div className="col-sm-6 left">
             <h1>{title}</h1>
             {/* if */ subtitle && <p>{subtitle}</p>}
           </div>
-          <div className="col-xs-6 right">
+          <div className="col-sm-6 right">
             {/* if */ field &&
               <div className="field">
                 {/* if */ field === "textarea" &&

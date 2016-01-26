@@ -1,0 +1,21 @@
+@import "vars";
+
+.safety-copy {
+  .bottom-label {
+    margin-top: @signview-half-gutter;
+
+    .on-small-view({
+      margin-top: @signview-half-half-gutter;
+    });
+  }
+
+  .on-small-view({
+    .col-sm-6 {
+      margin-top: @signview-half-half-gutter;
+
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+  });
+}

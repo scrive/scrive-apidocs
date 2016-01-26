@@ -5,7 +5,6 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       model: React.PropTypes.instanceOf(File).isRequired,
       signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
       arrow: React.PropTypes.func.isRequired,
-      width: React.PropTypes.number.isRequired,
       pixelWidth: React.PropTypes.number.isRequired
     },
 
@@ -96,6 +95,17 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       }
     },
 
+    documentWidth: function () {
+      if (!this.isMounted()) {
+        return 0;
+      }
+
+      var $main = $(this.getDOMNode());
+      var width = $main.width();
+
+      return width;
+    },
+
     renderPage: function (page, index) {
       var image = this.state.images[index];
 
@@ -103,12 +113,14 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         return <span key={index} />;
       }
 
+      var documentWidth = this.documentWidth();
+
       var imageWidth = image.width;
       var imageHeight = image.height;
 
-      var ratio = this.props.width / imageWidth;
+      var ratio = documentWidth / imageWidth;
 
-      var width = this.props.width;
+      var width = documentWidth;
       var height = ratio * imageHeight;
 
       return (

@@ -290,6 +290,7 @@ var PageTasksArrowView = Backbone.View.extend({
   updateArrow : function() {
      var view = this;
      var oldArrow = view.arrow;
+
      if (view.arrow == undefined || view.arrowShouldChange(this.model.active()))
      {
       if (view.arrow != undefined)
@@ -338,6 +339,12 @@ var PageTasksArrowView = Backbone.View.extend({
     $(window).off("resize", this.updateArrow);
     $(window).off("scroll", this.onScroll);
     this.stopListening();
+  },
+  replaceModel: function (model) {
+    this.stopListening(this.model, "change", this.render);
+    this.model = model;
+    this.listenTo(model, "change", this.render);
+    this.updateArrow();
   }
 });
 
@@ -355,6 +362,7 @@ window.PageTasksArrow = function(args){
             , disable  : function()    { view.disable(); }
             , updatePosition: function() { view.updatePosition();}
             , updateArrow: function() { view.updateArrow();}
+            , replaceTasks: function (tasks) { view.replaceModel(tasks) }
             , click: function () { if (view.task) {view.task.onArrowClick();} }
             , goToCurrentTask: function() { view.goToCurrentTask();}
             , forceActivate: function() { model.forceActivate();}

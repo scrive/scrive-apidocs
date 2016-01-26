@@ -1,19 +1,41 @@
 @import "vars";
 
 .feedback {
-  h1, .label, .button, .field {
+  h1, .label, .field {
     margin-bottom: @signview-half-gutter;
+
+    .on-small-view({
+      margin-bottom: @signview-half-half-gutter;
+    });
+
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
+
   .button .label {
     margin-bottom: 0;
   }
 
   .field {
     display: inline-block;
-    width: 378px;
+
+    .on-small-view({
+      display: block;
+    });
 
     .label {
       text-align: left;
     }
   }
+
+  .on-small-view({
+    .col-sm-6 {
+      margin-top: @signview-half-half-gutter;
+
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+  });
 }

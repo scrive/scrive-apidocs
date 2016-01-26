@@ -16,13 +16,13 @@ function (legacy_code, Backbone, React, Button, PadGiveToNextView, HtmlTextWithS
       var openStyle = {height: open ? "64px" : "0"};
 
       return (
-        <span>
+        <span className="menu">
           <Button
             className="transparent-button download-button"
             text={this.props.title}
             onClick={this.toggleOpen}
           />
-          <div style={openStyle} className="menu-options button-group">
+          <div style={openStyle} className="menu-options">
             <Button onClick={this.props.onDownload} text={localization.docsignview.downloadDocumentButtonText} />
           </div>
         </span>
@@ -94,19 +94,17 @@ function (legacy_code, Backbone, React, Button, PadGiveToNextView, HtmlTextWithS
       var self = this;
       var doc = this.props.model;
       var sig = doc.currentSignatory();
-      var isSmallScreen = BrowserInfo.isSmallScreen();
-      var hasDownloadButton = doc.showpdfdownload() && !isSmallScreen;
+      var hasDownloadButton = doc.showpdfdownload();
       var downloadUrl = doc.mainfile().downloadLinkForMainFile(doc.title());
 
       var sectionClass = React.addons.classSet({
         "section": true,
-        "instructions": true,
-        "small-screen": isSmallScreen
+        "instructions": true
       });
 
       return (
         <div className={sectionClass}>
-            <h1 className="follow" ref="headline">
+            <h1 className="follow">
               <HtmlTextWithSubstitution
                 secureText={self.headlineText()}
                 subs={{".signatory-name": sig.name()}}

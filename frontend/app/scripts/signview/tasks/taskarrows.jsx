@@ -20,10 +20,6 @@ define(["Backbone", "React"], function (Backbone, React) {
       this.injectArrows();
     },
 
-    componentDidUpdate: function () {
-      this.injectArrows();
-    },
-
     render: function () {
       return <div />;
     }

@@ -1,9 +1,13 @@
 @import "../branding/variables";
 
+/* Sign view views */
+@signview-small-view: 630px;
+@signview-medium-view: 840px;
+
 /* Grid */
-@screen-xs: 480px;
-@screen-sm: 768px;
-@screen-md: 992px;
+@screen-xs: 320px;
+@screen-sm: @signview-small-view;
+@screen-md: @signview-medium-view;
 @screen-lg: 1000px;
 @grid-columns: 12;
 @grid-gutter-width: 20px;
@@ -32,6 +36,7 @@
 /* Sign view */
 @signview-gutter: @grid-gutter-width;
 @signview-half-gutter: @signview-gutter / 2;
+@signview-half-half-gutter: @signview-half-gutter / 2;
 @signview-bg: #F1F1F1;
 @signview-fg: #505050;
 @signview-grey: #CCCCCC;
@@ -39,19 +44,56 @@
 @signview-font-face: "Source Sans Pro", sans-serif;
 @signview-font-size-large: 28px;
 @signview-font-size-small: 18px;
+@signview-small-font-size-large: 24px;
+@signview-small-font-size-small: 16px;
 @signview-header-height: 74px;
+@signview-header-height-small: 44px;
 @signview-button-padding-lr: 28px;
 @signview-button-padding-tb: 24px;
+@signview-button-padding-tb-small: 18px;
+@signview-button-padding-lr-small: 18px;
 @signview-overlay-z-index: 1000;
 @signview-drawer-z-index: 1000;
 @signview-large: @container-lg;
+@signview-document: 950px;
+@signview-large-screen: (@container-lg);
+@signview-section-padding: 45px;
+@signview-section-padding-small: 20px;
 
 /* mixins */
+.on-medium-view(@rules) {
+  @media (min-width: (@signview-small-view)) and (max-width: (@signview-medium-view)) {
+    @rules();
+  }
+}
+
+.on-small-view(@rules) {
+  @media not all and (min-width: (@signview-small-view)) {
+    @rules();
+  }
+}
+
 .font-normal() {
+  color: @signview-fg;
   font-family: @signview-font-face;
   font-size: @signview-font-size-small;
+  font-size: @signview-font-size-small;
   font-weight: 300;
+
+  .on-small-view({
+    font-size: @signview-small-font-size-small;
+  });
+}
+
+.font-large() {
   color: @signview-fg;
+  font-family: @signview-font-face;
+  font-size: @signview-font-size-large;
+  font-weight: 300;
+
+  .on-small-view({
+    font-size: @signview-small-font-size-large;
+  });
 }
 
 .background-alpha(@bcolor) {

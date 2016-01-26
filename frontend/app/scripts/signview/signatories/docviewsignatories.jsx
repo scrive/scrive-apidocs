@@ -1,8 +1,7 @@
 /** @jsx React.DOM */
 
-define(["React", "Backbone", "signview/signatories/docviewsignatory",
-  "signview/signatories/docviewsignatory", "legacy_code"],
-  function (React, Backbone, DocumentViewSignatory) {
+define(["React", "Backbone", "signview/signatories/docviewsignatory", "signview/viewsize"],
+  function (React, Backbone, DocumentViewSignatory, ViewSize) {
   return React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Document).isRequired
@@ -19,31 +18,46 @@ define(["React", "Backbone", "signview/signatories/docviewsignatory",
     render: function () {
       var sigs = this.signatories();
 
-      sigs = [{type: "title"}].concat(sigs);
+      if (!ViewSize.isSmall()) {
+        sigs = [{type: "title"}].concat(sigs);
+      }
+
+      var numGroups = ViewSize.isMedium() ? 2 : 3;
 
       var groups = _.groupBy(sigs, function (sig, index) {
-        return Math.floor(index / 3);
+        return Math.floor(index / numGroups);
       });
 
       return (
         <span>
-          {_.map(groups, function (group, index) {
-            return (
-              <div key={index} className="section parties">
-                {_.map(group, function (s) {
-                  if (s.type === "title") {
-                    return (
-                      <div key="title" className="col-xs-4">
-                        <h1 className="title">{localization.docsignview.signatoriesTitle}</h1>
-                      </div>
-                    );
-                  } else {
-                    return <DocumentViewSignatory key={String(s.signatoryid())} signatory={s} />;
-                  }
-                })}
-              </div>
-            );
-          })}
+          {/* if */ !ViewSize.isSmall() &&
+            <span>
+              {_.map(groups, function (group, index) {
+                return (
+                  <div key={index} className="section parties">
+                    {_.map(group, function (s) {
+                      if (s.type === "title") {
+                        return (
+                          <div key="title" className={ViewSize.isMedium() ? "col-xs-6" : "col-xs-4"}>
+                            <h1 className="title">{localization.docsignview.signatoriesTitle}</h1>
+                          </div>
+                        );
+                      } else {
+                        return <DocumentViewSignatory key={s.signatoryid()} signatory={s} />;
+                      }
+                    })}
+                  </div>
+                );
+              })}
+            </span>
+          }
+          {/* else */ ViewSize.isSmall() &&
+            <span>
+              {_.map(sigs, function (s, index) {
+                return <DocumentViewSignatory first={index == 0} key={s.signatoryid()} signatory={s} />;
+              })}
+            </span>
+          }
         </span>
       );
     }

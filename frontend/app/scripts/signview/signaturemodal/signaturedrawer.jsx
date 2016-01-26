@@ -1,31 +1,9 @@
 /* Content of modal for drawing signature */
 
-define(["legacy_code", "Backbone", "React", "common/button", "common/backbone_mixin"],
-        function (_legacy, Backbone, React, Button, BackboneMixin) {
+define(["legacy_code", "Backbone", "React", "common/button", "common/backbone_mixin", "signview/viewsize"],
+        function (_legacy, Backbone, React, Button, BackboneMixin, ViewSize) {
 
-/* SignatureDrawerModel holds reference to field and dimentions, as well as some
- * temporary data connected with drawing
- *
- * Drawing data includes things like - current point position (x,y), previous point position (x_,y_)
- * information if anything was drawn (not detect if image is empty), information if any line was
- * drawn in current session, information if drawing is in progress and what 'tool' is used for that.
- *
- * Drawing data is stored here to limit direct access to it. Only functions that can modify drawing data are:
- *
- * startDrawing(drawingMethod)  - Start drawing with drawingMethod
- * stopDrawing()                - Stop drawing
- * setStartPoint(x,y)           - Started drawing at point (x,y)
- * lineDrawn(x_,y_,x,y)         - Curve was drawn till point (x,y). Middle of curve was (x_,y_).
- * setEmpty()                   - Used after "clear" operation
- *
- * All functions modifying drawing data may be silent, since rerendering of view is not needed.
- *
- * NOTE: We are not drawing lines, but curves. This is why x_,y_ are there and are position of middle of last curve.
- *
- */
-
-var DRAWING_CANVAS_WIDTH = BrowserInfo.isSmallScreen() ? 900 : 772 ;
-var FOOTER_HEIGHT = BrowserInfo.isSmallScreen() ? 148 : 100;
+var MAX_WIDTH = 772;
 var LARGEST_WIDTH = 1040;
 
 var SignatureDrawerModel = Backbone.Model.extend({
@@ -59,6 +37,22 @@ var SignatureDrawerModel = Backbone.Model.extend({
         self.startPreviewTimer();
       }
     };
+  },
+  canvasWidth: function () {
+    var innerWidth = $("body").innerWidth();
+    var innerHeight = $("body").innerHeight();
+    var width = innerWidth < MAX_WIDTH ? innerWidth : MAX_WIDTH;
+    var height = Math.round(width * this.height() / this.width());
+    var fullHeight = height + this.footerHeight();
+
+    if (fullHeight > innerHeight) {
+      width = Math.round((innerHeight - this.footerHeight()) * this.width() / this.height());
+    }
+
+    return width;
+  },
+  footerHeight: function () {
+    return ViewSize.isSmall() ? 56 : 100;
   },
   height: function () {
      return this.get("height");
@@ -201,8 +195,8 @@ var SignatureDrawerModel = Backbone.Model.extend({
       }
     } else {
       var field = this.field();
-      var height = Math.floor(DRAWING_CANVAS_WIDTH * this.height() / this.width());
-      ImageUtil.addTransparentBGAndSerializeCanvas(canvas, DRAWING_CANVAS_WIDTH, height, function (imageData) {
+      var height = Math.floor(this.canvasWidth() * this.height() / this.width());
+      ImageUtil.addTransparentBGAndSerializeCanvas(canvas, this.canvasWidth(), height, function (imageData) {
         field.setValue(imageData);
         if (typeof callback === "function") {
           callback();
@@ -213,6 +207,7 @@ var SignatureDrawerModel = Backbone.Model.extend({
 });
 
 return React.createClass({
+    canvas: undefined,
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels: function () {
       return [this.state.model];
@@ -240,18 +235,22 @@ return React.createClass({
     },
     componentDidMount: function () {
       var self = this;
-      var picture =  this.refs.canvas.getDOMNode().getContext("2d");
+      var canvasBox = this.refs.canvasBox;
+      var canvasWidth = this.canvasWidth();
+      var canvasHeight =  this.canvasHeight();
+      this.canvas = $("<canvas class='canvas'/>").attr("width", canvasWidth).attr("height", canvasHeight);
+      $(canvasBox.getDOMNode()).append(this.canvas);
+      var picture = this.canvas[0].getContext("2d");
       if (this.state.model.value() && this.state.model.value() != "") {
         var img = new Image();
         img.type = "image/png";
         img.src =  this.state.model.value();
-        var imageHeight = DRAWING_CANVAS_WIDTH * this.state.model.height() / this.state.model.width();
-        picture.drawImage(img, 0, 0, DRAWING_CANVAS_WIDTH, imageHeight);
+        picture.drawImage(img, 0, 0, canvasWidth, canvasHeight);
       }
       this.setState({picture: picture, show: true});
       this.initDrawing();
-      $(window).resize(self.forceUpdate);
-      $(window).on("gestureend", self.forceUpdate);
+      $(window).on("resize", this.handleResize);
+      $(window).on("gestureend", this.handleResize);
       if ("ontouchstart" in document.documentElement) {
         $(document)[0].addEventListener("touchend", this.mouseupCallback);
       } else if (navigator.msPointerEnabled) {
@@ -260,14 +259,28 @@ return React.createClass({
       $(document).mouseup(self.mouseupCallback);
     },
     componentWillUnmount: function () {
-      $(window).off("resize", self.forceUpdate);
-      $(window).off("gestureend", self.forceUpdate);
+      $(window).off("resize", this.handleResize);
+      $(window).off("gestureend", this.handleResize);
       if ("ontouchstart" in document.documentElement) {
         $(document)[0].removeEventListener("touchend", this.mouseupCallback);
       } else if (navigator.msPointerEnabled) {
         $(document)[0].removeEventListener("MSPointerUp", this.mouseupCallback);
       }
       $(document).off("mouseup", this.mouseupCallback);
+    },
+    handleResize: function (e) {
+      this.forceUpdate();
+    },
+    componentDidUpdate: function () {
+      var canvas = this.canvas;
+      if (canvas.width() != this.canvasWidth() || canvas.height() != this.canvasHeight()) {
+        var picture = canvas[0].getContext("2d");
+        var img = new Image();
+        img.type = "image/png";
+        img.src =  this.state.model.value();
+        canvas.attr("width", this.canvasWidth()).attr("height", this.canvasHeight());
+        canvas[0].getContext("2d").drawImage(img, 0, 0, this.canvasWidth(), this.canvasHeight());
+      }
     },
     startDrawing: function (drawingMethod, pointerId) {
       this.state.model.startDrawing(drawingMethod, pointerId);
@@ -503,51 +516,60 @@ return React.createClass({
       return src + "?" + nonce;
     },
     saveImage: function (callback) {
-      this.state.model.saveImage(this.refs.canvas.getDOMNode(), callback);
+      this.state.model.saveImage(this.canvas[0], callback);
     },
     clear: function () {
-      var drawingCanvasHeight = Math.round(DRAWING_CANVAS_WIDTH * this.state.model.height() / this.state.model.width());
-      this.state.picture.clearRect(0, 0, DRAWING_CANVAS_WIDTH, drawingCanvasHeight);
-      this.state.model.setEmpty();
+      var model = this.state.model;
+      var canvasWidth = model.canvasWidth();
+      var drawingCanvasHeight = Math.round(canvasWidth * model.height() / model.width());
+      this.state.picture.clearRect(0, 0, canvasWidth, drawingCanvasHeight);
+      model.setEmpty();
       this.saveImage();
+    },
+    canvasWidth: function () {
+      return this.state.model.canvasWidth();
+    },
+    canvasHeight: function () {
+      return Math.round(this.state.model.canvasWidth() * this.state.model.height() / this.state.model.width());
     },
     render: function () {
       var self = this;
       var model = this.state.model;
       var text = localization.signviewDrawSignatureHere;
+      var canvasWidth = this.canvasWidth();
+      var canvasHeight = this.canvasHeight();
 
-      var bodyWidth = window.innerWidth;
-      var bodyHeight = window.innerHeight;
+      var bodyWidth = $("body").innerWidth();
+      var bodyHeight = $("body").innerHeight();
 
-      var canvasHeight = Math.round(DRAWING_CANVAS_WIDTH * model.height() / model.width());
-      var contentHeight = canvasHeight + FOOTER_HEIGHT;
+      var contentHeight = canvasHeight + model.footerHeight();
 
-      var left = (bodyWidth - DRAWING_CANVAS_WIDTH) / 2;
+      var left = (bodyWidth - canvasWidth) / 2;
       var top = (bodyHeight - contentHeight) / 2;
 
       left = left < 0 ? 0 : left;
       top = top < 0 ? 0 : top;
 
-      var contentStyle = {left: left + "px", width: DRAWING_CANVAS_WIDTH + "px"};
+      var contentStyle = {left: left + "px", width: canvasWidth + "px"};
       if (bodyWidth < LARGEST_WIDTH || contentHeight >= bodyHeight) {
         contentStyle.bottom = 0;
       } else {
         contentStyle.top = top;
       }
 
+      if (canvasWidth >= bodyWidth) {
+        contentStyle.left = 0;
+        contentStyle.bottom = 0;
+      }
+
       var backgroundStyle = {
-        width: DRAWING_CANVAS_WIDTH + "px",
+        width: canvasWidth + "px",
         height: canvasHeight + "px"
       };
 
       var instructionStyle = {
         opacity: model.empty() && !model.showAnimation() ? "1" : "0"
       };
-
-      var footerClass = React.addons.classSet({
-        "footer": true,
-        "small-screen": BrowserInfo.isSmallScreen()
-      });
 
       return (
         <div style={contentStyle} className="content">
@@ -564,17 +586,31 @@ return React.createClass({
                 <hr />
               </div>
             </div>
-            <canvas
-              ref="canvas"
-              className="canvas"
-              width={DRAWING_CANVAS_WIDTH}
-              height={canvasHeight}
+            <div
+              ref="canvasBox"
+              style={{
+                width: canvasWidth + "px",
+                height: canvasHeight + "px"
+              }}
             />
           </div>
           <div>
-            <div className={footerClass}>
+            <div className="footer">
               <Button
-                className="transparent-button float-left"
+                type="action"
+                text={self.props.acceptText}
+                className={"next " + (model.empty() ? "inactive" : "")}
+                onClick={function () {
+                  if (!model.empty()) {
+                    self.saveImage(function () {
+                      self.setState({show: false});
+                      self.props.onAccept();
+                    });
+                  }
+                }}
+              />
+              <Button
+                className="transparent-button cancel-clear"
                 text={model.empty() ? localization.cancel : localization.pad.cleanImage}
                 onClick={function () {
                   if (model.empty()) {
@@ -585,19 +621,7 @@ return React.createClass({
                   }
                 }}
               />
-              <Button
-                type="action"
-                text={self.props.acceptText}
-                className={model.empty() ? "inactive" : ""}
-                onClick={function () {
-                  if (!model.empty()) {
-                    self.saveImage(function () {
-                      self.setState({show: false});
-                      self.props.onAccept();
-                    });
-                  }
-                }}
-              />
+              <div className="clearfix" />
             </div>
           </div>
         </div>

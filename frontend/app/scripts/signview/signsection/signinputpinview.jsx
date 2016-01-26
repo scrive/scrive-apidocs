@@ -1,6 +1,6 @@
 define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/infotextinput",
-  "common/htmltextwithsubstitution"],
-  function (legacy_code, _, Backbone, React, Button, InfoTextInput, HtmlTextWithSubstitution) {
+  "common/htmltextwithsubstitution", "signview/viewsize"],
+  function (legacy_code, _, Backbone, React, Button, InfoTextInput, HtmlTextWithSubstitution, ViewSize) {
 
   return React.createClass({
     propTypes: {
@@ -14,8 +14,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
       var self = this;
 
       var divClass = React.addons.classSet({
-        "col-xs-6": !BrowserInfo.isSmallScreen(),
-        "col-xs-12": BrowserInfo.isSmallScreen(),
+        "col-xs-6": !ViewSize.isSmall(),
+        "col-xs-12": ViewSize.isSmall(),
         "center-block": true
       });
 
@@ -33,6 +33,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
             <dd>
               <InfoTextInput
                 infotext={localization.docsignview.pinSigning.checkYourPhone}
+                inputtype="number"
                 id="pin"
                 className="obligatory-input"
                 ref="pin"

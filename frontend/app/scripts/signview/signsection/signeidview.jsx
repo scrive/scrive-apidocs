@@ -1,6 +1,7 @@
 define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/checkbox", "common/infotextinput",
-  "common/htmltextwithsubstitution", "signview/tasks/task_mixin"],
-  function (legacy_code, _, Backbone, React, Button, Checkbox, InfoTextInput, HtmlTextWithSubstitution, TaskMixin) {
+  "common/htmltextwithsubstitution", "signview/tasks/task_mixin", "signview/viewsize"],
+  function (legacy_code, _, Backbone, React, Button, Checkbox, InfoTextInput, HtmlTextWithSubstitution, TaskMixin,
+    ViewSize) {
 
   return React.createClass({
     mixins: [TaskMixin],
@@ -88,15 +89,15 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
       });
 
       var divClass = React.addons.classSet({
-        "col-xs-6": !BrowserInfo.isSmallScreen(),
-        "col-xs-12": BrowserInfo.isSmallScreen(),
+        "col-xs-6": !ViewSize.isSmall(),
+        "col-xs-12": ViewSize.isSmall(),
         "center-block": true
       });
 
       return (
         <div className={divClass}>
           <h1>
-            <img className="inline-img" src="/img/bankid3.png" />
+            <span className="bankid-logo" />
             {localization.docsignview.eleg.bankid.signConfirmationTitle}
           </h1>
           {/* if */ name !== "" &&
@@ -126,14 +127,12 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
           {/* else */ !this.props.askForSSN &&
             <p className="ssn-text">{localization.personalNumber} <b>{ssn}</b></p>
           }
-          {/* if */ !BrowserInfo.isSmallScreen() &&
-            <Checkbox
-              className="large-checkbox"
-              label={localization.openBankId}
-              checked={this.state.thisDevice}
-              onChange={function () { self.setState({thisDevice: !self.state.thisDevice}); }}
-            />
-          }
+          <Checkbox
+            className="large-checkbox"
+            label={localization.openBankId}
+            checked={this.state.thisDevice}
+            onChange={function () { self.setState({thisDevice: !self.state.thisDevice}); }}
+          />
           <Button
             ref="signButton"
             type="action"

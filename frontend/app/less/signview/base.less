@@ -1,50 +1,5 @@
 @import "vars";
 
-.small-screen {
-  @small: @signview-font-size-small * 2;
-  @large: @signview-font-size-large * 2;
-  @padding: @signview-button-padding-tb * 2 @signview-button-padding-lr * 2;
-  @input: 30px * 2;
-
-  h1 {
-    font-size: @large;
-  }
-
-  .arrowtext {
-    font-size: @large;
-  }
-
-  p, label, textarea, td {
-    font-size: @small;
-  }
-
-  h1, p, label, textarea, td {
-    line-height: normal;
-  }
-
-  .button {
-    font-size: @small;
-    padding: @padding;
-  }
-
-  .button-block {
-    font-size: @large;
-  }
-
-  .transparent-button {
-    font-size: @small;
-  }
-
-  .obligatory-input {
-    font-size: @small;
-
-    input {
-      height: @input;
-      line-height: @input;
-    }
-  }
-}
-
 .main {
   position: relative;
 }
@@ -62,15 +17,17 @@ label {
 }
 
 h1 {
-  .font-normal();
+  .font-large();
+  line-height: 1em;
   letter-spacing: -1px;
-  font-size: @signview-font-size-large;
   font-weight: 400;
+  white-space: pre-wrap;
+  word-break: break-all;
+  word-wrap: break-word;
 }
 
 h2 {
   .font-normal();
-  font-size: @signview-font-size-large;
   font-weight: 300;
 }
 
@@ -80,9 +37,24 @@ h4 {
 
 .section {
   background-color: @signview-section-bg;
-  width: auto;
   margin-top: @signview-half-gutter;
-  padding: 45px;
+  padding: @signview-section-padding;
+  width: auto;
+
+  .on-medium-view({
+    padding: 35px @signview-section-padding-small;
+  });
+
+
+  .on-small-view({
+    padding: @signview-section-padding-small;
+    margin-top: @signview-half-gutter;
+  });
+}
+
+.row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 dl {
@@ -90,6 +62,10 @@ dl {
 
   dt {
     margin-bottom: @signview-half-gutter;
+  }
+
+  dd {
+    line-height: 0px;
   }
 
   .item {
@@ -105,7 +81,14 @@ textarea {
   .font-normal();
   padding: 10px;
   height: 104px;
+
   width: 378px;
+  max-width: 100%;
+
+  .on-small-view({
+    width: 100%;
+    max-width: none;
+  });
 }
 
 .info-text-input {
@@ -120,14 +103,19 @@ textarea {
 .button {
   @trans-time: 200ms;
 
-  box-sizing: content-box; // fix IE issues with min-width;
-  user-select: none;
+  .font-normal();
   background-color: @signview-bg;
-  transition: background-color @trans-time ease-out, opacity @trans-time ease-out;
-  font-size: @signview-font-size-small;
+  box-sizing: content-box; // fix IE issues with min-width;
   font-weight: 400;
   min-width: 140px - @signview-button-padding-lr * 2;
   padding: @signview-button-padding-tb @signview-button-padding-lr;
+  transition: background-color @trans-time ease-out, opacity @trans-time ease-out;
+  user-select: none;
+
+  .on-small-view({
+    display: block;
+    padding: @signview-button-padding-tb-small @signview-button-padding-lr-small;
+  });
 
   &:hover {
     transition: background-color 0ms ease-out;
@@ -143,10 +131,23 @@ textarea {
 .button-block {
   display: block;
   font-size: @signview-font-size-large;
+
+  .on-small-view({
+    font-size: @signview-small-font-size-large;
+  });
+
   font-weight: 400;
   line-height: normal;
   width: auto;
   margin-top: @signview-gutter;
+
+  .on-small-view({
+    margin-top: @signview-half-gutter;
+
+    &.transparent-button {
+      padding: (@signview-button-padding-tb-small - 4px) @signview-button-padding-lr-small;
+    }
+  });
 
   &:first-child {
     margin-top: 0;
@@ -160,8 +161,10 @@ textarea {
   @padding-lr: 14px;
 
   transition: background-color @trans-time1 ease-out, border-color @trans-time1 ease-out;
-  .font-normal();
+  font-size: @signview-font-size-small;
   padding: @padding-tb @padding-lr;
+  height: 44px;
+  overflow-y: hidden;
 
   input {
     transition: width @trans-time2 step-end;
@@ -212,10 +215,22 @@ textarea {
 
 .button-group {
   .button {
-    margin-left: @signview-gutter;
+    margin-right: @signview-gutter;
+
+    .on-small-view({
+      display: block;
+      margin-top: @signview-half-gutter;
+      margin-right: 0;
+    });
 
     &:first-child {
-      margin-left: 0;
+      margin-right: 0;
+      float: right;
+
+      .on-small-view({
+        float: none;
+        margin-top: 0;
+      });
     }
   }
 }
@@ -228,7 +243,7 @@ textarea {
 
 .transparent-button {
   font-weight: 300;
-  font-size: @signview-font-size-small;
+  .font-normal();
   background: transparent;
   text-decoration: underline;
   color: @signview-fg;
@@ -253,14 +268,34 @@ textarea {
   }
 }
 
-.inline-img {
+.bankid-logo {
+  background-image: url(/img/bankid3.png);
+  background-size: cover;
+  display: inline-block;
+  height: 38px;
   margin-right: @signview-half-gutter;
+  vertical-align: middle;
+  width: 42px;
+
+  .on-small-view({
+    height: 25px;
+    width: 28px;
+  });
+}
+
+.paperclip {
+  background-image: url(/img/gem_large.png);
+  background-size: cover;
+  display: inline-block;
+  height: 22px;
+  margin-right: @signview-half-gutter;
+  vertical-align: middle;
+  width: 17px;
 }
 
 .large-checkbox {
   @dim: 18px;
   @color: @signview-fg;
-  height: @dim;
 
   .checkbox {
     background-color: @signview-bg;
@@ -303,4 +338,9 @@ textarea {
 .full-height {
   position: absolute;
   height: 100%;
+
+  .on-small-view({
+    position: static;
+    margin-bottom: @signview-half-gutter;
+  });
 }

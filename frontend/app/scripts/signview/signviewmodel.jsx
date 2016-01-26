@@ -6,6 +6,7 @@ define(["React", "Backbone", "Underscore"],
       hasChangedPin: false,
       hasTakenFirstScreenshot: false,
       hasSentTrackingData: false,
+      arrowDisabled: false,
       tasks: []
     },
 
@@ -44,6 +45,7 @@ define(["React", "Backbone", "Underscore"],
           model.set("arrow", undefined, {silent: true});
           model.trigger("change");
         });
+      this.listenTo(this, "change:tasks", this.updateArrowTasks);
     },
 
     blockReload: function () {
@@ -92,7 +94,7 @@ define(["React", "Backbone", "Underscore"],
     },
 
     hasRejectOption: function () {
-      return this.document().showrejectoption() && !BrowserInfo.isSmallScreen();
+      return this.document().showrejectoption();
     },
 
     hasSignSection: function () {
@@ -102,8 +104,7 @@ define(["React", "Backbone", "Underscore"],
 
     hasSignatoriesSection: function () {
       return !this.document().closed()
-             && !BrowserInfo.isSmallScreen()
-             && _.filter(this.document().signatories(), function (sig) {return sig.signs();}).length > 1;
+        && _.filter(this.document().signatories(), function (sig) {return sig.signs();}).length > 1;
     },
 
     hasAuthorAttachmentsSection: function () {
@@ -254,49 +255,47 @@ define(["React", "Backbone", "Underscore"],
     addTask: function (task) {
       var tasks = this.get("tasks");
       var newTasks = tasks.concat([task]);
-      this.clearArrow();
       this.set({tasks: newTasks});
     },
 
     removeTask: function (task) {
       var tasks = this.get("tasks");
       tasks = _.without(tasks, task);
-      this.clearArrow();
       this.set({tasks: tasks});
+    },
+
+    updateArrowTasks: function () {
+      var arrow = this.arrow();
+      var tasks = this.tasks();
+      arrow.replaceTasks(tasks);
     },
 
     tasks: function () {
       return new PageTasks({tasks: this.get("tasks")});
     },
 
-    clearArrow: function () {
-      this.set("arrow", undefined, {silent: true});
+    createArrow: function () {
+      var arrow = new PageTasksArrow({
+        tasks: this.tasks()
+      });
+
+      this._arrow = arrow;
     },
 
     arrow: function () {
-      if (this.get("arrow") == undefined) {
-        var arrow = new PageTasksArrow({
-          tasks: this.tasks()
-        });
-
-        this.set({arrow: arrow}, {silent: true});
+      if (!this._arrow) {
+        this.createArrow();
       }
 
-      return this.get("arrow");
+      return this._arrow;
     },
 
     updateArrowPosition: function () {
-      var arrow = this.get("arrow");
-      if (arrow) {
-        arrow.updatePosition();
-      }
+      this.arrow().updatePosition();
     },
 
     updateArrow: function () {
-      var arrow = this.get("arrow");
-      if (arrow) {
-        arrow.updateArrow();
-      }
+      this.arrow().updateArrow();
     },
 
     recall: function (f) {

@@ -1,6 +1,6 @@
-define(["Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
-  "eleg/bankidsigning"],
-  function (_, Backbone, React, BackboneMixin, Button, BankIDSigning) {
+define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
+  "eleg/bankidsigning", "signview/viewsize"],
+  function (legacy_code, _, Backbone, React, BackboneMixin, Button, BankIDSigning, ViewSize) {
 
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -95,14 +95,14 @@ define(["Underscore", "Backbone", "React", "common/backbone_mixin", "common/butt
       var hasError = this.state.error;
 
       var divClass = React.addons.classSet({
-        "col-xs-6": !BrowserInfo.isSmallScreen(),
-        "col-xs-12": BrowserInfo.isSmallScreen(),
+        "col-xs-6": !ViewSize.isSmall(),
+        "col-xs-12": ViewSize.isSmall(),
         "center-block": true
       });
 
       return (
         <div className={divClass}>
-          <h1><img className="inline-img" src={window.cdnbaseurl + "/img/bankid3.png"} />{model.statusMessage()}</h1>
+          <h1><span className="bankid-logo"/>{model.statusMessage()}</h1>
           <p className="ssn-text">
             {!hasError && <img src={window.cdnbaseurl + "/img/wait30trans.gif"} />}
             {localization.personalNumber} <b>{ssn}</b>

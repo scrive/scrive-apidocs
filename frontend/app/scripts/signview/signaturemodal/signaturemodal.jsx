@@ -39,7 +39,7 @@ var SignatureDrawOrTypeModel = Backbone.Model.extend({
     return this.get("signview");
   },
   arrow: function () {
-    return this.get("arrow");
+    return this.get("arrow")();
   },
   actionButtonType: function () {
     if (this.get("actionButtonType")) {
@@ -105,7 +105,6 @@ var SignatureDrawOrTypeModel = Backbone.Model.extend({
 
 return function (args) {
   var self = this;
-  var arrow = args.arrow();
   var modal = $("<div class='drawer' />");
   var transTime = 300; // sync with @trans-time in 'signview/drawer.less';
   var onClose = args.onClose;
@@ -114,10 +113,11 @@ return function (args) {
     field: args.field,
     width: args.width,
     height: args.height,
-    arrow: arrow,
+    arrow: args.arrow,
     signview: args.signview,
     modal: modal,
     onClose: function (shouldScroll, shouldSign) {
+      var arrow = args.arrow();
       modal.removeClass("active");
       document.ontouchmove = function (e) {
         return true;
@@ -176,19 +176,9 @@ return function (args) {
     }), modal[0]);
   }
 
-  if (arrow) {
-    arrow.disable();
+  if (args.arrow()) {
+    args.arrow().disable();
   }
-
-  var closeOverlay = function (e) {
-    var onOverlay = e.target === modal[0];
-    if (onOverlay) {
-      model.onClose();
-    }
-  };
-
-  modal.mousedown(closeOverlay);
-  modal.on("touchstart", closeOverlay);
 
   $(".signview").append(modal);
 

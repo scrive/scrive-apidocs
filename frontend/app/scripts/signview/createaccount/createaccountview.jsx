@@ -63,11 +63,11 @@ function (React, Backbone, _legacy, Button, HtmlTextWithSubstitution) {
 
       return (
         <div className="section safety-copy">
-          <div className="col-xs-6">
+          <div className="col-sm-6">
             <h1>{localization.docsignview.titleText}</h1>
             <p>{localization.docsignview.subtitleText}</p>
           </div>
-          <div className="col-xs-6 right">
+          <div className="col-sm-6 right">
             <Button
               type="action"
               text={localization.docsignview.signupButtonText}

@@ -1,6 +1,6 @@
-define(["Underscore", "Backbone", "React", "common/button", "common/htmltextwithsubstitution",
-  "signview/tasks/task_mixin"],
-  function (_, Backbone, React, Button, HtmlTextWithSubstitution, TaskMixin) {
+define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/htmltextwithsubstitution",
+  "signview/tasks/task_mixin", "signview/viewsize"],
+  function (legacy_code, _, Backbone, React, Button, HtmlTextWithSubstitution, TaskMixin, ViewSize) {
 
   return React.createClass({
     mixins: [TaskMixin],
@@ -40,8 +40,8 @@ define(["Underscore", "Backbone", "React", "common/button", "common/htmltextwith
       var hasSignaturesPlaced = this.props.model.document().currentSignatory().hasPlacedSignatures();
 
       var divClass = React.addons.classSet({
-        "col-xs-6": !BrowserInfo.isSmallScreen(),
-        "col-xs-12": BrowserInfo.isSmallScreen(),
+        "col-xs-6": !ViewSize.isSmall(),
+        "col-xs-12": ViewSize.isSmall(),
         "center-block": true
       });
 

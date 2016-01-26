@@ -1,9 +1,8 @@
 /** @jsx React.DOM */
 
-define(["React", "common/backbone_mixin", "Backbone", "common/language_service", "legacy_code"],
-  function (React, BackboneMixin, Backbone, LanguageService) {
-
-  return React.createClass({
+define(["React", "common/backbone_mixin", "Backbone", "common/language_service", "signview/viewsize"],
+  function (React, BackboneMixin, Backbone, LanguageService, ViewSize) {
+return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
     getBackboneModels: function () {
@@ -11,7 +10,8 @@ define(["React", "common/backbone_mixin", "Backbone", "common/language_service",
     },
 
     propTypes: {
-      signatory: React.PropTypes.object
+      signatory: React.PropTypes.object,
+      first: React.PropTypes.bool
     },
 
     signatorySummary: function () {
@@ -101,43 +101,57 @@ define(["React", "common/backbone_mixin", "Backbone", "common/language_service",
 
     render: function () {
       var signatory = this.props.signatory;
+      var smallView = ViewSize.isSmall();
+      var mediumView = ViewSize.isMedium();
+
+      var divClass = React.addons.classSet({
+        "col-xs-4": !smallView && !mediumView,
+        "col-xs-6": mediumView,
+        "section": smallView,
+        "parties": smallView
+      });
 
       return (
-        <div className="col-xs-4">
-          <h2 className="name">{signatory.nameOrEmailOrMobile() || localization.pad.notNamedParty}</h2>
-          <ul>
-            {/* if */ signatory.company() &&
-              <li>
-                {localization.company}: <b>{signatory.company()}</b>
-              </li>
+        <div className={divClass}>
+          <div className={smallView ? "col-xs-12" : ""}>
+            {this.props.first && smallView &&
+              <h1 className="title">{localization.docsignview.signatoriesTitle}</h1>
             }
-            {/* if */ signatory.email() &&
-              <li>
-                {localization.email}: <b>{signatory.email()}</b>
-              </li>
-            }
-            {/* if */ signatory.mobile() &&
-              <li>
-                {localization.phone}: <b>{signatory.mobile()}</b>
-              </li>
-            }
-            {/* if */ signatory.companynumber() &&
-              <li>
-                {localization.docsignview.companyNumberLabel + ": "}
-                <b>{signatory.companynumber().trim() || localization.docsignview.notEntered}</b>
-              </li>
-            }
-            {/* if */ signatory.personalnumber() &&
-              <li>
-                {localization.docsignview.personalNumberLabel + ": "}
-                <b>{signatory.personalnumber().trim() || localization.docsignview.notEntered}</b>
-              </li>
-            }
-          </ul>
-          <span className={"icon status " + signatory.status()}></span>
-          <span className={"status statustext " + signatory.status()}>
-            {this.signatorySummary()}
-          </span>
+            <h1 className="name">{signatory.nameOrEmailOrMobile() || localization.pad.notNamedParty}</h1>
+            <ul>
+              {/* if */ signatory.company() &&
+                <li>
+                  {localization.company}: <b>{signatory.company()}</b>
+                </li>
+              }
+              {/* if */ signatory.email() &&
+                <li>
+                  {localization.email}: <b>{signatory.email()}</b>
+                </li>
+              }
+              {/* if */ signatory.mobile() &&
+                <li>
+                  {localization.phone}: <b>{signatory.mobile()}</b>
+                </li>
+              }
+              {/* if */ signatory.companynumber() &&
+                <li>
+                  {localization.docsignview.companyNumberLabel + ": "}
+                  <b>{signatory.companynumber().trim() || localization.docsignview.notEntered}</b>
+                </li>
+              }
+              {/* if */ signatory.personalnumber() &&
+                <li>
+                  {localization.docsignview.personalNumberLabel + ": "}
+                  <b>{signatory.personalnumber().trim() || localization.docsignview.notEntered}</b>
+                </li>
+              }
+            </ul>
+            <span className={"icon status " + signatory.status()}></span>
+            <span className={"status statustext " + signatory.status()}>
+              {this.signatorySummary()}
+            </span>
+          </div>
         </div>
       );
     }

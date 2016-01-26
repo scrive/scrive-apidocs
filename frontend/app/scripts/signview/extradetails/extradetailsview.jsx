@@ -1,29 +1,49 @@
 define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/infotextinput",
-  "signview/tasks/task_mixin"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, InfoTextInput, TaskMixin) {
+  "signview/tasks/task_mixin", "signview/viewsize"],
+  function (legacy_code, _, Backbone, React, BackboneMixin, InfoTextInput, TaskMixin, ViewSize) {
 
   var DetailsList = React.createClass({
     render: function () {
+      var isVertical = this.props.isVertical;
       var childs = React.Children.map(this.props.children, function (child) {
         return child;
       });
       childs = _.compact(childs);
 
+      var leftClass = React.addons.classSet({
+        "col-md-6": true,
+        "pull-right": !(childs[1] || childs[2])
+      });
+
       return (
-        <div className="row">
-          {/* if */ (childs[1] || childs[2]) &&
-            <dl className="col-xs-5 pull-right">
+        <span>
+          {/* if */ isVertical &&
+          <div className="row">
+            <dl className="col-xs-12">
+              {childs[0]}
               {childs[1]}
               {childs[2]}
-            </dl>
-          }
-          {/* if */ (childs[0] || childs[3]) &&
-            <dl className="col-xs-5 pull-right">
-              {childs[0]}
               {childs[3]}
             </dl>
+          </div>
           }
-        </div>
+          {/* else */ !isVertical &&
+            <div className="row">
+              {/* if */ (childs[0] || childs[3]) &&
+                <dl className={leftClass}>
+                  {childs[0]}
+                  {childs[3]}
+                </dl>
+              }
+              {/* if */ (childs[1] || childs[2]) &&
+                <dl className="col-md-6">
+                  {childs[1]}
+                  {childs[2]}
+                </dl>
+              }
+            </div>
+          }
+        </span>
       );
     }
   });
@@ -44,7 +64,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
 
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      signview: React.PropTypes.instanceOf(Backbone.Model).isRequired
+      signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
+      isVertical: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function () {
@@ -82,6 +103,12 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       });
     },
 
+    componentDidUpdate: function (prevProps) {
+      if (this.props.isVertical !== prevProps.isVertical) {
+        this.forceUpdateTasks();
+      }
+    },
+
     createTasks: function () {
       var signview = this.props.signview;
       var tasks = [];
@@ -117,6 +144,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var self = this;
       var sig = this.props.model;
       var signview = this.props.signview;
+      var mediumView = ViewSize.isMedium();
 
       var fstnameField = sig.fstnameField();
       var sndnameField = sig.sndnameField();
@@ -149,11 +177,11 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
 
       return (
         <div className="section extradetails">
-          <div className="col-xs-2">
-            <h1>{localization.docsignview.filladitionfieldslabel}</h1>
+          <div className={mediumView ? "col-sm-6" : "col-sm-4"}>
+            <h1 className="title">{localization.docsignview.filladitionfieldslabel}</h1>
           </div>
-          <div className="col-xs-10">
-            <DetailsList>
+          <div className={mediumView ? "col-sm-6" : "col-sm-8"}>
+            <DetailsList isVertical={this.props.isVertical}>
               {/* if */ this.state.askForName &&
                 <DetailsItem htmlFor="name" title={localization.personalName}>
                   <InfoTextInput
@@ -207,7 +235,6 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
                     id="ssn"
                     infotext={localization.ssnInfoText}
                     ref="ssn"
-                    inputtype="number"
                     tabIndex={3}
                     className={ssnClass}
                     value={ssnField.value()}

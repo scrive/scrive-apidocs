@@ -1,7 +1,6 @@
-
-define(["Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
-  "signview/tasks/task_mixin", "signview/signsection/signrejectview", "signview/signsection/signsigningview"],
-  function (_, Backbone, React, BackboneMixin, Button, TaskMixin) {
+define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
+  "signview/tasks/task_mixin", "signview/viewsize"],
+  function (legacy_code, _, Backbone, React, BackboneMixin, Button, TaskMixin, ViewSize) {
 
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin, TaskMixin],
@@ -62,8 +61,8 @@ define(["Underscore", "Backbone", "React", "common/backbone_mixin", "common/butt
       });
 
       var divClass = React.addons.classSet({
-        "col-xs-6": !BrowserInfo.isSmallScreen(),
-        "col-xs-12": BrowserInfo.isSmallScreen(),
+        "col-xs-6": !ViewSize.isSmall(),
+        "col-xs-12": ViewSize.isSmall(),
         "center-block": true
       });
 
