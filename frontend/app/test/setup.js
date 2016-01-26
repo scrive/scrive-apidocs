@@ -33,7 +33,6 @@ var realLoad = function () {
       jquery: '../bower_components/jquery/jquery.min',
       es5shim: '../bower_components/es5-shim/es5-shim.min',
       es5sham: '../bower_components/es5-shim/es5-sham.min',
-      es6promise: '../bower_components/es6-promise/promise.min',
       React: '../bower_components/react/react-with-addons',
       Backbone: '../bower_components/backbone/backbone',
       Underscore: '../bower_components/underscore/underscore-min',
@@ -59,7 +58,7 @@ var realLoad = function () {
         exports: 'Backbone'
       }
     },
-    deps: ['es5shim', 'es5sham', 'es6promise', 'jquery', 'Underscore', 'Backbone'].concat(allTestFiles),
+    deps: ['es5shim', 'es5sham', 'jquery', 'Underscore', 'Backbone'].concat(allTestFiles),
     callback: window.__karma__.start
   };
 
