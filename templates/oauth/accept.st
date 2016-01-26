@@ -12,7 +12,7 @@ pagePrivilegesConfirm =$doctype()$
             <ul class="ct">
               <li id="branding" >
                 <a id="logo" class="page" href="#" >
-                  <img src="$cdnbaseurl$/service_logo/$brandingdomainid$/$brandinghash$" style="margin:0px;" />
+                  <img src="$cdnbaseurl$/service_logo/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$" style="margin:0px;" />
                 </a>
               </li>
               <ul class="right-container" >

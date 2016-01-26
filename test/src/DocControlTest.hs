@@ -538,7 +538,7 @@ testSignviewBrandingBlocksNastyInput:: TestEnv ()
 testSignviewBrandingBlocksNastyInput = do
   bd <- ctxbrandeddomain <$> mkContext def -- We need to get default branded domain. And it can be fetched from default ctx
   theme <- dbQuery $ GetTheme $ (bdSignviewTheme $ bd)
-  emptyBrandingCSS <- signviewBrandingCSS Nothing theme
+  emptyBrandingCSS <- signviewBrandingCSS theme
   assertBool "CSS generated for empty branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
   let
     nasty1 = "nastyColor \n \n";
@@ -549,7 +549,7 @@ testSignviewBrandingBlocksNastyInput = do
       , themeBrandTextColor = nasty2
       , themeFont = nasty3
       }
-  nastyCSS <-  signviewBrandingCSS (Just "") nastyTheme
+  nastyCSS <-  signviewBrandingCSS nastyTheme
   assertBool "CSS generated for nasty company branding is not empty" (not $ BSL.null $ nastyCSS)
   assertBool "CSS generated for nasty company branding does not contain nasty strings" $
        (not $ nasty1 `isInfixOf ` (BSL.toString $ nastyCSS))
@@ -572,7 +572,7 @@ testDownloadSignviewBrandingAccess = do
                           _ -> False)
                      && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
             file
-  siglink <- withDocumentID (documentid doc) $ do
+  withDocumentID (documentid doc) $ do
     d <- theDocument
     _ <- randomUpdate $ ResetSignatoryDetails ([
                       (def {   signatoryfields = (signatoryfields $ $fromJust $ getAuthorSigLink d)
@@ -591,36 +591,24 @@ testDownloadSignviewBrandingAccess = do
     t <- documentctime <$> theDocument
     tz <- mkTimeZoneName "Europe/Stockholm"
     randomUpdate $ PreparationToPending (systemActor t) tz
-    let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
-    $head . filter isUnsigned .documentsignatorylinks <$> theDocument
+
 
   -- We have a document, now proper tests will take place
 
   -- 1) Check access to main signview branding
   emptyContext <- mkContext def
+  let bid = bdid $ ctxbrandeddomain emptyContext
   svbr1 <- mkRequest GET [ ]
-  resp1 <- E.try $  runTestKontra svbr1 emptyContext $ handleSignviewBranding (documentid doc) (signatorylinkid siglink) "-branding-hash-12xdaad32" "some_name.css"
+  resp1 <- E.try $  runTestKontra svbr1 emptyContext $ handleSignviewBranding bid (documentid doc) "-branding-hash-12xdaad32" "some_name.css"
   case resp1 of
-    Right _ ->   assertFailure "CSS for signing is available for anyone, and thats bad"
-    Left (_ :: E.SomeException) -> return ()
+    Right (cssResp1, _)->  assertBool "CSS should be returned" (rsCode cssResp1 == 200)
+    Left (_ :: E.SomeException) -> assertFailure "CSS should be avaialbe for CDN"
 
-
-  preq <- mkRequest GET [ ]
-  (_,ctxWithSignatory) <- runTestKontra preq emptyContext $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid siglink) (signatorymagichash siglink)
-
-  svbr2 <- mkRequest GET [ ]
-  (cssResp2, _) <- runTestKontra svbr2 ctxWithSignatory $ handleSignviewBranding (documentid doc) (signatorylinkid siglink) "-branding-hash-Aox8433" "some_name.css"
-  assertBool "CSS for signing is available for signatories" (rsCode cssResp2 == 200)
 
   -- 2) Check access to main signview branding for author. Used when logged in a to-sign view.
 
-  svbr3 <- mkRequest GET [ ]
-  resp3 <- E.try $ runTestKontra svbr3 emptyContext $ handleSignviewBrandingWithoutDocument "-branding-hash-7cdsgSAq1" "some_name.css"
-  case resp3 of
-    Right _ ->   assertFailure "CSS for signing without document is available for anyone, and thats bad"
-    Left (_ :: E.SomeException) -> return ()
-
-  let ctxWithAuthor = emptyContext {ctxmaybeuser = Just user}
-  svbr4 <- mkRequest GET [ ]
-  (cssResp4, _) <- runTestKontra svbr4 ctxWithAuthor $ handleSignviewBrandingWithoutDocument "-branding-hash-6dfypqbbc""some_name.css"
-  assertBool "CSS for signing is available for author" (rsCode cssResp4 == 200)
+  svbr2 <- mkRequest GET [ ]
+  resp2 <- E.try $ runTestKontra svbr2 emptyContext $ handleSignviewBrandingWithoutDocument bid (userid user) "-branding-hash-7cdsgSAq1" "some_name.css"
+  case resp2 of
+    Right (cssResp2, _)->  assertBool "CSS should be returned" (rsCode cssResp2 == 200)
+    Left (_ :: E.SomeException) -> assertFailure "CSS should be avaialbe for CDN"

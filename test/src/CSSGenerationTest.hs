@@ -27,21 +27,21 @@ testSignviewBrandingGeneration:: TestEnv ()
 testSignviewBrandingGeneration = do
   bd <- ctxbrandeddomain <$> mkContext def
   theme <- dbQuery $ GetTheme $ (bdSignviewTheme $ bd)
-  emptyBrandingCSS <- signviewBrandingCSS Nothing theme
+  emptyBrandingCSS <- signviewBrandingCSS theme
   assertBool "CSS generated for signview branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
 
 testServiceBrandingGeneration:: TestEnv ()
 testServiceBrandingGeneration = do
   bd <- ctxbrandeddomain <$> mkContext def
   theme <- dbQuery $ GetTheme $ (bdServiceTheme $ bd)
-  emptyBrandingCSS <- serviceBrandingCSS Nothing theme
+  emptyBrandingCSS <- serviceBrandingCSS theme
   assertBool "CSS generated for service branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
 
 testLoginBrandingGeneration:: TestEnv ()
 testLoginBrandingGeneration = do
   bd <- ctxbrandeddomain <$> mkContext def
   theme <- dbQuery $ GetTheme $ (bdLoginTheme $ bd)
-  emptyBrandingCSS <- loginBrandingCSS Nothing theme
+  emptyBrandingCSS <- loginBrandingCSS theme
   assertBool "CSS generated for login branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
 
 testDomainBrandingGeneration:: TestEnv ()

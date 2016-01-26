@@ -12,7 +12,6 @@ module Branding.Control(
               , loginLogo
               , serviceLogo
               , emailLogo
-              , emailLogoForDocument
               , signviewLogo
               , signviewLogoWithoutDocument
               , faviconIcon
@@ -39,17 +38,15 @@ import Theme.Model
 import User.Model
 import User.Utils
 import Util.MonadUtils
-import Util.SignatoryLinkUtils
 import qualified MemCache as MemCache
 
 handleServiceBranding :: Kontrakcja m => BrandedDomainID -> String -> String -> String -> m Response
 handleServiceBranding bdid uidstr brandinghash _ = do
-  let muid = case uidstr of
-        "_" -> Nothing
-        s -> maybeRead s
-  muser <- case muid of
-    Nothing -> return Nothing
-    Just uid -> dbQuery $ GetUserByID uid
+  muser <- case uidstr of
+    "_"-> return Nothing
+    s -> case maybeRead s of
+      Nothing -> return Nothing
+      Just uid -> dbQuery $ GetUserByID uid
   theme <- getServiceTheme bdid muser
   brandingCSS <- withLessCache (ServiceBranding (themeID theme) brandinghash) $ serviceBrandingCSS theme
   return (cssResponse brandingCSS)
@@ -121,9 +118,14 @@ loginLogo bdid _ = do
   theme <- dbQuery $ GetTheme (bdLoginTheme bd)
   return (pngResponse $ themeLogo theme)
 
-serviceLogo :: Kontrakcja m => BrandedDomainID -> String -> m Response
-serviceLogo bdid _ = do
-  theme <- getServiceTheme bdid Nothing
+serviceLogo :: Kontrakcja m => BrandedDomainID -> String -> String -> m Response
+serviceLogo bdid uidstr _ = do
+  muser <- case uidstr of
+    "_" -> return Nothing
+    s -> case maybeRead s of
+      Nothing -> return Nothing
+      Just uid -> dbQuery $ GetUserByID uid
+  theme <- getServiceTheme bdid muser
   return (pngResponse $ themeLogo theme)
 
 emailLogo :: Kontrakcja m => BrandedDomainID -> UserID -> String -> m Response
@@ -134,17 +136,6 @@ emailLogo bdid uid _ = do
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme bd) (companyMailTheme companyui)
-  return (pngResponse $ themeLogo theme)
-
-emailLogoForDocument :: Kontrakcja m => BrandedDomainID -> DocumentID -> String -> m Response
-emailLogoForDocument bdid did _ = do
-  bd <- dbQuery $ GetBrandedDomainByID bdid
-  doc <- dbQuery $ GetDocumentByDocumentID did
-  authorid <- guardJustM $ return $ getAuthorSigLink doc >>= maybesignatory
-  user <- guardJustM $ dbQuery $ GetUserByIDIncludeDeleted authorid
-  company <- getCompanyForUser user
-  companyui <- dbQuery $ GetCompanyUI (companyid company)
-  theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme bd) (companyMailTheme $ companyui)
   return (pngResponse $ themeLogo theme)
 
 signviewLogo :: Kontrakcja m => BrandedDomainID -> DocumentID -> String -> m Response

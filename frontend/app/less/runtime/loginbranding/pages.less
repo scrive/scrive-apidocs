@@ -20,7 +20,7 @@ body {
     border-color: @brandtextcolor; 
 
     .checkmark {
-       @url : %('%s/colored_image?file=checkboxes-blue.png&color=%D', @cdnbaseurl, @brandtextcolor);
+       @url : %('/colored_image?file=checkboxes-blue.png&color=%D', @brandtextcolor);
        background-image: url(@url);
      }
   }

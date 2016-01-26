@@ -200,11 +200,10 @@ staticRoutes production = choice
      , dir "login_branding" $ hGet $ toK3 $ Branding.handleLoginBranding
      , dir "domain_branding" $ hGet $ toK3 $ Branding.handleDomainBranding
      , dir "login_logo" $  hGet $ toK2 $ Branding.loginLogo
-     , dir "service_logo" $  hGet $ toK2 $ Branding.serviceLogo
+     , dir "service_logo" $  hGet $ toK3 $ Branding.serviceLogo
      , dir "signview_logo" $  hGet $ toK3 $ Branding.signviewLogo
      , dir "signview_logo_without_document" $  hGet $ toK3 $ Branding.signviewLogoWithoutDocument
      , dir "email_logo" $  hGet $ toK3 $ Branding.emailLogo
-     , dir "email_logo_for_document" $  hGet $ toK3 $ Branding.emailLogoForDocument
      , dir "favicon" $  hGet $ toK1 $ Branding.faviconIcon
      , dir "api" $ dir "v2" $ remainingPath GET $ toK0 noAPIV2CallFoundHandler
      , dir "api" $ dir "v2" $ remainingPath POST $ toK0 noAPIV2CallFoundHandler
