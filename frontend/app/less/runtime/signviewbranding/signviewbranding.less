@@ -10,7 +10,7 @@
         background:transparent; /* Fallback IE */
         filter: e(@filter);
         background-color: @bcolor;
-        @url : %('%s/img/transparent-pixel.png', @cdnbaseurl);
+        @url : %('/img/transparent-pixel.png');
         background-image: @url; // Make click area work in IE8.
 }
 
@@ -50,7 +50,7 @@
     }
 
     .checkmark {
-      @url: %("%s/colored_image?file=valid-input-checkbox.png&color=%D", @cdnbaseurl, @actiontextcolor);
+      @url: %("/colored_image?file=valid-input-checkbox.png&color=%D", @actiontextcolor);
       background-image: url(@url);
     }
 
@@ -62,7 +62,7 @@
 
 .signview .sign {
   .check-done {
-    @url: %('%s/colored_image?file=check-done.png&color=%D', @cdnbaseurl, @positivecolor);
+    @url: %('/colored_image?file=check-done.png&color=%D', @positivecolor);
     background: url(@url);
   }
 }
@@ -115,12 +115,12 @@
   .arrow-legend {
 
     .mandatory {
-      @url : %('%s/colored_image?file=icon-legend-mandatory.png&color=%D', @cdnbaseurl, @actioncolor);
+      @url : %('/colored_image?file=icon-legend-mandatory.png&color=%D', @actioncolor);
       background : url(@url) ;
     }
 
     .optional {
-      @url : %('%s/colored_image?file=icon-legend-mandatory.png&color=%D', @cdnbaseurl, @actionsecondarycolor);
+      @url : %('/colored_image?file=icon-legend-mandatory.png&color=%D', @actionsecondarycolor);
       background : url(@url) ;
     }
   }
@@ -139,17 +139,17 @@
   .action-arrow.left {
 
     .front {
-      @url : %('%s/colored_image?file=sign-arrow-action-left.png&color=%D',@cdnbaseurl, @actioncolor);
+      @url : %('/colored_image?file=sign-arrow-action-left.png&color=%D', @actioncolor);
       background : url(@url);
     }
 
     .back {
-      @url : %('%s/colored_image?file=sign-arrow-action-left-back.png&color=%D',@cdnbaseurl, @actioncolor);
+      @url : %('/colored_image?file=sign-arrow-action-left-back.png&color=%D', @actioncolor);
       background : url(@url);
     }
 
     .label {
-      @url : %('%s/colored_image?file=sign-arrow-action-label.png&color=%D', @cdnbaseurl, @actioncolor);
+      @url : %('/colored_image?file=sign-arrow-action-label.png&color=%D', @actioncolor);
       background : url(@url);
       color : @actiontextcolor;
       font-family: @font;
@@ -159,17 +159,17 @@
   .action-arrow.right {
 
     .front {
-      @url : %('%s/colored_image?file=sign-arrow-action-right.png&color=%D', @cdnbaseurl, @actioncolor);
+      @url : %('/colored_image?file=sign-arrow-action-right.png&color=%D', @actioncolor);
       background : url(@url);
     }
 
     .back {
-      @url : %('%s/colored_image?file=sign-arrow-action-right-back.png&color=%D', @cdnbaseurl, @actioncolor);
+      @url : %('/colored_image?file=sign-arrow-action-right-back.png&color=%D', @actioncolor);
       background : url(@url);
     }
 
     .label {
-      @url : %('%s/colored_image?file=sign-arrow-action-label.png&color=%D', @cdnbaseurl, @actioncolor);
+      @url : %('/colored_image?file=sign-arrow-action-label.png&color=%D', @actioncolor);
       background : url(@url);
       color : @actiontextcolor;
       font-family: @font;
@@ -177,12 +177,12 @@
   }
 
   .arrow.up {
-    @url : %('%s/colored_image?file=sign-arrow-up.png&color=%D', @cdnbaseurl, @actioncolor);
+    @url : %('/colored_image?file=sign-arrow-up.png&color=%D', @actioncolor);
     background : url(@url);
   }
 
   .arrow.down {
-    @url : %('%s/colored_image?file=sign-arrow-down.png&color=%D', @cdnbaseurl, @actioncolor);
+    @url : %('/colored_image?file=sign-arrow-down.png&color=%D', @actioncolor);
     background : url(@url);
   }
 }
@@ -204,7 +204,7 @@
 
 .obligatory-input {
   .after {
-    @url: %("%s/colored_image?file=valid-input-check.png&color=%D", @cdnbaseurl, @actioncolor);
+    @url: %("/colored_image?file=valid-input-check.png&color=%D", @actioncolor);
     background-image: url(@url);
   }
 }

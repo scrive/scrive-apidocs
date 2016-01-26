@@ -5,9 +5,9 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $standardHeaderContents(nobranding='true')$
     $if(logged)$
-      <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     $else$
-      <link href='/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     $endif$
   </head>
 <body>
@@ -24,6 +24,10 @@ $htmlopentag()$
         jQuery('.price-plan-page-link').addClass('active');
         PricePage({}).show('.js-price-plan');
         mixpanel.track('View Price Plan Page');
+        setTimeout(function() {
+          // Race condition between rendering of header and adding class
+          jQuery('.price-plan-page-link').addClass('active');
+        },100);
       });
       </script>
 

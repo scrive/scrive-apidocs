@@ -34,7 +34,8 @@ define(["legacy_code",  "React", "common/backbone_mixin",
     brandLogo: function () {
       var documentId = this.props.doc.documentid();
       var signatoryId = this.props.siglinkid;
-      return "/signview_logo/" + documentId + "/" + signatoryId + "/" + window.brandinghash;
+      var urlparams = window.brandingdomainid + "/" + documentId + "/" + window.brandinghash;
+      return window.cdnbaseurl + "/signview_logo/" + urlparams;
     },
 
     bankidLogo: function () {

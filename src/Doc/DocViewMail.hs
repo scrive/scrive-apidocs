@@ -299,6 +299,9 @@ documentMailFields doc mctx = do
       F.value "ctxlang" (codeFromLang $ mctxlang mctx)
       F.value "documenttitle" $ documenttitle doc
       F.value "creatorname" $ getSmartName $ $fromJust $ getAuthorSigLink doc
+      -- brandingdomainid and brandinguserid are needed only for preview/email logo
+      F.value "brandingdomainid" (show . bdid . mctxcurrentBrandedDomain $ mctx)
+      F.value "brandinguserid" (show <$> (join $ maybesignatory <$> getAuthorSigLink doc))
       brandingMailFields theme
 
 documentMail :: (HasLang a, MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => a -> Document -> String -> Fields m () -> m Mail

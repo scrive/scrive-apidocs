@@ -194,17 +194,16 @@ staticRoutes production = choice
 
 
      , dir "document_signview_branding" $ hGet $ toK4 $ Branding.handleSignviewBranding
-     , dir "padlist_signview_branding" $ hGet $ toK2 $ Branding.handleSignviewBrandingWithoutDocument
-     , dir "service_branding" $ hGet $ toK2 $ Branding.handleServiceBranding
+     , dir "padlist_signview_branding" $ hGet $ toK4 $ Branding.handleSignviewBrandingWithoutDocument
+     , dir "service_branding" $ hGet $ toK4 $ Branding.handleServiceBranding
      , dir "scrive_branding" $ hGet $ toK2 $ Branding.handleScriveBranding
-     , dir "login_branding" $ hGet $ toK2 $ Branding.handleLoginBranding
-     , dir "domain_branding" $ hGet $ toK2 $ Branding.handleDomainBranding
-     , dir "login_logo" $  hGet $ toK1 $ Branding.loginLogo
-     , dir "service_logo" $  hGet $ toK1 $ Branding.serviceLogo
+     , dir "login_branding" $ hGet $ toK3 $ Branding.handleLoginBranding
+     , dir "domain_branding" $ hGet $ toK3 $ Branding.handleDomainBranding
+     , dir "login_logo" $  hGet $ toK2 $ Branding.loginLogo
+     , dir "service_logo" $  hGet $ toK3 $ Branding.serviceLogo
      , dir "signview_logo" $  hGet $ toK3 $ Branding.signviewLogo
-     , dir "signview_logo_without_document" $  hGet $ toK1 $ Branding.signviewLogoWithoutDocument
-     , dir "email_logo" $  hGet $ toK1 $ Branding.emailLogo
-     , dir "email_logo" $  hGet $ toK3 $ Branding.emailLogoForSignatory
+     , dir "signview_logo_without_document" $  hGet $ toK3 $ Branding.signviewLogoWithoutDocument
+     , dir "email_logo" $  hGet $ toK3 $ Branding.emailLogo
      , dir "favicon" $  hGet $ toK1 $ Branding.faviconIcon
      , dir "api" $ dir "v2" $ remainingPath GET $ toK0 noAPIV2CallFoundHandler
      , dir "api" $ dir "v2" $ remainingPath POST $ toK0 noAPIV2CallFoundHandler

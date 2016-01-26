@@ -44,7 +44,7 @@ standardHeaderContents=
 	<script src="$cdnbaseurl$/bower_components/es5-shim/es5-shim.min.js"></script>
 	<script src="$cdnbaseurl$/bower_components/es5-shim/es5-sham.min.js"></script>
         <![endif]-->
-        <link rel=" icon" href="/favicon/$brandinghash$" />
+        <link rel=" icon" href="$cdnbaseurl$/favicon/$brandinghash$" />
 
         <script src="$cdnbaseurl$/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
@@ -68,19 +68,21 @@ standardHeaderContents=
         <script src="/bower_components/requirejs/require.js"></script>
         $endif$
 
-        <link href='/domain_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+        <link href='$cdnbaseurl$/domain_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
 
         $if(nobranding)$
         $else$
           $if(logged)$
-          <link href='/service_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+          <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
             $else$
-          <link href='/login_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+          <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
           $endif$
         $endif$
         <script>
           window.brandinghash = "$brandinghash$";
+          window.brandingdomainid = "$brandingdomainid$";
           window.cdnbaseurl = "$cdnbaseurl$";
+          window.brandinguserid = "$brandinguserid$";
         </script>
 
         $analyticsLoaderKontrakcja()$

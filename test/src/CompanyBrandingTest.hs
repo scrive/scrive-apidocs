@@ -237,8 +237,8 @@ testBrandingCacheWorks:: TestEnv ()
 testBrandingCacheWorks = do
   company <- addNewCompany
   Just user <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
-  ctx <- (\c -> c { ctxmaybeuser = Just user , ctxproduction = True}) -- ctxproduction is important, since we disable cache for dev
-    <$> mkContext def
+  ctx <- (\c -> c { ctxproduction = True}) <$> mkContext def -- ctxproduction is important, since we disable cache for dev
+  let bid = bdid $ ctxbrandeddomain ctx
 
   mainbd <- dbQuery $ GetMainBrandedDomain
   bdSignviewTheme <- dbQuery $ GetTheme (bdSignviewTheme mainbd)
@@ -247,19 +247,19 @@ testBrandingCacheWorks = do
   _ <- dbUpdate $ SetCompanyUI (companyid company) $ companyui { companyServiceTheme = Just $ themeID newServiceTheme }
 
   req1 <- mkRequest GET []
-  (resp1, _) <- runTestKontra req1 ctx $ handleServiceBranding "branding-hash-1" "style.css"
+  (resp1, _) <- runTestKontra req1 ctx $ handleServiceBranding bid (show $ userid user) "branding-hash-1" "style.css"
   let css1 = rsBody resp1
   assertBool "First signview css should contain first new color " ("#669713" `isInfixOf` (BSL.toString css1))
 
   _ <- dbUpdate $ UpdateThemeForCompany (companyid company) (newServiceTheme {themeBrandColor = "#136697"})
 
   req2 <- mkRequest GET []
-  (resp2, _) <- runTestKontra req2 ctx $ handleServiceBranding "branding-hash-1" "style.css"
+  (resp2, _) <- runTestKontra req2 ctx $ handleServiceBranding bid (show $ userid user) "branding-hash-1" "style.css"
   let css2 = rsBody resp2
   assertBool "Requesting signview css should stay the same - even if we changed theme - but we still use same branding hash" (css1==css2)
 
   req3 <- mkRequest GET []
-  (resp3, _) <- runTestKontra req3 ctx $ handleServiceBranding "branding-hash-2" "style.css"
+  (resp3, _) <- runTestKontra req3 ctx $ handleServiceBranding bid (show $ userid user) "branding-hash-2" "style.css"
   let css3 = rsBody resp3
   assertBool "Requesting signview css should change if changed theme and use different branding hash" (css2/=css3)
   assertBool "Third signview css should contain second new color" ("#136697" `isInfixOf` (BSL.toString css3))

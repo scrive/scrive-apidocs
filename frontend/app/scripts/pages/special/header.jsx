@@ -9,7 +9,7 @@ define(['React', 'Backbone'], function(React, Backbone) {
       linkOnClick : React.PropTypes.func
     },
     logoLink : function() {
-      return "/signview_logo_without_document/" + window.brandinghash;
+      return window.cdnbaseurl + "/signview_logo_without_document/" + window.brandingdomainid + "/" + window.brandinguserid + "/" + window.brandinghash;
     },
     render: function() {
       return (

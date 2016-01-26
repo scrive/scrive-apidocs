@@ -7,7 +7,7 @@
 @import 'runtime/servicebranding/designview';
 
 .sharedIcon {
-  @url : %('%s/colored_image?file=shared.png&color=%D', @cdnbaseurl, @positivecolor);
+  @url : %('/colored_image?file=shared.png&color=%D', @positivecolor);
   background : url(@url) ;
   display: block;
   height: 14px;
@@ -16,7 +16,7 @@
 }
 
 .icon.delete {
-  @url : %('%s/colored_image?file=icon-delete.png&color=%D', @cdnbaseurl, @negativecolor);
+  @url : %('/colored_image?file=icon-delete.png&color=%D', @negativecolor);
   background : url(@url) 0 0 no-repeat;
   display: block;
   height: 16px;
@@ -54,12 +54,12 @@
     width: 13px;
 
     &.required {
-      @url :  %('%s/colored_image?file=attachment-icon.png&color=%D', @cdnbaseurl, @actioncolor);
+      @url :  %('/colored_image?file=attachment-icon.png&color=%D', @actioncolor);
       background-image: url(@url) ;
     }
 
     &.optional {
-      @url :  %('%s/colored_image?file=attachment-icon.png&color=%D', @cdnbaseurl, @actionsecondarycolor);
+      @url :  %('/colored_image?file=attachment-icon.png&color=%D', @actionsecondarycolor);
       background-image: url(@url) ;
     }
   }
