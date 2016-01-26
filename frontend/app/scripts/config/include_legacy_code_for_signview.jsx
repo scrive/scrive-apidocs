@@ -32,7 +32,6 @@ define([
   '../js/anchors',
   '../js/fields',
   '../js/reloadmanager',
-  '../js/reloadduetoerrormodal',
   '../js/authorattachment',
   '../js/signatoryattachment',
   '../js/signatories',

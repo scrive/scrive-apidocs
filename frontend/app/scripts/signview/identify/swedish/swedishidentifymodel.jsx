@@ -1,7 +1,7 @@
 // ignore model in coverage for now.
 /* istanbul ignore next */
-define(["legacy_code", "Underscore", "Backbone", "eleg/bankidsigning"],
-  function (legacy_code, _, Backbone, BankIDSigning) {
+define(["legacy_code", "Underscore", "Backbone", "eleg/bankidsigning", "signview/errormodal"],
+  function (legacy_code, _, Backbone, BankIDSigning, ErrorModal) {
   return Backbone.Model.extend({
     defaults: {
       doc: undefined,
@@ -83,7 +83,7 @@ define(["legacy_code", "Underscore", "Backbone", "eleg/bankidsigning"],
         onCriticalError: function (xhr) {
           self.setStatusText(bankID.statusMessage());
           self.setProblem();
-          new ReloadDueToErrorModal(xhr);
+          new ErrorModal(xhr);
         },
         thisDevice: self.thisDevice()
       });

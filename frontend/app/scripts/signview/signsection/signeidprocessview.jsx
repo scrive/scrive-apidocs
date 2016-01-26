@@ -1,6 +1,6 @@
 define(["Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
-  "eleg/bankidsigning"],
-  function (_, Backbone, React, BackboneMixin, Button, BankIDSigning) {
+  "eleg/bankidsigning", "signview/errormodal"],
+  function (_, Backbone, React, BackboneMixin, Button, BankIDSigning, ErrorModal) {
 
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -38,7 +38,7 @@ define(["Underscore", "Backbone", "React", "common/backbone_mixin", "common/butt
         onCriticalError: function (xhr) {
           if (self.isMounted()) {
             ReloadManager.stopBlocking();
-            new ReloadDueToErrorModal(xhr);
+            new ErrorModal(xhr);
           }
         }
       });
