@@ -1,6 +1,6 @@
 define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
-  "eleg/bankidsigning", "signview/viewsize"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, Button, BankIDSigning, ViewSize) {
+  "eleg/bankidsigning", "signview/viewsize", "signview/errormodal"],
+  function (legacy_code, _, Backbone, React, BackboneMixin, Button, BankIDSigning, ViewSize, ErrorModal) {
 
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -38,7 +38,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
         onCriticalError: function (xhr) {
           if (self.isMounted()) {
             ReloadManager.stopBlocking();
-            new ReloadDueToErrorModal(xhr);
+            new ErrorModal(xhr);
           }
         }
       });

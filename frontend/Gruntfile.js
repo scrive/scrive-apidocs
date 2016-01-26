@@ -187,6 +187,7 @@ module.exports = function (grunt) {
               "localization/*.*.js",
               "libs/html5shiv.js",
               "bower_components/json3/**",
+              "bower_components/es6-promise/**",
               "bower_components/es5-shim/**"
             ]
           }

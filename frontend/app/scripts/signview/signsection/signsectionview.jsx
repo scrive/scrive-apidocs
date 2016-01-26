@@ -13,7 +13,8 @@ define([
   "signview/signsection/signpin",
   "signview/signsection/signinputpinview",
   "signview/signsection/signeidview",
-  "signview/signsection/signeidprocessview"
+  "signview/signsection/signeidprocessview",
+  "signview/errormodal"
 ], function (
   _,
   Backbone,
@@ -29,7 +30,8 @@ define([
   SignPin,
   SignInputPin,
   SignEID,
-  SignEIDProcess
+  SignEIDProcess,
+  ErrorModal
 ) {
   return React.createClass({
     mixins: [TransitionMixin],
@@ -210,7 +212,7 @@ define([
             ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
           } else {
             ReloadManager.stopBlocking();
-            new ReloadDueToErrorModal(xhr);
+            new ErrorModal(xhr);
           }
         }
       };
@@ -279,7 +281,7 @@ define([
         self.setStep("input-pin");
       }, function (xhr) {
         ReloadManager.stopBlocking();
-        new ReloadDueToErrorModal(xhr);
+        new ErrorModal(xhr);
       }).send();
     },
 

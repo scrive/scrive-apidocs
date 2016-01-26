@@ -230,7 +230,7 @@ window.Document = Backbone.Model.extend({
             function(canvas) {
                 try {
                   var shot = { "time" : new Date().toISOString(),
-                             "image": canvas.toDataURL("image/jpeg",0.7) };
+                             "image": canvas.toDataURL("image/png") };
                   if (first)
                       document.get("screenshots").first = shot;
                   else
