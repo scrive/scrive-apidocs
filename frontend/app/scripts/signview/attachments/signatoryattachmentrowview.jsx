@@ -1,6 +1,6 @@
 define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutton", "common/backbone_mixin",
-  "signview/tasks/task_mixin", "signview/is_small_view"],
-  function (legacy_code, React, Backbone, Button, UploadButton, BackboneMixin, TaskMixin, isSmallView) {
+  "signview/tasks/task_mixin", "signview/viewsize"],
+  function (legacy_code, React, Backbone, Button, UploadButton, BackboneMixin, TaskMixin, ViewSize) {
 
   var UploadArea = React.createClass({
     propTypes: {
@@ -175,7 +175,7 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
             {/* if */ hasFile && !isLoading &&
               <span>
                 <div className={canUpload && "button-group small-buttons"}>
-                  {/* if */ isSmallView() &&
+                  {/* if */ ViewSize.isSmall() &&
                     <p className="file-name">{model.file().name()}</p>
                   }
                   <Button
@@ -208,7 +208,7 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
                     />
                   }
                 </div>
-                {/* if */ !isSmallView() &&
+                {/* if */ !ViewSize.isSmall() &&
                   <p className="file-name">{model.file().name()}</p>
                 }
               </span>

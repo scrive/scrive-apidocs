@@ -1,7 +1,7 @@
 /* Content of modal for drawing signature */
 
-define(["legacy_code", "Backbone", "React", "common/button", "common/backbone_mixin", "signview/is_small_view"],
-        function (_legacy, Backbone, React, Button, BackboneMixin, isSmallView) {
+define(["legacy_code", "Backbone", "React", "common/button", "common/backbone_mixin", "signview/viewsize"],
+        function (_legacy, Backbone, React, Button, BackboneMixin, ViewSize) {
 
 var MAX_WIDTH = 772;
 var LARGEST_WIDTH = 1040;
@@ -52,7 +52,7 @@ var SignatureDrawerModel = Backbone.Model.extend({
     return width;
   },
   footerHeight: function () {
-    return isSmallView() ? 56 : 100;
+    return ViewSize.isSmall() ? 56 : 100;
   },
   height: function () {
      return this.get("height");
@@ -238,7 +238,7 @@ return React.createClass({
       var canvasBox = this.refs.canvasBox;
       var canvasWidth = this.canvasWidth();
       var canvasHeight =  this.canvasHeight();
-      this.canvas = $("<canvas class='canvas'/>").attr("width",canvasWidth).attr("height",canvasHeight);
+      this.canvas = $("<canvas class='canvas'/>").attr("width", canvasWidth).attr("height", canvasHeight);
       $(canvasBox.getDOMNode()).append(this.canvas);
       var picture = this.canvas[0].getContext("2d");
       if (this.state.model.value() && this.state.model.value() != "") {
@@ -278,7 +278,7 @@ return React.createClass({
         var img = new Image();
         img.type = "image/png";
         img.src =  this.state.model.value();
-        canvas.attr("width",this.canvasWidth()).attr("height",this.canvasHeight());
+        canvas.attr("width", this.canvasWidth()).attr("height", this.canvasHeight());
         canvas[0].getContext("2d").drawImage(img, 0, 0, this.canvasWidth(), this.canvasHeight());
       }
     },
@@ -526,10 +526,10 @@ return React.createClass({
       model.setEmpty();
       this.saveImage();
     },
-    canvasWidth: function() {
+    canvasWidth: function () {
       return this.state.model.canvasWidth();
     },
-    canvasHeight: function() {
+    canvasHeight: function () {
       return Math.round(this.state.model.canvasWidth() * this.state.model.height() / this.state.model.width());
     },
     render: function () {

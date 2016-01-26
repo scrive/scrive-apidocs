@@ -16,8 +16,7 @@ define([
   "signview/postsignview",
   "signview/tasks/taskarrows",
   "signview/overlay",
-  "signview/is_small_view",
-  "signview/is_medium_view"
+  "signview/viewsize"
 ], function (
   Backbone,
   React,
@@ -36,8 +35,7 @@ define([
   PostSignView,
   TaskArrows,
   Overlay,
-  isSmallView,
-  isMediumView
+  ViewSize
 ) {
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -147,7 +145,6 @@ define([
       var self = this;
       var model = this.state.model;
       var doc = model.document();
-      var isSmallScreen = BrowserInfo.isSmallScreen();
 
       return (
         <div className="signview">
@@ -204,7 +201,7 @@ define([
                 <ExtraDetailsView
                   model={doc.currentSignatory()}
                   signview={model}
-                  isVertical={isSmallView() || isMediumView()}
+                  isVertical={ViewSize.isSmall() || ViewSize.isMedium()}
                 />
               }
               {/* if */ model.hasSignatoriesSection() &&

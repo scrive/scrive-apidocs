@@ -1,8 +1,7 @@
 /** @jsx React.DOM */
 
-define(["React", "common/backbone_mixin", "Backbone", "common/language_service", "signview/is_small_view",
-  "signview/is_medium_view"],
-  function (React, BackboneMixin, Backbone, LanguageService, isSmallView, isMediumView) {
+define(["React", "common/backbone_mixin", "Backbone", "common/language_service", "signview/viewsize"],
+  function (React, BackboneMixin, Backbone, LanguageService, ViewSize) {
 return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
@@ -102,8 +101,8 @@ return React.createClass({
 
     render: function () {
       var signatory = this.props.signatory;
-      var smallView = isSmallView();
-      var mediumView = isMediumView();
+      var smallView = ViewSize.isSmall();
+      var mediumView = ViewSize.isMedium();
 
       var divClass = React.addons.classSet({
         "col-xs-4": !smallView && !mediumView,

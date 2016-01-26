@@ -1,8 +1,7 @@
 /** @jsx React.DOM */
 
-define(["React", "Backbone", "signview/signatories/docviewsignatory", "signview/is_small_view",
-  "signview/is_medium_view"],
-  function (React, Backbone, DocumentViewSignatory, isSmallView, isMediumView) {
+define(["React", "Backbone", "signview/signatories/docviewsignatory", "signview/viewsize"],
+  function (React, Backbone, DocumentViewSignatory, ViewSize) {
   return React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Document).isRequired
@@ -17,15 +16,13 @@ define(["React", "Backbone", "signview/signatories/docviewsignatory", "signview/
     },
 
     render: function () {
-      var smallView = isSmallView();
-      var mediumView = isMediumView();
       var sigs = this.signatories();
 
-      if (!smallView) {
+      if (!ViewSize.isSmall()) {
         sigs = [{type: "title"}].concat(sigs);
       }
 
-      var numGroups = mediumView ? 2 : 3;
+      var numGroups = ViewSize.isMedium() ? 2 : 3;
 
       var groups = _.groupBy(sigs, function (sig, index) {
         return Math.floor(index / numGroups);
@@ -33,7 +30,7 @@ define(["React", "Backbone", "signview/signatories/docviewsignatory", "signview/
 
       return (
         <span>
-          {/* if */ !smallView &&
+          {/* if */ !ViewSize.isSmall() &&
             <span>
               {_.map(groups, function (group, index) {
                 return (
@@ -41,7 +38,7 @@ define(["React", "Backbone", "signview/signatories/docviewsignatory", "signview/
                     {_.map(group, function (s) {
                       if (s.type === "title") {
                         return (
-                          <div key="title" className={mediumView ? "col-xs-6" : "col-xs-4"}>
+                          <div key="title" className={ViewSize.isMedium() ? "col-xs-6" : "col-xs-4"}>
                             <h1 className="title">{localization.docsignview.signatoriesTitle}</h1>
                           </div>
                         );
@@ -54,7 +51,7 @@ define(["React", "Backbone", "signview/signatories/docviewsignatory", "signview/
               })}
             </span>
           }
-          {/* else */ smallView &&
+          {/* else */ ViewSize.isSmall() &&
             <span>
               {_.map(sigs, function (s, index) {
                 return <DocumentViewSignatory first={index == 0} key={s.signatoryid()} signatory={s} />;

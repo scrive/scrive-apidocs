@@ -1,6 +1,6 @@
 define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/infotextinput",
-  "signview/tasks/task_mixin", "signview/is_small_view"],
-  function (legacy_code, _, Backbone, React, Button, InfoTextInput, TaskMixin, isSmallView) {
+  "signview/tasks/task_mixin", "signview/viewsize"],
+  function (legacy_code, _, Backbone, React, Button, InfoTextInput, TaskMixin, viewsize) {
 
   return React.createClass({
     mixins: [TaskMixin],
@@ -82,8 +82,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
       });
 
       var divClass = React.addons.classSet({
-        "col-xs-6": !isSmallView(),
-        "col-xs-12": isSmallView(),
+        "col-xs-6": !ViewSize.isSmall(),
+        "col-xs-12": ViewSize.isSmall(),
         "center-block": true
       });
 

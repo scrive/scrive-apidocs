@@ -1,6 +1,6 @@
 define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
-  "eleg/bankidsigning", "signview/is_small_view"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, Button, BankIDSigning, isSmallView) {
+  "eleg/bankidsigning", "signview/viewsize"],
+  function (legacy_code, _, Backbone, React, BackboneMixin, Button, BankIDSigning, ViewSize) {
 
   return React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -95,8 +95,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var hasError = this.state.error;
 
       var divClass = React.addons.classSet({
-        "col-xs-6": !isSmallView(),
-        "col-xs-12": isSmallView(),
+        "col-xs-6": !ViewSize.isSmall(),
+        "col-xs-12": ViewSize.isSmall(),
         "center-block": true
       });
 

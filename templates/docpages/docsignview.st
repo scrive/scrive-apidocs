@@ -52,7 +52,6 @@ $htmlopentag()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
     <link href='/document_signview_branding/$documentid$/$siglinkid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script type="text/javascript"></script>
   </head>
 
   <body>

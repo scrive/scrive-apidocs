@@ -1,6 +1,6 @@
 define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/htmltextwithsubstitution",
-  "signview/is_small_view"],
-  function (legacy_code, _, Backbone, React, Button, HtmlTextWithSubstitution, isSmallView) {
+  "signview/viewsize"],
+  function (legacy_code, _, Backbone, React, Button, HtmlTextWithSubstitution, ViewSize) {
 
   var Status = React.createClass({
     render: function () {
@@ -37,8 +37,8 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
 
     render: function () {
       var divClass = React.addons.classSet({
-        "col-xs-6": !isSmallView(),
-        "col-xs-12": isSmallView(),
+        "col-xs-6": !ViewSize.isSmall(),
+        "col-xs-12": ViewSize.isSmall(),
         "center-block": true
       });
 

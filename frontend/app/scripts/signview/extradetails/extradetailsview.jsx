@@ -1,6 +1,6 @@
 define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/infotextinput",
-  "signview/tasks/task_mixin", "signview/is_small_view", "signview/is_medium_view"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, InfoTextInput, TaskMixin, isSmallView, isMediumView) {
+  "signview/tasks/task_mixin", "signview/viewsize"],
+  function (legacy_code, _, Backbone, React, BackboneMixin, InfoTextInput, TaskMixin, ViewSize) {
 
   var DetailsList = React.createClass({
     render: function () {
@@ -144,7 +144,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var self = this;
       var sig = this.props.model;
       var signview = this.props.signview;
-      var mediumView = isMediumView();
+      var mediumView = ViewSize.isMedium();
 
       var fstnameField = sig.fstnameField();
       var sndnameField = sig.sndnameField();
