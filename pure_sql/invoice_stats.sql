@@ -104,6 +104,11 @@ SELECT escape_for_csv(companies.name) AS "Company name"
          WHERE chi.company_id = companies.id
            AND chi.type = 4
            AND date_trunc('month', chi.time) = thetime.time) as "Norwegian BankID authorization"
+     , (SELECT sum(chi.quantity)
+          FROM chargeable_items chi
+         WHERE chi.company_id = companies.id
+           AND chi.type = 5
+           AND date_trunc('month', chi.time) = thetime.time) as "Telia SMSes sent (physical)"
      , (SELECT count(*)
           FROM users
          WHERE (users.deleted IS NULL OR users.deleted > thetime.time)
