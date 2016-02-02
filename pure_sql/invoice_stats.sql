@@ -112,21 +112,25 @@ SELECT escape_for_csv(companies.name) AS "Company name"
      , (SELECT count(*)
           FROM users
          WHERE (users.deleted IS NULL OR users.deleted > thetime.time)
+           AND users.email NOT LIKE '%@scrive.com'
            AND users.company_id = companies.id
            AND has_accepted_terms_of_service <= thetime.time) AS "Users at begin of month"
      , (SELECT count(*)
           FROM users
          WHERE (users.deleted IS NULL OR users.deleted > thetime.time + interval '1 month')
+           AND users.email NOT LIKE '%@scrive.com'
            AND users.company_id = companies.id
            AND has_accepted_terms_of_service <= thetime.time + interval '1 month') AS "Users at end of month"
      , (SELECT count(*)
           FROM users
          WHERE users.company_id = companies.id
+           AND users.email NOT LIKE '%@scrive.com'
            AND has_accepted_terms_of_service >= thetime.time
            AND has_accepted_terms_of_service < thetime.time + interval '1 month') AS "Users activated during month"
      , (SELECT count(*)
           FROM users
          WHERE users.company_id = companies.id
+           AND users.email NOT LIKE '%@scrive.com'
            AND users.deleted >= thetime.time
            AND users.deleted < thetime.time + interval '1 month') AS "Users deleted during month"
      , substring((thetime.time :: DATE :: TEXT) for 7) AS "Month"
