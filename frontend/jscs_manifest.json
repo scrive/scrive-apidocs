@@ -24,6 +24,7 @@
   "./app/scripts/common/select.jsx",
   "./app/scripts/common/location.jsx",
   "./app/js/anchors.js",
+  "./app/js/flashmessages.js",
   "./app/js/authorattachment.js",
   "./app/js/takeScreenshot.js",
   "./app/api-explorer/js/*.js",

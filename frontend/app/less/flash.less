@@ -1,0 +1,50 @@
+.flash {
+  background: transparent;
+  left: 0;
+  padding: 4px 0;
+  position: fixed;
+  width: 100%;
+  z-index: 100001;
+  word-break: break-all;
+
+  transition: all .25s ease-in-out;
+
+  .flash-content-wrapper {
+    border: 6px solid rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+    width: 1018px;
+
+    @media not all and (min-width: 1030px) {
+      width: calc(~"100% - 12px");
+    }
+  }
+
+  .flash-content {
+    border-radius: 3px;
+  }
+
+  .flash-body {
+    color: #FFF;
+    font-size: 1.25em;
+    max-width: calc(~"100% - 178px");
+    padding: 19px 30px;
+    padding-left: 16px;
+    text-align: left;
+  }
+
+  .flash-close {
+    font-family: "Source Sans Pro", sans-serif;
+    cursor: pointer;
+    font-size: 36px;
+    font-weight: 300;
+    line-height: 60px;
+    padding: 0px 20px;
+    position: absolute;
+    right: 0;
+    top: 3px;
+    width: 22px;
+  }
+}

@@ -1,22 +1,16 @@
 @import "vars";
 
-.flash-signview {
-  @line-height: 100px;
-  @padding: 50px;
-  @container-lg: 1040px;
+.flash {
+  @padding-tb: 40px;
+  @padding-lr: 50px;
 
   background: transparent;
   left: 0;
   position: fixed;
-  top: -(@line-height + 4);
   width: 100%;
   z-index: 100001;
 
   transition: all .25s ease-in-out;
-
-  &.active {
-    top: 0;
-  }
 
   .flash-content-wrapper {
     margin: 0 auto;
@@ -29,36 +23,23 @@
     }
   }
 
-
-  .flash-content {
-    height: @line-height;
-  }
-
   .flash-body {
-    float: left;
     font-size: 18px;
     font-weight: 300;
-    line-height: @line-height;
-    max-width: 840px;
-    padding-left: @padding;
+    max-width: calc(~"100% - 185px");
+    padding: @padding-tb @padding-lr;
     text-align: left;
-
-    .multiline & {
-      line-height: 22px;
-      padding-bottom: 8px;
-      padding-top: 8px;
-    }
+    word-break: break-all;
   }
 
   .flash-close {
     cursor: pointer;
     font-size: 30px;
     font-weight: 300;
-    line-height: @line-height;
-    padding: 0px @padding;
+    padding: 0px @padding-lr;
     position: absolute;
     right: 0;
-    top: 0;
+    top: @padding-tb + 2px;
     width: 22px;
   }
 }
