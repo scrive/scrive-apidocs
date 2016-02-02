@@ -36,7 +36,7 @@ var openCreateAccountPopup = function(callback) {
             var popup = new Confirmation({
               onAccept : function() {
 
-                 var errorCallback = function(t,e,v) {   e.css("border-color", "red"); };
+                 var errorCallback = function (t, e, v) { e.addClass("problem"); };
                  fstname.css("border-color", "");
                  sndname.css("border-color", "");
                  email.css("border-color", "");
