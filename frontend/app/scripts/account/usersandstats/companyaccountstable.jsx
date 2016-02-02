@@ -41,13 +41,9 @@ var openCreateAccountPopup = function(callback) {
                  sndname.css("border-color", "");
                  email.css("border-color", "");
 
-                  var vresult = [
-                                 fstname.validate(new NameValidation({callback: errorCallback, message: "Wrong first name format!"})),
-                                 sndname.validate(new NameValidation({callback: errorCallback, message: "Wrong second name format!"})),
-                                 email.validate((new NotEmptyValidation({callback: errorCallback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: errorCallback})))
-                                ];
+                 var emailValidator = new NotEmptyValidation({callback: errorCallback, message: "Email cannot be empty!"}).concat(new EmailValidation({callback: errorCallback}));
 
-                  if (_.every(vresult, function(a) {return a;})) {
+                  if (email.validate(emailValidator)) {
 
                     new Submit({
                         url: "/account/companyaccounts/add",
