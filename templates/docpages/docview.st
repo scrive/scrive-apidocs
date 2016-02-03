@@ -11,7 +11,8 @@ jQuery(function(){
       id:"$documentid$"
        $if(siglinkid)$
       , viewer : new DocumentViewer({
-          signatoryid : "$siglinkid$"
+          signatoryid : "$siglinkid$",
+          authorcompanyadmin : $if(authorcompanyadmin)$true$else$false$endif$
           })
       $elseif(authorcompanyadmin)$
       , viewer : new DocumentViewer({
