@@ -429,7 +429,7 @@ instance FromJSValueWithUpdate Document where
         (apicallbackurl :: Maybe (Maybe String)) <- fromJSValueField "apicallbackurl"
         saved <- fromJSValueField "saved"
         authorattachments <- fromJSValueFieldCustom "authorattachments" $ fromJSValueCustomMany $ fmap (join . (fmap maybeRead)) $ (fromJSValueField "id")
-        let daystosign'  = min 90 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign
+        let daystosign'  = min 365 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign
         let daystoremind' = min daystosign' <$> max 1 <$> updateWithDefaultAndField Nothing documentdaystoremind daystoremind
 
         return $ Just def {

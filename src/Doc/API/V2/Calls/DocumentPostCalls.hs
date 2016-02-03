@@ -158,8 +158,8 @@ docApiV2Prolong did = logDocument did . api $ do
     guardThatDocumentIs (isTimedout) "The document has not timed out. Only timed out documents can be prolonged."
     -- Parameters
     days <- fromIntegral <$> apiV2ParameterObligatory (ApiV2ParameterInt "days")
-    when (days < 1 || days > 90) $
-      apiError $ requestParameterInvalid "days" "Days must be a number between 1 and 90"
+    when (days < 1 || days > 365) $
+      apiError $ requestParameterInvalid "days" "Days must be a number between 1 and 365"
     -- API call actions
     timezone <- documenttimezonename <$> theDocument
     dbUpdate $ ProlongDocument days timezone actor

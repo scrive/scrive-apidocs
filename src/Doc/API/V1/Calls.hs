@@ -601,9 +601,9 @@ apiCallV1Prolong did = logDocument did . api $ do
             throwM . SomeKontraException $ (conflictError "Document is not timedout")
       mdays <- getDefaultedField 1 asValidNumber "days"
       days <- case mdays of
-           Nothing -> throwM . SomeKontraException $ (badInput "Number of days to sign must be a valid number, between 1 and 90")
-           Just n -> if (n < 1 || n > 90)
-                              then throwM . SomeKontraException $ (badInput "Number of days to sign must be a valid number, between 1 and 90")
+           Nothing -> throwM . SomeKontraException $ (badInput "Number of days to sign must be a valid number, between 1 and 365")
+           Just n -> if (n < 1 || n > 365)
+                              then throwM . SomeKontraException $ (badInput "Number of days to sign must be a valid number, between 1 and 365")
                               else return n
       timezone <- documenttimezonename <$> theDocument
       dbUpdate $ ProlongDocument days timezone actor

@@ -84,7 +84,7 @@ return React.createClass({
             days={doc.daystosign()}
             canBeEmpty={false}
             minDays={1}
-            maxDays={90}
+            maxDays={365}
             onChange= {function(days) {
               doc.setDaystosign(days);
             }}
