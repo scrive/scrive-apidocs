@@ -4,4 +4,4 @@
 
 cd frontend/
 npm install
-grunt build
+LC_ALL="pl_PL.UTF-8" grunt build

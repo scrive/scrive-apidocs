@@ -133,7 +133,7 @@ mailHeader headerName headerValue = prefix ++ mailEncode (Just $ 75 - length pre
 mailEncode :: Maybe Int -> String -> String
 mailEncode mFirstLineLength source | all asciiPrintable source = asciiMailEncode mFirstLineLength source
                                    | otherwise = unicodeMailEncode mFirstLineLength source
-  where asciiPrintable c = ord c >= 32 && ord c <= 126
+  where asciiPrintable c = ord c >= 32 && ord c <= 126 && ord c /= ord ';'
 
 -- only line breaking
 asciiMailEncode :: Maybe Int -> String -> String

@@ -31,7 +31,7 @@ echo "Building Clean"
 echo "Building Frontend"
 cd frontend/
 npm install
-grunt build
+LC_ALL="en_US.UTF-8" grunt build
 cd ../
 
 echo "Running unit tests"
