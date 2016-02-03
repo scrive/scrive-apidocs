@@ -37,6 +37,7 @@ function main()
 function step_check_import_order()
 {
     github_notify_commit_state "check-import-order" "pending" "Checking Haskell imports";
+    export LC_ALL="en_US.UTF-8"
     if scripts/sort_imports.sh --check; then
         github_notify_commit_state "check-import-order" "success" "Haskell imports in proper order";
         exit_code=0;
