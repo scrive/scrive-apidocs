@@ -271,6 +271,9 @@ javascriptLocalisation =
               , elInEl : "$GreekInGreek()$"
               , fiInFi : "$FinnishInFinish()$"
               , isInIs : "$IcelandicInIcelandic()$"
+              , etInEt : "$EstonianInEstonian()$"
+              , lvInLv : "$LatvianInLatvian()$"
+              , ltInLt : "$LithuanianInLithuanian()$"
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"

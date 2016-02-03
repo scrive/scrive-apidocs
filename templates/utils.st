@@ -61,6 +61,12 @@ FinnishInFinish=Suomi
 ###
 IcelandicInIcelandic=Íslenska
 ###
+EstonianInEstonian=Eesti
+###
+LatvianInLatvian=Latviešu
+###
+LithuanianInLithuanian=Lietuvių
+###
 PoweredByScrive=E-signing powered by Scrive
 ###
 ### All the prices below are when paying yearly.
