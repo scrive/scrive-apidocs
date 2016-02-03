@@ -35,6 +35,7 @@ module Doc.DocControl(
 
 import Control.Concurrent
 import Control.Conditional (unlessM, whenM)
+import Control.Monad.Base
 import Control.Monad.Catch (MonadMask)
 import Control.Monad.Reader
 import Data.String.Utils (replace,strip)
@@ -400,31 +401,21 @@ handleFilePages fid = do
   mpixelwidth <- readField "pixelwidth"
   pages <- getRenderedPages fid (fromMaybe legacyWidthInPixels mpixelwidth) RenderingModeWholeDocument
 
+  let pagesRsp = simpleJsonResponse . J.runJSONGen . J.value "pages"
   case pages of
     RenderedPages False _ -> do
-      -- Here we steal Twitter's Enhance Your Calm status code.  Out
-      -- mechanism upwards the stack will know to retry to ask us
-      -- again before giving up.
-      rsp <- simpleJsonResponse $ J.runJSONGen $ J.value "wait" ("Rendering in progress"::String)
-      return (rsp { rsCode = 420 })
-    RenderedPages True pngpages  -> do
-      -- This communicates to JavaScript how many pages there
-      -- are. This should be totally changed to the following
-      -- mechanism:
-      --
-      -- 1. JavaScript should ask for the first page
-      -- 2. Server should serve first page
-      -- 3. JavaScript should ask for next page
-      -- 4. Server should respond with Enhance Your Calm (or just wait a little before returning response).
-      -- 5. JavaScript should retry if Enhance Your Calm is the code
-      -- 6. If the page returned 200 with content, then proceed with next page
-      -- 7. If server returned 404 it means there are no more pages
-      -- 8. JavaScript should fire 'full document loaded' event (and place fields on all pages).
-      --
-      -- Such architecture would allow incremental rendering of pages
-      -- on the server side also, thus improving user experience a
-      -- lot.
-      simpleJsonResponse $ J.runJSONGen $ J.value "pages" $ length pngpages
+      -- Don't wait for rendering to complete, use mutool to extract
+      -- the number of pages quickly.
+      epages <- liftBase . getNumberOfPDFPages =<< getFileIDContents fid
+      case epages of
+        Right pagesNo -> pagesRsp pagesNo
+        Left err -> do
+          logAttention "getNumberOfPDFPages failed" $ object [
+              identifier_ fid
+            , "error" .= err
+            ]
+          internalError
+    RenderedPages True pngpages -> pagesRsp $ length pngpages
 
 {- |
    Get some html to display the images of the files

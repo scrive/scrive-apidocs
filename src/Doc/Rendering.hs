@@ -64,17 +64,16 @@ readNumberedFiles pathFromNumber currentNumber accum = do
    Convert PDF to jpeg images of pages
  -}
 runRendering :: (KontraMonad m, MonadLog m, MonadDB m, MonadThrow m, MonadIO m, MonadBaseControl IO m, AWS.AmazonMonad m)
-                     => RenderedPagesCache
+                     => BS.ByteString
                      -> FileID
                      -> Int
                      -> RenderingMode
                      -> m RenderedPages
-runRendering _renderedPages fid widthInPixels renderingMode = do
-  content <- getFileIDContents fid
+runRendering fileContent fid widthInPixels renderingMode = do
   withSystemTempDirectory "mudraw" $ \tmppath -> do
     let sourcepath = tmppath ++ "/source.pdf"
 
-    liftIO $ BS.writeFile sourcepath content
+    liftIO $ BS.writeFile sourcepath fileContent
 
     let pathOfPage n = tmppath ++ "/output-" ++ show n ++ ".png"
 
@@ -106,7 +105,7 @@ runRendering _renderedPages fid widthInPixels renderingMode = do
           identifier_ fid
         , "path" .= path
         ]
-      liftIO $ BS.hPutStr handle content
+      liftIO $ BS.hPutStr handle fileContent
       liftIO $ hClose handle
     return $ RenderedPages True pages
 
@@ -136,10 +135,14 @@ getRenderedPages fileid pageWidthInPixels renderingMode = do
   case v of
     Just pages -> return pages
     Nothing -> do
+      -- Get file content before forking to possibly avoid fetching
+      -- file twice from Amazon. TODO: Bad workaround, this mechanism
+      -- needs to be rethought.
+      fileContent <- getFileIDContents fileid
       MemCache.put key (RenderedPages False []) ctxnormalizeddocuments
       forkAction ("Rendering file #" ++ show fileid) $ do
-        -- FIXME: We should report error somewere
-        jpegpages <- runRendering ctxnormalizeddocuments fileid clampedPageWidthInPixels renderingMode
+        -- TODO: We should report error somewere
+        jpegpages <- runRendering fileContent fileid clampedPageWidthInPixels renderingMode
         MemCache.put key jpegpages ctxnormalizeddocuments
       return (RenderedPages False [])
 
