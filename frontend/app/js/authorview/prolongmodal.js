@@ -70,7 +70,7 @@ var ProlongModalView = Backbone.View.extend({
                     if (isNaN(days)) {
                       days = undefined;
                     } else {
-                      days = Math.min(90, days);
+                      days = Math.min(365, days);
                       days = Math.max(1, days);
                     }
                     if (days != model.days()) {

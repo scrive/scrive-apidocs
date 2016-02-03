@@ -17,7 +17,7 @@ window.Calendar = Backbone.Model.extend({
         on : $('<div/>'),
         change : function() {return false},
         changing: false,
-        maxValue : 90
+        maxValue : 365
     },
     initialize : function(args){
         var self = this;

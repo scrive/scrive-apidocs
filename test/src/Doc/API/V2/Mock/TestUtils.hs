@@ -20,6 +20,7 @@ module Doc.API.V2.Mock.TestUtils (
 , getMockDocId
 , getMockDocTitle
 , getMockDocStatus
+, getMockDocDaysToSign
 , getMockDocHasFile
 , getMockDocFileId
 , getMockDocAuthorAttachmentLength
@@ -121,6 +122,9 @@ getMockDocStatus md = case mockDocStatus md of
   "rejected"       -> Rejected
   "document_error" -> DocumentError
   _ -> $unexpectedError $ "Could not parse MockDoc status to DocumentStatus: " ++ mockDocStatus md
+
+getMockDocDaysToSign :: MockDoc -> Int
+getMockDocDaysToSign = mockDocDaysToSign
 
 getMockDocHasFile :: MockDoc -> Bool
 getMockDocHasFile = isJust . mockDocFile

@@ -111,14 +111,15 @@ testDocApiV2Prolong :: TestEnv ()
 testDocApiV2Prolong = do
   user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2Start' ctx
-
+  mockDoc <- testDocApiV2Start' ctx
+  assertEqual "Default number of days should match" 90 $ getMockDocDaysToSign mockDoc
+  let did = getMockDocId mockDoc
   withDocumentID did $ do
     dbUpdate $ TimeoutDocument (userActor ctx user)
-  -- FIXME check status for timed out
-
-  prolong_status <- getMockDocStatus <$> mockDocTestRequestHelper ctx POST [("days", inText "1")] (docApiV2Prolong did) 200
-  assertEqual "Document status should match" Pending prolong_status
+  -- Current limit is 365 days
+  _ <- jsonTestRequestHelper ctx POST [("days", inText "366")] (docApiV2Prolong did) 400
+  prolonged_status <- getMockDocStatus <$> mockDocTestRequestHelper ctx POST [("days", inText "365")] (docApiV2Prolong did) 200
+  assertEqual "Document status should match" Pending prolonged_status
 
 testDocApiV2Cancel :: TestEnv ()
 testDocApiV2Cancel = do
