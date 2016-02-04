@@ -45,15 +45,6 @@ window.BrowserInfo = {
     isIE9orLower : function() {
       return BrowserInfo.isIE() && !BrowserInfo.isWindowsPhone() && ($.browser.version > "3" && $.browser.version <= "9.0");
     },
-    isIE8orLower : function() {
-      return BrowserInfo.isIE() && !BrowserInfo.isWindowsPhone() && ($.browser.version > "3" && $.browser.version <= "8.0");
-    },
-    isIE7orLower : function() {
-      return BrowserInfo.isIE() && !BrowserInfo.isWindowsPhone() && ($.browser.version > "3" && $.browser.version <= "7.0");
-    },
-    isIE6orLower : function() {
-      return BrowserInfo.isIE() && !BrowserInfo.isWindowsPhone() && ($.browser.version > "3" && $.browser.version < "7.0");
-    },
     isSmallScreen : function() {
       if (window.outerWidth === 0) {
         // probably chrome, tab was opened in background, try to rely on screen.width alone
