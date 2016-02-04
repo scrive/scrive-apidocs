@@ -16,8 +16,8 @@
  */
 
 define(["legacy_code", "Backbone", "React",
-       "signview/signaturemodal/signaturedrawer", "signview/signaturemodal/signaturetyper"],
-       function (_legacy, Backbone, React, SignatureDrawer, SignatureTyper) {
+       "signview/signaturemodal/signaturedrawer"],
+       function (_legacy, Backbone, React, SignatureDrawer) {
 
 var SignatureDrawOrTypeModel = Backbone.Model.extend({
   onClose: function (shouldScroll, shouldSign) {
@@ -144,37 +144,26 @@ return function (args) {
     }
   });
 
-  if (!BrowserInfo.isIE8orLower()) {
-    React.render(React.createElement(SignatureDrawer, {
-      field: args.field,
-      width: args.width,
-      height: args.height,
-      acceptText: model.acceptText(),
-      onClose: function () {model.onClose();},
-      onAccept: function () {model.onAccept();},
-      onStartDrawing: function () {
-        document.ontouchmove = function (e) {
-          e.preventDefault();
-        };
-        modal.css("-ms-touch-action", "none");
-      },
-      onStopDrawing: function () {
-        document.ontouchmove = function (e) {
-            return true;
-        };
-        modal.css("-ms-touch-action", "auto");
-      }
-    }), modal[0]);
-  } else {
-    React.render(React.createElement(SignatureTyper, {
-      field: args.field,
-      width: args.width,
-      height: args.height,
-      acceptText: model.acceptText(),
-      onClose: function () {model.onClose();},
-      onAccept:  function () {model.onAccept();}
-    }), modal[0]);
-  }
+  React.render(React.createElement(SignatureDrawer, {
+    field: args.field,
+    width: args.width,
+    height: args.height,
+    acceptText: model.acceptText(),
+    onClose: function () {model.onClose();},
+    onAccept: function () {model.onAccept();},
+    onStartDrawing: function () {
+      document.ontouchmove = function (e) {
+        e.preventDefault();
+      };
+      modal.css("-ms-touch-action", "none");
+    },
+    onStopDrawing: function () {
+      document.ontouchmove = function (e) {
+          return true;
+      };
+      modal.css("-ms-touch-action", "auto");
+    }
+  }), modal[0]);
 
   if (args.arrow()) {
     args.arrow().disable();
