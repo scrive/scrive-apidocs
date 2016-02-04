@@ -83,7 +83,8 @@ define(['Backbone', 'legacy_code'], function() {
       var wrapper = $("<div/>");
       var body = $("<div/>");
       var header = $("<div style='margin-bottom:30px;text-align:center;'/>");
-      header.append($("<img alt='logo' src='/login_logo/"+ window.brandinghash +"'/>"));
+      var loginLogoUrl = window.cdnbaseurl + "/login_logo/" + window.brandingdomainid + "/" + window.brandinghash;
+      header.append($("<img alt='logo' src='"+ loginLogoUrl +"'/>"));
       header.append($("<div class='divider-line'/>"));
 
       var poweredLabel = $("<div class='label' style='text-align:center;width:275px;'/>").text(localization.esigningpoweredbyscrive);
