@@ -54,7 +54,7 @@ $htmlopentag()$
   <div class='mainContainer big error-page'>
    <div class="error-page-header">
      <div class="error-page-header-logo-wrapper" >
-        <img alt='logo' src="/login_logo/$brandinghash$" />
+        <img alt='logo' src="$cdnbaseurl$/login_logo/$brandingdomainid$/$brandinghash$" />
         <div class='divider-line'></div>
         <div class='label'>
           $PoweredByScrive()$
@@ -144,7 +144,7 @@ $htmlopentag()$
   <div class='mainContainer big error-page'>
    <div class="error-page-header">
      <div class="error-page-header-logo-wrapper" >
-        <img alt='logo' src="/login_logo/$brandinghash$" />
+        <img alt='logo' src="$cdnbaseurl$/login_logo/$brandingdomainid$/$brandinghash$" />
         <div class='divider-line'></div>
         <div class='label'>
           $PoweredByScrive()$
@@ -220,7 +220,7 @@ $htmlopentag()$
       <div class='mainContainer big error-page'>
         <div class="error-page-header">
           <div class="error-page-header-logo-wrapper" >
-            <img alt='logo' src="/login_logo/$brandinghash$" />
+            <img alt='logo' src="$cdnbaseurl$/login_logo/$brandingdomainid$/$brandinghash$" />
             <div class='divider-line'></div>
             <div class='label'>
               $PoweredByScrive()$
