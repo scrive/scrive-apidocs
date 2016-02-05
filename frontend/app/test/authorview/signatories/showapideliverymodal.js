@@ -18,10 +18,8 @@ define(["legacy_code", "backend", "util", "React", "authorview/signatories/showa
 
     it("should test component works", function () {
 
-      var showAPIDeliveryModal = TestUtils.renderIntoDocument(React.createElement(ShowAPIDeliveryModal, {
-        signatory: signatory
-      }));
-      assert.ok($(".docview-showapidelivery-modal",showAPIDeliveryModal.getDOMNode()).length > 0);
+      new ShowAPIDeliveryModal({ signatory: signatory });
+      assert.ok($(".docview-showapidelivery-modal").length > 0);
 
     });
 
