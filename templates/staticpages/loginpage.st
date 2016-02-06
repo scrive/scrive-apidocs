@@ -104,7 +104,7 @@ accountSetupPage=$doctype()$
 
       <div class='mainContainer create-account-box'>
         <div style="margin-bottom: 20px; margin-top: 64px; text-align: center" >
-          <img alt='logo' src="$cdnbaseurl$/login_logo/$brandingdomainid$/$brandinghash$" />
+          <img alt='logo' src="/login_logo/$brandinghash$" />
           <div class='divider-line'></div>
           <span class='label' style="text-align :center; width:275px">
             $PoweredByScrive()$

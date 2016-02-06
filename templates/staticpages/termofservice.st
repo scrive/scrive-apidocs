@@ -39,7 +39,7 @@ $htmlopentag()$
     <div class="js-terms-of-service terms-of-service">
       <div style='width:275px;margin:0px auto;'>
         <div style="margin-top: 64px;text-align:center;">
-          <img alt="logo" src="$cdnbaseurl$/login_logo/$brandingdomainid$/$brandinghash$" />
+          <img alt="logo" src="/login_logo/$brandinghash$" />
           <div class="divider-line"></div>
           <div class='label' style="text-align:center;width:275px;">
             E-signing powered by Scrive
