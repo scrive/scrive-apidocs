@@ -9,11 +9,6 @@ enableCookies=<!DOCTYPE html>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta http-equiv="content-language" content="$ctxlang$" />
 <meta http-equiv="X-UA-Compatible" content="IE=10" />
-<!--[if lt IE 9]>
-<script src="/bower_components/es5-shim/es5-shim.js"></script>
-<script src="/bower_components/es5-shim/es5-sham.js"></script>
-<script src="/libs/html5shiv.js"></script>
-<![endif]-->
 <link rel=" icon" href="$cdnbaseurl$/favicon/$brandinghash$" />
 <script src="/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
 <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
