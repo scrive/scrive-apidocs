@@ -43,6 +43,9 @@ var openCreateUserModal = function(callback) {
                                   + '<option value="el">Greek</option>'
                                   + '<option value="fi">Finnish</option>'
                                   + '<option value="is">Icelandic</option>'
+                                  + '<option value="et">Estonian</option>'
+                                  + '<option value="lv">Latvian</option>'
+                                  + '<option value="lt">Lithuanian</option>'
                                   + "</select>");
   tr6.append(jQuery("<td/>").append(lang));
   table.append(tr6);

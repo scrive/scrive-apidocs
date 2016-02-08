@@ -30,6 +30,9 @@ data Lang = LANG_SV
           | LANG_GR
           | LANG_FI
           | LANG_IS
+          | LANG_ET
+          | LANG_LV
+          | LANG_LT
   deriving (Bounded, Enum, Show, Read, Ord, Eq)
 
 instance Default Lang where
@@ -59,8 +62,11 @@ instance FromSQL Lang where
       11 -> return LANG_GR
       12 -> return LANG_FI
       13 -> return LANG_IS
+      14 -> return LANG_ET
+      15 -> return LANG_LV
+      16 -> return LANG_LT
       _  -> E.throwIO $ RangeError {
-        reRange = [(1, 13)]
+        reRange = [(1, 16)]
       , reValue = n
       }
 
@@ -79,6 +85,9 @@ instance ToSQL Lang where
   toSQL LANG_GR = toSQL (11::Int16)
   toSQL LANG_FI = toSQL (12::Int16)
   toSQL LANG_IS = toSQL (13::Int16)
+  toSQL LANG_ET = toSQL (14::Int16)
+  toSQL LANG_LV = toSQL (15::Int16)
+  toSQL LANG_LT = toSQL (16::Int16)
 
 
 codeFromLang :: Lang -> String
@@ -95,6 +104,9 @@ codeFromLang LANG_NO = "no"
 codeFromLang LANG_GR = "el"
 codeFromLang LANG_FI = "fi"
 codeFromLang LANG_IS = "is"
+codeFromLang LANG_ET = "et"
+codeFromLang LANG_LV = "lv"
+codeFromLang LANG_LT = "lt"
 
 langFromCode :: String -> Maybe Lang
 langFromCode s = find ((== s) . codeFromLang) allValues
