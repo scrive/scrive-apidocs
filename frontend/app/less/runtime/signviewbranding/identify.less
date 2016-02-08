@@ -8,7 +8,16 @@
 }
 
 .global-table {
+  display: table;
+  height:100%;
+  width: 100%;
+
   .background_with_ie_support(@brandcolor);
+
+  .global-table-cell {
+    display: table-cell;
+    vertical-align: middle;
+  }
 }
 
 @content-breakpoint: 529px;
