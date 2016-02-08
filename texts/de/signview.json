@@ -136,7 +136,7 @@
 "_signviewSigningFailed":"Der Signierungs-Vorgang hat leider nicht funktioniert. Bitte versuchen Sie es erneut.",
 "_smsDocumentErrorAuthor":"Scrive konnte das Dokument $documenttitle$ nicht bearbeiten und der Signierungsprozess wurde abgebrochen. Wenn Sie dazu Fragen haben, kontaktieren Sie uns bitte unter support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive konnte das Dokument $documenttitle$ nicht bearbeiten und der Signierungsprozess wurde abgebrochen. Wenn Sie dazu Fragen haben, kontaktieren Sie uns bitte unter support@scrive.com",
-"_smsInvitationToSign":"",
+"_smsInvitationToSign":"Hallo, $creatorname:noescape()$ hat Sie zum E-Signieren eingeladen. Klicken Sie hier um den Vorgang zu starten: $link$",
 "_smsPinSendout":"Ihre PIN für $documenttitle$ lautet $pin$",
 "_smsRejectNotification":"Hallo, $rejectorName$ hat es abgelehnt, das Dokument $documenttitle$ zu signieren. Der Signierungs-Vorgang wurde deshalb abgebrochen. Um sich das Dokument anzuschauen, klicken Sie auf den Link: $link$",
 "_smsReminder":"Hallo, dies ist eine Erinnerung von $creatorname$, dass Sie das Dokument $documenttitle$ noch nicht signiert haben. Öffnen Sie den Link, um das Dokument anzuschauen: $link$",
