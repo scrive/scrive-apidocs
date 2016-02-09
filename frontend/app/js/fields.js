@@ -40,9 +40,6 @@ window.Field = Backbone.Model.extend({
     value : function() {
         return this.get("value");
     },
-    valueTMP : function() {
-        return this.get("valueTMP");
-    },
     obligatory : function() {
         return this.get("obligatory");
     },
@@ -62,9 +59,6 @@ window.Field = Backbone.Model.extend({
     },
     hasChanged: function() {
       return this.get("hasChanged");
-    },
-    setValueTMP : function(value) {
-        this.set({"valueTMP" : value});
     },
     setName : function(name) {
         return this.set({"name" : name});

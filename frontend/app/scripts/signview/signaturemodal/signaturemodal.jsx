@@ -1,6 +1,5 @@
-/* Modal for drawing or typing signature. For old IE only typing mode is available.
+/* Modal for drawing or typing signature.
  * Value, as Base64 image is saved to field value.
- * valueTMP of field is used to store some internal values (for reediting, text mode only).
  * Usage:
  *
  *    new SignatureDrawOrTypeModal({
@@ -19,7 +18,7 @@ define(["legacy_code", "Backbone", "React",
        "signview/signaturemodal/signaturedrawer"],
        function (_legacy, Backbone, React, SignatureDrawer) {
 
-var SignatureDrawOrTypeModel = Backbone.Model.extend({
+var SignatureDrawingModel = Backbone.Model.extend({
   onClose: function (shouldScroll, shouldSign) {
     return this.get("onClose")(shouldScroll, shouldSign);
   },
@@ -109,7 +108,7 @@ return function (args) {
   var transTime = 300; // sync with @trans-time in 'signview/drawer.less';
   var onClose = args.onClose;
 
-  var model = new SignatureDrawOrTypeModel({
+  var model = new SignatureDrawingModel({
     field: args.field,
     width: args.width,
     height: args.height,

@@ -250,7 +250,6 @@ window.ConfirmationWithEmail = {
           var overlay = $("<div class='modal'/>");
           if (args.cssClass != undefined)
             overlay.addClass(args.cssClass);
-          var overlay_height = null;
           overlay.height($(document).height());
 
           if (BrowserInfo.isPadDevice()) {
