@@ -23,13 +23,7 @@ doctype=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.
 htmlclosingtag=
 </html>
 ####
-htmlopentag=
-    <!--[if lt IE 7]>  <html class="ie ie6 lte9 lte8 lte7"> <![endif]-->
-    <!--[if IE 7]>     <html class="ie ie7 lte9 lte8 lte7"> <![endif]-->
-    <!--[if IE 8]>     <html class="ie ie8 lte9 lte8"> <![endif]-->
-    <!--[if IE 9]>     <html class="ie ie9 lte9"> <![endif]-->
-    <!--[if gt IE 9]>  <html> <![endif]-->
-    <!--[if !IE]> -->  <html><!-- <![endif]-->
+htmlopentag=<html>
 ####
 standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -39,11 +33,6 @@ standardHeaderContents=
         $else$
           <meta name="viewport" content="width=1020" />
         $endif$
-        <!--[if lt IE 9]>
-	<script src="$cdnbaseurl$/libs/html5shiv.js"></script>
-	<script src="$cdnbaseurl$/bower_components/es5-shim/es5-shim.min.js"></script>
-	<script src="$cdnbaseurl$/bower_components/es5-shim/es5-sham.min.js"></script>
-        <![endif]-->
         <link rel=" icon" href="$cdnbaseurl$/favicon/$brandinghash$" />
 
         <script src="$cdnbaseurl$/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>

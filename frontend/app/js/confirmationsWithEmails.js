@@ -250,13 +250,7 @@ window.ConfirmationWithEmail = {
           var overlay = $("<div class='modal'/>");
           if (args.cssClass != undefined)
             overlay.addClass(args.cssClass);
-          var overlay_height = null;
-          if (!BrowserInfo.isIE8orLower()) {
-            // IE7 and IE8 don't push the document down,
-            // $(document).height() still reports the old size
-            // but for other browsers make the overlay big asap so it looks good immediately
-            overlay.height($(document).height());
-          }
+          overlay.height($(document).height());
 
           if (BrowserInfo.isPadDevice()) {
             //Pad devices have a different aproach to body.width
@@ -275,23 +269,12 @@ window.ConfirmationWithEmail = {
             var left = Math.floor(($(window).width() - (BrowserInfo.isSmallScreen() ? 980 : 800)) / 2);
             overlay.find('.modal-container').css("margin-left",left > 20 ? left : 20);
 
-            if (BrowserInfo.isIE8orLower()) {
-              // for IE7 and IE8 don't make the overlay big, append
-              // it directly and calculate it's real size, so we can increase the
-              // document+overlay size later
-              overlay_height = overlay.height();
-            }
             if (model.bottom()) {
               view.container.css("margin-top", window.innerHeight - view.container.height() - 100);
             }
             // Sometimes when the overlay pushes the document down,
             // we have to make sure that the overlay covers the whole doc.
-            if (BrowserInfo.isIE8orLower()) {
-              // increase the overlay size (see prev comments)
-              overlay.height(overlay_height + $(document).height());
-            } else {
-              overlay.height($(document).height());
-            }
+            overlay.height($(document).height());
           };
           $(window).resize(updateOverlay);
           setTimeout(function() {

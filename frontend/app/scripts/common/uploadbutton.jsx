@@ -65,10 +65,6 @@ define(['React','common/button'], function(React,Button) {
       var self = this;
       if (self.isMounted()) {
         var fileinput = $("<input class='file-input' type='file' />");
-        if (BrowserInfo.isIE8orLower()) {
-          // make input invisible
-          fileinput.css('filter', 'alpha(opacity=0)');
-        }
         if (self.props.fileType) {
           fileinput.attr("accept",self.props.fileType);
         }

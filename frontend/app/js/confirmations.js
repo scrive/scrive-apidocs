@@ -243,19 +243,6 @@ var ConfirmationView = Backbone.View.extend({
     },
     fixHeight: function() {
       var height = $(document).height();
-      if (BrowserInfo.isIE8orLower()) {
-        // WORKAROUND FOR IE8 BUG
-        // overlay (this.el) is absolute and has opacity filter
-        // which breaks IE8 calculation of the document height
-        // we temporarily disable opacity, calculate the height
-        // of the overlay and use it later.
-        // when we reenable opacity the document height is calculated properly
-        // because of explicitly set overlay height
-        var filter = $(this.el).css('filter');
-        $(this.el).css('filter', '');
-        height = $(document).height();
-        $(this.el).css('filter', filter);
-      }
       $(this.el).height(height);
     },
     reject: function(silent){

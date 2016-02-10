@@ -1,6 +1,5 @@
-/* Modal for drawing or typing signature. For old IE only typing mode is available.
+/* Modal for drawing or typing signature.
  * Value, as Base64 image is saved to field value.
- * valueTMP of field is used to store some internal values (for reediting, text mode only).
  * Usage:
  *
  *    new SignatureDrawOrTypeModal({
@@ -16,10 +15,10 @@
  */
 
 define(["legacy_code", "Backbone", "React",
-       "signview/signaturemodal/signaturedrawer", "signview/signaturemodal/signaturetyper"],
-       function (_legacy, Backbone, React, SignatureDrawer, SignatureTyper) {
+       "signview/signaturemodal/signaturedrawer"],
+       function (_legacy, Backbone, React, SignatureDrawer) {
 
-var SignatureDrawOrTypeModel = Backbone.Model.extend({
+var SignatureDrawingModel = Backbone.Model.extend({
   onClose: function (shouldScroll, shouldSign) {
     return this.get("onClose")(shouldScroll, shouldSign);
   },
@@ -109,7 +108,7 @@ return function (args) {
   var transTime = 300; // sync with @trans-time in 'signview/drawer.less';
   var onClose = args.onClose;
 
-  var model = new SignatureDrawOrTypeModel({
+  var model = new SignatureDrawingModel({
     field: args.field,
     width: args.width,
     height: args.height,
@@ -144,37 +143,26 @@ return function (args) {
     }
   });
 
-  if (!BrowserInfo.isIE8orLower()) {
-    React.render(React.createElement(SignatureDrawer, {
-      field: args.field,
-      width: args.width,
-      height: args.height,
-      acceptText: model.acceptText(),
-      onClose: function () {model.onClose();},
-      onAccept: function () {model.onAccept();},
-      onStartDrawing: function () {
-        document.ontouchmove = function (e) {
-          e.preventDefault();
-        };
-        modal.css("-ms-touch-action", "none");
-      },
-      onStopDrawing: function () {
-        document.ontouchmove = function (e) {
-            return true;
-        };
-        modal.css("-ms-touch-action", "auto");
-      }
-    }), modal[0]);
-  } else {
-    React.render(React.createElement(SignatureTyper, {
-      field: args.field,
-      width: args.width,
-      height: args.height,
-      acceptText: model.acceptText(),
-      onClose: function () {model.onClose();},
-      onAccept:  function () {model.onAccept();}
-    }), modal[0]);
-  }
+  React.render(React.createElement(SignatureDrawer, {
+    field: args.field,
+    width: args.width,
+    height: args.height,
+    acceptText: model.acceptText(),
+    onClose: function () {model.onClose();},
+    onAccept: function () {model.onAccept();},
+    onStartDrawing: function () {
+      document.ontouchmove = function (e) {
+        e.preventDefault();
+      };
+      modal.css("-ms-touch-action", "none");
+    },
+    onStopDrawing: function () {
+      document.ontouchmove = function (e) {
+          return true;
+      };
+      modal.css("-ms-touch-action", "auto");
+    }
+  }), modal[0]);
 
   if (args.arrow()) {
     args.arrow().disable();

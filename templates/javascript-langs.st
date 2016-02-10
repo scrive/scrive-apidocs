@@ -450,14 +450,10 @@ javascriptLocalisation =
               , passwordOldPasswordNotValid : "$_flashMessageBadOldPassword()$"
          }
          , pad : {
-                typeSignatureNameField : "$_padTypeSignatureNameField()$"
-             ,  cleanImage : "$_padCleanImage()$"
+                cleanImage : "$_padCleanImage()$"
              ,  notNamedParty : "$_notNamedParty()$"
              ,  changePartyTo : "$_changePartyTo()$"
              ,  giveForSigningThisDevice : "$_padGiveForSigningThisDevice()$"
-             ,  font1 : "$_padFont1()$"
-             ,  font2 : "$_padFont2()$"
-             ,  font3 : "$_padFont3()$"
              ,  backToList : "$_padBackToList()$"
              ,  backToDocument : "$_padBackToDocument()$"
         }

@@ -63,11 +63,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       var fileid = file.fileid();
       var pixelWidth = this.props.pixelWidth;
       _.each(self.state.images, function (img) {
-        if (BrowserInfo.isIE8orLower()) {
-          img.detachEvent("onload", self.handleLoad);
-        } else {
-          img.removeEventListener("load", self.handleLoad);
-        }
+        img.removeEventListener("load", self.handleLoad);
       });
       var images = _.map(file.pages(), function (page, index) {
         var pagelink = "/pages/" + fileid  + "/" + page.number() + file.queryPart({"pixelwidth": pixelWidth});
@@ -79,11 +75,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
             self.handleLoad(index);
           }
         };
-        if (BrowserInfo.isIE8orLower()) {
-          img.attachEvent("onload", callback);
-        } else {
-          img.addEventListener("load", callback);
-        }
+        img.addEventListener("load", callback);
         img.src = pagelink;
         return img;
       });

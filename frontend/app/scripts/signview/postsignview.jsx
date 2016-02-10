@@ -5,8 +5,6 @@ define(['React', 'Backbone', 'signview/createaccount/createaccountview', 'signvi
       document : React.PropTypes.object.isRequired
     },
     isHidden : function() {
-      if (BrowserInfo.isIE7orLower())
-        return true;
       if (null !== /^avis.*scrive.com/.exec(location.host))
         return true;
       if (null !== /^budget.*scrive.com/.exec(location.host))
