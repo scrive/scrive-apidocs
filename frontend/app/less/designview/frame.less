@@ -134,11 +134,6 @@ body.designview .mainContainer {
         &.float-left.last-tab {
           .box-shadow(1px 0 0 0 #cccccc inset);
 
-          .ie8 & {
-            // ie8 doesn't understand box-shadow, fallback to a border
-            border-left: 1px solid #cccccc;
-          }
-
           .design-view-tab-text {
             width: 291px;
           }
@@ -147,11 +142,6 @@ body.designview .mainContainer {
         &.float-left:first-child {
           border-left: none;
           .box-shadow(-1px 0 0 0 #cccccc inset);
-
-          .ie8 & {
-            // ie8 doesn't understand box-shadow, fallback to a border
-            border-right: 1px solid #cccccc;
-          }
         }
       }
     }
