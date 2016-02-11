@@ -6,6 +6,7 @@ termsOfService=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
     <link href='$cdnbaseurl$/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
@@ -32,6 +33,7 @@ termsOfServiceWithBranding=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
     <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>

@@ -3,6 +3,7 @@ pageDocumentDesign=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents()$
   </head>
   <body $if(custombackground)$style="background:$custombackground$;"$endif$ class='designview'>

@@ -44,6 +44,7 @@ changePasswordPageWithBranding=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
     <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
@@ -68,6 +69,7 @@ accessNewAccountPageWithBranding=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
     <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
   </head>
@@ -96,6 +98,7 @@ accountSetupPage=$doctype()$
   $htmlopentag()$
     <head>
       <title>$pagetitle()$</title>
+      $IECompatibilityMetaTag()$
       $standardHeaderContents(nobranding='true')$
       <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
     </head>
