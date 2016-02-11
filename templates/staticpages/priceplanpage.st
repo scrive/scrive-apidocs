@@ -3,6 +3,7 @@ priceplanPage=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
     $if(logged)$
       <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>

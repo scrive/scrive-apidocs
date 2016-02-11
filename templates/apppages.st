@@ -3,6 +3,7 @@ wholePage=$doctype()$
     $htmlopentag()$
       <head>
         <title>$pagetitle()$</title>
+        $IECompatibilityMetaTag()$
         $standardHeaderContents()$
       </head>
       <body $if(custombackground)$style="background:$custombackground$;"$endif$>
@@ -25,10 +26,11 @@ htmlclosingtag=
 ####
 htmlopentag=<html>
 ####
+IECompatibilityMetaTag=<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+####
 standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="content-language" content="$ctxlang$" />
-        <meta http-equiv="X-UA-Compatible" content="IE=10" />
         $if(noviewport)$
         $else$
           <meta name="viewport" content="width=1020" />

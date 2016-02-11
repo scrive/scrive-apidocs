@@ -3,6 +3,7 @@ toStartLogin=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents()$
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2" />
   </head>
@@ -36,6 +37,7 @@ pageToStartDocumentView=$doctype()$
 $htmlopentag()$
   <head>
     <title>$documenttitle$ - $pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents()$
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2" />
     <link href='$cdnbaseurl$/padlist_signview_branding/$brandingdomainid$/$brandinguserid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
@@ -89,6 +91,7 @@ pageToStartListView=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents()$
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2" />
     <link href='$cdnbaseurl$/padlist_signview_branding/$brandingdomainid$/$brandinguserid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>

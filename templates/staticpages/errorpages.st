@@ -3,6 +3,7 @@ notFound=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
     $if(logged)$
       <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
@@ -47,6 +48,7 @@ notFoundWithoutHeaders=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents()$
   </head>
 <body>
@@ -93,6 +95,7 @@ internalServerError=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
     $if(logged)$
       <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
@@ -137,6 +140,7 @@ internalServerErrorWithoutHeaders=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents()$
   </head>
 <body>
@@ -183,6 +187,7 @@ sessionTimeOut=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
     $if(logged)$
       <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
@@ -213,6 +218,7 @@ sessionTimeOutWithoutHeaders=$doctype()$
 $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
+    $IECompatibilityMetaTag()$
     $standardHeaderContents()$
   </head>
   <body>
