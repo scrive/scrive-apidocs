@@ -85,7 +85,7 @@ pageDocumentSignView ctx document siglink ad = do
   acompany <- getCompanyForUser auser
   acompanyui <- dbQuery $ GetCompanyUI (companyid acompany)
   let loggedAsSignatory = (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> ctxmaybeuser ctx);
-  let loggedAsAuthor = (Just authorid == (userid <$> ctxmaybeuser ctx)) || (Just authorid == (userid <$> ctxmaybeuser ctx));
+  let loggedAsAuthor = Just authorid == (userid <$> ctxmaybeuser ctx) || Just authorid == (userid <$> ctxmaybepaduser ctx)
 
   docjson <- documentJSONV1 Nothing False (isAuthor siglink) (Just siglink) document
   renderTemplate "pageDocumentSignView" $ do
