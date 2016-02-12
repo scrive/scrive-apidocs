@@ -258,7 +258,7 @@ standardPageFields ctx mcompanyui ad = do
 -- point though, so we go this hackish route for everybody.
 
 jsonContentType :: BS.ByteString
-jsonContentType = "text/html; charset=utf-8"
+jsonContentType = "text/plain; charset=utf-8"
 
 simpleJsonResponse :: (JSON.JSON a, FilterMonad Response m) => a -> m Response
 simpleJsonResponse = ok . toResponseBS jsonContentType . BSL.fromString . JSON.encode
