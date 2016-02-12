@@ -19,9 +19,11 @@ import User.UserView
 import Util.FinishWith
 import Util.FlashUtil
 import Utils.HTTP
+import Utils.String
 
 seeOtherXML :: String -> Response
-seeOtherXML url = toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString $ "<a href='"++url++"' alt='303 see other'>"++ url ++ "</a>"
+seeOtherXML url = toResponseBS (BS.fromString "text/html;charset=utf-8") $
+                    BSL.fromString $ "<a href='"++ (escapeString url) ++"' alt='303 see other'>"++ (escapeString url) ++ "</a>"
 
 {-|
    Redirects to the url relevant to the KontraLink.
