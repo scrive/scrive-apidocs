@@ -257,7 +257,7 @@
 "_brandingThemesLogo":"Logga",
 "_brandingThemesName":"Temats namn",
 "_brandingThemesNegativeColor":"Negativ",
-"_brandingThemesNegativeColorSample":"Den här färgen kommer att synas i notifikationer som t.ex. \\\\\"Fel\\\\\". Vi rekommenderar en intuitivt negativ färg som exempelvis röd.",
+"_brandingThemesNegativeColorSample":"",
 "_brandingThemesPositiveColor":"Positiv",
 "_brandingThemesPositiveColorSample":"Den här färgen kommer att synas på notifikationer som t.ex. \\\\\"Sparad\\\\\" och \\\\\"Klar\\\\\". Vi rekommenderar en intuitivt positiv färg som exempelvis grön.",
 "_brandingThemesServicePreview":"Förhandsvisning av tjänsten",
