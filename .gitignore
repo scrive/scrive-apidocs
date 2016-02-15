@@ -37,3 +37,6 @@ SkrivaPå BP.pdf
 
 test/e-legitimation/Test-certificates/Mariana Källström.p12
 test/e-legitimation/Test-certificates/Åke Jansson.p12
+
+_shake/
+_build/
