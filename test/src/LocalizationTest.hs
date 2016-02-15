@@ -159,7 +159,10 @@ testTranslationsHaveSameEscapeSequences = do
   let sourceTemplates = sort $ templates ! "en"
   lErrors <- forM (allValues :: [Lang]) $ \l -> do
     let translationTemplates = sort $ templates ! (codeFromLang l)
-    let errors = catMaybes $ checkEscapeSequencesTexts sourceTemplates translationTemplates
+    let cmpFunc = case l of
+                    LANG_LT -> compareEscapeSequecesForLatvian
+                    _ -> compareEscapeSequeces
+    let errors = catMaybes $ checkEscapeSequencesTexts cmpFunc sourceTemplates translationTemplates
     case errors of
        [] -> return Nothing
        errs -> return $ Just $ "For lang " ++ show (codeFromLang l) ++ "\n" ++ concat errs
@@ -167,14 +170,14 @@ testTranslationsHaveSameEscapeSequences = do
        [] -> return ()
        lErrs -> assertFailure $ "Some translation texts had different escapes structure then base texts\n" ++ concat lErrs
 
-checkEscapeSequencesTexts :: [(String,String)] -> [(String,String)] ->  [Maybe String]
-checkEscapeSequencesTexts _ [] = []
-checkEscapeSequencesTexts [] _ = []
-checkEscapeSequencesTexts src@((sn,sv):ss) tar@((tn,tv):tt)
-  | (sn < tn) = checkEscapeSequencesTexts ss tar
-  | (sn > tn) = checkEscapeSequencesTexts src tt
-  | (strip tv == "") = checkEscapeSequencesTexts ss tt
-  | otherwise = ((\s -> "In " ++ tn ++ " " ++ s ++ "\n") <$> compareEscapeSequeces sv tv) : (checkEscapeSequencesTexts ss tt)
+checkEscapeSequencesTexts :: (String -> String -> Maybe String) -> [(String,String)] -> [(String,String)] ->  [Maybe String]
+checkEscapeSequencesTexts _ _ [] = []
+checkEscapeSequencesTexts _ [] _ = []
+checkEscapeSequencesTexts cmp src@((sn,sv):ss) tar@((tn,tv):tt)
+  | (sn < tn) = checkEscapeSequencesTexts cmp ss tar
+  | (sn > tn) = checkEscapeSequencesTexts cmp src tt
+  | (strip tv == "") = checkEscapeSequencesTexts cmp ss tt
+  | otherwise = ((\s -> "In " ++ tn ++ " " ++ s ++ "\n") <$> cmp sv tv) : (checkEscapeSequencesTexts cmp ss tt)
 
 
 -- We need to extend this one day with " and '
@@ -189,11 +192,47 @@ compareEscapeSequeces s t =
       countLTs s /=  countLTs t)
     then Just "Escaped sequences don't match"
     else Nothing
-  where
-    countEscapes0 str = length $ split "\"" str
-    countEscapes1 str = length $ split "\\\"" str
-    countEscapes2 str = length $ split "\\\\\"" str
-    countEscapes3 str = length $ split "\\\\\\\"" str
-    countEOLs str = length $ split "\n" str
-    countGTs str = length $ split ">" str
-    countLTs str = length $ split "<" str
+
+-- Latvian has different aproach for quotations
+-- 1) It often uses '„' and '“' chars instead of '"'
+-- 2) It uses quotation for every foreign name. So there will be many more quotations
+
+compareEscapeSequecesForLatvian:: String -> String -> Maybe String
+compareEscapeSequecesForLatvian s t =
+  if (countEscapes0 s > countEscapes0 t + countLatvianExtraQuotes t ||
+      countEscapes1 s > countEscapes1 t + countLatvianExtraQuotes t ||
+      countEscapes2 s > countEscapes2 t + countLatvianExtraQuotes t ||
+      countEscapes3 s > countEscapes3 t + countLatvianExtraQuotes t ||
+      countEOLs s /= countEOLs t         ||
+      countGTs s /=  countGTs t          ||
+      countLTs s /=  countLTs t)
+    then Just $ "Escaped sequences don't match for Latvia"
+    else Nothing
+
+
+countEscapes0 :: String -> Int
+countEscapes0 = count "\""
+
+countEscapes1 :: String -> Int
+countEscapes1 = count "\\\""
+
+countEscapes2 :: String -> Int
+countEscapes2 = count "\\\\\""
+
+countEscapes3 :: String -> Int
+countEscapes3 = count "\\\\\\\""
+
+countLatvianExtraQuotes :: String -> Int
+countLatvianExtraQuotes s = count "„" s + count "“" s
+
+countEOLs :: String -> Int
+countEOLs = count "\n"
+
+countGTs :: String -> Int
+countGTs = count ">"
+
+countLTs :: String -> Int
+countLTs = count "<"
+
+count :: String -> String -> Int
+count p s = (length $ split p s) - 1

@@ -257,7 +257,7 @@
 "_brandingThemesLogo":"Logótipo",
 "_brandingThemesName":"Nome do tema",
 "_brandingThemesNegativeColor":"Negativo",
-"_brandingThemesNegativeColorSample":"",
+"_brandingThemesNegativeColorSample":"Esta cor será apresentada em notificações como \\\\\"Erro\\\\\". Recomendamos uma cor intuitivamente negativa, como o vermelho.",
 "_brandingThemesPositiveColor":"Positivo",
 "_brandingThemesPositiveColorSample":"Esta cor será apresentada em notificações como \\\\\"Guardado\\\\\" e \\\\\"Bem sucedido\\\\\". Recomendamos uma cor intuitivamente positiva, como o verde.",
 "_brandingThemesServicePreview":"Pré-visualização do serviço",

@@ -257,7 +257,7 @@
 "_brandingThemesLogo":"Logo",
 "_brandingThemesName":"Navn på tema",
 "_brandingThemesNegativeColor":"Negativ",
-"_brandingThemesNegativeColorSample":"",
+"_brandingThemesNegativeColorSample":"Denne farve vil blive anvendt på notifikationer såsom \\\\\"Fejl\\\\\". Vi anbefaler derfor en negativ farve såsom rød.",
 "_brandingThemesPositiveColor":"Positiv",
 "_brandingThemesPositiveColorSample":"Denne vil blive anvendt til notifikationer såsom \\\\\"Gemt\\\\\" og \\\\\"Gennemført\\\\\". Vi anbefaler en positiv farve såsom grøn.",
 "_brandingThemesServicePreview":"Vis service",

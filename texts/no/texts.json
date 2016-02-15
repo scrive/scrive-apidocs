@@ -257,7 +257,7 @@
 "_brandingThemesLogo":"Logo",
 "_brandingThemesName":"Temanavn",
 "_brandingThemesNegativeColor":"Negativ",
-"_brandingThemesNegativeColorSample":"",
+"_brandingThemesNegativeColorSample":"Denne fargen vil vises på varslinger som \\\\\"Feil\\\\\". Vi anbefaler en intuitiv negativ farge som for eksempel rød.",
 "_brandingThemesPositiveColor":"Positiv",
 "_brandingThemesPositiveColorSample":"Denne fargen vil vises på varslinger som \\\\\"Lagret\\\\\" og \\\\\"Vellykket\\\\\". Vi anbefaler en intuitiv positiv farge som for eksempel grønn.",
 "_brandingThemesServicePreview":"Forhåndsvisning av tjenester",
