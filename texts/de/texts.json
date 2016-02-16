@@ -166,7 +166,7 @@
 "_authorviewUploadedBy":"<span class='put-attachment-name-here'></span> hochgeladen von <span class='put-signatory-name-here'></span>",
 "_autoreminderChangeButton":"Ändern",
 "_autoreminderChangeDate":"Datum ändern",
-"_autoreminderChangeDescription":"Erinnerungen werden an Teilnehmer versendet,<BR/>die bis zu diesem Zeitpunkt noch nicht signiert haben.",
+"_autoreminderChangeDescription":"Erinnerungen werden an Teilnehmer versendet, die bis zu diesem Zeitpunkt noch nicht signiert haben.",
 "_autoreminderChangeTitle":"Erinnerungsdatum ändern",
 "_autoreminderDays":"Tag(e)",
 "_autoreminderDaysToRemind":"Erinnerung senden in",

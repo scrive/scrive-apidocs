@@ -166,7 +166,7 @@
 "_authorviewUploadedBy":"<span class='put-attachment-name-here'></span> caricato da <span class='put-signatory-name-here'></span>",
 "_autoreminderChangeButton":"Cambia",
 "_autoreminderChangeDate":"Cambia data",
-"_autoreminderChangeDescription":"Un promemoria sarà inviato ai successivi partecipanti <BR/> che non avranno ancora firmato entro questa data.",
+"_autoreminderChangeDescription":"Un promemoria sarà inviato ai successivi partecipanti che non avranno ancora firmato entro questa data.",
 "_autoreminderChangeTitle":"Cambia data promemoria",
 "_autoreminderDays":"giorno/i",
 "_autoreminderDaysToRemind":"Invia promemoria tra",

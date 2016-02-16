@@ -166,7 +166,7 @@
 "_authorviewUploadedBy":"<span class='put-attachment-name-here'></span> įkėlė <span class='put-signatory-name-here'></span>",
 "_autoreminderChangeButton":"Keisti",
 "_autoreminderChangeDate":"Pakeisti datą",
-"_autoreminderChangeDescription":"Kitai šaliai (-ims), <BR/> kuri (-ios) nepasirašė iki šios datos, bus išsiųstas (-i) priminimas (-ai).",
+"_autoreminderChangeDescription":"Kitai šaliai (-ims), kuri (-ios) nepasirašė iki šios datos, bus išsiųstas (-i) priminimas (-ai).",
 "_autoreminderChangeTitle":"Pakeisti priminimo datą",
 "_autoreminderDays":"diena (-os)",
 "_autoreminderDaysToRemind":"Siųsti priminimą",

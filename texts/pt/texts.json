@@ -166,7 +166,7 @@
 "_authorviewUploadedBy":"<span class='put-attachment-name-here'></span> carregado por <span class='put-signatory-name-here'></span>",
 "_autoreminderChangeButton":"Alterar",
 "_autoreminderChangeDate":"Alterar data",
-"_autoreminderChangeDescription":"O(s) lembrete(s) será(ão) enviado(s) para o(s) próximo(s) participante(s) <BR/> que ainda não tenham assinado até esta data.",
+"_autoreminderChangeDescription":"O(s) lembrete(s) será(ão) enviado(s) para o(s) próximo(s) participante(s) que ainda não tenham assinado até esta data.",
 "_autoreminderChangeTitle":"Alterar data do lembrete",
 "_autoreminderDays":"dia(s)",
 "_autoreminderDaysToRemind":"Enviar lembrete dentro de",

@@ -166,7 +166,7 @@
 "_authorviewUploadedBy":"<span class='put-attachment-name-here'></span> ladattu, <span class='put-signatory-name-here'></span>",
 "_autoreminderChangeButton":"Muuta",
 "_autoreminderChangeDate":"Muuta päivämäärä",
-"_autoreminderChangeDescription":"Muistutus tullaan lähettämään seuraavalle osallistujalle <BR/>, joka ei ole vielä tähän päivään mennessä allekirjoittanut.",
+"_autoreminderChangeDescription":"Muistutus tullaan lähettämään seuraavalle osallistujalle, joka ei ole vielä tähän päivään mennessä allekirjoittanut.",
 "_autoreminderChangeTitle":"Muuta muistutus päivämäärä",
 "_autoreminderDays":"päivä(ä)",
 "_autoreminderDaysToRemind":"Lähetä muistutus",

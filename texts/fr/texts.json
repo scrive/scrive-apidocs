@@ -166,7 +166,7 @@
 "_authorviewUploadedBy":"<span class='put-attachment-name-here'></span> téléchargé par <span class='put-signatory-name-here'></span>",
 "_autoreminderChangeButton":"Changer",
 "_autoreminderChangeDate":"Changer la date",
-"_autoreminderChangeDescription":"Un rappel sera envoyé au(x) signataire(s) <BR/> n'ayant pas encore signé à ce jour.",
+"_autoreminderChangeDescription":"Un rappel sera envoyé au(x) signataire(s) n'ayant pas encore signé à ce jour.",
 "_autoreminderChangeTitle":"Modifier la date de rappel",
 "_autoreminderDays":"jour(s)",
 "_autoreminderDaysToRemind":"Envoyer le rappel dans",
