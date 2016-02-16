@@ -166,7 +166,7 @@
 "_authorviewUploadedBy":"<span class='put-attachment-name-here'></span> uploaded by <span class='put-signatory-name-here'></span>",
 "_autoreminderChangeButton":"Change",
 "_autoreminderChangeDate":"Change date",
-"_autoreminderChangeDescription":"Reminder(s) will be sent to the next participant(s) <BR/> who has not yet signed by this date.",
+"_autoreminderChangeDescription":"Reminder(s) will be sent to the next participant(s) who has not yet signed by this date.",
 "_autoreminderChangeTitle":"Change reminder date",
 "_autoreminderDays":"day(s)",
 "_autoreminderDaysToRemind":"Send reminder in",
