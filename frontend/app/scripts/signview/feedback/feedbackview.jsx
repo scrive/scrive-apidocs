@@ -59,35 +59,35 @@ define(["React", "signview/feedback/questionview", "common/hubspot_service"], fu
       document: React.PropTypes.object.isRequired
     },
 
-    mixpanelProperties: function() {
+    mixpanelProperties: function () {
       var document = this.props.document;
       var properties = {
-        'Full Name': document.currentSignatory().name(),
-        '$first_name': document.currentSignatory().fstname(),
-        '$last_name': document.currentSignatory().sndname(),
-        '$email': document.currentSignatory().email(),
-        'Language': document.lang().simpleCode(),
-        'Company Name': document.currentSignatory().company(),
-        'Referring Company': document.author().company(),
-        'Signup Method': 'BySigning'
+        "Full Name": document.currentSignatory().name(),
+        "$first_name": document.currentSignatory().fstname(),
+        "$last_name": document.currentSignatory().sndname(),
+        "$email": document.currentSignatory().email(),
+        "Language": document.lang().simpleCode(),
+        "Company Name": document.currentSignatory().company(),
+        "Referring Company": document.author().company(),
+        "Signup Method": "BySigning"
       };
 
-      if(this._phoneNumber) {
-        properties['Phone'] = this._phoneNumber;
-        properties['Questionnaire Lead'] = true;
+      if (this._phoneNumber) {
+        properties.Phone = this._phoneNumber;
+        properties["Questionnaire Lead"] = true;
       }
 
       return properties;
     },
 
-    registerInMixpanel: function(extraProperties) {
+    registerInMixpanel: function (extraProperties) {
       var props = _.extend(this.mixpanelProperties(), extraProperties);
-      var mail = props['$email'];
+      var mail = props.$email;
       mixpanel.alias(mail);
       mixpanel.identify(mail);
       mixpanel.register(props);
       mixpanel.people.set(props);
-      mixpanel.track('Questionnaire Done');
+      mixpanel.track("Questionnaire Done");
     },
 
     onChangeQuestion: function (event, from, to, text) {
@@ -95,14 +95,14 @@ define(["React", "signview/feedback/questionview", "common/hubspot_service"], fu
       var isDone = endPoints.indexOf(to) > -1;
 
       if (from === "Q1" && event === "good") {
-        mixpanel.track('Questionnaire #1 Accept');
+        mixpanel.track("Questionnaire #1 Accept");
       }
 
       if (from === "Q3") {
         if (event === "sometimes" || event == "often") {
-          mixpanel.track('Questionnaire #2 Accept');
+          mixpanel.track("Questionnaire #2 Accept");
         } else {
-          mixpanel.track('Questionnaire #2 Deny');
+          mixpanel.track("Questionnaire #2 Deny");
         }
       }
 
@@ -138,7 +138,7 @@ define(["React", "signview/feedback/questionview", "common/hubspot_service"], fu
         }
 
         if (from === "Q5" && event === "yes") {
-          extraMixpanelProperties['Others in your organisation information wanted'] = true;
+          extraMixpanelProperties["Others in your organisation information wanted"] = true;
           HubSpot.track(HubSpot.FORM_NO_SENDS_DOCS, hubspotData);
         }
 
