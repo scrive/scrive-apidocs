@@ -257,7 +257,7 @@
 "_brandingThemesLogo":"Logo",
 "_brandingThemesName":"Name des Themes",
 "_brandingThemesNegativeColor":"Negativ",
-"_brandingThemesNegativeColorSample":"Diese Farbe erscheint bei Meldungen wie  \\\\\"Fehler\\\\\". Zu  empfehlen ist eine Warnfarbe wie Rot.",
+"_brandingThemesNegativeColorSample":"Diese Farbe erscheint bei Meldungen wie \\\\\"Fehler\\\\\";. Zu empfehlen ist eine Warnfarbe wie Rot.",
 "_brandingThemesPositiveColor":"Positiv",
 "_brandingThemesPositiveColorSample":"Diese Farbe erscheint bei Meldungen wie \\\\\"Gespeichert\\\\\" und \\\\\"Erfolg\\\\\". Zu empfehlen ist eine bestätigende Farbe wie Grün.",
 "_brandingThemesServicePreview":"Vorschau von Service",
