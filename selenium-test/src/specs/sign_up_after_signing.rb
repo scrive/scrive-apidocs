@@ -49,7 +49,7 @@ describe "sign up after signing a document" do
     puts "make sure we get invalid elements if we try to activate without filling in the password details"
     @h.wait_until { @h.driver.find_element :css => "a.main.button" }.click
     sleep 1
-    @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
+    @h.wait_until { (@h.driver.find_element :css => ".flash.error").displayed? }
     @h.screenshot 'sign_up_after_signing_3'
     @h.driver.execute_script("$('.flash-close img').click()")
 
@@ -59,7 +59,7 @@ describe "sign up after signing a document" do
     sleep 1
     @h.driver.execute_script("$('a.blue.button').click()")
     sleep 1
-    @h.wait_until { (@h.driver.find_element :css => ".flash.error.active").displayed? }
+    @h.wait_until { (@h.driver.find_element :css => ".flash.error").displayed? }
     @h.screenshot 'sign_up_after_signing_4'
     @h.driver.execute_script("$('.flash-close img').click()")
 
