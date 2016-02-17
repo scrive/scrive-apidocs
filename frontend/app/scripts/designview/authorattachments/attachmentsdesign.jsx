@@ -79,9 +79,7 @@ function (_Legacy, React, BackboneMixin, AttachmentsList,
                   <tr>
                     <td style={{width:"25px"}}></td>
                     <td style={{width:"330px"}}>{localization.authorattachments.nameOfAttachment}</td>
-                    <td style={{width:"242px"}}>{localization.authorattachments.typeOfAttachment}</td>
-                    <td style={{width:"48px"}}></td>
-                    <td style={{width:"25px"}}></td>
+                    <td colSpan="3" style={{width:"242px"}}>{localization.authorattachments.typeOfAttachment}</td>
                   </tr>
                 </thead>
                 <tbody>
@@ -119,7 +117,7 @@ function (_Legacy, React, BackboneMixin, AttachmentsList,
                             ]}
                           />
                         </td>
-                        <td>
+                        <td style={{width:"48px"}}>
                           {/* if */ (a.isServerFile()) &&
                             <a
                               className="view-link"
@@ -128,7 +126,7 @@ function (_Legacy, React, BackboneMixin, AttachmentsList,
                             />
                           }
                         </td>
-                        <td>
+                        <td style={{width:"25px"}}>
                           <a
                             className="remove-link"
                             onClick={function () {
