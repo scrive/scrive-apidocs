@@ -1,8 +1,13 @@
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var FilePageView = require("./filepageview");
+var File = require("../../../js/files.js").File;
+var $ = require("jquery");
+var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "designview/fileview/filepageview"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, FilePageView) {
-
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(File).isRequired,
       pixelWidth: React.PropTypes.number.isRequired
@@ -174,4 +179,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       );
     }
   });
-});

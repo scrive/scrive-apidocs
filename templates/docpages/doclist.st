@@ -5,18 +5,14 @@ pageDocumentsList=
 <div class='blocking-box'></div>
 <div class='archive'></div>
 <script>
- require(['jquery', 'legacy_code'], function(jQuery) {
-  jQuery(".archive").append(new Archive({
-    month : $month$, 
-    year : $year$, 
+  var fromTemplate = {
+    month : $month$,
+    year : $year$,
     forCompanyAdmin : $if(isadmin)$true$else$false$endif$,
-    idledoctimeout : $if(idledoctimeout)$$idledoctimeout$$else$null$endif$,
-  }).view().el);
-
-  mixpanel.register({Context : 'Archive'});
-  mixpanel.track('View Archive');
- });
+    idledoctimeout : $if(idledoctimeout)$$idledoctimeout$$else$null$endif$
+  };
 </script>
+  <script src="/compiled/all/archive.js"></script>
 </div>
 </div>
 ####

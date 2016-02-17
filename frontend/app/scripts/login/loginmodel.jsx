@@ -1,8 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Backbone = require("backbone");
+var LocalStorage = require("../../js/storage.js").LocalStorage;
+var Submit = require("../../js/submits.js").Submit;
+var Language = require("../../js/utils/language.js").Language;
 
-define(['React', 'Backbone', 'legacy_code'], function(React, Backbone) {
 
-return Backbone.Model.extend({
+module.exports = Backbone.Model.extend({
   defaults: {
         view: "login",
         email : "",
@@ -115,6 +118,4 @@ return Backbone.Model.extend({
       }
     }).send();
   }
-});
-
 });

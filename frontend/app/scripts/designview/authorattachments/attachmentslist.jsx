@@ -1,9 +1,9 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Button = require("../../common/button");
+var List = require("../../lists/list");
+var DesignAuthorAttachment = require("./designviewattachment");
 
-define(["legacy_code", "React", "common/button", "lists/list", "designview/authorattachments/designviewattachment"],
-function (_legacy, React, Button, List, DesignAuthorAttachment) {
-
-  return React.createClass({
+  module.exports = React.createClass({
       addAttachment: function (title, file, attachmentid) {
         mixpanel.track("Select attachment from list");
         this.props.model.addAttachment(
@@ -54,4 +54,3 @@ function (_legacy, React, Button, List, DesignAuthorAttachment) {
         );
       }
   });
-});

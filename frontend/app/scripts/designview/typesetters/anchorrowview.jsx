@@ -1,9 +1,10 @@
-/** @jsx React.DOM */
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var InfoTextInput = require("../../common/infotextinput");
+var PlacementAnchor = require("../../../js/anchors.js").PlacementAnchor;
 
-define(["Underscore", "Backbone", "React",
-        "common/infotextinput", "legacy_code"],
-  function (_, Backbone, React, InfoTextInput) {
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       anchor: React.PropTypes.instanceOf(PlacementAnchor).isRequired,
       onRemove: React.PropTypes.func.isRequired
@@ -55,4 +56,3 @@ define(["Underscore", "Backbone", "React",
       );
     }
   });
-});

@@ -1,8 +1,17 @@
+var React = require("react");
+var DesignAuthorAttachments = require("../../scripts/designview/authorattachments/designviewattachments");
+var AttachmentsDesign = require("../../scripts/designview/authorattachments/attachmentsdesign");
+var $ = require("jquery");
+var Button = require("../buttons.js").Button;
+var _ = require("underscore");
+var LoadingDialog = require("../loading.js").LoadingDialog;
+var FlashMessage = require("../flashmessages.js").FlashMessage;
+var Confirmation = require("../confirmations.js").Confirmation;
+
 /* This is component for uploding author attachments (with upload and for server attachments).
  */
-define(['React','designview/authorattachments/designviewattachments','designview/authorattachments/attachmentsdesign','Backbone', 'legacy_code'], function(React,DesignAuthorAttachments, AttachmentsDesign) {
 
-  window.DesignAuthorAttachmentsPopup = function(args) {
+  var DesignAuthorAttachmentsPopup = exports.DesignAuthorAttachmentsPopup = function(args) {
     var self = this;
     var onStartShowingList = function() {
       if (self.popup) {
@@ -93,4 +102,3 @@ define(['React','designview/authorattachments/designviewattachments','designview
     });
   };
 
-});

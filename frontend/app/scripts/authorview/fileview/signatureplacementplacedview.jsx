@@ -1,6 +1,8 @@
-define(["legacy_code", "Backbone", "React"], function (legacy_code, Backbone, React) {
+var Backbone = require("backbone");
+var React = require("react");
+var $ = require("jquery");
 
-return Backbone.View.extend({
+module.exports = Backbone.View.extend({
   initialize: function (args) {
     this.listenTo(this.model, "change", this.updatePosition);
     this.render();
@@ -61,6 +63,4 @@ return Backbone.View.extend({
 
     this.$el.append(box);
   }
-});
-
 });

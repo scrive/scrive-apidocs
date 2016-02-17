@@ -1,8 +1,15 @@
+var Backbone = require("backbone");
+var Submit = require("../../submits.js").Submit;
+var FlashMessage = require("../../flashmessages.js").FlashMessage;
+var _ = require("underscore");
+var $ = require("jquery");
+var PasswordValidation = require("../../validation.js").PasswordValidation;
+var Confirmation = require("../../confirmations.js").Confirmation;
+
 /*
  * Defines the model and view for the change password popup.
  */
 
-define(['Backbone', 'legacy_code'], function() {
 
 var ChangePasswordPopupModel = Backbone.Model.extend({
   defaults : {
@@ -125,9 +132,8 @@ var ChangePasswordPopupView = Backbone.View.extend({
 });
 
 
-window.ChangePasswordPopup = function(args) {
+var ChangePasswordPopup = exports.ChangePasswordPopup = function(args) {
           var model = new ChangePasswordPopupModel(args);
           var view =  new ChangePasswordPopupView({model : model});
 };
 
-});

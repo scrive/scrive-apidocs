@@ -1,7 +1,17 @@
-/* Page for accepting API Access  */
-define(['Backbone', 'legacy_code'], function() {
+var Backbone = require("backbone");
+var Submit = require("./submits.js").Submit;
+var FlashMessage = require("./flashmessages.js").FlashMessage;
+var Language = require("./utils/language.js").Language;
+var _ = require("underscore");
+var $ = require("jquery");
+var Button = require("./buttons.js").Button;
+var InfoTextInput = require("./infotextinputs.js").InfoTextInput;
+var EmailValidation = require("./validation.js").EmailValidation;
+var OAuthConfirationModel = require("./oauth.js").OAuthConfirationModel;
 
-window.OAuthConfirationModel = Backbone.Model.extend({
+/* Page for accepting API Access  */
+
+var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.extend({
   defaults: {
     logged : false,
     who    : ""   ,
@@ -224,7 +234,7 @@ var OAuthConfirationView = Backbone.View.extend({
 });
 
 
-window.OAuthConfirmation = function(args){
+var OAuthConfirmation = exports.OAuthConfirmation = function(args){
         var model = new OAuthConfirationModel(args);
         var view = new OAuthConfirationView({
                         model: model,
@@ -238,4 +248,3 @@ window.OAuthConfirmation = function(args){
 };
 
 
-});

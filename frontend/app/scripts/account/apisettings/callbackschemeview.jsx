@@ -1,9 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var CallbackScheme = require("./callbackscheme");
+var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 
-define(['React','common/backbone_mixin','account/apisettings/callbackscheme','common/htmltextwithsubstitution'], function(React, BackboneMixin, CallbackScheme, HtmlTextWithSubstitution) {
 
 
-return React.createClass({
+module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.model];
@@ -59,4 +61,3 @@ return React.createClass({
       );
     }
   });
-});

@@ -1,9 +1,14 @@
-define(["Backbone", "React", "common/backbone_mixin", "designview/typesetters/checkboxtypesetterview",
-        "designview/editdocument/draggablemixin", "designview/fileview/hastypesettermixin",
-        "legacy_code"],
-  function (Backbone, React, BackboneMixin, CheckboxTypeSetterView, DraggableMixin, HasTypeSetterMixin) {
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var CheckboxTypeSetterView = require("../typesetters/checkboxtypesetterview");
+var DraggableMixin = require("../editdocument/draggablemixin");
+var HasTypeSetterMixin = require("./hastypesettermixin");
+var FieldPlacement = require("../../../js/placements.js").FieldPlacement;
+var $ = require("jquery");
+var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(FieldPlacement).isRequired,
       pageWidth: React.PropTypes.number.isRequired,
@@ -99,4 +104,3 @@ define(["Backbone", "React", "common/backbone_mixin", "designview/typesetters/ch
       );
     }
   });
-});

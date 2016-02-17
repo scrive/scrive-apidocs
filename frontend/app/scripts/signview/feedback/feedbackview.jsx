@@ -1,4 +1,6 @@
-define(["React", "signview/feedback/questionview", "common/hubspot_service"], function (React, Question, HubSpot) {
+var React = require("react");
+var Question = require("./questionview");
+var HubSpot = require("../../common/hubspot_service");
   var QUESTIONS = {
     Q1: {
       title: localization.feedbackQ1,
@@ -47,7 +49,7 @@ define(["React", "signview/feedback/questionview", "common/hubspot_service"], fu
     }
   };
 
-  return React.createClass({
+  module.exports = React.createClass({
     _phoneNumber: undefined,
     _feedback: undefined,
 
@@ -183,4 +185,3 @@ define(["React", "signview/feedback/questionview", "common/hubspot_service"], fu
       );
     }
   });
-});

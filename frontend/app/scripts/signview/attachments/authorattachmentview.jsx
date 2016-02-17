@@ -1,10 +1,16 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin",
-        "signview/tasks/task_mixin", "common/button", "common/checkbox",
-        "signview/attachments/authorattachmentview"],
-  function (legacy_code, _, Backbone, React, BackboneMixin,
-            TaskMixin, Button, Checkbox, AuthorAttachmentView) {
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var TaskMixin = require("../tasks/task_mixin");
+var Button = require("../../common/button");
+var Checkbox = require("../../common/checkbox");
+var AuthorAttachmentView = require("./authorattachmentview");
+var AuthorAttachment = require("../../../js/authorattachment.js").AuthorAttachment;
+var PageTask = require("../../../js/tasks.js").PageTask;
+var $ = require("jquery");
 
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin, TaskMixin],
 
     getBackboneModels: function () {
@@ -165,4 +171,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       );
     }
   });
-});

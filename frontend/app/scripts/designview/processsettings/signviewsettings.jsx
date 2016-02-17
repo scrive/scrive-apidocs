@@ -1,6 +1,12 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Backbone = require("backbone");
+var BackboneMixin = require("../../common/backbone_mixin");
+var Checkbox = require("../../common/checkbox");
+var Theme = require("../../themes/theme");
+var SignviewPreview = require("../../themes/previews/signing");
+var $ = require("jquery");
+var Confirmation = require("../../../js/confirmations.js").Confirmation;
 
-define(['React','Backbone', 'common/backbone_mixin', 'common/checkbox', 'themes/theme', 'themes/previews/signing' ,'legacy_code'], function(React, Backbone, BackboneMixin, Checkbox, Theme, SignviewPreview) {
 
 var SignviewSettingsModel = Backbone.Model.extend({
   initialize: function(args) {
@@ -104,7 +110,7 @@ var SignviewSettingsView = React.createClass({
     }
 });
 
-return function(args) {
+module.exports = function(args) {
   var document = args.document;
   var model = new SignviewSettingsModel({document : document});
   var settingsView = $("<div/>");
@@ -134,6 +140,3 @@ return function(args) {
    }
  });
 };
-
-});
-

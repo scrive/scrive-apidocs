@@ -1,11 +1,14 @@
+var Backbone = require("backbone");
+var _ = require("underscore");
+var $ = require("jquery");
+
 /* Basic modules for daling with a files
  * File model + view of the files on all pages with ajax download of pages
  * Also support for showing fields placements | Sign view only for now
  */
 
-define(['Backbone', 'legacy_code'], function() {
 
-window.File = Backbone.Model.extend({
+var File = exports.File = Backbone.Model.extend({
     defaults: function() {
       return {
         id : 0,
@@ -139,7 +142,7 @@ window.File = Backbone.Model.extend({
 
 */
 
-window.FilePage = Backbone.Model.extend({
+var FilePage = exports.FilePage = Backbone.Model.extend({
     defaults: function() { return {
         number : 0,
         placements : [],
@@ -182,4 +185,3 @@ window.FilePage = Backbone.Model.extend({
     }
 });
 
-});

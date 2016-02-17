@@ -1,8 +1,6 @@
-/** @jsx React.DOM */
+var React = require("react");
 
-define(["legacy_code", "React"], function (_Legacy, React) {
-
-return React.createClass({
+module.exports = React.createClass({
   onClick: function () {
     var sig = this.props.model;
     mixpanel.track("Choose sign order", {
@@ -29,6 +27,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

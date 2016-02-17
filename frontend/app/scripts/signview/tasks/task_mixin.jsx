@@ -1,5 +1,5 @@
-define(["React"], function (React) {
-  return {
+var React = require("react");
+  module.exports = {
     contextTypes: {
       addTask: React.PropTypes.func,
       removeTask: React.PropTypes.func,
@@ -87,4 +87,3 @@ define(["React"], function (React) {
       this.removeTasks();
     }
   };
-});

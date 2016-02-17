@@ -1,8 +1,8 @@
-/** @jsx React.DOM */
+var Backbone = require("backbone");
+var _ = require("underscore");
 
-define(['legacy_code'], function() {
 
-return Backbone.Model.extend({
+module.exports = Backbone.Model.extend({
         defaults: function () {
           return {filters: []};
         },
@@ -30,9 +30,3 @@ return Backbone.Model.extend({
             this.trigger("change");
         }
     });
-
-
-
-
-});
-

@@ -1,8 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var BasicSettings = require("./basicsettings");
+var MessageSettings = require("./messagesettings");
+var AttachmentAndSignviewSettings = require("./attachmentsandsignviewsettings");
 
-define(['legacy_code', 'React', 'common/backbone_mixin','designview/processsettings/basicsettings','designview/processsettings/messagesettings', 'designview/processsettings/attachmentsandsignviewsettings'], function(_Legacy, React, BackboneMixin, BasicSettings, MessageSettings, AttachmentAndSignviewSettings) {
 
-return React.createClass({
+module.exports = React.createClass({
   mixins: [BackboneMixin.BackboneMixin],
   getBackboneModels : function() {
     return [this.props.model,this.props.model.document()];
@@ -41,7 +44,3 @@ return React.createClass({
     }
   }
 });
-
-});
-
-

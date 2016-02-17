@@ -1,9 +1,8 @@
-/** @jsx React.DOM */
-
-define(['legacy_code'], function() {
+var Backbone = require("backbone");
 
 
-return Backbone.Model.extend({
+
+module.exports = Backbone.Model.extend({
         defaults: {
             text: ""
         },
@@ -14,5 +13,3 @@ return Backbone.Model.extend({
             this.set({ text: text });
         }
     });
-});
-

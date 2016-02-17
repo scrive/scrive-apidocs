@@ -1,15 +1,18 @@
-/** @jsx React.DOM */
+var _ = require("underscore");
+var React = require("react");
+var Button = require("../../common/button");
+var Select = require("../../common/select");
+var TypeSetterMixin = require("./typesettermixin");
+var Done = require("./done");
+var Remove = require("./remove");
+var SignatorySelector = require("./signatoryselector");
+var More = require("./more");
+var FieldSelector = require("./fieldselector");
+var FontSelector = require("./fontselector");
+var Anchor = require("./anchor");
+var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 
-define(["Underscore", "React", "common/button", "common/select",
-        "designview/typesetters/typesettermixin", "designview/typesetters/done",
-        "designview/typesetters/remove", "designview/typesetters/signatoryselector",
-        "designview/typesetters/more", "designview/typesetters/fieldselector",
-        "designview/typesetters/fontselector", "designview/typesetters/anchor",
-        "legacy_code"],
-  function (_, React, Button, Select, TypeSetterMixin,
-            Done, Remove, SignatorySelector, More, FieldSelector,
-            FontSelector, Anchor) {
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [TypeSetterMixin],
 
     verticalOffset: FieldPlacementGlobal.textTypeSetterVerticalOffset,
@@ -145,4 +148,3 @@ define(["Underscore", "React", "common/button", "common/select",
       );
     }
   });
-});

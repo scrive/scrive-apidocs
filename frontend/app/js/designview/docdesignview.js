@@ -1,8 +1,21 @@
+var Spinner = require("spin.js");
+var React = require("react");
+var Backbone = require("backbone");
+var DocumentView = require("../../scripts/designview/documentview");
+var _ = require("underscore");
+var $ = require("jquery");
+var Button = require("../buttons.js").Button;
+var Submit = require("../submits.js").Submit;
+var Confirmation = require("../confirmations.js").Confirmation;
+var LoadingDialog = require("../loading.js").LoadingDialog;
+var Document = require("../documents.js").Document;
+var DesignViewTabsView = require("./designviewtabs.js").DesignViewTabsView;
+var DesignViewModel = require("./docdesignviewmodel.js").DesignViewModel;
+
 /*
  * View for design view
  */
 
-define(['Spinjs', "React", 'Backbone', 'designview/documentview', 'legacy_code'], function(Spinner, React, Backbone, DocumentView) {
 
   // expected model: DesignViewModel
     var DesignViewButtonBarView = Backbone.View.extend({
@@ -511,7 +524,7 @@ define(['Spinjs', "React", 'Backbone', 'designview/documentview', 'legacy_code']
         }
     });
 
-    window.DesignView = function(args) {
+    var DesignView = exports.DesignView = function(args) {
         var document = new Document({
             id : args.id
         });
@@ -532,4 +545,3 @@ define(['Spinjs', "React", 'Backbone', 'designview/documentview', 'legacy_code']
         };
     };
 
-});

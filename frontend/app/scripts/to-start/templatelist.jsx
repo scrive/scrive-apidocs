@@ -1,8 +1,14 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var Utils = require("../archive/utils");
+var List = require("../lists/list");
+var DeliveryMethodTooltipMixin = require("./deliverymethodtooltip");
+var Submit = require("../../js/submits.js").Submit;
+var LoadingDialog = require("../../js/loading.js").LoadingDialog;
+var _ = require("underscore");
 
-define(['React', 'common/backbone_mixin', 'archive/utils', 'lists/list', 'to-start/deliverymethodtooltip', 'legacy_code'], function(React, BackboneMixin, Utils, List, DeliveryMethodTooltipMixin) {
 
-return React.createClass({
+module.exports = React.createClass({
   mixins: [DeliveryMethodTooltipMixin],
     createFromTemplate : function(id) {
       mixpanel.track('Click on template in to-start list');
@@ -29,14 +35,14 @@ return React.createClass({
     deliveryMethodIcons: function(data) {
       var dms = _.map(data.field("parties"),function(s) {return s.delivery_method;});
       var self = this;
-      uniqdms = _.uniq(dms);
+      var uniqdms = _.uniq(dms);
 
       return (<div>{
-        uniqdms.map(function(d) { 
-          return (<div 
-            className={self.icons[d]} 
+        uniqdms.map(function(d) {
+          return (<div
+            className={self.icons[d]}
             key={"deliveryMethod-" + d}
-            style={{'display': 'inline-block'}} 
+            style={{'display': 'inline-block'}}
             onMouseOver={function(e) { self.showToolTip(d, e); }}
             onMouseOut={function(e) { self.hideToolTip(); }}
           />);
@@ -97,7 +103,3 @@ return React.createClass({
       );
     }
 });
-
-
-});
-

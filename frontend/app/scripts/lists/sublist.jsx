@@ -1,8 +1,7 @@
-/** @jsx React.DOM */
+var React = require("react");
 
-define(['React','legacy_code'],function(React) {
 
-return React.createClass({
+module.exports = React.createClass({
     propTypes: {
     },
     render: function() {
@@ -15,7 +14,3 @@ return React.createClass({
       );
     }
 });
-
-
-});
-

@@ -1,4 +1,7 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Document = require("../../../js/documents.js").Document;
+var $ = require("jquery");
+var _ = require("underscore");
 
 /* Mixin for elements that can create new placements on click
 
@@ -10,8 +13,7 @@
 
  */
 
-define(["React", "legacy_code"], function (React) {
-  return {
+  module.exports = {
     propTypes: {
       model: React.PropTypes.instanceOf(Document),
       openTypeSetterFor: React.PropTypes.func.isRequired
@@ -118,4 +120,3 @@ define(["React", "legacy_code"], function (React) {
       });
     }
   };
-});

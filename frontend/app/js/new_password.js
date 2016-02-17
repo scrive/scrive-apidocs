@@ -1,6 +1,12 @@
+var Backbone = require("backbone");
+var FlashMessage = require("./flashmessages.js").FlashMessage;
+var Submit = require("./submits.js").Submit;
+var $ = require("jquery");
+var InfoTextInput = require("./infotextinputs.js").InfoTextInput;
+var Button = require("./buttons.js").Button;
+
 // setting new password (after email reset step)
 
-define(['Backbone', 'legacy_code'], function() {
 
   var NewPasswordModel = Backbone.Model.extend({
     defaults: {
@@ -137,7 +143,7 @@ define(['Backbone', 'legacy_code'], function() {
   });
 
 
-  window.NewPassword = function(args) {
+  var NewPassword = exports.NewPassword = function(args) {
     var model = new NewPasswordModel(args);
     var view;
     var options = { model: model,
@@ -155,4 +161,3 @@ define(['Backbone', 'legacy_code'], function() {
     this.el = function() {return $(view.el);};
   };
 
-});

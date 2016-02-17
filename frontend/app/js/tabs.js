@@ -1,3 +1,8 @@
+var Backbone = require("backbone");
+var _ = require("underscore");
+var jQuery = require("jquery");
+var $ = require("jquery");
+
 /*Module for basic system schema called tabs. Like three steps in design view or Conteacts | Offers | Orders | .. in Archive
  *
  * Tab contails of name and body,
@@ -6,9 +11,8 @@
  *
  *
  */
-define(['Backbone', 'legacy_code'], function() {
 
-window.Tab = Backbone.Model.extend({
+var Tab = exports.Tab = Backbone.Model.extend({
   defaults: {
     pagehash : undefined,
     active : false,
@@ -381,7 +385,7 @@ var TabsView = Backbone.View.extend({
 });
 
 
-window.KontraTabs = function(args){
+var KontraTabs = exports.KontraTabs = function(args){
         var self = this;
         this.model = new Tabs(args);
         this.view = new TabsView({
@@ -405,4 +409,3 @@ window.KontraTabs = function(args){
 
 };
 
-});

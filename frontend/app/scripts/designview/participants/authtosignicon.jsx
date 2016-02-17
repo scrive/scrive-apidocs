@@ -1,8 +1,7 @@
-/** @jsx React.DOM */
+var React = require("react");
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
-define(["legacy_code", "React"], function (_Legacy, React) {
-
-return React.createClass({
+module.exports = React.createClass({
   onClick: function () {
     var sig = this.props.model;
     mixpanel.track("Choose auth", {
@@ -42,6 +41,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

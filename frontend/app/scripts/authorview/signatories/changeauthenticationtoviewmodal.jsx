@@ -1,8 +1,16 @@
-/** @jsx React.DOM */
-
-define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
-  "common/select", "common/infotextinput"],
-  function (Legacy, React, BackboneMixin, Backbone, Select, InfoTextInput) {
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var Backbone = require("backbone");
+var Select = require("../../common/select");
+var InfoTextInput = require("../../common/infotextinput");
+var SSNForSEBankIDValidation = require("../../../js/validation.js").SSNForSEBankIDValidation;
+var SSNForNOBankIDValidation = require("../../../js/validation.js").SSNForNOBankIDValidation;
+var PhoneValidationNO = require("../../../js/validation.js").PhoneValidationNO;
+var EmptyValidation = require("../../../js/validation.js").EmptyValidation;
+var $ = require("jquery");
+var Confirmation = require("../../../js/confirmations.js").Confirmation;
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
 
   var ChangeAuthenticationToViewModalModel = Backbone.Model.extend({
     initialize: function (args) {
@@ -251,7 +259,7 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
     }
   });
 
-  return function (args) {
+  module.exports = function (args) {
     var model = new ChangeAuthenticationToViewModalModel({signatory: args.signatory});
     var content = $("<div class='docview-changeauthentication-modal'>");
 
@@ -298,4 +306,3 @@ define(["legacy_code", "React", "common/backbone_mixin", "Backbone",
       }
     });
   }
-});

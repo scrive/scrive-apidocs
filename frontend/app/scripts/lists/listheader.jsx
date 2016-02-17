@@ -1,8 +1,7 @@
-/** @jsx React.DOM */
+var React = require("react");
 
-define(['React','legacy_code'],function(React) {
 
-return React.createClass({
+module.exports = React.createClass({
     render: function() {
       return (
         <div className=''>
@@ -11,6 +10,3 @@ return React.createClass({
       );
     }
 });
-
-});
-

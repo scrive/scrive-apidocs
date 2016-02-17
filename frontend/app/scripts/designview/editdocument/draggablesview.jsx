@@ -1,9 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var DraggableCheckbox = require("./draggablecheckbox");
+var DraggableSignature = require("./draggablesignature");
+var DraggableText = require("./draggabletext");
+var Document = require("../../../js/documents.js").Document;
 
-define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocument/draggablecheckbox",
-        "designview/editdocument/draggablesignature", "designview/editdocument/draggabletext"],
-  function (legacy_code, React, BackboneMixin, DraggableCheckbox, DraggableSignature, DraggableText) {
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
     propTypes: {
@@ -52,4 +54,3 @@ define(["legacy_code", "React", "common/backbone_mixin", "designview/editdocumen
       );
     }
   });
-});

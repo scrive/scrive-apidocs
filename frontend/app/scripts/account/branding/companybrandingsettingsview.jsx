@@ -1,9 +1,13 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var Button = require("../../common/button");
+var CompanyBrandingTextEditor = require("./companybrandingsettingstexteditor");
+var CompanyBrandingImageEditor = require("./companybrandingsettingsimageeditor");
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
-define(["React","common/backbone_mixin","legacy_code","common/button","account/branding/companybrandingsettingstexteditor","account/branding/companybrandingsettingsimageeditor"], function(React, BackboneMixin,_Legacy, Button,CompanyBrandingTextEditor,CompanyBrandingImageEditor) {
 
 
-return React.createClass({
+module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.model];
@@ -60,4 +64,3 @@ return React.createClass({
       );
     }
   });
-});

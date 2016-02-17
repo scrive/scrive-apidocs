@@ -1,6 +1,7 @@
-define(['legacy_code'], function() {
+var FieldPlacementGlobal = require("./fieldplacementglobal.js").FieldPlacementGlobal;
 
-window.FieldPlacementGlobal = {};
+
+var FieldPlacementGlobal = exports.FieldPlacementGlobal = {};
 
 /* Borders for all placements */
 FieldPlacementGlobal.placementBorder = 2;
@@ -66,4 +67,3 @@ FieldPlacementGlobal.checkboxHeight = 10;
 FieldPlacementGlobal.textfieldWidth = 77;
 FieldPlacementGlobal.textfieldHeight = 34;
 
-});

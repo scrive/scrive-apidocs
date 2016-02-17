@@ -1,5 +1,7 @@
-define(["React", "common/button", "common/infotextinput"], function (React, Button, InfoTextInput) {
-  return React.createClass({
+var React = require("react");
+var Button = require("../../common/button");
+var InfoTextInput = require("../../common/infotextinput");
+  module.exports = React.createClass({
     mixins: [React.addons.LinkedStateMixin],
 
     propTypes: {
@@ -77,4 +79,3 @@ define(["React", "common/button", "common/infotextinput"], function (React, Butt
       );
     }
   });
-});

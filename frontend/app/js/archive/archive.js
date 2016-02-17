@@ -1,6 +1,18 @@
+var React = require("react");
+var DocumentsList = require("../../scripts/archive/documents");
+var TemplatesList = require("../../scripts/archive/templates");
+var AttachmentsList = require("../../scripts/archive/attachments");
+var TrashList = require("../../scripts/archive/trash");
+var Backbone = require("backbone");
+var $ = require("jquery");
+var Tab = require("../tabs.js").Tab;
+var _ = require("underscore");
+var KontraTabs = require("../tabs.js").KontraTabs;
+
+require("../utils/time");
+
 /* Main archive definition. Its a tab based set of different documents lists. */
 
-define(['React', 'archive/documents','archive/templates', 'archive/attachments', 'archive/trash', 'Backbone', 'legacy_code'], function(React,DocumentsList,TemplatesList,AttachmentsList,TrashList) {
 
 var ArchiveModel = Backbone.Model.extend({
   month : function() {
@@ -129,7 +141,7 @@ var ArchiveView = Backbone.View.extend({
 });
 
 
-window.Archive = function(args) {
+var Archive = exports.Archive = function(args) {
           var model = new ArchiveModel(args);
           var view =  new ArchiveView({model : model, el : $("<div/>")});
           return new Object({
@@ -139,4 +151,3 @@ window.Archive = function(args) {
             });
 };
 
-});

@@ -13,30 +13,12 @@ $htmlopentag()$
       </div>
   </div>
   <script type="text/javascript">
-   require(['jquery', 'React', 'login/login', 'legacy_code'], function(jQuery,React,Login) {
-    jQuery(document).ready(function() {
-      var referer =  "$referer$";
-      if (window.location.hash != "" && referer.indexOf("#") == -1 &&
-          window.location.hash != "#log-in" &&
-          window.location.hash != "#sign-up" &&
-          window.location.hash != "#forgot") {
-        referer = referer + window.location.hash;
-      }
-      var div = jQuery('.global-table-cell');
-      React.render(React.createElement(Login,{
-        referer:   referer,
-        autofocus: true,
-        langprefix : "$langprefix()$"
-      }),div[0]);
-
-      mixpanel.register({
-        Context : 'Login page - branded'
-      });
-      mixpanel.track('View login page -branded');
-    });
-   });
+    var fromTemplate = {
+      referer: "$referer$",
+      langprefix : "$langprefix()$"
+    };
   </script>
-
+  <script src="/compiled/all/login.js"></script>
   </body>
 $htmlclosingtag()$
 ###
@@ -54,14 +36,12 @@ $htmlopentag()$
       </div>
   </div>
 <script type="text/javascript">
- require(['jquery', 'legacy_code'], function(jQuery) {
-  jQuery(document).ready(function() {
-    jQuery('.global-table-cell').append(new NewPassword({
-                        linkchangepassword: "$linkchangepassword$",
-                       }).el());
-  });
- });
+  var fromTemplate = {
+    linkchangepassword: "$linkchangepassword$",
+    accessnewaccount: false
+  };
 </script>
+  <script src="/compiled/all/new_password.js"></script>
   </body>
 $htmlclosingtag()$
 ###
@@ -79,18 +59,12 @@ $htmlopentag()$
       </div>
   </div>
 <script type="text/javascript">
- require(['jquery', 'legacy_code'], function(jQuery) {
-  jQuery(document).ready(function() {
-    mixpanel.track('View access new account page', {
-        branded: true
-    });
-    jQuery('.global-table-cell').append(new NewPassword({
-                        linkchangepassword: "$linkchangepassword$",
-                        accessnewaccount: true,
-                       }).el());
-  });
- });
+  var fromTemplate = {
+    linkchangepassword: "$linkchangepassword$",
+    accessnewaccount: true
+  };
 </script>
+  <script src="/compiled/all/new_password.js"></script>
   </body>
 $htmlclosingtag()$
 ###
@@ -114,23 +88,18 @@ accountSetupPage=$doctype()$
           </span>
         </div>
 
-        <script type="text/javascript">
-        require(['jquery', 'legacy_code'], function(jQuery) {
-            jQuery(document).ready(function() {
-              jQuery('.create-account-box').append( new AccountSetup({
-                                                    fstname: _.unescape("$fstname$"), // name can contain some funky chars like &
-                                                    sndname: _.unescape("$sndname$"), // -,,-
-                                                    email: "$email$",
-                                                    company : _.unescape("$company$"),// -,,-
-                                                    userid : "$userid$",
-                                                    signupmethod : "$signupmethod$",
-                                                    companyAdmin : $if(companyAdmin)$true$else$false$endif$
-                                                    })
-                                                .el());
-              jQuery('.short-input-section input:first').focus();
-            });
-        });
+        <script>
+        var fromTemplate = {
+          fstname: _.unescape("$fstname$"), // name can contain some funky chars like &
+          sndname: _.unescape("$sndname$"), // -,,-
+          email: "$email$",
+          company : _.unescape("$company$"),// -,,-
+          userid : "$userid$",
+          signupmethod : "$signupmethod$",
+          companyAdmin : $if(companyAdmin)$true$else$false$endif$
+        };
         </script>
+        <script src="/compiled/all/account_setup.js"></script>
       </div>
 
     </body>
@@ -139,13 +108,7 @@ accountSetupPage=$doctype()$
 pageAcceptTOS =
 <div class='mainContainer big'>
 <div class='inner'>
-<script type="text/javascript">
- require(['jquery', 'legacy_code'], function(jQuery) {
-  jQuery(document).ready(function() {
-    jQuery('.inner').append(new AcceptTOS({}).el());
-  });
- });
-</script>
+<script src="/compiled/all/accept_tos.js"></script>
 </div>
 </div>
 ####

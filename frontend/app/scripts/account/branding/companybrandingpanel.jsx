@@ -1,8 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var CompanyBrandingViewModel = require("./companybrandingviewmodel");
+var CompanyBrandingView = require("./companybrandingview");
+var $ = require("jquery");
 
-define(['React', 'common/backbone_mixin', 'account/branding/companybrandingviewmodel','account/branding/companybrandingview', 'legacy_code'], function(React, BackboneMixin, CompanyBrandingViewModel, CompanyBrandingView) {
 
-return React.createClass({
+module.exports = React.createClass({
     propTypes: {
         companyid: React.PropTypes.string
     },
@@ -54,4 +57,3 @@ return React.createClass({
       );
     }
   });
-});

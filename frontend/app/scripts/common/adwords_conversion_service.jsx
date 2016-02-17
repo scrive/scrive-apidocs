@@ -1,5 +1,4 @@
-define(function() {
-  var expose = {};
+var expose = {};
 
   /**
    *  @description
@@ -10,5 +9,4 @@ define(function() {
     trackingPixel.src = "//www.googleadservices.com/pagead/conversion/1009530676/?label=xai0CPSaugQQtO6w4QM&amp;guid=ON&amp;script=0";
   };
 
-  return expose;
-});
+  module.exports = expose;

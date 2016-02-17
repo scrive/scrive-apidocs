@@ -1,10 +1,12 @@
+var Backbone = require("backbone");
+var FlashMessage = require("../flashmessages.js").FlashMessage;
+
 /*
  * Model for DesignView
  */
 
-define([ 'Backbone', 'legacy_code'], function(Backbone) {
 
-  window.DesignViewModel = Backbone.Model.extend({
+  var DesignViewModel = exports.DesignViewModel = Backbone.Model.extend({
       initialize: function (args) {
           var self = this;
           var model = this;
@@ -65,4 +67,3 @@ define([ 'Backbone', 'legacy_code'], function(Backbone) {
           new FlashMessage({type: 'success', content: flashMsg});
       }
   });
-});

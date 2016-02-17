@@ -1,13 +1,14 @@
-/** @jsx React.DOM */
+var React = require("react");
+var TypeSetterMixin = require("./typesettermixin");
+var SignatorySelector = require("./signatoryselector");
+var Obligatory = require("./obligatory");
+var More = require("./more");
+var Anchor = require("./anchor");
+var Done = require("./done");
+var Remove = require("./remove");
+var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 
-define(["React", "designview/typesetters/typesettermixin",
-        "designview/typesetters/signatoryselector",
-        "designview/typesetters/obligatory", "designview/typesetters/more",
-        "designview/typesetters/anchor", "designview/typesetters/done",
-        "designview/typesetters/remove", "legacy_code"],
-  function (React, TypeSetterMixin, SignatorySelector, Obligatory, More, Anchor, Done, Remove) {
-
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [TypeSetterMixin],
 
     verticalOffset: FieldPlacementGlobal.signatureTypeSetterVerticalOffset,
@@ -30,5 +31,3 @@ define(["React", "designview/typesetters/typesettermixin",
       );
     }
   });
-
-});

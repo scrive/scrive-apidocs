@@ -1,3 +1,9 @@
+var tinycolor = require("tinycolor");
+var Backbone = require("backbone");
+var jQuery = require("jquery");
+var _ = require("underscore");
+var $ = require("jquery");
+
 /* Basic buttons
  * Usage
  *  var button =  new Button({
@@ -12,7 +18,6 @@
  *
  * button.el()
 */
-define(['tinycolor','Backbone', 'legacy_code'], function(tinycolor) {
 
 var ButtonModel = Backbone.Model.extend({
   defaults : {
@@ -154,7 +159,7 @@ var ButtonView = Backbone.View.extend({
 });
 
 
-window.Button = function (args) {
+var Button = exports.Button = function (args) {
    var model = new ButtonModel(args);
    var view = new ButtonView({model : model, el : $("<a/>")});
    this.el = function() {return $(view.el);};
@@ -162,4 +167,3 @@ window.Button = function (args) {
    this.setNotClicked = function() { model.setNotClicked();};
 };
 
-});

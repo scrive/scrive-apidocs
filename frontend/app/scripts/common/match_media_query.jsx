@@ -1,5 +1,4 @@
-define([], function () {
-  /*! matchMedia() polyfill - Test a CSS media type/query in JS. Authors & copyright (c) 2012: Scott Jehl, Paul Irish, Nicholas Zakas, David Knight. Dual MIT/BSD license */
+/*! matchMedia() polyfill - Test a CSS media type/query in JS. Authors & copyright (c) 2012: Scott Jehl, Paul Irish, Nicholas Zakas, David Knight. Dual MIT/BSD license */
   var polyfill = function() {
       "use strict";
 
@@ -45,8 +44,7 @@ define([], function () {
       };
   }();
 
-  return function (query) {
+  module.exports = function (query) {
     var fn = window.matchMedia || polyfill;
     return Boolean(fn(query).matches);
   };
-});

@@ -1,6 +1,12 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/infotextinput",
-  "signview/tasks/task_mixin", "signview/viewsize"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, InfoTextInput, TaskMixin, ViewSize) {
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var InfoTextInput = require("../../common/infotextinput");
+var TaskMixin = require("../tasks/task_mixin");
+var ViewSize = require("../viewsize");
+var PageTask = require("../../../js/tasks.js").PageTask;
+var $ = require("jquery");
 
   var DetailsList = React.createClass({
     render: function () {
@@ -59,7 +65,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
     }
   });
 
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin, TaskMixin],
 
     propTypes: {
@@ -262,4 +268,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       );
     }
   });
-});

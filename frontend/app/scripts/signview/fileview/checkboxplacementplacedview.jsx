@@ -1,6 +1,10 @@
-define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin", "legacy_code"],
-  function (React, PlacementMixin, TaskMixin) {
-  return React.createClass({
+var React = require("react");
+var PlacementMixin = require("./placement_mixin");
+var TaskMixin = require("../tasks/task_mixin");
+var PageTask = require("../../../js/tasks.js").PageTask;
+var $ = require("jquery");
+var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
+  module.exports = React.createClass({
     mixins: [PlacementMixin, TaskMixin],
 
     createTasks: function () {
@@ -95,4 +99,3 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
       );
     }
   });
-});

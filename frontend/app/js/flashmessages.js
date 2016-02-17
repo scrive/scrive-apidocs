@@ -1,3 +1,9 @@
+var Backbone = require("backbone");
+var _ = require("underscore");
+var $ = require("jquery");
+var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
+var Submit = require("./submits.js").Submit;
+
 /* Main and only flash messages module
  * Usage
  *   new FlashMessages({ type : "success" | "error",
@@ -11,7 +17,6 @@
  *   new FlashMessagesCleaner();
  */
 
-define(["Backbone", "legacy_code"], function () {
   var FlashMessageModel = Backbone.Model.extend({
     initialize: function (attr) {
       if (!(attr.type == "success" || attr.type == "error")) {
@@ -84,7 +89,7 @@ define(["Backbone", "legacy_code"], function () {
     }
   });
 
-  window.FlashMessage = function (args) {
+  var FlashMessage = exports.FlashMessage = function (args) {
     if (args.withReload != undefined && args.withReload == true) {
       new Submit({
         method: "POST",
@@ -133,4 +138,3 @@ define(["Backbone", "legacy_code"], function () {
   window.FlashMessagesCleaner = function () {
     $(".flash").css("display", "none");
   };
-});

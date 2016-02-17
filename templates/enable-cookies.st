@@ -14,27 +14,14 @@ enableCookies=<!DOCTYPE html>
 <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
 
 $if(production)$
-<script src="/$versioncode$.optimized-system.js"></script>
 $else$
-<script src="/compiled_jsx/requirejs_config.js"></script>
-<script src="/bower_components/requirejs/require.js"></script>
+<script src="/compiled/vendor.js"></script>
+<script src="/compiled/all/common.js"></script>
 $endif$
 
 $analyticsLoaderKontrakcja()$
 
-<script>
-  require(['jquery', 'legacy_code'], function(jQuery) {
-    jQuery(document).ready(function() {
-      var cookies = Cookies.buildCookieMap();
-      var cookieNames = [];
-      for(var key in cookies) {
-        cookieNames.push(key);
-      }
-      mixpanel.track('Cookies not enabled', {'cookie': cookieNames.toString(),
-                                             'user-agent': navigator.userAgent});
-    });
-  });
-</script>
+<script src="/compiled/all/enable_cookies.js"></script>
 </head>
 
 <body>

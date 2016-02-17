@@ -1,11 +1,14 @@
+var Cookies = require("./cookie.js").Cookies;
+var _ = require("underscore");
+var Language = require("./language.js").Language;
+
 /* Language changing script. Language is interface for getting informations about current language and changing it.
  *
  * .current() gives you current language based on localization
  */
 
-define(['Backbone', 'legacy_code'], function() {
 
-window.Language = {
+var Language = exports.Language = {
     current : function() {
        return localization.code;
     },
@@ -24,4 +27,3 @@ window.Language = {
     }
 };
 
-});

@@ -1,4 +1,4 @@
-/** @jsx React.DOM */
+var React = require("react");
 
 /**
  * A checkbox component. Used in branding settings.
@@ -17,8 +17,7 @@
  *
  */
 
-define(['React'], function(React) {
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       label: React.PropTypes.string.isRequired,
       checked: React.PropTypes.bool.isRequired,
@@ -51,5 +50,3 @@ define(['React'], function(React) {
       );
     }
   });
-});
-

@@ -1,8 +1,8 @@
-/** @jsx React.DOM */
+var React = require("react");
+var InfoTextInput = require("../../common/infotextinput");
 
-define(["React","legacy_code","common/infotextinput"], function(React,_Legacyt,InfoTextInput) {
 
-return React.createClass({
+module.exports = React.createClass({
   propTypes: {
     title: React.PropTypes.string,
     description: React.PropTypes.string,
@@ -28,6 +28,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

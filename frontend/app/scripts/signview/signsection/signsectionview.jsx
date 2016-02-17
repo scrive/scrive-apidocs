@@ -1,39 +1,27 @@
-define([
-  "Underscore",
-  "Backbone",
-  "React",
-  "common/backbone_mixin",
-  "common/button",
-  "signview/signsection/transition_mixin",
-  "signview/tasks/task_mixin",
-  "signview/signsection/signsignview",
-  "signview/signsection/signrejectview",
-  "signview/signsection/signsigningview",
-  "signview/signsection/signprocessview",
-  "signview/signsection/signpin",
-  "signview/signsection/signinputpinview",
-  "signview/signsection/signeidview",
-  "signview/signsection/signeidprocessview",
-  "signview/errormodal"
-], function (
-  _,
-  Backbone,
-  React,
-  BackboneMixin,
-  Button,
-  TransitionMixin,
-  TaskMixin,
-  SignSign,
-  SignReject,
-  SignSigning,
-  SignProcess,
-  SignPin,
-  SignInputPin,
-  SignEID,
-  SignEIDProcess,
-  ErrorModal
-) {
-  return React.createClass({
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var Button = require("../../common/button");
+var TransitionMixin = require("./transition_mixin");
+var TaskMixin = require("../tasks/task_mixin");
+var SignSign = require("./signsignview");
+var SignReject = require("./signrejectview");
+var SignSigning = require("./signsigningview");
+var SignProcess = require("./signprocessview");
+var SignPin = require("./signpin");
+var SignInputPin = require("./signinputpinview");
+var SignEID = require("./signeidview");
+var SignEIDProcess = require("./signeidprocessview");
+var ErrorModal = require("../errormodal");
+var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
+var $ = require("jquery");
+var ScreenBlockingDialog = require("../../../js/dialog.js").ScreenBlockingDialog;
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var FlashMessagesCleaner = require("../../../js/flashmessages.js").FlashMessagesCleaner;
+var Submit = require("../../../js/submits.js").Submit;
+var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
+  module.exports = React.createClass({
     mixins: [TransitionMixin],
 
     propTypes: {
@@ -395,4 +383,3 @@ define([
       );
     }
   });
-});

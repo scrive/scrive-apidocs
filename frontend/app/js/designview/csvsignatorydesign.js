@@ -1,6 +1,15 @@
+var Backbone = require("backbone");
+var React = require("react");
+var UploadButton = require("../../scripts/common/uploadbutton");
+var _ = require("underscore");
+var Submit = require("../submits.js").Submit;
+var $ = require("jquery");
+var Confirmation = require("../confirmations.js").Confirmation;
+var Signatory = require("../signatories.js").Signatory;
+var Field = require("../fields.js").Field;
+
 /*Popup when someone want to select a csv signatory. At the end it can set signatory csv.
  */
-define(['legacy_code', 'Backbone', 'React', 'common/uploadbutton'], function(_Legacy, Backbone, React, UploadButton) {
 
 var CsvProblem = Backbone.Model.extend({
       defaults : {
@@ -244,7 +253,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
 });
 
 
-window.CsvSignatoryDesignPopup =  function(args) {
+var CsvSignatoryDesignPopup = exports.CsvSignatoryDesignPopup =  function(args) {
          var csv = [];
          var csvSignatory = undefined;
          var designview = args.designview;
@@ -307,4 +316,3 @@ window.CsvSignatoryDesignPopup =  function(args) {
         });
 };
 
-});

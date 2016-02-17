@@ -1,7 +1,9 @@
-define(["Underscore", "Backbone", "React", "common/button"],
-  function (_, Backbone, React, Button) {
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var Button = require("../../common/button");
 
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [React.addons.LinkedStateMixin],
 
     propTypes: {
@@ -61,4 +63,3 @@ define(["Underscore", "Backbone", "React", "common/button"],
       );
     }
   });
-});

@@ -1,8 +1,16 @@
+var Backbone = require("backbone");
+var React = require("react");
+var UploadButton = require("../scripts/common/uploadbutton");
+var _ = require("underscore");
+var $ = require("jquery");
+var Confirmation = require("./confirmations.js").Confirmation;
+var Submit = require("./submits.js").Submit;
+var LoadingDialog = require("./loading.js").LoadingDialog;
+
 /* File input that after upload will show information if file is signed by GuardTime
  *
  */
 
-define(['legacy_code', 'Backbone', 'React', 'common/uploadbutton'], function(_Legacy, Backbone, React, UploadButton) {
 
 var FileVerifierModel = Backbone.Model.extend({});
 
@@ -84,7 +92,7 @@ var FileVerifierView = Backbone.View.extend({
     }
 });
 
-window.FileVerifier = {
+var FileVerifier = exports.FileVerifier = {
     init: function (args) {
           var model = new FileVerifierModel();
           var view = new FileVerifierView({model : model, el: $("<div/>")});
@@ -95,4 +103,3 @@ window.FileVerifier = {
         }
 };
 
-});

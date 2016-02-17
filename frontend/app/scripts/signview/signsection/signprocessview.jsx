@@ -1,6 +1,10 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/htmltextwithsubstitution",
-  "signview/viewsize"],
-  function (legacy_code, _, Backbone, React, Button, HtmlTextWithSubstitution, ViewSize) {
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var Button = require("../../common/button");
+var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
+var ViewSize = require("../viewsize");
+var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 
   var Status = React.createClass({
     render: function () {
@@ -16,7 +20,7 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
     }
   });
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       imgUrl: React.PropTypes.string.isRequired,
       docTitle: React.PropTypes.string.isRequired,
@@ -77,4 +81,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
       );
     }
   });
-});

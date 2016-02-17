@@ -1,3 +1,16 @@
+var React = require("react");
+var CompanyBrandingPanel = require("../../scripts/account/branding/companybrandingpanel");
+var Backbone = require("backbone");
+var AccountSettings = require("./accountsettings/accountsettings.js").AccountSettings;
+var CompanyAccountsAndStats = require("./usersandstats/companyaccountsandstats.js").CompanyAccountsAndStats;
+var OauthDashboard = require("./apisettings/oauthdashboard.js").OauthDashboard;
+var Stats = require("./usersandstats/stats.js").Stats;
+var PaymentsDashboard = require("../payments.js").PaymentsDashboard;
+var Tab = require("../tabs.js").Tab;
+var $ = require("jquery");
+var _ = require("underscore");
+var KontraTabs = require("../tabs.js").KontraTabs;
+
 /*
  * Main archive definition. Its a tab based set of different documents lists.
  *
@@ -5,7 +18,6 @@
 */
 
 
-define(['React','account/branding/companybrandingpanel','Backbone', 'legacy_code'], function(React,CompanyBrandingPanel) {
 
 var AccountModel = Backbone.Model.extend({
   companyAdmin : function() {
@@ -166,7 +178,7 @@ var AccountView = Backbone.View.extend({
 });
 
 
-window.Account = function(args) {
+var Account = exports.Account = function(args) {
           var model = new AccountModel(args);
           var view =  new AccountView({model : model, el : $("<div class='account'/>")});
           return {
@@ -174,4 +186,3 @@ window.Account = function(args) {
             };
 };
 
-});

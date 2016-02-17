@@ -1,10 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var List = require("../lists/list");
+var _ = require("underscore");
 
-define(['React', 'lists/list','legacy_code'], function(React, List) {
 
 var companyLimit = 100;
 
-return React.createClass({
+module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
     companyLink : function(d) {
       return "/adminonly/companyadmin/" + d.field("id");
@@ -104,6 +105,4 @@ return React.createClass({
         </List.List>
       );
     }
-});
-
 });

@@ -1,9 +1,8 @@
-/** @jsx React.DOM */
+var React = require("react");
 
 
-define(['React'], function(React) {
 
-  return React.createClass({
+  module.exports = React.createClass({
     render: function() {
       return (
         <div className="section footer">
@@ -14,5 +13,3 @@ define(['React'], function(React) {
       );
     }
   });
-
-});

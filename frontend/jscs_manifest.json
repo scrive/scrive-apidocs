@@ -30,5 +30,6 @@
   "./app/api-explorer/js/*.js",
   "./app/api-explorer/js/calls/v1/*.js",
   "./app/api-explorer/js/calls/v1/*/*.js",
+  "./webpack.config.js",
   "./Gruntfile.js"
 ]

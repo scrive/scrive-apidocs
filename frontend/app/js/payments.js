@@ -1,3 +1,15 @@
+var Backbone = require("backbone");
+var moment = require("moment");
+var _ = require("underscore");
+var $ = require("jquery");
+var Language = require("./utils/language.js").Language;
+var EmailValidation = require("./validation.js").EmailValidation;
+var FlashMessage = require("./flashmessages.js").FlashMessage;
+var Confirmation = require("./confirmations.js").Confirmation;
+var Button = require("./buttons.js").Button;
+var LoadingDialog = require("./loading.js").LoadingDialog;
+var Submit = require("./submits.js").Submit;
+
 /*
 
   Payments
@@ -5,7 +17,6 @@
   Author and Maintainer: Eric Normand
 
 */
-define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
     var PaymentsPendingModel = Backbone.Model.extend({
         name: function() {
@@ -1342,7 +1353,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         else if(model.type() === 'planrecurly')
             return new PaymentsDashboardRecurlyView({model:model});
     };
-    window.PaymentsDashboard = function(opts) {
+    var PaymentsDashboard = exports.PaymentsDashboard = function(opts) {
         var model = new PricePageModel(opts);
         var el = $("<div class='tab-container'/>");
         var view = null;
@@ -1365,7 +1376,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         };
     };
 
-    window.PricePage = function(opts) {
+    var PricePage = exports.PricePage = function(opts) {
         var model = new PricePageModel(opts);
         var view  = new PricePageView($.extend({model:model}, opts));
 
@@ -1374,4 +1385,3 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
         }};
     };
 
-});

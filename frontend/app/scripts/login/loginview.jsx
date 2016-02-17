@@ -1,10 +1,16 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var Button = require("../common/button");
+var InfoTextInput = require("../common/infotextinput");
+var LoginModel = require("./loginmodel");
+var LanguageSelect = require("../pages/languageselect");
+var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
+var $ = require("jquery");
+var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 
-define(['React','common/backbone_mixin','common/button','common/infotextinput', 'login/loginmodel','pages/languageselect','common/htmltextwithsubstitution', 'legacy_code'],
-       function(React, BackboneMixin, Button, InfoTextInput, LoginModel, LanguageSelect, HtmlTextWithSubstitution) {
 
 
-return React.createClass({
+module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.model];
@@ -101,4 +107,3 @@ return React.createClass({
       );
     }
   });
-});

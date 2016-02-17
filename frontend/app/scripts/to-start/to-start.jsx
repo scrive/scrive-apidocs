@@ -1,8 +1,17 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var Button = require("../common/button");
+var ToStartSignatory = require("./signatory");
+var ToStartHeader = require("./header");
+var _ = require("underscore");
+var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+var LocalStorage = require("../../js/storage.js").LocalStorage;
+var AuthorView = require("../../js/authorview/authorview.js").AuthorView;
+var DocumentViewer = require("../../js/documentviewer.js").DocumentViewer;
+var $ = require("jquery");
 
-define(['legacy_code', 'React', 'common/backbone_mixin', 'common/button', 'to-start/signatory', 'to-start/header'], function(_legacy, React, BackboneMixin, Button, ToStartSignatory, ToStartHeader) {
 
-return React.createClass({
+module.exports = React.createClass({
   propTypes: {
     document: React.PropTypes.object
   },
@@ -119,6 +128,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

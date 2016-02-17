@@ -1,5 +1,5 @@
-define(["React"], function (React) {
-  return React.createClass({
+var React = require("react");
+  module.exports = React.createClass({
     render: function () {
       var overlayClass = React.addons.classSet({
         "overlay": true,
@@ -11,4 +11,3 @@ define(["React"], function (React) {
       );
     }
   });
-});

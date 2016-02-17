@@ -1,7 +1,9 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Backbone = require("backbone");
+var Select = require("../common/select");
+var LanguageSelect = require("./languageselect");
 
 
-define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(React, Backbone, Select,LanguageSelect) {
   var LoggedInFooter = React.createClass({
     propTypes: {
       thin : React.PropTypes.bool,
@@ -169,7 +171,7 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
 
 
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       logged: React.PropTypes.bool,
       thin : React.PropTypes.bool,
@@ -200,6 +202,3 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
       }
     }
   });
-
-});
-

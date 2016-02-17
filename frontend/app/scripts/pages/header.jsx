@@ -1,7 +1,8 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Backbone = require("backbone");
+var NewButton = require("../common/button");
 
 
-define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButton) {
 
 
   var LoggedInHeader = React.createClass({
@@ -134,7 +135,7 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
 
 
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       httplink :  React.PropTypes.string,
       langprefix : React.PropTypes.string,
@@ -156,6 +157,3 @@ define(['React', 'Backbone', 'common/button'], function(React, Backbone, NewButt
       }
     }
   });
-
-});
-

@@ -1,8 +1,11 @@
-define(["legacy_code", "React", "designview/editdocument/createfieldsmixin",
-        "designview/editdocument/draggablemixin"],
-function (legacy_code, React, CreateFieldsMixin, DraggableMixin) {
+var React = require("react");
+var CreateFieldsMixin = require("./createfieldsmixin");
+var DraggableMixin = require("./draggablemixin");
+var FieldPlacement = require("../../../js/placements.js").FieldPlacement;
+var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
+var $ = require("jquery");
 
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [CreateFieldsMixin, DraggableMixin],
 
     newTextExpectedSize: function () {
@@ -97,4 +100,3 @@ function (legacy_code, React, CreateFieldsMixin, DraggableMixin) {
       );
     }
   });
-});

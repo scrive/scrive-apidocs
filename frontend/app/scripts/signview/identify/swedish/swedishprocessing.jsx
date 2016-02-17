@@ -1,8 +1,13 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/button",
-  "signview/identify/swedish/swedishidentifymodel"],
-  function (legacy_code, _, Backbone, React, Button, SwedishIdentifyModel) {
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var Button = require("../../../common/button");
+var SwedishIdentifyModel = require("./swedishidentifymodel");
+var BrowserInfo = require("../../../../js/utils/browserinfo.js").BrowserInfo;
+var $ = require("jquery");
+var ReloadManager = require("../../../../js/reloadmanager.js").ReloadManager;
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(SwedishIdentifyModel).isRequired
     },
@@ -63,4 +68,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button",
       );
     }
   });
-});

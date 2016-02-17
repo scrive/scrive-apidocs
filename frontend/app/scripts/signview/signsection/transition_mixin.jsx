@@ -1,5 +1,7 @@
-define(["jquery", "common/iselementinviewport", "common/zoomtools"], function ($, isElementInViewport, zoomTools) {
-  return {
+var $ = require("jquery");
+var isElementInViewport = require("../../common/iselementinviewport");
+var zoomTools = require("../../common/zoomtools");
+  module.exports = {
     _isInTransition: false,
 
     componentDidUpdate: function (prevProps, prevState) {
@@ -46,4 +48,3 @@ define(["jquery", "common/iselementinviewport", "common/zoomtools"], function ($
       }, 1);
     }
   };
-});

@@ -1,10 +1,12 @@
+var _ = require("underscore");
+var Backbone = require("backbone");
+var SignaturePlacementPlacedView = require("./signatureplacementplacedview");
+var CheckboxPlacementPlacedView = require("./checkboxplacementplacedview");
+var TextPlacementPlacedView = require("./textplacementplacedview");
+var FilePage = require("../../../js/files").FilePage;
+var $ = require("jquery");
 
-define(["legacy_code", "Underscore", "Backbone", "authorview/fileview/signatureplacementplacedview",
-        "authorview/fileview/checkboxplacementplacedview", "authorview/fileview/textplacementplacedview"],
-  function (legacy_code, _, Backbone, SignaturePlacementPlacedView,
-            CheckboxPlacementPlacedView, TextPlacementPlacedView) {
-
-return Backbone.View.extend({
+module.exports = Backbone.View.extend({
   model: FilePage,
 
   initialize: function (args) {
@@ -97,6 +99,4 @@ return Backbone.View.extend({
 
     return this;
   }
-});
-
 });

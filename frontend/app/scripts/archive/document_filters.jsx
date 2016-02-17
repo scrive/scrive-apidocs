@@ -1,9 +1,10 @@
-/** @jsx React.DOM */
+var React = require("react");
+var List = require("../lists/list");
+var _ = require("underscore");
 /* List of filters used by out archive view. Used by both, Documents and Trash list*/
 
-define(['React','lists/list','Backbone', 'legacy_code'], function(React,List) {
 
-return function(args) {
+module.exports = function(args) {
   var self = args.list;
   return [
     <List.SelectFilter
@@ -68,7 +69,3 @@ return function(args) {
 
   ];
 }
-
-
-
-});

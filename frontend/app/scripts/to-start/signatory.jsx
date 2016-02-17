@@ -1,8 +1,10 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var ToStartField = require("./field");
+var _ = require("underscore");
 
-define(['legacy_code', 'React', 'common/backbone_mixin', 'to-start/field'], function(_legacy, React, BackboneMixin, ToStartField) {
 
-return React.createClass({
+module.exports = React.createClass({
   propTypes: {
     signatory: React.PropTypes.object
   },
@@ -98,6 +100,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

@@ -1,8 +1,9 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Select = require("../common/select");
+var _ = require("underscore");
 
-define(["React","legacy_code","common/select"], function(React, _Legacy, Select) {
 
-return React.createClass({
+module.exports = React.createClass({
   propTypes: {
     getFont: React.PropTypes.func,
     setFont: React.PropTypes.func
@@ -73,6 +74,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

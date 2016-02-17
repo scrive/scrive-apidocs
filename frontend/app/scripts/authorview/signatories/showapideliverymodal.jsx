@@ -1,7 +1,9 @@
-/** @jsx React.DOM */
-
-define(["legacy_code", "React", "Backbone", "common/infotextinput", "common/location"],
-  function (Legacy, React, Backbone, InfoTextInput, LocationUtils) {
+var React = require("react");
+var Backbone = require("backbone");
+var InfoTextInput = require("../../common/infotextinput");
+var LocationUtils = require("../../common/location");
+var $ = require("jquery");
+var Confirmation = require("../../../js/confirmations.js").Confirmation;
 
   var ShowAPIDeliveryModalView = React.createClass({
 
@@ -39,7 +41,7 @@ define(["legacy_code", "React", "Backbone", "common/infotextinput", "common/loca
     }
   });
 
-  return function (args) {
+  module.exports = function (args) {
     var content = $("<div class='docview-showapidelivery-modal'>");
 
     var contentComp = React.render(React.createElement(ShowAPIDeliveryModalView, {
@@ -58,4 +60,3 @@ define(["legacy_code", "React", "Backbone", "common/infotextinput", "common/loca
     // Text selection needs to happend after input is appended somewhere in body
     contentComp.selectText();
   }
-});

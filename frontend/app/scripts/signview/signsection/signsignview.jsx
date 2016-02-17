@@ -1,8 +1,14 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
-  "signview/tasks/task_mixin", "signview/viewsize"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, Button, TaskMixin, ViewSize) {
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var Button = require("../../common/button");
+var TaskMixin = require("../tasks/task_mixin");
+var ViewSize = require("../viewsize");
+var PageTask = require("../../../js/tasks.js").PageTask;
+var $ = require("jquery");
 
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin, TaskMixin],
 
     propTypes: {
@@ -87,4 +93,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       );
     }
   });
-});

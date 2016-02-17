@@ -1,6 +1,16 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var HubSpot = require("../../common/hubspot_service");
+var List = require("../../lists/list");
+var jQuery = require("jquery");
+var Confirmation = require("../../../js/confirmations.js").Confirmation;
+var NotEmptyValidation = require("../../../js/validation.js").NotEmptyValidation;
+var EmailValidation = require("../../../js/validation.js").EmailValidation;
+var Submit = require("../../../js/submits.js").Submit;
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var Language = require("../../../js/utils/language.js").Language;
+var $ = require("jquery");
 
-define(['React', 'common/backbone_mixin', 'common/hubspot_service', 'lists/list','legacy_code'], function(React, BackboneMixin, HubSpot, List) {
 
 var userFullName = function(d) {
     var fullname = d.field("fullname");
@@ -142,7 +152,7 @@ var openResendInvitationPopup = function(d,callback) {
 };
 
 
-return React.createClass({
+module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
     changeRole : function(d) {
       var self = this;
@@ -262,7 +272,3 @@ return React.createClass({
       );
     }
 });
-
-
-});
-

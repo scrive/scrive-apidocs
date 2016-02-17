@@ -1,9 +1,12 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Backbone = require("backbone");
+var Select = require("../common/select");
+var Language = require("../../js/utils/language.js").Language;
+var _ = require("underscore");
 
 
-define(['React', 'Backbone', 'common/select'], function(React, Backbone, Select) {
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       langprefix : React.PropTypes.string
     },
@@ -52,6 +55,3 @@ define(['React', 'Backbone', 'common/select'], function(React, Backbone, Select)
      );
     }
   });
-
-});
-

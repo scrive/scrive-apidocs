@@ -1,4 +1,5 @@
-define(['jquery'], function($) {
+var $ = require("jquery");
+var Cookies = require("../../js/utils/cookie.js").Cookies;
 
   /**
    *  @description
@@ -130,6 +131,4 @@ var expose = {
 
 }; // end expose
 
-return expose;
-
-});
+module.exports = expose;

@@ -1,8 +1,16 @@
-define(['React','common/backbone_mixin','common/button','common/infotextinput', 'common/hubspot_service', 'common/adwords_conversion_service', 'common/htmltextwithsubstitution', 'legacy_code'],
-  function(React, BackboneMixin, Button, InfoTextInput, HubSpot, AdwordsConversionService, HtmlTextWithSubstitution) {
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var Button = require("../common/button");
+var InfoTextInput = require("../common/infotextinput");
+var HubSpot = require("../common/hubspot_service");
+var AdwordsConversionService = require("../common/adwords_conversion_service");
+var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
+var Language = require("../../js/utils/language.js").Language;
+var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+var EmailValidation = require("../../js/validation.js").EmailValidation;
 
 
-return React.createClass({
+module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.model];
@@ -81,4 +89,3 @@ return React.createClass({
       );
     }
   });
-});

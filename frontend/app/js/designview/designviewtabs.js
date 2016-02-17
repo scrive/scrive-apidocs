@@ -1,11 +1,19 @@
+var Backbone = require("backbone");
+var React = require("react");
+var Participants = require("../../scripts/designview/participants/participants");
+var ProcessSettings = require("../../scripts/designview/processsettings/processsettings");
+var DraggablesView = require("../../scripts/designview/editdocument/draggablesview");
+var $ = require("jquery");
+var Tab = require("../tabs.js").Tab;
+var KontraTabs = require("../tabs.js").KontraTabs;
+
 /*
  * Design view tabs
  *
  */
 
-define(['Backbone',  'React',  'designview/participants/participants' , 'designview/processsettings/processsettings', 'designview/editdocument/draggablesview', 'legacy_code'], function(Backbone, React, Participants, ProcessSettings, DraggablesView) {
 
-window.DesignViewTabsView = function(args) {
+var DesignViewTabsView = exports.DesignViewTabsView = function(args) {
   var model = args.model;
   var document = model.document();
   var participantsViewEl = $("<div/>");
@@ -110,4 +118,3 @@ window.DesignViewTabsView = function(args) {
 
 };
 
-});

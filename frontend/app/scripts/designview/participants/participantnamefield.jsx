@@ -1,8 +1,7 @@
-/** @jsx React.DOM */
+var React = require("react");
+var InfoTextInput = require("../../common/infotextinput");
 
-define(["legacy_code", "React", "common/infotextinput"], function (_Legacy, React, InfoTextInput) {
-
-return React.createClass({
+module.exports = React.createClass({
 
   render: function () {
     var self = this;
@@ -48,6 +47,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

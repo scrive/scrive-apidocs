@@ -1,8 +1,9 @@
-/** @jsx React.DOM */
+var React = require("react");
+var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
+var _ = require("underscore");
 
-define(['legacy_code', 'React','common/htmltextwithsubstitution'], function(_Legacy, React, HtmlTextWithSubstitution) {
 
-return React.createClass({
+module.exports = React.createClass({
   render: function() {
     var self = this;
     var document = self.props.document;
@@ -92,8 +93,3 @@ return React.createClass({
     }
   }
 });
-
-
-});
-
-

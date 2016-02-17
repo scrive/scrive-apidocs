@@ -1,8 +1,12 @@
+var Backbone = require("backbone");
+var _ = require("underscore");
+var $ = require("jquery");
+var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
+
 /* Arrows
  * There are 4 types of arrows: point-left, point-right, scroll-up, scroll-down
 */
 
-define(['Backbone', 'legacy_code'], function() {
 
 var pixelSpeed = 800;
 var maxScrollTime = 2000;
@@ -311,7 +315,7 @@ var ScrollDownArrowView = Backbone.View.extend({
 
 
 
-window.Arrow = function (args) {
+var Arrow = exports.Arrow = function (args) {
   var model = new ArrowModel({
       type  : args.type,
       margin : args.margin,
@@ -389,4 +393,3 @@ window.Arrow = function (args) {
   };
 };
 
-});

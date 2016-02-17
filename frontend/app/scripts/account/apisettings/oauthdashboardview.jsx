@@ -1,9 +1,14 @@
-/** @jsx React.DOM */
+var Backbone = require("backbone");
+var React = require("react");
+var List = require("../../lists/list");
+var CallbackScheme = require("./callbackscheme");
+var CallbackSchemeView = require("./callbackschemeview");
+var Button = require("../../common/button");
+var Submit = require("../../../js/submits.js").Submit;
 
 
-define(['Backbone', 'React', 'lists/list', 'account/apisettings/callbackscheme', 'account/apisettings/callbackschemeview','legacy_code','common/button'], function(Backbone, React, List, CallbackScheme, CallbackSchemeView,_legacy,Button) {
 
-return React.createClass({
+module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
     deleteApiToken : function(apitoken) {
       var self = this;
@@ -248,6 +253,3 @@ return React.createClass({
 
 
 });
-
-});
-

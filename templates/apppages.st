@@ -51,14 +51,12 @@ standardHeaderContents=
         $else$
         $if(signview)$
         <link href='/less/signview-less-compiled.css' rel='stylesheet' type='text/css'/>
-        <script src="/compiled_jsx/requirejs_signview.js"></script>
         $else$
         <link href='/less/less-compiled.css' rel='stylesheet' type='text/css'/>
-        <script src="/compiled_jsx/requirejs_system.js"></script>
         $endif$
-        <script src="/bower_components/requirejs/require.js"></script>
         $endif$
 
+        <script src="/compiled/vendor.js"></script>
         <link href='$cdnbaseurl$/domain_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
 
         $if(nobranding)$
@@ -96,21 +94,19 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
         $if(analytics.properties)$
           var analyticsproperties = $analytics.properties:noescape()$;
 
-          require(['Underscore'], function(_) {
-            // Overwrite with nicer values, like "Proffice & Foo" instead of "Proffice &amp; Foo"
-            var nicePropList = _.map(analyticsproperties, function(value, key) {
-              return [key, _.unescape(value)];
-            });
-            analyticsproperties = _.object(nicePropList);
-
-            console.log(analyticsproperties);
-
-            mixpanel.register(analyticsproperties);
-            mixpanel.people.set(analyticsproperties);
-
-            if(analyticsproperties['Smart Name'])
-              mixpanel.name_tag(analyticsproperties['Smart Name']);
+          // Overwrite with nicer values, like "Proffice & Foo" instead of "Proffice &amp; Foo"
+          var nicePropList = _.map(analyticsproperties, function(value, key) {
+            return [key, _.unescape(value)];
           });
+          analyticsproperties = _.object(nicePropList);
+
+          console.log(analyticsproperties);
+
+          mixpanel.register(analyticsproperties);
+          mixpanel.people.set(analyticsproperties);
+
+          if(analyticsproperties['Smart Name'])
+            mixpanel.name_tag(analyticsproperties['Smart Name']);
 
         $endif$
    // end Mixpanel
@@ -140,23 +136,17 @@ pageFooter=
   $postPageCode()$
 </div>
 <script>
-require(['jquery', 'React' , 'pages/footer','legacy_code'], function(jQuery,React,Footer) {
-
-  jQuery(function(){
-    React.render(React.createElement(Footer,{
-        logged: $if(logged)$ true $else$ false $endif$,
-        thin : $if(thin)$ true $else$ false $endif$,
-        httplink : "$httplink$",
-        langprefix : "$langprefix()$",
-        color :  "$custombarscolour$",
-        textcolor :  "$custombarstextcolour$",
-        highlightcolor : "$custombarshighlightcolour$"
-      })
-    , jQuery('.place-for-footer')[0]);
-  });
-
-});
+  var fromTemplateFooter = {
+    logged: $if(logged)$ true $else$ false $endif$,
+    thin : $if(thin)$ true $else$ false $endif$,
+    httplink : "$httplink$",
+    langprefix : "$langprefix()$",
+    color :  "$custombarscolour$",
+    textcolor :  "$custombarstextcolour$",
+    highlightcolor : "$custombarshighlightcolour$"
+  };
 </script>
+<script src="/compiled/all/footer.js"></script>
 ####
 postPageCode=
 
@@ -174,13 +164,11 @@ postPageCode=
   </script>
   <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>
   <script>
-   require(['jquery'], function(jQuery) {
      var container = jQuery('.mainContainer');
      // Fill the whole page
      if ($if(logged)$true$else$false$endif$ && container.find('.short-input-section').length > 0) {
        container.height(jQuery(window).height() - jQuery('header').height() - jQuery('footer').height());
      }
-   });
   </script>
   <noscript>
   <div style="display:inline;">
@@ -196,21 +184,15 @@ header=
   $postPageCode()$
 </div>
 <script>
-require(['jquery', 'React' , 'pages/header','legacy_code'], function(jQuery,React,Header) {
-
-  jQuery(function(){
-    React.render(React.createElement(Header,{
-        logged: $if(logged)$ true $else$ false $endif$,
-        httplink : "$httplink$",
-        langprefix : "$langprefix()$",
-        archive : $if(archive)$true$else$false$endif$,
-        account : $if(account)$true$else$false$endif$
-      })
-    , jQuery('.place-for-header')[0]);
-  });
-
-});
+var fromTemplateHeader = {
+  logged: $if(logged)$ true $else$ false $endif$,
+  httplink : "$httplink$",
+  langprefix : "$langprefix()$",
+  archive : $if(archive)$true$else$false$endif$,
+  account : $if(account)$true$else$false$endif$
+};
 </script>
+<script src="/compiled/all/header.js"></script>
 ####
 contactUsVivocha=
 <aside class="contact">
@@ -250,13 +232,11 @@ $loadScript(src="https://www.vivocha.com/a/scrive/api/vivocha.js")$
 ####
 loadScript=
 <script>
- require(['jquery'], function(jQuery) {
-  jQuery(window).load(function(){
-    var script = document.createElement( 'script' );
-    script.type = 'text/javascript';
-    script.src = "$src$";
-    jQuery("head").append( script );
-  })
-});
+jQuery(window).load(function(){
+  var script = document.createElement( 'script' );
+  script.type = 'text/javascript';
+  script.src = "$src$";
+  jQuery("head").append( script );
+})
 </script>
 ####

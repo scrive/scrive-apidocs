@@ -1,11 +1,18 @@
+var Backbone = require("backbone");
+var jQuery = require("jquery");
+var $ = require("jquery");
+var _ = require("underscore");
+var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
+var MailView = require("./confirmationsWithEmails.js").MailView;
+var Button = require("./buttons.js").Button;
+
 /* We have a lot of popups where body if a preview of the mail.
  * This modal downloads email preview from server and shows such modal allowing edit of some part of email
  *
 */
 
-define(['Backbone','legacy_code'], function(Backbone) {
 
-window.Mail = Backbone.Model.extend({
+var Mail = exports.Mail = Backbone.Model.extend({
 	defaults : {
 		ready : false,
 		content : jQuery("<div/>"),
@@ -41,7 +48,7 @@ window.Mail = Backbone.Model.extend({
     }
 });
 
-window.MailView = Backbone.View.extend({
+var MailView = exports.MailView = Backbone.View.extend({
     model : Mail,
     initialize: function (args) {
         _.bindAll(this, 'render');
@@ -244,7 +251,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
 });
 
 
-window.ConfirmationWithEmail = {
+var ConfirmationWithEmail = exports.ConfirmationWithEmail = {
     popup: function (args) {
           var model = new ConfirmationWithEmailModel(args);
           var overlay = $("<div class='modal'/>");
@@ -288,4 +295,3 @@ window.ConfirmationWithEmail = {
 
 };
 
-});

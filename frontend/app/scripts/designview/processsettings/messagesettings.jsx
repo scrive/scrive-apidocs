@@ -1,8 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var CustomTextEditor = require("./customtexteditor");
+var _ = require("underscore");
+var ConfirmationWithEmail = require("../../../js/confirmationsWithEmails.js").ConfirmationWithEmail;
 
-define(['React', 'common/backbone_mixin','designview/processsettings/customtexteditor','legacy_code'], function(React, BackboneMixin, CustomTextEditor) {
 
-return React.createClass({
+module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.document];
@@ -79,8 +82,3 @@ return React.createClass({
     }
   }
 });
-
-
-});
-
-

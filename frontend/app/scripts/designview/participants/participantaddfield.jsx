@@ -1,8 +1,8 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Button = require("../../common/button");
+var Field = require("../../../js/fields.js").Field;
 
-define(["legacy_code", "React", "common/button"], function (_Legacy, React, Button) {
-
-return React.createClass({
+module.exports = React.createClass({
   render: function () {
     var self = this;
     var sig = this.props.model;
@@ -33,6 +33,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

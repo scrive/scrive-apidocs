@@ -1,7 +1,10 @@
-define(["legacy_code", "Backbone", "React", "common/button"],
-  function (legacy_code, Backbone, React, Button) {
+var Backbone = require("backbone");
+var React = require("react");
+var Button = require("../../common/button");
+var Signatory = require("../../../js/signatories.js").Signatory;
+var _ = require("underscore");
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       sigs: React.PropTypes.arrayOf(React.PropTypes.instanceOf(Signatory)).isRequired
     },
@@ -46,4 +49,3 @@ define(["legacy_code", "Backbone", "React", "common/button"],
       );
     }
   });
-});

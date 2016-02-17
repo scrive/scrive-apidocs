@@ -1,6 +1,16 @@
-/** @jsx React.DOM */
+var React = require("react");
+var List = require("../lists/list");
+var moment = require("moment");
+var jQuery = require("jquery");
+var $ = require("jquery");
+var Confirmation = require("../../js/confirmations.js").Confirmation;
+var NameValidation = require("../../js/validation.js").NameValidation;
+var NotEmptyValidation = require("../../js/validation.js").NotEmptyValidation;
+var EmailValidation = require("../../js/validation.js").EmailValidation;
+var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+var Submit = require("../../js/submits.js").Submit;
+var _ = require("underscore");
 
-define(['React', 'lists/list', 'moment', 'legacy_code'], function(React, List, moment) {
 
 var openCreateUserModal = function(callback) {
   var body = jQuery("<div class='standard-input-table'>");
@@ -107,7 +117,7 @@ var openCreateUserModal = function(callback) {
 
 var usersLimit = 100;
 
-return React.createClass({
+module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
     userLink : function(d) {
       return "/adminonly/useradmin/" + d.field("id");
@@ -214,6 +224,4 @@ return React.createClass({
        </List.List>
      );
    }
-});
-
 });

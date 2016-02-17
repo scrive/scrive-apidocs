@@ -1,6 +1,18 @@
-define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutton", "common/backbone_mixin",
-  "signview/tasks/task_mixin", "signview/viewsize"],
-  function (legacy_code, React, Backbone, Button, UploadButton, BackboneMixin, TaskMixin, ViewSize) {
+var React = require("react");
+var Backbone = require("backbone");
+var Button = require("../../common/button");
+var UploadButton = require("../../common/uploadbutton");
+var BackboneMixin = require("../../common/backbone_mixin");
+var TaskMixin = require("../tasks/task_mixin");
+var ViewSize = require("../viewsize");
+var Submit = require("../../../js/submits.js").Submit;
+var $ = require("jquery");
+var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
+var ScreenBlockingDialog = require("../../../js/dialog.js").ScreenBlockingDialog;
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var Document = require("../../../js/documents.js").Document;
+var _ = require("underscore");
+var PageTask = require("../../../js/tasks.js").PageTask;
 
   var UploadArea = React.createClass({
     propTypes: {
@@ -102,7 +114,7 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
     }
   });
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model)
     },
@@ -221,4 +233,3 @@ define(["legacy_code", "React", "Backbone", "common/button", "common/uploadbutto
       );
     }
   });
-});

@@ -1,10 +1,9 @@
-/** @jsx React.DOM */
+var React = require("react");
 
 
-define(['React', 'legacy_code'], function(React) {
 
 
-return React.createClass({
+module.exports = React.createClass({
     propTypes: {
       onChange: React.PropTypes.func.isRequired,
       onPreview: React.PropTypes.func.isRequired,
@@ -47,5 +46,3 @@ return React.createClass({
       );
     }
   });
-
-});

@@ -1,8 +1,10 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var Backbone = require("backbone");
+var LanguageService = require("../../common/language_service");
+var ViewSize = require("../viewsize");
 
-define(["React", "common/backbone_mixin", "Backbone", "common/language_service", "signview/viewsize"],
-  function (React, BackboneMixin, Backbone, LanguageService, ViewSize) {
-return React.createClass({
+module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
     getBackboneModels: function () {
@@ -156,4 +158,3 @@ return React.createClass({
       );
     }
   });
-});

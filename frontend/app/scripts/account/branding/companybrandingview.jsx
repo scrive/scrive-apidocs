@@ -1,8 +1,24 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var CompanyBrandingViewModel = require("./companybrandingviewmodel");
+var ThemeView = require("../../themes/themeview");
+var CompanySettingsView = require("./companybrandingsettingsview");
+var CompanyBrandingNewThemeView = require("./companybrandingnewthemeview");
+var CompanyThemesManagementBar = require("./companythemesmanagementbar");
+var ReactButton = require("../../common/button");
+var EmailPreview = require("../../themes/previews/email");
+var SigningPreview = require("../../themes/previews/signing");
+var LoginPreview = require("../../themes/previews/login");
+var ServicePreview = require("../../themes/previews/service");
+var $ = require("jquery");
+var Confirmation = require("../../../js/confirmations.js").Confirmation;
+var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var Button = require("../../../js/buttons.js").Button;
+var _ = require("underscore");
 
-define(['React','common/backbone_mixin','account/branding/companybrandingviewmodel','themes/themeview','account/branding/companybrandingsettingsview','account/branding/companybrandingnewthemeview','account/branding/companythemesmanagementbar'   ,'legacy_code','common/button',"themes/previews/email", "themes/previews/signing", "themes/previews/login", "themes/previews/service"], function(React, BackboneMixin, CompanyBrandingViewModel,ThemeView,CompanySettingsView,CompanyBrandingNewThemeView,CompanyThemesManagementBar, _Legacy, ReactButton, EmailPreview, SigningPreview, LoginPreview, ServicePreview) {
 
-return React.createClass({
+module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.model];
@@ -216,4 +232,3 @@ return React.createClass({
       );
     }
   });
-});

@@ -1,7 +1,11 @@
-define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "signview/tasks/task_mixin",
-  "legacy_code"],
-  function (React, InfoTextInput, PlacementMixin, TaskMixin) {
-  return React.createClass({
+var React = require("react");
+var InfoTextInput = require("../../common/infotextinput");
+var PlacementMixin = require("./placement_mixin");
+var TaskMixin = require("../tasks/task_mixin");
+var PageTask = require("../../../js/tasks.js").PageTask;
+var $ = require("jquery");
+var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
+  module.exports = React.createClass({
     _shouldBlur: true,
 
     mixins: [PlacementMixin, TaskMixin],
@@ -261,4 +265,3 @@ define(["React", "common/infotextinput", "signview/fileview/placement_mixin", "s
       );
     }
   });
-});

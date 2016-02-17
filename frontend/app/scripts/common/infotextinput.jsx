@@ -1,4 +1,7 @@
-/** @jsx React.DOM */
+var React = require("react");
+var $ = require("jquery");
+var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
+var _ = require("underscore");
 
 /**
  * A infotextinput component in React. Used instead of input tag for text input.
@@ -30,8 +33,7 @@
  *
  */
 
-define(['React'], function(React) {
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       infotext      : React.PropTypes.string,
       value         : React.PropTypes.string,
@@ -236,6 +238,3 @@ define(['React'], function(React) {
       );
     }
   });
-});
-
-

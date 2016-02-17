@@ -1,8 +1,18 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Utils = require("./utils");
+var StatusTooltipMixin = require("./statustooltipmixin");
+var List = require("../lists/list");
+var DocumentColumns = require("./document_columns");
+var DocumentFilters = require("./document_filters");
+var jQuery = require("jquery");
+var $ = require("jquery");
+var Confirmation = require("../../js/confirmations.js").Confirmation;
+var Submit = require("../../js/submits.js").Submit;
+var _ = require("underscore");
+var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 
-define(['React', 'archive/utils', 'archive/statustooltipmixin','lists/list','archive/document_columns','archive/document_filters','legacy_code'], function(React, Utils, StatusTooltipMixin, List, DocumentColumns,DocumentFilters) {
 
-return React.createClass({
+module.exports = React.createClass({
     mixins: [StatusTooltipMixin,List.ReloadableContainer],
     openSendReminderModal : function(selected) {
       var self = this;
@@ -252,8 +262,4 @@ return React.createClass({
         </List.List>
       );
     }
-});
-
-
-
 });

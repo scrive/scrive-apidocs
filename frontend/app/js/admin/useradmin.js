@@ -1,7 +1,18 @@
+var React = require("react");
+var DocumentsList = require("../../scripts/admin/documentslist");
+var Backbone = require("backbone");
+var AdminUserDetails = require("./userdetails.js").AdminUserDetails;
+var Stats = require("../account/usersandstats/stats.js").Stats;
+var Tab = require("../tabs.js").Tab;
+var $ = require("jquery");
+var _ = require("underscore");
+var KontraTabs = require("../tabs.js").KontraTabs;
+
+require("../utils/time");
+
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
 
-define(['React','admin/documentslist','Backbone', 'legacy_code'], function(React,DocumentsList) {
 
 var UserAdminModel = Backbone.Model.extend({
   userid : function() {
@@ -88,7 +99,7 @@ var UserAdminView = Backbone.View.extend({
 });
 
 
-window.UserAdmin = function(args) {
+var UserAdmin = exports.UserAdmin = function(args) {
           var model = new UserAdminModel(args);
           var view =  new UserAdminView({model : model, el : $("<div/>")});
           return new Object({
@@ -96,4 +107,3 @@ window.UserAdmin = function(args) {
             });
 };
 
-});

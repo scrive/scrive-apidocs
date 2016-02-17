@@ -1,5 +1,8 @@
-define(["legacy_code", "Underscore", "Backbone", "authorview/fileview/filepageview"],
-  function (legacy_code, _, Backbone, FilePageView) {
+var _ = require("underscore");
+var Backbone = require("backbone");
+var FilePageView = require("./filepageview");
+var $ = require("jquery");
+var File = require("../../../js/files.js").File;
 
 var FileView = Backbone.View.extend({
   initialize: function (args) {
@@ -105,7 +108,7 @@ var FileView = Backbone.View.extend({
   }
 });
 
-return function (args) {
+module.exports = function (args) {
   if (args.file) {
     this.model = args.file;
   } else {
@@ -133,5 +136,3 @@ return function (args) {
 
   return this;
 };
-
-});

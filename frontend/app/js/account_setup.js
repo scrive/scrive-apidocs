@@ -1,4 +1,16 @@
-define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) {
+var HubSpot = require("../scripts/common/hubspot_service");
+var Backbone = require("backbone");
+var $ = require("jquery");
+var Submit = require("./submits.js").Submit;
+var FlashMessage = require("./flashmessages.js").FlashMessage;
+var _ = require("underscore");
+var InfoTextInput = require("./infotextinputs.js").InfoTextInput;
+var NameValidation = require("./validation.js").NameValidation;
+var PasswordValidation = require("./validation.js").PasswordValidation;
+var PasswordEqValidation = require("./validation.js").PasswordEqValidation;
+var CheckboxReqValidation = require("./validation.js").CheckboxReqValidation;
+var Button = require("./buttons.js").Button;
+
 
   var AccountSetupModel = Backbone.Model.extend({
     defaults: {
@@ -337,11 +349,10 @@ define(['common/hubspot_service', 'Backbone', 'legacy_code'], function(HubSpot) 
     }
   });
 
-  window.AccountSetup = function(args) {
+  var AccountSetup = exports.AccountSetup = function(args) {
     mixpanel.track('Visit account setup');
     var model = new AccountSetupModel(args);
     var view =  new AccountSetupView({model: model, el: $("<div class='short-input-section account-setup'/>")});
     this.el = function() {return $(view.el);};
   };
 
-});

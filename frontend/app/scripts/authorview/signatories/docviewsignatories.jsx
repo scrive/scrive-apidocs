@@ -1,9 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Backbone = require("backbone");
+var Reminders = require("../authorviewautomaticreminders");
+var DocumentViewSignatoryForList = require("./docviewsignatoryforlist");
+var DocumentViewSignatory = require("./docviewsignatory");
+var _ = require("underscore");
 
-define(["React", "Backbone", "authorview/authorviewautomaticreminders",
-  "authorview/signatories/docviewsignatoryforlist", "authorview/signatories/docviewsignatory", "legacy_code"],
-  function (React, Backbone, Reminders, DocumentViewSignatoryForList, DocumentViewSignatory) {
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       document: React.PropTypes.object,
       onAction: React.PropTypes.func
@@ -101,5 +103,3 @@ define(["React", "Backbone", "authorview/authorviewautomaticreminders",
       );
     }
   });
-
-});

@@ -1,8 +1,14 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var Utils = require("../archive/utils");
+var List = require("../lists/list");
+var moment = require("moment");
+var Submit = require("../../js/submits.js").Submit;
+var LoadingDialog = require("../../js/loading.js").LoadingDialog;
 
-define(['React', 'common/backbone_mixin', 'archive/utils', 'lists/list', 'moment', 'legacy_code'], function(React, BackboneMixin, Utils, List, moment) {
+require("../../js/utils/time.js");
 
-return React.createClass({
+module.exports = React.createClass({
     createFromTemplate : function(id) {
       new Submit({
         method : "POST",
@@ -91,7 +97,3 @@ return React.createClass({
       );
     }
 });
-
-
-});
-

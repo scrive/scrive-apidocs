@@ -1,4 +1,11 @@
-/* Modal for drawing or typing signature.
+var Backbone = require("backbone");
+var React = require("react");
+var SignatureDrawer = require("./signaturedrawer");
+var _ = require("underscore");
+var $ = require("jquery");
+var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
+
+/* Modal for drawing or typing signature. For old IE only typing mode is available.
  * Value, as Base64 image is saved to field value.
  * Usage:
  *
@@ -13,10 +20,6 @@
  * but rather it depends on placements and rendered page size.
  *
  */
-
-define(["legacy_code", "Backbone", "React",
-       "signview/signaturemodal/signaturedrawer"],
-       function (_legacy, Backbone, React, SignatureDrawer) {
 
 var SignatureDrawingModel = Backbone.Model.extend({
   onClose: function (shouldScroll, shouldSign) {
@@ -102,7 +105,7 @@ var SignatureDrawingModel = Backbone.Model.extend({
   }
 });
 
-return function (args) {
+module.exports = function (args) {
   var self = this;
   var modal = $("<div class='drawer' />");
   var transTime = 300; // sync with @trans-time in 'signview/drawer.less';
@@ -175,5 +178,3 @@ return function (args) {
     modal.addClass("active show");
   }, 5);
 };
-
-});

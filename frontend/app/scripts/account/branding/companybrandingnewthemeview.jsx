@@ -1,8 +1,21 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var CompanyBrandingViewModel = require("./companybrandingviewmodel");
+var ThemeView = require("../../themes/themeview");
+var CompanySettingsView = require("./companybrandingsettingsview");
+var Button = require("../../common/button");
+var Select = require("../../common/select");
+var EmailPreview = require("../../themes/previews/email");
+var SigningPreview = require("../../themes/previews/signing");
+var ServicePreview = require("../../themes/previews/service");
+var InfoTextInput = require("../../../js/infotextinputs.js").InfoTextInput;
+var $ = require("jquery");
+var Confirmation = require("../../../js/confirmations.js").Confirmation;
+var Submit = require("../../../js/submits.js").Submit;
+var _ = require("underscore");
 
-define(['React','common/backbone_mixin','account/branding/companybrandingviewmodel','themes/themeview','account/branding/companybrandingsettingsview'  ,'legacy_code','common/button','common/select',"themes/previews/email", "themes/previews/signing", "themes/previews/service"], function(React, BackboneMixin, CompanyBrandingViewModel,ThemeView,CompanySettingsView, _Legacy, Button, Select, EmailPreview, SigningPreview, ServicePreview) {
 
-return React.createClass({
+module.exports = React.createClass({
     opendNewThemeModal : function() {
       var self = this;
       var input = new InfoTextInput({infotext: localization.branding.themes.name, value: ""});
@@ -136,4 +149,3 @@ return React.createClass({
       );
     }
   });
-});

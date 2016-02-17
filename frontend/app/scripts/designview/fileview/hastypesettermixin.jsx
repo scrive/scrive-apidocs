@@ -1,12 +1,13 @@
+var $ = require("jquery");
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
 /* Mixin for placement views that have typesetter
    To use this mixin, getPlacement() and getTypeSetterClass() functions should be implemented
    and prod closeAllTypeSetters should be set.
 */
 
-define(["jquery", "Underscore", "Backbone", "React", "legacy_code"],
-  function ($, _, Backbone, React) {
-
-  return {
+  module.exports = {
     propTypes: {
       closeAllTypeSetters: React.PropTypes.func.isRequired
     },
@@ -88,4 +89,3 @@ define(["jquery", "Underscore", "Backbone", "React", "legacy_code"],
       }
     }
   };
-});

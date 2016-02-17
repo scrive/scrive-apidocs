@@ -1,5 +1,6 @@
-define(["signview/constants", "common/match_media_query"], function (cons, matchMediaQuery) {
-  return {
+var cons = require("./constants");
+var matchMediaQuery = require("../common/match_media_query");
+  module.exports = {
 
     isSmall: function () {
       return matchMediaQuery("not all and (min-width: " + cons.SIGNVIEW_SMALL_VIEW + ")");
@@ -10,4 +11,3 @@ define(["signview/constants", "common/match_media_query"], function (cons, match
       return matchMediaQuery(query);
     }
   };
-});

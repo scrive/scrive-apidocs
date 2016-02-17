@@ -1,3 +1,8 @@
+var Backbone = require("backbone");
+var Button = require("./buttons.js").Button;
+var $ = require("jquery");
+var ScreenBlockingDialog = require("./dialog.js").ScreenBlockingDialog;
+
 /* Ajax queue - used to provide order when performing ajax events. Works with Submits.
  *
  * All the added will be submitted, but in the presence of errors,
@@ -42,7 +47,6 @@
  *  After calling finishWith nothing can be added to the queue, until
  *  queue is empty and 'fin' starts executing.
  */
-define(['Backbone', 'legacy_code'], function() {
 
 var QueueRequest = Backbone.Model.extend({
   defaults : {
@@ -93,7 +97,7 @@ var QueueRequest = Backbone.Model.extend({
   }
 });
 
-window.AjaxQueue = Backbone.Model.extend({
+var AjaxQueue = exports.AjaxQueue = Backbone.Model.extend({
   defaults : function() {
     return {
       queue : [] ,
@@ -179,4 +183,3 @@ window.AjaxQueue = Backbone.Model.extend({
 });
 
 
-});

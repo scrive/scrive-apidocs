@@ -1,6 +1,7 @@
-define(['Backbone', 'legacy_code'], function() {
+var Backbone = require("backbone");
 
-window.Company = Backbone.Model.extend({
+
+var Company = exports.Company = Backbone.Model.extend({
   defaults : {
       companyid        : "",
       companyname      : "",
@@ -90,4 +91,3 @@ window.Company = Backbone.Model.extend({
   }
 });
 
-});

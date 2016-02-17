@@ -1,10 +1,9 @@
+var Backbone = require("backbone");
 /* Model representing attachment during design - either with file input or with
  * attachment from attachment archive reference
  */
 
-define(["Backbone", "legacy_code"], function (Backbone, AttachmentsListForModal) {
-
-  return Backbone.Model.extend({
+  module.exports = Backbone.Model.extend({
     defaults: {
       name: "",
       originaName: "",
@@ -82,4 +81,3 @@ define(["Backbone", "legacy_code"], function (Backbone, AttachmentsListForModal)
       this.set("required", false);
     }
   });
-});

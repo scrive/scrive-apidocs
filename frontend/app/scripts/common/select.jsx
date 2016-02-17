@@ -1,3 +1,7 @@
+var React = require("react");
+var $ = require("jquery");
+var _ = require("underscore");
+var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
 /*
 Standard select boxes.
 
@@ -40,7 +44,6 @@ Usage:
   />
 */
 
-define(["legacy_code", "React"], function (legacy_code, React) {
   var EXTRA_BUTTON_WIDTH = 27;
 
   var Option = React.createClass({
@@ -311,5 +314,4 @@ define(["legacy_code", "React"], function (legacy_code, React) {
     }
   });
 
-  return Select;
-});
+  module.exports = Select;

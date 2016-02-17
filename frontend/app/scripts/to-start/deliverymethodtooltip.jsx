@@ -1,9 +1,8 @@
-/** @jsx React.DOM */
+var $ = require("jquery");
 
 
-define(['Backbone', 'legacy_code'], function() {
 
-return {
+module.exports = {
   getDeliveryMethodText: function(dm) {
       if (dm == "email") {
         return capitaliseFirstLetter(localization.delivery.email);
@@ -48,7 +47,3 @@ return {
      $('.tooltip-container').remove();
   }
 };
-
-
-
-});

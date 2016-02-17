@@ -1,8 +1,20 @@
+var Backbone = require("backbone");
+var _ = require("underscore");
+var FieldPlacement = require("./placements.js").FieldPlacement;
+var EmailValidation = require("./validation.js").EmailValidation;
+var NotEmptyValidation = require("./validation.js").NotEmptyValidation;
+var SSNForNOBankIDValidation = require("./validation.js").SSNForNOBankIDValidation;
+var SSNForSEBankIDValidation = require("./validation.js").SSNForSEBankIDValidation;
+var PhoneValidation = require("./validation.js").PhoneValidation;
+var Validation = require("./validation.js").Validation;
+var NoValidation = require("./validation.js").NoValidation;
+var EmptyValidation = require("./validation.js").EmptyValidation;
+var PhoneValidationNO = require("./validation.js").PhoneValidationNO;
+
 /* Fields of signatories */
 
-define(['Backbone', 'legacy_code'], function() {
 
-window.Field = Backbone.Model.extend({
+var Field = exports.Field = Backbone.Model.extend({
     defaults: {
         name : "",
         value : "",
@@ -441,4 +453,3 @@ window.Field = Backbone.Model.extend({
 
 
 
-});

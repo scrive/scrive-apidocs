@@ -1,7 +1,15 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin",
-        "common/uploadbutton", "Spinjs", "designview/fileview/fileview"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, UploadButton, Spinner, FileView) {
-  return React.createClass({
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var UploadButton = require("../common/uploadbutton");
+var Spinner = require("spin.js");
+var FileView = require("./fileview/fileview");
+var DesignViewModel = require("../../js/designview/docdesignviewmodel.js").DesignViewModel;
+var $ = require("jquery");
+var Submit = require("../../js/submits.js").Submit;
+var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(DesignViewModel).isRequired
     },
@@ -218,4 +226,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       );
     }
   });
-});

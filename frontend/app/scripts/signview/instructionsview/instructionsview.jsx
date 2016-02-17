@@ -1,6 +1,9 @@
-define(["legacy_code", "Backbone", "React", "common/button",
-        "signview/instructionsview/padgivetonextview", "common/htmltextwithsubstitution"],
-function (legacy_code, Backbone, React, Button, PadGiveToNextView, HtmlTextWithSubstitution) {
+var Backbone = require("backbone");
+var React = require("react");
+var Button = require("../../common/button");
+var PadGiveToNextView = require("./padgivetonextview");
+var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
+var Document = require("../../../js/documents.js").Document;
 
   var Menu = React.createClass({
     getInitialState: function () {
@@ -30,7 +33,7 @@ function (legacy_code, Backbone, React, Button, PadGiveToNextView, HtmlTextWithS
     }
   });
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Document).isRequired,
       loggedInAsAuthor: React.PropTypes.bool.isRequired,
@@ -124,4 +127,3 @@ function (legacy_code, Backbone, React, Button, PadGiveToNextView, HtmlTextWithS
       );
     }
   });
-});

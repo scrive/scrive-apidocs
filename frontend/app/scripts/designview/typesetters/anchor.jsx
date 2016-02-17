@@ -1,9 +1,12 @@
-/** @jsx React.DOM */
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var Button = require("../../common/button");
+var AnchorTable = require("./anchortableview");
+var $ = require("jquery");
+var Confirmation = require("../../../js/confirmations.js").Confirmation;
 
-define(["Underscore", "Backbone", "React", "common/button",
-        "designview/typesetters/anchortableview", "legacy_code"],
-  function (_, Backbone, React, Button, AnchorTable) {
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired
     },
@@ -75,4 +78,3 @@ define(["Underscore", "Backbone", "React", "common/button",
       );
     }
   });
-});

@@ -1,4 +1,6 @@
-/** @jsx React.DOM */
+var React = require("react");
+var $ = require("jquery");
+var _ = require("underscore");
 
 /**
  * A button component in React. It does not have all properties of original backbone button,
@@ -24,8 +26,7 @@
  *
  */
 
-define(['React'], function(React) {
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       text        : function(props, propName, componentName) {
         var val = props[propName];
@@ -121,4 +122,3 @@ define(['React'], function(React) {
       );
     }
   });
-});

@@ -1,8 +1,14 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var DomainViewModel = require("./domainviewmodel");
+var Button = require("../../common/button");
+var DomainImageEditor = require("./domainimageeditor");
+var DomainTextEditor = require("./domaintexteditor");
+var DomainColorEditor = require("./domaincoloreditor");
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
-define(["React","common/backbone_mixin","admin/brandeddomain/domainviewmodel","legacy_code","common/button","admin/brandeddomain/domainimageeditor","admin/brandeddomain/domaintexteditor","admin/brandeddomain/domaincoloreditor"], function(React, BackboneMixin, DomainViewModel,_Legacy, Button, DomainImageEditor,DomainTextEditor,DomainColorEditor) {
 
-return React.createClass({
+module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.model];
@@ -214,4 +220,3 @@ return React.createClass({
       );
     }
   });
-});

@@ -1,8 +1,10 @@
+var _ = require("underscore");
+var Backbone = require("backbone");
+var BankIDSigning = require("../../../eleg/bankidsigning");
+var ErrorModal = require("../../errormodal");
 // ignore model in coverage for now.
 /* istanbul ignore next */
-define(["legacy_code", "Underscore", "Backbone", "eleg/bankidsigning", "signview/errormodal"],
-  function (legacy_code, _, Backbone, BankIDSigning, ErrorModal) {
-  return Backbone.Model.extend({
+  module.exports = Backbone.Model.extend({
     defaults: {
       doc: undefined,
       siglinkid: 0,
@@ -104,4 +106,3 @@ define(["legacy_code", "Underscore", "Backbone", "eleg/bankidsigning", "signview
     }
 
   });
-});

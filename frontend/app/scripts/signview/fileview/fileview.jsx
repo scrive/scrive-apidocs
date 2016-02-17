@@ -1,6 +1,12 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "signview/fileview/filepageview"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, FilePageView) {
-  return React.createClass({
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var FilePageView = require("./filepageview");
+var File = require("../../../js/files.js").File;
+var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
+var $ = require("jquery");
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(File).isRequired,
       signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
@@ -151,4 +157,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       );
     }
   });
-});

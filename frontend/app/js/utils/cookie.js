@@ -1,9 +1,11 @@
-define(['legacy_code'],function() {
+var Cookies = require("./cookie.js").Cookies;
+var _ = require("underscore");
+
 
   /**
    *  Reading and settings browser cookies
    */
-  window.Cookies = {
+  var Cookies = exports.Cookies = {
     buildCookieMultiMap : function () {
       var cookies = document.cookie.split(';');
       var cookieMap = {};
@@ -41,5 +43,4 @@ define(['legacy_code'],function() {
     }
   };
 
-  return window.Cookies;
-});
+

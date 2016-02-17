@@ -1,43 +1,26 @@
-define([
-  "Backbone",
-  "React",
-  "common/backbone_mixin",
-  "common/onelementheightchange",
-  "signview/signatories/docviewsignatories",
-  "signview/attachments/signatoryattachmentsview",
-  "signview/instructionsview/instructionsview",
-  "signview/attachments/authorattachmentsview",
-  "signview/extradetails/extradetailsview",
-  "signview/signsection/signsectionview",
-  "signview/signviewmodel",
-  "signview/fileview/fileview",
-  "signview/header",
-  "signview/footer",
-  "signview/postsignview",
-  "signview/tasks/taskarrows",
-  "signview/overlay",
-  "signview/viewsize"
-], function (
-  Backbone,
-  React,
-  BackboneMixin,
-  onElementHeightChange,
-  DocumentViewSignatories,
-  SignatoryAttachmentsView,
-  InstructionsView,
-  AuthorAttachmentsView,
-  ExtraDetailsView,
-  SignSectionView,
-  SignViewModel,
-  FileView,
-  Header,
-  Footer,
-  PostSignView,
-  TaskArrows,
-  Overlay,
-  ViewSize
-) {
-  return React.createClass({
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var onElementHeightChange = require("../common/onelementheightchange");
+var DocumentViewSignatories = require("./signatories/docviewsignatories");
+var SignatoryAttachmentsView = require("./attachments/signatoryattachmentsview");
+var InstructionsView = require("./instructionsview/instructionsview");
+var AuthorAttachmentsView = require("./attachments/authorattachmentsview");
+var ExtraDetailsView = require("./extradetails/extradetailsview");
+var SignSectionView = require("./signsection/signsectionview");
+var SignViewModel = require("./signviewmodel");
+var FileView = require("./fileview/fileview");
+var Header = require("./header");
+var Footer = require("./footer");
+var PostSignView = require("./postsignview");
+var TaskArrows = require("./tasks/taskarrows");
+var Overlay = require("./overlay");
+var ViewSize = require("./viewsize");
+var DocumentViewer = require("../../js/documentviewer.js").DocumentViewer;
+var Document = require("../../js/documents.js").Document;
+var $ = require("jquery");
+var ReloadManager = require("../../js/reloadmanager.js").ReloadManager;
+  module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
     propTypes: {
@@ -224,4 +207,3 @@ define([
       );
     }
   });
-});

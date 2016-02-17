@@ -1,7 +1,10 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "signview/attachments/authorattachmentview"],
-  function (legacy_code, _, Backbone, React, AuthorAttachmentView) {
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var AuthorAttachmentView = require("./authorattachmentview");
+var Document = require("../../../js/documents.js").Document;
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Document).isRequired,
       canStartFetching: React.PropTypes.bool.isRequired
@@ -26,4 +29,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "signview/attachments/
       );
     }
   });
-});

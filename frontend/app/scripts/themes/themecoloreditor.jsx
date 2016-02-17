@@ -1,8 +1,10 @@
-/** @jsx React.DOM */
+var React = require("react");
+var tinycolor = require("tinycolor");
+var InfoTextInput = require("../common/infotextinput");
+var $ = require("jquery");
 
-define(["React","tinycolor","legacy_code","common/infotextinput"], function(React, tinycolor,_Legacy, InfoTextInput) {
 
-return React.createClass({
+module.exports = React.createClass({
   propTypes: {
     title: React.PropTypes.string,
     sampleText: React.PropTypes.string,
@@ -138,5 +140,4 @@ return React.createClass({
       </div>
     );
   }
-});
 });

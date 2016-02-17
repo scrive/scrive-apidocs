@@ -1,6 +1,9 @@
-define(['Backbone', "common/location", 'legacy_code'], function(Backbone, LocationUtils) {
+var Backbone = require("backbone");
+var LocationUtils = require("../common/location");
+var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
+var Submit = require("../../js/submits.js").Submit;
 
-return Backbone.Model.extend({
+module.exports = Backbone.Model.extend({
     defaults: {
       signatory: undefined,
       onStatusChange: function() {},
@@ -274,5 +277,3 @@ return Backbone.Model.extend({
       poller();
     }
   });
-
-});

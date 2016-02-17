@@ -1,4 +1,8 @@
-/** @jsx React.DOM */
+var React = require("react");
+var UploadButton = require("./uploadbutton");
+var Submit = require("../../js/submits.js").Submit;
+var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+var $ = require("jquery");
 
 /**
  * A upload button component in React. Internallly it uses UploadButton, and can take many UI propperties of buttons - but not all of them.
@@ -21,8 +25,7 @@
  *
  */
 
-define(['React','common/uploadbutton'], function(React,UploadButton) {
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       text        : React.PropTypes.string,
       type        : React.PropTypes.string,
@@ -82,4 +85,3 @@ define(['React','common/uploadbutton'], function(React,UploadButton) {
       );
     }
   });
-});

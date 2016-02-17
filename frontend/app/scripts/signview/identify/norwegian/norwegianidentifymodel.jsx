@@ -1,8 +1,10 @@
+var _ = require("underscore");
+var Backbone = require("backbone");
+var _Base64 = require("base64");
+var LocationUtils = require("../../../common/location");
 // ignore model in coverage for now.
 /* istanbul ignore next */
-define(["legacy_code", "Underscore", "Backbone", "base64", "common/location"],
-  function (legacy_code, _, Backbone, _Base64, LocationUtils) {
-  return Backbone.Model.extend({
+  module.exports = Backbone.Model.extend({
     defaults: {
       doc: undefined,
       siglinkid: 0,
@@ -134,4 +136,3 @@ define(["legacy_code", "Underscore", "Backbone", "base64", "common/location"],
       return link;
     }
   });
-});

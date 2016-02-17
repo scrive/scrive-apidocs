@@ -29,27 +29,16 @@ pagePrivilegesConfirm =$doctype()$
         $flashmessages()$
         <div class='oauth-confirm'></div>
         <script>
-         require(['jquery', 'legacy_code'], function(jQuery) {
-          jQuery(function() {
-            var target = jQuery(".oauth-confirm");
-            var confirmation =  new OAuthConfirmation({
-                               logged : $if(logged)$ true $else$ false $endif$,
-                               sendPermission : $if(isDocumentSend)$ true $else$ false $endif$,
-                               createPermission : $if(isDocumentCreate)$ true $else$ false $endif$,
-                               readPermission : $if(isDocumentCheck)$ true $else$ false $endif$,
-                               who : "$companyname$",
-                               token : "$token$"
-                        });
-            target.append(confirmation.view().el);
-
-            jQuery(".js-deny").click(function() {
-               confirmation.deny();
-               return false;
-            })
-
-          });
-         });
+        var fromTemplate = {
+          logged : $if(logged)$ true $else$ false $endif$,
+          sendPermission : $if(isDocumentSend)$ true $else$ false $endif$,
+          createPermission : $if(isDocumentCreate)$ true $else$ false $endif$,
+          readPermission : $if(isDocumentCheck)$ true $else$ false $endif$,
+          who : "$companyname$",
+          token : "$token$"
+        };
         </script>
+        <script src="/compiled/all/oauth_accept.js"></script>
       </body>
     $htmlclosingtag()$
 #####

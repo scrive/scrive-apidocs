@@ -1,8 +1,10 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var InfoTextInput = require("../common/infotextinput");
+var Checkbox = require("../common/checkbox");
 
-define(['legacy_code', 'React', 'common/backbone_mixin', 'common/infotextinput', 'common/checkbox'], function(_legacy, React, BackboneMixin, InfoTextInput, Checkbox) {
 
-return React.createClass({
+module.exports = React.createClass({
   propTypes: {
     field: React.PropTypes.object
   },
@@ -84,7 +86,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
-
 });

@@ -1,10 +1,13 @@
-define(["legacy_code",  "React", "common/backbone_mixin",
-        "signview/identify/swedish/swedishidentifyview", "signview/identify/swedish/swedishidentifymodel",
-        "signview/identify/norwegian/norwegianidentifyview", "signview/identify/norwegian/norwegianidentifymodel"],
-  function (legacy_code, React, BackboneMixin,
-            SwedishIdentifyView, SwedishIdentifyModel, NorwegianIdentifyView, NorwegianIdentifyModel) {
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var SwedishIdentifyView = require("./swedish/swedishidentifyview");
+var SwedishIdentifyModel = require("./swedish/swedishidentifymodel");
+var NorwegianIdentifyView = require("./norwegian/norwegianidentifyview");
+var NorwegianIdentifyModel = require("./norwegian/norwegianidentifymodel");
+var Document = require("../../../js/documents.js").Document;
+var $ = require("jquery");
 
-  return React.createClass({
+  module.exports = React.createClass({
 
     propTypes: {
       doc: React.PropTypes.instanceOf(Document).isRequired,
@@ -108,4 +111,3 @@ define(["legacy_code",  "React", "common/backbone_mixin",
       );
     }
   });
-});

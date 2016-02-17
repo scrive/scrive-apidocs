@@ -1,8 +1,12 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/infotextinput",
-  "common/htmltextwithsubstitution", "signview/viewsize"],
-  function (legacy_code, _, Backbone, React, Button, InfoTextInput, HtmlTextWithSubstitution, ViewSize) {
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var Button = require("../../common/button");
+var InfoTextInput = require("../../common/infotextinput");
+var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
+var ViewSize = require("../viewsize");
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       title: React.PropTypes.string.isRequired,
       name: React.PropTypes.string.isRequired,
@@ -55,4 +59,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "comm
       );
     }
   });
-});

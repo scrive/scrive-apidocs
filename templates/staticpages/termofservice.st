@@ -17,9 +17,7 @@ $htmlopentag()$
 
       <div class="js-terms-of-service terms-of-service">$termsOfServiceContent()$</div>
       <script>
-      require(['jquery', 'legacy_code'], function(jQuery) {
         mixpanel.track('View Terms Of Service Page');
-      });
       </script>
     </div>
   </div>

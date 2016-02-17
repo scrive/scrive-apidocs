@@ -1,6 +1,9 @@
-/** @jsx React.DOM */
+var SortingModel = require("./sortingmodel");
+var TextFilteringModel = require("./textfilteringmodel");
+var SelectFilteringModel = require("./selectfilteringmodel");
+var Backbone = require("backbone");
+var $ = require("jquery");
 
-define(['lists/sortingmodel','lists/textfilteringmodel','lists/selectfilteringmodel','legacy_code'], function(SortingModel,TextFilteringModel,SelectFilteringModel) {
 
     var ListObject = Backbone.Model.extend({
         defaults: function() {
@@ -84,7 +87,7 @@ define(['lists/sortingmodel','lists/textfilteringmodel','lists/selectfilteringmo
     });
 
 
-return Backbone.Model.extend({
+module.exports = Backbone.Model.extend({
     defaults: function() {
       var self = this;
       return {
@@ -200,6 +203,3 @@ return Backbone.Model.extend({
     }
 
 });
-
-});
-

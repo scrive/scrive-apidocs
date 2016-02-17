@@ -1,9 +1,13 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Utils = require("./utils");
+var List = require("../lists/list");
+var moment = require("moment");
+var LocalStorage = require("../../js/storage.js").LocalStorage;
+var _ = require("underscore");
 /* List of columns used by out archive view. Used by both, Documents and Trash list*/
 
-define(['React','archive/utils', 'lists/list', 'moment', 'Backbone', 'legacy_code'], function(React, Utils, List, moment) {
 
-return function(args) {
+module.exports = function(args) {
   var self = args.list;
   return [
           <List.Column
@@ -117,7 +121,3 @@ return function(args) {
           />
 ];
 }
-
-
-
-});

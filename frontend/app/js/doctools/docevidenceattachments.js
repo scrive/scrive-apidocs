@@ -1,4 +1,8 @@
-define(['Backbone', 'legacy_code'], function() {
+var Backbone = require("backbone");
+var $ = require("jquery");
+var Button = require("../buttons.js").Button;
+var _ = require("underscore");
+
 
 var DocumentEvidenceAttachmentsModel = Backbone.Model.extend({
   defaults : {
@@ -86,7 +90,7 @@ var DocumentEvidenceAttachmentsView = Backbone.View.extend({
   }
 });
 
-window.DocumentEvidenceAttachments = function(args) {
+var DocumentEvidenceAttachments = exports.DocumentEvidenceAttachments = function(args) {
        var model = new DocumentEvidenceAttachmentsModel(args);
        var view = new DocumentEvidenceAttachmentsView({
                         model: model,
@@ -97,4 +101,3 @@ window.DocumentEvidenceAttachments = function(args) {
        this.ready = function() {return model.ready();};
 };
 
-});

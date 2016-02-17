@@ -1,13 +1,16 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var AttachmentsList = require("./attachmentslist");
+var DesignViewAttachment = require("./designviewattachment");
+var DesignViewAttachments = require("./designviewattachments");
+var Button = require("../../common/button");
+var UploadButton = require("../../common/uploadbutton");
+var Select = require("../../common/select");
+var InfoTextInput = require("../../common/infotextinput");
+var $ = require("jquery");
+var _ = require("underscore");
 
-define(["legacy_code", "React", "common/backbone_mixin", "designview/authorattachments/attachmentslist",
-        "designview/authorattachments/designviewattachment", "designview/authorattachments/designviewattachments",
-       "common/button", "common/uploadbutton", "common/select", "common/infotextinput"
-       ],
-function (_Legacy, React, BackboneMixin, AttachmentsList,
-          DesignViewAttachment, DesignViewAttachments, Button, UploadButton, Select, InfoTextInput) {
-
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels: function () {
       return [this.props.model];
@@ -146,5 +149,3 @@ function (_Legacy, React, BackboneMixin, AttachmentsList,
       );
     }
   });
-
-});

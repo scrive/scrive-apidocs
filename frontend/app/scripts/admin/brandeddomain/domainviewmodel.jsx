@@ -1,10 +1,13 @@
-/** @jsx React.DOM */
+var BrandedDomain = require("./brandeddomain");
+var ListModel = require("../../lists/listmodel");
+var Theme = require("../../themes/theme");
+var Backbone = require("backbone");
+var _ = require("underscore");
 
 /* View model for  */
-define(['admin/brandeddomain/brandeddomain', 'lists/listmodel', 'themes/theme', 'Backbone', 'legacy_code'], function(BrandedDomain,ListModel,Theme) {
 
 
-return Backbone.Model.extend({
+module.exports = Backbone.Model.extend({
   defaults: {
         domain: undefined,
         themeList : undefined,
@@ -169,7 +172,4 @@ return Backbone.Model.extend({
   dirty : function() {
     return _.any(this.editedThemes(), function(t) {return t.dirty(); }) || this.domain().dirty();
   }
-});
-
-
 });

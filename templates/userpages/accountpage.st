@@ -5,13 +5,12 @@ showAccount =
     <div class='blocking-box'></div>
     <div class='archive'></div>
     <script>
-     require(['jquery', 'legacy_code'], function(jQuery) {
-      var account = new Account({companyAdmin : $if(companyAdmin)$true$else$false$endif$, noCompany : $if(noCompany)$true$else$false$endif$});
-      jQuery(".body-container").append(account.el());
-      mixpanel.register({Context : 'Account Page'});
-      mixpanel.track('View Account Page');
-     });
+    var fromTemplate = {
+      companyAdmin: $if(companyAdmin)$true$else$false$endif$,
+      noCompany : $if(noCompany)$true$else$false$endif$
+    };
     </script>
+    <script src="/compiled/all/account.js"></script>
   </div>
 </div>
 
@@ -24,20 +23,13 @@ pageDoYouWantToBeCompanyAccount=
   </div>
 </div>
 <script>
- require(['jquery', 'legacy_code'], function(jQuery) {
-  jQuery(document).ready(function() {
-    var content = jQuery('<div/>').addClass('recovery-container');
-    content.append(jQuery('<p/>').append("$_modalDoYouWantToBeCompanyAccountBody()$"));
-    new Confirmation({onAccept: function() {
-                                    new Submit({method: 'POST', url: ''}).send();
-                                  },
-                        onReject : function() { window.location = '/account' ; },
-                        title: "$_modalDoYouWantToBeCompanyAccountHeader()$",
-                        acceptButtonText: "$_modalDoYouWantToBeCompanyAccountFooterAccept()$",
-                        content: content});
-  });
- });
+  var fromTemplate = {
+    title: "$_modalDoYouWantToBeCompanyAccountHeader()$",
+    acceptButtonText: "$_modalDoYouWantToBeCompanyAccountFooterAccept()$",
+    body: "$_modalDoYouWantToBeCompanyAccountBody()$"
+  };
 </script>
+<script src="/compiled/all/company_account.js"></script>
 ####
 pageDoYouWantToChangeEmail=
 <div class="mainContainer" >
@@ -45,22 +37,10 @@ pageDoYouWantToChangeEmail=
   </div>
 </div>
 <script>
- require(['jquery', 'legacy_code'], function(jQuery) {
-  jQuery(document).ready(function() {
-    var content = jQuery('<div/>').addClass('recovery-container');
-    content.append(jQuery('<p/>').append("$_modalDoYouWantToChangeEmailBody()$"));
-    var password_input = jQuery('<input type="password" name="password" autocomplete="off"/>');
-    content.append(jQuery('<p/>').append(password_input));
-    new Confirmation({onAccept: function() {
-                                    new Submit({method: 'POST',
-                                                url: '',
-                                                password: password_input.val()}).send();
-                                  },
-                        onReject : function() { window.location = '/account' ; },
-                        title: "$_modalDoYouWantToChangeEmailHeader()$",
-                        acceptButtonText: 'OK',
-                        content: content});
-  });
- });
+  var fromTemplate = {
+    body: "$_modalDoYouWantToChangeEmailBody()$",
+    title: "$_modalDoYouWantToChangeEmailHeader()$"
+  };
 </script>
+<script src="/compiled/all/change_email.js"></script>
 ####

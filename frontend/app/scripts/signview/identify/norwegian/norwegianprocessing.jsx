@@ -1,8 +1,10 @@
-define(["legacy_code", "Underscore", "Backbone", "React",
-  "signview/identify/norwegian/norwegianidentifymodel"],
-  function (legacy_code, _, Backbone, React, NorwegianIdentifyModel) {
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var NorwegianIdentifyModel = require("./norwegianidentifymodel");
+var FlashMessage = require("../../../../js/flashmessages.js").FlashMessage;
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(NorwegianIdentifyModel).isRequired
     },
@@ -48,4 +50,3 @@ define(["legacy_code", "Underscore", "Backbone", "React",
       );
     }
   });
-});

@@ -1,6 +1,14 @@
-/** @jsx React.DOM */
+var React = require("react");
+var NewButton = require("../common/button");
+var Backbone = require("backbone");
+var _ = require("underscore");
+var $ = require("jquery");
+var Calendar = require("../../js/calendar.js").Calendar;
+var InfoTextInput = require("../../js/infotextinputs.js").InfoTextInput;
+var Confirmation = require("../../js/confirmations.js").Confirmation;
+var Button = require("../../js/buttons.js").Button;
+var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
 
-define(['React','common/button', 'Backbone', 'legacy_code'], function(React, NewButton) {
 
 var expose = {};
 
@@ -244,5 +252,4 @@ var AuthorViewAutomaticReminders = React.createClass({
 });
 
   expose.AuthorViewAutomaticReminders = AuthorViewAutomaticReminders;
-  return expose;
-});
+  module.exports = expose;

@@ -1,4 +1,5 @@
-/** @jsx React.DOM */
+var React = require("react");
+var $ = require("jquery");
 
 /* Mixin for elements that can create/move placements by dragging them
 
@@ -7,8 +8,7 @@
 
  */
 
-define(["React", "legacy_code"], function (React) {
-  return {
+  module.exports = {
     propTypes: {
       showCoordinateAxes: React.PropTypes.func.isRequired,
       hideCoordinateAxes: React.PropTypes.func.isRequired,
@@ -78,4 +78,3 @@ define(["React", "legacy_code"], function (React) {
       });
     }
   };
-});
