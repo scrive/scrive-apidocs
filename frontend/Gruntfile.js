@@ -33,14 +33,14 @@ module.exports = function (grunt) {
     webpack: {
       all: webpackConfig[0],
       signview: webpackConfig[1],
-      allWatch: _.extend(webpackConfig[0], {
+      allWatch: _.extend({
         watch: true,
         keepalive: true
-      }),
-      signviewWatch: _.extend(webpackConfig[1], {
+      }, webpackConfig[0]),
+      signviewWatch: _.extend({
         watch: true,
         keepalive: true
-      })
+      }, webpackConfig[1])
     },
 
     jscs: {
@@ -312,7 +312,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask("compileStyles", ["less", "autoprefixer"]);
   grunt.registerTask("server:dist", ["build"]);
-  //grunt.registerTask("test", ["karma:unitSingleRun"]);
+  // grunt.registerTask("test", ["karma:unitSingleRun"]);
   grunt.registerTask("test", []);
   grunt.registerTask("validateJs", ["gjslint"]);
   grunt.registerTask("default", ["gjslint", "build", "test"]);
