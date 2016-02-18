@@ -32,6 +32,8 @@ function defaultConfig(obj) {
   return _.extend({
     context: context,
 
+    devtool: "source-map",
+
     module: {
       loaders: [
         {
@@ -66,7 +68,7 @@ function defaultConfig(obj) {
 
 var signviewConfig = defaultConfig({
   name: "signview",
-  output: {path: __dirname, filename: "./app/compiled/signview/[name].js"},
+  output: {path: __dirname, filename: "./app/compiled/signview/[name].js", sourceMapFilename: "[file].map"},
   entry: allEntryPoints("./app/scripts/entry/signview/*.jsx"),
   plugins: [bowerResolver()]
 });
@@ -74,7 +76,7 @@ var signviewConfig = defaultConfig({
 var allConfig = defaultConfig({
   name: "all",
   entry: allEntryPoints("./app/scripts/entry/all/*.jsx"),
-  output: {path: __dirname, filename: "./app/compiled/all/[name].js"},
+  output: {path: __dirname, filename: "./app/compiled/all/[name].js", sourceMapFilename: "[file].map"},
   plugins: [bowerResolver()]
 });
 

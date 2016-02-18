@@ -216,6 +216,9 @@ module.exports = function (grunt) {
 
     uglify: {
       vendor: {
+        options: {
+          sourceMap: true
+        },
         src: [
           "<%= yeoman.app %>/bower_components/jquery/jquery.js",
           "<%= yeoman.app %>/bower_components/underscore/underscore.js",
