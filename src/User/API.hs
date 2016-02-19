@@ -334,10 +334,11 @@ apiCallTestSalesforceIntegration = api $ do
             value "status" ("ok"::String)
             value "http_code" http_code
             value "response" resp
-          Left (msg, curl_err, stderr, http_code) -> runJSONGenT $ do
+          Left (msg, curl_err, stdout, stderr, http_code) -> runJSONGenT $ do
             value "status" ("error"::String)
             value "error_message" msg
             value "http_code" http_code
             value "curl_exit_code" curl_err
+            value "curl_stdout" stdout
             value "curl_stderr" stderr
       _ -> throwM . SomeKontraException $ conflictError "Salesforce callback scheme is not set for this user"

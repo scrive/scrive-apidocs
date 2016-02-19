@@ -68,7 +68,7 @@ getRefreshTokenFromCode code = do
 
 {- Every time we do a salesforce callback, we need to get new access token. We get it using refresh token -}
 getAccessTokenFromRefreshToken :: (MonadDB m, MonadIO m, MonadLog m, MonadReader c m, HasSalesforceConf c)
-                                => String -> m (Either (String, Int, String, String) String)
+                                => String -> m (Either (String, Int, String, String, String) String)
 getAccessTokenFromRefreshToken rtoken = do
   sc <- getSalesforceConfM
   (exitcode, stdoutWithCode, stderr) <- readCurl [
@@ -88,7 +88,7 @@ getAccessTokenFromRefreshToken rtoken = do
             "curl_exit_code" .= err
           , "stderr" `equalsExternalBSL` stderr
           ]
-        return $ Left ("curl connection to Salesforce closed", err, BSL.unpack stderr, httpCode)
+        return $ Left ("curl connection to Salesforce closed", err, BSL.unpack stdout, BSL.unpack stderr, httpCode)
       ExitSuccess -> case (decode $ BSL.toString stdout) of
         J.Ok js -> do
           mrt <- withJSValue js $ fromJSValueField "access_token"
@@ -99,24 +99,24 @@ getAccessTokenFromRefreshToken rtoken = do
                   "http_code" .= httpCode
                 , "stdout" `equalsExternalBSL` stdout
                 ]
-              return $ Left ("Salesforce access response is valid JSON, but no access token found", 0, BSL.unpack stderr, httpCode)
+              return $ Left ("Salesforce access response is valid JSON, but no access token found", 0, BSL.unpack stdout, BSL.unpack stderr, httpCode)
         _ -> do
           logInfo "Parsing JSON from Salesforce access response stdout failed" $ object [
               "http_code" .= httpCode
             , "stdout" `equalsExternalBSL` stdout
             ]
-          return $ Left ("Salesforce access response is not valid JSON", 0, BSL.unpack stderr, httpCode)
+          return $ Left ("Salesforce access response is not valid JSON", 0, BSL.unpack stdout,BSL.unpack stderr, httpCode)
 
 
 
 {- Used by API call test salesforce. Let you check if salesfoce integration is set and working for a given url -}
 testSalesforce :: (MonadDB m, MonadIO m, MonadLog m, MonadReader c m, HasSalesforceConf c)
-               => String -> String -> m (Either (String, Int, String, String) (String, String))
+               => String -> String -> m (Either (String, Int, String, String, String) (String, String))
 testSalesforce rtoken url = do
   matoken <- getAccessTokenFromRefreshToken rtoken
   case matoken of
-    Left (msg, curlErr, stderr, httpCode) ->
-      return $ Left ("Getting access token failed: " ++ msg, curlErr, stderr, httpCode)
+    Left (msg, curlErr, stdout, stderr, httpCode) ->
+      return $ Left ("Getting access token failed: " ++ msg, curlErr, stdout, stderr, httpCode)
     Right atoken -> do
       (exitcode, stdoutWithCode, stderr) <- readCurl [
           "-X", "POST"
@@ -133,7 +133,7 @@ testSalesforce rtoken url = do
         ExitSuccess ->
           return $ Right (httpCode, BSL.unpack stdout)
         ExitFailure err ->
-          return $ Left ("Salesforce access token worked, but callback failed", err, BSL.unpack stderr, httpCode)
+          return $ Left ("Salesforce access token worked, but callback failed", err, BSL.unpack stdout, BSL.unpack stderr, httpCode)
 
 
 stdoutFromStdoutWithHTTPCode :: BSL.ByteString -> BSL.ByteString

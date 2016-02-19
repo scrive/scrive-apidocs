@@ -39,6 +39,7 @@ import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.IO
+import Utils.String
 
 execute :: (AmazonMonad m, MonadDB m, CryptoRNG m, MonadThrow m, MonadLog m, MonadIO m, MonadBase IO m,  MonadReader c m, HasSalesforceConf c, MailContextMonad m) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
@@ -172,8 +173,8 @@ executeSalesforceCallback :: (MonadDB m, CryptoRNG m, MonadLog m, MonadThrow m, 
 executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid doc) $ do
   mtoken <- getAccessTokenFromRefreshToken rtoken
   case mtoken of
-       Left (msg, curl_err, stderr, http_code) -> do
-         emailErrorIfNeeded ("Getting access token failed: " ++ msg, curl_err, stderr, http_code)
+       Left (msg, curl_err, stdout, stderr, http_code) -> do
+         emailErrorIfNeeded ("Getting access token failed: " ++ msg, curl_err, stdout, stderr, http_code)
          return False
        Right token -> do
         (exitcode, stdout, stderr) <- readCurl [
@@ -198,10 +199,10 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                       logInfo "Salesforce API callback failed" $ object [
                           "stderr" `equalsExternalBSL` stderr
                         ]
-                      emailErrorIfNeeded ("Request to callback URL failed", err, BSL.unpack stderr, http_code)
+                      emailErrorIfNeeded ("Request to callback URL failed", err, BSL.unpack stdout , BSL.unpack stderr, http_code)
                       return False
 
-  where emailErrorIfNeeded (msg, curl_err, stderr, http_code) = do
+  where emailErrorIfNeeded (msg, curl_err, stdout, stderr, http_code) = do
           sc <- getSalesforceConfM
           when (attempts == 4 && isJust (salesforceErrorEmail sc)) $ do
             logInfo_ "Salesforce API callback failed for 5th time, sending email."
@@ -217,18 +218,19 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                             "(documentid: " ++ show (documentid doc) ++ ") " ++
                             "(http_code: " ++ http_code ++ ")"
                   , content = "<h2>Salesforce Callback Failed</h2>" ++ "<br />\r\n"
-                          ++ "<strong>Error:</strong> " ++ msg ++ "<br />\r\n"
+                          ++ "<strong>Error:</strong> " ++ escapeHTML msg ++ "<br />\r\n"
                           ++ "<br />"
                           ++ "<strong>Salesforce access token URL:</strong> " ++ salesforceTokenUrl sc ++ "<br />\r\n"
                           ++ "<strong>Callback URL:</strong> " ++ url ++ "<br />\r\n"
                           ++ "<strong>Curl error code:</strong> " ++ show curl_err ++ "<br />\r\n"
-                          ++ "<strong>Curl stderr:</strong> " ++ stderr ++ "<br />\r\n"
-                          ++ "<strong>HTTP response code:</strong> " ++ http_code ++ "<br />\r\n"
+                          ++ "<strong>Curl stdout:</strong> " ++ escapeHTML stdout ++ "<br />\r\n"
+                          ++ "<strong>Curl stderr:</strong> " ++ escapeHTML stderr ++ "<br />\r\n"
+                          ++ "<strong>HTTP response code:</strong> " ++ escapeHTML http_code ++ "<br />\r\n"
                           ++ "<br />"
                           ++ "<strong>User ID:</strong> " ++ show (userid user) ++ "<br />\r\n"
                           ++ "<strong>Document ID:</strong> " ++ show (documentid doc) ++ "<br />\r\n"
                           ++ "<strong>User Company ID:</strong> " ++ show (companyid company) ++ "<br />\r\n"
-                          ++ "<strong>User Name:</strong> " ++ getFullName user ++ "<br />\r\n"
-                          ++ "<strong>User Email:</strong> " ++ getEmail user ++ "<br />\r\n"
+                          ++ "<strong>User Name:</strong> " ++ escapeHTML (getFullName user) ++ "<br />\r\n"
+                          ++ "<strong>User Email:</strong> " ++ escapeHTML (getEmail user) ++ "<br />\r\n"
                   }
             scheduleEmailSendout (mctxmailsconfig mctx) mail
