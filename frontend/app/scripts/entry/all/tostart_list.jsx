@@ -3,6 +3,7 @@ var $ = require("jquery");
 
 var Header = require("../../pages/special/header");
 var Footer = require("../../pages/special/footer");
+var Submit = require("../../../js/submits").Submit;
 var ToStartList = require("../../to-start/templatelist");
 
 $(function () {

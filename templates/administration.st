@@ -34,7 +34,7 @@ admincompany=
 <div class='admin'></div>
 <script>
 var fromTemplate = {
-  comapnyId: "$companyid$"
+  companyId: "$companyid$"
 };
 </script>
 <script src="/compiled/all/companyadmin.js"></script>

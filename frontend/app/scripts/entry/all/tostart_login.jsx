@@ -4,7 +4,7 @@ var $ = require("jquery");
 
 $(function () {
   React.render(React.createElement(Login, {
-    referer:   "/to-sign",
+    referer:   "/to-start",
     autofocus: true,
     nolinks : true
   }), $(".global-table-cell")[0]);

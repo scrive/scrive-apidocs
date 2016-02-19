@@ -3,6 +3,7 @@ var AcceptTOS = require("../../../js/accept_tos").AcceptTOS;
 var $ = require("jquery");
 var Header = require("../../pages/special/header");
 var Footer = require("../../pages/special/footer");
+var Submit = require("../../../js/submits").Submit;
 var PadList = require("../../padlist/padlist");
 
 $(function () {

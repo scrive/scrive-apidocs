@@ -135,6 +135,6 @@ var Submit = require("./submits.js").Submit;
     setTimeout(function () { view.clear(); }, 10000);
   };
 
-  window.FlashMessagesCleaner = function () {
+  var FlashMessagesCleaner = exports.FlashMessagesCleaner = function () {
     $(".flash").css("display", "none");
   };
