@@ -32,6 +32,7 @@ import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.Unjson as Unjson
 import qualified System.IO.Temp
 
 import DB
@@ -44,6 +45,17 @@ import KontraPrelude
 import Log.Identifier
 import qualified Amazon as AWS
 import qualified MemCache as MemCache
+
+data RemoveJavaScriptSpec = RemoveJavaScriptSpec
+    { input          :: String
+    , output         :: String
+    }
+    deriving (Eq,Ord,Show,Read)
+
+unjsonRemoveJavaScriptSpec :: Unjson.UnjsonDef RemoveJavaScriptSpec
+unjsonRemoveJavaScriptSpec = Unjson.objectOf $ pure RemoveJavaScriptSpec
+    <*> Unjson.field "input" input "Path for source document"
+    <*> Unjson.field "output" output "Output path"
 
 withSystemTempDirectory :: (MonadBaseControl IO m) => String -> (String -> m a) -> m a
 withSystemTempDirectory = liftBaseOp . System.IO.Temp.withSystemTempDirectory
@@ -150,6 +162,7 @@ getRenderedPages fileid pageWidthInPixels renderingMode = do
 data FileError = FileSizeError Int Int
                | FileFormatError
                | FileNormalizeError BSL.ByteString
+               | FileRemoveJavaScriptError BSL.ByteString
                | FileSealingError BSL.ByteString
                | FileOtherError String
                deriving (Eq, Ord, Show, Read, Typeable)
@@ -161,10 +174,12 @@ preCheckPDFHelper content tmppath =
     runExceptT $ do
       checkSize
       checkHeader
+      checkRemoveJavaScript
       checkNormalize
       readOutput
   where
     sourcepath = tmppath ++ "/source.pdf"
+    jsremovedpath = tmppath ++ "/jsremoved.pdf"
     normalizedpath = tmppath ++ "/normalized.pdf"
 
     sizeLimit = 10 * 1000 * 1000
@@ -180,15 +195,33 @@ preCheckPDFHelper content tmppath =
       when (not $ headerPattern `BS.isPrefixOf` content) $ do
         throwError (FileFormatError)
 
-    checkNormalize = do
+    checkRemoveJavaScript = do
       liftIO $ BS.writeFile sourcepath content
+      (code,stdout1,stderr1) <- liftIO $ do
+        let jsremovespecpath = tmppath ++ "/jsremove.json"
+        let config = RemoveJavaScriptSpec { input = sourcepath, output = jsremovedpath }
+        let json_config = Unjson.unjsonToByteStringLazy unjsonRemoveJavaScriptSpec config
+
+        liftIO $ BSL.writeFile jsremovespecpath json_config
+        readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "remove-javascript", jsremovespecpath] (BSL.empty)
+      case code of
+        ExitSuccess -> return ()
+        ExitFailure _ -> do
+          throwError $ FileRemoveJavaScriptError $ BSL.concat [ BSL.pack ("Exit failure \n")
+                                                              , stdout1
+                                                              , BSL.pack "\n"
+                                                              , stderr1
+                                                              ]
+
+
+    checkNormalize = do
 
       -- dont rely on mutool exit code - for mupdf-1.6 it's always 1
       -- just check if the output file is there
       (_, stdout1, stderr1) <- liftIO $ readProcessWithExitCode "mutool"
                                    [ "clean"
                                    , "-gg"
-                                   , sourcepath
+                                   , jsremovedpath
                                    , normalizedpath
                                    ] BSL.empty
       flag <- liftIO $ doesFileExist normalizedpath
