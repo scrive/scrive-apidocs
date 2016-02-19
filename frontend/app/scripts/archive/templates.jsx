@@ -145,6 +145,8 @@ module.exports = React.createClass({
             sorting="mtime"
             rendering={function(d) {
               var time = moment(d.field("mtime")).toDate();
+              // FIXME The fullTime() function doesn't work for some reason,
+              // it is located in app/js/utils/time.js and works in scripts/archive/templates.jsx
               return (<span title={time.fullTime()}>{time.toTimeAbrev()}</span>);
             }}
           />

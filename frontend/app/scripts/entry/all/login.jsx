@@ -17,4 +17,11 @@ $(function () {
     autofocus: true,
     langprefix : fromTemplate.langprefix
   }), $(".global-table-cell")[0]);
+  // FIXME there was some mixpanel events in the original here, we should
+  // probably keep them?
+  //
+  // > mixpanel.register({
+  // >   Context : 'Login page - branded'
+  // > });
+  // > mixpanel.track('View login page -branded');
 });

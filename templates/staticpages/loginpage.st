@@ -90,6 +90,8 @@ accountSetupPage=$doctype()$
 
         <script>
         var fromTemplate = {
+          // FIXME will this underscore.js stuff work here?
+          // It has not been imported yet, right?
           fstname: _.unescape("$fstname$"), // name can contain some funky chars like &
           sndname: _.unescape("$sndname$"), // -,,-
           email: "$email$",
