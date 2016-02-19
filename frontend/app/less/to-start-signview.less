@@ -1,6 +1,7 @@
 @import 'branding/variables';
 @import 'branding/elements';
 @import 'designview/util';
+@import "signview/vars";
 
 .to-start-signview {
   min-height: 100%;
@@ -64,6 +65,14 @@
         margin-left: 38px;
         margin-top: 25px;
         margin-bottom: 25px;
+
+        max-width: 172px;
+        max-height: 52px;
+
+        .on-small-view({
+          max-width: 104px;
+          max-height: 20px;
+        });
       }
     }
 
