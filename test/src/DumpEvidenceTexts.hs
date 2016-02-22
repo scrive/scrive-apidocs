@@ -136,6 +136,7 @@ dumpEvidenceTexts now lang doc' = do
      F.value "versionID" versionID
      F.value "timestamp" $ show now
      F.objects "evidences" $ for evs $ \(evt, vp, av, elog) -> do
+       F.value "unavailable" $ evt `elem` [AuthenticatedToViewEvidence]
        F.value "name" $ show evt
        F.value "evidencelog" $ renderXMLContent elog
        F.value "authorview" $ av

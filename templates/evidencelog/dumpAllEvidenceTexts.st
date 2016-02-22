@@ -21,7 +21,11 @@ dumpAllEvidenceTexts=
         <h2>Author’s view</h2>
         <table>
           $evidences:{evidence|
-          $if(evidence.authorview)$<tr><td>$evidence.name$</td><td>$evidence.authorview:noescape()$</td></tr>$endif$}$
+          $if(evidence.unavailable)$
+            <tr><td>$evidence.name$</td><td>(UNAVAILABLE)</td></tr>
+          $else$
+            $if(evidence.authorview)$<tr><td>$evidence.name$</td><td>$evidence.authorview:noescape()$</td></tr>$endif$
+          $endif$}$
         </table>
         <h2>Verification page</h2>
         <table>
