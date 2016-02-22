@@ -16,7 +16,6 @@ data BrandedDomain = BrandedDomain {
                         , bdUrl :: !String
                         , bdSmsOriginator :: !String
                         , bdEmailOriginator :: !String
-                        , bdContactEmail :: !String
                         , bdNoreplyEmail  :: !String
                         , bdMailTheme     :: !ThemeID
                         , bdSignviewTheme :: !ThemeID

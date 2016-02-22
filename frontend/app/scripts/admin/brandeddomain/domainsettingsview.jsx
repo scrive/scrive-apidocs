@@ -65,12 +65,6 @@ return React.createClass({
                 setValue={function(v) {return model.setEmailOriginator(v)}}
               />
               <DomainTextEditor
-                title="Contact email."
-                description="In places where the user can contact you this is the email address that will be used."
-                getValue={function() {return model.contactEmail()}}
-                setValue={function(v) {return model.setContactEmail(v)}}
-              />
-              <DomainTextEditor
                 title="No reply email."
                 description="This email address will be used as the no-reply address. Setting this address may cause email delivery issues."
                 getValue={function() {return model.noreplyEmail()}}

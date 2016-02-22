@@ -10,13 +10,12 @@ import KontraPrelude
 tableBrandedDomains :: Table
 tableBrandedDomains = tblTable {
   tblName = "branded_domains"
-  , tblVersion = 8
+  , tblVersion = 9
   , tblColumns =
     [ tblColumn { colName = "id",                            colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "url",                           colType = TextT, colNullable = False }
     , tblColumn { colName = "sms_originator",                colType = TextT, colNullable = False }
     , tblColumn { colName = "email_originator",              colType = TextT, colNullable = False }
-    , tblColumn { colName = "contact_email",                 colType = TextT, colNullable = False }
     , tblColumn { colName = "noreply_email",                 colType = TextT, colNullable = False, colDefault = Just "''::text"}
     , tblColumn { colName = "mail_theme",                    colType = BigIntT, colNullable = False }
     , tblColumn { colName = "signview_theme",                colType = BigIntT, colNullable = False }
@@ -138,7 +137,6 @@ tableBrandedDomains = tblTable {
                     sqlSet "main_domain" $ True
                     sqlSet "sms_originator" ("Scrive":: String)
                     sqlSet "email_originator" ("Scrive":: String)
-                    sqlSet "contact_email" ("noreply@scrive.com":: String)
                     sqlSet "noreply_email" ("noreply@scrive.com":: String)
                     sqlSet "browser_title" ("Scrive":: String)
                     sqlSet "favicon" $ Binary $ B64.decodeLenient $ BS.fromString $ favicon

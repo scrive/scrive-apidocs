@@ -37,12 +37,6 @@ return Backbone.Model.extend({
   setEmailOriginator: function(s) {
     this.set({"emailOriginator":s, "dirty" : true});
   },
-  contactEmail : function() {
-    return this.get("contactEmail");
-  },
-  setContactEmail: function(s) {
-    this.set({"contactEmail":s, "dirty" : true});
-  },
   noreplyEmail : function() {
     return this.get("noreplyEmail");
   },
