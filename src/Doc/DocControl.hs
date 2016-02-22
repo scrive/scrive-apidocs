@@ -36,10 +36,9 @@ module Doc.DocControl(
 import Control.Concurrent
 import Control.Conditional (unlessM, whenM)
 import Control.Monad.Base
-import Control.Monad.Catch (MonadMask)
+import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.String.Utils (replace,strip)
-import Data.Time (ZonedTime)
 import Happstack.Server hiding (simpleHTTP, lookCookieValue)
 import Log
 import System.Directory
@@ -91,7 +90,6 @@ import KontraLink
 import KontraPrelude
 import Log.Identifier
 import MagicHash
-import MinutesTime
 import Redirect
 import User.Email
 import User.Model
@@ -184,11 +182,10 @@ handleNewDocument = do
   Here are all actions associated with transitions.
 -}
 
-formatTimeSimpleWithTZ :: (MonadDB m, MonadMask m) => TimeZoneName -> UTCTime -> m String
-formatTimeSimpleWithTZ tz mt = withTimeZone tz $ do
-  runQuery_ $ rawSQL "SELECT $1, to_char($1, 'TZ')" (Identity mt)
-  (t::ZonedTime, _::String) <- fetchOne id
-  return $ formatTime' "%Y-%m-%d %H:%M" t
+formatTimeSimpleWithTZ :: (MonadDB m, MonadThrow m) => TimeZoneName -> UTCTime -> m String
+formatTimeSimpleWithTZ tz t = do
+  runQuery_ $ rawSQL "SELECT to_char($1 AT TIME ZONE $2, 'YYYY-MM-DD HH24:MI')" (t, tz)
+  fetchOne runIdentity
 
 showCreateFromTemplate :: Kontrakcja m => m (Either KontraLink String)
 showCreateFromTemplate = withUserGet $ pageCreateFromTemplate
@@ -648,8 +645,8 @@ handleVerify = do
             Just (Input (Left filepath) _ _) -> return filepath
             Just (Input (Right content) _ _) -> liftIO $ do
                     systmp <- getTemporaryDirectory
-                    (pth,handle) <- openTempFile systmp ("vpath.pdf")
-                    BSL.hPutStr handle content
+                    (pth, fhandle) <- openTempFile systmp "vpath.pdf"
+                    BSL.hPutStr fhandle content
                     return pth
             _ -> internalError
       ctx <- getContext
