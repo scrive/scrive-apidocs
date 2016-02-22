@@ -983,7 +983,7 @@ define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 	  table.append(planInformation);
 
 	  var askviktor = $('<p class="askviktor"></p>').html(localization.payments.askviktor);
-          askviktor.find('.put-link-to-mail-sales-here').attr('href', 'mailto:viktor@scrive.com').attr('target', '_blank');
+          askviktor.find('.put-link-to-mail-sales-here').attr('href', 'mailto:info@scrive.com').attr('target', '_blank');
           table.append(askviktor);
 
           $el.html(div.append(header).append(table));

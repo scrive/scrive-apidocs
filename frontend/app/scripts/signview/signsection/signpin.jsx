@@ -1,6 +1,6 @@
 define(["legacy_code", "Underscore", "Backbone", "React", "common/button", "common/infotextinput",
   "signview/tasks/task_mixin", "signview/viewsize"],
-  function (legacy_code, _, Backbone, React, Button, InfoTextInput, TaskMixin, viewsize) {
+  function (legacy_code, _, Backbone, React, Button, InfoTextInput, TaskMixin, ViewSize) {
 
   return React.createClass({
     mixins: [TaskMixin],

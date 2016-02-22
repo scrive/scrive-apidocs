@@ -166,7 +166,7 @@
 "_authorviewUploadedBy":"<span class='put-attachment-name-here'></span> ble lastet opp av <span class='put-signatory-name-here'></span>",
 "_autoreminderChangeButton":"Endre",
 "_autoreminderChangeDate":"Endre dato",
-"_autoreminderChangeDescription":"Påminnelse(r) vil bli sendt ut til neste deltaker(e) <BR/> som ennå ikke har signert ved denne datoen.",
+"_autoreminderChangeDescription":"Påminnelse(r) vil bli sendt ut til neste deltaker(e) som ennå ikke har signert ved denne datoen.",
 "_autoreminderChangeTitle":"Endre påminnelsesdato",
 "_autoreminderDays":"dag(er)",
 "_autoreminderDaysToRemind":"Send påminnelse om",

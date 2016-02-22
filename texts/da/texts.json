@@ -166,7 +166,7 @@
 "_authorviewUploadedBy":"<span class='put-attachment-name-here'></span> uploadet af <span class='put-signatory-name-here'></span>",
 "_autoreminderChangeButton":"Ændre",
 "_autoreminderChangeDate":"Ændre dato",
-"_autoreminderChangeDescription":"Påmindelse(r) vil blive sendt til næste modtager(e)<BR/>, der endnu ikke har signeret, når vi kommer til denne dato.",
+"_autoreminderChangeDescription":"Påmindelse(r) vil blive sendt til næste modtager(e), der endnu ikke har signeret, når vi kommer til denne dato.",
 "_autoreminderChangeTitle":"Ændre påmindelsesdato ",
 "_autoreminderDays":"dag(e)",
 "_autoreminderDaysToRemind":"Send påmindelse igen",

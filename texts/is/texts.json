@@ -166,7 +166,7 @@
 "_authorviewUploadedBy":"<span class='put-attachment-name-here'></span> hlaðið upp af <span class='put-signatory-name-here'></span>",
 "_autoreminderChangeButton":"Breyta",
 "_autoreminderChangeDate":"Breyta dagsetningu",
-"_autoreminderChangeDescription":"Áminning/-ar verður/verða send/sendar til næsta/næstu þáttakenda <BR/>, sem hefur/hafa ekki enn skrifað undir fyrir þessa dagsetningu.",
+"_autoreminderChangeDescription":"Áminning/-ar verður/verða send/sendar til næsta/næstu þáttakenda, sem hefur/hafa ekki enn skrifað undir fyrir þessa dagsetningu.",
 "_autoreminderChangeTitle":"Breyta áminningardegi",
 "_autoreminderDays":"dagur(-ar)",
 "_autoreminderDaysToRemind":"Senda áminningu eftir",
