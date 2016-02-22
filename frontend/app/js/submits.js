@@ -70,7 +70,7 @@ window.Submit = Backbone.Model.extend({
     },
     send: function() {
         var self = this;
-        var form = $("<form style='display:hidden'/>");
+        var form = $("<form style='display: none;'/>");
         form.attr("action", this.get("url"));
         form.attr("method", this.get("method"));
         if (this.get("method") == "POST" && this.hasFile())
