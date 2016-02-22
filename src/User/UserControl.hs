@@ -442,14 +442,10 @@ handleContactUs = do
                 "<p>" ++ uid ++ "</p>" ++
                 "<p>Have a good one!</p>"
       contactEmail = "info@scrive.com"
-      partnerEmail = bdContactEmail $ bd
       sendEmailTo emailAddress = scheduleEmailSendout ctxmailsconfig $ emptyMail {
                                    to = [MailAddress { fullname = emailAddress, email = emailAddress }]
                                  , title = "Contact request (" ++ plan ++ ")"
                                  , content = content
                                  }
-
   sendEmailTo contactEmail
-  when (partnerEmail /= contactEmail) $ sendEmailTo partnerEmail
-
   return $ LoopBack

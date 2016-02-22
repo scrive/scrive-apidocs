@@ -81,6 +81,7 @@ kontraMigrations = [
   , addUniqueConstraintForAuthorCheck
   , createDocumentSealingConsumersTable
   , createDocumentSealingJobsTable
+  , dropBrandedDomainContact
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

@@ -289,3 +289,12 @@ changeScriveSignviewLogo =
         sqlSet "signview_theme" signviewThemeId
         sqlWhere "main_domain"
   }
+
+dropBrandedDomainContact :: (MonadDB m, MonadThrow m) => Migration m
+dropBrandedDomainContact =
+  Migration {
+      mgrTable = tableBrandedDomains
+    , mgrFrom = 8
+    , mgrDo = do
+        runSQL_ "ALTER TABLE branded_domains DROP COLUMN contact_email"
+  }

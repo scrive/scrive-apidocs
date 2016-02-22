@@ -659,9 +659,6 @@ unjsonBrandedDomain = objectOf $ pure BrandedDomain
   <*> field "emailOriginator"
       bdEmailOriginator
       "Originator for email messages"
-  <*> field "contactEmail"
-      bdContactEmail
-      "Email address to contact owner of domain"
   <*> field "noreplyEmail"
       bdNoreplyEmail
       "Email address that none should reply to"
