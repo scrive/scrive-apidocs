@@ -161,7 +161,7 @@ phoneMeRequest muser phone = do
                     ++ "&lt;" ++ phone ++ "&gt;.  "
                     ++ "</p>"
   scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
-            to = [MailAddress { fullname = "info@skrivapa.se", email = "info@skrivapa.se" }]
+            to = [MailAddress { fullname = "info@scrive.com", email = "info@scrive.com" }]
           , title = "Phone Call Request"
           , content = content
       }

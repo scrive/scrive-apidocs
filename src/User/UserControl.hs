@@ -111,7 +111,7 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
     , "new_email" .= unEmail newemail
     ]
   scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
-      to = [MailAddress { fullname = "info@skrivapa.se", email = "info@skrivapa.se" }]
+      to = [MailAddress { fullname = "info@scrive.com", email = "info@scrive.com" }]
     , title = "Request to Change Email to Existing Account"
     , content = content
     }
