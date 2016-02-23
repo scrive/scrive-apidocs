@@ -1,7 +1,3 @@
-var Backbone = require("backbone");
-var moment = require("moment");
-
-
 var monthShortName = function (v) {
  switch(v)
   {

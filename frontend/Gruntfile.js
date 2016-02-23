@@ -218,7 +218,8 @@ module.exports = function (grunt) {
     uglify: {
       vendor: {
         options: {
-          sourceMap: true
+          sourceMap: true,
+          beautify: true
         },
         src: [
           "<%= yeoman.app %>/bower_components/jquery/jquery.js",
@@ -228,8 +229,9 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/bower_components/spin.js/spin.js",
           "<%= yeoman.app %>/bower_components/moment/moment.js",
           "<%= yeoman.app %>/libs/*.js",
-          "<%= yeoman.app %>/js/global.js",
-          "<%= yeoman.app %>/js/utils/time.js"
+          "<%= yeoman.app %>/js/utils/cookie.js",
+          "<%= yeoman.app %>/js/utils/time.js",
+          "<%= yeoman.app %>/js/global.js"
         ],
         dest: "<%= yeoman.app %>/compiled/vendor.js"
       }

@@ -109,6 +109,7 @@ module.exports = Backbone.Model.extend({
       lang : Language.current(),
       email: model.email(),
       ajaxsuccess: function(rs) {
+        var resp;
         try {
           resp = JSON.parse(rs);
         } catch (e) {

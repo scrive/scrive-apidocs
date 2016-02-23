@@ -98,6 +98,7 @@ var NotEmptyValidation = exports.NotEmptyValidation = Validation.extend({
 var EmailValidation = exports.EmailValidation = Validation.extend({
      defaults: {
             validates: function(t) {
+                t = t || "";
                 t = t.trim();
                 // this does not allow international characters, which for the moment is good
                 if (/^[\w._%+-]+@[a-zA-Z0-9.-]+[.][a-z]{2,}$/i.test(t))

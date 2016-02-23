@@ -1,10 +1,8 @@
-var _ = require("underscore");
-
-
-  /**
+ /**
    *  Reading and settings browser cookies
    */
-  var Cookies = exports.Cookies = {
+(function () {
+  var Cookies = {
     buildCookieMultiMap : function () {
       var cookies = document.cookie.split(';');
       var cookieMap = {};
@@ -42,5 +40,10 @@ var _ = require("underscore");
     }
   };
 
-//FIXME: Cookie is used in global.js so has to be made global.
-window.Cookies = Cookies;
+  //FIXME: Cookie is used in global.js so has to work both global and with commonjs.
+  if (typeof exports !== "undefined") {
+    exports.Cookies = Cookies;
+  } else {
+    window.Cookies = Cookies;
+  }
+}());

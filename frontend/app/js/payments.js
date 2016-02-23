@@ -9,6 +9,7 @@ var Confirmation = require("./confirmations.js").Confirmation;
 var Button = require("./buttons.js").Button;
 var LoadingDialog = require("./loading.js").LoadingDialog;
 var Submit = require("./submits.js").Submit;
+var Recurly = require("./recurly");
 
 /*
 

@@ -1,7 +1,7 @@
 var React = require("react");
 var IdentifyView = require("../../signview/identify/identifyview");
 var Document = require("../../../js/documents").Document;
-var DocumentView = require("../../../js/documentviewer").DocumentViewer;
+var DocumentViewer = require("../../../js/documentviewer").DocumentViewer;
 var $ = require("jquery");
 
 $(function () {
