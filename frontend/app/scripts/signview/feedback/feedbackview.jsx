@@ -143,7 +143,7 @@ define(["React", "signview/feedback/questionview", "common/hubspot_service"], fu
         }
 
         if (from !== "Q2") {
-          self.registerInMixpanel(extraMixpanelProperties);
+          this.registerInMixpanel(extraMixpanelProperties);
         }
       }
     },
