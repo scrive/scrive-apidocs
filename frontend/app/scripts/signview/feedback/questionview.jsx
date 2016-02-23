@@ -1,8 +1,10 @@
-define(["React", "common/button", "common/infotextinput"], function (React, Button, InfoTextInput) {
+define(["React", "common/button", "common/infotextinput", "signview/viewsize"],
+       function (React, Button, InfoTextInput, ViewSize) {
   return React.createClass({
     mixins: [React.addons.LinkedStateMixin],
 
     propTypes: {
+      question: React.PropTypes.string.isRequired,
       title: React.PropTypes.string.isRequired,
       subtitle: React.PropTypes.string,
       onClick: React.PropTypes.func.isRequired,
@@ -18,11 +20,25 @@ define(["React", "common/button", "common/infotextinput"], function (React, Butt
     handleChange: function (value) {
       this.setState({text: value});
     },
-
+    componentDidMount: function () {
+      $(window).on("resize", this.handleResize);
+    },
+    componentWillUnmount: function () {
+      $(window).off("resize", this.handleResize);
+    },
+    handleResize: function (e) {
+      this.forceUpdate();
+    },
     render: function () {
+      var self = this;
+      var question = this.props.question;
       var title = this.props.title;
       var subtitle = this.props.subtitle;
       var buttons = this.props.buttons;
+      if (ViewSize.isSmall()) {
+        buttons = _.clone(buttons);
+        buttons.reverse();
+      }
       var onClick = this.props.onClick;
       var field = this.props.field;
       var fieldTitle = this.props.fieldTitle;
@@ -62,10 +78,12 @@ define(["React", "common/button", "common/infotextinput"], function (React, Butt
             }
             <div className="button-group small-buttons">
               {buttons.map(function (button, index) {
+                var realIndex = _.indexOf(self.props.buttons, button);
+                var key = self.props.question + "-" + realIndex;
                 return (
                   <Button
-                    key={index}
-                    type="action"
+                    key={key}
+                    type={button.type}
                     text={button.text}
                     onClick={function (e) { onClick(button.value, text); }}
                   />
