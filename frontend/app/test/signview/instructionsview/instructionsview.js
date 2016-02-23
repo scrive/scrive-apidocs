@@ -1,4 +1,7 @@
-define(["legacy_code_for_signview", "backend", "util", "React", "signview/instructionsview/instructionsview"], function(legacy_code, backend, util, React, InstructionsView) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var InstructionsView = require("../../../scripts/signview/instructionsview/instructionsview");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -26,4 +29,3 @@ define(["legacy_code_for_signview", "backend", "util", "React", "signview/instru
       server.restore();
     });
   });
-});

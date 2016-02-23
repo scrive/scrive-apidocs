@@ -1,35 +1,27 @@
+var path = require("path");
+var webpack = require("webpack");
+
+function bowerResolver() {
+  return new webpack.ResolverPlugin(
+    new webpack.ResolverPlugin.DirectoryDescriptionFilePlugin("./bower.json", ["main"])
+  );
+}
+
 module.exports = function(config) {
   config.set({
     basePath: "./app/",
 
-    frameworks: ["requirejs", "mocha", "chai"],
+    frameworks: ["mocha", "chai"],
 
     files: [
-      // Include EN localisation for tests but all others for JSCS pre-processor
       "./localization/*.en.js",
-      {pattern: "./localization/*.*.js", included: false},
+      "./compiled/vendor.js",
       "./test/env.js",
-      "./test/setup.js",
-      {pattern: "./bower_components/**/*.js", included: false},
-      {pattern: "./libs/**/*.js", included: false},
-      {pattern: "./js/**/*.js", included: false},
-      {pattern: "./compiled_jsx/**/*.js", included: false},
-      {pattern: "./test/**/*.js", included: false}
-    ],
-
-    exclude: [
+      "./test/entry.js"
     ],
 
     preprocessors: {
-      "./compiled_jsx/**/*.js": ["coverage"],
-      "./localization/*.*.js" : ["jscs"]
-    },
-
-    jscsPreprocessor: {
-      rules: {
-        // Single rule to check that localisation is valid JavaScript
-        "esnext": true
-      }
+      "./test/entry.js": ["webpack", "sourcemap"]
     },
 
     reporters: ["progress", "coverage"],
@@ -45,6 +37,57 @@ module.exports = function(config) {
     browsers: ["PhantomJS"],
 
     singleRun: false,
+
+    webpack: {
+      context: "./app",
+
+      devtool: "inline-source-map",
+
+      isparta: {
+        embedSource: true,
+        noAutoWrap: true,
+        babel: {
+          presets: ["react", "es2015"]
+        }
+      },
+
+      module: {
+        preLoaders: [
+          {
+            test: /.jsx$/,
+            loader: "babel",
+            query: {
+              presets: ["react", "es2015"]
+            }
+          },
+          {
+            test: /\.jsx$/,
+            loader: "isparta"
+          }
+        ]
+      },
+
+      externals: {
+        "jquery": "jQuery",
+        "backbone": "Backbone",
+        "underscore": "_",
+        "react": "React",
+        "react/addons": "React",
+        "tinycolor": "tinycolor",
+        "html2canvas": "html2canvas",
+        "spin.js": "Spinner",
+        "moment": "moment",
+        "sinon": "sinon",
+        "base64": "Base64"
+      },
+
+      resolve: {
+        extensions: ["", "min.js", ".js", ".jsx"],
+        root: [path.join(__dirname, "./app/bower_components")],
+      },
+
+      plugins: [bowerResolver()]
+    },
 
     coverageReporter: {
       type : "html",

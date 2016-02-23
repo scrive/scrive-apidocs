@@ -1,4 +1,3 @@
-var Cookies = require("./cookie.js").Cookies;
 var _ = require("underscore");
 
 
@@ -43,4 +42,5 @@ var _ = require("underscore");
     }
   };
 
-
+//FIXME: Cookie is used in global.js so has to be made global.
+window.Cookies = Cookies;

@@ -1,4 +1,7 @@
-define(["legacy_code", "backend", "util", "React", "designview/typesetters/obligatory"], function(legacy_code, backend, util, React, Obligatory) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var Obligatory = require("../../../scripts/designview/typesetters/obligatory");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -60,4 +63,3 @@ define(["legacy_code", "backend", "util", "React", "designview/typesetters/oblig
       server.restore();
     });
   });
-});

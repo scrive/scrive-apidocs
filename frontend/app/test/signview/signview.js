@@ -1,4 +1,8 @@
-define(["legacy_code", "backend", "util", "image", "React", "signview/signview"], function(legacy_code, backend, util, ImageShim, React, SignView) {
+var backend = require("../backend");
+var util = require("../util");
+var ImageShim = require("../image");
+var React = require("react");
+var SignView = require("../../scripts/signview/signview");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -42,4 +46,3 @@ define(["legacy_code", "backend", "util", "image", "React", "signview/signview"]
       server.restore();
     });
   });
-});

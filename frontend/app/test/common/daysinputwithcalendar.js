@@ -1,7 +1,8 @@
+var React = require("react");
+var DaysInputWithCalendar = require("../../scripts/common/daysinputwithcalendar");
+var moment = require("moment");
 // Some trivial test of the common React components.
 
-define(["legacy_code", "React", "common/daysinputwithcalendar"], function(undefined, React, DaysInputWithCalendar
-) {
 
   var TestUtils = React.addons.TestUtils;
 
@@ -83,4 +84,3 @@ define(["legacy_code", "React", "common/daysinputwithcalendar"], function(undefi
     });
 
   });
-});

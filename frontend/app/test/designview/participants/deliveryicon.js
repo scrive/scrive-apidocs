@@ -1,4 +1,7 @@
-define(["legacy_code", "backend", "util", "React", "designview/participants/deliveryicon"], function(legacy_code, backend, util, React, DeliveryIcon) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var DeliveryIcon = require("../../../scripts/designview/participants/deliveryicon");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -85,4 +88,3 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/deli
       server.restore();
     });
   });
-});

@@ -1,4 +1,8 @@
-define(["legacy_code", "backend", "util", "React", "common/select", "designview/typesetters/signatoryselector"], function(legacy_code, backend, util, React, Select, SignatorySelector) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var Select = require("../../../scripts/common/select");
+var SignatorySelector = require("../../../scripts/designview/typesetters/signatoryselector");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -45,4 +49,3 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
       server.restore();
     });
   });
-});

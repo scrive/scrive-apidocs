@@ -1,4 +1,7 @@
-define(["legacy_code", "backend", "util", "React", "designview/typesetters/done"], function(legacy_code, backend, util, React, Done) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var Done = require("../../../scripts/designview/typesetters/done");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -52,4 +55,3 @@ define(["legacy_code", "backend", "util", "React", "designview/typesetters/done"
       server.restore();
     });
   });
-});

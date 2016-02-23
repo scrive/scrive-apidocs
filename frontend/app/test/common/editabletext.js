@@ -1,4 +1,6 @@
-define(["legacy_code", "React", "common/editabletext", "common/button"], function(undefined, React, EditableText, Button) {
+var React = require("react");
+var EditableText = require("../../scripts/common/editabletext");
+var Button = require("../../scripts/common/button");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -62,4 +64,3 @@ define(["legacy_code", "React", "common/editabletext", "common/button"], functio
       assert.equal(buttons2.length, 0, "there should no buttons");
     });
   });
-});

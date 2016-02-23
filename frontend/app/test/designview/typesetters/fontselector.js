@@ -1,7 +1,11 @@
-var imports = ["legacy_code", "backend", "util", "React", "common/select",
-               "common/button", "designview/typesetters/fontselector"];
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var Select = require("../../../scripts/common/select");
+var Button = require("../../../scripts/common/button");
+var FontSelector = require("../../../scripts/designview/typesetters/fontselector");
+var FieldPlacementGlobal = require("../../../js/fieldplacementglobal").FieldPlacementGlobal;
 
-define(imports, function(legacy_code, backend, util, React, Select, Button, FontSelector) {
   var TestUtils = React.addons.TestUtils;
 
   describe("designview/typesetters/fontselector", function () {
@@ -73,4 +77,3 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, Font
       server.restore();
     });
   });
-});

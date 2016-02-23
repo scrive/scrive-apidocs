@@ -1,4 +1,8 @@
-define(["legacy_code_for_signview", "backend", "util", "image", "React", "signview/fileview/checkboxplacementplacedview"], function(legacy_code, backend, util, ImageShim, React, CheckboxPlacementPlacedView) {
+var backend = require("../../backend");
+var util = require("../../util");
+var ImageShim = require("../../image");
+var React = require("react");
+var CheckboxPlacementPlacedView = require("../../../scripts/signview/fileview/checkboxplacementplacedview");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -51,4 +55,3 @@ define(["legacy_code_for_signview", "backend", "util", "image", "React", "signvi
     });
   });
   */
-});

@@ -1,4 +1,7 @@
-define(['legacy_code', 'backend', 'util', 'React', 'designview/typesetters/anchor'], function(legacy_code, backend, util, React, Anchor) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var Anchor = require("../../../scripts/designview/typesetters/anchor");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -66,4 +69,3 @@ define(['legacy_code', 'backend', 'util', 'React', 'designview/typesetters/ancho
       server.restore();
     });
   });
-});

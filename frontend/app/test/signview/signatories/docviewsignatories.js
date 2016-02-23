@@ -1,4 +1,7 @@
-define(["legacy_code_for_signview", "backend", "util", "React", "signview/signatories/docviewsignatories"], function(legacy_code, backend, util, React, DocumentViewSignatories) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var DocumentViewSignatories = require("../../../scripts/signview/signatories/docviewsignatories");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -24,4 +27,3 @@ define(["legacy_code_for_signview", "backend", "util", "React", "signview/signat
       server.restore();
     });
   });
-});

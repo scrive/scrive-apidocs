@@ -1,4 +1,7 @@
-define(["legacy_code_for_signview", "backend", "util", "React", "signview/attachments/signatoryattachmentsview"], function(legacy_code, backend, util, React, SignatoryAttachmentsView) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var SignatoryAttachmentsView = require("../../../scripts/signview/attachments/signatoryattachmentsview");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -25,4 +28,3 @@ define(["legacy_code_for_signview", "backend", "util", "React", "signview/attach
       server.restore();
     });
   });
-});

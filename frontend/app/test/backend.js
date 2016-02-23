@@ -1,4 +1,7 @@
-define(["legacy_code", "sinon", "../test/data/document", "../test/data/document2", "../test/data/file"], function(legacy_code, sinon, doc1, doc2, file) {
+var sinon = require("sinon");
+var doc1 = require("./data/document");
+var doc2 = require("./data/document2");
+var file = require("./data/file");
   var exports = {};
 
   exports.createServer = function () {
@@ -41,5 +44,4 @@ define(["legacy_code", "sinon", "../test/data/document", "../test/data/document2
     return server;
   };
 
-  return exports;
-});
+  module.exports = exports;

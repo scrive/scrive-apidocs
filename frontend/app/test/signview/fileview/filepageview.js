@@ -1,4 +1,8 @@
-define(["legacy_code_for_signview", "backend", "util", "image", "React", "signview/fileview/filepageview"], function(legacy_code, backend, util, ImageShim, React, FilePageView) {
+var backend = require("../../backend");
+var util = require("../../util");
+var ImageShim = require("../../image");
+var React = require("react");
+var FilePageView = require("../../../scripts/signview/fileview/filepageview");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -62,4 +66,3 @@ define(["legacy_code_for_signview", "backend", "util", "image", "React", "signvi
     });
   });
   */
-});

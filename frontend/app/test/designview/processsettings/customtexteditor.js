@@ -1,6 +1,7 @@
+var React = require("react");
+var CustomTextEditor = require("../../../scripts/designview/processsettings/customtexteditor");
 // Some trivial test of the common React components.
 
-define(["legacy_code", "React", "designview/processsettings/customtexteditor"], function(undefined, React, CustomTextEditor) {
 
   var TestUtils = React.addons.TestUtils;
 
@@ -62,4 +63,3 @@ define(["legacy_code", "React", "designview/processsettings/customtexteditor"], 
       assert.ok(valueChanged == false);
     });
   });
-});

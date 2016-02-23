@@ -6,6 +6,7 @@ module.exports = function (grunt) {
   require("time-grunt")(grunt);
   require("./custom_grunt_tasks/deploybuild")(grunt);
   grunt.loadNpmTasks("grunt-webpack");
+  grunt.loadNpmTasks("grunt-contrib-uglify");
 
   var yeomanConfig = {
     app: require("./bower.json").appPath || "app",
@@ -225,8 +226,10 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/bower_components/backbone/backbone.js",
           "<%= yeoman.app %>/bower_components/react/react-with-addons.js",
           "<%= yeoman.app %>/bower_components/spin.js/spin.js",
+          "<%= yeoman.app %>/bower_components/moment/moment.js",
           "<%= yeoman.app %>/libs/*.js",
-          "<%= yeoman.app %>/js/global.js"
+          "<%= yeoman.app %>/js/global.js",
+          "<%= yeoman.app %>/js/utils/time.js"
         ],
         dest: "<%= yeoman.app %>/compiled/vendor.js"
       }
@@ -280,22 +283,27 @@ module.exports = function (grunt) {
     ]);
   });
 
+  grunt.registerTask("buildJs", function (target) {
+    var tasks = [
+      "uglify",
+      "webpack:all",
+      "webpack:signview"
+    ];
+
+    return grunt.task.run(tasks);
+  });
+
   grunt.registerTask("build", function (target) {
     var tasks = [
       "clean:dist",
       "compileGenerateLocalization",
       "concurrent:dist",
-    ];
-
-    tasks = tasks.concat([
       "compileStyles",
-      "uglify",
-      "webpack:all",
-      "webpack:signview",
+      "buildJs",
       "cssmin:dist",
       "deploybuild:dist",
       "shell:updateLastBuilt"
-    ]);
+    ];
 
     return grunt.task.run(tasks);
   });
@@ -312,8 +320,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask("compileStyles", ["less", "autoprefixer"]);
   grunt.registerTask("server:dist", ["build"]);
-  // grunt.registerTask("test", ["karma:unitSingleRun"]);
-  grunt.registerTask("test", []);
+  grunt.registerTask("test", ["uglify", "karma:unitSingleRun"]);
   grunt.registerTask("validateJs", ["gjslint"]);
   grunt.registerTask("default", ["gjslint", "build", "test"]);
 };

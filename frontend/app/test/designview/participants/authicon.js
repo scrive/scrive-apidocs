@@ -1,4 +1,7 @@
-define(["legacy_code", "backend", "util", "React", "designview/participants/authtosignicon"], function(legacy_code, backend, util, React, AuthToSignIcon) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var AuthToSignIcon = require("../../../scripts/designview/participants/authtosignicon");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -53,4 +56,3 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/auth
       server.restore();
     });
   });
-});

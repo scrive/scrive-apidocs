@@ -1,4 +1,8 @@
-define(["legacy_code", "backend", "util", "React", "common/select", "designview/typesetters/checkboxtypesetterview"], function(legacy_code, backend, util, React, Select, CheckboxTypeSetterView) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var Select = require("../../../scripts/common/select");
+var CheckboxTypeSetterView = require("../../../scripts/designview/typesetters/checkboxtypesetterview");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -84,4 +88,3 @@ define(["legacy_code", "backend", "util", "React", "common/select", "designview/
       server.restore();
     });
   });
-});

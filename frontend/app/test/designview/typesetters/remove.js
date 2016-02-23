@@ -1,4 +1,7 @@
-define(['legacy_code', 'backend', 'util', 'React', 'designview/typesetters/remove'], function(legacy_code, backend, util, React, Remove) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var Remove = require("../../../scripts/designview/typesetters/remove");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -54,4 +57,3 @@ define(['legacy_code', 'backend', 'util', 'React', 'designview/typesetters/remov
       server.restore();
     });
   });
-});

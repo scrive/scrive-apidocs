@@ -55,6 +55,7 @@ function defaultConfig(obj) {
       "tinycolor": "tinycolor",
       "html2canvas": "html2canvas",
       "spin.js": "Spinner",
+      "moment": "moment",
       "base64": "Base64"
     },
 

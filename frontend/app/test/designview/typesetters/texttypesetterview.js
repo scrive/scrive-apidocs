@@ -1,8 +1,12 @@
-var imports = ["legacy_code", "backend", "util", "React", "common/select",
-               "common/button", "designview/typesetters/more",
-               "designview/typesetters/done", "designview/typesetters/texttypesetterview"];
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var Select = require("../../../scripts/common/select");
+var Button = require("../../../scripts/common/button");
+var More = require("../../../scripts/designview/typesetters/more");
+var Done = require("../../../scripts/designview/typesetters/done");
+var TextTypeSetterView = require("../../../scripts/designview/typesetters/texttypesetterview");
 
-define(imports, function(legacy_code, backend, util, React, Select, Button, More, Done, TextTypeSetterView) {
 
   var TestUtils = React.addons.TestUtils;
 
@@ -253,4 +257,3 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, More
       server.restore();
     });
   });
-});
