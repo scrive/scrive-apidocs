@@ -45,11 +45,13 @@ return React.createClass({
     var sig = this.props.model;
     var viewmodel = this.props.viewmodel;
     var heightOfUnexpandedSignatory = 46;  // Height each signatory description when signatory is not expanded
-    var heightOfField = 48; // Height each field row
-    var heightOfParticipantSettings = 189; // Height of 6 selects at bottom of signatory
+    var heightOfField = 50; // Height each field row
+    var heightOfParticipantSettings = 172; // Height of 6 selects at bottom of signatory
+    var heightOfExpandedSignatoryHeader = 60;
     var height = heightOfUnexpandedSignatory;
 
     if (viewmodel.participantDetail() === sig) {
+      height = heightOfExpandedSignatoryHeader;
       height += heightOfParticipantSettings;
       var fields = 0;
       var nameIncluded = false;
