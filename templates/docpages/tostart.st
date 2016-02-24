@@ -13,7 +13,7 @@ $htmlopentag()$
       <div class="global-table-cell">
       </div>
   </div>
-  <script src="/compiled/all/tostart_login.js" type="text/javascript"></script>
+  <script src="$cdnbaseurl$/compiled/all/tostart_login-$versioncode$.js" type="text/javascript"></script>
   </body>
 $htmlclosingtag()$
 ###
@@ -37,7 +37,7 @@ $htmlopentag()$
               documentId: "$documentid$"
             };
           </script>
-          <script src="/compiled/all/tostart_view.js"></script>
+          <script src="$cdnbaseurl$/compiled/all/tostart_view-$versioncode$.js"></script>
         </div>
       </div>
     </div>
@@ -64,7 +64,7 @@ $htmlopentag()$
               headerLogOut: "$_headerLogOut()$"
             };
           </script>
-          <script src="/compiled/all/tostart_list.js"></script>
+          <script src="$cdnbaseurl$/compiled/all/tostart_list-$versioncode$.js"></script>
         </div>
       </div>
     </div>

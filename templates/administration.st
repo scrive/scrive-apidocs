@@ -9,7 +9,7 @@ adminsmain=
     isAdmin: $if(admin)$true$else$false$endif$
   };
 </script>
-<script src="/compiled/all/admin.js"></script>
+<script src="$cdnbaseurl$/compiled/all/admin-$versioncode$.js"></script>
 </div>
 </div>
 ###
@@ -23,7 +23,7 @@ var fromTemplate = {
   userId: "$userid$"
 };
 </script>
-<script src="/compiled/all/useradmin.js"></script>
+<script src="$cdnbaseurl$/compiled/all/useradmin-$versioncode$.js"></script>
 </div>
 </div>
 ####
@@ -37,7 +37,7 @@ var fromTemplate = {
   companyId: "$companyid$"
 };
 </script>
-<script src="/compiled/all/companyadmin.js"></script>
+<script src="$cdnbaseurl$/compiled/all/companyadmin-$versioncode$.js"></script>
 </div>
 </div>
 ####

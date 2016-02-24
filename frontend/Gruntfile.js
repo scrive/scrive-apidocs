@@ -1,5 +1,6 @@
 var _ = require("underscore");
 var webpackConfig = require("./webpack.config.js");
+var generateVersionId = require("./custom_grunt_tasks/utils/version_id_generator");
 
 module.exports = function (grunt) {
   require("load-grunt-tasks")(grunt);
@@ -101,7 +102,6 @@ module.exports = function (grunt) {
       dist: {
         files: {
           src: [
-            "<%= yeoman.dist %>/*.js",
             "<%= yeoman.dist %>/*.css"
           ]
         }
@@ -149,6 +149,7 @@ module.exports = function (grunt) {
               "enable-cookies/**/*",
               "css/fonts/*.woff",
               "css/assets/*",
+              "compiled/**/*",
               "fonts/**/*",
               "img/**/*",
               "newsletter/**/*",
@@ -233,7 +234,7 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/js/utils/time.js",
           "<%= yeoman.app %>/js/global.js"
         ],
-        dest: "<%= yeoman.app %>/compiled/vendor.js"
+        dest: "<%= yeoman.app %>/compiled/vendor-" + generateVersionId() + ".js"
       }
     },
 
@@ -299,11 +300,11 @@ module.exports = function (grunt) {
     var tasks = [
       "clean:dist",
       "compileGenerateLocalization",
-      "concurrent:dist",
       "compileStyles",
       "buildJs",
       "cssmin:dist",
       "deploybuild:dist",
+      "concurrent:dist",
       "shell:updateLastBuilt"
     ];
 

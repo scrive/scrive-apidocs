@@ -28,7 +28,7 @@ var fromTemplateFlash = {
 };
 $endif$
 </script>
-<script src="/compiled/all/flashmessage.js"></script>
+<script src="$cdnbaseurl$/compiled/all/flashmessage-$versioncode$.js"></script>
 ####
 EnglishInEnglish=English
 ####

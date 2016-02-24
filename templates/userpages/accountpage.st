@@ -10,7 +10,7 @@ showAccount =
       noCompany : $if(noCompany)$true$else$false$endif$
     };
     </script>
-    <script src="/compiled/all/account.js"></script>
+    <script src="$cdnbaseurl$/compiled/all/account-$versioncode$.js"></script>
   </div>
 </div>
 
@@ -29,7 +29,7 @@ pageDoYouWantToBeCompanyAccount=
     body: "$_modalDoYouWantToBeCompanyAccountBody()$"
   };
 </script>
-<script src="/compiled/all/company_account.js"></script>
+<script src="$cdnbaseurl$/compiled/all/company_account-$versioncode$.js"></script>
 ####
 pageDoYouWantToChangeEmail=
 <div class="mainContainer" >
@@ -42,5 +42,5 @@ pageDoYouWantToChangeEmail=
     title: "$_modalDoYouWantToChangeEmailHeader()$"
   };
 </script>
-<script src="/compiled/all/change_email.js"></script>
+<script src="$cdnbaseurl$/compiled/all/change_email-$versioncode$.js"></script>
 ####

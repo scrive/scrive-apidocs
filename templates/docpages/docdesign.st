@@ -18,7 +18,7 @@ $htmlopentag()$
     };
 
     </script>
-    <script src="/compiled/all/designview.js"></script>
+    <script src="$cdnbaseurl$/compiled/all/designview-$versioncode$.js"></script>
     </div>
     </div>
   $postPageCode()$

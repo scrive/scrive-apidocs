@@ -18,7 +18,7 @@ $htmlopentag()$
       langprefix : "$langprefix()$"
     };
   </script>
-  <script src="/compiled/all/login.js"></script>
+  <script src="$cdnbaseurl$/compiled/all/login-$versioncode$.js"></script>
   </body>
 $htmlclosingtag()$
 ###
@@ -41,7 +41,7 @@ $htmlopentag()$
     accessnewaccount: false
   };
 </script>
-  <script src="/compiled/all/new_password.js"></script>
+  <script src="$cdnbaseurl$/compiled/all/new_password-$versioncode$.js"></script>
   </body>
 $htmlclosingtag()$
 ###
@@ -64,7 +64,7 @@ $htmlopentag()$
     accessnewaccount: true
   };
 </script>
-  <script src="/compiled/all/new_password.js"></script>
+  <script src="$cdnbaseurl$/compiled/all/new_password-$versioncode$.js"></script>
   </body>
 $htmlclosingtag()$
 ###
@@ -101,7 +101,7 @@ accountSetupPage=$doctype()$
           companyAdmin : $if(companyAdmin)$true$else$false$endif$
         };
         </script>
-        <script src="/compiled/all/account_setup.js"></script>
+        <script src="$cdnbaseurl$/compiled/all/account_setup-$versioncode$.js"></script>
       </div>
 
     </body>
@@ -110,7 +110,7 @@ accountSetupPage=$doctype()$
 pageAcceptTOS =
 <div class='mainContainer big'>
 <div class='inner'>
-<script src="/compiled/all/accept_tos.js"></script>
+<script src="$cdnbaseurl$/compiled/all/accept_tos-$versioncode$.js"></script>
 </div>
 </div>
 ####

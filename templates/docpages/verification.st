@@ -25,7 +25,7 @@ $htmlopentag()$
         </span>
         <span class='verificationContainer'>  </span>
       </div>
-      <script src="/compiled/all/verification.js"></script>
+      <script src="$cdnbaseurl$/compiled/all/verification-$versioncode$.js"></script>
     </div>
   </div>
   $pageFooter()$

@@ -43,10 +43,8 @@ standardHeaderContents=
         $if(production)$
         $if(signview)$
         <link href='$cdnbaseurl$/$versioncode$.signview-all-styling-minified.css' rel='stylesheet' type='text/css'/>
-        <script src="$cdnbaseurl$/$versioncode$.optimized-signview.js"></script>
         $else$
         <link href='$cdnbaseurl$/$versioncode$.all-styling-minified.css' rel='stylesheet' type='text/css'/>
-        <script src="$cdnbaseurl$/$versioncode$.optimized-system.js"></script>
         $endif$
         $else$
         $if(signview)$
@@ -56,7 +54,7 @@ standardHeaderContents=
         $endif$
         $endif$
 
-        <script src="/compiled/vendor.js"></script>
+        <script src="$cdnbaseurl$/compiled/vendor-$versioncode$.js"></script>
         <link href='$cdnbaseurl$/domain_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
 
         $if(nobranding)$
@@ -146,7 +144,7 @@ pageFooter=
     highlightcolor : "$custombarshighlightcolour$"
   };
 </script>
-<script src="/compiled/all/footer.js"></script>
+<script src="$cdnbaseurl$/compiled/all/footer-$versioncode$.js"></script>
 ####
 postPageCode=
 
@@ -192,7 +190,7 @@ var fromTemplateHeader = {
   account : $if(account)$true$else$false$endif$
 };
 </script>
-<script src="/compiled/all/header.js"></script>
+<script src="$cdnbaseurl$/compiled/all/header-$versioncode$.js"></script>
 ####
 contactUsVivocha=
 <aside class="contact">

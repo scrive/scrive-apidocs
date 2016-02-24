@@ -18,7 +18,7 @@ $htmlopentag()$
     <div class="body-container pricing">
       <div class="big-title"><h1>$_paymentsSubscribeHeader()$</h1></div>
       <div class="js-price-plan price-plan price-plan-outside"></div>
-      <script src="/compiled/all/pricepage.js"></script>
+      <script src="$cdnbaseurl$/compiled/all/pricepage-$versioncode$.js"></script>
     </div>
   </div>
   <div class="pricing-footer">

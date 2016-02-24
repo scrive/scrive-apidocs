@@ -15,13 +15,13 @@ enableCookies=<!DOCTYPE html>
 
 $if(production)$
 $else$
-<script src="/compiled/vendor.js"></script>
-<script src="/compiled/all/common.js"></script>
+<script src="$cdnbaseurl$/compiled/vendor-$versioncode$.js"></script>
+<script src="$cdnbaseurl$/compiled/all/common-$versioncode$.js"></script>
 $endif$
 
 $analyticsLoaderKontrakcja()$
 
-<script src="/compiled/all/enable_cookies.js"></script>
+<script src="$cdnbaseurl$/compiled/all/enable_cookies-$versioncode$.js"></script>
 </head>
 
 <body>

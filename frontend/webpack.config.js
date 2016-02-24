@@ -2,22 +2,13 @@ var path = require("path");
 var webpack = require("webpack");
 var _ = require("underscore");
 var glob = require("glob");
+var generateVersionId = require("./custom_grunt_tasks/utils/version_id_generator");
 
 function bowerResolver() {
   return new webpack.ResolverPlugin(
     new webpack.ResolverPlugin.DirectoryDescriptionFilePlugin("./bower.json", ["main"])
   );
 }
-
-function commonsPlugin(output) {
-  return new webpack.optimize.CommonsChunkPlugin({
-    name: "common",
-    filename: output,
-    minChunks: 2
-  });
-}
-
-var uglifyPlugin = new webpack.optimize.UglifyJsPlugin({minimize: true});
 
 var context = path.join(__dirname, "/app");
 
@@ -67,9 +58,11 @@ function defaultConfig(obj) {
   }, obj);
 };
 
+var versionId = generateVersionId();
+
 var signviewConfig = defaultConfig({
   name: "signview",
-  output: {path: __dirname, filename: "./app/compiled/signview/[name].js", sourceMapFilename: "[file].map"},
+  output: {path: __dirname, filename: "./app/compiled/signview/[name]-" + versionId + ".js", sourceMapFilename: "[file].map"},
   entry: allEntryPoints("./app/scripts/entry/signview/*.jsx"),
   plugins: [bowerResolver()]
 });
@@ -77,7 +70,7 @@ var signviewConfig = defaultConfig({
 var allConfig = defaultConfig({
   name: "all",
   entry: allEntryPoints("./app/scripts/entry/all/*.jsx"),
-  output: {path: __dirname, filename: "./app/compiled/all/[name].js", sourceMapFilename: "[file].map"},
+  output: {path: __dirname, filename: "./app/compiled/all/[name]-" + versionId + ".js", sourceMapFilename: "[file].map"},
   plugins: [bowerResolver()]
 });
 

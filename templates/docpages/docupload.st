@@ -5,7 +5,7 @@ createFromTemplatePage=
 <div class="body-container">
 <div class="blocking-box"></div>
 <div class='place-for-list'></div>
-<script src="/compiled/all/create_from_template.js"></script>
+<script src="$cdnbaseurl$/compiled/all/create_from_template-$versioncode$.js"></script>
 </script>
 </div>
 </div>
