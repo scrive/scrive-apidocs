@@ -20,7 +20,7 @@ var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
         email: currentSignatory.email(),
         ajax: true,
         ajaxsuccess: function (userObject) {
-          userObjectParsed = JSON.parse(userObject);
+          var userObjectParsed = JSON.parse(userObject);
           if (userObjectParsed.userid) {
             var userid = userObjectParsed.userid;
             mixpanel.alias(userid);

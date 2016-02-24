@@ -56,9 +56,14 @@ module.exports = function (grunt) {
     },
 
     karma: {
-      unitSingleRun: {
+      full: {
         singleRun: true,
         configFile: "karma.conf.js",
+        autoWatch: false
+      },
+      fast: {
+        singleRun: true,
+        configFile: "karma.fast.conf.js",
         autoWatch: false
       }
     },
@@ -161,25 +166,6 @@ module.exports = function (grunt) {
               "bower_components/es6-promise/**"
             ]
           }
-        ]
-      }
-    },
-
-    gjslint: {
-      options: {
-        flags: [
-          "--disable 1,2,5,110,120,131,220",
-          "--custom_jsdoc_tags jsx,note,description"
-        ],
-        reporter: {
-          name: "console"
-        }
-      },
-      all: {
-        src: [
-          "Gruntfile.js",
-          "<%= yeoman.app %>/js/**/*.js",
-          "<%= yeoman.app %>/compiled/**/*.js"
         ]
       }
     },
@@ -323,7 +309,8 @@ module.exports = function (grunt) {
 
   grunt.registerTask("compileStyles", ["less", "autoprefixer"]);
   grunt.registerTask("server:dist", ["build"]);
-  grunt.registerTask("test", ["uglify", "karma:unitSingleRun"]);
-  grunt.registerTask("validateJs", ["gjslint"]);
+  grunt.registerTask("test", ["uglify", "karma:full"]);
+  grunt.registerTask("test:fast", ["karma:fast"]);
+  grunt.registerTask("validateJs", []);
   grunt.registerTask("default", ["gjslint", "build", "test"]);
 };

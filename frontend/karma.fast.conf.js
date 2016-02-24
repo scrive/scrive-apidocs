@@ -22,10 +22,10 @@ module.exports = function(config) {
     ],
 
     preprocessors: {
-      "./test/entry.js": ["webpack", "sourcemap"]
+      "./test/entry.js": ["webpack"]
     },
 
-    reporters: ["progress", "coverage"],
+    reporters: ["progress"],
 
     port: 9876,
 
@@ -42,16 +42,6 @@ module.exports = function(config) {
     webpack: {
       context: "./app",
 
-      devtool: "inline-source-map",
-
-      isparta: {
-        embedSource: true,
-        noAutoWrap: true,
-        babel: {
-          presets: ["react", "es2015"]
-        }
-      },
-
       module: {
         preLoaders: [
           {
@@ -60,10 +50,6 @@ module.exports = function(config) {
             query: {
               presets: ["react", "es2015"]
             }
-          },
-          {
-            test: /\.jsx$/,
-            loader: "isparta"
           }
         ]
       },
@@ -88,11 +74,6 @@ module.exports = function(config) {
       },
 
       plugins: [bowerResolver()]
-    },
-
-    coverageReporter: {
-      type : "html",
-      dir : "../coverage/"
     }
   });
 };
