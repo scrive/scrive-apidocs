@@ -41,7 +41,7 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
 
       if (zoom > 1 && width < 772) {
         if (self._openTry === 0) {
-          alert(localization.zoomOut);
+          alert(localization.zoomOut.replace("<br/>", "\n"));
         } else {
           alert(localization.zoomOutMore);
         }
