@@ -44,7 +44,7 @@ standardHeaderContents=
 	<script src="$cdnbaseurl$/bower_components/es5-shim/es5-shim.min.js"></script>
 	<script src="$cdnbaseurl$/bower_components/es5-shim/es5-sham.min.js"></script>
         <![endif]-->
-        <link rel=" icon" href="$cdnbaseurl$/favicon/$brandinghash$" />
+        <link rel=" icon" href="favicon/$brandinghash$" />
 
         <script src="$cdnbaseurl$/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
