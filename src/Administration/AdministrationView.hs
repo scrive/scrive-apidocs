@@ -17,17 +17,24 @@ module Administration.AdministrationView(
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
+import AppView
 import Company.Model
 import Kontra
 import KontraPrelude
 import User.Model
 
 adminMainPage :: TemplatesMonad m => Context -> m String
-adminMainPage ctx = renderTemplate "adminsmain" $ F.value "admin" $ isAdmin ctx
+adminMainPage ctx = renderTemplate "adminsmain" $ do
+  F.value "admin" $ isAdmin ctx
+  entryPointFields ctx
 
-adminCompanyPage :: TemplatesMonad m => CompanyID ->  m String
-adminCompanyPage cid = renderTemplate "admincompany" $ (F.value "companyid" $ show cid)
+adminCompanyPage :: TemplatesMonad m => Context -> CompanyID ->  m String
+adminCompanyPage ctx cid = renderTemplate "admincompany" $ do
+  F.value "companyid" $ show cid
+  entryPointFields ctx
 
-adminUserPage :: TemplatesMonad m => UserID -> m String
-adminUserPage uid = renderTemplate "adminuser" $ (F.value "userid" $ show uid)
+adminUserPage :: TemplatesMonad m => Context -> UserID -> m String
+adminUserPage ctx uid = renderTemplate "adminuser" $ do
+  F.value "userid" $ show uid
+  entryPointFields ctx
 

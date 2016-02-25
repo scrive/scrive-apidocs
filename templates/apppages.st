@@ -136,7 +136,6 @@ pageFooter=
 <script>
   var fromTemplateFooter = {
     logged: $if(logged)$ true $else$ false $endif$,
-    thin : $if(thin)$ true $else$ false $endif$,
     httplink : "$httplink$",
     langprefix : "$langprefix()$",
     color :  "$custombarscolour$",

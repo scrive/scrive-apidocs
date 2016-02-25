@@ -274,8 +274,9 @@ handleGetBecomeCompanyAccount companyid = withUserGet $ do
         addFlashM $ flashMessageBecomeCompanyLogInDifferentUser
         return $ Left LinkAccount
        _ -> do
+        ctx <- getContext
         newcompany <- guardJustM $ dbQuery $ GetCompany companyid
-        Right <$> pageDoYouWantToBeCompanyAccount newcompany
+        Right <$> pageDoYouWantToBeCompanyAccount ctx newcompany
 
 handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m KontraLink
 handlePostBecomeCompanyAccount cid = withUserPost $ do

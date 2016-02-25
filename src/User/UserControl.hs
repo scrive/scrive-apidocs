@@ -72,6 +72,7 @@ handleAccountGet = checkUserTOSGet $ do
          Just user -> do
            pb <- renderTemplate "showAccount" $ do
                    F.value "companyAdmin" $ useriscompanyadmin user
+                   entryPointFields ctx
            renderFromBodyWithFields pb (F.value "account" True)
 
 -- please treat this function like a public query form, it's not secure
@@ -118,9 +119,10 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
 
 handleGetChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m (Either KontraLink (Either KontraLink String))
 handleGetChangeEmail uid hash = withUserGet $ do
+  ctx <- getContext
   mnewemail <- getEmailChangeRequestNewEmail uid hash
   case mnewemail of
-    Just newemail -> Right <$> pageDoYouWantToChangeEmail newemail
+    Just newemail -> Right <$> pageDoYouWantToChangeEmail ctx newemail
     Nothing -> (addFlashM flashMessageProblemWithEmailChange) >> (return  $ Left LinkAccount)
 
 handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m KontraLink
@@ -257,7 +259,7 @@ createNewUserByAdmin email names companyandrole lg = do
          Nothing -> return muser
 
 handleAcceptTOSGet :: Kontrakcja m => m (Either KontraLink String)
-handleAcceptTOSGet = withUserGet $ pageAcceptTOS
+handleAcceptTOSGet = withUserGet $ pageAcceptTOS =<< getContext
 
 handleAcceptTOSPost :: Kontrakcja m => m ()
 handleAcceptTOSPost = do

@@ -157,7 +157,9 @@ showAdminMainPage = onlySalesOrAdmin $ do
 
 {- | Process view for finding a user in basic administration -}
 showAdminUsers :: Kontrakcja m => UserID -> m String
-showAdminUsers uid = onlySalesOrAdmin $ adminUserPage uid
+showAdminUsers uid = onlySalesOrAdmin $ do
+  ctx <- getContext
+  adminUserPage ctx uid
 
 handleUserGetProfile:: Kontrakcja m => UserID -> m JSValue
 handleUserGetProfile uid = onlySalesOrAdmin $ do
@@ -172,7 +174,9 @@ handleCompanyGetProfile cid = onlySalesOrAdmin $ do
   companyJSON  company
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
-showAdminCompany companyid = onlySalesOrAdmin $ adminCompanyPage companyid
+showAdminCompany companyid = onlySalesOrAdmin $ do
+  ctx <- getContext
+  adminCompanyPage ctx companyid
 
 companyPaymentsJSON :: Kontrakcja m => CompanyID -> m JSValue
 companyPaymentsJSON cid = onlySalesOrAdmin $ do

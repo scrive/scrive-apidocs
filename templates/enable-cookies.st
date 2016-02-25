@@ -12,12 +12,7 @@ enableCookies=<!DOCTYPE html>
 <link rel=" icon" href="$cdnbaseurl$/favicon/$brandinghash$" />
 <script src="/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
 <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
-
-$if(production)$
-$else$
 <script src="$cdnbaseurl$/compiled/vendor-$versioncode$.js"></script>
-<script src="$cdnbaseurl$/compiled/all/common-$versioncode$.js"></script>
-$endif$
 
 $analyticsLoaderKontrakcja()$
 

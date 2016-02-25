@@ -156,7 +156,8 @@ showArchive = checkUserTOSGet $ do
     tostime <- guardJustM $ join <$> fmap userhasacceptedtermsofservice <$> ctxmaybeuser <$> getContext
     user    <- guardJustM $ ctxmaybeuser <$> getContext
     mcompany <- dbQuery $ GetCompany (usercompany user)
-    pb <-  pageArchive user mcompany tostime
+    ctx <- getContext
+    pb <-  pageArchive ctx user mcompany tostime
     renderFromBodyWithFields pb (F.value "archive" True)
 
 -- Zip utils

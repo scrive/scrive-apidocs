@@ -37,6 +37,7 @@ import Text.StringTemplate.GenericStandard()
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
+import AppView
 import BrandedDomain.BrandedDomain
 import Company.Model
 import DB
@@ -112,8 +113,8 @@ companyStatsToJSON formatTime textName uuss = runJSONGen . objects "stats" . for
       where
         sameTimeWindow u1 u2 = uusTimeWindowStart u1 == uusTimeWindowStart u2
 
-pageAcceptTOS :: TemplatesMonad m => m String
-pageAcceptTOS = renderTemplate_ "pageAcceptTOS"
+pageAcceptTOS :: TemplatesMonad m => Context -> m String
+pageAcceptTOS ctx = renderTemplate "pageAcceptTOS" $ entryPointFields ctx
 
 accessNewAccountMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> User -> KontraLink -> m Mail
 accessNewAccountMail ctx user setpasslink = do
@@ -170,10 +171,11 @@ mailEmailChangeRequest ctx user newemail link = do
 
 -------------------------------------------------------------------------------
 
-pageDoYouWantToChangeEmail :: TemplatesMonad m => Email -> m String
-pageDoYouWantToChangeEmail newemail =
+pageDoYouWantToChangeEmail :: TemplatesMonad m => Context -> Email -> m String
+pageDoYouWantToChangeEmail ctx newemail =
   renderTemplate "pageDoYouWantToChangeEmail" $ do
-                 F.value "newemail" $ unEmail newemail
+    F.value "newemail" $ unEmail newemail
+    entryPointFields ctx
 
 flashMessageLoginRedirectReason :: TemplatesMonad m => LoginRedirectReason -> m (Maybe FlashMessage)
 flashMessageLoginRedirectReason reason =

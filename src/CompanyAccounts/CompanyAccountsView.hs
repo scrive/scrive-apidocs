@@ -16,6 +16,7 @@ import Data.Time
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
+import AppView
 import BrandedDomain.BrandedDomain
 import Company.CompanyUI
 import Company.Model
@@ -71,11 +72,11 @@ basicLinkFields hostpart link = do
 
 -------------------------------------------------------------------------------
 
-pageDoYouWantToBeCompanyAccount :: (TemplatesMonad m,  HasSomeCompanyInfo c) => c -> m String
-pageDoYouWantToBeCompanyAccount company =
+pageDoYouWantToBeCompanyAccount :: (TemplatesMonad m,  HasSomeCompanyInfo c) => Context -> c -> m String
+pageDoYouWantToBeCompanyAccount ctx company =
   renderTemplate "pageDoYouWantToBeCompanyAccount" $ do
-      F.value "companyname" $ getCompanyName company
-
+    F.value "companyname" $ getCompanyName company
+    entryPointFields ctx
 -------------------------------------------------------------------------------
 
 flashMessageUserHasBecomeCompanyAccount :: (TemplatesMonad m,  HasSomeCompanyInfo c) => c -> m FlashMessage

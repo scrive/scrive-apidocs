@@ -5,7 +5,6 @@
 module AppView(
                 renderFromBody
               , renderFromBodyWithFields
-              , renderFromBodyThin
               , notFoundPage
               , internalServerErrorPage
               , simpleJsonResponse
@@ -17,7 +16,7 @@ module AppView(
               , priceplanPage
               , unsupportedBrowserPage
               , standardPageFields
-              , contextInfoFields
+              , entryPointFields
               , companyForPage
               , companyUIForPage
               , handleTermsOfService
@@ -78,39 +77,24 @@ renderFromBodyWithFields :: Kontrakcja m
 renderFromBodyWithFields content fields = do
   ctx <- getContext
   ad <- getAnalyticsData
-  res <- simpleHtmlResponse =<< pageFromBody False ctx ad content fields
+  res <- simpleHtmlResponse =<< pageFromBody ctx ad content fields
   clearFlashMsgs
   return res
 
-
-{- |
-   Renders some page body xml into a complete reponse
--}
-renderFromBodyThin :: Kontrakcja m
-               => String
-               -> m Response
-renderFromBodyThin content = do
-  ctx <- getContext
-  ad <- getAnalyticsData
-  res <- simpleHtmlResponse =<< pageFromBody True ctx ad content (return ())
-  clearFlashMsgs
-  return res
 
 {- |
    Renders some page body xml into a complete page of xml
 -}
 pageFromBody :: Kontrakcja m
-             => Bool
-             -> Context
+             => Context
              -> AnalyticsData
              -> String
              -> Fields m ()
              -> m String
-pageFromBody thin ctx ad bodytext fields = do
+pageFromBody ctx ad bodytext fields = do
   mcompanyui <- companyUIForPage
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
-    F.value "thin" thin
     standardPageFields ctx mcompanyui ad
     F.valueM "httplink" $ getHttpHostpart
     fields
@@ -238,13 +222,20 @@ handleTermsOfService = withAnonymousContext $ do
 standardPageFields :: (TemplatesMonad m, MonadDB m, MonadThrow m) => Context -> Maybe CompanyUI -> AnalyticsData -> Fields m ()
 standardPageFields ctx mcompanyui ad = do
   F.value "langcode" $ codeFromLang $ ctxlang ctx
-  contextInfoFields ctx
-  F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
+  F.value "logged" $ isJust (ctxmaybeuser ctx)
+  F.value "padlogged" $ isJust (ctxmaybepaduser ctx)
+  F.objects "flashmessages" $ map flashMessageFields $ ctxflashmessages ctx
+  F.value "hostpart" $ ctxDomainUrl ctx
+  F.value "production" (ctxproduction ctx)
+  F.value "brandingdomainid" (show . bdid . ctxbrandeddomain $ ctx)
+  F.value "brandinguserid" (fmap (show . userid) (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx))
+  F.value "ctxlang" $ codeFromLang $ ctxlang ctx
   F.object "analytics" $ analyticsTemplates ad
   F.valueM "brandinghash" $ brandingAdler32 ctx mcompanyui
   F.value "title" $ case emptyToNothing . strip =<< companyBrowserTitle =<< mcompanyui of
                       Just ctitle -> ctitle ++ " - " ++ (bdBrowserTitle $ ctxbrandeddomain ctx)
                       Nothing -> (bdBrowserTitle $ ctxbrandeddomain ctx)
+  entryPointFields ctx
 
 -- Official documentation states that JSON mime type is
 -- 'application/json'. IE8 for anything that starts with
@@ -291,20 +282,13 @@ respondWithPDF forceDownload contents =
   Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 {- |
-   Defines some standard context information as fields handy for substitution
-   into templates.
+   JavaScript entry points require version and cdnbaseurl to work.
+   This variables are also required by standardHeaderContents template.
 -}
-contextInfoFields :: TemplatesMonad m => Context -> Fields m ()
-contextInfoFields ctx@Context{ ctxlang } = do
-  F.value "logged" $ isJust (ctxmaybeuser ctx)
-  F.value "padlogged" $ isJust (ctxmaybepaduser ctx)
-  F.objects "flashmessages" $ map flashMessageFields $ ctxflashmessages ctx
-  F.value "hostpart" $ ctxDomainUrl ctx
-  F.value "production" (ctxproduction ctx)
+entryPointFields :: TemplatesMonad m => Context -> Fields m ()
+entryPointFields ctx =  do
   F.value "cdnbaseurl" (ctxcdnbaseurl ctx)
-  F.value "brandingdomainid" (show . bdid . ctxbrandeddomain $ ctx)
-  F.value "brandinguserid" (fmap (show . userid) (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx))
-  F.value "ctxlang" $ codeFromLang ctxlang
+  F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
 
 
 flashMessageFields :: (Monad m) => FlashMessage -> Fields m ()
