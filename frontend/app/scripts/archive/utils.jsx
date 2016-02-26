@@ -1,7 +1,6 @@
-/** @jsx React.DOM */
+var _ = require("underscore");
 /* Diffrent utils used by archive view to parse documents */
 
-define(['legacy_code'], function() {
 
   var e = {};
   // Utils for working with list call
@@ -249,6 +248,4 @@ define(['legacy_code'], function() {
     return text;
   };
 
-  return e;
-
-});
+  module.exports = e;

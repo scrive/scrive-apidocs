@@ -1,10 +1,14 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin",
-        "designview/fileview/signatureview", "designview/fileview/checkboxview",
-        "designview/fileview/textview"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, SignatureView,
-            CheckboxView, TextView) {
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var SignatureView = require("./signatureview");
+var CheckboxView = require("./checkboxview");
+var TextView = require("./textview");
+var FilePage = require("../../../js/files.js").FilePage;
+var $ = require("jquery");
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(FilePage).isRequired,
       imageSrc: React.PropTypes.string.isRequired,
@@ -134,4 +138,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       );
     }
   });
-});

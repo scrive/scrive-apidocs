@@ -1,8 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Utils = require("../archive/utils");
+var List = require("../lists/list");
+var moment = require("moment");
+var _ = require("underscore");
 
-define(["React", "archive/utils", "lists/list", "moment", "legacy_code"], function(React, Utils, List, moment) {
 
-return React.createClass({
+module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
     url : function() {
       if (this.props.userid != undefined && this.props.userid!= "") {
@@ -164,6 +167,4 @@ return React.createClass({
         </List.List>
       );
     }
-});
-
 });

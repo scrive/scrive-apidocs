@@ -1,9 +1,16 @@
+var Backbone = require("backbone");
+var LoadingDialog = require("../loading.js").LoadingDialog;
+var _ = require("underscore");
+var $ = require("jquery");
+var Calendar = require("../calendar.js").Calendar;
+var InfoTextInput = require("../infotextinputs.js").InfoTextInput;
+var Confirmation = require("../confirmations.js").Confirmation;
+
 /* This modal asks user for how long he wants to extend document timeout time.
  * Usage:
  * new ProlongModal({authorview : authorview});
  */
 
-define(['Backbone', 'legacy_code'], function() {
 
 var ProlongModalModel = Backbone.Model.extend({
   defaults : {
@@ -92,7 +99,7 @@ var ProlongModalView = Backbone.View.extend({
 });
 
 
-window.ProlongModal = function(args){
+var ProlongModal = exports.ProlongModal = function(args){
         var model = new ProlongModalModel( {
                         authorview : args.authorview
                     });
@@ -112,4 +119,3 @@ window.ProlongModal = function(args){
         });
 };
 
-});

@@ -1,11 +1,10 @@
-define(["legacy_code", "React", "common/backbone_mixin",
-        "signview/identify/norwegian/norwegianidentifymodel",
-        "signview/identify/norwegian/norwegianidentify",
-        "signview/identify/norwegian/norwegianprocessing"],
-  function (legacy_code, React, BackboneMixin,
-            NorwegianIdentifyModel, NorwegianIdentify, NorwegianProcessing) {
+var React = require("react");
+var BackboneMixin = require("../../../common/backbone_mixin");
+var NorwegianIdentifyModel = require("./norwegianidentifymodel");
+var NorwegianIdentify = require("./norwegianidentify");
+var NorwegianProcessing = require("./norwegianprocessing");
 
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
     propTypes: {
@@ -39,4 +38,3 @@ define(["legacy_code", "React", "common/backbone_mixin",
       );
     }
   });
-});

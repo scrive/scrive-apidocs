@@ -1,4 +1,6 @@
-define(['Underscore', 'jquery', 'moment'], function(_, $, moment) {
+var _ = require("underscore");
+var $ = require("jquery");
+var moment = require("moment");
   var expose = {};
 
   /**
@@ -39,5 +41,4 @@ define(['Underscore', 'jquery', 'moment'], function(_, $, moment) {
     return expose.momentLangDataForCurrentLanguage().ordinal(n);
   };
 
-  return expose;
-});
+  module.exports = expose;

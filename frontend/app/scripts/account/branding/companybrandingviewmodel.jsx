@@ -1,10 +1,15 @@
-/** @jsx React.DOM */
+var ListModel = require("../../lists/listmodel");
+var Theme = require("../../themes/theme");
+var _Backbone = require("backbone");
+var CompanyBranding = require("./companybranding");
+var LocationUtils = require("../../common/location");
+var Backbone = require("backbone");
+var _ = require("underscore");
 
 /* View model for  */
-define(['lists/listmodel', 'themes/theme', 'Backbone', 'legacy_code','account/branding/companybranding', "common/location"], function(ListModel,Theme,_Backbone,_Legacy,CompanyBranding, LocationUtils) {
 
 
-return Backbone.Model.extend({
+module.exports = Backbone.Model.extend({
   defaults: {
         companybranding: undefined,
         themeList : undefined,
@@ -184,7 +189,4 @@ return Backbone.Model.extend({
   dirty : function() {
     return _.any(this.editedThemes(), function(t) {return t.dirty(); }) || this.companybranding().dirty();
   }
-});
-
-
 });

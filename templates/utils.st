@@ -20,20 +20,15 @@ nomorethanonelistnormal=
 ####
 flashmessages =
 <script>
- require(['jquery', 'legacy_code'], function(jQuery) {
-   jQuery(function(){
-     $flashmessages:{ flash |
-        $if(flash)$
-            new FlashMessage({
-              "type" : "$flash.type$",
-              "content": "$flash.message:noescape()$"
-            })
-        $endif$
-     }$
-   })
- });
+var fromTemplateHasFlash = $if(flash)$true$else$false$endif$;
+$if(flash)$
+var fromTemplateFlash = {
+  "type" : "$flash.type$",
+  "content": "$flash.message:noescape()$"
+};
+$endif$
 </script>
-
+<script src="$cdnbaseurl$/compiled/all/flashmessage-$versioncode$.js"></script>
 ####
 EnglishInEnglish=English
 ####

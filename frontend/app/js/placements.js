@@ -1,8 +1,11 @@
+var Backbone = require("backbone");
+var _ = require("underscore");
+var PlacementAnchor = require("./anchors.js").PlacementAnchor;
+
 /* Placements of fields for signatories */
 
-define(['Backbone', 'legacy_code'], function() {
 
-window.FieldPlacement = Backbone.Model.extend({
+var FieldPlacement = exports.FieldPlacement = Backbone.Model.extend({
     defaults: {
       placed : false,
       tip: undefined,
@@ -180,4 +183,3 @@ window.FieldPlacement = Backbone.Model.extend({
     }
 });
 
-});

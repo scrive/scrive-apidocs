@@ -1,9 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Backbone = require("backbone");
+var BackboneMixin = require("../common/backbone_mixin");
+var _ = require("underscore");
 
 
-define(['React', 'Backbone', 'common/backbone_mixin'], function(React, Backbone, BackboneMixin) {
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       document: React.PropTypes.instanceOf(Backbone.Model).isRequired,
       documentid: React.PropTypes.string.isRequired,
@@ -57,5 +59,3 @@ define(['React', 'Backbone', 'common/backbone_mixin'], function(React, Backbone,
     );
     }
   });
-
-});

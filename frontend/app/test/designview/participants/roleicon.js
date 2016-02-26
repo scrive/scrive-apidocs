@@ -1,4 +1,7 @@
-define(["legacy_code", "backend", "util", "React", "designview/participants/roleicon"], function(legacy_code, backend, util, React, RoleIcon) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var RoleIcon = require("../../../scripts/designview/participants/roleicon");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -36,4 +39,3 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/role
       server.restore();
     });
   });
-});

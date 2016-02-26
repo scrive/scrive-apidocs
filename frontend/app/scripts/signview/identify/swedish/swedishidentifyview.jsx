@@ -1,10 +1,11 @@
-define(["legacy_code",  "React", "common/backbone_mixin",
-        "signview/identify/swedish/swedishidentifymodel", "signview/identify/swedish/swedishidentify",
-        "signview/identify/swedish/swedishprocessing", "signview/identify/swedish/swedishproblem"],
-  function (legacy_code, React, BackboneMixin,
-            SwedishIdentifyModel, SwedishIdentify, SwedishProcessing, SwedishProblem) {
+var React = require("react");
+var BackboneMixin = require("../../../common/backbone_mixin");
+var SwedishIdentifyModel = require("./swedishidentifymodel");
+var SwedishIdentify = require("./swedishidentify");
+var SwedishProcessing = require("./swedishprocessing");
+var SwedishProblem = require("./swedishproblem");
 
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
     propTypes: {
@@ -41,4 +42,3 @@ define(["legacy_code",  "React", "common/backbone_mixin",
       );
     }
   });
-});

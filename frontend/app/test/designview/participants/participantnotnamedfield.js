@@ -1,4 +1,8 @@
-define(["legacy_code", "backend", "util", "React", "designview/participants/participantnotnamedfield"], function(legacy_code, backend, util, React, ParticipantNotNamedField) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var ParticipantNotNamedField = require("../../../scripts/designview/participants/participantnotnamedfield");
+var Field = require("../../../js/fields").Field;
 
   var TestUtils = React.addons.TestUtils;
 
@@ -82,4 +86,3 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/part
       server.restore();
     });
   });
-});

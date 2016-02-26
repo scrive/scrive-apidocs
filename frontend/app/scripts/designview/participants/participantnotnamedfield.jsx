@@ -1,11 +1,10 @@
-/** @jsx React.DOM */
+var React = require("react");
+var InfoTextInput = require("../../common/infotextinput");
+var Button = require("../../common/button");
+var _ = require("underscore");
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
-define(["legacy_code", "React",
-        "common/infotextinput", "common/button"],
-function (_Legacy, React,
-          InfoTextInput, Button) {
-
-return React.createClass({
+module.exports = React.createClass({
   sameNameExists: function () {
     var self = this;
     var field =  this.props.model;
@@ -73,6 +72,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

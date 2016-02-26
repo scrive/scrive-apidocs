@@ -1,8 +1,10 @@
+var Backbone = require("backbone");
+var _ = require("underscore");
+var PlacementAnchor = require("./anchors.js").PlacementAnchor;
+
 /* Anchors on placements */
 
-define(["Backbone", "legacy_code"], function () {
-
-window.PlacementAnchor = Backbone.Model.extend({
+var PlacementAnchor = exports.PlacementAnchor = Backbone.Model.extend({
   defaults: function () {
     return {
       text: "",
@@ -60,6 +62,4 @@ window.PlacementAnchor = Backbone.Model.extend({
       pages: _.clone(this.pages())
     });
   }
-});
-
 });

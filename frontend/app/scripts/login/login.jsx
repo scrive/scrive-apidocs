@@ -1,8 +1,13 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var LoginModel = require("./loginmodel");
+var LoginView = require("./loginview");
+var ForgotPasswordView = require("./forgotpasswordview");
+var SignupView = require("./signupview");
+var $ = require("jquery");
 
-define(['React', 'common/backbone_mixin', 'login/loginmodel','login/loginview', 'login/forgotpasswordview','login/signupview', 'legacy_code'], function(React, BackboneMixin, LoginModel, LoginView, ForgotPasswordView, SignupView) {
 
-return React.createClass({
+module.exports = React.createClass({
     propTypes: {
         view: React.PropTypes.string,
         defaultView: React.PropTypes.string,
@@ -97,4 +102,3 @@ return React.createClass({
       );
     }
   });
-});

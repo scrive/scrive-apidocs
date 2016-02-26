@@ -1,4 +1,6 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Button = require("./button");
+var InfoTextInput = require("./infotextinput");
 
 /**
  * An editable text component. Click on a text and a input box appears.
@@ -12,7 +14,6 @@
  *
  */
 
-define(["React", "common/button", "common/infotextinput", "legacy_code"], function (React, Button, InfoTextInput) {
   var EditableText = React.createClass({
     mixins: [React.addons.PureRenderMixin],
 
@@ -131,5 +132,4 @@ define(["React", "common/button", "common/infotextinput", "legacy_code"], functi
     }
   });
 
-  return EditableText;
-});
+  module.exports = EditableText;

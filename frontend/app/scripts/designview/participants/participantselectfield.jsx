@@ -1,8 +1,8 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Select = require("../../common/select");
+var _ = require("underscore");
 
-define(["legacy_code", "React", "common/select"], function (_Legacy, React, Select) {
-
-return React.createClass({
+module.exports = React.createClass({
   basicFields: function () {
     return [
        {name: "fstname", type: "standard"},
@@ -106,6 +106,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

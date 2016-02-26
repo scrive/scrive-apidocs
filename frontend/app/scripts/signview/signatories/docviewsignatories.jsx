@@ -1,8 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Backbone = require("backbone");
+var DocumentViewSignatory = require("./docviewsignatory");
+var ViewSize = require("../viewsize");
+var Document = require("../../../js/documents.js").Document;
+var _ = require("underscore");
 
-define(["React", "Backbone", "signview/signatories/docviewsignatory", "signview/viewsize"],
-  function (React, Backbone, DocumentViewSignatory, ViewSize) {
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Document).isRequired
     },
@@ -62,4 +65,3 @@ define(["React", "Backbone", "signview/signatories/docviewsignatory", "signview/
       );
     }
   });
-});

@@ -1,8 +1,9 @@
+var Backbone = require("backbone");
+var DesignAuthorAttachment = require("./designviewattachment");
+var _ = require("underscore");
 /* Model representing list of attachments created during design - not send to server yet */
-define(["Backbone", "designview/authorattachments/designviewattachment", "legacy_code"],
-function (Backbone, DesignAuthorAttachment) {
 
-  return Backbone.Model.extend({
+  module.exports = Backbone.Model.extend({
     defaults: {
         attachments: []
     },
@@ -50,4 +51,3 @@ function (Backbone, DesignAuthorAttachment) {
       return this.attachments().length == 0;
     }
   });
-});

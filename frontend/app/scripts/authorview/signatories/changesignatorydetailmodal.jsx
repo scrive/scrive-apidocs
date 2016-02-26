@@ -1,7 +1,10 @@
-/** @jsx React.DOM */
-
-define(["React", "common/backbone_mixin", "Backbone", "common/infotextinput", "legacy_code"],
-  function (React, BackboneMixin, Backbone, InfoTextInput) {
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var Backbone = require("backbone");
+var InfoTextInput = require("../../common/infotextinput");
+var $ = require("jquery");
+var Confirmation = require("../../../js/confirmations.js").Confirmation;
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
   var ChangeSignatoryDetailModalModel = Backbone.Model.extend({
     initialize: function (args) {
@@ -64,7 +67,7 @@ define(["React", "common/backbone_mixin", "Backbone", "common/infotextinput", "l
     }
   });
 
-  return function (args) {
+  module.exports = function (args) {
     var model = new ChangeSignatoryDetailModalModel({
       signatoryDetailValue: args.value,
       validator: args.validator,
@@ -95,4 +98,3 @@ define(["React", "common/backbone_mixin", "Backbone", "common/infotextinput", "l
       }
     });
   }
-});

@@ -1,11 +1,13 @@
-/** @jsx React.DOM */
+var React = require("react");
+var InfoTextInput = require("./infotextinput");
+var Calendar = require("../../js/calendar.js").Calendar;
+var $ = require("jquery");
 
 /**
  * DaysInputWithCalendar. Small text input with calendar button next to it. Designed to select number of days.
  */
 
-define(['React', 'common/infotextinput', 'legacy_code'], function(React,InfoTextInput) {
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       infotext        : React.PropTypes.string,
       label           : React.PropTypes.string,
@@ -77,4 +79,3 @@ define(['React', 'common/infotextinput', 'legacy_code'], function(React,InfoText
       );
     }
   });
-});

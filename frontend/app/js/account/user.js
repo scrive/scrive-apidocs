@@ -1,8 +1,10 @@
+var Backbone = require("backbone");
+var Company = require("./company.js").Company;
+
 /* Main archive definition. Its a tab based set of different documents lists. */
 
-define(['Backbone', 'legacy_code'], function() {
 
-window.User = Backbone.Model.extend({
+var User = exports.User = Backbone.Model.extend({
   defaults : {
       id        : "",
       fstname   : "",
@@ -85,4 +87,3 @@ window.User = Backbone.Model.extend({
   }
 });
 
-});

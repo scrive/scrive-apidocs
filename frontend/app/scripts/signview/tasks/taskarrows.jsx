@@ -1,5 +1,7 @@
-define(["Backbone", "React"], function (Backbone, React) {
-  return React.createClass({
+var Backbone = require("backbone");
+var React = require("react");
+var $ = require("jquery");
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model)
     },
@@ -24,4 +26,3 @@ define(["Backbone", "React"], function (Backbone, React) {
       return <div />;
     }
   });
-});

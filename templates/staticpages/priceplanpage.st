@@ -17,21 +17,8 @@ $htmlopentag()$
   <div class="mainContainer" >
     <div class="body-container pricing">
       <div class="big-title"><h1>$_paymentsSubscribeHeader()$</h1></div>
-
       <div class="js-price-plan price-plan price-plan-outside"></div>
-
-      <script>
-      require(['jquery', 'legacy_code'], function(jQuery) {
-        jQuery('.price-plan-page-link').addClass('active');
-        PricePage({}).show('.js-price-plan');
-        mixpanel.track('View Price Plan Page');
-        setTimeout(function() {
-          // Race condition between rendering of header and adding class
-          jQuery('.price-plan-page-link').addClass('active');
-        },100);
-      });
-      </script>
-
+      <script src="$cdnbaseurl$/compiled/all/pricepage-$versioncode$.js"></script>
     </div>
   </div>
   <div class="pricing-footer">

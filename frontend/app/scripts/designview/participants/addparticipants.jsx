@@ -1,8 +1,10 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Button = require("../../common/button");
+var Signatory = require("../../../js/signatories.js").Signatory;
+var CsvSignatoryDesignPopup = require("../../../js/designview/csvsignatorydesign.js").CsvSignatoryDesignPopup;
+var _ = require("underscore");
 
-define(["legacy_code", "React", "common/button"], function (_Legacy, React, Button) {
-
-return React.createClass({
+module.exports = React.createClass({
   onDone: function () {
     mixpanel.track("Close participant");
     this.props.model.setParticipantDetail(undefined);
@@ -67,6 +69,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

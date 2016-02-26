@@ -1,4 +1,7 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Button = require("./button");
+var $ = require("jquery");
+var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
 
 /**
  * A upload button component in React. Internallly it uses standard buttons, and can take many UI propperties of buttons.
@@ -20,8 +23,7 @@
  *
  */
 
-define(['React','common/button'], function(React,Button) {
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       text        : React.PropTypes.string,
       type        : React.PropTypes.string,
@@ -109,4 +111,3 @@ define(['React','common/button'], function(React,Button) {
       );
     }
   });
-});

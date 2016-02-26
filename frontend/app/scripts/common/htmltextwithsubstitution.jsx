@@ -1,3 +1,6 @@
+var $ = require("jquery");
+var _ = require("underscore");
+var React = require("react");
 /* Usage:
  *
  * <HtmlTextWithSubstitution
@@ -14,8 +17,7 @@
  */
 
 
-define(["jquery", "Underscore", "React"], function ($, _, React) {
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       secureText: React.PropTypes.string.isRequired,
       subs: React.PropTypes.object,
@@ -53,4 +55,3 @@ define(["jquery", "Underscore", "React"], function ($, _, React) {
       return <span className={this.props.className} dangerouslySetInnerHTML={{__html: $el.html()}} />;
     }
   });
-});

@@ -1,8 +1,10 @@
+var $ = require("jquery");
+var BrowserInfo = require("./browserinfo.js").BrowserInfo;
+
 /* Getting some information about browsers */
 
-define(['legacy_code'], function() {
 
-window.BrowserInfo = {
+var BrowserInfo = exports.BrowserInfo = {
     doesNotSupportHoverPseudoclassSelector : function() {
        return $.browser.opera;
     },
@@ -56,6 +58,5 @@ window.BrowserInfo = {
     }
 };
 
-  return window.BrowserInfo;
 
-});
+

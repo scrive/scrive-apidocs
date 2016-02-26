@@ -1,4 +1,16 @@
-define(['legacy_code', 'Backbone', 'React', 'common/select'], function(legacy_code, Backbone, React, Select) {
+var Backbone = require("backbone");
+var React = require("react");
+var Select = require("../../scripts/common/select");
+var LoadingDialog = require("../loading.js").LoadingDialog;
+var FlashMessage = require("../flashmessages.js").FlashMessage;
+var LocalStorage = require("../storage.js").LocalStorage;
+var Submit = require("../submits.js").Submit;
+var _ = require("underscore");
+var $ = require("jquery");
+var Button = require("../buttons.js").Button;
+var ProlongModal = require("./prolongmodal.js").ProlongModal;
+var Confirmation = require("../confirmations.js").Confirmation;
+
 
 var AuthorViewTitleBoxModel = Backbone.Model.extend({
   defaults : {
@@ -250,7 +262,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
 
 });
 
-window.AuthorViewTitleBox = function(args) {
+var AuthorViewTitleBox = exports.AuthorViewTitleBox = function(args) {
           var model = new AuthorViewTitleBoxModel(args);
           var view =  new AuthorViewTitleBoxView({model : model, el : $("<div/>")});
           this.el = function() {return $(view.el);};
@@ -258,4 +270,3 @@ window.AuthorViewTitleBox = function(args) {
 
 };
 
-});

@@ -1,7 +1,8 @@
-/** @jsx React.DOM */
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
 
-define(["Underscore", "Backbone", "React", "legacy_code"], function (_, Backbone, React) {
-  return React.createClass({
+  module.exports = React.createClass({
     getInitialState: function () {
       return {
         open: false
@@ -29,4 +30,3 @@ define(["Underscore", "Backbone", "React", "legacy_code"], function (_, Backbone
       );
     }
   });
-});

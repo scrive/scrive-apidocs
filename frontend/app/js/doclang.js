@@ -1,9 +1,10 @@
+var Backbone = require("backbone");
+
 /* Whole document schema
  */
 
-define(['Backbone', 'legacy_code'], function() {
 
-window.DocLang = Backbone.Model.extend({
+var DocLang = exports.DocLang = Backbone.Model.extend({
     lang : function() {
         return this.get("lang");
     },
@@ -29,4 +30,3 @@ window.DocLang = Backbone.Model.extend({
     }
 });
 
-});

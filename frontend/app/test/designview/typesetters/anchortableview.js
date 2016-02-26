@@ -1,4 +1,7 @@
-define(['legacy_code', 'backend', 'util', 'React', 'designview/typesetters/anchortableview'], function(legacy_code, backend, util, React, AnchorTable) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var AnchorTable = require("../../../scripts/designview/typesetters/anchortableview");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -31,4 +34,3 @@ define(['legacy_code', 'backend', 'util', 'React', 'designview/typesetters/ancho
       server.restore();
     });
   });
-});

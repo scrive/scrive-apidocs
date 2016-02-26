@@ -1,5 +1,7 @@
-define(["legacy_code", "backend", "util", "React", "authorview/signatories/showapideliverymodal"]
-  , function(legacy_code, backend, util, React, ShowAPIDeliveryModal) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var ShowAPIDeliveryModal = require("../../../scripts/authorview/signatories/showapideliverymodal");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -28,4 +30,3 @@ define(["legacy_code", "backend", "util", "React", "authorview/signatories/showa
       server.restore();
     });
   });
-});

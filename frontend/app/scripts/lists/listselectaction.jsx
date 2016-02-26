@@ -1,8 +1,9 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Select = require("../common/select");
+var _ = require("underscore");
 
-define(['React','common/select','legacy_code'], function(React,Select) {
 
-return React.createClass({
+module.exports = React.createClass({
     propTypes: {
        name : React.PropTypes.string,
        actions: React.PropTypes.array
@@ -25,6 +26,3 @@ return React.createClass({
       );
     }
 });
-
-});
-

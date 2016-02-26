@@ -1,4 +1,5 @@
-define(['legacy_code'], function() {
+var _ = require("underscore");
+
 
 var ReloadManagerClass = function () {
   this.fns = [];
@@ -43,6 +44,5 @@ ReloadManagerClass.prototype.isBlocking = function (fn) {
   return this.blocking;
 };
 
-window.ReloadManager = new ReloadManagerClass();
+var ReloadManager = exports.ReloadManager = new ReloadManagerClass();
 
-});

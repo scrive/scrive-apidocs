@@ -1,5 +1,10 @@
+var React = require("react");
+var DaysStatsTable = require("../../../scripts/account/usersandstats/daysstatstable");
+var Backbone = require("backbone");
+var _ = require("underscore");
+var $ = require("jquery");
+
 /* Main archive definition. Its a tab based set of different documents lists. */
-define(['React', 'account/usersandstats/daysstatstable', 'legacy_code'], function(React,DaysStatsTable) {
 
 var StatsModel = Backbone.Model.extend({
   withCompany : function() {
@@ -75,7 +80,7 @@ var StatsView = Backbone.View.extend({
 });
 
 
-window.Stats = function(args) {
+var Stats = exports.Stats = function(args) {
           var model = new StatsModel(args);
           var view =  new StatsView({model : model, el : $("<div class='tab-container'/>")});
           return {
@@ -84,4 +89,3 @@ window.Stats = function(args) {
             };
 };
 
-});

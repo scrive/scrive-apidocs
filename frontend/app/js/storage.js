@@ -1,3 +1,5 @@
+
+
 /*
  * Simple local storage mechanism
  *
@@ -8,9 +10,8 @@
  * Namespace is a obligatory param. All call from this module exit immediately with undefined if namespace is undefined or "".
  */
 
-define(['Backbone', 'legacy_code'], function() {
 
-window.LocalStorage = {
+var LocalStorage = exports.LocalStorage = {
     set: function(namespace, field, value) {
         if (namespace == undefined || namespace == "") return;
         try {
@@ -34,4 +35,3 @@ window.LocalStorage = {
     }
 };
 
-});

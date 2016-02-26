@@ -1,8 +1,17 @@
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin", "common/button",
-  "eleg/bankidsigning", "signview/viewsize", "signview/errormodal"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, Button, BankIDSigning, ViewSize, ErrorModal) {
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var Button = require("../../common/button");
+var BankIDSigning = require("../../eleg/bankidsigning");
+var ViewSize = require("../viewsize");
+var ErrorModal = require("../errormodal");
+var Signatory = require("../../../js/signatories.js").Signatory;
+var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
+var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
+var $ = require("jquery");
 
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
     propTypes: {
@@ -137,4 +146,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       );
     }
   });
-});

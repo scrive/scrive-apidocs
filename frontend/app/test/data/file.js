@@ -1,5 +1,3 @@
-define(["legacy_code"], function () {
-  return {
+module.exports = {
     "pages": 1
   };
-});

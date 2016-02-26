@@ -1,4 +1,9 @@
-define(["legacy_code", "backend", "util", "React", "designview/typesetters/typesettermixin", "common/editabletext", "common/button"], function(legacy_code, backend, util, React, TypeSetterMixin, EditableText, Button) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var TypeSetterMixin = require("../../../scripts/designview/typesetters/typesettermixin");
+var EditableText = require("../../../scripts/common/editabletext");
+var Button = require("../../../scripts/common/button");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -113,4 +118,3 @@ define(["legacy_code", "backend", "util", "React", "designview/typesetters/types
       server.restore();
     });
   });
-});

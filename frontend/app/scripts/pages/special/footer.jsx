@@ -1,9 +1,10 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Backbone = require("backbone");
+var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 
 
-define(['React', 'Backbone'], function(React, Backbone) {
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       forceShowing: React.PropTypes.bool // OVERRIDES Sign View Branding setting "showfooter"
     },
@@ -21,5 +22,3 @@ define(['React', 'Backbone'], function(React, Backbone) {
       );
     }
   });
-
-});

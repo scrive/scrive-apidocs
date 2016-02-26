@@ -1,4 +1,7 @@
-define(["legacy_code", "backend", "util", "React", "designview/participants/participantsettings"], function(legacy_code, backend, util, React, ParticipantSettings) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var ParticipantSettings = require("../../../scripts/designview/participants/participantsettings");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -40,4 +43,3 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/part
       server.restore();
     });
   });
-});

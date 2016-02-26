@@ -1,4 +1,9 @@
-define(["legacy_code", "React"], function(legacy_code, React) {
+var React = require("react");
+var Document = require("../js/documents").Document;
+var Field = require("../js/fields").Field;
+var FieldPlacement = require("../js/placements").FieldPlacement;
+var DesignViewModel = require("../js/designview/docdesignviewmodel").DesignViewModel;
+
   var exports = {};
 
   var TestUtils = React.addons.TestUtils;
@@ -120,5 +125,4 @@ define(["legacy_code", "React"], function(legacy_code, React) {
     });
   };
 
-  return exports;
-});
+  module.exports = exports;

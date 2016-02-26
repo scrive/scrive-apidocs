@@ -1,9 +1,15 @@
-define(["Backbone", "React", "common/backbone_mixin", "designview/typesetters/texttypesetterview",
-        "designview/editdocument/draggablemixin", "designview/fileview/hastypesettermixin",
-        "common/infotextinput", "legacy_code"],
-  function (Backbone, React, BackboneMixin, TextTypeSetterView, DraggableMixin, HasTypeSetterMixin, InfoTextInput) {
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var TextTypeSetterView = require("../typesetters/texttypesetterview");
+var DraggableMixin = require("../editdocument/draggablemixin");
+var HasTypeSetterMixin = require("./hastypesettermixin");
+var InfoTextInput = require("../../common/infotextinput");
+var FieldPlacement = require("../../../js/placements.js").FieldPlacement;
+var $ = require("jquery");
+var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(FieldPlacement).isRequired,
       pageWidth: React.PropTypes.number.isRequired,
@@ -161,4 +167,3 @@ define(["Backbone", "React", "common/backbone_mixin", "designview/typesetters/te
       );
     }
   });
-});

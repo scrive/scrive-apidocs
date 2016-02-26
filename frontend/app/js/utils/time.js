@@ -1,5 +1,3 @@
-define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
-
 var monthShortName = function (v) {
  switch(v)
   {
@@ -138,4 +136,3 @@ if (!Date.prototype.diffDays) {
     };
 }
 
-});

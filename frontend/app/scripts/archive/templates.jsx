@@ -1,9 +1,18 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Utils = require("./utils");
+var List = require("../lists/list");
+var moment = require("moment");
+var Submit = require("../../js/submits.js").Submit;
+var LoadingDialog = require("../../js/loading.js").LoadingDialog;
+var Confirmation = require("../../js/confirmations.js").Confirmation;
+var jQuery = require("jquery");
+var _ = require("underscore");
+var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+var $ = require("jquery");
 
-define(['React', 'archive/utils', 'lists/list', 'moment', 'legacy_code'], function(React, Utils, List, moment) {
 
 
-return React.createClass({
+module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
     createNewTemplate : function() {
       new Submit({
@@ -136,6 +145,8 @@ return React.createClass({
             sorting="mtime"
             rendering={function(d) {
               var time = moment(d.field("mtime")).toDate();
+              // FIXME The fullTime() function doesn't work for some reason,
+              // it is located in app/js/utils/time.js and works in scripts/archive/templates.jsx
               return (<span title={time.fullTime()}>{time.toTimeAbrev()}</span>);
             }}
           />
@@ -167,6 +178,4 @@ return React.createClass({
         </List.List>
       );
     }
-});
-
 });

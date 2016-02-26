@@ -1,9 +1,11 @@
-/** @jsx React.DOM */
-
-define(["jquery", "Underscore", "Backbone", "React",
-        "common/backbone_mixin", "common/selfunmountmixin",
-        "common/editabletext", "legacy_code"],
-  function ($, _, Backbone, React, BackboneMixin, SelfUnmountMixin, EditableText) {
+var $ = require("jquery");
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var SelfUnmountMixin = require("../../common/selfunmountmixin");
+var EditableText = require("../../common/editabletext");
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
   var Mixin = {
     mixins: [SelfUnmountMixin, BackboneMixin.BackboneMixin],
@@ -108,5 +110,4 @@ define(["jquery", "Underscore", "Backbone", "React",
     }
   };
 
-  return Mixin;
-});
+  module.exports = Mixin;

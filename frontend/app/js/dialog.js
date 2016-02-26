@@ -1,3 +1,7 @@
+var $ = require("jquery");
+var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
+var ScreenBlockingDialog = require("./dialog.js").ScreenBlockingDialog;
+
 /* Screen blocking dialog
  *
  * Open with ScreenBlockingDialog.open({'header': some html/jquery object,
@@ -7,7 +11,6 @@
  * Close with ScreenBlockingDialog.close();
 */
 
-define(['Backbone', 'legacy_code'], function() {
 
 var fillWith = function(e, s) {
   e.children().detach();
@@ -55,7 +58,7 @@ var buildDialog = function(cfg) {
   return dialog;
 };
 
-window.ScreenBlockingDialog = {
+var ScreenBlockingDialog = exports.ScreenBlockingDialog = {
     dialog : function(cfg) {
       var dialog = $('.modal.screenblockingdialog');
       if (dialog.size() == 0) {
@@ -97,4 +100,3 @@ window.ScreenBlockingDialog = {
     }
 };
 
-});

@@ -1,4 +1,8 @@
-define(["legacy_code_for_signview", "backend", "util", "image", "React", "signview/fileview/textplacementplacedview"], function(legacy_code, backend, util, ImageShim, React, TextPlacementPlacedView) {
+var backend = require("../../backend");
+var util = require("../../util");
+var ImageShim = require("../../image");
+var React = require("react");
+var TextPlacementPlacedView = require("../../../scripts/signview/fileview/textplacementplacedview");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -47,4 +51,3 @@ define(["legacy_code_for_signview", "backend", "util", "image", "React", "signvi
     });
   });
   */
-});

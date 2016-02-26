@@ -1,4 +1,9 @@
-define(['Backbone', 'legacy_code'], function() {
+var Backbone = require("backbone");
+var Submit = require("./submits.js").Submit;
+var _ = require("underscore");
+var $ = require("jquery");
+var Button = require("./buttons.js").Button;
+
 
   var AcceptTOSModel = Backbone.Model.extend({
     defaults: {
@@ -82,10 +87,9 @@ define(['Backbone', 'legacy_code'], function() {
     }
   });
 
-  window.AcceptTOS = function(args) {
+  var AcceptTOS = exports.AcceptTOS = function(args) {
     var model = new AcceptTOSModel(args);
     var view =  new AcceptTOSView({model: model, el: $("<div class='short-input-section accept-tos s-accept-tos'/>")});
     this.el = function() {return $(view.el);};
   };
 
-});

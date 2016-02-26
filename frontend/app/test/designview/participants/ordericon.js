@@ -1,4 +1,7 @@
-define(["legacy_code", "backend", "util", "React", "designview/participants/ordericon"], function(legacy_code, backend, util, React, OrderIcon) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var OrderIcon = require("../../../scripts/designview/participants/ordericon");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -35,4 +38,3 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/orde
       server.restore();
     });
   });
-});

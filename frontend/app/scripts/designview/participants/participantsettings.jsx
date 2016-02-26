@@ -1,16 +1,14 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Select = require("../../common/select");
+var LanguageService = require("../../common/language_service");
+var _ = require("underscore");
 
-define(["legacy_code", "React", "common/select",
-        "common/language_service"],
-function (_Legacy, React, Select,
-          LanguageService) {
-
-return React.createClass({
+module.exports = React.createClass({
   signorderOptions: function () {
     var sig = this.props.model;
     var order = sig.signorder();
     var options = [];
-    for (i = 1;i <= sig.document().maxPossibleSignOrder();i++) {
+    for (var i = 1;i <= sig.document().maxPossibleSignOrder();i++) {
       options.push({
         name: LanguageService.localizedOrdinal(i),
         value: i
@@ -222,6 +220,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

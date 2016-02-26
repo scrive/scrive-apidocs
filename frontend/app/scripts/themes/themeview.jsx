@@ -1,8 +1,17 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var ThemeLogoEditor = require("./themelogoeditor");
+var ThemeColorEditor = require("./themecoloreditor");
+var ThemeFontEditor = require("./themefonteditor");
+var Button = require("../common/button");
+var InfoTextInput = require("../common/infotextinput");
+var EmailPreview = require("./previews/email");
+var SigningPreview = require("./previews/signing");
+var LoginPreview = require("./previews/login");
+var ServicePreview = require("./previews/service");
 
-define(["React","common/backbone_mixin","themes/themelogoeditor","themes/themecoloreditor","themes/themefonteditor","legacy_code","common/button","common/infotextinput","themes/previews/email", "themes/previews/signing", "themes/previews/login", "themes/previews/service"], function(React,BackboneMixin,ThemeLogoEditor,ThemeColorEditor,ThemeFontEditor, _Legacy, Button,InfoTextInput, EmailPreview, SigningPreview, LoginPreview, ServicePreview) {
 
-return React.createClass({
+module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.model];
@@ -159,4 +168,3 @@ return React.createClass({
       );
     }
   });
-});

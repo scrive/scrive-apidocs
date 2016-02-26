@@ -1,9 +1,24 @@
+var Backbone = require("backbone");
+var moment = require("moment");
+var DocumentViewer = require("./documentviewer.js").DocumentViewer;
+var AjaxQueue = require("./ajaxqueue.js").AjaxQueue;
+var _ = require("underscore");
+var Submit = require("./submits.js").Submit;
+var Mail = require("./confirmationsWithEmails.js").Mail;
+var Document = require("./documents.js").Document;
+var File = require("./files.js").File;
+var AuthorAttachment = require("./authorattachment.js").AuthorAttachment;
+var Signatory = require("./signatories.js").Signatory;
+var DocLang = require("./doclang.js").DocLang;
+var takeScreenshot = require("./takeScreenshot").takeScreenshot;
+
+require("./utils/time");
+
 /* Document model
  */
 
-define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
-window.Document = Backbone.Model.extend({
+var Document = exports.Document = Backbone.Model.extend({
     defaults: function() { return {
         id: 0,
         title: "",
@@ -226,7 +241,7 @@ window.Document = Backbone.Model.extend({
         function callDone() {
             if (done) done();
         }
-        window.takeScreenshot(
+        takeScreenshot(
             function(canvas) {
                 try {
                   var shot = { "time" : new Date().toISOString(),
@@ -497,7 +512,7 @@ window.Document = Backbone.Model.extend({
             successCallback();
           }
         };
-        
+
         // See if we have document data in the object
         var initialDocumentData = this.initialDocumentData();
         if (initialDocumentData) {
@@ -792,4 +807,3 @@ window.Document = Backbone.Model.extend({
     }
 });
 
-});

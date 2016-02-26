@@ -1,4 +1,10 @@
-define(['Backbone', 'legacy_code'], function() {
+var Backbone = require("backbone");
+var jQuery = require("jquery");
+var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
+var _ = require("underscore");
+var $ = require("jquery");
+var Button = require("./buttons.js").Button;
+
 
 var ConfirmationModel = Backbone.Model.extend({
   defaults : {
@@ -264,7 +270,7 @@ var ConfirmationView = Backbone.View.extend({
 });
 
 
-window.Confirmation = function (args) {
+var Confirmation = exports.Confirmation = function (args) {
           var model = new ConfirmationModel(args);
           var overlay = $("<div class='modal'/>");
           var bottomMargin = 100;
@@ -345,4 +351,3 @@ window.Confirmation = function (args) {
           };
 };
 
-});

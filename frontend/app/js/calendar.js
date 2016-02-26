@@ -1,4 +1,8 @@
-define(['Backbone', 'common/language_service', 'legacy_code'], function(Backbone, LanguageService) {
+var Backbone = require("backbone");
+var LanguageService = require("../scripts/common/language_service");
+var _ = require("underscore");
+var $ = require("jquery");
+
 
 (function() {
   var moment_lang_data = LanguageService.momentLangDataForCurrentLanguage();
@@ -12,7 +16,7 @@ define(['Backbone', 'common/language_service', 'legacy_code'], function(Backbone
                               shortDays: join_and_capitalize(moment_lang_data._weekdaysShort)});
 })();
 
-window.Calendar = Backbone.Model.extend({
+var Calendar = exports.Calendar = Backbone.Model.extend({
     defaults: {
         on : $('<div/>'),
         change : function() {return false},
@@ -65,4 +69,3 @@ window.Calendar = Backbone.Model.extend({
     }
 });
 
-});

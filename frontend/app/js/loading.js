@@ -1,3 +1,7 @@
+var $ = require("jquery");
+var ScreenBlockingDialog = require("./dialog.js").ScreenBlockingDialog;
+var _ = require("underscore");
+
 /* Loading dialog
  *
  * Open with LoadingDialog.open(args).
@@ -8,9 +12,8 @@
  * Close with LoadingDialog.close();
 */
 
-define(['Backbone', 'legacy_code'], function() {
 
-window.LoadingDialog = {
+var LoadingDialog = exports.LoadingDialog = {
     open: function (args) { 
       var dialogArgs = args || {};
       var src = window.cdnbaseurl + '/img/wait30trans.gif';
@@ -22,4 +25,3 @@ window.LoadingDialog = {
     }
 };
 
-});

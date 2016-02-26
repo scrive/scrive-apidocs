@@ -1,8 +1,7 @@
-/** @jsx React.DOM */
+var Backbone = require("backbone");
 
-define(['legacy_code'], function() {
 
-  return Backbone.Model.extend({
+  module.exports = Backbone.Model.extend({
     defaults : {
         ready : false
     },
@@ -38,5 +37,3 @@ define(['legacy_code'], function() {
       };
     }
   });
-
-});

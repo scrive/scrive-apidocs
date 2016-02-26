@@ -1,8 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Select = require("../../common/select");
+var InfoTextInput = require("../../common/infotextinput");
+var DaysInputWithCalendar = require("../../common/daysinputwithcalendar");
+var _ = require("underscore");
 
-define(['legacy_code', 'React','common/select', 'common/infotextinput', 'common/daysinputwithcalendar'], function(_Legacy, React, Select, InfoTextInput, DaysInputWithCalendar) {
 
-return React.createClass({
+module.exports = React.createClass({
   languages : function() {
     var languages = [
         {name: localization.languages.en, value: "en"}
@@ -118,8 +121,3 @@ return React.createClass({
     );
   }
 });
-
-
-});
-
-

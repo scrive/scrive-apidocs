@@ -1,8 +1,10 @@
-/** @jsx React.DOM */
+var React = require("react");
+var List = require("../lists/list");
+var Submit = require("../../js/submits.js").Submit;
+var _ = require("underscore");
 
-define(['React', 'lists/list','legacy_code'], function(React, List) {
 
-return React.createClass({
+module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
     createNewDomain: function() {
       var self = this;
@@ -67,6 +69,4 @@ return React.createClass({
         </List.List>
       );
     }
-});
-
 });

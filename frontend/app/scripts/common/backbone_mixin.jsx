@@ -1,6 +1,6 @@
-/** @jsx React.DOM */
+var _ = require("underscore");
+var Backbone = require("backbone");
 
-define(['Backbone', 'legacy_code'], function() {
 
 var expose = {};
 
@@ -65,7 +65,4 @@ var BackboneMixin = {
 
 expose.BackboneMixin = BackboneMixin;
 
-return expose;
-
-
-});
+module.exports = expose;

@@ -1,8 +1,13 @@
-/** @jsx React.DOM */
+var React = require("react");
+var SignviewSettings = require("./signviewsettings");
+var AttachmentsList = require("./attachmentslist");
+var Button = require("../../common/button");
+var DesignAuthorAttachmentsPopup = require("../../../js/designview/authoraattachmentsdesign.js").DesignAuthorAttachmentsPopup;
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var DesignSignatoryAttachmentsPopup = require("../../../js/designview/signatoryattachmentsdesignview.js").DesignSignatoryAttachmentsPopup;
 
-define(['legacy_code', 'React', 'designview/processsettings/signviewsettings', 'designview/processsettings/attachmentslist', 'common/button'], function(_Legacy, React, SignviewSettings,AttachmentsList, Button) {
 
-return React.createClass({
+module.exports = React.createClass({
   getInitialState: function() {
       return {settingsModalOpened: this.props['false']};
     },
@@ -59,7 +64,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
-
 });

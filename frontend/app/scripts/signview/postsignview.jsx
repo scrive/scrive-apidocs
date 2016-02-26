@@ -1,6 +1,10 @@
-define(['React', 'Backbone', 'signview/createaccount/createaccountview', 'signview/feedback/feedbackview'], function(React, Backbone, CreateAccountView, FeedbackView) {
+var React = require("react");
+var Backbone = require("backbone");
+var CreateAccountView = require("./createaccount/createaccountview");
+var FeedbackView = require("./feedback/feedbackview");
+var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       document : React.PropTypes.object.isRequired
     },
@@ -38,4 +42,3 @@ define(['React', 'Backbone', 'signview/createaccount/createaccountview', 'signvi
       }
     }
   });
-});

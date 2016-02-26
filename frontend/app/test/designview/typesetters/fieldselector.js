@@ -1,7 +1,10 @@
-var imports = ["legacy_code", "backend", "util", "React", "common/select",
-               "common/button", "designview/typesetters/fieldselector"];
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var Select = require("../../../scripts/common/select");
+var Button = require("../../../scripts/common/button");
+var FieldSelector = require("../../../scripts/designview/typesetters/fieldselector");
 
-define(imports, function(legacy_code, backend, util, React, Select, Button, FieldSelector) {
   var TestUtils = React.addons.TestUtils;
 
   describe("designview/typesetters/fieldselector", function () {
@@ -66,4 +69,3 @@ define(imports, function(legacy_code, backend, util, React, Select, Button, Fiel
       server.restore();
     });
   });
-});

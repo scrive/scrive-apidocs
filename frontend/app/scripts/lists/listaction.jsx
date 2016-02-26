@@ -1,8 +1,8 @@
-/** @jsx React.DOM */
+var React = require("react");
+var NewButton = require("../common/button");
 
-define(['React','common/button','legacy_code'], function(React, NewButton) {
 
-return React.createClass({
+module.exports = React.createClass({
     propTypes: {
        onSelect : React.PropTypes.func,
        name : React.PropTypes.string,
@@ -40,6 +40,3 @@ return React.createClass({
       }
     }
 });
-
-});
-

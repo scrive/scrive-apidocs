@@ -1,13 +1,14 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Button = require("../../common/button");
+var ParticipantNameField = require("./participantnamefield");
+var ParticipantField = require("./participantfield");
+var ParticipantSelectField = require("./participantselectfield");
+var ParticipantNotNamedField = require("./participantnotnamedfield");
+var ParticipantAddField = require("./participantaddfield");
+var _ = require("underscore");
+var CsvSignatoryDesignPopup = require("../../../js/designview/csvsignatorydesign.js").CsvSignatoryDesignPopup;
 
-define(["legacy_code", "React", "common/button", "designview/participants/participantnamefield",
-        "designview/participants/participantfield", "designview/participants/participantselectfield",
-        "designview/participants/participantnotnamedfield", "designview/participants/participantaddfield"],
-function (_Legacy, React, Button, ParticipantNameField,
-          ParticipantField, ParticipantSelectField,
-          ParticipantNotNamedField, ParticipantAddField) {
-
-return React.createClass({
+module.exports = React.createClass({
 
   render: function () {
     var self = this;
@@ -70,6 +71,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

@@ -1,7 +1,12 @@
+var Backbone = require("backbone");
+var _ = require("underscore");
+var $ = require("jquery");
+var Button = require("../buttons.js").Button;
+var BrowserInfo = require("../utils/browserinfo.js").BrowserInfo;
+
 /* Signatory view of document
  */
 
-define(['Backbone', 'legacy_code'], function() {
 
 var DocumentAuthorAttachmentsModel = Backbone.Model.extend({
   defaults : {
@@ -100,7 +105,7 @@ var DocumentAuthorAttachmentsView = Backbone.View.extend({
   }
 });
 
-window.DocumentAuthorAttachments = function(args) {
+var DocumentAuthorAttachments = exports.DocumentAuthorAttachments = function(args) {
        var model = new DocumentAuthorAttachmentsModel(args);
        var view = new DocumentAuthorAttachmentsView({
                         model: model,
@@ -110,4 +115,3 @@ window.DocumentAuthorAttachments = function(args) {
        this.destroy = function() { view.destroy();};
 };
 
-});

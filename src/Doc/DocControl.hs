@@ -188,7 +188,7 @@ formatTimeSimpleWithTZ tz t = do
   fetchOne runIdentity
 
 showCreateFromTemplate :: Kontrakcja m => m (Either KontraLink String)
-showCreateFromTemplate = withUserGet $ pageCreateFromTemplate
+showCreateFromTemplate = withUserGet $ pageCreateFromTemplate =<< getContext
 
 {- |
 
@@ -384,7 +384,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
        -- Never cache design view. IE8 hack. Should be fixed in different wasy
        Left <$> (setHeaderBS "Cache-Control" "no-cache" <$> (simpleHtmlResonseClrFlash =<< pageDocumentDesign ctx document ad))
     (False, _) | isauthororincompany -> do
-       Right <$> pageDocumentView document msiglink (isincompany)
+       Right <$> pageDocumentView ctx document msiglink (isincompany)
     (False, Just siglink)            -> do
        Left  <$> (simpleHtmlResonseClrFlash =<< pageDocumentSignView ctx document siglink ad)
     _                                -> do

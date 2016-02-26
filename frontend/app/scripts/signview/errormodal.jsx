@@ -1,4 +1,9 @@
-define(["legacy_code", "React", "common/button"], function(_legacy, React, Button) {
+var React = require("react");
+var Button = require("../common/button");
+var Submit = require("../../js/submits.js").Submit;
+var ReloadManager = require("../../js/reloadmanager.js").ReloadManager;
+var $ = require("jquery");
+var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
 
   var TextComponent = React.createClass({
     render: function () {
@@ -21,7 +26,7 @@ define(["legacy_code", "React", "common/button"], function(_legacy, React, Butto
     }
   };
 
-  return function(xhr) {
+  module.exports = function(xhr) {
     ReloadManager.stopBlocking();
     mixpanel.track('Error', {
       Message : 'Signing failed: reload modal',
@@ -35,4 +40,3 @@ define(["legacy_code", "React", "common/button"], function(_legacy, React, Butto
     React.render(React.createElement(Button,buttonParams),buttonDiv[0]);
     return ScreenBlockingDialog.open({header:textDiv, content: buttonDiv});
   };
-});

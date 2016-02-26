@@ -1,8 +1,9 @@
-/** @jsx React.DOM */
+var _ = require("underscore");
+var React = require("react");
+var Select = require("../../common/select");
+var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 
-define(["Underscore", "React", "common/select", "legacy_code"],
-  function (_, React, Select) {
-  return React.createClass({
+  module.exports = React.createClass({
     fontSelected: function () {
       var model = this.props.model;
       var field = model.field();
@@ -80,4 +81,3 @@ define(["Underscore", "React", "common/select", "legacy_code"],
       );
     }
   });
-});

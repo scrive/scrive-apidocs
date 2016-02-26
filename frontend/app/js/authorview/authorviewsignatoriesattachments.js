@@ -1,4 +1,8 @@
-define(['Backbone', 'legacy_code'], function() {
+var Backbone = require("backbone");
+var _ = require("underscore");
+var $ = require("jquery");
+var Button = require("../buttons.js").Button;
+
 
 var AuthorViewSignatoriesAttachmentsModel = Backbone.Model.extend({
   defaults : {
@@ -74,7 +78,7 @@ var AuthorViewSignatoriesAttachmentsView = Backbone.View.extend({
 
 });
 
-window.AuthorViewSignatoriesAttachments = function(args) {
+var AuthorViewSignatoriesAttachments = exports.AuthorViewSignatoriesAttachments = function(args) {
           var model = new AuthorViewSignatoriesAttachmentsModel(args);
           var view =  new AuthorViewSignatoriesAttachmentsView({model : model, el :(args.el != undefined) ? args.el : $("<div/>")});
           this.el = function() {return $(view.el);};
@@ -82,4 +86,3 @@ window.AuthorViewSignatoriesAttachments = function(args) {
 
 };
 
-});

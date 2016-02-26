@@ -1,7 +1,19 @@
+var Backbone = require("backbone");
+var React = require("react");
+var Select = require("../../scripts/common/select");
+var Company = require("../account/company.js").Company;
+var Submit = require("../submits.js").Submit;
+var _ = require("underscore");
+var $ = require("jquery");
+var InfoTextInput = require("../infotextinputs.js").InfoTextInput;
+var NumberValidation = require("../validation.js").NumberValidation;
+var Confirmation = require("../confirmations.js").Confirmation;
+var FlashMessage = require("../flashmessages.js").FlashMessage;
+var Button = require("../buttons.js").Button;
+
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
 
-define(['legacy_code', 'Backbone', 'React', 'common/select'], function(legacy_code, Backbone, React, Select) {
 
 var AdminCompanyDetailsModel = Backbone.Model.extend({
   initialize : function(args) {
@@ -347,7 +359,7 @@ var AdminCompanyDetailsView = Backbone.View.extend({
 });
 
 
-window.AdminCompanyDetails = function(args) {
+var AdminCompanyDetails = exports.AdminCompanyDetails = function(args) {
           var model = new AdminCompanyDetailsModel(args);
           var view =  new AdminCompanyDetailsView({model : model, el : $("<div class='tab-container account'/>")});
           this.el = function() {return $(view.el);};
@@ -356,4 +368,3 @@ window.AdminCompanyDetails = function(args) {
           };
 };
 
-});

@@ -1,6 +1,8 @@
-define(["legacy_code_for_signview", "backend", "util", "React", "signview/identify/norwegian/norwegianidentifymodel",
-        "signview/identify/norwegian/norwegianidentifyview"],
-  function(legacy_code, backend, util, React, NorwegianIdentifyModel, NorwegianIdentifyView) {
+var backend = require("../../../backend");
+var util = require("../../../util");
+var React = require("react");
+var NorwegianIdentifyModel = require("../../../../scripts/signview/identify/norwegian/norwegianidentifymodel");
+var NorwegianIdentifyView = require("../../../../scripts/signview/identify/norwegian/norwegianidentifyview");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -93,4 +95,3 @@ define(["legacy_code_for_signview", "backend", "util", "React", "signview/identi
       server.restore();
     });
   });
-});

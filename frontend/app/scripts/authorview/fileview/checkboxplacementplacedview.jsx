@@ -1,6 +1,9 @@
-define(["Backbone", "React", "legacy_code"], function (Backbone, React) {
+var Backbone = require("backbone");
+var React = require("react");
+var $ = require("jquery");
+var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 
-return Backbone.View.extend({
+module.exports = Backbone.View.extend({
   initialize: function (args) {
     this.listenTo(this.model, "change", this.updatePosition);
     this.render();
@@ -36,6 +39,4 @@ return Backbone.View.extend({
     this.$el.empty();
     this.$el.append(box);
   }
-});
-
 });

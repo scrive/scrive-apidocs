@@ -1,6 +1,12 @@
-define(['Backbone', 'legacy_code'], function() {
+var Backbone = require("backbone");
+var Validation = require("./validation.js").Validation;
+var $ = require("jquery");
+var _ = require("underscore");
+var DigitsLettersValidation = require("./validation.js").DigitsLettersValidation;
+var NotEmptyValidation = require("./validation.js").NotEmptyValidation;
 
-window.Validation = Backbone.Model.extend({
+
+var Validation = exports.Validation = Backbone.Model.extend({
     defaults : {
         validates : function() {return true;},
         callback : function() {},
@@ -60,14 +66,14 @@ window.Validation = Backbone.Model.extend({
     }
 });
 
-window.NoValidation = Validation.extend({
+var NoValidation = exports.NoValidation = Validation.extend({
     defaults: {
            validates: function(t) { return true; },
            message: "The value should be always ok"
         }
 });
 
-window.EmptyValidation = Validation.extend({
+var EmptyValidation = exports.EmptyValidation = Validation.extend({
     defaults: {
       validates: function(t) {
         return /^\s*$/.test(t);
@@ -76,7 +82,7 @@ window.EmptyValidation = Validation.extend({
     }
 });
 
-window.NotEmptyValidation = Validation.extend({
+var NotEmptyValidation = exports.NotEmptyValidation = Validation.extend({
     defaults: {
            validates: function(t) {
 
@@ -89,9 +95,10 @@ window.NotEmptyValidation = Validation.extend({
         }
 });
 
-window.EmailValidation = Validation.extend({
+var EmailValidation = exports.EmailValidation = Validation.extend({
      defaults: {
             validates: function(t) {
+                t = t || "";
                 t = t.trim();
                 // this does not allow international characters, which for the moment is good
                 if (/^[\w._%+-]+@[a-zA-Z0-9.-]+[.][a-z]{2,}$/i.test(t))
@@ -102,7 +109,7 @@ window.EmailValidation = Validation.extend({
     }
 });
 
-window.PhoneValidation = Validation.extend({
+var PhoneValidation = exports.PhoneValidation = Validation.extend({
      defaults: {
             validates: function(t) {
                 /* After trimming and removal of ignorable characters
@@ -116,7 +123,7 @@ window.PhoneValidation = Validation.extend({
     }
 });
 
-window.PhoneValidationNO = Validation.extend({
+var PhoneValidationNO = exports.PhoneValidationNO = Validation.extend({
      defaults: {
             validates: function(t) {
               // Norwegian phone numbers +47xxx xxx xx.
@@ -133,7 +140,7 @@ window.PhoneValidationNO = Validation.extend({
 // If we want to match more see: http://www.unicode.org/charts/
 var nameCharactersRegex = /[^a-z\u0021-\u007E\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/;
 
-window.NameValidation = Validation.extend({
+var NameValidation = exports.NameValidation = Validation.extend({
     defaults: {
             validates: function(t) {
                 var t = $.trim(t);
@@ -151,7 +158,7 @@ window.NameValidation = Validation.extend({
     }
 });
 
-window.UserNameValidation = Validation.extend({
+var UserNameValidation = exports.UserNameValidation = Validation.extend({
     initialize: function(args) {
       this.set('firstName', args.firstName);
       this.set('lastName', args.lastName);
@@ -213,7 +220,7 @@ window.UserNameValidation = Validation.extend({
     }
 });
 
-window.CheckboxReqValidation = Validation.extend({
+var CheckboxReqValidation = exports.CheckboxReqValidation = Validation.extend({
     defaults: {
             validates: function(t) {
                 return t.attr('checked') || t.hasClass("checked");
@@ -222,7 +229,7 @@ window.CheckboxReqValidation = Validation.extend({
     }
 });
 
-window.DigitsLettersValidation = Validation.extend({
+var DigitsLettersValidation = exports.DigitsLettersValidation = Validation.extend({
     defaults: {
         validates: function(t) {
             // we don't allow international in password; good or bad?
@@ -237,7 +244,7 @@ window.DigitsLettersValidation = Validation.extend({
     }
 });
 
-window.NumberValidation = Validation.extend({
+var NumberValidation = exports.NumberValidation = Validation.extend({
     defaults: {
         validates: function(t) {
            return /^[0-9]{1,}$/i.test(t);
@@ -246,7 +253,7 @@ window.NumberValidation = Validation.extend({
     }
 });
 
-window.PasswordValidation = Validation.extend({
+var PasswordValidation = exports.PasswordValidation = Validation.extend({
     defaults: {
         validates: function(t) { return t.length >= 8; },
         message: "Password must contain 8 characters at least!",
@@ -267,7 +274,7 @@ window.PasswordValidation = Validation.extend({
     }
 });
 
-window.PasswordEqValidation = Validation.extend({
+var PasswordEqValidation = exports.PasswordEqValidation = Validation.extend({
     defaults: {
         validates: function(t) {
             var p1 = this.get("with") ? this.get("with")(): undefined;
@@ -278,7 +285,7 @@ window.PasswordEqValidation = Validation.extend({
     }
 });
 
-window.SSNForSEBankIDValidation = Validation.extend({
+var SSNForSEBankIDValidation = exports.SSNForSEBankIDValidation = Validation.extend({
     defaults: {
         validates: function(t) {
            var fWithoutHyphens = t.replace(/-/g, "");
@@ -288,7 +295,7 @@ window.SSNForSEBankIDValidation = Validation.extend({
     }
 });
 
-window.SSNForNOBankIDValidation = Validation.extend({
+var SSNForNOBankIDValidation = exports.SSNForNOBankIDValidation = Validation.extend({
     defaults: {
         validates: function(t) {
            var fWithoutHyphens = t.replace(/-/g, "");
@@ -323,4 +330,3 @@ String.prototype.validate = function(validationObject) {
     return validationObject.validateData(this);
 };
 
-});

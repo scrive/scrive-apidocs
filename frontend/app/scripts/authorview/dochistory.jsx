@@ -1,6 +1,10 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var List = require("../lists/list");
+var moment = require("moment");
+var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
+var $ = require("jquery");
 
-define(['React', 'common/backbone_mixin','lists/list', 'moment', 'legacy_code', 'common/htmltextwithsubstitution'], function(React, BackboneMixin, List, moment, _legacyCode, HtmlTextWithSubstitution) {
 
 var DocumentHistoryView =  React.createClass({
     getDefaultProps: function() {
@@ -113,7 +117,7 @@ var DocumentHistoryView =  React.createClass({
     }
 });
 
-return function(args){
+module.exports = function(args){
         var el = $("<div/>");
         var view = React.render(React.createElement(DocumentHistoryView,{documentid : args.document.documentid()}), el[0]);
         this.el     = function() {return el;};
@@ -124,5 +128,3 @@ return function(args){
         this.destroy = function() { React.unmountComponentAtNode(el[0]); this.checkIfHistoryChangedAndCallback = function() {};};
         this.checkIfHistoryChangedAndCallback = function(changedcallback,errorcallback) { view.checkIfHistoryChangedAndCallback(changedcallback,errorcallback);};
 };
-
-});

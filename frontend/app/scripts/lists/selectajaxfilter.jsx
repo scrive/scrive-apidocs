@@ -1,9 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Select = require("../common/select");
+var $ = require("jquery");
+var _ = require("underscore");
 
-define(['React','common/select'], function(React,Select) {
 
 
-return React.createClass({
+module.exports = React.createClass({
     propTypes: {
       name : React.PropTypes.string,
       defaultOption : React.PropTypes.object,
@@ -74,6 +76,3 @@ return React.createClass({
       );
     }
 });
-
-});
-

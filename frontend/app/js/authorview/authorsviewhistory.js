@@ -1,4 +1,9 @@
-define(['Backbone', 'moment', 'legacy_code', 'authorview/dochistory'], function(Backbone, moment, _legacy, DocumentHistory) {
+var Backbone = require("backbone");
+var moment = require("moment");
+var DocumentHistory = require("../../scripts/authorview/dochistory");
+var _ = require("underscore");
+var $ = require("jquery");
+
 
 var AuthorViewHistoryModel = Backbone.Model.extend({
   defaults : {
@@ -94,7 +99,7 @@ var AuthorViewHistoryView = Backbone.View.extend({
 
 });
 
-window.AuthorViewHistory = function(args) {
+var AuthorViewHistory = exports.AuthorViewHistory = function(args) {
           var model = new AuthorViewHistoryModel(args);
           var view =  new AuthorViewHistoryView({model : model, el : $("<div class='history-box'/>")});
           this.el = function() {return $(view.el);};
@@ -114,4 +119,3 @@ window.AuthorViewHistory = function(args) {
 };
 
 
-});

@@ -12,29 +12,11 @@ enableCookies=<!DOCTYPE html>
 <link rel=" icon" href="$cdnbaseurl$/favicon/$brandinghash$" />
 <script src="/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
 <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
-
-$if(production)$
-<script src="/$versioncode$.optimized-system.js"></script>
-$else$
-<script src="/compiled_jsx/requirejs_config.js"></script>
-<script src="/bower_components/requirejs/require.js"></script>
-$endif$
+<script src="$cdnbaseurl$/compiled/vendor-$versioncode$.js"></script>
 
 $analyticsLoaderKontrakcja()$
 
-<script>
-  require(['jquery', 'legacy_code'], function(jQuery) {
-    jQuery(document).ready(function() {
-      var cookies = Cookies.buildCookieMap();
-      var cookieNames = [];
-      for(var key in cookies) {
-        cookieNames.push(key);
-      }
-      mixpanel.track('Cookies not enabled', {'cookie': cookieNames.toString(),
-                                             'user-agent': navigator.userAgent});
-    });
-  });
-</script>
+<script src="$cdnbaseurl$/compiled/all/enable_cookies-$versioncode$.js"></script>
 </head>
 
 <body>

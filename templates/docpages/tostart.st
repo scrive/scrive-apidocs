@@ -13,23 +13,7 @@ $htmlopentag()$
       <div class="global-table-cell">
       </div>
   </div>
-  <script type="text/javascript">
-   require(['jquery', 'React', 'login/login', 'legacy_code'], function(jQuery,React,Login) {
-    jQuery(document).ready(function() {
-      var div = jQuery('.global-table-cell');
-      React.render(React.createElement(Login,{
-        referer:   "/to-start",
-        autofocus: true,
-        nolinks : true
-      }),div[0]);
-      mixpanel.register({
-        Context : 'Login page - to start'
-      });
-      mixpanel.track('View login page - to start');
-    });
-   });
-  </script>
-
+  <script src="$cdnbaseurl$/compiled/all/tostart_login-$versioncode$.js" type="text/javascript"></script>
   </body>
 $htmlclosingtag()$
 ###
@@ -49,38 +33,11 @@ $htmlopentag()$
         <div class="to-start">
           <div class="form-container"></div>
           <script>
-           require(['jquery', 'React' , 'pages/special/header', 'pages/special/footer',  'to-start/to-start', 'legacy_code'], function(jQuery,React,Header,Footer,ToStart) {
-
-              jQuery(function(){
-                doc = new Document({id: "$documentid$"});
-                doc.recall(function() {
-                  var toStartDiv = jQuery('<div />');
-                  jQuery(".form-container").append(toStartDiv);
-                  jQuery(".to-start").append(footerDiv);
-                  React.render(ToStart({document: doc}), toStartDiv[0]);
-                });
-              });
-
-              var headerDiv = jQuery('<div/>');
-              var component = React.render(React.createElement(Header,{
-                   linkText : localization.pad.backToList,
-                   linkOnClick : function() {
-                      window.location.href = '/to-start';
-                   }
-                }), headerDiv[0]);
-
-              var footerDiv = jQuery('<div/>');
-              var component = React.render(React.createElement(Footer,{
-                }), footerDiv[0]);
-
-              jQuery(".to-start").prepend(headerDiv);
-
-            });
-
-            mixpanel.register({
-              Context : 'To Start'
-            });
-         </script>
+            var fromTemplate = {
+              documentId: "$documentid$"
+            };
+          </script>
+          <script src="$cdnbaseurl$/compiled/all/tostart_view-$versioncode$.js"></script>
         </div>
       </div>
     </div>
@@ -103,42 +60,11 @@ $htmlopentag()$
         <div class="to-start">
           <div class="list-container"></div>
           <script>
-           require(['jquery', 'React' , 'pages/special/header', 'pages/special/footer', 'to-start/templatelist', 'legacy_code'], function(jQuery,React,Header,Footer, ToStartList) {
-
-              jQuery(function(){
-
-              var listDiv = jQuery('.list-container');
-              var component = React.render(React.createElement(ToStartList,{
-                }), listDiv[0]);
-
-              var headerDiv = jQuery('<div/>');
-              var component = React.render(React.createElement(Header,{
-                   linkText : "$_headerLogOut()$",
-                   linkOnClick : function() {
-                     new Submit({
-                        url : "/logout_ajax",
-                        ajax : true,
-                        ajaxsuccess : function() {
-                          window.location.reload();}
-                     }).send();
-                   }
-                }), headerDiv[0]);
-
-              var footerDiv = jQuery('<div/>');
-              var component = React.render(React.createElement(Footer,{
-                }), footerDiv[0]);
-
-              jQuery(".to-start").prepend(headerDiv);
-              jQuery(".to-start").append(footerDiv);
-
-            });
-
-              mixpanel.register({
-                Context : 'List for to-start'
-              });
-
-           });
-         </script>
+            var fromTemplate = {
+              headerLogOut: "$_headerLogOut()$"
+            };
+          </script>
+          <script src="$cdnbaseurl$/compiled/all/tostart_list-$versioncode$.js"></script>
         </div>
       </div>
     </div>

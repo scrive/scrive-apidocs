@@ -1,9 +1,8 @@
-/** @jsx React.DOM */
-
-define(['legacy_code'], function() {
+var Backbone = require("backbone");
 
 
-return Backbone.Model.extend({
+
+module.exports = Backbone.Model.extend({
         defaults: {
             current: undefined,
             order: true
@@ -28,5 +27,3 @@ return Backbone.Model.extend({
             }
         }
   });
-});
-

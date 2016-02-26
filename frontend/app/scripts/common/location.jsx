@@ -1,8 +1,6 @@
 /* Compatibility wrapper for winow.location object */
 
-define([], function () {
-
-  return {
+  module.exports = {
 
     "origin": function () {
       if (window.location.origin !== undefined) {
@@ -17,5 +15,3 @@ define([], function () {
     }
 
   };
-
-});

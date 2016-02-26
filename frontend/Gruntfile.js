@@ -1,9 +1,13 @@
-var JSX_BIN = __dirname + "/node_modules/react-tools/bin/jsx ";
+var _ = require("underscore");
+var webpackConfig = require("./webpack.config.js");
+var generateVersionId = require("./custom_grunt_tasks/utils/version_id_generator");
 
 module.exports = function (grunt) {
   require("load-grunt-tasks")(grunt);
   require("time-grunt")(grunt);
   require("./custom_grunt_tasks/deploybuild")(grunt);
+  grunt.loadNpmTasks("grunt-webpack");
+  grunt.loadNpmTasks("grunt-contrib-uglify");
 
   var yeomanConfig = {
     app: require("./bower.json").appPath || "app",
@@ -28,6 +32,19 @@ module.exports = function (grunt) {
       }
     },
 
+    webpack: {
+      all: webpackConfig[0],
+      signview: webpackConfig[1],
+      allWatch: _.extend({
+        watch: true,
+        keepalive: true
+      }, webpackConfig[0]),
+      signviewWatch: _.extend({
+        watch: true,
+        keepalive: true
+      }, webpackConfig[1])
+    },
+
     jscs: {
       src: require("./jscs_manifest.json"),
       options: {
@@ -39,50 +56,15 @@ module.exports = function (grunt) {
     },
 
     karma: {
-      unitSingleRun: {
+      full: {
         singleRun: true,
         configFile: "karma.conf.js",
         autoWatch: false
-      }
-    },
-
-    requirejs: {
-      options: {
-        baseUrl: "<%= yeoman.app %>/compiled_jsx/",
-        include: ["../bower_components/requirejs/require.js"],
-        preserveLicenseComments: false
       },
-      systemWithSourceMap: {
-        options: {
-          mainConfigFile: "<%= yeoman.app %>/compiled_jsx/requirejs_system.js",
-          out: "<%= yeoman.dist %>/optimized-system.js",
-          optimize: "uglify2",
-          generateSourceMaps: true
-        }
-      },
-      systemNoSourceMap: {
-        options: {
-          mainConfigFile: "<%= yeoman.app %>/compiled_jsx/requirejs_system.js",
-          out: "<%= yeoman.dist %>/optimized-system.js",
-          optimize: "none",
-          generateSourceMaps: false
-        }
-      },
-      signviewWithSourceMap: {
-        options: {
-          mainConfigFile: "<%= yeoman.app %>/compiled_jsx/requirejs_signview.js",
-          out: "<%= yeoman.dist %>/optimized-signview.js",
-          optimize: "uglify2",
-          generateSourceMaps: true
-        }
-      },
-      signviewNoSourceMap: {
-        options: {
-          mainConfigFile: "<%= yeoman.app %>/compiled_jsx/requirejs_signview.js",
-          out: "<%= yeoman.dist %>/optimized-signview.js",
-          optimize: "none",
-          generateSourceMaps: false
-        }
+      fast: {
+        singleRun: true,
+        configFile: "karma.fast.conf.js",
+        autoWatch: false
       }
     },
 
@@ -93,7 +75,7 @@ module.exports = function (grunt) {
             dot: true,
             src: [
               ".tmp",
-              "<%= yeoman.app %>/compiled_jsx/",
+              "<%= yeoman.app %>/compiled/",
               "<%= yeoman.app %>/localization/",
               "<%= yeoman.dist %>/*",
               "!<%= yeoman.dist %>/.git*"
@@ -107,7 +89,7 @@ module.exports = function (grunt) {
             dot: true,
             src: [
               ".tmp",
-              "<%= yeoman.app %>/compiled_jsx/"
+              "<%= yeoman.app %>/compiled/"
             ]
           }
         ]
@@ -125,7 +107,6 @@ module.exports = function (grunt) {
       dist: {
         files: {
           src: [
-            "<%= yeoman.dist %>/*.js",
             "<%= yeoman.dist %>/*.css"
           ]
         }
@@ -140,12 +121,6 @@ module.exports = function (grunt) {
       },
       updateLastBuilt: {
         command: "echo '$(date +%s)' > <%= yeoman.dist %>/LAST_BUILT"
-      },
-      compileJsx: {
-        command: JSX_BIN + " -x jsx <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/"
-      },
-      watchJsx: {
-        command: JSX_BIN + " -x jsx -w <%= yeoman.app %>/scripts/ <%= yeoman.app %>/compiled_jsx/"
       },
       compileLocalization: {
         command: "cabal build localization",
@@ -179,6 +154,7 @@ module.exports = function (grunt) {
               "enable-cookies/**/*",
               "css/fonts/*.woff",
               "css/assets/*",
+              "compiled/**/*",
               "fonts/**/*",
               "img/**/*",
               "newsletter/**/*",
@@ -190,25 +166,6 @@ module.exports = function (grunt) {
               "bower_components/es6-promise/**"
             ]
           }
-        ]
-      }
-    },
-
-    gjslint: {
-      options: {
-        flags: [
-          "--disable 1,2,5,110,120,131,220",
-          "--custom_jsdoc_tags jsx,note,description"
-        ],
-        reporter: {
-          name: "console"
-        }
-      },
-      all: {
-        src: [
-          "Gruntfile.js",
-          "<%= yeoman.app %>/js/**/*.js",
-          "<%= yeoman.app %>/compiled_jsx/**/*.js"
         ]
       }
     },
@@ -228,7 +185,7 @@ module.exports = function (grunt) {
     concurrent: {
       dist: ["copy:dist"],
       watch: {
-        tasks: ["watch", "shell:watchJsx"],
+        tasks: ["watch", "webpack:allWatch", "webpack:signviewWatch"],
         options: {logConcurrentOutput: true}
       }
     },
@@ -242,6 +199,28 @@ module.exports = function (grunt) {
       },
       signview: {
         src: "<%= yeoman.app %>/less/signview-less-compiled.css"
+      }
+    },
+
+    uglify: {
+      vendor: {
+        options: {
+          sourceMap: true,
+          beautify: true
+        },
+        src: [
+          "<%= yeoman.app %>/bower_components/jquery/jquery.js",
+          "<%= yeoman.app %>/bower_components/underscore/underscore.js",
+          "<%= yeoman.app %>/bower_components/backbone/backbone.js",
+          "<%= yeoman.app %>/bower_components/react/react-with-addons.js",
+          "<%= yeoman.app %>/bower_components/spin.js/spin.js",
+          "<%= yeoman.app %>/bower_components/moment/moment.js",
+          "<%= yeoman.app %>/libs/*.js",
+          "<%= yeoman.app %>/js/utils/cookie.js",
+          "<%= yeoman.app %>/js/utils/time.js",
+          "<%= yeoman.app %>/js/global.js"
+        ],
+        dest: "<%= yeoman.app %>/compiled/vendor-" + generateVersionId() + ".js"
       }
     },
 
@@ -293,28 +272,27 @@ module.exports = function (grunt) {
     ]);
   });
 
+  grunt.registerTask("buildJs", function (target) {
+    var tasks = [
+      "uglify",
+      "webpack:all",
+      "webpack:signview"
+    ];
+
+    return grunt.task.run(tasks);
+  });
+
   grunt.registerTask("build", function (target) {
     var tasks = [
       "clean:dist",
       "compileGenerateLocalization",
-      "concurrent:dist",
-      "shell:compileJsx"
-    ];
-
-    if (target === "sourcemap") {
-      tasks.push("requirejs:systemWithSourceMap");
-      tasks.push("requirejs:signviewWithSourceMap");
-    } else {
-      tasks.push("requirejs:systemNoSourceMap");
-      tasks.push("requirejs:signviewNoSourceMap");
-    }
-
-    tasks = tasks.concat([
       "compileStyles",
+      "buildJs",
       "cssmin:dist",
       "deploybuild:dist",
+      "concurrent:dist",
       "shell:updateLastBuilt"
-    ]);
+    ];
 
     return grunt.task.run(tasks);
   });
@@ -324,14 +302,15 @@ module.exports = function (grunt) {
       "clean:server",
       "compileStyles",
       "compileGenerateLocalization",
-      "shell:compileJsx",
+      "uglify",
       "concurrent:watch"
     ]);
   });
 
   grunt.registerTask("compileStyles", ["less", "autoprefixer"]);
   grunt.registerTask("server:dist", ["build"]);
-  grunt.registerTask("test", ["karma:unitSingleRun"]);
-  grunt.registerTask("validateJs", ["gjslint"]);
+  grunt.registerTask("test", ["uglify", "karma:full"]);
+  grunt.registerTask("test:fast", ["karma:fast"]);
+  grunt.registerTask("validateJs", []);
   grunt.registerTask("default", ["gjslint", "build", "test"]);
 };

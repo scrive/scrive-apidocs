@@ -1,7 +1,21 @@
+var React = require("react");
+var CompanieUsersAdminList = require("../../scripts/admin/companyusersadminlist");
+var DocumentsList = require("../../scripts/admin/documentslist");
+var CompanyBrandingPanel = require("../../scripts/account/branding/companybrandingpanel");
+var Backbone = require("backbone");
+var AdminCompanyDetails = require("./companydetails.js").AdminCompanyDetails;
+var AdminPayments = require("./payments.js").AdminPayments;
+var Stats = require("../account/usersandstats/stats.js").Stats;
+var Tab = require("../tabs.js").Tab;
+var $ = require("jquery");
+var _ = require("underscore");
+var KontraTabs = require("../tabs.js").KontraTabs;
+
+require("../utils/time");
+
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
 
-define(['React','admin/companyusersadminlist','admin/documentslist','account/branding/companybrandingpanel','Backbone', 'legacy_code'], function(React,CompanieUsersAdminList,DocumentsList,CompanyBrandingPanel) {
 
 var CompanyAdminModel = Backbone.Model.extend({
   companyid : function() {
@@ -138,7 +152,7 @@ var CompanyAdminView = Backbone.View.extend({
 });
 
 
-window.CompanyAdmin = function(args) {
+var CompanyAdmin = exports.CompanyAdmin = function(args) {
           var model = new CompanyAdminModel(args);
           var view =  new CompanyAdminView({model : model, el : $("<div/>")});
           return new Object({
@@ -146,4 +160,3 @@ window.CompanyAdmin = function(args) {
             });
 };
 
-});

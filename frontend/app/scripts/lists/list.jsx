@@ -1,6 +1,21 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
+var ReloadableMixin = require("../common/reloadable_mixin");
+var TextFiltering = require("./textfiltering");
+var Pagination = require("./pagination");
+var ListModel = require("./listmodel");
+var ListAction = require("./listaction");
+var ListSelectActions = require("./listselectaction");
+var SelectFilter = require("./selectfilter");
+var SelectAjaxFilter = require("./selectajaxfilter");
+var SelectFromToFilter = require("./selectfromtofilter");
+var ListHeader = require("./listfooter");
+var ListFooter = require("./listheader");
+var Column = require("./column");
+var Sublist = require("./sublist");
+var ListSubHeader = require("./listsubheader");
+var _ = require("underscore");
 
-define(['React', 'common/backbone_mixin','common/reloadable_mixin','legacy_code', 'lists/textfiltering', 'lists/pagination','lists/listmodel', 'lists/listaction','lists/listselectaction','lists/selectfilter','lists/selectajaxfilter','lists/selectfromtofilter','lists/listfooter','lists/listheader','lists/column','lists/sublist','lists/listsubheader'], function(React, BackboneMixin, ReloadableMixin, _legacyCode,TextFiltering,Pagination,ListModel,ListAction,ListSelectActions,SelectFilter,SelectAjaxFilter,SelectFromToFilter,ListHeader,ListFooter,Column,Sublist,ListSubHeader) {
 
 
 var List = React.createClass({
@@ -239,7 +254,7 @@ var List = React.createClass({
 });
 
 
-return {
+module.exports = {
   List : List,
   TextFiltering : TextFiltering,
   Pagination : Pagination,
@@ -255,5 +270,3 @@ return {
   Sublist : Sublist,
   ReloadableContainer : ReloadableMixin
 };
-});
-

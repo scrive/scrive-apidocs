@@ -1,6 +1,6 @@
+var jQuery = require("jquery");
 // Listen on height changes to an element.
-define(["jquery"], function (jQuery) {
-  return function (el, cb) {
+  module.exports = function (el, cb) {
     if (el instanceof jQuery) {
       el = el[0];
     }
@@ -23,4 +23,3 @@ define(["jquery"], function (jQuery) {
       el.onElementHeightChangeTimer = setTimeout(run, 200);
     })();
   }
-});

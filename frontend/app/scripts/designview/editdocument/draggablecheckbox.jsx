@@ -1,8 +1,13 @@
-define(["legacy_code", "React", "designview/editdocument/createfieldsmixin",
-        "designview/editdocument/draggablemixin"],
-function (legacy_code, React, CreateFieldsMixin, DraggableMixin) {
+var React = require("react");
+var CreateFieldsMixin = require("./createfieldsmixin");
+var DraggableMixin = require("./draggablemixin");
+var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
+var Field = require("../../../js/fields.js").Field;
+var FieldPlacement = require("../../../js/placements.js").FieldPlacement;
+var $ = require("jquery");
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [CreateFieldsMixin, DraggableMixin],
 
     newCheckboxExpectedSize: function () {
@@ -124,4 +129,3 @@ function (legacy_code, React, CreateFieldsMixin, DraggableMixin) {
       );
     }
   });
-});

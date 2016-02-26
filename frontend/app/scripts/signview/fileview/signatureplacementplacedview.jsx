@@ -1,8 +1,12 @@
-define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin",
-        "signview/signaturemodal/signaturemodal", "common/zoomtools", "legacy_code"],
-  function (React, PlacementMixin, TaskMixin, SignatureModal, zoomTools) {
+var React = require("react");
+var PlacementMixin = require("./placement_mixin");
+var TaskMixin = require("../tasks/task_mixin");
+var SignatureModal = require("../signaturemodal/signaturemodal");
+var zoomTools = require("../../common/zoomtools");
+var PageTask = require("../../../js/tasks.js").PageTask;
+var $ = require("jquery");
 
-  return React.createClass({
+  module.exports = React.createClass({
     _openTry: 0,
     _openModal: false,
 
@@ -131,4 +135,3 @@ define(["React", "signview/fileview/placement_mixin", "signview/tasks/task_mixin
       );
     }
   });
-});

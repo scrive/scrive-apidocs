@@ -1,6 +1,7 @@
-/** @jsx React.DOM */
+var Backbone = require("backbone");
+var React = require("react");
+var Select = require("../../common/select");
 
-define(["Backbone", "React", "common/select", "legacy_code"], function (Backbone, React, Select) {
   var SignatorySelector = React.createClass({
     propTypes: {
       field: React.PropTypes.instanceOf(Backbone.Model).isRequired,
@@ -59,5 +60,4 @@ define(["Backbone", "React", "common/select", "legacy_code"], function (Backbone
     }
   });
 
-  return SignatorySelector;
-});
+  module.exports = SignatorySelector;

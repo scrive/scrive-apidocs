@@ -1,3 +1,10 @@
+var Backbone = require("backbone");
+var jQuery = require("jquery");
+var _ = require("underscore");
+var $ = require("jquery");
+var Cookies = require("./utils/cookie.js").Cookies;
+var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
+
 /* Use Submit object to skip usage of form elements.
  * Usage
  *  var new Submit({
@@ -6,9 +13,8 @@
  *              });
 */
 
-define(['Backbone', 'legacy_code'], function() {
 
-window.Submit = Backbone.Model.extend({
+var Submit = exports.Submit = Backbone.Model.extend({
     defaults : {
         url : window.location, // Fix for IE - new version can cut off last part of url, if not followed by slash
         method : "GET",
@@ -151,4 +157,3 @@ window.Submit = Backbone.Model.extend({
   }
 });
 
-});

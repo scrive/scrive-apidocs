@@ -1,10 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Backbone = require("backbone");
+var Select = require("../common/select");
+var LanguageSelect = require("./languageselect");
 
 
-define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(React, Backbone, Select,LanguageSelect) {
   var LoggedInFooter = React.createClass({
     propTypes: {
-      thin : React.PropTypes.bool,
       color :  React.PropTypes.string,
       textcolor :  React.PropTypes.string,
       highlightcolor : React.PropTypes.string
@@ -14,7 +15,7 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
      var labelStyle = this.props.color ? {textShadow : "none", color : this.props.textcolor} : {};
      return (
        <footer
-         className={"site logged-in" + (this.props.thin ? "thin" : "")}
+         className={"site logged-in"}
          style={mainStyle}
          >
         <div className="poweredbyscrive">
@@ -40,7 +41,6 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
 
   var NotLoggedInFooter = React.createClass({
     propTypes: {
-      thin : React.PropTypes.bool,
       httplink :  React.PropTypes.string,
       langprefix : React.PropTypes.string,
       color :  React.PropTypes.string,
@@ -169,10 +169,9 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
 
 
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       logged: React.PropTypes.bool,
-      thin : React.PropTypes.bool,
       httplink :  React.PropTypes.string,
       langprefix : React.PropTypes.string,
       color :  React.PropTypes.string,
@@ -183,14 +182,12 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
 
       if (this.props.logged) {
         return (<LoggedInFooter
-                  thin={this.props.thin}
                   color={this.props.color}
                   textcolor={this.props.textcolor}
                   highlightcolor={this.props.highlightcolor}
                 />);
       } else {
         return (<NotLoggedInFooter
-                  thin={this.props.thin}
                   httplink={this.props.httplink}
                   langprefix={this.props.langprefix}
                   color={this.props.color}
@@ -200,6 +197,3 @@ define(['React', 'Backbone', 'common/select', 'pages/languageselect'], function(
       }
     }
   });
-
-});
-

@@ -1,4 +1,7 @@
-define(["Backbone", "html2canvas", "legacy_code"], function (Backbone, html2canvas) {
+var Backbone = require("backbone");
+var html2canvas = require("html2canvas");
+var $ = require("jquery");
+var _ = require("underscore");
 
 /* takeScreenshot(success, error, timeout, timeoutval):
     Render a canvas with current viewport and calls exactly one of three callbacks:
@@ -18,7 +21,7 @@ define(["Backbone", "html2canvas", "legacy_code"], function (Backbone, html2canv
       return newCanvas;
     };
 
-    window.takeScreenshot = function (success, error, timeout, timeoutval, extraErrorLogParams) {
+    exports.takeScreenshot = function (success, error, timeout, timeoutval, extraErrorLogParams) {
         var mixpanelScreenshotError = function (reason, extraParams) {
           var errorInfo = {"Reason": reason,
                            "Browser": $.browser.name,
@@ -66,4 +69,3 @@ define(["Backbone", "html2canvas", "legacy_code"], function (Backbone, html2canv
           }
         });
     };
-});

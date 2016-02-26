@@ -25,12 +25,7 @@ $htmlopentag()$
         </span>
         <span class='verificationContainer'>  </span>
       </div>
-
-      <script>
-      require(['jquery', 'legacy_code'], function(jQuery) {
-          jQuery('.verificationContainer').append(FileVerifier.init().view.el);
-      });
-      </script>
+      <script src="$cdnbaseurl$/compiled/all/verification-$versioncode$.js"></script>
     </div>
   </div>
   $pageFooter()$

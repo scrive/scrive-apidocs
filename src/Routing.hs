@@ -21,7 +21,6 @@ module Routing ( hGet
                , allowHttp
                , toK0, toK1, toK2, toK3, toK4, toK5, toK6
                , ToResp(..)
-               , ThinPage(..)
                ) where
 
 import Data.Functor
@@ -41,8 +40,6 @@ import Util.CSVUtil
 import Util.ZipUtil
 import Utils.HTTP
 
-newtype ThinPage = ThinPage String
-
 class ToResp a where
     toResp :: a -> Kontra Response
 
@@ -57,9 +54,6 @@ instance ToResp KontraLink where
 
 instance ToResp String where
     toResp = page . return
-
-instance ToResp ThinPage where
-    toResp = pageThin . return
 
 instance ToResp JSValue where
     toResp = simpleJsonResponse
@@ -96,13 +90,6 @@ page :: Kontra String -> Kontra Response
 page pageBody = do
     pb <- pageBody
     renderFromBody pb
-
-{- To change thin page type to full response -}
-pageThin :: Kontra ThinPage -> Kontra Response
-pageThin pageBody = do
-    ThinPage pb  <- pageBody
-    renderFromBodyThin pb
-
 
 hPost :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hPost = hPostWrap (https . guardXToken)

@@ -1,4 +1,7 @@
-define(["legacy_code", "backend", "util", "React", "designview/participants/confirmationdeliveryicon"], function(legacy_code, backend, util, React, ConfirmationDeliveryIcon) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var ConfirmationDeliveryIcon = require("../../../scripts/designview/participants/confirmationdeliveryicon");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -57,4 +60,3 @@ define(["legacy_code", "backend", "util", "React", "designview/participants/conf
       server.restore();
     });
   });
-});

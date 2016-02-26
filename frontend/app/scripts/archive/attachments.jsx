@@ -1,9 +1,17 @@
-/** @jsx React.DOM */
+var React = require("react");
+var List = require("../lists/list");
+var moment = require("moment");
+var UploadButton = require("../common/uploadbutton");
+var Confirmation = require("../../js/confirmations.js").Confirmation;
+var jQuery = require("jquery");
+var Submit = require("../../js/submits.js").Submit;
+var _ = require("underscore");
+var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+var $ = require("jquery");
 
-define(['React','lists/list', 'moment', 'legacy_code','common/uploadbutton'], function(React, List,moment,_legacy,UploadButton) {
 
 
-return React.createClass({
+module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
     attachmentDownloadLink : function(d) {
       return "/a/download/"+ d.field("id") + "/" + d.field("title") +".pdf";
@@ -167,8 +175,4 @@ return React.createClass({
         </List.List>
       );
     }
-});
-
-
-
 });

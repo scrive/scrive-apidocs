@@ -1,7 +1,10 @@
-define(["legacy_code", "React", "Backbone", "signview/attachments/signatoryattachmentrowview"],
-  function (legacy_code, React, Backbone, SignatoryAttachmentRow) {
+var React = require("react");
+var Backbone = require("backbone");
+var SignatoryAttachmentRow = require("./signatoryattachmentrowview");
+var Document = require("../../../js/documents.js").Document;
+var _ = require("underscore");
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Document).isRequired
     },
@@ -20,4 +23,3 @@ define(["legacy_code", "React", "Backbone", "signview/attachments/signatoryattac
       );
     }
   });
-});

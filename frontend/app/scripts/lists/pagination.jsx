@@ -1,8 +1,7 @@
-/** @jsx React.DOM */
+var React = require("react");
 
-define(['React','legacy_code'], function(React) {
 
-return React.createClass({
+module.exports = React.createClass({
     propTypes: {
       maxNextPages : React.PropTypes.number,
       showOnlyForMultiplePages : React.PropTypes.bool
@@ -61,5 +60,3 @@ return React.createClass({
       );
     }
   });
-});
-

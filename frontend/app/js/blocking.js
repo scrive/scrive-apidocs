@@ -1,10 +1,19 @@
-define(['Backbone', 'moment', 'common/language_service', 'legacy_code'], function(Backbone, moment, Language) {
+var Backbone = require("backbone");
+var moment = require("moment");
+var Language = require("../scripts/common/language_service");
+var _ = require("underscore");
+var $ = require("jquery");
+var Confirmation = require("./confirmations.js").Confirmation;
+var PricePage = require("./payments.js").PricePage;
+var BlockingInfoModel = require("./blocking.js").BlockingInfoModel;
+var BlockingInfoView = require("./blocking.js").BlockingInfoView;
+
 
     /*
       Holds information relevant to blocking for a user.
 
     */
-    window.BlockingInfoModel = Backbone.Model.extend({
+    var BlockingInfoModel = exports.BlockingInfoModel = Backbone.Model.extend({
         defaults: {
             block: false,
             dunning: false
@@ -89,7 +98,7 @@ define(['Backbone', 'moment', 'common/language_service', 'legacy_code'], functio
         }
     });
 
-    window.BlockingInfoView = Backbone.View.extend({
+    var BlockingInfoView = exports.BlockingInfoView = Backbone.View.extend({
         className: 'blocking-info',
         initialize: function(args) {
             _.bindAll(this,  'render');
@@ -411,7 +420,7 @@ define(['Backbone', 'moment', 'common/language_service', 'legacy_code'], functio
         }
     });
 
-    window.Blocking = function() {
+    var Blocking = exports.Blocking = function() {
         var model = new BlockingInfoModel({});
         var view = new BlockingInfoView({model:model});
         model.reload();
@@ -447,4 +456,3 @@ define(['Backbone', 'moment', 'common/language_service', 'legacy_code'], functio
         };
     };
 
-});

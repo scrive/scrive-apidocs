@@ -1,6 +1,7 @@
-/** @jsx React.DOM */
+var Backbone = require("backbone");
+var React = require("react");
+var Checkbox = require("../../common/checkbox");
 
-define(["Backbone", "React", "common/checkbox", "legacy_code"], function (Backbone, React, Checkbox) {
   var Obligatory = React.createClass({
     propTypes: {
       field: React.PropTypes.instanceOf(Backbone.Model).isRequired
@@ -36,5 +37,4 @@ define(["Backbone", "React", "common/checkbox", "legacy_code"], function (Backbo
     }
   });
 
-  return Obligatory;
-});
+  module.exports = Obligatory;

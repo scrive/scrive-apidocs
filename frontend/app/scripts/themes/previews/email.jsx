@@ -1,12 +1,15 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var DomainViewModel = require("../../admin/brandeddomain/domainviewmodel");
+var Theme = require("../theme");
+var Button = require("../../common/button");
+var UploadImageButton = require("../../common/uploadimagebutton");
+var Select = require("../../common/select");
+var InfoTextInput = require("../../common/infotextinput");
+var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 
-define(["React", "common/backbone_mixin", "admin/brandeddomain/domainviewmodel", "themes/theme",
-        "legacy_code", "common/button", "common/uploadimagebutton", "common/select",
-        "common/infotextinput", "common/htmltextwithsubstitution"],
-       function(React, BackboneMixin, DomainViewModel,Theme, _Legacy, Button,
-                UploadImageButton, Select, InfoTextInput, HtmlTextWithSubstitution) {
 
-return React.createClass({
+module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.model];
@@ -55,4 +58,3 @@ return React.createClass({
       );
     }
   });
-});

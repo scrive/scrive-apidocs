@@ -1,9 +1,12 @@
-define(["legacy_code_for_signview", "backend", "util", "React", "signview/identify/swedish/swedishidentifymodel",
-        "signview/identify/swedish/swedishidentifyview", "signview/identify/swedish/swedishidentify",
-        "signview/identify/swedish/swedishproblem", "signview/identify/swedish/swedishprocessing",
-        "eleg/bankidsigning"],
-  function(legacy_code, backend, util, React, SwedishIdentifyModel,SwedishIdentifyView, SwedishIdentify, SwedishProcessing,
-           SwedishProblem, BankIDSigning) {
+var backend = require("../../../backend");
+var util = require("../../../util");
+var React = require("react");
+var SwedishIdentifyModel = require("../../../../scripts/signview/identify/swedish/swedishidentifymodel");
+var SwedishIdentifyView = require("../../../../scripts/signview/identify/swedish/swedishidentifyview");
+var SwedishIdentify = require("../../../../scripts/signview/identify/swedish/swedishidentify");
+var SwedishProcessing = require("../../../../scripts/signview/identify/swedish/swedishproblem");
+var SwedishProblem = require("../../../../scripts/signview/identify/swedish/swedishprocessing");
+var BankIDSigning = require("../../../../scripts/eleg/bankidsigning");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -101,4 +104,3 @@ define(["legacy_code_for_signview", "backend", "util", "React", "signview/identi
       server.restore();
     });
   });
-});

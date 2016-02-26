@@ -1,6 +1,8 @@
-/** @jsx React.DOM */
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var Button = require("../../common/button");
 
-define(["Underscore", "Backbone", "React", "common/button", "legacy_code"], function (_, Backbone, React, Button) {
   var Done = React.createClass({
     propTypes: {
       field: React.PropTypes.instanceOf(Backbone.Model).isRequired,
@@ -32,5 +34,4 @@ define(["Underscore", "Backbone", "React", "common/button", "legacy_code"], func
     }
   });
 
-  return Done;
-});
+  module.exports = Done;

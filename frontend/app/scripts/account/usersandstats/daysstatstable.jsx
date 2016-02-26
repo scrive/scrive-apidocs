@@ -1,8 +1,8 @@
-/** @jsx React.DOM */
+var React = require("react");
+var List = require("../../lists/list");
 
-define(['React', 'lists/list','legacy_code'], function(React, List) {
 
-return React.createClass({
+module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
     render: function() {
       var self = this;
@@ -79,7 +79,3 @@ return React.createClass({
       );
     }
 });
-
-
-});
-

@@ -5,37 +5,13 @@ pageDocumentView=
 <div class='place-for-authorview'>
 </div>
 <script>
- require(['jquery', 'legacy_code'], function(jQuery) {
-jQuery(function(){
-    var authorView = new AuthorView({
-      id:"$documentid$"
-       $if(siglinkid)$
-      , viewer : new DocumentViewer({
-          signatoryid : "$siglinkid$",
-          authorcompanyadmin : $if(authorcompanyadmin)$true$else$false$endif$
-          })
-      $elseif(authorcompanyadmin)$
-      , viewer : new DocumentViewer({
-          authorcompanyadmin : true
-          })
-      $endif$
-    });
-    jQuery(".place-for-authorview").replaceWith(authorView.el());
-});
-
-mixpanel.register({DocumentID : "$documentid$"
-                   $if(siglinkid)$
-                   ,'Signatory ID' : "$siglinkid$"
-                   $elseif(authorcompanyadmin)$
-                   ,'Admin of author?' : true
-                   $endif$
-                  });
-  mixpanel.track('View Author View');
-
-});
-
+var fromTemplate = {
+  documentId:"$documentid$",
+  signatoryid : "$siglinkid$",
+  authorcompanyadmin : $if(authorcompanyadmin)$true$else$false$endif$
+};
 </script>
+<script src="$cdnbaseurl$/compiled/all/authorview-$versioncode$.js"></script>
 </div>
 </div>
-
 ####

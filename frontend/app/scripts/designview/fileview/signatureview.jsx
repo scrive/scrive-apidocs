@@ -1,10 +1,16 @@
-define(["legacy_code", "Backbone", "React", "common/backbone_mixin",
-        "designview/typesetters/signaturetypesetterview", "common/htmltextwithsubstitution",
-        "designview/editdocument/draggablemixin", "designview/fileview/hastypesettermixin"],
-  function (legacy_code, Backbone, React, BackboneMixin, SignatureTypeSetterView,
-            HtmlTextWithSubstitution, DraggableMixin, HasTypeSetterMixin) {
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var SignatureTypeSetterView = require("../typesetters/signaturetypesetterview");
+var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
+var DraggableMixin = require("../editdocument/draggablemixin");
+var HasTypeSetterMixin = require("./hastypesettermixin");
+var FieldPlacement = require("../../../js/placements.js").FieldPlacement;
+var $ = require("jquery");
+var _ = require("underscore");
+var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 
- return React.createClass({
+ module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(FieldPlacement).isRequired,
       pageWidth: React.PropTypes.number.isRequired,
@@ -143,4 +149,3 @@ define(["legacy_code", "Backbone", "React", "common/backbone_mixin",
       );
     }
   });
-});

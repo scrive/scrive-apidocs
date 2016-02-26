@@ -1,9 +1,9 @@
-/** @jsx React.DOM */
+var Backbone = require("backbone");
+var Submit = require("../../js/submits.js").Submit;
 
 /* View model for  */
-define(['Backbone', 'legacy_code'], function() {
 
-return Backbone.Model.extend({
+module.exports = Backbone.Model.extend({
   defaults: {
    "id" : undefined,
    "name" : undefined,
@@ -153,7 +153,4 @@ return Backbone.Model.extend({
       theme : JSON.stringify(self.attributes)
     }).send();
   }
-});
-
-
 });

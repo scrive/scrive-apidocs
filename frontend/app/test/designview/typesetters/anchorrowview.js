@@ -1,4 +1,8 @@
-define(['legacy_code', 'backend', 'util', 'React', 'designview/typesetters/anchorrowview'], function(legacy_code, backend, util, React, AnchorRow) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var AnchorRow = require("../../../scripts/designview/typesetters/anchorrowview");
+var PlacementAnchor = require("../../../js/anchors").PlacementAnchor;
 
   var TestUtils = React.addons.TestUtils;
 
@@ -52,4 +56,3 @@ define(['legacy_code', 'backend', 'util', 'React', 'designview/typesetters/ancho
       server.restore();
     });
   });
-});

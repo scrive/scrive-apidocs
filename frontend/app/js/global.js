@@ -5,8 +5,6 @@ if (typeof String.prototype.startsWith != 'function') {
   };
 }
 
-require(['Backbone', 'legacy_code'], function(Backbone) {
-
 // globally track errors
 window.onerror = function(msg, url, line) {
     mixpanel.track('Error', {
@@ -69,7 +67,6 @@ window.mixpanelPeopleSetTimeout = function(props, callback, ms) {
         }
     }, ms);
 };
-});
 
 //make sure we've got console logging/warning
 if (!window.console) {
@@ -117,8 +114,6 @@ function parseQueryString() {
     return urlParams;
 }
 
-require(['Backbone', 'legacy_code'], function() {
-
 /**
  * For Cross-Site Request Forgery (CSRF) Attacks
  * 1. Grab the cookie in Javascript, which protects
@@ -152,9 +147,7 @@ $(document).ready(function() {
 });
 
 
-});
-
-function capitaliseFirstLetter(string)
+window.capitaliseFirstLetter = function (string)
 {   if (string == undefined || string.length == 0) return string;
     return string.charAt(0).toUpperCase() + string.slice(1);
 }

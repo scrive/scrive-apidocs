@@ -1,3 +1,8 @@
+var Backbone = require("backbone");
+var _ = require("underscore");
+var $ = require("jquery");
+var Arrow = require("./arrows.js").Arrow;
+
 /*
  * General list of tasks (actions) that user should perform on page.
  *
@@ -39,9 +44,8 @@
        $('body').append(arrow.el())
  */
 
-define(['Backbone', 'legacy_code'], function() {
 
-window.PageTask = Backbone.Model.extend({
+var PageTask = exports.PageTask = Backbone.Model.extend({
   defaults: {
     active: false,
     complete   : false, // Cache for isCompleate
@@ -130,7 +134,7 @@ window.PageTask = Backbone.Model.extend({
   }
 });
 
-window.PageTasks = Backbone.Model.extend({
+var PageTasks = exports.PageTasks = Backbone.Model.extend({
   defaults: {
     tasks: [],
     active : undefined
@@ -348,7 +352,7 @@ var PageTasksArrowView = Backbone.View.extend({
   }
 });
 
-window.PageTasksArrow = function(args){
+var PageTasksArrow = exports.PageTasksArrow = function(args){
         var model = args.tasks;
         var view = new PageTasksArrowView({
                         model: model,
@@ -371,4 +375,3 @@ window.PageTasksArrow = function(args){
          };
 };
 
-});

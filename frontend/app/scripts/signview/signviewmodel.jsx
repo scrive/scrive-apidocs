@@ -1,7 +1,15 @@
-define(["React", "Backbone", "Underscore"],
-  function (React, Backbone, _) {
+var React = require("react");
+var Backbone = require("backbone");
+var _ = require("underscore");
+var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
+var EmailValidation = require("../../js/validation.js").EmailValidation;
+var SSNForNOBankIDValidation = require("../../js/validation.js").SSNForNOBankIDValidation;
+var SSNForSEBankIDValidation = require("../../js/validation.js").SSNForSEBankIDValidation;
+var PhoneValidation = require("../../js/validation.js").PhoneValidation;
+var PageTasks = require("../../js/tasks.js").PageTasks;
+var PageTasksArrow = require("../../js/tasks.js").PageTasksArrow;
 
-    return Backbone.Model.extend({
+    module.exports = Backbone.Model.extend({
     defaults: {
       hasChangedPin: false,
       hasTakenFirstScreenshot: false,
@@ -308,6 +316,4 @@ define(["React", "Backbone", "Underscore"],
         return true;
       });
     }
-  });
-
   });

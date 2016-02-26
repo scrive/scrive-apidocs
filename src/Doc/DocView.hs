@@ -28,7 +28,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
-import AppView (standardPageFields, companyUIForPage, simpleHtmlResonseClrFlash)
+import AppView (standardPageFields, companyUIForPage, simpleHtmlResonseClrFlash, entryPointFields)
 import BrandedDomain.BrandedDomain
 import Company.CompanyUI
 import Company.Model
@@ -45,8 +45,8 @@ import User.Utils
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
-pageCreateFromTemplate :: TemplatesMonad m => m String
-pageCreateFromTemplate = renderTemplate_ "createFromTemplatePage"
+pageCreateFromTemplate :: TemplatesMonad m => Context -> m String
+pageCreateFromTemplate ctx = renderTemplate "createFromTemplatePage" $ entryPointFields ctx
 
 pageDocumentDesign :: Kontrakcja m
                    => Context
@@ -60,16 +60,17 @@ pageDocumentDesign ctx document ad = do
          standardPageFields ctx mcompany ad
 
 pageDocumentView :: TemplatesMonad m
-                    => Document
+                    => Context
+                    -> Document
                     -> Maybe SignatoryLink
                     -> Bool
                     -> m String
-pageDocumentView document msiglink authorcompanyadmin =
+pageDocumentView ctx document msiglink authorcompanyadmin =
   renderTemplate "pageDocumentView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ fmap (show . signatorylinkid) msiglink
       F.value "authorcompanyadmin" $ authorcompanyadmin
-
+      entryPointFields ctx
 
 pageDocumentSignView :: Kontrakcja m
                     => Context

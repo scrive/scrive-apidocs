@@ -1,9 +1,18 @@
+var Backbone = require("backbone");
+var Stats = require("./stats.js").Stats;
+var CompanyAccounts = require("./companyaccounts.js").CompanyAccounts;
+var KontraTabs = require("../../tabs.js").KontraTabs;
+var Tab = require("../../tabs.js").Tab;
+var _ = require("underscore");
+var $ = require("jquery");
+var CompanyAccountsAndStatsModel = require("./companyaccountsandstats.js").CompanyAccountsAndStatsModel;
+var CompanyAccountsAndStatsView = require("./companyaccountsandstats.js").CompanyAccountsAndStatsView;
+
 /*
  * View for company branding. It contains two tabs - one with mail branding and one with email branding.
  */
-define(['Backbone', 'legacy_code'], function() {
 
-window.CompanyAccountsAndStatsModel = Backbone.Model.extend({
+var CompanyAccountsAndStatsModel = exports.CompanyAccountsAndStatsModel = Backbone.Model.extend({
     initialize: function(args) {
       this.args = args;
     },
@@ -48,7 +57,7 @@ window.CompanyAccountsAndStatsModel = Backbone.Model.extend({
     }
 });
 
-window.CompanyAccountsAndStatsView = Backbone.View.extend({
+var CompanyAccountsAndStatsView = exports.CompanyAccountsAndStatsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, "render");
     this.model.bind("reset", this.render);
@@ -63,7 +72,7 @@ window.CompanyAccountsAndStatsView = Backbone.View.extend({
   }
 });
 
-window.CompanyAccountsAndStats = function(args) {
+var CompanyAccountsAndStats = exports.CompanyAccountsAndStats = function(args) {
     var model = new CompanyAccountsAndStatsModel(args || {});
     var view = new CompanyAccountsAndStatsView({ model: model, el:$("<div class='tab-container companyaccountsandstats'/>") });
     return {
@@ -72,4 +81,3 @@ window.CompanyAccountsAndStats = function(args) {
     };
 };
 
-});

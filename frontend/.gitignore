@@ -6,6 +6,7 @@ coverage
 .bower-cache/
 .bower-registry/
 app/compiled_jsx
+app/compiled
 .idea
 app/less/less-compiled.css
 app/less/less-compiled.css.map

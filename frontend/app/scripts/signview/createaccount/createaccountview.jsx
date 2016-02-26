@@ -1,9 +1,12 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Backbone = require("backbone");
+var Button = require("../../common/button");
+var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
+var Document = require("../../../js/documents.js").Document;
+var Submit = require("../../../js/submits.js").Submit;
+var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 
-define(["React", "Backbone", "legacy_code", "common/button", "common/htmltextwithsubstitution"],
-function (React, Backbone, _legacy, Button, HtmlTextWithSubstitution) {
-
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       document: React.PropTypes.instanceOf(Document).isRequired
     },
@@ -17,7 +20,7 @@ function (React, Backbone, _legacy, Button, HtmlTextWithSubstitution) {
         email: currentSignatory.email(),
         ajax: true,
         ajaxsuccess: function (userObject) {
-          userObjectParsed = JSON.parse(userObject);
+          var userObjectParsed = JSON.parse(userObject);
           if (userObjectParsed.userid) {
             var userid = userObjectParsed.userid;
             mixpanel.alias(userid);
@@ -85,4 +88,3 @@ function (React, Backbone, _legacy, Button, HtmlTextWithSubstitution) {
       );
     }
   });
-});

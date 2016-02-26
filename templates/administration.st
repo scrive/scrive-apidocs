@@ -5,10 +5,11 @@ adminsmain=
 <div class='blocking-box'></div>
 <div class='admin'></div>
 <script>
- require(['jquery', 'legacy_code'], function(jQuery) {
-    jQuery(".admin").append(new Admin({isAdmin: $if(admin)$true$else$false$endif$}).el());
- });
+  var fromTemplate = {
+    isAdmin: $if(admin)$true$else$false$endif$
+  };
 </script>
+<script src="$cdnbaseurl$/compiled/all/admin-$versioncode$.js"></script>
 </div>
 </div>
 ###
@@ -18,10 +19,11 @@ adminuser=
 <div class='blocking-box'></div>
 <div class='admin'></div>
 <script>
- require(['jquery', 'legacy_code'], function(jQuery) {
-    jQuery(".admin").append(new UserAdmin({userid: "$userid$"}).el());
- });
+var fromTemplate = {
+  userId: "$userid$"
+};
 </script>
+<script src="$cdnbaseurl$/compiled/all/useradmin-$versioncode$.js"></script>
 </div>
 </div>
 ####
@@ -31,10 +33,11 @@ admincompany=
 <div class='blocking-box'></div>
 <div class='admin'></div>
 <script>
- require(['jquery', 'legacy_code'], function(jQuery) {
-    jQuery(".admin").append(new CompanyAdmin({companyid: "$companyid$"}).el());
- });
+var fromTemplate = {
+  companyId: "$companyid$"
+};
 </script>
+<script src="$cdnbaseurl$/compiled/all/companyadmin-$versioncode$.js"></script>
 </div>
 </div>
 ####

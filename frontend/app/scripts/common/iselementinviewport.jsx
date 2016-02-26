@@ -1,6 +1,6 @@
+var jQuery = require("jquery");
 // Determine if an element is in viewport.
-define(["jquery"], function (jQuery) {
-  return function (el) {
+  module.exports = function (el) {
     var rect = el.getBoundingClientRect();
 
     if (el instanceof jQuery) {
@@ -14,4 +14,3 @@ define(["jquery"], function (jQuery) {
       rect.right <= (window.innerWidth || document.documentElement.clientWidth)
     );
   }
-});

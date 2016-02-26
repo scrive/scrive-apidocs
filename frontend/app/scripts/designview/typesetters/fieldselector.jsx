@@ -1,12 +1,15 @@
-/** @jsx React.DOM */
-
-define(["Underscore", "React", "common/button", "common/select",
-        "common/editabletext", "legacy_code"],
-  function (_, React, Button, Select, EditableText) {
+var _ = require("underscore");
+var React = require("react");
+var Button = require("../../common/button");
+var Select = require("../../common/select");
+var EditableText = require("../../common/editabletext");
+var Backbone = require("backbone");
+var $ = require("jquery");
+var Field = require("../../../js/fields.js").Field;
 
   var SELECT_TEXT_WIDTH = 218;
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
       onSave: React.PropTypes.func.isRequired
@@ -179,4 +182,3 @@ define(["Underscore", "React", "common/button", "common/select",
       );
     }
   });
-});

@@ -1,9 +1,8 @@
-/** @jsx React.DOM */
+var $ = require("jquery");
 
 
-define(['Backbone', 'legacy_code'], function() {
 
-return {
+module.exports = {
   showToolTip : function(status,e) {
      $('.tooltip-container').remove();
      var body = $("<div class='tooltip-body'/>");
@@ -22,7 +21,3 @@ return {
      $('.tooltip-container').remove();
   }
 };
-
-
-
-});

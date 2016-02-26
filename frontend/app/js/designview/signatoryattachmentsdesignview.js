@@ -1,7 +1,16 @@
+var Backbone = require("backbone");
+var React = require("react");
+var Select = require("../../scripts/common/select");
+var _ = require("underscore");
+var Button = require("../buttons.js").Button;
+var $ = require("jquery");
+var Confirmation = require("../confirmations.js").Confirmation;
+var FlashMessage = require("../flashmessages.js").FlashMessage;
+var SignatoryAttachment = require("../signatoryattachment.js").SignatoryAttachment;
+
 /* This is component for designing signatory attachments
  */
 
-define(['legacy_code', 'Backbone', 'React', 'common/select'], function(legacy_code, Backbone, React, Select) {
   var DesignSignatoryAttachment = Backbone.Model.extend({
   defaults : {
       name : "",
@@ -189,7 +198,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
 });
 
 
-window.DesignSignatoryAttachmentsPopup = function(args) {
+var DesignSignatoryAttachmentsPopup = exports.DesignSignatoryAttachmentsPopup = function(args) {
          var viewmodel = args.viewmodel;
          var document = viewmodel.document();
          var model = new DesignSignatoryAttachments({ document : document  });
@@ -238,4 +247,3 @@ window.DesignSignatoryAttachmentsPopup = function(args) {
 };
 
 
-});

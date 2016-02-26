@@ -1,4 +1,7 @@
-define(["legacy_code", "backend", "util", "React", "designview/typesetters/signaturetypesetterview"], function(legacy_code, backend, util, React, SignatureTypeSetterView) {
+var backend = require("../../backend");
+var util = require("../../util");
+var React = require("react");
+var SignatureTypeSetterView = require("../../../scripts/designview/typesetters/signaturetypesetterview");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -27,4 +30,3 @@ define(["legacy_code", "backend", "util", "React", "designview/typesetters/signa
       server.restore();
     });
   });
-});

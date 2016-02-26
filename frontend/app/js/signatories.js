@@ -1,8 +1,15 @@
+var Backbone = require("backbone");
+var moment = require("moment");
+var _ = require("underscore");
+var Field = require("./fields.js").Field;
+var SignatoryAttachment = require("./signatoryattachment.js").SignatoryAttachment;
+var Submit = require("./submits.js").Submit;
+var Mail = require("./confirmationsWithEmails.js").Mail;
+
 /* Signatories model */
 
-define(['Backbone', 'moment', 'legacy_code'], function(Backbone, moment) {
 
-window.Signatory = Backbone.Model.extend({
+var Signatory = exports.Signatory = Backbone.Model.extend({
     defaults: {
         id: 0,
         signed: false,
@@ -806,4 +813,3 @@ window.Signatory = Backbone.Model.extend({
     }
 });
 
-});

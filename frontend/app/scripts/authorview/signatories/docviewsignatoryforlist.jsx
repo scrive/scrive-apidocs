@@ -1,9 +1,8 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var Backbone = require("backbone");
 
-define(["React", "common/backbone_mixin", "Backbone", "legacy_code"],
-  function (React, BackboneMixin, Backbone) {
-
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
     getBackboneModels: function () {
@@ -73,5 +72,3 @@ define(["React", "common/backbone_mixin", "Backbone", "legacy_code"],
       );
     }
   });
-
-});

@@ -1,7 +1,17 @@
+var Backbone = require("backbone");
+var React = require("react");
+var Select = require("../../scripts/common/select");
+var Submit = require("../submits.js").Submit;
+var _ = require("underscore");
+var InfoTextInput = require("../infotextinputs.js").InfoTextInput;
+var $ = require("jquery");
+var Confirmation = require("../confirmations.js").Confirmation;
+var FlashMessage = require("../flashmessages.js").FlashMessage;
+var Button = require("../buttons.js").Button;
+
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
 
-define(['legacy_code', 'Backbone', 'React', 'common/select'], function(legacy_code, Backbone, React, Select) {
 
 var AdminPaymentsModel = Backbone.Model.extend({
  defaults : {
@@ -280,7 +290,7 @@ var AdminPaymentsView = Backbone.View.extend({
 });
 
 
-window.AdminPayments = function(args) {
+var AdminPayments = exports.AdminPayments = function(args) {
           var model = new AdminPaymentsModel(args);
           var view =  new AdminPaymentsView({model : model, el : $("<div class='tab-container account'/>")});
           this.el = function() {return $(view.el);};
@@ -289,4 +299,3 @@ window.AdminPayments = function(args) {
           };
 };
 
-});

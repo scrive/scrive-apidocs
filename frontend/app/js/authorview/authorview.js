@@ -1,8 +1,22 @@
+var React = require("react");
+var DocumentViewSignatories = require("../../scripts/authorview/signatories/docviewsignatories");
+var FileView = require("../../scripts/authorview/fileview/fileview");
+var Backbone = require("backbone");
+var AuthorViewTitleBox = require("./authorviewtitlebox.js").AuthorViewTitleBox;
+var AuthorViewHistory = require("./authorsviewhistory.js").AuthorViewHistory;
+var $ = require("jquery");
+var DocumentAuthorAttachments = require("../doctools/docauthorattachments.js").DocumentAuthorAttachments;
+var DocumentEvidenceAttachments = require("../doctools/docevidenceattachments.js").DocumentEvidenceAttachments;
+var AuthorViewSignatoriesAttachments = require("./authorviewsignatoriesattachments.js").AuthorViewSignatoriesAttachments;
+var _ = require("underscore");
+var Document = require("../documents.js").Document;
+var AuthorViewView = require("./authorview.js").AuthorViewView;
+var LoadingDialog = require("../loading.js").LoadingDialog;
+
 /* Signatory view of document
  * Now unified with author and viewer views
  */
 
-define(['React','authorview/signatories/docviewsignatories', 'authorview/fileview/fileview', 'Backbone', 'legacy_code'], function(React,DocumentViewSignatories, FileView) {
 
 var AuthorViewModel = Backbone.Model.extend({
   defaults : {
@@ -107,7 +121,7 @@ var AuthorViewModel = Backbone.Model.extend({
 
 
 
-window.AuthorViewView = Backbone.View.extend({
+var AuthorViewView = exports.AuthorViewView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
     this.model.on('render', this.render);
@@ -156,7 +170,7 @@ window.AuthorViewView = Backbone.View.extend({
 
 
 
-window.AuthorView = function(args) {
+var AuthorView = exports.AuthorView = function(args) {
        var version = 0;
        var self = this;
        var maindiv = $("<div/>");
@@ -249,4 +263,3 @@ window.AuthorView = function(args) {
        };
 };
 
-});

@@ -1,8 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var DomainViewModel = require("./domainviewmodel");
+var DomainView = require("./domainview");
+var $ = require("jquery");
 
-define(['React', 'common/backbone_mixin', 'admin/brandeddomain/domainviewmodel','admin/brandeddomain/domainview', 'legacy_code'], function(React, BackboneMixin, DomainViewModel, DomainView) {
 
-return React.createClass({
+module.exports = React.createClass({
     propTypes: {
         domainid: React.PropTypes.string
     },
@@ -53,4 +56,3 @@ return React.createClass({
       );
     }
   });
-});

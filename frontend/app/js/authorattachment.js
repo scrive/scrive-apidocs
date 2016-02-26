@@ -1,9 +1,11 @@
+var Backbone = require("backbone");
+var _ = require("underscore");
+var $ = require("jquery");
+
 /* Author attachments
  */
 
-define(["Backbone", "legacy_code"], function () {
-
-  window.AuthorAttachment = Backbone.Model.extend({
+  var AuthorAttachment = exports.AuthorAttachment = Backbone.Model.extend({
       defaults: function () {
         return {
           id: 0,
@@ -115,4 +117,3 @@ define(["Backbone", "legacy_code"], function () {
           }
       }
   });
-});

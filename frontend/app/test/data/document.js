@@ -1,5 +1,4 @@
-define(["legacy_code"], function () {
-  return {
+module.exports = {
       "accesstoken": "388f5e5e1afe659c",
       "apicallbackurl": null,
       "authentication": "standard",
@@ -196,4 +195,3 @@ define(["legacy_code"], function () {
       "timezone": "Europe/Berlin",
       "title": "contract"
   };
-});

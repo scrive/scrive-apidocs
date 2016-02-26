@@ -1,11 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var Participant = require("./participant");
+var AddParticipants = require("./addparticipants");
+var $ = require("jquery");
+var _ = require("underscore");
 
-define(["legacy_code", "React", "common/backbone_mixin",
-        "designview/participants/participant", "designview/participants/addparticipants"],
-function (_Legacy, React, BackboneMixin,
-          Participant, AddParticipants) {
-
-return React.createClass({
+module.exports = React.createClass({
   mixins: [BackboneMixin.BackboneMixin],
   getBackboneModels: function () {
     return [this.props.model, this.props.model.document()];
@@ -148,6 +148,4 @@ return React.createClass({
       );
     }
   }
-});
-
 });

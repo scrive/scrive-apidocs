@@ -1,6 +1,16 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Utils = require("../archive/utils");
+var List = require("../lists/list");
+var StatusTooltipMixin = require("../archive/statustooltipmixin");
+var Select = require("../common/select");
+var moment = require("moment");
+var $ = require("jquery");
+var Confirmation = require("../../js/confirmations.js").Confirmation;
+var Submit = require("../../js/submits.js").Submit;
+var LocalStorage = require("../../js/storage.js").LocalStorage;
+var _ = require("underscore");
+var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 
-define(['React', 'archive/utils', 'lists/list','archive/statustooltipmixin', 'common/select', 'moment', 'legacy_code'], function(React, Utils, List, StatusTooltipMixin, Select, moment) {
 
 
 var SelectPartyModal = function(signingIndexes,doc) {
@@ -56,7 +66,7 @@ var SelectPartyModal = function(signingIndexes,doc) {
 
 
 
-return React.createClass({
+module.exports = React.createClass({
     getInitialState: function() {
       return {currentCounter: 1, currentInterval : 1};
     },
@@ -266,8 +276,4 @@ return React.createClass({
         </List.List>
       );
     }
-});
-
-
-
 });

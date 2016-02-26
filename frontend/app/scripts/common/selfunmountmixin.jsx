@@ -1,4 +1,5 @@
-/** @jsx React.DOM */
+var $ = require("jquery");
+var React = require("react");
 
 /*
   Transitory mixin that mimics the behavior of the old type setters.
@@ -6,7 +7,6 @@
   has been rewritten
 */
 
-define(["jquery", "React", "legacy_code"], function($, React) {
   var SelfUnmountMixin = {
     getInitialState: function () {
       return {
@@ -30,5 +30,4 @@ define(["jquery", "React", "legacy_code"], function($, React) {
     }
   };
 
-  return SelfUnmountMixin;
-});
+  module.exports = SelfUnmountMixin;

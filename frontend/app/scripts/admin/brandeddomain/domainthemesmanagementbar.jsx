@@ -1,10 +1,16 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Button = require("../../common/button");
+var Select = require("../../common/select");
+var InfoTextInput = require("../../../js/infotextinputs.js").InfoTextInput;
+var $ = require("jquery");
+var Confirmation = require("../../../js/confirmations.js").Confirmation;
+var Submit = require("../../../js/submits.js").Submit;
+var _ = require("underscore");
 
-define(['React','legacy_code','common/button','common/select'], function(React, _Legacy, Button, Select) {
 
 
 
-return React.createClass({
+module.exports = React.createClass({
     opendNewThemeModal : function(getTheme,setTheme) {
       var self = this;
       var input = new InfoTextInput({infotext: localization.branding.themes.name ,value: ""});
@@ -122,5 +128,3 @@ return React.createClass({
       );
     }
   });
-});
-

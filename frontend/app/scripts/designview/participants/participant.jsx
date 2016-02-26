@@ -1,15 +1,15 @@
-/** @jsx React.DOM */
+var React = require("react");
+var OrderIcon = require("./ordericon");
+var RoleIcon = require("./roleicon");
+var AuthToViewIcon = require("./authtoviewicon");
+var DeliveryIcon = require("./deliveryicon");
+var AuthToSignIcon = require("./authtosignicon");
+var ConfirmationDeliveryIcon = require("./confirmationdeliveryicon");
+var ParticipantSettings = require("./participantsettings");
+var ParticipantFields = require("./participantfields");
+var _ = require("underscore");
 
-define(["legacy_code", "React", "designview/participants/ordericon", "designview/participants/roleicon",
-        "designview/participants/authtoviewicon", "designview/participants/deliveryicon",
-        "designview/participants/authtosignicon", "designview/participants/confirmationdeliveryicon",
-        "designview/participants/participantsettings", "designview/participants/participantfields"],
-function (_Legacy, React, OrderIcon, RoleIcon,
-          AuthToViewIcon, DeliveryIcon, AuthToSignIcon,
-          ConfirmationDeliveryIcon, ParticipantSettings,
-          ParticipantFields) {
-
-return React.createClass({
+module.exports = React.createClass({
   toogleView: function () {
     var sig = this.props.model;
     var viewmodel = this.props.viewmodel;
@@ -132,6 +132,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

@@ -1,7 +1,13 @@
+var Backbone = require("backbone");
+var React = require("react");
+var Button = require("../../common/button");
+var BackboneMixin = require("../../common/backbone_mixin");
+var ViewSize = require("../viewsize");
+var _ = require("underscore");
+var $ = require("jquery");
+var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
+var ImageUtil = require("../../../js/utils/image.js").ImageUtil;
 /* Content of modal for drawing signature */
-
-define(["legacy_code", "Backbone", "React", "common/button", "common/backbone_mixin", "signview/viewsize"],
-        function (_legacy, Backbone, React, Button, BackboneMixin, ViewSize) {
 
 var MAX_WIDTH = 772;
 var LARGEST_WIDTH = 1040;
@@ -206,7 +212,7 @@ var SignatureDrawerModel = Backbone.Model.extend({
   }
 });
 
-return React.createClass({
+module.exports = React.createClass({
     canvas: undefined,
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels: function () {
@@ -627,6 +633,4 @@ return React.createClass({
         </div>
       );
     }
-});
-
 });

@@ -1,8 +1,8 @@
-/** @jsx React.DOM */
+var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
 
-define(['legacy_code', 'React', 'common/backbone_mixin', 'common/infotextinput'], function(_legacy, React, BackboneMixin) {
 
-return React.createClass({
+module.exports = React.createClass({
   propTypes: {
     document: React.PropTypes.object
   },
@@ -23,6 +23,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

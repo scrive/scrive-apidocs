@@ -1,3 +1,8 @@
+var Backbone = require("backbone");
+var _ = require("underscore");
+var $ = require("jquery");
+var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
+
 /*
   Standard text inputs with placeholder.
   Usage:
@@ -33,7 +38,6 @@
 
 */
 
-define(['Backbone', 'legacy_code'], function() {
 
 /* InfoTextInput model. Has value, information if its focused, and some ui details  */
 
@@ -323,7 +327,7 @@ var InfoTextInputView = Backbone.View.extend({
 });
 
 //  Interface
-window.InfoTextInput = function (args) {
+var InfoTextInput = exports.InfoTextInput = function (args) {
           var model = new InfoTextInputModel(args);
           var view = new InfoTextInputView({model : model, el : $("<div class='info-text-input'/>")});
 
@@ -335,4 +339,3 @@ window.InfoTextInput = function (args) {
           this.render = function() {view.render();};
 };
 
-});

@@ -1,7 +1,20 @@
+var React = require("react");
+var Select = require("../../../scripts/common/select");
+var Backbone = require("backbone");
+var User = require("../user.js").User;
+var Submit = require("../../submits.js").Submit;
+var $ = require("jquery");
+var FlashMessage = require("../../flashmessages.js").FlashMessage;
+var _ = require("underscore");
+var jQuery = require("jquery");
+var Button = require("../../buttons.js").Button;
+var ChangePasswordPopup = require("./changepasswordpopup.js").ChangePasswordPopup;
+var Confirmation = require("../../confirmations.js").Confirmation;
+var EmailValidation = require("../../validation.js").EmailValidation;
+
 /*
  * Defines the account settings page.
  */
-define(['React','common/select','Backbone', 'legacy_code'], function(React,Select) {
 
 var AccountSettingsModel = Backbone.Model.extend({
   initialize : function() {
@@ -531,7 +544,7 @@ var AccountSettingsView = Backbone.View.extend({
 });
 
 
-window.AccountSettings = function(args) {
+var AccountSettings = exports.AccountSettings = function(args) {
           var model = new AccountSettingsModel(args);
           var view =  new AccountSettingsView({model : model, el : $("<div class='tab-container account-settings'/>")});
           return {
@@ -540,4 +553,3 @@ window.AccountSettings = function(args) {
             };
 };
 
-});

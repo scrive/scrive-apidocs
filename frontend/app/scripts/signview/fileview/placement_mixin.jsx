@@ -1,8 +1,11 @@
-define(["Backbone", "React", "common/backbone_mixin", "legacy_code"], function (Backbone, React, BackboneMixin) {
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var FieldPlacement = require("../../../js/placements.js").FieldPlacement;
   var STANDARD_WIDTH = 950;
   var STANDARD_BORDER = 2;
 
-  return {
+  module.exports = {
     propTypes: {
       model: React.PropTypes.instanceOf(FieldPlacement).isRequired,
       pageWidth: React.PropTypes.number.isRequired,
@@ -46,4 +49,3 @@ define(["Backbone", "React", "common/backbone_mixin", "legacy_code"], function (
       return border < 1 ? 1 : border;
     }
   };
-});

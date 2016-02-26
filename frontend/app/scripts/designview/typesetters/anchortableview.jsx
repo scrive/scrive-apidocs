@@ -1,10 +1,12 @@
-/** @jsx React.DOM */
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var InfoTextInput = require("../../common/infotextinput");
+var Button = require("../../common/button");
+var AnchorRow = require("./anchorrowview");
+var PlacementAnchor = require("../../../js/anchors.js").PlacementAnchor;
 
-define(["Underscore", "Backbone", "React",
-        "common/infotextinput", "common/button",
-        "designview/typesetters/anchorrowview", "legacy_code"],
-  function (_, Backbone, React, InfoTextInput, Button, AnchorRow) {
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       anchors: React.PropTypes.array.isRequired
     },
@@ -82,4 +84,3 @@ define(["Underscore", "Backbone", "React",
       );
     }
   });
-});

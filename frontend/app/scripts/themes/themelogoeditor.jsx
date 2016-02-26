@@ -1,9 +1,9 @@
-/** @jsx React.DOM */
+var React = require("react");
+var UploadImageButton = require("../common/uploadimagebutton");
 
-define(["React","legacy_code","common/uploadimagebutton"], function(React, _Legacy,UploadImageButton) {
 
 
-return React.createClass({
+module.exports = React.createClass({
   propTypes: {
     getLogo: React.PropTypes.func,
     setLogo: React.PropTypes.func,
@@ -38,6 +38,4 @@ return React.createClass({
       </div>
     );
   }
-});
-
 });

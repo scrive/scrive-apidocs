@@ -1,9 +1,9 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Backbone = require("backbone");
 
 
-define(['React', 'Backbone'], function(React, Backbone) {
 
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       linkText : React.PropTypes.string,
       linkOnClick : React.PropTypes.func
@@ -33,5 +33,3 @@ define(['React', 'Backbone'], function(React, Backbone) {
       );
     }
   });
-
-});

@@ -1,9 +1,8 @@
-define(['legacy_code'],function() {
-
-  /**
+ /**
    *  Reading and settings browser cookies
    */
-  window.Cookies = {
+(function () {
+  var Cookies = {
     buildCookieMultiMap : function () {
       var cookies = document.cookie.split(';');
       var cookieMap = {};
@@ -41,5 +40,10 @@ define(['legacy_code'],function() {
     }
   };
 
-  return window.Cookies;
-});
+  //FIXME: Cookie is used in global.js so has to work both global and with commonjs.
+  if (typeof exports !== "undefined") {
+    exports.Cookies = Cookies;
+  } else {
+    window.Cookies = Cookies;
+  }
+}());

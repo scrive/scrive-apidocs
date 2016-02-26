@@ -1,5 +1,4 @@
-define([], function() {
-  var Image = function () {
+var Image = function () {
     this.shim = true;
 
     this.src = "";
@@ -27,5 +26,4 @@ define([], function() {
     delete this.listeners[type];
   };
 
-  return Image;
-});
+  module.exports = Image;

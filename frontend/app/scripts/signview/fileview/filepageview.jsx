@@ -1,11 +1,13 @@
+var _ = require("underscore");
+var Backbone = require("backbone");
+var React = require("react");
+var BackboneMixin = require("../../common/backbone_mixin");
+var SignaturePlacementPlacedView = require("./signatureplacementplacedview");
+var CheckboxPlacementPlacedView = require("./checkboxplacementplacedview");
+var TextPlacementPlacedView = require("./textplacementplacedview");
+var FilePage = require("../../../js/files.js").FilePage;
 
-define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin",
-        "signview/fileview/signatureplacementplacedview", "signview/fileview/checkboxplacementplacedview",
-        "signview/fileview/textplacementplacedview"],
-  function (legacy_code, _, Backbone, React, BackboneMixin, SignaturePlacementPlacedView,
-            CheckboxPlacementPlacedView, TextPlacementPlacedView) {
-
-  return React.createClass({
+  module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(FilePage).isRequired,
       signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
@@ -96,4 +98,3 @@ define(["legacy_code", "Underscore", "Backbone", "React", "common/backbone_mixin
       );
     }
   });
-});

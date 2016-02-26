@@ -1,8 +1,11 @@
+var Backbone = require("backbone");
+var File = require("./files.js").File;
+var _ = require("underscore");
+
 /* Signatories attachments model */
 
-define(['Backbone', 'legacy_code'], function(Backbone) {
 
-window.SignatoryAttachment = Backbone.Model.extend({
+var SignatoryAttachment = exports.SignatoryAttachment = Backbone.Model.extend({
     defaults: {
         name: "",
         description: "",
@@ -60,4 +63,3 @@ window.SignatoryAttachment = Backbone.Model.extend({
     }
 });
 
-});

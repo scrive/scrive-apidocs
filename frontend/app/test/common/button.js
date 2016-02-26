@@ -1,6 +1,7 @@
+var React = require("react");
+var Button = require("../../scripts/common/button");
 // Some trivial test of the common React components.
 
-define(["legacy_code", "React", "common/button"], function(undefined, React, Button) {
 
   var TestUtils = React.addons.TestUtils;
 
@@ -36,4 +37,3 @@ define(["legacy_code", "React", "common/button"], function(undefined, React, But
       TestUtils.Simulate.click(anchor);
     });
   });
-});

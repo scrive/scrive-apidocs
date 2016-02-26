@@ -1,6 +1,19 @@
+var React = require("react");
+var BrandedDomainsList = require("../../scripts/admin/brandeddomainslist");
+var CompaniesAdminList = require("../../scripts/admin/companiesadminlist");
+var UsersAdminList = require("../../scripts/admin/usersadminlist");
+var DocumentsList = require("../../scripts/admin/documentslist");
+var BrandedDomainAdminPanel = require("../../scripts/admin/brandeddomain/brandeddomainadminpanel");
+var Backbone = require("backbone");
+var $ = require("jquery");
+var Tab = require("../tabs.js").Tab;
+var _ = require("underscore");
+var KontraTabs = require("../tabs.js").KontraTabs;
+
+require("../utils/time");
+
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
-define(['React','admin/brandeddomainslist','admin/companiesadminlist','admin/usersadminlist','admin/documentslist', 'admin/brandeddomain/brandeddomainadminpanel','Backbone', 'legacy_code'], function(React,BrandedDomainsList,CompaniesAdminList,UsersAdminList,DocumentsList,BrandedDomainAdminPanel) {
 
 var AdminModel = Backbone.Model.extend({
   isAdmin: function() {
@@ -119,7 +132,7 @@ var AdminView = Backbone.View.extend({
 });
 
 
-window.Admin = function(args) {
+var Admin = exports.Admin = function(args) {
           var model = new AdminModel(args);
           var view =  new AdminView({model : model, el : $("<div/>")});
           return new Object({
@@ -127,4 +140,3 @@ window.Admin = function(args) {
             });
 };
 
-});

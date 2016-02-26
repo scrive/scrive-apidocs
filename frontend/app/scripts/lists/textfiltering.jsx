@@ -1,10 +1,11 @@
-/** @jsx React.DOM */
+var React = require("react");
+var NewButton = require("../common/button");
+var NewInfoTextInput = require("../common/infotextinput");
 
-define(['React','common/button','common/infotextinput','legacy_code'], function(React, NewButton,NewInfoTextInput) {
 
 
 
-return React.createClass({
+module.exports = React.createClass({
     render: function() {
       var self = this;
       var model = this.props.model;
@@ -37,6 +38,3 @@ return React.createClass({
       );
     }
 });
-
-});
-

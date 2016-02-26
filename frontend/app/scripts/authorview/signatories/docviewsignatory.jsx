@@ -1,17 +1,21 @@
-/** @jsx React.DOM */
+var React = require("react");
+var Button = require("../../common/button");
+var BackboneMixin = require("../../common/backbone_mixin");
+var Backbone = require("backbone");
+var LanguageService = require("../../common/language_service");
+var ChangeAuthenticationToViewModal = require("./changeauthenticationtoviewmodal");
+var ChangeAuthenticationToSignModal = require("./changeauthenticationtosignmodal");
+var ChangeSignatoryDetailModal = require("./changesignatorydetailmodal");
+var ShowAPIDeliveryModal = require("./showapideliverymodal");
+var EmailValidation = require("../../../js/validation.js").EmailValidation;
+var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
+var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
+var ConfirmationWithEmail = require("../../../js/confirmationsWithEmails.js").ConfirmationWithEmail;
+var Confirmation = require("../../../js/confirmations.js").Confirmation;
+var $ = require("jquery");
+var LocalStorage = require("../../../js/storage.js").LocalStorage;
 
-define(["React", "common/button", "common/backbone_mixin", "Backbone",
-  "common/language_service",
-  "authorview/signatories/changeauthenticationtoviewmodal",
-  "authorview/signatories/changeauthenticationtosignmodal",
-  "authorview/signatories/changesignatorydetailmodal",
-  "authorview/signatories/showapideliverymodal",
-  "legacy_code"],
-  function (React, Button, BackboneMixin, Backbone, LanguageService,
-    ChangeAuthenticationToViewModal, ChangeAuthenticationToSignModal,
-    ChangeSignatoryDetailModal, ShowAPIDeliveryModal) {
-
-  return React.createClass({
+  module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
     getBackboneModels: function () {
@@ -503,5 +507,3 @@ define(["React", "common/button", "common/backbone_mixin", "Backbone",
       );
     }
   });
-
-});
