@@ -145,7 +145,7 @@ logRequest rq maybeInputsBody = [
 -- connection needs to be dropped between retries to allow for commits
 -- to take place.
 enhanceYourCalm :: (MonadIO m) => m Response -> m Response
-enhanceYourCalm action = enhanceYourCalmWorker (100::Int)
+enhanceYourCalm action = enhanceYourCalmWorker (300::Int)
   where
     enhanceYourCalmWorker 0 = action
     enhanceYourCalmWorker n = do
