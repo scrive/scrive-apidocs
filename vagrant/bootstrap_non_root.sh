@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 cd /home/vagrant
-ssh-keyscan git.scrive.lan > .ssh/known_hosts
-git clone git@git.scrive.lan:kontrakcja
+ssh-keyscan github.com > .ssh/known_hosts
+git clone git@github.com:scrive/kontrakcja.git
 cabal update
 echo "remote-repo: scrive-hackage:http://hackage.scrive.com/" >> .cabal/config
 echo "optimization: False" >> .cabal/config
