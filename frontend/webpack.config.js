@@ -62,7 +62,9 @@ var versionId = generateVersionId();
 
 var signviewConfig = defaultConfig({
   name: "signview",
-  output: {path: __dirname, filename: "./app/compiled/signview/[name]-" + versionId + ".js", sourceMapFilename: "[file].map"},
+  output: {
+    path: __dirname, filename: "./app/compiled/signview/[name]-" + versionId + ".js", sourceMapFilename: "[file].map"
+  },
   entry: allEntryPoints("./app/scripts/entry/signview/*.jsx"),
   plugins: [bowerResolver()]
 });
@@ -70,7 +72,9 @@ var signviewConfig = defaultConfig({
 var allConfig = defaultConfig({
   name: "all",
   entry: allEntryPoints("./app/scripts/entry/all/*.jsx"),
-  output: {path: __dirname, filename: "./app/compiled/all/[name]-" + versionId + ".js", sourceMapFilename: "[file].map"},
+  output: {
+    path: __dirname, filename: "./app/compiled/all/[name]-" + versionId + ".js", sourceMapFilename: "[file].map"
+  },
   plugins: [bowerResolver()]
 });
 
