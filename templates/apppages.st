@@ -35,7 +35,7 @@ standardHeaderContents=
         $else$
           <meta name="viewport" content="width=1020" />
         $endif$
-        <link rel=" icon" href="$cdnbaseurl$/favicon/$brandinghash$" />
+        <link rel=" icon" href="favicon/$brandinghash$" />
 
         <script src="$cdnbaseurl$/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>

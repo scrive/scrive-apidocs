@@ -13,6 +13,21 @@
     }
   }
 
+  .button-group {
+    .button:first-child {
+      float: none;
+      margin-right: 20px;
+
+      .on-small-view({
+          margin-right: 0;
+      });
+    }
+
+    .button:last-child {
+      margin-right: 0;
+    }
+  }
+
   .button .label {
     margin-bottom: 0;
   }

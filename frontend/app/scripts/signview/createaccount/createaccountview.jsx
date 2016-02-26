@@ -27,7 +27,6 @@ var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
             mixpanel.identify(userid);
             mixpanel.track("Create new account",
                           {"Signup Method": "BySigning"});
-            mixpanel.track("Sign TOS");
 
             var userData = {
               "TOS Date": new Date(),
@@ -48,6 +47,7 @@ var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
             // Register current user's data in Mixpanel
             mixpanel.register(userData); // as super property
             mixpanel.people.set(userData); // as regular person property
+            mixpanel.track("Sign TOS");
             window.location = "/d";
           }
         }

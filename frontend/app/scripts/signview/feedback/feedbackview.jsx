@@ -4,13 +4,15 @@ var HubSpot = require("../../common/hubspot_service");
   var QUESTIONS = {
     Q1: {
       title: localization.feedbackQ1,
-      buttons: [{text: localization.feedbackBad, value: "bad"}, {text: localization.feedbackGood, value: "good"}],
+      buttons: [{text: localization.feedbackBad, value: "bad", "type": undefined},
+                {text: localization.feedbackGood, value: "good", "type": "action"}],
       next: {bad: "Q2", good: "Q3"}
     },
     Q2: {
       title: localization.feedbackQ2Title,
       subtitle: localization.feedbackQ2Subtitle,
-      buttons: [{text: localization.feedbackSkip, value: "skip"}, {text: localization.feedbackSend, value: "send"}],
+      buttons: [{text: localization.feedbackSkip, value: "skip", "type": undefined},
+                {text: localization.feedbackSend, value: "send", "type": "action"}],
       field: "textarea",
       fieldTitle: localization.feedbackFeedback,
       next: {skip: "Q7", send: "Q7"}
@@ -18,15 +20,16 @@ var HubSpot = require("../../common/hubspot_service");
     Q3: {
       title: localization.feedbackQ3Title,
       subtitle: localization.feedbackQ3Subtitle,
-      buttons: [{text: localization.feedbackNever, value: "never"},
-        {text: localization.feedbackSometimes, value: "sometimes"},
-        {text: localization.feedbackOften, value: "often"}],
+      buttons: [{text: localization.feedbackNever, value: "never", "type": undefined},
+                {text: localization.feedbackSometimes, value: "sometimes", "type": "action"},
+                {text: localization.feedbackOften, value: "often", "type": undefined}],
       next: {never: "Q5", sometimes: "Q4", often: "Q4"}
     },
     Q4: {
       title: localization.feedbackQ4Title,
       subtitle: localization.feedbackQ4Subtitle,
-      buttons: [{text: localization.feedbackNo, value: "no"}, {text: localization.feedbackYesPlease, value: "yes"}],
+      buttons: [{text: localization.feedbackNo, value: "no", "type": undefined},
+                {text: localization.feedbackYesPlease, value: "yes", "type": "action"}],
       field: "phone",
       fieldTitle: localization.feedbackPhoneNumber,
       next: {no: "Q7", yes: "Q6"}
@@ -34,7 +37,8 @@ var HubSpot = require("../../common/hubspot_service");
     Q5: {
       title: localization.feedbackQ5Title,
       subtitle: localization.feedbackQ5Subtitle,
-      buttons: [{text: localization.feedbackNo, value: "no"}, {text: localization.feedbackYesLink, value: "yes"}],
+      buttons: [{text: localization.feedbackNo, value: "no", "type": undefined},
+                {text: localization.feedbackYesLink, value: "yes", "type": "action"}],
       next: {no: "Q7", yes: "Q7"}
     },
     Q6: {
@@ -145,7 +149,7 @@ var HubSpot = require("../../common/hubspot_service");
         }
 
         if (from !== "Q2") {
-          self.registerInMixpanel(extraMixpanelProperties);
+          this.registerInMixpanel(extraMixpanelProperties);
         }
       }
     },
@@ -162,7 +166,6 @@ var HubSpot = require("../../common/hubspot_service");
       this.setState({question: next[value]});
       this.onChangeQuestion(value, question, next[value], text);
     },
-
     render: function () {
       var question = this.state.question;
       var data = QUESTIONS[question];
@@ -174,6 +177,7 @@ var HubSpot = require("../../common/hubspot_service");
       return (
         <div className="section feedback">
           <Question
+            question={question}
             title={data.title}
             subtitle={data.subtitle}
             buttons={data.buttons}
