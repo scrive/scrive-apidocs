@@ -9,7 +9,7 @@ enableCookies=<!DOCTYPE html>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta http-equiv="content-language" content="$ctxlang$" />
 <meta http-equiv="X-UA-Compatible" content="IE=10" />
-<link rel=" icon" href="/favicon/$brandinghash$" />
+<link rel=" icon" href="$cdnbaseurl$/favicon/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$" />
 <script src="/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
 <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
 <script src="$cdnbaseurl$/compiled/vendor-$versioncode$.js"></script>
