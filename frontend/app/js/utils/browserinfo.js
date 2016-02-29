@@ -22,7 +22,7 @@ window.BrowserInfo = {
         return navigator.userAgent.match(/Android/i) != null;
     },
     isIOS9 : function(){
-        return navigator.userAgent.match(/OS 9_0 like Mac OS X/i) != null;
+      return navigator.userAgent.match(/OS 9[0-9_]* like Mac OS X/i) != null;
     },
     isFirefox : function() {
         return navigator.userAgent.match(/Firefox/i) != null; //
