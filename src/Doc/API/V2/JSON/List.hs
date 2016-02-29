@@ -65,8 +65,10 @@ data DocumentAPIFilter = DocumentAPIFilterStatuses [DocumentStatus]
                     | DocumentAPIFilterIsAuthor
                     | DocumentAPIFilterIsAuthoredBy UserID
                     | DocumentAPIFilterIsSignableOnPad
-                    | DocumentAPIFilterIsTemplate Bool
-                    | DocumentAPIFilterIsInTrash Bool
+                    | DocumentAPIFilterIsTemplate
+                    | DocumentAPIFilterIsNotTemplate
+                    | DocumentAPIFilterIsInTrash
+                    | DocumentAPIFilterIsNotInTrash
                     | DocumentAPIFilterByText T.Text
                     | DocumentAPIFilterCanBeSignedBy UserID
 
@@ -78,8 +80,10 @@ filterType (DocumentAPIFilterTag _ _) = "tag"
 filterType (DocumentAPIFilterIsAuthor) = "is_author"
 filterType (DocumentAPIFilterIsAuthoredBy _) = "author"
 filterType (DocumentAPIFilterIsSignableOnPad) = "is_signable_on_pad"
-filterType (DocumentAPIFilterIsTemplate _) = "template"
-filterType (DocumentAPIFilterIsInTrash _) = "trash"
+filterType (DocumentAPIFilterIsTemplate) = "is_template"
+filterType (DocumentAPIFilterIsNotTemplate) = "is_not_template"
+filterType (DocumentAPIFilterIsInTrash) = "is_in_trash"
+filterType (DocumentAPIFilterIsNotInTrash) = "is_not_in_trashed"
 filterType (DocumentAPIFilterByText _) = "text"
 filterType (DocumentAPIFilterCanBeSignedBy _) = "user_can_sign"
 
@@ -91,8 +95,10 @@ instance Unjson DocumentAPIFilter where
       , (DocumentAPIFilterIsAuthor, unjsonDocumentAPIFilterIsAuthor)
       , (DocumentAPIFilterIsAuthoredBy (unsafeUserID 0), unjsonDocumentAPIFilterIsAuthoredBy)
       , (DocumentAPIFilterIsSignableOnPad, unjsonDocumentAPIFilterIsSignableOnPad)
-      , (DocumentAPIFilterIsTemplate False, unjsonDocumentAPIFilterIsTemplate)
-      , (DocumentAPIFilterIsInTrash False, unjsonDocumentAPIFilterIsInTrash)
+      , (DocumentAPIFilterIsTemplate, unjsonDocumentAPIFilterIsTemplate)
+      , (DocumentAPIFilterIsNotTemplate, unjsonDocumentAPIFilterIsNotTemplate)
+      , (DocumentAPIFilterIsInTrash, unjsonDocumentAPIFilterIsInTrash)
+      , (DocumentAPIFilterIsNotInTrash, unjsonDocumentAPIFilterIsNotInTrash)
       , (DocumentAPIFilterByText "", unjsonDocumentAPIFilterByText)
       , (DocumentAPIFilterCanBeSignedBy (unsafeUserID 0), unjsonDocumentAPIFilterCanBeSignedBy)
     ]
@@ -156,20 +162,18 @@ unjsonDocumentAPIFilterIsSignableOnPad = pure DocumentAPIFilterIsSignableOnPad
 unjsonDocumentAPIFilterIsTemplate:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsTemplate = pure DocumentAPIFilterIsTemplate
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> field "is_template" unsafeDocumentAPIFilterIsTemplate "Filter documents that are templates"
-  where
-    unsafeDocumentAPIFilterIsTemplate :: DocumentAPIFilter ->  Bool
-    unsafeDocumentAPIFilterIsTemplate (DocumentAPIFilterIsTemplate is_template) = is_template
-    unsafeDocumentAPIFilterIsTemplate _ = $unexpectedError "unsafeDocumentAPIFilterIsTemplate"
+
+unjsonDocumentAPIFilterIsNotTemplate:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsNotTemplate = pure DocumentAPIFilterIsNotTemplate
+  <*  fieldReadonly "filter_by" filterType "Type of filter"
 
 unjsonDocumentAPIFilterIsInTrash:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsInTrash = pure DocumentAPIFilterIsInTrash
   <*  fieldReadonly "filter_by" filterType "Type of filter"
-  <*> field "is_trashed" unsafeDocumentAPIFilterIsTrashed "Filter documents that are in trash"
-  where
-    unsafeDocumentAPIFilterIsTrashed :: DocumentAPIFilter ->  Bool
-    unsafeDocumentAPIFilterIsTrashed (DocumentAPIFilterIsInTrash is_trashed) = is_trashed
-    unsafeDocumentAPIFilterIsTrashed _ = $unexpectedError "unsafeDocumentAPIFilterIsTrashed"
+
+unjsonDocumentAPIFilterIsNotInTrash:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsNotInTrash = pure DocumentAPIFilterIsNotInTrash
+  <*  fieldReadonly "filter_by" filterType "Type of filter"
 
 unjsonDocumentAPIFilterByText:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterByText = pure DocumentAPIFilterByText
@@ -200,8 +204,9 @@ toDocumentFilter _ (DocumentAPIFilterTag name value) = [DF.DocumentFilterByTags 
 toDocumentFilter uid (DocumentAPIFilterIsAuthor) = [DF.DocumentFilterByAuthor uid]
 toDocumentFilter _ (DocumentAPIFilterIsAuthoredBy uid) = [DF.DocumentFilterByAuthor uid]
 toDocumentFilter _ (DocumentAPIFilterIsSignableOnPad) = [DF.DocumentFilterSignNowOnPad]
-toDocumentFilter _ (DocumentAPIFilterIsTemplate True)  = [DF.DocumentFilterTemplate]
-toDocumentFilter _ (DocumentAPIFilterIsTemplate False) = [DF.DocumentFilterSignable]
-toDocumentFilter _ (DocumentAPIFilterIsInTrash bool) = [DF.DocumentFilterDeleted bool]
+toDocumentFilter _ (DocumentAPIFilterIsTemplate)    = [DF.DocumentFilterTemplate]
+toDocumentFilter _ (DocumentAPIFilterIsNotTemplate) = [DF.DocumentFilterSignable]
+toDocumentFilter _ (DocumentAPIFilterIsInTrash)     = [DF.DocumentFilterDeleted True]
+toDocumentFilter _ (DocumentAPIFilterIsNotInTrash)  = [DF.DocumentFilterDeleted False]
 toDocumentFilter _ (DocumentAPIFilterByText text) = DF.processSearchStringToFilter text
 toDocumentFilter _ (DocumentAPIFilterCanBeSignedBy uid) = [DF.DocumentFilterByCanSign uid]

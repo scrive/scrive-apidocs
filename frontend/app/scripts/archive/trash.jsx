@@ -78,7 +78,7 @@ module.exports = React.createClass({
           totalCountFunction={Utils.totalCountFunction}
           url={Utils.listCallUrl}
           paramsFunction={Utils.paramsFunctionWithFilter([
-              {"filter_by" : "trash", "is_trashed" : true}
+              {"filter_by" : "is_in_trash"}
             ])}
           dataFetcher={Utils.dataFetcher}
           idFetcher={Utils.idFetcher}
