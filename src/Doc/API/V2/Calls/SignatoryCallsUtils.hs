@@ -54,7 +54,7 @@ checkAuthenticationToSignMethodAndValue slid = do
           if (authValue == getMobile siglink || null (getMobile siglink))
             then return ()
             else apiError $
-              requestParameterInvalid "authentication_value" "value for phone number does not match"
+              requestParameterInvalid "authentication_value" "value for mobile number does not match"
 
 getScreenshots :: (Kontrakcja m) => m SignatoryScreenshots
 getScreenshots = do
@@ -101,11 +101,11 @@ fieldsToFieldsWithFiles (f:fs) = do
 
 checkSignatoryPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, SignatoryFieldTMPValue)] -> String -> m Bool
 checkSignatoryPin slid fields pin = do
-  slidPhone <- getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
-  phone <- case (not $ null slidPhone, lookup MobileFI fields) of
-    (True, _) -> return slidPhone
+  slidMobile <- getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
+  mobile <- case (not $ null slidMobile, lookup MobileFI fields) of
+    (True, _) -> return slidMobile
     (False, Just (StringFTV v)) -> return v
     (False, _) -> apiError $ requestParameterInvalid "fields"
                     "Does not contain a mobile number field, author has not set one for the signatory"
-  pin' <- dbQuery $ GetSignatoryPin slid phone
+  pin' <- dbQuery $ GetSignatoryPin slid mobile
   return $ pin == pin'
