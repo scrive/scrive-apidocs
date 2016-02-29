@@ -290,7 +290,7 @@
 "_checkboxObligatory":"Vérification obligatoire",
 "_checkboxPrechecked":"Vérifié",
 "_city":"Ville",
-"_clickToDraw":"Encart de signature",
+"_clickToDraw":"",
 "_closedDocuments":"Documents protégés",
 "_closedSignatures":"Signatures conclues",
 "_companyNumberInvalidChars":"Le numéro de l'entreprise doit exclusivement comporter des lettres, des chiffres et un tiret.",

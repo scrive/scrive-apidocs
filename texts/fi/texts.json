@@ -290,7 +290,7 @@
 "_checkboxObligatory":"Pakollinen valinta",
 "_checkboxPrechecked":"Esivalittu",
 "_city":"Kaupunki",
-"_clickToDraw":"Allekirjoitusruutu",
+"_clickToDraw":"",
 "_closedDocuments":"Suljetut dokumentit",
 "_closedSignatures":"Suljetut allekirjoitukset",
 "_companyNumberInvalidChars":"Yrityksen numero voi sisältää vain kirjaimia, numeroita ja väliviivan.",

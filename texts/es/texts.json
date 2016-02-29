@@ -290,7 +290,7 @@
 "_checkboxObligatory":"Obligatorio revisar",
 "_checkboxPrechecked":"Revisar otra vez",
 "_city":"Ciudad",
-"_clickToDraw":"Recuadro para la firma",
+"_clickToDraw":"",
 "_closedDocuments":"Documentos cerrados",
 "_closedSignatures":"Firmas cerradas",
 "_companyNumberInvalidChars":"El número de la empresa sólo puede contener letras, números y un guión. ",
