@@ -171,7 +171,7 @@ ctAuthorAttachment = CompositeType {
 tableSignatoryAttachments :: Table
 tableSignatoryAttachments = tblTable {
     tblName = "signatory_attachments"
-  , tblVersion = 7
+  , tblVersion = 8
   , tblColumns = [
       tblColumn { colName = "file_id", colType = BigIntT }
     , tblColumn { colName = "description", colType = TextT, colNullable = False }
@@ -194,6 +194,7 @@ ctSignatoryAttachment = CompositeType {
   ctName = "signatory_attachment"
 , ctColumns = [
     CompositeColumn { ccName = "file_id", ccType = BigIntT }
+  , CompositeColumn { ccName = "filename", ccType = TextT }
   , CompositeColumn { ccName = "description", ccType = TextT }
   , CompositeColumn { ccName = "name", ccType = TextT }
   ]

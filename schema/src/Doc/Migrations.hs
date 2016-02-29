@@ -527,3 +527,10 @@ addAuthenticatedToViewToCompositeType = Migration {
     , mgrFrom = 28
     , mgrDo = return () -- Empty migration to mark change in ctSignatoryLink :: CompositeType
     }
+
+addFileNameToSignatoryAttachment :: MonadDB m  => Migration m
+addFileNameToSignatoryAttachment = Migration {
+      mgrTable = tableSignatoryAttachments
+    , mgrFrom = 7
+    , mgrDo = return () -- Empty migration to mark change in ctSignatoryAttachment :: CompositeType
+    }
