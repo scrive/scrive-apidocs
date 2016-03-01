@@ -193,9 +193,13 @@
     margin: 10px 0;
     padding: @preview-ratio * 45px;
     background-color: white;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 
-  .buttons {
+  .signsection {
     margin-top: 0;
     height: auto;
     overflow: hidden;
@@ -205,43 +209,28 @@
       margin: 0 auto;
       width: @preview-ratio * 475px;
 
+      &:first-child {
+        margin-bottom: 10px;
+      }
+
       .label {
         margin: 0 7px 0 7px;
       }
     }
 
-    .sign {
-      margin-bottom: 10px;
-    }
-
     .reject {
-      .button {
-        font-weight: 300;
-        background-color: white;
-        text-decoration: underline;
-      }
-    }
-
-    &.noreject {
-      .buttoncontainer {
-        &.sign {
-          float: none;
-        }
-        &.reject {
-          display: none;
-        }
-      }
+      font-weight: 300;
+      background-color: white;
+      text-decoration: underline;
     }
   }
 
   .innercontent {
     width: 500px;
     margin: auto;
-    padding-bottom: 10px;
   }
 
   .content {
-    padding-bottom: 20px;
     background-color: #F1F1F1;
   }
 

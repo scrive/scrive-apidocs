@@ -93,39 +93,25 @@ module.exports = React.createClass({
                                   <div className="placedfield optionalplacedfield" style={{"borderColor": model.actionSecondaryColor()}}>
                                       <div className="placedfieldvalue">{localization.sampleSignView.phone}</div>
                                   </div>
-                              </div><img className="exampledocument" src={window.cdnbaseurl + "/img/document_example.png"} />
+                              </div>
+                              <img className="exampledocument" src={window.cdnbaseurl + "/img/document_example.png"} />
 
                           </div>
-                              {/*if*/ (self.props.showRejectOption) &&
-                                <div className="section buttons">
-                                    <div className="buttoncontainer sign">
-                                      <Button
-                                        size="small"
-                                        type="action"
-                                        text={localization.sampleSignView.signButton}
-                                        style={{'backgroundColor': model.actionColor(), 'color': model.actionTextColor()}}
-                                      />
-                                    </div>
-                                    <div className="buttoncontainer reject">
-                                      <Button
-                                        size="small"
-                                        text={localization.sampleSignView.rejectButton}
-                                      />
-                                    </div>
-                                </div>
-                              }
-                              {/*else*/ (!self.props.showRejectOption) &&
-                                <div className="section buttons">
-                                      <div className="buttoncontainer sign" style={{"float": "none"}}>
-                                      <Button
-                                        size="small"
-                                        type="action"
-                                        text={localization.sampleSignView.signButton}
-                                        style={{'backgroundColor': model.actionColor(), 'color': model.actionTextColor()}}
-                                      />
-                                    </div>
-                                </div>
-                              }
+                              <div className="section signsection">
+                                  <Button
+                                    size="small"
+                                    type="action"
+                                    text={localization.sampleSignView.signButton}
+                                    style={{'backgroundColor': model.actionColor(), 'color': model.actionTextColor()}}
+                                  />
+                                  {/*if*/ (self.props.showRejectOption) &&
+                                    <Button
+                                      className="button reject"
+                                      size="small"
+                                      text={localization.sampleSignView.rejectButton}
+                                    />
+                                  }
+                              </div>
                               {/*if*/ (self.props.showFooter) &&
                                 <div className="section footer">
                                   <img className="logo" src="/img/poweredby.png" />
