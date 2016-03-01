@@ -35,7 +35,7 @@ var _ = require("underscore");
                   </div>
                 </div>
               </div>
-              <div className="col-xs-6 right content">
+              <div className="col-xs-6 content">
                 <div className="vertical">
                   <div className="middle">
                     {/* if */ hasLink &&
