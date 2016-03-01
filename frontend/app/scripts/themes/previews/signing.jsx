@@ -72,6 +72,13 @@ module.exports = React.createClass({
                      <div className="section contentheader">
                         <div className="instructions">
                           <span>Follow the <span style={{"color": model.actionColor()}} className="arrowtext">ARROW</span></span>
+                          <div className="document-name">Demo document</div>
+                          {/* if */ self.props.showPDFDownload &&
+                            <Button
+                              size="small"
+                              text={localization.docsignview.downloadDocumentButtonText}
+                            />
+                          }
                         </div>
                       </div>
                       <div className="document">
