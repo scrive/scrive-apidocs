@@ -95,7 +95,7 @@
 "_VerifyIdentityWithName":"<span class='name-of-signatory'></span>, verifiera din identitet för att se dokumentet",
 "_VerifyIdentityWithoutName":"Verifiera din identitet för att se dokumentet",
 "_YourIdNumber":"Ditt personnummer",
-"_ZoomOut":"",
+"_ZoomOut":"Zooma ut och försök igen.<br/>Du behöver zooma ut för att kunna rita din signatur.",
 "_ZoomOutMore":"Zooma ut lite till",
 "_acceptTOS":"Jag har läst och accepterar <a class='is-TOS'>Scrives allmänna villkor</a>",
 "_accessNewAccountBody":"Börja med att skapa ett lösenord. I framtiden kommer du få tillgång till ditt e-arkiv genom att skriva in din e-postadress och detta lösenord.",
