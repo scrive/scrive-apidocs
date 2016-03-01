@@ -20,6 +20,7 @@ module.exports = React.createClass({
     render: function() {
       var self = this;
       var model = this.props.model;
+      var faviconAltUrl = window.cdnbaseurl + "/favicon/" + window.brandingdomainid + "/" + window.brandinguserid + "/" + window.brandinghash;
       return (
         <div className="companybranding-settings-edit">
           <div className="companybranding-settings-edit-panel">
@@ -45,7 +46,7 @@ module.exports = React.createClass({
               <CompanyBrandingImageEditor
                 title={localization.branding.companySettings.favicon}
                 description={localization.branding.companySettings.faviconDescription}
-                alternativeImage={"/favicon/" + window.brandinghash}
+                alternativeImage={faviconAltUrl}
                 uploadText={localization.branding.companySettings.uploadFavicon}
                 getValue={function() {return model.favicon()}}
                 setValue={function(v) {return model.setFavicon(v)}}

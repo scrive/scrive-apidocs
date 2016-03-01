@@ -203,7 +203,7 @@ staticRoutes production = choice
      , dir "signview_logo" $  hGet $ toK3 $ Branding.signviewLogo
      , dir "signview_logo_without_document" $  hGet $ toK3 $ Branding.signviewLogoWithoutDocument
      , dir "email_logo" $  hGet $ toK3 $ Branding.emailLogo
-     , dir "favicon" $  hGet $ toK1 $ Branding.faviconIcon
+     , dir "favicon" $  hGet $ toK3 $ Branding.faviconIcon
      , dir "api" $ dir "v2" $ remainingPath GET $ toK0 noAPIV2CallFoundHandler
      , dir "api" $ dir "v2" $ remainingPath POST $ toK0 noAPIV2CallFoundHandler
    ]

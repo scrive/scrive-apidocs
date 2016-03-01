@@ -149,16 +149,22 @@ signviewLogoWithoutDocument bdid uid _ = do
   theme <- getSignviewThemeWithoutDocument bdid uid
   return (pngResponse $ themeLogo theme)
 
-faviconIcon :: Kontrakcja m => String  -> m Response
-faviconIcon _ = do
-  ctx <- getContext
-  companyFavicon <- case getContextUser ctx of
-    Nothing -> return Nothing
-    Just user -> do
-      company <- getCompanyForUser user
-      companyui <- dbQuery $ GetCompanyUI (companyid company)
-      return (companyFavicon $ companyui)
-  let favicon = fromMaybe (bdFavicon $ ctxbrandeddomain ctx) companyFavicon
+faviconIcon :: Kontrakcja m => BrandedDomainID -> String -> String -> m Response
+faviconIcon bdid uidstr _ = do
+  mCompanyFavicon <- case uidstr of
+    "_" -> return Nothing
+    s -> case (maybeRead s :: Maybe UserID) of
+      Nothing -> return Nothing
+      Just uid -> do
+        muser <- dbQuery $ GetUserByID uid
+        case muser of
+          Nothing -> return Nothing
+          Just user -> do
+            company <- getCompanyForUser user
+            companyui <- dbQuery $ GetCompanyUI (companyid company)
+            return (companyFavicon companyui)
+  bd <- dbQuery $ GetBrandedDomainByID bdid
+  let favicon = fromMaybe (bdFavicon bd) mCompanyFavicon
   return (pngResponse favicon)
 
 
