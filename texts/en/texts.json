@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -871,7 +871,7 @@
 "_sampleSignViewPhone":"Phone",
 "_sampleSignViewRejectButton":"Reject and reply",
 "_sampleSignViewReviewPDF":"Show",
-"_sampleSignViewSignButton":"Sign",
+"_sampleSignViewSignButton":"Next",
 "_sampleSignViewTextField":"Write there",
 "_save":"Save",
 "_searchBoxButtonText":"Search",

@@ -49,7 +49,8 @@ var _ = require("underscore");
           "text"      : "",
           "size"      : "small",
           "multiline" : false,
-          "style"     : {}
+          "style"     : {},
+          onClick: function () { }
         };
       },
     getInitialState: function() {
