@@ -1,4 +1,4 @@
-define(['React', 'Backbone', 'signview/createaccount/createaccountview', 'signview/feedback/feedbackview'], function(React, Backbone, CreateAccountView, FeedbackView) {
+define(['React', 'Backbone', 'signview/feedback/feedbackview'], function(React, Backbone, FeedbackView) {
 
   return React.createClass({
     propTypes: {
@@ -15,10 +15,7 @@ define(['React', 'Backbone', 'signview/createaccount/createaccountview', 'signvi
       return null !== /^(backbone|loxysoft|caspeco).scrive.com/.exec(location.host);
     },
     isQuestionaire : function() {
-      return (!this.isNotInterestedInQuestionnaire() && this.props.document.currentSignatory().company() !== '');
-    },
-    isSaveCopy : function() {
-      return !this.isHidden() && !this.isQuestionaire();
+      return !this.isNotInterestedInQuestionnaire() && !this.isHidden();
     },
     componentWillMount : function() {
       var promotionName = "";
@@ -29,12 +26,10 @@ define(['React', 'Backbone', 'signview/createaccount/createaccountview', 'signvi
     },
     render: function() {
       var document = this.props.document;
-      if(this.isHidden()) {
-        return (<div/>);
-      } else if(this.isQuestionaire()) {
+      if(this.isQuestionaire()) {
         return <FeedbackView document={document} />;
-      } else if (this.isSaveCopy()) {
-        return (<CreateAccountView document={document}/>);
+      } else {
+        return (<div/>);
       }
     }
   });
