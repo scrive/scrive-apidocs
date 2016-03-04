@@ -112,7 +112,7 @@ guardSignatoryHasNotIdentifiedToView slid =
     (apiError $ signatoryStateError "The party has already identified to view")
 
 guardCanSetAuthenticationToViewForSignatoryWithValues :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> AuthenticationToViewMethod -> Maybe String -> Maybe String -> m ()
-guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mPhone = do
+guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mMobile = do
   sl <- $fromJust . getSigLinkFor slid <$> theDocument
   -- Do not allow mixing of Swedish and Norwegian BankID
   when (authToView == NOBankIDAuthenticationToView && signatorylinkauthenticationtosignmethod sl == SEBankIDAuthenticationToSign)
@@ -123,25 +123,25 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mPhon
       (apiError $ signatoryStateError "Signatory does not have a valid personal number for the authentication method and you did not provide one")
     Just ssn -> unless (isValidSSNForAuthenticationToView authToView ssn) $
       (apiError $ signatoryStateError "The personal number you provided is not valid for the authentication method")
-  -- Check if either a valid phone for authToView is set or is provided
-  case mPhone of
-    Nothing -> unless (isValidPhoneForAuthenticationToView authToView $ getMobile sl) $
-      (apiError $ signatoryStateError "Party does not have a valid phone number set for the authentication method and you did not provide one")
-    Just phone -> unless (isValidPhoneForAuthenticationToView authToView phone) $
-      (apiError $ signatoryStateError "The phone number you provided is not valid for the authentication method")
+  -- Check if either a valid mobile for authToView is set or is provided
+  case mMobile of
+    Nothing -> unless (isValidMobileForAuthenticationToView authToView $ getMobile sl) $
+      (apiError $ signatoryStateError "Party does not have a valid mobile number set for the authentication method and you did not provide one")
+    Just mobile -> unless (isValidMobileForAuthenticationToView authToView mobile) $
+      (apiError $ signatoryStateError "The mobile number you provided is not valid for the authentication method")
   where
     isValidSSNForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
     isValidSSNForAuthenticationToView StandardAuthenticationToView _ = True
     isValidSSNForAuthenticationToView SEBankIDAuthenticationToView ssn = isGood $ asValidSwedishSSN   ssn
     isValidSSNForAuthenticationToView NOBankIDAuthenticationToView ssn = isGood $ asValidNorwegianSSN ssn
-    isValidPhoneForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
-    isValidPhoneForAuthenticationToView StandardAuthenticationToView _ = True
-    isValidPhoneForAuthenticationToView SEBankIDAuthenticationToView _ = True
-    isValidPhoneForAuthenticationToView NOBankIDAuthenticationToView phone = isGood phoneValidation || isEmpty phoneValidation
-      where phoneValidation = asValidPhoneForNorwegianBankID phone
+    isValidMobileForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
+    isValidMobileForAuthenticationToView StandardAuthenticationToView _ = True
+    isValidMobileForAuthenticationToView SEBankIDAuthenticationToView _ = True
+    isValidMobileForAuthenticationToView NOBankIDAuthenticationToView mobile = isGood phoneValidation || isEmpty phoneValidation
+      where phoneValidation = asValidPhoneForNorwegianBankID mobile
 
 guardCanSetAuthenticationToSignForSignatoryWithValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> AuthenticationToSignMethod -> Maybe String -> Maybe String -> m ()
-guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mPhone = do
+guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobile = do
   sl <- $fromJust . getSigLinkFor slid <$> theDocument
   case authToSign of
     StandardAuthenticationToSign -> return ()
@@ -161,16 +161,16 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mPhone
               apiError $ signatoryStateError "You provided an empty authentication value, needs a value for authentication to view"
             Bad -> apiError $ signatoryStateError "The authentication value provided is not a valid for Swedish BankID"
             Good _ -> return ()
-    SMSPinAuthenticationToSign -> case mPhone of
+    SMSPinAuthenticationToSign -> case mMobile of
       Nothing -> return ()
-      Just phone -> do
-        -- If the signatory has authenticated to view with NOBankIDAuthenticationToView and a valid number, then we can't change the phone number!
-        when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView && signatorylinkidentifiedtoview sl && getMobile sl /= "" && phone /= getMobile sl) $
-          apiError $ signatoryStateError "The party has authenticated to view with Norwegian BankID, therefore you can't change the phone number"
-        -- If given a phone number we need to make sure it doesn't invalidate NOBankIDAuthenticationToView
+      Just mobile -> do
+        -- If the signatory has authenticated to view with NOBankIDAuthenticationToView and a valid number, then we can't change the mobile number!
+        when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView && signatorylinkidentifiedtoview sl && getMobile sl /= "" && mobile /= getMobile sl) $
+          apiError $ signatoryStateError "The party has authenticated to view with Norwegian BankID, therefore you can't change the mobile number"
+        -- If given a mobile number we need to make sure it doesn't invalidate NOBankIDAuthenticationToView
         when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $
-          case asValidPhoneForNorwegianBankID phone of
-            Bad -> apiError $ signatoryStateError "Phone number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
+          case asValidPhoneForNorwegianBankID mobile of
+            Bad -> apiError $ signatoryStateError "Mobile number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
             Empty -> return ()
             Good _ -> return ()
 
@@ -185,13 +185,13 @@ guardThatDocumentCanBeStarted = do
     whenM (isTemplate <$> theDocument) $ do
        apiError $ (documentStateError "Document is a template, templates can not be started")
     unlessM (((all signatoryHasValidDeliverySettings) . documentsignatorylinks) <$> theDocument) $ do
-       apiError $ documentStateError "Some parties have invalid email address or phone number, their invitation 'delivery_method' requires it to be valid and not empty."
+       apiError $ documentStateError "Some parties have invalid email address or mobile number, their invitation 'delivery_method' requires it to be valid and not empty."
     unlessM (((all signatoryHasValidSSNForIdentifyToView) . documentsignatorylinks) <$> theDocument) $ do
        apiError $ documentStateError "Some parties have invalid personal numbers, their 'authentication_to_view' requires it to be valid and not empty."
     unlessM (((all signatoryHasValidAuthSettings) . documentsignatorylinks) <$> theDocument) $ do
        apiError $ documentStateError "Some parties have invalid personal numbers, their 'authentication_to_sign' requires it to be valid or empty."
-    unlessM (((all signatoryHasValidPhoneForIdentifyToView) . documentsignatorylinks) <$> theDocument) $ do
-       apiError $ documentStateError "Some parties have invalid phone number and it is required for identification to view document."
+    unlessM (((all signatoryHasValidMobileForIdentifyToView) . documentsignatorylinks) <$> theDocument) $ do
+       apiError $ documentStateError "Some parties have invalid mobile number and it is required for identification to view document."
     whenM (isNothing . documentfile <$> theDocument) $ do
        apiError $ documentStateError "Document must have a file before it can be started"
     return ()
@@ -209,7 +209,7 @@ guardThatDocumentCanBeStarted = do
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN   $ getPersonalNumber sl
       NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
       _ -> True
-    signatoryHasValidPhoneForIdentifyToView sl =
+    signatoryHasValidMobileForIdentifyToView sl =
       let resultValidPhone = asValidPhoneForNorwegianBankID $ getMobile sl in
       if (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView)
          then isGood resultValidPhone || isEmpty resultValidPhone

@@ -1,0 +1,25 @@
+[ {"filter_by": "status", "statuses":
+      [ "preparation"
+      , "pending"
+      , "closed"
+      , "canceled"
+      , "timedout"
+      , "rejected"
+      , "document_error"
+      ]
+  }
+, {"filter_by": "mtime"}
+, {"filter_by": "mtime", "start_time":"2015-05-05T00:00:00Z"}
+, {"filter_by": "mtime", "end_time":"2015-05-05T00:00:00Z"}
+, {"filter_by": "mtime", "start_time":"2015-05-05T00:00:00Z", "end_time":"2015-05-05T00:00:01Z"}
+, {"filter_by": "tag", "name":"atag", "value":"aval"}
+, {"filter_by": "is_author"}
+, {"filter_by": "author", "user_id":"1"}
+, {"filter_by": "is_signable_on_pad"}
+, {"filter_by": "is_template"}
+, {"filter_by": "is_not_template"}
+, {"filter_by": "is_in_trash"}
+, {"filter_by": "is_not_in_trash"}
+, {"filter_by": "text", "text":"atext"}
+, {"filter_by": "user_can_sign", "user_id":"1"}
+]

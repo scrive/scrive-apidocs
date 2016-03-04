@@ -140,7 +140,8 @@
         {
           "name": "#☭ҖATT",
           "description": "#☭ҖATT_DESC",
-          "file": null
+          "file": null,
+          "filename" : null
         }
       ],
       "api_delivery_url": null

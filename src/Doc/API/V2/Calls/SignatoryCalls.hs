@@ -142,19 +142,19 @@ docApiV2SigSendSmsPin did slid = logDocumentAndSignatory did slid . api $ do
     when (signatorylinkauthenticationtosignmethod sl /= SMSPinAuthenticationToSign) $ do
       apiError $ signatoryStateError "Signatory authentication method to sign is not SMS PIN"
     -- Parameters
-    let slidPhone = getMobile sl
-    phone <- if not $ null slidPhone
-                then case asValidPhoneForSMS slidPhone of
+    let slidMobile = getMobile sl
+    mobile <- if not $ null slidMobile
+                then case asValidPhoneForSMS slidMobile of
                           Good v -> return v
                           _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
                 else do
-                    phoneParam <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "phone")
-                    case asValidPhoneForSMS phoneParam of
+                    mobileParam <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "mobile")
+                    case asValidPhoneForSMS mobileParam of
                          Good v -> return v
-                         _ -> apiError $ requestParameterInvalid "phone" "Not a valid phone number"
+                         _ -> apiError $ requestParameterInvalid "mobile" "Not a valid mobile number"
     -- API call actions
-    pin <- dbQuery $ GetSignatoryPin slid phone
-    sendPinCode sl phone pin
+    pin <- dbQuery $ GetSignatoryPin slid mobile
+    sendPinCode sl mobile pin
     -- Return
     return $ Accepted ()
 

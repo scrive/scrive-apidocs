@@ -82,6 +82,7 @@ kontraMigrations = [
   , createDocumentSealingConsumersTable
   , createDocumentSealingJobsTable
   , dropBrandedDomainContact
+  , addFileNameToSignatoryAttachment
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

@@ -225,6 +225,12 @@ testDocList = do
   assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resFilterPending)
   testJSONWith "test/json/api_v2/test-DocListEmpty.json" (rsBody resFilterPending)
 
+  allFiltersJSONBS <- liftIO $ B.readFile "test/json/api_v2/param-list-all.json"
+  let rq_all_filters_param = [ ("filter", inTextBS allFiltersJSONBS) ]
+  reqAllFilters <- mkRequestWithHeaders GET rq_all_filters_param []
+  (resAllFilters,_) <- runTestKontra reqAllFilters ctx $ docApiV2List
+  assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resAllFilters)
+
 -- Compare JSON sesults from API calls
 testJSONWith :: FilePath -> BS.ByteString -> TestEnv ()
 testJSONWith fp jsonBS = do

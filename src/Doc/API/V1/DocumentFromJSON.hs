@@ -360,7 +360,8 @@ instance FromJSValue SignatoryAttachment where
         case (name,description) of
              (Just n, Just d) -> return $ Just $ SignatoryAttachment {signatoryattachmentname  = n ,
                                                                       signatoryattachmentdescription = d,
-                                                                      signatoryattachmentfile = Nothing}
+                                                                      signatoryattachmentfile = Nothing,
+                                                                      signatoryattachmentfilename = Nothing}
              _ -> return Nothing
 
 instance FromJSValue FieldIdentity where
