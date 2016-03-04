@@ -21,14 +21,17 @@ module.exports = React.createClass({
   // Height of whole secton and each field is hardcoded
   participantsHeight: function () {
     var heightOfUnexpandedSignatory = 60;  // Height each signatory description when signatory is not expanded
-    var heightOfField = 48; // Height each field row
-    var heightOfParticipantSettings = 189; // Height of 6 selects at bottom of signatory
+    var heightOfSignatoryPadding = 14; // height of paddings between each signatory
+    var heightOfField = 50; // Height each field row
+    var heightOfParticipantSettings = 172; // Height of 6 selects at bottom of signatory
+    var heightOfParticipantBorder = 4;
     var height = 0;
 
     height += this.props.model.document().signatories().length * heightOfUnexpandedSignatory;
 
     if (this.props.model.participantDetail() != undefined) {
-      height += heightOfParticipantSettings;
+      height += heightOfParticipantBorder + heightOfParticipantSettings;
+      height += heightOfSignatoryPadding;
       var fields = 0;
       var nameIncluded = false;
       _.each(this.props.model.participantDetail().fields(), function (f) {

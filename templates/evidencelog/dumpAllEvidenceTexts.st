@@ -30,12 +30,20 @@ dumpAllEvidenceTexts=
         <h2>Verification page</h2>
         <table>
           $evidences:{evidence|
-          $if(evidence.verificationpage)$<tr><td>$evidence.name$</td><td>$evidence.verificationpage:noescape()$</td></tr>$endif$}$
+          $if(evidence.unavailable)$
+            <tr><td>$evidence.name$</td><td>(UNAVAILABLE)</td></tr>
+          $else$
+            $if(evidence.verificationpage)$<tr><td>$evidence.name$</td><td>$evidence.verificationpage:noescape()$</td></tr>$endif$
+          $endif$}$
         </table>
         <h2>Evidence Log</h2>
         <table>
           $evidences:{evidence|
-          <tr><td>$evidence.name$</td><td class="evidencelog">$evidence.evidencelog:noescape()$</td></tr>}$
+          $if(evidence.unavailable)$
+            <tr><td>$evidence.name$</td><td>(UNAVAILABLE)</td></tr>
+          $else$
+            <tr><td>$evidence.name$</td><td class="evidencelog">$evidence.evidencelog:noescape()$</td></tr>
+          $endif$}$
         </table>
       </div>
     </div>

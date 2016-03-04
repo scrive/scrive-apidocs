@@ -39,19 +39,20 @@ module.exports = React.createClass({
       return !field.isValid();
     });
   },
-  // We need to compute height in JS - height auto in css would be enought
+  // We need to compute height in JS - height auto in css would be enough
   // but it will not work with hide/show css transitions.
   height: function () {
     var sig = this.props.model;
     var viewmodel = this.props.viewmodel;
+    var heightOfParticipantBorder = 4;
     var heightOfUnexpandedSignatory = 46;  // Height each signatory description when signatory is not expanded
     var heightOfField = 50; // Height each field row
     var heightOfParticipantSettings = 172; // Height of 6 selects at bottom of signatory
-    var heightOfExpandedSignatoryHeader = 60;
+    var heightOfExpandedSignatoryHeader = 58;
     var height = heightOfUnexpandedSignatory;
 
     if (viewmodel.participantDetail() === sig) {
-      height = heightOfExpandedSignatoryHeader;
+      height = heightOfExpandedSignatoryHeader + heightOfParticipantBorder;
       height += heightOfParticipantSettings;
       var fields = 0;
       var nameIncluded = false;

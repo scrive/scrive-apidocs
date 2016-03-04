@@ -1,10 +1,9 @@
 var React = require("react");
 var Backbone = require("backbone");
-var CreateAccountView = require("./createaccount/createaccountview");
 var FeedbackView = require("./feedback/feedbackview");
 var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
 
-  module.exports = React.createClass({
+module.exports = React.createClass({
     propTypes: {
       document : React.PropTypes.object.isRequired
     },
@@ -19,10 +18,7 @@ var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
       return null !== /^(backbone|loxysoft|caspeco).scrive.com/.exec(location.host);
     },
     isQuestionaire : function() {
-      return (!this.isNotInterestedInQuestionnaire() && this.props.document.currentSignatory().company() !== '');
-    },
-    isSaveCopy : function() {
-      return !this.isHidden() && !this.isQuestionaire();
+      return !this.isNotInterestedInQuestionnaire() && !this.isHidden();
     },
     componentWillMount : function() {
       var promotionName = "";
@@ -33,12 +29,10 @@ var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
     },
     render: function() {
       var document = this.props.document;
-      if(this.isHidden()) {
-        return (<div/>);
-      } else if(this.isQuestionaire()) {
+      if(this.isQuestionaire()) {
         return <FeedbackView document={document} />;
-      } else if (this.isSaveCopy()) {
-        return (<CreateAccountView document={document}/>);
+      } else {
+        return (<div/>);
       }
     }
   });

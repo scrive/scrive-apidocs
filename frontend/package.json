@@ -29,6 +29,8 @@
     "grunt-shell": "~0.6.3",
     "grunt-shell-spawn": "~0.3.0",
     "isparta-loader": "^2.0.0",
+    "phantomjs-prebuilt": "^2.1.4",
+    "karma": "^0.13.0",
     "karma-chai": "~0.1.0",
     "karma-coverage": "~0.2.7",
     "karma-jscs-preprocessor": "~0.1",
@@ -39,7 +41,10 @@
     "load-grunt-tasks": "~0.1.0",
     "time-grunt": "~0.1.0",
     "underscore": "~1.8.2",
-    "webpack": "^1.12.12"
+    "webpack": "^1.12.12",
+    "webpack-dev-server": "^1.14.1",
+    "mocha": "^2.4.5",
+    "chai": "^3.5.0"
   },
   "dependencies": {
     "glob": "^7.0.0",
