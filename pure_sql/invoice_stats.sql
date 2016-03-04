@@ -28,10 +28,13 @@ SELECT escape_for_csv(companies.name) AS "Company name"
         LIMIT 1
        ) :: TEXT) AS "Company admin"
      , (CASE payment_plans.plan
-          WHEN 1 THEN 'free'
-          WHEN 2 THEN 'team'
-          WHEN 3 THEN 'form'
-          WHEN 4 THEN 'enterprise'
+          WHEN 0 THEN 'free'
+          WHEN 1 THEN 'team'
+          WHEN 2 THEN 'form'
+          WHEN 3 THEN 'enterprise'
+          WHEN 4 THEN 'trial'
+          WHEN 5 THEN 'company'
+          WHEN 6 THEN 'one'
         END) AS "Plan"
      , (CASE payment_plans.provider
           WHEN 0 THEN 'none'
