@@ -385,6 +385,7 @@ testSaveSigAttachmentEvidenceLog = do
   addRandomDocumentWithAuthorAndCondition author (isPreparation && isSignable) `withDocumentM` do
     file <- addNewRandomFile
     let sa = SignatoryAttachment { signatoryattachmentfile        = Nothing
+                                 , signatoryattachmentfilename    = Nothing
                                  , signatoryattachmentname        = "attachment"
                                  , signatoryattachmentdescription = "gimme!"
                                  }
@@ -408,6 +409,7 @@ testDeleteSigAttachmentAlreadySigned = do
     file <- addNewRandomFile
     sl <- (\d -> (documentsignatorylinks d) !! 1) <$> theDocument
     let sa = SignatoryAttachment { signatoryattachmentfile        = Nothing
+                                 , signatoryattachmentfilename    = Nothing
                                  , signatoryattachmentname        = "attachment"
                                  , signatoryattachmentdescription = "gimme!"
                                  }
@@ -430,6 +432,7 @@ testDeleteSigAttachmentEvidenceLog = do
   addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
     file <- addNewRandomFile
     let sa = SignatoryAttachment { signatoryattachmentfile        = Just file
+                                 , signatoryattachmentfilename    = Just "afile.ran"
                                                , signatoryattachmentname        = "attachment"
                                                , signatoryattachmentdescription = "gimme!"
                                                }
@@ -885,6 +888,7 @@ testSealDocument = replicateM_ 1 $ do
              file <- addNewRandomFile
 
              let att = SignatoryAttachment { signatoryattachmentfile = Just file
+                                           , signatoryattachmentfilename = Just "afile.ran"
                                            , signatoryattachmentname = show file
                                            , signatoryattachmentdescription = "att description"
                                            }
@@ -1330,10 +1334,12 @@ testUpdateSigAttachmentsAttachmentsOk = replicateM_ 10 $ do
     file2 <- addNewRandomFile
     --execute
     let att1 = SignatoryAttachment { signatoryattachmentfile = Just file1
+                                   , signatoryattachmentfilename = Just "afile1.ran"
                                    , signatoryattachmentname = "att1"
                                    , signatoryattachmentdescription = "att1 description"
                                    }
     let att2 = SignatoryAttachment { signatoryattachmentfile = Nothing
+                                   , signatoryattachmentfilename = Nothing
                                    , signatoryattachmentname = "att2"
                                    , signatoryattachmentdescription = "att2 description"
                                    }

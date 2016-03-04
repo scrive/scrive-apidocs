@@ -65,8 +65,8 @@ module.exports = React.createClass({
             maxPageSize={1000} // This view will not work well when there are more templates
             url={Utils.listCallUrl}
             paramsFunction={Utils.paramsFunctionWithFilter([
-                {"filter_by" : "template", "is_template" : true},
-                {"filter_by" : "trash", "is_trashed" : false}
+                {"filter_by" : "is_template"},
+                {"filter_by" : "is_not_in_trash"}
               ])}
             dataFetcher={function(d) {
               var list = Utils.dataFetcher(d);

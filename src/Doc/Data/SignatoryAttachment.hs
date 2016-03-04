@@ -8,7 +8,8 @@ import File.FileID
 import KontraPrelude
 
 data SignatoryAttachment = SignatoryAttachment {
-  signatoryattachmentfile :: !(Maybe FileID)
+  signatoryattachmentfile     :: !(Maybe FileID)
+, signatoryattachmentfilename :: !(Maybe String)
 , signatoryattachmentname :: !String
 , signatoryattachmentdescription :: !String
 } deriving (Eq, Ord, Show)
@@ -18,18 +19,20 @@ data SignatoryAttachment = SignatoryAttachment {
 signatoryAttachmentsSelectors :: [SQL]
 signatoryAttachmentsSelectors = [
     "signatory_attachments.file_id"
+  , "files.name"
   , "signatory_attachments.name"
   , "signatory_attachments.description"
   ]
 
-type instance CompositeRow SignatoryAttachment = (Maybe FileID, String, String)
+type instance CompositeRow SignatoryAttachment = (Maybe FileID, Maybe String, String, String)
 
 instance PQFormat SignatoryAttachment where
   pqFormat _ = "%signatory_attachment"
 
 instance CompositeFromSQL SignatoryAttachment where
-  toComposite (mfid, name, description) = SignatoryAttachment {
+  toComposite (mfid, mfname, name, description) = SignatoryAttachment {
     signatoryattachmentfile = mfid
+  , signatoryattachmentfilename = mfname
   , signatoryattachmentname = name
   , signatoryattachmentdescription = description
   }
