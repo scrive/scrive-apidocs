@@ -45,7 +45,7 @@ var $ = require("jquery");
 
       if (zoom > 1 && width < 772) {
         if (self._openTry === 0) {
-          alert(localization.zoomOut.replace("<br/>", "\n"));
+          alert(localization.zoomOut1 + "\n" + localization.zoomOut2);
         } else {
           alert(localization.zoomOutMore);
         }
