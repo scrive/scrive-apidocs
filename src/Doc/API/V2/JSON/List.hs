@@ -83,7 +83,7 @@ filterType (DocumentAPIFilterIsSignableOnPad) = "is_signable_on_pad"
 filterType (DocumentAPIFilterIsTemplate) = "is_template"
 filterType (DocumentAPIFilterIsNotTemplate) = "is_not_template"
 filterType (DocumentAPIFilterIsInTrash) = "is_in_trash"
-filterType (DocumentAPIFilterIsNotInTrash) = "is_not_in_trashed"
+filterType (DocumentAPIFilterIsNotInTrash) = "is_not_in_trash"
 filterType (DocumentAPIFilterByText _) = "text"
 filterType (DocumentAPIFilterCanBeSignedBy _) = "user_can_sign"
 

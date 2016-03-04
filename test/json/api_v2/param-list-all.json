@@ -19,6 +19,7 @@
 , {"filter_by": "is_template"}
 , {"filter_by": "is_not_template"}
 , {"filter_by": "is_in_trash"}
+, {"filter_by": "is_not_in_trash"}
 , {"filter_by": "text", "text":"atext"}
 , {"filter_by": "user_can_sign", "user_id":"1"}
 ]
