@@ -430,6 +430,7 @@ signatoryForListCSV doc sl = [
             , getAuthorName $ doc
             , formatTimeSimple $ (documentctime doc)
             , maybe "" formatTimeSimple $ signtime <$> documentinvitetime doc
+            , maybe "" formatTimeSimple $ documenttimeouttime doc
             , maybe "" formatTimeSimple $ maybereadinvite sl
             , maybe "" formatTimeSimple $ signtime <$> maybeseeninfo sl
             , maybe "" formatTimeSimple $ signtime <$> maybesigninfo sl
@@ -467,6 +468,7 @@ docForListCSVHeaderV1 = [
                         , "Author"
                         , "Creation"
                         , "Started"
+                        , "Signing deadline"
                         , "Party read invitation"
                         , "Party seen document"
                         , "Party signed document"
