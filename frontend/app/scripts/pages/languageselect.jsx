@@ -29,9 +29,9 @@ var _ = require("underscore");
         , {value : "el", name : localization.languages.elInEl}
         , {value : "fi", name : localization.languages.fiInFi}
         , {value : "is", name : localization.languages.isInIs}
-        , {value : "et", name : localization.languages.etInEt, hidden: true}
-        , {value : "lv", name : localization.languages.lvInLv, hidden: true}
-        , {value : "lt", name : localization.languages.ltInLt, hidden: true}
+        , {value : "et", name : localization.languages.etInEt}
+        , {value : "lv", name : localization.languages.lvInLv}
+        , {value : "lt", name : localization.languages.ltInLt}
       ],function(l) {return l.name;});
     },
     render: function() {

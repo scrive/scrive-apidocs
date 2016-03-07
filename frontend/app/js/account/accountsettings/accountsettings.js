@@ -328,9 +328,9 @@ var AccountSettingsView = Backbone.View.extend({
         , {name: localization.languages.elInEl, value: "el"}
         , {name: localization.languages.fiInFi, value: "fi"}
         , {name: localization.languages.isInIs, value: "is"}
-        , {name: localization.languages.etInEt, value: "et", hidden: true}
-        , {name: localization.languages.lvInLv, value: "lv", hidden: true}
-        , {name: localization.languages.ltInLt, value: "lt", hidden: true}
+        , {name: localization.languages.etInEt, value: "et"}
+        , {name: localization.languages.lvInLv, value: "lv"}
+        , {name: localization.languages.ltInLt, value: "lt"}
       ];
 
       languages = _.sortBy(languages, function(l) {return l.name.toLowerCase();});

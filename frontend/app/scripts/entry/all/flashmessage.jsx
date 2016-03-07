@@ -1,5 +1,5 @@
 var React = require("react");
-var Flashmessage = require("../../../js/flashmessages");
+var FlashMessage = require("../../../js/flashmessages").FlashMessage;
 var $ = require("jquery");
 
 $(function () {
