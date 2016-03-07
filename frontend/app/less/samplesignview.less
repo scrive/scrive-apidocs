@@ -1,4 +1,5 @@
 @import 'branding/variables';
+@preview-ratio: 500 / 1040;
 
 .sample-sign-view {
   border: 1px solid @gray-border;
@@ -23,15 +24,20 @@
 
     .logo {
       display: table-cell;
-      padding: 10px 10px 10px 41px;
+      padding: 10px 10px 10px 50px;
       vertical-align: middle;
       text-align: left;
+
+      img {
+        max-width: @preview-ratio * 172px;
+        max-height: @preview-ratio * 52px;
+      }
     }
 
     .header-text {
       display: table-cell;
       font-size: 10px;
-      padding-right: 38px;
+      padding-right: 52px;
       text-align: right;
       vertical-align: middle;
     }
@@ -55,12 +61,18 @@
   }
 
   .contentheader {
+    margin: 0 !important;
     text-align: center;
     padding-top: 5px;
     font-size: 12px;
     background-color: white;
-    border: 1px solid @gray-border;
     border-bottom-width: 0;
+
+    .document-name {
+      text-decoration: underline;
+      font-size: 14px;
+      padding: 14px;
+    }
 
     p {
       display: inline-block;
@@ -87,7 +99,6 @@
     .instructions {
       font-size: 18px;
       margin-bottom: 0;
-      margin-top: 10px;
 
       .arrowtext {
         font-weight: 600;
@@ -97,13 +108,10 @@
   }
 
   .document {
-    border: 1px solid @gray-border;
-    padding: 10px;
-    padding-bottom: 0;
+    box-shadow: inset 0 0 10px 0 rgba(0,0,0,.15);
+    padding: @preview-ratio * 45px;
     text-align: center;
-    background: @gray-10-percent;
-    border-bottom-right-radius: 4px;
-    border-bottom-left-radius: 4px;
+    background: #f1f1f1;
     position: relative;
 
     .exampledocument {
@@ -116,8 +124,8 @@
       height: 102px;
       width: 102px;
       position: absolute;
-      left: 43%;
-      bottom: 162px;
+      left: 40%;
+      bottom: 25px;
       background: url('../img/sign-arrow-down.png');
     }
 
@@ -129,43 +137,23 @@
     }
 
     .mandatoryfield {
-      bottom: 560px;
+      bottom: 415px;
       left: 75px;
 
       .front {
-        background-image: url('../img/sign-arrow-action-right-front.png');
+        position: relative;
+        z-index: 2;
+        background-image: url('../img/sign-arrow-action-right.png');
         float: left;
         background-repeat: no-repeat;
         height: 37px;
         width: 20px;
-      }
-
-      .label {
-        background-image: url('../img/sign-arrow-action-label.png');
-        float: left;
-        line-height: 1.8;
-        padding-left: 3px;
-        padding-right: 3px;
-        background-repeat: repeat-x;
-        color: #FFF;
-        font-size: 14px;
-        height: 37px;
-        min-width: 43px;
-        padding-top: 6px;
-        white-space: nowrap;
-      }
-
-      .back {
-        background-image: url('../img/sign-arrow-action-right-back.png');
-        float: left;
-        background-repeat: no-repeat;
-        height: 37px;
-        width: 8px;
+        margin-left: -9px;
       }
     }
 
     .optionalfield {
-      bottom: 575px;
+      bottom: 407px;
       left: 369px;
       width: 62px;
     }
@@ -196,106 +184,55 @@
   }
 
   .section {
-    height: 56px;
     text-align: center;
-    border-top-width: 1px;
-    border-top-color: @gray-border;
-    border-top-style: solid;
     margin: 10px 0;
-    box-shadow: 0 0 8px rgba(80, 80, 80, 0.31);
+    padding: @preview-ratio * 45px;
     background-color: white;
-  }
 
-  .attachments {
-    .attachments-container {
-      padding: 10px;
-
-      .file-container {
-        float: right;
-
-        .name {
-          font-size: 11px;
-          margin-right: 150px;
-        }
-        .icon {
-          height: 9px;
-          margin-right: 2px;
-          max-width: none;
-        }
-        .button {
-          line-height: 10px;
-          font-size: 11px;
-        }
-      }
-
-      h2 {
-        float: left;
-        color: #4A4A49;
-        font-size: 14px;
-        font-weight: 300;
-      }
+    &:last-child {
+      margin-bottom: 0;
     }
   }
 
-  .buttons {
+  .signsection {
+    margin-top: 0;
     height: auto;
     overflow: hidden;
-    padding: 10px;
 
     .button {
+      display: block;
+      margin: 0 auto;
+      width: @preview-ratio * 475px;
+
+      &:first-child {
+        margin-bottom: 10px;
+      }
+
       .label {
         margin: 0 7px 0 7px;
       }
     }
 
-    .buttoncontainer {
-      &.reject {
-        float: left;
-      }
-      &.sign {
-        float: right;
-      }
-    }
-
-    &.noreject {
-      .buttoncontainer {
-        &.sign {
-          float: none;
-        }
-        &.reject {
-          display: none;
-        }
-      }
+    .reject {
+      font-weight: 300;
+      background-color: white;
+      text-decoration: underline;
     }
   }
 
   .innercontent {
     width: 500px;
     margin: auto;
-    padding-bottom: 10px;
-    padding-top: 15px;
   }
 
   .content {
-    padding-bottom: 20px;
+    background-color: #F1F1F1;
   }
 
   .footer {
-    height: 30px;
-    padding: 10px;
-    border-top: 1px solid @blue-border;
-    font-size: 10px;
-    display: table;
-    width: 540px; 
-
-    &.hidden {
-      display: none;
-    }
-
-    .text {
-      text-align: center;
-      display: table-cell;
-      vertical-align: middle;
+    .logo {
+      margin: 0 auto;
+      width: @preview-ratio * 149px;
     }
   }
 }
