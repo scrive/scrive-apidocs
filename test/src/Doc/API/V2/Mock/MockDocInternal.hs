@@ -216,10 +216,12 @@ instance Unjson MockAnchor where
 data MockSigAttachment = MockSigAttachment {
     mockSigAttachmentName         :: String
   , mockSigAttachmentDescription  :: String
-  , mockSigAttachmentFile         :: Maybe String
+  , mockSigAttachmentFileId       :: Maybe String
+  , mockSigAttachmentFileName     :: Maybe String
 } deriving (Show, Eq)
 instance Unjson MockSigAttachment where
   unjsonDef = objectOf $ pure MockSigAttachment
     <*> field "name"        mockSigAttachmentName         "MockSigAttachment Name"
     <*> field "description" mockSigAttachmentDescription  "MockSigAttachment Description"
-    <*> fieldOpt "file"     mockSigAttachmentFile         "MockSigAttachment File"
+    <*> fieldOpt "file_id"    mockSigAttachmentFileId     "MockSigAttachment File ID"
+    <*> fieldOpt "file_name"  mockSigAttachmentFileName   "MockSigAttachment File Name"
