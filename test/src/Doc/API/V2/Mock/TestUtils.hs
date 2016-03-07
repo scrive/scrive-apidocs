@@ -224,7 +224,7 @@ getMockDocSigLinkAttachmentHasFile :: Int -> Int -> MockDoc -> Bool
 getMockDocSigLinkAttachmentHasFile si ai md
   | ai > length atts = $unexpectedError
     $ "getMockDocSigLinkAttachmentHasFile could not get index " ++ show ai ++ " from MockDoc:\n" ++ show md
-  | otherwise = isJust . mockSigAttachmentFile $ atts !! (ai-1)
+  | otherwise = isJust . mockSigAttachmentFileId $ atts !! (ai-1)
   where atts = mockSigLinkAttachments . getMockSigLinkNumber si $ md
 
 setMockDocSigLinkAttachments :: Int -> [(String, String)] -> MockDoc -> MockDoc
@@ -232,7 +232,8 @@ setMockDocSigLinkAttachments i namesdesc = setForSigNumberFromMockDoc i
   (\msl -> msl { mockSigLinkAttachments = for namesdesc
                   (\(n,d) -> MockSigAttachment { mockSigAttachmentName = n
                                                , mockSigAttachmentDescription = d
-                                               , mockSigAttachmentFile = Nothing
+                                               , mockSigAttachmentFileId = Nothing
+                                               , mockSigAttachmentFileName = Nothing
                                                }
                   )
                }

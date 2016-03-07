@@ -109,8 +109,8 @@ unjsonSignatoryAttachment :: UnjsonDef SignatoryAttachment
 unjsonSignatoryAttachment = objectOf $ pure (SignatoryAttachment Nothing Nothing)
     <*> field "name"  signatoryattachmentname  "Name of attachment"
     <*> field "description" signatoryattachmentdescription "Description of attachment"
-    <* fieldReadOnlyOpt "file" signatoryattachmentfile "Uploaded file id"
-    <* fieldReadOnlyOpt "filename" signatoryattachmentfilename "Uploaded filename"
+    <* fieldReadOnlyOpt "file_id" signatoryattachmentfile "Uploaded file id"
+    <* fieldReadOnlyOpt "file_name" signatoryattachmentfilename "Uploaded filename"
 
 unjsonDocumentTag :: UnjsonDef DocumentTag
 unjsonDocumentTag = objectOf $ pure DocumentTag
