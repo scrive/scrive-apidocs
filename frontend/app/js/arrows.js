@@ -11,6 +11,30 @@ var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
 var pixelSpeed = 800;
 var maxScrollTime = 2000;
 
+function scrollWithInterrupt(scrollTop, timeToScroll, finish) {
+  var $el = $("html,body");
+
+  function stop() {
+    $el.stop(true, false);
+
+    $el.unbind("mousewheel", stop);
+    $el.unbind("mousedown", stop);
+    $el.unbind("keydown", stop);
+    $el.unbind("touchstart", stop);
+
+    finish();
+  }
+
+  $el.animate({
+    scrollTop: scrollTop
+  }, timeToScroll, finish);
+
+  $el.bind("mousewheel", stop);
+  $el.bind("mousedown", stop);
+  $el.bind("keydown", stop);
+  $el.bind("touchstart", stop);
+}
+
 var ArrowModel = Backbone.Model.extend({
   defaults : {
       type : undefined,
@@ -206,6 +230,7 @@ var ScrollUpArrowView = Backbone.View.extend({
        mixpanel.track('Click fat arrow up');
        var model = this.model;
        var task = this.model.point();
+       var self = this;
        if (task == undefined) return;
        var scrollTop = task.offset().top - 150;
        var currentScrollTop = $(window).scrollTop();
@@ -214,10 +239,8 @@ var ScrollUpArrowView = Backbone.View.extend({
         if (timeToScroll > maxScrollTime) {
           timeToScroll = maxScrollTime;
         }
-       $('html,body').animate({
-          scrollTop: scrollTop
-       }, timeToScroll, function() {
-         this.alreadyScrolling = false;
+       scrollWithInterrupt(scrollTop, timeToScroll, function () {
+         self.alreadyScrolling = false;
          model.scrollDone();
        });
        return false;
@@ -273,6 +296,7 @@ var ScrollDownArrowView = Backbone.View.extend({
         }
         this.alreadyScrolling = true;
         mixpanel.track('Click fat arrow down');
+        var self = this;
         var model = this.model;
         var task = this.model.point();
 
@@ -300,10 +324,8 @@ var ScrollDownArrowView = Backbone.View.extend({
           timeToScroll = maxScrollTime;
         }
 
-        $('html,body').animate({
-          scrollTop: scrollTop
-        }, timeToScroll, function() {
-          this.alreadyScrolling = false;
+        scrollWithInterrupt(scrollTop, timeToScroll, function () {
+          self.alreadyScrolling = false;
           model.scrollDone();
         });
 
