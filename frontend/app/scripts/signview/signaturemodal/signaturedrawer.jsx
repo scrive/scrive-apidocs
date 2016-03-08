@@ -246,7 +246,7 @@ return React.createClass({
         img.type = "image/png";
         img.onload = function () {
           self.canvas[0].getContext("2d").drawImage(img, 0, 0, canvasWidth, canvasHeight);
-        }
+        };
         img.src =  this.state.model.value();
       }
       this.setState({picture: picture, show: true});
@@ -282,7 +282,7 @@ return React.createClass({
         img.type = "image/png";
         img.onload = function () {
           canvas[0].getContext("2d").drawImage(img, 0, 0, self.canvasWidth(), self.canvasHeight());
-        }
+        };
         img.src =  this.state.model.value();
       }
     },
