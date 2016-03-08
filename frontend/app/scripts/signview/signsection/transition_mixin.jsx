@@ -12,7 +12,7 @@ var zoomTools = require("../../common/zoomtools");
 
     scrollIntoView: function (ms) {
       var $node = $(this.getDOMNode());
-      if (!isElementInViewport($node[0])) {
+      if (!isElementInViewport.entire($node)) {
         var height = $node.outerHeight();
         var windowHeight = (window.innerHeight || $(window).height()) / zoomTools.zoomLevel();
         var scrollTop = $(window).scrollTop();

@@ -2,6 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var $ = require("jquery");
 var Arrow = require("./arrows.js").Arrow;
+var isElementInViewport = require("../scripts/common/iselementinviewport");
 
 /*
  * General list of tasks (actions) that user should perform on page.
@@ -120,6 +121,9 @@ var PageTask = exports.PageTask = Backbone.Model.extend({
   isExtraDetailsTask : function() {
     return this.get("type") == 'extra-details';
   },
+  isOverlayTask : function() {
+    return this.get("type") == 'overlay';
+  },
   tipSide : function() {
     return this.get("tipSide");
   },
@@ -226,6 +230,30 @@ var PageTasksArrowView = Backbone.View.extend({
     if (this.arrow != undefined)
         this.arrow.enable();
   },
+  taskOverlayArrow : function(task) {
+    this.task = task;
+
+    if (isElementInViewport.part(task.el())) {
+      return ;
+    }
+
+    var scrolltop = $(window).scrollTop();
+    var scrollbottom = scrolltop + (window.innerHeight ? window.innerHeight : $(window).height());
+    var eltop = task.el().offset().top;
+    var elbottom = eltop +task.el().height();
+    var bottommargin = 0;
+
+    if ((scrolltop >= 0) && (elbottom <= eltop)) {
+       window.setTimeout(function() {view.updateArrow()} , 500);
+       return;
+    }
+
+    if ((elbottom + bottommargin) > scrollbottom) {
+      return new Arrow({type: 'scroll-down', overlay: true, point : $(task.el()), scrollDone : function() {task.onActivate();} });
+    } else {
+      return new Arrow({type: 'scroll-up', overlay: true, point : $(task.el()), scrollDone : function() {task.onActivate();} });
+    }
+  },
   taskArrow : function(task) {
         var view = this;
         this.task = task;
@@ -269,6 +297,7 @@ var PageTasksArrowView = Backbone.View.extend({
         if (task == undefined || arrow == undefined) return true;
         if (arrow.isDisabled()) return false;
         if (task != newtask) return true;
+        if (task.isOverlayTask()) return true;
         if ((scrolltop >= 0) && (elbottom <= eltop)) return false;
 
         if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
@@ -301,13 +330,17 @@ var PageTasksArrowView = Backbone.View.extend({
           this.arrow.clear();
       if (this.model.active() != undefined)
           {
-              this.arrow = this.taskArrow(this.model.active());
+              if (this.model.active().isOverlayTask()) {
+                this.arrow = this.taskOverlayArrow(this.model.active());
+              } else {
+                this.arrow = this.taskArrow(this.model.active());
+              }
               if (this.arrow != undefined)
                   $(this.el).append(this.arrow.el());
               this.trigger("change:arrow");
               if (this.arrow != undefined) {
                   view.arrow.fixWidth();
-                  setTimeout(function() {view.arrow.fixWidth();},100);
+                  setTimeout(function() {view.arrow && view.arrow.fixWidth();},100);
                   if (this.shouldBlinkOnUpdate(oldArrow,view.arrow)) {
                     this.blink();
                   }

@@ -3,14 +3,10 @@ var Backbone = require("backbone");
 var React = require("react");
 var Button = require("../../common/button");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
-var TaskMixin = require("../tasks/task_mixin");
 var ViewSize = require("../viewsize");
-var PageTask = require("../../../js/tasks.js").PageTask;
 var $ = require("jquery");
 
   module.exports = React.createClass({
-    mixins: [TaskMixin],
-
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
       title: React.PropTypes.string.isRequired,
@@ -18,28 +14,6 @@ var $ = require("jquery");
       canSign: React.PropTypes.bool.isRequired,
       onBack: React.PropTypes.func.isRequired,
       onSign: React.PropTypes.func.isRequired
-    },
-
-    createTasks: function () {
-      var self = this;
-      var model = self.props.model;
-
-      return [new PageTask({
-        type: "sign",
-        onArrowClick: function () {
-          self.props.onSign();
-        },
-        isComplete: function () {
-          return !model.document().currentSignatoryCanSign();
-        },
-        el: $(self.refs.signButton.getDOMNode()),
-        onActivate: function () {
-          mixpanel.track("Begin signature task");
-        },
-        onDeactivate: function () {
-          mixpanel.track("Finish signature task");
-        }
-      })];
     },
 
     render: function () {

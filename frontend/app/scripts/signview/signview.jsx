@@ -79,6 +79,7 @@ var PadSigningView = require("./padsigningview");
       var self = this;
       var model = self.state.model;
       $(window).resize(this.handleResize);
+      $(window).on("orientationchange", this.handleOrientationChange);
       model.recall();
       ReloadManager.pushBlock(model.blockReload);
       onElementHeightChange(self.getDOMNode(), function () {
@@ -113,6 +114,14 @@ var PadSigningView = require("./padsigningview");
 
     disableOverlay: function () {
       this.setState({overlay: false});
+    },
+
+    handleOrientationChange: function () {
+      // This fixes an issue on Chrome for iOS on iPhone5 where the browser does not repaint when phone flips.
+      // Still need to fix this issue on iPhone6.
+      setTimeout(function () {
+        $(window).scrollTop($(window).scrollTop());
+      }, 5);
     },
 
     handleResize: function () {
