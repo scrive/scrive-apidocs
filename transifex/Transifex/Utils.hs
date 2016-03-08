@@ -1,4 +1,4 @@
-module Transifex.Utils (TranslationResource(..), allResources, readResource, translationFile, allLangs, sourceLang , encodeTranslationJSON, textsToJSON,textsFromStringJSON, textsFromJSON, Change(..), compareTranslations,parsePushResponse) where
+module Transifex.Utils (TranslationResource(..), allResources, readResource, translationFile, allLangs, allTargetLangs, sourceLang , encodeTranslationJSON, textsToJSON,textsFromStringJSON, textsFromJSON, Change(..), compareTranslations,parsePushResponse) where
 
 
 import Data.CSV (csvFile)
@@ -41,6 +41,9 @@ allLangs = ["en","sv","de","fr","it","es","pt","nl","da","no","el","fi","is","et
 
 sourceLang :: String
 sourceLang = "en"
+
+allTargetLangs :: [String]
+allTargetLangs = delete sourceLang allLangs
 
 encodeTranslationJSON :: JSValue -> String
 encodeTranslationJSON  (JSObject jso) = "{ \n" ++ (intercalate ",\n" $ map (\(s,js) -> encode s ++ ":" ++ encode js) (fromJSObject jso)) ++ "\n}\n"
