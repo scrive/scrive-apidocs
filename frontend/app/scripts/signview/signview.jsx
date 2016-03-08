@@ -20,6 +20,8 @@ var DocumentViewer = require("../../js/documentviewer.js").DocumentViewer;
 var Document = require("../../js/documents.js").Document;
 var $ = require("jquery");
 var ReloadManager = require("../../js/reloadmanager.js").ReloadManager;
+var PadSigningView = require("./padsigningview");
+
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
@@ -161,6 +163,9 @@ var ReloadManager = require("../../js/reloadmanager.js").ReloadManager;
                 loggedInAsAuthor={model.loggedInAsAuthor()}
                 arrow={function () { return model.arrow(); }}
               />
+              {/* if */ this.props.loggedInAsAuthor && model.hasPadSigning() &&
+                <PadSigningView sigs={doc.signatoriesThatCanSignNowOnPad()} />
+              }
               {/* if */ model.hasPostSignView() &&
                 <PostSignView document={doc} />
               }

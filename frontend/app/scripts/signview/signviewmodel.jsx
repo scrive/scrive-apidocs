@@ -76,6 +76,15 @@ var PageTasksArrow = require("../../js/tasks.js").PageTasksArrow;
       return this.get("document");
     },
 
+    hasPadSigning: function () {
+      var doc = this.document();
+      var sig = doc.currentSignatory();
+
+      return doc.currentSignatory().padDelivery() &&
+        doc.isSignedNotClosed() &&
+        doc.signatoriesThatCanSignNowOnPad().length > 0;
+    },
+
     allowsavesafetycopy: function () {
       return this.get("allowsavesafetycopy");
     },

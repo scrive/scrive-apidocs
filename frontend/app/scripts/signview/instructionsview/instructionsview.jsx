@@ -1,7 +1,6 @@
 var Backbone = require("backbone");
 var React = require("react");
 var Button = require("../../common/button");
-var PadGiveToNextView = require("./padgivetonextview");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 var Document = require("../../../js/documents.js").Document;
 
@@ -40,9 +39,6 @@ var Document = require("../../../js/documents.js").Document;
       arrow: React.PropTypes.func.isRequired
     },
 
-    componentDidMount: function () {
-    },
-
     headlineText: function () {
       var doc = this.props.model;
       var sig = doc.currentSignatory();
@@ -63,15 +59,6 @@ var Document = require("../../../js/documents.js").Document;
       } else {
         return localization.docsignview.unavailableForSign;
       }
-    },
-
-    hasPadSigning: function () {
-      var doc = this.props.model;
-      var sig = doc.currentSignatory();
-
-      return doc.currentSignatory().padDelivery() &&
-        doc.isSignedNotClosed() &&
-        doc.signatoriesThatCanSignNowOnPad().length > 0;
     },
 
     handleArrowTextClick: function () {
@@ -119,9 +106,6 @@ var Document = require("../../../js/documents.js").Document;
                 title={doc.title()}
                 onDownload={this.handleDownloadClick}
               />
-            }
-            {/* if */ this.props.loggedInAsAuthor && this.hasPadSigning() &&
-              <PadGiveToNextView sigs={doc.signatoriesThatCanSignNowOnPad()} />
             }
         </div>
       );

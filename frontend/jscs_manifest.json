@@ -16,6 +16,7 @@
   "./app/scripts/signview/identify/**/*.jsx",
   "./app/scripts/signview/signsection/*.jsx",
   "./app/scripts/signview/feedback/*.jsx",
+  "./app/scripts/signview/padsigningview.jsx",
   "./app/scripts/signview/createaccount/*.jsx",
   "./app/scripts/signview/tasks/*.jsx",
   "./app/scripts/signview/signview.jsx",
