@@ -322,7 +322,7 @@ signatoryLinksSelectors = [
   , "signatory_links.deleted"
   , "signatory_links.really_deleted"
   , "signatory_links.csv_contents"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryAttachmentsSelectors <> ")::signatory_attachment FROM signatory_attachments LEFT JOIN files ON (files.id = signatory_attachments.file_id) WHERE signatory_links.id = signatory_attachments.signatory_link_id ORDER BY signatory_attachments.file_id)"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryAttachmentsSelectors <> ")::signatory_attachment FROM signatory_attachments LEFT JOIN files ON (files.id = signatory_attachments.file_id) WHERE signatory_links.id = signatory_attachments.signatory_link_id ORDER BY signatory_attachments.file_id, signatory_attachments.name)"
   , "signatory_links.sign_redirect_url"
   , "signatory_links.reject_redirect_url"
   , "signatory_links.rejection_time"
