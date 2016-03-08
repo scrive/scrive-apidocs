@@ -112,6 +112,7 @@ var $ = require("jquery");
     componentDidUpdate: function (prevProps) {
       if (this.props.isVertical !== prevProps.isVertical) {
         this.forceUpdateTasks();
+        this.refocus();
       }
     },
 
@@ -144,6 +145,24 @@ var $ = require("jquery");
       }
 
       return tasks;
+    },
+
+    refocus: function () {
+      var ref = this.state.focus;
+      if (ref !== "" && this.refs[ref]) {
+        this.refs[ref].focus();
+      }
+    },
+
+    handleBlur: function () {
+      this.setState({focus: ""});
+    },
+
+    handleFocus: function (ref) {
+      var self = this;
+      return function () {
+        self.setState({focus: ref});
+      };
     },
 
     render: function () {
@@ -218,6 +237,8 @@ var $ = require("jquery");
                         fstnameField.setValue(str);
                       }
                     }}
+                    onFocus={this.handleFocus("name")}
+                    onBlur={this.handleBlur}
                   />
                 </DetailsItem>
               }
@@ -232,6 +253,8 @@ var $ = require("jquery");
                     className={emailClass}
                     value={emailField.value()}
                     onChange={function (value) {emailField.setValue(value);}}
+                    onFocus={this.handleFocus("email")}
+                    onBlur={this.handleBlur}
                   />
                 </DetailsItem>
               }
@@ -245,6 +268,8 @@ var $ = require("jquery");
                     className={ssnClass}
                     value={ssnField.value()}
                     onChange={function (value) {ssnField.setValue(value);}}
+                    onFocus={this.handleFocus("ssn")}
+                    onBlur={this.handleBlur}
                   />
                 </DetailsItem>
               }
@@ -259,6 +284,8 @@ var $ = require("jquery");
                     className={phoneClass}
                     value={phoneField.value()}
                     onChange={function (value) {phoneField.setValue(value);}}
+                    onFocus={this.handleFocus("phone")}
+                    onBlur={this.handleBlur}
                   />
                 </DetailsItem>
               }
