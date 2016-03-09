@@ -250,8 +250,10 @@ module.exports = React.createClass({
       if (this.state.model.value() && this.state.model.value() != "") {
         var img = new Image();
         img.type = "image/png";
+        img.onload = function () {
+          self.canvas[0].getContext("2d").drawImage(img, 0, 0, canvasWidth, canvasHeight);
+        };
         img.src =  this.state.model.value();
-        picture.drawImage(img, 0, 0, canvasWidth, canvasHeight);
       }
       this.setState({picture: picture, show: true});
       this.initDrawing();
@@ -278,14 +280,16 @@ module.exports = React.createClass({
       this.forceUpdate();
     },
     componentDidUpdate: function () {
+      var self = this;
       var canvas = this.canvas;
       if (canvas.width() != this.canvasWidth() || canvas.height() != this.canvasHeight()) {
-        var picture = canvas[0].getContext("2d");
+        canvas.attr("width", this.canvasWidth()).attr("height", this.canvasHeight());
         var img = new Image();
         img.type = "image/png";
+        img.onload = function () {
+          canvas[0].getContext("2d").drawImage(img, 0, 0, self.canvasWidth(), self.canvasHeight());
+        };
         img.src =  this.state.model.value();
-        canvas.attr("width", this.canvasWidth()).attr("height", this.canvasHeight());
-        canvas[0].getContext("2d").drawImage(img, 0, 0, this.canvasWidth(), this.canvasHeight());
       }
     },
     startDrawing: function (drawingMethod, pointerId) {

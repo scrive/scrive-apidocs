@@ -106,6 +106,7 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                     case ev of
                       SL_Opened -> handleOpenedInvitation slid email muid
                       SL_Delivered -> handleDeliveredInvitation bd mc slid
+                      SL_Failed 0 5001 -> handleDeliveredInvitation bd mc slid -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
                       SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
                       _ -> return ()
                   handleEv (SendinBlueEvent email ev) = do
