@@ -172,7 +172,9 @@ handleDeferredInvitation bd mc slid email = do
 handleUndeliveredInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> MailsConfig -> SignatoryLinkID -> m ()
 handleUndeliveredInvitation bd mc slid = do
   getSigLinkFor slid <$> theDocument >>= \case
-    Just signlink -> do
+    Just signlink | mailinvitationdeliverystatus signlink == Delivered -> do
+      logInfo "Undelivered email event for email that was already delivered" $ object ["signatory_email" .= getEmail signlink]
+                  | otherwise -> do
       time <- currentTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) slid
       _ <- dbUpdate $ SetEmailInvitationDeliveryStatus slid Undelivered actor
