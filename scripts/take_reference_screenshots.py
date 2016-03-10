@@ -205,21 +205,18 @@ if __name__ == '__main__':
         wait_for_element_to_disappear(driver, '.above-overlay')
 
         # user smaller size, so small screen mode is enabled
-        driver.set_window_size(702, 731)
+        driver.set_window_size(619, 706)
         driver.get(URL + mobile_siglink)
         time.sleep(2)  # wait for pages to load
-        # zoom out
-        send_keys(['CONTROL', 'SUBTRACT', 'NULL'], times=3)
         # scroll down and up to fix arrow position
         send_keys(['END'])
         time.sleep(1)
         send_keys(['HOME'])
+        time.sleep(1)
         save_screenshot(driver, '/tmp/mobile1.png')
-        send_keys(['CONTROL', 'ADD', 'NULL'], times=3)
         wait_for_element(driver, '.button.action').click()
         wait_and_js_click(driver, '.above-overlay .button.action')
         time.sleep(1)  # wait for signinginprogress modal to be shown
-        send_keys(['CONTROL', 'SUBTRACT', 'NULL'], times=3)
         save_screenshot(driver, '/tmp/mobile2.png')
 
     with open('files/reference_screenshots/author.json', 'wb') as f:
