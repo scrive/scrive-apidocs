@@ -248,6 +248,7 @@ createTestUser = do
                                 (companyid company,True)
                                 def
                                 (bdid bd)
+                                AccountRequest
     case muser of
         Nothing     -> $unexpectedErrorM "can't create user"
         (Just user) -> return user

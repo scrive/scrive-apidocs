@@ -198,7 +198,7 @@ apiCallSignup = api $ do
                Just user ->   return $ Nothing <| (isJust (userhasacceptedtermsofservice user)) |> Just user
                Nothing ->  do
                  company <- dbUpdate $ CreateCompany
-                 createUser (Email email) (firstname,lastname) (companyid company,True) lang
+                 createUser (Email email) (firstname,lastname) (companyid company,True) lang AccountRequest
   case muser' of
     Nothing -> runJSONGenT $ value "sent" $ False
     Just user -> do

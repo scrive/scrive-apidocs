@@ -577,12 +577,12 @@ addNewUser :: (MonadDB m, MonadThrow m, MonadLog m) => String -> String -> Strin
 addNewUser firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
   company <- dbUpdate $ CreateCompany
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) def (bdid bd)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) def (bdid bd) AccountRequest
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid = do
   bd <- dbQuery $ GetMainBrandedDomain
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) def (bdid bd)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) def (bdid bd) CompanyInvitation
 
 addNewRandomUser :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => m User
 addNewRandomUser = do
