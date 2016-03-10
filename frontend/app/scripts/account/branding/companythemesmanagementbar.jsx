@@ -149,7 +149,6 @@ module.exports = React.createClass({
             <Button
               text={localization.branding.save}
               type="action"
-              width={60}
               className="save"
               onClick={this.props.onSave}
             />
