@@ -54,7 +54,8 @@
       "authentication_method_to_sign": "standard",
       "confirmation_delivery_method": "email",
       "attachments": [],
-      "api_delivery_url": null
+      "api_delivery_url": null,
+      "has_authenticated_to_view":false
     }
   ],
   "file": {
@@ -85,7 +86,7 @@
   "timezone": "Europe/Stockholm",
   "tags": [],
   "is_template": true,
-  "is_saved": true,
+  "is_saved": false,
   "is_shared": false,
   "is_trashed": false,
   "is_deleted": false,

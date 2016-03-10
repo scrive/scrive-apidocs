@@ -45,7 +45,7 @@ var DocumentHistoryView =  React.createClass({
       return (
         <div className="document-history-container">
           <List.List
-            url={"/api/v2/documents/"+ this.props.documentid + "/history" }
+            url={"/api/frontend/documents/"+ this.props.documentid + "/history" }
             dataFetcher={function(d) {return d.events;}}
             ref='list'
             onReload={function() {self.forceUpdate();}}

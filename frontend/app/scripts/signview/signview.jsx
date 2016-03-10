@@ -16,7 +16,6 @@ var PostSignView = require("./postsignview");
 var TaskArrows = require("./tasks/taskarrows");
 var Overlay = require("./overlay");
 var ViewSize = require("./viewsize");
-var DocumentViewer = require("../../js/documentviewer.js").DocumentViewer;
 var Document = require("../../js/documents.js").Document;
 var $ = require("jquery");
 var ReloadManager = require("../../js/reloadmanager.js").ReloadManager;
@@ -37,14 +36,8 @@ var PadSigningView = require("./padsigningview");
     },
 
     getInitialState: function () {
-      var viewer = new DocumentViewer({
-        signatoryid: this.props.sigLinkId
-      });
-
       var model = new SignViewModel({
-        document: new Document({id: this.props.documentId,
-                                initialdocumentdata: this.props.documentData,
-                                viewer: viewer}),
+        document: new Document({id: this.props.documentId, initialdocumentdata: this.props.documentData}),
         allowsavesafetycopy: this.props.allowSaveSafetyCopy,
         loggedInAsAuthor: this.props.loggedInAsAuthor
       });

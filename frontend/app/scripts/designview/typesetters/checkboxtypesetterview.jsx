@@ -17,16 +17,15 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
     horizontalOffset: FieldPlacementGlobal.checkboxTypeSetterHorizontalOffset,
 
     handlePrecheck: function (checked) {
-      var field = this.props.model.field();
-      field.setValue(checked ? "checked" : "");
+      this.props.model.field().setChecked(checked);
     },
 
     handleSelect: function (s) {
       var field = this.props.model.field();
       if (s.author()) {
-        field.setValue("checked");
+        field.setChecked(true);
       } else {
-        field.setValue("");
+        field.setChecked(false);
       }
     },
 
@@ -39,7 +38,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
           <div className="fieldTypeSetter-option checkbox-box">
             <Checkbox
               label={localization.designview.checkboxes.prechecked}
-              checked={field.value() != undefined && field.value() != ""}
+              checked={field.isChecked()}
               onChange={this.handlePrecheck}
             />
           </div>

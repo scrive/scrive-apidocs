@@ -145,7 +145,7 @@ var DesignViewModel = require("./docdesignviewmodel.js").DesignViewModel;
                     doc.afterSave(function() {
                         new Submit({
                             method : "POST",
-                            url :  "/api/frontend/changemainfile/" + doc.documentid(),
+                            url :  "/api/frontend/documents/" + doc.documentid() + "/setfile",
                             ajax: true,
                             onSend: function() {},
                             ajaxerror: function(d,a){
@@ -367,7 +367,7 @@ var DesignViewModel = require("./docdesignviewmodel.js").DesignViewModel;
             LoadingDialog.open({header: copyDocFor, subheader: copyPartOf});
             doc.save();
             doc.afterSave(function() {
-              doc.makeReadyForSigning().add("authorsignsimmediately","YES").sendAjax(function(docdata) {
+              doc.makeReadyForSigning().add("author_signs_now","true").sendAjax(function(docdata) {
                   var newdoc = new Document(new Document({}).parse(docdata));
                   newdoc.set({"screenshots" : doc.get("screenshots")}); // We need to propagate screenshots
                   newdoc.sign().sendAjax(
@@ -394,7 +394,7 @@ var DesignViewModel = require("./docdesignviewmodel.js").DesignViewModel;
             }
             doc.save();
             doc.afterSave(function() {
-            doc.makeReadyForSigning().add("authorsignsimmediately","YES").sendAjax(function(docdata) {
+            doc.makeReadyForSigning().add("author_signs_now","true").sendAjax(function(docdata) {
                var newdoc = new Document(new Document({}).parse(docdata));
                newdoc.set({"screenshots" : doc.get("screenshots")}); // We need to propagate screenshots
                newdoc.sign().sendAjax(function() {

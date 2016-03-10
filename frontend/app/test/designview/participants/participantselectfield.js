@@ -20,8 +20,6 @@ var Field = require("../../../js/fields").Field;
 
     it("should test component with selecting standard field", function () {
       var field = new Field({
-        name: "",
-        type: "",
         signatory: signatory,
         obligatory: false,
         shouldbefilledbysender: false
@@ -33,14 +31,11 @@ var Field = require("../../../js/fields").Field;
         }));
       fieldView.refs["select"].select(0);
       //This depends a lot on document structure
-      assert.equal(field.type(),"standard");
-      assert.equal(field.name(),"sigpersnr");
+      assert.equal(field.type(),"personal_number");
     });
 
    it("should test component  with using enter and same name conflict", function () {
      var field = new Field({
-        name: "",
-        type: "",
         signatory: signatory,
         obligatory: false,
         shouldbefilledbysender: false
@@ -52,15 +47,15 @@ var Field = require("../../../js/fields").Field;
         }));
       //This depends a lot on document structure
       fieldView.refs["select"].select(0);
-      assert.equal(field.type(),"custom");
+      assert.equal(field.type(),"text");
       assert.equal(field.name(),"");
     });
 
     it("should test component with removing field", function () {
       util.cleanTimeoutsAndBody();
       var field = new Field({
-        name: "",
-        type: "custom",
+        name: "Sample name",
+        type: "text",
         signatory: signatory,
         obligatory: false,
         shouldbefilledbysender: false

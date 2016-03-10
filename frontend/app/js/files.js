@@ -19,9 +19,9 @@ var File = exports.File = Backbone.Model.extend({
     },
     queryPart: function (more) {
       more = more || {};
-      var params = _.extend(more, { documentid: this.documentid(),
-                                    attachmentid: this.attachmentid(),
-                                    signatorylinkid: this.signatoryid()
+      var params = _.extend(more, { document_id: this.documentid(),
+                                    attachment_id: this.attachmentid(),
+                                    signatory_id: this.signatoryid()
                                   });
       /*
        * Remove undefined values that may happen in the object.
@@ -50,10 +50,10 @@ var File = exports.File = Backbone.Model.extend({
             link = "/a/download/" + this.attachmentid() + "/" + this.fileid() + "/" + encodeURIComponent(name) + this.queryPart();
         }
         if( this.fileid()!==undefined && this.documentid()!==undefined ) {
-            link = "/api/frontend/downloadfile/" + this.documentid() + "/" + this.fileid() + "/" + encodeURIComponent(name) + this.queryPart();
+            link = "/api/frontend/documents/" + this.documentid() + "/files/" + this.fileid() + "/" + encodeURIComponent(name) + this.queryPart();
         }
         else if( this.documentid()!==undefined ) {
-            link = "/api/frontend/downloadmainfile/"+ this.documentid() + "/" + encodeURIComponent(name) + this.queryPart();
+            link = "/api/frontend/documents/"+ this.documentid() + "/files/main/" + encodeURIComponent(name) + this.queryPart();
         }
         else {
             console.log("File with neither documentid nor fileid, do not know where does it link to");
@@ -63,7 +63,7 @@ var File = exports.File = Backbone.Model.extend({
     downloadLinkForMainFile : function(name) {
         var link = null;
         if( this.documentid()!==undefined ) {
-            link = "/api/frontend/downloadmainfile/"+ this.documentid() + "/" + encodeURIComponent(name + ".pdf") + this.queryPart();
+            link = "/api/frontend/documents/"+ this.documentid() + "/files/main/" + encodeURIComponent(name + ".pdf") + this.queryPart();
         }
         else {
             console.log("File is not binded to document");
@@ -94,8 +94,8 @@ var File = exports.File = Backbone.Model.extend({
         return this.get("attachmentid");
     },
     signatoryid : function(){
-      if (this.document() != undefined && this.document().viewer().signatoryid() != undefined)
-        return this.document().viewer().signatoryid();
+      if (this.document() != undefined && this.document().currentSignatory() != undefined)
+        return this.document().currentSignatory().signatoryid();
       return this.get("signatoryid");
     },
     name : function(){
@@ -119,7 +119,7 @@ var File = exports.File = Backbone.Model.extend({
         else if (response.wait != undefined)
         {
           _.delay(_.bind(this.fetch, this), 2000,
-                  {data: { signatoryid: this.signatoryid()},
+                  {data: { signatory_id: this.signatoryid()},
                    processData:  true,
                    cache : false});
         }

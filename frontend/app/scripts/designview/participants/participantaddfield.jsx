@@ -16,6 +16,7 @@ module.exports = React.createClass({
             var field = new Field({
               name: "",
               type: "",
+              value: "",
               signatory: sig,
               obligatory: false,
               shouldbefilledbysender: sig.author()

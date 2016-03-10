@@ -41,7 +41,7 @@ var CheckboxTypeSetterView = require("../../../scripts/designview/typesetters/ch
 
       assert.ok(field.isOptional(), "field should be optional.");
 
-      assert.equal(field.value(), "", "field value should be empty.");
+      assert.equal(field.isChecked(), false, "field value should be empty.");
 
       // check all checkboxes.
       checkboxes.forEach(function (checkbox) {
@@ -50,7 +50,7 @@ var CheckboxTypeSetterView = require("../../../scripts/designview/typesetters/ch
 
       assert.ok(field.isObligatory(), "field should be obligatory.");
 
-      assert.equal(field.value(), "checked", "field value should be checked.");
+      assert.equal(field.isChecked(), true, "field value should be checked.");
 
       // uncheck all checkboxes again.
       checkboxes.forEach(function (checkbox) {
@@ -61,7 +61,7 @@ var CheckboxTypeSetterView = require("../../../scripts/designview/typesetters/ch
 
       assert.ok(field.isOptional(), "field should be optional.");
 
-      assert.equal(field.value(), "", "field value should be empty.");
+      assert.equal(field.isChecked(), false, "field value should be empty.");
 
       var select = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
         return TestUtils.isCompositeComponentWithType(comp, Select);
@@ -73,15 +73,15 @@ var CheckboxTypeSetterView = require("../../../scripts/designview/typesetters/ch
 
       TestUtils.Simulate.click(checkboxes[0], "check pre-check option.");
 
-      assert.equal(field.value(), "checked", "field value should be checked.");
+      assert.equal(field.isChecked(), true, "field value should be checked.");
 
       select.select(0);
 
-      assert.equal(field.value(), "", "field value should be empty.");
+      assert.equal(field.isChecked(), false, "field value should be empty.");
 
       select.select(0);
 
-      assert.equal(field.value(), "checked", "field value should be checked.");
+      assert.equal(field.isChecked(), true, "field value should be checked.");
     });
 
     after(function () {

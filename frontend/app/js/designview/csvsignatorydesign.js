@@ -99,7 +99,15 @@ var CsvProblem = Backbone.Model.extend({
         });
       return res;
   },
-  csvstandardheaders : ['fstname', 'sndname', 'email', 'mobile',  'sigco', 'sigpersnr', 'sigcompnr'],
+  csvstandardheaders : {
+    'fstname' : { type: "name", order: 1},
+    'sndname' : { type: "name", order: 2},
+    'email'   : { type: "email"},
+    'mobile'  : { type: "mobile"},
+    'sigco'   : { type: "company"},
+    'sigpersnr': { type: "personal_number"},
+    'sigcompnr': { type: "company_number"}
+  },
   upload : function(input) {
        var self = this;
        var submit = new Submit({ url : "/parsecsv", method : "POST", expectedType:"text"});
@@ -121,7 +129,7 @@ var CsvProblem = Backbone.Model.extend({
            }
            if (jresp.header != undefined) {
               for(var i=0;i<jresp.header.length;i++)
-                jresp.header[i] = self.csvstandardheaders[i] || jresp.header[i];
+                jresp.header[i] = _.keys(self.csvstandardheaders)[i] || jresp.header[i];
            }
            self.set({'header': jresp.header , 'rows': jresp.rows, 'problems': problems });
            self.trigger("change");
@@ -275,24 +283,23 @@ var CsvSignatoryDesignPopup = exports.CsvSignatoryDesignPopup =  function(args) 
               onAccept : function() {
                   if (csvSignatory == undefined) {
                     var fields = [];
-                    for(var i = 0; i < model.header().length; i ++)
-                       fields.push({name: model.header()[i],   type : _.contains(model.csvstandardheaders,model.header()[i]) ? "standard" : "custom"});
-                       var signatory = new Signatory({
-                         document : document,
-                         fields : fields,
-                         signs : true,
-                         csv : model.csv()
-                      });
+                    for(var i = 0; i < model.header().length; i ++) {
+                      var f = model.csvstandardheaders[model.header()[i]] || {type: "text", name : model.header()[i]};
+                      fields.push(f);
+                    }
+                    var signatory = new Signatory({
+                      document : document,
+                      fields : fields,
+                      signs : true,
+                      csv : model.csv()
+                    });
                     document.addExistingSignatory(signatory);
                     designview.setParticipantDetail(signatory);
                   } else {
                     for(var i = 0; i < model.header().length; i ++)
                       if (!csvSignatory.hasTextFieldWithName(model.header()[i])) {
-                        csvSignatory.addField(new Field({
-                              name: model.header()[i],
-                              type: _.contains(model.csvstandardheaders,model.header()[i]) ? "standard" : "custom",
-                              signatory: csvSignatory
-                          }));
+                        f = model.csvstandardheaders[model.header()[i]] || {type: "text", name : model.header()[i]};
+                        csvSignatory.addField(new Field(_.extend(f, {signatory: csvSignatory})));
                       }
 
                     csvSignatory.setCsv(model.csv());

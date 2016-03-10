@@ -136,7 +136,7 @@ var HubSpot = require("../../common/hubspot_service");
           scrive_domain: location.hostname,
           phone: this._phoneNumber,
           feedback: this.feedback,
-          language: doc.lang().simpleCode()
+          language: doc.lang()
         };
 
         if (from === "Q4" && event === "yes") {

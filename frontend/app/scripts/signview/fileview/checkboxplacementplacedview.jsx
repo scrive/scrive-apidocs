@@ -38,11 +38,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
         doc.currentSignatoryCanSign();
 
       if (current) {
-        if (field.value() == "") {
-          field.setValue("CHECKED");
-        } else {
-          field.setValue("");
-        }
+        field.setChecked(!field.isChecked());
       }
     },
 
@@ -51,7 +47,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
       var doc = field.signatory().document();
       var current = field.signatory() == doc.currentSignatory() &&
         doc.currentSignatoryCanSign();
-      var checked = field.value() !== "";
+      var checked = field.isChecked();
 
       var divClass = React.addons.classSet({
         "placedfield": true,

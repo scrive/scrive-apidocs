@@ -6,7 +6,7 @@ module.exports = React.createClass({
     mixpanel.track("Choose participant role", {
       Where: "icon"
     });
-    if (sig.role() === "viewer") {
+    if (!sig.signs()) {
       sig.makeSignatory();
     } else {
       sig.makeViewer();
@@ -14,7 +14,7 @@ module.exports = React.createClass({
   },
   icon: function () {
     var sig = this.props.model;
-    if (sig.role() == "viewer") {
+    if (!sig.signs()) {
       return "design-view-action-participant-icon-role-icon-viewer";
     } else {
       return "design-view-action-participant-icon-role-icon-signatory";

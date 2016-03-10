@@ -64,7 +64,6 @@ var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
       var document = model.document();
       if (document.ready() && document.mainfile() && !document.mainfile().ready()) {
         document.mainfile().fetch({
-          data: {signatoryid: document.viewer().signatoryid()},
           processData: true,
           cache: false
         });
@@ -148,12 +147,18 @@ var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
       document.markAsNotReady();
       var submit = new Submit({
         method: "POST",
-        url: "/api/frontend/changemainfile/" + document.documentid(),
+        url:  "/api/frontend/documents/" + document.documentid() + "/setfile",
         ajaxsuccess: function (d) {
           mixpanel.track("Upload main file");
-          model.setParticipantDetail(undefined);
-          document.killAllPlacements();
-          document.recall();
+          // Note that update is happening twice: before and after file upload
+          // Reason is that we want set title only if upload succeed
+          document.setTitle(title.replace(/\.[^/.]+$/, ""));
+          document.save();
+          document.afterSave(function () {
+            model.setParticipantDetail(undefined);
+            document.killAllPlacements();
+            document.recall();
+          });
         },
         ajaxerror: function (d, a) {
           if (a === "parsererror") { // file too large
@@ -169,6 +174,7 @@ var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
         }
       });
       submit.addInputs(input);
+
       model.saveAndFlashMessageIfAlreadySaved();
       document.afterSave(function () {
         submit.sendAjax();

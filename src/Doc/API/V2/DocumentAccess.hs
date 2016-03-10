@@ -5,6 +5,7 @@ module Doc.API.V2.DocumentAccess (
 , propertyForCurrentSignatory
 , documentAccessForUser
 , documentAccessForSlid
+, documentAccessForAuthor
 , documentAccessForAdminonly
 ) where
 
@@ -52,6 +53,13 @@ documentAccessForUser :: User -> Document -> DocumentAccess
 documentAccessForUser user document = DocumentAccess {
       daDocumentID = documentid document
     , daAccessMode = documentAccessModeForUser user document
+    , daStatus = documentstatus document
+  }
+
+documentAccessForAuthor :: Document -> DocumentAccess
+documentAccessForAuthor document = DocumentAccess {
+      daDocumentID = documentid document
+    , daAccessMode = AuthorDocumentAccess
     , daStatus = documentstatus document
   }
 

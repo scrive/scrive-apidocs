@@ -21,10 +21,9 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
       var document = this.document();
       var signatory = document.signatoriesWhoSign()[0] || document.author();
       var field = new Field({
-        fresh: false,
         type: "checkbox",
         signatory: signatory,
-        value: signatory.author() ? "checked" : "",
+        is_checked: signatory.author(),
         name: document.newCheckboxName()
       });
       signatory.addField(field);

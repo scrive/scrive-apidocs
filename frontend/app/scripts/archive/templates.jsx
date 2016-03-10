@@ -17,22 +17,28 @@ module.exports = React.createClass({
     createNewTemplate : function() {
       new Submit({
         method : "POST",
-        url : "/api/frontend/createfromfile",
+        url : "/api/frontend/documents/new",
         ajax: true,
-        template: "YES",
+        saved: "true",
         expectedType : "text",
         onSend: function() {
           LoadingDialog.open();
         },
         ajaxsuccess: function(d) {
-          try {
-            window.location.href = "/d/"+JSON.parse(d).id;
-          } catch(e) {
-            new FlashMessage({content: localization.couldNotUpload, type: 'error'});
-            LoadingDialog.close();
-          }
+          var doc = JSON.parse(d);
+          doc.is_template = true;
+          new Submit({
+            method : "POST",
+            url : "/api/frontend/documents/"+doc.id+"/update",
+            ajax: true,
+            document: JSON.stringify(doc),
+            ajaxsuccess: function() {
+              window.location.href = "/d/"+doc.id;
+              LoadingDialog.close();
+            }
+          }).sendAjax();
         }
-      }).send();
+      }).sendAjax();
     },
     openShareModal: function(selected) {
       var self = this;

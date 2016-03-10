@@ -32,24 +32,22 @@ var Field = require("../../../js/fields.js").Field;
       }
     },
 
-    getOrCreateField: function (sig, name, type) {
-      var newField = sig.field(name, type);
+    getOrCreateField: function (sig, type, order, name) {
+      var newField = sig.field(name, type, order);
 
       if (newField) {
         return newField;
       }
-
       newField = new Field({
         signatory: sig,
         type: type,
+        order: order,
         name: name,
         obligatory: true,
-        fresh: false,
         shouldbefilledbysender: sig.author()
       });
 
-      newField.addedByMe = true;
-
+      sig.addField(newField);
       return newField;
     },
 
@@ -67,24 +65,14 @@ var Field = require("../../../js/fields.js").Field;
       var sig = field.signatory();
       var doc = sig.document();
 
-      var fieldNames = {
-        fstname: localization.fstname,
-        sndname: localization.sndname,
-        email: localization.email,
-        sigcompnr: localization.companyNumber,
-        sigpersnr: localization.personalNumber,
-        sigco: localization.company,
-        mobile: localization.phone
-      };
-
       var standardFields = [
-        "fstname",
-        "sndname",
-        "email",
-        "sigco",
-        "sigpersnr",
-        "sigcompnr",
-        "mobile"
+        {type: "name", order: 1, text: localization.fstname},
+        {type: "name", order: 2, text: localization.sndname},
+        {type: "email",  text: localization.email},
+        {type: "company",  text: localization.companyNumber},
+        {type: "personal_number",  text: localization.personalNumber},
+        {type: "company_number",  text: localization.company},
+        {type: "mobile",  text: localization.phone}
       ];
 
       var options = [];
@@ -94,25 +82,24 @@ var Field = require("../../../js/fields.js").Field;
         onSelect: function () {
           var newField = new Field({
             signatory: sig,
-            type: "custom",
+            type: "text",
+            value: "",
             name: doc.newCustomName(),
             obligatory: true,
             shouldbefilledbysender: sig.author()
           });
 
           sig.addField(newField);
-          newField.addedByMe = true;
-
           model.changeField(newField);
           self.edit();
         }
       });
 
-      _.each(standardFields, function (name) {
+      _.each(standardFields, function (f) {
         options.push({
-          name: fieldNames[name],
+          name: f.text,
           onSelect: function () {
-            var newField = self.getOrCreateField(sig, name, "standard");
+            var newField = self.getOrCreateField(sig, f.type, f.order);
             model.changeField(newField);
           }
         });
@@ -123,7 +110,7 @@ var Field = require("../../../js/fields.js").Field;
           options.push({
             name: f.name(),
             onSelect: function () {
-              var newField = self.getOrCreateField(sig, f.name(), "custom");
+              var newField = self.getOrCreateField(sig, "text", undefined, f.name());
               model.changeField(newField);
             }
           });

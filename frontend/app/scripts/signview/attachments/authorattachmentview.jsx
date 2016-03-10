@@ -68,7 +68,12 @@ var $ = require("jquery");
     tryToStartFetchingAttachmntFilePages: function () {
       if (this.props.model.pages() == undefined && this.props.canStartFetching && !this.fetchingStarted) {
         this.fetchingStarted = true;
-        this.props.model.fetch({processData: true, cache: false});
+        var currentSignatory = this.props.model.document().currentSignatory();
+        this.props.model.fetch({
+          data: {signatory_id: currentSignatory && currentSignatory.signatoryid()},
+          processData: true,
+          cache: false
+        });
       }
     },
 

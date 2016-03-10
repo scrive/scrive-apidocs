@@ -280,7 +280,7 @@ unjsonCheckboxFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPVa
 unjsonCheckboxFieldFieldValue = pure (\no v ->(no,v))
   <*  fieldReadonlyBy "type" (fieldTypeFromFieldIdentity . fst) "Type of a field" unjsonFieldType
   <*> field "name" (unsafeCheckboxName . fst) "Name of checkbox field"
-  <*> field "checked" (unsafeBoolFromSignatoryFieldTMPValue .snd) "Value of the field"
+  <*> field "is_checked" (unsafeBoolFromSignatoryFieldTMPValue .snd) "Value of the field"
   where
     unsafeCheckboxName:: FieldIdentity -> String
     unsafeCheckboxName (CheckboxFI n) = n

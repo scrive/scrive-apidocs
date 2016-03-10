@@ -72,10 +72,10 @@ var DesignViewModel = require("../js/designview/docdesignviewmodel").DesignViewM
     var sig = sigs[part];
     var options = {
       signatory: sig
-      , type: "custom"
+      , type: "text"
       , name: "field-" + id
-      , obligatory: true
-      , shouldbefilledbysender: sig.author()
+      , is_obligatory: true
+      , should_be_filled_by_sender: sig.author()
     };
     var field = new Field(_.extend(options, fieldOptions));
     field.addedByMe = true;

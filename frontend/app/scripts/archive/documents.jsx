@@ -220,7 +220,7 @@ module.exports = React.createClass({
                     return true;
                   }
                   else if (selected.length == 1) {
-                    var url =  "/api/frontend/downloadmainfile/" + selected[0].field("id") + "/" + encodeURIComponent(selected[0].field("title")) + ".pdf";
+                    var url =  "/api/frontend/documents/" + selected[0].field("id") + "/files/main/" + encodeURIComponent(selected[0].field("title")) + ".pdf";
                     window.open(url);
                     return true;
                   } else {

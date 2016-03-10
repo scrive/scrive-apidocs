@@ -5,7 +5,7 @@ var _ = require("underscore");
   var e = {};
   // Utils for working with list call
 
-  e.listCallUrl = "/api/v2/documents/list";
+  e.listCallUrl = "/api/frontend/documents/list";
   e.dataFetcher=function(d) {return d.documents;};
   e.idFetcher=function(d) {return d.field("id");};
   e.totalCountFunction=function(data){ return data.total_matching;};

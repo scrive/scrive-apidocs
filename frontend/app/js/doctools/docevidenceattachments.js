@@ -9,7 +9,7 @@ var DocumentEvidenceAttachmentsModel = Backbone.Model.extend({
      ready : false
   },
   initialize: function (args) {
-    this.url = "/api/frontend/getevidenceattachments/" + args.document.documentid();
+    this.url = "/api/frontend/documents/" + args.document.documentid() + "/evidenceattachments";
     this.fetch({cache: false});
   },
   ready: function() {
@@ -18,12 +18,12 @@ var DocumentEvidenceAttachmentsModel = Backbone.Model.extend({
   document: function() {
      return this.get("document");
   },
-  evidenceattachments: function() {
-     return this.get("evidenceattachments");
+  attachments: function() {
+     return this.get("attachments");
   },
   parse: function(args) {
      return {
-       evidenceattachments : args.evidenceattachments,
+       attachments : args.attachments,
        ready: true
      };
     }
@@ -51,7 +51,7 @@ var DocumentEvidenceAttachmentsView = Backbone.View.extend({
   evidenceAttachmentFile: function(attachment) {
     var container = $("<div class='item' />");
     var button = new Button({text: localization.reviewAttachment, cssClass: 'float-right', size:'small', onClick: function() {
-                        window.open(attachment.downloadLink, '_blank');
+                        window.open(attachment.download_url, '_blank');
                         }});
     container.append(button.el());
     return container;
@@ -61,7 +61,7 @@ var DocumentEvidenceAttachmentsView = Backbone.View.extend({
     var self = this;
     $(this.el).empty();
 
-    if (!this.model.ready() || !this.model.evidenceattachments().length > 0) {
+    if (!this.model.ready() || !this.model.attachments().length > 0) {
       $(this.el).css("display","none");
       return this;
     }
@@ -72,7 +72,7 @@ var DocumentEvidenceAttachmentsView = Backbone.View.extend({
     var table = $("<table class='list'/>");
     var tbody = $("<tbody/>");
     table.append(tbody);
-    _.each(this.model.evidenceattachments(), function(attachment) {
+    _.each(this.model.attachments(), function(attachment) {
       var tr = $("<tr/>");
 
       tr.append($("<td class='desc'>").append(self.evidenceAttachmentDesc(attachment)));

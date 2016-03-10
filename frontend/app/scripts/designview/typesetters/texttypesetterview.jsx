@@ -95,7 +95,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
     handleSelectSig: function (sig) {
       var model = this.props.model;
       var field = model.field();
-      var existingField = sig.field(field.name(), field.type());
+      var existingField = sig.field(field.name(), field.type(), field.order());
 
       this.refs.fieldSelector.selector();
 
@@ -103,7 +103,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
         return model.changeField(existingField);
       }
 
-      model.changeField(sig.field("fstname", "standard"));
+      model.changeField(sig.fstnameField());
     },
 
     handleSave: function (text) {

@@ -89,9 +89,6 @@ data CSVUpload = CSVUpload {
   csvcontents  :: ![[String]]
 } deriving (Eq, Ord, Show)
 
-instance Unjson CSVUpload where
-  unjsonDef = invmap CSVUpload csvcontents unjsonDef
-
 instance PQFormat [[String]] where
   pqFormat = const $ pqFormat ($undefined::String)
 instance FromSQL [[String]] where

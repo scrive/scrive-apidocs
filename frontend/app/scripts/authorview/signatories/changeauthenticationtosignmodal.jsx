@@ -61,7 +61,7 @@ var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
     },
 
     isNewAuthenticationELeg: function () {
-      return this.newAuthenticationMethod() == "eleg";
+      return this.newAuthenticationMethod() == "se_bankid";
     },
 
     isAuthenticationValueInvalid: function () {
@@ -168,7 +168,7 @@ var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
       var sig = model.signatory();
 
       var standard = {name: localization.docview.signatory.authenticationToSignStandard, value: "standard"};
-      var eleg = {name: localization.docview.signatory.authenticationToSignSEBankID, value: "eleg"};
+      var eleg = {name: localization.docview.signatory.authenticationToSignSEBankID, value: "se_bankid"};
       var sms = {name: localization.docview.signatory.authenticationToSignSMSPin, value: "sms_pin"};
 
       if (sig.authenticationToView() === "no_bankid") {
@@ -184,7 +184,7 @@ var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
 
       // If we are setting SE BankID and signatory has authenticated to view,
       // we cannot change SSN
-      if (signatory.hasAuthenticatedToView() && model.newAuthenticationMethod() == "eleg") {
+      if (signatory.hasAuthenticatedToView() && model.newAuthenticationMethod() == "se_bankid") {
           return false;
       // If we are setting SMS PIN and signatory has authenticated to view
       // using NO BankID with a valid mobile, we cannot change phone number
@@ -252,6 +252,8 @@ var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
       onAccept: function () {
         var authmethod = model.newAuthenticationMethod();
         var authvalue = model.newAuthenticationValue();
+        var personalNumber = model.isNewAuthenticationELeg() ? authvalue : undefined;
+        var mobileNumber = model.isNewAuthenticationPINbySMS() ? authvalue : undefined;
 
         if (model.isAuthenticationValueInvalid()) {
           new FlashMessage({content: model.getAuthenticationValueInvalidFlashMessageText(), type: "error"});
@@ -267,7 +269,7 @@ var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
 
         LoadingDialog.open();
 
-        model.signatory().changeAuthenticationToSign(authmethod, authvalue).sendAjax(function () {
+        model.signatory().changeAuthenticationToSign(authmethod, personalNumber, mobileNumber).sendAjax(function () {
           args.onAction();
         }, function (err) {
           LoadingDialog.close();

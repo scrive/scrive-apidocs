@@ -34,7 +34,7 @@ module.exports = Backbone.View.extend({
     this.$el.addClass("placedfield");
 
     box.addClass("placedcheckbox-noactive");
-    box.toggleClass("checked", field.value() !== "");
+    box.toggleClass("checked", field.isChecked());
 
     this.$el.empty();
     this.$el.append(box);

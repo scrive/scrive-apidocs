@@ -24,25 +24,25 @@ var DeliveryIcon = require("../../../scripts/designview/participants/deliveryico
         , element: $("body")[0]
       }));
 
-      var deliveryMethod1 = signatory.get("delivery");
+      var deliveryMethod1 = signatory.get("delivery_method");
       TestUtils.Simulate.click(deliveryIcon.getDOMNode());
-      var deliveryMethod2 = signatory.get("delivery");
+      var deliveryMethod2 = signatory.get("delivery_method");
       assert.notEqual(deliveryMethod1, deliveryMethod2);
       deliveryIcon.forceUpdate();
       TestUtils.Simulate.click(deliveryIcon.getDOMNode());
-      var deliveryMethod3 = signatory.get("delivery");
+      var deliveryMethod3 = signatory.get("delivery_method");
       assert.notEqual(deliveryMethod2, deliveryMethod3);
       deliveryIcon.forceUpdate();
       TestUtils.Simulate.click(deliveryIcon.getDOMNode());
-      var deliveryMethod4 = signatory.get("delivery");
+      var deliveryMethod4 = signatory.get("delivery_method");
       assert.notEqual(deliveryMethod3, deliveryMethod4);
       deliveryIcon.forceUpdate();
       TestUtils.Simulate.click(deliveryIcon.getDOMNode());
-      var deliveryMethod5 = signatory.get("delivery");
+      var deliveryMethod5 = signatory.get("delivery_method");
       assert.notEqual(deliveryMethod5, deliveryMethod1);
       deliveryIcon.forceUpdate();
       TestUtils.Simulate.click(deliveryIcon.getDOMNode());
-      var deliveryMethod6 = signatory.get("delivery");
+      var deliveryMethod6 = signatory.get("delivery_method");
       assert.equal(deliveryMethod6, deliveryMethod1);
     });
 
@@ -53,16 +53,16 @@ var DeliveryIcon = require("../../../scripts/designview/participants/deliveryico
         , element: $("body")[0]
       }));
 
-      var confirmationDeliveryMethod1 = signatory.get("confirmationdelivery");
+      var confirmationDeliveryMethod1 = signatory.get("confirmation_delivery_method");
       // Need click twice, since first click goes to pad delivery - and it does not affect confirmation delivery
       TestUtils.Simulate.click(deliveryIcon.getDOMNode());
       TestUtils.Simulate.click(deliveryIcon.getDOMNode());
-      var confirmationDeliveryMethod2 = signatory.get("confirmationdelivery");
+      var confirmationDeliveryMethod2 = signatory.get("confirmation_delivery_method");
       assert.notEqual(confirmationDeliveryMethod1, confirmationDeliveryMethod2);
     });
 
     it("should delivery icon handle API delivery", function () {
-      signatory.set({"delivery" : "api"})
+      signatory.set({"delivery_method" : "api"})
       var deliveryIcon = TestUtils.renderIntoDocument(React.createElement(DeliveryIcon, {
         model: signatory
         , element: $("body")[0]
@@ -77,9 +77,9 @@ var DeliveryIcon = require("../../../scripts/designview/participants/deliveryico
         , element: $("body")[0]
       }));
 
-      var deliveryMethod1 = signatory.get("delivery");
+      var deliveryMethod1 = signatory.get("delivery_method");
       TestUtils.Simulate.click(deliveryIcon.getDOMNode());
-      var deliveryMethod2 = signatory.get("delivery");
+      var deliveryMethod2 = signatory.get("delivery_method");
       assert.equal(deliveryMethod1, deliveryMethod2);
     });
 

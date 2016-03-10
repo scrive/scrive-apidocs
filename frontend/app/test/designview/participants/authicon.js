@@ -17,24 +17,24 @@ var AuthToSignIcon = require("../../../scripts/designview/participants/authtosig
       });
     });
 
-    it("should auth icon changes signatory authentication method when clicking", function () {
+    it("should auth icon changes signatory authentication_method_to_sign method when clicking", function () {
 
       var authIcon = TestUtils.renderIntoDocument(React.createElement(AuthToSignIcon, {
         model: signatory
         , element: $("body")[0]
       }));
 
-      var authMethod1 = signatory.get("authentication");
+      var authMethod1 = signatory.get("authentication_method_to_sign");
       TestUtils.Simulate.click(authIcon.getDOMNode());
-      var authMethod2 = signatory.get("authentication");
+      var authMethod2 = signatory.get("authentication_method_to_sign");
       assert.notEqual(authMethod1, authMethod2);
       authIcon.forceUpdate();
       TestUtils.Simulate.click(authIcon.getDOMNode());
-      var authMethod3 = signatory.get("authentication");
+      var authMethod3 = signatory.get("authentication_method_to_sign");
       assert.notEqual(authMethod2, authMethod3);
       authIcon.forceUpdate();
       TestUtils.Simulate.click(authIcon.getDOMNode());
-      var authMethod4 = signatory.get("authentication");
+      var authMethod4 = signatory.get("authentication_method_to_sign");
       assert.equal(authMethod4, authMethod1);
     });
 
@@ -46,9 +46,9 @@ var AuthToSignIcon = require("../../../scripts/designview/participants/authtosig
         , element: $("body")[0]
       }));
 
-      var authMethod1 = signatory.get("authentication");
+      var authMethod1 = signatory.get("authentication_method_to_sign");
       TestUtils.Simulate.click(authIcon.getDOMNode());
-      var authMethod2 = signatory.get("authentication");
+      var authMethod2 = signatory.get("authentication_method_to_sign");
       assert.equal(authMethod1, authMethod2);
     });
 

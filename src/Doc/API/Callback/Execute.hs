@@ -5,6 +5,7 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Int (Int32)
+import Data.Unjson
 import Log
 import Network.HTTP as HTTP
 import System.Exit
@@ -23,6 +24,8 @@ import Crypto.RNG
 import DB
 import Doc.API.Callback.Data
 import Doc.API.V1.DocumentToJSON
+import Doc.API.V2.DocumentAccess
+import Doc.API.V2.JSON.Document
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.Logging
@@ -40,6 +43,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.IO
 import Utils.String
+import qualified Utils.HTTP as Utils.HTTP
 
 execute :: (AmazonMonad m, MonadDB m, CryptoRNG m, MonadThrow m, MonadLog m, MonadIO m, MonadBase IO m,  MonadReader c m, HasSalesforceConf c, MailContextMonad m) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
@@ -47,7 +51,7 @@ execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
   if not exists then do
     logInfo_ "API callback dropped since document does not exists or is purged/reallydeleted"
     return True
-  else if dacApiVersion == V1 then do -- TODO APIv2: Get rid of the API version check here, executeStandardCallback will handle it
+  else do
     doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
     case (maybesignatory =<< getAuthorSigLink doc) of
       Nothing -> $unexpectedErrorM $ "Document" <+> show dacDocumentID <+> "has no author"
@@ -58,12 +62,6 @@ execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
           Just (BasicAuthScheme lg pwd) -> executeStandardCallback (Just (lg,pwd)) doc dacURL dacApiVersion
           Just (OAuth2Scheme lg pwd tokenUrl scope) -> executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dacURL dacApiVersion
           _ -> executeStandardCallback Nothing doc dacURL dacApiVersion
-  else do -- TODO APIv2: Get rid of this block too, see TODO above
-    logAttention "API callback was dropped as it is not a V1 callback: this is not yet implemented and shouldn't happen!" $ object [
-          identifier_ dacApiVersion
-        , "url" .= dacURL
-        ]
-    return True
 
 executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) => Maybe (String,String) -> Document -> String -> APIVersion -> m Bool
 executeStandardCallback mBasicAuth doc url apiVersion = logDocument (documentid doc) $ do
@@ -151,17 +149,25 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc callbackUrl apiVersion = logDo
 
 callbackParamsWithDocumentJSON :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) =>
                                   APIVersion -> Document -> m BSLU.ByteString
-callbackParamsWithDocumentJSON apiVersion doc = do
-  dJSON <- case apiVersion of
-    -- TODO APIv2: Use correct JSON for the version given
-    _ -> documentJSONV1 Nothing False True Nothing doc
-  return $ BSLU.fromString $ urlEncodeVars [
-      ("documentid", show (documentid doc))
-    , ("signedAndSealed", if isClosed doc && isJust (documentsealedfile doc)
-        then "true"
-        else "false")
-    , ("json", encode dJSON)
-    ]
+callbackParamsWithDocumentJSON apiVersion doc = case apiVersion of
+  V1 -> do
+    dJSON <- documentJSONV1 Nothing False True Nothing doc
+    return $ BSLU.fromString $ urlEncodeVars [
+        ("documentid", show (documentid doc))
+      , ("signedAndSealed", if isClosed doc && isJust (documentsealedfile doc)
+          then "true"
+          else "false")
+      , ("json", encode dJSON)
+      ]
+  V2 -> do
+    let json = unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) (unjsonDocument (documentAccessForAuthor doc)) doc
+    return $ Utils.HTTP.urlEncodeVars [
+        ("document_id", BSLU.fromString $ show (documentid doc))
+      , ("document_signed_and_sealed", if isClosed doc && isJust (documentsealedfile doc)
+          then "true"
+          else "false")
+      , ("document_json", json)
+      ]
 
 parseAccessToken :: BSLU.ByteString -> Maybe String
 parseAccessToken str = do

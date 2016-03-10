@@ -5,13 +5,13 @@ var _ = require("underscore");
 module.exports = React.createClass({
   basicFields: function () {
     return [
-       {name: "fstname", type: "standard"},
-       {name: "sndname", type: "standard"},
-       {name: "email",  type: "standard"},
-       {name: "sigco",  type: "standard"},
-       {name: "sigpersnr", type: "standard"},
-       {name: "sigcompnr", type: "standard"},
-       {name: "mobile",  type: "standard"}
+       {type: "name", order: 1},
+       {type: "name", order: 2},
+       {type: "email"},
+       {type: "company"},
+       {type: "personal_number"},
+       {type: "company_number"},
+       {type: "mobile"}
     ];
   },
   allPossibleFields: function () {
@@ -19,32 +19,32 @@ module.exports = React.createClass({
     var document = this.props.model.signatory().document();
     function isNotOnList(field) {
       return _.every(res, function (o) {
-        return field.name() !== o.name && field.type() !== o.type;
+        return field.type() !== o.type && field.name() !== o.name ;
       });
     }
     _.each(document.signatories(), function (signatory) {
       _.each(signatory.fields(), function (field) {
-        if (field.isText() && isNotOnList(field)) {
+        if (field.isCustom()) {
           res.push({name: field.name(), type: field.type()});
         }
       });
     });
     return res;
   },
-  niceFieldName: function (name) {
-    if (name == "fstname") {
+  niceFieldName: function (type, order, name) {
+    if (type == "name" && order == 1) {
       return localization.fstname;
-    } else if (name == "sndname") {
+    } else if (type == "name" && order == 2) {
       return localization.sndname;
-    } else if (name == "email") {
+    } else if (type == "email") {
       return localization.email;
-    } else if (name == "sigcompnr") {
+    } else if (type == "company_number") {
       return localization.companyNumber;
-    } else if (name == "sigpersnr") {
+    } else if (type == "personal_number") {
       return localization.personalNumber;
-    } else if (name == "sigco") {
+    } else if (type == "company") {
       return localization.company;
-    } else if (name == "mobile") {
+    } else if (type == "mobile") {
       return localization.phone;
     } else {
       return name;
@@ -56,13 +56,13 @@ module.exports = React.createClass({
     var allPossibleFields = self.allPossibleFields();
     var options = [];
     _.each(allPossibleFields, function (f) {
-      if (!sig.field(f.name, f.type)) {
-        options.push({name: self.niceFieldName(f.name), value: f});
+      if (!sig.hasField(f.type, f.order, f.name)) {
+        options.push({name: self.niceFieldName(f.type, f.order, f.name), value: f});
       }
     });
     options.push({
       name: localization.designview.customField,
-      value: {name: "--custom", type: "--custom"} // type is not used for custom
+      value: {name: "--text", type: "--text"} // type is not used for custom
     });
     return options;
   },
@@ -80,11 +80,11 @@ module.exports = React.createClass({
            width={297}
            options={self.fieldOptions()}
            onSelect={function (v) {
-             if (v.name === "--custom") {
+             if (v.name === "--text") {
                mixpanel.track("Select field type", {
-                  Type: "custom"
+                  Type: "text"
                 });
-               field.setType("custom");
+               field.setType("text");
              } else {
                field.setType(v.type);
                field.setName(v.name);

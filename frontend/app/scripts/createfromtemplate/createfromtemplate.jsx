@@ -12,7 +12,7 @@ module.exports = React.createClass({
     createFromTemplate : function(id) {
       new Submit({
         method : "POST",
-        url: "/api/frontend/createfromtemplate/" +  id,
+        url: "/api/frontend/documents/newfromtemplate/" +  id,
         ajax: true,
         expectedType : "text",
         onSend: function() {

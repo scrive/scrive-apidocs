@@ -25,7 +25,7 @@ module.exports = Backbone.View.extend({
   },
   updateSize: function (width, height) {
     var field = this.model.field();
-    if (field.value()) {
+    if (field.signatureFile() != undefined) {
       this.box.css({width: width, height: height});
       this.img.css({width: width, height: height});
     }
@@ -44,14 +44,17 @@ module.exports = Backbone.View.extend({
     this.$el.empty();
 
     this.$el.addClass("placedfield");
-    this.$el.toggleClass("empty-signature", field.value() === "");
+    this.$el.toggleClass("empty-signature", field.signatureFile() == undefined);
 
     box.empty();
 
-    if (field.value()) {
+    if (field.signatureFile()) {
+      var queryPart = doc.currentSignatory() ? "?signature_id=" + doc.currentSignatory().signatoryid()  : "";
+      var url = "/api/frontend/documents/" + doc.documentid() + "/files/" + field.signatureFile() +
+                "/image.png" + queryPart;
       box.css("width", width);
       box.css("height", height);
-      img.attr("src", field.value());
+      img.attr("src", url);
       img.css("width", width);
       img.attr("width", width);
       img.css("height", height);

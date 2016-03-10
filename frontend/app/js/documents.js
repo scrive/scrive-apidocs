@@ -1,6 +1,5 @@
 var Backbone = require("backbone");
 var moment = require("moment");
-var DocumentViewer = require("./documentviewer.js").DocumentViewer;
 var AjaxQueue = require("./ajaxqueue.js").AjaxQueue;
 var _ = require("underscore");
 var Submit = require("./submits.js").Submit;
@@ -9,7 +8,6 @@ var Document = require("./documents.js").Document;
 var File = require("./files.js").File;
 var AuthorAttachment = require("./authorattachment.js").AuthorAttachment;
 var Signatory = require("./signatories.js").Signatory;
-var DocLang = require("./doclang.js").DocLang;
 var takeScreenshot = require("./takeScreenshot").takeScreenshot;
 
 require("./utils/time");
@@ -28,23 +26,17 @@ var Document = exports.Document = Backbone.Model.extend({
         authorattachments: [],
         signatoryattachments: [],
         ready: false,
-        viewer: new DocumentViewer(),
         authentication: "standard",
         delivery: "email",
         template: false,
         timezone : "Europe/Stockholm",
         saveQueue : new AjaxQueue(),
-        saved : false,
-        screenshots : {}
+        is_saved : false,
+        screenshots : {},
+        companyAdmin: false
     }},
     initialize: function(args) {
-        this.url = "/api/frontend/get/" + args.id ;
-    },
-    viewer: function() {
-        if (this.get("viewer") != undefined)
-            return this.get("viewer");
-        else
-            return new DocumentViewer(); // Fix for strande backbone behavior
+        this.url = "/api/frontend/documents/" + args.id  + "/get" + (args.siglinkid ? "?signatory_id="+ args.siglinkid : "");
     },
     documentid: function() {
         return this.get("id");
@@ -113,6 +105,9 @@ var Document = exports.Document = Backbone.Model.extend({
     lang: function() {
         return this.get("lang");
     },
+    setLanguage: function(v) {
+        this.set("lang",v);
+    },
     title: function() {
         return this.get("title");
     },
@@ -159,41 +154,31 @@ var Document = exports.Document = Backbone.Model.extend({
       this.set({"showfooter": showfooter});
     },
     setReferenceScreenshot: function(d) {
-      this.get("screenshots").reference = d;
-    },
-    canberestarted: function() {
-        return this.get("canberestarted");
-    },
-    canbeprolonged: function() {
-        return this.get("canbeprolonged");
+      this.get("screenshots").referenceName = d;
     },
     restart: function() {
           return new Submit({
-              url: "/api/frontend/restart/" + this.documentid(),
+              url: "/api/frontend/documents/" + this.documentid() + "/restart",
               method: "POST"
           });
     },
     prolong: function(days) {
           return new Submit({
-              url: "/api/frontend/prolong/" + this.documentid(),
+              url: "/api/frontend/documents/" + this.documentid() + "/prolong",
               method: "POST",
-              timezone: jstz.determine().name(),
               days : days
           });
     },
     setautoreminder: function(days) {
           return new Submit({
-              url: "/api/frontend/setautoreminder/" + this.documentid(),
+              url: "/api/frontend/documents/" + this.documentid() + "/setautoreminder",
               method: "POST",
               days : days
           });
     },
-    canbecanceled: function() {
-        return this.get("canbecanceled");
-    },
     cancel: function() {
           return new Submit({
-              url: "/api/frontend/cancel/" + this.documentid(),
+              url: "/api/frontend/documents/" + this.documentid() + "/cancel",
               method: "POST"
           });
     },
@@ -271,7 +256,7 @@ var Document = exports.Document = Backbone.Model.extend({
         var fields = [];
         _.each(this.currentSignatory().fields(), function(field) {
             if (field.isClosed()) return;
-            fields.push({name: field.name(), value: field.value(), type: field.type()});
+            fields.push(field.dataForSigning());
         });
         return fields;
     },
@@ -284,9 +269,9 @@ var Document = exports.Document = Backbone.Model.extend({
     requestPin : function(successCallback,errorCallback) {
         var document = this;
         return new Submit({
-            url : "/api/frontend/sendsmspin/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
+            url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/sendsmspin",
             method: "POST",
-            phone: document.currentSignatory().mobile(),
+            mobile: document.currentSignatory().mobile(),
             ajax: true,
             expectedType : "text",
             ajaxsuccess : successCallback,
@@ -300,7 +285,7 @@ var Document = exports.Document = Backbone.Model.extend({
         var acceptedAuthorAttachments = this.acceptedAuthorAttachmentsForSigning();
         extraSignFields = extraSignFields || {};
         return new Submit({
-            url : "/api/frontend/checksign/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
+            url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/check",
             method: "POST",
             fields: JSON.stringify(fields),
             authentication_type: signatory.authenticationToSign(),
@@ -319,7 +304,7 @@ var Document = exports.Document = Backbone.Model.extend({
         var acceptedAuthorAttachments = this.acceptedAuthorAttachmentsForSigning();
         extraSignFields = extraSignFields || {};
         return new Submit({
-            url : "/api/frontend/sign/" + document.documentid() +  "/" + document.currentSignatory().signatoryid(),
+            url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/sign",
             method: "POST",
             screenshots: JSON.stringify(document.get("screenshots")),
             fields: JSON.stringify(fields),
@@ -346,14 +331,13 @@ var Document = exports.Document = Backbone.Model.extend({
     clone : function(callback) {
        var document = this;
          return new Submit({
-              url : "/api/frontend/clone/" + this.documentid(),
+              url : "/api/frontend/documents/" + this.documentid() + "/clone",
               method: "POST",
               ajaxtimeout : 120000,
               ajaxsuccess : function(resp) {
                 var jresp = JSON.parse(resp);
                 var nd = new Document({id : jresp.id, screenshots : document.get("screenshots") }); // Note that we are not cloning screenshot object, as it may be too big.
                 nd.set(nd.parse(jresp));
-                console.log(nd.get("screenshots"));
                 callback(nd);
               }
           });
@@ -361,19 +345,17 @@ var Document = exports.Document = Backbone.Model.extend({
     makeReadyForSigning : function() {
          var document = this;
          return new Submit({
-              url : "/api/frontend/ready/" + this.documentid(),
-              timezone: jstz.determine().name(),
+              url : "/api/frontend/documents/" + this.documentid() + "/start",
               method: "POST",
               expectedType : "json",
-              screenshots: JSON.stringify(document.get("screenshots")),
               ajaxtimeout : 120000
           });
     },
     save: function(callback) {
          this.get("saveQueue").add(new Submit({
-              url: "/api/frontend/update/" + this.documentid(),
+              url: "/api/frontend/documents/" + this.documentid() +"/update",
               method: "POST",
-              json: JSON.stringify(this.draftData()),
+              document: JSON.stringify(this.draftData()),
               ajaxsuccess : function() {if (callback != undefined) callback();}
          }), function(ec) {if (ec == 403) window.location.reload()});
     },
@@ -381,36 +363,37 @@ var Document = exports.Document = Backbone.Model.extend({
         this.get("saveQueue").finishWith(f);
     },
     saved : function() {
-        return this.get("saved");
+        return this.get("is_saved");
     },
     setSaved : function() {
-        this.set({saved:true});
+        this.set({is_saved:true});
     },
     setAttachments: function() {
         return new Submit({
-              url: "/api/frontend/setattachments/" + this.documentid(),
+              url: "/api/frontend/documents/"+this.documentid()+"/setattachments",
               method: "POST",
               ajax: true
           });
     },
     draftData: function() {
       return {
+          id: this.documentid(),
           title: this.title(),
-          invitationmessage: _.escape(this.get("invitationmessage")),
-          confirmationmessage: _.escape(this.get("confirmationmessage")),
-          daystosign: this.get("daystosign"),
-          daystoremind: this.get("daystoremind") != undefined ? this.get("daystoremind") : null,
-          apicallbackurl : this.get("apicallbackurl"),
-          signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
-          lang: this.lang().draftData(),
-          template: this.isTemplate(),
-          authorattachments : _.map(this.authorattachments(), function(a) {return a.draftData()}),
-          showheader: this.get("showheader") != undefined ? this.get("showheader") : null,
-          showpdfdownload: this.get("showpdfdownload") != undefined ? this.get("showpdfdownload") : null,
-          showrejectoption: this.get("showrejectoption") != undefined ? this.get("showrejectoption") : null,
-          showfooter: this.get("showfooter") != undefined ? this.get("showfooter") : null,
-          saved: this.get("saved"),
-          timezone : this.get("timezone")
+          invitation_message: this.get("invitationmessage"),
+          confirmation_message: this.get("confirmationmessage"),
+          days_to_sign: this.get("daystosign"),
+          days_to_remind: this.get("daystoremind") != undefined ? this.get("daystoremind") : null,
+          parties: _.map(this.signatories(), function(sig) {return sig.draftData()}),
+          lang: this.lang(),
+          is_template: this.isTemplate(),
+          is_saved: this.get("is_saved"),
+          timezone : this.get("timezone"),
+          display_options : {
+            show_header: this.get("showheader"),
+            show_pdf_download: this.get("showpdfdownload"),
+            show_reject_option: this.get("showrejectoption"),
+            show_footer: this.get("showfooter"),
+          }
       };
     },
     status: function() {
@@ -446,25 +429,25 @@ var Document = exports.Document = Backbone.Model.extend({
         return (csig != undefined && csig.author());
     },
     currentViewerIsAuthorsCompanyAdmin : function() {
-        return this.viewer().authorcompanyadmin() == true;
+        return this.get("companyAdmin");
     },
     preparation: function() {
-        return this.status() == "Preparation";
+        return this.status() == "preparation";
     },
     pending: function() {
-        return this.status() == "Pending";
+        return this.status() == "pending";
     },
     timedout: function() {
-        return this.status() == "Timedout";
+        return this.status() == "timedout";
     },
     canceled: function() {
-        return this.status() == "Canceled";
+        return this.status() == "canceled";
     },
     rejected: function() {
-        return this.status() == "Rejected";
+        return this.status() == "rejected";
     },
     closed: function() {
-        return this.status() == "Closed";
+        return this.status() == "closed";
     },
     timeouttime: function() {
         return this.get("timeouttime");
@@ -476,7 +459,13 @@ var Document = exports.Document = Backbone.Model.extend({
         return this.get("file");
     },
     signorder: function() {
-      return this.get("signorder");
+      var res = this.maxPossibleSignOrder();
+      _.each(this.signatories(), function(s) {
+        if (s.signs() && !s.hasSigned()) {
+          res = Math.min(res,s.signorder());
+        }
+      });
+      return res;
     },
     isTemplate: function() {
        return this.get("template") == true;
@@ -490,7 +479,7 @@ var Document = exports.Document = Backbone.Model.extend({
         console.log('recall');
 
         var self = this;
-        var fetchOptions = { data: self.viewer().forFetch(),
+        var fetchOptions = {
                              processData: true,
                              cache: false };
         var fetchFunction = function () {
@@ -614,20 +603,11 @@ var Document = exports.Document = Backbone.Model.extend({
      },500);
      var dataForFile =
         { documentid: self.documentid(),
-          document: self,
-          signatoryid: self.viewer().signatoryid()
+          document: self
         };
      if (self.file() != undefined) self.file().off();
-     var signatories = args.signatories || [];
-     var maxSignsSignorder = _.max(signatories, function(s) {
-         return s.signs ? s.signorder : 0;
-       }).signorder;
 
-     var dropHTMLWrapperFromMessage = function(msg) {
-       // Backward compatibility for V1. We are still returning HTML strucure from API for invitation and confirmation.
-       return _.unescape(msg.replace("<p>","").replace("</p>",""));
-
-     };
+     var signatories = args.parties || [];
 
      return {
        id: args.id,
@@ -643,42 +623,31 @@ var Document = exports.Document = Backbone.Model.extend({
                return null;
            }
        }(),
-       sealedfile: args.sealedfile
-                      ? new File(_.defaults(args.sealedfile, dataForFile))
+       sealedfile: args.sealed_file
+                      ? new File(_.defaults(args.sealed_file, dataForFile))
                       : null,
-       authorattachments: _.map(args.authorattachments, function(fileargs) {
+       authorattachments: _.map(args.author_attachments, function(fileargs) {
          return new AuthorAttachment(_.defaults(fileargs, dataForFile));
        }),
        signatories: _.map(signatories, function(signatoryargs) {
-         return new Signatory(_.defaults(signatoryargs, { document: self, isLastViewer : !signatoryargs.signs && signatoryargs.signorder > maxSignsSignorder }));
+         return new Signatory(_.defaults(signatoryargs, { document: self , current: signatoryargs.id === args.viewer.signatory_id}));
        }),
-       lang: (function() {
-           var lang = new DocLang({lang : args.lang});
-           lang.on('change', function() {
-               self.trigger('change');
-           });
-           return lang;
-       }()),
-       canberestarted: args.canberestarted,
-       canbeprolonged: args.canbeprolonged,
-       canbecanceled: args.canbecanceled,
+       lang: args.lang,
        status: args.status,
-       timeouttime: args.timeouttime == undefined ? undefined : moment(args.timeouttime).toDate(),
-       autoremindtime: args.autoremindtime == undefined ? undefined : moment(args.autoremindtime).toDate(),
-       signorder: args.signorder,
-       authentication: args.authentication,
-       delivery: args.delivery,
-       template: args.template,
-       daystosign: args.daystosign,
-       daystoremind: args.daystoremind,
-       showheader: args.showheader,
-       showpdfdownload: args.showpdfdownload,
-       showrejectoption: args.showrejectoption,
-       showfooter: args.showfooter,
-       invitationmessage: dropHTMLWrapperFromMessage(args.invitationmessage),
-       confirmationmessage: dropHTMLWrapperFromMessage(args.confirmationmessage),
+       timeouttime: args.timeout_time == undefined ? undefined : moment(args.timeout_time).toDate(),
+       autoremindtime: args.auto_remind_time == undefined ? undefined : moment(args.auto_remind_time).toDate(),
+       template: args.is_template,
+       daystosign: args.days_to_sign,
+       daystoremind: args.days_to_remind,
+       showheader: args.display_options.show_header,
+       showpdfdownload: args.display_options.show_pdf_download,
+       showrejectoption: args.display_options.show_reject_option,
+       showfooter: args.display_options.show_footer,
+       invitationmessage: args.invitation_message,
+       confirmationmessage: args.confirmation_message,
        timezone: args.timezone,
-       saved: args.saved,
+       is_saved: args.is_saved,
+       companyAdmin: args.viewer.role == "company_admin",
        ready: true
      };
     },

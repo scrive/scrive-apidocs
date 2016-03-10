@@ -66,7 +66,7 @@ var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
     },
 
     canUseNOBankID: function () {
-      return this.signatory().authenticationToSign() != "eleg";
+      return this.signatory().authenticationToSign() != "se_bankid";
     },
 
     isAuthenticationNOBankID: function () {
@@ -273,9 +273,9 @@ var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
       content: content,
       width: 420,
       onAccept: function () {
-        var authentication_method = model.authenticationMethod();
-        var personal_number = model.personalNumber();
-        var mobile_number = model.mobileNumber();
+        var authenticationMethod = model.authenticationMethod();
+        var personalNumber = model.personalNumber();
+        var mobileNumber = model.mobileNumber();
 
         if (!model.isValid()) {
           new FlashMessage({content: model.getInvalidFlashMessageText(), type: "error"});
@@ -285,14 +285,14 @@ var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
         trackTimeout("Accept", {
           "Accept": "Change authentication to view",
           "Signatory index": model.signatory().signIndex(),
-          "Authentication method": authentication_method,
-          "Personal number": personal_number,
-          "Mobile number": mobile_number
+          "Authentication method": authenticationMethod,
+          "Personal number": personalNumber,
+          "Mobile number": mobileNumber
         });
 
         LoadingDialog.open();
 
-        model.signatory().changeAuthenticationToView(authentication_method, personal_number, mobile_number)
+        model.signatory().changeAuthenticationToView(authenticationMethod, personalNumber, mobileNumber)
           .sendAjax(function () {
             args.onAction();}, function (err) {
               LoadingDialog.close();

@@ -10,7 +10,7 @@ module.exports = React.createClass({
     if (!sig.signs()) {
       new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
     } else if (sig.standardAuthenticationToSign()) {
-      sig.setAuthenticationToSign("eleg");
+      sig.setAuthenticationToSign("se_bankid");
     } else if (sig.seBankIDAuthenticationToSign()) {
       sig.setAuthenticationToSign("sms_pin");
     } else if (sig.smsPinAuthenticationToSign()) {

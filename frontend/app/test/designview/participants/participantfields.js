@@ -29,14 +29,14 @@ var Field = require("../../../js/fields").Field;
       }));
       signatory.addField(new Field({
         name: "",
-        type: "custom",
+        type: "text",
         signatory: signatory,
         obligatory: false,
         shouldbefilledbysender: false
       }));
       signatory.addField(new Field({
-        name: "Some custom field",
-        type: "custom",
+        name: "Some text field",
+        type: "text",
         signatory: signatory,
         obligatory: false,
         shouldbefilledbysender: false

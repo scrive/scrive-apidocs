@@ -13,7 +13,7 @@ var ShowAPIDeliveryModal = require("../../../scripts/authorview/signatories/show
 
       util.createDocument(function (doc) {
         signatory = doc.signatories()[1];
-        signatory.set("signlink","a/b/c");
+        signatory.set("api_delivery_url","a/b/c");
         done();
       });
     });

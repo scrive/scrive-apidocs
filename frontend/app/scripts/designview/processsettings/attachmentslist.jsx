@@ -41,6 +41,19 @@ module.exports = React.createClass({
                       <div
                         className='remove-icon'
                         onClick={function() {
+                          var submit = document.setAttachments();
+                          var attachments = [];
+                          _.each(authorattachments, function(att) {
+                            if (a !== att ) {
+                              attachments.push({
+                                name : att.name(),
+                                required: att.isRequired(),
+                                file_id: att.fileid()
+                              })
+                            }
+                          });
+                          submit.add("attachments", JSON.stringify(attachments));
+                          submit.sendAjax();
                           document.removeattachment(a);
                           mixpanel.track('Click remove attachment', {  Type: 'Author'});
                         }}

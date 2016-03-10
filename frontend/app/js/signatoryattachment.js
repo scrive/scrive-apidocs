@@ -13,11 +13,14 @@ var SignatoryAttachment = exports.SignatoryAttachment = Backbone.Model.extend({
         hasChanged: false
     },
     initialize: function(args) {
-        if (args.file != undefined) {
-            var document = args.signatory.document();
-            this.set({"file": new File(_.extend(args.file, {document: document,
-                                                            documentid: document.documentid()
-                                                           }))});
+        if (args.file_id != undefined) {
+          var document = args.signatory.document();
+          this.set({"file": new File({
+            id : args.file_id,
+            name: args.file_name,
+            document: document,
+            documentid: document.documentid()
+          })});
         }
         return this;
     },

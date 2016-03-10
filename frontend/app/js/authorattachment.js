@@ -8,7 +8,7 @@ var $ = require("jquery");
   var AuthorAttachment = exports.AuthorAttachment = Backbone.Model.extend({
       defaults: function () {
         return {
-          id: 0,
+          file_id: 0,
           name: "",
           required: false,
           accepted: false,
@@ -17,8 +17,8 @@ var $ = require("jquery");
       },
 
       initialize: function (args) {
-        if (args.id) {
-          this.url = "/filepages/" + args.id + this.queryPart();
+        if (args.file_id) {
+          this.url = "/filepages/" + args.file_id + this.queryPart();
         }
       },
 
@@ -28,8 +28,8 @@ var $ = require("jquery");
 
       queryPart: function () {
         var params = {
-          documentid: this.documentid(),
-          signatorylinkid: this.signatoryid()
+          document_id: this.documentid(),
+          signatory_id: this.signatoryid()
         };
         /*
         * Remove undefined values that may happen in the object.
@@ -53,12 +53,12 @@ var $ = require("jquery");
         if (name.toLowerCase().indexOf(".pdf", name.length - 4) === -1) {
           name += ".pdf"; // Same old attachments have names taken directly from files, and .pdf should not be added
         }
-        return "/api/frontend/downloadfile/" + this.documentid() + "/" + this.fileid() +
+        return "/api/frontend/documents/" + this.documentid() + "/files/" + this.fileid() +
                "/" + encodeURIComponent(name) + this.queryPart();
       },
 
       fileid: function () {
-          return this.get("id");
+          return this.get("file_id");
       },
 
       document: function () {
@@ -73,8 +73,8 @@ var $ = require("jquery");
       },
 
       signatoryid: function () {
-        if (this.document() != undefined && this.document().viewer().signatoryid() != undefined) {
-          return this.document().viewer().signatoryid();
+        if (this.document() != undefined && this.document().currentSignatory() != undefined) {
+          return this.document().currentSignatory().signatoryid();
         }
         return this.get("signatoryid");
       },
@@ -99,16 +99,12 @@ var $ = require("jquery");
         this.set("accepted", accepted);
       },
 
-      draftData: function () {
-        return {id: this.fileid(), name: this.name(), required: this.isRequired()};
-      },
-
       parse: function (response) {
           if (response.error != undefined) {
             this.set({broken: true});
           } else if (response.wait != undefined) {
             _.delay(_.bind(this.fetch, this), 2000, {
-                data: {signatoryid: this.signatoryid()},
+                data: {signatory_id: this.signatoryid()},
                 processData:  true,
                 cache: false
             });

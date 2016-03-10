@@ -108,6 +108,7 @@ Executable kontrakcja-server
   Build-depends: hS3
   Build-depends: HStringTemplate
   Build-depends: HTTP
+  Build-depends: http-types
   Build-depends: HUnit
   Build-depends: iconv
   Build-depends: invariant
@@ -231,6 +232,7 @@ Executable cron
   Build-depends: explicit-exception
   Build-depends: fields-json
   Build-depends: filepath
+  Build-depends: free
   Build-depends: happstack-server
   Build-depends: happstack-static-routing
   Build-depends: HaXml
@@ -238,6 +240,7 @@ Executable cron
   Build-depends: hS3
   Build-depends: HStringTemplate
   Build-depends: HTTP
+  Build-depends: http-types
   Build-depends: HUnit
   Build-depends: iconv
   Build-depends: invariant
@@ -741,6 +744,7 @@ Executable kontrakcja-test
   Build-depends: hS3
   Build-depends: HStringTemplate
   Build-depends: HTTP
+  Build-depends: http-types
   Build-depends: HUnit
   Build-depends: iconv
   Build-depends: invariant

@@ -13,6 +13,8 @@ var NorwegianIdentifyView = require("../../../../scripts/signview/identify/norwe
       server = backend.createServer();
       util.createDocument(function (d) {
         doc = d;
+        doc.currentSignatory().set("current",false);
+        doc.signatories()[1].set("current",true);
         doc.currentSignatory().setAuthenticationToView("no_bankid");
         done();
       });

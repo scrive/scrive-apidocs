@@ -65,7 +65,7 @@ module.exports = React.createClass({
   authenticationToSignText: function (t) {
     if (t == "standard") {
       return localization.designview.addParties.authenticationToSignStandard;
-    } else if (t == "eleg") {
+    } else if (t == "se_bankid") {
       return localization.designview.addParties.authenticationToSignSEBankID;
     } else if (t == "sms_pin") {
       return localization.designview.addParties.authenticationToSignSMSPin;
@@ -74,7 +74,7 @@ module.exports = React.createClass({
   authenticationToSignOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes = sig.signs() ? ["standard", "eleg", "sms_pin"] : ["standard"];
+    var authTypes = sig.signs() ? ["standard", "se_bankid", "sms_pin"] : ["standard"];
     return _.map(authTypes, function (t) {
       return {name: self.authenticationToSignText(t), value:t};
     });
