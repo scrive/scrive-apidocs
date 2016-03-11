@@ -87,5 +87,5 @@ createTestUser lang = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
     company <- dbUpdate $ CreateCompany
-    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) lang (bdid bd)
+    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) lang (bdid bd) AccountRequest
     return user

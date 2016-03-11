@@ -58,7 +58,9 @@ handleAccountSetupFromSign signatorylink = do
                     companyname = cname
                   , companynumber = cnumber
                 }
-               guardJustM $ documentlang <$> theDocument >>= createUser (Email email) (firstname, lastname) (companyid company,True)
+               guardJustM $ do
+                 lang <- documentlang <$> theDocument
+                 createUser (Email email) (firstname, lastname) (companyid company,True) lang BySigning
   company <- dbQuery $ GetCompanyByUserID (userid user)
   activateduser <- handleActivate (Just $ firstname) (Just $ lastname) (user,company) BySigning
   _ <- dbUpdate $ SaveDocumentForUser activateduser (signatorylinkid signatorylink)
@@ -133,11 +135,11 @@ scheduleNewAccountMail ctx user = do
   mail <- accessNewAccountMail ctx user link
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
-createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Email -> (String, String) -> (CompanyID,Bool) -> Lang -> m (Maybe User)
-createUser email names companyandrole lang = do
+createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Email -> (String, String) -> (CompanyID,Bool) -> Lang -> SignupMethod -> m (Maybe User)
+createUser email names companyandrole lang sm = do
   ctx <- getContext
   passwd <- createPassword =<< randomPassword
-  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyandrole lang (bdid $ ctxbrandeddomain ctx)
+  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyandrole lang (bdid $ ctxbrandeddomain ctx) sm
   case muser of
     Just user -> do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> getContextUser ctx)
