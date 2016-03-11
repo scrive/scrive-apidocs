@@ -1,6 +1,7 @@
 var sinon = require("sinon");
 var doc1 = require("./data/document");
 var doc2 = require("./data/document2");
+var profile = require("./data/profile");
 var file = require("./data/file");
   var exports = {};
 
@@ -39,6 +40,10 @@ var file = require("./data/file");
 
     server.respondWith(/\/s\/eid\/cgi\/grp\/collect\/(\d+)\/(\d+)/, function (xhr, id) {
       xhr.respond(200, { "Content-Type": "application/text" }, JSON.stringify({progress_status : "outstanding_transaction"}));
+    });
+
+    server.respondWith(/\/api\/frontend\/getprofile/, function (xhr) {
+      xhr.respond(200, { "Content-Type": "application/text" }, JSON.stringify(_.clone(profile)));
     });
 
     return server;

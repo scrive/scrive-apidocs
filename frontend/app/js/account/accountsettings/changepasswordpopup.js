@@ -132,7 +132,7 @@ var ChangePasswordPopupView = Backbone.View.extend({
 });
 
 
-var ChangePasswordPopup = exports.ChangePasswordPopup = function(args) {
+module.exports = function(args) {
           var model = new ChangePasswordPopupModel(args);
           var view =  new ChangePasswordPopupView({model : model});
 };

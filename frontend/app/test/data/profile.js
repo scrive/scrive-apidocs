@@ -1,0 +1,26 @@
+module.exports = {
+  "id":"10",
+  "fstname":"M",
+  "sndname":"R",
+  "email":"mariusz@skrivapa.se",
+  "personalnumber":"c",
+  "phone":"d",
+  "companyadmin":true,
+  "companyposition":"Leader",
+  "lang":"en",
+  "company":{
+    "companyid":"9",
+    "address":"Warsaw",
+    "city":"5",
+    "country":"6",
+    "zip":"4",
+    "companyname":"Yeoman",
+    "companynumber":"2",
+    "cgidisplayname":null,
+    "cgiserviceid":null,
+    "ipaddressmasklist":"",
+    "allowsavesafetycopy":true,
+    "idledoctimeout":null,
+    "smsprovider":"SMSDefault"
+  }
+}
