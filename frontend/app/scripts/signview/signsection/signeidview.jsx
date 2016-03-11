@@ -124,6 +124,7 @@ var Field = require("../../../js/fields.js").Field;
                 <InfoTextInput
                   id="ssn"
                   ref="ssnInput"
+                  inputtype="number"
                   infotext={localization.ssnInfoText}
                   className={inputClass}
                   value={field.value()}

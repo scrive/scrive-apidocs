@@ -39,24 +39,30 @@ var openCreateUserModal = function(callback) {
   table.append(tr5).append(tr5ErrorRow);
 
   var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Language:"));
-  var lang = jQuery("<select name='lang'>"
-                                  + '<option value="sv">Swedish</option>'
-                                  + '<option value="en">English</option>'
-                                  + '<option value="de">German</option>'
-                                  + '<option value="fr">French</option>'
-                                  + '<option value="nl">Dutch</option>'
-                                  + '<option value="it">Italian</option>'
-                                  + '<option value="no">Norwegian</option>'
-                                  + '<option value="pt">Portuguese</option>'
-                                  + '<option value="es">Spanish</option>'
-                                  + '<option value="da">Danish</option>'
-                                  + '<option value="el">Greek</option>'
-                                  + '<option value="fi">Finnish</option>'
-                                  + '<option value="is">Icelandic</option>'
-                                  + '<option value="et">Estonian</option>'
-                                  + '<option value="lv">Latvian</option>'
-                                  + '<option value="lt">Lithuanian</option>'
-                                  + "</select>");
+  var languages = [
+      {name: "Swedish", value: "sv"}
+    , {name: "English", value: "en"}
+    , {name: "German", value: "de"}
+    , {name: "French", value: "fr"}
+    , {name: "Dutch", value: "nl"}
+    , {name: "Italian", value: "it"}
+    , {name: "Norwegian", value: "no"}
+    , {name: "Portuguese", value: "pt"}
+    , {name: "Spanish", value: "es"}
+    , {name: "Danish", value: "da"}
+    , {name: "Greek", value: "el"}
+    , {name: "Finnish", value: "fi"}
+    , {name: "Icelandic", value: "is"}
+    , {name: "Estonian", value: "et"}
+    , {name: "Latvian", value: "lv"}
+    , {name: "Lithuanian", value: "lt"}
+  ];
+
+  languages = _.sortBy(languages, function(l) {return l.name.toLowerCase();});
+  var lang = jQuery("<select name='lang' />");
+  _.each(languages, function(l) {
+    lang.append($("<option />").val(l.value).text(l.name));
+  });
   tr6.append(jQuery("<td/>").append(lang));
   table.append(tr6);
 

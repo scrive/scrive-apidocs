@@ -14,17 +14,16 @@
   }
 
   .button-group {
-    .button:first-child {
+
+    .button  {
       float: none;
-      margin-right: 20px;
+      margin: 0 0 10px 10px;
 
-      .on-small-view({
+      &:first-child {
+        .on-small-view({
           margin-right: 0;
-      });
-    }
-
-    .button:last-child {
-      margin-right: 0;
+        });
+      }
     }
   }
 
