@@ -274,9 +274,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveInactiveUser Bool where
        runQuery_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = " <?> uid <+> " AND users.has_accepted_terms_of_service IS NULL)"
        runQuery01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
 
-data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang BrandedDomainID
+data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang BrandedDomainID SignupMethod
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd (cid, admin) l ad) = do
+  update (AddUser (fname, lname) email mpwd (cid, admin) l ad sm) = do
     mu <- query $ GetUserByEmail $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
@@ -287,7 +287,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
             sqlSet "is_company_admin" admin
             sqlSet "account_suspended" False
             sqlSet "has_accepted_terms_of_service" (Nothing :: Maybe UTCTime)
-            sqlSet "signup_method" AccountRequest
+            sqlSet "signup_method" sm
             sqlSet "company_id" cid
             sqlSet "first_name" fname
             sqlSet "last_name" lname

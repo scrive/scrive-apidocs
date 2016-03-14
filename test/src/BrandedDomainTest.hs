@@ -47,7 +47,7 @@ test_brandedDomainAssociatedDomain = do
 
   pwd <- createPassword "admin"
 
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) def bdid
+  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) def bdid AccountRequest
 
   wbd <- dbQuery $ GetBrandedDomainByUserID (userid user)
 

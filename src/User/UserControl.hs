@@ -248,7 +248,7 @@ sendNewUserMail user = do
 createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> (CompanyID, Bool) -> Lang -> m (Maybe User)
 createNewUserByAdmin email names companyandrole lg = do
     ctx <- getContext
-    muser <- createUser (Email email) names companyandrole lg
+    muser <- createUser (Email email) names companyandrole lg ByAdmin
     case muser of
          Just user -> do
              let fullname = composeFullName names
