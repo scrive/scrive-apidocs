@@ -10,7 +10,12 @@ import Shake.Utils
 opts :: String -> ShakeOptions
 opts v = shakeOptions { shakeVersion = v
                       , shakeFiles = "_build"
-                      , shakeThreads = 0
+                      -- When running on multiple threads, a build failure on one
+                      -- thread did not stop other threads from continuing
+                      -- Maybe this is default Shake behaviour but is annoying as
+                      -- the build error gets lost in output
+                      -- Run on single thread until we figure this out
+                      , shakeThreads = 1
                       }
 
 main :: IO ()
@@ -147,7 +152,7 @@ serverBuildRules = do
 serverTestRules :: Rules ()
 serverTestRules = do
   let hsImportOrderAction checkOnly = do
-        let flags = if checkOnly then ("--check":hsSourceDirs) else hsSourceDirs
+        let flags = if checkOnly then ("--check":sourceDirsFromCabal) else sourceDirsFromCabal
         command [Shell, AddEnv "LANG" "en_GB.UTF-8"] "runhaskell scripts/sort_imports.hs" flags
 
   "_build/hs-import-order" %>>> do
@@ -188,7 +193,7 @@ serverTestRules = do
       removeFilesAfter "coverage-reports" ["//*"]
 
 needServerHaskellFiles :: Action ()
-needServerHaskellFiles = needPatternsInDirectories ["//*.hs"] hsSourceDirs
+needServerHaskellFiles = needPatternsInDirectories ["//*.hs"] sourceDirsFromCabal
 
 -- | All HS source directories from kontrakcja.cabal
 -- For `needServerHaskellFiles` we could do with top-level directories, but our
@@ -196,8 +201,8 @@ needServerHaskellFiles = needPatternsInDirectories ["//*.hs"] hsSourceDirs
 -- uses this information to decide if an import is foreign or not
 -- FIXME This can be automated this using grep, ack, sort, uniq on kontrakcja.cabal:
 -- grep 'hs-source-dirs' -i kontrakcja.cabal | sed -e 's/Hs-source-dirs://g' -e 's/^ *//g' | tr ' ' '\n' | sort -u
-hsSourceDirs :: [FilePath]
-hsSourceDirs =
+sourceDirsFromCabal :: [FilePath]
+sourceDirsFromCabal =
   [ "cron"
   , "cron/inc"
   , "cron/schema"
