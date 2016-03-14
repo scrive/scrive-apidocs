@@ -1,14 +1,14 @@
 module LocalizationMain(main) where
 
-import KontraPrelude
-import Text.StringTemplates.Templates hiding (runTemplatesT)
 import System.Directory (createDirectoryIfMissing)
-import qualified Data.Text.IO as T
+import Text.StringTemplates.Templates hiding (runTemplatesT)
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import qualified Text.StringTemplates.Fields as F
 
-import User.Lang
+import KontraPrelude
 import Templates
+import User.Lang
 
 main :: IO ()
 main = do

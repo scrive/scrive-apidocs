@@ -53,6 +53,7 @@ main = do
       putNormal "   test-server               : Run all server-side tests"
       putNormal "   test-frontend             : Run all frontend tests"
       putNormal "   test-hs-import-order      : Run Haskell Import Order checking script"
+      putNormal "   fix-hs-import-order       : Sort Haskell imports"
       putNormal ""
       putNormal "   test-frontend-tests       : Run frontend Grunt Tests"
       putNormal "   test-frontend-jscs        : Run frontend Grunt JSCS Style Checker"
@@ -145,10 +146,15 @@ serverBuildRules = do
 -- | Server test rules
 serverTestRules :: Rules ()
 serverTestRules = do
+  let hsImportOrderAction checkOnly = do
+        let flags = if checkOnly then ("--check":hsSourceDirs) else hsSourceDirs
+        command [Shell, AddEnv "LANG" "en_GB.UTF-8"] "runhaskell scripts/sort_imports.hs" flags
+
   "_build/hs-import-order" %>>> do
     needServerHaskellFiles
-    withGitHub "Haskell import order" $
-      command [AddEnv "LC_ALL" "en_US.UTF-8"] "scripts/sort_imports.sh" ("--check":serverHaskellDirs)
+    withGitHub "Haskell import order" $ hsImportOrderAction True
+
+  "fix-hs-import-order" ~> hsImportOrderAction False
 
   "kontrakcja_test.conf" %> \_ -> do
     tc <- askOracle (TeamCity ())
@@ -182,20 +188,37 @@ serverTestRules = do
       removeFilesAfter "coverage-reports" ["//*"]
 
 needServerHaskellFiles :: Action ()
-needServerHaskellFiles = needPatternsInDirectories ["//*.hs"] serverHaskellDirs
+needServerHaskellFiles = needPatternsInDirectories ["//*.hs"] hsSourceDirs
 
-serverHaskellDirs :: [FilePath]
-serverHaskellDirs = [ "cron"
-                    , "docconv"
-                    , "inc"
-                    , "mailer"
-                    , "messenger"
-                    , "misc"
-                    , "pdftools"
-                    , "schema"
-                    , "src"
-                    , "test"
-                    ]
+-- | All HS source directories from kontrakcja.cabal
+-- For `needServerHaskellFiles` we could do with top-level directories, but our
+-- sort imports procedure needs the directories as defined in .cabal file as it
+-- uses this information to decide if an import is foreign or not
+-- FIXME This can be automated this using grep, ack, sort, uniq on kontrakcja.cabal:
+-- grep 'hs-source-dirs' -i kontrakcja.cabal | sed -e 's/Hs-source-dirs://g' -e 's/^ *//g' | tr ' ' '\n' | sort -u
+hsSourceDirs :: [FilePath]
+hsSourceDirs =
+  [ "cron"
+  , "cron/inc"
+  , "cron/schema"
+  , "cron/src"
+  , "docconv/src"
+  , "docconv/test/src"
+  , "inc"
+  , "localization/src"
+  , "mailer/inc"
+  , "mailer/schema"
+  , "mailer/src"
+  , "messenger/inc"
+  , "messenger/schema"
+  , "messenger/src"
+  , "misc"
+  , "pdftools"
+  , "schema/inc"
+  , "schema/src"
+  , "src"
+  , "test/src"
+  ]
 
 -- * Frontend
 
