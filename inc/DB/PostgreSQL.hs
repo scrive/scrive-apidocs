@@ -38,7 +38,7 @@ createPoolSource logger cs = do
   }
   where
     maxConnections :: Int
-    maxConnections = 15
+    maxConnections = 30
 
     withResource' :: (MonadBase IO m, MonadMask m)
                   => Pool Connection -> (Connection -> m a) -> m a
