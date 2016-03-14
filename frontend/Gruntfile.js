@@ -209,7 +209,8 @@ module.exports = function (grunt) {
           beautify: true
         },
         src: [
-          "<%= yeoman.app %>/bower_components/jquery/jquery.js",
+          "<%= yeoman.app %>/bower_components/jquery/dist/jquery.js",
+          "<%= yeoman.app %>/bower_components/jquery-migrate/jquery-migrate.js",
           "<%= yeoman.app %>/bower_components/underscore/underscore.js",
           "<%= yeoman.app %>/bower_components/backbone/backbone.js",
           "<%= yeoman.app %>/bower_components/react/react-with-addons.js",
