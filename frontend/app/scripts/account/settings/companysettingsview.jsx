@@ -35,6 +35,7 @@ module.exports = React.createClass({
                 <td><label>{localization.account.accountDetails.companyname}</label></td>
                 <td>
                   <InfoTextInput
+                    ref="companyname"
                     name="companyname"
                     value={model.companyname()}
                     onChange={this.onCompanynameChange}
@@ -46,6 +47,7 @@ module.exports = React.createClass({
                 <td><label>{localization.account.accountDetails.companynumber}</label></td>
                 <td>
                   <InfoTextInput
+                    ref="companynumber"
                     name="companynumber"
                     value={model.companynumber()}
                     onChange={this.onCompanynumberChange}
@@ -57,6 +59,7 @@ module.exports = React.createClass({
                 <td><label>{localization.account.accountDetails.companyaddress}</label></td>
                 <td>
                   <InfoTextInput
+                    ref="companyaddress"
                     name="companyaddress"
                     value={model.companyaddress()}
                     onChange={this.onCompanyaddressChange}
@@ -68,6 +71,7 @@ module.exports = React.createClass({
                 <td><label>{localization.account.accountDetails.companyzip}</label></td>
                 <td>
                   <InfoTextInput
+                    ref="companyzip"
                     name="companyzip"
                     value={model.companyzip()}
                     onChange={this.onCompanyzipChange}
@@ -79,6 +83,7 @@ module.exports = React.createClass({
                 <td><label>{localization.account.accountDetails.companycity}</label></td>
                 <td>
                   <InfoTextInput
+                    ref="companycity"
                     name="companycity"
                     value={model.companycity()}
                     onChange={this.onCompanycityChange}
@@ -90,6 +95,7 @@ module.exports = React.createClass({
                 <td><label>{localization.account.accountDetails.companycountry}</label></td>
                 <td>
                   <InfoTextInput
+                    ref="companycountry"
                     name="companycountry"
                     value={model.companycountry()}
                     onChange={this.onCompanycountryChange}

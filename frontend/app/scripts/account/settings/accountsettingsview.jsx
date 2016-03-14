@@ -49,6 +49,7 @@ module.exports = React.createClass({
                 </td>
                 <td>
                   <InfoTextInput
+                    ref="fstname"
                     name="fstname"
                     value={model.fstname()}
                     onChange={this.onFstnameChange}
@@ -61,6 +62,7 @@ module.exports = React.createClass({
                 </td>
                 <td>
                   <InfoTextInput
+                    ref="sndname"
                     name="sndname"
                     value={model.sndname()}
                     onChange={this.onSndnameChange}
@@ -73,6 +75,7 @@ module.exports = React.createClass({
                 </td>
                 <td>
                   <InfoTextInput
+                    ref="personalnumber"
                     name="personalnumber"
                     value={model.personnumber()}
                     onChange={this.onPersonnumberChange}
@@ -85,12 +88,14 @@ module.exports = React.createClass({
                 </td>
                 <td>
                   <input
+                    ref="emailinput"
                     type="text"
                     disabled={true}
                     className="emailinput"
                     value={model.email()}
                   />
                   <Button
+                    ref="changeemail"
                     text={localization.account.accountDetails.changeEmailButton}
                     className="new-mail-button"
                     onClick={this.onChangeEmailClick}
@@ -109,6 +114,7 @@ module.exports = React.createClass({
                     value="************"
                   />
                   <Button
+                    ref="changepassword"
                     text={localization.account.accountDetails.changeEmailButton}
                     className="new-mail-button"
                     onClick={this.onChangePasswordClick}
@@ -121,6 +127,7 @@ module.exports = React.createClass({
                 </td>
                 <td>
                   <InfoTextInput
+                    ref="phone"
                     name="phone"
                     value={model.phone()}
                     onChange={this.onPhoneChange}
@@ -133,6 +140,7 @@ module.exports = React.createClass({
                 </td>
                 <td>
                   <InfoTextInput
+                    ref="companyposition"
                     name="companyposition"
                     value={model.companyposition()}
                     onChange={this.onCompanypositionChange}
@@ -144,7 +152,10 @@ module.exports = React.createClass({
                   <label>{localization.account.accountSecurity.lang}</label>
                 </td>
                 <td>
-                  <LanguageSelect model={this.props.model} />
+                  <LanguageSelect
+                    ref="languageselect"
+                    model={this.props.model}
+                  />
                 </td>
               </tr>
             </tbody>

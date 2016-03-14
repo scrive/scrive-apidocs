@@ -33,9 +33,11 @@ module.exports = React.createClass({
         <div className="tab-container account-settings">
           <div className="tab-content account">
             <AccountSettingsView
+              ref="accountsettings"
               model={this.state.model}
             />
             <CompanySettingsView
+              ref="companysettings"
               model={this.state.model}
               companyAdmin={this.props.companyAdmin}
             />

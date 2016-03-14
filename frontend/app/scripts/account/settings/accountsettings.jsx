@@ -18,9 +18,6 @@ module.exports = Backbone.Model.extend({
     user.fetch({cache: false, processData: true});
     this.reset();
   },
-  companyAdmin: function () {
-     return this.get("companyAdmin");
-  },
   user: function () {
      return this.get("user");
   },

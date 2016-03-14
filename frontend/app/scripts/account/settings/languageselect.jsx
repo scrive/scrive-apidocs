@@ -41,6 +41,7 @@ module.exports = React.createClass({
 
     return (
       <Select
+        ref="select"
         name={lname}
         onSelect={function (v) {
           self.props.model.setLang(v);
