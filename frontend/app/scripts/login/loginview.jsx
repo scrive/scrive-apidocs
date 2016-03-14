@@ -7,6 +7,7 @@ var LanguageSelect = require("../pages/languageselect");
 var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
 var $ = require("jquery");
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+var trackTimeout = require("../common/track_timeout");
 
 
 

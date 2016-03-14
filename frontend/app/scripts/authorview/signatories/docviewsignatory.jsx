@@ -14,6 +14,7 @@ var ConfirmationWithEmail = require("../../../js/confirmationsWithEmails.js").Co
 var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var $ = require("jquery");
 var LocalStorage = require("../../../js/storage.js").LocalStorage;
+var trackTimeout = require("../../common/track_timeout");
 
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],

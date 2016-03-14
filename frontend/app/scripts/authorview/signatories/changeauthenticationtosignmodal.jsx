@@ -11,6 +11,7 @@ var $ = require("jquery");
 var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
+var trackTimeout = require("../../common/track_timeout");
 
   var ChangeAuthenticationModalModel = Backbone.Model.extend({
     initialize: function (args) {

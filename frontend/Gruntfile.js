@@ -218,7 +218,10 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/libs/*.js",
           "<%= yeoman.app %>/js/utils/cookie.js",
           "<%= yeoman.app %>/js/utils/time.js",
-          "<%= yeoman.app %>/js/global.js"
+          "<%= yeoman.app %>/js/shims.js",
+          "<%= yeoman.app %>/js/errors.js",
+          "<%= yeoman.app %>/js/csrf.js",
+          "<%= yeoman.app %>/js/timezone.js"
         ],
         dest: "<%= yeoman.app %>/compiled/vendor-" + generateVersionId() + ".js"
       }

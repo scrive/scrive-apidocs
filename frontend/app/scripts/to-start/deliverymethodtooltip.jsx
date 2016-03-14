@@ -1,4 +1,5 @@
 var $ = require("jquery");
+var capitaliseFirstLetter = require("../common/capitalise_first_letter");
 
 
 

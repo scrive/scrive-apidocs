@@ -1,6 +1,7 @@
 var React = require("react");
 var List = require("../lists/list");
 var _ = require("underscore");
+var capitaliseFirstLetter = require("../common/capitalise_first_letter");
 /* List of filters used by out archive view. Used by both, Documents and Trash list*/
 
 
