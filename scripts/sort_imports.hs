@@ -12,6 +12,7 @@ import Data.Text (Text)
 import System.Directory
 import System.Environment
 import System.Exit
+import System.IO (stderr, hPutStrLn)
 import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -126,7 +127,10 @@ checkConsistency dirs = do
     source <- T.readFile file
     if source == convert modules source
       then putStrLn " yes."
-      else putStrLn " no." >> exitFailure
+      else do
+        putStrLn " no."
+        hPutStrLn stderr $ "Imports in " ++ file ++ " are not sorted"
+        exitFailure
 
 ----------------------------------------
 
