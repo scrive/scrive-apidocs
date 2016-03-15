@@ -34,6 +34,9 @@ function defaultConfig(obj) {
             presets: ["react", "es2015"]
           }
         }
+      ],
+      noParse: [
+        /html2canvas/
       ]
     },
 
@@ -44,7 +47,6 @@ function defaultConfig(obj) {
       "react": "React",
       "react/addons": "React",
       "tinycolor": "tinycolor",
-      "html2canvas": "html2canvas",
       "moment": "moment",
       "base64": "Base64"
     },

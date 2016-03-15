@@ -65,6 +65,9 @@ module.exports = function(config) {
             test: /\.jsx$/,
             loader: "isparta"
           }
+        ],
+        noParse: [
+          /html2canvas/
         ]
       },
 
@@ -75,7 +78,6 @@ module.exports = function(config) {
         "react": "React",
         "react/addons": "React",
         "tinycolor": "tinycolor",
-        "html2canvas": "html2canvas",
         "moment": "moment",
         "sinon": "sinon",
         "base64": "Base64"
