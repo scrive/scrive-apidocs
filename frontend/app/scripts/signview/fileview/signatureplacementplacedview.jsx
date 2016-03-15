@@ -71,15 +71,26 @@ var $ = require("jquery");
         });
       }
     },
-
+    imageSrc: function () {
+      var placement = this.props.model;
+      var field = placement.field();
+      var signatory = field.signatory();
+      var doc = signatory.document();
+      var queryPart = doc.currentSignatory() ? "?signature_id=" + doc.currentSignatory().signatoryid()  : "";
+      if (field.value()) {
+        return field.value()
+      } else if (field.signatureFile()) {
+        return "/api/frontend/documents/" + doc.documentid() + "/files/" + field.signatureFile() +
+               "/image.png" + queryPart;
+      }
+    },
     render: function () {
       var placement = this.props.model;
       var field = placement.field();
       var signatory = field.signatory();
       var doc = signatory.document();
-      var image = field.value();
       var drawing = doc.pending() && doc.currentSignatoryCanSign() && signatory.current();
-      var hasImage = image !== "";
+      var hasImage = field.value() !== "" || field.signatureFile() != undefined;
 
       var divClass = React.addons.classSet({
         "placedfield": true,
@@ -127,7 +138,7 @@ var $ = require("jquery");
                   <span>{localization.signature.clickToDraw}</span>
                 }
                 {/* else if */ hasImage &&
-                  <img src={image} style={{width: width, height: height}} />
+                  <img src={this.imageSrc()} style={{width: width, height: height}} />
                 }
               </div>
             }

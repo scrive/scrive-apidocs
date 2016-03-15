@@ -30,7 +30,7 @@ unjsonDocument da = objectOf $
   <**> (field "title" documenttitle "Document title"
         <**> (pure $ \t d -> d { documenttitle = t }))
   <**> (fieldBy "parties" documentsignatorylinks "Document parties" (unjsonSignatoryArray da)
-        <**> (pure (\sl d ->d { documentsignatorylinks = sl }) ))
+        <**> (pure (\sl d -> d { documentsignatorylinks = sl }) ))
   <*   fieldReadonlyBy "file" documentfile "Document main file" unjsonMaybeMainFile
   <*   fieldReadonlyBy "sealed_file" documentsealedfile "Document sealed file" unjsonMaybeMainFile
   <*   fieldReadonlyBy "author_attachments" documentauthorattachments "Document author attachments" (arrayOf unjsonAuthorAttachment)
@@ -60,9 +60,9 @@ unjsonDocument da = objectOf $
   <**> (fieldBy "tags" documenttags "Document tags" (invmap Set.fromList Set.toList $ arrayOf unjsonDocumentTag)
         <**> (pure $ \tags d -> d { documenttags = tags }))
   <**> (field "is_template" isTemplate "Whether document is a template"
-        <**> (pure (\t d -> if t then d { documenttype = Template } else d)))
+        <**> (pure (\t d -> d { documenttype = if t then Template else Signable } )))
   <**> (field "is_saved" (not . documentunsaveddraft) "Whether document is saved"
-        <**> (pure (\t d -> if t then d { documentunsaveddraft = False } else d)))
+        <**> (pure (\t d -> d { documentunsaveddraft = not t } )))
   <*   (fieldReadonly "is_shared" isDocumentShared "Document is a template and is shared within company")
   <*   (fieldReadonly "is_trashed" (propertyForCurrentSignatory da (isJust . signatorylinkdeleted)) "Whether document is in Trash")
   <*   (fieldReadonly "is_deleted" (propertyForCurrentSignatory da (isJust . signatorylinkreallydeleted)) "Whether document has been deleted")
@@ -101,7 +101,8 @@ unjsonSignatory da =  objectOf $
         <**> (pure $ \mrd s -> s { signatorylinkrejectredirecturl = mrd }))
   <*   (fieldReadonlyBy "email_delivery_status" mailinvitationdeliverystatus "Email invitation delivery status" unjsonDeliveryStatus)
   <*   (fieldReadonlyBy "mobile_delivery_status" smsinvitationdeliverystatus "SMS invitation delivery status" unjsonDeliveryStatus)
-  <**> (fieldOpt "csv" signatorylinkcsvupload ("CSV upload for multipart") <**> (pure $ \mcsv s -> s { signatorylinkcsvupload = mcsv })) -- Check only one csv for whole doc
+  <*   (fieldReadonly "has_authenticated_to_view" signatorylinkidentifiedtoview "Signatory has already authenticated to view")
+  <**> (fieldOptBy "csv" signatorylinkcsvupload "CSV upload for multipart" unjsonCSVUpload <**> (pure $ \mcsv s -> s { signatorylinkcsvupload = mcsv })) -- Check only one csv for whole doc
   <**> (fieldDefBy "delivery_method" (signatorylinkdeliverymethod def) signatorylinkdeliverymethod "Signatory invitation delivery method" unjsonDeliveryMethod
         <**> (pure $ \sd s -> s { signatorylinkdeliverymethod = sd }))
   <**> (fieldDefBy "authentication_method_to_view" (signatorylinkauthenticationtoviewmethod def) signatorylinkauthenticationtoviewmethod "Signatory authentication to view method" unjsonAuthenticationToViewMethod

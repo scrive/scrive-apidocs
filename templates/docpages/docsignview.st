@@ -132,7 +132,6 @@ $htmlopentag()$
     window.netsIdentifyUrl = "$netsIdentifyUrl$";
     window.netsMerchantIdentifier = "$netsMerchantIdentifier$";
     window.netsTrustedDomain = "$netsTrustedDomain$";
-
     var fromTemplate = {
       documentId: "$documentid$",
       sigLinkId: "$siglinkid$"

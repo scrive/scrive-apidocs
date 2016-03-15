@@ -37,7 +37,7 @@ var PageTasksArrow = require("../../js/tasks.js").PageTasksArrow;
           } else if (!triggeredChangeOnReady) { // Once model is ready - we want to trigger change only once
             triggeredChangeOnReady = true;
             document.mainfile().fetch({
-              data: {signatoryid: document.viewer().signatoryid()},
+              data: {signatory_id: document.currentSignatory() && document.currentSignatory().signatoryid()},
               processData: true,
               cache: false
             });

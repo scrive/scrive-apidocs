@@ -13,6 +13,7 @@ module Doc.API.V2.JSON.Misc (
 , unjsonDocumentTag
 , unjsonMaybeMainFile
 , unjsonSignatoryScreenshots
+, unjsonCSVUpload
 , evidenceAttachmentsToJSONBS
 ) where
 
@@ -169,3 +170,6 @@ evidenceAttachmentsToJSONBS did eas = toLazyByteString $ "{ \"attachments\": [" 
                  | EvidenceAttachments.name b == firstAttachmentName = GT
                  | otherwise = compare a b
     firstAttachmentName = "Evidence Quality of Scrive E-signed Documents.html"
+
+unjsonCSVUpload :: UnjsonDef CSVUpload
+unjsonCSVUpload = invmap CSVUpload csvcontents unjsonDef

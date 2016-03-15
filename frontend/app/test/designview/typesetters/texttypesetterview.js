@@ -121,8 +121,7 @@ var TextTypeSetterView = require("../../../scripts/designview/typesetters/textty
 
     it("should test component author unchangeable", function () {
       var placement1 = util.addPlacement(doc, undefined, 0, {
-        type: "standard"
-        , name: "email"
+        type: "email"
       });
 
       var typeSetter1 = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
@@ -143,8 +142,8 @@ var TextTypeSetterView = require("../../../scripts/designview/typesetters/textty
       assert.equal(obligatorySelect.props.inactive, true, "obligatory select should now be inactive.");
 
       var placement2 = util.addPlacement(doc, undefined, 0, {
-        type: "standard"
-        , name: "sndname"
+          type: "name"
+        , order: 2
       });
 
      var typeSetter2 = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
@@ -154,9 +153,8 @@ var TextTypeSetterView = require("../../../scripts/designview/typesetters/textty
 
       }));
 
-      var placement3 = util.addPlacement(doc, undefined, 1, {
-        type: "standard"
-        , name: "email"
+     var placement3 = util.addPlacement(doc, undefined, 1, {
+        type: "email"
       });
 
       var typeSetter3 = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {
@@ -173,6 +171,7 @@ var TextTypeSetterView = require("../../../scripts/designview/typesetters/textty
     });
 
     it("should test done", function () {
+
       var placement = util.addPlacement(doc);
 
       var typeSetter = TestUtils.renderIntoDocument(React.createElement(TextTypeSetterView, {

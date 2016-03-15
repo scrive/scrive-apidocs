@@ -12,8 +12,8 @@ import KontraPrelude
 
 documentAPI :: Route (Kontra Response)
 documentAPI = dir "api" $ choice
-  [ dir "frontend" $ documentAPIV1
+  [ dir "frontend" $ documentAPIV2
   , documentAPIV1 -- Temporary backwards compatibility for clients accessing version-less API
   , dir "v1" $ documentAPIV1
-  , dir "v2" $ limitedDocumentAPIV2 -- Only 'list' and 'history' calls. Replace with documentAPIV2 when frontend is ready
+  , dir "v2" $ documentAPIV2 -- Only 'list' and 'history' calls. Replace with documentAPIV2 when frontend is ready
   ]

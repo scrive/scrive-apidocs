@@ -573,9 +573,9 @@ checkFileAccess fid = do
   -- Warning take into account when somebody has saved document into
   -- hers account but we still refer using signatorylinkid.
 
-  msid <- readField "signatorylinkid"
-  mdid <- readField "documentid"
-  mattid <- readField "attachmentid"
+  msid <- readField "signatory_id"
+  mdid <- readField "document_id"
+  mattid <- readField "attachment_id"
 
   -- If refering to something by SignatoryLinkID check out if in the
   -- session we have a properly stored access magic hash.

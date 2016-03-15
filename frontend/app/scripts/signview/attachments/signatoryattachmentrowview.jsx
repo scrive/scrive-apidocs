@@ -11,6 +11,7 @@ var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 var ScreenBlockingDialog = require("../../../js/dialog.js").ScreenBlockingDialog;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var Document = require("../../../js/documents.js").Document;
+var File = require("../../../js/files.js").File;
 var _ = require("underscore");
 var PageTask = require("../../../js/tasks.js").PageTask;
 
@@ -19,13 +20,11 @@ var PageTask = require("../../../js/tasks.js").PageTask;
       model: React.PropTypes.instanceOf(Backbone.Model)
     },
 
-    attachmentURL: function () {
+    setAttachmentURL: function () {
       var model = this.props.model;
       var doc = model.document();
-
-      return "/api/frontend/setsignatoryattachment/" + doc.documentid() +
-        "/" + doc.viewer().signatoryid() + "/" +
-        encodeURIComponent(model.name());
+      return "/api/frontend/documents/" + doc.documentid() +
+        "/" + doc.currentSignatory().signatoryid() + "/setattachment";
     },
 
     uploadButton: function () {
@@ -38,9 +37,8 @@ var PageTask = require("../../../js/tasks.js").PageTask;
 
       return new Submit({
         method: "POST",
-        url: self.attachmentURL(),
-        attachname: model.name(),
-        sigattachment: "YES",
+        url: self.setAttachmentURL(),
+        name: model.name(),
         ajax: true,
         expectedType: "json",
         onSend: function () {
@@ -71,13 +69,24 @@ var PageTask = require("../../../js/tasks.js").PageTask;
         ajaxsuccess: function (docdata) {
           var olddocument = model.signatory().document();
           var newdoc = new Document(new Document({
-            id: olddocument.documentid(),
-            viewer: olddocument.viewer()
+            id: olddocument.documentid()
           }).parse(docdata));
 
           _.each(newdoc.currentSignatory().attachments(), function (a) {
             if (a.name() == model.name()) {
-              model.setFile(a.file());
+              var newFile = a.file();
+              if (newFile) {
+                model.setFile(
+                  new File({
+                    id: newFile.fileid(),
+                    name: newFile.name(),
+                    document: olddocument,
+                    documentid: olddocument.documentid()
+                  })
+                );
+              } else {
+                model.setFile(undefined);
+              }
             }
           });
 
@@ -95,7 +104,7 @@ var PageTask = require("../../../js/tasks.js").PageTask;
           <UploadButton
             ref="uploadButton"
             size="small"
-            name="file"
+            name="attachment"
             type="action"
             text={localization.signatoryAttachmentUploadButton}
             onError={function () {
@@ -148,13 +157,12 @@ var PageTask = require("../../../js/tasks.js").PageTask;
       return [this.props.model];
     },
 
-    attachmentURL: function () {
+    setAttachmentURL: function () {
       var model = this.props.model;
       var doc = model.document();
 
-      return "/api/frontend/setsignatoryattachment/" + doc.documentid() +
-        "/" + doc.viewer().signatoryid() + "/" +
-        encodeURIComponent(model.name());
+      return "/api/frontend/documents/" + doc.documentid() +
+        "/" + doc.currentSignatory().signatoryid() + "/setattachment";
     },
 
     render: function () {
@@ -206,7 +214,8 @@ var PageTask = require("../../../js/tasks.js").PageTask;
                         new Submit({
                           method: "POST",
                           expectedType: "json",
-                          url: self.attachmentURL(),
+                          url: self.setAttachmentURL(),
+                          name: model.name(),
                           ajax: true,
                           ajaxerror: function (d, a) {
                             model.notLoading();

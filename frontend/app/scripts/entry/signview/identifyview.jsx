@@ -1,15 +1,12 @@
 var React = require("react");
 var IdentifyView = require("../../signview/identify/identifyview");
 var Document = require("../../../js/documents").Document;
-var DocumentViewer = require("../../../js/documentviewer").DocumentViewer;
 var $ = require("jquery");
 
 $(function () {
   var doc = new Document({
     id: fromTemplate.documentId,
-    viewer: new DocumentViewer({
-      signatoryid : fromTemplate.sigLinkId
-    })
+    signatoryid : fromTemplate.sigLinkId
   });
 
   // no design for loading.

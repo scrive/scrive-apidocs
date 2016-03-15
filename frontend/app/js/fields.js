@@ -18,11 +18,12 @@ var Field = exports.Field = Backbone.Model.extend({
     defaults: {
         name : "",
         value : "",
-        closed : false,
+        is_checked : false,
+        signature : undefined,
+        hadValueWhenCreated : false,
         placements : [],
-        obligatory : true,
-        shouldbefilledbysender : false,
-        fresh : false,
+        is_obligatory : true,
+        should_be_filled_by_sender : false,
         hasChanged: false
     },
     initialize : function(args){
@@ -35,10 +36,21 @@ var Field = exports.Field = Backbone.Model.extend({
         var placements =  _.map(args.placements, function(placement){
                 return new FieldPlacement(extendedWithField(placement));
         });
-        this.set({"placements": placements});
+        this.set({"placements": placements, "hadValueWhenCreated": this.hadValueWhenCreated(args)});
         if(args.signatory)
             args.signatory.bind("removed", field.remove);
         field.bindBubble();
+    },
+    hadValueWhenCreated: function(args) {
+      if (args.type === "checkbox" && args.is_checked) {
+        return true;
+      } else if (args.type === "signature" && args.signature) {
+        return true;
+      } else if (args.type !== "checkbox" && args.type !== "signature" && args.value != "") { // ~ this.isText
+        return true;
+      } else {
+        return false;
+      }
     },
     type : function() {
         return this.get("type");
@@ -46,28 +58,41 @@ var Field = exports.Field = Backbone.Model.extend({
     setType : function(t) {
         this.set({type:t});
     },
+    order: function() {
+       return this.get("order");
+    },
     name : function() {
         return this.get("name");
     },
     value : function() {
         return this.get("value");
     },
+    isChecked : function() {
+      return this.get("is_checked");
+    },
+    signatureFile : function() {
+      return this.get("signature");
+    },
     obligatory : function() {
-        return this.get("obligatory");
+        return this.get("is_obligatory");
     },
     shouldbefilledbysender : function() {
-        return this.get("shouldbefilledbysender");
+        return this.get("should_be_filled_by_sender");
     },
     setShouldBeFilledBySender : function(s) {
-        this.set({shouldbefilledbysender:s});
+        this.set({should_be_filled_by_sender:s});
         return this;
     },
     setObligatoryAndShouldBeFilledBySender : function(obl,sbs) {
-      this.set({"obligatory" : obl, "shouldbefilledbysender": sbs});
+      this.set({"is_obligatory" : obl, "should_be_filled_by_sender": sbs});
     },
     setValue : function(value, options) {
         this.set({ hasChanged: true }, { silent: true });
         this.set({"value" : value}, options);
+    },
+    setChecked : function(value, options) {
+        this.set({ hasChanged: true }, { silent: true });
+        this.set({"is_checked" : value}, options);
     },
     hasChanged: function() {
       return this.get("hasChanged");
@@ -76,7 +101,7 @@ var Field = exports.Field = Backbone.Model.extend({
         return this.set({"name" : name});
     },
     isClosed : function() {
-        return this.get("closed");
+        return this.signatory() && this.signatory().document() && this.signatory().document().pending() && this.get("hadValueWhenCreated");
     },
     placements : function() {
         return this.get("placements");
@@ -133,30 +158,31 @@ var Field = exports.Field = Backbone.Model.extend({
             return true;
         } else if (this.isSignature()) {
             return (this.value() != "" || this.placements().length == 0);
-        } else if (this.isObligatory() && this.value() != "") {
+        } else if (this.isText() && this.isObligatory() && this.value() != "") {
+            return true;
+        } else if (this.isCheckbox() && this.isObligatory() && this.isChecked()) {
             return true;
         }
         return false;
     },
     nicename : function() {
-        var name = this.name();
-        if (this.isStandard()) {
-            if (name == "fstname")
-                return localization.fstname;
-            if (name == "sndname" )
-                return localization.sndname;
-            if (name == "email")
-                return localization.email;
-            if (name == "sigco")
-                return localization.company;
-            if (name == "sigpersnr" )
-                return localization.personalNumber;
-            if (name == "sigcompnr")
-                return localization.companyNumber;
-            if (name == "mobile")
-                return localization.phone;
-        }
-        return name;
+      if (this.isFstName()) {
+        return localization.fstname;
+      } else if  (this.isSndName()) {
+        return localization.sndname;
+      } else if (this.isEmail()) {
+        return localization.email;
+      } else if  (this.isCompanyName()) {
+        return localization.company;
+      } else if  (this.isSSN()) {
+        return localization.personalNumber;
+      } else if (this.isCompanyNumber()) {
+        return localization.companyNumber;
+      } else if (this.isMobile()) {
+        return localization.phone;
+      } else {
+        return this.name();
+      }
     },
     nicetext : function() {
         var res = this.value() || this.nicename();
@@ -196,7 +222,7 @@ var Field = exports.Field = Backbone.Model.extend({
         && field.isObligatory()
         && (field.isText() || field.isCheckbox());
       if(senderMustFill || willSignNowAndFieldNeeded || viewerNeedsFieldForDelivery) {
-        concatValidations = new NotEmptyValidation();
+        concatValidations = this.validateFilled();
       }
 
       if(signatory.author() && (field.isFstName() || field.isSndName())) {
@@ -216,6 +242,22 @@ var Field = exports.Field = Backbone.Model.extend({
       }
 
       return concatValidations;
+    },
+    validateFilled: function() {
+      var field = this;
+      var validation = new Validation({
+        validates: function(v) {
+          if (field.isText()) {
+            return v != undefined && v != "";
+          } else if (field.isSignature()) {
+            return field.signatureFile() != undefined || (field.value() != undefined && field.value() != "");
+          } else if (field.isCheckbox()) {
+            return field.isChecked();
+          }
+        },
+        message: localization.designview.validation.notReadyField
+      });
+      return validation;
     },
     validateSSN: function() {
       if (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView()) {
@@ -272,32 +314,41 @@ var Field = exports.Field = Backbone.Model.extend({
       return new Validation();
     },
     isEmail: function() {
-        return  this.isStandard() && this.name() == "email";
+        return this.type() == "email";
     },
     isMobile: function() {
-        return  this.isStandard() && this.name() == "mobile";
+        return this.type() == "mobile";
+    },
+    isName : function() {
+        return  this.type() == "name";
     },
     isFstName: function() {
-        return  this.isStandard() && this.name() == "fstname";
+        return  this.isName() && this.order() == 1;
     },
     isSndName: function() {
-        return  this.isStandard() && this.name() == "sndname";
+        return this.isName() && this.order() == 2
     },
     isSSN : function() {
-        return  this.isStandard() && this.name() == "sigpersnr";
+        return  this.type() == "personal_number";
+    },
+    isCompanyName : function() {
+        return  this.type() == "company";
+    },
+    isCompanyNumber : function() {
+        return  this.type() == "company_number";
     },
     isBlank: function() {
         return this.type() === '' && this.name() === '';
     },
     noName: function() {
-        return this.name() === '' && this.type() == "custom";
+        return this.name() === '' && this.type() == "text";
     },
     isStandard: function() {
-        return  this.type() == "standard";
+        return  this.isName() || this.isEmail() || this.isMobile() || this.isSSN() || this.isCompanyName() || this.isCompanyNumber();
     },
     isCustom: function() {
-        return this.type() == "custom";
-    },
+        return this.type() == "text";
+    },      
     isText : function() {
         return this.isStandard() || this.isCustom();
     },
@@ -314,14 +365,33 @@ var Field = exports.Field = Backbone.Model.extend({
         return this.obligatory();
     },
     isCsvField : function() {
-        return this.isText() && this.signatory().isCsv() && this.signatory().hasCsvField(this.name());
+        return this.isText() && this.signatory().isCsv() && this.signatory().hasCsvField(this.csvname());
+    },
+    csvname : function() {
+      if (this.isFstName()) {
+        return "fstname";
+      } else if (this.isSndName()) {
+        return "sndname";
+      } else if (this.isEmail()) {
+        return "email";
+      } else if (this.isMobile()) {
+        return "mobile";
+      } else if (this.isSSN()) {
+        return "sigpersnr";
+      } else if (this.isCompanyName()) {
+        return "sigco";
+      } else if (this.isCompanyNumber()) {
+        return "sigcompnr";
+      } else {
+        return this.name();
+      }
     },
     isAuthorUnchangeableField :function() {
         return (this.isFstName() || this.isSndName() || this.isEmail()) && this.signatory().author();
     },
     csvFieldValues : function() {
        var csv = this.signatory().csv();
-       var index = _.indexOf(csv[0],this.name());
+       var index = _.indexOf(csv[0],this.csvname());
        var res = [];
        for(var i = 1;i< csv.length;i++)
          res.push(csv[i][index]);
@@ -333,10 +403,10 @@ var Field = exports.Field = Backbone.Model.extend({
       return "right";
     },
     makeOptional : function() {
-        this.set({"obligatory":false});
+        this.set({"is_obligatory":false});
     },
     makeObligatory : function() {
-        this.set({"obligatory":true});
+        this.set({"is_obligatory":true});
     },
     canBeOptional : function() {
       if (this.signatory().author() && (this.isEmail() ||this.isFstName() || this.isSndName()))
@@ -364,10 +434,9 @@ var Field = exports.Field = Backbone.Model.extend({
       }
     },
     isReady: function(){
-      return this.get("fresh") == false && this.name() !== '' && this.type() !== '';
+      return this.type() && (this.type() !== "text" || this.name() !== "");
     },
     makeReady : function() {
-      this.set({fresh: false});
       this.trigger("ready");
     },
     remove: function(){
@@ -377,14 +446,29 @@ var Field = exports.Field = Backbone.Model.extend({
     },
     draftData : function() {
       return {
-          type : this.type()
+            type : this.type()
+          , order : this.order()
           , name : this.name()
-          , value : this.value()
+          , value : this.isText() ? this.value() : undefined
+          , is_checked :  this.isCheckbox() ? this.isChecked() : undefined
           , placements : _.invoke(this.placements(), 'draftData')
-          , obligatory : this.obligatory()
-          , shouldbefilledbysender : this.shouldbefilledbysender()
+          , is_obligatory : this.obligatory()
+          , should_be_filled_by_sender : this.shouldbefilledbysender()
       };
     },
+   dataForSigning: function() {
+     if (this.isName()) {
+       return {type: this.type(), order: this.order(), value: this.value()};
+     } else if (this.isStandard()) {
+       return {type: this.type(), value: this.value()};
+     } else if (this.isText()) {
+       return {type: this.type(), name: this.name(), value: this.value()};
+     } else if (this.isCheckbox()) {
+       return {type: this.type(), name: this.name(), is_checked: this.isChecked()};
+     } else if (this.isSignature()) {
+       return {type: this.type(), name: this.name(), signature: this.value()};
+     }
+   },
    hasPlacements : function() {
       return this.get("placements").length > 0;
    },
@@ -407,17 +491,21 @@ var Field = exports.Field = Backbone.Model.extend({
         _.each(this.placements(), function(p) {p.remove();});
     },
     needsSenderAction : function() {
-      return (this.isObligatory()
+      var textNeedsValue = this.isText()
+          && this.isObligatory()
           && this.shouldbefilledbysender()
-          && !this.value()
-          ) || !this.isValid();
+          && !this.value();
+      var checkboxNeedsToBeCheckedByAuthor = this.isCheckbox()
+          && this.isObligatory()
+          && this.signatory().author()
+          && !this.isChecked();
+      return textNeedsValue || checkboxNeedsToBeCheckedByAuthor || !this.isValid();
     },
     isValid: function() {
         var self = this;
         if (!this.isCsvField())
           return this.validation().validateData(this.value());
         else {
-            var csvValues = this.csvFieldValues();
             return _.all(this.csvFieldValues(),function(v) {return self.validation().validateData(v); });
         }
     },

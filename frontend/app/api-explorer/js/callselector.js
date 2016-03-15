@@ -71,32 +71,27 @@ window.CallSelector = Backbone.View.extend({
   versionSelector: function () {
     var model = this.model;
     var select = $("<select id='version-selector' class='form-control'>");
-    select.append($("<option value='v1'>V1</option>").attr("selected", model.apiVersion() == "v1"));
-    select.append($("<option value='v2'>V2</option>").attr("selected", model.apiVersion() == "v2"));
+    select.append($("<option value='v1'>API version 1</option>").attr("selected", model.apiVersion() == "v1"));
+    select.append($("<option value='v2'>API version 2 (beta)</option>").attr("selected", model.apiVersion() == "v2"));
     select.change(function () {
       model.changeAPIVersion(select.val());
     });
     return select;
   },
-  renderSelectWithLabel: function (target, label, id, select) {
-    var row = $("<div class='row form-horizontal'/>");
-    row.append(
-      $("<div class='col-xs-1 col-xs-offset-2 text-right'>")
-        .append("<label for='" + id + "' class='control-label'>" + label + "</label>")
-    );
-    row.append($("<div class='col-xs-3'>").append(select));
-    target.append(row);
-  },
   render: function () {
     var self = this;
     var model = this.model;
     var selectCallCol = $("<p/>");
-    var selectVersionCol = $("<p/>");
-    this.renderSelectWithLabel(selectCallCol, "API call", "call-selector", this.callSelector());
-    // API V2 is disabled now
-    // this.renderSelectWithLabel(selectVersionCol,"API version","version-selector",this.versionSelector());
+    var row = $("<div class='row form-horizontal'/>");
+    row.append(
+      $("<div class='col-xs-1 col-xs-offset-2 text-right'>")
+        .append("<label for='call-selector' class='control-label'>API call</label>")
+    );
+    row.append($("<div class='col-xs-3'>").append(this.callSelector()));
+    row.append($("<div class='col-xs-2'>").append(this.versionSelector()));
+    selectCallCol.append(row);
 
-    $(this.el).append(selectCallCol).append(selectVersionCol);
+    $(this.el).append(selectCallCol);
     return this;
   }
 });

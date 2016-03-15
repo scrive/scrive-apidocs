@@ -205,7 +205,7 @@ var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
         }
       };
 
-      var pinParam = signatory.smsPinAuthenticationToSign() ? {pin: pin} : {};
+      var pinParam = signatory.smsPinAuthenticationToSign() ? {sms_pin: pin} : {};
 
       document.checksign(function () {
         self.setStep("process");

@@ -24,21 +24,21 @@ var ConfirmationDeliveryIcon = require("../../../scripts/designview/participants
         , element: $("body")[0]
       }));
 
-      var confirmationDeliveryMethod1 = signatory.get("confirmationdelivery");
+      var confirmationDeliveryMethod1 = signatory.get("confirmation_delivery_method");
       TestUtils.Simulate.click(confirmationDeliveryIcon.getDOMNode());
-      var confirmationDeliveryMethod2 = signatory.get("confirmationdelivery");
+      var confirmationDeliveryMethod2 = signatory.get("confirmation_delivery_method");
       assert.notEqual(confirmationDeliveryMethod1, confirmationDeliveryMethod2);
       confirmationDeliveryIcon.forceUpdate();
       TestUtils.Simulate.click(confirmationDeliveryIcon.getDOMNode());
-      var confirmationDeliveryMethod3 = signatory.get("confirmationdelivery");
+      var confirmationDeliveryMethod3 = signatory.get("confirmation_delivery_method");
       assert.notEqual(confirmationDeliveryMethod2, confirmationDeliveryMethod3);
       confirmationDeliveryIcon.forceUpdate();
       TestUtils.Simulate.click(confirmationDeliveryIcon.getDOMNode());
-      var confirmationDeliveryMethod4 = signatory.get("confirmationdelivery");
+      var confirmationDeliveryMethod4 = signatory.get("confirmation_delivery_method");
       assert.notEqual(confirmationDeliveryMethod3, confirmationDeliveryMethod4);
       confirmationDeliveryIcon.forceUpdate();
       TestUtils.Simulate.click(confirmationDeliveryIcon.getDOMNode());
-      var confirmationDeliveryMethod5 = signatory.get("confirmationdelivery");
+      var confirmationDeliveryMethod5 = signatory.get("confirmation_delivery_method");
       assert.equal(confirmationDeliveryMethod5, confirmationDeliveryMethod1);
     });
 
@@ -49,9 +49,9 @@ var ConfirmationDeliveryIcon = require("../../../scripts/designview/participants
         , element: $("body")[0]
       }));
 
-      var deliveryMethod1 = signatory.get("delivery");
+      var deliveryMethod1 = signatory.get("delivery_method");
       TestUtils.Simulate.click(confirmationDeliveryIcon.getDOMNode());
-      var deliveryMethod2 = signatory.get("delivery");
+      var deliveryMethod2 = signatory.get("delivery_method");
       assert.notEqual(deliveryMethod1, deliveryMethod2);
     });
 

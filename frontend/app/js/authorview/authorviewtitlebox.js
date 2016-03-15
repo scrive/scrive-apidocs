@@ -24,16 +24,16 @@ var AuthorViewTitleBoxModel = Backbone.Model.extend({
      return this.authorview().document();
   },
   canBeRestarted : function() {
-    return (this.document().canberestarted() && this.document().currentViewerIsAuthor());
+    return ((this.document().timedout() || this.document().canceled() || this.document().rejected()) && this.document().currentViewerIsAuthor());
   },
   canBeProlonged : function() {
-    return (this.document().canbeprolonged() && this.document().currentViewerIsAuthor());
+    return (this.document().timedout() && this.document().currentViewerIsAuthor());
   },
   restart : function(success) {
     this.document().restart().sendAjax(success);
   },
   canBeWithdrawn : function() {
-    return this.document().canbecanceled() && (this.document().currentViewerIsAuthor() || this.document().currentViewerIsAuthorsCompanyAdmin());
+    return this.document().pending() && (this.document().currentViewerIsAuthor() || this.document().currentViewerIsAuthorsCompanyAdmin());
   },
   cancel : function() {
     var self = this;

@@ -38,7 +38,7 @@ module.exports = React.createClass({
   render: function() {
     var self = this;
     var doc = self.props.document;
-    var lang = doc.lang().simpleCode();
+    var lang = doc.lang();
     return (
       <div>
         <div className="design-view-action-process-left-column-document-name">
@@ -70,7 +70,7 @@ module.exports = React.createClass({
             width={158}
             onSelect= {function(v) {
               mixpanel.track('Select language', {'New Language': v});
-              doc.lang().setLanguage(v);
+              doc.setLanguage(v);
             }}
           />
         </div>

@@ -92,7 +92,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
             className={
               "placedcheckbox " +
               FieldPlacementGlobal.signatoryCSSClass(signatory) + " "  +
-              (field.value() != "" ? "checked" : "") + " " +
+              (field.isChecked() ? "checked" : "") + " " +
               (field.needsSenderAction() ? "needs-sender-action" : "")
             }
             style={{

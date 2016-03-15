@@ -1,257 +1,240 @@
 module.exports = {
-      "accesstoken": "",
-      "apicallbackurl": null,
-      "authentication": "standard",
-      "authorattachments": [
-          {
-              "id": "106",
-              "name": "contract.pdf"
-          }
+  "id": "97",
+  "title": "Supersaver",
+  "parties": [
+    {
+      "id": "202",
+      "user_id": "10",
+      "is_author": true,
+      "is_signatory": true,
+      "fields": [
+        {
+          "type": "name",
+          "order": 1,
+          "value": "xxxx",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "email",
+          "value": "mariusz@skrivapa.se",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": true,
+          "placements": []
+        },
+        {
+          "type": "company",
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "mobile",
+          "value": "694528309",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        }
       ],
-      "autoremindtime": null,
-      "canbecanceled": false,
-      "canbeprolonged": false,
-      "canberestarted": false,
-      "canseeallattachments": false,
-      "confirmationmessage": "",
-      "ctime": "2015-09-18T09:34:45Z",
-      "daystoremind": null,
-      "daystosign": 90,
-      "deleted": false,
-      "delivery": "pad",
-      "evidenceattachments": [],
-      "file": {
-          "id": "105",
-          "name": "contract.pdf"
-      },
-      "id": "2",
-      "invitationmessage": "",
-      "isviewedbyauthor": false,
-      "lang": "sv",
-      "objectversion": 11,
-      "process": "Contract",
-      "reallydeleted": false,
-      "saved": false,
-      "sealedfile": null,
-      "showfooter": true,
-      "showheader": true,
-      "showpdfdownload": true,
-      "showrejectoption": true,
-      "signatories": [
-          {
-              "attachments": [],
-              "authentication": "standard",
-              "authenticationToView": "standard",
-              "author": true,
-              "confirmationdelivery": "email",
-              "csv": null,
-              "current": false,
-              "datamismatch": null,
-              "deliveredInvitation": false,
-              "delivery": "pad",
-              "fields": [
-                  {
-                      "closed": false,
-                      "name": "fstname",
-                      "obligatory": true,
-                      "placements": [],
-                      "shouldbefilledbysender": false,
-                      "type": "standard",
-                      "value": ""
-                  },
-                  {
-                      "closed": false,
-                      "name": "sndname",
-                      "obligatory": true,
-                      "placements": [],
-                      "shouldbefilledbysender": false,
-                      "type": "standard",
-                      "value": ""
-                  },
-                  {
-                      "closed": true,
-                      "name": "email",
-                      "obligatory": true,
-                      "placements": [],
-                      "shouldbefilledbysender": false,
-                      "type": "standard",
-                      "value": "test-1@skrivapa.se"
-                  },
-                  {
-                      "closed": false,
-                      "name": "sigco",
-                      "obligatory": false,
-                      "placements": [],
-                      "shouldbefilledbysender": false,
-                      "type": "standard",
-                      "value": ""
-                  }
-              ],
-              "id": "90",
-              "inpadqueue": false,
-              "readdate": null,
-              "rejecteddate": null,
-              "rejectionreason": null,
-              "rejectredirect": null,
-              "saved": true,
-              "seendate": null,
-              "signdate": "2015-09-18T09:35:37Z",
-              "signorder": 1,
-              "signs": true,
-              "signsuccessredirect": null,
-              "status": "signed",
-              "undeliveredInvitation": false,
-              "undeliveredMailInvitation": false,
-              "undeliveredSMSInvitation": false,
-              "userid": "1"
-          },
-          {
-              "attachments": [
-                  {
-                      "description": "weqwewqe",
-                      "file": null,
-                      "name": "qwewqe"
-                  }
-              ],
-              "authentication": "standard",
-              "authenticationToView": "standard",
-              "author": false,
-              "confirmationdelivery": "email",
-              "csv": null,
-              "current": true,
-              "datamismatch": null,
-              "deliveredInvitation": false,
-              "delivery": "pad",
-              "fields": [
-                  {
-                      "closed": false,
-                      "name": "fstname",
-                      "obligatory": true,
-                      "placements": [
-                          {
-                              "fsrel": 0.016967127,
-                              "hrel": 0.025468165,
-                              "page": 1,
-                              "tip": "right",
-                              "wrel": 0.081654295,
-                              "xrel": 0.22587487,
-                              "yrel": 0.06516854
-                          }
-                      ],
-                      "shouldbefilledbysender": false,
-                      "type": "standard",
-                      "value": ""
-                  },
-                  {
-                      "closed": false,
-                      "name": "sndname",
-                      "obligatory": true,
-                      "placements": [],
-                      "shouldbefilledbysender": false,
-                      "type": "standard",
-                      "value": ""
-                  },
-                  {
-                      "closed": false,
-                      "name": "email",
-                      "obligatory": true,
-                      "placements": [],
-                      "shouldbefilledbysender": false,
-                      "type": "standard",
-                      "value": ""
-                  },
-                  {
-                      "closed": false,
-                      "name": "mobile",
-                      "obligatory": false,
-                      "placements": [],
-                      "shouldbefilledbysender": false,
-                      "type": "standard",
-                      "value": ""
-                  },
-                  {
-                      "closed": false,
-                      "name": "sigco",
-                      "obligatory": false,
-                      "placements": [],
-                      "shouldbefilledbysender": false,
-                      "type": "standard",
-                      "value": ""
-                  },
-                  {
-                      "closed": false,
-                      "name": "sigcompnr",
-                      "obligatory": false,
-                      "placements": [],
-                      "shouldbefilledbysender": false,
-                      "type": "standard",
-                      "value": ""
-                  },
-                  {
-                      "closed": false,
-                      "name": "Kryssruta 1",
-                      "obligatory": true,
-                      "placements": [
-                          {
-                              "fsrel": 0.01590668,
-                              "hrel": 0.007490637,
-                              "page": 1,
-                              "tip": "left",
-                              "wrel": 0.010604454,
-                              "xrel": 0.46871686,
-                              "yrel": 0.09363296
-                          }
-                      ],
-                      "shouldbefilledbysender": false,
-                      "type": "checkbox",
-                      "value": ""
-                  },
-                  {
-                      "closed": false,
-                      "name": "Signatur 1",
-                      "obligatory": true,
-                      "placements": [
-                          {
-                              "fsrel": 0.01590668,
-                              "hrel": 0.0764045,
-                              "page": 1,
-                              "tip": "right",
-                              "wrel": 0.2757158,
-                              "xrel": 0.65959704,
-                              "yrel": 0.08239701
-                          }
-                      ],
-                      "shouldbefilledbysender": false,
-                      "type": "signature",
-                      "value": ""
-                  }
-              ],
-              "id": "1",
-              "inpadqueue": false,
-              "readdate": null,
-              "rejecteddate": null,
-              "rejectionreason": null,
-              "rejectredirect": null,
-              "saved": false,
-              "seendate": "2015-09-18T09:35:44Z",
-              "signdate": null,
-              "signorder": 1,
-              "signs": true,
-              "signsuccessredirect": null,
-              "status": "opened",
-              "undeliveredInvitation": false,
-              "undeliveredMailInvitation": false,
-              "undeliveredSMSInvitation": false,
-              "userid": null
-          }
+      "sign_order": 1,
+      "sign_time": "2016-03-08T17:21:23.401639Z",
+      "seen_time": null,
+      "read_invitation_time": null,
+      "rejected_time": null,
+      "sign_success_redirect_url": null,
+      "reject_redirect_url": null,
+      "email_delivery_status": "unknown",
+      "mobile_delivery_status": "unknown",
+      "has_authenticated_to_view": false,
+      "csv": null,
+      "delivery_method": "email",
+      "authentication_method_to_view": "standard",
+      "authentication_method_to_sign": "standard",
+      "confirmation_delivery_method": "email",
+      "attachments": [],
+      "api_delivery_url": null
+    },
+    {
+      "id": "203",
+      "user_id": "5",
+      "is_author": false,
+      "is_signatory": true,
+      "fields": [
+        {
+          "type": "name",
+          "order": 1,
+          "value": "Other",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.41251325556733826,
+              "yrel": 0.5232383808095952,
+              "wrel": 0.05832449628844114,
+              "hrel": 0.025487256371814093,
+              "fsrel": 0.016967126193001062,
+              "page": 1,
+              "tip": "right",
+              "anchors": []
+            }
+          ]
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "guy",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "email",
+          "value": "mariusz@scrive.com",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "mobile",
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "company",
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "company_number",
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "signature",
+          "name": "Signature 1",
+          "signature": null,
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.559915164369035,
+              "yrel": 0.17316341829085458,
+              "wrel": 0.2757158006362672,
+              "hrel": 0.07646176911544228,
+              "fsrel": 0.0168,
+              "page": 2,
+              "tip": "right",
+              "anchors": []
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "Checkbox 1",
+          "is_checked": false,
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.32873806998939553,
+              "yrel": 0.23013493253373313,
+              "wrel": 0.010604453870625663,
+              "hrel": 0.0074962518740629685,
+              "fsrel": 0.0168,
+              "page": 2,
+              "tip": "left",
+              "anchors": []
+            }
+          ]
+        }
       ],
-      "signorder": 1,
-      "state": "Pending",
-      "status": "Pending",
-      "tags": [],
-      "template": false,
-      "time": "2015-09-18T09:35:37Z",
-      "timeouttime": "2015-12-17T22:59:59Z",
-      "timezone": "Europe/Berlin",
-      "title": "contract"
-  };
+      "sign_order": 1,
+      "sign_time": null,
+      "seen_time": null,
+      "read_invitation_time": null,
+      "rejected_time": null,
+      "sign_success_redirect_url": null,
+      "reject_redirect_url": null,
+      "email_delivery_status": "unknown",
+      "mobile_delivery_status": "unknown",
+      "has_authenticated_to_view": false,
+      "csv": null,
+      "delivery_method": "pad",
+      "authentication_method_to_view": "standard",
+      "authentication_method_to_sign": "standard",
+      "confirmation_delivery_method": "email",
+      "attachments": [
+        {
+          "name": "ImpAtt",
+          "description": "Important attachment",
+          "file_id": null,
+          "file_name": null
+        }
+      ],
+      "api_delivery_url": null
+    }
+  ],
+  "file": {
+    "name": "Supersaver.pdf",
+    "id": "166"
+  },
+  "sealed_file": null,
+  "author_attachments": [
+    {
+      "name": "1",
+      "required": false,
+      "file_id": "167"
+    },
+    {
+      "name": "2",
+      "required": true,
+      "file_id": "168"
+    }
+  ],
+  "ctime": "2016-03-08T17:21:17.664222Z",
+  "mtime": "2016-03-08T17:21:23.401639Z",
+  "timeout_time": "2016-06-06T21:59:59Z",
+  "auto_remind_time": null,
+  "status": "pending",
+  "days_to_sign": 90,
+  "days_to_remind": null,
+  "display_options": {
+    "show_header": true,
+    "show_pdf_download": true,
+    "show_reject_option": true,
+    "show_footer": true
+  },
+  "invitation_message": "",
+  "confirmation_message": "",
+  "lang": "en",
+  "api_callback_url": null,
+  "object_version": 20,
+  "access_token": "adcc4cf2568f720d",
+  "timezone": "Europe/Berlin",
+  "tags": [],
+  "is_template": false,
+  "is_saved": true,
+  "is_shared": false,
+  "is_trashed": false,
+  "is_deleted": false,
+  "viewer": {
+    "signatory_id": "203",
+    "role": "signatory"
+  }
+};

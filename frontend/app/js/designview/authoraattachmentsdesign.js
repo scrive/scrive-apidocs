@@ -46,19 +46,20 @@ var Confirmation = require("../confirmations.js").Confirmation;
         document.afterSave( function() {
           var submit = document.setAttachments();
           var counter = 0;
-          _.each(model.attachments(), function(att){
-
-              var name = "attachment_" + counter;
-              if (att.isServerFile()) {
-                submit.add(name, att.serverFileId());
-              } else {
-                submit.addInputs(att.fileUpload().attr("name", name));
-              }
-              var detailsName = "attachment_details_" + counter;
-              submit.add(detailsName, JSON.stringify({name : att.name() || att.originalName(), required: att.isRequired()}));
-
-              counter++;
+          var attachments = _.map(model.attachments(), function(att,i) {
+            if (!att.isServerFile()) {
+              att.fileUpload().attr("name", "attachment_" + i)
+              submit.addInputs(att.fileUpload());
+            }
+            return {
+              name : att.name() || att.originalName(),
+              required: att.isRequired(),
+              file_id: att.isServerFile() ? att.serverFileId() : undefined,
+              file_param: att.isServerFile() ? undefined : att.fileUpload().attr("name")
+            };
           });
+
+          submit.add("attachments", JSON.stringify(attachments));
           submit.sendAjax(
             function() {
                 document.recall(function() {

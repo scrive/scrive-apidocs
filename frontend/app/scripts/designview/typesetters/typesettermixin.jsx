@@ -54,7 +54,7 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
       var field = this.props.model.field();
       var sig = field.signatory();
       var doc = sig.document();
-      var global = field.type() !== "custom";
+      var global = field.type() !== "text";
 
       var sigs = global ? doc.signatories() : [sig];
       var allnames = [];

@@ -12,12 +12,12 @@ var Button = require("../../common/button");
     handleClick: function () {
       var self = this;
       var field = self.props.field;
+      var hasName = field.isSignature() || field.isCheckbox() || field.isCustom();
 
-      var done = field.name() != undefined && field.name() != "";
-      done = done && _.all(field.signatory().fields(), function (f) {
-        return f.name() != field.name() || f.type() != field.type() || f == field;
-      });
-
+      var done = !hasName || (field.name() && _.all(field.signatory().fields(), function (f) {
+        return f.name() != field.name() || f == field;
+      }));
+      console.log(done);
       if (done) { self.props.onDone(); }
     },
 

@@ -23,7 +23,7 @@ var file = require("./data/file");
       xhr.respond(200, { "Content-Type": "application/json" }, JSON.stringify(clone));
     });
 
-    server.respondWith(/\/api\/frontend\/get\/(\d+)/, function (xhr, id) {
+    server.respondWith(/\/api\/frontend\/documents\/(\d+)\/get/, function (xhr, id) {
       var clone;
       if (id == 2) {
         clone = _.clone(doc2);

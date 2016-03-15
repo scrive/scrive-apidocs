@@ -21,7 +21,7 @@ var Field = require("../../../js/fields").Field;
     it("should test component with setting name", function () {
       var field = new Field({
         name: "",
-        type: "custom",
+        type: "text",
         signatory: signatory,
         obligatory: false,
         shouldbefilledbysender: false
@@ -41,7 +41,7 @@ var Field = require("../../../js/fields").Field;
       util.cleanTimeoutsAndBody();
       var field = new Field({
         name: "",
-        type: "custom",
+        type: "text",
         signatory: signatory,
         obligatory: false,
         shouldbefilledbysender: false
@@ -66,7 +66,7 @@ var Field = require("../../../js/fields").Field;
       util.cleanTimeoutsAndBody();
       var field = new Field({
         name: "",
-        type: "custom",
+        type: "text",
         signatory: signatory,
         obligatory: false,
         shouldbefilledbysender: false

@@ -57,8 +57,8 @@ var Backbone = require("backbone");
         name += ".pdf"; // Same old attachments have names taken directly from files and we should not add .pdf
       }
       if (this.documentid()) {
-        return "/api/frontend/downloadfile/" + this.documentid() +
-               "/" + this.serverFileId() + "/" + encodeURIComponent(name);
+        return "/api/frontend/documents/" + this.documentid() + "/files/" +
+               this.serverFileId() + "/" + encodeURIComponent(name);
       } else if (this.attachmentid()) {
         // If documentid is not set and server file id is set - this is a attachment from attachment archive
         return "/a/download/" + this.attachmentid() + "/" + encodeURIComponent(name);

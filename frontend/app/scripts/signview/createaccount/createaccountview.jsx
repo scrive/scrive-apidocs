@@ -34,7 +34,7 @@ var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
               "$first_name": currentSignatory.fstname(),
               "$last_name": currentSignatory.sndname(),
               "$email": currentSignatory.email(),
-              "Language": document.lang().simpleCode(),
+              "Language": document.lang(),
               "Referring Company": document.author().company(),
               "Signup Method": "BySigning"
             };

@@ -85,25 +85,24 @@ triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadCatch m, MonadLog m)
   => Document -> m ()
 triggerAPICallbackIfThereIsOne doc@Document{..} = logDocument documentid $ case documentstatus of
   Preparation -> return () -- We don't trigger callbacks for Drafts
-  -- TODO APIv2:
-  -- when v2 is live this needs to check for v2 callbacks and execute only
-  -- v2 callback if there is one, otherwise use v1 callbacks
-  _ -> case documentapiv1callbackurl of
-    Just url -> addAPICallback url V1
-    Nothing -> case (maybesignatory =<< getAuthorSigLink doc) of
+  -- NOTE: v2 has priority over v1 callbacks, because v2 calls don't expose v1 callbacks
+  _ -> case (documentapiv2callbackurl, documentapiv1callbackurl) of
+    (Just url,_) -> addAPICallback url V2
+    (_,Just url) -> addAPICallback url V1
+    _ -> case (maybesignatory =<< getAuthorSigLink doc) of
       -- FIXME: this should be modified so it's not Maybe
       Just userid -> do
         mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
         case mcallbackschema of
           Just (ConstantUrlScheme url) -> addAPICallback url V1
-          -- TODO APIv2: implement this to use V2
-          Just (ConstantUrlSchemeV2 _url) -> return ()
+          Just (ConstantUrlSchemeV2 url) -> addAPICallback url V2
           _ -> return () -- No callback defined for document nor user.
       Nothing -> $unexpectedErrorM $ "Document" <+> show documentid <+> "has no author"
 
   where
     addAPICallback url apiVersion = do
-      logInfo_ "Triggering API callback for document"
+      logInfo "Triggering API callback for document with api version" $
+        object [ "api_version" .= show apiVersion]
       dbUpdate $ MergeAPICallback documentid url apiVersion
 
 ----------------------------------------

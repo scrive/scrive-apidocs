@@ -7,7 +7,6 @@ var _ = require("underscore");
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 var LocalStorage = require("../../js/storage.js").LocalStorage;
 var AuthorView = require("../../js/authorview/authorview.js").AuthorView;
-var DocumentViewer = require("../../js/documentviewer.js").DocumentViewer;
 var $ = require("jquery");
 
 
@@ -92,9 +91,6 @@ module.exports = React.createClass({
     if (documentSent) {
       var authorView = new AuthorView({
         id: document.id
-        , viewer : new DocumentViewer({
-          signatoryid : signatories[0].id
-        })
       }); 
 
       this.componentDidMount = function() {

@@ -8,10 +8,14 @@ module Utils.HTTP(
   , getHostpart
   , currentLink
   , currentLinkBody
+  , urlEncodeVars
   ) where
 
 import Happstack.Server
+import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.UTF8 as BS
+import qualified Network.HTTP.Types.URI as URI
 
 import KontraPrelude
 
@@ -57,3 +61,8 @@ currentLinkBody = do
   rq <- askRq
   hostpart <- currentDomain
   return $ hostpart ++ (rqUri rq) ++ (rqQuery rq)
+
+urlEncodeVars :: [(BSLU.ByteString,BSLU.ByteString)] -> BSLU.ByteString
+urlEncodeVars ((n,v):[]) = (BSL.fromChunks [(URI.urlEncode True $ BSL.toStrict n)]) `BSL.append` "=" `BSL.append` (BSL.fromChunks [(URI.urlEncode True $ BSL.toStrict v)])
+urlEncodeVars [] = BSL.empty
+urlEncodeVars (p:pp) = urlEncodeVars [p] `BSL.append` "&" `BSL.append` urlEncodeVars pp

@@ -13,7 +13,7 @@ var Confirmation = require("../../../js/confirmations.js").Confirmation;
 
     getAPIDeliveryURL: function () {
       var signatory = this.props.signatory;
-      return LocationUtils.origin() + signatory.signlink();
+      return LocationUtils.origin() + signatory.apideliveryurl();
     },
 
     selectText: function () {

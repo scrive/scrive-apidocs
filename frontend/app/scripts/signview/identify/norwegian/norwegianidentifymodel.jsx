@@ -127,11 +127,11 @@ var link = link;
       }
 
       var locale = "en_GB";
-      if (this.doc().lang().simpleCode() == "sv") {
+      if (this.doc().lang() == "sv") {
         locale = "sv_SE";
-      } else if (this.doc().lang().simpleCode() == "no") {
+      } else if (this.doc().lang() == "no") {
         locale = "nb_NO";
-      }  else if (this.doc().lang().simpleCode() == "da") {
+      }  else if (this.doc().lang() == "da") {
         locale = "da_DK";
       }
       link = link + "&locale=" + locale;

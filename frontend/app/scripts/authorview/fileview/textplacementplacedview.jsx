@@ -32,8 +32,6 @@ module.exports = Backbone.View.extend({
 
   render: function () {
     var field = this.model.field();
-    var signatory = this.model.signatory() || field.signatory();
-    var doc = signatory.document();
     var fontSize = this.fontSize();
     var wrapper = $("<div class='placedfield-placement-wrapper'>");
     var box = $("<div>");

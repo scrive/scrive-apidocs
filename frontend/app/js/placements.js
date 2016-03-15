@@ -21,7 +21,6 @@ var FieldPlacement = exports.FieldPlacement = Backbone.Model.extend({
         placement.addToPage();
         if (this.tip() === undefined)
           this.set({"tip" : args.field.defaultTip()});
-        this.setSignatory(args.field.signatory());
         this.setField(args.field);
         var anchors =  _.map(args.anchors, function(anchorargs){
           return new PlacementAnchor(anchorargs);
@@ -84,17 +83,12 @@ var FieldPlacement = exports.FieldPlacement = Backbone.Model.extend({
       this.set({ anchors: anchors });
     },
     changeField: function (newField) {
-      var field = this.field();
-      var sig = newField.signatory();
-      var name = newField.name();
-
-      field.removePlacement(this);
-      this.setSignatory(sig);
-      newField.addPlacement(this);
-      this.setField(newField);
-
-      if (!sig.hasTextFieldWithName(name)) {
-        sig.addField(newField);
+      if (this.field() != newField) {
+        if (this.field()) {
+          this.field().removePlacement(this);
+        }
+        newField.addPlacement(this);
+        this.setField(newField);
       }
     },
     setField: function(f) {
@@ -160,12 +154,6 @@ var FieldPlacement = exports.FieldPlacement = Backbone.Model.extend({
     },
     setFSRel : function(fsrel) {
       this.set({"fsrel" : fsrel });
-    },
-    signatory: function() {
-        return this.get('signatory');
-    },
-    setSignatory: function(s) {
-        return this.set({signatory:s});
     },
     die: function() {
         this.set({alive:false});

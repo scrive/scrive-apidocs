@@ -17,7 +17,7 @@ new APICallV2({
           window.APIV2CallParamSignatoryID,
           new APICallParam({
             type: "text",
-            argName: "phone",
+            argName: "mobile",
             name: "Phone number",
             description: "If the phone number is not set by document author,\
                           then it must be provided.",

@@ -20,11 +20,10 @@ module Doc.DocView (
   , gtVerificationPage
   ) where
 
+import Data.Unjson
 import Happstack.Server.SimpleHTTP
-import Text.JSON as JSON
 import Text.StringTemplates.Templates
-import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Base64.Lazy as B64
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
@@ -33,7 +32,8 @@ import BrandedDomain.BrandedDomain
 import Company.CompanyUI
 import Company.Model
 import DB
-import Doc.API.V1.DocumentToJSON
+import Doc.API.V2.DocumentAccess
+import Doc.API.V2.JSON.Document
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
@@ -85,10 +85,9 @@ pageDocumentSignView ctx document siglink ad = do
   auser <- fmap $fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
   acompany <- getCompanyForUser auser
   acompanyui <- dbQuery $ GetCompanyUI (companyid acompany)
-  let loggedAsSignatory = (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> ctxmaybeuser ctx);
-  let loggedAsAuthor = Just authorid == (userid <$> ctxmaybeuser ctx) || Just authorid == (userid <$> ctxmaybepaduser ctx)
-
-  docjson <- documentJSONV1 Nothing False (isAuthor siglink) (Just siglink) document
+  let loggedAsSignatory = (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> getContextUser ctx);
+  let loggedAsAuthor = (Just authorid == (userid <$> getContextUser ctx));
+  let docjson = unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) (unjsonDocument (documentAccessForSlid (signatorylinkid siglink) document)) document
   renderTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
@@ -98,7 +97,7 @@ pageDocumentSignView ctx document siglink ad = do
       F.value "allowsavesafetycopy" $ companyallowsavesafetycopy $ companyinfo acompany
       F.value "authorFullname" $ getFullName auser
       F.value "authorPhone" $ getMobile auser
-      F.value "b64documentdata" $ B64.encode $ BS.fromString $ JSON.encode docjson
+      F.value "b64documentdata" $ B64.encode $ docjson
       standardPageFields ctx (Just acompanyui) ad -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView :: Kontrakcja m
