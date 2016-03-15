@@ -201,8 +201,7 @@ module.exports = function (grunt) {
     uglify: {
       vendor: {
         options: {
-          sourceMap: true,
-          beautify: true
+          sourceMap: true
         },
         src: [
           "<%= yeoman.app %>/bower_components/jquery/dist/jquery.js",
