@@ -68,7 +68,6 @@ var User = exports.User = Backbone.Model.extend({
      return this.get("companyadmin");
   },
   parse: function(args) {
-     console.log("Parsing user " + this.get("ready"));
      return {
       id        : args.id,
       fstname   : args.fstname,
