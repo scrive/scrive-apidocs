@@ -12,7 +12,7 @@ module.exports = function(config) {
   config.set({
     basePath: "./app/",
 
-    frameworks: ["mocha", "chai"],
+    frameworks: ["mocha", "sinon-chai"],
 
     files: [
       "./localization/*.en.js",

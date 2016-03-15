@@ -159,11 +159,7 @@ module.exports = function (grunt) {
               "img/**/*",
               "newsletter/**/*",
               "pdf/**/*",
-              "libs/tiny_mce/**/*",
-              "localization/*.*.js",
-              "libs/html5shiv.js",
-              "bower_components/json3/**",
-              "bower_components/es6-promise/**"
+              "localization/*.*.js"
             ]
           }
         ]
