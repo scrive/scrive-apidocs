@@ -10,8 +10,6 @@ var AuthorAttachment = require("./authorattachment.js").AuthorAttachment;
 var Signatory = require("./signatories.js").Signatory;
 var takeScreenshot = require("./takeScreenshot").takeScreenshot;
 
-require("./utils/time");
-
 /* Document model
  */
 

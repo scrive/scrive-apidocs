@@ -9,8 +9,6 @@ var Tab = require("../tabs.js").Tab;
 var _ = require("underscore");
 var KontraTabs = require("../tabs.js").KontraTabs;
 
-require("../utils/time");
-
 /* Main archive definition. Its a tab based set of different documents lists. */
 
 

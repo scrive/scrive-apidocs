@@ -45,7 +45,6 @@ function defaultConfig(obj) {
       "react/addons": "React",
       "tinycolor": "tinycolor",
       "html2canvas": "html2canvas",
-      "spin.js": "Spinner",
       "moment": "moment",
       "base64": "Base64"
     },

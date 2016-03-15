@@ -6,8 +6,6 @@ var moment = require("moment");
 var Submit = require("../../js/submits.js").Submit;
 var LoadingDialog = require("../../js/loading.js").LoadingDialog;
 
-require("../../js/utils/time.js");
-
 module.exports = React.createClass({
     createFromTemplate : function(id) {
       new Submit({

@@ -210,15 +210,14 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/bower_components/underscore/underscore.js",
           "<%= yeoman.app %>/bower_components/backbone/backbone.js",
           "<%= yeoman.app %>/bower_components/react/react-with-addons.js",
-          "<%= yeoman.app %>/bower_components/spin.js/spin.js",
           "<%= yeoman.app %>/bower_components/moment/moment.js",
           "<%= yeoman.app %>/libs/*.js",
-          "<%= yeoman.app %>/js/utils/cookie.js",
-          "<%= yeoman.app %>/js/utils/time.js",
-          "<%= yeoman.app %>/js/shims.js",
-          "<%= yeoman.app %>/js/errors.js",
-          "<%= yeoman.app %>/js/csrf.js",
-          "<%= yeoman.app %>/js/timezone.js"
+          "<%= yeoman.app %>/js/global/cookie.js",
+          "<%= yeoman.app %>/js/global/time.js",
+          "<%= yeoman.app %>/js/global/shims.js",
+          "<%= yeoman.app %>/js/global/errors.js",
+          "<%= yeoman.app %>/js/global/csrf.js",
+          "<%= yeoman.app %>/js/global/timezone.js"
         ],
         dest: "<%= yeoman.app %>/compiled/vendor-" + generateVersionId() + ".js"
       }
