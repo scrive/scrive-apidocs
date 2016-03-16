@@ -163,8 +163,7 @@ type InnerHandlerM = AWS.AmazonMonadT (CryptoRNGT (DBT HandlerM))
 
 -- | Creates a context, routes the request, and handles the session.
 appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> HandlerM Response
-appHandler handleRoutes appConf appGlobals = runHandler $ do
-  startTime <- liftIO getCurrentTime
+appHandler handleRoutes appConf appGlobals = liftIO currentTime >>= \startTime -> runHandler $ do
   let quota = 10000000
   temp <- liftIO getTemporaryDirectory
   withDecodedBody (defaultBodyPolicy temp quota quota quota) $ do
