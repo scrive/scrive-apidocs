@@ -2,7 +2,7 @@ var jQuery = require("jquery");
 var FlashMessage = require("../../flashmessages.js").FlashMessage;
 var Confirmation = require("../../confirmations.js").Confirmation;
 var EmailValidation = require("../../validation.js").EmailValidation;
-var trackTimeout = require("../scripts/common/track_timeout");
+var trackTimeout = require("../../../scripts/common/track_timeout");
 
 module.exports = function(model) {
   mixpanel.track('Click change email button');
