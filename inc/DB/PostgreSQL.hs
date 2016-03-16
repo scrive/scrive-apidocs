@@ -38,15 +38,16 @@ createPoolSource logger cs = do
   }
   where
     maxConnections :: Int
-    maxConnections = 30
+    maxConnections = 100
 
     withResource' :: (MonadBase IO m, MonadMask m)
                   => Pool Connection -> (Connection -> m a) -> m a
     withResource' pool m = mask $ \restore -> do
       (resource, local) <- liftBase $ takeResource pool
       (allocatedNow, availableNow) <- internalPoolState local
-      when (allocatedNow == maxConnections && availableNow == 0) $ do
-        logger $ "withResource: limit of available connections reached"
+      logger $ "withResource: connection acquired (" ++ show allocatedNow <+> "allocated," <+> show availableNow <+> "available)"
+      --when (allocatedNow == maxConnections && availableNow == 0) $ do
+      --  logger $ "withResource: limit of available connections reached"
       ret <- restore (m resource) `onException` do
         liftBase (destroyResource pool local resource)
       liftBase $ putResource local resource
