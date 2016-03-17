@@ -20,7 +20,5 @@ if (!window.console.log) {
 }
 
 if (!window.console.warn) {
-  window.console.warn = function(s) {
-    mixpanel.track('window.console.warn() stub: ' + s);
-  };
+  window.console.warn = function() {};
 }
