@@ -1,5 +1,5 @@
 _local/
-dist/
+/dist/
 coverage-reports/
 log/
 kontrakcja.conf

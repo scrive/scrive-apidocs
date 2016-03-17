@@ -91,8 +91,9 @@ module.exports = React.createClass({
     if (documentSent) {
       var authorView = new AuthorView({
         id: document.id
-      }); 
+      });
 
+      // TODO. THis is very wrong and should be fixed when AuhtorView is in React
       this.componentDidMount = function() {
         $('.responsive.signview').removeClass('responsive');
         var awNode = $(this.refs.authorview.getDOMNode());
@@ -112,10 +113,10 @@ module.exports = React.createClass({
           })}
 
           <div className="party-container sign-button-container">
-            <Button 
+            <Button
               ref="sendButton"
               text={localization.toStart.sendForSigning}
-              size="large" 
+              size="large"
               type="action"
               className={buttonClass}
               onClick={this.finalClick}

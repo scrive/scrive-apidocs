@@ -159,11 +159,7 @@ module.exports = function (grunt) {
               "img/**/*",
               "newsletter/**/*",
               "pdf/**/*",
-              "libs/tiny_mce/**/*",
-              "localization/*.*.js",
-              "libs/html5shiv.js",
-              "bower_components/json3/**",
-              "bower_components/es6-promise/**"
+              "localization/*.*.js"
             ]
           }
         ]
@@ -205,20 +201,22 @@ module.exports = function (grunt) {
     uglify: {
       vendor: {
         options: {
-          sourceMap: true,
-          beautify: true
+          sourceMap: true
         },
         src: [
-          "<%= yeoman.app %>/bower_components/jquery/jquery.js",
+          "<%= yeoman.app %>/bower_components/jquery/dist/jquery.js",
+          "<%= yeoman.app %>/bower_components/jquery-migrate/jquery-migrate.js",
           "<%= yeoman.app %>/bower_components/underscore/underscore.js",
           "<%= yeoman.app %>/bower_components/backbone/backbone.js",
           "<%= yeoman.app %>/bower_components/react/react-with-addons.js",
-          "<%= yeoman.app %>/bower_components/spin.js/spin.js",
           "<%= yeoman.app %>/bower_components/moment/moment.js",
           "<%= yeoman.app %>/libs/*.js",
-          "<%= yeoman.app %>/js/utils/cookie.js",
-          "<%= yeoman.app %>/js/utils/time.js",
-          "<%= yeoman.app %>/js/global.js"
+          "<%= yeoman.app %>/js/global/cookie.js",
+          "<%= yeoman.app %>/js/global/time.js",
+          "<%= yeoman.app %>/js/global/shims.js",
+          "<%= yeoman.app %>/js/global/errors.js",
+          "<%= yeoman.app %>/js/global/csrf.js",
+          "<%= yeoman.app %>/js/global/timezone.js"
         ],
         dest: "<%= yeoman.app %>/compiled/vendor-" + generateVersionId() + ".js"
       }

@@ -8,8 +8,6 @@ var $ = require("jquery");
 var _ = require("underscore");
 var KontraTabs = require("../tabs.js").KontraTabs;
 
-require("../utils/time");
-
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */
 

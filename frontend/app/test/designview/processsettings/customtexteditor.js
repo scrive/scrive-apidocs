@@ -10,7 +10,7 @@ var CustomTextEditor = require("../../../scripts/designview/processsettings/cust
       var previewClicked = false;
       var valueChanged = false;
       var newValue = "";
-      var textEditor = TestUtils.renderIntoDocument(CustomTextEditor({
+      var textEditor = TestUtils.renderIntoDocument(React.createElement(CustomTextEditor, {
         onChange: function(v) { valueChanged = true;newValue = v;},
         onPreview: function() { previewClicked = true;},
         editable : true,
@@ -43,7 +43,7 @@ var CustomTextEditor = require("../../../scripts/designview/processsettings/cust
 
     it("should test CustomTextEditor that is disabled doesn't cause change and uses disabled label ", function () {
       var valueChanged = false;
-      var textEditor = TestUtils.renderIntoDocument(CustomTextEditor({
+      var textEditor = TestUtils.renderIntoDocument(React.createElement(CustomTextEditor, {
         onChange: function(v) { valueChanged = true;},
         onPreview: function() {},
         editable : false,

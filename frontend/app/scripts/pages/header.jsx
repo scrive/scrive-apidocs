@@ -1,6 +1,7 @@
 var React = require("react");
 var Backbone = require("backbone");
 var NewButton = require("../common/button");
+var trackTimeout = require("../common/track_timeout");
 
 
 
@@ -38,7 +39,7 @@ var NewButton = require("../common/button");
                 {
                   <img
                     src={
-                      window.cdnbaseurl + "/service_logo/" + window.brandingdomainid + "/" + 
+                      window.cdnbaseurl + "/service_logo/" + window.brandingdomainid + "/" +
                       (window.brandinguserid || "_") + "/" + window.brandinghash}
                     style={{"margin":"0px"}}
                   />

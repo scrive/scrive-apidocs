@@ -12,7 +12,7 @@ $(function () {
     var toStartDiv = $("<div />");
     $(".form-container").append(toStartDiv);
     $(".to-start").append(footerDiv);
-      React.render(ToStart({document: doc}), toStartDiv[0]);
+      React.render(React.createElement(ToStart,{document: doc}), toStartDiv[0]);
   });
 
   var headerDiv = $("<div/>");

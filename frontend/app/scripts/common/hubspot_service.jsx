@@ -1,5 +1,4 @@
 var $ = require("jquery");
-var Cookies = require("../../js/utils/cookie.js").Cookies;
 
   /**
    *  @description
@@ -82,7 +81,7 @@ var expose = {
   FORM_TOS_SUBMIT     : hubspotConf.forms.tos_submit,
   FORM_NO_SENDS_DOCS  : hubspotConf.forms.no_sends_docs,
   FORM_YES_SENDS_DOCS : hubspotConf.forms.yes_sends_docs,
- 
+
   track : function(formId, formData, noCookie) {
 
     noCookie = (noCookie) ? true : false;
@@ -101,14 +100,14 @@ var expose = {
     // hack counter to stop injection of non-existing form.
     // No form can be injected if e.g. the correct form ids are not defined.
     var hubspotCallCounter = 0;
-    var hubspotCallMax     = 100; 
+    var hubspotCallMax     = 100;
 
     // wait for the mount of the iframe to complete and the form to be
     // loaded, and only then submit the data.
     var intervalId = setInterval(function () {
       hbsptIframe = $('#hubspot-redirect-iframe');
       hbsptForm = $(hubspotFormDomElm);
-      
+
       if ((hbsptIframe.length != 0) && (hbsptForm.length != 0) ){
          submitData(formData, noCookie);
          clearInterval(intervalId);

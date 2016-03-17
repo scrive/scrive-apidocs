@@ -11,6 +11,20 @@ var LoadingDialog = require("./loading.js").LoadingDialog;
 var Submit = require("./submits.js").Submit;
 var Recurly = require("./recurly");
 
+function parseQueryString() {
+    var match,
+        urlParams = {},
+        pl     = /\+/g,  // Regex for replacing addition symbol with a space
+        search = /([^&=]+)=?([^&]*)/g;
+    var decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); };
+    var query  = window.location.search.substring(1);
+
+    while (match = search.exec(query))
+       urlParams[decode(match[1])] = decode(match[2]);
+    return urlParams;
+}
+
+
 /*
 
   Payments

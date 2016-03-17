@@ -10,6 +10,7 @@ var PasswordValidation = require("./validation.js").PasswordValidation;
 var PasswordEqValidation = require("./validation.js").PasswordEqValidation;
 var CheckboxReqValidation = require("./validation.js").CheckboxReqValidation;
 var Button = require("./buttons.js").Button;
+var trackTimeout = require("../scripts/common/track_timeout");
 
 
   var AccountSetupModel = Backbone.Model.extend({

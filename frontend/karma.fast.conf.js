@@ -12,7 +12,7 @@ module.exports = function(config) {
   config.set({
     basePath: "./app/",
 
-    frameworks: ["mocha", "chai"],
+    frameworks: ["mocha", "sinon-chai"],
 
     files: [
       "./localization/*.en.js",
@@ -51,6 +51,9 @@ module.exports = function(config) {
               presets: ["react", "es2015"]
             }
           }
+        ],
+        noParse: [
+          /html2canvas/
         ]
       },
 
@@ -61,8 +64,6 @@ module.exports = function(config) {
         "react": "React",
         "react/addons": "React",
         "tinycolor": "tinycolor",
-        "html2canvas": "html2canvas",
-        "spin.js": "Spinner",
         "moment": "moment",
         "sinon": "sinon",
         "base64": "Base64"

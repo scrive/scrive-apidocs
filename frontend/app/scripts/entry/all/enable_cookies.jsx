@@ -1,4 +1,3 @@
-var Cookies = require("../../../js/utils/cookie").Cookies;
 var $ = require("jquery");
 
 $(function () {

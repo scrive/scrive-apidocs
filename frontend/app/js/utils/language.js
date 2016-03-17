@@ -1,4 +1,3 @@
-var Cookies = require("./cookie.js").Cookies;
 var _ = require("underscore");
 var Language = require("./language.js").Language;
 

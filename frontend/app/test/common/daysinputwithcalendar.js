@@ -9,7 +9,7 @@ var moment = require("moment");
   describe("common/daysinputwithcalendar", function () {
     it("should test the DaysInputWithCalendar renders correctly and calendar acts as expected", function () {
       assert.equal($('#calroot').size(),0); //Callendar should not be initiated
-      var daysInputWithCalendar = TestUtils.renderIntoDocument(DaysInputWithCalendar({
+      var daysInputWithCalendar = TestUtils.renderIntoDocument(React.createElement(DaysInputWithCalendar, {
         infotext        : "-",
         label           : "days",
         className       : "main-class",
@@ -50,7 +50,7 @@ var moment = require("moment");
 
     it("should test the DaysInputWithCalendar respects max and mix days", function () {
       var currentDaysValue = 10;
-      var daysInputWithCalendar = TestUtils.renderIntoDocument(DaysInputWithCalendar({
+      var daysInputWithCalendar = TestUtils.renderIntoDocument(React.createElement(DaysInputWithCalendar, {
         infotext        : "-",
         label           : "days",
         className       : "main-class",

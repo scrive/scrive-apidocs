@@ -2,8 +2,8 @@ var Backbone = require("backbone");
 var jQuery = require("jquery");
 var _ = require("underscore");
 var $ = require("jquery");
-var Cookies = require("./utils/cookie.js").Cookies;
 var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
+var trackTimeout = require("../scripts/common/track_timeout");
 
 /* Use Submit object to skip usage of form elements.
  * Usage

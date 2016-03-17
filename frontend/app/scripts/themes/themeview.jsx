@@ -157,7 +157,7 @@ module.exports = React.createClass({
                 return (
                   <div key={"preview-" + key}>
                     <div className="preview-title">{self.previewTitle(preview)}</div>
-                    {preview({model: model})}
+                    {React.createElement(preview,{model: model})}
                   </div>
                 );
               })

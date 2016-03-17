@@ -10,6 +10,7 @@ var $ = require("jquery");
 var Button = require("../buttons.js").Button;
 var ProlongModal = require("./prolongmodal.js").ProlongModal;
 var Confirmation = require("../confirmations.js").Confirmation;
+var trackTimeout = require("../../scripts/common/track_timeout");
 
 
 var AuthorViewTitleBoxModel = Backbone.Model.extend({
