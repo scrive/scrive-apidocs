@@ -84,9 +84,6 @@ getStandardLang :: (HasLang a, ServerMonad m, FilterMonad Response m, MonadIO m,
 getStandardLang muser = do
   rq <- askRq
   langcookie <- lookCookieValue "lang"
-  case langcookie of
-    Nothing -> logInfo_ "'lang' cookie not found"
-    _ -> return ()
   let mcookielang = join $ langFromCode <$> langcookie
   let browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
       newlang = fromMaybe browserlang $ msum [(getLang <$> muser), mcookielang]
@@ -317,18 +314,17 @@ appHandler handleRoutes appConf appGlobals = liftIO currentTime >>= \startTime -
       mpaduser <- getPadUserFromSession session
       brandeddomain <- dbQuery $ GetBrandedDomainByURL currhostpart
 
-      let flashErrorHandler = do
-            logInfo_ "Couldn't read flash messages"
-            F.removeFlashCookie
-            return []
       mflashmessages <- F.flashDataFromCookie
       flashmessages <- case mflashmessages of
-                        Nothing -> flashErrorHandler
+                        Nothing -> return []
                         Just fs -> do
                           flashes <- liftIO $ F.fromCookieValue fs
                           case flashes of
                             Just fs' -> return fs'
-                            _ -> flashErrorHandler
+                            _ -> do
+                              logInfo_ "Couldn't read flash messages"
+                              F.removeFlashCookie
+                              return []
 
       -- do reload templates in non-production code
       templates2 <- maybeReadTemplates (production appConf) (templates appGlobals)
