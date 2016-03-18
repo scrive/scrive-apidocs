@@ -35,6 +35,10 @@ describe "subscribe with a credit card" do
       option.text == "20"
     end.click
 
+    sel.find_elements( :css => ".month select option" ).find do |option|
+      option.text == "01"
+    end.click
+
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.cvv input" }).send_keys "111"
     @h.screenshot 'payments_2'
 
