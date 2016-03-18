@@ -191,7 +191,7 @@ describe "sign up on front page and modify account settings" do
     @h.wait_until { @h.driver.find_element :css => "div.flash.success" }
 
     # we have to wait until new companyposition input is rendered so we don't grab reference to the old one
-    @h.wait_until { (@h.driver.find_element :name => "companyposition").ref != companypositioninput_ref }
+    sleep 1
     expect((@h.wait_until { @h.driver.find_element :xpath => "//input[@name='companyposition']" }).attribute("value")).to eq(companyposition)
     @h.loginhelper.logout
   end
