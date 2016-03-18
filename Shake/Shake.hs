@@ -65,6 +65,10 @@ main = do
       putNormal "   test-frontend-tests       : Run frontend Grunt Tests"
       putNormal "   test-frontend-jscs        : Run frontend Grunt JSCS Style Checker"
       putNormal ""
+      putNormal "# Distribution targets"
+      putNormal ""
+      putNormal "   dist                      : Build all and create .tar.gz archive"
+      putNormal ""
       putNormal "# Clean"
       putNormal ""
       putNormal "   clean          : Clean all except Shake directory"
@@ -88,6 +92,8 @@ main = do
     "test-frontend-tests"      ~> need ["grunt-test"]
     "test-frontend-jscs"       ~> need ["grunt-jscs"]
 
+    "dist" ~> need ["_build/kontrakcja.tar.gz"]
+
     "clean" ~> need ["clean-server","clean-frontend"]
     "clean-server" ~> need ["cabal-clean"]
     "clean-frontend" ~> need ["grunt-clean"]
@@ -101,6 +107,7 @@ main = do
     serverTestRules
     frontendBuildRules
     frontendTestRules
+    distributionRules
     oracleHelpRule
 
 -- * Server
@@ -284,3 +291,25 @@ frontendTestRules = do
           need ["grunt-coverage"]
           command_ [Shell] "zip -r _build/JS_coverage.zip frontend/coverage/" []
           removeFilesAfter "frontend/coverage" ["//*"]
+
+-- * Create distribution
+distributionRules :: Rules ()
+distributionRules = do
+  "_build/kontrakcja.tar.gz" %> \_ -> do
+    need ["all"]
+    let distFiles = [ "dist/build/kontrakcja-server/kontrakcja-server"
+                    , "dist/build/cron/cron"
+                    , "dist/build/kontrakcja-migrate/kontrakcja-migrate"
+                    , "dist/build/mailing-server/mailing-server"
+                    , "dist/build/messenger-server/messenger-server"
+                    , "evidence-package/samples.p"
+                    , "frontend/app/img"
+                    , "frontend/app/less"
+                    , "frontend/dist"
+                    , "scrivepdftools"
+                    , "GuardTime"
+                    , "templates"
+                    , "files"
+                    , "texts"
+                    ]
+    command_ [Shell] "tar" $ ["-czf","_build/kontrakcja.tar.gz"] ++ distFiles
