@@ -93,11 +93,6 @@ var TaskMixin = require("../tasks/task_mixin");
       }
     },
 
-    contextTypes: {
-      addTask: React.PropTypes.func,
-      removeTask: React.PropTypes.func
-    },
-
     componentDidUpdate: function (prevProps, prevState) {
       var model = this.props.model;
       var hadOverlay = this.shouldHaveOverlay(prevState.step);
