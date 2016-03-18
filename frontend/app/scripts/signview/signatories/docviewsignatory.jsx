@@ -113,6 +113,38 @@ module.exports = React.createClass({
         "parties": smallView
       });
 
+      var infoList = [];
+
+      if (signatory.company()) {
+        infoList.push({label: localization.company, text: signatory.company()});
+      }
+
+      if (signatory.email()) {
+        infoList.push({label: localization.email, text: signatory.email()});
+      }
+
+      if (signatory.mobile()) {
+        infoList.push({label: localization.phone, text: signatory.mobile()});
+      }
+
+      if (signatory.companynumber()) {
+        infoList.push({
+          label: localization.docsignview.companyNumberLabel,
+          text: signatory.companynumber().trim() || localization.docsignview.notEntered
+        });
+      }
+
+      if (signatory.personalnumber()) {
+        infoList.push({
+          label: localization.docsignview.personalNumberLabel,
+          text: signatory.personalnumber().trim() || localization.docsignview.notEntered
+        });
+      }
+
+      function renderInfo({label, text}) {
+        return <li>{label}: <b>{text}</b></li>;
+      }
+
       return (
         <div className={divClass}>
           <div className={smallView ? "col-xs-12" : ""}>
@@ -120,35 +152,31 @@ module.exports = React.createClass({
               <h1 className="title">{localization.docsignview.signatoriesTitle}</h1>
             }
             <h1 className="name">{signatory.nameOrEmailOrMobile() || localization.pad.notNamedParty}</h1>
-            <ul>
-              {/* if */ signatory.company() &&
-                <li>
-                  {localization.company}: <b>{signatory.company()}</b>
-                </li>
-              }
-              {/* if */ signatory.email() &&
-                <li>
-                  {localization.email}: <b>{signatory.email()}</b>
-                </li>
-              }
-              {/* if */ signatory.mobile() &&
-                <li>
-                  {localization.phone}: <b>{signatory.mobile()}</b>
-                </li>
-              }
-              {/* if */ signatory.companynumber() &&
-                <li>
-                  {localization.docsignview.companyNumberLabel + ": "}
-                  <b>{signatory.companynumber().trim() || localization.docsignview.notEntered}</b>
-                </li>
-              }
-              {/* if */ signatory.personalnumber() &&
-                <li>
-                  {localization.docsignview.personalNumberLabel + ": "}
-                  <b>{signatory.personalnumber().trim() || localization.docsignview.notEntered}</b>
-                </li>
-              }
-            </ul>
+            {/* if */ infoList.length < 4 &&
+              <ul>
+                {infoList.map(renderInfo)}
+              </ul>
+            }
+            {/* else if */ infoList.length == 4 &&
+              <span>
+                <ul>
+                  {infoList.slice(0, 2).map(renderInfo)}
+                </ul>
+                <ul>
+                  {infoList.slice(2).map(renderInfo)}
+                </ul>
+              </span>
+            }
+            {/* else */ infoList.length > 4 &&
+              <span>
+                <ul>
+                  {infoList.slice(0, 3).map(renderInfo)}
+                </ul>
+                <ul>
+                  {infoList.slice(3).map(renderInfo)}
+                </ul>
+              </span>
+            }
             <span className={"icon status " + signatory.status()}></span>
             <span className={"status statustext " + signatory.status()}>
               {this.signatorySummary()}
