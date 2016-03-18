@@ -78,7 +78,7 @@ main = do
     "server"    ~> need ["_build/cabal-build"]
     "frontend"  ~> need ["_build/grunt-build"]
 
-    "haddock"   ~> need ["_build/cabal-haddock"]
+    "haddock"   ~> need ["_build/cabal-haddock.tar.gz"]
 
     "test" ~> need ["test-server","test-frontend","test-hs-import-order"]
     "test-server" ~> need ["kontrakcja-test"]
@@ -156,9 +156,11 @@ serverBuildRules = do
     needServerHaskellFiles
     cmd (EchoStdout True) "cabal build"
 
-  "_build/cabal-haddock" %>>> do
+  "_build/cabal-haddock.tar.gz" %> \_ -> do
     need ["_build/cabal-build"]
-    cmd "cabal haddock --all"
+    needServerHaskellFiles
+    command_ [] "cabal" ["haddock","--all"]
+    command_ [Shell] "tar" ["-czf","_build/cabal-haddock.tar.gz","dist/doc"]
 
   "cabal-clean" ~> cmd "cabal clean"
 
