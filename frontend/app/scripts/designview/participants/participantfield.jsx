@@ -13,7 +13,7 @@ module.exports = React.createClass({
   render: function () {
     var self = this;
     var field = this.props.model;
-    var name = field.name();
+    var name = field.type();
     var value = field.value();
     var csvfield = field.isCsvField();
     var csvname = self.placeholderText() + " (" + localization.designview.fromCSV + ")";

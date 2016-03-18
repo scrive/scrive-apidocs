@@ -29,13 +29,15 @@ describe "subscribe with a credit card" do
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.one .email input" }).send_keys random_email
 
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.one .card_number input" }).send_keys "4111 1111 1111 1111"
-    sel =(@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.expires .year select" })
+    syel =(@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.expires .year select" })
 
-    sel.find_elements( :css => ".year select option" ).find do |option|
+    syel.find_elements( :css => ".year select option" ).find do |option|
       option.text == "20"
     end.click
 
-    sel.find_elements( :css => ".month select option" ).find do |option|
+    smel =(@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.expires .month select" })
+
+    smel.find_elements( :css => ".month select option" ).find do |option|
       option.text == "01"
     end.click
 
@@ -67,10 +69,16 @@ describe "subscribe with a credit card" do
 
     puts "fill in cc number (incorrect)"
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.one .card_number input" }).send_keys "4111 1111 1111 1110"
-    sel =(@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.expires .year select" })
+    syel =(@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.expires .year select" })
 
-    sel.find_elements( :css => "option" ).find do |option|
+    syel.find_elements( :css => "option" ).find do |option|
       option.text == "20"
+    end.click
+
+    smel =(@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.expires .month select" })
+
+    smel.find_elements( :css => "option" ).find do |option|
+      option.text == "01"
     end.click
 
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.cvv input" }).send_keys "111"
@@ -132,6 +140,7 @@ describe "subscribe with a credit card" do
     @h.driver.execute_script "$('.plan-container.one .field.card_number input').val('4111 1111 1111 1111');"
     puts "select expiration date"
     @h.driver.execute_script "$('.plan-container.one .field.expires .year select').val('20');"
+    @h.driver.execute_script "$('.plan-container.one .field.expires .month select').val('1');"
     #sel =(@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.expires .year select" })
 
     #sel.find_elements( :css => "option" ).find do |option|
@@ -191,10 +200,16 @@ describe "subscribe with a credit card" do
 
     puts "fill in cc number"
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.one .card_number input" }).send_keys "4111 1111 1111 1111"
-    sel =(@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.expires .year select" })
+    syel =(@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.expires .year select" })
 
-    sel.find_elements( :css => "option" ).find do |option|
+    syel.find_elements( :css => "option" ).find do |option|
       option.text == "20"
+    end.click
+
+    smel =(@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.expires .month select" })
+
+    smel.find_elements( :css => "option" ).find do |option|
+      option.text == "01"
     end.click
 
     (@h.wait_until { @h.driver.find_element :css => ".plan-container.one .field.cvv input" }).send_keys "111"
