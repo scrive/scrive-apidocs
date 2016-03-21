@@ -21,6 +21,6 @@ else
   cabal build --ghc-options="-O0 -optl -O0" 2>&1 | runghc build-scripts/Teamcity.hs ghc
   RESULT="${PIPESTATUS[0]}"
   echo "Generating urls"
-  ./scripts/UrlList.sh $NGINX_CONF_PATH
+  ./dist/build/routinglist/routinglist $NGINX_CONF_PATH
   exit "${RESULT}"
 fi
