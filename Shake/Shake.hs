@@ -2,6 +2,7 @@
 
 import Control.Monad
 import Development.Shake
+import System.Exit (exitFailure)
 
 import Shake.GitHub
 import Shake.Oracles
@@ -295,8 +296,17 @@ frontendTestRules = do
 -- * Create distribution
 distributionRules :: Rules ()
 distributionRules = do
+  "urls.txt" %> \_ -> do
+    need ["_build/cabal-build"]
+    nginxconfpath <- askOracle (NginxConfPath ())
+    when (null nginxconfpath) $ do
+      putLoud "ERROR: NGINX_CONF_PATH is empty"
+      liftIO $ exitFailure
+    command_ [] "./dist/build/routinglist/routinglist" [nginxconfpath]
+    removeFilesAfter "." ["urls.txt"]
+
   "_build/kontrakcja.tar.gz" %> \_ -> do
-    need ["all"]
+    need ["all", "urls.txt"]
     let distFiles = [ "dist/build/kontrakcja-server/kontrakcja-server"
                     , "dist/build/cron/cron"
                     , "dist/build/kontrakcja-migrate/kontrakcja-migrate"
@@ -311,5 +321,11 @@ distributionRules = do
                     , "templates"
                     , "files"
                     , "texts"
+                    , "urls.txt"
                     ]
     command_ [Shell] "tar" $ ["-czf","_build/kontrakcja.tar.gz"] ++ distFiles
+
+  -- This is here until we get a better deployment workflow, then we can remove this
+  "deploy-dev" ~> do
+    need ["_build/kontrakcja.tar.gz"]
+    cmd "./Shake/deployToDev.sh"

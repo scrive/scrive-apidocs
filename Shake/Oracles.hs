@@ -74,7 +74,8 @@ oracleHelpRule = do
     tc <- askOracleWith (TeamCity ()) True
     putNormal $ "                              = " ++ show tc
     nginxconfpath <- askOracle (NginxConfPath ())
-    putNormal $ "   NGINX_CONF_PATH            = " ++ nginxconfpath
+    putNormal   "   NGINX_CONF_PATH            : Used for generating NGINX urls.txt file"
+    putNormal $ "                              = " ++ nginxconfpath
     putNormal ""
     ghc <- askOracleWith (GhcVersion ()) ""
     putNormal $ "   GHC version: " ++ ghc
