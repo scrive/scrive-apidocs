@@ -143,8 +143,9 @@ mailDocumentRejected :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextM
                      -> Document
                      -> m Mail
 mailDocumentRejected forMail customMessage forAuthor rejector document = do
+   rejectorName <- smartOrUnnamedName rejector document
    documentMailWithDocLang document template $ do
-        F.value "rejectorName" $ getSmartName rejector
+        F.value "rejectorName" rejectorName
         F.value "ispreview" $ not $ forMail
         F.value "documentid" $ show $ documentid document
         F.value "signatorylinkid" $ show $ signatorylinkid rejector
