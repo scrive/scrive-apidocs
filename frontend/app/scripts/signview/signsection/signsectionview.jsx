@@ -22,8 +22,12 @@ var FlashMessagesCleaner = require("../../../js/flashmessages.js").FlashMessages
 var Submit = require("../../../js/submits.js").Submit;
 var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 var trackTimeout = require("../../common/track_timeout");
+var PageTask = require("../../../js/tasks.js").PageTask;
+var TaskMixin = require("../tasks/task_mixin");
+
   module.exports = React.createClass({
-    mixins: [TransitionMixin],
+
+    mixins: [TransitionMixin, TaskMixin],
 
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
@@ -45,6 +49,18 @@ var trackTimeout = require("../../common/track_timeout");
         askForPhone: model.askForPhone(),
         askForSSN: model.askForSSN()
       };
+    },
+
+    createTasks: function () {
+      var self = this;
+      return [new PageTask({
+        type: "overlay",
+        tipSide: "none",
+        isComplete: function () {
+          return !self.isMounted() || !self.shouldHaveOverlay();
+        },
+        el:  $(self.getDOMNode())
+      })];
     },
 
     shouldTransition: function (prevProps, prevState) {
@@ -81,18 +97,26 @@ var trackTimeout = require("../../common/track_timeout");
       var model = this.props.model;
       var hadOverlay = this.shouldHaveOverlay(prevState.step);
       var shouldHaveOverlay = this.shouldHaveOverlay();
+      var disableArrow = prevState.step !== "reject" && this.state.step === "reject";
+      var enableArrow = prevState.step === "reject" && this.state.step !== "reject";
 
-      if (!hadOverlay && shouldHaveOverlay) {
+      if (disableArrow) {
         setTimeout(function () {
           model.arrow().disable();
-        }, 10);
+        });
+      }
+
+      if (enableArrow) {
+        setTimeout(function () {
+          model.arrow().enable();
+        });
+      }
+
+      if (!hadOverlay && shouldHaveOverlay) {
         this.props.enableOverlay();
       }
 
       if (hadOverlay && !shouldHaveOverlay) {
-        setTimeout(function () {
-          model.arrow().enable();
-        }, 10);
         this.props.disableOverlay();
       }
     },

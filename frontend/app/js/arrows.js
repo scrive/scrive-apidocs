@@ -39,6 +39,7 @@ var ArrowModel = Backbone.Model.extend({
   defaults : {
       type : undefined,
       margin : undefined,
+      overlay: false,
       point : undefined,
       onClick : function() { return false; },
       blinks : 0 // Persistent blinking. If > 0 then arrow is in middle of blinking.
@@ -54,6 +55,9 @@ var ArrowModel = Backbone.Model.extend({
   },
   setBlinks : function(i) {
       return this.set({"blinks" : i});
+  },
+  overlay: function () {
+    return this.get("overlay");
   },
   point: function() {
        return this.get("point");
@@ -196,7 +200,7 @@ var PointRightArrowView = Backbone.View.extend({
 
 var ScrollUpArrowView = Backbone.View.extend({
     events: {
-        "click"  :  "scroll"
+        "click"  :  "click"
     },
     initialize: function (args) {
         _.bindAll(this, 'render', 'scroll', 'updateRightMargin');
@@ -222,35 +226,56 @@ var ScrollUpArrowView = Backbone.View.extend({
       var arrow_margin = space / 2;
       $(this.el).css("right", arrow_margin + "px");
     },
-    scroll: function(){
-       if (this.alreadyScrolling) {
-         return false;
-       }
-       this.alreadyScrolling = true;
-       mixpanel.track('Click fat arrow up');
-       var model = this.model;
-       var task = this.model.point();
-       var self = this;
-       if (task == undefined) return;
-       var scrollTop = task.offset().top - 150;
-       var currentScrollTop = $(window).scrollTop();
-       var distanceToTask = currentScrollTop - scrollTop;
-       var timeToScroll = (distanceToTask / pixelSpeed) * 1000;
-        if (timeToScroll > maxScrollTime) {
-          timeToScroll = maxScrollTime;
-        }
-       scrollWithInterrupt(scrollTop, timeToScroll, function () {
-         self.alreadyScrolling = false;
-         model.scrollDone();
-       });
-       return false;
-    }
+    taskPosition: function () {
+      var task = this.model.point();
 
+      if (task == undefined) {
+        return 0;
+      } else if (this.model.overlay()) {
+        return task.offset().top;
+      }  else {
+        return task.offset().top - 150;
+      }
+    },
+    click: function () {
+       mixpanel.track('Click fat arrow up');
+       this.scroll();
+    },
+    scroll: function(){
+      if (this.alreadyScrolling) {
+        return false;
+      } else {
+        this.alreadyScrolling = true;
+
+        var model = this.model;
+        var task = this.model.point();
+        var self = this;
+        if (task == undefined) {
+          return false;
+        } else {
+          var taskPosition = this.taskPosition();
+          var currentScrollTop = $(window).scrollTop();
+          var distanceToTask = currentScrollTop - taskPosition;
+          var timeToScroll = (distanceToTask / pixelSpeed) * 1000;
+
+          if (timeToScroll > maxScrollTime) {
+            timeToScroll = maxScrollTime;
+          }
+
+          scrollWithInterrupt(taskPosition, timeToScroll, function () {
+            self.alreadyScrolling = false;
+            model.scrollDone();
+          });
+
+          return false;
+        }
+      }
+    }
 });
 
 var ScrollDownArrowView = Backbone.View.extend({
     events: {
-        "click"  :  "scroll"
+        "click"  :  "click"
     },
     clear : function() {
         $(window).unbind('resize',this.checkIfDownArrowInFooter);
@@ -290,18 +315,14 @@ var ScrollDownArrowView = Backbone.View.extend({
         $(this.el).css("display","block");
       }
     },
-    scroll: function(){
-        if (this.alreadyScrolling) {
-          return false;
-        }
-        this.alreadyScrolling = true;
-        mixpanel.track('Click fat arrow down');
-        var self = this;
-        var model = this.model;
-        var task = this.model.point();
+    taskPosition: function () {
+      var task = this.model.point();
 
-        if (task == undefined) return;
-
+      if (task == undefined) {
+        return 0;
+      } else if (this.model.overlay()) {
+        return task.offset().top;
+      } else {
         var marginTop = 50;
         var viewportHeight = window.innerHeight ? window.innerHeight : $(window).height();
         var documentHeight = $(document).height();
@@ -316,22 +337,43 @@ var ScrollDownArrowView = Backbone.View.extend({
           scrollTop = scrollbottom - viewportHeight;
         }
 
-        var currentScrollTop = $(window).scrollTop();
-        var distanceToTask = scrollTop - currentScrollTop;
-        var timeToScroll = (distanceToTask / pixelSpeed) * 1000;
+        return scrollTop;
+      }
+    },
+    click: function () {
+      mixpanel.track('Click fat arrow down');
+      this.scroll();
+    },
+    scroll: function(){
+      if (this.alreadyScrolling) {
+        return false;
+      } else {
+        this.alreadyScrolling = true;
 
-        if (timeToScroll > maxScrollTime) {
-          timeToScroll = maxScrollTime;
+        var self = this;
+        var model = this.model;
+        var task = this.model.point();
+        if (task == undefined) {
+          return false
+        } else {
+          var taskPosition = this.taskPosition();
+          var currentScrollTop = $(window).scrollTop();
+          var distanceToTask = taskPosition - currentScrollTop;
+          var timeToScroll = (distanceToTask / pixelSpeed) * 1000;
+
+          if (timeToScroll > maxScrollTime) {
+            timeToScroll = maxScrollTime;
+          }
+
+          scrollWithInterrupt(taskPosition, timeToScroll, function () {
+            self.alreadyScrolling = false;
+            model.scrollDone();
+          });
+
+          return false;
         }
-
-        scrollWithInterrupt(scrollTop, timeToScroll, function () {
-          self.alreadyScrolling = false;
-          model.scrollDone();
-        });
-
-       return false;
+      }
     }
-
 });
 
 
@@ -341,6 +383,7 @@ var Arrow = exports.Arrow = function (args) {
   var model = new ArrowModel({
       type  : args.type,
       margin : args.margin,
+      overlay: args.overlay,
       point : args.point,
       scrollDone : args.scrollDone,
       onClick : args.onClick
