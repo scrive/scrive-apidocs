@@ -14,6 +14,7 @@ module Util.HasSomeUserInfo (
   getFullName,
   getSmartName,
   getSmartNameOrPlaceholder,
+  smartOrUnnamedName,
   HasSomeUserInfo(..)
   ) where
 
@@ -97,3 +98,14 @@ getMailAddress a = MailAddress {
     fullname = getFullName a
   , email    = getEmail a
   }
+
+smartOrUnnamedName :: TemplatesMonad m => SignatoryLink -> Document -> m String
+smartOrUnnamedName sl doc | sn /= "" = return sn
+                          | otherwise = do
+                              prefix <- renderTemplate_ "_contractsignatoryname"
+                              return $ prefix ++ " " ++ show signIndex
+  where sn = getSmartName sl
+        signatories = filter signatoryispartner $ documentsignatorylinks doc
+        signIndex = case findIndex (\s -> signatorylinkid s == signatorylinkid sl) signatories of
+                      Just i -> i + 1
+                      Nothing -> 0
