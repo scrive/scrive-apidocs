@@ -215,6 +215,7 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/bower_components/react/react-with-addons.js",
           "<%= yeoman.app %>/bower_components/spin.js/spin.js",
           "<%= yeoman.app %>/bower_components/moment/moment.js",
+          "<%= yeoman.app %>/bower_components/es6-promise/promise.js",
           "<%= yeoman.app %>/libs/*.js",
           "<%= yeoman.app %>/js/utils/cookie.js",
           "<%= yeoman.app %>/js/utils/time.js",
