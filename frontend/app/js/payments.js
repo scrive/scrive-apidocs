@@ -336,25 +336,24 @@ function parseQueryString() {
 
             var div = this.$el;
 
-            var monthly = $('<div class="top-bar monthly" />');
             var yearly = $('<div class="top-bar yearly" />');
+            var biyearly = $('<div class="top-bar biyearly" />');
 
-            monthly.append($('<span class="text" />').text(localization.payments.payMonthly));
             yearly.append($('<span class="text" />').text(localization.payments.payYearly));
-            yearly.append($('<span class="savings" />').text('(' + localization.payments.saveYearly + ')'));
+            biyearly.append($('<span class="text" />').text(localization.payments.payBiYearly));
 
             yearly.toggleClass("active", model.yearlyprices());
-            monthly.toggleClass("active", !model.yearlyprices());
-
-            monthly.click(function() {
-              model.setYearlyPrices(false);
-            });
+            biyearly.toggleClass("active", !model.yearlyprices());
 
             yearly.click(function() {
               model.setYearlyPrices(true);
             });
 
-            div.empty().append(monthly).append(yearly);
+            biyearly.click(function() {
+              model.setYearlyPrices(false);
+            });
+
+            div.empty().append(yearly).append(biyearly);
         }
     });
 
@@ -384,7 +383,7 @@ function parseQueryString() {
         }
 
         // Yearly has a rebate, monthly pays 125% of yearly price
-        var price = Math.round(localization.payments.plans[view.plan].price[currency] * (model.yearlyprices() ? 1 : 1.25));
+        var price = Math.round(localization.payments.plans[view.plan].price[currency] * (model.yearlyprices() ? 1.25 : 1));
         var thousands = Math.floor(price / 1000);
 
         if (thousands) {
@@ -538,6 +537,7 @@ function parseQueryString() {
         }
     });
 
+    // TODO: NOT USED - SHOULD BE DROPPED WHEN WE WILL DROP RECURLY
     var TeamBoxView = FeaturesView.extend({
         className: "plan-container",
         initialize: function(args) {
@@ -924,14 +924,8 @@ function parseQueryString() {
             var view = this;
             _.bindAll(this, 'render');
 
-            this.oneBoxMonthly = new TeamBoxView({model: args.model,
-                                            plan:'one',
-                                            onClick: function() {
-                                              mixpanel.track('Click one plan');
-                                            }});
 
-
-            this.oneBoxYearly = new ContactBoxView({model: args.model,
+            this.oneBox = new ContactBoxView({model: args.model,
                                             plan:'one',
                                             onClick: function() {
                                               mixpanel.track('Click one plan');
@@ -961,15 +955,17 @@ function parseQueryString() {
             view.model.bind('change:yearlyprices', function() {
               view.render();
             });
+            view. model.trigger("change:yearlyprices");
         },
         render: function() {
             var view = this;
             var model = view.model;
             var div = $('<div />'); // container div
 
+
             div.append(view.topTabs.el);
 
-            div.append(view.model.yearlyprices() ? view.oneBoxYearly.el : view.oneBoxMonthly.el)
+            div.append(view.oneBox.el)
                 .append(view.teamBox.el)
                 .append(view.companyBox.el)
                 .append(view.enterpriseBox.el);

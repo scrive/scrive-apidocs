@@ -674,7 +674,7 @@ javascriptLocalisation =
            , allFeaturesIncluded: "$_paymentAllFeaturesIncluded()$"
            , payMonthly: "$_paymentPayMonthly()$"
            , payYearly: "$_paymentPayYearly()$"
-           , saveYearly: "$_paymentSaveYearly()$"
+           , payBiYearly: "$_paymentPayBiYearly()$"
            , plans: {
                     // Legacy plans only need the name
                     form : {
