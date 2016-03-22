@@ -210,6 +210,7 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/bower_components/backbone/backbone.js",
           "<%= yeoman.app %>/bower_components/react/react-with-addons.js",
           "<%= yeoman.app %>/bower_components/moment/moment.js",
+          "<%= yeoman.app %>/bower_components/es6-promise/promise.js",
           "<%= yeoman.app %>/libs/*.js",
           "<%= yeoman.app %>/js/global/cookie.js",
           "<%= yeoman.app %>/js/global/time.js",
