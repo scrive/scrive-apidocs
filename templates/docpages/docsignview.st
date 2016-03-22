@@ -82,9 +82,7 @@ $htmlopentag()$
 
         var documentData;
         try {
-          if (window.atob) {
-            documentData = JSON.parse(decodeURIComponent(escape(window.atob("$b64documentdata$"))));
-          }
+          documentData = JSON.parse(Base64.decode("$b64documentdata$"));
         } catch (e) {
           console.log("Could not parse document data embedded in the DOM", e);
         }
