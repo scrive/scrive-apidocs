@@ -163,17 +163,15 @@ type InnerHandlerM = DBT (AWS.AmazonMonadT (CryptoRNGT HandlerM))
 
 -- | Creates a context, routes the request, and handles the session.
 appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> HandlerM Response
-appHandler handleRoutes appConf appGlobals = runHandler $ do
+appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler_id" $ \handlerID -> do
   realStartTime <- liftIO currentTime
   temp <- liftIO getTemporaryDirectory
   let quota = 10000000
       bodyPolicy = defaultBodyPolicy temp quota quota quota
       connTracker = detailedConnectionTracker $ withLogger (logrunner appGlobals)
-  withDecodedBody bodyPolicy . localRandomID "handler_id" $ \handlerID -> do
+  logInfo_ "Incoming request, decoding body"
+  withDecodedBody bodyPolicy $ do
     rq <- askRq
-    let routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
-    logInfo "Handler started" $ object routeLogData
-
     enhanceYourCalm . withPostgreSQL (connsource appGlobals $ connTracker ["handler_id" .= handlerID]) $ do
       logInfo_ "Retrieving session"
       session <- getCurrentSession
@@ -187,6 +185,9 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
       -- refresh the page will fail, because they will try to
       -- access/update session from a row that was previously locked.
       commit
+
+      let routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
+      logInfo "Handler started" $ object routeLogData
 
       localData [identifier_ $ sesID session] $ do
         startTime <- liftIO currentTime
