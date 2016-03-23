@@ -141,7 +141,7 @@ logRequest rq maybeInputsBody = [
 -- It has to be done outside of database connection, because database
 -- connection needs to be dropped between retries to allow for commits
 -- to take place.
-enhanceYourCalm :: (MonadIO m) => m Response -> m Response
+enhanceYourCalm :: (MonadLog m, MonadIO m) => m Response -> m Response
 enhanceYourCalm action = enhanceYourCalmWorker (300::Int)
   where
     enhanceYourCalmWorker 0 = action
@@ -149,6 +149,7 @@ enhanceYourCalm action = enhanceYourCalmWorker (300::Int)
       result' <- action
       case rsCode result' of
         420 -> do
+          logInfo_ "Response with code 420 returned, retrying the handler in 1 second"
           liftIO $ threadDelay 100000
           enhanceYourCalmWorker (n-1)
         _ -> return result'
@@ -156,71 +157,82 @@ enhanceYourCalm action = enhanceYourCalmWorker (300::Int)
 -- | Outer handler monad
 type HandlerM = ReqHandlerT (LogT IO)
 -- | Inner handler monad.
-type InnerHandlerM = AWS.AmazonMonadT (CryptoRNGT (DBT HandlerM))
+type InnerHandlerM = DBT (AWS.AmazonMonadT (CryptoRNGT HandlerM))
 
 -- | Creates a context, routes the request, and handles the session.
 appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> HandlerM Response
-appHandler handleRoutes appConf appGlobals = liftIO currentTime >>= \startTime -> runHandler $ do
-  let quota = 10000000
+appHandler handleRoutes appConf appGlobals = runHandler $ do
+  realStartTime <- liftIO currentTime
   temp <- liftIO getTemporaryDirectory
-  withDecodedBody (defaultBodyPolicy temp quota quota quota) $ do
-    session <- getCurrentSession
-    ctx <- createContext session
-    -- commit is needed after getting session from the database
-    -- since session expiration date is updated while getting it,
-    -- which results in pgsql locking the row. then, if request
-    -- handler somehow gets stuck, transaction is left open for
-    -- some time, row remains locked and subsequent attempts to
-    -- refresh the page will fail, because they will try to
-    -- access/update session from a row that was previously locked.
-    commit
+  let quota = 10000000
+      bodyPolicy = defaultBodyPolicy temp quota quota quota
+  withDecodedBody bodyPolicy . localRandomID "handler_id" $ do
+    rq <- askRq
+    let routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
+    logInfo "Handler started" $ object routeLogData
 
-    localData [identifier_ $ sesID session] . localRandomID "handler_id" $ do
-      rq <- askRq
-      let routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
-      logInfo "Handler started" $ object routeLogData
+    enhanceYourCalm . withPostgreSQL (connsource appGlobals) $ do
+      logInfo_ "Retrieving session"
+      session <- getCurrentSession
+      logInfo_ "Initializing context"
+      ctx <- createContext session
+      -- commit is needed after getting session from the database
+      -- since session expiration date is updated while getting it,
+      -- which results in pgsql locking the row. then, if request
+      -- handler somehow gets stuck, transaction is left open for
+      -- some time, row remains locked and subsequent attempts to
+      -- refresh the page will fail, because they will try to
+      -- access/update session from a row that was previously locked.
+      commit
 
-      (res, ctx') <- routeHandlers ctx
+      localData [identifier_ $ sesID session] $ do
+        startTime <- liftIO currentTime
+        (eres, ctx') <- routeHandlers ctx
+        finishTime <- liftIO currentTime
 
-      F.updateFlashCookie (ctxflashmessages ctx) (ctxflashmessages ctx')
-      issecure <- isSecure
-      let usehttps = useHttps appConf
-      when (issecure || not usehttps) $
-        updateSession session (ctxsessionid ctx') (userid <$> ctxmaybeuser ctx') (userid <$> ctxmaybepaduser ctx')
+        F.updateFlashCookie (ctxflashmessages ctx) (ctxflashmessages ctx')
+        issecure <- isSecure
+        let usehttps = useHttps appConf
+        when (issecure || not usehttps) $ do
+          updateSession session (ctxsessionid ctx') (userid <$> ctxmaybeuser ctx') (userid <$> ctxmaybepaduser ctx')
 
-      -- Here we show in debug log some statistics that should help
-      -- optimize code and instantly see if there is something
-      -- wrong. Measurements are not perfect, for example time is not
-      -- full response time, it is just the part that is under
-      -- application control. That is good because we want to stress
-      -- places that can be fixed.
+        -- Make sure response is well defined before passing it further.
+        res <- contentLength <$> eres `deepseq` case eres of
+          Right response -> return response
+          Left response -> do
+            rollback -- if exception was thrown, rollback everything
+            return response
 
-      ConnectionStats{..} <- getConnectionStats
-      finishTime <- liftIO getCurrentTime
-      logInfo "Handler finished" . object $ [
-          "statistics" .= object [
-              "queries" .= statsQueries
-            , "rows"    .= statsRows
-            , "values"  .= statsValues
-            , "params"  .= statsParams
-            ]
-        , "time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
-        ] ++ routeLogData
+        -- Here we show in debug log some statistics that should help
+        -- optimize code and instantly see if there is something
+        -- wrong. Measurements are not perfect, for example time is not
+        -- full response time, it is just the part that is under
+        -- application control. That is good because we want to stress
+        -- places that can be fixed.
 
-      -- Make sure response is well defined before passing it further.
-      res `deepseq` case res of
-        Right response -> return $ contentLength response
-        Left response -> do
-          rollback -- if exception was thrown, rollback everything
-          return $ contentLength response
+        ConnectionStats{..} <- getConnectionStats
+        realFinishTime <- liftIO getCurrentTime
+        logInfo "Handler finished" . object $ [
+            "statistics" .= object [
+                "queries" .= statsQueries
+              , "rows"    .= statsRows
+              , "values"  .= statsValues
+              , "params"  .= statsParams
+              ]
+          , "time" .= timeDiff finishTime startTime
+          , "full_time" .= timeDiff realFinishTime realStartTime
+          ] ++ routeLogData
+
+        return res
   where
-    runHandler :: AWS.AmazonMonadT (CryptoRNGT (DBT HandlerM)) Response
+    timeDiff :: UTCTime -> UTCTime -> Double
+    timeDiff t = realToFrac . diffUTCTime t
+
+    runHandler :: AWS.AmazonMonadT (CryptoRNGT HandlerM) Response
                -> HandlerM Response
     runHandler = catchEverything
-               . enhanceYourCalm
-               . withPostgreSQL (connsource appGlobals)
-               . runCryptoRNGT (cryptorng appGlobals)
-               . AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals))
+      . runCryptoRNGT (cryptorng appGlobals)
+      . AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals))
 
     catchEverything :: HandlerM Response -> HandlerM Response
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do
