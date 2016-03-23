@@ -49,7 +49,7 @@ import User.Model
 import Utils.HTTP
 import qualified Amazon as AWS
 
-type InnerKontra = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (LogT IO)))))
+type InnerKontra = StateT Context (DBT (AWS.AmazonMonadT (CryptoRNGT (ReqHandlerT (LogT IO)))))
 
 -- | Kontra is a traditional Happstack handler monad except that it's
 -- not WebMonad.
@@ -60,7 +60,7 @@ type InnerKontra = StateT Context (AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandler
 newtype Kontra a = Kontra { unKontra :: InnerKontra a }
   deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, ServerMonad, AWS.AmazonMonad, MonadLog)
 
-runKontra :: Context -> Kontra a -> AWS.AmazonMonadT (CryptoRNGT (DBT (ReqHandlerT (LogT IO)))) a
+runKontra :: Context -> Kontra a -> DBT (AWS.AmazonMonadT (CryptoRNGT (ReqHandlerT (LogT IO)))) a
 runKontra ctx f = evalStateT (unKontra f) ctx
 
 instance MonadBaseControl IO Kontra where
