@@ -58,7 +58,7 @@ main = do
     let cs = pgConnSettings (mscDBConfig conf) []
     withPostgreSQL (simpleSource cs) $
       checkDatabase (logInfo_ . T.pack) [] messengerTables
-    pool <- liftBase $ createPoolSource (liftBase . withLogger . logTrace_ . T.pack) cs
+    pool <- ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource cs)
     rng <- newCryptoRNGState
 
     E.bracket (startServer lr pool rng conf) (liftBase killThread) . const $ do
