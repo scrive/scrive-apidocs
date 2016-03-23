@@ -1,5 +1,6 @@
 module MailingServer (main) where
 
+import Control.Arrow (first)
 import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Data.Aeson
@@ -57,7 +58,7 @@ main = do
   -- All running instances need to have the same configuration.
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   conf <- readConfig putStrLn config
-  lr@LogRunner{..} <- mkLogRunner "mailer" $ mscLogConfig conf
+  lr@LogRunner{..} <- mkLogRunner Nothing "mailer" $ mscLogConfig conf
   withLoggerWait $ do
     checkExecutables
 
@@ -65,7 +66,7 @@ main = do
     withPostgreSQL (simpleSource $ cs []) $ do
       checkDatabase (logInfo_ . T.pack) [] mailerTables
     awsconf <- AWS.AmazonConfig (mscAmazonConfig conf) <$> MemCache.new BS.length 52428800
-    pool <- ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource $ cs mailerComposites)
+    (pool, _) <- first ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource $ cs mailerComposites)
     rng <- newCryptoRNGState
 
     E.bracket (startServer lr conf pool rng) (liftBase . killThread) . const $ do
