@@ -80,7 +80,7 @@ main = do
     withPostgreSQL (simpleSource $ connSettings []) $
       checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
 
-    pool <- liftBase . createPoolSource (liftBase . withLogger . logTrace_ . T.pack) $ connSettings kontraComposites
+    pool <- ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource $ connSettings kontraComposites)
     templates <- liftBase readGlobalTemplates
     rng <- newCryptoRNGState
     filecache <- MemCache.new BS.length 52428800
@@ -243,4 +243,4 @@ main = do
       _ -> RerunAfter $ ihours 1
     }
       where
-        logHandlerInfo jobType = localRandomID "job_id" . localData ["job_type" .= show jobType]
+        logHandlerInfo jobType action = localRandomID "job_id" $ \_ -> localData ["job_type" .= show jobType] action

@@ -80,7 +80,7 @@ main = withCurlDo $ do
       brandedimagescache <- MemCache.new BSL8.length 50000000
       docs <- MemCache.new RenderedPages.pagesCount 10000
       rng <- newCryptoRNGState
-      connpool <- liftBase . createPoolSource (liftBase . withLogger . logTrace_ . T.pack) $ connSettings kontraComposites
+      connpool <- liftBase . createPoolSource $ connSettings kontraComposites
       return AppGlobals {
           templates = templates
         , filecache = filecache
@@ -89,6 +89,7 @@ main = withCurlDo $ do
         , docscache = docs
         , cryptorng = rng
         , connsource = connpool
+        , logrunner = lr
         }
 
     startSystem lr appGlobals appConf
@@ -117,7 +118,7 @@ startSystem LogRunner{..} appGlobals appConf = E.bracket startServer stopServer 
         mapReqHandlerT withLogger $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
-      withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $ do
+      withPostgreSQL (connsource appGlobals $ maxConnectionTracker withLogger) . runCryptoRNGT (cryptorng appGlobals) $ do
         initDatabaseEntries appConf
       liftBase $ waitForTermination
       logInfo_ "Termination request received"

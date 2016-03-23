@@ -47,6 +47,7 @@ import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
 import KontraPrelude
+import Log.Configuration
 import Log.Identifier
 import Log.Utils
 import MinutesTime
@@ -73,7 +74,8 @@ data AppGlobals
                  , brandedimagescache :: !BrandedImagesCache
                  , docscache          :: !RenderedPagesCache
                  , cryptorng          :: !CryptoRNGState
-                 , connsource         :: !ConnectionSource
+                 , connsource         :: !(ConnectionTracker -> ConnectionSource)
+                 , logrunner          :: !LogRunner
                  }
 
 {- |
@@ -149,7 +151,7 @@ enhanceYourCalm action = enhanceYourCalmWorker (300::Int)
       result' <- action
       case rsCode result' of
         420 -> do
-          logInfo_ "Response with code 420 returned, retrying the handler in 1 second"
+          logInfo_ "Response with code 420 returned, rerunning the handler in 100 ms"
           liftIO $ threadDelay 100000
           enhanceYourCalmWorker (n-1)
         _ -> return result'
@@ -166,12 +168,13 @@ appHandler handleRoutes appConf appGlobals = runHandler $ do
   temp <- liftIO getTemporaryDirectory
   let quota = 10000000
       bodyPolicy = defaultBodyPolicy temp quota quota quota
-  withDecodedBody bodyPolicy . localRandomID "handler_id" $ do
+      connTracker = detailedConnectionTracker $ withLogger (logrunner appGlobals)
+  withDecodedBody bodyPolicy . localRandomID "handler_id" $ \handlerID -> do
     rq <- askRq
     let routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
     logInfo "Handler started" $ object routeLogData
 
-    enhanceYourCalm . withPostgreSQL (connsource appGlobals) $ do
+    enhanceYourCalm . withPostgreSQL (connsource appGlobals $ connTracker ["handler_id" .= handlerID]) $ do
       logInfo_ "Retrieving session"
       session <- getCurrentSession
       logInfo_ "Initializing context"
