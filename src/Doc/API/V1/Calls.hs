@@ -968,7 +968,6 @@ apiCallV1CheckAvailable = api $ do
         throwM . SomeKontraException $ serverError "This request can't check more than 10000 documents"
       logInfo "Checking availability of user's documents" $ object [
           identifier_ $ userid user
-        , identifiers ids
         ]
       docids <- dbQuery $ GetDocumentsIDs (DocumentsVisibleToUser $ userid user) [DocumentFilterDeleted False, DocumentFilterByDocumentIDs ids] []
       Ok <$> (J.runJSONGenT $ J.value "ids" (show <$> docids))
