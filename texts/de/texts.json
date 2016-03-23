@@ -704,7 +704,7 @@
 "_modalResendCompanyAccountInviteConfirm":"Senden",
 "_modalResendCompanyAccountInviteHeader":"Einladung erneut senden",
 "_modalUserSignupDoneHeader":"Ihr Konto wurde erstellt! Bitte überprüfen Sie Ihren E-Mail-Eingang, um das Konto zu aktivieren.",
-"_more":"Mehr",
+"_more":"",
 "_name":"Name",
 "_nameInvalidChars":"<span class='put-field-name'></span> enthält ungültige Zeichen.",
 "_nameRequired":"<span class='put-field-name'></span> erforderlich.",

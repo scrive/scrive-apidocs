@@ -704,7 +704,7 @@
 "_modalResendCompanyAccountInviteConfirm":"Skicka",
 "_modalResendCompanyAccountInviteHeader":"Skicka inbjudan igen",
 "_modalUserSignupDoneHeader":"Ditt konto har skapats! Kolla din e-post för att aktivera ditt konto.",
-"_more":"Mer",
+"_more":"",
 "_name":"Namn",
 "_nameInvalidChars":"<span class='put-field-name'></span> innehåller ogiltiga tecken.",
 "_nameRequired":"<span class='put-field-name'></span> krävs.",

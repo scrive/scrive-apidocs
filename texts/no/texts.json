@@ -704,7 +704,7 @@
 "_modalResendCompanyAccountInviteConfirm":"Send",
 "_modalResendCompanyAccountInviteHeader":"Send invitasjon på nytt",
 "_modalUserSignupDoneHeader":"Kontoen din er opprettet! Vennligst sjekk e-posten din for å aktivere kontoen.",
-"_more":"Mer",
+"_more":"",
 "_name":"Navn",
 "_nameInvalidChars":"<span class='put-field-name'></span> inneholder ugyldige tegn.",
 "_nameRequired":"<span class='put-field-name'></span> obligatorisk.",

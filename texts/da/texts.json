@@ -704,7 +704,7 @@
 "_modalResendCompanyAccountInviteConfirm":"Send",
 "_modalResendCompanyAccountInviteHeader":"Gensend invitation",
 "_modalUserSignupDoneHeader":"Din konto er blevet oprettet! Du bedes tjekke din indbakke for at få aktiveret kontoen.",
-"_more":"Mere",
+"_more":"",
 "_name":"Navn",
 "_nameInvalidChars":"<span class='put-field-name'></span> indeholder ugyldige tegn.",
 "_nameRequired":"<span class='put-field-name'></span> påkrævet.",

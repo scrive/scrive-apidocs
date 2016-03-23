@@ -704,7 +704,7 @@
 "_modalResendCompanyAccountInviteConfirm":"Saada",
 "_modalResendCompanyAccountInviteHeader":"Saada kutse uuesti",
 "_modalUserSignupDoneHeader":"Teie konto on loodud! Kontrollige enda e-maili konto aktiveerimiseks.",
-"_more":"Veel",
+"_more":"",
 "_name":"Nimi",
 "_nameInvalidChars":"<span class='put-field-name'></span> sisaldab valesid sümboleid.",
 "_nameRequired":"<span class='put-field-name'></span> nõutud.",

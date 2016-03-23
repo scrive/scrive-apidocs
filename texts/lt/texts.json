@@ -704,7 +704,7 @@
 "_modalResendCompanyAccountInviteConfirm":"Siųsti",
 "_modalResendCompanyAccountInviteHeader":"Pakartotinai išsiųskite kvietimą",
 "_modalUserSignupDoneHeader":"Jūsų paskyra sukurta! Suaktyvinkite savo paskyrą per į Jūsų el. paštą nusiųstą saitą.",
-"_more":"Daugiau",
+"_more":"",
 "_name":"Vardas",
 "_nameInvalidChars":"<span class='put-field-name'></span> yra neleistinų ženklų.",
 "_nameRequired":"<span class='put-field-name'></span> būtina.",

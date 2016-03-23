@@ -704,7 +704,7 @@
 "_modalResendCompanyAccountInviteConfirm":"Lähetä",
 "_modalResendCompanyAccountInviteHeader":"Lähetä kutsu uudelleen",
 "_modalUserSignupDoneHeader":"Tilisi on luotu! Ole hyvä ja tarkista sähköpostisi tilisi aktivoimiseksi.",
-"_more":"Lisää",
+"_more":"",
 "_name":"Nimi",
 "_nameInvalidChars":"<span class='put-field-name'></span> sisältää virheellisiä merkkejä.",
 "_nameRequired":"<span class='put-field-name'></span> vaadittu.",

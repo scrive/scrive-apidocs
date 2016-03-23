@@ -704,7 +704,7 @@
 "_modalResendCompanyAccountInviteConfirm":"Verstuur",
 "_modalResendCompanyAccountInviteHeader":"Stuur uitnodiging opnieuw",
 "_modalUserSignupDoneHeader":"Uw account is aangemaakt! Controleer a.u.b. uw mailbox om uw account te activeren. ",
-"_more":"Meer",
+"_more":"",
 "_name":"Naam",
 "_nameInvalidChars":"<span class='put-field-name'></span> bevat ongeldige tekens",
 "_nameRequired":"<span class='put-field-name'></span> verplicht.",

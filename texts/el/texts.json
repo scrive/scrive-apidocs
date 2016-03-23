@@ -704,7 +704,7 @@
 "_modalResendCompanyAccountInviteConfirm":"Αποστολή ",
 "_modalResendCompanyAccountInviteHeader":"Επανάληψη αποστολής πρόσκλησης ",
 "_modalUserSignupDoneHeader":"Ο λογαριασμός σας έχει δημιουργηθεί! Παρακαλώ ελέγξτε το email σας για να ενεργοποιήσετε τον λογαριασμό σας. ",
-"_more":"Περισσότερα",
+"_more":"",
 "_name":"Όνομα",
 "_nameInvalidChars":"<span class='put-field-name'></span> περιέχει μη έγκυρους χαρακτήρες.",
 "_nameRequired":"Απαιτείται <span class='put-field-name'></span>;.",

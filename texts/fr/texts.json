@@ -704,7 +704,7 @@
 "_modalResendCompanyAccountInviteConfirm":"Envoyer",
 "_modalResendCompanyAccountInviteHeader":"Renvoyer une invitation",
 "_modalUserSignupDoneHeader":"Votre compte a été créé! Veuillez consulter votre boîte de messagerie électronique afin de l'activer.",
-"_more":"Plus",
+"_more":"",
 "_name":"Nom",
 "_nameInvalidChars":"",
 "_nameRequired":"<span class='put-field-name'></span> requis.",

@@ -704,7 +704,7 @@
 "_modalResendCompanyAccountInviteConfirm":"Senda",
 "_modalResendCompanyAccountInviteHeader":"Endursenda boð",
 "_modalUserSignupDoneHeader":"Reikningur þinn hefur verið búinn til! Vinsamlegast skoðaðu tölvupóst þinn til að virkja reikninginn þinn.",
-"_more":"Meira",
+"_more":"",
 "_name":"Nafn",
 "_nameInvalidChars":"",
 "_nameRequired":"<span class='put-field-name'></span> þarf að fylla út.",

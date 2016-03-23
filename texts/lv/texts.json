@@ -704,7 +704,7 @@
 "_modalResendCompanyAccountInviteConfirm":"Nosūtīt",
 "_modalResendCompanyAccountInviteHeader":"Nosūtīt uzaicinājumu atkārtoti",
 "_modalUserSignupDoneHeader":"Jūsu konts ir izveidots! Lai to aktivizētu, lūdzu, pārbaudiet savu e-pastu.",
-"_more":"Vairāk",
+"_more":"",
 "_name":"Nosaukums",
 "_nameInvalidChars":"<span class='put-field-name'></span> ievadītas neatbilstošas zīmes.",
 "_nameRequired":"Nepieciešams <span class='put-field-name'></span>.",
