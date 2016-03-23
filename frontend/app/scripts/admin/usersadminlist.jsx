@@ -41,7 +41,7 @@ var openCreateUserModal = function(callback) {
   var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Language:"));
   var languages = [
       {name: "Swedish", value: "sv"}
-    , {name: "English", value: "en"}
+    , {name: "English", value: "en", selected: true}
     , {name: "German", value: "de"}
     , {name: "French", value: "fr"}
     , {name: "Dutch", value: "nl"}
@@ -61,7 +61,11 @@ var openCreateUserModal = function(callback) {
   languages = _.sortBy(languages, function(l) {return l.name.toLowerCase();});
   var lang = jQuery("<select name='lang' />");
   _.each(languages, function(l) {
-    lang.append($("<option />").val(l.value).text(l.name));
+    var option = $("<option />").val(l.value).text(l.name);
+    if (l.selected) {
+      option.attr("selected", "selected");
+    }
+    lang.append(option);
   });
   tr6.append(jQuery("<td/>").append(lang));
   table.append(tr6);
