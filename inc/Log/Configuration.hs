@@ -10,6 +10,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Default
 import Data.Foldable (fold)
+import Data.IORef
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Unjson
@@ -71,8 +72,8 @@ data LogRunner = LogRunner {
 , withLoggerWait :: forall m r. (MonadBase IO m, MonadMask m) => LogT m r -> m r
 }
 
-mkLogRunner :: Text -> LogConfig -> IO LogRunner
-mkLogRunner component LogConfig{..} = do
+mkLogRunner :: Maybe (IORef Int) -> Text -> LogConfig -> IO LogRunner
+mkLogRunner mUsedConns component LogConfig{..} = do
   logger <- fold <$> mapM defLogger lcLoggers
   let run :: LogT m r -> m r
       run = runLogT (component <> "-" <> lcSuffix) logger
@@ -86,4 +87,12 @@ mkLogRunner component LogConfig{..} = do
       pool <- poolSource def { csConnInfo = encodeUtf8 ci } 1 10 1
       withPostgreSQL pool $ do
         migrateDatabase (liftBase . putStrLn) [] [] logsTables logsMigrations
-      pgLogger pool
+      logger <- pgLogger pool
+      case mUsedConns of
+        Nothing -> return logger
+        Just usedConns -> return logger {
+          loggerWriteMessage = \msg -> do
+            used <- readIORef usedConns
+            when (used < maxConnections `div` 2) $ do
+              loggerWriteMessage logger msg
+        }

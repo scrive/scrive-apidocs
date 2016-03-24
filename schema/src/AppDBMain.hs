@@ -37,7 +37,7 @@ main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   AppDBConf{..} <- readConfig putStrLn config
-  LogRunner{..} <- mkLogRunner "kontrakcja-migrate" logConfig
+  LogRunner{..} <- mkLogRunner Nothing "kontrakcja-migrate" logConfig
   withLoggerWait $ do
     -- composite types are not available in migrations
     let connSource = simpleSource $ pgConnSettings dbConfig []

@@ -17,7 +17,7 @@ import Log.Utils
 forkAction :: forall m. (CryptoRNG m, MonadDB m, MonadBaseControl IO m, MonadLog m, KontraMonad m)
            => String -> m () -> m ()
 forkAction title action = do
-  (_, mjoin) <- liftBaseDiscard T.forkIO . withNewConnection $ mask $ \release -> localRandomID "action_id" . localData ["action_name" .= title] $ do
+  (_, mjoin) <- liftBaseDiscard T.forkIO . withNewConnection $ mask $ \release -> localRandomID "action_id" $ \_ -> localData ["action_name" .= title] $ do
     logInfo_ "forkAction started"
     start <- liftBase getCurrentTime
     result <- try $ release action

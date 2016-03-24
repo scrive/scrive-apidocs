@@ -61,14 +61,15 @@ main :: IO ()
 main = withCurlDo $ do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   appConf <- readConfig putStrLn config
-  lr@LogRunner{..} <- mkLogRunner "kontrakcja" $ logConfig appConf
+  let connSettings = pgConnSettings $ dbConfig appConf
+  (pool, usedConns) <- liftBase . createPoolSource $ connSettings kontraComposites
+  lr@LogRunner{..} <- mkLogRunner (Just usedConns) "kontrakcja" $ logConfig appConf
   withLoggerWait $ do
     logInfo "Starting kontrakcja-server" $ object [
         "version" .= Version.versionID
       ]
     checkExecutables
 
-    let connSettings = pgConnSettings $ dbConfig appConf
     withPostgreSQL (simpleSource $ connSettings []) $ do
       checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
       dbUpdate $ SetMainDomainURL $ mainDomainUrl appConf
@@ -80,7 +81,6 @@ main = withCurlDo $ do
       brandedimagescache <- MemCache.new BSL8.length 50000000
       docs <- MemCache.new RenderedPages.pagesCount 10000
       rng <- newCryptoRNGState
-      connpool <- liftBase . createPoolSource (liftBase . withLogger . logTrace_ . T.pack) $ connSettings kontraComposites
       return AppGlobals {
           templates = templates
         , filecache = filecache
@@ -88,7 +88,8 @@ main = withCurlDo $ do
         , brandedimagescache = brandedimagescache
         , docscache = docs
         , cryptorng = rng
-        , connsource = connpool
+        , connsource = pool
+        , logrunner = lr
         }
 
     startSystem lr appGlobals appConf
@@ -117,7 +118,7 @@ startSystem LogRunner{..} appGlobals appConf = E.bracket startServer stopServer 
         mapReqHandlerT withLogger $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
-      withPostgreSQL (connsource appGlobals) . runCryptoRNGT (cryptorng appGlobals) $ do
+      withPostgreSQL (connsource appGlobals $ maxConnectionTracker withLogger) . runCryptoRNGT (cryptorng appGlobals) $ do
         initDatabaseEntries appConf
       liftBase $ waitForTermination
       logInfo_ "Termination request received"

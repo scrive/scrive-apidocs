@@ -36,7 +36,8 @@ equalsExternalBS name value
 equalsExternalBSL :: T.Text -> BSL.ByteString -> Pair
 equalsExternalBSL name = equalsExternalBS name . BSL.toStrict
 
-localRandomID :: (MonadLog m, CryptoRNG m) => T.Text -> m a -> m a
+localRandomID :: (MonadLog m, CryptoRNG m) => T.Text -> (T.Text -> m a) -> m a
 localRandomID name action = do
   uuid <- randomBytes 8
-  localData [name .= (T.decodeUtf8 $ B16.encode uuid)] action
+  let b64uuid = T.decodeUtf8 $ B16.encode uuid
+  localData [name .= b64uuid] $ action b64uuid
