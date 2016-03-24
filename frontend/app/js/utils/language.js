@@ -12,7 +12,7 @@ var Language = exports.Language = {
        return localization.code;
     },
     allLanguagesCodes : function() {
-      return ["en","sv","de","fr","it","es","pt","nl","da","no","el","fi","is"];
+      return ["en","sv","de","fr","it","es","pt","nl","da","no","el","fi","is","et","lv","lt"];
     },
     changeForPageAndReload : function(code) {
         var p = window.location.pathname;

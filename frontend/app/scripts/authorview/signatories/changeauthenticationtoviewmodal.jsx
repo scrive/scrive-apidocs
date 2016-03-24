@@ -102,7 +102,7 @@ var trackTimeout = require("../../common/track_timeout");
 
     isMobileNumberValid: function () {
       if (this.isAuthenticationNOBankID()) {
-        m = this.mobileNumber();
+        var m = this.mobileNumber();
         return (
           new PhoneValidationNO().validateData(m) ||
           new EmptyValidation().validateData(m)
