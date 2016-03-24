@@ -4,6 +4,11 @@ import Data.List
 import Data.Maybe
 import System.Exit
 
+-- | Takes the output of running a HUnit test suite in the form of the
+-- executable processes ExitCode and standard output as a String.
+-- This function then "parses" this to annotate it with messages that TeamCity
+-- can understand as per:
+-- https://confluence.jetbrains.com/display/TCD8/Build+Script+Interaction+with+TeamCity
 hUnitForTeamCity :: ExitCode -> String -> IO ()
 hUnitForTeamCity c out = do
   allErrs <- mapM parseHUnit $ lines out
@@ -19,6 +24,9 @@ hUnitForTeamCity c out = do
         parseHUnit s | otherwise = do
           putStrLn s
           return Nothing
+
+-- * TeamCity compatible output
+-- See: https://confluence.jetbrains.com/display/TCD8/Build+Script+Interaction+with+TeamCity
 
 teamcityFailureMessage :: String -> String
 teamcityFailureMessage message =
