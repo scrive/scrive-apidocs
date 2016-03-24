@@ -233,9 +233,11 @@ var AdminPaymentsView = Backbone.View.extend({
           ppRow.append("<label style='width:200px;float:left;'> Price plan: </label>");
           var $select1 = $("<span>");
           React.render(React.createElement(Select, {
-            name : this.priceplanNameToText(this.model.priceplan()),
             width: 136,
             style : { display: "inline-block" },
+            isOptionSelected: function(o) {
+              return o.value ==  self.model.priceplan();
+            },
             onSelect: function(v) {model.setPriceplan(v); self.render(); return true;},
             options: [
               { name : this.priceplanNameToText("free"), value : "free"},
@@ -255,11 +257,12 @@ var AdminPaymentsView = Backbone.View.extend({
           statusRow.append("<label style='width:200px;float:left;'> Price plan: </label>");
           var $select2 = $("<span>");
           React.render(React.createElement(Select, {
-            name : this.priceplanStatusToText(this.model.status()),
             width: 136,
             style : { display: "inline-block" },
+            isOptionSelected: function(o) {
+              return o.value ==  self.model.status();
+            },
             onSelect: function(v) {model.setStatus(v); self.render(); return true;},
-
             options: [
               { name : this.priceplanStatusToText("active"), value : "active"},
               { name : this.priceplanStatusToText("overdue"), value : "overdue"},

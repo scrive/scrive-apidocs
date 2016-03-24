@@ -106,15 +106,15 @@ var _ = require("underscore");
                         </td>
                         <td>
                           <Select
-                            name={ a.isRequired() ? localization.authorattachments.required
-                                                  : localization.authorattachments.optional }
                             options={[
                               {
                                 name: localization.authorattachments.required,
+                                selected: a.isRequired(),
                                 onSelect: function () { a.makeRequired();}
                               },
                               {
                                 name: localization.authorattachments.optional,
+                                selected: !a.isRequired(),
                                 onSelect: function () { a.makeOptional();}
                               }
                             ]}

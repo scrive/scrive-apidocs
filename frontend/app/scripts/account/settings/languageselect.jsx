@@ -34,44 +34,19 @@ module.exports = React.createClass({
   },
   render: function () {
     var self = this;
-    var lname = _.findWhere(self.languages(), {value: self.props.model.lang()}).name;
-    var options = _.filter(self.languages(), function (l) {
-      return l.value != self.props.model.lang() && !l.hidden;
-    });
-
     return (
       <Select
         ref="select"
-        name={lname}
+        isOptionSelected={function (o) {
+          return o.value == self.props.model.lang();
+        }}
         onSelect={function (v) {
           self.props.model.setLang(v);
           self.forceUpdate();
           return true;
         }}
-        options={options}
+        options={self.languages()}
         width={240}
-        // This is a hack - since footer has a fixed height, and this select box is very big
-        // it may cause problems. So we expand the footer to match its size.
-        onOpen={function () {
-          // right now the expanded select is still not mounted, so this value is pre-select-existience
-          var documentHeight = $(document).height();
-          var bodyPaddingHeight = $("footer").offset().top + $("footer").outerHeight();
-          bodyPaddingHeight = bodyPaddingHeight - $(".body-container").offset().top - $(".body-container").height();
-          setTimeout(function () {
-            // and now the document (maybe) is bigger
-            var newDocumentHeight = $(document).height();
-            if (newDocumentHeight > documentHeight) {
-            var heightDifference = newDocumentHeight - documentHeight;
-            $(".body-container").css("padding-bottom", bodyPaddingHeight + heightDifference + "px");
-            $("footer").css("height", $("footer").height() + heightDifference + "px");
-            }
-          }, 100);
-          return true;
-        }}
-        onClose={function () {
-          $(".body-container").css("padding-bottom", "");
-          $("footer").css("height", "");
-        }}
       />
     );
   }

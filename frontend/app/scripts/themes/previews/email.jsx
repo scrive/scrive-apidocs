@@ -4,7 +4,6 @@ var DomainViewModel = require("../../admin/brandeddomain/domainviewmodel");
 var Theme = require("../theme");
 var Button = require("../../common/button");
 var UploadImageButton = require("../../common/uploadimagebutton");
-var Select = require("../../common/select");
 var InfoTextInput = require("../../common/infotextinput");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 

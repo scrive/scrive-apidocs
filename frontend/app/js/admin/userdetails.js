@@ -222,14 +222,15 @@ var AdminUserDetailsView = Backbone.View.extend({
       ];
 
       languages = _.sortBy(languages, function(l) {return l.name.toLowerCase();});
-      var lname = _.findWhere(languages, {value :model.lang()}).name;
 
       var $select = $("<span>");
 
       React.render(React.createElement(Select, {
-        name : lname,
+        isOptionSelected: function(o) {
+          return o.value == model.lang();
+        },
         onSelect : function(v) {model.setLang(v); return true;},
-        options: _.filter(languages, function(l) { return l.value !=  model.lang() && !l.hidden;}),
+        options: languages,
         textWidth : 240
       }), $select[0]);
 
@@ -247,7 +248,9 @@ var AdminUserDetailsView = Backbone.View.extend({
       var $select = $("<span>");
 
       React.render(React.createElement(Select, {
-        name : this.accountTypeName(model.accountType()),
+        isOptionSelected: function(o) {
+          return o.value == model.accountType();
+        },
         onSelect : function(v) {
           model.setAccountType(v);
         },

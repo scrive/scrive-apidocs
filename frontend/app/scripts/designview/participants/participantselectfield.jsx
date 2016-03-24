@@ -54,7 +54,7 @@ module.exports = React.createClass({
     var self = this;
     var sig = self.props.model.signatory();
     var allPossibleFields = self.allPossibleFields();
-    var options = [];
+    var options = [{name: localization.designview.whatField, selected: true, disabled:true}];
     _.each(allPossibleFields, function (f) {
       if (!sig.hasField(f.type, f.order, f.name)) {
         options.push({name: self.niceFieldName(f.type, f.order, f.name), value: f});
@@ -74,7 +74,6 @@ module.exports = React.createClass({
       <div className="design-view-action-participant-details-information-field-wrapper">
         <Select
            ref="select"
-           name={localization.designview.whatField}
            className={"design-view-action-participant-new-field-select"}
            border={""}
            width={297}

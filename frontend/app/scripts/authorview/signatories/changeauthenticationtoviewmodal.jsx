@@ -161,12 +161,21 @@ var trackTimeout = require("../../common/track_timeout");
     getAuthenticationMethodOptions: function () {
       var model = this.props.model;
 
-      var standard = {name: localization.docview.signatory.authenticationToViewStandard,
-        value: model.standardAuthenticationValue()};
-      var se_bankid = {name: localization.docview.signatory.authenticationToViewSEBankID,
-        value: model.SEBankIDAuthenticationValue()};
-      var no_bankid = {name: localization.docview.signatory.authenticationToViewNOBankID,
-        value: model.NOBankIDAuthenticationValue()};
+      var standard = {
+        name: localization.docview.signatory.authenticationToViewStandard,
+        selected: model.isAuthenticationStandard(),
+        value: model.standardAuthenticationValue()
+      };
+      var se_bankid = {
+        name: localization.docview.signatory.authenticationToViewSEBankID,
+        selected: model.isAuthenticationSEBankID(),
+        value: model.SEBankIDAuthenticationValue()
+      };
+      var no_bankid = {
+        name: localization.docview.signatory.authenticationToViewNOBankID,
+        selected: model.isAuthenticationNOBankID(),
+        value: model.NOBankIDAuthenticationValue()
+      };
 
       if (model.canUseNOBankID()) {
         return [standard, se_bankid, no_bankid];
@@ -227,7 +236,6 @@ var trackTimeout = require("../../common/track_timeout");
             {localization.docview.changeAuthenticationToView.methodLabel}
           </label>
           <Select
-            name={this.getAuthenticationMethodNameText()}
             onSelect={this.setAuthenticationMethod}
             width={348}
             options={this.getAuthenticationMethodOptions()}

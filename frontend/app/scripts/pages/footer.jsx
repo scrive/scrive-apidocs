@@ -1,6 +1,5 @@
 var React = require("react");
 var Backbone = require("backbone");
-var Select = require("../common/select");
 var LanguageSelect = require("./languageselect");
 
 
@@ -151,10 +150,8 @@ var LanguageSelect = require("./languageselect");
                    <li className="branch">
                      <LanguageSelect
                       langprefix={this.props.langprefix}
-                      border="none"
                       cssClass="change-language"
                       width={107}
-                      adjustHeightOnExpand={true}
                      />
                    </li>
                  </ul>

@@ -36,19 +36,15 @@ var _ = require("underscore");
     },
     render: function() {
      var self = this;
-     var visibleLanguages = _.filter(this.languages(), function(l) { return !l.hidden;});
-     var options = _.filter(visibleLanguages, function(l) { return ('/' + l.value + '/') !=  self.props.langprefix });
-     var lname = _.find(this.languages(), function(l) {return ('/' + l.value + '/') == self.props.langprefix}).name;
      return (
       <div className='langSwitcher'>
         <Select
-          options={options}
-          name={lname}
-          border={this.props.border}
+          options={this.languages()}
+          isOptionSelected={function(l) {
+            return ('/' + l.value + '/') ==  self.props.langprefix;
+          }}
           className={this.props.cssClass}
           width={this.props.width}
-          maxOptionsWidth={this.props.maxOptionsWidth}
-          adjustHeightOnExpand={this.props.adjustHeightOnExpand}
           onSelect={function(v) {self.changeLang(v);}}
         />
       </div>

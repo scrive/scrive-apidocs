@@ -51,13 +51,6 @@ var Field = require("../../../js/fields.js").Field;
       return newField;
     },
 
-    typeSelected: function () {
-      var model = this.props.model;
-      var field = model.field();
-
-      return field.nicename();
-    },
-
     typeOptions: function () {
       var self = this;
       var model = self.props.model;
@@ -98,6 +91,7 @@ var Field = require("../../../js/fields.js").Field;
       _.each(standardFields, function (f) {
         options.push({
           name: f.text,
+          selected: f.type == field.type(),
           onSelect: function () {
             var newField = self.getOrCreateField(sig, f.type, f.order);
             model.changeField(newField);
@@ -109,6 +103,7 @@ var Field = require("../../../js/fields.js").Field;
         if (f.isCustom() && f.name() !== "") {
           options.push({
             name: f.name(),
+            selected: field.type() == "text" && field.name() == f.name(),
             onSelect: function () {
               var newField = self.getOrCreateField(sig, "text", undefined, f.name());
               model.changeField(newField);
@@ -117,9 +112,7 @@ var Field = require("../../../js/fields.js").Field;
         }
       });
 
-      return _.filter(options, function (opt) {
-        return opt.name !== self.typeSelected();
-      });
+      return options;
     },
 
     edit: function () {
@@ -146,11 +139,9 @@ var Field = require("../../../js/fields.js").Field;
               <span>
                 <div className="fieldTypeSetter-field-select-container">
                   <Select
-                    name={this.typeSelected()}
                     options={this.typeOptions()}
                     width={textWidth}
                     className={"typesetter-obligatory-option"}
-                    style={{fontSize: "16px"}}
                   />
                 </div>
                 {field.isCustom() &&

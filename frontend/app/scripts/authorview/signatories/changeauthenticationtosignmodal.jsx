@@ -168,9 +168,21 @@ var trackTimeout = require("../../common/track_timeout");
       var model = this.props.model;
       var sig = model.signatory();
 
-      var standard = {name: localization.docview.signatory.authenticationToSignStandard, value: "standard"};
-      var eleg = {name: localization.docview.signatory.authenticationToSignSEBankID, value: "se_bankid"};
-      var sms = {name: localization.docview.signatory.authenticationToSignSMSPin, value: "sms_pin"};
+      var standard = {
+        name: localization.docview.signatory.authenticationToSignStandard,
+        selected: model.isNewAuthenticationStandard(),
+        value: "standard"
+      };
+      var eleg = {
+        name: localization.docview.signatory.authenticationToSignSEBankID,
+        selected: model.isNewAuthenticationELeg(),
+        value: "se_bankid"
+      };
+      var sms = {
+        name: localization.docview.signatory.authenticationToSignSMSPin,
+        selected: model.isNewAuthenticationPINbySMS(),
+        value: "sms_pin"
+      };
 
       if (sig.authenticationToView() === "no_bankid") {
         return [standard, sms];
@@ -214,7 +226,6 @@ var trackTimeout = require("../../common/track_timeout");
             {localization.docview.changeAuthentication.methodLabel}
           </label>
           <Select
-            name={this.getAuthenticationMethodNameText()}
             onSelect={this.setAuthenticationMethod}
             width={348}
             options={this.getAuthenticationOptions()}

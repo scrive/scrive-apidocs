@@ -41,8 +41,8 @@ module.exports = React.createClass({
   },
   roleOptions: function () {
     return [
-      {name: localization.designview.addParties.roleSignatory, value: "signatory"},
-      {name: localization.designview.addParties.roleViewer, value: "viewer"}
+      {name: localization.designview.addParties.roleSignatory, value: "signatory", selected:  this.props.model.signs()},
+      {name: localization.designview.addParties.roleViewer, value: "viewer", selected:  !this.props.model.signs()}
     ];
   },
   authenticationToViewText: function (t) {
@@ -111,7 +111,9 @@ module.exports = React.createClass({
             <label className="label">{localization.designview.addParties.invitationOrder}</label>
             <Select
               ref="order-select"
-              name={LanguageService.localizedOrdinal(sig.signorder())}
+              isOptionSelected={function (o) {
+                return sig.signorder() == o.value;
+              }}
               width={297}
               options={self.signorderOptions()}
               onSelect={function (v) {
@@ -127,7 +129,9 @@ module.exports = React.createClass({
             <label className="label">{localization.designview.addParties.invitation}</label>
             <Select
               ref="delivery-select"
-              name={self.deliveryText(sig.isLastViewer() ? "none" : sig.delivery())}
+              isOptionSelected={function (o) {
+                return (sig.isLastViewer() ? "none" : sig.delivery()) == o.value;
+              }}
               width={297}
               options={self.deliveryOptions()}
               onSelect={function (v) {
@@ -145,7 +149,9 @@ module.exports = React.createClass({
             <label className="label">{localization.designview.addParties.authenticationToView}</label>
             <Select
               ref="delivery-select"
-              name={self.authenticationToViewText(sig.signs() ? sig.authenticationToView() : "standard")}
+              isOptionSelected={function (o) {
+                return (sig.signs() ? sig.authenticationToView() : "standard") == o.value;
+              }}
               width={297}
               options={self.authenticationToViewOptions()}
               onSelect={function (v) {
@@ -188,7 +194,9 @@ module.exports = React.createClass({
             <label className="label">{localization.designview.addParties.authenticationToSign}</label>
             <Select
               ref="authentication-select"
-              name={self.authenticationToSignText(sig.signs() ? sig.authenticationToSign() : "standard")}
+              isOptionSelected={function (o) {
+                return (sig.signs() ? sig.authenticationToSign() : "standard") == o.value;
+              }}
               width={297}
               options={self.authenticationToSignOptions()}
               onSelect={function (v) {
@@ -204,7 +212,9 @@ module.exports = React.createClass({
             <label className="label">{localization.designview.addParties.confirmation}</label>
             <Select
               ref="confirmation-delivery-select"
-              name={self.confirmationDeliveryText(sig.confirmationdelivery())}
+              isOptionSelected={function (o) {
+                return sig.confirmationdelivery() == o.value;
+              }}
               width={297}
               options={self.confirmationDeliveryOptions()}
               onSelect={function (v) {

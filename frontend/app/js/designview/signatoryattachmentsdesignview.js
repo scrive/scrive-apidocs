@@ -142,6 +142,9 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
           return text;
         };
         var options = [];
+        if (!attachment.signatory()) {
+          options.push({name:"",value:undefined,disabled:true,selected:true});
+        }
         _.each(attachments.document.signatories(), function(sig)  {
           if (sig.signs() && !sig.author()) {
             var text = nameFromSignatory(sig);
@@ -151,7 +154,9 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         });
         var sig = attachment.signatory();
         React.render(React.createElement(Select, {
-          name: sig ? nameFromSignatory(sig) : '',
+          isOptionSelected:  function(o) {
+            return o.value == sig;
+          },
           width: 190,
           options: options,
           onSelect: function(sig) {

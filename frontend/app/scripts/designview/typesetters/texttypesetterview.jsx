@@ -19,49 +19,26 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
 
     horizontalOffset: FieldPlacementGlobal.textTypeSetterArrowOffset,
 
-    obligatorySelected: function () {
-      var model = this.props.model;
-      var field = model.field();
-
-      if (field.isAuthorUnchangeableField()) {
-        return localization.designview.mandatoryForSender;
-      }
-
-      if (field.isOptional()) {
-        return localization.designview.optionalField;
-      }
-
-      if (field.shouldbefilledbysender()) {
-        return localization.designview.mandatoryForSender;
-      }
-
-      return localization.designview.mandatoryForRecipient;
-    },
-
     obligatoryOptions: function () {
       var model = this.props.model;
       var field = model.field();
 
       var options = [];
 
-      if (field.isAuthorUnchangeableField()) {
-        return options;
-      }
+      options.push({
+        name: localization.designview.mandatoryForSender,
+        selected: (!field.isOptional() && field.shouldbefilledbysender()) || field.isAuthorUnchangeableField(),
+        onSelect: function () {
+          field.authorObligatory = "sender";
+          field.addedByMe = false;
+          field.setObligatoryAndShouldBeFilledBySender(true, true);
+        }
+      });
 
-      if (!field.shouldbefilledbysender()) {
-        options.push({
-          name: localization.designview.mandatoryForSender,
-          onSelect: function () {
-            field.authorObligatory = "sender";
-            field.addedByMe = false;
-            field.setObligatoryAndShouldBeFilledBySender(true, true);
-          }
-        });
-      }
-
-      if ((field.shouldbefilledbysender() || field.isOptional()) && field.canBeSetByRecipent()) {
+      if (field.canBeSetByRecipent() && !field.isAuthorUnchangeableField()) {
         options.push({
           name: localization.designview.mandatoryForRecipient,
+          selected: !field.isOptional() && !field.shouldbefilledbysender(),
           onSelect: function () {
             field.authorObligatory = "signatory";
             field.addedByMe = false;
@@ -70,9 +47,10 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
         });
       }
 
-      if (!field.isOptional() && field.canBeOptional()) {
+      if (field.canBeOptional() && !field.isAuthorUnchangeableField()) {
         options.push({
           name: localization.designview.optionalField,
+          selected: field.isOptional() && !field.shouldbefilledbysender(),
           onSelect: function () {
             field.authorObligatory = "optional";
             field.addedByMe = false;
@@ -129,11 +107,9 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
             {localization.designview.optionalMandatory}
             <div className="fieldTypeSetter-subtitle-select">
               <Select
-                name={this.obligatorySelected()}
                 options={options}
                 width={218}
                 className={"typesetter-obligatory-option"}
-                style={{fontSize: "16px"}}
                 inactive={options.length === 0}
               />
             </div>

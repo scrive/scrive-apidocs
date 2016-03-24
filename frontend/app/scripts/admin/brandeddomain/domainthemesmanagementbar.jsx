@@ -46,16 +46,13 @@ module.exports = React.createClass({
       var availableThemesOptions = [];
       var selectedThemeName = "";
       _.each(themeList.list().models, function(t) {
-        if (t.field("id")  != selectedThemeID) {
-          availableThemesOptions.push({
-            name: model.themeName(t.field("id")),
-            onSelect : function() {
-              setTheme(t.field("id"));
-            }
-          });
-        } else {
-          selectedThemeName = model.themeName(t.field("id"));
-        }
+        availableThemesOptions.push({
+          name: model.themeName(t.field("id")),
+          selected: t.field("id")  == selectedThemeID,
+          onSelect : function() {
+            setTheme(t.field("id"));
+          }
+        });
       });
       availableThemesOptions = _.sortBy(availableThemesOptions,function(o) {return o.name.toLowerCase();});
       availableThemesOptions.push({
@@ -66,9 +63,7 @@ module.exports = React.createClass({
       });
       return (
         <Select
-          color={"#000000"}
           options={availableThemesOptions}
-          name ={selectedThemeName}
           width = {156}
        />
       );

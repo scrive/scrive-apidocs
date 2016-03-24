@@ -69,13 +69,13 @@ var CheckboxTypeSetterView = require("../../../scripts/designview/typesetters/ch
 
       assert.ok(select, "there should be a select.");
 
-      assert.equal(select.props.options.length, 1, "there should be one option.");
+      assert.equal(select.props.options.length, 2, "there should be two options.");
 
       TestUtils.Simulate.click(checkboxes[0], "check pre-check option.");
 
       assert.equal(field.isChecked(), true, "field value should be checked.");
 
-      select.select(0);
+      select.select(1);
 
       assert.equal(field.isChecked(), false, "field value should be empty.");
 
