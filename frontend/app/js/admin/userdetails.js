@@ -203,23 +203,24 @@ var AdminUserDetailsView = Backbone.View.extend({
       var model = this.model;
 
       var languages = [
-          {name: localization.languages.enInEn, value: "en"}
-        , {name: localization.languages.svInSv, value: "sv"}
-        , {name: localization.languages.deInDe, value: "de"}
-        , {name: localization.languages.frInFr, value: "fr"}
-        , {name: localization.languages.itInIt, value: "it"}
-        , {name: localization.languages.esInEs, value: "es"}
-        , {name: localization.languages.ptInPt, value: "pt"}
-        , {name: localization.languages.nlInNl, value: "nl"}
-        , {name: localization.languages.daInDa, value: "da"}
-        , {name: localization.languages.noInNo, value: "no"}
-        , {name: localization.languages.elInEl, value: "el"}
-        , {name: localization.languages.fiInFi, value: "fi"}
-        , {name: localization.languages.isInIs, value: "is"}
-        , {name: localization.languages.etInEt, value: "et"}
-        , {name: localization.languages.lvInLv, value: "lv"}
-        , {name: localization.languages.ltInLt, value: "lt"}
+          {name: "Swedish", value: "sv"}
+        , {name: "English", value: "en"}
+        , {name: "German", value: "de"}
+        , {name: "French", value: "fr"}
+        , {name: "Dutch", value: "nl"}
+        , {name: "Italian", value: "it"}
+        , {name: "Norwegian", value: "no"}
+        , {name: "Portuguese", value: "pt"}
+        , {name: "Spanish", value: "es"}
+        , {name: "Danish", value: "da"}
+        , {name: "Greek", value: "el"}
+        , {name: "Finnish", value: "fi"}
+        , {name: "Icelandic", value: "is"}
+        , {name: "Estonian", value: "et"}
+        , {name: "Latvian", value: "lv"}
+        , {name: "Lithuanian", value: "lt"}
       ];
+
       languages = _.sortBy(languages, function(l) {return l.name.toLowerCase();});
       var lname = _.findWhere(languages, {value :model.lang()}).name;
 
