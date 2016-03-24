@@ -13,6 +13,9 @@ import KontraPrelude
 import RoutingTable (staticRoutes)
 
 
+------------------------------------------------------------------------------
+-- MyRoute is an exact copy of Route, but since Route's ctors are not exported
+-- we use unsafeCoerce to get access to them
 data MyRoute a =
     MyDir MySegment (MyRoute a)
   | MyParam (MyRoute a)
@@ -36,38 +39,41 @@ type MyEndSegment = (Maybe Int, Method)
 
 type MyCheckApply = [String] -> Bool
 
-bar :: MyRoute (Kontra Response) -> State Int [String]
-bar (MyDir _segment (MyHandler (Nothing, _) _ _)) = return [] -- [segment ++ " <SERVING FILES FROM SOME DIRECTORY>"]
-bar (MyDir segment (MyHandler (Just n, _method') _ _)) = do
+coerce :: Route a -> MyRoute a
+coerce = unsafeCoerce
+------------------------------------------------------------------------------
+-- go over Route object (recursively) and return list of urls inside
+-- this a stateful computation (for counting how many parameters are in the url)
+worker :: MyRoute (Kontra Response) -> State Int [String]
+worker (MyDir _segment (MyHandler (Nothing, _) _ _)) = return [] -- [segment ++ " <SERVING FILES FROM SOME DIRECTORY>"]
+worker (MyDir segment (MyHandler (Just n, _method') _ _)) = do
   nParams <- get
   let n' = n - nParams
   case n' of
     0 -> return [show segment]
     _ -> return [show segment ++ "/"]
-bar (MyDir segment route) = mapM (\s -> return $ show segment ++ "/" ++ s) =<< bar route
-bar (MyHandler (Nothing, _) _ _) = return [] -- ["<SERVING FILES FROM SOME DIRECTORY>"]
-bar (MyHandler (Just 0, _method') _ _) = return [""]
-bar (MyHandler (Just n, _method') _ _) = return [intersperse '/' (replicate n 'X')]
-bar (MyChoice routes) = do
+worker (MyDir segment route) = mapM (\s -> return $ show segment ++ "/" ++ s) =<< worker route
+worker (MyHandler (Nothing, _) _ _) = return [] -- ["<SERVING FILES FROM SOME DIRECTORY>"]
+worker (MyHandler (Just 0, _method') _ _) = return [""]
+worker (MyHandler (Just n, _method') _ _) = return [intersperse '/' (replicate n 'X')]
+worker (MyChoice routes) = do
   let localState :: State s a -> State s a
       localState f = do
         s <- get
         x <- f
         put s
         return x
-  concat <$> mapM (localState . bar) routes
-bar (MyParam route) = do
+  concat <$> mapM (localState . worker) routes
+worker (MyParam route) = do
   modify (+1)
-  mapM (\s -> return $ "[a-zA-Z0-9_-]+/" ++ s) =<< bar route
+  mapM (\s -> return $ "[a-zA-Z0-9_-]+/" ++ s) =<< worker route
 
-foo :: Route (Kontra Response) -> [String]
-foo = fst . flip runState 0 . bar . coerce
-
-coerce :: Route (Kontra Response) -> MyRoute (Kontra Response)
-coerce = unsafeCoerce
-
-baz :: Route (Kontra Response) -> [String]
-baz = nub . concatMap exceptions . filter (not . (== "/")) . map ("/" ++) . foo
+getUrls :: Route (Kontra Response) -> [String]
+getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map makeAbsoluteUrl result
+  where route' = coerce route
+        makeAbsoluteUrl url = "/" ++ url
+        isRoot url = url == "/"
+        result = fst $ runState (worker route') 0
 
 -- handle exceptions
 -- urls like /s are special, they need to both handle "/s" and "/s/1/2/3"
@@ -83,7 +89,7 @@ main :: IO ()
 main = do
   [include] <- getArgs
   withFile "urls.txt" WriteMode $ \h -> do
-    forM_ (baz $ staticRoutes True) $ \url -> do
+    forM_ (getUrls $ staticRoutes True) $ \url -> do
       hPutStrLn h $ "location ~ ^" ++ url ++ " {"
       hPutStrLn h $ "    include " ++ include ++ ";"
       hPutStrLn h "}"
