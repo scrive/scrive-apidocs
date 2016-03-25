@@ -12,6 +12,7 @@ import Development.Shake.Classes
 -- This is just an oddity of the way these "Oracles" work in Shake
 -- The other option was to write the value of env vars to a file in the Shake
 -- build directory, this option was preffered
+newtype GhcVersion = GhcVersion () deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype TeamCity = TeamCity () deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype NginxConfPath = NginxConfPath () deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype BuildTarget = BuildTarget () deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
@@ -20,11 +21,13 @@ newtype BuildTestConfPath = BuildTestConfPath () deriving (Show,Typeable,Eq,Hash
 newtype BuildGitHub = BuildGitHub () deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype BuildDev = BuildDev () deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype BuildTestCoverage = BuildTestCoverage () deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
+newtype BuildCabalConfigureOptions = BuildCabalConfigureOptions () deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 
 addOracles :: Rules ()
 addOracles = do
   -- * Oracles for using environment variables
   -- See Shake documentation or newtype declarations for some background
+  _ <- addOracle $ \(GhcVersion _) -> fmap fromStdout $ cmd "ghc --numeric-version" :: Action String
   _ <- addOracle $ \(TeamCity _) -> not . null . fromMaybe "" <$> getEnv "TEAMCITY_VERSION"
   -- This is needed by our build
   -- FIXME should be part of SHAKE_BUILD_ env vars?
@@ -36,6 +39,7 @@ addOracles = do
   _ <- addOracle $ \(BuildGitHub _)  ->       not . null . fromMaybe "" <$> getEnv "SHAKE_BUILD_GITHUB"
   _ <- addOracle $ \(BuildDev _)     ->       not . null . fromMaybe "" <$> getEnv "SHAKE_BUILD_DEV"
   _ <- addOracle $ \(BuildTestCoverage _) ->  not . null . fromMaybe "" <$> getEnv "SHAKE_BUILD_TEST_COVERAGE"
+  _ <- addOracle $ \(BuildCabalConfigureOptions _)  -> fromMaybe "" <$> getEnv "SHAKE_BUILD_CABAL_CONFIGURE_OPTS"
   return ()
 
 oracleHelpRule :: Rules ()
@@ -62,12 +66,19 @@ oracleHelpRule = do
     putNormal   "   SHAKE_BUILD_TEST_COVERAGE  : If not empty, will create a coverage report from server tests"
     testCoverage <- askOracleWith (BuildTestCoverage ()) True
     putNormal $ "                              = " ++ show testCoverage
+    putNormal   "   SHAKE_BUILD_CABAL_CONFIGURE_OPTS : Custom flags to pass to cabal configure"
+    cabalFlags <- askOracleWith (BuildCabalConfigureOptions ()) ""
+    putNormal $ "                              = " ++ show cabalFlags
     putNormal ""
     putNormal   "   TEAMCITY_VERSION           : Used to determine if run by TeamCity CI"
     tc <- askOracleWith (TeamCity ()) True
     putNormal $ "                              = " ++ show tc
     nginxconfpath <- askOracle (NginxConfPath ())
-    putNormal $ "   NGINX_CONF_PATH            = " ++ nginxconfpath
+    putNormal   "   NGINX_CONF_PATH            : Used for generating NGINX urls.txt file"
+    putNormal $ "                              = " ++ nginxconfpath
+    putNormal ""
+    ghc <- askOracleWith (GhcVersion ()) ""
+    putNormal $ "   GHC version: " ++ ghc
     putNormal ""
 
   "env" ~> do
