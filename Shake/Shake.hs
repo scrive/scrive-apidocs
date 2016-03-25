@@ -336,4 +336,4 @@ distributionRules = do
   -- This is here until we get a better deployment workflow, then we can remove this
   "deploy-dev" ~> do
     need ["_build/kontrakcja.tar.gz"]
-    cmd "./Shake/deployToDev.sh"
+    cmd (Cwd "Shake") "bash deployToDev.sh"
