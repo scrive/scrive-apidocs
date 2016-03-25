@@ -56,6 +56,11 @@ Flag test-coverage
   Manual: True
   Default: False
 
+Flag enable-routinglist
+  Description: Enables building the routing list executable
+  Manual: True
+  Default: False
+
 
 Executable kontrakcja-server
 
@@ -882,6 +887,10 @@ Executable localization
     UndecidableInstances
 
 Executable routinglist
+  if flag(enable-routinglist)
+    buildable:    True
+  else
+    buildable:    False
 
   Hs-source-dirs: cron cron/inc cron/schema docconv/src inc mailer/inc mailer/schema messenger/inc messenger/schema messenger/src pdftools misc schema/inc schema/src src routinglist
 

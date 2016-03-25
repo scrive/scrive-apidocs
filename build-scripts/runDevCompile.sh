@@ -13,7 +13,7 @@ rm -f kontrakcja-test.tix
 cabal update
 cabal clean
 cabal install --only-dependencies --force-reinstalls
-cabal configure -ftest-coverage
+cabal configure -ftest-coverage -fenable-routinglist
 
 if [ "$TEAMCITY_VERSION" = "" ]; then
   cabal build --ghc-options="-O0 -optl -O0"

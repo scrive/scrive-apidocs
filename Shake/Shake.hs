@@ -142,20 +142,24 @@ serverBuildRules = do
   "_build/cabal-configure-with-flags" %>>> do
     need cabalFiles
     need ["_build/cabal-install-deps"]
+    tc <- askOracle (TeamCity ())
     testCoverage <- askOracle (BuildTestCoverage ())
     cabalFlags <- askOracle (BuildCabalConfigureOptions ())
+    let flags = if tc then ["-fenable-routinglist",cabalFlags]
+                      else [cabalFlags]
     -- Need to clean for flags to be effective
     command_ [] "cabal" ["clean"]
     case testCoverage of
-      True -> command [Shell] "cabal" ["configure","-ftest-coverage",cabalFlags]
-      False -> command [Shell] "cabal" ["configure",cabalFlags]
+      True -> command [Shell] "cabal" $ "configure":"-ftest-coverage":flags
+      False -> command [Shell] "cabal" $ "configure":flags
 
   "dist/setup-config" %> \_ -> do
     need cabalFiles
     need ["_build/cabal-install-deps"]
+    tc <- askOracle (TeamCity ())
     testCoverage <- askOracle (BuildTestCoverage ())
     cabalFlags <- askOracleWith (BuildCabalConfigureOptions ()) ""
-    if testCoverage || (not . null) cabalFlags
+    if tc || testCoverage || (not . null) cabalFlags
       then need ["_build/cabal-configure-with-flags"]
       else cmd (Shell) $ "cabal configure"
 
@@ -297,11 +301,15 @@ frontendTestRules = do
 distributionRules :: Rules ()
 distributionRules = do
   "urls.txt" %> \_ -> do
-    need ["_build/cabal-build"]
+    tc <- askOracle (TeamCity ())
     nginxconfpath <- askOracle (NginxConfPath ())
+    when (not tc) $ do
+      putLoud "ERROR: routinglist executable is only built with Shake when running from TeamCity"
+      liftIO $ exitFailure
     when (null nginxconfpath) $ do
       putLoud "ERROR: NGINX_CONF_PATH is empty"
       liftIO $ exitFailure
+    need ["_build/cabal-build"]
     command_ [] "./dist/build/routinglist/routinglist" [nginxconfpath]
     removeFilesAfter "." ["urls.txt"]
 
