@@ -4,7 +4,7 @@
 
 ssh dev@dev.scrive.com bash -xe -s <<EOF
 
-rm kontrakcja/kontrakcja.tar.gz
+rm -f kontrakcja/kontrakcja.tar.gz
 
 rm -rf dist evidence-package frontend scrivepdftools GuardTime templates files texts urls.txt
 

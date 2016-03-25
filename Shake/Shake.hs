@@ -332,8 +332,3 @@ distributionRules = do
                     , "urls.txt"
                     ]
     command_ [Shell] "tar" $ ["-czf","_build/kontrakcja.tar.gz"] ++ distFiles
-
-  -- This is here until we get a better deployment workflow, then we can remove this
-  "deploy-dev" ~> do
-    need ["_build/kontrakcja.tar.gz"]
-    cmd (Cwd "Shake") "bash deployToDev.sh"
