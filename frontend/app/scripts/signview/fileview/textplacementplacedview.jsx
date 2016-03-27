@@ -1,8 +1,8 @@
 var React = require("react");
 var InfoTextInput = require("../../common/infotextinput");
 var PlacementMixin = require("./placement_mixin");
-var TaskMixin = require("../tasks/task_mixin");
-var PageTask = require("../../../js/tasks.js").PageTask;
+var TaskMixin = require("../navigation/task_mixin");
+var Task = require("../navigation/task");
 var $ = require("jquery");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 var classNames = require("classnames");
@@ -17,12 +17,6 @@ var classNames = require("classnames");
       return {editing: false, active: false};
     },
 
-    componentDidUpdate: function (prevProps, prevState) {
-      if (this.props.arrow()) {
-        this.props.arrow().updatePosition();
-      }
-    },
-
     createTasks: function () {
       var self = this;
       var placement = self.props.model;
@@ -32,7 +26,7 @@ var classNames = require("classnames");
         return;
       }
 
-      return [new PageTask({
+      return [new Task({
         type: "field",
         field: field,
         isComplete: function () {
@@ -61,14 +55,6 @@ var classNames = require("classnames");
           setTimeout(function () {
             self.setState({active: false});
           }, 1);
-        },
-        onScrollWhenActive: function () {
-          var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
-          var nothingHasFocus = $(":focus").size() == 0;
-          var noSignatureDrawer = $(".drawer").size() == 0;
-          if (!field.readyForSign() && windowIsFocused && nothingHasFocus && noSignatureDrawer) {
-            self.startInlineEditing();
-          }
         },
         tipSide: placement.tip()
       })];
@@ -101,10 +87,11 @@ var classNames = require("classnames");
     stopInlineEditing: function () {
       var self = this;
       var field = self.props.model.field();
+      var tasks = self.props.signview.tasks();
       if (self.state.editing) {
         self.setState({editing: false}, function () {
           if (field.readyForSign()) {
-            self.activateCurrentTask();
+            tasks.triggerOnActivate();
           }
         });
       }
@@ -251,11 +238,6 @@ var classNames = require("classnames");
               inputStyle={inputStyle}
               className="text-inline-editing"
               autoGrowth={true}
-              onAutoGrowth={function () {
-                if (self.props.arrow()) {
-                  self.props.arrow().updatePosition();
-                }
-              }}
               onEnter={self.accept}
               onTab={self.accept}
               onBlur={self.handleBlur}

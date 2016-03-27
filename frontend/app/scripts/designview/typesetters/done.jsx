@@ -17,7 +17,6 @@ var Button = require("../../common/button");
       var done = !hasName || (field.name() && _.all(field.signatory().fields(), function (f) {
         return f.name() != field.name() || f == field;
       }));
-      console.log(done);
       if (done) { self.props.onDone(); }
     },
 

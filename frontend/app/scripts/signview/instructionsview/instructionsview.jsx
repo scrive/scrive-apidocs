@@ -37,7 +37,7 @@ var classNames = require("classnames");
     propTypes: {
       model: React.PropTypes.instanceOf(Document).isRequired,
       loggedInAsAuthor: React.PropTypes.bool.isRequired,
-      arrow: React.PropTypes.func.isRequired
+      goToCurrentTask: React.PropTypes.func.isRequired
     },
 
     headlineText: function () {
@@ -63,9 +63,8 @@ var classNames = require("classnames");
     },
 
     handleArrowTextClick: function () {
-      var arrow = this.props.arrow;
       mixpanel.track("Click arrow text");
-      arrow().goToCurrentTask();
+      this.props.goToCurrentTask();
     },
 
     handleDownloadClick: function () {

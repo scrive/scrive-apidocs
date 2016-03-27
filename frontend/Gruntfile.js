@@ -196,7 +196,7 @@ module.exports = function (grunt) {
 
     autoprefixer: {
       options: {
-        browsers: ["ie >= 8", "chrome >= 31", "ff >= 38"]
+        browsers: ["ie >= 9", "chrome >= 31", "ff >= 38"]
       },
       compile: {
         src: "<%= yeoman.app %>/less/less-compiled.css"

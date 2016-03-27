@@ -6,16 +6,16 @@ var SignaturePlacementPlacedView = require("./signatureplacementplacedview");
 var CheckboxPlacementPlacedView = require("./checkboxplacementplacedview");
 var TextPlacementPlacedView = require("./textplacementplacedview");
 var FilePage = require("../../../js/files.js").FilePage;
+var Page = require("../pageviewer/page");
 
   module.exports = React.createClass({
+    displayName: "FilePageView",
+
     propTypes: {
       model: React.PropTypes.instanceOf(FilePage).isRequired,
       signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      arrow: React.PropTypes.func.isRequired,
-      imageSrc: React.PropTypes.string.isRequired,
-      imageComplete: React.PropTypes.bool.isRequired,
-      width: React.PropTypes.number.isRequired,
-      height: React.PropTypes.number.isRequired
+      image: React.PropTypes.instanceOf(Image).isRequired,
+      width: React.PropTypes.number
     },
 
     mixins: [BackboneMixin.BackboneMixin],
@@ -33,12 +33,20 @@ var FilePage = require("../../../js/files.js").FilePage;
       return [this.props.model];
     },
 
+    height: function () {
+      if (!this.props.image.complete) {
+        return 0;
+      }
+
+      return (this.props.width / this.props.image.width) * this.props.image.height;
+    },
+
     renderFields: function () {
       var self = this;
       var page = self.props.model;
       var file = page.file();
       var width = self.props.width;
-      var height = self.props.height;
+      var height = this.height();
       var doc = file.document();
 
       return _.map(doc.allPlacements(), function (placement, index) {
@@ -49,8 +57,7 @@ var FilePage = require("../../../js/files.js").FilePage;
             model: placement,
             pageWidth: width,
             pageHeight: height,
-            signview: self.props.signview,
-            arrow: self.props.arrow
+            signview: self.props.signview
           };
 
           if (field.isSignature()) {
@@ -80,21 +87,15 @@ var FilePage = require("../../../js/files.js").FilePage;
       var page = this.props.model;
       var file = page.file();
       var doc = file.document();
-      var imageSrc = this.props.imageSrc;
-      var imageComplete = this.props.imageComplete;
-
-      var pageStyle = {
-        width: this.props.width + "px",
-        height: this.props.height + "px"
-      };
+      var imageSrc = this.props.image.src;
+      var imageComplete = this.props.image.complete;
 
       return (
-        <div style={pageStyle} id={"page" + page.number()} className="pagediv">
-          <img src={imageSrc} />
+        <Page width={this.props.width} number={page.number()} imageSrc={imageSrc}>
           {/* if */ imageComplete && !doc.closed() &&
             this.renderFields()
           }
-        </div>
+        </Page>
       );
     }
   });

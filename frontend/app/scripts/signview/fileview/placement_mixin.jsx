@@ -10,8 +10,7 @@ var FieldPlacement = require("../../../js/placements.js").FieldPlacement;
       model: React.PropTypes.instanceOf(FieldPlacement).isRequired,
       pageWidth: React.PropTypes.number.isRequired,
       pageHeight: React.PropTypes.number.isRequired,
-      signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      arrow: React.PropTypes.func.isRequired
+      signview: React.PropTypes.instanceOf(Backbone.Model).isRequired
     },
 
     mixins: [BackboneMixin.BackboneMixin],

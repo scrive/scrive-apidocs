@@ -16,6 +16,10 @@
 
 @import "flash";
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   background-color: @signview-bg;
   line-height: 1.2em;
@@ -23,6 +27,8 @@ body {
 
 .signview {
   word-wrap: break-word;
+  float: left;
+  min-width: 100%;
 
   @import "grid";
   @import "base";

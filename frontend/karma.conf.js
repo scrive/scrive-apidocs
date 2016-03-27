@@ -58,12 +58,18 @@ module.exports = function(config) {
             test: /.jsx$/,
             loader: "babel",
             query: {
-              presets: ["react", "es2015"]
+              presets: ["react", "es2015", "stage-2"]
             }
           },
           {
             test: /\.jsx$/,
             loader: "isparta"
+          }
+        ],
+        loaders: [
+          {
+            test: /.less$/,
+            loader: "less-interop",
           }
         ],
         noParse: [

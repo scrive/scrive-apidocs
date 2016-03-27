@@ -7,7 +7,9 @@ var Document = require("../../../js/documents.js").Document;
   module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Document).isRequired,
-      canStartFetching: React.PropTypes.bool.isRequired
+      canStartFetching: React.PropTypes.bool.isRequired,
+      showOverlay: React.PropTypes.bool.isRequired,
+      showArrow: React.PropTypes.bool.isRequired
     },
 
     attachmentsToShow: function () {
@@ -23,7 +25,7 @@ var Document = require("../../../js/documents.js").Document;
       var doc = this.props.model;
       return (
         <div>
-        {_.map(this.attachmentsToShow(), function (a, i) {
+        {_.map(this.attachmentsToShow(), (a, i) => {
           return (
              <AuthorAttachmentView
                ref={"attachment-view-" + i}
@@ -31,6 +33,8 @@ var Document = require("../../../js/documents.js").Document;
                model={a}
                canSign={doc.currentSignatoryCanSign()}
                canStartFetching={self.props.canStartFetching}
+               showOverlay={this.props.showOverlay}
+               showArrow={this.props.showArrow}
              />
           );
         })}

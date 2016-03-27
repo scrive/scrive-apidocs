@@ -32,7 +32,7 @@ $htmlopentag()$
   <head>
     <title>$pagetitle()$</title>
     $IECompatibilityMetaTag()$
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, maximum-scale=1, initial-scale=1, user-scalable=no" />
     <meta name="format-detection" content="telephone=no"/>
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
@@ -119,7 +119,7 @@ $htmlopentag()$
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
     <link href='$cdnbaseurl$/document_signview_branding/$brandingdomainid$/$documentid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2" />
+    <meta name="viewport" content="width=device-width, maximum-scale=1, initial-scale=1, user-scalable=no" />
   </head>
   <body>
     <div class='global-table'>

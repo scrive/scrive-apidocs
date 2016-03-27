@@ -1,7 +1,6 @@
 var Backbone = require("backbone");
 var React = require("react");
 var BackboneMixin = require("../common/backbone_mixin");
-var onElementHeightChange = require("../common/onelementheightchange");
 var DocumentViewSignatories = require("./signatories/docviewsignatories");
 var SignatoryAttachmentsView = require("./attachments/signatoryattachmentsview");
 var InstructionsView = require("./instructionsview/instructionsview");
@@ -13,13 +12,14 @@ var FileView = require("./fileview/fileview");
 var Header = require("./header");
 var Footer = require("./footer");
 var PostSignView = require("./postsignview");
-var TaskArrows = require("./tasks/taskarrows");
 var Overlay = require("./overlay");
 var ViewSize = require("./viewsize");
 var Document = require("../../js/documents.js").Document;
 var $ = require("jquery");
 var ReloadManager = require("../../js/reloadmanager.js").ReloadManager;
 var PadSigningView = require("./padsigningview");
+var Arrow = require("./navigation/arrow");
+var TaskList = require("./navigation/task_list");
 
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -42,31 +42,36 @@ var PadSigningView = require("./padsigningview");
         loggedInAsAuthor: this.props.loggedInAsAuthor
       });
 
-      return {model: model, overlay: false, pixelWidth: 950};
+      return {model: model, overlay: false, showArrow: true, pixelWidth: 950};
     },
 
     childContextTypes: {
-      addTask: React.PropTypes.func.isRequired,
-      removeTask: React.PropTypes.func.isRequired,
-      getArrow: React.PropTypes.func.isRequired
+      taskList: React.PropTypes.instanceOf(TaskList).isRequired,
+      hideArrow: React.PropTypes.func.isRequired,
+      showArrow: React.PropTypes.func.isRequired,
+      blinkArrow: React.PropTypes.func.isRequired
     },
 
     // Contexts are an undocumented built in feature of React.
     // https://discuss.reactjs.org/t/documentation-on-context/130
     getChildContext: function () {
-      var model = this.state.model;
+      var self = this;
 
       return {
-        addTask: function (task) {
-          model.addTask(task);
+        taskList: self.state.model.tasks(),
+
+        hideArrow: function () {
+          self.setState({showArrow: false});
         },
 
-        removeTask: function (task) {
-          model.removeTask(task);
+        showArrow: function () {
+          self.setState({showArrow: true});
         },
 
-        getArrow: function () {
-          return model.arrow();
+        blinkArrow: function () {
+          if (self.refs.arrow) {
+            self.refs.arrow.blink()
+          }
         }
       };
     },
@@ -82,9 +87,6 @@ var PadSigningView = require("./padsigningview");
       $(window).on("orientationchange", this.handleOrientationChange);
       model.recall();
       ReloadManager.pushBlock(model.blockReload);
-      onElementHeightChange(self.getDOMNode(), function () {
-        model.updateArrowPosition();
-      });
     },
 
     componentDidUpdate: function () {
@@ -142,8 +144,8 @@ var PadSigningView = require("./padsigningview");
               authorPhone={this.props.authorPhone}
             />
           }
-          {/* if */ model.hasArrows() &&
-            <TaskArrows model={model} />
+          {/* if */ model.hasArrows() && model.tasks().active() &&
+            <Arrow ref="arrow" show={this.state.showArrow} task={model.tasks().active()} />
           }
           {/* if */ !model.isReady() &&
             <div className="main">
@@ -160,7 +162,13 @@ var PadSigningView = require("./padsigningview");
               <InstructionsView
                 model={doc}
                 loggedInAsAuthor={model.loggedInAsAuthor()}
-                arrow={function () { return model.arrow(); }}
+                goToCurrentTask={() => {
+                  let arrow = this.refs.arrow;
+
+                  if (arrow) {
+                    arrow.goto();
+                  }
+                }}
               />
               {/* if */ this.props.loggedInAsAuthor && model.hasPadSigning() &&
                 <PadSigningView sigs={doc.signatoriesThatCanSignNowOnPad()} />
@@ -173,12 +181,15 @@ var PadSigningView = require("./padsigningview");
                 pixelWidth={this.state.pixelWidth}
                 model={doc.mainfile()}
                 signview={model}
-                arrow={function () { return model.arrow(); }}
+                showOverlay={this.state.overlay}
+                showArrow={this.state.showArrow}
               />
               {/* if */ model.hasAuthorAttachmentsSection() &&
                 <AuthorAttachmentsView
                   model={doc}
                   canStartFetching={self.refs.fileView != undefined && self.refs.fileView.ready()}
+                  showOverlay={this.state.overlay}
+                  showArrow={this.state.showArrow}
                 />
               }
               {/* if */ model.hasSignatoriesAttachmentsSection() &&

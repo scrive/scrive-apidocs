@@ -4,19 +4,24 @@ var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
 var FilePageView = require("./filepageview");
 var File = require("../../../js/files.js").File;
-var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 var $ = require("jquery");
 var classNames = require("classnames");
+var vars = require("../../../less/signview/vars.less");
+var viewSize = require("../viewsize");
+var PageViewer = require("../pageviewer/pageviewer");
 
   module.exports = React.createClass({
+    displayName: "FileView",
+
     propTypes: {
       model: React.PropTypes.instanceOf(File).isRequired,
       signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      arrow: React.PropTypes.func.isRequired,
-      pixelWidth: React.PropTypes.number.isRequired
+      pixelWidth: React.PropTypes.number.isRequired,
+      showOverlay: React.PropTypes.bool.isRequired,
+      showArrow: React.PropTypes.bool.isRequired
     },
 
-    mixins: [BackboneMixin.BackboneMixin],
+    mixins: [BackboneMixin.BackboneMixin, React.addons.PureRenderMixin],
 
     getBackboneModels: function () {
       return [this.props.model];
@@ -28,6 +33,16 @@ var classNames = require("classnames");
 
     componentWillMount: function () {
       this.props.model.view = this;
+      $(window).on("resize", this.handleResize);
+    },
+
+    componentWillUnmount: function () {
+      this.props.model.view = null;
+      $(window).off("resize", this.handleResize);
+    },
+
+    handleResize: function () {
+      this.forceUpdate();
     },
 
     componentDidUpdate: function (prevProps, prevState) {
@@ -36,10 +51,6 @@ var classNames = require("classnames");
       if (this.props.model.pages().length !== this.state.images.length) {
         this.updateImages();
       }
-
-      setTimeout(function () {
-        signview.updateArrow();
-      }, 100);
     },
 
     ready: function () {
@@ -95,44 +106,20 @@ var classNames = require("classnames");
       }
     },
 
-    documentWidth: function () {
-      if (!this.isMounted()) {
-        return 0;
-      }
-
-      var $main = $(this.getDOMNode());
-      var width = $main.width();
-
-      return width;
-    },
-
     renderPage: function (page, index) {
       var image = this.state.images[index];
+      var signview = this.props.signview;
 
       if (!image) {
         return <span key={index} />;
       }
 
-      var documentWidth = this.documentWidth();
-
-      var imageWidth = image.width;
-      var imageHeight = image.height;
-
-      var ratio = documentWidth / imageWidth;
-
-      var width = documentWidth;
-      var height = ratio * imageHeight;
-
       return (
         <FilePageView
-          key={index}
+          key={"file_" + index}
           model={page}
-          arrow={this.props.arrow}
-          signview={this.props.signview}
-          width={width}
-          height={height}
-          imageSrc={image.src}
-          imageComplete={image.complete}
+          signview={signview}
+          image={image}
         />
       );
     },
@@ -140,22 +127,15 @@ var classNames = require("classnames");
     render: function () {
       var file = this.props.model;
 
-      var sectionClass = classNames({
-        "section": true,
-        "document-pages": file.ready()
-      });
-
       return (
-        <div className={sectionClass}>
-          {/* if */ !file.ready() &&
-            <div className="col-xs-12 center">
-              <div classsName="waiting4data" />
-            </div>
-          }
-          {/* else */ file.ready() &&
-            _.map(file.pages(), this.renderPage)
-          }
-        </div>
+        <PageViewer
+          ref="viewer"
+          ready={file.ready()}
+          showArrow={this.props.showArrow}
+          showOverlay={this.props.showOverlay}
+        >
+          {_.map(file.pages(), this.renderPage)}
+        </PageViewer>
       );
     }
   });

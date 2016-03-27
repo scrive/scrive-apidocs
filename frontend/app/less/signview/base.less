@@ -35,20 +35,32 @@ h4 {
   .font-normal()
 }
 
+.hidden {
+  filter: alpha(opacity=0);
+  opacity: 0;
+}
+
 .section {
   background-color: @signview-section-bg;
   margin-top: @signview-half-gutter;
   padding: @signview-section-padding;
-  width: auto;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: @container-lg;
+
+  @media not all and (min-width: (@container-lg + @signview-gutter)) {
+    width: auto;
+  }
 
   .on-medium-view({
     padding: 35px @signview-section-padding-small;
+    max-width: @signview-medium-view;
   });
-
 
   .on-small-view({
     padding: @signview-section-padding-small;
     margin-top: @signview-half-gutter;
+    max-width: @signview-small-view;
   });
 }
 
