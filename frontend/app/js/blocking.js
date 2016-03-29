@@ -433,7 +433,9 @@ var BlockingInfoView = require("./blocking.js").BlockingInfoView;
                return $(view.el);
             } ,
             shouldBlockDocs: function(n) {
-                return n > model.docsLeft() && !model.isAdminUser();
+              // JN requested temporarily disabling blocking
+              return false;
+                // return n > model.docsLeft() && !model.isAdminUser();
             },
             createPopup: function() {
                 view.createPopup();
