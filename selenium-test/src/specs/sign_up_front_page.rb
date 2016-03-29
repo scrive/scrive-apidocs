@@ -70,7 +70,7 @@ describe "sign up on front page and modify account settings" do
 
 
     puts "fill in a name"
-    (@h.wait_until { @h.driver.find_element :name => "fullname" }).send_keys "Random Person"
+    (@h.wait_until { @h.driver.find_element :name => "fullname" }).send_keys "Lee Lopez"
 
     puts "make sure we get a red flash if we try to activate without filling in the password details"
     (@h.wait_until { @h.driver.find_element :css => "a.main.button" }).click
@@ -121,7 +121,7 @@ describe "sign up on front page and modify account settings" do
     puts "change account settings"
     @h.loginhelper.login_as(random_email, new_password)
     puts "Setting names"
-    @h.loginhelper.set_name("Random", "User")
+    @h.loginhelper.set_name("Robin", "Rodriguez")
     sleep 4
     puts "Looking for change mail button"
     (@h.wait_until { @h.driver.find_element :css => "a.new-mail-button" }).click
