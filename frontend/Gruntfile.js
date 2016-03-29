@@ -1,6 +1,10 @@
 var _ = require("underscore");
+var fs = require("fs");
+var path = require("path");
+var util = require("util");
 var webpackConfig = require("./webpack.config.js");
 var generateVersionId = require("./custom_grunt_tasks/utils/version_id_generator");
+var langFromTexts = fs.readdirSync(path.join(__dirname, "../texts"));
 
 module.exports = function (grunt) {
   require("load-grunt-tasks")(grunt);
@@ -210,6 +214,7 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/bower_components/backbone/backbone.js",
           "<%= yeoman.app %>/bower_components/react/react-with-addons.js",
           "<%= yeoman.app %>/bower_components/moment/moment.js",
+          util.format("<%= yeoman.app %>/bower_components/moment/locale/{%s}.js", langFromTexts.join(",")),
           "<%= yeoman.app %>/bower_components/es6-promise/promise.js",
           "<%= yeoman.app %>/libs/*.js",
           "<%= yeoman.app %>/js/global/cookie.js",
