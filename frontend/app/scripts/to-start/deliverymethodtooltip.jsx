@@ -35,7 +35,7 @@ module.exports = {
      tooltip.append(arrow);
      tooltip.append(body);
 
-     var tooltipWidth = 189;
+     var tooltipWidth = 209;
      var tooltipMargin = 19;
 
      tooltip.css({
