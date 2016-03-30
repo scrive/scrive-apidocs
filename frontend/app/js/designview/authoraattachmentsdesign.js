@@ -42,6 +42,14 @@ var Confirmation = require("../confirmations.js").Confirmation;
       size: "small",
       text: localization.save,
       onClick :function() {
+        var uniquelyNamedAttachments = _.uniq(model.attachments(), function(a) {
+          return a.name();
+        });
+        if (model.attachments().length > uniquelyNamedAttachments.length) {
+          new FlashMessage({type: 'error',
+                            content: localization.signatoryAttachments.uniqueAttachmentNamesError});
+          return false;
+        }
         mixpanel.track('Save attachments', {documentid:document.documentid()});
         document.afterSave( function() {
           var submit = document.setAttachments();
