@@ -83,6 +83,7 @@ kontraMigrations = [
   , createDocumentSealingJobsTable
   , dropBrandedDomainContact
   , addFileNameToSignatoryAttachment
+  , allowManyCopiesOfAuthorAttachmentForSameDocument
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

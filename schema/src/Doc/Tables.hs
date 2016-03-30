@@ -137,14 +137,14 @@ ctMainFile = CompositeType {
 tableAuthorAttachments :: Table
 tableAuthorAttachments = tblTable {
     tblName = "author_attachments"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblColumns = [
       tblColumn { colName = "file_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False }
     , tblColumn { colName = "required", colType = BoolT, colNullable = False }
     ]
-  , tblPrimaryKey = pkOnColumns ["file_id", "document_id"]
+  , tblPrimaryKey = pkOnColumns ["file_id", "document_id", "name"]
   , tblForeignKeys = [
       fkOnColumn "file_id" "files" "id"
     , (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
