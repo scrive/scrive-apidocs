@@ -534,3 +534,12 @@ addFileNameToSignatoryAttachment = Migration {
     , mgrFrom = 7
     , mgrDo = return () -- Empty migration to mark change in ctSignatoryAttachment :: CompositeType
     }
+
+allowManyCopiesOfAuthorAttachmentForSameDocument :: MonadDB m => Migration m
+allowManyCopiesOfAuthorAttachmentForSameDocument = Migration {
+      mgrTable = tableAuthorAttachments
+    , mgrFrom = 3
+    , mgrDo = do
+      runQuery_ $ "ALTER TABLE author_attachments " <> sqlDropPK (tblName tableAuthorAttachments)
+      runQuery_ $ "ALTER TABLE author_attachments " <> sqlAddPK (tblName tableAuthorAttachments) ($fromJust $ pkOnColumns ["file_id", "document_id", "name"])
+    }
