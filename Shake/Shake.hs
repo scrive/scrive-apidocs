@@ -164,6 +164,11 @@ serverBuildRules = do
       else cmd (Shell) $ "cabal configure"
 
   "_build/cabal-build" %>>> do
+    -- Need to rebuild on TeamCity because versioncode for resources that is
+    -- generated in src/Version.hs is used for stuff that is rebuilt with new
+    -- versioncode by `grunt build`
+    tc <- askOracle (TeamCity ())
+    when tc $ need ["cabal-clean"]
     need ["dist/setup-config"]
     needServerHaskellFiles
     cmd (EchoStdout True) "cabal build"
