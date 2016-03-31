@@ -102,7 +102,7 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
                              '&#x60;': '`'};
 
           var escaper = function(match) {
-            return map[match];
+            return unescapeMap[match];
           };
 
           var source = '(?:&amp;|&lt;|&gt;|&quot;\&#x27;|&#x60;)';
