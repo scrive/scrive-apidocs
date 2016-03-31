@@ -228,11 +228,12 @@ $loadScript(src="https://www.vivocha.com/a/scrive/api/vivocha.js")$
 ####
 loadScript=
 <script>
-jQuery(window).load(function(){
-  var script = document.createElement( 'script' );
-  script.type = 'text/javascript';
+document.addEventListener("DOMContentLoaded", function () {
+  var script = document.createElement("script");
+  script.type = "text/javascript";
   script.src = "$src$";
-  jQuery("head").append( script );
-})
+  var head = document.head || document.getElementsByTagName("head")[0];
+  head.appendChild(script);
+});
 </script>
 ####
