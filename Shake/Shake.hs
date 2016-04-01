@@ -255,6 +255,7 @@ sourceDirsFromCabal =
   , "pdftools"
   , "schema/inc"
   , "schema/src"
+  , "server"
   , "src"
   , "test/src"
   ]

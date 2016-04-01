@@ -81,7 +81,7 @@ getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map makeAbs
 -- so turn those cases (/s, /d, /a) into two rules, one with explicit end of line regex match $,
 -- and one rule that matches longer urls with additional path elems after another slash
 exceptions :: String -> [String]
-exceptions s@('/':c:[]) | c `elem` "asd" = ['/':c:'/':[], '/':c:'$':[]]
+exceptions s@('/':c:[]) | c `elem` ("asd"::String) = ['/':c:'/':[], '/':c:'$':[]]
                         | otherwise = [s]
 exceptions s = [s]
 
