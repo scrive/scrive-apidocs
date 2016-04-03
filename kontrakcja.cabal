@@ -61,7 +61,13 @@ Flag enable-routinglist
 
 Library
 
-  Hs-source-dirs: cron/inc cron/schema docconv/src inc mailer/inc mailer/schema mailer/src messenger/inc messenger/schema messenger/src pdftools misc schema/inc schema/src src
+  Hs-source-dirs: backend/cron/inc backend/cron/schema
+                  backend/lib
+                  backend/mailer/inc backend/mailer/schema backend/mailer/src
+                  backend/messenger/inc backend/messenger/schema backend/messenger/src
+                  backend/migrate/inc
+                  backend/misc/schema backend/misc/src
+                  backend/server/schema backend/server/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -288,8 +294,8 @@ Library
                  , KontraPrelude
                  , LangRouting
                  , LiveDocx
-                 , LiveDocxConf
-                 , LiveDocxTypes
+                 , LiveDocx.Conf
+                 , LiveDocx.Types
                  , Log.Configuration
                  , Log.Identifier
                  , Log.Migrations
@@ -308,7 +314,6 @@ Library
                  , Mails.Model
                  , Mails.SendMail
                  , Mails.Tables
-                 , Matrix
                  , MemCache
                  , MessageData
                  , MessengerServerConf
@@ -321,6 +326,8 @@ Library
                  , OAuth.Tables
                  , OAuth.Util
                  , OAuth.View
+                 , PDF.Matrix
+                 , PDF.Model
                  , PadApplication.API
                  , Payments.Action
                  , Payments.Config
@@ -331,7 +338,6 @@ Library
                  , Payments.Stats
                  , Payments.Tables
                  , Payments.View
-                 , PdfModel
                  , Purging.Files
                  , Redirect
                  , Routing
@@ -521,7 +527,7 @@ Library
 
 Executable kontrakcja-server
 
-  Hs-source-dirs: server
+  Hs-source-dirs: backend/server/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -576,7 +582,7 @@ Executable kontrakcja-server
 
 Executable cron
 
-  Hs-source-dirs: cron/src
+  Hs-source-dirs: backend/cron/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -626,7 +632,12 @@ Executable cron
 
 Executable kontrakcja-migrate
 
-  Hs-source-dirs: cron/inc cron/schema inc mailer/inc mailer/schema messenger/inc messenger/schema misc schema/inc schema/src
+  Hs-source-dirs: backend/cron/schema
+                  backend/mailer/schema
+                  backend/messenger/schema
+                  backend/migrate/inc backend/migrate/src
+                  backend/misc/schema backend/misc/src
+                  backend/server/schema
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -701,7 +712,8 @@ Executable kontrakcja-migrate
 
 Executable mailing-server
 
-  Hs-source-dirs: inc mailer/inc mailer/schema mailer/src misc schema/inc
+  Hs-source-dirs: backend/mailer/inc backend/mailer/schema backend/mailer/src
+                  backend/misc/schema backend/misc/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -793,7 +805,8 @@ Executable mailing-server
 
 Executable messenger-server
 
-  Hs-source-dirs: inc messenger/inc messenger/schema messenger/src misc schema/inc src
+  Hs-source-dirs: backend/messenger/inc backend/messenger/schema backend/messenger/src
+                  backend/misc/schema backend/misc/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -881,7 +894,13 @@ Executable messenger-server
 
 Executable kontrakcja-test
 
-  Hs-source-dirs: cron/schema mailer/schema messenger/schema schema/inc schema/src test/src
+  Hs-source-dirs: backend/cron/schema
+                  backend/mailer/schema
+                  backend/messenger/schema
+                  backend/migrate/inc
+                  backend/misc/schema
+                  backend/server/schema
+                  backend/test/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -967,7 +986,9 @@ Executable kontrakcja-test
 
 Executable localization
 
-  Hs-source-dirs: misc inc src localization/src
+  Hs-source-dirs: backend/lib
+                  backend/misc/src
+                  localization/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
@@ -1025,7 +1046,7 @@ Executable routinglist
   else
     buildable:    False
 
-  Hs-source-dirs: routinglist
+  Hs-source-dirs: backend/routinglist
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
