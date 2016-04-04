@@ -6,7 +6,7 @@ var $ = require("jquery");
 $(function () {
   var doc = new Document({
     id: fromTemplate.documentId,
-    signatoryid : fromTemplate.sigLinkId
+    siglinkid: fromTemplate.sigLinkId
   });
 
   // no design for loading.
