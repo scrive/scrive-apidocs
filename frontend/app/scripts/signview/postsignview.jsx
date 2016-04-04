@@ -15,7 +15,7 @@ module.exports = React.createClass({
     },
     isNotInterestedInQuestionnaire: function() {
       // We need to tell this environment somehow that this is a branded domain. This was a quicky fix for LoxySoft and has to be reworked.
-      return null !== /^(backbone|loxysoft|caspeco).scrive.com/.exec(location.host);
+      return null !== /^(backbone|loxysoft|caspeco|api-testbed).scrive.com/.exec(location.host);
     },
     isQuestionaire : function() {
       return !this.isNotInterestedInQuestionnaire() && !this.isHidden();
