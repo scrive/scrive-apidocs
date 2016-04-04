@@ -63,7 +63,7 @@ applyDraftDataToDocument draft actor = do
          dbUpdate $ TemplateFromDocument actor
     documentauthorattachments <$> theDocument >>= \atts -> forM_ atts $ \att -> do
             when_ (not $ (authorattachmentfileid att) `elem` (authorattachmentfileid <$> documentauthorattachments draft)) $ do -- We need to compare fileid - since name is not parsed in V1
-              dbUpdate $ RemoveDocumentAttachment (authorattachmentfileid att) actor
+              dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
     documentsignatorylinks <$> theDocument >>= \siglinks -> case (mergeAuthorDetails siglinks (sortBy compareSL $ documentsignatorylinks draft)) of
          Nothing   -> throwM $ SomeKontraException $ serverError "Problem with author details while sending draft"
          Just sigs -> do

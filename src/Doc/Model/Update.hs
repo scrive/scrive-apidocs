@@ -22,7 +22,7 @@ module Doc.Model.Update
   , ArchiveIdleDocuments(..)
   , unsavedDocumentLingerDays
   , RejectDocument(..)
-  , RemoveDocumentAttachment(..)
+  , RemoveDocumentAttachments(..)
   , ResetSignatoryDetails(..)
   , RestartDocument(..)
   , ProlongDocument(..)
@@ -1617,10 +1617,11 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AddDocu
           sqlWhereEq "id" did
           sqlWhereEq "status" Preparation
 
-data RemoveDocumentAttachment = RemoveDocumentAttachment FileID Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RemoveDocumentAttachment Bool where
-  update (RemoveDocumentAttachment fid _actor) = updateDocumentWithID $ \did -> do
-    runQuery01 $ "DELETE FROM author_attachments WHERE document_id =" <?> did <+> "AND file_id =" <?> fid <+> "AND EXISTS (SELECT 1 FROM documents WHERE id = author_attachments.document_id AND status = " <?> Preparation <+> ")"
+data RemoveDocumentAttachments = RemoveDocumentAttachments FileID Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RemoveDocumentAttachments Bool where
+  update (RemoveDocumentAttachments fid _actor) = updateDocumentWithID $ \did -> do
+    count <- runQuery $ "DELETE FROM author_attachments WHERE document_id =" <?> did <+> "AND file_id =" <?> fid <+> "AND EXISTS (SELECT 1 FROM documents WHERE id = author_attachments.document_id AND status = " <?> Preparation <+> ")"
+    return $ count > 0
 
 -- Remove unsaved drafts (older than 1 week) from db.
 -- Uses chunking to not overload db when there's a lot of old drafts
