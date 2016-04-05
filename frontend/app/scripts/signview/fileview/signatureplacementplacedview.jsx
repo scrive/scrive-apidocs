@@ -76,7 +76,7 @@ var $ = require("jquery");
       var field = placement.field();
       var signatory = field.signatory();
       var doc = signatory.document();
-      var queryPart = doc.currentSignatory() ? "?signature_id=" + doc.currentSignatory().signatoryid()  : "";
+      var queryPart = doc.currentSignatory() ? "?signatory_id=" + doc.currentSignatory().signatoryid()  : "";
       if (field.value()) {
         return field.value()
       } else if (field.signatureFile()) {
