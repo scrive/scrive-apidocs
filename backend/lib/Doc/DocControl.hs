@@ -33,13 +33,12 @@ module Doc.DocControl(
     , handleToStartShow
 ) where
 
-import Control.Concurrent
+import System.Timeout.Lifted
 import Control.Conditional (unlessM, whenM)
-import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.String.Utils (replace,strip)
-import Happstack.Server hiding (simpleHTTP, lookCookieValue)
+import Happstack.Server hiding (lookCookieValue, simpleHTTP, timeout)
 import Log
 import System.Directory
 import System.IO.Temp
@@ -396,34 +395,36 @@ handleFilePages :: Kontrakcja m => FileID -> m Response
 handleFilePages fid = do
   checkFileAccess fid
   mpixelwidth <- readField "pixelwidth"
-  pages <- getRenderedPages fid (fromMaybe legacyWidthInPixels mpixelwidth) RenderingModeWholeDocument
-
-  let pagesRsp = simpleJsonResponse . J.runJSONGen . J.value "pages"
-  case pages of
-    RenderedPages False _ -> do
-      -- Don't wait for rendering to complete, use mutool to extract
-      -- the number of pages quickly.
-      epages <- liftBase . getNumberOfPDFPages =<< getFileIDContents fid
-      case epages of
-        Right pagesNo -> pagesRsp pagesNo
-        Left err -> do
-          logAttention "getNumberOfPDFPages failed" $ object [
-              identifier_ fid
-            , "error" .= err
-            ]
-          internalError
-    RenderedPages True pngpages -> pagesRsp $ length pngpages
+  rp <- getRenderedPages fid (fromMaybe legacyWidthInPixels mpixelwidth) RenderingModeWholeDocument
+  simpleJsonResponse . J.runJSONGen . J.value "pages" $ pagesCount rp
 
 {- |
    Get some html to display the images of the files
    URL: /pages/{fileid}
    Method: GET
-   FIXME: Should probably check for permissions to view
  -}
 showPage :: Kontrakcja m => FileID -> Int -> m Response
-showPage fileid pageno = do
-  checkFileAccess fileid
-  showPage' fileid pageno
+showPage fid pageno = logFile fid $ do
+  checkFileAccess fid
+  mpixelwidth <- readField "pixelwidth"
+  rp <- getRenderedPages fid (fromMaybe legacyWidthInPixels mpixelwidth) RenderingModeWholeDocument
+  if pagesCount rp < pageno
+    then do
+      logInfo "Requested page doesn't exist" $ object [
+          "page" .= pageno
+        , "pages" .= pagesCount rp
+        ]
+      respond404
+    else do
+      page <- getPage rp pageno
+      logInfo "PNG page found" $ object [
+          "page" .= pageno
+        ]
+      return
+        . setHeaderBS "Content-Type" "image/png"
+        -- max-age same as for brandedSignviewImage
+        . setHeaderBS "Cache-Control" "max-age=604800"
+        $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [page]) Nothing
 
 -- | Preview when authorized user is logged in (without magic hash)
 showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
@@ -437,59 +438,35 @@ showPreview docid fileid = do
         return $ Right $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
     else do
         checkFileAccessWith fileid Nothing Nothing (Just docid) Nothing
-        iprev <- preview fileid 0
+        iprev <- preview fileid
         case iprev of
           Just res -> return $ Right res
-          Nothing ->   return $ Left $ LinkDocumentPreview docid Nothing fileid
+          Nothing ->  return $ Left $ LinkDocumentPreview docid Nothing fileid
 
 -- | Preview from mail client with magic hash
 showPreviewForSignatory:: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m (Either KontraLink Response)
 showPreviewForSignatory docid siglinkid sigmagichash fileid = do
     checkFileAccessWith fileid (Just siglinkid) (Just sigmagichash) (Just docid) Nothing
     doc <- dbQuery $ GetDocumentByDocumentID docid
-    iprev <- preview fileid 0
+    iprev <- preview fileid
     case iprev of
          Just res -> return $ Right res
          Nothing ->   return $ Left $ LinkDocumentPreview docid (getMaybeSignatoryLink (doc,siglinkid)) fileid
 
-preview :: Kontrakcja m => FileID -> Int -> m (Maybe Response)
-preview fid value
-  | value > 10 = return Nothing
-  | otherwise  =   do
-        pages <- getRenderedPages fid 150 RenderingModeFirstPageOnly
-        case pages of
-            RenderedPages _ (contents:_) -> do
-                let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
-                return $ Just $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") res
-            _ -> do
-                liftIO $ threadDelay 500000
-                preview fid (value+1)
-
-
-showPage' :: Kontrakcja m => FileID -> Int -> m Response
-showPage' fileid pageno = do
-  mpixelwidth <- readField "pixelwidth"
-  pages <- getRenderedPages fileid (fromMaybe legacyWidthInPixels mpixelwidth) RenderingModeWholeDocument
-  case pages of
-    RenderedPages _ contents | pageno - 1 < length contents -> do
-      let content = contents !! (pageno - 1)
-      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [content]) Nothing
-      logInfo "PNG page found and returned for file" $ object [
-          identifier_ fileid
-        , "page" .= pageno
-        ]
-      return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png")
-             -- max-age same as for brandedSignviewImage
-             $ setHeaderBS (BS.fromString "Cache-Control") (BS.fromString "max-age=604800") res
-
-    RenderedPages False _ -> do
-      return ((toResponse "") { rsCode = 420 })
-    _ -> do
-      logInfo "JPEG page not found in cache, responding 404" $ object [
-          identifier_ fileid
-        , "page" .= pageno
-        ]
-      notFound (toResponse "temporarily unavailable (document has files pending for process)")
+preview :: Kontrakcja m => FileID -> m (Maybe Response)
+preview fid = do
+  rp <- getRenderedPages fid 150 RenderingModeFirstPageOnly
+  when (pagesCount rp /= 1) $ do
+    logAttention "preview has invalid number of pages" $ object [
+        identifier_ fid
+      , "pages" .= pagesCount rp
+      ]
+    internalError
+  timeout 5000000 (getPage rp 1) >>= \case
+    Nothing -> return Nothing
+    Just page -> do
+      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [page]) Nothing
+      return $ Just $ setHeaderBS "Content-Type" "image/png" res
 
 handleDownloadClosedFile :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> String -> m Response
 handleDownloadClosedFile did sid mh _nameForBrowser = do

@@ -16,6 +16,7 @@ module Doc.Rendering
     , getPageSizeOfPDFInPoints
     ) where
 
+import Data.Aeson
 import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Except
@@ -34,6 +35,11 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Unjson as Unjson
 import qualified System.IO.Temp
+import qualified Data.Attoparsec.Text as P
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+import System.Process hiding (readProcessWithExitCode)
+import Doc.Logging
 
 import DB
 import Doc.RenderedPages
@@ -42,9 +48,36 @@ import File.Storage
 import ForkAction
 import Kontra
 import KontraPrelude
-import Log.Identifier
 import qualified Amazon as AWS
 import qualified MemCache as MemCache
+
+data PageInfo = PageInfo {
+    piPage :: !Int
+  , piTime :: !Double
+  } deriving (Eq, Ord, Show)
+
+instance ToJSON PageInfo where
+  toJSON PageInfo{..} = object [
+      "page" .= piPage
+    , "time" .= piTime
+    ]
+
+data RenderingStats = RenderingStats {
+    rsTotal   :: !Double
+  , rsAverage :: !Double
+  , rsFastest :: !PageInfo
+  , rsSlowest :: !PageInfo
+  } deriving (Eq, Ord, Show)
+
+instance ToJSON RenderingStats where
+  toJSON RenderingStats{..} = object [
+      "total"   .= rsTotal
+    , "average" .= rsAverage
+    , "fastest" .= rsFastest
+    , "slowest" .= rsSlowest
+    ]
+
+----------------------------------------
 
 data RemoveJavaScriptSpec = RemoveJavaScriptSpec
     { input          :: String
@@ -60,76 +93,143 @@ unjsonRemoveJavaScriptSpec = Unjson.objectOf $ pure RemoveJavaScriptSpec
 withSystemTempDirectory :: (MonadBaseControl IO m) => String -> (String -> m a) -> m a
 withSystemTempDirectory = liftBaseOp . System.IO.Temp.withSystemTempDirectory
 
+msToSecsM :: P.Parser Double -> P.Parser Double
+msToSecsM = fmap (/ 1000)
 
-readNumberedFiles :: (MonadBaseControl IO m) => (Int -> FilePath) -> Int -> [BS.ByteString] -> m [BS.ByteString]
-readNumberedFiles pathFromNumber currentNumber accum = do
-  econtentx <- E.try (liftBase $ BS.readFile (pathFromNumber currentNumber))
-  case econtentx of
-    Right contentx -> do
-       readNumberedFiles pathFromNumber (succ currentNumber) (contentx : accum)
-    Left (_ :: IOError) -> do
-       -- we could not open this file, it means it does not exists
-       return (reverse accum)
+renderingStatsParser :: P.Parser RenderingStats
+renderingStatsParser = pure RenderingStats
+  <* P.string "total "
+  <*> msToSecsM P.double
+  <* P.string "ms / "
+  <* P.double
+  <* P.string " pages for an average of "
+  <*> msToSecsM P.double
+  <* P.string "ms"
+  <* P.endOfLine
+  <* P.string "fastest "
+  <*> edgeCase
+  <* P.endOfLine
+  <* P.string "slowest "
+  <*> edgeCase
+  where
+    edgeCase :: P.Parser PageInfo
+    edgeCase = pure PageInfo
+      <* P.string "page "
+      <*> P.decimal
+      <* P.string ": "
+      <*> msToSecsM P.double
+      <* P.string "ms"
 
+pageInfoParser :: T.Text -> P.Parser PageInfo
+pageInfoParser pdf = pure PageInfo
+  <* P.string "page "
+  <* P.string pdf
+  <* P.space
+  <*> P.decimal
+  <* P.space
+  <*> msToSecsM P.double
+  <* P.string "ms"
 
 {- |
    Convert PDF to jpeg images of pages
  -}
-runRendering :: (KontraMonad m, MonadLog m, MonadDB m, MonadThrow m, MonadIO m, MonadBaseControl IO m, AWS.AmazonMonad m)
-                     => BS.ByteString
-                     -> FileID
-                     -> Int
-                     -> RenderingMode
-                     -> m RenderedPages
-runRendering fileContent fid widthInPixels renderingMode = do
-  withSystemTempDirectory "mudraw" $ \tmppath -> do
-    let sourcepath = tmppath ++ "/source.pdf"
+runRendering
+  :: forall m. (KontraMonad m, MonadLog m, MonadDB m, MonadThrow m, MonadMask m, MonadBaseControl IO m, AWS.AmazonMonad m)
+  => BS.ByteString
+  -> Int
+  -> RenderingMode
+  -> RenderedPages
+  -> m ()
+runRendering fileContent widthInPixels renderingMode rp = do
+  withSystemTempDirectory "mudraw" $ \tmpPath -> do
+    let sourcePath = tmpPath ++ "/source.pdf"
+    liftBase $ BS.writeFile sourcePath fileContent
+    let pagePath n = tmpPath ++ "/output-" ++ show n ++ ".png"
+        -- Run mutool through stdbuf and set its output buffering to
+        -- line buffering as communication via pipes uses block
+        -- buffering by default and we would not be able to get page
+        -- info immediately.
+        mutoolDraw = (proc "stdbuf" $ concat [
+            ["-oL"]
+          , ["mutool", "draw"]
+          , ["-o", tmpPath ++ "/output-%d.png"]
+          , ["-w", show widthInPixels]
+          , ["-A", "8"]
+          , ["-st"]
+          , [sourcePath]
+          , ["1" | RenderingModeFirstPageOnly <- return renderingMode]
+          ]) {
+            std_out = CreatePipe
+          , std_err = CreatePipe
+          }
 
-    liftIO $ BS.writeFile sourcepath fileContent
+    (Nothing, Just hout, Just herr, ph) <- liftBase $ createProcess_ "mutool draw" mutoolDraw
 
-    let pathOfPage n = tmppath ++ "/output-" ++ show n ++ ".png"
+    let cleanupProcess = do
+          ec <- liftBase $ do
+            hClose hout
+            hClose herr
+            waitForProcess ph
+          logInfo "Rendering completed" $ object [
+              "code" .= show ec
+            ]
 
-    -- Note: Infrstructure here is prepared for existence of
-    -- background thread that will sniff already rendered
-    -- pages. Although it is not that easy to do that, as that thread
-    -- will need to wait for a file (n+1) to appear before reading
-    -- file (n). Potentials for race conditions also abound. Remember
-    -- about final condition as this is not clear when this thread is
-    -- supposed to finish.
+    (`finally` cleanupProcess) $ do
+      pagesOk <- fetchPages pagePath (T.pack sourcePath) (pagesCount rp) hout
+      statsOk <- showStatistics hout
 
-    (exitcode,_outcontent,_errcontent) <-
-      liftIO $ readProcessWithExitCode "mutool"
-               (concat [ ["draw"]
-                       , ["-o", tmppath ++ "/output-%d.png"]
-                       , ["-w", show widthInPixels]
-                       , ["-A", "8"]
-                       , [sourcepath]
-                       , ["1" | RenderingModeFirstPageOnly <- return renderingMode] -- render only first page if so desired
-                       ]) BSL.empty
+      when (not pagesOk || not statsOk) $ do
+        out <- liftBase $ hGetContents hout
+        err <- liftBase $ hGetContents herr
+        logAttention "Unexpected mutool output" $ object [
+            "stdout" .= err
+          , "stderr" .= out
+          ]
+  where
+    showStatistics :: Handle -> m Bool
+    showStatistics h = do
+      stats <- liftBase $ T.hGetContents h
+      case P.parseOnly renderingStatsParser stats of
+        Right rs -> do
+          logInfo "Rendering statistics" $ toJSON rs
+          return True
+        Left err -> do
+          logAttention "Couldn't parse RenderingStats" $ object [
+              "error" .= err
+            , "stdout" .= stats
+            ]
+          return False
 
-    when (exitcode /= ExitSuccess) $
-      logAttention_ "mudraw process for pdf->png render failed, will look for rendered images anyway"
-    pages <- readNumberedFiles pathOfPage 1 []
-    when (null pages) $ do
-      systmp <- liftIO $ getTemporaryDirectory
-      (path, handle) <- liftIO $ openTempFile systmp $ "mudraw-failed-" ++ show fid ++ "-.pdf"
-      logAttention "Cannot mudraw file" $ object [
-          identifier_ fid
-        , "path" .= path
-        ]
-      liftIO $ BS.hPutStr handle fileContent
-      liftIO $ hClose handle
-    return $ RenderedPages True pages
-
+    fetchPages :: (Int -> FilePath) -> T.Text -> Int -> Handle -> m Bool
+    fetchPages pagePath sourcePath n h = go 1
+      where
+        go k | k > n = return True
+        go k = liftBase (hIsEOF h) >>= \case
+          True  -> return False
+          False -> do
+            line <- liftBase $ T.hGetLine h
+            case P.parseOnly (pageInfoParser sourcePath) line of
+              Left err -> logAttention "Couldn't parse PageInfo" $ object [
+                  "stdout" .= line
+                , "error" .= err
+                ]
+              Right info@PageInfo{..} -> localData ["page" .= piPage] $ do
+                econtent <- liftBase . E.try . BS.readFile $ pagePath piPage
+                case econtent of
+                  Right content -> do
+                    putPage rp piPage content >>= \case
+                      True  -> logInfo "Page retrieved successfully" $ toJSON info
+                      False -> logAttention_ "Page already in place"
+                  Left (e :: IOError) -> do
+                    logAttention "Couldn't open page file" $ object [
+                        "error" .= show e
+                      ]
+            go $ k + 1
 
 -- | 'getRenderedPages' returns 'RenderedPages' for document 'fileid'
 -- requested to be rendered with width 'pageWidthInPixels' and also a
 -- flag if full document should be rendered or only first page is
 -- enough.
---
--- This function return immediatelly, so look for 'RenderedPages'
--- first argument to see if the page that is requested has already
--- been rendered. 'RenderedPages' is the final state of rendering.
 --
 -- This function has internal caching system based on 'Context'
 getRenderedPages :: Kontrakcja m
@@ -137,27 +237,28 @@ getRenderedPages :: Kontrakcja m
                  -> Int
                  -> RenderingMode
                  -> m RenderedPages
-getRenderedPages fileid pageWidthInPixels renderingMode = do
+getRenderedPages fid pageWidthInPixels renderingMode = logFile fid $ do
   let clampedPageWidthInPixels =
         min 4000 (max 100 pageWidthInPixels)
   Context{ctxnormalizeddocuments} <- getContext
-  -- Propper action
-  let key = (fileid,clampedPageWidthInPixels,renderingMode)
+  let key = (fid, clampedPageWidthInPixels, renderingMode)
   v <- MemCache.get key ctxnormalizeddocuments
   case v of
-    Just pages -> return pages
+    Just rp -> return rp
     Nothing -> do
-      -- Get file content before forking to possibly avoid fetching
-      -- file twice from Amazon. TODO: Bad workaround, this mechanism
-      -- needs to be rethought.
-      fileContent <- getFileIDContents fileid
-      MemCache.put key (RenderedPages False []) ctxnormalizeddocuments
-      forkAction ("Rendering file #" ++ show fileid) $ do
-        -- TODO: We should report error somewere
-        jpegpages <- runRendering fileContent fileid clampedPageWidthInPixels renderingMode
-        MemCache.put key jpegpages ctxnormalizeddocuments
-      return (RenderedPages False [])
-
+      fileContent <- getFileIDContents fid
+      liftBase (getNumberOfPDFPages fileContent) >>= \case
+        Left err -> do
+          logAttention "getNumberOfPDFPages failed" $ object [
+              "error" .= err
+            ]
+          internalError
+        Right pagesNo -> do
+          rp <- renderedPages pagesNo
+          MemCache.put key rp ctxnormalizeddocuments
+          forkAction "Rendering file" $ do
+            runRendering fileContent clampedPageWidthInPixels renderingMode rp
+          return rp
 
 data FileError = FileSizeError Int Int
                | FileFormatError
