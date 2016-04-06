@@ -1,7 +1,6 @@
 module Transifex.Synch (push, merge, diff, fix, fetchLocal)where
 
 
-import Data.CSV (csvFile)
 import Data.Char (isSpace, isControl)
 import Data.List (isSuffixOf)
 import System.IO

@@ -1,7 +1,6 @@
 module Transifex.Utils (TranslationResource(..), allResources, readResource, translationFile, allLangs, allTargetLangs, sourceLang , encodeTranslationJSON, textsToJSON,textsFromStringJSON, textsFromJSON, Change(..), compareTranslations,parsePushResponse) where
 
 
-import Data.CSV (csvFile)
 import Data.Char (isSpace, isControl)
 import Data.List (isSuffixOf)
 import System.IO
