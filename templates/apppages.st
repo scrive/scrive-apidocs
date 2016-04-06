@@ -92,10 +92,36 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
           var analyticsproperties = $analytics.properties:noescape()$;
 
           // Overwrite with nicer values, like "Proffice & Foo" instead of "Proffice &amp; Foo"
-          var nicePropList = _.map(analyticsproperties, function(value, key) {
-            return [key, _.unescape(value)];
-          });
-          analyticsproperties = _.object(nicePropList);
+          var nicePropList = [];
+
+          var unescapeMap = {'&amp;': '&',
+                             '&lt;': '<',
+                             '&gt;': '>',
+                             '&quot;': '"',
+                             '&#x27;': "'",
+                             '&#x60;': '`'};
+
+          var escaper = function(match) {
+            return unescapeMap[match];
+          };
+
+          var source = '(?:&amp;|&lt;|&gt;|&quot;\&#x27;|&#x60;)';
+          var testRegexp = RegExp(source);
+          var replaceRegexp = RegExp(source, 'g');
+
+          var unescape = function(string) {
+            string = string == null ? '' : '' + string;
+            return testRegexp.test(string) ? string.replace(replaceRegexp, escaper) : string;
+          };
+
+          for (var key in analyticsproperties) {
+            nicePropList.push([key, unescape(analyticsproperties[key])]);
+          }
+          analyticsproperties = {};
+          for (var i = 0; i < nicePropList.length; i++) {
+            var pair = nicePropList[i];
+            analyticsproperties[pair[0]] = pair[1];
+          }
 
           console.log(analyticsproperties);
 
@@ -228,11 +254,12 @@ $loadScript(src="https://www.vivocha.com/a/scrive/api/vivocha.js")$
 ####
 loadScript=
 <script>
-jQuery(window).load(function(){
-  var script = document.createElement( 'script' );
-  script.type = 'text/javascript';
+document.addEventListener("DOMContentLoaded", function () {
+  var script = document.createElement("script");
+  script.type = "text/javascript";
   script.src = "$src$";
-  jQuery("head").append( script );
-})
+  var head = document.head || document.getElementsByTagName("head")[0];
+  head.appendChild(script);
+});
 </script>
 ####

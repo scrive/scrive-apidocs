@@ -280,7 +280,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
     when (not $ (auid == userid user)) $ do
           throwM . SomeKontraException $ serverError "Permission problem. Not an author."
     attachmentFilesWithDetails <- getAttachments 0 =<< theDocument
-    (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachment (authorattachmentfileid att) actor
+    (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
     forM_ attachmentFilesWithDetails $ \(attfile, maad) -> do
       dbUpdate $ AddDocumentAttachment (fromMaybe (T.pack $ filename attfile) (aadName <$> maad))  (fromMaybe False (aadRequired <$> maad)) (fileid attfile) actor
     Ok <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)

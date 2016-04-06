@@ -172,8 +172,8 @@ docStateTests env = testGroup "DocState" [
   testThat "addDocumentAttachment fails if not in preparation" env testAddDocumentAttachmentFailsIfNotPreparation,
   testThat "addDocumentAttachment doesn't fail if there's no attachments" env testAddDocumentAttachmentOk,
 
-  testThat "removeDocumentAttachment fails if not in preparation" env testRemoveDocumentAttachmentFailsIfNotPreparation,
-  testThat "removeDocumentAttachment return False if there's no attachments" env testRemoveDocumentAttachmentOk,
+  testThat "removeDocumentAttachments fails if not in preparation" env testRemoveDocumentAttachmentsFailsIfNotPreparation,
+  testThat "removeDocumentAttachments return False if there's no attachments" env testRemoveDocumentAttachmentsOk,
 
   testThat "UpdateSigAttachments works as advertised" env testUpdateSigAttachmentsAttachmentsOk,
 
@@ -1305,21 +1305,21 @@ testAddDocumentAttachmentOk = replicateM_ 10 $ do
     assertEqual "Author attachment was really attached" [file]
                     . map authorattachmentfileid . documentauthorattachments =<< theDocument
 
-testRemoveDocumentAttachmentFailsIfNotPreparation :: TestEnv ()
-testRemoveDocumentAttachmentFailsIfNotPreparation = replicateM_ 10 $ do
+testRemoveDocumentAttachmentsFailsIfNotPreparation :: TestEnv ()
+testRemoveDocumentAttachmentsFailsIfNotPreparation = replicateM_ 10 $ do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (not . isPreparation) `withDocumentM` do
     --execute
-    success <- randomUpdate $ \t -> RemoveDocumentAttachment (unsafeFileID 0) (systemActor t)
+    success <- randomUpdate $ \t -> RemoveDocumentAttachments (unsafeFileID 0) (systemActor t)
     --assert
     assert $ not success
 
-testRemoveDocumentAttachmentOk :: TestEnv ()
-testRemoveDocumentAttachmentOk = replicateM_ 10 $ do
+testRemoveDocumentAttachmentsOk :: TestEnv ()
+testRemoveDocumentAttachmentsOk = replicateM_ 10 $ do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
     --execute
-    success <- randomUpdate $ \t -> RemoveDocumentAttachment (unsafeFileID 0) (systemActor t)
+    success <- randomUpdate $ \t -> RemoveDocumentAttachments (unsafeFileID 0) (systemActor t)
     --assert
     assert $ not success
 

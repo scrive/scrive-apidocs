@@ -78,21 +78,19 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
         var $window = $(window);
         var $input = $(self.refs.input.getDOMNode());
         if ($window.scrollTop() + $window.height() > $input.offset().top && $window.scrollTop() < $input.offset().top) {
-          // BROWSER FIX: Safari 9.01
-          setTimeout(function () {
-            self.refs.input.focus();
-          }, 1);
+          self.refs.input.focus();
         }
       }
     },
 
     startInlineEditing: function () {
+      var self = this;
       if (this.canSign()) {
         if (this.state.editing) {
           this.focusInput();
         } else {
           this.setState({editing: true}, function () {
-            this.focusInput();
+            self.focusInput();
           });
         }
       }

@@ -77,9 +77,12 @@ smsReminder automatic doc sl = mkSMS doc sl smsdata =<< renderLocalTemplate doc 
 
 smsClosedNotification :: (MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryLink -> Bool -> Bool -> m SMS
 smsClosedNotification doc sl withEmail sealFixed = do
-  mkSMS doc sl None =<< (renderLocalTemplate doc (if sealFixed then templateName "_smsCorrectedNotification" else templateName "_smsClosedNotification") $ do
-    smsFields doc sl
-    F.value "withEmail" withEmail)
+  mkSMS doc sl None =<< (renderLocalTemplate doc template $ smsFields doc sl)
+  where template = case (sealFixed, withEmail) of
+                     (True, True) -> templateName "_smsCorrectedNotificationWithEmail"
+                     (True, False) -> templateName "_smsCorrectedNotification"
+                     (False, True) -> templateName "_smsClosedNotificationWithEmail"
+                     (False, False) -> templateName "_smsClosedNotification"
 
 smsRejectNotification :: (MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryLink -> SignatoryLink -> m SMS
 smsRejectNotification doc sl rejector = do

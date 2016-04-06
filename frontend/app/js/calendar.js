@@ -10,9 +10,9 @@ var $ = require("jquery");
     return (_.map(strings, function (s) { return s.charAt(0).toUpperCase() + s.slice(1);})).join(',');
   };
   $.tools.dateinput.localize(LanguageService.currentLanguage(),
-                             {months: join_and_capitalize(moment_lang_data._months),
+                             {months: join_and_capitalize(moment_lang_data._months.format),
                               shortMonths: join_and_capitalize(moment_lang_data._monthsShort),
-                              days: join_and_capitalize(moment_lang_data._weekdays),
+                              days: join_and_capitalize(moment_lang_data._weekdays.format),
                               shortDays: join_and_capitalize(moment_lang_data._weekdaysShort)});
 })();
 

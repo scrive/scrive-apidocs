@@ -49,7 +49,7 @@ module.exports = Backbone.View.extend({
     box.empty();
 
     if (field.signatureFile()) {
-      var queryPart = doc.currentSignatory() ? "?signature_id=" + doc.currentSignatory().signatoryid()  : "";
+      var queryPart = doc.currentSignatory() ? "?signatory_id=" + doc.currentSignatory().signatoryid()  : "";
       var url = "/api/frontend/documents/" + doc.documentid() + "/files/" + field.signatureFile() +
                 "/image.png" + queryPart;
       box.css("width", width);

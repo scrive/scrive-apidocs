@@ -296,7 +296,7 @@ docApiV2SetAttachments did = logDocument did . api $ do
     -- We fetch a function for checking if attachment was part of document before call. This has to be here - since next step is purging all attachmnets.
     fileWasAlreadAnAttachmnet <- theDocument >>= (\d -> return $ \fid -> fid `elem` (authorattachmentfileid <$> documentauthorattachments d))
 
-    (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachment (authorattachmentfileid att) actor
+    (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
 
     forM_ attachmentDetails $ \ad ->  case (aadFileOrFileParam ad) of
       Left fid -> do

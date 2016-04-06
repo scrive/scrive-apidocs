@@ -246,6 +246,11 @@ var BlockingInfoView = require("./blocking.js").BlockingInfoView;
             var model = view.model;
             var $el = $(view.el);
             $el.unbind('click');
+            // JN requested temporarily disabling blocking for non (free & cc) users
+            var plan = model.plan();
+            if (plan !== "form" && plan !== "free") {
+              return;
+            }
             if(model.isFree() ||
                model.isOverdue() ||
                model.isDunning() ||
@@ -433,7 +438,13 @@ var BlockingInfoView = require("./blocking.js").BlockingInfoView;
                return $(view.el);
             } ,
             shouldBlockDocs: function(n) {
+              // JN requested temporarily disabling blocking for non (free & cc) users
+              var plan = this.model.plan();
+              if (plan === "form" || plan === "free") {
                 return n > model.docsLeft() && !model.isAdminUser();
+              } else {
+                return false;
+              }
             },
             createPopup: function() {
                 view.createPopup();

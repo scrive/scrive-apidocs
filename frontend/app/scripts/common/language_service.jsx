@@ -24,7 +24,7 @@ var moment = require("moment");
       // moment.js uses different lang code for norwegian
       current_lang_code = 'nn';
     }
-    return moment.langData(current_lang_code);
+    return moment.localeData(current_lang_code);
   };
 
   /**
