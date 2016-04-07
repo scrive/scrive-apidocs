@@ -64,6 +64,7 @@ instance ToJSON PageInfo where
 
 data RenderingStats = RenderingStats {
     rsTotal   :: !Double
+  , rsPages   :: !Double
   , rsAverage :: !Double
   , rsFastest :: !PageInfo
   , rsSlowest :: !PageInfo
@@ -72,6 +73,7 @@ data RenderingStats = RenderingStats {
 instance ToJSON RenderingStats where
   toJSON RenderingStats{..} = object [
       "total"   .= rsTotal
+    , "pages"   .= rsPages
     , "average" .= rsAverage
     , "fastest" .= rsFastest
     , "slowest" .= rsSlowest
@@ -93,46 +95,7 @@ unjsonRemoveJavaScriptSpec = Unjson.objectOf $ pure RemoveJavaScriptSpec
 withSystemTempDirectory :: (MonadBaseControl IO m) => String -> (String -> m a) -> m a
 withSystemTempDirectory = liftBaseOp . System.IO.Temp.withSystemTempDirectory
 
-msToSecsM :: P.Parser Double -> P.Parser Double
-msToSecsM = fmap (/ 1000)
-
-renderingStatsParser :: P.Parser RenderingStats
-renderingStatsParser = pure RenderingStats
-  <* P.string "total "
-  <*> msToSecsM P.double
-  <* P.string "ms / "
-  <* P.double
-  <* P.string " pages for an average of "
-  <*> msToSecsM P.double
-  <* P.string "ms"
-  <* P.endOfLine
-  <* P.string "fastest "
-  <*> edgeCase
-  <* P.endOfLine
-  <* P.string "slowest "
-  <*> edgeCase
-  where
-    edgeCase :: P.Parser PageInfo
-    edgeCase = pure PageInfo
-      <* P.string "page "
-      <*> P.decimal
-      <* P.string ": "
-      <*> msToSecsM P.double
-      <* P.string "ms"
-
-pageInfoParser :: T.Text -> P.Parser PageInfo
-pageInfoParser pdf = pure PageInfo
-  <* P.string "page "
-  <* P.string pdf
-  <* P.space
-  <*> P.decimal
-  <* P.space
-  <*> msToSecsM P.double
-  <* P.string "ms"
-
-{- |
-   Convert PDF to jpeg images of pages
- -}
+-- |Convert PDF to PNG images of pages
 runRendering
   :: forall m. (KontraMonad m, MonadLog m, MonadDB m, MonadThrow m, MonadMask m, MonadBaseControl IO m, AWS.AmazonMonad m)
   => BS.ByteString
@@ -225,6 +188,44 @@ runRendering fileContent widthInPixels renderingMode rp = do
                         "error" .= show e
                       ]
             go $ k + 1
+
+    msToSecsM :: P.Parser Double -> P.Parser Double
+    msToSecsM = fmap (/ 1000)
+
+    renderingStatsParser :: P.Parser RenderingStats
+    renderingStatsParser = pure RenderingStats
+      <* P.string "total "
+      <*> msToSecsM P.double
+      <* P.string "ms / "
+      <*> P.double
+      <* P.string " pages for an average of "
+      <*> msToSecsM P.double
+      <* P.string "ms"
+      <* P.endOfLine
+      <* P.string "fastest "
+      <*> edgeCase
+      <* P.endOfLine
+      <* P.string "slowest "
+      <*> edgeCase
+      where
+        edgeCase :: P.Parser PageInfo
+        edgeCase = pure PageInfo
+          <* P.string "page "
+          <*> P.decimal
+          <* P.string ": "
+          <*> msToSecsM P.double
+          <* P.string "ms"
+
+    pageInfoParser :: T.Text -> P.Parser PageInfo
+    pageInfoParser pdf = pure PageInfo
+      <* P.string "page "
+      <* P.string pdf
+      <* P.space
+      <*> P.decimal
+      <* P.space
+      <*> msToSecsM P.double
+      <* P.string "ms"
+
 
 -- | 'getRenderedPages' returns 'RenderedPages' for document 'fileid'
 -- requested to be rendered with width 'pageWidthInPixels' and also a

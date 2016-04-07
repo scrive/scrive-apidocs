@@ -143,8 +143,8 @@ logRequest rq maybeInputsBody = [
 -- It has to be done outside of database connection, because database
 -- connection needs to be dropped between retries to allow for commits
 -- to take place.
-enhanceYourCalm :: (MonadLog m, MonadIO m) => m Response -> m Response
-enhanceYourCalm action = enhanceYourCalmWorker (300::Int)
+_enhanceYourCalm :: (MonadLog m, MonadIO m) => m Response -> m Response
+_enhanceYourCalm action = enhanceYourCalmWorker (300::Int)
   where
     enhanceYourCalmWorker 0 = action
     enhanceYourCalmWorker n = do
@@ -172,7 +172,8 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
   logInfo_ "Incoming request, decoding body"
   withDecodedBody bodyPolicy $ do
     rq <- askRq
-    enhanceYourCalm . withPostgreSQL (connsource appGlobals $ connTracker ["handler_id" .= handlerID]) $ do
+    let routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
+    (res, mdres, ConnectionStats{..}, handlerTime) <- withPostgreSQL (connsource appGlobals $ connTracker ["handler_id" .= handlerID]) $ do
       logInfo_ "Retrieving session"
       session <- getCurrentSession
       logInfo_ "Initializing context"
@@ -186,10 +187,9 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
       -- access/update session from a row that was previously locked.
       commit
 
-      let routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
       logInfo "Handler started" $ object routeLogData
 
-      localData [identifier_ $ sesID session] $ do
+      (res, mdres, handlerTime) <- localData [identifier_ $ sesID session] $ do
         startTime <- liftIO currentTime
         (eres, ctx') <- routeHandlers ctx
         finishTime <- liftIO currentTime
@@ -201,33 +201,37 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
           updateSession session (ctxsessionid ctx') (userid <$> ctxmaybeuser ctx') (userid <$> ctxmaybepaduser ctx')
 
         -- Make sure response is well defined before passing it further.
-        res <- contentLength <$> eres `deepseq` case eres of
+        res <- eres `deepseq` case eres of
           Right response -> return response
           Left response -> do
             rollback -- if exception was thrown, rollback everything
             return response
 
-        -- Here we show in debug log some statistics that should help
-        -- optimize code and instantly see if there is something
-        -- wrong. Measurements are not perfect, for example time is not
-        -- full response time, it is just the part that is under
-        -- application control. That is good because we want to stress
-        -- places that can be fixed.
+        return (res, ctxdelayedresponse ctx', timeDiff finishTime startTime)
 
-        ConnectionStats{..} <- getConnectionStats
-        realFinishTime <- liftIO getCurrentTime
-        logInfo "Handler finished" . object $ [
-            "statistics" .= object [
-                "queries" .= statsQueries
-              , "rows"    .= statsRows
-              , "values"  .= statsValues
-              , "params"  .= statsParams
-              ]
-          , "time" .= timeDiff finishTime startTime
-          , "full_time" .= timeDiff realFinishTime realStartTime
-          ] ++ routeLogData
+      stats <- getConnectionStats
+      return (res, mdres, stats, handlerTime)
 
-        return res
+    -- Override response with delayed one if appropriate.
+    finalResponse <- contentLength <$> case mdres of
+      Nothing -> return res
+      Just dr -> do
+        logInfo_ "Waiting for delayed response"
+        fromMaybe res <$> unDelayedResponse dr
+
+    realFinishTime <- liftIO getCurrentTime
+    logInfo "Handler finished" . object $ [
+        "statistics" .= object [
+            "queries" .= statsQueries
+          , "rows"    .= statsRows
+          , "values"  .= statsValues
+          , "params"  .= statsParams
+          ]
+      , "time" .= handlerTime
+      , "full_time" .= timeDiff realFinishTime realStartTime
+      ] ++ routeLogData
+
+    return finalResponse
   where
     timeDiff :: UTCTime -> UTCTime -> Double
     timeDiff t = realToFrac . diffUTCTime t
@@ -381,5 +385,6 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , ctxbrandeddomain = brandeddomain
         , ctxsalesforceconf = getSalesforceConf appConf
         , ctxnetsconfig = netsConfig appConf
+        , ctxdelayedresponse = Nothing
         , ctxthreadjoins = []
         }

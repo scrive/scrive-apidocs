@@ -1,5 +1,6 @@
 module Context (
-    Context(..)
+    DelayedResponse(..)
+  , Context(..)
   , ctxDomainUrl
   , getContextUser
   , anonymousContext
@@ -9,6 +10,9 @@ module Context (
 import qualified Control.Concurrent.Thread as T
 import qualified Data.ByteString as BS
 
+import Happstack.Server (Response)
+import Control.Monad.Trans.Control
+import Log.Class
 import BrandedDomain.BrandedDomain
 import Branding.Cache
 import Doc.RenderedPages
@@ -24,7 +28,6 @@ import LiveDocx (LiveDocxConf(..))
 import MagicHash (MagicHash)
 import MailContext (MailContext(..))
 import Mails.MailsConfig
-import MinutesTime
 import Payments.Config (RecurlyConfig)
 import Salesforce.Conf
 import ServerUtils.BrandedImagesCache
@@ -33,6 +36,13 @@ import Templates
 import User.Email
 import User.Model
 import qualified MemCache
+
+-- | Action that generates Response after database connection is no longer held
+-- by the request handler. If present in 'Context', it will overwrite Response
+-- object returned by standard means.
+newtype DelayedResponse = DelayedResponse {
+    unDelayedResponse :: forall m. (MonadLog m, MonadBaseControl IO m) => m (Maybe Response)
+  }
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -67,6 +77,7 @@ data Context = Context
     , ctxbrandeddomain       :: BrandedDomain
     , ctxsalesforceconf      :: SalesforceConf
     , ctxnetsconfig          :: Maybe NetsConfig
+    , ctxdelayedresponse     :: Maybe DelayedResponse
     -- | Contains actions that join threads spawned with forkAction
     , ctxthreadjoins       :: [IO (T.Result ())]
     }

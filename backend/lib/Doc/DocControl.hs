@@ -48,7 +48,6 @@ import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length, take)
-import qualified Data.Map as Map
 import qualified Data.Traversable as T
 import qualified Text.JSON.Gen as J
 
@@ -404,57 +403,60 @@ handleFilePages fid = do
    Method: GET
  -}
 showPage :: Kontrakcja m => FileID -> Int -> m Response
-showPage fid pageno = logFile fid $ do
+showPage fid pageNo = logFile fid $ do
   checkFileAccess fid
   mpixelwidth <- readField "pixelwidth"
   rp <- getRenderedPages fid (fromMaybe legacyWidthInPixels mpixelwidth) RenderingModeWholeDocument
-  if pagesCount rp < pageno
+  if pagesCount rp < pageNo
     then do
       logInfo "Requested page doesn't exist" $ object [
-          "page" .= pageno
+          "page" .= pageNo
         , "pages" .= pagesCount rp
         ]
       respond404
     else do
-      page <- getPage rp pageno
-      logInfo "PNG page found" $ object [
-          "page" .= pageno
-        ]
-      return
-        . setHeaderBS "Content-Type" "image/png"
-        -- max-age same as for brandedSignviewImage
-        . setHeaderBS "Cache-Control" "max-age=604800"
-        $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [page]) Nothing
+      -- Wait for the page after database connection is freed and
+      -- return 420 if it's not there in 30 seconds.
+      modifyContext $ \ctx -> ctx { ctxdelayedresponse = Just $ returnPage rp }
+      return $ (toResponse "") { rsCode = 420 }
+  where
+    returnPage rp = DelayedResponse $ localData ["page" .= pageNo] $ do
+      logInfo_ "Retrieving rendered page"
+      timeout 30000000 (getPage rp pageNo) >>= \case
+        Nothing -> do
+          logInfo_ "Page not found"
+          return Nothing
+        Just page -> do
+          logInfo_ "Page found"
+          return . Just
+            -- max-age same as for brandedSignviewImage
+            . setHeaderBS "Cache-Control" "max-age=604800"
+            . toResponseBS "image/png" $ BSL.fromStrict page
 
 -- | Preview when authorized user is logged in (without magic hash)
-showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
-showPreview docid fileid = do
-   guardLoggedIn
-   _ <- getDocByDocID docid
-   if (fileid == (unsafeFileID 0))
+showPreview :: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
+showPreview did fid = logDocumentAndFile did fid $ do
+  guardLoggedIn
+  void $ getDocByDocID did
+  if fid == unsafeFileID 0
     then do
-        emptyPreview <- liftIO $ BS.readFile "frontend/app/img/empty-preview.jpg"
-        let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [emptyPreview]) Nothing
-        return $ Right $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/jpeg") res
+      emptyPreview <- liftIO $ BS.readFile "frontend/app/img/empty-preview.jpg"
+      return . Right . toResponseBS "image/jpeg" $ BSL.fromStrict emptyPreview
     else do
-        checkFileAccessWith fileid Nothing Nothing (Just docid) Nothing
-        iprev <- preview fileid
-        case iprev of
-          Just res -> return $ Right res
-          Nothing ->  return $ Left $ LinkDocumentPreview docid Nothing fileid
+      checkFileAccessWith fid Nothing Nothing (Just did) Nothing
+      addDelayedResponsePreview fid
+      return . Left $ LinkDocumentPreview did Nothing fid
 
 -- | Preview from mail client with magic hash
-showPreviewForSignatory:: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m (Either KontraLink Response)
-showPreviewForSignatory docid siglinkid sigmagichash fileid = do
-    checkFileAccessWith fileid (Just siglinkid) (Just sigmagichash) (Just docid) Nothing
-    doc <- dbQuery $ GetDocumentByDocumentID docid
-    iprev <- preview fileid
-    case iprev of
-         Just res -> return $ Right res
-         Nothing ->   return $ Left $ LinkDocumentPreview docid (getMaybeSignatoryLink (doc,siglinkid)) fileid
+showPreviewForSignatory :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m KontraLink
+showPreviewForSignatory did slid mh fid = logDocumentAndFile did fid $ do
+  checkFileAccessWith fid (Just slid) (Just mh) (Just did) Nothing
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  addDelayedResponsePreview fid
+  return $ LinkDocumentPreview did (getMaybeSignatoryLink (doc, slid)) fid
 
-preview :: Kontrakcja m => FileID -> m (Maybe Response)
-preview fid = do
+addDelayedResponsePreview :: Kontrakcja m => FileID -> m ()
+addDelayedResponsePreview fid = do
   rp <- getRenderedPages fid 150 RenderingModeFirstPageOnly
   when (pagesCount rp /= 1) $ do
     logAttention "preview has invalid number of pages" $ object [
@@ -462,11 +464,16 @@ preview fid = do
       , "pages" .= pagesCount rp
       ]
     internalError
-  timeout 5000000 (getPage rp 1) >>= \case
-    Nothing -> return Nothing
-    Just page -> do
-      let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [page]) Nothing
-      return $ Just $ setHeaderBS "Content-Type" "image/png" res
+  modifyContext $ \ctx -> ctx {
+      ctxdelayedresponse = Just $ returnPage rp
+    }
+  where
+    returnPage rp = DelayedResponse $ logFile fid $ do
+      logInfo_ "Retrieving preview"
+      timeout 5000000 (getPage rp 1) >>= \case
+        Nothing -> return Nothing
+        Just page -> return . Just
+          . toResponseBS "image/png" $ BSL.fromStrict page
 
 handleDownloadClosedFile :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> String -> m Response
 handleDownloadClosedFile did sid mh _nameForBrowser = do
