@@ -1,1 +1,0 @@
-runghc -isrc src\Main.hs

@@ -1,1 +1,0 @@
-ghci -isrc src\Main.hs
