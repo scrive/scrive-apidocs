@@ -103,6 +103,9 @@ var Field = exports.Field = Backbone.Model.extend({
     isClosed : function() {
         return this.signatory() && this.signatory().document() && this.signatory().document().pending() && this.get("hadValueWhenCreated");
     },
+    hasDataForSigning: function() {
+        return !this.isClosed() && (!this.isSignature() || this.value())
+    },
     placements : function() {
         return this.get("placements");
     },
