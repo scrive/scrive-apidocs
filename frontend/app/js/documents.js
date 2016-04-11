@@ -253,8 +253,9 @@ var Document = exports.Document = Backbone.Model.extend({
     fieldsForSigning : function() {
         var fields = [];
         _.each(this.currentSignatory().fields(), function(field) {
-            if (field.isClosed()) return;
-            fields.push(field.dataForSigning());
+            if (field.hasDataForSigning()) {
+              fields.push(field.dataForSigning());
+            }
         });
         return fields;
     },
