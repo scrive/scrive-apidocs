@@ -208,7 +208,6 @@ var _ = require("underscore");
             autoComplete={this.props.autocomplete ? "on" : "off"}
             style={inputStyle}
             readOnly={this.props.readonly}
-            disabled={this.props.readonly}
             tabIndex={this.props.tabIndex}
             className={fakePlaceholder ? "grayed" : ""}
             placeholder={this.props.infotext}
