@@ -41,13 +41,17 @@ createSender (SendersConfig getConf) = Sender {
   sendSMS = \sms@ShortMessage{smProvider} -> sendSMSHelper (getConf smProvider) sms
 }
 
+clearMobileNumber :: String -> String
+clearMobileNumber = filter (\c -> not (c `elem` " -()."))
+
 sendSMSHelper :: (MonadDB m, MonadThrow m, CryptoRNG m, MonadBase IO m, MonadIO m, MonadLog m) => SenderConfig -> ShortMessage -> m Bool
 sendSMSHelper GlobalMouthSender{..} ShortMessage{..} = localData [identifier_ smID] $ do
+  let clearmsisdn = clearMobileNumber smMSISDN
   logInfo "Sending SMS" $ object [
       "sender"     .= ("GlobalMouth" :: String)
     , "provider"   .= show smProvider
     , "originator" .= smOriginator
-    , "msisdn"     .= smMSISDN
+    , "msisdn"     .= smMSISDN -- original/non-clean format
     , "body"       .= smBody
     , "data"       .= smData
     , "attempts"   .= smAttempts
@@ -55,7 +59,7 @@ sendSMSHelper GlobalMouthSender{..} ShortMessage{..} = localData [identifier_ sm
   let latin_user = toLatin gmSenderUser
       latin_password = toLatin gmSenderPassword
       latin_originator = toLatin smOriginator
-      latin_msisdn = toLatin smMSISDN
+      latin_msisdn = toLatin clearmsisdn
       latin_body = toLatin smBody
       hash = md5s . Str $ concat [
           latin_user
@@ -75,17 +79,18 @@ sendSMSHelper GlobalMouthSender{..} ShortMessage{..} = localData [identifier_ sm
         , "dlr=true", "&"
         , "ref=", show smID
         ]
-  (success, _) <- curlSMSSender [url] smMSISDN
+  (success, _) <- curlSMSSender [url] clearmsisdn
   return success
 
 sendSMSHelper TeliaCallGuideSender{..} ShortMessage{..} = localData [identifier_ smID] $ do
   -- Telia CallGuide doesn't want leading +
   let msisdn = filter (/='+') smMSISDN
+  let clearmsisdn = clearMobileNumber msisdn
   logInfo "Sending SMS" $ object [
       "sender"     .= ("TeliaCallGuide" :: String)
     , "provider"   .= show smProvider
     , "originator" .= smOriginator
-    , "msisdn"     .= smMSISDN
+    , "msisdn"     .= smMSISDN -- original/non-clean format
     , "body"       .= smBody
     , "data"       .= smData
     , "attempts"   .= smAttempts
@@ -95,11 +100,11 @@ sendSMSHelper TeliaCallGuideSender{..} ShortMessage{..} = localData [identifier_
           tcgSenderUrl
         , "?", "correlationId=", take 100 . show $ smID -- Telia Callguide has a 100 char limit on this
         , "&", "originatingAddress=", take 11 . urlEncode . toLatin $ smOriginator -- Telia Callguide has 11 alphanum char limit on this
-        , "&", "destinationAddress=", urlEncode . toLatin $ msisdn
+        , "&", "destinationAddress=", urlEncode . toLatin $ clearmsisdn
         , "&", "userData=", urlEncode . toLatin $ smBody
         , "&", "statusReportFlags=1"
         ]
-  (success, resp) <- curlSMSSender ["--user", userpass, url] msisdn
+  (success, resp) <- curlSMSSender ["--user", userpass, url] clearmsisdn
   -- Example response from Telia CallGuide:
   -- (see Telia CallGuide SMS Interface Extended Interface Specification)
   -- (should be here https://drive.google.com/drive/folders/0B8akyOlg6VShRnJOYVI1N2FaNU0)
@@ -121,15 +126,16 @@ sendSMSHelper TeliaCallGuideSender{..} ShortMessage{..} = localData [identifier_
   return (success && res)
 
 sendSMSHelper LocalSender{..} ShortMessage{..} = localData [identifier_ smID] $ do
+  let clearmsisdn = clearMobileNumber smMSISDN
   let matchResult = (match (makeRegex ("https?://[a-zA-Z:0-9.-]+/[a-zA-Z_:/0-9#?-]+" :: String) :: Regex) (smBody :: String) :: MatchResult String)
   let withClickableLinks = mrBefore matchResult ++ "<a href=\"" ++ mrMatch matchResult ++ "\">" ++ mrMatch matchResult ++ "</a>" ++ mrAfter matchResult
-  let content = "<html><head><title>SMS - " ++ show smID ++ " to " ++ smMSISDN ++ "</title></head><body>" ++
+  let content = "<html><head><title>SMS - " ++ show smID ++ " to " ++ clearmsisdn ++ "</title></head><body>" ++
                 "ID: " ++ show smID ++ "<br>" ++
                 "Data: " ++ show smData ++ "<br>" ++
                 "Provider: " ++ show smProvider ++ "<br>" ++
                 "<br>" ++
                 "Originator: " ++ smOriginator ++ "<br>" ++
-                "MSISDN: " ++ smMSISDN ++ "<br>" ++
+                "MSISDN: " ++ clearmsisdn ++ "<br>" ++
                 "<br>" ++
                 withClickableLinks ++
                 "</body></html>"

@@ -461,11 +461,11 @@ asValidPhone input =
 
 asValidPhoneForSMS :: String -> Result String
 asValidPhoneForSMS input =
-    filterOutCharacters " -()." input
+    stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 20
     >>= checkLengthIsMin 6
-    >>= checkOnly (isDigit : map (==) "+")
+    >>= checkOnly (isDigit : map (==) "+ -().")
     >>= (\str -> if take 1 str == "+"
                  then return str
                  else Bad)

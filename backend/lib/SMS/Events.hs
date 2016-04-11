@@ -48,7 +48,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
 processEvents :: Scheduler ()
-processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, msmsType) -> do
+processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, msmsType, smsOrigMsisdn) -> do
   let smsType = fromMaybe None $ maybeRead msmsType
       ids = case smsType of
           Invitation did slid -> [identifier_ slid, identifier_ did]
@@ -60,10 +60,10 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, m
           , identifier_ smsid
           , "event_type" .= show eventType
           ]
-    processEvent (eid, smsid, eventType, smsType)
+    processEvent (eid, smsid, eventType, smsType, smsOrigMsisdn)
   )
   where
-    processEvent (eid, _, eventType, Invitation _did slid ) = do
+    processEvent (eid, _, eventType, Invitation _did slid, smsOrigMsisdn) = do
       dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
         _ <- dbUpdate $ MarkSMSEventAsRead eid
         msl <- getSigLinkFor slid <$> theDocument
@@ -84,14 +84,15 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, m
                   identifier_ slid
                 , "signatory_phone" .= signphone
                 , "event_phone" .= phone
+                , "sms_original_phone" .= smsOrigMsisdn
                 ]
               theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case ev of
                 SMSDelivered -> handleDeliveredInvitation slid
-                SMSUndelivered _ -> when (signphone == phone) $ do
+                SMSUndelivered _ -> when (signphone == smsOrigMsisdn) $ do
                   handleUndeliveredSMSInvitation bd host mc slid
         handleEv eventType
 
-    processEvent (eid, _, eventType, SMSPinSendout slid) = do
+    processEvent (eid, _, eventType, SMSPinSendout slid, smsOrigMsisdn) = do
       dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
         _ <- dbUpdate $ MarkSMSEventAsRead eid
         templates <- getGlobalTemplates
@@ -100,6 +101,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, m
           (SMSEvent phone SMSDelivered, Just sl) -> runTemplatesT (def, templates) $ do
             logInfo "SMS with PIN delivered" $ object [
                 "recipient" .= phone
+              , "sms_original_phone" .= smsOrigMsisdn
               ]
             time <- currentTime
             let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
@@ -107,11 +109,11 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, m
               SMSPinDeliveredEvidence
               (return ())
               (Just sl)
-              (Just phone)
+              (Just smsOrigMsisdn)
               (actor)
           _ -> return ()
 
-    processEvent (eid, _ , _, _) = do
+    processEvent (eid, _ , _, _, _) = do
       _ <- dbUpdate $ MarkSMSEventAsRead eid
       return ()
 

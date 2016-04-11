@@ -107,7 +107,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEventForTeliaID Bo
       sqlSet "event" ev
 
 data GetUnreadSMSEvents = GetUnreadSMSEvents
-instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID, SMSEvent, String)] where
+instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID, SMSEvent, String, String)] where
   query GetUnreadSMSEvents = do
     runQuery_ . sqlSelect "sms_events" $ do
       sqlJoinOn "smses" "smses.id = sms_events.sms_id"
@@ -116,6 +116,7 @@ instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID,
       sqlResult "sms_events.sms_id"
       sqlResult "sms_events.event"
       sqlResult "smses.data"
+      sqlResult "smses.msisdn"
 
       sqlWhere "sms_events.event_read IS NULL"
       sqlOrderBy "sms_events.id"

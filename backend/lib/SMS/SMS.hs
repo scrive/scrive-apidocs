@@ -34,7 +34,7 @@ scheduleSMS :: (MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
 scheduleSMS doc SMS{..} = do
   when (null smsMSISDN) $ do
     $unexpectedErrorM "no mobile phone number defined"
-  sid <- dbUpdate $ CreateSMS smsProvider (fixOriginator smsOriginator) (fixPhoneNumber smsMSISDN) smsBody (show smsData)
+  sid <- dbUpdate $ CreateSMS smsProvider (fixOriginator smsOriginator) smsMSISDN smsBody (show smsData)
   -- charge company of the author of the document for the smses
   dbUpdate $ ChargeCompanyForSMS (documentid doc) smsProvider sms_count
   logInfo "SMS scheduled for sendout" $ object [
@@ -60,16 +60,6 @@ scheduleSMS doc SMS{..} = do
                            (count, 0) -> count
                            (count, _) -> count + 1
       _ -> 1
-
-fixPhoneNumber :: String -> String
-fixPhoneNumber = filter goodChars
-  where
-    goodChars ' ' = False
-    goodChars '-' = False
-    goodChars '(' = False
-    goodChars ')' = False
-    goodChars _   = True
-
 
 fixOriginator :: String -> String
 fixOriginator s = notEmpty $ map fixChars $ take 11 s
