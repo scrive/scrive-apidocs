@@ -14,7 +14,9 @@ var $ = require("jquery");
       size        : string, tiny | small | big
       textcolor   : string, color for text on button, else default value for predefined color will be used.
       width       : integer, final width of button, if not set, button will adjust to text
-      className    : additional css classes
+      className   : additional css classes
+      extensions  : list of strings of allowed file extensions
+      unsupportedFileMessage: string with message to display when uploading failed due to filetype
       style       : style object (react format)
 
  *
@@ -34,6 +36,8 @@ var $ = require("jquery");
       width       : React.PropTypes.number,
       className   : React.PropTypes.string,
       style       : React.PropTypes.object,
+      extensions  : React.PropTypes.list,
+      unsupportedFileMessage: React.PropTypes.string,
       onUploadComplete : React.PropTypes.func
     },
     getDefaultProps : function() {
@@ -42,6 +46,8 @@ var $ = require("jquery");
         "text"      : "",
         "color"     : "green",
         "size"      : "small",
+        "extensions": ["png", "jpg", "jpeg"],
+        "unsupportedFileMessage": localization.imageFileFormatNotSpported,
         "style"     : {}
       };
     },
@@ -50,10 +56,11 @@ var $ = require("jquery");
       var submit = new Submit({
         method: 'POST',
         url: '/serialize_image',
+        extensions: self.props.extensions.join(","),
         ajax: true,
         ajaxerror: function (rs) {
           if (rs.status === 400) {
-            new FlashMessage({type: "error", content: localization.imageFileFormatNotSpported});
+            new FlashMessage({type: "error", content: self.props.unsupportedFileMessage});
           }
         },
         ajaxsuccess: function (rs) {

@@ -23,6 +23,8 @@ module.exports = React.createClass({
                 text={self.props.uploadText} 
                 width={160}
                 size="tiny"
+                unsupportedFileMessage={localization.imageFileFormatNotSpportedIco}
+                extensions={["png", "ico"]}
                 onUploadComplete={function(image) {
                   self.props.setValue(image);
                 }}

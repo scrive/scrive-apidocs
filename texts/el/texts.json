@@ -606,6 +606,7 @@
 "_historyParty":"Μετέχων",
 "_historyTime":"Ώρα",
 "_imageFileFormatNotSpported":"",
+"_imageFileFormatNotSpportedIco":"",
 "_internalServerError":"<h1>Υπήρξε κάποιο πρόβλημα</h1><h4>Αν το πρόβλημα παραμένει παρακαλώ επικοινωνήστε με την ομάδα υποστήριξης στο support@scrive.com ή +46 8 519 779 00.</h4> ",
 "_invalidAttachments":"Λυπούμαστε, αυτή η μορφή αρχείου δεν υποστηρίζεται. Παρακαλώ επιλέξτε ένα αρχείο PDF αντ΄ αυτού. ",
 "_invitationMailDeferredContentBodyFirst":"Δυστυχώς αναμένουμε δυσκολίες στην παράδοση της πρόσκλησης ηλεκτρονικής υπογραφής στους <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Είτε η διεύθυνση email τους είναι λανθασμένη ή ο διακομιστής των email τους αντιμετωπίζει προβλήματα.",

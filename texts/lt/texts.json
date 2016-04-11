@@ -606,6 +606,7 @@
 "_historyParty":"Šalis",
 "_historyTime":"Laikas",
 "_imageFileFormatNotSpported":"Failo formatas nepalaikomas. Vietoj jo rinkitės paveikslėlį (PNG / JPG).",
+"_imageFileFormatNotSpportedIco":"",
 "_internalServerError":"<h1>Kažkas nepavyko</h1><h4>Jei sutrikimas kartojasi, prašom susisiekti su pagalbos tarnyba el. paštu support@scrive.com arba +46 8 519 779 00.</h4>",
 "_invalidAttachments":"Atsiprašome, šis failo formatas nepalaikomas. Prašom rinktis PDF formato failą.",
 "_invitationMailDeferredContentBodyFirst":"Deja, mums nepavyksta nusiųsti pasiūlymo pasirašyti el. parašu <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Gali būti, kad neteisingas el. pašto adresas arba neveikia gavėjo pašto tarnybinė stotis.",

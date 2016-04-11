@@ -1296,6 +1296,7 @@ javascriptLocalisation =
           }
       },
       notNamedParty : "$_notNamedParty()$",
+      imageFileFormatNotSpportedIco : "$_imageFileFormatNotSpportedIco()$",
       imageFileFormatNotSpported : "$_imageFileFormatNotSpported()$"
     };
 ###

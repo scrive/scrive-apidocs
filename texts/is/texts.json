@@ -606,6 +606,7 @@
 "_historyParty":"Aðili",
 "_historyTime":"Tími",
 "_imageFileFormatNotSpported":"",
+"_imageFileFormatNotSpportedIco":"",
 "_internalServerError":"<h1>Eitthvað gekk ekki sem skyldi</h1><h4>Ef vandamálið er viðvarandi skaltu hafa samband á netfangið support@scrive.com eða +46 8 519 779 00.</h4>",
 "_invalidAttachments":"Því miður er þetta skráarsnið ekki stutt. Vinsamlegast veldu PDF-skrá í staðinn.",
 "_invitationMailDeferredContentBodyFirst":"Því miður eigum við í erfiðleikum með að afhenda boð um rafræna undirskrift til <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Annað hvort er netfangið ekki rétt eða tölvupóstþjónn viðkomandi á við erfiðleika að stríða.",

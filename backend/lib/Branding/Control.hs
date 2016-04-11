@@ -116,7 +116,7 @@ loginLogo :: Kontrakcja m => BrandedDomainID -> String -> m Response
 loginLogo bdid _ = do
   bd <- dbQuery $ GetBrandedDomainByID bdid
   theme <- dbQuery $ GetTheme (bdLoginTheme bd)
-  return (pngResponse $ themeLogo theme)
+  return (imageResponse $ themeLogo theme)
 
 serviceLogo :: Kontrakcja m => BrandedDomainID -> String -> String -> m Response
 serviceLogo bdid uidstr _ = do
@@ -126,7 +126,7 @@ serviceLogo bdid uidstr _ = do
       Nothing -> return Nothing
       Just uid -> dbQuery $ GetUserByID uid
   theme <- getServiceTheme bdid muser
-  return (pngResponse $ themeLogo theme)
+  return (imageResponse $ themeLogo theme)
 
 emailLogo :: Kontrakcja m => BrandedDomainID -> UserID -> String -> m Response
 emailLogo bdid uid _ = do
@@ -136,18 +136,18 @@ emailLogo bdid uid _ = do
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme bd) (companyMailTheme companyui)
-  return (pngResponse $ themeLogo theme)
+  return (imageResponse $ themeLogo theme)
 
 signviewLogo :: Kontrakcja m => BrandedDomainID -> DocumentID -> String -> m Response
 signviewLogo bdid did _ = do
   theme <- getSignviewTheme bdid did
-  return (pngResponse $ themeLogo theme)
+  return (imageResponse $ themeLogo theme)
 
 
 signviewLogoWithoutDocument :: Kontrakcja m => BrandedDomainID -> UserID -> String -> m Response
 signviewLogoWithoutDocument bdid uid _ = do
   theme <- getSignviewThemeWithoutDocument bdid uid
-  return (pngResponse $ themeLogo theme)
+  return (imageResponse $ themeLogo theme)
 
 faviconIcon :: Kontrakcja m => BrandedDomainID -> String -> String -> m Response
 faviconIcon bdid uidstr _ = do
@@ -165,7 +165,7 @@ faviconIcon bdid uidstr _ = do
             return (companyFavicon companyui)
   bd <- dbQuery $ GetBrandedDomainByID bdid
   let favicon = fromMaybe (bdFavicon bd) mCompanyFavicon
-  return (pngResponse favicon)
+  return (imageResponse favicon)
 
 
 -- Utils
@@ -190,7 +190,12 @@ cssResponse css = setHeaderBS "Cache-Control" "max-age=31536000"
   $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css")
   $ Response 200 Map.empty nullRsFlags css Nothing
 
-pngResponse :: Binary BS.ByteString -> Response
-pngResponse png = setHeaderBS "Cache-Control" "max-age=31536000"
-  $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png")
-  $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [unBinary png]) Nothing
+imageResponse :: Binary BS.ByteString -> Response
+imageResponse image = setHeaderBS "Cache-Control" "max-age=31536000"
+  $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString contentType)
+  $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [unBinary image]) Nothing
+  where content = unBinary image
+        contentType | BS.take 4 content == "\x00\x00\x01\x00" = "image/x-icon"
+                    | BS.take 2 content == "\xFF\xD8" = "image/jpeg"
+                    | BS.take 8 content == "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A" = "image/png"
+                    | otherwise = "image/png"

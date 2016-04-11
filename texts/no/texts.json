@@ -606,6 +606,7 @@
 "_historyParty":"Part",
 "_historyTime":"Tid",
 "_imageFileFormatNotSpported":"Filformatet støttes ikke. Velg en bildefil (PNG/JPG) istedenfor.",
+"_imageFileFormatNotSpportedIco":"",
 "_internalServerError":"<h1>Noe gikk galt</h1><h4>Dersom problemet vedvarer kan du kontakte vår support via support@scrive.com eller +46 8 519 779 00.</h4>",
 "_invalidAttachments":"Beklager, dette filformatet støttes ikke. Vennligs velg en PDF-fil istedenfor.",
 "_invitationMailDeferredContentBodyFirst":"Dessverre har vi vanskeligheter med å levere invitasjonen til å e-signere til <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Enten er deres e-postadresse feil eller så har mailserveren deres problemer.",

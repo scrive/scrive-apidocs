@@ -606,6 +606,7 @@
 "_historyParty":"Partij",
 "_historyTime":"Tijd",
 "_imageFileFormatNotSpported":"Dit bestandsformaat wordt niet ondersteund. Kies in plaats hiervan een fotobestand (PNG//JPG).",
+"_imageFileFormatNotSpportedIco":"",
 "_internalServerError":"<h1>Er is iets misgegaan</h1><h4>Indien het probleem blijft ontstaan neem dan a.u.b. contact op met onze support via support@scrive.com of +46 8 519 779 00.</h4>",
 "_invalidAttachments":"Sorry, dit bestandsformaat wordt niet ondersteund. Kies in plaats hiervan een PDF.",
 "_invitationMailDeferredContentBodyFirst":"Helaas ondervinden we problemen met het leveren van de uitnodiging om te e-ondertekenen aan <strong>$counterpartname$ &lt;$counterpartemail$&gt;</strong>. Het e-mailadres is incorrect of de server ondervindt problemen.",

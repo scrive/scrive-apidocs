@@ -7,6 +7,7 @@ module ServerUtils.ServerUtils (
 import Control.Monad.Trans
 import Data.Char (toLower)
 import Data.Functor
+import Data.List.Split (splitOn)
 import Happstack.Server hiding (dir, simpleHTTP)
 import Log as Log
 import System.Directory (getCurrentDirectory)
@@ -51,15 +52,18 @@ handleParseCSV = do
   return res
 
 -- Read an image file from POST, and returns a its content encoded with Base64
+-- extensions is comma-separated list of accepted extensions (returns 400 for other filetypes)
 handleSerializeImage :: Kontrakcja m => m Response
 handleSerializeImage = do
   fileinput <- getDataFn' (lookInput "logo")
+  acceptedExtensionsString <- guardJustM $ getField "extensions"
+  let acceptedExtensions = splitOn "," acceptedExtensionsString
   case fileinput of
     Nothing -> badRequest' "Missing file"
     Just (Input _ Nothing _) -> badRequest' "Missing file"
     Just (Input contentspec (Just filename) _contentType) -> do
       let hasExtension ext = ("." ++ ext) `isSuffixOf` map toLower filename
-      if hasExtension "png" || hasExtension "jpg" || hasExtension "jpeg" then do
+      if any hasExtension acceptedExtensions then do
         content <- case contentspec of
           Left filepath -> liftIO $ BS.readFile filepath
           Right content' -> return $ BS.concat $ BSL.toChunks content'
