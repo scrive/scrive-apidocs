@@ -9,12 +9,15 @@ module Doc.RenderedPages
   , RenderingMode(..)
   ) where
 
-import Control.Monad.Base
 import Control.Concurrent.MVar.Lifted
+import Control.DeepSeq
+import Control.Monad.Base
+import Data.Hashable
+import GHC.Generics
+import Log.Class
 import qualified Data.ByteString as BS
 import qualified Data.Vector as V
 
-import Log.Class
 import File.FileID
 import KontraPrelude
 import qualified MemCache
@@ -23,10 +26,19 @@ newtype RenderedPages = RenderedPages {
     unRenderedPages :: V.Vector (MVar BS.ByteString)
   }
 
+instance NFData RenderedPages where
+  rnf (RenderedPages v) = go 0 $ V.length v
+    where
+      go i len
+        | i == len  = ()
+        | otherwise = V.unsafeIndex v i `seq` go (i + 1) len
+
 data RenderingMode
   = RenderingModeWholeDocument
   | RenderingModeFirstPageOnly
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Generic)
+
+instance Hashable RenderingMode
 
 renderedPages :: MonadBase IO m => Int -> m RenderedPages
 renderedPages n = RenderedPages <$> V.replicateM n newEmptyMVar

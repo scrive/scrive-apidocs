@@ -28,9 +28,9 @@ module Doc.Model.Query
   , DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor(..)
   ) where
 
-import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.State
+import Control.Monad.Trans.Control
 import Data.Int
 import Data.List hiding (tail, head)
 import Data.Maybe hiding (fromJust)
@@ -60,7 +60,7 @@ import User.Model
 import qualified Amazon
 
 data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
-instance (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
+instance (MonadDB m, MonadThrow m, MonadLog m, MonadBaseControl IO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
   query (GetSignatoryScreenshots l) = do
     runQuery_ . sqlSelect "signatory_screenshots" $ do
                 sqlWhereIn "signatory_link_id" l

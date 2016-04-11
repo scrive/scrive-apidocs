@@ -13,7 +13,6 @@ module Doc.DocSeal
   ) where
 
 import Control.Conditional ((<|), (|>))
-import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
@@ -70,7 +69,7 @@ import qualified Amazon as AWS
 import qualified Doc.SealSpec as Seal
 import qualified HostClock.Model as HC
 
-personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBase IO m)
+personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
                     => TimeZoneName -> SignatoryIdentifierMap -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
 personFromSignatory tz sim boxImages signatory = do
     emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
@@ -107,7 +106,7 @@ personFromSignatory tz sim boxImages signatory = do
                          , Seal.companyNumberText  = companyNumberText
                          }
 
-personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBase IO m)
+personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
                           =>  TimeZoneName -> SignatoryIdentifierMap -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
 personExFromSignatoryLink tz sim boxImages sl@SignatoryLink{..} = do
   person <- personFromSignatory tz sim boxImages sl
@@ -119,7 +118,7 @@ personExFromSignatoryLink tz sim boxImages sl@SignatoryLink{..} = do
      , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationtosignmethod == SMSPinAuthenticationToSign)
      }
 
-fieldsFromSignatory :: (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => (BS.ByteString,BS.ByteString) -> SignatoryLink -> m [Seal.Field]
+fieldsFromSignatory :: forall m. (MonadDB m, MonadThrow m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => (BS.ByteString,BS.ByteString) -> SignatoryLink -> m [Seal.Field]
 fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryfields} =
   silenceJPEGFieldsFromFirstSignature <$> concat <$> mapM makeSealField signatoryfields
   where
@@ -131,7 +130,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
       field : silenceJPEGFieldsToTheEnd xs
     silenceJPEGFieldsFromFirstSignature (x:xs) = x : silenceJPEGFieldsFromFirstSignature xs
 
-    makeSealField :: (MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m) => SignatoryField -> m [Seal.Field]
+    makeSealField :: SignatoryField -> m [Seal.Field]
     makeSealField sf = case sf of
        SignatorySignatureField ssf -> case (fieldPlacements  sf, ssfValue ssf) of
                            (_, Nothing) -> return []  -- We skip signature that don't have a drawing
@@ -262,7 +261,7 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
                                x -> reverse (drop 1 x)
 
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, AWS.AmazonMonad m)
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m)
                            => SignatoryIdentifierMap -> Document -> m Seal.SealAttachment
 evidenceOfIntentAttachment sim doc = do
   let title = documenttitle doc

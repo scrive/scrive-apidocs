@@ -173,16 +173,8 @@ faviconIcon bdid uidstr _ = do
 withLessCache :: (Kontrakcja m ) => LessCacheKey -> m BSL.ByteString -> m BSL.ByteString
 withLessCache key generator = do
   ctx <- getContext
-  if (ctxproduction ctx) -- We only use cache if we are in production mode
-    then do
-      let cache = ctxlesscache ctx
-      mv <- MemCache.get key cache
-      case mv of
-        Just v -> return v
-        Nothing -> do
-          css <- generator
-          MemCache.put key css cache
-          return css
+  if ctxproduction ctx
+    then MemCache.fetch (ctxlesscache ctx) key generator
     else generator
 
 cssResponse :: BSL.ByteString -> Response

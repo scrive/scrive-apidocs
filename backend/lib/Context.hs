@@ -7,12 +7,12 @@ module Context (
   , contextToMailContext
   ) where
 
+import Control.Monad.Trans.Control
+import Happstack.Server (Response)
+import Log.Class
 import qualified Control.Concurrent.Thread as T
 import qualified Data.ByteString as BS
 
-import Happstack.Server (Response)
-import Control.Monad.Trans.Control
-import Log.Class
 import BrandedDomain.BrandedDomain
 import Branding.Cache
 import Doc.RenderedPages

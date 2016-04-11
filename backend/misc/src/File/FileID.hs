@@ -4,6 +4,7 @@ module File.FileID (
   , fromFileID
   ) where
 
+import Data.Hashable
 import Data.Int
 import Data.Typeable
 import Data.Unjson
@@ -15,7 +16,7 @@ import KontraPrelude
 import Log.Identifier
 
 newtype FileID = FileID Int64
-  deriving (Eq, Ord, PQFormat, Typeable)
+  deriving (Eq, Ord, Hashable, PQFormat, Typeable)
 $(newtypeDeriveUnderlyingReadShow ''FileID)
 
 instance Identifier FileID Int64 where

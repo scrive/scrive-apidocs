@@ -134,28 +134,6 @@ logRequest rq maybeInputsBody = [
   , "http cookies" .= (map showNamedCookie $ rqCookies rq)
   ]
 
--- | Long polling implementation.
---
--- The 'enhanceYourCalm' function checks for 420 Enhance Your Calm
--- status code and if detected it retries to invoke a handler. This is
--- done for at most 10s, then gives up and returns result as given.
---
--- It has to be done outside of database connection, because database
--- connection needs to be dropped between retries to allow for commits
--- to take place.
-_enhanceYourCalm :: (MonadLog m, MonadIO m) => m Response -> m Response
-_enhanceYourCalm action = enhanceYourCalmWorker (300::Int)
-  where
-    enhanceYourCalmWorker 0 = action
-    enhanceYourCalmWorker n = do
-      result' <- action
-      case rsCode result' of
-        420 -> do
-          logInfo_ "Response with code 420 returned, rerunning the handler in 100 ms"
-          liftIO $ threadDelay 100000
-          enhanceYourCalmWorker (n-1)
-        _ -> return result'
-
 -- | Outer handler monad
 type HandlerM = ReqHandlerT (LogT IO)
 -- | Inner handler monad.

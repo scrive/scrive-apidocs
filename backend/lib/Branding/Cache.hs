@@ -4,6 +4,8 @@ module Branding.Cache (
    , LessCacheKey(..)
   ) where
 
+import Data.Hashable
+import GHC.Generics
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import BrandedDomain.BrandedDomainID
@@ -19,5 +21,6 @@ data LessCacheKey =
   | ServiceBranding ThemeID String
   | LoginBranding ThemeID String
   | ScriveBranding String
-  deriving (Eq,Ord)
+  deriving (Eq, Ord, Generic)
 
+instance Hashable LessCacheKey

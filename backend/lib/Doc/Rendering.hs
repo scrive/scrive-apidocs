@@ -16,11 +16,11 @@ module Doc.Rendering
     , getPageSizeOfPDFInPoints
     ) where
 
-import Data.Aeson
 import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Except
 import Control.Monad.Trans.Control
+import Data.Aeson
 import Data.Char
 import Data.Typeable
 import Log
@@ -28,20 +28,20 @@ import Numeric
 import System.Directory
 import System.Exit
 import System.IO
+import System.Process hiding (readProcessWithExitCode)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import qualified Control.Exception.Lifted as E
+import qualified Data.Attoparsec.Text as P
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import qualified Data.Unjson as Unjson
-import qualified System.IO.Temp
-import qualified Data.Attoparsec.Text as P
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import System.Process hiding (readProcessWithExitCode)
-import Doc.Logging
+import qualified Data.Unjson as Unjson
+import qualified System.IO.Temp
 
 import DB
+import Doc.Logging
 import Doc.RenderedPages
 import File.Model
 import File.Storage
@@ -243,23 +243,19 @@ getRenderedPages fid pageWidthInPixels renderingMode = logFile fid $ do
         min 4000 (max 100 pageWidthInPixels)
   Context{ctxnormalizeddocuments} <- getContext
   let key = (fid, clampedPageWidthInPixels, renderingMode)
-  v <- MemCache.get key ctxnormalizeddocuments
-  case v of
-    Just rp -> return rp
-    Nothing -> do
-      fileContent <- getFileIDContents fid
-      liftBase (getNumberOfPDFPages fileContent) >>= \case
-        Left err -> do
-          logAttention "getNumberOfPDFPages failed" $ object [
-              "error" .= err
-            ]
-          internalError
-        Right pagesNo -> do
-          rp <- renderedPages pagesNo
-          MemCache.put key rp ctxnormalizeddocuments
-          forkAction "Rendering file" $ do
-            runRendering fileContent clampedPageWidthInPixels renderingMode rp
-          return rp
+  MemCache.fetch ctxnormalizeddocuments key $ do
+    fileContent <- getFileIDContents fid
+    liftBase (getNumberOfPDFPages fileContent) >>= \case
+      Left err -> do
+        logAttention "getNumberOfPDFPages failed" $ object [
+            "error" .= err
+          ]
+        internalError
+      Right pagesNo -> do
+        rp <- renderedPages pagesNo
+        forkAction "Rendering file" $ do
+          runRendering fileContent clampedPageWidthInPixels renderingMode rp
+        return rp
 
 data FileError = FileSizeError Int Int
                | FileFormatError

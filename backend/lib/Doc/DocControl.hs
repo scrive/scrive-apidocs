@@ -33,7 +33,6 @@ module Doc.DocControl(
     , handleToStartShow
 ) where
 
-import System.Timeout.Lifted
 import Control.Conditional (unlessM, whenM)
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -42,6 +41,7 @@ import Happstack.Server hiding (lookCookieValue, simpleHTTP, timeout)
 import Log
 import System.Directory
 import System.IO.Temp
+import System.Timeout.Lifted
 import Text.JSON hiding (Result)
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E

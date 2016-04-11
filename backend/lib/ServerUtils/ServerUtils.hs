@@ -21,7 +21,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS (fromString)
-import qualified Data.ByteString.UTF8 as BSUTF8
 import qualified Happstack.Server.Response as Web
 import qualified Text.JSON.Gen as J
 
@@ -82,18 +81,13 @@ brandedImage = do
     color <- fmap (take 12) $ guardJustM $ getField "color"
     file <- fmap (take 50) $ guardJustM $ getField "file"
     let key = BrandedImagesCacheKey { filename = file , color = color }
-    let cache = ctxbrandedimagescache ctx
-    mv <- MemCache.get key cache
-    img <- if (ctxproduction ctx)
-             then case mv of
-               Just v -> return v
-               Nothing -> do
-                 bi <- brandImage file color
-                 MemCache.put key bi cache
-                 return bi
-            else
-              brandImage file color
-    ok $ setHeaderBS "Cache-Control" "max-age=604800" $ toResponseBS (BSUTF8.fromString "image/png") $ img
+        cache = ctxbrandedimagescache ctx
+    img <- if ctxproduction ctx
+           then MemCache.fetch cache key $ brandImage file color
+           else brandImage file color
+    ok
+      . setHeaderBS "Cache-Control" "max-age=604800"
+      $ toResponseBS "image/png" img
 
 brandImage :: Kontrakcja m => String -> String -> m BSL.ByteString
 brandImage file color = do
