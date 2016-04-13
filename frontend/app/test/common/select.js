@@ -6,275 +6,161 @@ var Select = require("../../scripts/common/select");
   var TestUtils = React.addons.TestUtils;
 
   describe("common/select", function () {
-    it("should test selecting an option", function (done) {
-      var index = 0;
-
+    it("should test selecting an option (width global onSelect)", function (done) {
       var options = [
-        {name: "zero", value: 0},
-        {name: "one", value: 1},
-        {name: "two", value: 2}
+        {
+          name: "zero",
+          value: "A"
+        },
+        {
+          name: "one",
+          value: "B",
+          selected: true
+        },
+        {
+          name: "two",
+          value: "C"
+        }
       ];
 
       var select = TestUtils.renderIntoDocument(React.createElement(Select, {
-        name: "one",
         options: options,
-        adjustHeightOnExpand: true,
         onSelect: function (v) {
-          assert.equal(v, index, "should be the index we choose");
+          assert.equal(v, "C", "should be the index we choose");
           done();
         }
       }));
 
-      TestUtils.Simulate.click(select.getDOMNode()); // open
-
-      assert.ok($(".select-exp").hasClass("select"), "there should be an expanded component in body")
-
-      TestUtils.Simulate.click(select.getDOMNode()); // close
-
-      assert.ok(!$(".select-exp").hasClass("select"), "there should not be an expanded component in body")
-
-      TestUtils.Simulate.click(select.getDOMNode()); // open
-
-      var expand = select.state.expandComponent;
-
-      var lis = TestUtils.scryRenderedDOMComponentsWithTag(expand, "li");
-
-      assert.equal(lis.length, options.length, "there should be as many items as options");
-
-      TestUtils.Simulate.click(lis[index]);
+      var node = select.getDOMNode();
+      assert.ok($("select",node).length === 1 , "there should be select component")
+      assert.ok($("select option",node).length === 3 , "it should have 3 options inside")
+      assert.ok($("select",node).val() === "1" , "we should have snd option selected (index 1)")
+      select.select(2);
     });
 
-    it("should close when hovering out", function (done) {
+    it("should test selecting an option (with local onSelect)", function (done) {
       var options = [
-        {name: "zero", value: 0},
-        {name: "one", value: 1},
-        {name: "two", value: 2}
+        {
+          name: "zero",
+          value: "A",
+          selected: true
+        },
+        {
+          name: "one",
+          value: "B"
+        },
+        {
+          name: "two",
+          value: "C",
+          onSelect: function (v) {
+            assert.equal(v, "C", "should be the index we choose");
+            done();
+          }
+        }
       ];
 
       var select = TestUtils.renderIntoDocument(React.createElement(Select, {
-        name: "one",
-        options: options,
-        onSelect: function () { }
-      }));
-
-      TestUtils.Simulate.click(select.getDOMNode());
-
-      var expand = select.state.expandComponent;
-
-      TestUtils.SimulateNative.mouseOver(expand.getDOMNode());
-
-      TestUtils.SimulateNative.mouseOut(expand.getDOMNode());
-
-      setTimeout(function () {
-        assert.ok(!select.state.expanded, "should not be expanded");
-        done();
-      }, 100);
-    });
-
-    it("should test disabled options", function (done) {
-      var index = 1;
-
-      var options = [
-        {name: "zero", value: 0},
-        {name: "one", value: 1, disabled: true},
-        {name: "two", value: 2}
-      ];
-
-      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
-        name: "one",
         options: options,
         onSelect: function (v) {
-          assert.equal(v, index + 1, "should be the index we choose");
+          assert.ok(false , "onSelect for options should have higher priority then onSelect for select")
+        }
+      }));
+
+      var node = select.getDOMNode();
+      assert.ok($("select",node).val() === "0" , "we should have snd option selected (index 0)")
+      select.select(2);
+    });
+
+    it("should test disabled options is still rendered", function () {
+      var options = [
+        {
+          name: "zero",
+          value: "A",
+          disabled: true
+        },
+        {
+          name: "one",
+          value: "B",
+          disabled: true
+        },
+        {
+          name: "two",
+          value: "C"
+        }
+      ];
+
+      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
+        options: options,
+        onSelect: function (v) {
+        }
+      }));
+
+      var node = select.getDOMNode();
+      assert.ok(!$(node).hasClass("inactive") , "it should not have inactive class");
+      assert.ok($("select option",node).length === 3 , "it should have 3 options inside");
+      assert.ok($("select option:disabled",node).length === 2, "two options should be disabled");
+    });
+
+    it("should test inactive select when only one option", function () {
+      var options = [
+        {
+          name: "zero",
+          value: "A",
+          disabled: true
+        }
+      ];
+
+      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
+        options: options,
+        onSelect: function (v) {
+        }
+      }));
+
+      var node = select.getDOMNode();
+      assert.ok($(node).hasClass("inactive") , "it should have inactive class");
+    });
+
+    it("should use className parameter", function () {
+      var options = [
+        {
+          name: "zero",
+          value: "A",
+          disabled: true
+        }
+      ];
+
+      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
+        options: options,
+        className: "test-class",
+        onSelect: function (v) {
+        }
+      }));
+
+      var node = select.getDOMNode();
+      assert.ok($(node).hasClass("test-class") , "it should have test-class class");
+    });
+
+    it("should test have remove option when onRemove is set", function (done) {
+      var options = [
+        {
+          name: "zero",
+          value: "A",
+          disabled: true
+        }
+      ];
+
+      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
+        options: options,
+        onRemove: function() {
           done();
-        }
-      }));
-
-      TestUtils.Simulate.click(select.getDOMNode());
-
-      var expand = select.state.expandComponent;
-
-      var lis = TestUtils.scryRenderedDOMComponentsWithTag(expand, "li");
-
-      assert.equal(lis.length, options.length - 1, "there should be on less items as options");
-
-      TestUtils.Simulate.click(lis[index]);
-    });
-
-    it("should test precedence of onSelect", function (done) {
-      var index = 1;
-
-      var options = [
-        {name: "zero", value: 0},
-        {name: "one", value: 1, onSelect: function () { done() }},
-        {name: "two", value: 2}
-      ];
-
-      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
-        name: "one",
-        options: options,
+        },
         onSelect: function (v) {
-          assert.ok(false, "should never fire");
         }
       }));
 
-      TestUtils.Simulate.click(select.getDOMNode());
-
-      var expand = select.state.expandComponent;
-
-      var lis = TestUtils.scryRenderedDOMComponentsWithTag(expand, "li");
-
-      TestUtils.Simulate.click(lis[index]);
-    });
-  });
-
-  describe("common/select coverage", function () {
-    it("should unmount without errors", function () {
-      var options = [
-        {name: "zero", value: 0},
-        {name: "one", value: 1},
-        {name: "two", value: 2}
-      ];
-
-      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
-        name: "one",
-        options: options,
-        onSelect: function () { }
-      }));
-
-      select.open();
-
-      React.unmountComponentAtNode($(select.getDOMNode()).parent()[0]);
+      var node = select.getDOMNode();
+      assert.ok($(".closer",node).length === 1 , "it should have closer");
+      TestUtils.Simulate.click($(".closer",node)[0]);
     });
 
-    it("should block open", function () {
-      var options = [
-        {name: "zero", value: 0},
-        {name: "one", value: 1},
-        {name: "two", value: 2}
-      ];
-
-      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
-        name: "one",
-        options: options,
-        onOpen: function () { return false; },
-        onSelect: function () { }
-      }));
-
-      select.open();
-
-      assert.ok(!select.state.expanded, "should not be open");
-    });
-
-    it("should not open inactive", function () {
-      var options = [
-        {name: "zero", value: 0},
-        {name: "one", value: 1},
-        {name: "two", value: 2}
-      ];
-
-      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
-        name: "one",
-        options: options,
-        inactive: true,
-        onSelect: function () { }
-      }));
-
-      select.open();
-
-      assert.ok(!select.state.expanded, "should not be open");
-    });
-
-    it("should test without select", function () {
-      var index = 0;
-
-      var options = [
-        {name: "zero", value: 0},
-        {name: "one", value: 1},
-        {name: "two", value: 2}
-      ];
-
-      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
-        name: "one",
-        options: options
-      }));
-
-      TestUtils.Simulate.click(select.getDOMNode());
-
-      var expand = select.state.expandComponent;
-
-      var lis = TestUtils.scryRenderedDOMComponentsWithTag(expand, "li");
-
-      TestUtils.Simulate.click(lis[index]);
-    });
-
-    it("should test blocking close", function () {
-      var index = 0;
-
-      var options = [
-        {name: "zero", value: 0},
-        {name: "one", value: 1},
-        {name: "two", value: 2}
-      ];
-
-      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
-        name: "one",
-        options: options,
-        onSelect: function () { return false; }
-      }));
-
-      TestUtils.Simulate.click(select.getDOMNode());
-
-      var expand = select.state.expandComponent;
-
-      var lis = TestUtils.scryRenderedDOMComponentsWithTag(expand, "li");
-
-      TestUtils.Simulate.click(lis[index]);
-
-      assert.ok(select.state.expanded, "should still be open");
-    });
-
-    /*
-    it("should not close when hovering out of pad device", function (done) {
-      var options = [
-        {name: "zero", value: 0},
-        {name: "one", value: 1},
-        {name: "two", value: 2}
-      ];
-
-      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
-        name: "one",
-        options: options,
-        onSelect: function () { }
-      }));
-
-      TestUtils.Simulate.click(select.getDOMNode());
-
-      var expand = select.state.expandComponent;
-
-      TestUtils.SimulateNative.mouseOver(expand.getDOMNode());
-
-      TestUtils.SimulateNative.mouseOut(expand.getDOMNode());
-
-      setTimeout(function () {
-        assert.ok(select.state.expanded, "should not be expanded");
-        done();
-      }, 100);
-    });
-    */
-
-    it("should not select out of index option", function () {
-      var options = [
-        {name: "zero", value: 0},
-        {name: "one", value: 1},
-        {name: "two", value: 2}
-      ];
-
-      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
-        name: "one",
-        options: options,
-        onSelect: function () { }
-      }));
-
-      select.select(3);
-    });
   });

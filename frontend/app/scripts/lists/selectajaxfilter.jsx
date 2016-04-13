@@ -15,12 +15,19 @@ module.exports = React.createClass({
     getInitialState: function() {
       return {ajaxOptions : undefined};
     },
-    getMoreDataIfNeededAndOpen : function() {
+    componentDidMount :function() {
+      this.getMoreDataIfNeeded();
+    },
+    componentDidUpdate :function() {
+      this.getMoreDataIfNeeded();
+    },
+    getMoreDataIfNeeded : function() {
       var self = this;
-      if (this.state.ajaxOptions != undefined) {
+      if (this.state.ajaxOptions != undefined || self.fetchingStarted || !this.props.model.ready()) {
         return true;
       }
       else {
+        self.fetchingStarted = true;
         $.ajax(
           this.props.optionsURL,
           {
@@ -28,43 +35,30 @@ module.exports = React.createClass({
             success : function(res) {
               var options = self.props.optionsParse(JSON.parse(res));
               self.setState({ajaxOptions : options});
-              self.open();
             }
           }
         );
         return false;
       }
     },
-    open : function() {
-      this.refs.select.open();
-    },
     render: function() {
       var self = this;
       var model = self.props.model;
       var options = [this.props.defaultOption];
-      if (this.state.ajaxOptions != undefined)
+      if (this.state.ajaxOptions != undefined) {
         options = options.concat(this.state.ajaxOptions);
-      var selectedValue = model.selectfiltering().filteringValue(self.props.name) || options[0].value;
-      var availableOptions = [];
-
-      var selectedOptionName = "";
-      for(var i=0;i< options.length;i++) {
-         if (_.isEqual(options[i].value,selectedValue)) { 
-           selectedOptionName = options[i].name;
-         } else {
-           availableOptions.push(options[i]);
-         }
-
       }
+      var selectedValue = model.selectfiltering().filteringValue(self.props.name);
+
       return (
         <div className='float-left'>
           <Select
             ref='select'
-            color={"#000000"}
-            options={availableOptions}
-            name ={selectedOptionName}
+            isOptionSelected={function (o) {
+              return o.value == selectedValue;
+            }}
+            options={options}
             width={this.props.width}
-            onOpen={this.getMoreDataIfNeededAndOpen}
             onSelect={function(value) {
                       var selectedOption = _.find(options,function(o) {return o.value == value;});
                       mixpanel.track('Filter ' + self.props.name,

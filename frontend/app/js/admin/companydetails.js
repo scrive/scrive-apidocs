@@ -180,14 +180,15 @@ var AdminCompanyDetailsView = Backbone.View.extend({
           {name: "Default", value: "SMSDefault"}
         , {name: "Telia", value: "SMSTeliaCallGuide"}
       ];
-      var pname = _.findWhere(smsProviders, {value : model.companysmsprovider()}).name;
 
       var $select = $("<span>");
 
       React.render(React.createElement(Select, {
-        name : pname,
+        isOptionSelected : function(o) {
+          return o.value ==  model.companysmsprovider(); 
+        },
         onSelect : function(v) {model.setCompanysmsprovider(v); return true;},
-        options: _.filter(smsProviders, function(p) { return p.value !=  model.companysmsprovider() && !p.hidden;}),
+        options: smsProviders,
         textWidth : 240
       }), $select[0]);
 

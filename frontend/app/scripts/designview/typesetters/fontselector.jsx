@@ -4,53 +4,65 @@ var Select = require("../../common/select");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 
   module.exports = React.createClass({
-    fontSelected: function () {
+    currSize: function () {
       var model = this.props.model;
       var field = model.field();
       var sig = field.signatory();
       var page = sig.document().mainfile().page(model.get("page"));
-
-      var currSize = model.fsrel() * page.width();
-
-      if (Math.abs(currSize - FieldPlacementGlobal.fontSizeSmall) < 1) {
-        return localization.fontSize.small;
-      }
-
-      if (Math.abs(currSize - FieldPlacementGlobal.fontSizeNormal) < 1) {
-        return localization.fontSize.normal;
-      }
-
-      if (Math.abs(currSize - FieldPlacementGlobal.fontSizeLarge) < 1) {
-        return localization.fontSize.big;
-      }
-
-      if (Math.abs(currSize - FieldPlacementGlobal.fontSizeHuge) < 1) {
-        return localization.fontSize.large;
-      }
-
-      return localization.fontSize.custom;
+      return model.fsrel() * page.width();
     },
-
+    smallFontSelected: function () {
+      return Math.abs(this.currSize() - FieldPlacementGlobal.fontSizeSmall) < 1;
+    },
+    normalFontSelected: function () {
+      return Math.abs(this.currSize() - FieldPlacementGlobal.fontSizeNormal) < 1;
+    },
+    largeFontSelected: function () {
+      return Math.abs(this.currSize() - FieldPlacementGlobal.fontSizeLarge) < 1;
+    },
+    hugeFontSelected: function () {
+      return Math.abs(this.currSize() - FieldPlacementGlobal.fontSizeHuge) < 1;
+    },
+    customFontSelected: function () {
+      return !this.smallFontSelected() && !this.normalFontSelected() &&
+             !this.largeFontSelected() && !this.hugeFontSelected();
+    },
     fontOptions: function () {
       var model = this.props.model;
       var field = model.field();
       var sig = field.signatory();
       var page = sig.document().mainfile().page(model.get("page"));
 
-      return [
-        {name: localization.fontSize.small,
-         style: {fontSize: FieldPlacementGlobal.fontSizeSmall + "px"},
-         onSelect: function () { model.setFSRel(FieldPlacementGlobal.fontSizeSmall / page.width()); }},
-        {name: localization.fontSize.normal,
-         style: {fontSize: FieldPlacementGlobal.fontSizeNormal + "px"},
-         onSelect: function () { model.setFSRel(FieldPlacementGlobal.fontSizeNormal / page.width()); }},
-        {name: localization.fontSize.big,
-         style: {fontSize: FieldPlacementGlobal.fontSizeLarge + "px"},
-         onSelect: function () { model.setFSRel(FieldPlacementGlobal.fontSizeLarge / page.width()); }},
-        {name: localization.fontSize.large,
-         style: {fontSize: FieldPlacementGlobal.fontSizeHuge + "px"},
-         onSelect: function () { model.setFSRel(FieldPlacementGlobal.fontSizeHuge / page.width()); }}
+      var options = [
+        {
+          name: localization.fontSize.small,
+          selected: this.smallFontSelected(),
+          onSelect: function () { model.setFSRel(FieldPlacementGlobal.fontSizeSmall / page.width()); }
+        },
+        {
+          name: localization.fontSize.normal,
+          selected: this.normalFontSelected(),
+          onSelect: function () { model.setFSRel(FieldPlacementGlobal.fontSizeNormal / page.width()); }
+        },
+        {
+          name: localization.fontSize.big,
+          selected: this.largeFontSelected(),
+          onSelect: function () { model.setFSRel(FieldPlacementGlobal.fontSizeLarge / page.width()); }
+        },
+        {
+          name: localization.fontSize.large,
+          selected: this.hugeFontSelected(),
+          onSelect: function () { model.setFSRel(FieldPlacementGlobal.fontSizeHuge / page.width()); }
+        }
       ];
+      if (this.customFontSelected()) {
+        options.unshift({
+          name: localization.fontSize.custom,
+          selected: true,
+          disabled: true
+        })
+      }
+      return options;
     },
 
     render: function () {
@@ -70,11 +82,9 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
           {localization.fontSize.name}
           <div className="fieldTypeSetter-subtitle-select">
             <Select
-              name={this.fontSelected()}
               options={this.fontOptions()}
               width={218}
               className="typesetter-obligatory-option"
-              style={{fontSize: "16px"}}
             />
           </div>
         </div>

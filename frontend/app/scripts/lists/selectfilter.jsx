@@ -13,22 +13,13 @@ module.exports = React.createClass({
       var model = self.props.model;
       var options = this.props.options;
       var selectedValue = model.selectfiltering().filteringValue(self.props.name) || options[0].value;
-      var availableOptions = [];
-      var selectedOptionName = "";
-      for(var i=0;i< options.length;i++) {
-         if (_.isEqual(options[i].value,selectedValue)) {
-           selectedOptionName = options[i].name;
-         } else {
-           availableOptions.push(options[i]);
-        }
-
-      }
       return (
         <div className='float-left'>
           <Select
-            color={"#000000"}
-            options={availableOptions}
-            name ={selectedOptionName}
+            options={options}
+            isOptionSelected={function (o) {
+              return o.value == selectedValue;
+            }}
             width={this.props.width}
             onSelect={function(value) {
                       var selectedOption = _.find(options,function(o) {return o.value == value;});

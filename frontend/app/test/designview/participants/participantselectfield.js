@@ -29,7 +29,8 @@ var Field = require("../../../js/fields").Field;
           model: field,
           element: $("body")[0]
         }));
-      fieldView.refs["select"].select(0);
+
+      fieldView.refs["select"].select(1);
       //This depends a lot on document structure
       assert.equal(field.type(),"personal_number");
     });
@@ -46,7 +47,7 @@ var Field = require("../../../js/fields").Field;
           element: $("body")[0]
         }));
       //This depends a lot on document structure
-      fieldView.refs["select"].select(0);
+      fieldView.refs["select"].select(1);
       assert.equal(field.type(),"text");
       assert.equal(field.name(),"");
     });
@@ -66,7 +67,7 @@ var Field = require("../../../js/fields").Field;
           element: $("body")[0]
         }));
       var signatoryFieldsCount = signatory.fields().length;
-      TestUtils.Simulate.click(fieldView.refs["select"].refs["view"].refs["close"].getDOMNode());
+      TestUtils.Simulate.click(fieldView.refs["select"].refs["close"].getDOMNode());
       assert.notEqual(signatory.fields().length,signatoryFieldsCount);
     });
 

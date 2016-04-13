@@ -35,11 +35,11 @@ var SignatorySelector = require("../../../scripts/designview/typesetters/signato
 
         assert.ok(select, "there should be a select component.");
 
-        assert.equal(select.props.options.length, 1, "there should be one option.");
+        assert.equal(select.props.options.length, 2, "there should be two options.");
 
-        var part2 = select.props.options[0].value
+        var part2 = select.props.options[1].value
 
-        select.select(0);
+        select.select(1);
 
         assert.equal(field.signatory(), part2, "field should now be part 2.");
       });

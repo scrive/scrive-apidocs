@@ -23,17 +23,16 @@ var SelectPartyModal = function(signingIndexes,doc) {
             var options = [];
             for(var i=0;i<signingIndexes.length;i++) {
                 var currentName = Utils.signatorySmartName(doc.field("parties")[signingIndexes[i]]).trim();
-                if (i != self.current)
                 options.push({
                   name: (currentName != "" ? currentName : localization.process.signatoryname + " " + (signingIndexes[i] + 1)),
-                  value : i
+                  value : i,
+                  selected : i == self.current
                 });
             }
             var currentName = Utils.signatorySmartName(doc.field("parties")[signingIndexes[self.current]]).trim();
 
             var $select1 = $("<span>");
             React.render(React.createElement(Select, {
-                name : ( currentName != "" ? currentName : localization.process.signatoryname + " " + (signingIndexes[self.current] + 1)),
                 className : "float-left",
                 options : options,
                 onSelect : function(v) {

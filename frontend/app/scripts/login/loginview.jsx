@@ -99,7 +99,6 @@ module.exports = React.createClass({
           <div className="position">
             <LanguageSelect
               langprefix={model.langprefix()}
-              border=""
               cssClass="change-language-for-login"
               width={198}
             />

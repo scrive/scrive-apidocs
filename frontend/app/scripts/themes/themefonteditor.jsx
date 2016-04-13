@@ -29,23 +29,20 @@ module.exports = React.createClass({
     var self = this;
     var availableFonts = self.availableFonts();
     var availableFontOptions = [];
-    var selectedFontName = localization.branding.themes.customFont;
     var selectedFontValue = "";
 
     _.each(availableFonts,function(f) {
       if (f.value == self.props.getFont()) {
-        selectedFontName = f.name;
         selectedFontValue = f.value;
-      } else {
-        availableFontOptions.push({
-          name : f.name,
-          style: {fontFamily : f.value},
-          onSelect : function() {
-            self.props.setFont(f.value);
-            return false;
-          }
-        });
       }
+      availableFontOptions.push({
+        name : f.name,
+        selected : f.value == self.props.getFont(),
+        onSelect : function() {
+          self.props.setFont(f.value);
+          return false;
+        }
+      });
     });
 
     return (
@@ -63,9 +60,7 @@ module.exports = React.createClass({
           </div>
           <div className="theme-edit-font-select">
               <Select
-                color={"#000000"}
                 options={availableFontOptions}
-                name ={selectedFontName}
                 width = {136}
                 style={{fontFamily : selectedFontValue}}
               />

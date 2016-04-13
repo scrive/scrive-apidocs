@@ -44,31 +44,26 @@ module.exports = React.createClass({
       var themeList = model.themeList();
       var selectedThemeID = getTheme();
       var availableThemesOptions = [];
-      var selectedThemeName = localization.branding.defaultTheme;
 
       _.each(themeList.list().models, function(t) {
-        if (t.field("id")  != selectedThemeID) {
-          availableThemesOptions.push({
-            name:  model.themeName(t.field("id")),
-            onSelect : function() {
-              setTheme(t.field("id"));
-            }
-          });
-        } else {
-          selectedThemeName =  model.themeName(t.field("id"));
-        }
+        availableThemesOptions.push({
+          name:  model.themeName(t.field("id")),
+          selected: selectedThemeID == t.field("id"),
+          onSelect : function() {
+            setTheme(t.field("id"));
+          }
+        });
       });
+
       availableThemesOptions = _.sortBy(availableThemesOptions,function(o) {return o.name.toLowerCase();});
-
-      if (selectedThemeID != undefined) {
-        availableThemesOptions.unshift({
-            name: localization.branding.defaultTheme,
-            onSelect : function() {
-              setTheme(undefined);
-            }
-          });
-      }
-
+      availableThemesOptions.unshift({
+        name: localization.branding.defaultTheme,
+        value:"",
+        selected:selectedThemeID == undefined,
+        onSelect : function() {
+          setTheme(undefined);
+        }
+      })
       availableThemesOptions.push({
             name: localization.branding.newThemeWithDots,
             onSelect : function() {
@@ -77,9 +72,7 @@ module.exports = React.createClass({
       });
       return (
         <Select
-          color={"#000000"}
           options={availableThemesOptions}
-          name ={selectedThemeName}
           width = {156}
        />
       );

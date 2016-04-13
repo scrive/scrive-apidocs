@@ -195,15 +195,14 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
             {
               var options = [];
               _.each(document.signatoriesThatCanSignNowOnPad(),function(sig) {
-                if (sig != model.padNextSignatory())
                 options.push({
                   name: (sig.smartname().trim() !== '' ? sig.smartname() : sig.nameInDocument()),
-                  onSelect : function() {model.setPadNextSignatory(sig); return true;}
+                  onSelect : function() {model.setPadNextSignatory(sig); return true;},
+                  selected : model.padNextSignatory() == sig
                 });
               });
               var $select = $("<span>");
               React.render(React.createElement(Select, {
-                name : (model.padNextSignatory().smartname() != "" ? model.padNextSignatory().smartname() : model.padNextSignatory().nameInDocument()),
                 className: "float-left",
                 options : options
               }), $select[0]);

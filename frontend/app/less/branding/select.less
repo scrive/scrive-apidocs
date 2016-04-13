@@ -1,18 +1,8 @@
 
-.select-expanded-wrapper {
-  position: absolute;
-  z-index: 5000;
-
-  // New selectboxes (in react) use select-expanded-wrapper. In that case only wrapper has to be positioned absolute
-  .select.select-exp {
-    position: relative;
-  }
-}
-
 .select{
   background: @white;
+  border: 1px solid #dddddd;
   color: @black;
-  cursor: pointer;
   font-family: @font-family-source;
   font-weight: 300;
   position: relative;
@@ -29,8 +19,37 @@
         background: @gray-2-percent;
       }
     }
+
+    select {
+      display: none;
+    }
   }
 
+  select {
+    appearance: none;
+    background-color: transparent;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    color: transparent;
+    cursor: pointer;
+    height: 39px;
+    margin:none;
+    padding:none;
+    position: absolute;
+    opacity: 0;
+    outline:none;
+    width: 100%;
+    z-index: 1;
+
+    &:focus {
+      outline: none;
+    }
+
+    option {
+      color: @black;
+    }
+  }
 
   .select-button {
     background: @white;
@@ -59,6 +78,7 @@
       background-repeat: repeat-y;
       color: @black;
       float: left;
+      font-size: 15px;
       line-height: 21px;
       overflow: hidden;
       padding-top: 9px;
@@ -77,48 +97,10 @@
       position: absolute;
       top: -9px;
       width: 24px;
+      z-index: 2;
 
       &:hover {
         background-position: -24px 0;
-      }
-    }
-  }
-
-  &.select-exp {
-    display: block;
-    position: absolute;
-    z-index: 5000;
-
-    .select-button {
-      z-index: 5002;
-    }
-
-    .select-opts {
-      background: @white;
-      left: -1px ;
-      padding: 0;
-      position: absolute;
-      text-align: left;
-      top: 37px;
-      z-index: 5001;
-
-      &.right {
-        left: auto;
-        right: -1px;
-        text-align: right;
-      }
-
-      li {
-        height: 20px;
-        line-height:  22px;
-        padding: 6px;
-        text-indent: 5px;
-        text-overflow: ellipsis;
-        overflow: hidden;
-
-        &:hover {
-          background: @slightly-darker-grey-background;
-        }
       }
     }
   }

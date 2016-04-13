@@ -51,19 +51,19 @@ var TextTypeSetterView = require("../../../scripts/designview/typesetters/textty
       var obligatorySelect = selects[2];
       var fontSelect = selects[3];
 
-      assert.equal(obligatorySelect.props.options.length, 2, "we have two options.");
+      assert.equal(obligatorySelect.props.options.length, 3, "we have three options.");
 
       assert.ok(field.isObligatory(), "field should be obligatory");
 
       assert.ok(field.shouldbefilledbysender(), "field should be filled by sender.");
 
-      obligatorySelect.select(0);
+      obligatorySelect.select(1);
 
       assert.ok(field.isObligatory(), "field should still be obligatory");
 
       assert.ok(!field.shouldbefilledbysender(), "field should not be filled by sender.");
 
-      obligatorySelect.select(1);
+      obligatorySelect.select(2);
 
       assert.ok(field.isOptional(), "field should be optional");
 
@@ -104,14 +104,14 @@ var TextTypeSetterView = require("../../../scripts/designview/typesetters/textty
 
       assert.equal(selects.length, 3, "three selects field, signatory and obligatory.");
 
-      assert.equal(obligatorySelect.props.options.length, 2, "we have all the options.");
+      assert.equal(obligatorySelect.props.options.length, 3, "we have all the options.");
 
       assert.ok(!field.shouldbefilledbysender(), "field should not be filled by sender.");
 
       // click sender.
-      obligatorySelect.select(1);
+      obligatorySelect.select(0);
 
-      assert.ok(!field.shouldbefilledbysender(), "field should be filled by sender.");
+      assert.ok(field.shouldbefilledbysender(), "field should be filled by sender.");
 
       // click signatory.
       obligatorySelect.select(1);
@@ -139,7 +139,7 @@ var TextTypeSetterView = require("../../../scripts/designview/typesetters/textty
       var fieldSelect = selects[1];
       var obligatorySelect = selects[2];
 
-      assert.equal(obligatorySelect.props.inactive, true, "obligatory select should now be inactive.");
+      assert.equal(obligatorySelect.props.options.length, 1, "obligatory select should now be inactive, because it has only one option.");
 
       var placement2 = util.addPlacement(doc, undefined, 0, {
           type: "name"
@@ -205,7 +205,7 @@ var TextTypeSetterView = require("../../../scripts/designview/typesetters/textty
 
       var sig1 = placement.field().signatory();
 
-      signatorySelect.select(0);
+      signatorySelect.select(1);
 
       var sig2 = placement.field().signatory();
 

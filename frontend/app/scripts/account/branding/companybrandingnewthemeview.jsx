@@ -86,6 +86,7 @@ module.exports = React.createClass({
           });
       });
       availableThemesOptions = _.sortBy(availableThemesOptions,function(o) {return o.name.toLowerCase();});
+      availableThemesOptions.unshift({name: localization.branding.defaultTheme, value:"", selected: true})
       availableThemesOptions.push({
             name: localization.branding.newThemeWithDots,
             onSelect : createNewThemeFunction
@@ -101,9 +102,7 @@ module.exports = React.createClass({
                    <div>
                      <div className='text-with-bottom-spacing'>{localization.branding.useExistingOrCreateNewTheme}</div>
                      <Select
-                       color={"#000000"}
                        options={availableThemesOptions}
-                       name ={localization.branding.defaultTheme}
                        width = {300}
                      />
                    </div>

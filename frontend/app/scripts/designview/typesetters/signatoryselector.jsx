@@ -34,12 +34,12 @@ var Select = require("../../common/select");
       var sig = field.signatory();
       var doc = sig.document();
 
-      var signame = sig.nameOrEmail() || sig.nameInDocument();
-
       var options = doc.signatories().map(function (s) {
-        return {name: s.nameOrEmail() || s.nameInDocument(), value: s};
-      }).filter(function (s) {
-        return s.value !== sig;
+        return {
+          name: s.nameOrEmail() || s.nameInDocument(),
+          value: s,
+          selected: s === sig
+        };
       });
 
       return (
@@ -47,7 +47,6 @@ var Select = require("../../common/select");
           {localization.designview.textFields.forThis + " "}
           <div className="fieldTypeSetter-subtitle-select">
             <Select
-              name={signame}
               options={options}
               width={218}
               className="signature-field-placement-setter-field-selector"
