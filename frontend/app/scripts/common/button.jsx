@@ -106,7 +106,7 @@ var _ = require("underscore");
     },
     render: function() {
       return (
-        <a className={this.className()} onClick={this.handleClick} style={this.style()}>
+        <a href="#" className={this.className()} onClick={this.handleClick} style={this.style()}>
           <div className="label" style={{'color': this.props.textcolor}}>
             {/*if*/ this.props.multiline &&
               this.props.text.map(function(text, i) {
