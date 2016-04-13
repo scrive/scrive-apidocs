@@ -4,6 +4,7 @@ var Submit = require("./submits.js").Submit;
 var $ = require("jquery");
 var InfoTextInput = require("./infotextinputs.js").InfoTextInput;
 var Button = require("./buttons.js").Button;
+var PasswordValidation = require("./validation.js").PasswordValidation;
 
 // setting new password (after email reset step)
 
@@ -32,22 +33,19 @@ var Button = require("./buttons.js").Button;
     validatePassword: function() {
       var password = this.password();
       var password2 = this.password2();
-      var validCharsRegex = /^[a-zA-Z0-9\.,-\/#! +$%\^&\*;:{}=\-_`~()]*$/;
       if (password !== password2) {
         return localization.newPasswordModal.flashMessagePasswordsDontMatch;
-      } else if (password === '') {
-        return localization.newPasswordModal.flashMessageMissingRequiredField;
-      } else if (password.length < 8 ||
-                 password.replace(/[^a-zA-Z]/g, '').length < 1 ||
-                 password.replace(/[^0-9]/g, '').length < 1) {
-        return localization.newPasswordModal.flashMessagePasswordInvalid;
-      } else if (password.length > 250) {
-        return localization.newPasswordModal.flashMessagePasswordExceedsMaxLength;
-      } else if (password.match(validCharsRegex) === null) {
-        return localization.newPasswordModal.flashMessageInvalidCharsInPassword;
-      } else {
-        return null;
       }
+
+      var error_message;
+      var result = password.validate(new PasswordValidation({
+        callback: function (text, elem, v) {error_message = v.message();},
+        message: localization.validation.passwordLessThanMinLength,
+        message_max: localization.validation.passwordExceedsMaxLength,
+        message_digits: localization.validation.passwordNeedsLetterAndDigit
+      }));
+
+      return result ? null : error_message;
     },
     resetPassword: function() {
       var model = this;
