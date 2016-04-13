@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"È necessario aggiungere almeno un altro firmatario prima di richiedere gli allegati.",
 "_designViewAttachmentRequestedFrom":"Richiesto: <span class='put-attachment-name'></span> da <span class='put-person-name'></span>",
 "_designViewCustomField":"Nuovo campo",
+"_designViewCustomFieldLabel":"Nuovo campo...",
 "_designViewCustomMessageConfirmation":"Messaggio di conferma",
 "_designViewCustomMessageInvitation":"Messaggio di invito",
 "_designViewCustomMessagePreview":"Anteprima",

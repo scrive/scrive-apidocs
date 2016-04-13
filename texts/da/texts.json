@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"Det er påkrævet, at du som minimum tilføjer endnu en signeringspart, inden du anmoder om at vedhæfte filer.",
 "_designViewAttachmentRequestedFrom":"Anmodet: <span class='put-attachment-name'></span> fra <span class='put-person-name'></span>",
 "_designViewCustomField":"Nyt felt",
+"_designViewCustomFieldLabel":"Nyt felt...",
 "_designViewCustomMessageConfirmation":"Bekræftelsesbesked",
 "_designViewCustomMessageInvitation":"Invitationsbesked",
 "_designViewCustomMessagePreview":"Gennemse",

@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"Jāpievieno vismaz vēl viena parakstītāja puse, lai varētu pieprasīt pielikumus.",
 "_designViewAttachmentRequestedFrom":"Pieprasīts: <span class='put-person-name'></span> pieprasīja <span class='put-attachment-name'></span>",
 "_designViewCustomField":"Jauns lauks",
+"_designViewCustomFieldLabel":"Jauns lauks...",
 "_designViewCustomMessageConfirmation":"Apstiprinājuma paziņojums",
 "_designViewCustomMessageInvitation":"Uzaicinājuma paziņojums",
 "_designViewCustomMessagePreview":"Priekšskatījums",

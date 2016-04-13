@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"Vous devez encore ajouter au moins un signataire avant de demander des pièces jointes.",
 "_designViewAttachmentRequestedFrom":"Requis: <span class='put-attachment-name'></span> de la part de<span class='put-person-name'></span>",
 "_designViewCustomField":"Nouveau champ",
+"_designViewCustomFieldLabel":"Nouveau champ...",
 "_designViewCustomMessageConfirmation":"Message de confirmation",
 "_designViewCustomMessageInvitation":"Message d'invitation",
 "_designViewCustomMessagePreview":"Prévisualiser",

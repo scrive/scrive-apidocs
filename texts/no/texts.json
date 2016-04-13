@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"Du må legge til minst én part til før du kan be om vedlegg.",
 "_designViewAttachmentRequestedFrom":"Forespurt: <span class='put-attachment-name'></span> fra <span class='put-person-name'></span>",
 "_designViewCustomField":"Nytt felt",
+"_designViewCustomFieldLabel":"Nytt felt...",
 "_designViewCustomMessageConfirmation":"Bekreftelsesmelding",
 "_designViewCustomMessageInvitation":"Invitasjonsmelding",
 "_designViewCustomMessagePreview":"Forhåndsvis",

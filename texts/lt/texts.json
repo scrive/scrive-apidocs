@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"Prieš pareikalaudami priedų turite pridėti dar bent vieną pasirašantįjį.",
 "_designViewAttachmentRequestedFrom":"Pareikalauta: <span class='put-attachment-name'></span> iš <span class='put-person-name'></span>",
 "_designViewCustomField":"Naujas laukelis",
+"_designViewCustomFieldLabel":"Naujas laukelis...",
 "_designViewCustomMessageConfirmation":"Patvirtinimo pranešimas",
 "_designViewCustomMessageInvitation":"Pasiūlymo pranešimas",
 "_designViewCustomMessagePreview":"Peržiūra",
