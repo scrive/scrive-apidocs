@@ -10,6 +10,7 @@ var ViewSize = require("../viewsize");
 var PageTask = require("../../../js/tasks.js").PageTask;
 var $ = require("jquery");
 var Field = require("../../../js/fields.js").Field;
+var classNames = require("classnames");
 
   module.exports = React.createClass({
     mixins: [TaskMixin],
@@ -86,17 +87,17 @@ var Field = require("../../../js/fields.js").Field;
       var name = self.props.name;
       var field = self.props.field;
 
-      var inputClass = React.addons.classSet({
+      var inputClass = classNames({
         "obligatory-input": true,
         "valid": !self.props.model.askForSSN()
       });
 
-      var buttonClass = React.addons.classSet({
+      var buttonClass = classNames({
         "button-block": true,
         "inactive": !this.props.canSign
       });
 
-      var divClass = React.addons.classSet({
+      var divClass = classNames({
         "col-xs-6": !ViewSize.isSmall(),
         "col-xs-12": ViewSize.isSmall(),
         "center-block": true

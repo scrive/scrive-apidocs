@@ -5,6 +5,7 @@ var Button = require("../../../common/button");
 var InfoTextInput = require("../../../common/infotextinput");
 var NorwegianIdentifyModel = require("./norwegianidentifymodel");
 var FlashMessage = require("../../../../js/flashmessages.js").FlashMessage;
+var classNames = require("classnames");
 
   module.exports = React.createClass({
     propTypes: {
@@ -34,18 +35,18 @@ var FlashMessage = require("../../../../js/flashmessages.js").FlashMessage;
         marginTop: "27px"
       };
 
-      var textinputClass = React.addons.classSet({
+      var textinputClass = classNames({
         "identify-phone-number": true,
         "valid": this.validMobile(),
         "active": model.canEditMobile()
       });
 
-      var buttonDesktopClass = React.addons.classSet({
+      var buttonDesktopClass = classNames({
         "identify-box-button-select": true,
         "identify-box-button-selected": model.isDesktopMode()
       });
 
-      var buttonMobileClass = React.addons.classSet({
+      var buttonMobileClass = classNames({
         "identify-box-button-select": true,
         "identify-box-button-selected": model.isMobileMode()
       });

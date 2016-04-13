@@ -3,6 +3,7 @@ var React = require("react");
 var Button = require("../../common/button");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 var Document = require("../../../js/documents.js").Document;
+var classNames = require("classnames");
 
   var Menu = React.createClass({
     getInitialState: function () {
@@ -87,7 +88,7 @@ var Document = require("../../../js/documents.js").Document;
       var hasDownloadButton = doc.showpdfdownload();
       var downloadUrl = doc.mainfile().downloadLinkForMainFile(doc.title());
 
-      var sectionClass = React.addons.classSet({
+      var sectionClass = classNames({
         "section": true,
         "instructions": true
       });

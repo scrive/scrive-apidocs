@@ -1,6 +1,7 @@
 var React = require("react");
 var $ = require("jquery");
 var _ = require("underscore");
+var classNames = require("classnames");
 
 /*
 Standard select boxes.
@@ -108,9 +109,10 @@ module.exports = React.createClass({
     var labelStyle = {width: this.props.width - EXTRA_BUTTON_WIDTH + "px"};
     mainStyle = _.extend(mainStyle, this.props.style);
     labelStyle = _.extend(labelStyle, this.props.style);
-    var mainClass = "select " +
-      (this.props.className ? this.props.className : "") + " " +
-      (this.inactive() ? "inactive" : "");
+    var mainClass = classNames(this.props.className, {
+      "select": true,
+      "inactive": this.inactive()
+    });
 
     return (
       <div

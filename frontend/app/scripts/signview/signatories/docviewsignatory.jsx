@@ -3,6 +3,7 @@ var BackboneMixin = require("../../common/backbone_mixin");
 var Backbone = require("backbone");
 var LanguageService = require("../../common/language_service");
 var ViewSize = require("../viewsize");
+var classNames = require("classnames");
 
 module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -106,7 +107,7 @@ module.exports = React.createClass({
       var smallView = ViewSize.isSmall();
       var mediumView = ViewSize.isMedium();
 
-      var divClass = React.addons.classSet({
+      var divClass = classNames({
         "col-xs-4": !smallView && !mediumView,
         "col-xs-6": mediumView,
         "section": smallView,

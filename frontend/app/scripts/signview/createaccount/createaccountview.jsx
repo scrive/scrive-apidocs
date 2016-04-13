@@ -5,6 +5,7 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 var Document = require("../../../js/documents.js").Document;
 var Submit = require("../../../js/submits.js").Submit;
 var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
+var classNames = require("classnames");
 
   module.exports = React.createClass({
     propTypes: {
@@ -55,8 +56,7 @@ var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
     },
 
     render: function () {
-      var cx = React.addons.classSet;
-      var mainContainerClasses = cx({
+      var mainContainerClasses = classNames({
         "small-screen": BrowserInfo.isSmallScreen(),
         "save-backup-copy": true,
         "save": true,

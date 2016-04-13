@@ -12,6 +12,7 @@ var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
 var trackTimeout = require("../../common/track_timeout");
+var classNames = require("classnames");
 
   var ChangeAuthenticationModalModel = Backbone.Model.extend({
     initialize: function (args) {
@@ -216,10 +217,6 @@ var trackTimeout = require("../../common/track_timeout");
     render: function () {
       var model = this.props.model;
 
-      var authenticationValueClass = React.addons.classSet({
-        "obligatory-input": model.isAuthenticationValueInvalid()
-      });
-
       return (
         <div>
           <label>
@@ -238,7 +235,7 @@ var trackTimeout = require("../../common/track_timeout");
                 infotext={this.getAuthenticationValuePlaceholderText()}
                 value={model.newAuthenticationValue()}
                 onChange={this.setAuthenticationValue}
-                className={authenticationValueClass}
+                className={classNames({"obligatory-input": model.isAuthenticationValueInvalid()})}
               />
               <label className="infotext">{localization.docview.changeAuthentication.valueInfotext}</label>
             </div>

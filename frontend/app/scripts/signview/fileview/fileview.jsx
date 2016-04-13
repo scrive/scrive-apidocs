@@ -6,6 +6,8 @@ var FilePageView = require("./filepageview");
 var File = require("../../../js/files.js").File;
 var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 var $ = require("jquery");
+var classNames = require("classnames");
+
   module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(File).isRequired,
@@ -138,7 +140,7 @@ var $ = require("jquery");
     render: function () {
       var file = this.props.model;
 
-      var sectionClass = React.addons.classSet({
+      var sectionClass = classNames({
         "section": true,
         "document-pages": file.ready()
       });

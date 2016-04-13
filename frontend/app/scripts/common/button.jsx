@@ -1,6 +1,7 @@
 var React = require("react");
 var $ = require("jquery");
 var _ = require("underscore");
+var classNames = require("classnames");
 
 /**
  * A button component in React. It does not have all properties of original backbone button,
@@ -85,21 +86,13 @@ var _ = require("underscore");
       if (this.props.width)
         return this.props.width - 2*this.borderWidth() - 2* this.labelPadding();
     },
-    sizeClass : function() {
-     if (this.props.size == "tiny")
-         return "button-small";
-     else if (this.props.size == "big")
-         return "button-large";
-     return "";
-    },
-    multilineClass : function() {
-      return this.props.multiline ? "button-signleline": "";
-    },
-    inactiveClass : function() {
-      return (this.props.oneClick && this.state.clicked) ? "inactive " : "";
-    },
     className : function() {
-      return this.inactiveClass() + (this.props.className || "") + " button " + this.sizeClass() + " " + (this.state.type || "") + " " + this.multilineClass();
+      return classNames("button",this.props.className, this.state.type, {
+        "button-small": this.props.size == "tiny",
+        "button-large": this.props.size == "big",
+        "inactive": this.props.oneClick && this.state.clicked,
+        "button-signleline" : this.props.multiline
+      });
     },
     style : function() {
       return  _.extend({width: this.width()},this.props.style);

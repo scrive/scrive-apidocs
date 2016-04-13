@@ -9,6 +9,7 @@ var AuthorAttachmentView = require("./authorattachmentview");
 var AuthorAttachment = require("../../../js/authorattachment.js").AuthorAttachment;
 var PageTask = require("../../../js/tasks.js").PageTask;
 var $ = require("jquery");
+var classNames = require("classnames");
 
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin, TaskMixin],
@@ -84,11 +85,11 @@ var $ = require("jquery");
       var showPages = this.state.showPages;
       var isPagesLoaded = model.pages() !== undefined;
 
-      var buttonClass = React.addons.classSet({
+      var buttonClass = classNames({
         "for-signing": canSign
       });
 
-      var fullClass = React.addons.classSet({
+      var fullClass = classNames({
         "col-sm-7": true,
         "full-height": model.isRequired() && canSign
       });

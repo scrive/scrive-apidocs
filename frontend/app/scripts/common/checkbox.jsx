@@ -1,4 +1,5 @@
 var React = require("react");
+var classNames = require("classnames");
 
 /**
  * A checkbox component. Used in branding settings.
@@ -33,13 +34,13 @@ var React = require("react");
 
     render: function() {
 
-      var checkboxClasses = React.addons.classSet({
+      var checkboxClasses = classNames({
         'checkbox': true,
         'checked': this.props.checked
       });
 
       return (
-        <div className={React.addons.classSet("checkbox-box",this.props.className)}>
+        <div className={classNames("checkbox-box",this.props.className)}>
           <div onClick={this.handleClick} className={checkboxClasses} style={this.props.style} tabIndex="0" onKeyDown={this.handleKeyDn}>
             <div className="checkmark" />
           </div>

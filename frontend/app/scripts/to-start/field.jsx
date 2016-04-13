@@ -2,6 +2,7 @@ var React = require("react");
 var BackboneMixin = require("../common/backbone_mixin");
 var InfoTextInput = require("../common/infotextinput");
 var Checkbox = require("../common/checkbox");
+var classNames = require("classnames");
 
 
 module.exports = React.createClass({
@@ -52,7 +53,7 @@ module.exports = React.createClass({
 
     var c = this.changeHandler;
 
-    var classes = React.addons.classSet({
+    var classes = classNames({
       'field-input': isTextField,
       'needs-sender-action': obligatory,
       'optional-input': !obligatory,

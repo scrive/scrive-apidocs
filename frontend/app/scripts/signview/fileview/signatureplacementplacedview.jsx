@@ -5,6 +5,7 @@ var SignatureModal = require("../signaturemodal/signaturemodal");
 var zoomTools = require("../../common/zoomtools");
 var PageTask = require("../../../js/tasks.js").PageTask;
 var $ = require("jquery");
+var classNames = require("classnames");
 
   module.exports = React.createClass({
     _openTry: 0,
@@ -92,12 +93,12 @@ var $ = require("jquery");
       var drawing = doc.pending() && doc.currentSignatoryCanSign() && signatory.current();
       var hasImage = field.value() !== "" || field.signatureFile() != undefined;
 
-      var divClass = React.addons.classSet({
+      var divClass = classNames({
         "placedfield": true,
         "empty-signature": !hasImage
       });
 
-      var boxClass = React.addons.classSet({
+      var boxClass = classNames({
         "signatureBox": drawing,
         "forDrawing": drawing,
         "signaturePlaceholder": !hasImage,

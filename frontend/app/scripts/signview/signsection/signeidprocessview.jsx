@@ -10,6 +10,7 @@ var Signatory = require("../../../js/signatories.js").Signatory;
 var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 var $ = require("jquery");
+var classNames = require("classnames");
 
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -103,7 +104,7 @@ var $ = require("jquery");
       var ssn = this.props.ssn;
       var hasError = this.state.error;
 
-      var divClass = React.addons.classSet({
+      var divClass = classNames({
         "col-xs-6": !ViewSize.isSmall(),
         "col-xs-12": ViewSize.isSmall(),
         "center-block": true

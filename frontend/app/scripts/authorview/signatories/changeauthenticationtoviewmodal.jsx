@@ -12,6 +12,7 @@ var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
 var trackTimeout = require("../../common/track_timeout");
+var classNames = require("classnames");
 
   var ChangeAuthenticationToViewModalModel = Backbone.Model.extend({
     initialize: function (args) {
@@ -222,14 +223,6 @@ var trackTimeout = require("../../common/track_timeout");
 
     render: function () {
       var model = this.props.model;
-
-      var personalNumberClass = React.addons.classSet({
-        "obligatory-input": !model.isPersonalNumberValid()
-      });
-      var mobileNumberClass = React.addons.classSet({
-        "obligatory-input": !model.isMobileNumberValid()
-      });
-
       return (
         <div>
           <label>
@@ -248,7 +241,7 @@ var trackTimeout = require("../../common/track_timeout");
                 infotext={this.getPersonalNumberPlaceholderText()}
                 value={model.personalNumber()}
                 onChange={this.setPersonalNumber}
-                className={personalNumberClass}
+                className={classNames({"obligatory-input": !model.isPersonalNumberValid()})}
               />
             </div>
           }
@@ -259,7 +252,7 @@ var trackTimeout = require("../../common/track_timeout");
                 inputtype="text"
                 value={model.mobileNumber()}
                 onChange={this.setMobileNumber}
-                className={mobileNumberClass}
+                className={classNames({"obligatory-input": !model.isMobileNumberValid()})}
               />
             </div>
           }

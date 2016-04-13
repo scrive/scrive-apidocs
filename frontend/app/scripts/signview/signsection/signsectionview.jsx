@@ -24,6 +24,7 @@ var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 var trackTimeout = require("../../common/track_timeout");
 var PageTask = require("../../../js/tasks.js").PageTask;
 var TaskMixin = require("../tasks/task_mixin");
+var classNames = require("classnames");
 
   module.exports = React.createClass({
 
@@ -325,7 +326,7 @@ var TaskMixin = require("../tasks/task_mixin");
       var phoneField = sig.mobileField();
       var ssnField = sig.personalnumberField();
 
-      var sectionClass = React.addons.classSet({
+      var sectionClass = classNames({
         "section": true,
         "sign": true,
         "small-screen": BrowserInfo.isSmallScreen(),

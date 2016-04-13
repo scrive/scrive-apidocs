@@ -1,6 +1,7 @@
 var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
 var Backbone = require("backbone");
+var classNames = require("classnames");
 
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -41,7 +42,7 @@ var Backbone = require("backbone");
     },
     render: function () {
       var signatory = this.props.signatory;
-      var divClass = React.addons.classSet({
+      var divClass = className({
         "sig": true,
         "first": this.props.first,
         "last": this.props.last,

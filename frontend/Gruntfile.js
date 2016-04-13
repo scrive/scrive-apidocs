@@ -216,6 +216,7 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/bower_components/moment/moment.js",
           util.format("<%= yeoman.app %>/bower_components/moment/locale/{%s}.js", langFromTexts.join(",")),
           "<%= yeoman.app %>/bower_components/es6-promise/promise.js",
+          "<%= yeoman.app %>/bower_components/classnames/index.js",
           "<%= yeoman.app %>/libs/*.js",
           "<%= yeoman.app %>/js/global/cookie.js",
           "<%= yeoman.app %>/js/global/time.js",

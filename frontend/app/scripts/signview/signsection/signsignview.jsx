@@ -7,6 +7,7 @@ var TaskMixin = require("../tasks/task_mixin");
 var ViewSize = require("../viewsize");
 var PageTask = require("../../../js/tasks.js").PageTask;
 var $ = require("jquery");
+var classNames = require("classnames");
 
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin, TaskMixin],
@@ -61,12 +62,12 @@ var $ = require("jquery");
 
       var canHaveRejectButton = model.hasRejectOption();
 
-      var buttonClass = React.addons.classSet({
+      var buttonClass = classNames({
         "button-block": true,
         "inactive": !this.props.canSign
       });
 
-      var divClass = React.addons.classSet({
+      var divClass = classNames({
         "col-xs-6": !ViewSize.isSmall(),
         "col-xs-12": ViewSize.isSmall(),
         "center-block": true

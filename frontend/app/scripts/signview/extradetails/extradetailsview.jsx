@@ -7,6 +7,7 @@ var TaskMixin = require("../tasks/task_mixin");
 var ViewSize = require("../viewsize");
 var PageTask = require("../../../js/tasks.js").PageTask;
 var $ = require("jquery");
+var classNames = require("classnames");
 
   var DetailsList = React.createClass({
     render: function () {
@@ -16,7 +17,7 @@ var $ = require("jquery");
       });
       childs = _.compact(childs);
 
-      var leftClass = React.addons.classSet({
+      var leftClass = classNames({
         "col-md-6": true,
         "pull-right": !(childs[1] || childs[2])
       });
@@ -173,28 +174,28 @@ var $ = require("jquery");
 
       var fstnameField = sig.fstnameField();
       var sndnameField = sig.sndnameField();
-      var nameClass = React.addons.classSet({
+      var nameClass = classNames({
         "signview-input": true,
         "obligatory-input": true,
         "valid": !signview.askForName()
       });
 
       var emailField = sig.emailField();
-      var emailClass = React.addons.classSet({
+      var emailClass = classNames({
         "signview-input": true,
         "obligatory-input": true,
         "valid": !signview.askForEmail()
       });
 
       var ssnField = sig.personalnumberField();
-      var ssnClass = React.addons.classSet({
+      var ssnClass = classNames({
         "signview-input": true,
         "obligatory-input": true,
         "valid": !signview.askForSSNIfNotEID()
       });
 
       var phoneField = sig.mobileField();
-      var phoneClass = React.addons.classSet({
+      var phoneClass = classNames({
         "signview-input": true,
         "obligatory-input": true,
         "valid": !signview.askForPhoneIfNotPin()

@@ -5,6 +5,7 @@ var Button = require("../../common/button");
 var InfoTextInput = require("../../common/infotextinput");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 var ViewSize = require("../viewsize");
+var classNames = require("classnames");
 
   module.exports = React.createClass({
     propTypes: {
@@ -17,7 +18,7 @@ var ViewSize = require("../viewsize");
     render: function () {
       var self = this;
 
-      var divClass = React.addons.classSet({
+      var divClass = classNames({
         "col-xs-6": !ViewSize.isSmall(),
         "col-xs-12": ViewSize.isSmall(),
         "center-block": true

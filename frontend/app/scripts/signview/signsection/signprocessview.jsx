@@ -5,6 +5,7 @@ var Button = require("../../common/button");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 var ViewSize = require("../viewsize");
 var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
+var classNames = require("classnames");
 
   var Status = React.createClass({
     render: function () {
@@ -40,7 +41,7 @@ var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
     },
 
     render: function () {
-      var divClass = React.addons.classSet({
+      var divClass = classNames({
         "col-xs-6": !ViewSize.isSmall(),
         "col-xs-12": ViewSize.isSmall(),
         "center-block": true

@@ -4,6 +4,8 @@ var TaskMixin = require("../tasks/task_mixin");
 var PageTask = require("../../../js/tasks.js").PageTask;
 var $ = require("jquery");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
+var classNames = require("classnames");
+
   module.exports = React.createClass({
     mixins: [PlacementMixin, TaskMixin],
 
@@ -49,14 +51,14 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
         doc.currentSignatoryCanSign();
       var checked = field.isChecked();
 
-      var divClass = React.addons.classSet({
+      var divClass = classNames({
         "placedfield": true,
         "js-checkbox": true,
         "to-fill-now": current,
         "obligatory": field.obligatory()
       });
 
-      var boxClass = React.addons.classSet({
+      var boxClass = classNames({
         "placedcheckbox": current,
         "placedcheckbox-noactive": !current,
         "checked": checked

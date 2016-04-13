@@ -8,6 +8,7 @@ var ViewSize = require("../viewsize");
 var Field = require("../../../js/fields.js").Field;
 var PageTask = require("../../../js/tasks.js").PageTask;
 var $ = require("jquery");
+var classNames = require("classnames");
 
   module.exports = React.createClass({
     mixins: [TaskMixin],
@@ -78,17 +79,17 @@ var $ = require("jquery");
       var canSign = this.props.canSign;
       var onNext = this.props.onNext;
 
-      var inputClass = React.addons.classSet({
+      var inputClass = classNames({
         "obligatory-input": true,
         "valid": !model.askForPhone()
       });
 
-      var buttonClass = React.addons.classSet({
+      var buttonClass = classNames({
         "button-block": true,
         "inactive": !canSign
       });
 
-      var divClass = React.addons.classSet({
+      var divClass = classNames({
         "col-xs-6": !ViewSize.isSmall(),
         "col-xs-12": ViewSize.isSmall(),
         "center-block": true

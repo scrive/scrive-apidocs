@@ -5,6 +5,8 @@ var TaskMixin = require("../tasks/task_mixin");
 var PageTask = require("../../../js/tasks.js").PageTask;
 var $ = require("jquery");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
+var classNames = require("classnames");
+
   module.exports = React.createClass({
     _shouldBlur: true,
 
@@ -153,7 +155,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
       var current = signatory == doc.currentSignatory() && doc.currentSignatoryCanSign();
       var editing = self.state.editing;
 
-      var divClass = React.addons.classSet({
+      var divClass = classNames({
         "placedfield": true,
         "placement-text": true,
         "to-fill-now": self.canSign(),
@@ -180,7 +182,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
         divStyle.display = "none";
       }
 
-      var boxClass = React.addons.classSet({
+      var boxClass = classNames({
         "placedfieldvalue": true,
         "value": true
       });
