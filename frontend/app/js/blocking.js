@@ -167,6 +167,7 @@ var BlockingInfoView = require("./blocking.js").BlockingInfoView;
                 var span = $('<span />');
                 span.html($('<a/>').text(localization.blocking.free.hasNot.subtext1)
                         .attr('href', this.subscriptionPageHref));
+                span.click(function (e) { e.preventDefault(); });
                 return span;
             } else if(model.hasUsedAll()) {
                 var span = $('<span />');
