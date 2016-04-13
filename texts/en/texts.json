@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"You need to add at least one more signatory before requesting attachments.",
 "_designViewAttachmentRequestedFrom":"Requested: <span class='put-attachment-name'></span> from <span class='put-person-name'></span>",
 "_designViewCustomField":"New field",
+"_designViewCustomFieldLabel":"New field...",
 "_designViewCustomMessageConfirmation":"Confirmation message",
 "_designViewCustomMessageInvitation":"Invitation message",
 "_designViewCustomMessagePreview":"Preview",

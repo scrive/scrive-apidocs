@@ -78,7 +78,7 @@ var Field = require("../../../js/fields.js").Field;
       var options = [];
 
       options.push({
-        name: localization.designview.customField,
+        name: localization.designview.customFieldLabel,
         onSelect: function () {
           var newField = new Field({
             signatory: sig,
