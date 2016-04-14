@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"Enne manuste taotlemist peate lisama vähemalt ühe täiendava allkirjastaja.",
 "_designViewAttachmentRequestedFrom":"Taotlus esitatud: <span class='put-attachment-name'></span> kasutajalt <span class='put-person-name'></span>",
 "_designViewCustomField":"Uus väli",
+"_designViewCustomFieldLabel":"Uus väli...",
 "_designViewCustomMessageConfirmation":"Kinnitussõnum",
 "_designViewCustomMessageInvitation":"Kutse sõnum",
 "_designViewCustomMessagePreview":"Eelvaade",

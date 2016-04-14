@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"Θα πρέπει να προσθέσετε τουλάχιστον έναν ακόμα υπογράφοντα προτού ζητήσετε επισυνάψεις. ",
 "_designViewAttachmentRequestedFrom":"Υποβλήθηκε αίτηση για: <span class='put-attachment-name'></span> from <span class='put-person-name'></span> ",
 "_designViewCustomField":"Νέο πεδίο ",
+"_designViewCustomFieldLabel":"Νέο πεδίο...",
 "_designViewCustomMessageConfirmation":"Μήνυμα επιβεβαίωσης",
 "_designViewCustomMessageInvitation":"Μήνυμα πρόσκλησης",
 "_designViewCustomMessagePreview":"Ανασκόπηση",

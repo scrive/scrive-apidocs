@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"Þú þarft að bæta við að minnsta kosti einum undirritunaraðila til viðbótar áður en óskað er eftir fylgiskjölum.",
 "_designViewAttachmentRequestedFrom":"Óskað eftir: <span class='put-attachment-name'></span> frá <span class='put-person-name'></span>",
 "_designViewCustomField":"Nýr reitur",
+"_designViewCustomFieldLabel":"Nýr reitur...",
 "_designViewCustomMessageConfirmation":"Staðfestingarskilaboð",
 "_designViewCustomMessageInvitation":"Boðskilaboð",
 "_designViewCustomMessagePreview":"Forskoðun",

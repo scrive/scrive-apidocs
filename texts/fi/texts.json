@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"Tarvitset ainakin yhden allekirjoittajan enemmän ennen liitteiden pyytämistä.",
 "_designViewAttachmentRequestedFrom":"Pyydetty: <span class='put-attachment-name'></span> henkilöltä <span class='put-person-name'></span>",
 "_designViewCustomField":"Uusi kenttä",
+"_designViewCustomFieldLabel":"Uusi kenttä...",
 "_designViewCustomMessageConfirmation":"Vahvistusviesti",
 "_designViewCustomMessageInvitation":"Kutsuviesti",
 "_designViewCustomMessagePreview":"Esikatselu",

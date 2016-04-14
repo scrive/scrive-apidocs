@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"Du behöver lägga till åtminstone en till part innan du kan begära bilagor.",
 "_designViewAttachmentRequestedFrom":"Begärd: <span class='put-attachment-name'></span> från <span class='put-person-name'></span>",
 "_designViewCustomField":"Nytt fält",
+"_designViewCustomFieldLabel":"Nytt fält...",
 "_designViewCustomMessageConfirmation":"Bekräftelsemeddelande",
 "_designViewCustomMessageInvitation":"Inbjudningsmeddelande",
 "_designViewCustomMessagePreview":"Förhandsgranska",

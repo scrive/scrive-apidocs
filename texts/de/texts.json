@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"Sie müssen mindestens noch einen Unterzeichner hinzufügen, um Anlagen anfordern zu können.",
 "_designViewAttachmentRequestedFrom":"Angeforderter Anhang: <span class='put-attachment-name'></span> von <span class='put-person-name'></span>",
 "_designViewCustomField":"Neues Feld",
+"_designViewCustomFieldLabel":"Neues Feld...",
 "_designViewCustomMessageConfirmation":"Bestätigungsnachricht",
 "_designViewCustomMessageInvitation":"Einladungsnachricht",
 "_designViewCustomMessagePreview":"Vorschau",

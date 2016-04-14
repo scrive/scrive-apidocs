@@ -350,6 +350,7 @@ javascriptLocalisation =
              , editField: "$_designViewEditField()$"
              , whatField: "$_designViewWhatField()$"
              , customField: "$_designViewCustomField()$"
+             , customFieldLabel: "$_designViewCustomFieldLabel()$"
              , fieldName: "$_designViewFieldName()$"
              , addParty: "$_designViewAddParty()$"
              , moreSettings: "$_designViewMoreSettings()$"

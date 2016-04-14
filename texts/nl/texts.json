@@ -397,6 +397,7 @@
 "_designViewAttachmentRequestedFlashMessage":"U moet ten minste nog een ondertekenaar toevoegen voordat u bijlagen kunt aanvragen.",
 "_designViewAttachmentRequestedFrom":"Aangevraagd: <span class='put-attachment-name'></span> van <span class='put-person-name'></span>",
 "_designViewCustomField":"Nieuw veld",
+"_designViewCustomFieldLabel":"Nieuw veld...",
 "_designViewCustomMessageConfirmation":"Bevestigingsbericht",
 "_designViewCustomMessageInvitation":"Uitnodigingsbericht",
 "_designViewCustomMessagePreview":"Voorbeeld",
