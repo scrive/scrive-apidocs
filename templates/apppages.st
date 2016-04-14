@@ -11,7 +11,7 @@ wholePage=$doctype()$
          $header()$
          $flashmessages()$
          $content:noescape()$
-         $contactUsVivocha()$
+         $contactUs()$
          $pageFooter()$
  	</div>
       </body>
@@ -216,7 +216,7 @@ var fromTemplateHeader = {
 </script>
 <script src="$cdnbaseurl$/compiled/all/header-$versioncode$.js"></script>
 ####
-contactUsVivocha=
+contactUs=
 <aside class="contact">
   <nav class="contact">
   <ul>
@@ -238,19 +238,9 @@ contactUsVivocha=
         </div>
       </a>
     </li>
-    <li class="chat-vivocha vivocha_widget_openmedia_chat">
-      <a class="" href="#vivocha-chat-url">
-        <div class="icon"><img src="$cdnbaseurl$/img/chat.png" width="32" height="32" alt="Chat"/></div>
-        <div class="hover">
-          <p>$_vivochaChatNow()$</p>
-          <small>$_vivochaLiveChat()$</small>
-        </div>
-      </a>
-    </li>
   </ul>
 </nav>
 </aside>
-$loadScript(src="https://www.vivocha.com/a/scrive/api/vivocha.js")$
 ####
 loadScript=
 <script>
