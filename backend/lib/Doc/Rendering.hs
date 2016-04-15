@@ -138,10 +138,10 @@ runRendering fileContent widthInPixels renderingMode rp = do
             ]
 
     (`finally` cleanupProcess) $ do
-      pagesOk <- fetchPages pagePath (T.pack sourcePath) (pagesCount rp) hout
+      fetchPages pagePath (T.pack sourcePath) (pagesCount rp) hout
       statsOk <- showStatistics hout
 
-      when (not pagesOk || not statsOk) $ do
+      when (not statsOk) $ do
         out <- liftBase $ hGetContents hout
         err <- liftBase $ hGetContents herr
         logAttention "Unexpected mutool output" $ object [
@@ -163,31 +163,32 @@ runRendering fileContent widthInPixels renderingMode rp = do
             ]
           return False
 
-    fetchPages :: (Int -> FilePath) -> T.Text -> Int -> Handle -> m Bool
+    fetchPages :: (Int -> FilePath) -> T.Text -> Int -> Handle -> m ()
     fetchPages pagePath sourcePath n h = go 1
       where
-        go k | k > n = return True
+        go k | k > n = return ()
         go k = liftBase (hIsEOF h) >>= \case
-          True  -> return False
+          True  -> return ()
           False -> do
             line <- liftBase $ T.hGetLine h
             case P.parseOnly (pageInfoParser sourcePath) line of
-              Left err -> logAttention "Couldn't parse PageInfo" $ object [
-                  "stdout" .= line
-                , "error" .= err
-                ]
+              Left _ -> do
+                logInfo "Mutool returned something else than PageInfo" $ object [
+                    "stdout" .= line
+                  ]
+                go k
               Right info@PageInfo{..} -> localData ["page" .= piPage] $ do
-                econtent <- liftBase . E.try . BS.readFile $ pagePath piPage
-                case econtent of
-                  Right content -> do
-                    putPage rp piPage content >>= \case
-                      True  -> logInfo "Page retrieved successfully" $ toJSON info
-                      False -> logAttention_ "Page already in place"
-                  Left (e :: IOError) -> do
+                content <- liftBase (E.try . BS.readFile $ pagePath piPage) >>= \case
+                  Right content -> return content
+                  Left (e::IOError) -> do
                     logAttention "Couldn't open page file" $ object [
                         "error" .= show e
                       ]
-            go $ k + 1
+                    return BS.empty
+                putPage rp piPage content >>= \case
+                  True  -> logInfo "Page retrieved successfully" $ toJSON info
+                  False -> logAttention_ "Page already in place"
+                go $ k + 1
 
     msToSecsM :: P.Parser Double -> P.Parser Double
     msToSecsM = fmap (/ 1000)
