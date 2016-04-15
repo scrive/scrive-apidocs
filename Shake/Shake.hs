@@ -274,7 +274,9 @@ frontendBuildRules = do
     withGitHub "Grunt Build" $
       command [EchoStdout True, Cwd "frontend", AddEnv "LC_ALL" "en_US.UTF-8"] "grunt" ["build"]
 
-  "grunt-clean" ~> cmd (Cwd "frontend") "grunt clean"
+  "grunt-clean" ~> do
+    need ["_build/npm-install"]
+    cmd (Cwd "frontend") "grunt clean"
 
 -- | Frontend test rules
 frontendTestRules :: Rules ()
