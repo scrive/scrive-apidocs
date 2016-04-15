@@ -1,6 +1,5 @@
 module Cron (main) where
 
-import Control.Arrow (first)
 import Control.Monad
 import Control.Monad.Base
 import Data.Maybe
@@ -73,7 +72,7 @@ main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   appConf <- readConfig putStrLn config
-  LogRunner{..} <- mkLogRunner Nothing "cron" $ logConfig appConf
+  LogRunner{..} <- mkLogRunner "cron" $ logConfig appConf
   withLoggerWait $ do
     checkExecutables
 
@@ -81,7 +80,7 @@ main = do
     withPostgreSQL (simpleSource $ connSettings []) $
       checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
 
-    (pool, _) <- first ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource $ connSettings kontraComposites)
+    pool <- ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource $ connSettings kontraComposites)
     templates <- liftBase readGlobalTemplates
     rng <- newCryptoRNGState
     filecache <- MemCache.new BS.length 52428800

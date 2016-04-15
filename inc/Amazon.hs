@@ -15,6 +15,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
+import Data.Time
 import Log
 import Log.Class.Instances ()
 import Network.AWS.Authentication
@@ -167,36 +168,44 @@ deleteFile ctxs3action bucket url = do
 
 
 getFileContents :: (MonadBase IO m, MonadLog m) => S3Action -> File -> m (Maybe BS.ByteString)
-getFileContents s3action File{..} = localData [identifier_ fileid] $ do
+getFileContents s3action File{..} = localData fileData $ do
   mcontent <- getContent filestorage
   case mcontent of
     Nothing -> do
-      logAttention "No content for file" $ object [
-          "filename" .= filename
-        ]
+      logAttention_ "No content for file"
       return Nothing
     Just content -> do
       if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
         then do
-          logAttention "SHA1 checksum of file doesn't match the one in the database" $ object [
-              "filename" .= filename
-            ]
-             -- value "database_sha1" filechecksum
-             -- value "calculated_sha1" (SHA1.hash content)
+          logAttention_ "SHA1 checksum of file doesn't match the one in the database"
           return Nothing
         else return $ Just content
   where
+    fileData = [
+        identifier_ fileid
+      , "filename" .= filename
+      , "filesize" .= filesize
+      ]
+
     getContent (FileStorageMemory content) = return . Just $ content
     getContent (FileStorageAWS bucket url aes) = do
-      result <- liftBase $ AWS.runAction $ s3action {
-          AWS.s3object = url
-        , AWS.s3bucket = bucket
-      }
+      (result, timeDiff) <- liftBase $ do
+        startTime <- getCurrentTime
+        result <- AWS.runAction $ s3action {
+            AWS.s3object = url
+          , AWS.s3bucket = bucket
+        }
+        finishTime <- getCurrentTime
+        return (result, realToFrac $ diffUTCTime finishTime startTime :: Double)
       case result of
-        Right rsp -> return . Just . aesDecrypt aes . BSL.toStrict $ HTTP.rspBody rsp
+        Right rsp -> do
+          logInfo "Fetching file from AWS succeeded" $ object [
+              "time" .= timeDiff
+            ]
+          return . Just . aesDecrypt aes . BSL.toStrict $ HTTP.rspBody rsp
         Left err -> do
-          logAttention "AWS.runAction failed" $ object [
+          logAttention "Fetching file from AWS failed" $ object [
               "error" .= show err
-            , "filename" .= filename
+            , "time" .= timeDiff
             ]
           return Nothing

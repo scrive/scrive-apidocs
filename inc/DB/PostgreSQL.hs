@@ -7,7 +7,6 @@ import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Aeson.Types (Pair)
-import Data.IORef
 import Data.Pool
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
@@ -50,27 +49,24 @@ pgConnSettings dbconf ctypes = def {
 -- - disposes connections outside of request (reduce latency)
 -- - limits the amount of connections at the same time
 createPoolSource :: ConnectionSettings
-                 -> IO (ConnectionTracker -> ConnectionSource, IORef Int)
+                 -> IO (ConnectionTracker -> ConnectionSource)
 createPoolSource cs = do
   pool <- createPool (connect cs) disconnect
     1  -- number of subpools, we do not need that functionality
     10 -- connection linger time after returned to pool
     maxConnections
-  usedConns <- newIORef 0
-  return (\tracker -> ConnectionSource {
-    withConnection = withResource' usedConns tracker pool . (clearStats >=>)
-  }, usedConns)
+  return $ \tracker -> ConnectionSource {
+    withConnection = withResource' tracker pool . (clearStats >=>)
+  }
   where
     withResource' :: (MonadBase IO m, MonadMask m)
-                  => IORef Int
-                  -> ConnectionTracker
+                  => ConnectionTracker
                   -> Pool Connection
                   -> (Connection -> m a)
                   -> m a
-    withResource' usedConns (ConnectionTracker tracker) pool m = mask $ \restore -> do
+    withResource' (ConnectionTracker tracker) pool m = mask $ \restore -> do
       (resource, local) <- liftBase $ takeResource pool
       (allocatedNow, availableNow) <- internalPoolState local
-      liftBase . writeIORef usedConns $ allocatedNow - availableNow
       tracker allocatedNow availableNow
       ret <- restore (m resource) `onException` do
         liftBase (destroyResource pool local resource)
