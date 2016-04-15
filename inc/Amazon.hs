@@ -15,6 +15,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
+import Data.Time
 import Log
 import Log.Class.Instances ()
 import Network.AWS.Authentication
@@ -188,15 +189,24 @@ getFileContents s3action File{..} = localData [identifier_ fileid] $ do
   where
     getContent (FileStorageMemory content) = return . Just $ content
     getContent (FileStorageAWS bucket url aes) = do
-      result <- liftBase $ AWS.runAction $ s3action {
-          AWS.s3object = url
-        , AWS.s3bucket = bucket
-      }
-      case result of
-        Right rsp -> return . Just . aesDecrypt aes . BSL.toStrict $ HTTP.rspBody rsp
+      (result, timeDiff) <- liftBase $ do
+        startTime <- getCurrentTime
+        result <- AWS.runAction $ s3action {
+            AWS.s3object = url
+          , AWS.s3bucket = bucket
+        }
+        finishTime <- getCurrentTime
+        return (result, realToFrac $ diffUTCTime finishTime startTime :: Double)
+      localData [] $ case result of
+        Right rsp -> do
+          logInfo "Fetching file from AWS succeeded" $ object [
+              "time" .= timeDiff
+            ]
+          return . Just . aesDecrypt aes . BSL.toStrict $ HTTP.rspBody rsp
         Left err -> do
-          logAttention "AWS.runAction failed" $ object [
+          logAttention "Fetching file from AWS failed" $ object [
               "error" .= show err
             , "filename" .= filename
+            , "time" .= timeDiff
             ]
           return Nothing
