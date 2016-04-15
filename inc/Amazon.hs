@@ -168,25 +168,25 @@ deleteFile ctxs3action bucket url = do
 
 
 getFileContents :: (MonadBase IO m, MonadLog m) => S3Action -> File -> m (Maybe BS.ByteString)
-getFileContents s3action File{..} = localData [identifier_ fileid] $ do
+getFileContents s3action File{..} = localData fileData $ do
   mcontent <- getContent filestorage
   case mcontent of
     Nothing -> do
-      logAttention "No content for file" $ object [
-          "filename" .= filename
-        ]
+      logAttention_ "No content for file"
       return Nothing
     Just content -> do
       if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
         then do
-          logAttention "SHA1 checksum of file doesn't match the one in the database" $ object [
-              "filename" .= filename
-            ]
-             -- value "database_sha1" filechecksum
-             -- value "calculated_sha1" (SHA1.hash content)
+          logAttention_ "SHA1 checksum of file doesn't match the one in the database"
           return Nothing
         else return $ Just content
   where
+    fileData = [
+        identifier_ fileid
+      , "filename" .= filename
+      , "filesize" .= filesize
+      ]
+
     getContent (FileStorageMemory content) = return . Just $ content
     getContent (FileStorageAWS bucket url aes) = do
       (result, timeDiff) <- liftBase $ do
@@ -197,7 +197,7 @@ getFileContents s3action File{..} = localData [identifier_ fileid] $ do
         }
         finishTime <- getCurrentTime
         return (result, realToFrac $ diffUTCTime finishTime startTime :: Double)
-      localData [] $ case result of
+      case result of
         Right rsp -> do
           logInfo "Fetching file from AWS succeeded" $ object [
               "time" .= timeDiff
@@ -206,7 +206,6 @@ getFileContents s3action File{..} = localData [identifier_ fileid] $ do
         Left err -> do
           logAttention "Fetching file from AWS failed" $ object [
               "error" .= show err
-            , "filename" .= filename
             , "time" .= timeDiff
             ]
           return Nothing
