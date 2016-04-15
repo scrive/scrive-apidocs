@@ -16,6 +16,7 @@ module Doc.Rendering
     , getPageSizeOfPDFInPoints
     ) where
 
+import Control.DeepSeq
 import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Except
@@ -30,6 +31,7 @@ import System.Exit
 import System.IO
 import System.Process hiding (readProcessWithExitCode)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
+import qualified Control.Concurrent.Thread.Lifted as LT
 import qualified Control.Exception.Lifted as E
 import qualified Data.Attoparsec.Text as P
 import qualified Data.ByteString.Char8 as BS
@@ -37,6 +39,7 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+import qualified Data.Text.Lazy.IO as LT
 import qualified Data.Unjson as Unjson
 import qualified System.IO.Temp
 
@@ -128,40 +131,36 @@ runRendering fileContent widthInPixels renderingMode rp = do
 
     (Nothing, Just hout, Just herr, ph) <- liftBase $ createProcess_ "mutool draw" mutoolDraw
 
+    -- Collect stderr in parallel to stdout so that its buffer won't get full.
+    (_, getStdErr) <- liftBase (LT.fork $ E.evaluate . force =<< LT.hGetContents herr)
+
     let cleanupProcess = do
-          ec <- liftBase $ do
+          (err, ec) <- liftBase $ do
+            err <- getStdErr
             hClose hout
             hClose herr
-            waitForProcess ph
+            ec <- waitForProcess ph
+            return (err, ec)
           logInfo "Rendering completed" $ object [
               "code" .= show ec
+            , case err of
+                Right msg -> "stderr" .= msg
+                Left ex   -> "error"  .= show ex
             ]
 
     (`finally` cleanupProcess) $ do
       fetchPages pagePath (T.pack sourcePath) (pagesCount rp) hout
-      statsOk <- showStatistics hout
-
-      when (not statsOk) $ do
-        out <- liftBase $ hGetContents hout
-        err <- liftBase $ hGetContents herr
-        logAttention "Unexpected mutool output" $ object [
-            "stdout" .= err
-          , "stderr" .= out
-          ]
+      showStatistics hout
   where
-    showStatistics :: Handle -> m Bool
+    showStatistics :: Handle -> m ()
     showStatistics h = do
       stats <- liftBase $ T.hGetContents h
       case P.parseOnly renderingStatsParser stats of
-        Right rs -> do
-          logInfo "Rendering statistics" $ toJSON rs
-          return True
-        Left err -> do
-          logAttention "Couldn't parse RenderingStats" $ object [
-              "error" .= err
-            , "stdout" .= stats
-            ]
-          return False
+        Right rs -> logInfo "Rendering statistics" $ toJSON rs
+        Left err -> logAttention "Couldn't parse RenderingStats" $ object [
+            "error" .= err
+          , "stdout" .= stats
+          ]
 
     fetchPages :: (Int -> FilePath) -> T.Text -> Int -> Handle -> m ()
     fetchPages pagePath sourcePath n h = go 1
