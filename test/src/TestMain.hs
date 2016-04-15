@@ -132,7 +132,7 @@ testMany (allargs, ts) = do
   templates <- readGlobalTemplates
 
   let connSettings = pgConnSettings pgconf
-  lr@LogRunner{..} <- mkLogRunner Nothing "test" def
+  lr@LogRunner{..} <- mkLogRunner "test" def
   withLogger . runDBT (simpleSource $ connSettings []) def $ do
     migrateDatabase (logInfo_ . T.pack) kontraExtensions kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions

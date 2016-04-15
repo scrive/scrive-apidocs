@@ -1,6 +1,5 @@
 module MessengerServer (main) where
 
-import Control.Arrow (first)
 import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Database.PostgreSQL.Consumers
@@ -52,14 +51,14 @@ main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   conf <- readConfig putStrLn config
-  lr@LogRunner{..} <- mkLogRunner Nothing "messenger" $ mscLogConfig conf
+  lr@LogRunner{..} <- mkLogRunner "messenger" $ mscLogConfig conf
   withLogger $ do
     checkExecutables
 
     let cs = pgConnSettings (mscDBConfig conf) []
     withPostgreSQL (simpleSource cs) $
       checkDatabase (logInfo_ . T.pack) [] messengerTables
-    (pool, _) <- first ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource cs)
+    pool <- ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource cs)
     rng <- newCryptoRNGState
 
     E.bracket (startServer lr pool rng conf) (liftBase killThread) . const $ do
