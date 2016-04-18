@@ -169,7 +169,9 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
 
       (res, mdres, handlerTime) <- localData [identifier_ $ sesID session] $ do
         startTime <- liftIO currentTime
-        (eres, ctx') <- routeHandlers ctx
+        -- Make Response filters local to the main request handler so
+        -- that they do not interfere with delayed response.
+        ((eres, ctx'), resFilter) <- getFilter $ routeHandlers ctx
         finishTime <- liftIO currentTime
 
         F.updateFlashCookie (ctxflashmessages ctx) (ctxflashmessages ctx')
@@ -179,7 +181,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
           updateSession session (ctxsessionid ctx') (userid <$> ctxmaybeuser ctx') (userid <$> ctxmaybepaduser ctx')
 
         -- Make sure response is well defined before passing it further.
-        res <- eres `deepseq` case eres of
+        res <- E.evaluate . force . resFilter =<< case eres of
           Right response -> return response
           Left response -> do
             rollback -- if exception was thrown, rollback everything
@@ -195,7 +197,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
       Nothing -> return res
       Just dr -> do
         logInfo_ "Waiting for delayed response"
-        fromMaybe res <$> unDelayedResponse dr
+        maybe (return res) (E.evaluate . force) =<< unDelayedResponse dr
 
     realFinishTime <- liftIO getCurrentTime
     logInfo "Handler finished" . object $ [

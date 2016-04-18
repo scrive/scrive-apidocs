@@ -402,7 +402,7 @@ handleFilePages fid = do
    URL: /pages/{fileid}
    Method: GET
  -}
-showPage :: Kontrakcja m => FileID -> Int -> m Response
+showPage :: Kontrakcja m => FileID -> Int -> m KontraLink
 showPage fid pageNo = logFile fid $ do
   checkFileAccess fid
   mpixelwidth <- readField "pixelwidth"
@@ -415,9 +415,10 @@ showPage fid pageNo = logFile fid $ do
         ]
       respond404
     else do
-      -- Wait for the page after database connection is freed.
+      -- Wait for the page after database connection is freed and loop
+      -- back if it's not there after 1 minute.
       modifyContext $ \ctx -> ctx { ctxdelayedresponse = Just $ returnPage rp }
-      return $ (toResponse "") { rsCode = 420 }
+      return LoopBack
   where
     returnPage rp = DelayedResponse $ localData ["page" .= pageNo] $ do
       logInfo_ "Retrieving rendered page"
