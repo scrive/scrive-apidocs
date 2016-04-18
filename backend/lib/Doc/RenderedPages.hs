@@ -10,15 +10,15 @@ module Doc.RenderedPages
   ) where
 
 import Control.Concurrent.MVar.Lifted
-import Control.Monad.Catch
 import Control.DeepSeq
 import Control.Monad.Base
+import Control.Monad.Catch
 import Data.Hashable
 import GHC.Generics
 import Log
 import qualified Data.ByteString as BS
-import qualified Data.Vector as V
 import qualified Data.Text as T
+import qualified Data.Vector as V
 
 import File.FileID
 import KontraPrelude
