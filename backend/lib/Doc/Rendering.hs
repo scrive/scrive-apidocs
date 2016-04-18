@@ -66,20 +66,22 @@ instance ToJSON PageInfo where
     ]
 
 data RenderingStats = RenderingStats {
-    rsTotal   :: !Double
-  , rsPages   :: !Double
-  , rsAverage :: !Double
-  , rsFastest :: !PageInfo
-  , rsSlowest :: !PageInfo
+    rsTotal    :: !Double
+  , rsFileSize :: !Int
+  , rsPages    :: !Int
+  , rsAverage  :: !Double
+  , rsFastest  :: !PageInfo
+  , rsSlowest  :: !PageInfo
   } deriving (Eq, Ord, Show)
 
 instance ToJSON RenderingStats where
   toJSON RenderingStats{..} = object [
-      "total"   .= rsTotal
-    , "pages"   .= rsPages
-    , "average" .= rsAverage
-    , "fastest" .= rsFastest
-    , "slowest" .= rsSlowest
+      "total"    .= rsTotal
+    , "filesize" .= rsFileSize
+    , "pages"    .= rsPages
+    , "average"  .= rsAverage
+    , "fastest"  .= rsFastest
+    , "slowest"  .= rsSlowest
     ]
 
 ----------------------------------------
@@ -155,7 +157,7 @@ runRendering fileContent widthInPixels renderingMode rp = do
     fetchStatistics :: Handle -> m ()
     fetchStatistics h = do
       stats <- liftBase $ T.hGetContents h
-      case P.parseOnly renderingStatsParser stats of
+      case P.parseOnly (renderingStatsParser $ BS.length fileContent) stats of
         Right rs -> logInfo "Rendering statistics" $ toJSON rs
         Left err -> logAttention "Couldn't parse RenderingStats" $ object [
             "error" .= err
@@ -192,12 +194,13 @@ runRendering fileContent widthInPixels renderingMode rp = do
     msToSecsM :: P.Parser Double -> P.Parser Double
     msToSecsM = fmap (/ 1000)
 
-    renderingStatsParser :: P.Parser RenderingStats
-    renderingStatsParser = pure RenderingStats
+    renderingStatsParser :: Int -> P.Parser RenderingStats
+    renderingStatsParser fileSize = pure RenderingStats
       <* P.string "total "
       <*> msToSecsM P.double
+      <*> pure fileSize
       <* P.string "ms / "
-      <*> P.double
+      <*> P.decimal
       <* P.string " pages for an average of "
       <*> msToSecsM P.double
       <* P.string "ms"
