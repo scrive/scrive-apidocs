@@ -6,6 +6,10 @@ var webpackConfig = require("./webpack.config.js");
 var generateVersionId = require("./custom_grunt_tasks/utils/version_id_generator");
 var langFromTexts = fs.readdirSync(path.join(__dirname, "../texts"));
 
+// moment.js uses nn locale name for norwegian
+langFromTexts = _.without(langFromTexts, "no");
+langFromTexts.push("nn");
+
 module.exports = function (grunt) {
   require("load-grunt-tasks")(grunt);
   require("time-grunt")(grunt);
