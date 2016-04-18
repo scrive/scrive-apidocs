@@ -7,6 +7,7 @@ module Context (
   , contextToMailContext
   ) where
 
+import Control.Monad.Catch
 import Control.Monad.Trans.Control
 import Happstack.Server (Response)
 import Log.Class
@@ -41,7 +42,7 @@ import qualified MemCache
 -- by the request handler. If present in 'Context', it will overwrite Response
 -- object returned by standard means.
 newtype DelayedResponse = DelayedResponse {
-    unDelayedResponse :: forall m. (MonadLog m, MonadBaseControl IO m) => m (Maybe Response)
+    unDelayedResponse :: forall m. (MonadBaseControl IO m, MonadLog m, MonadThrow m) => m (Maybe Response)
   }
 
 data Context = Context

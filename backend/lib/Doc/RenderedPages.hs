@@ -10,13 +10,15 @@ module Doc.RenderedPages
   ) where
 
 import Control.Concurrent.MVar.Lifted
+import Control.Monad.Catch
 import Control.DeepSeq
 import Control.Monad.Base
 import Data.Hashable
 import GHC.Generics
-import Log.Class
+import Log
 import qualified Data.ByteString as BS
 import qualified Data.Vector as V
+import qualified Data.Text as T
 
 import File.FileID
 import KontraPrelude
@@ -43,11 +45,17 @@ instance Hashable RenderingMode
 renderedPages :: MonadBase IO m => Int -> m RenderedPages
 renderedPages n = RenderedPages <$> V.replicateM n newEmptyMVar
 
-putPage :: MonadBase IO m => RenderedPages -> Int -> BS.ByteString -> m Bool
-putPage rp n = tryPutMVar $ unRenderedPages rp V.! (n-1)
+putPage
+  :: (MonadBase IO m, MonadLog m, MonadThrow m)
+  => RenderedPages -> Int -> BS.ByteString -> m Bool
+putPage rp pageNo content = throwIfOutsideRange rp pageNo $ do
+  tryPutMVar (unRenderedPages rp V.! (pageNo - 1)) content
 
-getPage :: (MonadBase IO m, MonadLog m) => RenderedPages -> Int -> m BS.ByteString
-getPage rp n = readMVar . (V.! (n-1)) $ unRenderedPages rp
+getPage
+  :: (MonadBase IO m, MonadLog m, MonadThrow m)
+  => RenderedPages -> Int -> m BS.ByteString
+getPage rp pageNo = throwIfOutsideRange rp pageNo $ do
+  readMVar . (V.! (pageNo - 1)) $ unRenderedPages rp
 
 pagesCount :: RenderedPages -> Int
 pagesCount (RenderedPages ps) = V.length ps
@@ -59,3 +67,16 @@ type RenderedPagesCache = MemCache.MemCache (FileID, Int, RenderingMode) Rendere
 
 legacyWidthInPixels :: Int
 legacyWidthInPixels = 943
+
+----------------------------------------
+
+throwIfOutsideRange :: (MonadLog m, MonadThrow m) => RenderedPages -> Int -> m a -> m a
+throwIfOutsideRange rp pageNo action = case pageNo > pagesCount rp of
+  False -> action
+  True  -> do
+    let noRequestedPage = "Requested page doesn't exist"
+    logAttention noRequestedPage $ object [
+        "pages" .= pagesCount rp
+      , "page"  .= pageNo
+      ]
+    $unexpectedErrorM $ T.unpack noRequestedPage
