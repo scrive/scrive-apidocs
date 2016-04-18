@@ -150,10 +150,10 @@ runRendering fileContent widthInPixels renderingMode rp = do
 
     (`finally` cleanupProcess) $ do
       fetchPages pagePath (T.pack sourcePath) (pagesCount rp) hout
-      showStatistics hout
+      fetchStatistics hout
   where
-    showStatistics :: Handle -> m ()
-    showStatistics h = do
+    fetchStatistics :: Handle -> m ()
+    fetchStatistics h = do
       stats <- liftBase $ T.hGetContents h
       case P.parseOnly renderingStatsParser stats of
         Right rs -> logInfo "Rendering statistics" $ toJSON rs
