@@ -42,7 +42,7 @@ createSender (SendersConfig getConf) = Sender {
 }
 
 clearMobileNumber :: String -> String
-clearMobileNumber = filter (\c -> not (c `elem` " -()."))
+clearMobileNumber = filter (\c -> not (c `elem` (" -()."::String)))
 
 sendSMSHelper :: (MonadDB m, MonadThrow m, CryptoRNG m, MonadBase IO m, MonadIO m, MonadLog m) => SenderConfig -> ShortMessage -> m Bool
 sendSMSHelper GlobalMouthSender{..} ShortMessage{..} = localData [identifier_ smID] $ do
