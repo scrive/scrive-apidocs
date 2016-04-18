@@ -415,14 +415,13 @@ showPage fid pageNo = logFile fid $ do
         ]
       respond404
     else do
-      -- Wait for the page after database connection is freed and
-      -- return 420 if it's not there in 30 seconds.
+      -- Wait for the page after database connection is freed.
       modifyContext $ \ctx -> ctx { ctxdelayedresponse = Just $ returnPage rp }
       return $ (toResponse "") { rsCode = 420 }
   where
     returnPage rp = DelayedResponse $ localData ["page" .= pageNo] $ do
       logInfo_ "Retrieving rendered page"
-      timeout 30000000 (getPage rp pageNo) >>= \case
+      timeout 60000000 (getPage rp pageNo) >>= \case
         Nothing -> do
           logInfo_ "Page not found"
           return Nothing
