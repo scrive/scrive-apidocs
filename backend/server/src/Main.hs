@@ -62,8 +62,8 @@ main = withCurlDo $ do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   appConf <- readConfig putStrLn config
   let connSettings = pgConnSettings $ dbConfig appConf
-  (pool, usedConns) <- liftBase . createPoolSource $ connSettings kontraComposites
-  lr@LogRunner{..} <- mkLogRunner (Just usedConns) "kontrakcja" $ logConfig appConf
+  pool <- liftBase . createPoolSource $ connSettings kontraComposites
+  lr@LogRunner{..} <- mkLogRunner "kontrakcja" $ logConfig appConf
   withLoggerWait $ do
     logInfo "Starting kontrakcja-server" $ object [
         "version" .= Version.versionID

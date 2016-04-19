@@ -21,6 +21,9 @@ if [ "$2" == "" ]; then
 else
     export SELENIUM_TEST_LANG="$2"
     export SELENIUM_TAKE_SCREENSHOTS="1"
+
+    # delete old screenshots because apparently TC doesn't do that :(
+    rm selenium_screenshots/${SELENIUM_TEST_LANG}_*
 fi
 set -- "$1"  # clear second arg
 if [ "$1" == "all" ]; then

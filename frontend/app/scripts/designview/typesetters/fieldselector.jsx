@@ -62,9 +62,9 @@ var Field = require("../../../js/fields.js").Field;
         {type: "name", order: 1, text: localization.fstname},
         {type: "name", order: 2, text: localization.sndname},
         {type: "email",  text: localization.email},
-        {type: "company",  text: localization.companyNumber},
+        {type: "company",  text: localization.company},
         {type: "personal_number",  text: localization.personalNumber},
-        {type: "company_number",  text: localization.company},
+        {type: "company_number",  text: localization.companyNumber},
         {type: "mobile",  text: localization.phone}
       ];
 
