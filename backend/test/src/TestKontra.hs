@@ -333,6 +333,7 @@ mkContext lang = do
         , ctxbrandeddomain = bd
         , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" "" Nothing
         , ctxnetsconfig = Nothing
+        , ctxdelayedresponse = Nothing
         , ctxthreadjoins = []
     }
 

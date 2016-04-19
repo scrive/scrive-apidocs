@@ -1,7 +1,7 @@
 module Utils.IO where
 
 import Control.Concurrent
-import Control.Monad.IO.Class
+import Control.Monad.Base
 import Log
 import System.Exit
 import System.IO
@@ -30,11 +30,11 @@ curl_exe :: String
 curl_exe = "curl"
 
 -- | This function executes curl as external program. Args are args.
-readCurl :: MonadIO m
+readCurl :: MonadBase IO m
          => [String]                 -- ^ any arguments
          -> BSL.ByteString           -- ^ standard input
          -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
-readCurl args input = liftIO $ readProcessWithExitCode curl_exe (["--max-time", "10", "-s", "-S"] ++ args) input
+readCurl args input = liftBase $ readProcessWithExitCode curl_exe (["--max-time", "10", "-s", "-S"] ++ args) input
 
 checkPathToExecutable :: FilePath -> IO FilePath
 checkPathToExecutable filepath = do
@@ -51,22 +51,23 @@ importantExecutables :: [(T.Text, [String])]
 importantExecutables =
   [ ("java", ["-version"])
   , ("curl", ["-V"])
+  , ("stdbuf", [])
   , ("mutool", [])
   , ("convert", [])
   , ("lessc", ["-v"])
   , ("gnuplot", ["--version"])
   ]
 
-checkExecutables :: (MonadLog m, MonadIO m, Functor m) => m ()
+checkExecutables :: (MonadLog m, MonadBase IO m, Functor m) => m ()
 checkExecutables = logInfo "Checking paths to executables:" . object
   =<< mapM check (sort importantExecutables)
   where
     check (filepath, options) = do
-      realpathlines <- lines `fmap` (liftIO $ checkPathToExecutable $ T.unpack filepath)
+      realpathlines <- lines `fmap` (liftBase $ checkPathToExecutable $ T.unpack filepath)
       case realpathlines of
         [] -> return $ filepath .= ("*** not found ***"::T.Text)
         (realpath:_) -> if null options
           then return $ filepath .= realpath
           else do
-            ver <- liftIO $ checkExecutableVersion realpath options
+            ver <- liftBase $ checkExecutableVersion realpath options
             return $ filepath .= (realpath : lines ver)

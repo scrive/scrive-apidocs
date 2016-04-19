@@ -16,10 +16,12 @@ module Doc.Rendering
     , getPageSizeOfPDFInPoints
     ) where
 
+import Control.DeepSeq
 import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Except
 import Control.Monad.Trans.Control
+import Data.Aeson
 import Data.Char
 import Data.Typeable
 import Log
@@ -27,24 +29,62 @@ import Numeric
 import System.Directory
 import System.Exit
 import System.IO
+import System.Process hiding (readProcessWithExitCode)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
+import qualified Control.Concurrent.Thread.Lifted as LT
 import qualified Control.Exception.Lifted as E
+import qualified Data.Attoparsec.Text as P
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+import qualified Data.Text.Lazy.IO as LT
 import qualified Data.Unjson as Unjson
 import qualified System.IO.Temp
 
 import DB
+import Doc.Logging
 import Doc.RenderedPages
 import File.Model
 import File.Storage
 import ForkAction
 import Kontra
 import KontraPrelude
-import Log.Identifier
 import qualified Amazon as AWS
 import qualified MemCache as MemCache
+
+data PageInfo = PageInfo {
+    piPage :: !Int
+  , piTime :: !Double
+  } deriving (Eq, Ord, Show)
+
+instance ToJSON PageInfo where
+  toJSON PageInfo{..} = object [
+      "page" .= piPage
+    , "time" .= piTime
+    ]
+
+data RenderingStats = RenderingStats {
+    rsTotal    :: !Double
+  , rsFileSize :: !Int
+  , rsPages    :: !Int
+  , rsAverage  :: !Double
+  , rsFastest  :: !PageInfo
+  , rsSlowest  :: !PageInfo
+  } deriving (Eq, Ord, Show)
+
+instance ToJSON RenderingStats where
+  toJSON RenderingStats{..} = object [
+      "total"    .= rsTotal
+    , "filesize" .= rsFileSize
+    , "pages"    .= rsPages
+    , "average"  .= rsAverage
+    , "fastest"  .= rsFastest
+    , "slowest"  .= rsSlowest
+    ]
+
+----------------------------------------
 
 data RemoveJavaScriptSpec = RemoveJavaScriptSpec
     { input          :: String
@@ -60,66 +100,134 @@ unjsonRemoveJavaScriptSpec = Unjson.objectOf $ pure RemoveJavaScriptSpec
 withSystemTempDirectory :: (MonadBaseControl IO m) => String -> (String -> m a) -> m a
 withSystemTempDirectory = liftBaseOp . System.IO.Temp.withSystemTempDirectory
 
+-- |Convert PDF to PNG images of pages
+runRendering
+  :: forall m. (KontraMonad m, MonadLog m, MonadDB m, MonadThrow m, MonadMask m, MonadBaseControl IO m, AWS.AmazonMonad m)
+  => BS.ByteString
+  -> Int
+  -> RenderingMode
+  -> RenderedPages
+  -> m ()
+runRendering fileContent widthInPixels renderingMode rp = do
+  withSystemTempDirectory "mudraw" $ \tmpPath -> do
+    let sourcePath = tmpPath ++ "/source.pdf"
+    liftBase $ BS.writeFile sourcePath fileContent
+    let pagePath n = tmpPath ++ "/output-" ++ show n ++ ".png"
+        -- Run mutool through stdbuf and set its output buffering to
+        -- line buffering as communication via pipes uses block
+        -- buffering by default and we would not be able to get page
+        -- info immediately.
+        mutoolDraw = (proc "stdbuf" $ concat [
+            ["-oL"]
+          , ["mutool", "draw"]
+          , ["-o", tmpPath ++ "/output-%d.png"]
+          , ["-w", show widthInPixels]
+          , ["-A", "8"]
+          , ["-st"]
+          , [sourcePath]
+          , ["1" | RenderingModeFirstPageOnly <- return renderingMode]
+          ]) {
+            std_out = CreatePipe
+          , std_err = CreatePipe
+          }
 
-readNumberedFiles :: (MonadBaseControl IO m) => (Int -> FilePath) -> Int -> [BS.ByteString] -> m [BS.ByteString]
-readNumberedFiles pathFromNumber currentNumber accum = do
-  econtentx <- E.try (liftBase $ BS.readFile (pathFromNumber currentNumber))
-  case econtentx of
-    Right contentx -> do
-       readNumberedFiles pathFromNumber (succ currentNumber) (contentx : accum)
-    Left (_ :: IOError) -> do
-       -- we could not open this file, it means it does not exists
-       return (reverse accum)
+    (Nothing, Just hout, Just herr, ph) <- liftBase $ createProcess_ "mutool draw" mutoolDraw
 
+    -- Collect stderr in parallel to stdout so that its buffer won't get full.
+    (_, getStdErr) <- liftBase (LT.fork $ E.evaluate . force =<< LT.hGetContents herr)
 
-{- |
-   Convert PDF to jpeg images of pages
- -}
-runRendering :: (KontraMonad m, MonadLog m, MonadDB m, MonadThrow m, MonadIO m, MonadBaseControl IO m, AWS.AmazonMonad m)
-                     => BS.ByteString
-                     -> FileID
-                     -> Int
-                     -> RenderingMode
-                     -> m RenderedPages
-runRendering fileContent fid widthInPixels renderingMode = do
-  withSystemTempDirectory "mudraw" $ \tmppath -> do
-    let sourcepath = tmppath ++ "/source.pdf"
+    let cleanupProcess = do
+          (err, ec) <- liftBase $ do
+            err <- getStdErr
+            hClose hout
+            hClose herr
+            ec <- waitForProcess ph
+            return (err, ec)
+          logInfo "Rendering completed" $ object [
+              "code" .= show ec
+            , case err of
+                Right msg -> "stderr" .= msg
+                Left ex   -> "error"  .= show ex
+            ]
 
-    liftIO $ BS.writeFile sourcepath fileContent
+    (`finally` cleanupProcess) $ do
+      fetchPages pagePath (T.pack sourcePath) (pagesCount rp) hout
+      fetchStatistics hout
+  where
+    fetchStatistics :: Handle -> m ()
+    fetchStatistics h = do
+      stats <- liftBase $ T.hGetContents h
+      case P.parseOnly (renderingStatsParser $ BS.length fileContent) stats of
+        Right rs -> logInfo "Rendering statistics" $ toJSON rs
+        Left err -> logAttention "Couldn't parse RenderingStats" $ object [
+            "error" .= err
+          , "stdout" .= stats
+          ]
 
-    let pathOfPage n = tmppath ++ "/output-" ++ show n ++ ".png"
+    fetchPages :: (Int -> FilePath) -> T.Text -> Int -> Handle -> m ()
+    fetchPages pagePath sourcePath n h = go 1
+      where
+        go k | k > n = return ()
+        go k = liftBase (hIsEOF h) >>= \case
+          True  -> return ()
+          False -> do
+            line <- liftBase $ T.hGetLine h
+            case P.parseOnly (pageInfoParser sourcePath) line of
+              Left _ -> do
+                logInfo "Mutool returned something else than PageInfo" $ object [
+                    "stdout" .= line
+                  ]
+                go k
+              Right info@PageInfo{..} -> localData ["page" .= piPage] $ do
+                content <- liftBase (E.try . BS.readFile $ pagePath piPage) >>= \case
+                  Right content -> return content
+                  Left (e::IOError) -> do
+                    logAttention "Couldn't open page file" $ object [
+                        "error" .= show e
+                      ]
+                    return BS.empty
+                putPage rp piPage content >>= \case
+                  True  -> logInfo "Page retrieved successfully" $ toJSON info
+                  False -> logAttention_ "Page already in place"
+                go $ k + 1
 
-    -- Note: Infrstructure here is prepared for existence of
-    -- background thread that will sniff already rendered
-    -- pages. Although it is not that easy to do that, as that thread
-    -- will need to wait for a file (n+1) to appear before reading
-    -- file (n). Potentials for race conditions also abound. Remember
-    -- about final condition as this is not clear when this thread is
-    -- supposed to finish.
+    msToSecsM :: P.Parser Double -> P.Parser Double
+    msToSecsM = fmap (/ 1000)
 
-    (exitcode,_outcontent,_errcontent) <-
-      liftIO $ readProcessWithExitCode "mutool"
-               (concat [ ["draw"]
-                       , ["-o", tmppath ++ "/output-%d.png"]
-                       , ["-w", show widthInPixels]
-                       , ["-A", "8"]
-                       , [sourcepath]
-                       , ["1" | RenderingModeFirstPageOnly <- return renderingMode] -- render only first page if so desired
-                       ]) BSL.empty
+    renderingStatsParser :: Int -> P.Parser RenderingStats
+    renderingStatsParser fileSize = pure RenderingStats
+      <* P.string "total "
+      <*> msToSecsM P.double
+      <*> pure fileSize
+      <* P.string "ms / "
+      <*> P.decimal
+      <* P.string " pages for an average of "
+      <*> msToSecsM P.double
+      <* P.string "ms"
+      <* P.endOfLine
+      <* P.string "fastest "
+      <*> edgeCase
+      <* P.endOfLine
+      <* P.string "slowest "
+      <*> edgeCase
+      where
+        edgeCase :: P.Parser PageInfo
+        edgeCase = pure PageInfo
+          <* P.string "page "
+          <*> P.decimal
+          <* P.string ": "
+          <*> msToSecsM P.double
+          <* P.string "ms"
 
-    when (exitcode /= ExitSuccess) $
-      logAttention_ "mudraw process for pdf->png render failed, will look for rendered images anyway"
-    pages <- readNumberedFiles pathOfPage 1 []
-    when (null pages) $ do
-      systmp <- liftIO $ getTemporaryDirectory
-      (path, handle) <- liftIO $ openTempFile systmp $ "mudraw-failed-" ++ show fid ++ "-.pdf"
-      logAttention "Cannot mudraw file" $ object [
-          identifier_ fid
-        , "path" .= path
-        ]
-      liftIO $ BS.hPutStr handle fileContent
-      liftIO $ hClose handle
-    return $ RenderedPages True pages
+    pageInfoParser :: T.Text -> P.Parser PageInfo
+    pageInfoParser pdf = pure PageInfo
+      <* P.string "page "
+      <* P.string pdf
+      <* P.space
+      <*> P.decimal
+      <* P.space
+      <*> msToSecsM P.double
+      <* P.string "ms"
 
 
 -- | 'getRenderedPages' returns 'RenderedPages' for document 'fileid'
@@ -127,37 +235,30 @@ runRendering fileContent fid widthInPixels renderingMode = do
 -- flag if full document should be rendered or only first page is
 -- enough.
 --
--- This function return immediatelly, so look for 'RenderedPages'
--- first argument to see if the page that is requested has already
--- been rendered. 'RenderedPages' is the final state of rendering.
---
 -- This function has internal caching system based on 'Context'
 getRenderedPages :: Kontrakcja m
                  => FileID
                  -> Int
                  -> RenderingMode
                  -> m RenderedPages
-getRenderedPages fileid pageWidthInPixels renderingMode = do
+getRenderedPages fid pageWidthInPixels renderingMode = logFile fid $ do
   let clampedPageWidthInPixels =
         min 4000 (max 100 pageWidthInPixels)
   Context{ctxnormalizeddocuments} <- getContext
-  -- Propper action
-  let key = (fileid,clampedPageWidthInPixels,renderingMode)
-  v <- MemCache.get key ctxnormalizeddocuments
-  case v of
-    Just pages -> return pages
-    Nothing -> do
-      -- Get file content before forking to possibly avoid fetching
-      -- file twice from Amazon. TODO: Bad workaround, this mechanism
-      -- needs to be rethought.
-      fileContent <- getFileIDContents fileid
-      MemCache.put key (RenderedPages False []) ctxnormalizeddocuments
-      forkAction ("Rendering file #" ++ show fileid) $ do
-        -- TODO: We should report error somewere
-        jpegpages <- runRendering fileContent fileid clampedPageWidthInPixels renderingMode
-        MemCache.put key jpegpages ctxnormalizeddocuments
-      return (RenderedPages False [])
-
+  let key = (fid, clampedPageWidthInPixels, renderingMode)
+  MemCache.fetch ctxnormalizeddocuments key $ do
+    fileContent <- getFileIDContents fid
+    liftBase (getNumberOfPDFPages fileContent) >>= \case
+      Left err -> do
+        logAttention "getNumberOfPDFPages failed" $ object [
+            "error" .= err
+          ]
+        internalError
+      Right pagesNo -> do
+        rp <- renderedPages pagesNo
+        forkAction "Rendering file" $ do
+          runRendering fileContent clampedPageWidthInPixels renderingMode rp
+        return rp
 
 data FileError = FileSizeError Int Int
                | FileFormatError

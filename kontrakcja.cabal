@@ -451,6 +451,7 @@ Library
                , hS3
                , happstack-server
                , happstack-static-routing
+               , hashable
                , hpqtypes
                , http-types
                , iconv
@@ -458,6 +459,7 @@ Library
                , json
                , kontrakcja-templates
                , lifted-base
+               , lifted-threads
                , log
                , mixpanel
                , mmap
@@ -468,6 +470,7 @@ Library
                , network-uri
                , process
                , process-extras
+               , psqueues
                , random
                , recurly
                , regex-tdfa
@@ -503,6 +506,7 @@ Library
                     , ConstraintKinds
                     , DeriveDataTypeable
                     , DeriveFunctor
+                    , DeriveGeneric
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -558,6 +562,7 @@ Executable kontrakcja-server
                     , ConstraintKinds
                     , DeriveDataTypeable
                     , DeriveFunctor
+                    , DeriveGeneric
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -608,6 +613,7 @@ Executable cron
                     , ConstraintKinds
                     , DeriveDataTypeable
                     , DeriveFunctor
+                    , DeriveGeneric
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -688,6 +694,7 @@ Executable kontrakcja-migrate
                     , ConstraintKinds
                     , DeriveDataTypeable
                     , DeriveFunctor
+                    , DeriveGeneric
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -750,9 +757,11 @@ Executable mailing-server
                , hS3
                , happstack-server
                , happstack-static-routing
+               , hashable
                , hpqtypes
                , json
                , lifted-base
+               , lifted-threads
                , log
                , monad-control
                , monad-time
@@ -760,6 +769,7 @@ Executable mailing-server
                , network
                , process
                , process-extras
+               , psqueues
                , resource-pool
                , scientific
                , stm
@@ -781,6 +791,7 @@ Executable mailing-server
                     , ConstraintKinds
                     , DeriveDataTypeable
                     , DeriveFunctor
+                    , DeriveGeneric
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -870,6 +881,7 @@ Executable messenger-server
                     , ConstraintKinds
                     , DeriveDataTypeable
                     , DeriveFunctor
+                    , DeriveGeneric
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -962,6 +974,7 @@ Executable kontrakcja-test
                     , ConstraintKinds
                     , DeriveDataTypeable
                     , DeriveFunctor
+                    , DeriveGeneric
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -1018,6 +1031,7 @@ Executable localization
                     , ConstraintKinds
                     , DeriveDataTypeable
                     , DeriveFunctor
+                    , DeriveGeneric
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -1066,6 +1080,7 @@ Executable routinglist
                     , ConstraintKinds
                     , DeriveDataTypeable
                     , DeriveFunctor
+                    , DeriveGeneric
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies

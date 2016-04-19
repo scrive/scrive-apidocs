@@ -98,7 +98,8 @@ instance Monad m => FilterMonad Response (ReqHandlerT m) where
   composeFilter f = ReqHandlerT . modify $ \st -> st { hsFilter = f . hsFilter st }
   getFilter m     = ReqHandlerT . StateT $ \st -> do
     (res, st') <- runStateT (unReqHandlerT m) st
-    return ((res, hsFilter st'), st')
+    -- Make Response filters local to the passed computation.
+    return ((res, hsFilter st'), st' { hsFilter = hsFilter st })
 
 instance (MonadIO m, MonadThrow m) => HasRqData (ReqHandlerT m) where
   askRqEnv = smAskRqEnv

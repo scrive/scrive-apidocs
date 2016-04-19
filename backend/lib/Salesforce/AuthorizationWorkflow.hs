@@ -5,7 +5,7 @@ module Salesforce.AuthorizationWorkflow (
   , testSalesforce ) where
 
 
-import Control.Monad.IO.Class
+import Control.Monad.Base
 import Control.Monad.Reader
 import Data.Int
 import Log
@@ -34,7 +34,7 @@ initAuthorizationWorkflowUrl mstate = do
                                                   _ -> "")
 
 {- Returns a refresh token, that we will get back when user agrees in salesforce to give us persmission (after following link from initAuthorizationWorkflowUrl) -}
-getRefreshTokenFromCode :: (MonadDB m, MonadLog m, MonadIO m, MonadReader c m, HasSalesforceConf c) => String -> m (Either String String)
+getRefreshTokenFromCode :: (MonadDB m, MonadLog m, MonadBase IO m, MonadReader c m, HasSalesforceConf c) => String -> m (Either String String)
 getRefreshTokenFromCode code = do
   sc <- getSalesforceConfM
   (exitcode, stdout , stderr) <- readCurl [
@@ -67,7 +67,7 @@ getRefreshTokenFromCode code = do
                            return $ Left "Response from salesforce was not a valid JSON"
 
 {- Every time we do a salesforce callback, we need to get new access token. We get it using refresh token -}
-getAccessTokenFromRefreshToken :: (MonadDB m, MonadIO m, MonadLog m, MonadReader c m, HasSalesforceConf c)
+getAccessTokenFromRefreshToken :: (MonadDB m, MonadBase IO m, MonadLog m, MonadReader c m, HasSalesforceConf c)
                                 => String -> m (Either (String, Int, String, String, String) String)
 getAccessTokenFromRefreshToken rtoken = do
   sc <- getSalesforceConfM
@@ -110,7 +110,7 @@ getAccessTokenFromRefreshToken rtoken = do
 
 
 {- Used by API call test salesforce. Let you check if salesfoce integration is set and working for a given url -}
-testSalesforce :: (MonadDB m, MonadIO m, MonadLog m, MonadReader c m, HasSalesforceConf c)
+testSalesforce :: (MonadDB m, MonadBase IO m, MonadLog m, MonadReader c m, HasSalesforceConf c)
                => String -> String -> m (Either (String, Int, String, String, String) (String, String))
 testSalesforce rtoken url = do
   matoken <- getAccessTokenFromRefreshToken rtoken

@@ -2,8 +2,8 @@ module Doc.API.Callback.Execute (execute) where
 
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.IO.Class
 import Control.Monad.Reader
+import Control.Monad.Trans.Control
 import Data.Int (Int32)
 import Data.Unjson
 import Log
@@ -45,7 +45,7 @@ import Utils.IO
 import Utils.String
 import qualified Utils.HTTP as Utils.HTTP
 
-execute :: (AmazonMonad m, MonadDB m, CryptoRNG m, MonadThrow m, MonadLog m, MonadIO m, MonadBase IO m,  MonadReader c m, HasSalesforceConf c, MailContextMonad m) => DocumentAPICallback -> m Bool
+execute :: (AmazonMonad m, MonadDB m, CryptoRNG m, MonadThrow m, MonadLog m, MonadBaseControl IO m,  MonadReader c m, HasSalesforceConf c, MailContextMonad m) => DocumentAPICallback -> m Bool
 execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
   exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor dacDocumentID
   if not exists then do
@@ -63,7 +63,7 @@ execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
           Just (OAuth2Scheme lg pwd tokenUrl scope) -> executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dacURL dacApiVersion
           _ -> executeStandardCallback Nothing doc dacURL dacApiVersion
 
-executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) => Maybe (String,String) -> Document -> String -> APIVersion -> m Bool
+executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBaseControl IO m) => Maybe (String,String) -> Document -> String -> APIVersion -> m Bool
 executeStandardCallback mBasicAuth doc url apiVersion = logDocument (documentid doc) $ do
   callbackParams <- callbackParamsWithDocumentJSON apiVersion doc
   (exitcode, _ , stderr) <- readCurl curlParams callbackParams
@@ -96,7 +96,7 @@ executeStandardCallback mBasicAuth doc url apiVersion = logDocument (documentid 
         ) ++
         [ url]
 
-executeOAuth2Callback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) =>
+executeOAuth2Callback :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBaseControl IO m) =>
                          (String,String,String,String) -> Document -> String -> APIVersion -> m Bool
 executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc callbackUrl apiVersion = logDocument (documentid doc) $ do
    (exitcode1, stdout1 , stderr1) <- readCurl [
@@ -147,7 +147,7 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc callbackUrl apiVersion = logDo
             return False
 
 
-callbackParamsWithDocumentJSON :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBase IO m, MonadIO m) =>
+callbackParamsWithDocumentJSON :: (AmazonMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBaseControl IO m) =>
                                   APIVersion -> Document -> m BSLU.ByteString
 callbackParamsWithDocumentJSON apiVersion doc = case apiVersion of
   V1 -> do
@@ -175,7 +175,7 @@ parseAccessToken str = do
     J.Ok js ->  join $ withJSValue js $ fromJSValueFieldCustom "auth" $ fromJSValueField "access_token"
     _ -> Nothing
 
-executeSalesforceCallback :: (MonadDB m, CryptoRNG m, MonadLog m, MonadThrow m, MonadIO m, MonadBase IO m, MonadReader c m, HasSalesforceConf c, MailContextMonad m) => Document -> String ->  String -> Int32 -> UserID -> m Bool
+executeSalesforceCallback :: (MonadDB m, CryptoRNG m, MonadLog m, MonadThrow m, MonadBase IO m, MonadReader c m, HasSalesforceConf c, MailContextMonad m) => Document -> String ->  String -> Int32 -> UserID -> m Bool
 executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid doc) $ do
   mtoken <- getAccessTokenFromRefreshToken rtoken
   case mtoken of
