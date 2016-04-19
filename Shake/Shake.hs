@@ -201,6 +201,9 @@ serverTestRules = do
 
   "kontrakcja-test" ~> do
     need ["_build/cabal-build", "kontrakcja_test.conf"]
+    -- removeFilesAfter is only performed on a successfull build, this file
+    -- needs to be cleaned regardless otherwise successive builds will fail
+    liftIO $ removeFiles "." ["kontrakcja-test.tix"]
     tc <- askOracle (TeamCity ())
     if tc
       then do
@@ -223,7 +226,6 @@ serverTestRules = do
          ++ " | hpc markup `xargs echo` --destdir=coverage-reports kontrakcja-test.tix"
         ) []
       command_ [Shell] "zip -r _build/coverage-reports.zip coverage-reports kontrakcja-test.tix" []
-      removeFilesAfter "." ["kontrakcja-test.tix"]
       removeFilesAfter "coverage-reports" ["//*"]
 
 needServerHaskellFiles :: Action ()
