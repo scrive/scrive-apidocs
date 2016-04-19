@@ -21,6 +21,10 @@ else
   cabal build 2>&1 | runghc build-scripts/Teamcity.hs ghc
   RESULT="${PIPESTATUS[0]}"
   echo "Generating urls"
-  ./dist/build/routinglist/routinglist $NGINX_CONF_PATH
+  if [ "$NGINX_CONF_PATH" = "" ]; then
+    echo "No NGINX_CONF_PATH set, not generating routing list"
+  else
+    ./dist/build/routinglist/routinglist $NGINX_CONF_PATH
+  fi
   exit "${RESULT}"
 fi
