@@ -105,6 +105,7 @@ javascriptLocalisation =
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , reviewAttachment: "$_ReviewAttachment()$"
              , reviewPDF: "$_ReviewPDF()$"
+             , downloadPDF : "$_DownloadPDF()$"
              , deletePDF: "$_DeletePDF()$"
              , accept : "$_Accept()$"
              , send : "$_send()$"
@@ -233,6 +234,9 @@ javascriptLocalisation =
                 , typeOfAttachment :  "$_authorAttachmentType()$"
                 , back : "$_authorAttachmentBack()$"
                 , add : "$_authorAttachmentAdd()$"
+                , mergedQuestion : "$_authorAttachmentMergedQuestion()$"
+                , merged : "$_authorAttachmentMerged()$"
+                , notMerged : "$_authorAttachmentNotMerged()$"
             }
           , signatoryAttachments : {
                 addAttachment:      "$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$"

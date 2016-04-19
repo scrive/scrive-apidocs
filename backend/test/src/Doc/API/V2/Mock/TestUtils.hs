@@ -26,6 +26,7 @@ module Doc.API.V2.Mock.TestUtils (
 , getMockDocAuthorAttachmentLength
 , getMockDocAuthorAttachmentName
 , getMockDocAuthorAttachmentRequired
+, getMockAuthorAttachmentAddedToSealedFile
 , getMockDocAuthorAttachmentHasFile
 , getMockDocAuthorAttachmentFileId
 , getMockDocHasAutoRemindTime
@@ -147,6 +148,9 @@ getMockDocAuthorAttachmentName i md = mockAuthorAttachmentName . mockDocAuthorAt
 
 getMockDocAuthorAttachmentRequired :: Int -> MockDoc -> Bool
 getMockDocAuthorAttachmentRequired i md = mockAuthorAttachmentRequired . mockDocAuthorAttachmentNumber i $ md
+
+getMockAuthorAttachmentAddedToSealedFile :: Int -> MockDoc -> Bool
+getMockAuthorAttachmentAddedToSealedFile i md = mockAuthorAttachmentAddedToSealedFile . mockDocAuthorAttachmentNumber i $ md
 
 getMockDocAuthorAttachmentHasFile :: Int -> MockDoc -> Bool
 getMockDocAuthorAttachmentHasFile i md = not . null . mockAuthorAttachmentFileId . mockDocAuthorAttachmentNumber i $ md

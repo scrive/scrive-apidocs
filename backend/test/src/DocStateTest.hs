@@ -1287,7 +1287,7 @@ testAddDocumentAttachmentFailsIfNotPreparation = replicateM_ 10 $ do
   addRandomDocumentWithAuthorAndCondition author (not . isPreparation) `withDocumentM` do
     file <- addNewRandomFile
     --execute
-    success <- randomUpdate $ \t->AddDocumentAttachment "file.pdf" False file (systemActor t)
+    success <- randomUpdate $ \t->AddDocumentAttachment "file.pdf" False True file (systemActor t)
     --assert
     assert $ not success
 
@@ -1298,7 +1298,7 @@ testAddDocumentAttachmentOk = replicateM_ 10 $ do
     file <- addNewRandomFile
     --execute
 
-    success <- randomUpdate $ \t->AddDocumentAttachment "file.pdf" False file (systemActor t)
+    success <- randomUpdate $ \t->AddDocumentAttachment "file.pdf" False True file (systemActor t)
 
     --assert
     assert success

@@ -150,7 +150,7 @@
 "_authorAttachmentOptional":"Opcional",
 "_authorAttachmentRequired":"Obligatorio",
 "_authorAttachmentType":"¿Necesario para revisar?",
-"_authorAttachmentsUnderstoodContent":"He leído y entendido el contenido del anexo.",
+"_authorAttachmentsUnderstoodContent":"",
 "_authorParty":"Autor",
 "_authorviewCanceled":"El documento fue retirado",
 "_authorviewClosed":"El documento ha sido sellado por Scrive",

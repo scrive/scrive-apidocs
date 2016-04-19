@@ -234,21 +234,47 @@ sendClosedEmails sealFixed document = do
                                               when useMail $ sendMail
                                               when useSMS  $ sendSMS useMail
 
+
 makeMailAttachments :: (MonadDB m, MonadThrow m) => Document -> m [(String, Either BS.ByteString FileID)]
-makeMailAttachments document = do
-  let mainfile = mainfileid <$> documentsealedfile document `mplus` documentfile document
+makeMailAttachments doc = map (\(n,f) -> (n, Right $ fileid f)) <$> if (isClosed doc)
+  then makeMailAttachmentsForClosedDocument doc
+  else makeMailAttachmentsForNotClosedDocument doc
+
+
+makeMailAttachmentsForClosedDocument :: (MonadDB m, MonadThrow m) => Document -> m [(String, File)]
+makeMailAttachmentsForClosedDocument doc = do
+  mainfile <- do
+    file <- dbQuery $ GetFileByFileID $ mainfileid $ $(fromJust) $ (documentsealedfile doc) `mplus` (documentfile doc)
+    return [(documenttitle doc ++ ".pdf", file)]
+  aattachments <- forM (filter (not . authorattachmentaddtosealedfile) $ documentauthorattachments doc) $ \aatt -> do
+    file <- dbQuery $ GetFileByFileID $ authorattachmentfileid aatt
+    return [(authorattachmentname aatt ++ ".pdf", file)]
   let
-      aattachments = map authorattachmentfileid $ documentauthorattachments document
-      sattachments = concatMap (maybeToList . signatoryattachmentfile) $ concatMap signatoryattachments $ documentsignatorylinks document
-      allfiles' = maybeToList mainfile ++
-                  if isClosed document then [] else aattachments ++ sattachments
-  allfiles <- mapM (dbQuery . GetFileByFileID) allfiles'
-  let maxFileSize = 10 * 1024 * 1024
-  if sum (map filesize allfiles) > maxFileSize
+    allMailAttachments = mainfile ++ (concat aattachments)
+    maxFileSize = 10 * 1024 * 1024
+  if sum (map (filesize . snd) allMailAttachments) > maxFileSize
     then return []
-    else do
-      let filenames =  (documenttitle document ++ ".pdf") : map filename ($(tail) allfiles)
-      return $ zip filenames (map (Right . fileid) allfiles)
+    else return allMailAttachments
+
+makeMailAttachmentsForNotClosedDocument :: (MonadDB m, MonadThrow m) => Document -> m [(String, File)]
+makeMailAttachmentsForNotClosedDocument doc = do
+  mainfile <- do
+    file <- dbQuery $ GetFileByFileID $ mainfileid $ $(fromJust) (documentfile doc)
+    return [(documenttitle doc ++ ".pdf", file)]
+  aattachments <- forM (documentauthorattachments doc) $ \aatt -> do
+    file <- dbQuery $ GetFileByFileID $ authorattachmentfileid aatt
+    return [(authorattachmentname aatt ++ ".pdf", file)]
+  sattachments <- forM (concatMap signatoryattachments $ documentsignatorylinks doc) $ \satt -> case signatoryattachmentfile satt of
+      Nothing -> return []
+      Just sattfid -> do
+        file <- dbQuery $ GetFileByFileID sattfid
+        return [(filename file, file)]
+  let
+    allMailAttachments = mainfile ++ (concat aattachments) ++ (concat sattachments)
+    maxFileSize = 10 * 1024 * 1024
+  if sum (map (filesize . snd) allMailAttachments) > maxFileSize
+    then return []
+    else return allMailAttachments
 
 {- |
    Send an email to the author and to all signatories who were sent an invitation  when the document is rejected

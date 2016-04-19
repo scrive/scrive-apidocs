@@ -76,14 +76,16 @@ instance Unjson MockMainFile where
     <*> field "name"  mockMainFileName  "MockMainFile Name"
 
 data MockAuthorAttachment = MockAuthorAttachment {
-    mockAuthorAttachmentName     :: String
-  , mockAuthorAttachmentRequired :: Bool
-  , mockAuthorAttachmentFileId   :: String
+    mockAuthorAttachmentName              :: String
+  , mockAuthorAttachmentRequired          :: Bool
+  , mockAuthorAttachmentAddedToSealedFile :: Bool
+  , mockAuthorAttachmentFileId            :: String
 } deriving (Show, Eq)
 instance Unjson MockAuthorAttachment where
   unjsonDef = objectOf $ pure MockAuthorAttachment
     <*> field "name"     mockAuthorAttachmentName     "MockAuthorAttachment Name"
     <*> field "required" mockAuthorAttachmentRequired "MockAuthorAttachment Required"
+    <*> field "add_to_sealed_file" mockAuthorAttachmentAddedToSealedFile "MockAuthorAttachment AddedToSealedFile"
     <*> field "file_id"  mockAuthorAttachmentFileId   "MockAuthorAttachment FileID"
 
 data MockDocDisplayOptions = MockDocDisplayOptions {

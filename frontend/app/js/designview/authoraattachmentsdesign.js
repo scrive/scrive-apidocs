@@ -62,6 +62,7 @@ var Confirmation = require("../confirmations.js").Confirmation;
             return {
               name : att.name() || att.originalName(),
               required: att.isRequired(),
+              add_to_sealed_file: att.isAddToSealedFile(),
               file_id: att.isServerFile() ? att.serverFileId() : undefined,
               file_param: att.isServerFile() ? undefined : att.fileUpload().attr("name")
             };

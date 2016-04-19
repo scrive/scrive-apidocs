@@ -84,6 +84,7 @@ kontraMigrations = [
   , dropBrandedDomainContact
   , addFileNameToSignatoryAttachment
   , allowManyCopiesOfAuthorAttachmentForSameDocument
+  , addAddedToSealedFileToAuthorAttachment
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

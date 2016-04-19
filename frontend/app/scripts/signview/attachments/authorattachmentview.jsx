@@ -78,6 +78,12 @@ var classNames = require("classnames");
       }
     },
 
+    mandatoryCheckboxLabel: function () {
+      var textSpan = $("<span/>").html(localization.docsignview.authorAttachmentsUnderstoodContent);
+      $(".put-attachment-name-here", textSpan).text(this.props.model.name());
+      return textSpan.text();
+    },
+
     render: function () {
       var self = this;
       var model = this.props.model;
@@ -97,7 +103,7 @@ var classNames = require("classnames");
       return (
         <span>
           <div className="section author-attachment">
-            <div className="col-sm-7 left">
+            <div className="col-sm-5 left">
               <h1>
                 <span className="paperclip"/>
                 {model.name()}
@@ -107,12 +113,12 @@ var classNames = require("classnames");
                   ref="checkbox"
                   className="large-checkbox branded-checkbox"
                   checked={model.isAccepted()}
-                  label={localization.docsignview.authorAttachmentsUnderstoodContent}
+                  label={this.mandatoryCheckboxLabel()}
                   onChange={function (v) { model.setAccepted(v);}}
                 />
               }
             </div>
-            <div className="col-sm-5 right">
+            <div className="col-sm-7 right">
               <div className="button-group small-buttons">
                 <Button
                   className={buttonClass}
@@ -121,6 +127,13 @@ var classNames = require("classnames");
                     self.setState({showPages: !showPages});
                   }}
                 />
+                {/* if */ model.document().showpdfdownload() &&
+                  <Button
+                    className="download-button"
+                    text={localization.downloadPDF}
+                    onClick={() => window.open(model.downloadLink(true))}
+                  />
+                }
               </div>
             </div>
           </div>
@@ -151,14 +164,14 @@ var classNames = require("classnames");
                           ref="checkbox"
                           className="large-checkbox branded-checkbox"
                           checked={model.isAccepted()}
-                          label={localization.docsignview.authorAttachmentsUnderstoodContent}
+                          label={this.mandatoryCheckboxLabel()}
                           onChange={function (v) { model.setAccepted(v);}}
                         />
                       }
                     </div>
                   </div>
                 </div>
-                <div className="col-sm-5 right hide-button">
+                <div className="col-sm-7 right hide-button">
                   <div className="button-group small-buttons">
                     <Button
                       className={buttonClass}
@@ -167,6 +180,13 @@ var classNames = require("classnames");
                         self.setState({showPages: !showPages});
                       }}
                     />
+                    {/* if */ model.document().showpdfdownload() &&
+                      <Button
+                        className="download-button"
+                        text={localization.downloadPDF}
+                        onClick={() => window.open(model.downloadLink(true))}
+                      />
+                    }
                   </div>
                 </div>
                 <div className="clearfix" />

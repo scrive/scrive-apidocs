@@ -49,6 +49,7 @@ import qualified Data.Traversable as T
 import qualified Data.Vector as Vec
 import qualified Text.JSON as J
 import qualified Text.JSON.Gen as J
+import qualified Text.StringTemplates.Fields as F
 
 import API.Monad.V1
 import AppView (respondWithPDF)
@@ -282,7 +283,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
     attachmentFilesWithDetails <- getAttachments 0 =<< theDocument
     (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
     forM_ attachmentFilesWithDetails $ \(attfile, maad) -> do
-      dbUpdate $ AddDocumentAttachment (fromMaybe (T.pack $ filename attfile) (aadName <$> maad))  (fromMaybe False (aadRequired <$> maad)) (fileid attfile) actor
+      dbUpdate $ AddDocumentAttachment (fromMaybe (T.pack $ filename attfile) (aadName <$> maad))  (fromMaybe False (aadRequired <$> maad)) (fromMaybe True (aadAddToSealedFile <$> maad)) (fileid attfile) actor
     Ok <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
      where
           getAttachments :: Kontrakcja m => Int -> Document -> m [(File,Maybe AuthorAttachmentDetails)]
@@ -570,8 +571,10 @@ signDocument slid mh fields acceptedAuthorAttachments mesig mpin screenshots = d
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) =<< signatoryActor ctx sl
   theDocument >>= \doc -> do
     let sl = $fromJust (getSigLinkFor slid doc)
-    acceptanceText <- renderTemplate_ "_authorAttachmentsUnderstoodContent"
-    dbUpdate . AddAcceptedAuthorAttachmentsEvents acceptanceText sl acceptedAuthorAttachments (documentauthorattachments doc)  =<< signatoryActor ctx sl
+    authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments doc) $ \a -> do
+      acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
+      return (acceptanceText,a)
+    dbUpdate . AddAcceptedAuthorAttachmentsEvents sl acceptedAuthorAttachments authorAttachmetsWithAcceptanceText  =<< signatoryActor ctx sl
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 {- End of utils-}

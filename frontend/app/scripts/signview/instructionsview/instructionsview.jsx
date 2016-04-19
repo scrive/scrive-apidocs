@@ -71,7 +71,7 @@ var classNames = require("classnames");
     handleDownloadClick: function () {
       var doc = this.props.model;
       var sig = doc.currentSignatory();
-      var downloadUrl = doc.mainfile().downloadLinkForMainFile(doc.title());
+      var downloadUrl = doc.mainfile().downloadLinkForMainFile(doc.title(), true);
 
       mixpanel.track("Download pdf", {
         "Can sign": doc.currentSignatoryCanSign() ? "yes" : "no",
@@ -86,7 +86,6 @@ var classNames = require("classnames");
       var doc = this.props.model;
       var sig = doc.currentSignatory();
       var hasDownloadButton = doc.showpdfdownload();
-      var downloadUrl = doc.mainfile().downloadLinkForMainFile(doc.title());
 
       var sectionClass = classNames({
         "section": true,

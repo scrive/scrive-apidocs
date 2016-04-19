@@ -201,8 +201,8 @@ testDocApiV2SetAttachments = do
     mda <- mockDocTestRequestHelper ctx
       POST [
         ("attachments", inText $ "[" <>
-            "{\"name\" : \"A1\", \"required\" : false, \"file_param\" : \"attachment_0\"}," <>
-            "{\"name\" : \"A2\", \"required\" : true, \"file_param\" : \"other_attachment\"}" <>
+            "{\"name\" : \"A1\", \"required\" : false, \"add_to_sealed_file\" : true, \"file_param\" : \"attachment_0\"}," <>
+            "{\"name\" : \"A2\", \"required\" : true, \"add_to_sealed_file\" : false, \"file_param\" : \"other_attachment\"}" <>
         "]")
       ,("attachment_0", inFile $ inTestDir "pdfs/simple-rotate-90.pdf")
       ,("other_attachment", inFile $ inTestDir "pdfs/simple-rotate-180.pdf")
@@ -212,10 +212,13 @@ testDocApiV2SetAttachments = do
 
     assertEqual "Attachment 'A1' should be named as such" "A1" (getMockDocAuthorAttachmentName 1 mda)
     assertEqual "Attachment 'A1' should not be required" False (getMockDocAuthorAttachmentRequired 1 mda)
+    assertEqual "Attachment 'A1' should be added to sealed file" True (getMockAuthorAttachmentAddedToSealedFile 1 mda)
     assertBool "Attachment 'A1' should have a file set" (getMockDocAuthorAttachmentHasFile 1 mda)
 
     assertEqual "Attachment 'A2' should be named as such" "A2" (getMockDocAuthorAttachmentName 2 mda)
     assertEqual "Attachment 'A2' should be required" True (getMockDocAuthorAttachmentRequired 2 mda)
+    assertEqual "Attachment 'A2' should not be added to sealed file" False (getMockAuthorAttachmentAddedToSealedFile 2 mda)
+
     assertBool "Attachment 'A2' should have a file set" (getMockDocAuthorAttachmentHasFile 2 mda)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing

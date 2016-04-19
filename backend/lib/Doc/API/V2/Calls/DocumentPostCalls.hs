@@ -304,10 +304,10 @@ docApiV2SetAttachments did = logDocument did . api $ do
         when (not (fileWasAlreadAnAttachmnet fid || attachmentFromAttachmentArchive)) $
             apiError $ resourceNotFound $ "File id " <+> (T.pack . show $ fid)
               <+> " can't be used. It may not exist or you don't have permission to use it."
-        dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) fid actor
+        dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (aadAddToSealedFile ad) fid actor
       Right fp -> do
         newFile <- apiV2ParameterObligatory (ApiV2ParameterFilePDF $ fp)
-        dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (fileid newFile) actor
+        dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (aadAddToSealedFile ad) (fileid newFile) actor
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
   where

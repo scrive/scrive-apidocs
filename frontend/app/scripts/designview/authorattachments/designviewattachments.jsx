@@ -16,6 +16,7 @@ var _ = require("underscore");
               serverFileId: attachment.fileid(),
               name: attachment.name(),
               required: attachment.isRequired(),
+              addToSealedFile: attachment.isAddToSealedFile(),
               documentid: args.document.documentid()
           });
           self.listenTo(newAttachment, "change", function () {self.trigger("change");});

@@ -150,7 +150,7 @@
 "_authorAttachmentOptional":"Facultatif",
 "_authorAttachmentRequired":"Obligatoire",
 "_authorAttachmentType":"Vérification requise?",
-"_authorAttachmentsUnderstoodContent":"J'ai lu et compris le contenu de la pièce jointe.",
+"_authorAttachmentsUnderstoodContent":"",
 "_authorParty":"Auteur",
 "_authorviewCanceled":"Ce document a été retiré",
 "_authorviewClosed":"Le document a été scellé par Scrive",

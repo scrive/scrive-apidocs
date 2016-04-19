@@ -2,6 +2,7 @@ var backend = require("../../backend");
 var util = require("../../util");
 var React = require("react");
 var AuthorAttachmentsView = require("../../../scripts/signview/attachments/authorattachmentsview");
+var AuthorAttachment = require("../../../js/authorattachment").AuthorAttachment;
 
   var TestUtils = React.addons.TestUtils;
 
@@ -23,6 +24,25 @@ var AuthorAttachmentsView = require("../../../scripts/signview/attachments/autho
           canStartFetching: true
         }));
       });
+
+      it("should test download button visible/invisible based on showpdfdownload setting", function () {
+        var sampleAttachmnet =  new AuthorAttachment({document: doc, file_id: "1"});
+        doc.set("authorattachments", [sampleAttachmnet]);
+
+        doc.set("showpdfdownload", true);
+        var authView = TestUtils.renderIntoDocument(React.createElement(AuthorAttachmentsView, {
+          model: doc,
+          canStartFetching: true
+        }));
+
+        assert.ok($(".download-button", authView.getDOMNode()).length > 0, "There is download button");
+
+        doc.set("showpdfdownload", false);
+        authView.forceUpdate();
+        assert.ok($(".download-button",authView.getDOMNode()).length == 0, "There is no download button");
+
+      });
+
     });
 
     after(function () {

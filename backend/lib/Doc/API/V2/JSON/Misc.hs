@@ -104,6 +104,7 @@ unjsonAuthorAttachment :: UnjsonDef AuthorAttachment
 unjsonAuthorAttachment = objectOf $ pure AuthorAttachment
     <*> field "name" authorattachmentname "Name of file"
     <*> field "required" authorattachmentrequired "Are signatories required to accept attachment before signing"
+    <*> field "add_to_sealed_file" authorattachmentaddtosealedfile "Should attachmnet be added to sealed file"
     <*> field "file_id" authorattachmentfileid  "Id of file"
 
 unjsonSignatoryAttachment :: UnjsonDef SignatoryAttachment

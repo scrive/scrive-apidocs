@@ -155,7 +155,7 @@ testDocApiV2FilesGet = do
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   mockDocSet <- mockDocTestRequestHelper ctx POST [
-      ("attachments", inText $ "[{\"name\" : \"simple-rotate-90.pdf\", \"required\" : false, \"file_param\" : \"afile\"}]")
+      ("attachments", inText $ "[{\"name\" : \"simple-rotate-90.pdf\", \"required\" : false, \"add_to_sealed_file\" : true, \"file_param\" : \"afile\"}]")
     , ("afile", inFile $ inTestDir "pdfs/simple-rotate-90.pdf")
     ] (docApiV2SetAttachments did) 200
 

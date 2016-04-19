@@ -10,12 +10,20 @@ var Document = require("../../../js/documents.js").Document;
       canStartFetching: React.PropTypes.bool.isRequired
     },
 
+    attachmentsToShow: function () {
+      var doc = this.props.model;
+      doc.authorattachments()
+      return _.filter(doc.authorattachments(), function (a) {
+        return !doc.isSignedAndClosed()  || !a.isAddToSealedFile();
+      });
+    },
+
     render: function () {
       var self = this;
       var doc = this.props.model;
       return (
         <div>
-        {_.map(doc.authorattachments(), function (a, i) {
+        {_.map(this.attachmentsToShow(), function (a, i) {
           return (
              <AuthorAttachmentView
                key={i}

@@ -77,12 +77,15 @@ var _ = require("underscore");
                 </div>
               </div>
               {/* if */ (!self.props.model.isEmpty()) &&
-              (<table className="attachmentsList" style={{borderCollapse: "separate", borderSpacing: "5px"}}>
+              (<table className="attachmentsList">
                 <thead>
                   <tr>
+                    <td style={{width:"210px"}}>{localization.authorattachments.nameOfAttachment}</td>
                     <td style={{width:"25px"}}></td>
-                    <td style={{width:"330px"}}>{localization.authorattachments.nameOfAttachment}</td>
-                    <td colSpan="3" style={{width:"242px"}}>{localization.authorattachments.typeOfAttachment}</td>
+                    <td style={{width:"142px"}}>{localization.authorattachments.typeOfAttachment}</td>
+                    <td style={{width:"142px"}}>{localization.authorattachments.mergedQuestion}</td>
+                    <td style={{width:"28px"}}></td>
+                    <td style={{width:"12px"}}></td>
                   </tr>
                 </thead>
                 <tbody>
@@ -90,22 +93,24 @@ var _ = require("underscore");
                     return (
                       <tr key={i}>
                         <td>
-                          <div
-                            className={a.isRequired() ? "required-author-attachment-icon"
-                                                      : "optional-author-attachment-icon"}
-                          />
-                        </td>
-                        <td>
                           <InfoTextInput
                           value={a.name()}
                           className="name-input"
+                          style={{width:"210px"}}
                           onChange={function (v) {
                             a.setName(v);
                           }}
                           />
                         </td>
                         <td>
+                          <div
+                            className={a.isRequired() ? "required-author-attachment-icon"
+                                                      : "optional-author-attachment-icon"}
+                          />
+                        </td>
+                        <td>
                           <Select
+                            width={140}
                             options={[
                               {
                                 name: localization.authorattachments.required,
@@ -120,7 +125,24 @@ var _ = require("underscore");
                             ]}
                           />
                         </td>
-                        <td style={{width:"48px"}}>
+                        <td>
+                          <Select
+                            width={140}
+                            options={[
+                              {
+                                name: localization.authorattachments.merged,
+                                selected: a.isAddToSealedFile(),
+                                onSelect: function () { a.setAddToSealedFile(true);}
+                              },
+                              {
+                                name: localization.authorattachments.notMerged,
+                                selected: !a.isAddToSealedFile(),
+                                onSelect: function () { a.setAddToSealedFile(false);}
+                              }
+                            ]}
+                          />
+                        </td>
+                        <td>
                           {/* if */ (a.isServerFile()) &&
                             <a
                               className="view-link"
@@ -129,7 +151,7 @@ var _ = require("underscore");
                             />
                           }
                         </td>
-                        <td style={{width:"25px"}}>
+                        <td>
                           <a
                             className="remove-link"
                             onClick={function () {

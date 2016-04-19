@@ -7,8 +7,8 @@
    },
    "sealedfile":null,
    "authorattachments":[
-    {"id":"11", "required": false,"name":"telia.pdf"},
-    {"id":"12", "required": false,"name":"visa-application.pdf"}
+    {"id":"11", "required": false, "add_to_sealed_file" : true, "name":"telia.pdf"},
+    {"id":"12", "required": false, "add_to_sealed_file" : true, "name":"visa-application.pdf"}
 
    ],
    "evidenceattachments":[

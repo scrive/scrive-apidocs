@@ -316,6 +316,7 @@ authorAttachmentJSON att = runJSONGen $ do
     J.value "id" $ show $ authorattachmentfileid att
     J.value "name" $ authorattachmentname att
     J.value "required" $ authorattachmentrequired att
+    J.value "add_to_sealed_file" $ authorattachmentaddtosealedfile att
 
 -- Converting document to JSON/CSV for lists
 docForListJSONV1 :: TemplatesMonad m => User ->  Document -> m JSValue

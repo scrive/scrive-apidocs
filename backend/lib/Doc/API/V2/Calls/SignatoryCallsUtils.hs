@@ -8,6 +8,7 @@ module Doc.API.V2.Calls.SignatoryCallsUtils (
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
+import qualified Text.StringTemplates.Fields as F
 
 import API.V2
 import DB
@@ -79,8 +80,10 @@ signDocument slid mh fields acceptedAuthorAttachments mesig mpin screenshots = d
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) =<< signatoryActor ctx sl
   theDocument >>= \doc -> do
     let sl = $fromJust (getSigLinkFor slid doc)
-    acceptanceText <- renderTemplate_ "_authorAttachmentsUnderstoodContent"
-    dbUpdate . AddAcceptedAuthorAttachmentsEvents acceptanceText sl acceptedAuthorAttachments (documentauthorattachments doc)  =<< signatoryActor ctx sl
+    authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments doc) $ \a -> do
+      acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
+      return (acceptanceText,a)
+    dbUpdate . AddAcceptedAuthorAttachmentsEvents sl acceptedAuthorAttachments authorAttachmetsWithAcceptanceText =<< signatoryActor ctx sl
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 

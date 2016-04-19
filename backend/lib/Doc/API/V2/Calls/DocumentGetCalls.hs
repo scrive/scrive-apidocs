@@ -98,6 +98,7 @@ docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ d
 docApiV2FilesMain :: Kontrakcja m => DocumentID -> String -> m Response
 docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
+  download <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
   _ <- guardDocumentReadAccess did mslid
   when (isJust mslid) (withDocumentID did $ guardSignatoryNeedsToIdentifyToView $ $fromJust mslid)
   fileContents <- withDocumentID did $ do
@@ -117,11 +118,12 @@ docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
            case presealFile of
              Left err -> apiError $ serverError (T.pack err)
              Right f -> return $ f
-  return $ Ok $ respondWithPDF False fileContents
+  return $ Ok $ respondWithPDF download fileContents
 
 docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
 docApiV2FilesGet did fid filename = logDocumentAndFile did fid . api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
+  download <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
   _ <- guardDocumentReadAccess did mslid
   when (isJust mslid) (withDocumentID did $ guardSignatoryNeedsToIdentifyToView $ $fromJust mslid)
   doc <- dbQuery $ GetDocumentByDocumentID did
@@ -138,7 +140,8 @@ docApiV2FilesGet did fid filename = logDocumentAndFile did fid . api $ do
                        | isSuffixOf ".png" filename' = "image/png"
                        | isSuffixOf ".jpg" filename' = "image/jpeg"
                        | otherwise = "application/octet-stream"
-           headers = mkHeaders [("Content-Type", contentType)]
+           additionalDownloadHeader = if (download) then [("Content-Disposition", "attachment")] else []
+           headers = mkHeaders $ [("Content-Type", contentType)] ++ additionalDownloadHeader
        return $ Ok $ Response 200 headers nullRsFlags (BSL.fromStrict fileContents) Nothing
 
 -------------------------------------------------------------------------------

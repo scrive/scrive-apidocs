@@ -452,7 +452,7 @@ instance FromJSValueWithUpdate Document where
             documentshowfooter = updateWithDefaultAndField True documentshowfooter showfooter,
             documentsignatorylinks = mapAuth authentication $ mapDL delivery $ updateWithDefaultAndField [] documentsignatorylinks signatories,
             -- Author attachments read by V1 for update call can be only used for deletion - this is why we can actually set name to "-" and required to False
-            documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap (\fid -> AuthorAttachment "-" False fid) <$> authorattachments),
+            documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap (\fid -> AuthorAttachment "-" False True fid) <$> authorattachments),
             documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags),
             documenttype = updateWithDefaultAndField Signable documenttype doctype,
             documentapiv1callbackurl = updateWithDefaultAndField Nothing documentapiv1callbackurl apicallbackurl,
@@ -473,13 +473,15 @@ instance FromJSValueWithUpdate Document where
 -- Author attachment utils. Used only for set author attachment call.
 data AuthorAttachmentDetails = AuthorAttachmentDetails {
     aadName :: T.Text,
-    aadRequired :: Bool
+    aadRequired :: Bool,
+    aadAddToSealedFile :: Bool
   } deriving (Eq,Show)
 
 instance FromJSValue AuthorAttachmentDetails where
   fromJSValue = do
     name   <- fromJSValueField "name"
     required  <- fromJSValueField "required"
+    added <- fromJSValueField "add_to_sealed_file"
     case (name, required) of
-      (Just n, Just r) -> return $ Just $ AuthorAttachmentDetails (T.pack n) r
+      (Just n, Just r) -> return $ Just $ AuthorAttachmentDetails (T.pack n) r (fromMaybe True added)
       _ -> return Nothing

@@ -17,6 +17,7 @@ import Control.Monad.Catch hiding (handle)
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Data.Char
+import Data.Digest.SHA2
 import Data.Function (on)
 import Data.Time
 import Log
@@ -27,6 +28,7 @@ import System.IO hiding (stderr)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.HTML.TagSoup (Tag(..), parseTags)
 import Text.StringTemplates.Templates
+import qualified Data.ByteString as BB
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL (empty, writeFile)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -210,12 +212,12 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
       Just asl = getAuthorSigLink document
 
       findAttachmentsForAuthorAttachment (num, authorattach) =
-        findAttachments (Just (authorattachmentfileid authorattach)) num asl removeExtIfAny
+        findAttachments (Just (authorattachmentfileid authorattach)) num asl (authorattachmentname authorattach) (authorattachmentaddtosealedfile authorattach)
 
       findAttachmentsForSignatoryAttachment (num, sigattach, sl) =
-        findAttachments (signatoryattachmentfile sigattach) num sl (const (signatoryattachmentname sigattach))
+        findAttachments (signatoryattachmentfile sigattach) num sl (signatoryattachmentname sigattach) True
 
-      findAttachments mfileid num sl titlef = do
+      findAttachments mfileid num sl title addContent = do
         (contents,numberOfPages,name) <- case mfileid of
           Nothing -> return (BS.empty, 1, "")
           Just fileid' -> do
@@ -248,17 +250,16 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
         let attachmentPath = tmppath </> attachmentNumText ++ takeExtension name
         liftIO $ BS.writeFile attachmentPath contents
 
+        attachedToSealedFileText <- renderLocalTemplate document (if addContent then "_attachedToSealedFile"  else "_notAttachedToSealedFile") (return ())
+
         return $ Seal.FileDesc
-                 { fileTitle      = titlef name
+                 { fileTitle      = title
                  , fileRole       = attachmentNumText
                  , filePagesText  = numberOfPagesText
                  , fileAttachedBy = attachedByText
-                 , fileInput      = Just attachmentPath
+                 , fileAttachedToSealedFileText = Just attachedToSealedFileText
+                 , fileInput      = if addContent then (Just attachmentPath) else Nothing
                  }
-
-      removeExtIfAny fname = case dropWhile (/= '.') (reverse fname) of
-                               "" -> fname
-                               x -> reverse (drop 1 x)
 
 
 evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m)
@@ -474,6 +475,7 @@ sealSpecFromDocument boxImages hostpart document elog offsets graphEvidenceOfTim
                           , fileRole = mainDocumentText
                           , filePagesText = numberOfPagesText
                           , fileAttachedBy = attachedByText
+                          , fileAttachedToSealedFileText = Nothing
                           , fileInput = Nothing
                           } ] ++ additionalAttachments
         }
@@ -511,12 +513,9 @@ sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMo
 sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \documentid ->
   withSystemTempDirectory' ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
     now <- currentTime
-    -- We generate this event before we attempt the sealing process so
+    -- We add events before we attempt the sealing process so
     -- that the event gets included in the evidence package
-    _ <- update $ InsertEvidenceEvent
-        AttachSealedFileEvidence
-        (return ())
-        (systemActor now)
+    addSealedEvidenceEvents (systemActor now)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
@@ -606,3 +605,22 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
             ]
           -- show JSON'd config as that's what the java app is fed.
           return $ Left "Error when preprinting fields on PDF"
+
+
+addSealedEvidenceEvents ::  (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, AWS.AmazonMonad m, MonadThrow m)
+                 => Actor -> m ()
+addSealedEvidenceEvents actor = do
+  notAddedAttachments <- filter (not . authorattachmentaddtosealedfile) <$> documentauthorattachments <$> theDocument
+  forM_ notAddedAttachments $ \a -> do
+    contents <- getFileIDContents $ authorattachmentfileid a
+    let hash = filter (not . isSpace) $ show $ sha256 $ BB.unpack contents
+    _ <- update $ InsertEvidenceEvent
+        AuthorAttachmentHashComputed
+        (F.value "attachment_name" (authorattachmentname a) >> F.value "hash" hash)
+        actor
+    return ()
+  _ <- update $ InsertEvidenceEvent
+        AttachSealedFileEvidence
+        (return ())
+        actor
+  return ()

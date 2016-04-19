@@ -205,7 +205,7 @@ var PageTasksArrow = require("../../js/tasks.js").PageTasksArrow;
     },
 
     hasSignatoriesAttachmentsSection: function () {
-      return this.document().currentSignatory().attachments().length > 0;
+      return !this.document().closed() && this.document().currentSignatory().attachments().length > 0;
     },
 
     hasArrows: function () {

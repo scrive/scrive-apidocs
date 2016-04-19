@@ -43,27 +43,27 @@ var File = exports.File = Backbone.Model.extend({
     initialize: function (args) {
         this.url = "/filepages/" + args.id + this.queryPart();
     },
-    downloadLink : function() {
+    downloadLink : function(as_download) {
         var link = null;
         var name = this.name();
         if( this.fileid()!==undefined && this.attachmentid()!==undefined ) {
             link = "/a/download/" + this.attachmentid() + "/" + this.fileid() + "/" + encodeURIComponent(name) + this.queryPart();
         }
         if( this.fileid()!==undefined && this.documentid()!==undefined ) {
-            link = "/api/frontend/documents/" + this.documentid() + "/files/" + this.fileid() + "/" + encodeURIComponent(name) + this.queryPart();
+            link = "/api/frontend/documents/" + this.documentid() + "/files/" + this.fileid() + "/" + encodeURIComponent(name) + this.queryPart({as_download : as_download});
         }
         else if( this.documentid()!==undefined ) {
-            link = "/api/frontend/documents/"+ this.documentid() + "/files/main/" + encodeURIComponent(name) + this.queryPart();
+            link = "/api/frontend/documents/"+ this.documentid() + "/files/main/" + encodeURIComponent(name) + this.queryPart({as_download : as_download});
         }
         else {
             console.log("File with neither documentid nor fileid, do not know where does it link to");
         }
         return link;
     },
-    downloadLinkForMainFile : function(name) {
+    downloadLinkForMainFile : function(name,as_download) {
         var link = null;
         if( this.documentid()!==undefined ) {
-            link = "/api/frontend/documents/"+ this.documentid() + "/files/main/" + encodeURIComponent(name + ".pdf") + this.queryPart();
+            link = "/api/frontend/documents/"+ this.documentid() + "/files/main/" + encodeURIComponent(name + ".pdf") + this.queryPart({as_download : as_download});
         }
         else {
             console.log("File is not binded to document");

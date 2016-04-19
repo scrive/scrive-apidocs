@@ -205,6 +205,7 @@ data FileDesc = FileDesc
     , fileRole       :: String
     , filePagesText  :: String
     , fileAttachedBy :: String
+    , fileAttachedToSealedFileText :: Maybe String
     , fileInput      :: Maybe String
     }
     deriving (Eq,Ord,Show,Read)
@@ -215,6 +216,7 @@ unjsonFileDesc = Unjson.objectOf $ pure FileDesc
     <*> Unjson.field "role" fileRole ""
     <*> Unjson.field "pagesText" filePagesText ""
     <*> Unjson.field "attachedBy" fileAttachedBy ""
+    <*> Unjson.fieldOpt "attachedToSealedFileText" fileAttachedToSealedFileText ""
     <*> Unjson.fieldOpt "input" fileInput ""
 
 data PreSealSpec = PreSealSpec

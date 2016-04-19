@@ -82,6 +82,7 @@ evidenceLogTemplateVariables = Set.fromList
   , "ocsp_response"   -- Data for eleg signing
   , "attachment_name" -- Name of attachment when accepting authors attachments
   , "attachment_acceptance_text" -- Text that should have been shown to user when rendering sign view and accepting attachment
+  , "hash"            -- SHA256 hash of attachment that will not be appended to main, sealsed file
   ]
 
 -- Attachment name                                       , "name"

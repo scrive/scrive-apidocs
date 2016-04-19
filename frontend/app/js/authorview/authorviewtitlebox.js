@@ -106,7 +106,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       text: localization.authorview.downloadPdf,
       onClick: function() {
         window.open(
-          document.mainfile().downloadLinkForMainFile(document.title()),
+          document.mainfile().downloadLinkForMainFile(document.title(), true),
           '_blank' // <- This is what makes it open in a new window.
         );
       }

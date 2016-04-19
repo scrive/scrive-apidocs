@@ -8,6 +8,7 @@ var Backbone = require("backbone");
       name: "",
       originaName: "",
       required: false,
+      addToSealedFile: true,
       serverFileId: undefined,
       fileUpload: undefined,
       documentid: undefined
@@ -63,6 +64,14 @@ var Backbone = require("backbone");
         // If documentid is not set and server file id is set - this is a attachment from attachment archive
         return "/a/download/" + this.attachmentid() + "/" + encodeURIComponent(name);
       }
+    },
+
+    isAddToSealedFile: function () {
+      return this.get("addToSealedFile");
+    },
+
+    setAddToSealedFile: function (bool) {
+     return this.set("addToSealedFile", bool);
     },
 
     isRequired: function () {

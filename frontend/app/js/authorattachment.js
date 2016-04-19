@@ -11,6 +11,7 @@ var $ = require("jquery");
           file_id: 0,
           name: "",
           required: false,
+          add_to_sealed_file: true,
           accepted: false,
           pages: undefined
         };
@@ -26,11 +27,12 @@ var $ = require("jquery");
         return "/pages/" + this.fileid() + "/" + pageNo + this.queryPart();
       },
 
-      queryPart: function () {
-        var params = {
+      queryPart: function (more) {
+        more = more || {};
+        var params = _.extend(more, {
           document_id: this.documentid(),
           signatory_id: this.signatoryid()
-        };
+        });
         /*
         * Remove undefined values that may happen in the object.
         */
@@ -48,13 +50,13 @@ var $ = require("jquery");
         }
       },
 
-      downloadLink: function () {
+      downloadLink: function (as_download) {
         var name = this.name();
         if (name.toLowerCase().indexOf(".pdf", name.length - 4) === -1) {
           name += ".pdf"; // Same old attachments have names taken directly from files, and .pdf should not be added
         }
         return "/api/frontend/documents/" + this.documentid() + "/files/" + this.fileid() +
-               "/" + encodeURIComponent(name) + this.queryPart();
+               "/" + encodeURIComponent(name) + this.queryPart({as_download: as_download});
       },
 
       fileid: function () {
@@ -85,6 +87,10 @@ var $ = require("jquery");
 
       isRequired: function () {
         return this.get("required");
+      },
+
+      isAddToSealedFile: function () {
+        return this.get("add_to_sealed_file");
       },
 
       pages: function () {
