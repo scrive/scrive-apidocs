@@ -76,7 +76,7 @@ fetch (MemCache mv) key construct = mask $ \release -> do
       -- If we got existing MVar, wait for its result. Otherwise run constructing
       -- action and update cache accordingly.
       if mvAlreadyThere
-        then release $ either throwIO return =<< readMVar mvEl
+        then release $ LT.result =<< readMVar mvEl
         else (`onException` removeInProgress) . release $ do
           -- Spawn new thread to avoid catching asynchronous exceptions thrown to a
           -- thread executing this function.
@@ -94,7 +94,7 @@ fetch (MemCache mv) key construct = mask $ \release -> do
                 , mcCache       = Q.insert key (mcTick mc) value $ mcCache mc
                 }
           putMVar mvEl evalue
-          either throwIO return evalue
+          LT.result evalue
   where
     lookupAndIncreasePriorityTo prio = \case
       Nothing        -> (Nothing, Nothing)
