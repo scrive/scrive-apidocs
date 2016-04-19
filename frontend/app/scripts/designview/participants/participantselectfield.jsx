@@ -57,6 +57,9 @@ module.exports = React.createClass({
     var options = [{name: localization.designview.whatField, selected: true, disabled:true}];
     _.each(allPossibleFields, function (f) {
       if (!sig.hasField(f.type, f.order, f.name)) {
+        if (f.name === undefined) {
+          f.name = "";
+        }
         options.push({name: self.niceFieldName(f.type, f.order, f.name), value: f});
       }
     });
