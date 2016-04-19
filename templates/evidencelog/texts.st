@@ -447,8 +447,8 @@ elegVerificationSign=
   <br/>ID number: $signatory_personal_number$
 </p>
 <br/>
-<p>Signature: <div style='white-space:pre'>$signature$</div></p>
-<p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp_response$</div></p>
+<p>Signature: <div>$signature$</div></p>
+<p>Online Certificate Status Protocol (OCSP) Response: <div>$ocsp_response$</div></p>
 ###
 invitationCustomMessageTextIfThereIsOne=
 $if(text)$$if(!mobile)$The invitation contained the following message: <BR/> <i>$text$</i>$endif$$endif$
@@ -507,10 +507,10 @@ elegVerificationAuth=
 </p>
 <br/>
 $if(signature)$
-<p>Signature: <div style='white-space:pre'>$signature$</div></p>
+<p>Signature: <div>$signature$</div></p>
 $endif$
 $if(ocsp_response)$
-<p>Online Certificate Status Protocol (OCSP) Response: <div style='white-space:pre'>$ocsp_response$</div></p>
+<p>Online Certificate Status Protocol (OCSP) Response: <div>$ocsp_response$</div></p>
 $endif$
 ###
 provider=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$endif$
