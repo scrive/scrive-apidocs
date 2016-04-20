@@ -77,9 +77,8 @@ class DocHelper
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-selector')]//a[contains(@class,'button')]"}).click
     sleep 1
     @h.screenshot options[:screenshot_name1] if options[:screenshot_name1]
-    (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-select')]//div[contains(@class,'select-button')]"}).click
     puts "XXX selecting last item"
-    @driver.execute_script("$('ul.select-opts li').last().click()")
+    (@h.wait_until { @driver.find_elements :css => ".design-view-action-participant-new-field-select select option" })[-1].click
     puts "YYY selecetd last item"
     (@h.wait_until { @driver.find_element :xpath => p + "//div[contains(@class,'design-view-action-participant-new-field-name-input')]//input"}).send_keys fieldname
     (@h.wait_until { @driver.find_element :xpath => p + "//a[contains(@class,'button')][../div[contains(@class,'design-view-action-participant-new-field-name-input')]//input]"}).click
@@ -92,15 +91,12 @@ class DocHelper
     # set target party
 
     if not options[:skip_party_choice] then
-      (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'signature-field-placement-setter-field-selector')]//div[contains(@class,'select-button')]"}).click
-      (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'signature-field-placement-setter-field-selector')]//ul[contains(@class,'select-opts')]//li[" + (part-1).to_s() + "]"}).click
+      (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'signature-field-placement-setter-field-selector')]//select/option[" + part.to_s() + "]"}).click
     end
 
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-field-select-container')]//div[contains(@class,'select-button')]"}).click
 
-    @h.wait_until { @driver.find_element :xpath => "//ul[contains(@class,'select-opts')]//li/span[text()='" + fieldname + "']"}
-    @h.screenshot options[:screenshot_name2] if options[:screenshot_name2]
-    (@driver.find_element :xpath => "//ul[contains(@class,'select-opts')]//li/span[text()='" + fieldname + "']").click
+    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'typesetter-obligatory-option')]//select/option[text()='" + fieldname + "']" }).click
     @h.screenshot options[:screenshot_name3] if options[:screenshot_name3]
     (@h.wait_until { @driver.find_element :xpath => "//a[contains(@class,'fieldTypeSetter-button')]"}).click
 
@@ -165,9 +161,7 @@ class DocHelper
       @driver.execute_script("$('.modal.active input.editSignatoryAttachmentName').change()");
       (@h.wait_until { @driver.find_elements :css => ".modal.active textarea.editSignatoryAttachmentDescription" }).last.send_keys attdesc
       @driver.execute_script("$('.modal.active  textarea.editSignatoryAttachmentDescription').change()");
-      select_button = @h.wait_until { @driver.find_element :xpath => "(//td[contains(@class,'editSignatoryAttachmentTDSelect')])[last()]//div[contains(@class,'select-button')]"}
-      @driver.action.move_to(select_button).click(select_button).perform
-      (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'select-exp')]//ul[contains(@class,'select-opts')]//span[contains(text(),'" + counterpart + "')]"}).click
+      (@h.wait_until { @driver.find_element :xpath => "(//td[contains(@class,'editSignatoryAttachmentTDSelect')])[last()]//select/option[text()='" + counterpart + "']" }).click
       sleep 1 if screenshot_name
       @h.screenshot screenshot_name if screenshot_name
     end
@@ -188,7 +182,6 @@ class DocHelper
     puts "review attachment"
     @h.wait_until { (@driver.find_elements :css => ".signatory-attachment .button.show-attachment").length == uploaded + 1 }
     puts "Checking length"
-    #(@h.wait_until { @driver.find_elements :css => ".signatory-attachment .button.show-attachment" })[uploaded].click
     puts "reviewed attachment"
   end
 
