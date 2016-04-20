@@ -108,6 +108,14 @@ var CsvProblem = Backbone.Model.extend({
     'sigpersnr': { type: "personal_number"},
     'sigcompnr': { type: "company_number"}
   },
+  csvSignatoryHasTextFieldWithName: function (csvSignatory, name) {
+    var fieldDescr = this.csvstandardheaders[name];
+    if (fieldDescr === undefined) {
+      return csvSignatory.hasTextFieldWithName(name);
+    } else {
+      return csvSignatory.hasField(fieldDescr.type, fieldDescr.order, undefined);
+    }
+  },
   upload : function(input) {
        var self = this;
        var submit = new Submit({ url : "/parsecsv", method : "POST", expectedType:"text"});
@@ -297,7 +305,7 @@ var CsvSignatoryDesignPopup = exports.CsvSignatoryDesignPopup =  function(args) 
                     designview.setParticipantDetail(signatory);
                   } else {
                     for(var i = 0; i < model.header().length; i ++)
-                      if (!csvSignatory.hasTextFieldWithName(model.header()[i])) {
+                      if (!model.csvSignatoryHasTextFieldWithName(csvSignatory, model.header()[i])) {
                         f = model.csvstandardheaders[model.header()[i]] || {type: "text", name : model.header()[i]};
                         csvSignatory.addField(new Field(_.extend(f, {signatory: csvSignatory})));
                       }
