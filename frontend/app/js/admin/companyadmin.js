@@ -1,6 +1,7 @@
 var React = require("react");
 var CompanieUsersAdminList = require("../../scripts/admin/companyusersadminlist");
 var DocumentsList = require("../../scripts/admin/documentslist");
+var TemplatesList = require("../../scripts/admin/templateslist");
 var CompanyBrandingPanel = require("../../scripts/account/branding/companybrandingpanel");
 var Backbone = require("backbone");
 var AdminCompanyDetails = require("./companydetails.js").AdminCompanyDetails;
@@ -104,6 +105,23 @@ var CompanyAdminModel = Backbone.Model.extend({
                         }
                     });
   },
+  companydtemplatesTab : function() {
+                    var self = this;
+                    var div = $('<div/>');
+                    var list = React.render(React.createElement(TemplatesList,{
+                      forAdmin : true, // For some reason we always show dave here
+                      companyid : this.companyid(),
+                      loadLater : true
+                    }),div[0]);
+                    return new Tab({
+                        name: "Templates",
+                        elems: [function() { return div; }],
+                        pagehash : "templates",
+                        onActivate : function() {
+                            list.reload();
+                        }
+                    });
+  },
   companydocumentsTab : function() {
                     var self = this;
                     var div = $('<div/>');
@@ -142,6 +160,7 @@ var CompanyAdminView = Backbone.View.extend({
            admin.companybrandingTab(),
            admin.companypaymentsTab(),
            admin.companystatisticsTab(),
+           admin.companydtemplatesTab(),
            admin.companydocumentsTab()]
        });
        container.append(tabs.el());
