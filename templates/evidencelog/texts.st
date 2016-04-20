@@ -542,5 +542,5 @@ UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signator
 AuthorAttachmentHashComputedLog=The attachment "$attachment_name$" will not be merged with the main document. To be able to confirm the integrity of "$attachment_name$" it was hashed using the SHA-256 method.
 <br/>
 <br/>
-<p>Hash: <div style='white-space:pre'>$hash$</div></p>
+<p>Hash: <div>$hash$</div></p>
 ###
