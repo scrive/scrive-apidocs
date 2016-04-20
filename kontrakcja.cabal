@@ -761,7 +761,6 @@ Executable mailing-server
                , hpqtypes
                , json
                , lifted-base
-               , lifted-threads
                , log
                , monad-control
                , monad-time
