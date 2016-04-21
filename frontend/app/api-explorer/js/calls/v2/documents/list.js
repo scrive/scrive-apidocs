@@ -37,7 +37,7 @@ new APICallV2({
             optional: true,
             name: "Sorting",
             sendAsParam: true,
-            description: "Filtering options.",
+            description: "Sorting options.",
             defaultValue: "[]"
           }),
           new APICallParam({
@@ -46,7 +46,7 @@ new APICallV2({
             optional: true,
             name: "Filter",
             sendAsParam: true,
-            description: "Sorting options.",
+            description: "Filtering options.",
             defaultValue: "[]"
           })
         ]

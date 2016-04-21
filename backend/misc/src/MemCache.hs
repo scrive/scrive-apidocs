@@ -12,7 +12,6 @@ import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Data.Hashable
 import Data.Word
-import qualified Control.Concurrent.Thread.Lifted as LT
 import qualified Data.HashMap.Strict as HM
 import qualified Data.HashPSQ as Q
 
@@ -50,6 +49,15 @@ fetch
   -> m v
   -> m v
 fetch (MemCache mv) key construct = mask $ \release -> do
+  -- Note: asynchronous exceptions need to be masked in the following places:
+  -- (1) When eel is Left and mvAlreadyThere is False: if asynchronous exception
+  -- arrives between first modifyMVar returns and onException handler is
+  -- estabilished, we're left with dangling MVar. (2) When constructing action
+  -- throws (so the corresponding MVar contains Left), if asynchronous exception
+  -- arrives between second modifyMVar returns and onException block is exited,
+  -- it may happen that another thread already inserted a different MVar under
+  -- the same key, which would've been then removed by onException handler.
+  --
   -- Attempt to get a value corresponding to the key from cache. If it's there,
   -- bump its priority and return it. Otherwise either check whether the value
   -- is already being computed and return associated MVar or create a new one.
@@ -73,32 +81,41 @@ fetch (MemCache mv) key construct = mask $ \release -> do
   case eel of
     Right el -> return el
     Left (mvEl, mvAlreadyThere) -> do
-      -- If we got existing MVar, wait for its result. Otherwise run constructing
-      -- action and update cache accordingly.
+      -- If we got existing MVar, wait for its result. Otherwise run
+      -- constructing action and update cache accordingly.
       if mvAlreadyThere
-        then release $ LT.result =<< readMVar mvEl
-        else (`onException` removeInProgress) . release $ do
-          -- Spawn new thread to avoid catching asynchronous exceptions thrown to a
-          -- thread executing this function.
-          evalue <- snd =<< LT.fork (evaluate . force =<< construct)
-          modifyMVar_ mv $ \mc -> case evalue of
-            Left _ -> do
-              return $! mc {
-                  mcInProgress = HM.delete key $ mcInProgress mc
-                }
-            Right value -> do
-              return $! tidyCache $! mc {
-                  mcCurrentSize = mcCurrentSize mc + mcSizeFun mc value
-                , mcTick        = mcTick mc + 1
-                , mcInProgress  = HM.delete key $ mcInProgress mc
-                , mcCache       = Q.insert key (mcTick mc) value $ mcCache mc
-                }
-          putMVar mvEl evalue
-          LT.result evalue
+        then release $ throwOrReturn =<< readMVar mvEl
+        else do
+          evalue <- (`onException` removeInProgress) $ do
+            -- Spawn a new thread to avoid catching asynchronous exceptions thrown
+            -- to the current thread. After that, construct the value and update
+            -- cache accordingly. If at any point during construction the
+            -- exception is thrown, use mvEl to propagate it to any other caller
+            -- that waits for its result. If at any point in time the current
+            -- thread throws (or receives asynchronous exception), remove mvEl
+            -- from mcInProgress as at this point it's a dangling MVar.
+            void . fork $ putMVar mvEl =<< try (release $ evaluate . force =<< construct)
+            evalue <- readMVar mvEl
+            modifyMVar_ mv $ \mc -> release $ case evalue of
+              Left _ -> do
+                return $! mc {
+                    mcInProgress = HM.delete key $ mcInProgress mc
+                  }
+              Right value -> do
+                return $! tidyCache $! mc {
+                    mcCurrentSize = mcCurrentSize mc + mcSizeFun mc value
+                  , mcTick        = mcTick mc + 1
+                  , mcInProgress  = HM.delete key $ mcInProgress mc
+                  , mcCache       = Q.insert key (mcTick mc) value $ mcCache mc
+                  }
+            return evalue
+          throwOrReturn evalue
   where
     lookupAndIncreasePriorityTo prio = \case
       Nothing        -> (Nothing, Nothing)
       Just (_, mvEl) -> (Just mvEl, Just (prio, mvEl))
+
+    throwOrReturn = either throwIO return
 
     removeInProgress :: m ()
     removeInProgress = modifyMVar_ mv $ \mc -> return $! mc {
