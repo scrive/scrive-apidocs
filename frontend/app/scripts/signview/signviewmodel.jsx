@@ -3,6 +3,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
 var EmailValidation = require("../../js/validation.js").EmailValidation;
+var NoValidation = require("../../js/validation.js").NoValidation;
 var SSNForNOBankIDValidation = require("../../js/validation.js").SSNForNOBankIDValidation;
 var SSNForSEBankIDValidation = require("../../js/validation.js").SSNForSEBankIDValidation;
 var PhoneValidation = require("../../js/validation.js").PhoneValidation;
@@ -175,8 +176,10 @@ var PageTasksArrow = require("../../js/tasks.js").PageTasksArrow;
       if (field != undefined && (!field.hasPlacements()) && field.obligatory()) {
         if (signatory.noBankIDAuthenticationToView()) {
           return !new SSNForNOBankIDValidation().validateData(field.value());
-        } else {
+        } else if (signatory.seBankIDAuthenticationToView()) {
           return !new SSNForSEBankIDValidation().validateData(field.value());
+        } else {
+          return !new NoValidation().validateData(field.value());
         }
       } else {
         return false;
