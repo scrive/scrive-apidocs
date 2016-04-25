@@ -42,7 +42,7 @@ var classNames = require("classnames");
     },
     render: function () {
       var signatory = this.props.signatory;
-      var divClass = className({
+      var divClass = classNames({
         "sig": true,
         "first": this.props.first,
         "last": this.props.last,
