@@ -1,7 +1,7 @@
 -- you need language-javascript-0.5.7 to use this script
 -- usage: runhaskell scripts/detect_old_localizations.hs
 
-module Main where
+module Main (main) where
 
 -- TODO:
 -- regex currently parses valid tokens like 'localization2' as 'localization',
@@ -21,60 +21,8 @@ import System.Directory
 
 ------------------------------
 -- WHITELIST
-whitelist :: Localization
-whitelist =
-    o[("localization",
-      o[ ("statusToolTip", o[ ("draft", d)
-                            , ("cancelled", d)
-                            , ("sent", d)
-                            , ("delivered", d)
-                            , ("reviewed", d)
-                            , ("read", d)
-                            , ("opened", d)
-                            , ("signed", d)
-                            , ("rejected", d)
-                            , ("deliveryproblem", d)
-                            , ("timeouted", d)
-                            , ("problem", d)
-                            ])
-       , ("signatoryMessage", o[ ("datamismatch", d)
-                               , ("timedout", d)
-                               , ("rejected", d)
-                               , ("seen", d)
-                               , ("read", d)
-                               , ("delivered", d)
-                               , ("signed", d)
-                               , ("cancelled", d)
-                               , ("other", d)
-                               , ("waitingForSignature", d)
-                               ])
-       , ("payments", o[ ("plans", o[ ("team", o[ ("name", d)
-                                               , ("price", o[ ("EUR", d)
-                                                            , ("SEK", d)])])
-                                   , ("form", o[ ("name", d)])
-                                   , ("enterprise", o[ ("name", d)
-                                                     , ("price", o[ ("EUR", d)
-                                                                  , ("SEK", d)])])
-                                   , ("trial", o[ ("name", d)
-                                                , ("price", d)])
-                                   ])
-                       , ("errors", o[ ("acceptTOS", d) -- payments.errors is used by Recurly
-                                     , ("cardDeclined", d)
-                                     , ("emptyField", d)
-                                     , ("invalidCC", d)
-                                     , ("invalidCVV", d)
-                                     , ("invalidCoupon", d)
-                                     , ("invalidEmail", d)
-                                     , ("invalidQuantity", d)
-                                     , ("missingFullAddress", d)
-                                     ])
-                       , ("priceUnit", o[ ("EUR", d)
-                                        , ("SEK", d)])])
-       ]
-      )
-     ]
-        where d = Value "" -- dummy value
-              o = Object . Map.fromList
+whitelist :: [String]
+whitelist = ["payments"]
 
 ------------------------------
 -- utils
@@ -88,10 +36,6 @@ splitEithers (e:es) =
 
 uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 uncurry3 f (x, y, z) = f x y z
-
-dropPrefix :: Eq a => [a] -> [a] -> [a]
-dropPrefix prefix s | prefix `isPrefixOf` s = drop (length prefix) s
-                    | otherwise             = s
 
 -- union of two maps or an error for some key that's present in both maps (and its values)
 disjointUnion :: Ord k => (k -> a -> a -> x) -> Map.Map k a -> Map.Map k a -> Either x (Map.Map k a)
@@ -159,24 +103,19 @@ intersectLocalizations (Object m1) (Object m2) = Object $ Map.fromList items'
           items' = catMaybes $ map aux items
 intersectLocalizations _ _ = undefined
 
--- diff two localizations (remove leaves present in the second localization from the first one)
--- this assumes that the the two localizations have the same shapes (of internal branches)
+-- remove stuff that is whitelisted from localization
 -- must be called on localizations with Object ctor
-diffLocalization :: Localization -> Localization -> Localization
-diffLocalization (Object m1) (Object m2) = Object $ Map.fromList items'
-    where items = Map.toList m1
-          aux x@(k, Value _) = if not $ k `Map.member` m2 then
-                                   Just x
-                               else
-                                   Nothing
-          aux (k, m@(Object _)) =
-              if k `Map.member` m2 then
-                  let m' = m2 Map.! k
-                  in Just (k, diffLocalization m m')
-              else
-                  Just (k, m)
-          items' = catMaybes $ map aux items
-diffLocalization _ _ = undefined
+filterWhitelist :: Localization -> Localization
+filterWhitelist (Object m)  = Object $ Map.fromList $ catMaybes $ map aux $ Map.toList m
+  where
+    aux x@(k, Value _) = if k `elem` whitelist
+                            then Nothing
+                            else Just x
+
+    aux (k, m@(Object _)) = if  k `elem` whitelist
+                              then Nothing
+                              else Just (k, filterWhitelist m)
+filterWhitelist v = v
 
 ------------------------------
 -- parsing Localization from javascript
@@ -256,8 +195,8 @@ localizationCallFromString s = LocalizationCall path finalElem
 -- localization call points to non-existing value in a localization
 -- localization call points to a whole [sub]dictionary of the localization
 -- dict-like access to simple values (e.g. localization call 'foo.bar' for localization '{foo: "quuz"}')
-removeLocalizationCallFromLocalization :: LocalizationCall -> Localization -> Localization -> Either String Localization
-removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath' lineNumber) whiteList loc = aux path loc whiteList
+removeLocalizationCallFromLocalization :: LocalizationCall -> Localization -> Either String Localization
+removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath' lineNumber) loc = aux path loc
     where myError s = Left $ filePath' ++ ":" ++ show lineNumber ++ ": " ++ s ++ " (from call: '" ++ wholePathFormatted ++ "')"
           wholePathFormatted = format $ path ++ [case finalElem of
                                                    DictAccess x -> x ++ "["
@@ -265,8 +204,8 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
                                                    Attribute x -> x]
           format = concat . intersperse "."
 
-          aux _ (Value _) _ = error "Trying to remove from Value Localization"
-          aux [] (Object m) wl =
+          aux _ (Value _) = error "Trying to remove from Value Localization"
+          aux [] (Object m) =
               case finalElem of
                 FunCall functionName ->
                     case Map.lookup functionName m of
@@ -278,11 +217,7 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
                 DictAccess dictName ->
                     case Map.lookup dictName m of
                       Nothing -> myError $ "Detected dict/array like access to non-existing key '" ++ dictName ++ "'"
-                      Just l@(Object _) -> myError $
-                          if nullLocalization $ pruneLocalization $ l `diffLocalization` (wl ! dictName) then
-                              "(WHITELISTED) Detected dict access (" ++ dictName ++ "), probably using dynamic keys."
-                          else
-                              "Detected dict access (" ++ dictName ++ "), probably using dynamic keys. Please manually add needed keys to the whitelist"
+                      Just l@(Object _) -> myError $ "Detected dict access (" ++ dictName ++ "), probably using dynamic keys. Please manually add needed keys to the whitelist"
                       Just (Value "<function>") -> myError $ "Detected dict/array like access to a function '" ++ dictName ++ "'"
                       Just (Value "<array>") -> Right $ Object $ Map.delete dictName m
                       Just (Value _) -> myError $ "Detected dict/array like access to a string '" ++ dictName ++ "'"
@@ -294,8 +229,9 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
                       Just (Value "<array>") -> myError $ "Detected attribute access to an array '" ++ attr ++ "'"
                       Just (Value _) -> Right $ Object $ Map.delete attr m
 
-          aux (node:children) (Object m) wl =
-              case Map.lookup node m of
+          aux (node:children) (Object m)
+            | node `elem` whitelist = return $ Object m
+            | otherwise = case Map.lookup node m of
                 Nothing -> myError $ "Detected access to non-existing key '" ++ node ++ "'"
                 Just (Value v) -> -- "foo....QUUX" "{foo: v}"
                     case children of
@@ -329,7 +265,7 @@ removeLocalizationCallFromLocalization (LocalizationCall path finalElem filePath
                         let badPrefix = take (length path - length children) path
                         in myError $ "Detected dict-like acces ('" ++ format path ++ "'), but '" ++ format badPrefix ++ "' is a simple value'"
                 Just l@(Object _) -> do
-                  y <- aux children l $ wl ! node
+                  y <- aux children l
                   return $ Object $ Map.alter (const $ Just y) node m
 
 -- parse localization calls from a list of files
@@ -338,7 +274,7 @@ readLocalizations paths = concat <$> mapM aux paths
     where aux path = do
             contents <- readFile path
             let numberedLines = zip [1..] $ lines contents
-                localizationRegex = "localization(\\.[a-zA-Z0-9_]+)*[([]?" :: String
+                localizationRegex = "localization(\\.[a-zA-Z0-9_]+)+[([]?" :: String
                 results = concatMap (\(lineNumber, line) -> map (\x -> (x, path, lineNumber)) $ getAllTextMatches $ line =~ localizationRegex) numberedLines
             return $ map (uncurry3 localizationCallFromString) results
 
@@ -350,10 +286,9 @@ main = do
   templates_files <- filter (".st" `isSuffixOf`) <$> directoryFilesRecursive "templates"
   let files = normal_js_files ++ jsx_compiled_files ++ templates_files
   localizationCalls <- readLocalizations files
-  let results = map (\lc -> removeLocalizationCallFromLocalization lc whitelist mainLocalization) localizationCalls
+  let results = map (\lc -> removeLocalizationCallFromLocalization lc mainLocalization) localizationCalls
       (logs, cleanedLocalizations) = splitEithers results
-      mainLocalizationWithWhiteList = mainLocalization `diffLocalization` whitelist
-      unusedLocalization = foldl intersectLocalizations mainLocalizationWithWhiteList cleanedLocalizations
+      unusedLocalization = foldl intersectLocalizations (filterWhitelist mainLocalization) cleanedLocalizations
   hPutStrLn stderr "Warnings:"
   _ <- forM logs $ hPutStrLn stderr
   putStrLn "******************************"
