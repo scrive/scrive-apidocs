@@ -145,6 +145,7 @@ var classNames = require("classnames");
           <Button
             ref="signButton"
             type="action"
+            href="#"
             className={buttonClass}
             onClick={function () { self.props.onSign(self.state.thisDevice); }}
             text={localization.process.signbuttontext}

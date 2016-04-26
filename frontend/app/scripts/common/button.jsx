@@ -98,8 +98,12 @@ var classNames = require("classnames");
       return  _.extend({width: this.width()},this.props.style);
     },
     render: function() {
+      var hrefProps = {};
+      if (this.props.href) {
+        hrefProps.href = this.props.href;
+      }
       return (
-        <a className={this.className()} onClick={this.handleClick} style={this.style()}>
+        <a {...hrefProps} className={this.className()} onClick={this.handleClick} style={this.style()}>
           <div className="label" style={{'color': this.props.textcolor}}>
             {/*if*/ this.props.multiline &&
               this.props.text.map(function(text, i) {
