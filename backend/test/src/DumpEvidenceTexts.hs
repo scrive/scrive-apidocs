@@ -19,7 +19,7 @@ import Doc.DocumentMonad (withDocumentID, withDocument, theDocument)
 import Doc.SignatoryIdentification (signatoryIdentifierMap)
 import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
 import EvidenceLog.Model (EventRenderTarget(..), DocumentEvidenceEvent(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
-import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForVerificationPage)
+import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForHistory, eventForVerificationPage)
 import EvidencePackage.EvidenceLog (finalizeEvidenceText)
 import KontraPrelude
 import MinutesTime
@@ -99,7 +99,7 @@ dumpEvidenceTexts now lang doc' = do
                        F.value "page" $ page
                        F.value "x" $ show $ realFracToDecimal 3 $ x
                        F.value "y" $ show $ realFracToDecimal 3 $ y
-  let mkev text msgtext evt =
+  let mkev text msgtext amsgtext evt =
           DocumentEvidenceEvent { evDocumentID = documentid doc
                                 , evTime = time
                                 , evClientTime = Nothing
@@ -116,20 +116,26 @@ dumpEvidenceTexts now lang doc' = do
                                 , evAffectedSigLink = Just (signatorylinkid asl)
                                 , evActor = actorWho actor
                                 , evMessageText = msgtext
+                                , evAdditionalMessageText = amsgtext
                                 }
   evs <- (sortBy (compare `on` (\(evt, _, _, _) -> show evt)) <$>) $
          forM (evidencetypes) $ \evt -> do
-       let text = case evt of
-                    _ | evt `elem` [SMSPinSendEvidence, SMSPinDeliveredEvidence] -> Just "+481234567890"
-                      | otherwise -> messageText
-       elog <- withDocument doc $ evidenceLogText evt (fields evt) (Just asl) text
-       let ev = mkev elog text evt
+       let (msgtext,amsgtext) = case evt of
+                    _ | evt `elem` [SMSPinSendEvidence, SMSPinDeliveredEvidence] -> (Just "+481234567890",Nothing)
+                    _ | evt `elem` [AuthorAttachmentAccepted] -> (Just "Attachment name",Just "Do you accept attachmnet Attachment name")
+                      | otherwise -> (messageText,Nothing)
+       elog <- withDocument doc $ evidenceLogText evt (fields evt) (Just asl) msgtext amsgtext
+       let ev = mkev elog msgtext amsgtext evt
            sim = signatoryIdentifierMap True  [doc] (Set.fromList  [signatorylinkid asl])
-       let simpletext target mactor = if simpleEvents (Current evt) && (isNothing mactor || eventForVerificationPage ev)
+       let simpletext target mactor = if simpleEvents (Current evt) && (isNothing mactor || eventForVerificationPage (evType ev))
                                       then Just <$> simplyfiedEventText target mactor doc{ documentlang = lang } sim ev
                                       else return Nothing
-       vp <- simpletext EventForVerificationPages (actorEmail actor)
-       av <- simpletext EventForArchive Nothing
+       vp <- if (eventForVerificationPage $ Current evt)
+              then simpletext EventForVerificationPages (actorEmail actor)
+              else return Nothing
+       av <- if (eventForHistory $ Current evt)
+              then simpletext EventForArchive Nothing
+              else return Nothing
        return (evt, vp, av, finalizeEvidenceText sim ev "Not named party")
   renderTemplate "dumpAllEvidenceTexts" $ do
      F.value "lang" $ codeFromLang lang

@@ -6,6 +6,7 @@ module EvidenceLog.View (
     , approximateActor
     , suppressRepeatedEvents
     , simpleEvents
+    , eventForHistory
     , eventForVerificationPage
   ) where
 
@@ -38,7 +39,7 @@ import Util.SignatoryLinkUtils
 -- | Evidence log for web page - short and simplified texts
 eventsJSListFromEvidenceLog ::  (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
 eventsJSListFromEvidenceLog doc dees = do
-  let evs = eventsForLog dees
+  let evs = filter (eventForHistory . evType) $ eventsForLog dees
   sim <- getSignatoryIdentifierMap True evs
   mapM (J.runJSONGenT . eventJSValue doc sim) evs
 
@@ -118,6 +119,7 @@ simpleEvents (Current SMSPinDeliveredEvidence)           = True
 simpleEvents (Current VisitedViewForAuthenticationEvidence) = True
 simpleEvents (Current VisitedViewForSigningEvidence)     = True
 simpleEvents (Current AuthenticatedToViewEvidence)       = True
+simpleEvents (Current AuthorAttachmentAccepted)          = True
 simpleEvents _                                           = False
 
 getEvidenceEventStatusClass :: EvidenceEventType -> StatusClass
@@ -185,8 +187,11 @@ emptyEvent (DocumentEvidenceEvent {evType = Current InvitationEvidence, evAffect
 emptyEvent (DocumentEvidenceEvent {evType = Current ReminderSend,       evAffectedSigLink = Nothing }) = True
 emptyEvent _ = False
 
-eventForVerificationPage :: DocumentEvidenceEvent -> Bool
-eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileEvidence, AttachExtendedSealedFileEvidence, MarkInvitationReadEvidence]) . evType
+eventForVerificationPage :: EvidenceEventType -> Bool
+eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileEvidence, AttachExtendedSealedFileEvidence, MarkInvitationReadEvidence])
+
+eventForHistory :: EvidenceEventType -> Bool
+eventForHistory = not . (`elem` map Current [AuthorAttachmentAccepted])
 
 -- | Produce simplified text for an event (only for archive or
 -- verification pages).
@@ -245,6 +250,7 @@ simplyfiedEventText target mactor d sim dee = do
                   F.value "signatory_dob" $ netsNOBankIDDateOfBirth n
 
         F.value "text" $ String.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
+        F.value "additional_text" $ String.replace "\n" " " <$> evAdditionalMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "signatory" $ (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) <$> mslinkid
         F.forM_ mactor $ F.value "actor"
 

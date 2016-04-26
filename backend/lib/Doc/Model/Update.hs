@@ -1268,14 +1268,15 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
       generateEvents [] = return ()
       generateEvents ((attAcceptanceText, att) : atts) = do
         when (authorattachmentrequired att && (authorattachmentfileid att) `elem` acceptedAttachments) $ do
-          void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+          void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsgs
               AuthorAttachmentAccepted
               (do
                 F.value "attachment_name" (authorattachmentname att)
                 F.value "attachment_acceptance_text" attAcceptanceText
               )
               (Just sl)
-              Nothing
+              (Just $ authorattachmentname att)
+              (Just attAcceptanceText)
             actor
         generateEvents atts
 

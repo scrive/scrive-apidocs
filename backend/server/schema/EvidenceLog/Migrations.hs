@@ -15,6 +15,16 @@ import EvidenceLog.Tables
 import KontraPrelude
 import Utils.String
 
+evidenceLogAddAdditionalText :: MonadDB m => Migration m
+evidenceLogAddAdditionalText =
+  Migration {
+    mgrTable = tableEvidenceLog
+  , mgrFrom = 6
+  , mgrDo = do
+    runSQL_ $ "ALTER TABLE evidence_log ADD COLUMN additional_message_text TEXT NULL"
+  }
+
+
 dropHTMLFromMessagesInEvidenceLog :: MonadDB m => Migration m
 dropHTMLFromMessagesInEvidenceLog = Migration {
   mgrTable = tableEvidenceLog

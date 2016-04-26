@@ -15,7 +15,7 @@ Also, it is insert only. No updates, no deletes.
 tableEvidenceLog :: Table
 tableEvidenceLog = tblTable {
   tblName = "evidence_log"
-  , tblVersion = 6
+  , tblVersion = 7
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT }
@@ -33,6 +33,7 @@ tableEvidenceLog = tblTable {
     , tblColumn { colName = "client_time", colType = TimestampWithZoneT }
     , tblColumn { colName = "client_name", colType = TextT }
     , tblColumn { colName = "actor", colType = TextT, colNullable = False }
+    , tblColumn { colName = "additional_message_text", colType = TextT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblIndexes = [

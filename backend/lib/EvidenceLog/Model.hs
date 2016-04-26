@@ -7,6 +7,7 @@ module EvidenceLog.Model (
   , apiActor
   , InsertEvidenceEvent(..)
   , InsertEvidenceEventWithAffectedSignatoryAndMsg(..)
+  , InsertEvidenceEventWithAffectedSignatoryAndMsgs(..)
   , GetEvidenceLog(..)
   , DocumentEvidenceEvent(..)
   , evidenceLogText
@@ -42,6 +43,15 @@ import Util.HasSomeUserInfo (getEmail)
 import Util.SignatoryLinkUtils (getSigLinkFor)
 import Version
 import qualified HostClock.Model as HC
+
+data InsertEvidenceEventWithAffectedSignatoryAndMsgs = InsertEvidenceEventWithAffectedSignatoryAndMsgs
+                           CurrentEvidenceEventType -- A code for the event
+                           (F.Fields Identity ()) -- Text for evidence
+                           (Maybe SignatoryLink)  -- Affected signatory
+                           (Maybe String)         -- Message text
+                           (Maybe String)         -- Additional message text
+                           Actor                  -- Actor
+    deriving (Typeable)
 
 data InsertEvidenceEventWithAffectedSignatoryAndMsg = InsertEvidenceEventWithAffectedSignatoryAndMsg
                            CurrentEvidenceEventType -- A code for the event
@@ -87,14 +97,15 @@ signatoryLinkTemplateFields sl = do
 
 -- | Create evidence text that goes into evidence log
 evidenceLogText :: (DocumentMonad m, TemplatesMonad m, MonadDB m, MonadThrow m)
-                => CurrentEvidenceEventType -> F.Fields Identity () -> Maybe SignatoryLink -> Maybe String -> m XMLContent
-evidenceLogText event textFields masl mmsg = do
+                => CurrentEvidenceEventType -> F.Fields Identity () -> Maybe SignatoryLink -> Maybe String -> Maybe String -> m XMLContent
+evidenceLogText event textFields masl mmsg masg = do
    let fields = do
          F.value "full" True
        -- Interim substitutions that can be eliminated if we switch from hstringtemplates to XML for representing holes in all event texts.
          F.value "actor" ("$actor$" :: String)
          F.value "signatory" ("$signatory$" :: String)
          maybe (return ()) (F.value "text") (mmsg)
+         maybe (return ()) (F.value "additional_text") (masg)
          case masl of
            Nothing -> return ()
            Just sl -> do
@@ -113,10 +124,10 @@ parseEventTextTemplate name s =
   either ($unexpectedErrorM . (("Cannot parse event template " ++ name ++ " with content " ++ s ++ ": ") ++) . show) (return . CleanXMLContent) $
     parseXMLContent $ T.pack s
 
-instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
-  update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor) = do
+instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsgs Bool where
+  update (InsertEvidenceEventWithAffectedSignatoryAndMsgs event textFields masl mmsg mamsg actor) = do
    -- FIXME: change to mmsg :: Maybe XMLContent
-   text <- evidenceLogText event textFields masl mmsg
+   text <- evidenceLogText event textFields masl mmsg mamsg
    did <- theDocumentID
    actorSLID <- theDocument >>= \doc -> return $
      actorSigLinkID actor `mplus` (signatorylinkid <$> (actorUserID actor >>= flip getSigLinkFor doc))
@@ -133,6 +144,7 @@ instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdat
       sqlSet "api_user" $ actorAPIString actor
       sqlSet "affected_signatory_link_id" $ signatorylinkid <$> masl
       sqlSet "message_text" $ mmsg
+      sqlSet "additional_message_text" $ mamsg
       sqlSet "client_time" $ actorClientTime actor
       sqlSet "client_name" $ actorClientName actor
       sqlSet "actor" $ actorWho actor
@@ -140,6 +152,8 @@ instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdat
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event textFields actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields Nothing Nothing actor)
 
+instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsg Bool where
+  update (InsertEvidenceEventWithAffectedSignatoryAndMsg event textFields masl mmsg actor) = update (InsertEvidenceEventWithAffectedSignatoryAndMsgs event textFields masl mmsg Nothing actor)
 
 data DocumentEvidenceEvent = DocumentEvidenceEvent {
     evDocumentID :: DocumentID
@@ -161,6 +175,8 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent {
   , evActor      :: String                     -- actorWho, used for actor identification if evSigLink is missing
   , evMessageText :: Maybe String              -- Some events have message connected to them (like reminders). We don't store such events in documents, but they should not get lost.
                                                -- use: "text" attribute
+  , evAdditionalMessageText :: Maybe String    -- Some events have even more messages connected to them
+
   }
   deriving (Eq, Ord, Show, Typeable)
 
@@ -181,6 +197,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> ", affected_signatory_link_id"
       <> ", actor"
       <> ", message_text"
+      <> ", additional_message_text"
       <> ", client_time"
       <> ", client_name"
       <> ", host_clock.time"
@@ -191,7 +208,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
       <> "  ORDER BY evidence_log.time, id"
     fetchMany fetchEvidenceLog
     where
-      fetchEvidenceLog (did', tm, txt, tp, vid, uid, eml, ip4, slid, api, aslid, actor, emsg, ctime, cname, hctime, offset, frequency) =
+      fetchEvidenceLog (did', tm, txt, tp, vid, uid, eml, ip4, slid, api, aslid, actor, emsg, eamsg, ctime, cname, hctime, offset, frequency) =
         DocumentEvidenceEvent {
             evDocumentID = did'
           , evTime       = tm
@@ -209,6 +226,7 @@ instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
           , evAffectedSigLink = aslid
           , evActor      = actor
           , evMessageText = emsg
+          , evAdditionalMessageText = eamsg
           }
 
 copyEvidenceLogToNewDocument :: MonadDB m => DocumentID -> DocumentID -> m ()
@@ -231,6 +249,7 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", affected_signatory_link_id"
     <> ", actor"
     <> ", message_text"
+    <> ", additional_message_text"
     <> ", client_time"
     <> ", client_name"
     <> ") (SELECT "
@@ -247,6 +266,7 @@ copyEvidenceLogToNewDocuments fromdoc todocs = do
     <> ", affected_signatory_link_id"
     <> ", actor"
     <> ", message_text"
+    <> ", additional_message_text"
     <> ", client_time"
     <> ", client_name"
     <> " FROM evidence_log, (VALUES" <+> sqlConcatComma (map (parenthesize . sqlParam) todocs) <+> ") AS todocs(id)"
@@ -316,8 +336,8 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewMethodSEBankIDToNOBankIDEvidence |
   ChangeAuthenticationToViewMethodNOBankIDToStandardEvidence |
   ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidence |
-  AuthorAttachmentAccepted                           |
-  AuthorAttachmentHashComputed
+  AuthorAttachmentHashComputed                       |
+  AuthorAttachmentAccepted
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -381,7 +401,8 @@ data ObsoleteEvidenceEventType =
   RemovedFromPadDevice                            |
   UpdateFieldTextEvidence                         |
   SignWithELegFailureEvidence                     |
-  SignatoryLinkVisited
+  SignatoryLinkVisited                            |
+  ObsoleteAuthorAttachmentAccepted
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 
@@ -502,8 +523,9 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewMethodSEBankIDToNOBankIDEvidence) = toSQL (110::Int16)
   toSQL (Current ChangeAuthenticationToViewMethodNOBankIDToStandardEvidence) = toSQL (111::Int16)
   toSQL (Current ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidence) = toSQL (112::Int16)
-  toSQL (Current AuthorAttachmentAccepted) = toSQL (113::Int16)
+  toSQL (Obsolete ObsoleteAuthorAttachmentAccepted) = toSQL (113::Int16)
   toSQL (Current AuthorAttachmentHashComputed) = toSQL (114::Int16)
+  toSQL (Current AuthorAttachmentAccepted) = toSQL (115::Int16)
 
 
 instance FromSQL EvidenceEventType where
@@ -623,9 +645,10 @@ instance FromSQL EvidenceEventType where
       110 -> return (Current ChangeAuthenticationToViewMethodSEBankIDToNOBankIDEvidence)
       111 -> return (Current ChangeAuthenticationToViewMethodNOBankIDToStandardEvidence)
       112 -> return (Current ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidence)
-      113 -> return (Current AuthorAttachmentAccepted)
+      113 -> return (Obsolete ObsoleteAuthorAttachmentAccepted)
       114 -> return (Current AuthorAttachmentHashComputed)
+      115 -> return (Current AuthorAttachmentAccepted)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 114)]
+        reRange = [(1, 115)]
       , reValue = n
       }

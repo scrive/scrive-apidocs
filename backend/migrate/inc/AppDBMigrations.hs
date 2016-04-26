@@ -85,6 +85,7 @@ kontraMigrations = [
   , addFileNameToSignatoryAttachment
   , allowManyCopiesOfAuthorAttachmentForSameDocument
   , addAddedToSealedFileToAuthorAttachment
+  , evidenceLogAddAdditionalText
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations
