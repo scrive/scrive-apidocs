@@ -80,7 +80,7 @@ $nicebutton(link=concat(a1=ctxhostpart;a2="/account#subscription"); text=_paymen
 paymentsExpiredEmail=
 $_paymentsEmailExpiredSubject()$
 $nicemail(
-  mailheader=_paymentsEmailEmailHeader();
+  mailheader=_paymentsEmailExpiredSubject();
   mailp1=paymentsExpiredEmail1()
 )$
 ###

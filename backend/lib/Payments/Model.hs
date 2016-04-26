@@ -288,7 +288,6 @@ instance MonadDB m => DBQuery m PaymentPlansExpiredDunning [PaymentPlan] where
 data SavePaymentPlan = SavePaymentPlan PaymentPlan UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m SavePaymentPlan Bool where
   update (SavePaymentPlan PaymentPlan{..} tm) = do
-    let
     updated <- runQuery01 . sqlUpdate "payment_plans" $ do
       setFields
       sqlWhereEq "account_code" ppAccountCode

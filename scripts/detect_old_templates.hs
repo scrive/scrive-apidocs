@@ -57,6 +57,7 @@ kontraExtensions = map EnableExtension [
   , UndecidableInstances
   , LambdaCase
   , MultiWayIf
+  , FunctionalDependencies
   ]
 
 ------------------------------
@@ -178,7 +179,7 @@ qualStmtExps _ = S.empty
 -- these are needed, because every event types has associated template
 elogEvents :: IO (S.Set String)
 elogEvents = do
-  ParseOk (Module _ _ _ _ _ _ decls) <- parseFileWithExts kontraExtensions "src/EvidenceLog/Model.hs"
+  ParseOk (Module _ _ _ _ _ _ decls) <- parseFileWithExts kontraExtensions "backend/lib/EvidenceLog/Model.hs"
   let documentCurrentEvidenceEventDeclCtors (DataDecl _ DataType _ (Ident "CurrentEvidenceEventType") _ ctors _) = Just ctors
       documentCurrentEvidenceEventDeclCtors _ = Nothing
       documentObsoleteEvidenceEventDeclCtors (DataDecl _ DataType _ (Ident "ObsoleteEvidenceEventType") _ ctors _) = Just ctors
@@ -259,7 +260,7 @@ setCatMaybes = S.fromList . catMaybes . S.toList
 
 main :: IO ()
 main = do
-  files <- filter (".hs" `isSuffixOf`) <$> directoryFilesRecursive "src"
+  files <- filter (".hs" `isSuffixOf`) <$> directoryFilesRecursive "backend"
   exps <- S.unions <$> mapM fileExps files
   let topLevelTemplatesFromSources = setCatMaybes $ S.map expTemplateName exps
   events <- elogEvents

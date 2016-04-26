@@ -250,7 +250,9 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
         let attachmentPath = tmppath </> attachmentNumText ++ takeExtension name
         liftIO $ BS.writeFile attachmentPath contents
 
-        attachedToSealedFileText <- renderLocalTemplate document (if addContent then "_attachedToSealedFile"  else "_notAttachedToSealedFile") (return ())
+        attachedToSealedFileText <- if addContent
+                                      then renderLocalTemplate document "_attachedToSealedFile" (return ())
+                                      else renderLocalTemplate document "_notAttachedToSealedFile" (return ())
 
         return $ Seal.FileDesc
                  { fileTitle      = title
