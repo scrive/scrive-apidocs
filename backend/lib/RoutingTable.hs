@@ -69,8 +69,6 @@ staticRoutes production = choice
      , dir "s" $ dir "eid" $ CGI.grpRoutes
      , dir "nets" $ NETS.netsRoutes
 
-     , dir "s" $ dir "acceptaccount"  $ hPostNoXToken $ toK2 $ DocControl.handleAcceptAccountFromSign
-
      , dir "sp" $ hGet $ toK2 $ DocControl.handleSignShow
      , dir "padsign" $ hPost $ toK2 $ DocControl.handleIssueGoToSignviewPad
      , allLangDirs $ dir "to-sign" $ hGet $ toK0 $ DocControl.handlePadList

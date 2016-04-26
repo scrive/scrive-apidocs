@@ -67,9 +67,6 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     document: function() {
         return this.get("document");
     },
-    saveurl: function() {
-      return "/s/acceptaccount/" + this.document().id + "/" + this.signatoryid();
-    },
     signIndex: function() {
         var allSignatories = this.document().signatories();
         var index = 1;

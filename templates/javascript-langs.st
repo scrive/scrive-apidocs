@@ -536,12 +536,8 @@ javascriptLocalisation =
              , personalNumberLabel: "$_personalNumberLabel()$"
              , authorAttachmentsUnderstoodContent : "$_authorAttachmentsUnderstoodContent()$"
              , signatoriesTitle: "$_signViewSignatoriesTitle()$"
-             , acceptTOS: "$_acceptTOS()$"
              , notEntered: "$_notEntered()$"
              , filladitionfieldslabel: "$_filladitionfieldslabel()$"
-             , signupButtonText: "$_signupButtonText()$"
-             , titleText: "$_titleText()$"
-             , subtitleText: "$_subtitleText()$"
              , downloadDocumentButtonText: "$_downloadDocumentButtonText()$"
              , pinSigning : {
                   invalidPhone   :  "$_invalidPhone()$"

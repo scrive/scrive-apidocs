@@ -11,7 +11,6 @@ module Doc.DocControl(
     , handleDownloadClosedFile
     , handleSignShow
     , handleSignShowSaveMagicHash
-    , handleAcceptAccountFromSign
     , handleEvidenceAttachment
     , handleIssueShowGet
     , handleIssueGoToSignview
@@ -99,7 +98,6 @@ import Util.SignatoryLinkUtils
 import Util.Zlib (decompressIfPossible)
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified GuardTime as GuardTime
-import qualified User.Action
 
 handleNewDocument :: Kontrakcja m => m KontraLink
 handleNewDocument = do
@@ -187,19 +185,6 @@ formatTimeSimpleWithTZ tz t = do
 
 showCreateFromTemplate :: Kontrakcja m => m (Either KontraLink String)
 showCreateFromTemplate = withUserGet $ pageCreateFromTemplate =<< getContext
-
-{- |
-
-    Handles an account setup from within the sign view.
--}
-handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
-handleAcceptAccountFromSign did slid = logDocumentAndSignatory did slid $ do
-  magichash <- guardJustM $ dbQuery $ GetDocumentSessionToken slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash) `withDocumentM` do
-    signatorylink <- guardJust . getSigLinkFor slid =<< theDocument
-    user <- User.Action.handleAccountSetupFromSign signatorylink
-    J.runJSONGenT $ do
-      J.value "userid" (show $ userid user)
 
 {- |
     Call after signing in order to save the document for any user, and

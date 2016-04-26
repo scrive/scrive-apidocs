@@ -442,7 +442,7 @@ instance Arbitrary (Binary BS.ByteString) where
   arbitrary = Binary <$> arbitrary
 
 instance Arbitrary SignupMethod where
-  arbitrary = elements [AccountRequest, ViralInvitation, BySigning, ByAdmin, CompanyInvitation]
+  arbitrary = elements [AccountRequest, ViralInvitation, ByAdmin, CompanyInvitation]
 
 instance Arbitrary UserSettings where
   arbitrary = UserSettings <$> arbitrary

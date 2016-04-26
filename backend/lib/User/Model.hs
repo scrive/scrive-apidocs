@@ -65,6 +65,7 @@ data StatsPartition = PartitionByDay | PartitionByMonth
 data InviteType = Viral | Admin
   deriving (Eq, Ord, Show)
 
+{- BySigning is not used anymore. We can't drop it right away, but it doesn't need to be supported -}
 data SignupMethod = AccountRequest | ViralInvitation | BySigning | ByAdmin | CompanyInvitation
   deriving (Eq, Ord, Show, Read)
 

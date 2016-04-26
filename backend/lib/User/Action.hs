@@ -1,6 +1,5 @@
 module User.Action (
-    handleAccountSetupFromSign
-  , handleActivate
+    handleActivate
   , createUser
   , phoneMeRequest
   ) where
@@ -12,15 +11,12 @@ import Log
 import Text.StringTemplates.Templates
 import qualified Data.Foldable as F
 
-import ActionQueue.AccessNewAccount (newAccessNewAccountLink)
 import Administration.AddPaymentPlan
 import BrandedDomain.BrandedDomain
 import Company.CompanyID
 import Company.Model
 import Crypto.RNG
 import DB
-import Doc.DocStateData
-import Doc.DocumentMonad
 import Doc.Model
 import Happstack.Fields
 import InputValidation
@@ -34,37 +30,9 @@ import ThirdPartyStats.Core
 import User.Email
 import User.History.Model
 import User.Model
-import User.UserView
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
-
-handleAccountSetupFromSign :: (Kontrakcja m, DocumentMonad m) => SignatoryLink -> m User
-handleAccountSetupFromSign signatorylink = do
-  let firstname = getFirstName signatorylink
-      lastname = getLastName signatorylink
-      cname = getCompanyName signatorylink
-      cnumber = getCompanyNumber signatorylink
-  email <- guardJustM $ getOptionalField asValidEmail "email"
-  muser <- dbQuery $ GetUserByEmail (Email email)
-  user <- case muser of
-            Just u -> do
-              when (isJust $ userhasacceptedtermsofservice u) $ do -- Don't remove - else people will be able to hijack accounts
-                internalError
-              return u
-            Nothing -> do
-               company <- dbUpdate $ CreateCompany
-               _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
-                    companyname = cname
-                  , companynumber = cnumber
-                }
-               guardJustM $ do
-                 lang <- documentlang <$> theDocument
-                 createUser (Email email) (firstname, lastname) (companyid company,True) lang BySigning
-  company <- dbQuery $ GetCompanyByUserID (userid user)
-  activateduser <- handleActivate (Just $ firstname) (Just $ lastname) (user,company) BySigning
-  _ <- dbUpdate $ SaveDocumentForUser activateduser (signatorylinkid signatorylink)
-  return activateduser
 
 handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> (User,Company) -> SignupMethod -> m User
 handleActivate mfstname msndname (actvuser,company) signupmethod = do
@@ -111,8 +79,6 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
     passwordhash <- createPassword password
     void . dbUpdate $ SetUserPassword (userid actvuser) passwordhash
 
-  when (signupmethod == BySigning) $ do
-    scheduleNewAccountMail ctx actvuser
   tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
 
   logInfo "Attempt successful, user logged in" $ object [
@@ -128,12 +94,6 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
     addCompanyPlanManual (companyid company) TrialPricePlan ActiveStatus
 
   return tosuser
-
-scheduleNewAccountMail :: (TemplatesMonad m, CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => Context -> User -> m ()
-scheduleNewAccountMail ctx user = do
-  link <- newAccessNewAccountLink $ userid user
-  mail <- accessNewAccountMail ctx user link
-  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
 createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Email -> (String, String) -> (CompanyID,Bool) -> Lang -> SignupMethod -> m (Maybe User)
 createUser email names companyandrole lang sm = do

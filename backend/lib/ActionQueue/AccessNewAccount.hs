@@ -2,8 +2,6 @@ module ActionQueue.AccessNewAccount (
     AccessNewAccount
   , accessNewAccount
   , getAccessNewAccountUser
-  , newAccessNewAccount
-  , newAccessNewAccountLink
   ) where
 
 import Control.Monad.Catch
@@ -13,9 +11,7 @@ import Data.Typeable
 import ActionQueue.Core
 import ActionQueue.Scheduler
 import ActionQueue.Tables
-import Crypto.RNG
 import DB
-import KontraLink
 import KontraPrelude
 import MagicHash
 import MinutesTime
@@ -56,14 +52,3 @@ getAccessNewAccountUser uid token = runMaybeT $ do
   guard $ aToken a == token
   Just user <- dbQuery $ GetUserByID $ aUserID a
   return user
-
-newAccessNewAccount :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => UserID -> m AccessNewAccount
-newAccessNewAccount uid = do
-  token <- random
-  expires <- (14 `daysAfter`) `liftM` currentTime
-  dbUpdate $ NewAction accessNewAccount expires (uid, token)
-
-newAccessNewAccountLink :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => UserID -> m KontraLink
-newAccessNewAccountLink uid = do
-  a <- newAccessNewAccount uid
-  return $ LinkAccessNewAccount (aUserID a) (aToken a)

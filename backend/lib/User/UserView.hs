@@ -9,7 +9,6 @@ module User.UserView (
     -- mails
     newUserMail,
     mailNewAccountCreatedByAdmin,
-    accessNewAccountMail,
     resetPasswordMail,
     mailEmailChangeRequest,
 
@@ -115,16 +114,6 @@ companyStatsToJSON formatTime textName uuss = runJSONGen . objects "stats" . for
 
 pageAcceptTOS :: TemplatesMonad m => Context -> m String
 pageAcceptTOS ctx = renderTemplate "pageAcceptTOS" $ entryPointFields ctx
-
-accessNewAccountMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> User -> KontraLink -> m Mail
-accessNewAccountMail ctx user setpasslink = do
-  theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
-  kontramail (ctxbrandeddomain ctx) theme "accessNewAccountMail" $ do
-    F.value "personname"   $ getFullName user
-    F.value "personemail"  $ getEmail user
-    F.value "passwordlink" $ show setpasslink
-    F.value "ctxhostpart"  $ ctxDomainUrl ctx
-    brandingMailFields theme
 
 resetPasswordMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> User -> KontraLink -> m Mail
 resetPasswordMail ctx user setpasslink = do
