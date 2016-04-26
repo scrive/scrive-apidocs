@@ -28,6 +28,8 @@ module.exports = {
       return localization.statusToolTip.sent;
     } else if (status === "delivered") {
       return localization.statusToolTip.delivered;
+    } else if (status === "template") {
+      return localization.statusToolTip.template;
     }
   },
 

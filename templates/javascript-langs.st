@@ -90,7 +90,6 @@ javascriptLocalisation =
                  , cancelled : "$_tooltipcancelled()$"
                  , sent : "$_tooltipsent()$"
                  , delivered : "$_tooltipdelivered()$"
-                 , reviewed : "$_tooltipreviewed()$"
                  , read : "$_tooltipread()$"
                  , opened : "$_tooltipopened()$"
                  , signed : "$_tooltipsigned()$"
@@ -180,8 +179,6 @@ javascriptLocalisation =
 
             , process : {
                signModalTitle: "$_contractSignatorySignModalTitle()$",
-               signModalBody: "<p> $_contractSignatorySignModalBody()$ </p>",
-               signModalBodyNoName: "<p> $_contractSignatorySignModalBodyNoName()$ </p>",
                sendbuttontext: "$_contractsendbuttontext()$",
                startsigningbuttontext: "$_contractstartsigningbuttontext()$",
                confirmsendtitle: "$_contractconfirmsendtitle()$",
@@ -443,8 +440,6 @@ javascriptLocalisation =
                 required: "$_nameRequired()$"
               , toolong: "$_nameTooLong()$"
               , invalidnamechars: "$_nameInvalidChars()$"
-              , firstNameField: "$_firstNameField()$"
-              , lastNameField: "$_lastNameField()$"
               , companyNumberInvalidChars: "$_companyNumberInvalidChars()$"
               , companyNumberTooLong: "$_companyNumberTooLong()$"
               , passwordExceedsMaxLength: "$_PasswordValidationMessageInputExceedsMaxLength()$"
@@ -488,10 +483,6 @@ javascriptLocalisation =
            , modalNewPasswordViewRepeatPassword: "$_modalNewPasswordViewRepeatPassword()$"
            , modalNewPasswordViewFooterSave: "$_modalNewPasswordViewFooterSave()$"
            , flashMessagePasswordsDontMatch: "$_flashMessagePasswordsDontMatch()$"
-           , flashMessageMissingRequiredField: "$_flashMessageMissingRequiredField()$"
-           , flashMessagePasswordExceedsMaxLength: "$_flashMessagePasswordExceedsMaxLength()$"
-           , flashMessageInvalidCharsInPassword: "$_flashMessageInvalidCharsInPassword()$"
-           , flashMessagePasswordInvalid: "$_flashMessagePasswordInvalid()$"
            , flashMessagePasswordChangeLinkNotValid: "$_flashMessagePasswordChangeLinkNotValid()$"
          }
          , signupModal: {
@@ -1124,16 +1115,10 @@ javascriptLocalisation =
           , subscription : "$_Subscription()$"
       }
       , sampleSignView : {
-            mandatoryAction: "$_sampleSignViewMandatoryAction()$"
-          , optionalAction: "$_sampleSignViewOptionalAction()$"
-          , phone : "$_sampleSignViewPhone()$"
+            phone : "$_sampleSignViewPhone()$"
           , email : "$_sampleSignViewEmail()$"
-          , textField : "$_sampleSignViewTextField()$"
-          , reviewPDF : "$_sampleSignViewReviewPDF()$"
           , rejectButton : "$_sampleSignViewRejectButton()$"
           , signButton : "$_sampleSignViewSignButton()$"
-          , attachmentsTitle : "$_sampleSignViewAttachmentsTitle()$"
-          , attachmentFilename : "$_sampleSignViewAttachmentFilename()$"
           , signViewHeader : "$_sampleSignViewHeader()$"
       }
       , companyBranding : {
@@ -1282,7 +1267,6 @@ javascriptLocalisation =
             , negativeColorSample : '$_brandingThemesNegativeColorSample()$'
             , font: "$_brandingThemesFont()$"
             , fontSample : "$_brandingThemesFontSample()$"
-            , customFont : "$_brandingThemesCustomFont()$"
             , deleteTitle : "$_brandingThemesDeleteTitle()$"
             , deleteNow : "$_brandingThemesDelete()$"
             , emailPreview : "$_brandingThemesEmailPreview()$"
