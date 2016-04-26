@@ -248,17 +248,19 @@ getRenderedPages fid pageWidthInPixels renderingMode = logFile fid $ do
   let key = (fid, clampedPageWidthInPixels, renderingMode)
   MemCache.fetch ctxnormalizeddocuments key $ do
     fileContent <- getFileIDContents fid
-    liftBase (getNumberOfPDFPages fileContent) >>= \case
-      Left err -> do
-        logAttention "getNumberOfPDFPages failed" $ object [
-            "error" .= err
-          ]
-        internalError
-      Right pagesNo -> do
-        rp <- renderedPages pagesNo
-        forkAction "Rendering file" $ do
-          runRendering fileContent clampedPageWidthInPixels renderingMode rp
-        return rp
+    rp <- case renderingMode of
+      RenderingModeFirstPageOnly -> renderedPages 1
+      RenderingModeWholeDocument -> do
+        liftBase (getNumberOfPDFPages fileContent) >>= \case
+          Left err -> do
+            logAttention "getNumberOfPDFPages failed" $ object [
+                "error" .= err
+              ]
+            internalError
+          Right pagesNo -> renderedPages pagesNo
+    forkAction "Rendering file" $ do
+      runRendering fileContent clampedPageWidthInPixels renderingMode rp
+    return rp
 
 data FileError = FileSizeError Int Int
                | FileFormatError
