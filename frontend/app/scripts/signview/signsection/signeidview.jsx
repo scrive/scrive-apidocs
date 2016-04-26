@@ -125,7 +125,6 @@ var classNames = require("classnames");
                 <InfoTextInput
                   id="ssn"
                   ref="ssnInput"
-                  inputtype="number"
                   infotext={localization.ssnInfoText}
                   className={inputClass}
                   value={field.value()}
