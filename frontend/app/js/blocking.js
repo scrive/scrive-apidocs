@@ -249,7 +249,7 @@ var BlockingInfoView = require("./blocking.js").BlockingInfoView;
             $el.unbind('click');
             // JN requested temporarily disabling blocking for non (free & cc) users
             var plan = model.plan();
-            if (plan !== "form" && plan !== "free") {
+            if (plan !== "team" && plan !== "free") {
               return;
             }
             if(model.isFree() ||
@@ -441,7 +441,7 @@ var BlockingInfoView = require("./blocking.js").BlockingInfoView;
             shouldBlockDocs: function(n) {
               // JN requested temporarily disabling blocking for non (free & cc) users
               var plan = this.model.plan();
-              if (plan === "form" || plan === "free") {
+              if (plan === "team" || plan === "free") {
                 return n > model.docsLeft() && !model.isAdminUser();
               } else {
                 return false;
