@@ -10,7 +10,7 @@ fi
 cabal sandbox init --sandbox="$1"
 
 rm -f kontrakcja-test.tix
-cabal update
+# cabal update
 cabal clean
 cabal install --only-dependencies --force-reinstalls
 cabal configure -ftest-coverage -fenable-routinglist
