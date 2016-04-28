@@ -1,7 +1,6 @@
 module AppDBMain where
 
 import Log
-import Log.Class.Instances ()
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import System.IO

@@ -12,7 +12,6 @@ import Control.Monad.Catch
 import Control.Monad.Reader (MonadIO, MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM, defaultLiftWith, defaultRestoreT)
 import Log
-import Log.Class.Instances ()
 
 import DB
 import DB.RowCache (RowCacheT, GetRow, runRowCacheT, runRowCacheTID, rowCache, rowCacheID, updateRow, updateRowWithID)

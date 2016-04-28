@@ -17,7 +17,6 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Data.Time
 import Log
-import Log.Class.Instances ()
 import Network.AWS.Authentication
 import System.FilePath ((</>))
 import qualified Crypto.Hash.SHA1 as SHA1

@@ -19,9 +19,11 @@ import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Except
+import Control.Monad.Time
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.State.Strict
+import Data.Time
 import Data.Typeable
 import Happstack.Server
 import Happstack.Server.Internal.MessageWrap
@@ -62,6 +64,7 @@ instance Exception RqDataError
 data ReqHandlerSt = ReqHandlerSt {
   hsRequest :: !Request
 , hsFilter  :: !(Response -> Response)
+, hsTime    :: !UTCTime
 }
 
 type InnerReqHandlerT = StateT ReqHandlerSt
@@ -73,7 +76,8 @@ newtype ReqHandlerT m a = ReqHandlerT { unReqHandlerT :: InnerReqHandlerT m a }
 
 runReqHandlerT :: Socket -> Conf -> ReqHandlerT IO Response -> IO ()
 runReqHandlerT sock conf (ReqHandlerT action) = L.listen' sock conf $ \req -> do
-  (res, st) <- runStateT action $ ReqHandlerSt req id
+  now <- getCurrentTime
+  (res, st) <- runStateT action $ ReqHandlerSt req id now
   runValidator (fromMaybe return $ validator conf) $ hsFilter st res
 
 mapReqHandlerT :: (m (a, ReqHandlerSt) -> n (b, ReqHandlerSt)) -> ReqHandlerT m a -> ReqHandlerT n b
@@ -92,6 +96,9 @@ instance MonadBaseControl b m => MonadBaseControl b (ReqHandlerT m) where
   restoreM     = defaultRestoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
+
+instance Monad m => MonadTime (ReqHandlerT m) where
+  currentTime = ReqHandlerT $ gets hsTime
 
 instance Monad m => FilterMonad Response (ReqHandlerT m) where
   setFilter f     = ReqHandlerT . modify $ \st -> st { hsFilter = f }

@@ -6,13 +6,11 @@ module LiveDocx (
   , convertToPDF
 ) where
 
-import Control.Monad()
 import Control.Monad.Base
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Data.Char
 import Log
-import Log.Class.Instances ()
 import System.CPUTime
 import System.FilePath
 import System.IO

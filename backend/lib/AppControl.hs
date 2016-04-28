@@ -142,7 +142,7 @@ type InnerHandlerM = DBT (AWS.AmazonMonadT (CryptoRNGT HandlerM))
 -- | Creates a context, routes the request, and handles the session.
 appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> HandlerM Response
 appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler_id" $ \handlerID -> do
-  realStartTime <- liftIO currentTime
+  realStartTime <- liftBase getCurrentTime
   temp <- liftIO getTemporaryDirectory
   let quota = 10000000
       bodyPolicy = defaultBodyPolicy temp quota quota quota
@@ -168,11 +168,11 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
       logInfo "Handler started" $ object routeLogData
 
       (res, mdres, handlerTime) <- localData [identifier_ $ sesID session] $ do
-        startTime <- liftIO currentTime
+        startTime <- liftBase getCurrentTime
         -- Make Response filters local to the main request handler so
         -- that they do not interfere with delayed response.
         ((eres, ctx'), resFilter) <- getFilter $ routeHandlers ctx
-        finishTime <- liftIO currentTime
+        finishTime <- liftBase getCurrentTime
 
         F.updateFlashCookie (ctxflashmessages ctx) (ctxflashmessages ctx')
         issecure <- isSecure
@@ -199,7 +199,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         logInfo_ "Waiting for delayed response"
         maybe (return res) (E.evaluate . force) =<< unDelayedResponse dr
 
-    realFinishTime <- liftIO getCurrentTime
+    realFinishTime <- liftBase getCurrentTime
     logInfo "Handler finished" . object $ [
         "statistics" .= object [
             "queries" .= statsQueries
