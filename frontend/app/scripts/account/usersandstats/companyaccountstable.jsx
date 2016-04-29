@@ -1,6 +1,7 @@
 var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
 var HubSpot = require("../../common/hubspot_service");
+var Select = require("../../common/select");
 var List = require("../../lists/list");
 var jQuery = require("jquery");
 var Confirmation = require("../../../js/confirmations.js").Confirmation;
@@ -176,6 +177,10 @@ module.exports = React.createClass({
        }
        return label;
     },
+    roleOptions: function () {
+      return [{name: localization.account.companyAccounts.roleStandard, value: "RoleStandard"},
+              {name: localization.account.companyAccounts.roleAdmin, value: "RoleAdmin"}];
+    },
     render: function() {
       var self = this;
       return (
@@ -230,6 +235,15 @@ module.exports = React.createClass({
               rendering={function(d) {
                 var canChangeRole = !d.field("isctxuser") || !d.field("role") =="RoleInvite";
                 if (canChangeRole) {
+                  return (<Select
+                            isOptionSelected={function (o) {
+                              return o.value == d.field("role");
+                            }}
+                            onSelect={function () {
+                              self.changeRole(d);
+                            }}
+                            options={self.roleOptions()}
+                          />);
                   return (<a onClick={function() {self.changeRole(d);}}>{self.roleText(d)}</a>);
                 } else {
                   return (<span>{self.roleText(d)}</span>);
