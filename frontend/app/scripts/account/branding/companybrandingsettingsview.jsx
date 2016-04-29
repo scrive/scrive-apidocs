@@ -14,7 +14,7 @@ module.exports = React.createClass({
     },
     saveSettings : function() {
       this.props.model.save(function() {
-        new FlashMessage({type : "success", content: "Saved"});
+        new FlashMessage({type : "success", content: "Saved", withReload: true});
       });
     },
     render: function() {

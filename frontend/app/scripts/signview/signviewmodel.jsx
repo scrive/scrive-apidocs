@@ -176,7 +176,7 @@ var PageTasksArrow = require("../../js/tasks.js").PageTasksArrow;
       if (field != undefined && (!field.hasPlacements()) && field.obligatory()) {
         if (signatory.noBankIDAuthenticationToView()) {
           return !new SSNForNOBankIDValidation().validateData(field.value());
-        } else if (signatory.seBankIDAuthenticationToView()) {
+        } else if (signatory.seBankIDAuthenticationToView() || signatory.seBankIDAuthenticationToSign()) {
           return !new SSNForSEBankIDValidation().validateData(field.value());
         } else {
           return !new NoValidation().validateData(field.value());
