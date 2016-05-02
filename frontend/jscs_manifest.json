@@ -1,6 +1,7 @@
 [
   "./app/scripts/admin/templateslist.jsx", 
   "./app/scripts/designview/typesetters/*.jsx",
+  "./app/scripts/designview/processsettings/signviewsettings.jsx",
   "./app/scripts/designview/participants/*.jsx",
   "./app/scripts/designview/fileview/*.jsx",
   "./app/scripts/designview/authorattachments/*.jsx",

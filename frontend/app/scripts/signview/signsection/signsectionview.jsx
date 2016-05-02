@@ -404,6 +404,7 @@ var classNames = require("classnames");
             <SignReject
               onBack={this.handleSetStep(this.state.initialStep)}
               onReject={this.handleReject}
+              allowRejectionReason={doc.allowrejectreason()}
             />
           }
         </div>

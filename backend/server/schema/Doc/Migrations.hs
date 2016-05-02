@@ -19,6 +19,17 @@ import Doc.Tables
 import KontraPrelude
 import Utils.String
 
+addAllowRejectReasonToDocuments :: MonadDB m => Migration m
+addAllowRejectReasonToDocuments = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 42
+  , mgrDo = do
+      runQuery_ $ sqlAlterTable "documents" [
+          sqlAddColumn $ tblColumn { colName = "allow_reject_reason", colType = BoolT, colNullable = False, colDefault = Just "true" }
+        ]
+  }
+
+
 addUniqueConstraintForAuthorCheck :: MonadDB m => Migration m
 addUniqueConstraintForAuthorCheck = Migration {
     mgrTable = tableSignatoryLinks

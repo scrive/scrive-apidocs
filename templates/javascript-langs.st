@@ -194,6 +194,7 @@ javascriptLocalisation =
                signbuttontextfromsignaturedrawing: "$_contractsignbuttontextfromsignaturedrawing()$",
                signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",
                signatorycancelmodaltext: "$_contractsignatorycancelmodaltext()$",
+               signatorycancelmodaltextwithoutreason: "$_contractsignatorycancelmodaltextwithoutreason()$",
                signatorycancelmodalplaceholder: "$_contractsignatorycancelmodalplaceholder()$",
                remindagainbuttontext: "$_contractremindagainbuttontext()$",
                authorname: "$_contractauthorname()$",
@@ -312,6 +313,7 @@ javascriptLocalisation =
                   showheader: "$_signviewSettingsShowHeader()$"
                 , showpdfdownload: "$_signviewSettingsShowPDFDownload()$"
                 , showrejectoption: "$_signviewSettingsShowRejectOption()$"
+                , allowrejectreason: "$_signviewSettingsAllowRejectReason()$"
                 , showfooter: "$_signviewSettingsShowFooter()$"
                 , title: "$_signviewSettingsTitle()$"
                 , button: "$_signviewSettingsButton()$"

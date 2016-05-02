@@ -45,6 +45,7 @@ module Doc.Model.Update
   , SetShowHeader(..)
   , SetShowPDFDownload(..)
   , SetShowRejectOption(..)
+  , SetAllowRejectReason(..)
   , SetShowFooter(..)
   , AddAcceptedAuthorAttachmentsEvents(..)
   , SignDocument(..)
@@ -315,6 +316,7 @@ insertDocument document@(Document{..}) = do
     sqlSet "show_header" documentshowheader
     sqlSet "show_pdf_download" documentshowpdfdownload
     sqlSet "show_reject_option" documentshowrejectoption
+    sqlSet "allow_reject_reason" documentallowrejectreason
     sqlSet "show_footer" documentshowfooter
     sqlSet "lang" documentlang
     sqlSet "sharing" documentsharing
@@ -1162,6 +1164,10 @@ data SetShowRejectOption = SetShowRejectOption Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetShowRejectOption Bool where
   update (SetShowRejectOption bool _actor) = updateWithoutEvidence "show_reject_option" bool
 
+data SetAllowRejectReason = SetAllowRejectReason Bool Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetAllowRejectReason Bool where
+  update (SetAllowRejectReason bool _actor) = updateWithoutEvidence "allow_reject_reason" bool
+
 data SetShowFooter = SetShowFooter Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetShowFooter Bool where
   update (SetShowFooter bool _actor) = updateWithoutEvidence "show_footer" bool
@@ -1670,6 +1676,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateD
     , update $ SetShowHeader (documentshowheader document) actor
     , update $ SetShowPDFDownload (documentshowpdfdownload document) actor
     , update $ SetShowRejectOption (documentshowrejectoption document) actor
+    , update $ SetAllowRejectReason (documentallowrejectreason document) actor
     , update $ SetShowFooter (documentshowfooter document) actor
     , update $ SetDocumentTags (documenttags document) actor
     , update $ SetDocumentAPICallbackURL V1 (documentapiv1callbackurl document)

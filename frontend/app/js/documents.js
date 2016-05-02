@@ -139,6 +139,12 @@ var Document = exports.Document = Backbone.Model.extend({
     setShowrejectoption: function(showrejectoption) {
       this.set({"showrejectoption": showrejectoption});
     },
+    allowrejectreason: function() {
+      return this.get("allowrejectreason");
+    },
+    setAllowrejectreason: function(allowrejectreason) {
+      this.set({"allowrejectreason": allowrejectreason});
+    },
     showpdfdownload: function() {
       return this.get("showpdfdownload");
     },
@@ -391,6 +397,7 @@ var Document = exports.Document = Backbone.Model.extend({
             show_header: this.get("showheader"),
             show_pdf_download: this.get("showpdfdownload"),
             show_reject_option: this.get("showrejectoption"),
+            allow_reject_reason: this.get("allowrejectreason"),
             show_footer: this.get("showfooter"),
           }
       };
@@ -641,6 +648,7 @@ var Document = exports.Document = Backbone.Model.extend({
        showheader: args.display_options.show_header,
        showpdfdownload: args.display_options.show_pdf_download,
        showrejectoption: args.display_options.show_reject_option,
+       allowrejectreason: args.display_options.allow_reject_reason,
        showfooter: args.display_options.show_footer,
        invitationmessage: args.invitation_message,
        confirmationmessage: args.confirmation_message,

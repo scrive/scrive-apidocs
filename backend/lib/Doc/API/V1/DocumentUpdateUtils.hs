@@ -50,6 +50,7 @@ applyDraftDataToDocument draft actor = do
                                 , documentshowheader = documentshowheader draft
                                 , documentshowpdfdownload = documentshowpdfdownload draft
                                 , documentshowrejectoption = documentshowrejectoption draft
+                                , documentallowrejectreason = documentallowrejectreason draft
                                 , documentshowfooter = documentshowfooter draft
                                 , documentlang = documentlang draft
                                 , documenttags = documenttags draft
@@ -153,6 +154,7 @@ draftIsChangingDocument draft doc =
      || (documentshowheader draft /= documentshowheader doc)
      || (documentshowpdfdownload draft /= documentshowpdfdownload doc)
      || (documentshowrejectoption draft /= documentshowrejectoption doc)
+     || (documentallowrejectreason draft /= documentallowrejectreason doc)
      || (documentshowfooter draft /= documentshowfooter doc)
      || (documenttimezonename draft /= documenttimezonename doc)
      || (draftIsChangingDocumentSignatories (documentsignatorylinks draft) (documentsignatorylinks doc))

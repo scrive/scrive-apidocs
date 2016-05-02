@@ -44,6 +44,7 @@ applyDraftDataToDocument draft actor = do
                                 , documentshowheader = documentshowheader draft
                                 , documentshowpdfdownload = documentshowpdfdownload draft
                                 , documentshowrejectoption = documentshowrejectoption draft
+                                , documentallowrejectreason = documentallowrejectreason draft
                                 , documentshowfooter = documentshowfooter draft
                                 , documentlang = documentlang draft
                                 , documenttags = documenttags draft

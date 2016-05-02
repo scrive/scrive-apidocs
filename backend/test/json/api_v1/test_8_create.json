@@ -91,6 +91,7 @@
  "daystosign": 90,
  "daystoremind": null,
  "showheader": true,
+ "allowrejectreason":true,
  "showpdfdownload": true,
  "showrejectoption": true,
  "showfooter": true,

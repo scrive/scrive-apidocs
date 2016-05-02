@@ -13,6 +13,7 @@
 "_contractrejectbuttontext":"Reject and reply",
 "_contractsignatorycancelmodalplaceholder":"Type your message here",
 "_contractsignatorycancelmodaltext":"If you reject the document it can’t be signed anymore. Please describe why you want to reject the document.",
+"_contractsignatorycancelmodaltextwithoutreason":"If you reject the document it can’t be signed anymore.",
 "_contractsignatorycancelmodaltitle":"Reject document",
 "_contractsignatoryname":"Party",
 "_contractsignbuttontext":"Sign",

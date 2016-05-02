@@ -6,7 +6,7 @@ import KontraPrelude
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 42
+  , tblVersion = 43
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -35,6 +35,8 @@ tableDocuments = tblTable {
     , tblColumn { colName = "time_zone_name", colType = TextT, colNullable = False, colDefault = Just "'Europe/Stockholm'::text" }
     , tblColumn { colName = "api_v2_callback_url", colType = TextT }
     , tblColumn { colName = "author_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "allow_reject_reason", colType = BoolT, colNullable = False, colDefault = Just "true" }
+
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -81,6 +83,7 @@ ctDocument = CompositeType {
   , CompositeColumn { ccName = "show_header", ccType = BoolT }
   , CompositeColumn { ccName = "show_pdf_download", ccType = BoolT }
   , CompositeColumn { ccName = "show_reject_option", ccType = BoolT }
+  , CompositeColumn { ccName = "allow_reject_reason", ccType = BoolT }
   , CompositeColumn { ccName = "show_footer", ccType = BoolT }
   , CompositeColumn { ccName = "lang", ccType = SmallIntT }
   , CompositeColumn { ccName = "sharing", ccType = SmallIntT }

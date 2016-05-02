@@ -886,6 +886,7 @@
 "_signaturePlaceFor":"<span class='put-name-here'></span> signs here",
 "_signviewHide":"Hide",
 "_signviewMessage":"Message",
+"_signviewSettingsAllowRejectReason":"Allow rejection reason",
 "_signviewSettingsButton":"Signing page settings",
 "_signviewSettingsShowFooter":"Show footer",
 "_signviewSettingsShowHeader":"Show header",

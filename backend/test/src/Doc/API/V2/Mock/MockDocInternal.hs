@@ -92,14 +92,16 @@ data MockDocDisplayOptions = MockDocDisplayOptions {
     mockDocDisplayOptionsShowHeader        :: Bool
   , mockDocDisplayOptionsShowPDFDownload   :: Bool
   , mockDocDisplayOptionsShowRejectButton  :: Bool
+  , mockDocDisplayOptionsAllowRejectReason :: Bool
   , mockDocDisplayOptionsShowFooter        :: Bool
 } deriving (Show, Eq)
 instance Unjson MockDocDisplayOptions where
   unjsonDef = objectOf $ pure MockDocDisplayOptions
-    <*> field "show_header"         mockDocDisplayOptionsShowHeader       "MockDocDisplayOptions ShowHeader"
-    <*> field "show_pdf_download"   mockDocDisplayOptionsShowPDFDownload  "MockDocDisplayOptions ShowPDFDownload"
-    <*> field "show_reject_option"  mockDocDisplayOptionsShowRejectButton "MockDocDisplayOptions ShowRejectButton"
-    <*> field "show_footer"         mockDocDisplayOptionsShowFooter       "MockDocDisplayOptions ShowFooter"
+    <*> field "show_header"         mockDocDisplayOptionsShowHeader        "MockDocDisplayOptions ShowHeader"
+    <*> field "show_pdf_download"   mockDocDisplayOptionsShowPDFDownload   "MockDocDisplayOptions ShowPDFDownload"
+    <*> field "show_reject_option"  mockDocDisplayOptionsShowRejectButton  "MockDocDisplayOptions ShowRejectButton"
+    <*> field "allow_reject_reason" mockDocDisplayOptionsAllowRejectReason "MockDocDisplayOptions AllowRejectReason"
+    <*> field "show_footer"         mockDocDisplayOptionsShowFooter        "MockDocDisplayOptions ShowFooter"
 
 data MockViewer = MockViewer {
     mockViewerRole   :: String

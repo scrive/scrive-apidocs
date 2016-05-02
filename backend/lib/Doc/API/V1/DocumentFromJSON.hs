@@ -419,6 +419,7 @@ instance FromJSValueWithUpdate Document where
         showheader <- fromJSValueField "showheader"
         showpdfdownload <- fromJSValueField "showpdfdownload"
         showrejectoption <- fromJSValueField "showrejectoption"
+        allowrejectreason <- fromJSValueField "allowrejectreason"
         showfooter <- fromJSValueField "showfooter"
         authentication <-  fromJSValueField "authentication"
         delivery <-  fromJSValueField "delivery"
@@ -448,6 +449,7 @@ instance FromJSValueWithUpdate Document where
             documentdaystoremind = daystoremind',
             documentshowheader = updateWithDefaultAndField True documentshowheader showheader,
             documentshowpdfdownload = updateWithDefaultAndField True documentshowpdfdownload showpdfdownload,
+            documentallowrejectreason = updateWithDefaultAndField True documentallowrejectreason allowrejectreason,
             documentshowrejectoption = updateWithDefaultAndField True documentshowrejectoption showrejectoption,
             documentshowfooter = updateWithDefaultAndField True documentshowfooter showfooter,
             documentsignatorylinks = mapAuth authentication $ mapDL delivery $ updateWithDefaultAndField [] documentsignatorylinks signatories,

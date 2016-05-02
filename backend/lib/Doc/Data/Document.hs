@@ -200,6 +200,7 @@ data Document = Document {
 , documentshowheader             :: !Bool
 , documentshowpdfdownload        :: !Bool
 , documentshowrejectoption       :: !Bool
+, documentallowrejectreason      :: !Bool
 , documentshowfooter             :: !Bool
 , documentsharing                :: !DocumentSharing
 , documenttags                   :: !(S.Set DocumentTag)
@@ -234,6 +235,7 @@ instance Default Document where
   , documentshowheader = True
   , documentshowpdfdownload = True
   , documentshowrejectoption = True
+  , documentallowrejectreason = True
   , documentshowfooter = True
   , documentinvitetext = ""
   , documentconfirmtext = ""
@@ -285,6 +287,7 @@ documentsSelectors = [
   , "documents.show_header"
   , "documents.show_pdf_download"
   , "documents.show_reject_option"
+  , "documents.allow_reject_reason"
   , "documents.show_footer"
   , "documents.lang"
   , "documents.sharing"
@@ -348,13 +351,13 @@ documentStatusClassExpression = mconcat [
       , "END :: INTEGER)"
       ]
 
-type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Maybe String, Bool, Int64, MagicHash, TimeZoneName, Maybe CompanyID, StatusClass)
+type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Maybe String, Bool, Int64, MagicHash, TimeZoneName, Maybe CompanyID, StatusClass)
 
 instance PQFormat Document where
   pqFormat _ = "%document"
 
 instance CompositeFromSQL Document where
-  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, show_footer, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_company_id, status_class) = Document {
+  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_company_id, status_class) = Document {
     documentid = did
   , documenttitle = title
   , documentsignatorylinks = signatory_links
@@ -377,6 +380,7 @@ instance CompositeFromSQL Document where
   , documentshowheader = show_header
   , documentshowpdfdownload = show_pdf_download
   , documentshowrejectoption = show_reject_option
+  , documentallowrejectreason = allow_reject_reason
   , documentshowfooter = show_footer
   , documentsharing = sharing
   , documenttags = S.fromList tags

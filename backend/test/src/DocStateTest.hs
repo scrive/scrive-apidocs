@@ -103,6 +103,12 @@ docStateTests env = testGroup "DocState" [
 
   testThat "SetDocumentTags succeeds" env testSetDocumentTagsRight,
 
+  testThat "SetShowHeader works" env testSetShowHeader,
+  testThat "SetShowPDFDownload succeeds" env testSetShowPDFDownload,
+  testThat "SetShowRejectOption succeeds" env testSetShowRejectOption,
+  testThat "SetAllowRejectReason succeeds" env testSetAllowRejectReason,
+  testThat "SetShowFooter succeeds" env testSetShowFooter,
+
   testThat "GetTimeoutedButPendingDocuments works as expected" env testGetTimedOutButPendingDocuments,
 
   testThat "SetInvitationDeliveryStatus fails when not signable" env testSetInvitationDeliveryStatusNotSignableLeft,
@@ -1763,6 +1769,61 @@ testSetDocumentDaysToSignRight = replicateM_ 10 $ do
 
     assert success1
     assertEqual "Days to sign is set properly" daystosign . documentdaystosign =<< theDocument
+
+testSetShowHeader :: TestEnv ()
+testSetShowHeader = replicateM_ 10 $ do
+  author <- addNewRandomUser
+  actor <- arbitraryAuthorActor
+  targetValue <- rand 10 arbitrary
+  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentCondition = isPreparation } `withDocumentM` do
+    success <- randomUpdate $ SetShowHeader targetValue actor
+    newValue <- documentshowheader <$> theDocument
+    assertEqual "SetShowHeader changes value to target value" targetValue newValue
+    assertEqual "SetShowHeader return success" success True
+
+testSetShowPDFDownload :: TestEnv ()
+testSetShowPDFDownload = replicateM_ 10 $ do
+  author <- addNewRandomUser
+  actor <- arbitraryAuthorActor
+  targetValue <- rand 10 arbitrary
+  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentCondition = isPreparation } `withDocumentM` do
+    success <- randomUpdate $ SetShowPDFDownload targetValue actor
+    newValue <- documentshowpdfdownload <$> theDocument
+    assertEqual "SetShowPDFDownload changes value to target value" targetValue newValue
+    assertEqual "SetShowPDFDownload return success" success True
+
+testSetShowRejectOption :: TestEnv ()
+testSetShowRejectOption = replicateM_ 10 $ do
+  author <- addNewRandomUser
+  actor <- arbitraryAuthorActor
+  targetValue <- rand 10 arbitrary
+  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentCondition = isPreparation } `withDocumentM` do
+    success <- randomUpdate $ SetShowRejectOption targetValue actor
+    newValue <- documentshowrejectoption <$> theDocument
+    assertEqual "SetShowRejectOption changes value to target value" targetValue newValue
+    assertEqual "SetShowRejectOption return success" success True
+
+testSetAllowRejectReason :: TestEnv ()
+testSetAllowRejectReason = replicateM_ 10 $ do
+  author <- addNewRandomUser
+  actor <- arbitraryAuthorActor
+  targetValue <- rand 10 arbitrary
+  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentCondition = isPreparation } `withDocumentM` do
+    success <- randomUpdate $ SetAllowRejectReason targetValue actor
+    newValue <- documentallowrejectreason <$> theDocument
+    assertEqual "SetAllowRejectReason changes value to target value" targetValue newValue
+    assertEqual "SetAllowRejectReason return success" success True
+
+testSetShowFooter :: TestEnv ()
+testSetShowFooter = replicateM_ 10 $ do
+  author <- addNewRandomUser
+  actor <- arbitraryAuthorActor
+  targetValue <- rand 10 arbitrary
+  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentCondition = isPreparation } `withDocumentM` do
+    success <- randomUpdate $ SetShowFooter targetValue actor
+    newValue <- documentshowfooter <$> theDocument
+    assertEqual "SetShowFooter changes value to target value" targetValue newValue
+    assertEqual "SetShowFooter return success" success True
 
 assertInvariants :: (MonadIO m, MonadTime m) => Document -> m ()
 assertInvariants document = do

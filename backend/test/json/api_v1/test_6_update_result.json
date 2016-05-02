@@ -176,6 +176,7 @@
  "showheader": true,
  "showpdfdownload": true,
  "showrejectoption": true,
+ "allowrejectreason":true,
  "showfooter": true,
  "invitationmessage": "",
  "confirmationmessage": "",

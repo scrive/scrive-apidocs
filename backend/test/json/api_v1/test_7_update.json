@@ -738,6 +738,7 @@
    "showheader":true,
    "showpdfdownload":true,
    "showrejectoption":true,
+   "allowrejectreason":true,
    "showfooter":true,
    "invitationmessage":"<p>My super invitation message</p>",
    "confirmationmessage":"<p>NULL NULL &lt;XXXX&gt;</p>",

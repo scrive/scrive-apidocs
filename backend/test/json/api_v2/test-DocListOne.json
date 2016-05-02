@@ -78,6 +78,7 @@
     "show_header": true,
     "show_pdf_download": true,
     "show_reject_option": true,
+    "allow_reject_reason": true,
     "show_footer": true
   },
   "invitation_message": "",

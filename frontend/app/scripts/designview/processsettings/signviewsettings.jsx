@@ -7,65 +7,73 @@ var SignviewPreview = require("../../themes/previews/signing");
 var $ = require("jquery");
 var Confirmation = require("../../../js/confirmations.js").Confirmation;
 
-
 var SignviewSettingsModel = Backbone.Model.extend({
-  initialize: function(args) {
+  initialize: function (args) {
     var self = this;
     var theme = new Theme({url: "/account/company/companybranding/signviewtheme"});
-    theme.bind("change", function() {
+    theme.bind("change", function () {
       self.trigger("change");
     });
     this.set({
       theme: theme,
       showHeader: args.document.showheader() == undefined ? true : args.document.showheader(),
       showRejectOption: args.document.showrejectoption() == undefined ? true : args.document.showrejectoption(),
+      allowRejectReason: args.document.allowrejectreason() == undefined ? true : args.document.allowrejectreason(),
       showPDFDownload: args.document.showpdfdownload() == undefined ? true : args.document.showpdfdownload(),
       showFooter: args.document.showfooter() == undefined ? true : args.document.showfooter()
     });
-    theme.fetch({cache: false });
+    theme.fetch({cache: false});
   },
-  document: function() {
-     return this.get("document");
+  document: function () {
+    return this.get("document");
   },
-  theme: function() {
-     return this.get("theme");
+  theme: function () {
+    return this.get("theme");
   },
-  showHeader: function() {
-     return this.get("showHeader");
+  showHeader: function () {
+    return this.get("showHeader");
   },
-  setShowHeader: function(b) {
-     return this.set("showHeader",b);
+  setShowHeader: function (b) {
+    this.set("showHeader", b);
   },
-  showRejectOption: function() {
+  showRejectOption: function () {
     return this.get("showRejectOption");
   },
-  setShowRejectOption: function(b) {
-     return this.set("showRejectOption",b);
+  setShowRejectOption: function (b) {
+    this.set("showRejectOption", b);
   },
-  showPDFDownload: function() {
+  allowRejectReason: function () {
+    return this.get("allowRejectReason");
+  },
+  setAllowRejectReason: function (b) {
+    this.set("allowRejectReason", b);
+  },
+  setShowRejectOptionAndAllowRejectReason: function (b) {
+    this.set({"allowRejectReason": b, "showRejectOption": b});
+  },
+  showPDFDownload: function () {
     return this.get("showPDFDownload");
   },
-  setShowPdfDownload: function(b) {
-     return this.set("showPDFDownload",b);
+  setShowPdfDownload: function (b) {
+    this.set("showPDFDownload", b);
   },
-  showFooter: function() {
+  showFooter: function () {
     return this.get("showFooter");
   },
-  setShowFooter: function(b) {
-     return this.set("showFooter",b);
+  setShowFooter: function (b) {
+    this.set("showFooter", b);
   },
-  ready : function() {
+  ready: function () {
     return this.document().ready() && this.theme().ready();
   }
 });
 
-
 var SignviewSettingsView = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
-    getBackboneModels : function() {
+    getBackboneModels: function () {
       return [this.props.model];
     },
-    render: function() {
+    render: function () {
       var self = this;
       var model = self.props.model;
       if (!model.ready()) {
@@ -77,22 +85,41 @@ var SignviewSettingsView = React.createClass({
               <Checkbox
                 checked={model.showHeader()}
                 label={localization.designview.signviewsettings.showheader}
-                onChange={function(c) {model.setShowHeader(c);}}
+                onChange={function (c) {model.setShowHeader(c);}}
               />
               <Checkbox
                 checked={model.showRejectOption()}
                 label={localization.designview.signviewsettings.showrejectoption}
-                onChange={function(c) {model.setShowRejectOption(c);}}
+                onChange={function (c) {
+                  if (!c) {
+                    model.setShowRejectOptionAndAllowRejectReason(c);
+                  } else {
+                    model.setShowRejectOptionAndAllowRejectReason(c);
+                  }
+                }}
               />
+              <div className="indented">
+                <Checkbox
+                  checked={model.allowRejectReason()}
+                  label={localization.designview.signviewsettings.allowrejectreason}
+                  onChange={function (c) {
+                    if (c) {
+                      model.setShowRejectOptionAndAllowRejectReason(c);
+                    } else {
+                      model.setAllowRejectReason(c);
+                    }
+                  }}
+                />
+              </div>
               <Checkbox
                 checked={model.showPDFDownload()}
                 label={localization.designview.signviewsettings.showpdfdownload}
-                onChange={function(c) {model.setShowPdfDownload(c);}}
+                onChange={function (c) {model.setShowPdfDownload(c);}}
               />
               <Checkbox
                 checked={model.showFooter()}
                 label={localization.designview.signviewsettings.showfooter}
-                onChange={function(c) {model.setShowFooter(c);}}
+                onChange={function (c) {model.setShowFooter(c);}}
               />
             </div>
             <div className="container">
@@ -110,11 +137,11 @@ var SignviewSettingsView = React.createClass({
     }
 });
 
-module.exports = function(args) {
+module.exports = function (args) {
   var document = args.document;
-  var model = new SignviewSettingsModel({document : document});
+  var model = new SignviewSettingsModel({document: document});
   var settingsView = $("<div/>");
-  React.render(React.createElement(SignviewSettingsView,{
+  React.render(React.createElement(SignviewSettingsView, {
     model: model
   }), settingsView[0]);
   var popup = new Confirmation({
@@ -123,9 +150,10 @@ module.exports = function(args) {
     icon: undefined,
     acceptText: localization.save,
     width: 940,
-    onAccept : function() {
+    onAccept: function () {
       document.setShowheader(model.showHeader());
       document.setShowrejectoption(model.showRejectOption());
+      document.setAllowrejectreason(model.allowRejectReason());
       document.setShowpdfdownload(model.showPDFDownload());
       document.setShowfooter(model.showFooter());
       if (args.onClose !== undefined) {
@@ -133,7 +161,7 @@ module.exports = function(args) {
       }
       return true;
     },
-    onReject: function() {
+    onReject: function () {
       if (args.onClose !== undefined) {
         args.onClose();
       }

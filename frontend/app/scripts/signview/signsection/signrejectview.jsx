@@ -8,7 +8,8 @@ var Button = require("../../common/button");
 
     propTypes: {
       onBack: React.PropTypes.func.isRequired,
-      onReject: React.PropTypes.func.isRequired
+      onReject: React.PropTypes.func.isRequired,
+      allowRejectionReason: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function () {
@@ -29,19 +30,26 @@ var Button = require("../../common/button");
           </div>
           <div className="row">
             <div className="col-sm-6 left">
-              <p>{localization.process.signatorycancelmodaltext}</p>
+              <p>{
+                this.props.allowRejectionReason ?
+                  localization.process.signatorycancelmodaltext :
+                  localization.process.signatorycancelmodaltextwithoutreason
+                }
+              </p>
             </div>
-            <div className="col-sm-6 right">
-              <div className="reject-textarea">
-                <p className="label"><label htmlFor="text">{localization.signviewMessage}</label></p>
-                <textarea
-                  id="text"
-                  valueLink={this.linkState("text")}
-                  className="signview-textarea"
-                  placeholder={localization.process.signatorycancelmodalplaceholder}
-                />
+            { /* IF */ this.props.allowRejectionReason &&
+              <div className="col-sm-6 right">
+                <div className="reject-textarea">
+                  <p className="label"><label htmlFor="text">{localization.signviewMessage}</label></p>
+                  <textarea
+                    id="text"
+                    valueLink={this.linkState("text")}
+                    className="signview-textarea"
+                    placeholder={localization.process.signatorycancelmodalplaceholder}
+                  />
+                </div>
               </div>
-            </div>
+            }
           </div>
           <div className="row">
             <div className="col-sm-12 right">

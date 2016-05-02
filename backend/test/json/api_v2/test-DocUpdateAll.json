@@ -166,6 +166,7 @@
     "show_header": false,
     "show_pdf_download": false,
     "show_reject_option": false,
+    "allow_reject_reason": false,
     "show_footer": false
   },
   "invitation_message": "#☭ҖINVITATION_MESSAGE",
