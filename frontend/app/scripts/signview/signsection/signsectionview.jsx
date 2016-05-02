@@ -214,7 +214,7 @@ var classNames = require("classnames");
           data = JSON.parse(xhr.responseText);
         } catch (e) {}
 
-        if (xhr.status == 400 && data.pinProblem) {
+        if (xhr.status == 400 && data.error_message === "The parameter 'sms_pin' had the following problems: invalid SMS PIN") {
           self.setStep("input-pin");
           new FlashMessage({
             content: localization.docsignview.pinSigning.invalidPin,
