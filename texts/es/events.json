@@ -9,6 +9,7 @@
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID":"$actor$ verificó su identidad con el banco sueco para acceder al documento. El banco sueco nos devolvió el nombre \"$signatory_name$\" y la fecha de nacimiento \"$signatory_dob$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID":"$actor$ verificó su identidad con el banco noruego para acceder al documento. El banco noruego nos devolvió el nombre \"$signatory_name$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID":"$actor$ verificó su identidad con el banco sueco para acceder al documento. El banco sueco nos devolvió el nombre \"$signatory_name$\".",
+"_AuthorAttachmentAcceptedTextNotArchiveSimple":"",
 "_AutomaticReminderSentTextSimpleEmail":"Un aviso automático para firmar el documento fue enviado a $signatory$ por email.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Un aviso automático para firmar el documento fue enviado a $signatory$ por email y SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"Un aviso automático para firmar el documento fue enviado a $signatory$ por SMS.",

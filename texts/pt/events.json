@@ -9,6 +9,7 @@
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID":"Foi verificada a identidade de $actor$ com o BankID sueco para aceder ao documento. A consulta ao BankID sueco indicou o nome \"$signatory_name$\" e a data de nascimento \"$signatory_dob$\". ",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID":"Foi verificada a identidade de $actor$ com o BankID norueguês para aceder ao documento. A consulta ao BankID norueguês indicou o nome \"$signatory_name$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID":"Foi verificada a identidade de $actor$ com o BankID sueco para aceder ao documento. A consulta ao BankID sueco indicou o nome \"$signatory_name$\". ",
+"_AuthorAttachmentAcceptedTextNotArchiveSimple":"",
 "_AutomaticReminderSentTextSimpleEmail":"Foi enviado um lembrete automático para assinar o documento para $signatory$ utilizando o email.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Foi enviado um lembrete automático para assinar o documento para $signatory$ utilizando o email e SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"Foi enviado um lembrete automático para assinar o documento para $signatory$ utilizando SMS.",

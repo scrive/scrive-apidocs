@@ -9,6 +9,7 @@
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID":"$actor$ hat Ihre Identität mit schwedischer BankID bestätigt, um auf das Dokument zuzugreifen. Die schwedische BankID hat den Namen \"$signatory_name$\" und das Geburtsdatum \"$signatory_dob$\" zurückgeschickt.",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID":"$actor$ hat Ihre Identität mit norwegischer BankID bestätigt, um auf das Dokument zuzugreifen. Die norwegische BankID hat den Namen \"$signatory_name$\" zurückgeschickt.",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID":"$actor$ hat Ihre Identität mit schwedischer BankID bestätigt, um auf das Dokument zuzugreifen. Die schwedische BankID hat den Namen \"$signatory_name$\" zurückgeschickt.",
+"_AuthorAttachmentAcceptedTextNotArchiveSimple":"",
 "_AutomaticReminderSentTextSimpleEmail":"Eine automatische Erinnerung, das Dokument zu signieren, wurde an $signatory$ mit E-Mail gesendet.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Eine automatische Erinnerung, das Dokument zu signieren, wurde an $signatory$ mit E-Mail und SMS gesendet.",
 "_AutomaticReminderSentTextSimpleSMS":"Eine automatische Erinnerung, das Dokument zu signieren, wurde an $signatory$ mit SMS gesendet.",

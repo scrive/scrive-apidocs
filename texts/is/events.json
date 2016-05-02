@@ -9,6 +9,7 @@
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID":"$actor$ staðfesti auðkenni sitt með sænsku BankID til að fá aðgang að skjalinu. Sænskt BankID skilaði nafninu \"$signatory_name$\" og fæðingardeginum \"$signatory_dob$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID":"$actor$ staðfesti auðkenni sitt með norsku BankID til að fá aðgang að skjalinu. Norskt BankID skilaði nafninu \"$signatory_name$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID":"$actor$ staðfesti auðkenni sitt með sænsku BankID til að fá aðgang að skjalinu. Sænskt BankID skilaði nafninu \"$signatory_name$\".",
+"_AuthorAttachmentAcceptedTextNotArchiveSimple":"",
 "_AutomaticReminderSentTextSimpleEmail":"Sjálfvirk áminning um að skrifa undir skjalið var send til $signatory$ með tölvupósti.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Sjálfvirk áminning um að skrifa undir skjalið var send til $signatory$ með tölvupósti og textaskilaboðum.",
 "_AutomaticReminderSentTextSimpleSMS":"Sjálfvirk áminning um að skrifa undir skjalið var send til $signatory$ með textaskilaboðum.",

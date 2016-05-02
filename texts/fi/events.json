@@ -9,6 +9,7 @@
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID":"$actor$ vahvisti henkilöllisyytensä ruotsalaisen BankID:n kanssa päästäkseen käsiksi dokumenttiin. Ruotsalainen BankID palautti nimen \"$signatory_name$\" ja syntymäajan \"$signatory_dob$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID":"$actor$ vahvisti henkilöllisyytensä norjalaisen BankID:n kanssa päästäkseen käsiksi dokumenttiin. Norjalainen BankID palautti nimen \"$signatory_name$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID":"$actor$ vahvisti henkilöllisyytensä ruotsalaisen BankID:n kanssa päästäkseen käsiksi dokumenttiin. Ruotsalainen BankID palautti nimen \"$signatory_name$\".",
+"_AuthorAttachmentAcceptedTextNotArchiveSimple":"",
 "_AutomaticReminderSentTextSimpleEmail":"Automaattinen muistutus dokumentin allekirjoittamisesta lähetettiin sähköpostitse, vastaanottaja $signatory$.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Automaattinen muistutus dokumentin allekirjoittamisesta lähetettiin sähköpostitse ja tekstiviestillä, vastaanottaja $signatory$.",
 "_AutomaticReminderSentTextSimpleSMS":"Automaattinen muistutus dokumentin allekirjoittamisesta lähetettiin tekstiviestillä, vastaanottaja $signatory$.",

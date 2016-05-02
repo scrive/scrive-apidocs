@@ -9,6 +9,7 @@
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID":"$actor$ a vérifié leur identité à partir de l'identifiant bancaire suédois, en vue d'accéder au document. L'identifiant bancaire suédois a retourné le nom \"$signatory_name$\" et la date de naissance \"$signatory_dob$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID":"$actor$ a vérifié leur identité à partir de l'identifiant bancaire norvégien, en vue d'accéder au document. L'identifiant bancaire norvégien a retourné le nom \"$signatory_name$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID":"$actor$ a vérifié leur identité à partir de l'identifiant bancaire suédois, en vue d'accéder au document. L'identifiant bancaire suédois a retourné le nom \"$signatory_name$\".",
+"_AuthorAttachmentAcceptedTextNotArchiveSimple":"",
 "_AutomaticReminderSentTextSimpleEmail":"Un rappel automatique de la nécessité de signer le document a été envoyé à $signatory$ via mail.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Un rappel automatique de la nécessité de signer le document a été envoyé à $signatory$ via mail et SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"Un rappel automatique de la nécessité de signer le document a été envoyé à $signatory$ via SMS.",

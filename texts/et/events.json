@@ -9,6 +9,7 @@
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID":"$actor$ tuvastas enda isiku dokumendile ligipääsemiseks Rootsi BankID abil. Rootsi BankID andis tulemuseks nime \"$signatory_name$\" ja sünnikuupäeva \"$signatory_dob$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID":"$actor$ tuvastas enda isiku dokumendile ligipääsemiseks Norra BankID abil. Norra BankID andis tulemuseks nime \"$signatory_name$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID":"$actor$ tuvastas enda isiku dokumendile ligipääsemiseks Rootsi BankID abil. Rootsi BankID andis tulemuseks nime \"$signatory_name$\".",
+"_AuthorAttachmentAcceptedTextNotArchiveSimple":"",
 "_AutomaticReminderSentTextSimpleEmail":"Automaatne meeldetuletus dokumendi allkirjastamiseks saati e-maili teel isikule $signatory$.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Automaatne meedetuletus dokumendi allkirjastamiseks saadeti e-maili ja SMSi teel isikule $signatory$.",
 "_AutomaticReminderSentTextSimpleSMS":"Automaatne meeldetuletus dokumendi allkirjastamiseks saadeti SMSi teel kasutajale $signatory$.",

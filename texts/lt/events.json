@@ -9,6 +9,7 @@
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID":"$actor$ patvirtino savo tapatybę per Švedijos „BankID“, kad gautų dokumento prieigą. Švedijos „BankID“ pateikė vardą „$signatory_name$“ ir gimimo datą „$signatory_dob$“.",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID":"$actor$ patvirtino savo tapatybę per Norvegijos „BankID“, kad gautų dokumento prieigą. Norvegijos „BankID“ pateikė vardą „$signatory_name$“.",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID":"$actor$ patvirtino savo tapatybę per Švedijos „BankID“, kad gautų dokumento prieigą. Švedijos „BankID“ pateikė vardą „$signatory_name$“.",
+"_AuthorAttachmentAcceptedTextNotArchiveSimple":"",
 "_AutomaticReminderSentTextSimpleEmail":"$signatory$ elektroniniu paštu išsiųstas automatinis priminimas pasirašyti dokumentą.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"$signatory$ elektroniniu paštu ir SMS žinute išsiųstas automatinis priminimas pasirašyti dokumentą.",
 "_AutomaticReminderSentTextSimpleSMS":"$signatory$ SMS žinute išsiųstas automatinis priminimas pasirašyti dokumentą.",

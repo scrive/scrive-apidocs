@@ -9,6 +9,7 @@
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID":"$actor$ ha verificato la propria identità con il BankID svedese per accedere al documento. Il BankID svedese ha restituito il nome  \"$signatory_name$\" e la data di nascita \"$signatory_dob$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID":"$actor$ ha verificato la propria identità con il BankID norvegese per accedere al documento. Il BankID norvegese ha restituito il nome  \"$signatory_name$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID":"$actor$ ha verificato la propria identità con il BankID svedese per accedere al documento. Il BankID svedese ha restituito il nome  \"$signatory_name$\".",
+"_AuthorAttachmentAcceptedTextNotArchiveSimple":"",
 "_AutomaticReminderSentTextSimpleEmail":"Un promemoria automatico per firmare il documento è stato spedito a $signatory$ via email.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Un promemoria automatico per firmare il documento è stato spedito a $signatory$ via email e SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"Un promemoria automatico per firmare il documento è stato spedito a $signatory$ via SMS.",
