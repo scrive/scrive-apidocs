@@ -95,6 +95,9 @@ mailContractClosedMainP =
       $endif$
     $endif$
 ####
+mailDocumentCorrectionBodyWikiURL=
+<a href='http://en.wikipedia.org/wiki/Digital_signature'>http://en.wikipedia.org/wiki/Digital_signature</a>
+####
 #### REJECTED MAIL
 ####
 mailAuthorRejectContractMail=
