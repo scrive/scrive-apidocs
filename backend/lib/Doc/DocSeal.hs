@@ -13,6 +13,7 @@ module Doc.DocSeal
   ) where
 
 import Control.Conditional ((<|), (|>))
+import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
@@ -343,13 +344,13 @@ sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Mo
                      -> Document
                      -> [DocumentEvidenceEvent]
                      -> [HC.ClockErrorEstimate]
-                     -> BS.ByteString
+                     -> EvidenceOfTime
                      -> BS.ByteString
                      -> String
                      -> String
                      -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument boxImages hostpart document elog offsets graphEvidenceOfTime content tmppath inputpath outputpath = do
+sealSpecFromDocument boxImages hostpart document elog offsets eotData content tmppath inputpath outputpath = do
   -- Keep only simple events and remove events induced by resealing
   let velog = filter (eventForVerificationPage . evType) $ eventsForLog elog
   -- Form initials from signing parties
@@ -417,7 +418,7 @@ sealSpecFromDocument boxImages hostpart document elog offsets graphEvidenceOfTim
   let evidenceattachment = Seal.SealAttachment { Seal.fileName = "Appendix 3 Evidence Log.html"
                                                , Seal.mimeType = Nothing
                                                , Seal.fileContent = BS.fromString htmllogs }
-  htmlEvidenceOfTime <- evidenceOfTimeHTML (documenttitle document) offsets graphEvidenceOfTime
+  htmlEvidenceOfTime <- evidenceOfTimeHTML (documenttitle document) offsets eotData
   let evidenceOfTime = Seal.SealAttachment { Seal.fileName = "Appendix 4 Evidence of Time.html"
                                            , Seal.mimeType = Nothing
                                            , Seal.fileContent = BS.fromString htmlEvidenceOfTime }
@@ -532,8 +533,8 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
       void $ dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence
         (return ())
         (systemActor now)
-    graphEvidenceOfTime <- generateEvidenceOfTimeGraph 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
-    config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart d elog offsets graphEvidenceOfTime content tmppath tmpin tmpout
+    eotData <- liftBase $ generateEvidenceOfTimeData 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
+    config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart d elog offsets eotData content tmppath tmpin tmpout
 
     let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonSealSpec config
     (code,_stdout,stderr) <- liftIO $ do
