@@ -190,6 +190,7 @@ javascriptLocalisation =
                cancelmodaltext: "$_contractcancelmodaltext()$",
                cancelmodaltextwithsignatures: "$_contractcancelmodaltextwithsignatures()$",
                rejectbuttontext: "$_contractrejectbuttontext()$",
+               rejectbuttontextwithoutreason: "$_contractrejectbuttontextwithoutreason()$",
                signbuttontext: "$_contractsignbuttontext()$",
                signbuttontextfromsignaturedrawing: "$_contractsignbuttontextfromsignaturedrawing()$",
                signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",

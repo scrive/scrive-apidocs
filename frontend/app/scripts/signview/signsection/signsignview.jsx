@@ -86,7 +86,11 @@ var classNames = require("classnames");
             <Button
               ref="rejectButton"
               className="transparent-button button-block"
-              text={localization.process.rejectbuttontext}
+              text={
+                doc.allowrejectreason() ?
+                  localization.process.rejectbuttontext :
+                  localization.process.rejectbuttontextwithoutreason
+              }
               onClick={this.props.onReject}
             />
           }

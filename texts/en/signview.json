@@ -11,6 +11,7 @@
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, you have signed the document <strong class='put-document-title-here'></strong>. When you click the button your signature will be registered by the e-signing service Scrive.",
 "_contractSignatorySignModalTitle":"Finished?",
 "_contractrejectbuttontext":"Reject and reply",
+"_contractrejectbuttontextwithoutreason":"Reject",
 "_contractsignatorycancelmodalplaceholder":"Type your message here",
 "_contractsignatorycancelmodaltext":"If you reject the document it can’t be signed anymore. Please describe why you want to reject the document.",
 "_contractsignatorycancelmodaltextwithoutreason":"If you reject the document it can’t be signed anymore.",
