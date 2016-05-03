@@ -66,7 +66,7 @@
 "_mailContractClosedContentSignedBy":"Il documento <strong>$documenttitle$</strong> è stato firmato da $partylist:noescape()$.",
 "_mailDocumentClosedTitleContractConfirmation":"Conferma: documento firmato con E-sign: $documenttitle$",
 "_mailDocumentClosedTitleContractCorrection":"Correzione: documento firmato con E-sign: $documenttitle$",
-"_mailDocumentCorrectionBody":"",
+"_mailDocumentCorrectionBody":"Alle $closingtime$ il documento <strong>$documenttitle$</strong> è stato firmato e ti abbiamo inviato una copia dello stesso.<br/><br/>Al momento della finalizzazione del documento da parte del nostro sistema di firma elettronica, abbiamo riscontrato un problema tecnico. Il problema ha impedito al sistema di proteggere il documento con una firma digitale. Il problema è stato corretto e il documento ha ora una firma digitale.<br/><br/>Si allega il documento con la nuova firma digitale. Per evitare confusioni in futuro, ti preghiamo di conservare questo documento ed eliminare la versione precedente.<br/><br/>Se vuoi saperne di più sullo scopo delle firme digitali, ti consigliamo di leggere questo articolo: $mailDocumentCorrectionBodyWikiURL()$",
 "_mailDocumentLinked":"Il documento firmato era troppo pesante da allegare a questa email. Sarà disponibile per il download entro $availabledate$.",
 "_mailDocumentLinkedButton":"Scarica il documento",
 "_mailGoToDocument":"Vai al documento",

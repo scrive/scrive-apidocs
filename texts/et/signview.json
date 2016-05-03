@@ -66,7 +66,7 @@
 "_mailContractClosedContentSignedBy":"Dokument <strong>$documenttitle$</strong> allkirjastati $partylist:noescape()$ poolt.",
 "_mailDocumentClosedTitleContractConfirmation":"Kinnitus: e-allkirjastatud dokument $documenttitle$",
 "_mailDocumentClosedTitleContractCorrection":"Parandus: e-allkirjastatud dokument $documenttitle$",
-"_mailDocumentCorrectionBody":"",
+"_mailDocumentCorrectionBody":"Dokument <strong>$documenttitle$</strong> allkirjastati $closingtime$ ja saatsime Teile dokumendi koopia.<br/><br/>Avastasime, et dokumendi kinnitamisel meie e-allkirjastamissüsteemi abil esines tehniline rike. Rike takistas dokumendi kinnitamist digitaalse allkirjaga e-allkirjastamissüsteemi poolt. Probleem on kõrvaldatud ja dokument on nüüd digitaalse allkirjaga kinnitatud.<br/><br/>Uue digitaalse allkirjaga dokument on manuses. Võimaliku segaduse vältimiseks tulevikus hoidke käesolev dokument alles ja kustutage varasem versioon.<br/><br/>Kui soovite digitaalallkirjade kohta rohkem lugeda, soovitame lugeda järgnevat artiklit: $mailDocumentCorrectionBodyWikiURL()$",
 "_mailDocumentLinked":"Dokument oli e-maili manustamiseks liiga suur. See on allalaadimiseks kättesaadav $availabledate$.",
 "_mailDocumentLinkedButton":"Lae dokument alla",
 "_mailGoToDocument":"Mine dokumendi juurde",

@@ -9,7 +9,7 @@
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID":"$actor$ verifierade sin identitet med svenskt BankID för att se dokumentet. Svenskt BankID returnerade namnet \"$signatory_name$\" och födelsedatumet \"$signatory_dob$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID":"$actor$ verifierade sin identitet med norskt BankID för att se dokumentet. Norskt BankID returnerade namnet \"$signatory_name$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID":"$actor$ verifierade sin identitet med svenskt BankID för att se dokumentet. Svenskt BankID returnerade namnet \"$signatory_name$\".",
-"_AuthorAttachmentAcceptedTextNotArchiveSimple":"",
+"_AuthorAttachmentAcceptedTextNotArchiveSimple":"Kryssrutan \"$text$\" kryssades i av $actor$. Texten bredvid kryssrutan var \"$additional_text$\"",
 "_AutomaticReminderSentTextSimpleEmail":"En automatisk påminnelse att signera dokumentet skickades till $signatory$ via e-post.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"En automatisk påminnelse att signera dokumentet skickades till $signatory$ via e-post och SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"En automatisk påminnelse att signera dokumentet skickades till $signatory$ via SMS.",
