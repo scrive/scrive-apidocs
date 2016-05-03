@@ -46,6 +46,7 @@ var AuthorAttachment = require("../../../js/authorattachment").AuthorAttachment;
     });
 
     after(function () {
+      util.cleanTimeoutsAndBody();
       server.restore();
     });
   });
