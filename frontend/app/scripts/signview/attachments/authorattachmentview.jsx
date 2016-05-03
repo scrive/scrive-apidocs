@@ -127,13 +127,6 @@ var classNames = require("classnames");
                     self.setState({showPages: !showPages});
                   }}
                 />
-                {/* if */ model.document().showpdfdownload() &&
-                  <Button
-                    className="download-button"
-                    text={localization.downloadPDF}
-                    onClick={() => window.open(model.downloadLink(true))}
-                  />
-                }
               </div>
             </div>
           </div>
