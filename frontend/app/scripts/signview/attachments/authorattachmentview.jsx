@@ -176,7 +176,7 @@ var classNames = require("classnames");
                     {/* if */ model.document().showpdfdownload() &&
                       <Button
                         className="download-button"
-                        text={localization.downloadPDF}
+                        text={localization.download}
                         onClick={() => window.open(model.downloadLink(true))}
                       />
                     }

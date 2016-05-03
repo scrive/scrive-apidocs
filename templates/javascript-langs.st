@@ -104,7 +104,7 @@ javascriptLocalisation =
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , reviewAttachment: "$_ReviewAttachment()$"
              , reviewPDF: "$_ReviewPDF()$"
-             , downloadPDF : "$_DownloadPDF()$"
+             , download : "$_Download()$"
              , deletePDF: "$_DeletePDF()$"
              , accept : "$_Accept()$"
              , send : "$_send()$"
