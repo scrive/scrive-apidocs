@@ -11,6 +11,7 @@
 "_contractSignConfirmationSignaturePlaced":"",
 "_contractSignatorySignModalTitle":"Terminé?",
 "_contractrejectbuttontext":"Refuser et répondre",
+"_contractrejectbuttontextwithoutreason":"",
 "_contractsignatorycancelmodalplaceholder":"Saisissez votre message ici",
 "_contractsignatorycancelmodaltext":"Si vous rejeter le document, il ne pourra plus être signé. Veuillez donner les raisons pour lesquelles vous souhaitez rejeter le document.",
 "_contractsignatorycancelmodaltextwithoutreason":"",

@@ -11,6 +11,7 @@
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, Jūs esat parakstījis dokumentu <strong class='put-document-title-here'></strong>. Klikšķinot uz pogas, Jūsu paraksts tiks reģistrēts elektroniskās parakstīšanās pakalpojumā Scrive.",
 "_contractSignatorySignModalTitle":"Vai pabeidzāt darbu?",
 "_contractrejectbuttontext":"Noraidīt un atbildēt",
+"_contractrejectbuttontextwithoutreason":"",
 "_contractsignatorycancelmodalplaceholder":"Ierakstiet savu ziņu šeit",
 "_contractsignatorycancelmodaltext":"Ja noraidīsiet dokumentu, to vairs nevarēs parakstīt. Lūdzu, norādiet, kāpēc vēlaties noraidīt dokumentu.",
 "_contractsignatorycancelmodaltextwithoutreason":"",

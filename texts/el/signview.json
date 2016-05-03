@@ -11,6 +11,7 @@
 "_contractSignConfirmationSignaturePlaced":"",
 "_contractSignatorySignModalTitle":"Ολοκληρώθηκε;",
 "_contractrejectbuttontext":"Απόρριψη και απάντηση",
+"_contractrejectbuttontextwithoutreason":"",
 "_contractsignatorycancelmodalplaceholder":"Πληκτρολογήστε το μήνυμά σας εδώ",
 "_contractsignatorycancelmodaltext":"Αν απορρίψετε το έγγραφο δεν μπορεί να υπογραφεί περαιτέρω. Παρακαλώ περιγράψτε γιατί θέλετε να απορρίψετε το έγγραφο. ",
 "_contractsignatorycancelmodaltextwithoutreason":"",

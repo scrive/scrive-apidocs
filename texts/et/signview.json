@@ -11,6 +11,7 @@
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, olete allkirjastanud dokumendi <strong class='put-document-title-here'></strong>. Nupul klõpsates registreeritakse Teie allkiri e-allkirjastamisteenusega Scrive.",
 "_contractSignatorySignModalTitle":"Lõpetamine?",
 "_contractrejectbuttontext":"Keeldu ja vasta",
+"_contractrejectbuttontextwithoutreason":"",
 "_contractsignatorycancelmodalplaceholder":"Trükkige enda sõnum siia",
 "_contractsignatorycancelmodaltext":"Kui lükkate dokumendi tagasi, ei saa seda enam allkirjastada. Palun põhjendage, miks soovite dokumendi tagasi lükata. ",
 "_contractsignatorycancelmodaltextwithoutreason":"",

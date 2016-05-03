@@ -11,6 +11,7 @@
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, Jūs pasirašėte dokumentą <strong class='put-document-title-here'></strong>. Paspaudus mygtuką, Jūsų parašą įregistruos „Scrive“ skaitmeninio parašo paslauga.",
 "_contractSignatorySignModalTitle":"Ar jau baigėte?",
 "_contractrejectbuttontext":"Atmeskite ir atsakykite",
+"_contractrejectbuttontextwithoutreason":"",
 "_contractsignatorycancelmodalplaceholder":"Čia įrašykite savo žinutę",
 "_contractsignatorycancelmodaltext":"Atmetus dokumentą jo daugiau nebus galima pasirašyti. Prašome paaiškinti, kodėl norite atmesti dokumentą.",
 "_contractsignatorycancelmodaltextwithoutreason":"",

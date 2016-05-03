@@ -11,6 +11,7 @@
 "_contractSignConfirmationSignaturePlaced":"",
 "_contractSignatorySignModalTitle":"Finito?",
 "_contractrejectbuttontext":"Rifiuta e rispondi",
+"_contractrejectbuttontextwithoutreason":"",
 "_contractsignatorycancelmodalplaceholder":"Digita il tuo messaggio qui",
 "_contractsignatorycancelmodaltext":"Se si rifiuta il documento, esso non può più essere firmato. Si prega di descrivere perché si vuole respingere il documento.",
 "_contractsignatorycancelmodaltextwithoutreason":"",

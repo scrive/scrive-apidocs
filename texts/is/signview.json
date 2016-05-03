@@ -11,6 +11,7 @@
 "_contractSignConfirmationSignaturePlaced":"",
 "_contractSignatorySignModalTitle":"Ertu búin/n?",
 "_contractrejectbuttontext":"Hafna og svara",
+"_contractrejectbuttontextwithoutreason":"",
 "_contractsignatorycancelmodalplaceholder":"Sláðu inn skilaboðin þín hér",
 "_contractsignatorycancelmodaltext":"Ef þú hafnar skjalinu er ekki lengur hægt að skrifa undir það. Vinsamlegast lýstu ástæðum þess að þú hafnar skjalinu.",
 "_contractsignatorycancelmodaltextwithoutreason":"",

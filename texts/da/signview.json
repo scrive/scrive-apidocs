@@ -11,6 +11,7 @@
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, du har signeret dokumentet <strong class='put-document-title-here'></strong>. Når du klikker på knappen, vil din signatur blive registreret af e-signeringstjenesten Scrive. ",
 "_contractSignatorySignModalTitle":"Færdig?",
 "_contractrejectbuttontext":"Afvis og svar",
+"_contractrejectbuttontextwithoutreason":"",
 "_contractsignatorycancelmodalplaceholder":"Indtast din besked her",
 "_contractsignatorycancelmodaltext":"Hvis du afviser dokumentet, er det ikke længere muligt at signere det. Forklar venligst, hvorfor du ønsker at afvise dokumentet. ",
 "_contractsignatorycancelmodaltextwithoutreason":"",

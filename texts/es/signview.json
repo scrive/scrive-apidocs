@@ -11,6 +11,7 @@
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, ha firmado el documento <strong class='put-document-title-here'></strong>. Cuando haga clic en el botón, su firma será registrada por el servicio de firma electrónica de Scrive.",
 "_contractSignatorySignModalTitle":"¿Terminado?",
 "_contractrejectbuttontext":"Rechazar y responder",
+"_contractrejectbuttontextwithoutreason":"",
 "_contractsignatorycancelmodalplaceholder":"Escriba su mensaje aquí",
 "_contractsignatorycancelmodaltext":"Si rechaza el documento, no puede firmarlo otra vez. Por favor, describa por qué quiere rechazar el documento. ",
 "_contractsignatorycancelmodaltextwithoutreason":"",
