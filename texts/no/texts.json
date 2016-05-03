@@ -5,6 +5,7 @@
 "_ContractReminderBodyMulti":"Er du sikker på at du vil sende en påminnelse til de involverte partene av <span class='put-number-of-documents-here'></span> dokumentene?",
 "_ContractReminderBodySingel":"Er du sikker på at du vil sende en påminnelse til de involverte parter i dokumentet <span class='put-document-name-here'></span>?",
 "_Danish":"Dansk",
+"_Download":"",
 "_DownloadPDF":"Last ned PDF",
 "_Dutch":"Nederlandsk",
 "_EmailInfoText":"E-postadressen din",

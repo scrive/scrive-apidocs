@@ -5,6 +5,7 @@
 "_ContractReminderBodyMulti":"Sind Sie sicher, dass Sie Erinnerungen an die im Dokument <span class='put-number-of-documents-here'></span> beteiligten Parteien senden wollen?",
 "_ContractReminderBodySingel":"Sind Sie sicher, dass Sie eine Erinnerung an die am Dokument <span class='put-document-name-here'></span> beteiligten Parteien senden wollen?",
 "_Danish":"Dänisch",
+"_Download":"",
 "_DownloadPDF":"PDF herunterladen",
 "_Dutch":"Holländisch",
 "_EmailInfoText":"Ihre E-Mailadresse",

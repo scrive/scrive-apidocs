@@ -5,6 +5,7 @@
 "_ContractReminderBodyMulti":"Ertu viss um að vilja senda áminningar til aðila sem bendlaðir eru við <span class='put-number-of-documents-here'></span> skjöl?",
 "_ContractReminderBodySingel":"Ertu viss um að vilja senda áminningu til aðilanna sem bendlaðir eru við skjalið <span class='put-document-name-here'></span>?",
 "_Danish":"Danska",
+"_Download":"",
 "_DownloadPDF":"Hala niður PDF-skjali",
 "_Dutch":"Hollenska",
 "_EmailInfoText":"Þitt netfang",

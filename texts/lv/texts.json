@@ -5,6 +5,7 @@
 "_ContractReminderBodyMulti":"Vai esat pārliecināts, ka vēlaties nosūtīt atgādinājumus <span class='put-number-of-documents-here'></span> dokumentos iesaistītajām pusēm?",
 "_ContractReminderBodySingel":"Vai esat pārliecināts, ka vēlaties nosūtīt atgādinājumu dokumentā <span class='put-document-name-here'></span> iesaistītajām pusēm?",
 "_Danish":"Dāņu",
+"_Download":"",
 "_DownloadPDF":"Lejuplādēt PDF",
 "_Dutch":"Holandiešu",
 "_EmailInfoText":"Jūsu e-pasta adrese",

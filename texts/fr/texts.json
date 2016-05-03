@@ -5,6 +5,7 @@
 "_ContractReminderBodyMulti":"Êtes-vous sûr de vouloir envoyer des rappels aux parties concernées par <span class='put-number-of-documents-here'></span> ces documents?",
 "_ContractReminderBodySingel":"Êtes-vous certain de vouloir envoyer un rappel aux personnes concernées par ce document <span class='put-document-name-here'></span>?",
 "_Danish":"Danois",
+"_Download":"",
 "_DownloadPDF":"Télécharger le document PDF",
 "_Dutch":"Néerlandais",
 "_EmailInfoText":"Votre adresse mail",

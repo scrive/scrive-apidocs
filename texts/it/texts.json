@@ -5,6 +5,7 @@
 "_ContractReminderBodyMulti":"Sei sicuro di voler inviare un promemoria alle parti coinvolte nei <span class='put-number-of-documents-here'></span> documenti?",
 "_ContractReminderBodySingel":"Sei sicuro di voler inviare un sollecito alle parti coinvolte nel documento <span class='put-document-name-here'> </span>?",
 "_Danish":"Danese",
+"_Download":"",
 "_DownloadPDF":"Scarica PDF",
 "_Dutch":"Olandese",
 "_EmailInfoText":"Il tuo indirizzo email",
