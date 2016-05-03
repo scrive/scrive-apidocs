@@ -26,6 +26,7 @@ var Document = require("../../../js/documents.js").Document;
         {_.map(this.attachmentsToShow(), function (a, i) {
           return (
              <AuthorAttachmentView
+               ref={"attachment-view-" + i}
                key={i}
                model={a}
                canSign={doc.currentSignatoryCanSign()}
