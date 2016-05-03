@@ -5,6 +5,7 @@
 "_ContractReminderBodyMulti":"Weet u zeker dat u herinneringen wilt versturen aan de partijen betrokken bij de <span class='put-number-of-documents-here'></span> documenten?",
 "_ContractReminderBodySingel":"Weet u zeker dat u een herinnering wilt versturen aan de partijen betrokken bij het document <span class='put-document-name-here'></span>?",
 "_Danish":"Deens",
+"_Download":"",
 "_DownloadPDF":"PDF Downloaden",
 "_Dutch":"Nederlands",
 "_EmailInfoText":"Uw e-mailadres",

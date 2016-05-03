@@ -5,6 +5,7 @@
 "_ContractReminderBodyMulti":"Ar tikrai norite išsiųsti priminimus šalims, susijusioms su <span class='put-number-of-documents-here'></span> dokumentais?",
 "_ContractReminderBodySingel":"Ar tikrai norite išsiųsti priminimus šalims, susijusioms su dokumentu <span class='put-document-name-here'></span>?",
 "_Danish":"Danų kalba",
+"_Download":"",
 "_DownloadPDF":"Atsisiųsti PDF",
 "_Dutch":"OIandų kalba",
 "_EmailInfoText":"Jūsų e. pašto adresas",

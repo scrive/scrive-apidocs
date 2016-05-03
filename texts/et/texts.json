@@ -5,6 +5,7 @@
 "_ContractReminderBodyMulti":"Kas olete kindel, et soovite saata meeldetuletuse <span class='put-number-of-documents-here'></span> dokumendis nimetatud pooltele?",
 "_ContractReminderBodySingel":"Kas olete kindel, et soovite saata meeldetuletuse dokumendis <span class='put-document-name-here'></span> nimetatud pooltele?",
 "_Danish":"Taani",
+"_Download":"",
 "_DownloadPDF":"Lae alla PDF",
 "_Dutch":"Holland",
 "_EmailInfoText":"Teie e-maili aadress",

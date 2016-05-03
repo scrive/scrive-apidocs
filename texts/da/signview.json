@@ -66,7 +66,7 @@
 "_mailContractClosedContentSignedBy":"Dokumentet <strong>$documenttitle$</strong> er blevet signeret af $partylist:noescape()$.",
 "_mailDocumentClosedTitleContractConfirmation":"Bekræftelse: e-signeret dokument $documenttitle$",
 "_mailDocumentClosedTitleContractCorrection":"Rettelse: e-signeret dokument $documenttitle$",
-"_mailDocumentCorrectionBody":"",
+"_mailDocumentCorrectionBody":"Ved $closingtime$ blev dokumentet <strong>$documenttitle$</strong> signeret, og vi har sendt dig en kopi af dokumentet.<br/><br/>Vi har fundet ud af, at der var et teknisk problem, da dokumentet blev færdiggjort af vores e-signeringssystem. Problemet forhindrede e-signereringssystemet i at forsegle dokumentet med en digital signatur. Problemet er blevet rettet, og dokumentet er derfor nu blevet forseglet med en digital signatur.<br/><br/>Find dokumentet med den nye digitale signatur som vedhæftet fil. For at undgå fremtidige forvekslinger bør du gemme dette dokument og kassere den tidligere version.<br/><br/> Hvis du er interesseret i at lære mere om formålet med digitale signaturer, anbefaler vi denne artikel: $mailDocumentCorrectionBodyWikiURL()$",
 "_mailDocumentLinked":"Dokumentet var for stort til at knytte til denne e-mail. Det vil være tilgængeligt for download indtil $availabledate$.",
 "_mailDocumentLinkedButton":"Download dokumentet",
 "_mailGoToDocument":"Gå til dokument",

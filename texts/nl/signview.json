@@ -66,7 +66,7 @@
 "_mailContractClosedContentSignedBy":"Het document <strong>$documenttitle$</strong> is ondertekend door $partylist:noescape()$.",
 "_mailDocumentClosedTitleContractConfirmation":"Bevestiging: e-ondertekend document $documenttitle$",
 "_mailDocumentClosedTitleContractCorrection":"Correctie: e-ondertekend document $documenttitle$",
-"_mailDocumentCorrectionBody":"",
+"_mailDocumentCorrectionBody":"Op $closingtime$ werd het document <strong>$documenttitle$</strong> ondertekend en hebben wij u een kopie van het document gestuurd. <br/><br/> We hebben ontdekt dat er een technisch probleem is opgetreden toen het document werd afgerond in ons e-signing systeem. Het probleem leidde ertoe dat het e-ondertekeningssyteem het document niet met een digitale handtekening kon vergrendelen. Dit probleem is gecorrigeerd en het nieuwe document is nu verzegeld met een digitale handtekening. <br/><br/> Zie bijgevoegd document met de nieuwe digitale handtekening. Om verdere verwarring te voorkomen raden wij u aan om dit bestand te bewaren en de vorige versie te verwijderen. <br/><br/> Indien u meer wilt weten over het doel van digitale handtekeningen raden wij dit artikel aan: $mailDocumentCorrectionBodyWikiURL()$",
 "_mailDocumentLinked":"Het document is te groot om als bijlage aan deze e-mail toe te voegen. Het is beschikbaar om te downloaden tot en met $availabledate$.",
 "_mailDocumentLinkedButton":"Document downloaden",
 "_mailGoToDocument":"Ga naar document",

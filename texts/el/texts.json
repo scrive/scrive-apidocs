@@ -5,6 +5,7 @@
 "_ContractReminderBodyMulti":"Είστε σίγουρος ότι θέλετε αν αποστείλετε υπενθυμίσεις στους μετέχοντες που περιλαμβάνονται στα <span class='put-number-of-documents-here'></span> έγγραφα;",
 "_ContractReminderBodySingel":"Είστε σίγουρος ότι θέλετε να αποστείλετε υπενθύμιση στους μετέχοντες που περιλαμβάνονται στο έγγραφο <span class='put-document-name-here'></span>? ",
 "_Danish":"Δανέζικα ",
+"_Download":"",
 "_DownloadPDF":"Λήψη PDF ",
 "_Dutch":"Ολλανδικά",
 "_EmailInfoText":"Η διεύθυνση του email σας ",

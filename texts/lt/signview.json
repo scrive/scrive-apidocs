@@ -66,7 +66,7 @@
 "_mailContractClosedContentSignedBy":"<strong>$documenttitle$</strong> dokumentą pasirašė $partylist:noescape()$.",
 "_mailDocumentClosedTitleContractConfirmation":"Patvirtinimas: el. parašu pasirašytas $documenttitle$ dokumentas",
 "_mailDocumentClosedTitleContractCorrection":"Pataisymas: el. parašu pasirašytas $documenttitle$ dokumentas",
-"_mailDocumentCorrectionBody":"",
+"_mailDocumentCorrectionBody":"$closingtime$ dokumentas <strong>$documenttitle$</strong> pasirašytas, o mes Jums išsiuntėme jo kopiją.<br/><br/>Pastebėjome, kad užbaigus dokumentą mūsų el. pasirašymo sistemoje įvyko techninė klaida. Dėl šios klaidos dokumentas nebuvo patvirtintas skaitmeniniu parašu. Klaida ištaisyta ir dabar dokumentas jau patvirtintas skaitmeniniu parašu.<br/><br/>Dokumentas su nauju skaitmeniniu parašu pridėtas. Pasilaikykite šį dokumentą ateities poreikiams, o ankstesnį išmeskite.<br/><br/>Jei norite išsamiau sužinoti apie skaitmeninių parašų paskirtį, siūlome pasiskaityti šį straipsnį: $mailDocumentCorrectionBodyWikiURL()$",
 "_mailDocumentLinked":"Šis dokumentas per didelės apimties, kad galėtume pridėti prie šio el. laiško. Jį galima atsisiųsti iki $availabledate$.",
 "_mailDocumentLinkedButton":"Atsisiųskite dokumentą",
 "_mailGoToDocument":"Atverskite dokumentą",
