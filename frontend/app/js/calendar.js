@@ -7,6 +7,10 @@ var $ = require("jquery");
 (function() {
   var moment_lang_data = LanguageService.momentLangDataForCurrentLanguage();
   var join_and_capitalize = function(strings) {
+    if (strings.format !== undefined) {
+      // for latvian. such is moment locale.
+      strings = strings.format;
+    }
     return (_.map(strings, function (s) { return s.charAt(0).toUpperCase() + s.slice(1);})).join(',');
   };
   $.tools.dateinput.localize(LanguageService.currentLanguage(),
