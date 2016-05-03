@@ -103,6 +103,8 @@ var classNames = require("classnames");
         "center-block": true
       });
 
+      var randomFragment = Math.floor((Math.random() * 1000000) + 1);
+
       return (
         <div className={divClass}>
           <h1>
@@ -145,7 +147,8 @@ var classNames = require("classnames");
           <Button
             ref="signButton"
             type="action"
-            href="#"
+            id={self.state.thisDevice ? randomFragment.toString() : undefined}
+            href={self.state.thisDevice ? ("#" + randomFragment) : undefined}
             className={buttonClass}
             onClick={function () { self.props.onSign(self.state.thisDevice); }}
             text={localization.process.signbuttontext}
