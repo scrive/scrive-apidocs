@@ -864,6 +864,7 @@
 "_sampleSignViewHeader":"Nafn",
 "_sampleSignViewPhone":"Sími",
 "_sampleSignViewRejectButton":"Hafna og svara",
+"_sampleSignViewRejectWithoutReasonButton":"",
 "_sampleSignViewSignButton":"",
 "_save":"Vista",
 "_searchBoxButtonText":"Leita",

@@ -864,6 +864,7 @@
 "_sampleSignViewHeader":"Nosaukums",
 "_sampleSignViewPhone":"Tālrunis",
 "_sampleSignViewRejectButton":"Noraidīt un atbildēt",
+"_sampleSignViewRejectWithoutReasonButton":"",
 "_sampleSignViewSignButton":"",
 "_save":"Saglabāt",
 "_searchBoxButtonText":"Meklēt",

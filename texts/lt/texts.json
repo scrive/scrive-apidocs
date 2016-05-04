@@ -864,6 +864,7 @@
 "_sampleSignViewHeader":"Vardas",
 "_sampleSignViewPhone":"Telefonas",
 "_sampleSignViewRejectButton":"Atmeskite ir atsakykite",
+"_sampleSignViewRejectWithoutReasonButton":"",
 "_sampleSignViewSignButton":"",
 "_save":"Įrašyti",
 "_searchBoxButtonText":"Paieška",

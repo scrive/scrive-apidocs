@@ -864,6 +864,7 @@
 "_sampleSignViewHeader":"Nimi",
 "_sampleSignViewPhone":"Puhelin",
 "_sampleSignViewRejectButton":"Hylkää ja vastaa",
+"_sampleSignViewRejectWithoutReasonButton":"",
 "_sampleSignViewSignButton":"Seuraava",
 "_save":"Tallenna",
 "_searchBoxButtonText":"Etsi",

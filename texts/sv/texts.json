@@ -864,6 +864,7 @@
 "_sampleSignViewHeader":"Namn",
 "_sampleSignViewPhone":"Telefon",
 "_sampleSignViewRejectButton":"Avvisa och svara",
+"_sampleSignViewRejectWithoutReasonButton":"",
 "_sampleSignViewSignButton":"Nästa",
 "_save":"Spara",
 "_searchBoxButtonText":"Sök",

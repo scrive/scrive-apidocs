@@ -864,6 +864,7 @@
 "_sampleSignViewHeader":"Όνομα ",
 "_sampleSignViewPhone":"Τηλέφωνο ",
 "_sampleSignViewRejectButton":"Απόρριψη και απάντηση ",
+"_sampleSignViewRejectWithoutReasonButton":"",
 "_sampleSignViewSignButton":"",
 "_save":"Αποθήκευση ",
 "_searchBoxButtonText":"Αναζήτηση ",

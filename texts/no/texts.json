@@ -864,6 +864,7 @@
 "_sampleSignViewHeader":"Navn",
 "_sampleSignViewPhone":"Telefon",
 "_sampleSignViewRejectButton":"Avvis og svar",
+"_sampleSignViewRejectWithoutReasonButton":"",
 "_sampleSignViewSignButton":"Neste",
 "_save":"Lagre",
 "_searchBoxButtonText":"Søk",

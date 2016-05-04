@@ -864,6 +864,7 @@
 "_sampleSignViewHeader":"Naam",
 "_sampleSignViewPhone":"Telefoon",
 "_sampleSignViewRejectButton":"Afwijzen en reageren",
+"_sampleSignViewRejectWithoutReasonButton":"",
 "_sampleSignViewSignButton":"Volgende",
 "_save":"Opslaan",
 "_searchBoxButtonText":"Zoeken",
