@@ -16,6 +16,7 @@ module.exports = React.createClass({
       return {
         showHeader: true,
         showRejectOption: true,
+        allowRejectReason: true,
         showPDFDownload: true,
         showFooter: true
       };
@@ -103,7 +104,11 @@ module.exports = React.createClass({
                                     <Button
                                       className="button reject"
                                       size="small"
-                                      text={localization.sampleSignView.rejectButton}
+                                      text={
+                                        self.props.allowRejectReason ?
+                                          localization.sampleSignView.rejectButton :
+                                          localization.sampleSignView.rejectWithoutReasonButton
+                                      }
                                     />
                                   }
                               </div>

@@ -126,6 +126,7 @@ var SignviewSettingsView = React.createClass({
               <SignviewPreview
                 showHeader={model.showHeader()}
                 showRejectOption={model.showRejectOption()}
+                allowRejectReason={model.allowRejectReason()}
                 showPDFDownload={model.showPDFDownload()}
                 showFooter={model.showFooter()}
                 model={model.theme()}

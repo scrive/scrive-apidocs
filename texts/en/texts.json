@@ -864,6 +864,7 @@
 "_sampleSignViewHeader":"Name",
 "_sampleSignViewPhone":"Phone",
 "_sampleSignViewRejectButton":"Reject and reply",
+"_sampleSignViewRejectWithoutReasonButton":"Reject",
 "_sampleSignViewSignButton":"Next",
 "_save":"Save",
 "_searchBoxButtonText":"Search",

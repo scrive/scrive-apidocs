@@ -1117,6 +1117,7 @@ javascriptLocalisation =
             phone : "$_sampleSignViewPhone()$"
           , email : "$_sampleSignViewEmail()$"
           , rejectButton : "$_sampleSignViewRejectButton()$"
+          , rejectWithoutReasonButton : "$_sampleSignViewRejectWithoutReasonButton()$"
           , signButton : "$_sampleSignViewSignButton()$"
           , signViewHeader : "$_sampleSignViewHeader()$"
       }
