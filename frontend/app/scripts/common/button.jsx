@@ -18,6 +18,8 @@ var classNames = require("classnames");
       onClick     : func, functiona to be called on click
       multiline   : bool, if button should support multiline labels (if true, text must be an array of strings)
       oneClick    : bool, if the button can be clicked only once
+      id          : string, button's id attribute value (default's to undefined=no attribute)
+      href        : string, button's href attribute value (default's to undefined=no attribute)
 
  *
  * Example usage:
@@ -43,6 +45,8 @@ var classNames = require("classnames");
       style       : React.PropTypes.object,
       onClick     : React.PropTypes.func,
       multiline   : React.PropTypes.bool,
+      href        : React.PropTypes.string,
+      id          : React.PropTypes.string,
       oneClick    : React.PropTypes.bool
     },
     getDefaultProps : function() {
@@ -50,6 +54,8 @@ var classNames = require("classnames");
           "text"      : "",
           "size"      : "small",
           "multiline" : false,
+          "href"      : undefined,
+          "id"        : undefined,
           "style"     : {},
           onClick: function () { }
         };
@@ -99,7 +105,7 @@ var classNames = require("classnames");
     },
     render: function() {
       return (
-        <a className={this.className()} onClick={this.handleClick} style={this.style()}>
+        <a id={this.props.id} href={this.props.href} className={this.className()} onClick={this.handleClick} style={this.style()}>
           <div className="label" style={{'color': this.props.textcolor}}>
             {/*if*/ this.props.multiline &&
               this.props.text.map(function(text, i) {
