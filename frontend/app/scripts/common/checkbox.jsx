@@ -40,12 +40,12 @@ var classNames = require("classnames");
       });
 
       return (
-        <div className={classNames("checkbox-box",this.props.className)}>
-          <div onClick={this.handleClick} className={checkboxClasses} style={this.props.style} tabIndex="0" onKeyDown={this.handleKeyDn}>
+        <div className={classNames("checkbox-box",this.props.className)} onClick={this.handleClick}>
+          <div className={checkboxClasses} style={this.props.style} tabIndex="0" onKeyDown={this.handleKeyDn}>
             <div className="checkmark" />
           </div>
           { this.props.label &&
-            <label onClick={this.handleClick}>{this.props.label}</label>
+            <label>{this.props.label}</label>
           }
         </div>
       );
