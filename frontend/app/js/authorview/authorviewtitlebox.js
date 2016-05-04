@@ -106,6 +106,7 @@ var AuthorViewTitleBoxView = Backbone.View.extend({
       text: localization.authorview.downloadPdf,
       onClick: function() {
         window.open(
+          // this should be done as a href attr when rewritten to react
           document.mainfile().downloadLinkForMainFile(document.title(), true),
           '_blank' // <- This is what makes it open in a new window.
         );
