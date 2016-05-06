@@ -140,7 +140,8 @@ var PageTask = require("../../../js/tasks.js").PageTask;
         isComplete: function () {
           return !model.get("loading") && model.hasFile();
         },
-        el: $(uploadArea.uploadButton().getDOMNode()),
+        pointSelector: ".loader,.button",
+        el: $(self.refs["upload-or-load-area"].getDOMNode()),
         onArrowClick: function () {
           uploadArea.uploadButton().openFileDialogue();
         },
@@ -186,7 +187,7 @@ var PageTask = require("../../../js/tasks.js").PageTask;
             </h1>
             <p className="desc">{model.description()}</p>
           </div>
-          <div className="col-sm-6 right">
+          <div className="col-sm-6 right" ref="upload-or-load-area">
             {/* if */ isLoading && !hasFile &&
               <div className="loader">
                 <div className="loading" />
