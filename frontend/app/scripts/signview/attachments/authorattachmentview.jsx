@@ -96,14 +96,14 @@ var classNames = require("classnames");
       });
 
       var fullClass = classNames({
-        "col-sm-7": true,
+        "col-sm-5": true,
         "full-height": model.isRequired() && canSign
       });
 
       return (
         <span>
           <div className="section author-attachment">
-            <div className="col-sm-5 left">
+            <div className="col-sm-6 left">
               <h1>
                 <span className="paperclip"/>
                 {model.name()}
@@ -118,7 +118,7 @@ var classNames = require("classnames");
                 />
               }
             </div>
-            <div className="col-sm-7 right">
+            <div className="col-sm-6 right">
               <div className="button-group small-buttons">
                 <Button
                   className={buttonClass}
