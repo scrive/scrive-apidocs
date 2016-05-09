@@ -91,8 +91,8 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.value "daystoremind" $ documentdaystoremind doc
       J.value "showheader" $ documentshowheader doc
       J.value "showpdfdownload" $ documentshowpdfdownload doc
-      J.value "showrejectoption" $ documentallowrejectreason doc
-      J.value "allowrejectreason" $ documentshowrejectoption doc
+      J.value "showrejectoption" $  documentshowrejectoption doc
+      J.value "allowrejectreason" $ documentallowrejectreason doc
       J.value "showfooter" $ documentshowfooter doc
       J.value "invitationmessage" $ if (null $ documentinvitetext doc) --V1 requires HTML for custom message unless message is empty
                                        then ""
