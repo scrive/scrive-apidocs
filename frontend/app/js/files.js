@@ -14,6 +14,7 @@ var File = exports.File = Backbone.Model.extend({
         id : 0,
         pages : [],
         name: "",
+        pixelWidth: 950,
         broken : false
       };
     },
@@ -41,7 +42,8 @@ var File = exports.File = Backbone.Model.extend({
       }
     },
     initialize: function (args) {
-        this.url = "/filepages/" + args.id + this.queryPart();
+        var pixelWidth = this.pixelWidth();
+        this.url = "/filepages/" + args.id + this.queryPart({"pixelwidth": pixelWidth});
     },
     downloadLink : function(as_download) {
         var link = null;
@@ -75,6 +77,9 @@ var File = exports.File = Backbone.Model.extend({
     },
     pages : function(){
         return this.get("pages");
+    },
+    pixelWidth: function () {
+      return this.get("pixelWidth");
     },
     placements : function() {
         return _.flatten(_.map(this.pages(), function(p) {return p.placements();}));
@@ -146,7 +151,7 @@ var FilePage = exports.FilePage = Backbone.Model.extend({
     defaults: function() { return {
         number : 0,
         placements : [],
-        width: 943,
+        width: 950,
         height: 1335
     }},
     initialize: function (args) {

@@ -13,18 +13,21 @@ var $ = require("jquery");
           required: false,
           add_to_sealed_file: true,
           accepted: false,
+          pixelWidth: 950,
           pages: undefined
         };
       },
 
       initialize: function (args) {
         if (args.file_id) {
-          this.url = "/filepages/" + args.file_id + this.queryPart();
+          var pixelWidth = this.pixelWidth();
+          this.url = "/filepages/" + args.file_id + this.queryPart({"pixelwidth": pixelWidth});
         }
       },
 
       pageUrl: function (pageNo) {
-        return "/pages/" + this.fileid() + "/" + pageNo + this.queryPart();
+        var pixelWidth = this.pixelWidth();
+        return "/pages/" + this.fileid() + "/" + pageNo + this.queryPart({"pixelwidth": pixelWidth});
       },
 
       queryPart: function (more) {
@@ -95,6 +98,10 @@ var $ = require("jquery");
 
       pages: function () {
         return this.get("pages");
+      },
+
+      pixelWidth: function () {
+        return this.get("pixelWidth");
       },
 
       isAccepted: function () {

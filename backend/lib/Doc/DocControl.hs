@@ -378,8 +378,8 @@ handleIssueShowGet docid = checkUserTOSGet $ do
 handleFilePages :: Kontrakcja m => FileID -> m Response
 handleFilePages fid = do
   checkFileAccess fid
-  mpixelwidth <- readField "pixelwidth"
-  rp <- getRenderedPages fid (fromMaybe legacyWidthInPixels mpixelwidth) RenderingModeWholeDocument
+  pixelwidth <- guardJustM $ readField "pixelwidth"
+  rp <- getRenderedPages fid pixelwidth RenderingModeWholeDocument
   simpleJsonResponse . J.runJSONGen . J.value "pages" $ pagesCount rp
 
 {- |
@@ -390,8 +390,8 @@ handleFilePages fid = do
 showPage :: Kontrakcja m => FileID -> Int -> m KontraLink
 showPage fid pageNo = logFile fid $ do
   checkFileAccess fid
-  mpixelwidth <- readField "pixelwidth"
-  rp <- getRenderedPages fid (fromMaybe legacyWidthInPixels mpixelwidth) RenderingModeWholeDocument
+  pixelwidth <- guardJustM $ readField "pixelwidth"
+  rp <- getRenderedPages fid pixelwidth RenderingModeWholeDocument
   if pagesCount rp < pageNo
     then do
       logInfo "Requested page doesn't exist" $ object [

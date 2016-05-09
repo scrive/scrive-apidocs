@@ -225,7 +225,7 @@ var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
             <FileView
               ref="fileView"
               model={document.mainfile()}
-              pixelWidth={943}
+              pixelWidth={950}
             />
           }
         </div>
