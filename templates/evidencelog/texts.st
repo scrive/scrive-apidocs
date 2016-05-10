@@ -264,7 +264,7 @@ SignReminderSendEmailLog=Scrive eSign sent a reminder to sign via email to $sign
 ###
 SignReminderSendSMSLog=Scrive eSign sent a reminder to sign via SMS to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
 ###
-SignReminderSendEmailSMSLog=Scrive eSign sent a reminder to sign via email and SMS to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
+SignReminderSendEmailSMSLog=$_SignReminderSendEmailSMSLog()$
 ###
 ReviewReminderSendEmailLog=Scrive eSign sent a reminder to review via email to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
 ###
