@@ -79,13 +79,13 @@ dumpEvidenceTexts now lang doc' = do
             , signatorylinkid = unsafeSignatoryLinkID 2
             }
   let doc = doc' { documentsignatorylinks = [author_sl, asl] }
-  let messageText = Just "This is a <b>message text.</b>"
+  let messageText = Just "This is a <b>custom message</b>"
   let fields t = do
         when (t `elem` [AutomaticReminderSent, ReminderSend, DeleteSigAttachmentEvidence, SaveSigAttachmentEvidence]) $ do
           F.value "author" $ actorEmail actor
         F.value "description" ("This is a description." :: String)
         F.value "lang" $ show lang
-        F.value "msg" ("Really long message from external eID system." :: String)
+        F.value "msg" ("Really long custom message from external eID system." :: String)
         F.value "name" ("some name" :: String)
         F.value "newemail" ("good@example.com" :: String)
         F.value "newphone" ("good-12 34 56" :: String)
