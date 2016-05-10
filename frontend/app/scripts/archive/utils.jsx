@@ -142,20 +142,32 @@ var capitaliseFirstLetter = require("../common/capitalise_first_letter");
     }
   };
 
-  e.signatoryCanSignNow = function(d,s) {
-    var so = s.sign_order;
-    _.each(d.field("parties"),function(sig) {
-       if (sig.is_signatory && !sig.sign_time) {
-        so = Math.min(so,sig.sign_order);
-       }
+  e.currentSignOrder = function (d) {
+    var unsignedSignatories =_.filter(d.field("parties"), function (sig) {
+      return sig.is_signatory && !sig.sign_time;
     });
-    return d.field("status") === "pending" && !s.sign_time && s.is_signatory && so == s.sign_order;
+    if (_.isEmpty(unsignedSignatories)) {
+      return undefined;
+    } else {
+      return _.min(_.map(unsignedSignatories, function (sig) {
+        return sig.sign_order;
+      }));
+    }
+  };
+
+  e.signatoryCanSignNow = function(d, s) {
+    return d.field("status") === "pending" && !s.sign_time && s.is_signatory && e.currentSignOrder(d) == s.sign_order;
   };
 
   e.documentStatus = function(d) {
-    var signingParties = _.filter(d.field("parties"), function(s) {
-      return s.is_signatory;
-    });
+    var currentSignOrder = e.currentSignOrder(d);
+    if (currentSignOrder === undefined) {
+      var signingParties = [];
+    } else {
+      var signingParties = _.filter(d.field("parties"), function(s) {
+        return s.is_signatory && s.sign_order <= currentSignOrder;
+      });
+    }
     var someSignatoryHasDeliveryProblem = _.some(signingParties, function(s) {
       return s.email_delivery_status === "not_delivered" || s.mobile_delivery_status === "not_delivered";
     });
