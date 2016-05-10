@@ -117,11 +117,8 @@ var PadSigningView = require("./padsigningview");
     },
 
     handleOrientationChange: function () {
-      // This fixes an issue on Chrome for iOS on iPhone5 where the browser does not repaint when phone flips.
-      // Still need to fix this issue on iPhone6.
-      setTimeout(function () {
-        $(window).scrollTop($(window).scrollTop());
-      }, 5);
+      // force redraw to fix chrome on ios not redrawing everything
+      this.forceUpdate();
     },
 
     handleResize: function () {
