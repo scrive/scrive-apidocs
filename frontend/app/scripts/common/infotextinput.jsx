@@ -141,8 +141,10 @@ var _ = require("underscore");
     },
     focus : function() {
       $(this.refs.input.getDOMNode()).focus();
-      //After calling focus - custor is sometimes at begining of text. If we will set the value to what is there - custor will be placed at the end
-      $(this.refs.input.getDOMNode()).val($(this.refs.input.getDOMNode()).val());
+      // After calling focus - caret is sometimes at the begining of text.
+      // Use text selection of 0 length at the end to move the caret position
+      var length = $(this.refs.input.getDOMNode()).val().length;
+      this.refs.input.getDOMNode().setSelectionRange(length, length);
     },
     selectText : function() {
       this.refs.input.getDOMNode().setSelectionRange(0, $(this.refs.input.getDOMNode()).val().length);
