@@ -157,6 +157,7 @@ module.exports = function (args) {
       document.setAllowrejectreason(model.allowRejectReason());
       document.setShowpdfdownload(model.showPDFDownload());
       document.setShowfooter(model.showFooter());
+      document.save();
       if (args.onClose !== undefined) {
         args.onClose();
       }
