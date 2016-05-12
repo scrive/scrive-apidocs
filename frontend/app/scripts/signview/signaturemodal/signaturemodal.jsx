@@ -4,6 +4,7 @@ var SignatureDrawer = require("./signaturedrawer");
 var _ = require("underscore");
 var $ = require("jquery");
 var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
+var scrollToElement = require("../../common/scrolltoelement");
 
 /* Modal for drawing or typing signature. For old IE only typing mode is available.
  * Value, as Base64 image is saved to field value.
@@ -40,15 +41,12 @@ var SignatureDrawingModel = Backbone.Model.extend({
   signview: function () {
     return this.get("signview");
   },
-  arrow: function () {
-    return this.get("arrow")();
-  },
   actionButtonType: function () {
     if (this.get("actionButtonType")) {
       return this.get("actionButtonType");
     }
 
-    var incompleteTasks = this.arrow().notCompletedTasks();
+    var incompleteTasks = this.signview().tasks().incomplete();
     var incompleteFieldTasks = _.filter(incompleteTasks, function (task) { return task.isFieldTask(); });
     var incompleteSignatoryAttachmentsTasks = _.filter(incompleteTasks, function (task) {
       return task.isSignatoryAttachmentTask() || task.isRequiredAuthorAttachmentTask();
@@ -110,16 +108,16 @@ module.exports = function (args) {
   var modal = $("<div class='drawer' />");
   var transTime = 300; // sync with @trans-time in 'signview/drawer.less';
   var onClose = args.onClose;
+  var hideArrow = args.hideArrow;
+  var showArrow = args.showArrow;
 
   var model = new SignatureDrawingModel({
     field: args.field,
     width: args.width,
     height: args.height,
-    arrow: args.arrow,
     signview: args.signview,
     modal: modal,
     onClose: function (shouldScroll, shouldSign) {
-      var arrow = args.arrow();
       modal.removeClass("active");
       document.ontouchmove = function (e) {
         return true;
@@ -129,13 +127,11 @@ module.exports = function (args) {
         onClose();
       }
 
-      if (arrow) {
-        arrow.enable();
-        if (shouldScroll) {
-          setTimeout(function () {
-            arrow.goToCurrentTask();
-          }, 5);
-        }
+      showArrow();
+      if (shouldScroll) {
+        setTimeout(function () {
+          scrollToElement(args.signview.tasks().active().el());
+        }, 5);
       }
 
       modal.removeClass("active");
@@ -167,9 +163,7 @@ module.exports = function (args) {
     }
   }), modal[0]);
 
-  if (args.arrow()) {
-    args.arrow().disable();
-  }
+  hideArrow();
 
   $(".signview").append(modal);
 

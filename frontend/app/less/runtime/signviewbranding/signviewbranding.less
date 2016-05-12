@@ -135,57 +135,22 @@
 }
 /* Arrows */
 .signview .arrows {
-
-  .action-arrow.left {
-
-    .front {
-      @url : %('/colored_image?file=sign-arrow-action-left.png&color=%D', @actioncolor);
-      background : url(@url);
-    }
-
-    .back {
-      @url : %('/colored_image?file=sign-arrow-action-left-back.png&color=%D', @actioncolor);
-      background : url(@url);
-    }
-
-    .label {
-      @url : %('/colored_image?file=sign-arrow-action-label.png&color=%D', @actioncolor);
-      background : url(@url);
-      color : @actiontextcolor;
-      font-family: @font;
-    }
-  }
-
-  .action-arrow.right {
-
-    .front {
-      @url : %('/colored_image?file=sign-arrow-action-right.png&color=%D', @actioncolor);
-      background : url(@url);
-    }
-
-    .back {
-      @url : %('/colored_image?file=sign-arrow-action-right-back.png&color=%D', @actioncolor);
-      background : url(@url);
-    }
-
-    .label {
-      @url : %('/colored_image?file=sign-arrow-action-label.png&color=%D', @actioncolor);
-      background : url(@url);
-      color : @actiontextcolor;
-      font-family: @font;
-    }
-  }
-
-  .arrow.up {
+  .scroll-arrow {
     @url : %('/colored_image?file=sign-arrow-up.png&color=%D', @actioncolor);
     background : url(@url);
   }
 
-  .arrow.down {
-    @url : %('/colored_image?file=sign-arrow-down.png&color=%D', @actioncolor);
+  .action-arrow.left {
+    @url : %('/colored_image?file=sign-arrow-action-left.png&color=%D', @actioncolor);
+    background : url(@url);
+  }
+
+  .action-arrow.right {
+    @url : %('/colored_image?file=sign-arrow-action-right.png&color=%D', @actioncolor);
     background : url(@url);
   }
 }
+
 .signview {
   .obligatory-input{
     border-color: @actioncolor; /* Fallback IE */

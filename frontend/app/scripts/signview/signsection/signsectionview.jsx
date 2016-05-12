@@ -4,7 +4,7 @@ var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
 var Button = require("../../common/button");
 var TransitionMixin = require("./transition_mixin");
-var TaskMixin = require("../tasks/task_mixin");
+var TaskMixin = require("../navigation/task_mixin");
 var SignSign = require("./signsignview");
 var SignReject = require("./signrejectview");
 var SignSigning = require("./signsigningview");
@@ -22,11 +22,11 @@ var FlashMessagesCleaner = require("../../../js/flashmessages.js").FlashMessages
 var Submit = require("../../../js/submits.js").Submit;
 var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 var trackTimeout = require("../../common/track_timeout");
-var PageTask = require("../../../js/tasks.js").PageTask;
-var TaskMixin = require("../tasks/task_mixin");
 var classNames = require("classnames");
+var Task = require("../navigation/task");
 
   module.exports = React.createClass({
+    displayName: "SignSectionView",
 
     mixins: [TransitionMixin, TaskMixin],
 
@@ -36,6 +36,12 @@ var classNames = require("classnames");
       pixelWidth: React.PropTypes.number.isRequired,
       enableOverlay: React.PropTypes.func.isRequired,
       disableOverlay: React.PropTypes.func.isRequired
+    },
+
+    contextTypes: {
+      showArrow: React.PropTypes.func,
+      hideArrow: React.PropTypes.func,
+      blinkArrow: React.PropTypes.func
     },
 
     getInitialState: function () {
@@ -54,11 +60,11 @@ var classNames = require("classnames");
 
     createTasks: function () {
       var self = this;
-      return [new PageTask({
+      return [new Task({
         type: "overlay",
         tipSide: "none",
         isComplete: function () {
-          return !self.isMounted() || !self.shouldHaveOverlay();
+          return !self.shouldHaveOverlay();
         },
         el:  $(self.getDOMNode())
       })];
@@ -102,14 +108,14 @@ var classNames = require("classnames");
       var enableArrow = prevState.step === "reject" && this.state.step !== "reject";
 
       if (disableArrow) {
-        setTimeout(function () {
-          model.arrow().disable();
+        setTimeout(() => {
+          this.context.hideArrow();
         });
       }
 
       if (enableArrow) {
-        setTimeout(function () {
-          model.arrow().enable();
+        setTimeout(() => {
+          this.context.showArrow();
         });
       }
 
@@ -154,8 +160,7 @@ var classNames = require("classnames");
       var model = this.props.model;
       var signatoryHasPlacedSignatures = model.document().currentSignatory().hasPlacedSignatures();
 
-      return this.shouldHaveOverlay() || model.tasks().notCompletedTasks().length == 1 &&
-        model.tasks().notCompletedTasks()[0].isSignTask();
+      return this.shouldHaveOverlay() || model.canSignDocument();
     },
 
     handleReject: function (text) {
@@ -197,7 +202,7 @@ var classNames = require("classnames");
       var signatory = document.currentSignatory();
 
       if (!self.canSignDocument()) {
-        return model.arrow().blink();
+        return this.context.blinkArrow();
       }
 
       if (signatory.smsPinAuthenticationToSign() && !pin) {
@@ -305,7 +310,7 @@ var classNames = require("classnames");
       var model = self.props.model;
 
       if (!self.canSignDocument()) {
-        return model.arrow().blink();
+        return this.context.blinkArrow();
       }
 
       self.setState({eidThisDevice: thisDevice}, function () {

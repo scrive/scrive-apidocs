@@ -3,19 +3,21 @@ var Backbone = require("backbone");
 var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
 var InfoTextInput = require("../../common/infotextinput");
-var TaskMixin = require("../tasks/task_mixin");
+var TaskMixin = require("../navigation/task_mixin");
 var ViewSize = require("../viewsize");
-var PageTask = require("../../../js/tasks.js").PageTask;
+var Task = require("../navigation/task");
 var $ = require("jquery");
 var classNames = require("classnames");
 
   var DetailsList = React.createClass({
     render: function () {
       var isVertical = this.props.isVertical;
-      var childs = React.Children.map(this.props.children, function (child) {
-        return child;
+      var childs = [];
+      React.Children.forEach(this.props.children, function (child) {
+        if (child) {
+          childs.push(child);
+        }
       });
-      childs = _.compact(childs);
 
       var leftClass = classNames({
         "col-md-6": true,
@@ -100,7 +102,7 @@ var classNames = require("classnames");
     },
 
     createTaskFromRef: function (ref, isComplete) {
-      return new PageTask({
+      return new Task({
         type: "extra-details",
         onArrowClick: function () {
           ref.focus();

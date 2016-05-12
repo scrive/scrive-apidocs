@@ -5,6 +5,21 @@
 @import "../bootstrap/mixins/responsive-visibility.less";
 @import "../bootstrap/utility/responsive-utilities.less";
 
+.col-loop (@p, @i, @rules) when (@i > 0) {
+  .col-@{p}-@{i} {
+    @rules();
+  }
+
+  .col-loop(@p, @i - 1, @rules);
+}
+
+.col-all-loop (@rules) {
+  .col-loop(lg, 12, @rules);
+  .col-loop(md, 12, @rules);
+  .col-loop(sm, 12, @rules);
+  .col-loop(xs, 12, @rules);
+}
+
 .clearfix {
   &:before,  &:after {
     content: " ";
@@ -24,11 +39,7 @@ div.main {
   .container-fixed();
   .clearfix();
 
-  width: @container-lg;
-
-  @media not all and (min-width: (@container-lg + @signview-gutter)) {
-    width: 100%;
-  }
+  padding: 0;
 
   .row {
     .make-row();
@@ -52,26 +63,28 @@ div.main {
     }
 
     // only use inner gutters, slow, but modifying the grid mixins does not seem to work.
-    [class^="col-"]:first-child {
-      padding-left: 0;
-    }
-
-    [class^="col-"]:last-child {
-      padding-right: 0;
-    }
-
-    .on-medium-view({
-      [class^="col-md-"] {
+    .col-all-loop({
+      &:first-child {
         padding-left: 0;
+      }
+
+      &:last-child {
         padding-right: 0;
       }
     });
 
-    .on-small-view({
-      [class^="col-sm-"] {
+    .on-medium-view({
+      .col-loop(md, 12, {
         padding-left: 0;
         padding-right: 0;
-      }
+      });
+    });
+
+    .on-small-view({
+      .col-loop(sm, 12, {
+        padding-left: 0;
+        padding-right: 0;
+      });
     });
 
     .left {
@@ -108,6 +121,8 @@ div.main {
     display: block;
     margin-left: auto;
     margin-right: auto;
+    padding-right: 0;
+    padding-left: 0;
   }
 
   .pull-right {

@@ -7,22 +7,21 @@ var NoValidation = require("../../js/validation.js").NoValidation;
 var SSNForNOBankIDValidation = require("../../js/validation.js").SSNForNOBankIDValidation;
 var SSNForSEBankIDValidation = require("../../js/validation.js").SSNForSEBankIDValidation;
 var PhoneValidation = require("../../js/validation.js").PhoneValidation;
-var PageTasks = require("../../js/tasks.js").PageTasks;
-var PageTasksArrow = require("../../js/tasks.js").PageTasksArrow;
+var TaskList = require("./navigation/task_list");
 
     module.exports = Backbone.Model.extend({
     defaults: {
       hasChangedPin: false,
       hasTakenFirstScreenshot: false,
       hasSentTrackingData: false,
-      arrowDisabled: false,
-      tasks: []
+      tasks: null
     },
 
     initialize: function (args) {
       var model = this;
       var document = args.document;
       var triggeredChangeOnReady = false;
+      var tasks = new TaskList();
 
       _.bindAll(this, "blockReload");
 
@@ -47,14 +46,14 @@ var PageTasksArrow = require("../../js/tasks.js").PageTasksArrow;
         });
 
       document.bind("file:change placements:change", function () {
-          var arrow = model.get("arrow");
-          if (arrow !== undefined) {
-            arrow.deletePageTasksArrow();
-          }
-          model.set("arrow", undefined, {silent: true});
           model.trigger("change");
         });
-      this.listenTo(this, "change:tasks", this.updateArrowTasks);
+
+      this.listenTo(tasks, "change", () => {
+        this.trigger("change");
+      });
+
+      this.set({tasks});
     },
 
     blockReload: function () {
@@ -272,50 +271,12 @@ var PageTasksArrow = require("../../js/tasks.js").PageTasksArrow;
       }, 1500);
     },
 
-    addTask: function (task) {
-      var tasks = this.get("tasks");
-      var newTasks = tasks.concat([task]);
-      this.set({tasks: newTasks});
-    },
-
-    removeTask: function (task) {
-      var tasks = this.get("tasks");
-      tasks = _.without(tasks, task);
-      this.set({tasks: tasks});
-    },
-
-    updateArrowTasks: function () {
-      var arrow = this.arrow();
-      var tasks = this.tasks();
-      arrow.replaceTasks(tasks);
-    },
-
     tasks: function () {
-      return new PageTasks({tasks: this.get("tasks")});
+      return this.get("tasks");
     },
 
-    createArrow: function () {
-      var arrow = new PageTasksArrow({
-        tasks: this.tasks()
-      });
-
-      this._arrow = arrow;
-    },
-
-    arrow: function () {
-      if (!this._arrow) {
-        this.createArrow();
-      }
-
-      return this._arrow;
-    },
-
-    updateArrowPosition: function () {
-      this.arrow().updatePosition();
-    },
-
-    updateArrow: function () {
-      this.arrow().updateArrow();
+    canSignDocument: function () {
+      return this.tasks().incomplete().length == 1 && this.tasks().incomplete()[0].isSignTask();
     },
 
     recall: function (f) {

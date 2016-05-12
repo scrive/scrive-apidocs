@@ -142,8 +142,8 @@ module.exports = React.createClass({
         });
       }
 
-      function renderInfo({label, text}) {
-        return <li>{label}: <b>{text}</b></li>;
+      function renderInfo({label, text}, index) {
+        return <li key={"info_" + index}>{label}: <b>{text}</b></li>;
       }
 
       return (

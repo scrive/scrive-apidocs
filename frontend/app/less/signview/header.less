@@ -17,6 +17,8 @@
   }
 
   .main {
+    max-width: 1040px;
+
     @media (min-width: @breakpoint) {
       padding: 0;
     }
@@ -27,6 +29,7 @@
 
     .on-small-view({
       padding: 0 @signview-half-gutter;
+      max-width: @signview-small-view;
     });
 
     .link {

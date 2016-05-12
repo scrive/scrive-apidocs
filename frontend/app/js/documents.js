@@ -482,8 +482,6 @@ var Document = exports.Document = Backbone.Model.extend({
     // errorCallback(response) should return bool value
     // indicating if further attempts should be continued
     recall: function(successCallback, errorCallback) {
-        console.log('recall');
-
         var self = this;
         var fetchOptions = {
                              processData: true,

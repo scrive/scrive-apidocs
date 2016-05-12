@@ -3,7 +3,7 @@ var Backbone = require("backbone");
 var Button = require("../../common/button");
 var UploadButton = require("../../common/uploadbutton");
 var BackboneMixin = require("../../common/backbone_mixin");
-var TaskMixin = require("../tasks/task_mixin");
+var TaskMixin = require("../navigation/task_mixin");
 var ViewSize = require("../viewsize");
 var Submit = require("../../../js/submits.js").Submit;
 var $ = require("jquery");
@@ -13,7 +13,7 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var Document = require("../../../js/documents.js").Document;
 var File = require("../../../js/files.js").File;
 var _ = require("underscore");
-var PageTask = require("../../../js/tasks.js").PageTask;
+var Task = require("../navigation/task");
 
   var UploadArea = React.createClass({
     propTypes: {
@@ -135,7 +135,7 @@ var PageTask = require("../../../js/tasks.js").PageTask;
       var model = self.props.model;
       var uploadArea = self.refs.uploadArea;
 
-      return [new PageTask({
+      return [new Task({
         type: "signatory-attachment",
         isComplete: function () {
           return !model.get("loading") && model.hasFile();

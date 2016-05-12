@@ -2,14 +2,16 @@ var _ = require("underscore");
 var Backbone = require("backbone");
 var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
-var TaskMixin = require("../tasks/task_mixin");
+var TaskMixin = require("../navigation/task_mixin");
 var Button = require("../../common/button");
 var Checkbox = require("../../common/checkbox");
 var AuthorAttachmentView = require("./authorattachmentview");
 var AuthorAttachment = require("../../../js/authorattachment.js").AuthorAttachment;
-var PageTask = require("../../../js/tasks.js").PageTask;
+var Task = require("../navigation/task");
 var $ = require("jquery");
 var classNames = require("classnames");
+var PageViewer = require("../pageviewer/pageviewer");
+var Page = require("../pageviewer/page");
 
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin, TaskMixin],
@@ -20,7 +22,9 @@ var classNames = require("classnames");
 
     propTypes: {
       model: React.PropTypes.instanceOf(AuthorAttachment).isRequired,
-      canStartFetching: React.PropTypes.bool.isRequired
+      canStartFetching: React.PropTypes.bool.isRequired,
+      showOverlay: React.PropTypes.bool.isRequired,
+      showArrow: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function () {
@@ -31,7 +35,7 @@ var classNames = require("classnames");
       var self = this;
 
       if (self.props.model.isRequired() && self.props.canSign) {
-        return [new PageTask({
+        return [new Task({
           type: "author-attachment",
           isComplete: function () {
             return self.props.model.isAccepted();
@@ -46,15 +50,6 @@ var classNames = require("classnames");
         })];
       } else {
         return [];
-      }
-    },
-
-    componentDidUpdate: function (prevProps, prevState) {
-      var self = this;
-      if (this.state.showPages !== prevState.showPages) {
-        setTimeout(function () {
-          self.updateArrow();
-        }, 100); // we need to wait a bit until DOM realizes position/offset changed
       }
     },
 
@@ -130,21 +125,18 @@ var classNames = require("classnames");
               </div>
             </div>
           </div>
-          { /* if */ isPagesLoaded &&
-            <div className="section document-pages" style={{display: showPages ? "block" : "none"}}>
+          {/* if */ showPages &&
+            <PageViewer
+              ready={isPagesLoaded}
+              showOverlay={this.props.showOverlay}
+              showArrow={this.props.showArrow}
+            >
               {_.map(_.range(model.pages()), function (p) {
                 return (
-                  <div key={p + 1} className="pagediv">
-                    <img src={model.pageUrl(p + 1)}/>
-                  </div>
+                  <Page key={p + 1} number={p + 1} imageSrc={model.pageUrl(p + 1)} />
                 );
               })}
-            </div>
-          }
-          { /* else */ !isPagesLoaded &&
-            <div className="document-pages" style={{display: showPages ? "block" : "none"}}>
-              <div className="waiting4page" />
-            </div>
+            </PageViewer>
           }
           {/* if */ showPages &&
             <div className="section author-attachment">

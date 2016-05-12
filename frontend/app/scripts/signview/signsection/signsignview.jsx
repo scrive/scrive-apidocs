@@ -3,9 +3,9 @@ var Backbone = require("backbone");
 var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
 var Button = require("../../common/button");
-var TaskMixin = require("../tasks/task_mixin");
+var TaskMixin = require("../navigation/task_mixin");
 var ViewSize = require("../viewsize");
-var PageTask = require("../../../js/tasks.js").PageTask;
+var Task = require("../navigation/task");
 var $ = require("jquery");
 var classNames = require("classnames");
 
@@ -19,6 +19,10 @@ var classNames = require("classnames");
       onReject: React.PropTypes.func.isRequired
     },
 
+    contextTypes: {
+      blinkArrow: React.PropTypes.func
+    },
+
     getBackboneModels: function () {
       return [this.props.model];
     },
@@ -27,7 +31,7 @@ var classNames = require("classnames");
       var self = this;
       var model = self.props.model;
 
-      return [new PageTask({
+      return [new Task({
         type: "sign",
         onArrowClick: function () {
           self.handleSign();
@@ -49,7 +53,7 @@ var classNames = require("classnames");
       if (this.props.canSign) {
         this.props.onSign();
       } else {
-        this.props.model.arrow().blink();
+        this.context.blinkArrow();
       }
     },
 

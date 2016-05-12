@@ -3,10 +3,11 @@ var Backbone = require("backbone");
 var React = require("react");
 var Button = require("../../common/button");
 var InfoTextInput = require("../../common/infotextinput");
-var TaskMixin = require("../tasks/task_mixin");
+var TaskMixin = require("../navigation/task_mixin");
+var Task = require("../navigation/task");
 var ViewSize = require("../viewsize");
 var Field = require("../../../js/fields.js").Field;
-var PageTask = require("../../../js/tasks.js").PageTask;
+var Task = require("../navigation/task");
 var $ = require("jquery");
 var classNames = require("classnames");
 
@@ -36,7 +37,7 @@ var classNames = require("classnames");
       var self = this;
       var model = self.props.model;
 
-      return new PageTask({
+      return new Task({
         type: "sign",
         onArrowClick: function () {
           self.props.onSign();
@@ -59,7 +60,7 @@ var classNames = require("classnames");
       var ref = this.refs.phoneInput;
       var model = this.props.model;
 
-      return new PageTask({
+      return new Task({
         type: "extra-details",
         onArrowClick: function () {
           ref.focus();

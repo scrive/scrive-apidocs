@@ -43,13 +43,17 @@ module.exports = function(config) {
       context: "./app",
 
       module: {
-        preLoaders: [
+        loaders: [
           {
             test: /.jsx$/,
             loader: "babel",
             query: {
-              presets: ["react", "es2015"]
+              presets: ["react", "es2015", "stage-2"]
             }
+          },
+          {
+            test: /.less$/,
+            loader: "less-interop",
           }
         ],
         noParse: [

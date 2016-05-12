@@ -48,6 +48,10 @@ var SignSectionView = require("../../../scripts/signview/signsection/signsection
 
     askForPhoneIfNotPin: function () {
       return false;
+    },
+
+    canSignDocument: function () {
+      return true;
     }
   });
 

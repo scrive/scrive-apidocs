@@ -1,9 +1,10 @@
 var React = require("react");
 var PlacementMixin = require("./placement_mixin");
-var TaskMixin = require("../tasks/task_mixin");
+var TaskMixin = require("../navigation/task_mixin");
 var SignatureModal = require("../signaturemodal/signaturemodal");
 var zoomTools = require("../../common/zoomtools");
-var PageTask = require("../../../js/tasks.js").PageTask;
+var Task = require("../navigation/task");
+var TaskList = require("../navigation/task_list");
 var $ = require("jquery");
 var classNames = require("classnames");
 
@@ -12,6 +13,12 @@ var classNames = require("classnames");
     _openModal: false,
 
     mixins: [PlacementMixin, TaskMixin],
+
+    contextTypes: {
+      taskList: React.PropTypes.instanceOf(TaskList),
+      hideArrow: React.PropTypes.func,
+      showArrow: React.PropTypes.func
+    },
 
     createTasks: function () {
       var self = this;
@@ -22,7 +29,7 @@ var classNames = require("classnames");
         return;
       }
 
-      return [new PageTask({
+      return [new Task({
         type: "field",
         field: field,
         isComplete: function () {
@@ -63,7 +70,8 @@ var classNames = require("classnames");
           field: field,
           width: this.width(),
           height: this.height(),
-          arrow: this.props.arrow,
+          hideArrow: this.context.hideArrow,
+          showArrow: this.context.showArrow,
           signview: this.props.signview,
           onClose: function () {
             self._openModal = false;

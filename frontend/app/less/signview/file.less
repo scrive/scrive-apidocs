@@ -1,25 +1,80 @@
 @import "vars";
 @import "../branding/elements";
 
+.scroller {
+  overflow-y: hidden;
+  margin-bottom: -4px;
+  -webkit-overflow-scrolling: touch;
+}
+
 .document-pages {
   position: relative;
   text-align: center;
   background-color: @signview-bg;
   text-align: left;
-  box-shadow: inset 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
-  margin-top: 0;
-  margin-bottom: -@signview-half-gutter;
+  padding: 0;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 4px;
+  max-width: none !important;
 
-  .on-medium-view({
-    padding: @signview-section-padding-small;
-  });
+  &.grab {
+    cursor: grab;
+  }
 
-  .on-small-view({
-    padding: @signview-half-gutter 0;
-  });
+  &.grabbing {
+    cursor: grabbing;
+  }
 
   * {
     box-sizing: content-box;
+  }
+
+  .zoom-controls {
+    transition: opacity 0.2s ease-in-out;
+
+    button {
+      background-color: white;
+      background-position: center;
+      background-repeat: no-repeat;
+      border: 1px solid #f1f1f1;
+      display: block;
+      height: 49px;
+      padding: 0;
+      width: 49px;
+      opacity: 0.8;
+
+      &:focus {
+        outline: 0;
+      }
+    }
+
+    button:hover {
+      opacity: 1;
+    }
+
+    button:disabled:hover {
+      opacity: 0.5;
+    }
+
+    button:disabled {
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+      -webkit-tap-highlight-color: transparent;
+      background-color: rgba(204, 204, 204, 0.25);
+      border: 1px solid rgba(204, 204, 204, 0.3);
+      opacity: 0.5;
+    }
+
+    .zoom-in {
+      background-image: url("/img/zoom_in.png");
+    }
+
+    .zoom-out {
+      background-image: url("/img/zoom_out.png");
+    }
+
+    margin-top: -49px;
+    z-index: @signview-overlay-z-index + 3;
   }
 
   .signatureBox {
@@ -42,6 +97,8 @@
 
   .placedfield {
     position: absolute;
+    -webkit-overflow-scrolling: auto;
+    white-space: nowrap;
     &.active {
       z-index: 1;
     }

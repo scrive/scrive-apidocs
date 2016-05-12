@@ -1,7 +1,7 @@
 var React = require("react");
 var PlacementMixin = require("./placement_mixin");
-var TaskMixin = require("../tasks/task_mixin");
-var PageTask = require("../../../js/tasks.js").PageTask;
+var TaskMixin = require("../navigation/task_mixin");
+var Task = require("../navigation/task");
 var $ = require("jquery");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 var classNames = require("classnames");
@@ -18,7 +18,7 @@ var classNames = require("classnames");
         return;
       }
 
-      return [new PageTask({
+      return [new Task({
         type: "field",
         field: field,
         isComplete: function () {

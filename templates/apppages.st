@@ -123,8 +123,6 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
             analyticsproperties[pair[0]] = pair[1];
           }
 
-          console.log(analyticsproperties);
-
           mixpanel.register(analyticsproperties);
           mixpanel.people.set(analyticsproperties);
 

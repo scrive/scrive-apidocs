@@ -1,13 +1,13 @@
 var React = require("react");
+var TaskList = require("../navigation/task_list");
+
   module.exports = {
     contextTypes: {
-      addTask: React.PropTypes.func,
-      removeTask: React.PropTypes.func,
-      getArrow: React.PropTypes.func
+      taskList: React.PropTypes.instanceOf(TaskList),
     },
 
     hasTaskContext: function () {
-      return typeof this.context.addTask === "function" && typeof this.context.removeTask === "function";
+      return typeof this.context.taskList === "object";
     },
 
     addTasks: function () {
@@ -27,7 +27,7 @@ var React = require("react");
         self._tasks = tasks;
 
         tasks.forEach(function (task) {
-          self.context.addTask(task);
+          self.context.taskList.add(task);
         });
       }
     },
@@ -42,30 +42,14 @@ var React = require("react");
 
       if (tasks instanceof Array) {
         tasks.forEach(function (task) {
-          self.context.removeTask(task);
+          self.context.taskList.remove(task);
         });
-      }
-    },
-
-    activateCurrentTask: function () {
-      var arrow = this.context.getArrow();
-
-      if (arrow) {
-        arrow.forceActivate();
       }
     },
 
     forceUpdateTasks: function () {
       this.removeTasks();
       this.addTasks();
-    },
-
-    updateArrow: function () {
-      var arrow = this.context.getArrow();
-
-      if (arrow) {
-        arrow.updateArrow();
-      }
     },
 
     componentDidUpdate: function () {
