@@ -389,6 +389,7 @@ handleFilePages fid = do
  -}
 showPage :: Kontrakcja m => FileID -> Int -> m KontraLink
 showPage fid pageNo = logFile fid $ do
+  logInfo_ "Checking file access"
   checkFileAccess fid
   mpixelwidth <- readField "pixelwidth"
   rp <- getRenderedPages fid (fromMaybe legacyWidthInPixels mpixelwidth) RenderingModeWholeDocument

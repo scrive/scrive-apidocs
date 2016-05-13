@@ -178,8 +178,10 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         issecure <- isSecure
         let usehttps = useHttps appConf
         when (issecure || not usehttps) $ do
+          logInfo_ "Updating session"
           updateSession session (ctxsessionid ctx') (userid <$> ctxmaybeuser ctx') (userid <$> ctxmaybepaduser ctx')
 
+        logInfo_ "Evaluating response"
         -- Make sure response is well defined before passing it further.
         res <- E.evaluate . force . resFilter =<< case eres of
           Right response -> return response
