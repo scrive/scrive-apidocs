@@ -26,7 +26,10 @@ var classNames = require("classnames");
             onClick={this.toggleOpen}
           />
           <div style={openStyle} className="menu-options">
-            <Button onClick={this.props.onDownload} text={localization.docsignview.downloadDocumentButtonText} />
+            <Button onClick={this.props.onDownload}
+                    text={localization.docsignview.downloadDocumentButtonText}
+                    href={this.props.downloadUrl}
+            />
           </div>
         </span>
       );
@@ -70,14 +73,11 @@ var classNames = require("classnames");
     handleDownloadClick: function () {
       var doc = this.props.model;
       var sig = doc.currentSignatory();
-      var downloadUrl = doc.mainfile().downloadLinkForMainFile(doc.title(), true);
 
       mixpanel.track("Download pdf", {
         "Can sign": doc.currentSignatoryCanSign() ? "yes" : "no",
         "Delivery method": sig.delivery()
       });
-
-      window.open(downloadUrl, "_blank");
     },
 
     render: function () {
@@ -90,6 +90,8 @@ var classNames = require("classnames");
         "section": true,
         "instructions": true
       });
+
+      var downloadUrl = doc.mainfile().downloadLinkForMainFile(doc.title(), true);
 
       return (
         <div className={sectionClass}>
@@ -104,6 +106,7 @@ var classNames = require("classnames");
               <Menu
                 title={doc.title()}
                 onDownload={this.handleDownloadClick}
+                downloadUrl={downloadUrl}
               />
             }
         </div>

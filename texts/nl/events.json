@@ -9,7 +9,7 @@
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID":"$actor$ heeft zijn/haar identiteit geverifiëerd met Swedish BankID om toegang te krijgen tot het document. Swedish BankID retourneerde de naam \"$signatory_name$\" en de geboortedatum \"$signatory_dob$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID":"$actor$ heeft zijn/haar identiteit geverifiëerd met Norwegian BankID om toegang te krijgen tot het document. Norwegian BankID retourneerde de naam \"$signatory_name$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID":"$actor$ heeft zijn/haar identiteit geverifiëerd met Swedish BankID om toegang te krijgen tot het document. Swedish BankID retourneerde de naam \"$signatory_name$\".",
-"_AuthorAttachmentAcceptedTextNotArchiveSimple":"",
+"_AuthorAttachmentAcceptedTextNotArchiveSimple":"De checkbox \"$text$\" is nagelezen door $actor$. De tekst naast de checkbox is \"$additional_text$\"",
 "_AutomaticReminderSentTextSimpleEmail":"Een automatische herinnering om het document te ondertekenen is verstuurd naar $signatory$ via E-mail. ",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Een automatische herinnering om het document te ondertekenen is verstuurd naar $signatory$ via E-mail en SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"Een automatische herinnering om het document te ondertekenen is verstuurd naar $signatory$ via SMS.",

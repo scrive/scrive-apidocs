@@ -169,7 +169,7 @@ var Page = require("../pageviewer/page");
                       <Button
                         className="download-button"
                         text={localization.download}
-                        onClick={() => window.open(model.downloadLink(true))}
+                        href={model.downloadLink(true)}
                       />
                     }
                   </div>

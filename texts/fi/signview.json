@@ -11,7 +11,7 @@
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, olet allekirjoittanut dokumentin <strong class='put-document-title-here'></strong>. Kun olet painanut kuvaketta, allekirjoituksesi tullaan rekisteröimään Scrive e-allekirjoituspalveluun.",
 "_contractSignatorySignModalTitle":"Valmis?",
 "_contractrejectbuttontext":"Hylkää ja vastaa",
-"_contractrejectbuttontextwithoutreason":"",
+"_contractrejectbuttontextwithoutreason":"Hylkää",
 "_contractsignatorycancelmodalplaceholder":"Kirjoita viestisi tähän",
 "_contractsignatorycancelmodaltext":"Jos hylkäät dokumentin, sitä ei voida enää allekirjoittaa. Ole hyvä ja kerro, miksi haluat hylätä dokumentin.",
 "_contractsignatorycancelmodaltextwithoutreason":"Jos hylkäät dokumentin, sitä ei voida enää allekirjoittaa.",

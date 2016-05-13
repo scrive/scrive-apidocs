@@ -246,6 +246,10 @@ getRenderedPages fid pageWidthInPixels renderingMode = logFile fid $ do
         min 4000 (max 100 pageWidthInPixels)
   Context{ctxnormalizeddocuments} <- getContext
   let key = (fid, clampedPageWidthInPixels, renderingMode)
+  logInfo "Fetching RenderedPages from cache" $ object [
+      "page_width" .= clampedPageWidthInPixels
+    , "rendering_mode" .= show renderingMode
+    ]
   MemCache.fetch ctxnormalizeddocuments key $ do
     fileContent <- getFileIDContents fid
     rp <- case renderingMode of

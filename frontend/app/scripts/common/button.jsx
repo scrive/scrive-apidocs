@@ -103,6 +103,14 @@ var classNames = require("classnames");
     style : function() {
       return  _.extend({width: this.width()},this.props.style);
     },
+    componentDidUpdate: function () {
+      // This is a workaround for https://github.com/facebook/react/issues/1448
+      // and can be removed after updating to react v15
+      var hrefAttr = this.props.href;
+      if (hrefAttr === undefined || hrefAttr === "") {
+        $(this.getDOMNode()).removeAttr("href");
+      }
+    },
     render: function() {
       return (
         <a id={this.props.id} href={this.props.href} className={this.className()} onClick={this.handleClick} style={this.style()}>
