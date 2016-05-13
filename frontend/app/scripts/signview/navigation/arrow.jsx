@@ -17,6 +17,10 @@ function transformWithPrefixes(style, value) {
   style["-ms-transform"] = value;
 }
 
+function scrollerFromTask(task) {
+  return $(task.el()).closest(".scroller");
+}
+
 module.exports = React.createClass({
   displayName: "Arrow",
 
@@ -62,7 +66,7 @@ module.exports = React.createClass({
     defaultErd.listenTo(task.el()[0], this.update);
 
     if (task.isFieldTask()) {
-      $(".scroller").on("scroll", this.handleScroll);
+      scrollerFromTask(task).on("scroll", this.handleScroll);
     }
   },
 
@@ -70,7 +74,7 @@ module.exports = React.createClass({
     defaultErd.removeListener(task.el()[0], this.update);
 
     if (task.isFieldTask()) {
-      $(".scroller").off("scroll", this.handleScroll);
+      scrollerFomTask(task).off("scroll", this.handleScroll);
     }
   },
 
@@ -89,6 +93,7 @@ module.exports = React.createClass({
     let newState = this.sizeAndPositionOfElement();
     newState.type = this.computeArrowType();
     newState.angle = this.computeAngle();
+    newState.scale = this.computeScale();
     this.setState(newState);
   },
 
@@ -103,6 +108,17 @@ module.exports = React.createClass({
       this.scroll();
     } else {
       this.blink();
+    }
+  },
+
+  computeScale: function () {
+    const BASE_FILEVIEW_WIDTH = 1040;
+    const $pages = scrollerFromTask(this.props.task).find(".document-pages");
+
+    if ($pages) {
+      return $pages.width() / BASE_FILEVIEW_WIDTH;
+    } else {
+      return 0;
     }
   },
 
@@ -213,7 +229,7 @@ module.exports = React.createClass({
 
   render: function () {
     const {task, show} = this.props;
-    const {type, left, right, top, height, angle} = this.state;
+    const {type, left, right, top, height, angle, scale} = this.state;
 
     const arrowClass = classNames({
       "hidden": this.isHiddenByBlink(),
@@ -240,6 +256,10 @@ module.exports = React.createClass({
       transformWithPrefixes(arrowStyle, "rotate(" + angle + "rad)");
     } else if (type === ARROW.DOWN && !task.isFieldTask()) {
       transformWithPrefixes(arrowStyle, "rotate(" + Math.PI + "rad)");
+    }
+
+    if (type === ARROW.RIGHT || type === ARROW.LEFT) {
+      transformWithPrefixes(arrowStyle, "scale(" + scale + ")");
     }
 
     return (
