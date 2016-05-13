@@ -72,15 +72,10 @@ var classNames = require("classnames");
     },
 
     startInlineEditing: function () {
-      var self = this;
-      if (this.canSign()) {
-        if (this.state.editing) {
+      if (this.canSign() && !this.state.editing) {
+        this.setState({editing: true}, () => {
           this.focusInput();
-        } else {
-          this.setState({editing: true}, function () {
-            self.focusInput();
-          });
-        }
+        });
       }
     },
 
