@@ -74,7 +74,7 @@ module.exports = React.createClass({
     defaultErd.removeListener(task.el()[0], this.update);
 
     if (task.isFieldTask()) {
-      scrollerFomTask(task).off("scroll", this.handleScroll);
+      scrollerFromTask(task).off("scroll", this.handleScroll);
     }
   },
 
