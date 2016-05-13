@@ -258,7 +258,7 @@ module.exports = React.createClass({
       transformWithPrefixes(arrowStyle, "rotate(" + Math.PI + "rad)");
     }
 
-    if (type === ARROW.RIGHT || type === ARROW.LEFT) {
+    if ((type === ARROW.RIGHT || type === ARROW.LEFT) && task.isFieldTask()) {
       transformWithPrefixes(arrowStyle, "scale(" + scale + ")");
     }
 
