@@ -234,7 +234,7 @@ var classNames = require("classnames");
               className="text-inline-editing"
               autoGrowth={true}
               onEnter={self.accept}
-              onTab={self.accept}
+              onTab={(e) => { e.preventDefault(); self.accept(); }}
               onBlur={self.handleBlur}
             />
           }
