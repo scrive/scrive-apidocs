@@ -175,7 +175,8 @@ serverBuildRules = do
   "_build/cabal-haddock.tar.gz" %> \_ -> do
     need ["_build/cabal-build"]
     needServerHaskellFiles
-    command_ [] "cabal" ["haddock","--all"]
+    -- Limit to library from package, due to Cabal bug: https://github.com/haskell/cabal/issues/1919
+    command_ [] "cabal" ["haddock","--internal"]
     command_ [Shell] "tar" ["-czf","_build/cabal-haddock.tar.gz","dist/doc"]
 
   "cabal-clean" ~> cmd "cabal clean"
