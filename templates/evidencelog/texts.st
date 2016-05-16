@@ -259,35 +259,22 @@ RejectDocumentEvidenceArchive=$_RejectDocumentEvidenceTextSimpleArchive()$
 ###
 RejectDocumentEvidenceVerificationPages=$_RejectDocumentEvidenceTextSimpleNotArchive()$
 ###
-###
-SignReminderSendEmailLog=Scrive eSign sent a reminder to sign via email to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
-###
-SignReminderSendSMSLog=Scrive eSign sent a reminder to sign via SMS to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
-###
-SignReminderSendEmailSMSLog=$_SignReminderSendEmailSMSLog()$
-###
-ReviewReminderSendEmailLog=Scrive eSign sent a reminder to review via email to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
-###
-ReviewReminderSendSMSLog=Scrive eSign sent a reminder to review via SMS to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
-###
-ReviewReminderSendEmailSMSLog=Scrive eSign sent a reminder to review via email and SMS to $signatory$ at the request of the user $actor$.$if(text)$ The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.$endif$
-###
 ReminderSendLog=*
 $if(signing)$
   $if(email)$
-    $SignReminderSendEmailLog()$
+    $_SignReminderSendEmailLog()$
   $elseif(mobile)$
-    $SignReminderSendSMSLog()$
+    $_SignReminderSendSMSLog()$
   $elseif(emailmobile)$
-    $SignReminderSendEmailSMSLog()$
+    $_SignReminderSendEmailSMSLog()$
   $endif$
 $elseif(viewing)$
   $if(email)$
-    $ReviewReminderSendEmailLog()$
+    $_ReviewReminderSendEmailLog()$
   $elseif(mobile)$
-    $ReviewReminderSendSMSLog()$
+    $_ReviewReminderSendSMSLog()$
   $elseif(emailmobile)$
-    $ReviewReminderSendEmailSMSLog()$
+    $_ReviewReminderSendEmailSMSLog()$
   $endif$
 $endif$
 ###
