@@ -98,7 +98,7 @@ var trackTimeout = require("../common/track_timeout");
           <ul className="ct thin">
             <li id="branding">
               <a id="logo" className="page" href={this.props.httplink + this.props.langprefix}>
-                <img src={window.cdnbaseurl + "/img/logo120.png"}  style={{"margin":"0"}} />
+                <img src={window.cdnbaseurl + "/img/scrive-logo-dark.png"}  style={{"margin":"0"}} />
               </a>
             </li>
             <li className="session-login float-right">

@@ -9,7 +9,7 @@ nicemail=
               <table cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="padding-top: 32px; padding-bottom: 32px;">
-                    <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:600px;" id="headerImage campaign-icon" alt="$_mailLogoAltText()$" />
+                    <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:200px;" id="headerImage campaign-icon" alt="$_mailLogoAltText()$" />
                   </td>
                 </tr>
               </table>

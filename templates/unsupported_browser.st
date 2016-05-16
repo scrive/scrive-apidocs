@@ -46,7 +46,7 @@ $htmlopentag()$
     <div style="width: 100%; min-height: 95px; border-top: 1px solid #dee4ed; border-bottom: 1px solid #dee4ed; margin-top: 3px; background-color: #FFFFFF;">
       <div style="width: 960px; margin: 0 auto; vertical-align: middle; min-height: 99px;">
         <a href="/">
-          <img src="/img/logo-white-bg.png" width="120" height="22" style="margin: 27px 0 26px; padding-top: 10px; padding-bottom: 10px; border: 0;" />
+          <img src="/img/scrive-logo-dark.png" style="max-height: 46px; max-width: 350px; margin: 0; padding-top: 26px; padding-bottom: 26px; border: 0;" />
         </a>
       </div>
     </div>

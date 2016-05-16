@@ -87,6 +87,7 @@ kontraMigrations = [
   , addAddedToSealedFileToAuthorAttachment
   , evidenceLogAddAdditionalText
   , addAllowRejectReasonToDocuments
+  , changeRestOfScriveLogos
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations
