@@ -11,6 +11,7 @@ import qualified Data.Text as T
 
 import API.V2.Errors
 import API.V2.Monad
+import Cookies
 import DB
 import Doc.DocStateData
 import Doc.DocStateQuery
@@ -20,6 +21,7 @@ import Doc.SignatoryLinkID
 import Doc.Tokens.Model
 import Kontra
 import KontraPrelude
+import Log
 import MagicHash (MagicHash)
 import OAuth.Model
 import OAuth.Util
@@ -100,7 +102,10 @@ getAPIUserWith ctxUser privs = do
           Just user -> return $ Just (user, authorActor ctx user)
       case msessionuser of
         Just (user, actor) -> return (user, actor)
-        Nothing -> apiError invalidAuthorization
+        Nothing -> do
+          msesid <- lookCookieValues "sessionId"
+          logInfo "Could not find user session" $ object ["session id cookie" .= msesid]
+          apiError $ invalidAuthorization
 
 getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either String (User, Actor)))
 getOAuthUser privs = do
