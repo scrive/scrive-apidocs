@@ -34,6 +34,8 @@ var _ = require("underscore");
  */
 
   module.exports = React.createClass({
+    displayName: "InfoTextInput",
+
     propTypes: {
       infotext      : React.PropTypes.string,
       value         : React.PropTypes.string,
@@ -89,20 +91,23 @@ var _ = require("underscore");
         };
       },
     getInitialState: function() {
-      return {value: this.props.value, focus : this.props.focus};
+      return {value: this.props.value, focus : this.props.focus, textWidth: 0};
     },
     componentDidMount : function() {
       if (this.props.focus)
         this.focus();
 
-      // must rerender otherwise autoGrowth width is 0.
       if (this.props.autoGrowth) {
-        this.forceUpdate();
+        this.computeTextWidth();
       }
     },
-    componentDidUpdate: function () {
+    componentDidUpdate: function (prevProps, prevState) {
       if (this.props.onAutoGrowth) {
         this.props.onAutoGrowth();
+      }
+
+      if ((prevState.value !== this.state.value || prevProps.infotext !== this.props.infotext) && this.props.autoGrowth) {
+        this.computeTextWidth();
       }
     },
     componentWillReceiveProps: function(props) {
@@ -125,7 +130,7 @@ var _ = require("underscore");
       $growth.text(text);
       return $growth.width() + 1;
     },
-    textWidth: function () {
+    computeTextWidth: function () {
       var valueWidth = this.measureText(this.state.value);
       var infotextWidth = this.measureText(this.props.infotext);
       var textWidth = Math.max(valueWidth, infotextWidth);
@@ -137,14 +142,17 @@ var _ = require("underscore");
         width += okButtonSize;
       }
 
-      return width;
+      this.setState({textWidth: width});
     },
     focus : function() {
       $(this.refs.input.getDOMNode()).focus();
       // After calling focus - caret is sometimes at the begining of text.
       // Use text selection of 0 length at the end to move the caret position
       var length = $(this.refs.input.getDOMNode()).val().length;
-      this.refs.input.getDOMNode().setSelectionRange(length, length);
+      // setSelectionRange is only supports "text" input type.
+      if (this.props.inputtype === "text") {
+        this.refs.input.getDOMNode().setSelectionRange(length, length);
+      }
     },
     selectText : function() {
       this.refs.input.getDOMNode().setSelectionRange(0, $(this.refs.input.getDOMNode()).val().length);
@@ -194,7 +202,7 @@ var _ = require("underscore");
       var inputStyle = _.extend({}, this.props.inputStyle);
 
       if (this.props.autoGrowth) {
-        _.extend(inputStyle, {width: this.textWidth() + "px"});
+        _.extend(inputStyle, {width: this.state.textWidth + "px"});
       }
 
       return (

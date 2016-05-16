@@ -8,6 +8,8 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
 var classNames = require("classnames");
 
   module.exports = React.createClass({
+    displayName: "TextPlacement",
+
     _shouldBlur: true,
 
     mixins: [PlacementMixin, TaskMixin],

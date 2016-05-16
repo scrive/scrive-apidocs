@@ -6,6 +6,8 @@ var FieldPlacement = require("../../../js/placements.js").FieldPlacement;
   var STANDARD_BORDER = 2;
 
   module.exports = {
+    displayName: "Placement",
+
     propTypes: {
       model: React.PropTypes.instanceOf(FieldPlacement).isRequired,
       pageWidth: React.PropTypes.number.isRequired,

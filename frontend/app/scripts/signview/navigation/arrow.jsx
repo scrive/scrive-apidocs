@@ -14,7 +14,9 @@ const ARROW = {NONE: -1, UP: 0, DOWN: 1, LEFT: 2, RIGHT: 3};
 
 function transformWithPrefixes(style, value) {
   style.transform = value;
-  style["-ms-transform"] = value;
+  style.MSTransform = value;
+  style.MozTransform = value;
+  style.WebkitTransform = value;
 }
 
 function scrollerFromTask(task) {
