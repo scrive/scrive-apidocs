@@ -19,7 +19,7 @@ window.CredentialsView = Backbone.View.extend({
     credentiasCol0
       .append("<p><b>Credentials obtained for</b><br/><span>" + oauth.email() + "</span></p>");
     credentiasCol1
-      .append("<p><b>Client credels identifier</b><br/><span>" + oauth.consumer_key() + "</span></p>");
+      .append("<p><b>Client credentials identifier</b><br/><span>" + oauth.consumer_key() + "</span></p>");
     credentiasCol2
       .append("<p><b>Client credentials secret</b><br/><span>" + oauth.client_shared_secret() + "</span></p>");
     credentiasCol3
