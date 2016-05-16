@@ -169,7 +169,7 @@ def wait_and_js_click(driver, css):
 
 if __name__ == '__main__':
     api = ScriveAPI()
-    doc_data = api.createfromfile('test/pdfs/simple.pdf')
+    doc_data = api.createfromfile('backend/test/pdfs/simple.pdf')
     doc_data['delivery'] = 'api'
     doc_data['signatories'][0]['delivery'] = 'api'
     doc_data['signatories'] += [api_signatory_json(first_name='Dave',
