@@ -28,6 +28,7 @@ var ButtonModel = Backbone.Model.extend({
       onClick : function() {return false;},
       icon : jQuery(""),
       width: undefined,
+      href: undefined,
       cssClass : "",
       style : "",
       oneClick : false,
@@ -40,6 +41,9 @@ var ButtonModel = Backbone.Model.extend({
   },
   size : function(){
        return this.get("size");
+  },
+  href : function(){
+       return this.get("href");
   },
   textcolor: function() {
        return this.get("textcolor");
@@ -119,12 +123,16 @@ var ButtonView = Backbone.View.extend({
         // and leave the rest as they are
         $(this.el).find('.label').remove();
 
+        $(this.el).removeAttr("href");
         $(this.el).attr("style",this.model.style());
         $(this.el).addClass(this.model.cssClass());
         $(this.el).addClass(this.model.type());
         $(this.el).toggleClass("inactive", this.model.oneClick() && this.model.isClicked());
 
         $(this.el).addClass("button");
+        if (this.model.href() !== undefined) {
+          $(this.el).attr("href", this.model.href());
+        }
         if (this.model.size() == "tiny")
             $(this.el).addClass("button-small");
         else if (this.model.size() == "big")
