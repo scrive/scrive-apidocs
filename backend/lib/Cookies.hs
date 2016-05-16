@@ -1,6 +1,7 @@
 module Cookies ( addCookie
                , addHttpOnlyCookie
                , lookCookieValue
+               , lookCookieValues
                , readCookiesValues
                ) where
 
