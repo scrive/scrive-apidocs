@@ -88,6 +88,7 @@ kontraMigrations = [
   , evidenceLogAddAdditionalText
   , addAllowRejectReasonToDocuments
   , changeRestOfScriveLogos
+  , changeScriveFavicon
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

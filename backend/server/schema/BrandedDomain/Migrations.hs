@@ -329,3 +329,15 @@ changeRestOfScriveLogos =
         sqlSet "logo" $ Binary $ B64.decodeLenient $ BS.fromString $ lightTextLogo
         sqlWhereEq "id" loginThemeId
   }
+
+changeScriveFavicon :: (MonadDB m, MonadThrow m) => Migration m
+changeScriveFavicon =
+  Migration {
+    mgrTable = tableBrandedDomains
+  , mgrFrom = 10
+  , mgrDo = do
+      let favicon = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAJcEhZcwAACxMAAAsTAQCanBgAAABCUExURVBQUFJSUktLS/r6+lBQUP///0VFRVBQUFBQUE5OTmVlZVpaWvDw8MLCwrKysubm5t3d3Y+Pj4ODg3d3d6WlpdLS0jBFWHAAAAAJdFJOU5n///////8ImNkf7DAAAAFcSURBVDjLhVNbloMgDCUR0kbeAvvf6gTUam3H5sN66DW5j6AeT31Tz4dS+raUgnsA/GggLQ4sAPeS368AQEKw1moigk+A/F1qi8652GoR6AUAaL05qs1HkxWANprJGJdackbe3PzqMQBAXk59AUa2S5P3pPkMwFk+90T9kGmgl32IGg2WcWQ3Piv8A1AJuZshVZalfI6YQhkmEGF/6HeSwUwdE1uoucxMcJHJfLZhShn54iTT0tx0YDxenAQgsnPJ1bfYZwnlk4quXeznQQ5hrtIiAh8AhhpCFnNhRI3ilJnEbDhGRGMS6q2pFU2SxiZV7Spl6mo1kpXAEs116VpeRvWwLKNQyD3ZbIVrEKabUdnsccch1lPtqVveZVJJJ6dcZfmkh36sHHEJ68oln63Q4zDFgvBaWtC0Lq1sJzF0b4TRZe31WHu9BSVOwRvgv4vz8+r9aPFUD3V//f8ANZsWxjENgZ8AAAAASUVORK5CYII="
+      runQuery_ . sqlUpdate "branded_domains" $ do
+        sqlSet "favicon" $ Binary $ B64.decodeLenient $ BS.fromString $ favicon
+        sqlWhere "main_domain"
+  }
