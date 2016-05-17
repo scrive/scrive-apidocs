@@ -107,7 +107,7 @@ var classNames = require("classnames");
       // This is a workaround for https://github.com/facebook/react/issues/1448
       // and can be removed after updating to react v15
       var hrefAttr = this.props.href;
-      if (hrefAttr === undefined || hrefAttr === "") {
+      if ((hrefAttr === undefined || hrefAttr === "") && this.isMounted()) {
         $(this.getDOMNode()).removeAttr("href");
       }
     },
