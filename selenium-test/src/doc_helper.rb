@@ -94,7 +94,7 @@ class DocHelper
       (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'signature-field-placement-setter-field-selector')]//select/option[" + part.to_s() + "]"}).click
     end
 
-    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-field-select-container')]//div[contains(@class,'select-button')]"}).click
+    (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'fieldTypeSetter-field-select-container')]//select"}).click
 
     (@h.wait_until { @driver.find_element :xpath => "//div[contains(@class,'typesetter-obligatory-option')]//select/option[text()='" + fieldname + "']" }).click
     @h.screenshot options[:screenshot_name3] if options[:screenshot_name3]
