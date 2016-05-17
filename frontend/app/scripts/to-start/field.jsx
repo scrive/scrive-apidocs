@@ -15,13 +15,12 @@ module.exports = React.createClass({
   },
   changeHandler: function(value) {
     var field = this.props.field;
-    var newvalue = value;
 
     if (field.isCheckbox()) {
-      newvalue = value ? "checked" : "";
+      field.setChecked(value);
+    } else {
+      field.setValue(value);
     }
-
-    field.setValue(newvalue);
   },
   labelClickHandler: function() { 
     var field = this.props.field;
@@ -44,7 +43,7 @@ module.exports = React.createClass({
     var empty = !field.value();
     var isCheckbox = field.isCheckbox();
     var isTextField = field.isText();
-    var isChecked = isCheckbox && field.value() == "checked";
+    var isChecked = isCheckbox && field.isChecked();
     var isPhoneField = field.isMobile();
     var style = {};
 
