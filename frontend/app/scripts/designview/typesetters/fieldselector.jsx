@@ -91,7 +91,7 @@ var Field = require("../../../js/fields.js").Field;
       _.each(standardFields, function (f) {
         options.push({
           name: f.text,
-          selected: f.type == field.type(),
+          selected: f.type === field.type() && f.order === field.order(),
           onSelect: function () {
             var newField = self.getOrCreateField(sig, f.type, f.order);
             model.changeField(newField);
