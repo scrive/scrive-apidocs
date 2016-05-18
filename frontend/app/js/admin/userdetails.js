@@ -148,10 +148,11 @@ var AdminUserDetailsModel = Backbone.Model.extend({
     }, {silent : true});
     this.trigger("reset");
   },
-  saveDetails : function() {
+  saveDetails : function(callback) {
     return new Submit({
         url : "/adminonly/useradmin/" + this.user().userid(),
         method : "POST",
+        ajaxsuccess : callback,
         userfstname : this.fstname(),
         usersndname : this.sndname(),
         userpersonalnumber : this.personnumber(),
@@ -365,10 +366,14 @@ var AdminUserDetailsView = Backbone.View.extend({
               , size: "tiny"
               , style: "margin-left:20px"
               , onClick : function() {
-                  model.saveDetails().sendAjax(function() {
-                      new FlashMessage({type: 'success', content : "Saved"});
+                  model.saveDetails(function (resp) {
+                    if (JSON.parse(resp).changed) {
+                      new FlashMessage({type: 'success', content: "Saved"});
                       model.refresh();
-                  });
+                    } else {
+                      new FlashMessage({type: 'error', content: "Failure. User already exists"});
+                    }
+                  }).sendAjax();
                 }
           });
 

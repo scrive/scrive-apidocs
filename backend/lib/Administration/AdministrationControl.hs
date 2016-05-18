@@ -260,7 +260,7 @@ jsonUsersList = onlySalesOrAdmin $ do
 
 
 {- | Handling user details change. It reads user info change -}
-handleUserChange :: Kontrakcja m => UserID -> m KontraLink
+handleUserChange :: Kontrakcja m => UserID -> m JSValue
 handleUserChange uid = onlySalesOrAdmin $ do
   ctx <- getContext
   museraccounttype <- getField "useraccounttype"
@@ -287,14 +287,27 @@ handleUserChange uid = onlySalesOrAdmin $ do
       return newuser
     _ -> return olduser
   infoChange <- getUserInfoChange
-  _ <- dbUpdate $ SetUserInfo uid $ infoChange $ userinfo user
-  _ <- dbUpdate
-           $ LogHistoryUserInfoChanged uid (ctxipnumber ctx) (ctxtime ctx)
-                                       (userinfo user) (infoChange $ userinfo user)
-                                       (userid <$> ctxmaybeuser ctx)
-  settingsChange <- getUserSettingsChange
-  _ <- dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
-  return $ LinkUserAdmin $ uid
+  let applyChanges = do
+        _ <- dbUpdate $ SetUserInfo uid $ infoChange $ userinfo user
+        _ <- dbUpdate
+              $ LogHistoryUserInfoChanged uid (ctxipnumber ctx) (ctxtime ctx)
+                    (userinfo user) (infoChange $ userinfo user)
+                    (userid <$> ctxmaybeuser ctx)
+        settingsChange <- getUserSettingsChange
+        _ <- dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
+        return ()
+  if (useremail (infoChange $ userinfo user) /= useremail (userinfo user))
+    then do
+      -- email address changed, check if new one is not used
+      mexistinguser <- dbQuery $ GetUserByEmail $ useremail $ infoChange $ userinfo user
+      case mexistinguser of
+        Just _ -> runJSONGenT $ value "changed" False
+        Nothing -> do
+          applyChanges
+          runJSONGenT $ value "changed" True
+    else do
+      applyChanges
+      runJSONGenT $ value "changed" True
 
 
 handleDeleteInvite :: Kontrakcja m => CompanyID -> UserID -> m ()
