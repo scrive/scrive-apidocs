@@ -136,7 +136,7 @@
 "_apiOauthReveal":"Paljasta",
 "_apiSettings":"Yhdentämisasetukset",
 "_april":"Huhtikuu",
-"_archiveCSV":"Lataa metadata (kaikki dokumentit), CSV",
+"_archiveCSV":"",
 "_archiveSendReminder":"Lähetä muistutus",
 "_archiveZIP":"Lataa valitut dokumentit, PDF",
 "_attachedDocument":"Liite $number$",
