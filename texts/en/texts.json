@@ -136,7 +136,7 @@
 "_apiOauthReveal":"Reveal",
 "_apiSettings":"Integration settings",
 "_april":"April",
-"_archiveCSV":"Download metadata (all docs), CSV",
+"_archiveCSV":"Download metadata (filtered docs), CSV",
 "_archiveSendReminder":"Send reminder",
 "_archiveZIP":"Download selected documents, PDF",
 "_attachedDocument":"Attachment $number$",
