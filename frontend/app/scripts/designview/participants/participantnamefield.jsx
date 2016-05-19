@@ -9,7 +9,7 @@ module.exports = React.createClass({
     var fstnameField = sig.fstnameField();
     var sndnameField = sig.sndnameField();
     var csvfield = fstnameField.isCsvField();
-    var csvname = localization.designview.fullName + "(" + localization.designview.fromCSV + ")";
+    var csvname = localization.designview.fullName + " (" + localization.designview.fromCSV + ")";
 
     return (
       <div className="design-view-action-participant-details-information-field-wrapper">
