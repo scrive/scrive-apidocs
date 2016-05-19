@@ -246,7 +246,7 @@ module.exports = React.createClass({
                           />);
                   return (<a onClick={function() {self.changeRole(d);}}>{self.roleText(d)}</a>);
                 } else {
-                  return (<span>{self.roleText(d)}</span>);
+                  return (<span className='unchangable-role'>{self.roleText(d)}</span>);
                 }
               }}
             />
