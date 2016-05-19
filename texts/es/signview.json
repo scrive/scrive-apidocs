@@ -15,7 +15,7 @@
 "_contractsignatorycancelmodalplaceholder":"Escriba su mensaje aquí",
 "_contractsignatorycancelmodaltext":"Si rechaza el documento, no puede firmarlo otra vez. Por favor, describa por qué quiere rechazar el documento. ",
 "_contractsignatorycancelmodaltextwithoutreason":"",
-"_contractsignatorycancelmodaltitle":"Rechazar el documento",
+"_contractsignatorycancelmodaltitle":"",
 "_contractsignatoryname":"Parte",
 "_contractsignbuttontext":"Firmar",
 "_contractsignbuttontextfromsignaturedrawing":"Terminar",
