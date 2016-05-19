@@ -11,11 +11,7 @@ var PlacementAnchor = require("../../../js/anchors.js").PlacementAnchor;
     },
 
     restrictIndex: function (value) {
-      if (!/^\d*$/.test(value)) {
-        return false;
-      }
-
-      return value === "" || parseInt(value, 10) > 0;
+      return /^-?\d*$/.test(value);
     },
 
     handleBlur: function () {

@@ -44,7 +44,7 @@ var PlacementAnchor = exports.PlacementAnchor = Backbone.Model.extend({
   },
 
   isValid: function () {
-    return this.text() !== "" && this.index() > 0;
+    return this.text() !== "";
   },
 
   draftData: function () {
