@@ -2,7 +2,7 @@
 
 # ASSUMES file _build/kontrakcja.tar.gz exists
 
-ssh dev@dev.scrive.com bash -xe -s <<EOF
+ssh dev@dev-c-1.scrive.lan bash -xe -s <<EOF
 
 rm -f kontrakcja/kontrakcja.tar.gz
 
@@ -10,9 +10,9 @@ rm -rf dist evidence-package frontend scrivepdftools GuardTime templates files t
 
 EOF
 
-scp _build/kontrakcja.tar.gz dev@dev.scrive.com:~/kontrakcja/
+scp _build/kontrakcja.tar.gz dev@dev-c-1.scrive.lan:~/kontrakcja/
 
-ssh dev@dev.scrive.com bash -xe -s <<EOF
+ssh dev@dev-c-1.scrive.lan bash -xe -s <<EOF
 
 cd kontrakcja
 
