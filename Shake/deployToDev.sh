@@ -28,6 +28,6 @@ chcon -Rt httpd_sys_content_t /srv/dev.scrive.com
 
 supervisorctl start dev-cron dev-messenger dev-mailer dev
 
-sudo /home/dev/deploy-rules.sh
+sudo /home/dev/kontrakcja/Shake/deployDevRules.sh
 
 EOF
