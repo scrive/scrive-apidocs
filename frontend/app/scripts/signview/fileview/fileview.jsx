@@ -53,6 +53,10 @@ var PageViewer = require("../pageviewer/pageviewer");
       }
     },
 
+    zoomToPoint: function (zoomPoint, zoom) {
+      this.refs.viewer.zoomToPoint(zoomPoint, zoom);
+    },
+
     ready: function () {
       var model = this.props.model;
       var ready = model.ready() && model.pages().length > 0 &&

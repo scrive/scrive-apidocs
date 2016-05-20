@@ -94,7 +94,7 @@ module.exports = React.createClass({
     } else {
       return {
         position: "fixed",
-        right: 0,
+        right: parentWidth < viewportWidth ? (viewportWidth - parentWidth) / 2 : 0,
         bottom: (viewportHeight / 2) - halfHeight,
         top: null
       }
