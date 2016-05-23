@@ -337,5 +337,6 @@ distributionRules = do
                     , "files"
                     , "texts"
                     , "urls.txt"
+                    , "build-scripts/deployDevNginxRules.sh"
                     ]
     command_ [Shell] "tar" $ ["-czf","_build/kontrakcja.tar.gz"] ++ distFiles
