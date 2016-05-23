@@ -143,7 +143,12 @@ module.exports = React.createClass({
                 new FlashMessage({type: 'error', content: localization.archive.documents.sendreminder.emptyMessage});
               } else {
                 var allSelectedArePending = _.all(selected, function(doc) {
-                      return doc.field("status") == "pending";
+                  if (doc.field("status") !== "pending") {
+                    return false;
+                  }
+                  return _.all(doc.field("parties"), function (sig) {
+                    return sig.email_delivery_status !== "not_delivered";
+                  });
                 });
                 if (!allSelectedArePending) {
                   new FlashMessage({type: 'error', content: localization.archive.documents.sendreminder.notAvailableMessage});
