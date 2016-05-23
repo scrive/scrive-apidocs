@@ -15,7 +15,7 @@
 "_contractsignatorycancelmodalplaceholder":"Saisissez votre message ici",
 "_contractsignatorycancelmodaltext":"Si vous rejeter le document, il ne pourra plus être signé. Veuillez donner les raisons pour lesquelles vous souhaitez rejeter le document.",
 "_contractsignatorycancelmodaltextwithoutreason":"",
-"_contractsignatorycancelmodaltitle":"Refuser le document",
+"_contractsignatorycancelmodaltitle":"",
 "_contractsignatoryname":"Partie",
 "_contractsignbuttontext":"Signer",
 "_contractsignbuttontextfromsignaturedrawing":"Terminer",

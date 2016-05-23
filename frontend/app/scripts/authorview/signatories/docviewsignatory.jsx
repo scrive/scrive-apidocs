@@ -78,7 +78,6 @@ var trackTimeout = require("../../common/track_timeout");
 
       return (document.currentViewerIsAuthor() || document.currentViewerIsAuthorsCompanyAdmin())
         && !signatory.author()
-        && signatory.signs()
         && signatory.reachedBySignorder()
         && (canGetInvitation || canGetConfirmation)
         && !signatory.undeliveredInvitation();
