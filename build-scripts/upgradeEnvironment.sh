@@ -2,8 +2,8 @@
 #
 # Easiest way to get this script on the server is:
 #
-# git show master:build-scripts/upgradeEnvironment.sh | ssh staging@prod.scrive.lan tee upgradeEnvironment.sh
-# ssh staging@prod.scrive.lan chmod a+x upgradeEnvironment.sh
+# git show master:build-scripts/upgradeEnvironment.sh | ssh api-testbed@dev-c-1.scrive.lan tee upgradeEnvironment.sh
+# ssh api-testbed@dev-c-1.scrive.lan chmod a+x upgradeEnvironment.sh
 #
 
 
@@ -13,7 +13,7 @@ if [ "$#" != "2" ] && [ "$#" != 3 ]; then
     echo "   upgradeEnvironment.sh <deployment archive> <environment name>"
     echo "   upgradeEnvironment.sh <deployment archive> <environment name> skip_pg_dump"
     echo
-    echo "Currently this script is only supported for prod, staging and api-testbed"
+    echo "Currently this script is only supported for api-testbed"
     exit 3
 fi
 
@@ -23,8 +23,8 @@ if [ ! -d kontrakcja ] ; then
 fi
 
 # Check we have passed a supported environment name
-if [ "$2" != "prod" ] && [ "$2" != "staging" ] && [ "$2" != "api-testbed" ]; then
-    echo "This script is only supported for prod, staging and api-testbed environments."
+if [ "$2" != "api-testbed" ]; then
+    echo "This script is only supported for the api-testbed environments."
     exit 3
 fi
 
