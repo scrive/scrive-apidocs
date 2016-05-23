@@ -95,7 +95,7 @@ module.exports = React.createClass({
           />
           <List.Column
             name="ID"
-            width="100px"
+            width="110px"
             rendering={function(d) {
               return (<a href={self.companyLink(d)}>{d.field("id")}</a>);
             }}
