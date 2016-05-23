@@ -62,7 +62,10 @@ var trackTimeout = require("../../common/track_timeout");
       var signatory = this.props.signatory;
       var document = signatory.document();
 
-      if (document.canceled() || document.rejected() || (document.pending() && signatory.hasSigned())) {
+      if (document.timedout()
+          || document.canceled()
+          || document.rejected()
+          || (document.pending() && signatory.hasSigned())) {
         return false;
       }
       var canGetInvitation = !signatory.hasSigned() && (
