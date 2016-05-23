@@ -74,7 +74,7 @@ class ScriveAPI(object):
                                   data='')
 
 
-def api_signatory_json(first_name, last_name):
+def api_signatory_json(first_name, last_name, ssn):
     return {'delivery': 'api',
             'signs': True,
             'fields': [{'type': 'standard',
@@ -101,6 +101,13 @@ def api_signatory_json(first_name, last_name):
                        {'type': 'standard',
                         'name': 'sigco',
                         'value': '',
+                        'closed': False,
+                        'obligatory': False,
+                        'shouldbefilledbysender': False,
+                        'placements': []},
+                       {'type': 'standard',
+                        'name': 'sigpersnr',
+                        'value': ssn,
                         'closed': False,
                         'obligatory': False,
                         'shouldbefilledbysender': False,
@@ -169,13 +176,17 @@ def wait_and_js_click(driver, css):
 
 if __name__ == '__main__':
     api = ScriveAPI()
+
+    # Creating author screenshots and screenshots for standard authorization
     doc_data = api.createfromfile('backend/test/pdfs/simple.pdf')
     doc_data['delivery'] = 'api'
     doc_data['signatories'][0]['delivery'] = 'api'
     doc_data['signatories'] += [api_signatory_json(first_name='Dave',
-                                                   last_name='Desktop'),
+                                                   last_name='Desktop',
+                                                   ssn=''),
                                 api_signatory_json(first_name='Mike',
-                                                   last_name='Mobile')]
+                                                   last_name='Mobile',
+                                                   ssn='')]
     doc_data = api.update(doc_data)
 
     with quitting(webdriver.Firefox()) as driver:
@@ -196,12 +207,11 @@ if __name__ == '__main__':
     with quitting(webdriver.Firefox()) as driver:
         driver.get(URL + desktop_siglink)
         time.sleep(2)  # wait for pages to load
-        save_screenshot(driver, '/tmp/desktop1.png')
-        wait_for_element(driver, '.button.action').click()
-        time.sleep(1)  # wtf?
-        wait_for_element(driver, '.above-overlay .button.action').click()
+        wait_for_element(driver, '.section.sign .button.action').click()
+        time.sleep(1)  # wait for confirm signing modal to be shown
+        wait_for_element(driver, '.section.sign.above-overlay .button.action').click()
         time.sleep(1)  # wait for signinginprogress modal to be shown
-        save_screenshot(driver, '/tmp/desktop2.png')
+        save_screenshot(driver, '/tmp/desktop.png')
         wait_for_element_to_disappear(driver, '.above-overlay')
 
         # user smaller size, so small screen mode is enabled
@@ -209,22 +219,72 @@ if __name__ == '__main__':
         driver.get(URL + mobile_siglink)
         time.sleep(2)  # wait for pages to load
         # scroll down and up to fix arrow position
-        send_keys(['END'])
-        time.sleep(1)
-        send_keys(['HOME'])
-        time.sleep(1)
-        save_screenshot(driver, '/tmp/mobile1.png')
-        wait_for_element(driver, '.button.action').click()
-        wait_and_js_click(driver, '.above-overlay .button.action')
+        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)');
+        wait_for_element(driver, '.section.sign .button.action').click()
+        time.sleep(1)  # wait for confirm signing modal to be shown
+        wait_for_element(driver, '.section.sign.above-overlay .button.action').click()
         time.sleep(1)  # wait for signinginprogress modal to be shown
-        save_screenshot(driver, '/tmp/mobile2.png')
+        save_screenshot(driver, '/tmp/mobile.png')
+
+    # Creating screenshots for bankid signing - desktop and mobile version
+    doc_data = api.createfromfile('backend/test/pdfs/simple.pdf')
+    doc_data['delivery'] = 'api'
+    doc_data['authentication'] = 'mixed' # only non-author signatories will use SE BankID
+    doc_data['signatories'][0]['delivery'] = 'api'
+    doc_data['signatories'] += [api_signatory_json(first_name='Dave',
+                                                   last_name='Desktop',
+                                                   ssn='8303180338'), # Johan Nilo SSN, need a real one for staging
+                                api_signatory_json(first_name='Mike',
+                                                   last_name='Mobile',
+                                                   ssn='8303180338')] # Johan Nilo SSN, need a real one for staging
+    doc_data['signatories'][1]['authentication'] = 'eleg'
+    doc_data['signatories'][2]['authentication'] = 'eleg'
+
+    doc_data = api.update(doc_data)
+
+    with quitting(webdriver.Firefox()) as driver:
+        driver.get(URL + '/d/' + doc_data['id'])
+        wait_for_element(driver, 'input[name=email]').send_keys('bartek+reference-screenshot@scrive.com')
+        wait_for_element(driver, 'input[name=password]').send_keys('dupadupa12')
+        wait_for_element(driver, '.button.main').click()
+        wait_for_element(driver, '.sendButton').click()
+        time.sleep(1)  # wait for signinginprogress modal to be shown
+
+    doc_data = api.ready(doc_data)
+
+    author_siglink = doc_data['signatories'][0]['signlink']
+    desktop_siglink = doc_data['signatories'][1]['signlink']
+    mobile_siglink = doc_data['signatories'][2]['signlink']
+
+    with quitting(webdriver.Firefox()) as driver:
+        driver.get(URL + desktop_siglink)
+        time.sleep(2)  # wait for pages to load
+        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)');
+        time.sleep(1)  # for arrow to adjust
+        save_screenshot(driver, '/tmp/desktop_bankid.png')
+
+        # user smaller size, so small screen mode is enabled
+        driver.set_window_size(619, 706)
+        driver.get(URL + mobile_siglink)
+        time.sleep(2)  # wait for pages to load
+        # scroll down and up to fix arrow position
+        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)');
+        time.sleep(1)  # for arrow to adjust
+        save_screenshot(driver, '/tmp/mobile_bankid.png')
+
+
+
 
     with open('files/reference_screenshots/author.json', 'wb') as f:
         json.dump(screenshot_json('/tmp/author.png'), f)
     with open('files/reference_screenshots/standard.json', 'wb') as f:
-        json.dump(screenshot_json('/tmp/desktop2.png'), f)
+        json.dump(screenshot_json('/tmp/desktop.png'), f)
     with open('files/reference_screenshots/mobile.json', 'wb') as f:
-        json.dump(screenshot_json('/tmp/mobile2.png'), f)
+        json.dump(screenshot_json('/tmp/mobile.png'), f)
+    with open('files/reference_screenshots/standard_bankid.json', 'wb') as f:
+        json.dump(screenshot_json('/tmp/desktop_bankid.png'), f)
+    with open('files/reference_screenshots/mobile_bankid.json', 'wb') as f:
+        json.dump(screenshot_json('/tmp/mobile_bankid.png'), f)
 
 # STEPS:
 # run this script

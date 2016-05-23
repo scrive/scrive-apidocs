@@ -54,7 +54,7 @@ referencePath :: String -> FilePath
 referencePath name = "files/reference_screenshots/" ++ name ++ ".json"
 
 validReferenceName :: String -> Bool
-validReferenceName n = n `elem` ["author", "mobile", "standard"]
+validReferenceName n = n `elem` ["author", "mobile", "standard", "mobile_bankid", "standard_bankid"]
 
 resolveReferenceScreenshotNames :: (MonadBase IO m, MonadBaseControl IO m, MonadIO m) => SignatoryScreenshots -> m (Maybe SignatoryScreenshots)
 resolveReferenceScreenshotNames s =
