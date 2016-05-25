@@ -250,6 +250,7 @@ parenthesize s = "(" <> s <> ")"
 -- Conversion to SQL adds DESC marker to descending and no marker
 -- to ascending order.
 data AscDesc a = Asc a | Desc a
+  deriving (Eq, Show)
 
 data Multiplicity a = Single a | Many [a]
   deriving (Eq, Ord, Show, Typeable)

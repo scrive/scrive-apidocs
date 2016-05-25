@@ -188,13 +188,14 @@ getFileContents s3action File{..} = localData fileData $ do
 
     getContent (FileStorageMemory content) = return . Just $ content
     getContent (FileStorageAWS bucket url aes) = do
-      (result, timeDiff) <- liftBase $ do
-        startTime <- getCurrentTime
-        result <- AWS.runAction $ s3action {
+      (result, timeDiff) <- do
+        startTime <- liftBase getCurrentTime
+        logInfo_ "Attempting to fetch file from AWS"
+        result <- liftBase . AWS.runAction $ s3action {
             AWS.s3object = url
           , AWS.s3bucket = bucket
         }
-        finishTime <- getCurrentTime
+        finishTime <- liftBase getCurrentTime
         return (result, realToFrac $ diffUTCTime finishTime startTime :: Double)
       case result of
         Right rsp -> do
