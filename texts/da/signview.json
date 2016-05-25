@@ -15,7 +15,7 @@
 "_contractsignatorycancelmodalplaceholder":"Indtast din besked her",
 "_contractsignatorycancelmodaltext":"Hvis du afviser dokumentet, er det ikke længere muligt at signere det. Forklar venligst, hvorfor du ønsker at afvise dokumentet. ",
 "_contractsignatorycancelmodaltextwithoutreason":"Hvis du afviser dette dokument, kan det ikke længere signeres.",
-"_contractsignatorycancelmodaltitle":"",
+"_contractsignatorycancelmodaltitle":"Bekræft afvisning",
 "_contractsignatoryname":"Part",
 "_contractsignbuttontext":"Signer",
 "_contractsignbuttontextfromsignaturedrawing":"Afslut",
