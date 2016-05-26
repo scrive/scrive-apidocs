@@ -31,4 +31,4 @@ infix 1 %>>>
   liftIO $ writeFile t out
 
 langEnv :: [CmdOption]
-langEnv = [AddEnv "LANG" "en_US.UTF-8", AddEnv "LC_ALL" "C"]
+langEnv = [AddEnv "LANG" "en_US.UTF-8", AddEnv "LC_ALL" "en_US.UTF-8"]
