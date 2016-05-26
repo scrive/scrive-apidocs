@@ -186,7 +186,7 @@ serverTestRules :: Rules ()
 serverTestRules = do
   let hsImportOrderAction checkOnly = do
         let flags = if checkOnly then ("--check":sourceDirsFromCabal) else sourceDirsFromCabal
-        command [Shell, AddEnv "LANG" "en_GB.UTF-8"] "runhaskell scripts/sort_imports.hs" flags
+        command [Shell, AddEnv "LANG" "en_GB.UTF-8", AddEnv "LC_CTYPE" "en_US.UTF-8"] "runhaskell scripts/sort_imports.hs" flags
 
   "_build/hs-import-order" %>>> do
     needServerHaskellFiles
