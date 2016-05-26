@@ -261,7 +261,15 @@ module.exports = React.createClass({
     }
 
     if ((type === ARROW.RIGHT || type === ARROW.LEFT) && task.isFieldTask()) {
-      transformWithPrefixes(arrowStyle, "scale(" + scale + ")");
+      transformWithPrefixes(arrowStyle, "scale(" + Math.max(1, scale) + ")");
+    }
+
+    if (type === ARROW.RIGHT && task.isFieldTask()) {
+      arrowStyle.marginLeft = Math.min(1, scale) * arrowVars.actionArrowRightMargin;
+    }
+
+    if (type === ARROW.LEFT && task.isFieldTask()) {
+      arrowStyle.marginLeft = Math.max(1, scale) * arrowVars.actionArrowLeftMargin;
     }
 
     return (

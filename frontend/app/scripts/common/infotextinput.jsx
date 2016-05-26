@@ -106,7 +106,11 @@ var _ = require("underscore");
         this.props.onAutoGrowth();
       }
 
-      if ((prevState.value !== this.state.value || prevProps.infotext !== this.props.infotext) && this.props.autoGrowth) {
+      var textWidthValuesChanged = prevState.value !== this.state.value || prevProps.infotext !== this.props.infotext;
+      var textWidthStylesChanged = prevProps.className !== this.props.className ||
+        !_.isEqual(prevProps.inputstyle, this.props.inputstyle) ||  !_.isEqual(prevProps.style, this.props.style);
+
+      if ((textWidthValuesChanged || textWidthStylesChanged) && this.props.autoGrowth) {
         this.computeTextWidth();
       }
     },
@@ -168,10 +172,10 @@ var _ = require("underscore");
         this.focus();
       }
     },
-    onFocus : function() {
+    onFocus : function(e) {
       this.setState({focus : true});
       if (this.props.onFocus != undefined)
-        this.props.onFocus();
+        this.props.onFocus(e);
     },
     onBlur : function(e) {
       this.setState({focus : false});

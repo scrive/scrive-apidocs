@@ -6,17 +6,47 @@ var Task = require("../navigation/task");
 var $ = require("jquery");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 var classNames = require("classnames");
+var isElementInViewport = require("../../common/iselementinviewport");
+var isTouchDevice = require("../../common/is_touch_device");
+
+var ORIGINAL_PAGE_SIZE = 950;
 
   module.exports = React.createClass({
     displayName: "TextPlacement",
-
-    _shouldBlur: true,
+    _lastWidth: 0,
 
     mixins: [PlacementMixin, TaskMixin],
 
+    contextTypes: {
+      zoomToPoint: React.PropTypes.func
+    },
+
     getInitialState: function () {
-      var field = this.props.model.field();
       return {editing: false, active: false};
+    },
+
+    componentWillUpdate: function (prevProps, prevState) {
+      this._lastWidth = $(this.getDOMNode()).width(); // Width is mangled just before zooming.
+    },
+
+    componentDidUpdate: function (prevProps, prevState) {
+      if (!prevState.editing && this.state.editing) {
+        this.focusInput();
+      }
+    },
+
+    shouldZoomTo: function () {
+      return this.props.pageWidth < ORIGINAL_PAGE_SIZE || isTouchDevice();
+    },
+
+    zoomTo: function () {
+      var $node = $(this.getDOMNode());
+      var offset = $node.offset();
+      var middleX = offset.left + (this._lastWidth / 2);
+      var middleY = offset.top - $(window).scrollTop() + ($node.height() / 2);
+      var zoomPoint = {x: middleX, y: middleY};
+      var zoom = ORIGINAL_PAGE_SIZE / $(window).width();
+      this.context.zoomToPoint(zoomPoint, zoom);
     },
 
     createTasks: function () {
@@ -39,19 +69,18 @@ var classNames = require("classnames");
           self.startInlineEditing();
         },
         onActivate: function () {
+          // Wait for other textplacements to blur.
           setTimeout(function () {
-            self.setState({active: true});
-          }, 1);
-          // It the window does not have focus (for some old browsers we can't really tell), we should not start
-          // inline editing.
-          var nothingHasFocus = $(":focus").size() == 0;
-          var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
-          if (nothingHasFocus && !field.readyForSign() && windowIsFocused) {
-            setTimeout(function () {
+            self.setState({active: false});
+            // It the window does not have focus (for some old browsers we can't really tell), we should not start
+            // inline editing.
+            var nothingHasFocus = $(":focus").length === 0;
+            var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
+            if (nothingHasFocus && !field.readyForSign() && windowIsFocused && !isTouchDevice()) {
               self.startInlineEditing();
-            }, 1);
-            mixpanel.track("Begin editing field", {Label: field.name()});
-          }
+              mixpanel.track("Begin editing field", {Label: field.name()});
+            }
+          }, 50);
         },
         onDeactivate: function () {
           setTimeout(function () {
@@ -63,21 +92,17 @@ var classNames = require("classnames");
     },
 
     focusInput: function () {
-      var self = this;
-      if (self.refs.input) {
-        var $window = $(window);
-        var $input = $(self.refs.input.getDOMNode());
-        if ($window.scrollTop() + $window.height() > $input.offset().top && $window.scrollTop() < $input.offset().top) {
-          self.refs.input.focus();
+      if (this.refs.input && isElementInViewport.part(this.refs.input.getDOMNode())) {
+        this.refs.input.focus();
+        if (this.shouldZoomTo()) {
+          this.zoomTo();
         }
       }
     },
 
     startInlineEditing: function () {
-      if (this.canSign() && !this.state.editing) {
-        this.setState({editing: true}, () => {
-          this.focusInput();
-        });
+      if (this.canSign() && !this.state.editing && isElementInViewport.part(this.getDOMNode())) {
+        this.setState({editing: true});
       }
     },
 
@@ -99,22 +124,12 @@ var classNames = require("classnames");
     },
 
     handleBlur: function (e) {
-      if (this._shouldBlur) {
-        this.accept();
-      }
+      this.accept();
     },
 
     handleChange: function (value) {
       var field = this.props.model.field();
       field.setValue(value);
-    },
-
-    handleMouseDown: function (e) {
-      this._shouldBlur = false;
-    },
-
-    handleMouseUp: function (e) {
-      this._shouldBlur = true;
     },
 
     handleClick: function (e) {
@@ -178,7 +193,8 @@ var classNames = require("classnames");
       var boxStyle = {
         padding: spacingString,
         fontSize: divStyle.fontSize + "px",
-        lineHeight: (divStyle.fontSize + extraLineHeight) + "px"
+        lineHeight: (divStyle.fontSize + extraLineHeight) + "px",
+        display: !editing ? "block" : "none"
       };
 
       var textStyle = {
@@ -186,7 +202,8 @@ var classNames = require("classnames");
         lineHeight: "1",
         height: (divStyle.fontSize + extraLineHeight) + "px",
         borderWidth: "0px",
-        padding: spacingString
+        padding: spacingString,
+        display: editing ? "block" : "none"
       };
 
       var paddingRight = FieldPlacementGlobal.textPlacementHorSpace;
@@ -208,38 +225,31 @@ var classNames = require("classnames");
 
       return (
         <div
-          onMouseDown={this.handleMouseDown}
-          onMouseUp={this.handleMouseUp}
-          onTouchStart={this.handleClick}
           onClick={this.handleClick}
           className={divClass}
           style={divStyle}
         >
-          {/* if */ !editing &&
-            <div className="placedfield-placement-wrapper">
-              <div
-                className={boxClass}
-                style={boxStyle}
-              >
-                {field.nicetext()}
-              </div>
+          <div className="placedfield-placement-wrapper">
+            <div
+              className={boxClass}
+              style={boxStyle}
+            >
+              {field.nicetext()}
             </div>
-          }
-          {/* else */ editing &&
-            <InfoTextInput
-              ref="input"
-              infotext={field.nicename()}
-              value={field.value()}
-              onChange={this.handleChange}
-              style={textStyle}
-              inputStyle={inputStyle}
-              className="text-inline-editing"
-              autoGrowth={true}
-              onEnter={self.accept}
-              onTab={(e) => { e.preventDefault(); self.accept(); }}
-              onBlur={self.handleBlur}
-            />
-          }
+          </div>
+          <InfoTextInput
+            ref="input"
+            infotext={field.nicename()}
+            value={field.value()}
+            onChange={this.handleChange}
+            style={textStyle}
+            inputStyle={inputStyle}
+            className="text-inline-editing"
+            autoGrowth={true}
+            onEnter={self.accept}
+            onTab={(e) => { e.preventDefault(); self.accept(); }}
+            onBlur={self.handleBlur}
+          />
         </div>
       );
     }
