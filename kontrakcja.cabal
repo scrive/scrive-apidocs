@@ -242,6 +242,9 @@ Library
                  , Doc.SignatoryIdentification
                  , Doc.SignatoryLinkID
                  , Doc.SignatoryScreenshots
+                 , Doc.Signing.Consumer
+                 , Doc.Signing.Model
+                 , Doc.Signing.Tables
                  , Doc.Tables
                  , Doc.Texts
                  , Doc.Tokens.Model

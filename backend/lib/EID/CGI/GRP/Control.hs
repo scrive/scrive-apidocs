@@ -1,6 +1,11 @@
-module EID.CGI.GRP.Control (grpRoutes) where
+module EID.CGI.GRP.Control (
+    grpRoutes
+  , checkCGISignStatus
+  , CGISignStatus(..)
+  ) where
 
 import Control.Monad.Catch
+import Control.Monad.Trans.Control
 import Data.Unjson
 import Happstack.Server hiding (dir)
 import Happstack.StaticRouting
@@ -16,10 +21,12 @@ import qualified Text.StringTemplates.Fields as F
 import Chargeable.Model
 import Company.Model
 import DB hiding (InternalError)
+import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
 import Doc.DocumentMonad
+import Doc.Model.Query
 import Doc.SignatoryLinkID
 import EID.Authentication.Model
 import EID.CGI.GRP.Config
@@ -48,8 +55,8 @@ grpRoutes :: Route (Kontra Response)
 grpRoutes = dir "cgi" . dir "grp" $ choice [
     dir "auth"    . hPost . toK2 $ handleAuthRequest
   , dir "sign"    . hPost . toK2 $ handleSignRequest
-  , dir "collect" . hGet  . toK2 $ handleCollectRequest
-  , dir "collectWithRedirect" . hGet  . toK2 $ handleCollectAndRedirectRequest
+  , dir "checkcgiauthstatus" . hGet  . toK2 $ handleCheckCGIAuthStatus
+  , dir "checkcgiauthstatuswithredirect" . hGet  . toK2 $ handleCheckCGIAuthStatusWithRedirect
   ]
 
 ----------------------------------------
@@ -127,45 +134,107 @@ handleSignRequest did slid = do
       dbUpdate $ MergeCgiGrpTransaction $ CgiGrpSignTransaction slid (T.pack tbs) srsTransactionID srsOrderRef (sesID sess)
       return $ unjsonToJSON unjsonDef (srsAutoStartToken,sessionCookieInfoFromSession sess)
 
-handleCollectRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
-handleCollectRequest did slid = do
-  res <- collectRequest  did slid
+handleCheckCGIAuthStatus :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
+handleCheckCGIAuthStatus did slid = do
+  res <- checkCGIAuthStatus did slid
   case res of
     Left e -> return $ unjsonToJSON unjsonDef e
     Right r -> return $ unjsonToJSON unjsonDef r
 
-handleCollectAndRedirectRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
-handleCollectAndRedirectRequest did slid = do
+handleCheckCGIAuthStatusWithRedirect :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
+handleCheckCGIAuthStatusWithRedirect did slid = do
   (msession :: Maybe SessionCookieInfo) <- readField "session_id"
   case msession of
     Nothing -> internalError -- This should never happend
     Just sci -> unsafeSessionTakeover (cookieSessionID sci) (cookieSessionToken sci)
-  _ <- collectRequest did slid -- There is no reason to process results of collect. We will redirect to link from param anyway
+  _ <- checkCGIAuthStatus did slid -- There is no reason to process results of collect. We will redirect to link from param anyway
   murl <- getField "url"
   case murl of
     Nothing -> internalError -- This should never happend
     Just l -> do
       return $ LinkExternal l
 
-collectRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either GrpFault ProgressStatus)
-collectRequest did slid = do
+
+data CGISignStatus = CGISignStatusSuccess | CGISignStatusInProgress ProgressStatus | CGISignStatusFailed GrpFault | CGISignStatusAlreadySigned
+
+checkCGISignStatus :: (MonadDB m, MonadThrow m, MonadMask m, MonadLog m, MonadBaseControl IO m) => CgiGrpConfig -> DocumentID -> SignatoryLinkID -> m CGISignStatus
+checkCGISignStatus CgiGrpConfig{..}  did slid = do
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  if (not (isPending doc) || hasSigned ($(fromJust) (getSigLinkFor slid doc)))
+    then return  CGISignStatusAlreadySigned
+    else do
+      logInfo_ "Fetching signature"
+      esignature <- dbQuery $ GetESignature slid
+      if (isJust esignature)
+        then return CGISignStatusSuccess
+        else do
+          mcompany_display_name <- getCompanyDisplayName doc
+          mcompany_service_id   <- getCompanyServiceID doc
+          mcgiTransaction <- dbQuery (GetCgiGrpTransaction CgiGrpSign slid)
+          logInfo_ "Getting transaction"
+
+          case mcgiTransaction of
+            Nothing -> return $ CGISignStatusFailed ExpiredTransaction
+            Just cgiTransaction -> do
+              logInfo_ "Transaction fetch"
+              certErrorHandler <- mkCertErrorHandler
+              debugFunction <- mkDebugFunction
+              let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway id certErrorHandler debugFunction
+                  req = CollectRequest {
+                    crqPolicy = fromMaybe cgServiceID mcompany_service_id
+                  , crqTransactionID = cgiTransactionID cgiTransaction
+                  , crqOrderRef = cgiOrderRef cgiTransaction
+                  , crqDisplayName = fromMaybe cgDisplayName mcompany_display_name
+                  }
+                  parser = Right <$> xpCollectResponse <|> Left <$> xpGrpFault
+
+              soapCall transport "" () req parser >>= \case
+                Left fault -> do
+                  logInfo "SOAP fault returned" $ object [
+                      "fault" .= show fault
+                    ]
+                  dbUpdate $ DeleteCgiGrpTransaction CgiGrpSign slid
+                  return $ CGISignStatusFailed fault
+                Right cr@CollectResponse{..} -> do
+                  logInfo "SOAP response returned" $ object [
+                      "response" .= show cr
+                    ]
+                  case crsProgressStatus of
+                    Complete -> do
+                      dbUpdate $ DeleteCgiGrpTransaction CgiGrpSign slid
+                      case cgiTransaction of
+                        (CgiGrpSignTransaction _ tbs _ _ _)   -> do
+                          -- all the required attributes are supposed to always
+                          -- be there, so bail out if this is not the case.
+                          dbUpdate $ MergeCGISEBankIDSignature slid CGISEBankIDSignature {
+                              cgisebidsSignatoryName = just_lookup "cert.subject.cn" crsAttributes
+                            , cgisebidsSignatoryPersonalNumber = just_lookup "cert.subject.serialnumber" crsAttributes
+                            , cgisebidsSignedText = tbs
+                            , cgisebidsSignature = mk_binary $ fromMaybe (missing "signature") crsSignature
+                            , cgisebidsOcspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
+                          }
+                          dbUpdate $ ChargeCompanyForSEBankIDSignature did
+                          return CGISignStatusSuccess
+                        (CgiGrpAuthTransaction _ _ _ _) -> $unexpectedErrorM "Fetched CgiGrpAuthTransaction while expecting CgiGrpSignTransaction"
+                    _ -> return $  CGISignStatusInProgress crsProgressStatus
+  where
+    missing name = $unexpectedError $ "missing" <+> T.unpack name
+    just_lookup name = fromMaybe (missing name) . lookup name
+
+    invalid_b64 txt = $unexpectedError $ "invalid base64:" <+> T.unpack txt
+    mk_binary txt = either (invalid_b64 txt) Binary . B64.decode . T.encodeUtf8 $ txt
+
+checkCGIAuthStatus :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either GrpFault ProgressStatus)
+checkCGIAuthStatus did slid = do
   CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
   (doc,sl) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
   mcompany_service_id   <- getCompanyServiceID doc
-  ttype <- getField "type" >>= \case
-    Just "auth" -> return CgiGrpAuth
-    Just "sign" -> return CgiGrpSign
-    _ -> do
-      logInfo_ "Collect request without type"
-      respond404
-  mcgiTransaction <- dbQuery (GetCgiGrpTransaction ttype slid)
+  mcgiTransaction <- dbQuery (GetCgiGrpTransaction CgiGrpAuth slid)
   case mcgiTransaction of
     Nothing -> do
       sesid <- ctxsessionid <$> getContext
-      success <- case ttype of
-        CgiGrpAuth -> isJust <$> (dbQuery $ GetEAuthentication sesid slid)
-        CgiGrpSign -> isJust <$> (dbQuery $ GetESignature slid)
+      success <- isJust <$> (dbQuery $ GetEAuthentication sesid slid)
       if (success)
         then return $ Right Complete
         else return $ Left ExpiredTransaction
@@ -186,14 +255,15 @@ collectRequest did slid = do
           logInfo "SOAP fault returned" $ object [
               "fault" .= show fault
             ]
-          dbUpdate $ DeleteCgiGrpTransaction ttype slid
+          dbUpdate $ DeleteCgiGrpTransaction CgiGrpAuth slid
           return $ Left fault
         Right cr@CollectResponse{..} -> do
           logInfo "SOAP response returned" $ object [
               "response" .= show cr
             ]
-          when (crsProgressStatus == Complete) $ do
-            dbUpdate $ DeleteCgiGrpTransaction ttype slid
+          if (crsProgressStatus == Complete)
+          then do
+            dbUpdate $ DeleteCgiGrpTransaction CgiGrpAuth slid
             case cgiTransaction of
               (CgiGrpAuthTransaction _ _ _ session_id)   -> do
                 -- all the required attributes are supposed to always
@@ -219,20 +289,10 @@ collectRequest did slid = do
                 withDocument doc $
                   void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
                 dbUpdate $ ChargeCompanyForSEBankIDAuthentication did
+                return $ Right Complete
+              (CgiGrpSignTransaction _ _ _ _ _) -> $unexpectedErrorM "Fetched CgiGrpSignTransaction while expecting CgiGrpAuthTransaction"
+          else return $ Right crsProgressStatus
 
-              (CgiGrpSignTransaction _ tbs _ _ _)   -> do
-                -- all the required attributes are supposed to always
-                -- be there, so bail out if this is not the case.
-                dbUpdate $ MergeCGISEBankIDSignature slid CGISEBankIDSignature {
-                    cgisebidsSignatoryName = just_lookup "cert.subject.cn" crsAttributes
-                  , cgisebidsSignatoryPersonalNumber = just_lookup "cert.subject.serialnumber" crsAttributes
-                  , cgisebidsSignedText = tbs
-                  , cgisebidsSignature = mk_binary $ fromMaybe (missing "signature") crsSignature
-                  , cgisebidsOcspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
-                }
-                dbUpdate $ ChargeCompanyForSEBankIDSignature did
-
-          return $ Right crsProgressStatus
   where
     missing name = $unexpectedError $ "missing" <+> T.unpack name
     just_lookup name = fromMaybe (missing name) . lookup name

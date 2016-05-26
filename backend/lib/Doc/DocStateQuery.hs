@@ -34,7 +34,6 @@ module Doc.DocStateQuery
     , getDocumentAndSignatoryForEID
     ) where
 
-import Control.Monad.Catch
 import Log
 
 import DB
@@ -157,7 +156,7 @@ signatoryNeedsToIdentifyToView sl = do
 -- that the document is in the correct state and the signatory hasn't
 -- signed yet. Requires session token to be set.
 getDocumentAndSignatoryForEID
-  :: (MonadDB m, MonadLog m, KontraMonad m, MonadThrow m)
+  :: Kontrakcja m
   => DocumentID
   -> SignatoryLinkID
   -> m (Document,SignatoryLink)

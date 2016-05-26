@@ -1,11 +1,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.API.V2.JSON.Fields (
   unjsonSignatoryFields
-, unjsonSignatoryFieldsValues
+, unjsonSignatoryFieldsValuesForSigning
+, SignatoryFieldsValuesForSigning(..)
 , SignatoryFieldTMPValue(..)
 ) where
 
 import Control.Applicative.Free
+import Data.Functor.Invariant
 import Data.String.Utils
 import Data.Text.Encoding
 import Data.Unjson
@@ -200,6 +202,7 @@ data SignatoryFieldTMPValue = StringFTV String
   | FileFTV BS.ByteString
   deriving (Eq, Ord, Show)
 
+
 unsafeStringFromSignatoryFieldTMPValue :: SignatoryFieldTMPValue -> String
 unsafeStringFromSignatoryFieldTMPValue (StringFTV a) = a
 unsafeStringFromSignatoryFieldTMPValue (BoolFTV _) = $unexpectedError "unsafeStringFromSignatoryFieldTMPValue: Bool instead of Sting"
@@ -215,8 +218,10 @@ unsafeFileFromSignatoryFieldTMPValue (FileFTV a) = a
 unsafeFileFromSignatoryFieldTMPValue (StringFTV _) = $unexpectedError "unsafeFileFromSignatoryFieldTMPValue: Sting instead of File"
 unsafeFileFromSignatoryFieldTMPValue (BoolFTV _) = $unexpectedError "unsafeFileFromSignatoryFieldTMPValue: Bool instead of File"
 
-unjsonSignatoryFieldsValues :: UnjsonDef [(FieldIdentity,SignatoryFieldTMPValue)]
-unjsonSignatoryFieldsValues = arrayOf unjsonSignatoryFieldValue
+newtype SignatoryFieldsValuesForSigning = SignatoryFieldsValuesForSigning [(FieldIdentity, SignatoryFieldTMPValue)] deriving Show
+
+unjsonSignatoryFieldsValuesForSigning :: UnjsonDef SignatoryFieldsValuesForSigning
+unjsonSignatoryFieldsValuesForSigning =  invmap SignatoryFieldsValuesForSigning (\(SignatoryFieldsValuesForSigning a) -> a) (arrayOf unjsonSignatoryFieldValue)
 
 unjsonSignatoryFieldValue :: UnjsonDef (FieldIdentity,SignatoryFieldTMPValue)
 unjsonSignatoryFieldValue = disjointUnionOf "type" [

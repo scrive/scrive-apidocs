@@ -6,7 +6,7 @@ var SwedishIdentifyView = require("../../../../scripts/signview/identify/swedish
 var SwedishIdentify = require("../../../../scripts/signview/identify/swedish/swedishidentify");
 var SwedishProcessing = require("../../../../scripts/signview/identify/swedish/swedishproblem");
 var SwedishProblem = require("../../../../scripts/signview/identify/swedish/swedishprocessing");
-var BankIDSigning = require("../../../../scripts/eleg/bankidsigning");
+var BankIDIdentify = require("../../../../scripts/eleg/bankididentify");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -51,7 +51,7 @@ var BankIDSigning = require("../../../../scripts/eleg/bankidsigning");
     describe("Processing", function () {
       it("should test Identify", function (done) {
         var model = new SwedishIdentifyModel({ doc: doc, siglinkid:  doc.currentSignatory().signatoryid()});
-        var bankIDTransaction = new BankIDSigning({
+        var bankIDTransaction = new BankIDIdentify({
           type: "auth",
           signatory : doc.currentSignatory(),
           onStatusChange : function() { },

@@ -13,6 +13,7 @@ import DB
 import Doc.API.Callback.Migrations
 import Doc.Migrations
 import Doc.Sealing.Migrations
+import Doc.Signing.Migrations
 import EID.Authentication.Migrations
 import EID.CGI.GRP.Transaction.Migrations
 import EID.Signature.Migrations
@@ -89,6 +90,8 @@ kontraMigrations = [
   , addAllowRejectReasonToDocuments
   , changeRestOfScriveLogos
   , changeScriveFavicon
+  , createDocumentSigningConsumersTable
+  , createDocumentSigningJobsTable
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

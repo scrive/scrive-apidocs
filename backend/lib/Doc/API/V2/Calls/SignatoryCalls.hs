@@ -4,13 +4,18 @@ module Doc.API.V2.Calls.SignatoryCalls (
 , docApiV2SigSign
 , docApiV2SigSendSmsPin
 , docApiV2SigSetAttachment
+, docApiV2SigSigningStatusCheck
+, docApiV2SigSigningCancel
 ) where
 
 import Data.Unjson
 import Happstack.Server.Types
+import Text.JSON.Types (JSValue(..))
 import qualified Data.Text as T
+import qualified Text.JSON as J
 
 import API.V2
+import BrandedDomain.BrandedDomain
 import DB
 import Doc.Action
 import Doc.API.V2.Calls.SignatoryCallsUtils
@@ -28,8 +33,8 @@ import Doc.DocUtils (getSignatoryAttachment)
 import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
+import Doc.Signing.Model
 import Doc.SMSPin.Model (GetSignatoryPin(..))
-import EID.Signature.Model
 import File.File (File(..))
 import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
@@ -61,6 +66,36 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
     doc <- theDocument
     return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
 
+
+docApiV2SigSigningStatusCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigSigningStatusCheck did slid = logDocumentAndSignatory did slid . api $ do
+  -- Permissions
+  mh <- getMagicHashForSignatoryAction did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+    Just sl <- getSigLinkFor slid <$> theDocument
+    isDocumentSigningInProgress <- dbQuery $ IsDocumentSigningInProgress slid
+    lastCheckStatus <- dbQuery $ GetDocumentSigningLastCheckStatus slid
+    return $ Ok $ JSObject (J.toJSObject $ [
+        ("in_progress", JSBool isDocumentSigningInProgress)
+      , ("signed", JSBool $ hasSigned sl)
+      , ("last_check_status", case lastCheckStatus of
+          Nothing -> JSNull
+          Just t -> JSString $ J.toJSString $ T.unpack t
+        )
+      ])
+
+docApiV2SigSigningCancel :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigSigningCancel did slid = logDocumentAndSignatory did slid . api $ do
+  -- Permissions
+  mh <- getMagicHashForSignatoryAction did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+    -- Guards
+    guardDocumentStatus Pending
+    guardSignatoryHasNotSigned slid
+    dbUpdate $ CleanAllScheduledDocumentSigning slid
+    return $ Ok $ ()
+
+
 docApiV2SigCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
@@ -74,7 +109,7 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     guardThatAllAttachmentsAreAcceptedOrIsAuthor slid =<< apiV2ParameterObligatory (ApiV2ParameterJSON "accepted_author_attachments" unjsonDef)
     -- Parameters
     checkAuthenticationToSignMethodAndValue slid
-    fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValues)
+    fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     -- API call actions + extra conditional parameter
     authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
     case authorization of
@@ -85,9 +120,7 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
         if not validPin
            then apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
            else return ()
-      SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
-        Nothing -> apiError $ signatoryStateError "Swedish BankID authentication needed before signing."
-        Just _ -> return ()
+      SEBankIDAuthenticationToSign -> return ()
     -- Return
     return $ Ok ()
 
@@ -107,25 +140,30 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     checkAuthenticationToSignMethodAndValue slid
     screenshots <- getScreenshots
     acceptedAttachments <- apiV2ParameterObligatory (ApiV2ParameterJSON "accepted_author_attachments" unjsonDef)
-    fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValues)
+    fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     -- API call actions + extra conditional parameter
     guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments
     authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
-    (mesig, mpin) <- case authorization of
-      StandardAuthenticationToSign -> return (Nothing, Nothing)
+    (signNow, mpin) <- case authorization of
+      StandardAuthenticationToSign -> return (True, Nothing)
       SMSPinAuthenticationToSign -> do
         pin <- fmap T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
         validPin <- checkSignatoryPin slid fields pin
         if not validPin
           then apiError documentActionForbidden
-          else return (Nothing, Just pin)
-      SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
-        Nothing -> apiError $ signatoryStateError "Swedish BankID authentication needed before signing."
-        Just esig -> return (Just esig, Nothing)
-    signDocument slid mh fields acceptedAttachments mesig mpin screenshots
-    postDocumentPendingChange olddoc
-    handleAfterSigning slid
-    -- Return
+          else return (True, Just pin)
+      SEBankIDAuthenticationToSign -> return (False, Nothing)
+    if (signNow)
+       then do
+        signDocument slid mh fields acceptedAttachments Nothing mpin screenshots
+        postDocumentPendingChange olddoc
+        handleAfterSigning slid
+        -- Return
+       else do
+        ctx <- getContext
+        doclang <- getLang <$> theDocument
+        dbUpdate $ CleanAllScheduledDocumentSigning slid
+        dbUpdate $ ScheduleDocumentSigning slid (bdid $ ctxbrandeddomain ctx) (ctxtime ctx) (ctxipnumber ctx) (ctxclienttime ctx) (ctxclientname ctx) doclang fields acceptedAttachments screenshots
     doc <- theDocument
     return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
 

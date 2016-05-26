@@ -38,7 +38,7 @@ var file = require("./data/file");
       xhr.respond(200, { "Content-Type": "application/text" }, JSON.stringify({auto_start_token : "123", session_id : "300"}));
     });
 
-    server.respondWith(/\/s\/eid\/cgi\/grp\/collect\/(\d+)\/(\d+)/, function (xhr, id) {
+    server.respondWith(/\/s\/eid\/cgi\/grp\/checkcgiauthstatus\/(\d+)\/(\d+)/, function (xhr, id) {
       xhr.respond(200, { "Content-Type": "application/text" }, JSON.stringify({progress_status : "outstanding_transaction"}));
     });
 

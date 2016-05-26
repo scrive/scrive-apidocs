@@ -2,6 +2,7 @@ module EID.CGI.GRP.Data (
     CGISEBankIDSignature(..)
   , CGISEBankIDAuthentication(..)
   , GrpFault(..)
+  , grpFaultText
   , xpGrpFault
   , AuthRequest(..)
   , SignRequest(..)
@@ -13,6 +14,7 @@ module EID.CGI.GRP.Data (
   , xpSignResponse
   , CollectRequest(..)
   , ProgressStatus(..)
+  , progressStatusText
   , CollectResponse(..)
   , xpCollectResponse
   ) where
@@ -64,23 +66,36 @@ data GrpFault
   | StartFailed
   deriving (Eq, Ord, Show)
 
+grpFaultText :: GrpFault -> T.Text
+grpFaultText InvalidParameters  = "invalid_parameters"
+grpFaultText AlreadyInProgress  = "already_in_progress"
+grpFaultText AccessDeniedRp     = "access_denied_rp"
+grpFaultText Retry              = "retry"
+grpFaultText InternalError      = "internal_error"
+grpFaultText ExpiredTransaction = "expired_transaction"
+grpFaultText UserCancel         = "user_cancel"
+grpFaultText ClientError        = "client_error"
+grpFaultText CertificateError   = "certificate_error"
+grpFaultText Cancelled          = "cancelled"
+grpFaultText StartFailed        = "start_failed"
+
 -- | Convert 'GrpFault' to JSON to show it to the client.
 instance Unjson GrpFault where
-  unjsonDef = disjointUnionOf "grp_fault" [
-      InvalidParameters  <=> "invalid_parameters"
-    , AlreadyInProgress  <=> "already_in_progress"
-    , AccessDeniedRp     <=> "access_denied_rp"
-    , Retry              <=> "retry"
-    , InternalError      <=> "internal_error"
-    , ExpiredTransaction <=> "expired_transaction"
-    , UserCancel         <=> "user_cancel"
-    , ClientError        <=> "client_error"
-    , CertificateError   <=> "certificate_error"
-    , Cancelled          <=> "cancelled"
-    , StartFailed        <=> "start_failed"
+  unjsonDef = disjointUnionOf "grp_fault" $ map grpFaultWithText [
+      InvalidParameters
+    , AlreadyInProgress
+    , AccessDeniedRp
+    , Retry
+    , InternalError
+    , ExpiredTransaction
+    , UserCancel
+    , ClientError
+    , CertificateError
+    , Cancelled
+    , StartFailed
     ]
     where
-      con <=> name = (name, (== con), pure con)
+      grpFaultWithText con = (grpFaultText con, (== con), pure con)
 
 -- | Retrieve 'GrpFault' from SOAP response.
 xpGrpFault :: XMLParser GrpFault
@@ -227,17 +242,26 @@ data ProgressStatus
   | Complete
   deriving (Eq, Ord, Show)
 
+
+
+progressStatusText :: ProgressStatus -> T.Text
+progressStatusText OutstandingTransaction = "outstanding_transaction"
+progressStatusText UserSign               = "user_sign"
+progressStatusText NoClient               = "no_client"
+progressStatusText Started                = "started"
+progressStatusText Complete               = "complete"
+
 -- | Convert 'ProgressStatus' to JSON and show it to the client.
 instance Unjson ProgressStatus where
-  unjsonDef = disjointUnionOf "progress_status" [
-      OutstandingTransaction <=> "outstanding_transaction"
-    , UserSign               <=> "user_sign"
-    , NoClient               <=> "no_client"
-    , Started                <=> "started"
-    , Complete               <=> "complete"
+  unjsonDef = disjointUnionOf "progress_status" $ map statusWithText [
+      OutstandingTransaction
+    , UserSign
+    , NoClient
+    , Started
+    , Complete
     ]
     where
-      con <=> name = (name, (== con), pure con)
+      statusWithText con = (progressStatusText con, (== con), pure con)
 
 ----------------------------------------
 

@@ -194,7 +194,74 @@ var Task = require("../navigation/task");
         });
       });
     },
+    handleSignSwedishEID: function (bankIDSigning) {
+      var self = this;
+      var model = self.props.model;
+      var document = self.props.model.document();
+      var signatory = document.currentSignatory();
 
+      if (!self.canSignDocument()) {
+        return this.context.blinkArrow();
+      }
+
+      var errorCallback = function (xhr) {
+        var data = {};
+        try {
+          data = JSON.parse(xhr.responseText);
+        } catch (e) {}
+
+        if (xhr.status == 403) {
+          ReloadManager.stopBlocking();
+          ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+        } else {
+          ReloadManager.stopBlocking();
+          new ErrorModal(xhr);
+        }
+      };
+
+      document.checksign(function () {
+        new FlashMessagesCleaner();
+        document.sign(errorCallback, function (newDocument, oldDocument) {
+            self.handleWaitingForSwedishBankID(bankIDSigning);
+        }, {}).send();
+      }, errorCallback, {}).send();
+    },
+
+    handleWaitingForSwedishBankID: function (bankIDSigning) {
+      var self = this;
+      var model = self.props.model;
+      var document = self.props.model.document();
+      var checkSigning = function () {
+        document.checkingSigning(
+          function () { self.handleAfterSignRedirectOrReload()},
+          function (s) {
+            bankIDSigning.setStatus(s);
+            setTimeout(checkSigning, 1000)
+          },
+          function (s) {
+            bankIDSigning.setStatus(s);
+            bankIDSigning.triggerFail();
+            self.handleFinishAfterSwedishBankIDFailed();
+          }
+        ).send();
+       };
+      checkSigning();
+    },
+    handleFinishAfterSwedishBankIDFailed: function () {
+      if (!this.isOnStep("eid")) {
+        this.setStep("eid");
+      }
+    },
+    handleCancelSwedishBankID: function () {
+      var self = this;
+      var model = self.props.model;
+      var document = self.props.model.document();
+      var signatory = document.currentSignatory();
+       document.cancelSigning(
+          function () { self.setStep("eid")},
+          function () { new ErrorModal(xhr);}
+        ).send();
+    },
     handleSign: function (pin) {
       var self = this;
       var model = self.props.model;
@@ -254,18 +321,8 @@ var Task = require("../navigation/task");
             document.sign(errorCallback, function (newDocument, oldDocument) {
               setTimeout(function () {
                 self.setSignedStatus(2);
-
-                var redirect = oldDocument.currentSignatory().signsuccessredirect();
-
                 setTimeout(function () {
-                  if (redirect) {
-                    window.location = redirect;
-                  } else {
-                    $(window).on("beforeunload", function () {
-                      $(window).scrollTop(0);
-                    });
-                    new Submit().send();
-                  }
+                  self.handleAfterSignRedirectOrReload();
                 }, 500);
               }, 2500);
             }, pinParam).send();
@@ -273,7 +330,21 @@ var Task = require("../navigation/task");
         });
       }, errorCallback, pinParam).send();
     },
-
+    handleAfterSignRedirectOrReload: function () {
+      var self = this;
+      var model = self.props.model;
+      var document = self.props.model.document();
+      var redirect = document.currentSignatory().signsuccessredirect();
+      ReloadManager.stopBlocking();
+      if (redirect) {
+        window.location = redirect;
+      } else {
+        $(window).on("beforeunload", function () {
+          $(window).scrollTop(0);
+        });
+        new Submit().send();
+      }
+    },
     handlePin: function () {
       var self = this;
       var model = self.props.model;
@@ -305,7 +376,7 @@ var Task = require("../navigation/task");
       }).send();
     },
 
-    handleSignEID: function (thisDevice) {
+    handleStartEID: function (thisDevice) {
       var self = this;
       var model = self.props.model;
 
@@ -323,6 +394,7 @@ var Task = require("../navigation/task");
     },
 
     render: function () {
+      var self = this;
       var model = this.props.model;
       var doc = model.document();
       var sig = doc.currentSignatory();
@@ -374,8 +446,14 @@ var Task = require("../navigation/task");
               askForSSN={this.state.askForSSN}
               canSign={this.canSignDocument()}
               ssn={sig.personalnumber()}
+              thisDevice={this.state.eidThisDevice}
               onReject={this.handleSetStep("reject")}
-              onSign={this.handleSignEID}
+              onSign={ function (thisDevice) {
+                  doc.takeSigningScreenshot(function () {
+                    self.handleStartEID(thisDevice);
+                  }, {});
+                }
+              }
             />
           }
           {/* if */ this.isOnStep("eid-process") &&
@@ -383,8 +461,8 @@ var Task = require("../navigation/task");
               ssn={sig.personalnumber()}
               signatory={sig}
               thisDevice={this.state.eidThisDevice}
-              onBack={this.handleSetStep("eid")}
-              onSuccess={this.handleSign}
+              onBack={this.handleCancelSwedishBankID}
+              onInitiated={function (bankIDSigning) {self.handleSignSwedishEID(bankIDSigning);}}
             />
           }
           {/* if */ this.isOnStep("pin") &&

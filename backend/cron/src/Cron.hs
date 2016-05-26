@@ -29,6 +29,7 @@ import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.Model
 import Doc.Sealing.Consumer
+import Doc.Signing.Consumer
 import HostClock.Collector (collectClockError)
 import KontraPrelude hiding (All)
 import Log.Configuration
@@ -100,11 +101,13 @@ main = do
         runScheduler = runDB . CronEnv.runScheduler appConf filecache templates
 
         docSealing = documentSealing appConf templates filecache pool
+        docSigning = documentSigning  appConf templates filecache pool
         apiCallbacks = documentAPICallback appConf runScheduler
         cron = cronQueue appConf mmixpanel templates runScheduler runDB
 
     runCryptoRNGT rng
       . finalize (localDomain "document sealing" $ runConsumer docSealing pool)
+      . finalize (localDomain "document signing" $ runConsumer docSigning pool)
       . finalize (localDomain "api callbacks" $ runConsumer apiCallbacks pool)
       . finalize (localDomain "cron" $ runConsumer cron pool) $ do
       liftBase waitForTermination

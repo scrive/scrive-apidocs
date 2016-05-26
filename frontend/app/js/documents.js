@@ -283,6 +283,39 @@ var Document = exports.Document = Backbone.Model.extend({
             ajaxerror : errorCallback
             });
     },
+    cancelSigning: function(successCallback,errorCallback) {
+      var document = this;
+      var signatory = document.currentSignatory();
+      return new Submit({
+        url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/signing/cancel",
+        method: "POST",
+        ajax: true,
+        expectedType : "text",
+        ajaxsuccess : successCallback,
+        ajaxerror : errorCallback
+      });
+    },
+    checkingSigning: function(successCallback, inProgressCallback, errorCallback) {
+        var document = this;
+        var signatory = document.currentSignatory();
+        return new Submit({
+          url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/signing/check",
+          method: "GET",
+          ajax: true,
+          expectedType : "text",
+          ajaxsuccess : function(data) {
+            var resJSON = JSON.parse(data);
+            if (resJSON.signed) {
+              successCallback();
+            } else if (resJSON.in_progress) {
+              inProgressCallback(resJSON.last_check_status);
+            } else {
+              errorCallback(resJSON.last_check_status);
+            }
+          },
+          ajaxerror : errorCallback
+        });
+    },
     checksign: function(successCallback, errorCallback,extraSignFields) {
         var document = this;
         var signatory = document.currentSignatory();

@@ -9,6 +9,7 @@ var ErrorModal = require("../errormodal");
 var Signatory = require("../../../js/signatories.js").Signatory;
 var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var $ = require("jquery");
 var classNames = require("classnames");
 
@@ -20,14 +21,13 @@ var classNames = require("classnames");
       signatory: React.PropTypes.instanceOf(Signatory).isRequired,
       thisDevice: React.PropTypes.bool.isRequired,
       onBack: React.PropTypes.func.isRequired,
-      onSuccess: React.PropTypes.func.isRequired
+      onInitiated: React.PropTypes.func.isRequired
     },
 
     getInitialState: function () {
       var self = this;
 
       var model = new BankIDSigning({
-        type: "sign",
         signatory: this.props.signatory,
         thisDevice: this.props.thisDevice,
         onStatusChange: function () {
@@ -35,13 +35,18 @@ var classNames = require("classnames");
             self.addBankIDIframeIfItsNeeded();
           }
         },
-        onSuccess: function () {
+        onInitiated: function () {
           if (self.isMounted()) {
-            self.props.onSuccess();
+            self.props.onInitiated(model);
           }
         },
         onFail: function () {
           if (self.isMounted()) {
+            new FlashMessage({
+              type: "error",
+              content: model.statusMessage(),
+              className: "flash-signview"
+            });
             self.setState({error: true});
           }
         },

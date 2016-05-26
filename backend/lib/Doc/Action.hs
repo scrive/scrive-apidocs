@@ -39,6 +39,7 @@ import Doc.Model
 import Doc.Sealing.Model
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryLinkID
+import Doc.Signing.Model ()
 import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
 import Kontra
 import KontraPrelude
@@ -57,11 +58,10 @@ import Util.MonadUtils
 import Util.SignatoryLinkUtils
 
 -- | Log a document event, adding some standard properties.
-logDocEvent :: (KontraMonad m, MonadDB m, MonadThrow m, MonadTime m) => EventName -> User -> [EventProperty] -> Document -> m ()
+logDocEvent :: (MonadDB m, MonadThrow m, MonadTime m) => EventName -> User -> [EventProperty] -> Document -> m ()
 logDocEvent name user extraProps doc = do
   comp <- getCompanyForUser user
   now <- currentTime
-  ip <- ctxipnumber <$> getContext
   let uid = userid user
       email = Email $ getEmail user
       fullname = getFullName user
@@ -71,7 +71,6 @@ logDocEvent name user extraProps doc = do
     DocIDProp  (documentid doc),
     TimeProp   now,
     MailProp   email,
-    IPProp     ip,
     NameProp   fullname,
     stringProp "Company Name" $ getCompanyName $ comp,
     stringProp "Delivery Method" deliverymethod,
@@ -142,7 +141,7 @@ postDocumentCanceledChange doc@Document{..} = logDocument documentid $ do
 
 -- | After a party has signed - check if we need to close document and
 -- take further actions.
-postDocumentPendingChange :: (CryptoRNG m, TemplatesMonad m, AmazonMonad m, MonadBaseControl IO m, DocumentMonad m, MonadMask m, MonadLog m, MonadIO m, KontraMonad m, GuardTimeConfMonad m, MailContextMonad m)
+postDocumentPendingChange :: (CryptoRNG m, TemplatesMonad m, AmazonMonad m, MonadBaseControl IO m, DocumentMonad m, MonadMask m, MonadLog m, MonadIO m, MailContextMonad m, GuardTimeConfMonad m)
                           => Document -> m ()
 postDocumentPendingChange olddoc = do
   unlessM (isPending <$> theDocument) $
@@ -153,13 +152,13 @@ postDocumentPendingChange olddoc = do
       theDocument >>= \d -> logInfo "All have signed, document closed" $ object [
           "old_status" .= show (documentstatus d)
         ]
-      time <- ctxtime <$> getContext
+      time <- mctxtime <$> getMailContext
       dbUpdate $ CloseDocument (systemActor time)
       author <- theDocument >>= getDocAuthor
       theDocument >>= logDocEvent "Doc Closed" author []
       asyncLogEvent SetUserProps [UserIDProp (userid author),
                                   someProp "Last Doc Closed" time]
-      dbUpdate . ScheduleDocumentSealing . bdid . ctxbrandeddomain =<< getContext)
+      dbUpdate . ScheduleDocumentSealing . bdid . mctxcurrentBrandedDomain =<< getMailContext)
   {-else-} $ do
       theDocument >>= triggerAPICallbackIfThereIsOne
       whenM ((\d -> documentcurrentsignorder d /= documentcurrentsignorder olddoc) <$> theDocument) $ do

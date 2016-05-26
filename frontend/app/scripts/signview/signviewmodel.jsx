@@ -17,6 +17,13 @@ var TaskList = require("./navigation/task_list");
       tasks: null
     },
 
+    referenceScreenshotName: function () {
+      if (this.document().currentSignatory().seBankIDAuthenticationToSign()) {
+        return BrowserInfo.isSmallScreen() ? "mobile_bankid" : "standard_bankid";
+      } else {
+        return BrowserInfo.isSmallScreen() ? "mobile" : "standard";
+      }
+    },
     initialize: function (args) {
       var model = this;
       var document = args.document;
@@ -29,8 +36,6 @@ var TaskList = require("./navigation/task_list");
         model.trigger("change");
       });
 
-      document.setReferenceScreenshot(BrowserInfo.isSmallScreen() ? "mobile" : "standard");
-
       document.bind("change", function () {
           if (!model.isReady()) {
             model.trigger("change");
@@ -41,6 +46,7 @@ var TaskList = require("./navigation/task_list");
               processData: true,
               cache: false
             });
+            document.setReferenceScreenshot(model.referenceScreenshotName());
             model.trigger("change");
           }
         });

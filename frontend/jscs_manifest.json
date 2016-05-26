@@ -24,6 +24,7 @@
   "./app/scripts/signview/pageviewer/*.jsx",
   "./app/scripts/signview/signview.jsx",
   "./app/scripts/signview/signviewmodel.jsx",
+  "./app/scripts/eleg/*.jsx",
   "./app/scripts/common/editabletext.jsx",
   "./app/scripts/common/blink_mixin.jsx",
   "./app/scripts/common/scrolltoelement.jsx",

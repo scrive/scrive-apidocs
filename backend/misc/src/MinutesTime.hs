@@ -94,25 +94,25 @@ formatTimeForMail :: UTCTime -> String
 formatTimeForMail = formatTime' "%a, %d %b %Y %H:%M:%S %z"
 ----------------------------------------
 
-secondsAfter :: Int -> UTCTime -> UTCTime
+secondsAfter :: (Integral a) => a -> UTCTime -> UTCTime
 secondsAfter = addUTCTime . fromIntegral
 
-secondsBefore :: Int -> UTCTime -> UTCTime
+secondsBefore :: (Integral a) => a -> UTCTime -> UTCTime
 secondsBefore = secondsAfter . negate
 
-minutesAfter :: Int -> UTCTime -> UTCTime
+minutesAfter :: (Integral a) => a -> UTCTime -> UTCTime
 minutesAfter = addUTCTime . (60 *) . fromIntegral
 
-minutesBefore :: Int -> UTCTime -> UTCTime
+minutesBefore :: (Integral a) => a -> UTCTime -> UTCTime
 minutesBefore = minutesAfter . negate
 
-daysAfter :: Int -> UTCTime -> UTCTime
+daysAfter :: (Integral a) => a -> UTCTime -> UTCTime
 daysAfter = minutesAfter . (60 * 24 *)
 
-daysBefore :: Int -> UTCTime -> UTCTime
+daysBefore :: (Integral a) => a -> UTCTime -> UTCTime
 daysBefore = daysAfter . negate
 
-monthsBefore :: Int -> UTCTime -> UTCTime
+monthsBefore :: (Integral a) => a -> UTCTime -> UTCTime
 monthsBefore i = localTimeToUTC utc . f . utcToLocalTime utc
   where
     f t = t { localDay = addGregorianMonthsClip (fromIntegral $ -i) $ localDay t }

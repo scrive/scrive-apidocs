@@ -19,7 +19,6 @@ import qualified Data.Text as T
 import Crypto.RNG
 import DB
 import Doc.SignatoryLinkID
-import KontraMonad
 import KontraPrelude
 import Session.SessionID
 
@@ -80,7 +79,7 @@ cgiSessionID (CgiGrpSignTransaction _ _ _ _ session_id) = session_id
 
 -- | Insert new transaction or replace the existing one.
 data MergeCgiGrpTransaction = MergeCgiGrpTransaction CgiGrpTransaction
-instance (CryptoRNG m, KontraMonad m, MonadDB m, MonadMask m)
+instance (CryptoRNG m, MonadDB m, MonadMask m)
   => DBUpdate m MergeCgiGrpTransaction () where
     update (MergeCgiGrpTransaction cgiTransaction) = do
       loopOnUniqueViolation . withSavepoint "merge_cgi_grp_transaction" $ do
@@ -110,7 +109,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m DeleteCgiGrpTransaction () where
 
 
 data GetCgiGrpTransaction = GetCgiGrpTransaction CgiGrpTransactionType SignatoryLinkID
-instance (KontraMonad m, MonadDB m, MonadThrow m)
+instance (MonadDB m, MonadThrow m)
   => DBQuery m GetCgiGrpTransaction (Maybe CgiGrpTransaction) where
     query (GetCgiGrpTransaction cgitt slid) = do
       runQuery_ . sqlSelect "cgi_grp_transactions" $ do

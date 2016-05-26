@@ -3,8 +3,10 @@ module Doc.API.V2.Calls.SignatoryCallsUtils (
 , getScreenshots
 , signDocument
 , checkSignatoryPin
+, fieldsToFieldsWithFiles
 ) where
 
+import Control.Monad.Catch
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
@@ -68,7 +70,7 @@ getScreenshots = do
 
 
 signDocument :: (Kontrakcja m, DocumentMonad m) =>
-  SignatoryLinkID -> MagicHash -> [(FieldIdentity, SignatoryFieldTMPValue)] -> [FileID] -> Maybe ESignature -> Maybe String -> SignatoryScreenshots -> m ()
+  SignatoryLinkID -> MagicHash -> SignatoryFieldsValuesForSigning -> [FileID] -> Maybe ESignature -> Maybe String -> SignatoryScreenshots -> m ()
 signDocument slid mh fields acceptedAuthorAttachments mesig mpin screenshots = do
   switchLang =<< getLang <$> theDocument
   ctx <- getContext
@@ -87,11 +89,11 @@ signDocument slid mh fields acceptedAuthorAttachments mesig mpin screenshots = d
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 
-fieldsToFieldsWithFiles :: (Kontrakcja m) =>
-  [(FieldIdentity,SignatoryFieldTMPValue)] -> m ([(FieldIdentity,FieldValue)],[(FileID,BS.ByteString)])
-fieldsToFieldsWithFiles [] = return ([],[])
-fieldsToFieldsWithFiles (f:fs) = do
-  (changeFields,files') <- fieldsToFieldsWithFiles fs
+fieldsToFieldsWithFiles :: (MonadDB m, MonadThrow m) =>
+  SignatoryFieldsValuesForSigning -> m ([(FieldIdentity,FieldValue)],[(FileID,BS.ByteString)])
+fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning []) = return ([],[])
+fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do
+  (changeFields,files') <- fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning fs)
   case f of
     (fi,StringFTV s) -> return ((fi,StringFV s):changeFields,files')
     (fi,BoolFTV b)   -> return ((fi,BoolFV b):changeFields,files')
@@ -102,8 +104,8 @@ fieldsToFieldsWithFiles (f:fs) = do
         return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')
 
 
-checkSignatoryPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, SignatoryFieldTMPValue)] -> String -> m Bool
-checkSignatoryPin slid fields pin = do
+checkSignatoryPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> String -> m Bool
+checkSignatoryPin slid (SignatoryFieldsValuesForSigning fields) pin = do
   slidMobile <- getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
   mobile <- case (not $ null slidMobile, lookup MobileFI fields) of
     (True, _) -> return slidMobile

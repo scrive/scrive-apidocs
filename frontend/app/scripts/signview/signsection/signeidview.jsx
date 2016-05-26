@@ -76,7 +76,7 @@ var classNames = require("classnames");
     },
 
     getInitialState: function () {
-      return {thisDevice: true};
+      return {thisDevice: (this.props.thisDevice === undefined) ? true : this.props.thisDevice};
     },
 
     render: function () {

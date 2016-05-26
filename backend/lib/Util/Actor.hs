@@ -2,6 +2,7 @@ module Util.Actor (
   Actor(..)
   , authorActor
   , signatoryActor
+  , recreatedSignatoryActor
   , systemActor
   , mailSystemActor
   , userActor
@@ -90,8 +91,24 @@ authorActor ctx u = (userActor ctx u) {
 
 -- | For an action requiring a signatory with siglinkid and token (such as signing)
 signatoryActor :: DocumentMonad m => Context -> SignatoryLink -> m Actor
-signatoryActor ctx s = do
-  return $ (contextActor ctx){
+signatoryActor ctx s = return $ toSignatoryActor s (contextActor ctx)
+
+-- | Used if we are performing some action in background, but we want to pretent like if it was performed by signatory
+recreatedSignatoryActor :: DocumentMonad m => UTCTime -> Maybe UTCTime ->  Maybe String -> IPAddress -> SignatoryLink -> m Actor
+recreatedSignatoryActor time mctime mcname mipaddress s = return $ toSignatoryActor s $ Actor
+  { actorTime = time
+  , actorClientTime = mctime
+  , actorClientName = mcname
+  , actorIP = Just mipaddress
+  , actorUserID = Nothing
+  , actorEmail = Nothing
+  , actorSigLinkID = Nothing
+  , actorAPIString = Nothing
+  , actorWho = ""
+  }
+
+toSignatoryActor :: SignatoryLink -> Actor -> Actor
+toSignatoryActor s a = a {
         actorUserID = maybesignatory s
       , actorEmail = Just (getEmail s)
       , actorSigLinkID = Just (signatorylinkid s)

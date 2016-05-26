@@ -33,6 +33,7 @@ module Doc.DocControl(
 ) where
 
 import Control.Conditional (unlessM, whenM)
+import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.String.Utils (replace,strip)
@@ -190,7 +191,7 @@ showCreateFromTemplate = withUserGet $ pageCreateFromTemplate =<< getContext
     Call after signing in order to save the document for any user, and
     put up the appropriate modal.
 -}
-handleAfterSigning :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
+handleAfterSigning :: (MonadLog m, MonadThrow m, TemplatesMonad m, DocumentMonad m, MonadBase IO m) => SignatoryLinkID -> m ()
 handleAfterSigning slid = logSignatory slid $ do
   signatorylink <- guardJust . getSigLinkFor slid =<< theDocument
   maybeuser <- dbQuery $ GetUserByEmail (Email $ getEmail signatorylink)

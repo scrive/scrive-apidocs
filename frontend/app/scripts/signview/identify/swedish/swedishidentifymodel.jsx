@@ -1,6 +1,6 @@
 var _ = require("underscore");
 var Backbone = require("backbone");
-var BankIDSigning = require("../../../eleg/bankidsigning");
+var BankIDIdentify = require("../../../eleg/bankididentify");
 var ErrorModal = require("../../errormodal");
 // ignore model in coverage for now.
 /* istanbul ignore next */
@@ -67,8 +67,7 @@ var ErrorModal = require("../../errormodal");
     },
     identify: function () {
       var self = this;
-      var bankID = new BankIDSigning({
-        type: "auth",
+      var bankID = new BankIDIdentify({
         signatory: this.doc().currentSignatory(),
         onStatusChange: function () {
           self.setStatusText(bankID.statusMessage());
