@@ -42,7 +42,6 @@ unjsonSignatoryField = disjointUnionOf "type" [
 
 unjsonNameField :: Ap (FieldDef SignatoryField) SignatoryNameField
 unjsonNameField = pure (\no v ob sfbs ps -> NameField (unsafeSignatoryFieldID 0) no v ob sfbs ps)
-  <*  fieldReadonlyBy "type" fieldType "Type of a field" unjsonFieldType
   <*> field "order" (unsafeFromNameField snfNameOrder) "Order of name field"
   <*> fieldDef "value" "" (unsafeFromNameField snfValue) "Value of the field"
   <*> fieldDef "is_obligatory" True (unsafeFromNameField snfObligatory) "If is oligatory"
@@ -55,7 +54,6 @@ unjsonNameField = pure (\no v ob sfbs ps -> NameField (unsafeSignatoryFieldID 0)
 
 unjsonCompanyField :: Ap (FieldDef SignatoryField) SignatoryCompanyField
 unjsonCompanyField = pure (\v ob sfbs ps -> CompanyField (unsafeSignatoryFieldID 0) v ob sfbs ps)
-  <*  fieldReadonlyBy "type" fieldType "Type of a field" unjsonFieldType
   <*> fieldDef "value" "" (unsafeFromCompanyField scfValue) "Value of the field"
   <*> fieldDef "is_obligatory" True (unsafeFromCompanyField scfObligatory) "If is oligatory"
   <*> fieldDef "should_be_filled_by_sender" False (unsafeFromCompanyField scfShouldBeFilledBySender) "If should be filled by sender"
@@ -67,7 +65,6 @@ unjsonCompanyField = pure (\v ob sfbs ps -> CompanyField (unsafeSignatoryFieldID
 
 unjsonPersonalNumberField :: Ap (FieldDef SignatoryField) SignatoryPersonalNumberField
 unjsonPersonalNumberField = pure (\v ob sfbs ps-> PersonalNumberField (unsafeSignatoryFieldID 0) (strip v) ob sfbs ps)
-  <*  fieldReadonlyBy "type" fieldType "Type of a field" unjsonFieldType
   <*> fieldDef "value" "" (unsafeFromPersonalNumberField spnfValue) "Value of the field"
   <*> fieldDef "is_obligatory" True (unsafeFromPersonalNumberField spnfObligatory) "If is oligatory"
   <*> fieldDef "should_be_filled_by_sender" False (unsafeFromPersonalNumberField spnfShouldBeFilledBySender) "If should be filled by sender"
@@ -79,7 +76,6 @@ unjsonPersonalNumberField = pure (\v ob sfbs ps-> PersonalNumberField (unsafeSig
 
 unjsonCompanyNumberField :: Ap (FieldDef SignatoryField) SignatoryCompanyNumberField
 unjsonCompanyNumberField = pure (\v  ob sfbs ps -> CompanyNumberField (unsafeSignatoryFieldID 0) v ob sfbs ps)
-  <*  fieldReadonlyBy "type" fieldType "Type of a field" unjsonFieldType
   <*> fieldDef "value" "" (unsafeFromCompanyNumberField scnfValue) "Value of the field"
   <*> fieldDef "is_obligatory" True (unsafeFromCompanyNumberField scnfObligatory) "If is oligatory"
   <*> fieldDef "should_be_filled_by_sender" False (unsafeFromCompanyNumberField scnfShouldBeFilledBySender) "If should be filled by sender"
@@ -92,7 +88,6 @@ unjsonCompanyNumberField = pure (\v  ob sfbs ps -> CompanyNumberField (unsafeSig
 
 unjsonEmailField :: Ap (FieldDef SignatoryField) SignatoryEmailField
 unjsonEmailField = pure (\v  ob sfbs ps -> EmailField (unsafeSignatoryFieldID 0) v ob sfbs ps)
-  <*  fieldReadonlyBy "type" fieldType "Type of a field" unjsonFieldType
   <*> fieldDef "value" "" (unsafeFromEmailField sefValue) "Value of the field"
   <*> fieldDef "is_obligatory" True (unsafeFromEmailField sefObligatory) "If is oligatory"
   <*> fieldDef "should_be_filled_by_sender" False (unsafeFromEmailField sefShouldBeFilledBySender) "If should be filled by sender"
@@ -104,7 +99,6 @@ unjsonEmailField = pure (\v  ob sfbs ps -> EmailField (unsafeSignatoryFieldID 0)
 
 unjsonMobileField :: Ap (FieldDef SignatoryField) SignatoryMobileField
 unjsonMobileField = pure (\v ob sfbs ps -> MobileField (unsafeSignatoryFieldID 0) v ob sfbs ps)
-  <*  fieldReadonlyBy "type" fieldType "Type of a field" unjsonFieldType
   <*> fieldDef "value" "" (unsafeFromMobileField smfValue) "Value of the field"
   <*> fieldDef "is_obligatory" True (unsafeFromMobileField smfObligatory) "If is oligatory"
   <*> fieldDef "should_be_filled_by_sender" False (unsafeFromMobileField smfShouldBeFilledBySender) "If should be filled by sender"
@@ -118,7 +112,6 @@ unjsonMobileField = pure (\v ob sfbs ps -> MobileField (unsafeSignatoryFieldID 0
 
 unjsonTextField :: Ap (FieldDef SignatoryField) SignatoryTextField
 unjsonTextField  = pure (\n v  ob sfbs ps -> TextField  (unsafeSignatoryFieldID 0) n (v == "") v ob sfbs ps)
-  <*  fieldReadonlyBy "type" fieldType "Type of a field" unjsonFieldType
   <*> field "name"  (unsafeFromTextField  stfName) "Name of the field"
   <*> fieldDef "value" "" (unsafeFromTextField  stfValue) "Value of the field"
   <*> fieldDef "is_obligatory" True (unsafeFromTextField stfObligatory) "If is oligatory"
@@ -131,7 +124,6 @@ unjsonTextField  = pure (\n v  ob sfbs ps -> TextField  (unsafeSignatoryFieldID 
 
 unjsonCheckboxField :: Ap (FieldDef SignatoryField) SignatoryCheckboxField
 unjsonCheckboxField  = pure (\n v ob sfbs ps -> CheckboxField  (unsafeSignatoryFieldID 0) n v ob sfbs ps)
-  <*  fieldReadonlyBy "type" fieldType "Type of a field" unjsonFieldType
   <*> field "name"  (unsafeFromCheckboxField  schfName)  "Name of the field"
   <*> fieldDef "is_checked" False (unsafeFromCheckboxField  schfValue) "Value of the field"
   <*> fieldDef "is_obligatory" True (unsafeFromCheckboxField schfObligatory) "If is oligatory"
@@ -144,7 +136,6 @@ unjsonCheckboxField  = pure (\n v ob sfbs ps -> CheckboxField  (unsafeSignatoryF
 
 unjsonSignatureField :: Ap (FieldDef SignatoryField) SignatorySignatureField
 unjsonSignatureField  = pure (\n ob sfbs ps -> SignatureField  (unsafeSignatoryFieldID 0) n Nothing ob sfbs ps)
-  <*  fieldReadonlyBy "type" fieldType "Type of a field" unjsonFieldType
   <*> field "name"  (unsafeFromSignatureField  ssfName)  "Value of the field"
   <*  fieldReadOnlyOpt "signature" (unsafeFromSignatureField  ssfValue) "Uploaded file"
   <*> fieldDef "is_obligatory" True (unsafeFromSignatureField ssfObligatory) "If is oligatory"
@@ -154,11 +145,6 @@ unjsonSignatureField  = pure (\n ob sfbs ps -> SignatureField  (unsafeSignatoryF
     unsafeFromSignatureField  :: (SignatorySignatureField  -> a) -> SignatoryField -> a
     unsafeFromSignatureField  f (SignatorySignatureField  a) = f a
     unsafeFromSignatureField  _ _ = $unexpectedError "unsafeFromSignatureField "
-
--- Unjson for FieldType. fieldTypeToText on "type" field is used to build a disjointUnion.
-
-unjsonFieldType :: UnjsonDef FieldType
-unjsonFieldType = unjsonEnum "FieldType (Readonly)" (\_ -> Nothing) fieldTypeToText
 
 fieldTypeToText :: FieldType -> T.Text
 fieldTypeToText NameFT = "name"
@@ -238,7 +224,6 @@ unjsonSignatoryFieldValue = disjointUnionOf "type" [
 
 unjsonNameFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (NameOrder,String)
 unjsonNameFieldFieldValue = pure (\no v ->(no,v))
-  <*  fieldReadonlyBy "type" (fieldTypeFromFieldIdentity . fst) "Type of a field" unjsonFieldType
   <*> field "order" (unsafeNameOrder . fst) "Order of name field"
   <*> field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
   where
@@ -247,33 +232,22 @@ unjsonNameFieldFieldValue = pure (\no v ->(no,v))
     unsafeNameOrder _ = $unexpectedError "unsafeNameOrder"
 
 unjsonCompanyFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) String
-unjsonCompanyFieldFieldValue =
-      fieldReadonlyBy "type" (fieldTypeFromFieldIdentity . fst) "Type of a field" unjsonFieldType
-  *>  field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
+unjsonCompanyFieldFieldValue = field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
 
 unjsonPersonalNumberFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) String
-unjsonPersonalNumberFieldFieldValue =
-      fieldReadonlyBy "type" (fieldTypeFromFieldIdentity . fst) "Type of a field" unjsonFieldType
-  *>  field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
+unjsonPersonalNumberFieldFieldValue = field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
 
 unjsonCompanyNumberFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) String
-unjsonCompanyNumberFieldFieldValue =
-      fieldReadonlyBy "type" (fieldTypeFromFieldIdentity . fst) "Type of a field" unjsonFieldType
-  *>  field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
+unjsonCompanyNumberFieldFieldValue = field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
 
 unjsonEmailFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) String
-unjsonEmailFieldFieldValue =
-      fieldReadonlyBy "type" (fieldTypeFromFieldIdentity . fst) "Type of a field" unjsonFieldType
-  *>  field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
+unjsonEmailFieldFieldValue = field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
 
 unjsonMobileFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) String
-unjsonMobileFieldFieldValue =
-      fieldReadonlyBy "type" (fieldTypeFromFieldIdentity . fst) "Type of a field" unjsonFieldType
-  *>  field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
+unjsonMobileFieldFieldValue = field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
 
 unjsonTextFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (String,String)
 unjsonTextFieldFieldValue = pure (\no v ->(no,v))
-  <*  fieldReadonlyBy "type" (fieldTypeFromFieldIdentity . fst) "Type of a field" unjsonFieldType
   <*> field "name" (unsafeTextName . fst) "Name of text field"
   <*> field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
   where
@@ -283,7 +257,6 @@ unjsonTextFieldFieldValue = pure (\no v ->(no,v))
 
 unjsonCheckboxFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (String,Bool)
 unjsonCheckboxFieldFieldValue = pure (\no v ->(no,v))
-  <*  fieldReadonlyBy "type" (fieldTypeFromFieldIdentity . fst) "Type of a field" unjsonFieldType
   <*> field "name" (unsafeCheckboxName . fst) "Name of checkbox field"
   <*> field "is_checked" (unsafeBoolFromSignatoryFieldTMPValue .snd) "Value of the field"
   where
@@ -293,7 +266,6 @@ unjsonCheckboxFieldFieldValue = pure (\no v ->(no,v))
 
 unjsonSignatureFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (String,BS.ByteString)
 unjsonSignatureFieldFieldValue = pure (\no v ->(no,v))
-  <*  fieldReadonlyBy "type" (fieldTypeFromFieldIdentity . fst) "Type of a field" unjsonFieldType
   <*> field "name" (unsafeSignatureName . fst) "Name of checkbox field"
   <*> fieldBy "signature" (unsafeFileFromSignatoryFieldTMPValue .snd) "Value of the field" unjsonImage
   where
