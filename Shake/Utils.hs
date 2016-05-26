@@ -29,3 +29,6 @@ infix 1 %>>>
 (%>>>) fp a = fp %> \t -> do
   Stdout out <- a
   liftIO $ writeFile t out
+
+langEnv :: [CmdOption]
+langEnv = [AddEnv "LANG" "en_US.UTF-8", AddEnv "LC_ALL" "C"]

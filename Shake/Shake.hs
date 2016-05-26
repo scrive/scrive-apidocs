@@ -186,7 +186,7 @@ serverTestRules :: Rules ()
 serverTestRules = do
   let hsImportOrderAction checkOnly = do
         let flags = if checkOnly then ("--check":sourceDirsFromCabal) else sourceDirsFromCabal
-        command [Shell, AddEnv "LANG" "en_GB.UTF-8", AddEnv "LC_CTYPE" "en_US.UTF-8"] "runhaskell scripts/sort_imports.hs" flags
+        command ([Shell] ++ langEnv) "runhaskell scripts/sort_imports.hs" flags
 
   "_build/hs-import-order" %>>> do
     needServerHaskellFiles
@@ -209,7 +209,7 @@ serverTestRules = do
     if tc
       then do
         target <- askOracle (BuildTarget ())
-        let cmdopt = [Shell, AddEnv "LANG" "en_US.UTF-8", AddEnv "LC_CTYPE" "en_US.UTF-8"]
+        let cmdopt = [Shell] ++ langEnv
             flags = ["--plain","--output-dir _build/kontrakcja-test-artefacts"]
               ++ case target of
                       "staging" -> ["--staging-tests"]
@@ -275,7 +275,7 @@ frontendBuildRules = do
          ]
     alwaysRerun
     withGitHub "Grunt Build" $
-      command [EchoStdout True, Cwd "frontend", AddEnv "LC_ALL" "en_US.UTF-8"] "grunt" ["build"]
+      command ([EchoStdout True, Cwd "frontend"] ++ langEnv) "grunt" ["build"]
 
   "grunt-clean" ~> do
     need ["_build/npm-install"]
