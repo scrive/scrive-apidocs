@@ -27,16 +27,20 @@ var ApiDemoModel = Backbone.Model.extend({
       var apiCalls;
       if (v == "v1") {
         apiCalls = APICalls.apiV1Calls();
-      } else {
+      } else if (v == "v2") {
         apiCalls = APICalls.apiV2Calls();
+      } else {
+        alert("Unknown API version (internal error): " + v);
       }
+
       var findEquivalent = _.find(apiCalls, function (c) {return c.name() == equivalent});
       if (findEquivalent != undefined) {
         this.setSelectedApiCall(findEquivalent);
       } else {
         if (v == "v1") {
-          this.setSelectedApiCall(APICalls.apiV1Calls()[0]);
-        } else {
+          var defaultV1Call = APICalls.apiV1Calls()[0]; // this may need cleanup
+          this.setSelectedApiCall(defaultV1Call);
+        } else if (v == "v2") {
           var defaultV2Call = _.find(APICalls.apiV2Calls(), function (c) {return c.name() == "Get"});
           this.setSelectedApiCall(defaultV2Call);
         }
@@ -61,7 +65,6 @@ var ApiDemoModel = Backbone.Model.extend({
         this.setMode("explore");
         this.selectedApiCall().unsend();
         window.location.hash = "#" + this.selectedApiCall().urlHash();
-
       } else {
         self.trigger("change");
       }
@@ -80,7 +83,6 @@ var ApiDemoModel = Backbone.Model.extend({
     } else if (window.location.hash == "#oauth") {
       self.setMode("authorize");
       oauth.setMode("oauth");
-
     } else if (window.location.hash == "#credentials") {
       self.setMode("authorize");
       oauth.setMode("credentials");
@@ -142,7 +144,8 @@ var ApiDemoView = Backbone.View.extend({
       this.explorerView = new ApiDemoExploreView({model: model});
       $(this.el).append(this.explorerView.el);
 
-      if (model.oauth().isSetUp()) {
+      //if (model.oauth().isSetUp())
+      {
         $("body").append("<div class='credentials-view-placeholder'/>");
         $("body").append(new CredentialsView({
           model: model,
