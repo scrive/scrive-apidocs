@@ -1,18 +1,31 @@
-Frontend-Scrive
-===============
+# frontend
 
-## Installation
-> Install latest version of NodeJS (expected version is defined)
-> npm install -g --production
-> npm install
+> Scrive frontend.
 
-### Running static files server and compilation of less and jsx
-> grunt server
+## Install
 
-### For tweaks to build process, see Gruntfile.js in root
+To install necessary dependencies:
 
-### Updating packages in app/bower_components
-> npm install -g bower
-> Go to project root
-> Edit bower.json
-> bower install
+> $ npm i grunt-cli bower less -g
+> $ npm i
+
+## Build
+
+To build the frontend once:
+
+> $ grunt build
+
+
+## Tests & Linting
+
+To run style checker:
+
+> $ grunt jscs
+
+To run tests with coverage:
+
+> $ grunt test
+
+To runt test without coverage:
+
+> $ grunt test:fast
