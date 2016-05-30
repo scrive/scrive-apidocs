@@ -52,6 +52,7 @@ window.CallResponseView = Backbone.View.extend({
         model.oauth().clear();
         model.setMode("authorize");
         window.location.hash = "#" + model.oauth().mode();
+
       });
       panelBody.append(buttonRow.append(buttonCol.append(button)));
     }

@@ -1,11 +1,6 @@
 
 (function (window) {
 
-$(document).ajaxError(function(e, xhr, sett) {   // function( Event event, jqXHR jqXHR, PlainObject ajaxSettings, String thrownError ) // no data object?
-  alert("Something is amiss, got an error response: " + xhr.status + ", " + xhr.statusText);
-});
-
-
 window.ApiDemoAuthorizeView = Backbone.View.extend({
   initialize: function (args) {
     _.bindAll(this, "render");
@@ -15,15 +10,12 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
   authorizationSelect: function () {
     var self = this;
     var oauth = self.model.oauth();
-    if (oauth.mode() == "") {
-        oauth.setMode("email");
-    }
     var wrapper = $("<div/>");
     wrapper.append("<label for='authorizationMethodSelect'>Authorisation method</label>");
     var select = $("<select class='form-control' id='authorizationMethodSelect'/>");
     select
-      .append($("<option value='email'>Email and password</option>")      .attr("selected", oauth.emailMode()))
-      .append($("<option value='oauth'>OAuth</option>")                   .attr("selected", oauth.oauthMode()))
+      .append($("<option value='email'>Email and password</option>").attr("selected", oauth.emailMode()))
+      .append($("<option value='oauth'>OAuth</option>").attr("selected", oauth.oauthMode()))
       .append($("<option value='credentials'>Access credentials</option>").attr("selected", oauth.credentialsMode()));
     select.change(function () {
       oauth.setMode(select.val());
@@ -37,9 +29,6 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
     var wrapper = $("<div/>");
     wrapper.append("<label for='priviligesSelect'>Priviliges</label>");
     var select = $("<select class='form-control' id='priviligesSelect'/>");
-    select.append(
-      $("<option value=''>Please select access level</option>")
-        .attr("selected", oauth.priviliges() == ""));
     select.append(
       $("<option value='DOC_CREATE'>DOC_CREATE</option>")
         .attr("selected", oauth.priviliges() == "DOC_CREATE"));
@@ -109,9 +98,7 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
     self.appendCenteredRow(container, "<p>E-signing powered by Scrive</p>");
     self.appendLeftRow(container, self.authorizationSelect());
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
     if (oauth.emailMode()) {
-      //oauth.set_priviliges("DOC_CREATE");
       self.appendLeftRow(
         container,
         self.formInput(
@@ -132,18 +119,18 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           "Password",
           function () {return oauth.password()},
           function (v) {return oauth.set_password(v)},
-          function () {oauth.tryToGetPersonalToken()} // action on "newline"
+          function () {oauth.tryToGetPesonalToken()}
         )
       );
       self.appendCenteredRow(container, $("<p/>").append(
           $("<button class='btn btn-block' type='button'>Authorise</button>")).click(function () {
-              oauth.tryToGetPersonalToken();
-            })
+            oauth.tryToGetPesonalToken();
+          })
         );
-////////////////////////////////////////////////////////////////////////////////////////////////////
+
     } else if (oauth.oauthMode()) {
       self.appendLeftRow(container, $("<p><small>You can generate client credentials at </small></p>")
-        .append("<a href='/account#api-dashboard'><small>"+ Scrive.serverUrl() + "/account#api-dashboard</small></a>")
+        .append("<a href='/account#api-dashboard'><small>https://scrive.com/account#api-dashboard</small></a>")
       );
       self.appendLeftRow(
         container,
@@ -214,23 +201,19 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
             )
           );
           self.appendCenteredRow(container, $("<p/>").append(
-              $("<button class='btn btn-block' type='button'>Send Token Request</button>")).click(function () {
+                $("<button class='btn btn-block' type='button'>Send Token Request</button>")).click(function () {
                   oauth.sendeTR();
                 })
-            );
-        } else {
-          // do nothing, we come here while requesting new oauth data in this mode
+              );
         }
-      } else {
-        // no error, we come here (e.g.) when clearing authorisation data
+
       }
-////////////////////////////////////////////////////////////////////////////////////////////////////
+
     } else if (oauth.credentialsMode()) {
-      //oauth.set_priviliges("unknown");
       self.appendLeftRow(
         container,
         $("<p><small>Bypass OAuth handshake by providing access credentials obtained at </small></p>")
-          .append("<a href='/account#api-dashboard'><small>"+ Scrive.serverUrl() + "/account#api-dashboard</small></a>")
+          .append("<a href='/account#api-dashboard'><small>https://scrive.com/account#api-dashboard</small></a>")
       );
       self.appendLeftRow(
         container,
@@ -274,28 +257,21 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           "oauth_token_secret",
           function () {return oauth.final_token_secret()},
           function (v) {return oauth.set_final_token_secret(v)},
-          function () { // action on "newline"
-            oauth.trigger("change");
-            oauth.tryToGetAccessData("unknown");
-          }
+          function () {oauth.trigger("change");}
         )
       );
       self.appendCenteredRow(container, $("<p/>").append(
           $("<button class='btn btn-block' type='button'>Authorise</button>")).click(function () {
-              oauth.trigger("change");
-              oauth.tryToGetAccessData("unknown");
-            })
+            oauth.trigger("change");
+          })
         );
-    } else {
-      alert("No such mode implemented (internal error): " + oauth.mode());
     }
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    self.appendCenteredRow(container, $("<p/>").append("<br/>").append($("<a>Skip authorisation</a>")
+    self.appendCenteredRow(container, $("<p/>").append("<BR/>").append($("<a>Skip authorisation</a>")
       .click(function () {
         oauth.clear();
         model.setMode("explore");
         window.location.hash = "#" + model.selectedApiCall().urlHash();
+
       })));
 
     $(this.el).addClass("main").empty().append(container);

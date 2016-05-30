@@ -3,83 +3,78 @@
 
 window.OAuth = Backbone.Model.extend({
   defaults: {
-    callback:             window.location.href, // not saved by save()
-    mode:                 "email", // Available modes "email", "oauth", "credentials", ("explore"), ((""))
-    password:             "", // not saved by save(), nor by set_password()
-    email:                LocalStorage.get("oauth", "email")                 || "",
-    consumer_key:         LocalStorage.get("oauth", "consumer_key")          || "",
+    mode: "email", // Available modes "email", "oauth", credentials
+    consumer_key: LocalStorage.get("oauth", "consumer_key") || "",
     client_shared_secret: LocalStorage.get("oauth", "client_shared_secret")  || "",
-    token:                LocalStorage.get("oauth", "token")                 || "",
-    token_secret:         LocalStorage.get("oauth", "token_secret")          || "",
-    verifier:             LocalStorage.get("oauth", "verifier")              || "",
-    final_token:          LocalStorage.get("oauth", "final_token")           || "",
-    final_token_secret:   LocalStorage.get("oauth", "final_token_secret")    || "",
-    priviliges:           LocalStorage.get("oauth", "priviliges")            || "", // had "DOC_CREATE" as default
+    callback:  window.location.href,
+    token: LocalStorage.get("oauth", "token")  || "",
+    token_secret: LocalStorage.get("oauth", "token_secret") || "",
+    verifier: LocalStorage.get("oauth", "verifier") || "",
+    final_token:   LocalStorage.get("oauth", "final_token") || "",
+    final_token_secret: LocalStorage.get("oauth", "final_token_secret") || "",
+    priviliges:  LocalStorage.get("oauth", "priviliges") || "DOC_CREATE",
+    email:  LocalStorage.get("oauth", "email") ||  "",
+    password: "",
   },
   save: function () {
-    LocalStorage.set("oauth", "mode",                 this.mode());
-    LocalStorage.set("oauth", "email",                this.email());
-    LocalStorage.set("oauth", "consumer_key",         this.consumer_key());
+    LocalStorage.set("oauth", "email", this.email());
+    LocalStorage.set("oauth", "consumer_key", this.consumer_key());
     LocalStorage.set("oauth", "client_shared_secret", this.client_shared_secret());
-    LocalStorage.set("oauth", "token",                this.token());
-    LocalStorage.set("oauth", "token_secret",         this.token_secret());
-    LocalStorage.set("oauth", "verifier",             this.verifier());
-    LocalStorage.set("oauth", "final_token",          this.final_token());
-    LocalStorage.set("oauth", "final_token_secret",   this.final_token_secret());
-    LocalStorage.set("oauth", "priviliges",           this.priviliges());
+    LocalStorage.set("oauth", "token", this.token());
+    LocalStorage.set("oauth", "verifier", this.verifier());
+    LocalStorage.set("oauth", "token_secret", this.token_secret());
+    LocalStorage.set("oauth", "final_token", this.final_token());
+    LocalStorage.set("oauth", "final_token_secret", this.final_token_secret());
+    LocalStorage.set("oauth", "priviliges", this.priviliges());
+
   },
   clear: function () {
+    LocalStorage.set("oauth", "verifier", "");
+    LocalStorage.set("oauth", "token", "");
+    LocalStorage.set("oauth", "token_secret", "");
+    LocalStorage.set("oauth", "final_token", "");
+    LocalStorage.set("oauth", "final_token_secret", "");
     this.set({
-      //"mode":                 "",  // don't clear
-      "email":                "",
-      "password":             "",
-      //"consumer_key":         "",  // don't clear, may be reused to get new final_token and final_token_secret(?)
-      //"client_shared_secret": "",  // don't clear, may be reused to get new final_token and final_token_secret(?)
-      "token":                "",
-      "token_secret":         "",
-      "verifier":             "",
-      "final_token":          "",
-      "final_token_secret":   "",
-      "priviliges":           "" // had "DOC_CREATE" as default
+      "password": "",
+      "token": "",
+      "token_secret": "",
+      "final_token": "",
+      "final_token_secret": "",
+      "verifier": "",
+      "priviliges": "DOC_CREATE"
     }, {silent: true});
-    this.save();
     this.trigger("change");
   },
-
   emailMode: function () {
-    return this.get("mode") == "email";
-  },
+          return this.get("mode") == "email";
+        },
   oauthMode: function () {
-    return this.get("mode") == "oauth";
-  },
+          return this.get("mode") == "oauth";
+        },
   credentialsMode: function () {
-    return this.get("mode") == "credentials";
-  },
+          return this.get("mode") == "credentials";
+        },
   mode: function () {
-    return this.get("mode");
-  },
-  setMode: function (mode) { // set_mode...
-    window.location.hash = mode;
-    this.set({"mode": mode});
-    this.save();
-  },
-
-  /* Email and password for shortcut credentials creation */
+          return this.get("mode");
+        },
+  setMode: function (mode) {
+          window.location.hash = mode;
+          this.set({"mode": mode});
+          this.save();
+        },
+  /* Email and password for shortcut */
   email: function () {
     return this.get("email");
   },
   set_email: function (v) {
     this.set({"email": v}, {silent: true});
-    this.save();
   },
   password: function () {
     return this.get("password");
   },
   set_password: function (v) {
     this.set({"password": v}, {silent: true});
-    // not saved!! don't save!!
   },
-
   /* TCR PARAMS*/
   consumer_key: function () {
     return this.get("consumer_key");
@@ -98,11 +93,10 @@ window.OAuth = Backbone.Model.extend({
   callback: function () {
     return this.get("callback");
   },
-  set_callback: function (v) { // not used...
+  set_callback: function (v) {
     this.set({"callback": v}, {silent: true});
     this.save();
   },
-
   priviliges: function () {
     return this.get("priviliges");
   },
@@ -110,7 +104,6 @@ window.OAuth = Backbone.Model.extend({
     this.set({"priviliges": v}, {silent: true});
     this.save();
   },
-
   /* ROA PARAMS*/
   token: function () {
     return this.get("token");
@@ -119,6 +112,7 @@ window.OAuth = Backbone.Model.extend({
     this.set({"token": v}, {silent: true});
     this.save();
   },
+
   token_secret: function () {
     return this.get("token_secret");
   },
@@ -137,6 +131,7 @@ window.OAuth = Backbone.Model.extend({
   },
 
   /* Final tokens*/
+
   final_token: function () {
     return this.get("final_token");
   },
@@ -163,6 +158,7 @@ window.OAuth = Backbone.Model.extend({
       model.set_token(res.oauth_token);
       model.set_token_secret(res.oauth_token_secret);
       model.set_verifier(null);
+      model.save();
       model.trigger("change");
     });
   },
@@ -177,8 +173,8 @@ window.OAuth = Backbone.Model.extend({
     }).send(function (res) {
       model.set_final_token(res.oauth_token);
       model.set_final_token_secret(res.oauth_token_secret);
+      model.save();
       model.trigger("change");
-      model.tryToGetAccessData(null);
     });
   },
   authorizationForRequests: function () {
@@ -186,55 +182,28 @@ window.OAuth = Backbone.Model.extend({
            "oauth_consumer_key=\"" + this.consumer_key() + "\"," +
            "oauth_token=\""        + this.final_token()     + "\"," +
            "oauth_signature=\""    + this.client_shared_secret() + "&" + this.final_token_secret()    + "\""
+
   },
-  tryToGetPersonalToken: function () {
+  tryToGetPesonalToken: function () {
     var model = this;
-    // this call does NOT need Oauth authorisation
-    $.ajaxSetup({timeout: 2000}); // $.post does not allow a timeout parameter (and don't want to use the $.ajax call directly (yet))
     $.post(Scrive.serverUrl() + "/api/v1/getpersonaltoken", {email: model.email(), password: model.password()},
-          function (rs, status, xhr) {
-            $.ajaxSetup({timeout: null}); // $.post does not allow a timeout parameter (and don't want to use the $.ajax call directly (yet))
-            if (status == "success") {
-              var resp = JSON.parse(rs);
-              model.set_consumer_key(resp.apitoken);
-              model.set_client_shared_secret(resp.apisecret);
-              model.set_final_token(resp.accesstoken);
-              model.set_final_token_secret(resp.accesssecret);
-              model.trigger("change");
-              model.tryToGetAccessData("DOC_CREATE");
-            } else {
-              model.clear();
-            }
-          });
+              function (rs) {
+                var resp = JSON.parse(rs)
+                model.set_consumer_key(resp.apitoken);
+                model.set_client_shared_secret(resp.apisecret);
+                model.set_final_token(resp.accesstoken);
+                model.set_final_token_secret(resp.accesssecret);
+                model.save();
+                model.trigger("change");
+              }
+             );
   },
-  tryToGetAccessData: function (defaultAccessLevel) {
-    var model = this;
-    //var sess_cook = $.cookie('sessionId');
-    //$.cookie("sessionId", null); // be sure not to be "logged in" when doing the getprofile, otherwise you'll get the profile for the login, not the profile for the credentials
-    // this call DOES need Oauth authorisation
-    $.ajaxSetup({timeout: 2000, headers: { authorization: this.authorizationForRequests() }}); // default... (elsewhere we don't use the default; consider using $.ajax directly and set the authorization header only for this ajax call)
-    if (defaultAccessLevel != null) { // is there a (nonpublic?) query API call for getting the access level
-      model.set_priviliges(defaultAccessLevel);
-    }
-    $.get(Scrive.serverUrl() + "/api/v1/getprofile", 
-          function (rs, status, xhr) {
-            $.ajaxSetup({timeout: null}); // $.get does not allow a timeout parameter (and don't want to use the $.ajax call directly (yet))
-            if (status == "success") {
-              var resp = JSON.parse(rs);
-              model.set_email(resp.email);
-              model.trigger("change");
-            } else {
-              model.clear();
-            }
-          });
-    //$.cookie("sessionId", sess_cook); // reset the login cookie
-  },
-  
   isSetUp: function () {
-    return    this.final_token()          != undefined && this.final_token()          != ""
-           && this.final_token_secret()   != undefined && this.final_token_secret()   != ""
-           && this.consumer_key()         != undefined && this.consumer_key()         != ""
+    return this.final_token() != undefined && this.final_token() != ""
+           && this.final_token_secret() != undefined && this.final_token_secret() != ""
+           && this.consumer_key() != undefined && this.consumer_key() != ""
            && this.client_shared_secret() != undefined && this.client_shared_secret() != "";
+
   }
 });
 

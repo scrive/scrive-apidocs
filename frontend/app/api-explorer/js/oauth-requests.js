@@ -59,7 +59,7 @@ window.OAuthResourceOwnerAuthorization =  Backbone.Model.extend({
   }
 });
 
-/* After user confirmed identity with Scrive, this one is used to get key to authorized user requests*/
+/* After user confirmed identity with Scrive, this one is ussed to get key to authorizaed user requests*/
 window.OAuthTokenRequest = OAuthRequest.extend({
   defaults: {
     oauth_consumer_key:"",
@@ -74,9 +74,10 @@ window.OAuthTokenRequest = OAuthRequest.extend({
   authorization: function () {
     return "oauth_signature_method=\"PLAINTEXT\"," +
            "oauth_consumer_key=\"" + this.get("oauth_consumer_key") + "\"," +
-           "oauth_signature=\""    + this.get("oauth_client_shared_secret") + "&" + this.get("oauth_token_secret") + "\"," +
+           "oauth_signature=\""    +
+             this.get("oauth_client_shared_secret") + "&" + this.get("oauth_token_secret") + "\"," +
            "oauth_verifier=\""     + this.get("oauth_verifier")     + "\"," +
-           "oauth_token=\""        + this.get("oauth_token")    + "\"";
+           "oauth_token=\""    + this.get("oauth_token")    + "\"";
   },
   data: function () {
     return {};
