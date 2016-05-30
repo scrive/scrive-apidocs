@@ -22,7 +22,7 @@ data DocumentOrderBy
   | DocumentOrderByType        -- ^ Order by document type.
   | DocumentOrderByPartners    -- ^ Order by partner names or emails
   | DocumentOrderByAuthor      -- ^ Order by author name or email
-  deriving (Eq)
+  deriving (Eq, Show)
 
 data DocumentOrderByRep = DocumentOrderByRep {
     dobrExpr  :: !SQL

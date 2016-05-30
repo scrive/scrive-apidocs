@@ -255,45 +255,103 @@ ProlongDocumentEvidenceVerificationPages=$_ProlongDocumentEvidenceTextNotArchive
 ###
 RejectDocumentEvidenceLog=The signatory <span class="actor"/> rejected the invitation to sign and Scrive eSign disabled the possibility to sign for all parties.$if(text)$ The rejection message from the signatory <span class="actor"/> was: <BR/> <i>$text$</i>$endif$
 ###
-RejectDocumentEvidenceArchive=$_RejectDocumentEvidenceTextSimpleArchive()$
+RejectDocumentEvidenceArchive=*
+$if(text)$
+  $_RejectDocumentEvidenceTextSimpleArchiveWithText()$
+$else$
+  $_RejectDocumentEvidenceTextSimpleArchive()$
+$endif$
 ###
-RejectDocumentEvidenceVerificationPages=$_RejectDocumentEvidenceTextSimpleNotArchive()$
+RejectDocumentEvidenceVerificationPages=*
+$if(text)$
+  $_RejectDocumentEvidenceTextSimpleNotArchiveWithText()$
+$else$
+  $_RejectDocumentEvidenceTextSimpleNotArchive()$
+$endif$
 ###
 ReminderSendLog=*
 $if(signing)$
   $if(email)$
-    $_SignReminderSendEmailLog()$
+    $if(text)$
+      $_SignReminderSendEmailLogWithText()$
+    $else$
+      $_SignReminderSendEmailLog()$
+    $endif$
   $elseif(mobile)$
-    $_SignReminderSendSMSLog()$
+    $if(text)$
+      $_SignReminderSendSMSLogWithText()$
+    $else$
+      $_SignReminderSendSMSLog()$
+    $endif$
   $elseif(emailmobile)$
-    $_SignReminderSendEmailSMSLog()$
+    $if(text)$
+      $_SignReminderSendEmailSMSLogWithText()$
+    $else$
+      $_SignReminderSendEmailSMSLog()$
+    $endif$
   $endif$
 $elseif(viewing)$
   $if(email)$
-    $_ReviewReminderSendEmailLog()$
+    $if(text)$
+      $_ReviewReminderSendEmailLogWithText()$
+    $else$
+      $_ReviewReminderSendEmailLog()$
+    $endif$
   $elseif(mobile)$
-    $_ReviewReminderSendSMSLog()$
+    $if(text)$
+      $_ReviewReminderSendSMSLogWithText()$
+    $else$
+      $_ReviewReminderSendSMSLog()$
+    $endif$
   $elseif(emailmobile)$
-    $_ReviewReminderSendEmailSMSLog()$
+    $if(text)$
+      $_ReviewReminderSendEmailSMSLogWithText()$
+    $else$
+      $_ReviewReminderSendEmailSMSLog()$
+    $endif$
   $endif$
 $endif$
 ###
 ReminderSendArchive=*
 $if(signing)$
   $if(email)$
-      $_ReminderSendTextToSignArchiveEmail()$
+      $if(text)$
+        $_ReminderSendTextToSignArchiveEmailWithText()$
+      $else$
+        $_ReminderSendTextToSignArchiveEmail()$
+      $endif$
   $elseif(mobile)$
-      $_ReminderSendTextToSignArchiveSMS()$
+      $if(text)$
+        $_ReminderSendTextToSignArchiveSMSWithText()$
+      $else$
+        $_ReminderSendTextToSignArchiveSMS()$
+      $endif$
   $elseif(emailmobile)$
-      $_ReminderSendTextToSignArchiveEmailSMS()$
+      $if(text)$
+        $_ReminderSendTextToSignArchiveEmailSMSWithText()$
+      $else$
+        $_ReminderSendTextToSignArchiveEmailSMS()$
+      $endif$
   $endif$
 $elseif(viewing)$
   $if(email)$
-      $_ReminderSendTextToReviewArchiveEmail()$
+      $if(text)$
+        $_ReminderSendTextToReviewArchiveEmailWithText()$
+      $else$
+        $_ReminderSendTextToReviewArchiveEmail()$
+      $endif$
   $elseif(mobile)$
-      $_ReminderSendTextToReviewArchiveSMS()$
+      $if(text)$
+        $_ReminderSendTextToReviewArchiveSMSWithText()$
+      $else$
+        $_ReminderSendTextToReviewArchiveSMS()$
+      $endif$
   $elseif(emailmobile)$
-      $_ReminderSendTextToReviewArchiveEmailSMS()$
+      $if(text)$
+        $_ReminderSendTextToReviewArchiveEmailSMSWithText()$
+      $else$
+        $_ReminderSendTextToReviewArchiveEmailSMS()$
+      $endif$
   $endif$
 $endif$
 ###

@@ -55,7 +55,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
                 f.authorObligatory = 'optional';
             return f;
         });
-
+        this.checkLastViewerChange();
         var attachments = _.map(args.attachments, function(attachment) {
                 return new SignatoryAttachment(extendedWithSignatory(attachment));
         });

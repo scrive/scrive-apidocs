@@ -49,7 +49,8 @@ var TaskList = require("./navigation/task_list");
       taskList: React.PropTypes.instanceOf(TaskList).isRequired,
       hideArrow: React.PropTypes.func.isRequired,
       showArrow: React.PropTypes.func.isRequired,
-      blinkArrow: React.PropTypes.func.isRequired
+      blinkArrow: React.PropTypes.func.isRequired,
+      zoomToPoint: React.PropTypes.func.isRequired
     },
 
     // Contexts are an undocumented built in feature of React.
@@ -72,6 +73,10 @@ var TaskList = require("./navigation/task_list");
           if (self.refs.arrow) {
             self.refs.arrow.blink()
           }
+        },
+
+        zoomToPoint: function (zoomPoint, zoom) {
+          self.refs.fileView.zoomToPoint(zoomPoint, zoom);
         }
       };
     },

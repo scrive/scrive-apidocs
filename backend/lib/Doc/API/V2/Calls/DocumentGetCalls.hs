@@ -11,6 +11,7 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 import Data.Char
 import Data.Unjson
 import Happstack.Server.Types
+import Log
 import Text.JSON.Types (JSValue(..))
 import qualified Data.ByteString.Lazy as BSL (fromStrict)
 import qualified Data.Map as Map hiding (map)
@@ -41,6 +42,7 @@ import File.Model
 import File.Storage
 import Kontra
 import KontraPrelude
+import Log.Identifier
 import OAuth.Model
 import User.Model
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
@@ -57,7 +59,15 @@ docApiV2List = api $ do
   -- API call actions
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
   let documentSorting = (toDocumentSorting <$> sorting)
+  logInfo "Fetching list of documents from the database" $ object [
+      identifier_ $ userid user
+    , "offset"    .= offset
+    , "max_count" .= maxcount
+    , "filters"   .= map show documentFilters
+    , "sorting"   .= map show documentSorting
+    ]
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit (DocumentsVisibleToUser $ userid user) documentFilters documentSorting (offset, 1000, maxcount)
+  logInfo_ "Fetching done"
   -- Result
   return $ Ok $ Response 200 Map.empty nullRsFlags (listToJSONBS (allDocsCount,(\d -> (documentAccessForUser user d,d)) <$> allDocs)) Nothing
 

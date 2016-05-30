@@ -6,6 +6,8 @@
 @scroll-arrow-margin: 50px;
 @action-arrow-width: 20px;
 @action-arrow-height: 37px;
+@action-arrow-left-margin: -20px;
+@action-arrow-right-margin: -10px;
 
 .arrows {
   .scroll-arrow {
@@ -41,11 +43,11 @@
 
   .action-arrow.right {
     float: left;
-    margin-left: -(@action-arrow-width / 2);
+    margin-left: @action-arrow-right-margin;
   }
 
   .action-arrow.left {
     float: right;
-    margin-left: -@action-arrow-width;
+    margin-left: @action-arrow-left-margin;
   }
 }
