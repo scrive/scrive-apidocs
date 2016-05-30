@@ -134,9 +134,9 @@
 "_smsDocumentErrorSignatory":"Scrive gat ekki meðhöndlað skjalið $documenttitle$ og hætt hefur verið við undirskriftarferlið. Ef þú hefur einhverjar spurningar skaltu hafa samband á netfangið support@scrive.com",
 "_smsInvitationToSign":"",
 "_smsPinSendout":"PIN-númer þitt fyrir $documenttitle$ is $pin$",
-"_smsRejectNotification":"Sæl/l, $rejectorName$ hefur hafnað því að skrifa undir skjalið $documenttitle$. Því hefur verið hætt við undirskriftarferlið. Smelltu á hlekkinn til að skoða skjalið: $link$",
-"_smsReminder":"Sæl/l, $creatorname$ langar að minna þig á að skrifa undir skjalið $documenttitle$. Opnaðu hlekkinn til að skoða skjalið: $link$",
+"_smsRejectNotification":"",
+"_smsReminder":"",
 "_smsReminderAutomatic":"",
-"_smsReminderSigned":"Sæl/l, undirskrifaða skjalið $documenttitle$ hefur verið endursent að beiðni $creatorname$. Nálgastu skjalið með því að smella á þennan hlekk: $link$",
+"_smsReminderSigned":"",
 "_unavailableForSign":"Skjalið er ekki lengur fáanlegt til undirskriftar"
 }

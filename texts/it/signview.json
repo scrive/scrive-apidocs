@@ -134,9 +134,9 @@
 "_smsDocumentErrorSignatory":"Scrive non ha potuto gestire il documento $documenttitle$ e il processo di firma è stato annullato. Se hai domande, non esitare a contattarci all'indirizzo support@scrive.com",
 "_smsInvitationToSign":"",
 "_smsPinSendout":"Il tuo PIN per $documenttitle$ è $pin$",
-"_smsRejectNotification":"Ciao, $rejectorName$ ha rifiutato di firmare il documento $documenttitle$. Il processo di firma è stato perciò annullato. Segui il link per vedere il documento: $link$",
-"_smsReminder":"Ciao, $creatorname$ ti ricorda di firmare il documento $documenttitle$. Apri il link per rivedere il documento: $link$",
+"_smsRejectNotification":"",
+"_smsReminder":"",
 "_smsReminderAutomatic":"",
-"_smsReminderSigned":"Ciao, il documento firmato $documenttitle$ ti è stato inviato nuovamente su richiesta di $creatorname$. Troverai il documento a questo link: $link$",
+"_smsReminderSigned":"",
 "_unavailableForSign":"Il documento non è più disponibile per la firma"
 }

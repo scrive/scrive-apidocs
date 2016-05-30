@@ -132,11 +132,11 @@
 "_signviewSigningFailed":"Diemžēl notika kļūme, parakstot dokumentu. Lūdzu, mēģiniet vēlreiz!",
 "_smsDocumentErrorAuthor":"Scrive nevarēja apstrādāt dokumentu $documenttitle$, un parakstīšana ir atcelta. Jautājumu gadījumā, lūdzu, sazinieties ar mums, rakstot uz support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive nevarēja apstrādāt dokumentu $documenttitle$, un parakstīšana ir atcelta. Jautājumu gadījumā, lūdzu, sazinieties ar mums, rakstot uz support@scrive.com",
-"_smsInvitationToSign":"Sveiki! $creatorname:noescape()$ ir uzaicinājis Jūs elektroniski parakstīties. Noklikšķiniet šeit: $link$",
+"_smsInvitationToSign":"",
 "_smsPinSendout":"Jūsu PIN kods dokumentam $documenttitle$ ir $pin$",
-"_smsRejectNotification":"Sveiki! $rejectorName$ atteicās parakstīt dokumentu $documenttitle$, tādēļ parakstīšana ir atcelts. Noklikšķiniet uz saites, lai apskatītu dokumentu: $link$",
-"_smsReminder":"Sveiki! $creatorname$ vēlas Jums atgādināt, ka jāparaksta dokuments  $documenttitle$. Noklikšķiniet uz saites, lai apskatītu dokumentu: $link$",
-"_smsReminderAutomatic":"Sveiki! ŠIs ir automātiskais atgādinājums, ka vēl neesat parakstījis dokumentu $documenttitle$ no $creatorname$. Noklikšķiniet uz saites, lai apskatītu dokumentu: $link$",
-"_smsReminderSigned":"Sveiki! Pēc $creatorname$ lūguma atkārtoti nosūtījām Jums parakstīto dokumentu $documenttitle$. Lai atvērtu to, noklikšķiniet uz saites: $link$",
+"_smsRejectNotification":"",
+"_smsReminder":"",
+"_smsReminderAutomatic":"",
+"_smsReminderSigned":"",
 "_unavailableForSign":"Dokuments vairs nav pieejams parakstīšanai"
 }

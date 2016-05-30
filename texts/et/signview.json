@@ -132,11 +132,11 @@
 "_signviewSigningFailed":"Vabandame, midagi läks dokumendi allkirjastamisel valesti. Palun proovige uuesti.",
 "_smsDocumentErrorAuthor":"Scrive ei suutnud dokumenti $documenttitle$ hallata ja allkirjastamisprotsess tühistati. Küsimuste korral võtke meiega ühendust aadressil support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive ei suutnud dokumenti $documenttitle$ hallata ja allkirjastamisprotsess tühistati. Küsimuste korral võtke meiega ühendust aadressil support@scrive.com",
-"_smsInvitationToSign":"Tere, $creatorname:noescape()$ on saatnud Teile kutse e-allkirjastamiseks. Klõpsake alustamiseks siin: $link$",
+"_smsInvitationToSign":"",
 "_smsPinSendout":"Teie $documenttitle$ PIN on $pin$",
-"_smsRejectNotification":"Tere, $rejectorName$ keeldus dokumendi $documenttitle$ allkirjastamisest. Allkirjastamisprotsess on seetõttu tühistatud. Järgige dokumendi vaatamiseks linki: $link$",
-"_smsReminder":"Tere, $creatorname$ soovib Teile meelde tuletada, et allkirjastaksite dokumendi $documenttitle$. Dokumendi vaatamiseks avage link: $link$",
-"_smsReminderAutomatic":"Tere, tegu on automaatse meeldetuletusega, et Te pole kasutaja $creatorname$ dokumenti $documenttitle$ allkirjastanud. Dokumendi vaatamiseks avage link: $link$",
-"_smsReminderSigned":"Tere, allkirjastatud dokument $documenttitle$ on Teile kasutaja $creatorname$ palvel uuesti saadetud. Dokumendi leiate, järgides allpool toodud linki: $link$",
+"_smsRejectNotification":"",
+"_smsReminder":"",
+"_smsReminderAutomatic":"",
+"_smsReminderSigned":"",
 "_unavailableForSign":"Dokument pole enam allkirjastamiseks kättesaadav."
 }

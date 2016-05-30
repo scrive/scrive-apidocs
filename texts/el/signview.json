@@ -134,9 +134,9 @@
 "_smsDocumentErrorSignatory":"Η υπηρεσία Scrive δεν μπόρεσε να διαχειριστεί το έγγραφο $documenttitle$ και η διαδικασία υπογραφής έχει ακυρωθεί. Αν έχετε ερωτήσεις, παρακαλώ επικοινωνήστε μαζί μας στο support@scrive.com  ",
 "_smsInvitationToSign":"",
 "_smsPinSendout":"Το PIN σας για το $documenttitle$ είναι $pin$ ",
-"_smsRejectNotification":"Γεια σας, ο $rejectorName$ έχει αρνηθεί να υπογράψει το έγγραφο $documenttitle$. Για τον λόγο αυτό η διαδικασία υπογραφής έχει ακυρωθεί. Ακολουθήστε τον σύνδεσμο για να δείτε το έγγραφο: $link$  ",
-"_smsReminder":"Γεια σας, ο $creatorname$ θέλει να σας υπενθυμίσει να υπογράψετε το έγγραφο $documenttitle$. Ανοίξτε τον σύνδεσμο για να δείτε το έγγραφο: $link$  ",
+"_smsRejectNotification":"",
+"_smsReminder":"",
 "_smsReminderAutomatic":"",
-"_smsReminderSigned":"Γεια σας, το υπογεγραμμένο έγγραφο $documenttitle$ σας έχει αποσταλεί ξανά μετά από αίτημα του $creatorname$. Βρείτε το έγγραφο στον σύνδεσμο που ακολουθεί: $link$  ",
+"_smsReminderSigned":"",
 "_unavailableForSign":"Το έγγραφο δεν είναι πλέον διαθέσιμο προς υπογραφή "
 }

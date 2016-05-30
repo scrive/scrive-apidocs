@@ -134,9 +134,9 @@
 "_smsDocumentErrorSignatory":"Não foi possível o Scrive processar o documento $documenttitle$ e o processo de assinatura foi cancelado. Se pretende colocar qualquer questão, contacte-nos para support@scrive.com",
 "_smsInvitationToSign":"",
 "_smsPinSendout":"O seu PIN para $documenttitle$ é $pin$",
-"_smsRejectNotification":"Olá, $rejectorName$ rejeitou a assinatura do documento $documenttitle$. O processo de assinatura foi, por isso, cancelado. Siga a hiperligação para visualizar o documento: $link$",
-"_smsReminder":"Olá, $creatorname$ pretende lembrá-lo para assinar o documento $documenttitle$. Abra a hiperligação para visualizar o documento: $link$",
+"_smsRejectNotification":"",
+"_smsReminder":"",
 "_smsReminderAutomatic":"",
-"_smsReminderSigned":"Olá, o documento assinado $documenttitle$ foi reenviado para si, a pedido de $creatorname$. Aceda ao documento seguindo esta hiperligação: $link$",
+"_smsReminderSigned":"",
 "_unavailableForSign":"O documento já não se encontra disponivel para assinar"
 }

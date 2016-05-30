@@ -132,11 +132,11 @@
 "_signviewSigningFailed":"Atsiprašome, kažkas sutriko pasirašant dokumentą. Pabandykite dar kartą.",
 "_smsDocumentErrorAuthor":"„Scrive“ negalėjo apdoroti $documenttitle$ dokumento, todėl pasirašymo eiga nutraukta. Jei kilo klausimų, susisiekite su mumis adresu support@scrive.com",
 "_smsDocumentErrorSignatory":"„Scrive“ negalėjo apdoroti $documenttitle$ dokumento, todėl pasirašymo eiga nutraukta. Jei kilo klausimų, susisiekite su mumis adresu support@scrive.com",
-"_smsInvitationToSign":"Sveiki, $creatorname:noescape()$ pasiūlė Jums pasirašyti el. parašu. Pradėkite paspausdami čia: $link$",
+"_smsInvitationToSign":"",
 "_smsPinSendout":"Jūsų PIN $documenttitle$ dokumentui yra $pin$",
-"_smsRejectNotification":"Sveiki, $rejectorName$ atsisakė pasirašyti $documenttitle$ dokumentą. Todėl pasirašymo eiga nutraukta. Dokumentą galima pamatyti čia: $link$",
-"_smsReminder":"Sveiki, $creatorname$ primena Jums pasirašyti $documenttitle$ dokumentą. Dokumentą galima pamatyti atvertus saitą: $link$",
-"_smsReminderAutomatic":"Sveiki, tai automatinis priminimas, kad Jūs dar nepasirašėte dokumento $documenttitle$, kurį atsiuntė $creatorname$. Dokumentą galima pamatyti atvertus saitą: $link$",
-"_smsReminderSigned":"Sveiki, pasirašytas dokumentas $documenttitle$ Jums pakartotinai išsiųstas $creatorname$ prašymu. Dokumentą galite rasti atvertę saitą: $link$",
+"_smsRejectNotification":"",
+"_smsReminder":"",
+"_smsReminderAutomatic":"",
+"_smsReminderSigned":"",
 "_unavailableForSign":"Šio dokumento jau nebegalima pasirašyti"
 }
