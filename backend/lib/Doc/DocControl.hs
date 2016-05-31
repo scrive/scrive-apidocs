@@ -284,7 +284,7 @@ handleCookieFail slid did = logDocumentAndSignatory did slid $ do
   if null cookies
     then sendRedirect LinkEnableCookies
     else do
-      logInfo_ "Signview load after session timedout"
+      logInfo "Signview load after session timedout" $ object ["cookies" .= show cookies]
       ctx <- getContext
       ad <- getAnalyticsData
       let fields = standardPageFields ctx Nothing ad
