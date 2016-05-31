@@ -145,7 +145,7 @@ runTestKontraHelper :: ConnectionSource -> Request -> Context -> Kontra a -> Tes
 runTestKontraHelper cs rq ctx tk = do
   filecache <- MemCache.new BS.length 52428800
   let noflashctx = ctx { ctxflashmessages = [] }
-      amazoncfg = AWS.AmazonConfig Nothing filecache
+      amazoncfg = AWS.AmazonConfig Nothing filecache Nothing
   now <- currentTime
   rng <- asks teRNGState
   LogRunner{..} <- asks teLogRunner
@@ -311,6 +311,7 @@ mkContext lang = do
           , cgServiceID = "logtest004"
           , cgDisplayName = "Funktionstjänster Test"
           }
+        , ctxmrediscache = Nothing
         , ctxfilecache = filecache
         , ctxlesscache = lesscache
         , ctxbrandedimagescache = brandedimagescache

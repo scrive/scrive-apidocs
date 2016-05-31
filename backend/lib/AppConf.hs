@@ -9,6 +9,7 @@ import Data.Word
 import qualified Data.Map as Map
 import qualified Data.Text as T
 
+import Database.Redis.Configuration
 import EID.CGI.GRP.Config
 import EID.Nets.Config
 import GuardTime (GuardTimeConf(..))
@@ -34,6 +35,7 @@ data AppConf = AppConf {
   , useHttps           :: Bool                         -- ^ should we redirect to https?
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
   , dbConfig           :: T.Text                       -- ^ postgresql configuration
+  , redisCacheConfig   :: Maybe RedisConfig            -- ^ redis configuration
   , logConfig          :: LogConfig                    -- ^ logging configuration
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , cdnBaseUrl         :: Maybe String                 -- ^ for CDN content in prod mode
@@ -86,6 +88,9 @@ unjsonAppConf = objectOf $ pure AppConf
       dbConfig
       "Database connection string"
       unjsonAeson
+  <*> fieldOpt "redis_cache"
+      redisCacheConfig
+      "Redis cache configuration"
   <*> field "logging"
       logConfig
       "Logging configuration"
@@ -142,7 +147,6 @@ instance Unjson AppConf where
   unjsonDef = unjsonAppConf
 
 -- | Default application configuration that does nothing.
---
 instance Default AppConf where
   def = AppConf {
       httpBindAddress    = (0x7f000001, 8000)
@@ -150,6 +154,7 @@ instance Default AppConf where
     , useHttps           = True
     , amazonConfig       = Nothing
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
+    , redisCacheConfig   = Just def
     , logConfig          = def
     , production         = True
     , cdnBaseUrl         = Nothing

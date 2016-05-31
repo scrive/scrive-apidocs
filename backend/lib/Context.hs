@@ -13,6 +13,7 @@ import Happstack.Server (Response)
 import Log.Class
 import qualified Control.Concurrent.Thread as T
 import qualified Data.ByteString as BS
+import qualified Database.Redis as R
 
 import BrandedDomain.BrandedDomain
 import Branding.Cache
@@ -62,6 +63,7 @@ data Context = Context
     , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
     , ctxcgigrpconfig        :: CgiGrpConfig
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
+    , ctxmrediscache         :: Maybe R.Connection
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
     , ctxlesscache           :: LessCache -- ^
     , ctxbrandedimagescache  :: BrandedImagesCache -- ^

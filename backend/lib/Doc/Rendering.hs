@@ -16,6 +16,8 @@ module Doc.Rendering
     , getPageSizeOfPDFInPoints
     ) where
 
+import Control.Concurrent.Async.Lifted
+import Control.Concurrent.Lifted
 import Control.DeepSeq
 import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
@@ -31,18 +33,22 @@ import System.Exit
 import System.IO
 import System.Process hiding (readProcessWithExitCode)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
+import System.Timeout.Lifted
 import qualified Control.Concurrent.Thread.Lifted as LT
 import qualified Control.Exception.Lifted as E
 import qualified Data.Attoparsec.Text as P
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.Foldable as F
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Text.Lazy.IO as LT
 import qualified Data.Unjson as Unjson
+import qualified Database.Redis as R
 import qualified System.IO.Temp
 
+import Database.Redis.Helpers
 import DB
 import Doc.Logging
 import Doc.RenderedPages
@@ -51,7 +57,7 @@ import File.Storage
 import ForkAction
 import Kontra
 import KontraPrelude
-import qualified Amazon as AWS
+import qualified Database.Redis.Cache as RC
 import qualified MemCache as MemCache
 
 data PageInfo = PageInfo {
@@ -102,13 +108,14 @@ withSystemTempDirectory = liftBaseOp . System.IO.Temp.withSystemTempDirectory
 
 -- |Convert PDF to PNG images of pages
 runRendering
-  :: forall m. (KontraMonad m, MonadLog m, MonadDB m, MonadThrow m, MonadMask m, MonadBaseControl IO m, AWS.AmazonMonad m)
+  :: forall m. (MonadBaseControl IO m, MonadLog m, MonadMask m)
   => BS.ByteString
   -> Int
   -> RenderingMode
   -> RenderedPages
+  -> Maybe (R.Connection, RedisKey)
   -> m ()
-runRendering fileContent widthInPixels renderingMode rp = do
+runRendering fileContent widthInPixels renderingMode rp mredis = do
   withSystemTempDirectory "mudraw" $ \tmpPath -> do
     let sourcePath = tmpPath ++ "/source.pdf"
     liftBase $ BS.writeFile sourcePath fileContent
@@ -186,6 +193,7 @@ runRendering fileContent widthInPixels renderingMode rp = do
                         "error" .= show e
                       ]
                     return BS.empty
+                F.forM_ mredis $ redisPut (BS.pack $ show k) content
                 putPage rp piPage content >>= \case
                   True  -> logInfo "Page retrieved successfully" $ toJSON info
                   False -> logAttention_ "Page already in place"
@@ -229,6 +237,45 @@ runRendering fileContent widthInPixels renderingMode rp = do
       <*> msToSecsM P.double
       <* P.string "ms"
 
+fetchPagesFromRedis
+  :: (MonadBaseControl IO m, MonadLog m, MonadThrow m)
+  => RenderedPages
+  -> R.Connection
+  -> RedisKey
+  -> m ()
+fetchPagesFromRedis rp cache rkey = do
+  -- Subscribe in background to a channel that is posted to whenever a new page
+  -- is rendered. In addition, if the function looking for pages won't find a
+  -- specific page, it stops and waits before retrying at most 1 second to work
+  -- around any unknown quirks (note that a single page should almost never take
+  -- more than one second to render, so we don't lose anything here).
+  semaphore <- newEmptyMVar
+  withAsync (listener semaphore) $ \_ -> go semaphore 1
+  where
+    key = fromRedisKey rkey
+
+    listener semaphore = runRedis_ cache $ do
+      R.pubSub (R.subscribe [key]) $ \_msg -> do
+        void $ tryPutMVar semaphore ()
+        return mempty
+
+    go semaphore k
+      | k > pagesCount rp = return ()
+      | otherwise = do
+        mcontent <- runRedis cache $ R.hget key (BS.pack $ show k)
+        case mcontent of
+          Just content -> do
+            logInfo "Page retrieved successfully" $ object [
+                "page" .= k
+              ]
+            void $ putPage rp k content
+            go semaphore $ k + 1
+          Nothing -> do
+            logInfo "Waiting for page" $ object [
+                "page" .= k
+              ]
+            void . timeout 1000000 $ takeMVar semaphore
+            go semaphore k
 
 -- | 'getRenderedPages' returns 'RenderedPages' for document 'fileid'
 -- requested to be rendered with width 'pageWidthInPixels' and also a
@@ -242,12 +289,11 @@ getRenderedPages :: Kontrakcja m
                  -> RenderingMode
                  -> m RenderedPages
 getRenderedPages fid pageWidthInPixels renderingMode = logFile fid $ do
-  let clampedPageWidthInPixels =
-        min 4000 (max 100 pageWidthInPixels)
+  let pageWidth = min 4000 (max 100 pageWidthInPixels)
   Context{ctxnormalizeddocuments} <- getContext
-  let key = (fid, clampedPageWidthInPixels, renderingMode)
+  let key = (fid, pageWidth, renderingMode)
   logInfo "Fetching RenderedPages from cache" $ object [
-      "page_width" .= clampedPageWidthInPixels
+      "page_width" .= pageWidth
     , "rendering_mode" .= show renderingMode
     ]
   MemCache.fetch ctxnormalizeddocuments key $ do
@@ -263,8 +309,21 @@ getRenderedPages fid pageWidthInPixels renderingMode = logFile fid $ do
             internalError
           Right pagesNo -> renderedPages pagesNo
     forkAction "Rendering file" $ do
-      runRendering fileContent clampedPageWidthInPixels renderingMode rp
+      let rkey = toRedisKey key
+      mredis <- ctxmrediscache <$> getContext
+      RC.mfetch mredis rkey
+        (fetchPagesFromRedis rp)
+        (runRendering fileContent pageWidth renderingMode rp)
     return rp
+  where
+    toRedisKey (fid_, pageWidth, mode) = mkRedisKey [
+        "pages"
+      , BS.pack . show $ fromFileID fid_
+      , BS.pack . show $ pageWidth
+      , case mode of
+          RenderingModeWholeDocument -> "whole"
+          RenderingModeFirstPageOnly -> "first"
+      ]
 
 data FileError = FileSizeError Int Int
                | FileFormatError

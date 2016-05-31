@@ -12,10 +12,12 @@ import System.Environment
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
+import qualified Data.Traversable as F
 import qualified Happstack.StaticRouting as R
 
 import Configuration
 import Crypto.RNG
+import Database.Redis.Configuration
 import DB
 import DB.Checks
 import DB.PostgreSQL
@@ -64,7 +66,14 @@ main = do
     let cs = pgConnSettings $ mscDBConfig conf
     withPostgreSQL (simpleSource $ cs []) $ do
       checkDatabase (logInfo_ . T.pack) [] mailerTables
-    awsconf <- AWS.AmazonConfig (mscAmazonConfig conf) <$> MemCache.new BS.length 52428800
+    awsconf <- do
+      localCache <- MemCache.new BS.length 52428800
+      globalCache <- F.forM (mscRedisCacheConfig conf) mkRedisConnection
+      return $ AWS.AmazonConfig {
+          awsConfig = mscAmazonConfig conf
+        , awsLocalCache = localCache
+        , awsGlobalCache = globalCache
+        }
     pool <- ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource $ cs mailerComposites)
     rng <- newCryptoRNGState
 

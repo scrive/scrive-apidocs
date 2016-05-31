@@ -10,6 +10,7 @@ import Data.ByteString (ByteString)
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
+import qualified Database.Redis as R
 
 import AppConf
 import BrandedDomain.Model
@@ -39,9 +40,10 @@ documentSealing :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, M
                 => AppConf
                 -> KontrakcjaGlobalTemplates
                 -> MemCache FileID ByteString
+                -> Maybe R.Connection
                 -> ConnectionSource
                 -> ConsumerConfig m DocumentID DocumentSealing
-documentSealing appConf templates fileCache pool = ConsumerConfig {
+documentSealing appConf templates localCache globalCache pool = ConsumerConfig {
     ccJobsTable = "document_sealing_jobs"
   , ccConsumersTable = "document_sealing_consumers"
   , ccJobSelectors = ["id", "branded_domain_id", "attempts"]
@@ -60,8 +62,9 @@ documentSealing appConf templates fileCache pool = ConsumerConfig {
       doc <- theDocument
       let lang = getLang doc
           ac = A.AmazonConfig {
-              A.amazonConfig = amazonConfig appConf
-            , A.fileCache = fileCache
+              A.awsConfig = amazonConfig appConf
+            , A.awsLocalCache = localCache
+            , A.awsGlobalCache = globalCache
             }
           mc = MailContext {
               mctxmailsconfig = mailsConfig appConf

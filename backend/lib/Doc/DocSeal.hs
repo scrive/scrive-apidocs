@@ -121,7 +121,7 @@ personExFromSignatoryLink tz sim boxImages sl@SignatoryLink{..} = do
      , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationtosignmethod == SMSPinAuthenticationToSign)
      }
 
-fieldsFromSignatory :: forall m. (MonadDB m, MonadThrow m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => (BS.ByteString,BS.ByteString) -> SignatoryLink -> m [Seal.Field]
+fieldsFromSignatory :: forall m. (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => (BS.ByteString,BS.ByteString) -> SignatoryLink -> m [Seal.Field]
 fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryfields} =
   silenceJPEGFieldsFromFirstSignature <$> concat <$> mapM makeSealField signatoryfields
   where
@@ -197,7 +197,7 @@ listAttachmentsFromDocument document =
   where extract sl = map (\at -> (at,sl)) (signatoryattachments sl)
 
 
-findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, AWS.AmazonMonad m, MonadBaseControl IO m)
+findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadMask m, MonadLog m, TemplatesMonad m, AWS.AmazonMonad m, MonadBaseControl IO m)
                       => SignatoryIdentifierMap -> String -> Document -> m [Seal.FileDesc]
 
 findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $ do
@@ -265,7 +265,7 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
                  }
 
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadThrow m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m)
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m)
                            => SignatoryIdentifierMap -> Document -> m Seal.SealAttachment
 evidenceOfIntentAttachment sim doc = do
   let title = documenttitle doc
@@ -610,7 +610,7 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
           return $ Left "Error when preprinting fields on PDF"
 
 
-addSealedEvidenceEvents ::  (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, AWS.AmazonMonad m, MonadThrow m)
+addSealedEvidenceEvents ::  (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, AWS.AmazonMonad m, MonadMask m)
                  => Actor -> m ()
 addSealedEvidenceEvents actor = do
   notAddedAttachments <- filter (not . authorattachmentaddtosealedfile) <$> documentauthorattachments <$> theDocument

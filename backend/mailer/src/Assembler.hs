@@ -31,7 +31,7 @@ import Mails.Model
 import MinutesTime
 import qualified Amazon as AWS
 
-assembleContent :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadBaseControl IO m, MonadLog m, AWS.AmazonMonad m, MonadTime m) => Mail -> m BSL.ByteString
+assembleContent :: (CryptoRNG m, MonadDB m, MonadMask m, MonadBaseControl IO m, MonadLog m, AWS.AmazonMonad m, MonadTime m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
   time <- currentTime
   (boundaryMixed, boundaryAlternative,boundaryRelated) <- createBoundaries

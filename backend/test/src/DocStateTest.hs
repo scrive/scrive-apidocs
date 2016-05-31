@@ -325,7 +325,7 @@ testSignDocumentEvidenceLog = do
       assertJust $ find (\e -> evType e == Current SignDocumentEvidence) lg
 
       mc <- MemCache.new (const 1) 1000
-      runAmazonMonadT (AmazonConfig Nothing mc) $ do
+      runAmazonMonadT (AmazonConfig Nothing mc Nothing) $ do
         sealDocument "https://scrive.com"
 
 testTimeoutDocumentEvidenceLog :: TestEnv ()
@@ -915,7 +915,7 @@ testSealDocument = replicateM_ 1 $ do
     randomUpdate $ \t-> CloseDocument (systemActor t)
 
     mc <- MemCache.new (const 1) 1000
-    runAmazonMonadT (AmazonConfig Nothing mc) $ do
+    runAmazonMonadT (AmazonConfig Nothing mc Nothing) $ do
       sealDocument "https://scrive.com"
 
 
@@ -1949,7 +1949,7 @@ runScheduler m = do
   let appConf = def { dbConfig = "" }
   templates <- liftBase readGlobalTemplates
   filecache <- MemCache.new BS.length 52428800
-  CronEnv.runScheduler appConf filecache templates m
+  CronEnv.runScheduler appConf filecache Nothing templates m
 
 -- Moved from Eq instance of SignatoryLink. Instance got dropped as it is not usefull in main server - but it's good to have way to compare SignatoryLinks in tests.
 signatoryLinksAreAlmoustEqualForTests :: SignatoryLink -> SignatoryLink -> Bool

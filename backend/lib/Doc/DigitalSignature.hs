@@ -37,7 +37,7 @@ import Util.Actor (systemActor)
 import Utils.Directory (withSystemTempDirectory')
 import qualified GuardTime as GT
 
-addDigitalSignature :: (CryptoRNG m, MonadIO m, MonadThrow m, MonadLog m, MonadBaseControl IO m, DocumentMonad m, AmazonMonad m, GuardTimeConfMonad m, TemplatesMonad m) => m ()
+addDigitalSignature :: (CryptoRNG m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, DocumentMonad m, AmazonMonad m, GuardTimeConfMonad m, TemplatesMonad m) => m ()
 addDigitalSignature = theDocumentID >>= \did ->
   withSystemTempDirectory' ("DigitalSignature-" ++ show did ++ "-") $ \tmppath -> do
   Just file <- fileFromMainFile =<< (documentsealedfile <$>theDocument)
@@ -80,7 +80,7 @@ addDigitalSignature = theDocumentID >>= \did ->
     dbUpdate $ AppendSealedFile sealedfileid status $ systemActor now
 
 -- | Extend a document: replace the digital signature with a keyless one.  Trigger callbacks.
-extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadCatch m, MonadLog m, MonadReader SchedulerData m, CryptoRNG m, DocumentMonad m, AmazonMonad m) => m ()
+extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadMask m, MonadLog m, MonadReader SchedulerData m, CryptoRNG m, DocumentMonad m, AmazonMonad m) => m ()
 extendDigitalSignature = do
   Just file <- fileFromMainFile =<< (documentsealedfile <$>theDocument)
   did <- theDocumentID

@@ -10,6 +10,7 @@ import System.Environment
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import qualified Data.Traversable as F
 
 import ActionQueue.EmailChangeRequest
 import ActionQueue.Monad
@@ -21,6 +22,7 @@ import AppDBTables
 import Configuration
 import Cron.Model
 import Crypto.RNG
+import Database.Redis.Configuration
 import DB
 import DB.Checks
 import DB.PostgreSQL
@@ -84,6 +86,7 @@ main = do
     pool <- ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource $ connSettings kontraComposites)
     templates <- liftBase readGlobalTemplates
     rng <- newCryptoRNGState
+    mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
     filecache <- MemCache.new BS.length 52428800
 
     -- Asynchronous event dispatcher; if you want to add a consumer to the event
@@ -98,10 +101,10 @@ main = do
         runDB = withPostgreSQL pool
 
         runScheduler :: Scheduler r -> CronM r
-        runScheduler = runDB . CronEnv.runScheduler appConf filecache templates
+        runScheduler = runDB . CronEnv.runScheduler appConf filecache mrediscache templates
 
-        docSealing = documentSealing appConf templates filecache pool
-        docSigning = documentSigning  appConf templates filecache pool
+        docSealing = documentSealing appConf templates filecache mrediscache pool
+        docSigning = documentSigning  appConf templates filecache mrediscache pool
         apiCallbacks = documentAPICallback appConf runScheduler
         cron = cronQueue appConf mmixpanel templates runScheduler runDB
 

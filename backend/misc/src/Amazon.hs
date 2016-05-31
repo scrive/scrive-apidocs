@@ -4,6 +4,7 @@ module Amazon (
   , isAWSConfigOk
   , mkAWSAction
   , uploadSomeFileToAmazon
+  , getFileFromRedis
   , getFileContents
   , AmazonMonadT
   , runAmazonMonadT
@@ -11,6 +12,8 @@ module Amazon (
   , deleteFile
   ) where
 
+import Control.Concurrent.Async.Lifted
+import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -19,10 +22,13 @@ import Data.Time
 import Log
 import Network.AWS.Authentication
 import System.FilePath ((</>))
+import System.Timeout.Lifted
 import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Foldable as F
+import qualified Database.Redis as R
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.HTTP as HTTP
@@ -30,6 +36,7 @@ import qualified Network.HTTP as HTTP
 import Amazon.Class
 import Crypto
 import Crypto.RNG
+import Database.Redis.Helpers
 import DB
 import File.File
 import File.Model
@@ -83,7 +90,7 @@ uploadSomeFileToAmazon = do
     Nothing -> return False
     Just file -> do
       conf <- getAmazonConfig
-      success <- exportFile (mkAWSAction $ amazonConfig conf) file
+      success <- exportFile (mkAWSAction $ awsConfig conf) file
       if success
         then return True
         else $unexpectedErrorM $ "Moving file " <+> show (fileid file) <+> " to Amazon failed."
@@ -165,9 +172,38 @@ deleteFile ctxs3action bucket url = do
          ]
       return False
 
+getFileFromRedis
+  :: (MonadBaseControl IO m, MonadLog m)
+  => R.Connection
+  -> RedisKey
+  -> m BS.ByteString
+getFileFromRedis cache rkey = do
+  semaphore <- newEmptyMVar
+  withAsync (listener semaphore) $ \_ -> fix $ \loop -> do
+    mcontent <- runRedis cache $ R.hget key "content"
+    case mcontent of
+      Just content -> do
+        logInfo_ "File retrieved successfully"
+        return content
+      Nothing -> do
+        logInfo_ "Waiting for file"
+        void . timeout 1000000 $ takeMVar semaphore
+        loop
+  where
+    key = fromRedisKey rkey
 
-getFileContents :: (MonadBase IO m, MonadLog m) => S3Action -> File -> m (Maybe BS.ByteString)
-getFileContents s3action File{..} = localData fileData $ do
+    listener semaphore = runRedis_ cache $ do
+      R.pubSub (R.subscribe [key]) $ \_msg -> do
+        void $ tryPutMVar semaphore ()
+        return mempty
+
+getFileContents
+  :: (MonadBase IO m, MonadLog m)
+  => S3Action
+  -> File
+  -> Maybe (R.Connection, RedisKey)
+  -> m (Maybe BS.ByteString)
+getFileContents s3action File{..} mredis = localData fileData $ do
   mcontent <- getContent filestorage
   case mcontent of
     Nothing -> do
@@ -178,7 +214,9 @@ getFileContents s3action File{..} = localData fileData $ do
         then do
           logAttention_ "SHA1 checksum of file doesn't match the one in the database"
           return Nothing
-        else return $ Just content
+        else do
+          F.forM_ mredis $ redisPut "content" content
+          return $ Just content
   where
     fileData = [
         identifier_ fileid

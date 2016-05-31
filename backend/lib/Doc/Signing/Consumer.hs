@@ -11,6 +11,7 @@ import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
 import Text.StringTemplates.Templates (renderTemplate)
+import qualified Database.Redis as R
 import qualified Text.StringTemplates.Fields as F
 
 import AppConf
@@ -67,9 +68,10 @@ documentSigning :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, M
                 => AppConf
                 -> KontrakcjaGlobalTemplates
                 -> MemCache FileID ByteString
+                -> Maybe R.Connection
                 -> ConnectionSource
                 -> ConsumerConfig m SignatoryLinkID DocumentSigning
-documentSigning appConf templates fileCache pool = ConsumerConfig {
+documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
     ccJobsTable = "document_signing_jobs"
   , ccConsumersTable = "document_signing_consumers"
   , ccJobSelectors = ["id", "branded_domain_id", "time", "client_ip_v4", "client_time", "client_name", "lang", "fields", "accepted_attachments", "screenshots", "last_check_status", "cancelled", "attempts"]
@@ -97,8 +99,9 @@ documentSigning appConf templates fileCache pool = ConsumerConfig {
       now <- currentTime
       bd <- dbQuery $ GetBrandedDomainByID signingBrandedDomainID
       let ac = A.AmazonConfig {
-              A.amazonConfig = amazonConfig appConf
-            , A.fileCache = fileCache
+              A.awsConfig = amazonConfig appConf
+            , A.awsLocalCache = localCache
+            , A.awsGlobalCache = globalCache
             }
           mc = MailContext {
               mctxmailsconfig = mailsConfig appConf

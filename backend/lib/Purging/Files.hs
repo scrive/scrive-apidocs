@@ -122,7 +122,7 @@ purgeOrphanFile = do
       purgedFromOtherSystems <- case (mamazonBucket, mamazonUrl, isOnAmazon) of
         (Just amazonBucket, Just amazonUrl, True) -> do
           conf <- getAmazonConfig
-          deleteFile (mkAWSAction $ amazonConfig conf) amazonBucket amazonUrl
+          deleteFile (mkAWSAction $ awsConfig conf) amazonBucket amazonUrl
         _ -> return True
       if purgedFromOtherSystems
         then do

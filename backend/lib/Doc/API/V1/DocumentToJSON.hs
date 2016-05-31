@@ -42,7 +42,7 @@ import Utils.String
 import qualified Amazon as AWS
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 
-evidenceAttachmentsJSONV1 :: (MonadDB m, MonadThrow m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => Document -> m JSValue
+evidenceAttachmentsJSONV1 :: (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => Document -> m JSValue
 evidenceAttachmentsJSONV1 doc = do
     evidenceattachments <- EvidenceAttachments.fetch doc
     let evidenceattachments' = sortBy eaSorter evidenceattachments
@@ -57,7 +57,7 @@ evidenceAttachmentsJSONV1 doc = do
                      | otherwise = compare a b
         firstAttachmentName = "Evidence Quality of Scrive E-signed Documents.html"
 
-documentJSONV1 :: (MonadDB m, MonadThrow m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
+documentJSONV1 :: (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => (Maybe User) -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
 documentJSONV1 muser forapi forauthor msl doc = do
     runJSONGenT $ do
       J.value "id" $ show $ documentid doc
@@ -137,7 +137,7 @@ authenticationToSignJSON StandardAuthenticationToSign = toJSValue ("standard"::S
 authenticationToSignJSON SEBankIDAuthenticationToSign     = toJSValue ("eleg"::String)
 authenticationToSignJSON SMSPinAuthenticationToSign   = toJSValue ("sms_pin"::String)
 
-signatoryJSON :: (MonadDB m, MonadThrow m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m) => Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
+signatoryJSON :: (MonadDB m, MonadMask m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m) => Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON forauthor doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ isCurrent
@@ -185,7 +185,7 @@ signatoryAttachmentJSON sa = do
   J.value "description" $ signatoryattachmentdescription sa
   J.value "file" $ fileJSON <$> mfile
 
-signatoryFieldsJSON :: (MonadDB m, MonadThrow m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m) => Document -> SignatoryLink -> m JSValue
+signatoryFieldsJSON :: (MonadDB m, MonadMask m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m) => Document -> SignatoryLink -> m JSValue
 signatoryFieldsJSON doc sl = fmap JSArray $ forM orderedFields $ \sf -> do
     case sf of
       SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 1}) ->

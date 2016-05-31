@@ -24,7 +24,7 @@ data Attachment = Attachment
   , content  :: BSL.ByteString
   } deriving (Eq, Ord, Show)
 
-fetch :: (MonadLog m, MonadDB m, MonadThrow m, MonadBaseControl IO m, AWS.AmazonMonad m) => Document -> m [Attachment]
+fetch :: (MonadLog m, MonadDB m, MonadMask m, MonadBaseControl IO m, AWS.AmazonMonad m) => Document -> m [Attachment]
 fetch doc = do
   case mainfileid <$> documentsealedfile doc of
     Nothing -> return []

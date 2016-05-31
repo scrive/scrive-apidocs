@@ -14,6 +14,7 @@ import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL8
 import qualified Data.Text as T
+import qualified Data.Traversable as F
 
 import AppConf
 import AppControl
@@ -23,6 +24,7 @@ import BrandedDomain.Model
 import Company.Model
 import Configuration
 import Crypto.RNG
+import Database.Redis.Configuration
 import DB
 import DB.Checks
 import DB.PostgreSQL
@@ -76,6 +78,7 @@ main = withCurlDo $ do
 
     appGlobals <- do
       templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
+      mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
       filecache <- MemCache.new BS.length 200000000
       lesscache <- MemCache.new BSL8.length 50000000
       brandedimagescache <- MemCache.new BSL8.length 50000000
@@ -83,6 +86,7 @@ main = withCurlDo $ do
       rng <- newCryptoRNGState
       return AppGlobals {
           templates = templates
+        , mrediscache = mrediscache
         , filecache = filecache
         , lesscache = lesscache
         , brandedimagescache = brandedimagescache

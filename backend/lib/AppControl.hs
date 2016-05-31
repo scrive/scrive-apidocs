@@ -32,6 +32,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
+import qualified Database.Redis as R
 
 import AppConf
 import AppView as V
@@ -69,6 +70,7 @@ import qualified MemCache
 -}
 data AppGlobals
     = AppGlobals { templates          :: !(MVar (UTCTime, KontrakcjaGlobalTemplates))
+                 , mrediscache        :: !(Maybe R.Connection)
                  , filecache          :: !(MemCache.MemCache FileID BS.ByteString)
                  , lesscache          :: !LessCache
                  , brandedimagescache :: !BrandedImagesCache
@@ -222,7 +224,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                -> HandlerM Response
     runHandler = catchEverything
       . runCryptoRNGT (cryptorng appGlobals)
-      . AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals))
+      . AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals) $ mrediscache appGlobals)
 
     catchEverything :: HandlerM Response -> HandlerM Response
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do
@@ -351,6 +353,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , ctxgtconf = guardTimeConf appConf
         , ctxlivedocxconf = liveDocxConfig appConf
         , ctxcgigrpconfig = cgiGrpConfig appConf
+        , ctxmrediscache = mrediscache appGlobals
         , ctxfilecache = filecache appGlobals
         , ctxlesscache = lesscache appGlobals
         , ctxbrandedimagescache = brandedimagescache appGlobals

@@ -12,19 +12,21 @@ import Data.Text (Text)
 import Data.Unjson
 import Data.Word
 
+import Database.Redis.Configuration
 import KontraPrelude
 import Log.Configuration
 import Mails.Data
 import Utils.TH
 
 data MailingServerConf = MailingServerConf {
-  mscHttpBindAddress :: !(Word32, Word16)
-, mscDBConfig        :: !Text
-, mscLogConfig       :: !LogConfig
-, mscMasterSender    :: !SenderConfig
-, mscSlaveSender     :: !(Maybe SenderConfig)
-, mscAmazonConfig    :: !(Maybe (String, String, String))
-, testReceivers      :: ![Address]
+  mscHttpBindAddress  :: !(Word32, Word16)
+, mscDBConfig         :: !Text
+, mscRedisCacheConfig :: !(Maybe RedisConfig)
+, mscLogConfig        :: !LogConfig
+, mscMasterSender     :: !SenderConfig
+, mscSlaveSender      :: !(Maybe SenderConfig)
+, mscAmazonConfig     :: !(Maybe (String, String, String))
+, testReceivers       :: ![Address]
 } deriving (Eq, Ord, Show)
 
 -- | SMTP callback key authentication will be used to receive callbacks
@@ -95,6 +97,9 @@ unjsonMailingServerConf = objectOf $ MailingServerConf
       mscDBConfig
       "Database connection string"
       unjsonAeson
+  <*> fieldOpt "redis_cache"
+      mscRedisCacheConfig
+      "Redis cache configuration"
   <*> field "logging"
       mscLogConfig
       "Logging configuration"
@@ -174,6 +179,7 @@ instance Default MailingServerConf where
   def = MailingServerConf {
       mscHttpBindAddress = (0x7f000001, 6666)
     , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
+    , mscRedisCacheConfig = Just def
     , mscLogConfig = def
     , mscMasterSender = LocalSender {
         localDirectory = "/tmp"

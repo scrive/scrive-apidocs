@@ -747,7 +747,7 @@ sealTestDocument ctx@Context{..} did
   = withDocumentID did
   . runGuardTimeConfT ctxgtconf
   . runTemplatesT (ctxlang, ctxglobaltemplates)
-  . A.runAmazonMonadT (A.AmazonConfig Nothing ctxfilecache)
+  . A.runAmazonMonadT (A.AmazonConfig Nothing ctxfilecache Nothing)
   . runMailContextT (contextToMailContext ctx)
   $ postDocumentClosedActions False False
 

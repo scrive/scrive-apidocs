@@ -3,15 +3,17 @@ module Amazon.Class where
 
 import Control.Monad.Trans
 import Data.ByteString (ByteString)
+import qualified Database.Redis as R
 
 import File.FileID
 import KontraPrelude
 import MemCache
 
 data AmazonConfig = AmazonConfig {
-  amazonConfig :: Maybe (String, String, String)
-, fileCache    :: MemCache FileID ByteString
-}
+    awsConfig      :: !(Maybe (String, String, String))
+  , awsLocalCache  :: !(MemCache FileID ByteString)
+  , awsGlobalCache :: !(Maybe R.Connection)
+  }
 
 class AmazonMonad m where
   getAmazonConfig :: m AmazonConfig

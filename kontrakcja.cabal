@@ -138,6 +138,9 @@ Library
                  , Crypto.RNG
                  , Crypto.RNG.Class
                  , Crypto.RNG.Utils
+                 , Database.Redis.Cache
+                 , Database.Redis.Configuration
+                 , Database.Redis.Helpers
                  , DB
                  , DB.Checks
                  , DB.Derive
@@ -404,6 +407,7 @@ Library
                  , Utils.Directory
                  , Utils.Either
                  , Utils.Enum
+                 , Utils.Exception
                  , Utils.Font
                  , Utils.HTTP
                  , Utils.IO
@@ -455,12 +459,14 @@ Library
                , happstack-server
                , happstack-static-routing
                , hashable
+               , hedis
                , hpqtypes
                , http-types
                , iconv
                , invariant
                , json
                , kontrakcja-templates
+               , lifted-async
                , lifted-base
                , lifted-threads
                , log
@@ -554,6 +560,7 @@ Executable kontrakcja-server
                , exceptions
                , happstack-server
                , happstack-static-routing
+               , hedis
                , lifted-base
                , log
                , text
@@ -604,6 +611,7 @@ Executable cron
                , bytestring
                , cmdargs
                , consumers
+               , hedis
                , log
                , text
                , transformers-base
@@ -761,8 +769,10 @@ Executable mailing-server
                , happstack-server
                , happstack-static-routing
                , hashable
+               , hedis
                , hpqtypes
                , json
+               , lifted-async
                , lifted-base
                , log
                , monad-control
