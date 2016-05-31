@@ -159,15 +159,19 @@ var capitaliseFirstLetter = require("../common/capitalise_first_letter");
     return d.field("status") === "pending" && !s.sign_time && s.is_signatory && e.currentSignOrder(d) == s.sign_order;
   };
 
-  e.documentStatus = function(d) {
+  e.signingParties = function (d) {
     var currentSignOrder = e.currentSignOrder(d);
     if (currentSignOrder === undefined) {
-      var signingParties = [];
+      return [];
     } else {
-      var signingParties = _.filter(d.field("parties"), function(s) {
+      return _.filter(d.field("parties"), function(s) {
         return s.is_signatory && s.sign_order <= currentSignOrder;
       });
     }
+  };
+
+  e.documentStatus = function (d) {
+    var signingParties = e.signingParties(d);
     var someSignatoryHasDeliveryProblem = _.some(signingParties, function(s) {
       return s.email_delivery_status === "not_delivered" || s.mobile_delivery_status === "not_delivered";
     });

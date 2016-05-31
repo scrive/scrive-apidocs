@@ -142,15 +142,19 @@ module.exports = React.createClass({
               if (selected.length ==0 ) {
                 new FlashMessage({type: 'error', content: localization.archive.documents.sendreminder.emptyMessage});
               } else {
-                var allSelectedArePending = _.all(selected, function(doc) {
-                  if (doc.field("status") !== "pending") {
-                    return false;
-                  }
-                  return _.all(doc.field("parties"), function (sig) {
-                    return sig.email_delivery_status !== "not_delivered";
+                var allSelectedAreRemindable = _.all(selected, function(doc) {
+                  var isPending = doc.field("status") === "pending";
+                  var signingParties = Utils.signingParties(doc);
+                  var signingPartiesWithoutDeliveryProblems = _.filter(signingParties, function (s) {
+                    return s.email_delivery_status !== "not_delivered" && s.mobile_delivery_status !== "not_delivered";
                   });
+                  var deliverableSigningPartiesWithoutDeliveryProblems = _.filter(signingPartiesWithoutDeliveryProblems,
+                                                                                  function (s) {
+                    return s.delivery_method !== "api" && s.delivery_method !== "pad";
+                  });
+                  return isPending && deliverableSigningPartiesWithoutDeliveryProblems.length > 0;
                 });
-                if (!allSelectedArePending) {
+                if (!allSelectedAreRemindable) {
                   new FlashMessage({type: 'error', content: localization.archive.documents.sendreminder.notAvailableMessage});
                 } else {
                   self.openSendReminderModal(selected);
