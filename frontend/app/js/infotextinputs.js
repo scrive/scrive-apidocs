@@ -22,8 +22,7 @@ var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
       onTab*    : function() {}, // Function to be called when tab is entered
       onBlur*   : function() {}, // Function to be called when input will loose focus
       onFocus*  : function() {}, // Function to be called when input gains focus
-      onRemove* : function() {}, // Function to be called when remove icon is clicked. If no function is provided, no icon will not show up
-      onOk*     : function() {}  // Function called when ok button is clicked. If no function is provided, no ok button will show up
+      onRemove* : function() {}  // Function to be called when remove icon is clicked. If no function is provided, no icon will not show up
    });
 
   Interface:
@@ -52,7 +51,6 @@ var InfoTextInputModel = Backbone.Model.extend({
       cssClass : "",
       style : "",
       inputStyle : "",
-      okStyle : "",
       autocomplete : false,
       readonly : false,
       autoGrowth : false,
@@ -72,9 +70,6 @@ var InfoTextInputModel = Backbone.Model.extend({
   },
   inputStyle: function() {
        return this.get("inputStyle");
-  },
-  okStyle: function() {
-       return this.get("okStyle");
   },
   value: function() {
        return this.get("value");
@@ -121,15 +116,8 @@ var InfoTextInputModel = Backbone.Model.extend({
         return this.get("onRemove")();
        return true;
   },
-  onOk : function() {
-      if (this.get("onOk") != undefined)
-          this.get("onOk")();
-  },
   hasRemoveOption : function(){
        return this.get("onRemove") != undefined;
-  },
-  hasOkOption : function(){
-       return this.get("onOk") != undefined;
   },
   autocomplete : function(){
        return this.get("autocomplete");
@@ -205,14 +193,6 @@ var InfoTextInputView = Backbone.View.extend({
             $(this.el).append($("<div class='closer'/>")
                                   .click(function() { model.onRemove();}));
         }
-        // Ok button at the end of input
-        if (model.hasOkOption()){
-            this.okButton = $("<div class='ok-button'>OK</div>")
-                                .attr("style",model.okStyle())
-                                .click(function() { model.onOk(); });
-
-            $(this.el).append(this.okButton);
-        }
 
         this.render();
     },
@@ -264,9 +244,9 @@ var InfoTextInputView = Backbone.View.extend({
         if (model.autoGrowth()) {
           if (this.minWidth == undefined) this.minWidth = this.input.width();
           this.growthPart.text(model.value());
-          var newWidthWithText = this.growthPart.width() + 20 + (model.hasOkOption() ? this.okButton.width() : 0);
+          var newWidthWithText = this.growthPart.width() + 20;
           this.growthPart.text(model.infotext());
-          var newWidthWithPlaceholder = this.growthPart.width() + 20 + (model.hasOkOption() ? this.okButton.width() : 0);
+          var newWidthWithPlaceholder = this.growthPart.width() + 20;
           var newWidth = Math.max(newWidthWithText,newWidthWithPlaceholder);
           newWidth = Math.max(this.minWidth,newWidth);
           if (Math.abs(this.input.width(),newWidth) > 10)

@@ -8,7 +8,7 @@ var _ = require("underscore");
  * It can automaticly deal with IE8, and also has a lot of features like
  *
  *   - autogrowth
- *   - internal small button (ie. small OK button)
+ *   - internal small button
  *   - remove button (x on in top, right corner)
  *   - restrict input, not to let people type in numbers in name field
  *
@@ -45,7 +45,6 @@ var _ = require("underscore");
       className     : React.PropTypes.string,
       style         : React.PropTypes.object,
       inputStyle    : React.PropTypes.object,
-      okStyle       : React.PropTypes.object,
       maxLength     : React.PropTypes.number,
 
       // Behaviour
@@ -64,13 +63,13 @@ var _ = require("underscore");
       onTab         : React.PropTypes.func,
       onBlur        : React.PropTypes.func,
       onRemove      : React.PropTypes.func,
-      onOk          : React.PropTypes.func,
       onClick       : React.PropTypes.func,
       onButtonClick : React.PropTypes.func,
       onAutoGrowth  : React.PropTypes.func,
 
       // More
-      buttonTitle    : React.PropTypes.string
+      buttonTitle     : React.PropTypes.string,
+      buttonClassName : React.PropTypes.string
     },
     getDefaultProps : function() {
         return {
@@ -83,7 +82,6 @@ var _ = require("underscore");
           "className" : "",
           "style" : {},
           "inputStyle" : {},
-          "okStyle" : {},
           "autocomplete" : false,
           "readonly" : false,
           "disabled" : false,
@@ -140,11 +138,6 @@ var _ = require("underscore");
       var textWidth = Math.max(valueWidth, infotextWidth);
 
       var width = textWidth;
-
-      var okButtonSize = 10;
-      if (this.props.onOk) {
-        width += okButtonSize;
-      }
 
       this.setState({textWidth: width});
     },
@@ -237,11 +230,15 @@ var _ = require("underscore");
            {/*if*/ this.props.onRemove != undefined &&
               <div ref="close" className="closer" onClick={this.props.onRemove}/>
            }
-           {/*if*/ this.props.onOk != undefined &&
-              <div ref="ok" className="ok-button" style={this.props.okStyle} onClick={this.props.onOk}>OK</div>
-           }
            {/*if*/ (this.props.buttonTitle != undefined && this.props.onButtonClick != undefined) &&
-              <div className="internal-button-wrapper"><div className="internal-button" onClick={this.props.onButtonClick}>{this.props.buttonTitle}</div></div>
+              <div className="internal-button-wrapper">
+                <div
+                  className={"internal-button " + (this.props.buttonClassName || "")}
+                  onClick={this.props.onButtonClick}
+                >
+                  {this.props.buttonTitle}
+                </div>
+              </div>
            }
            {/*if*/ this.props.autoGrowth &&
               <div ref="growth" className="growth" style={this.props.inputStyle} />
