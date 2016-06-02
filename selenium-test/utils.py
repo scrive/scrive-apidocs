@@ -1,7 +1,7 @@
 import os
 import time
 
-from scrivepy import _signatory
+from scrivepy import _signatory, _document
 
 
 class TestHelper(object):
@@ -45,6 +45,7 @@ class TestHelper(object):
         '''
         doc = self._api.create_document_from_file(self.PDF_PATH)
         doc.title = title
+        doc.language = _document.Language(self._driver._lang)
 
         doc.author.invitation_delivery_method = 'pad'
         doc.author.confirmation_delivery_method = 'none'
