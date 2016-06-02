@@ -91,9 +91,9 @@ var classNames = require("classnames");
         "instructions": true
       };
       if (doc.isSignedAndClosed()) {
-        sectionClass['s-header-doc-signed'] = true;
+        sectionClass["s-header-doc-signed"] = true;
       } else if (doc.isUnavailableForSign()) {
-        sectionClass['s-header-doc-cancelled'] = true;
+        sectionClass["s-header-doc-cancelled"] = true;
       }
 
       var downloadUrl = doc.mainfile().downloadLinkForMainFile(doc.title(), true);
