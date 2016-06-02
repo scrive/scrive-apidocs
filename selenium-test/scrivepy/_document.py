@@ -35,6 +35,10 @@ class Language(unicode, enum.Enum):
     norwegian = u'no'
     greek = u'el'
     finnish = u'fi'
+    estonian = u'et'
+    islandic = u'is'
+    lithuanian = u'lt'
+    latvian = u'lv'
 
 
 class DeletionStatus(enum.Enum):
