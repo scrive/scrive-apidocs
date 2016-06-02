@@ -29,7 +29,7 @@ http_code=$(curl --silent --location \
                        --write-out '%{http_code}' \
                        -XPOST https://api.github.com/repos/scrive/kontrakcja/statuses/${current_commit} \
                        -H 'Content-type: application/json' \
-                       -H 'Authorization: token a881167a944db3070d39d2d0551605da90d45644' \
+                       -H 'Authorization: token be9aa771a06beb767ab58108f2faef11dc9c34fe' \
                        -T - <<EOF
 {
   "state": "${state}",
