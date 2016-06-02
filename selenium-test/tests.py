@@ -37,9 +37,8 @@ def check_basic_sign(test, drv, api):
     # wait for modal to disappear
     drv.wait_for_element_to_disappear('.sign.section')
 
-    # wait for header of post signview
-    instructions = drv.wait_for_element('.instructions')
-    test.assertTrue('Document signed!' in instructions.text)
+    # wait for header of post signview that is signed
+    drv.wait_for_element('.instructions.s-header-doc-signed')
     drv.screenshot()
 
 
@@ -95,10 +94,8 @@ def check_basic_reject(test, drv, api):
     # wait for modal to disappear
     drv.wait_for_element_to_disappear('.sign.section')
 
-    # wait for header of post signview
-    instructions = drv.wait_for_element('.instructions')
-    msg = 'The document is no longer available for signing'
-    test.assertTrue(msg in instructions.text)
+    # wait for header of post signview that is cancelled
+    drv.wait_for_element('.instructions.s-header-doc-cancelled')
     drv.screenshot()
 
 
@@ -160,8 +157,8 @@ def check_sign_view_advanced(test, drv, api):
     drv.get_element('.file-input', number=2).send_keys(test.PDF_PATH)
 
     # sign the doc
-    test.arrow_scroll()
-    drv.wait_for_element('.section.sign .button.action').click()
+    drv.scroll_to_bottom()
+    drv.wait_for_element('.section.sign .button.action:not(.inactive)').click()
     drv.wait_for_element('.above-overlay')
     drv.wait_for_element('.section.sign .button.action').click()
     drv.wait_for_element_to_disappear('.sign.section')
@@ -199,6 +196,7 @@ def check_sign_view_advanced(test, drv, api):
     # sign the doc
     drv.wait_for_element('.section.sign .button.action').click()
     drv.wait_for_element('.above-overlay')
+    test.sleep(.5)  # there's a 0.2s transition on opacity
     drv.wait_for_element('.section.sign .button.action').click()
 
     # check that post-signview has a download doc button

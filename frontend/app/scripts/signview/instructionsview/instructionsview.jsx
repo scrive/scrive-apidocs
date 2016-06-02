@@ -86,15 +86,20 @@ var classNames = require("classnames");
       var sig = doc.currentSignatory();
       var hasDownloadButton = doc.showpdfdownload();
 
-      var sectionClass = classNames({
+      var sectionClass = {
         "section": true,
         "instructions": true
-      });
+      };
+      if (doc.isSignedAndClosed()) {
+        sectionClass['s-header-doc-signed'] = true;
+      } else if (doc.isUnavailableForSign()) {
+        sectionClass['s-header-doc-cancelled'] = true;
+      }
 
       var downloadUrl = doc.mainfile().downloadLinkForMainFile(doc.title(), true);
 
       return (
-        <div className={sectionClass}>
+        <div className={classNames(sectionClass)}>
             <h1 className="follow">
               <HtmlTextWithSubstitution
                 secureText={self.headlineText()}
