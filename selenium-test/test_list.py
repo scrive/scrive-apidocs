@@ -49,7 +49,7 @@ try:
 except ImportError:
     dir_path = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(dir_path, 'config.py')
-    print '''File %s should contain the configuration,
+    sys.stderr.write('''File %s should contain the configuration,
 with the following schema:
 
 api = {'client_credentials_identifier': '6eb8b9cc96923c23_53',
@@ -58,8 +58,8 @@ api = {'client_credentials_identifier': '6eb8b9cc96923c23_53',
        'token_credentials_secret': '2b9efbc91ee3606e',
        'api_hostname': 'staging.scrive.com',
        'https': True}
-''' % (config_path,)
-    sys.exit(1)
+''' % (config_path,))
+    raise
 
 
 ###############################################################################
