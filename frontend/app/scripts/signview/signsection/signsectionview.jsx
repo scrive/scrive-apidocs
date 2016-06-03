@@ -19,7 +19,6 @@ var $ = require("jquery");
 var ScreenBlockingDialog = require("../../../js/dialog.js").ScreenBlockingDialog;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var FlashMessagesCleaner = require("../../../js/flashmessages.js").FlashMessagesCleaner;
-var Submit = require("../../../js/submits.js").Submit;
 var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 var trackTimeout = require("../../common/track_timeout");
 var classNames = require("classnames");
@@ -342,7 +341,7 @@ var Task = require("../navigation/task");
         $(window).on("beforeunload", function () {
           $(window).scrollTop(0);
         });
-        new Submit().send();
+        window.location.reload();
       }
     },
     handlePin: function () {
