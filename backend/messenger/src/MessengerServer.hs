@@ -86,7 +86,7 @@ main = do
           $unexpectedErrorM "static routing"
         Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase (listenOn (htonl iface) $ fromIntegral port)
-      fork . liftBase . runReqHandlerT socket handlerConf . mapReqHandlerT withLogger $ router rng cs routes
+      fork . liftBase . runReqHandlerT socket handlerConf . withLogger $ router rng cs routes
 
     smsConsumer
       :: CryptoRNGState

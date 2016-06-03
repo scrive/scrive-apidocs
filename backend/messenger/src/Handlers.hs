@@ -24,7 +24,7 @@ router
   :: CryptoRNGState
   -> TrackedConnectionSource
   -> Messenger Response
-  -> ReqHandlerT (LogT IO) Response
+  -> LogT (ReqHandlerT IO) Response
 router rng (ConnectionSource pool) routes = withPostgreSQL pool $ do
   runMessenger rng routes
 

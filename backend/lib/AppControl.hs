@@ -135,7 +135,7 @@ logRequest rq maybeInputsBody = [
   ]
 
 -- | Outer handler monad
-type HandlerM = ReqHandlerT (LogT IO)
+type HandlerM = LogT (ReqHandlerT IO)
 -- | Inner handler monad.
 type InnerHandlerM = DBT (AWS.AmazonMonadT (CryptoRNGT HandlerM))
 

@@ -119,7 +119,7 @@ startSystem LogRunner{..} appGlobals appConf = E.bracket startServer stopServer 
           }
 
       fork . liftBase . runReqHandlerT listensocket conf $ do
-        mapReqHandlerT withLogger $ appHandler routes appConf appGlobals
+        withLogger $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
       withPostgreSQL (unConnectionSource $ connsource appGlobals maxConnectionTracker) . runCryptoRNGT (cryptorng appGlobals) $ do

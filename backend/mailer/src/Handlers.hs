@@ -26,7 +26,7 @@ router
   :: CryptoRNGState
   -> TrackedConnectionSource
   -> Mailer Response
-  -> ReqHandlerT (LogT IO) Response
+  -> LogT (ReqHandlerT IO) Response
 router rng (ConnectionSource pool) routes = withPostgreSQL pool $
   runMailer rng routes
 

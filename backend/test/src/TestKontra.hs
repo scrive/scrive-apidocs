@@ -155,7 +155,7 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   -- being already in progress
   commit' ts { tsAutoTransaction = False }
   ((res, ctx'), st) <- E.finally
-    (liftBase $ withLogger . runStateT (unReqHandlerT . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT pool ts $ runStateT (unKontra tk) noflashctx) $ ReqHandlerSt rq id now)
+    (liftBase $ runStateT (unReqHandlerT . withLogger . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT pool ts $ runStateT (unKontra tk) noflashctx) $ ReqHandlerSt rq id now)
     -- runDBT commits and doesn't run another transaction, so begin new one
     begin
   -- join all of the spawned threads. since exceptions
