@@ -65,20 +65,18 @@ import qualified Amazon as AWS
 import qualified FlashMessage as F
 import qualified MemCache
 
-{- |
-  Global application data
--}
-data AppGlobals
-    = AppGlobals { templates          :: !(MVar (UTCTime, KontrakcjaGlobalTemplates))
-                 , mrediscache        :: !(Maybe R.Connection)
-                 , filecache          :: !(MemCache.MemCache FileID BS.ByteString)
-                 , lesscache          :: !LessCache
-                 , brandedimagescache :: !BrandedImagesCache
-                 , docscache          :: !RenderedPagesCache
-                 , cryptorng          :: !CryptoRNGState
-                 , connsource         :: !(ConnectionTracker -> ConnectionSource)
-                 , logrunner          :: !LogRunner
-                 }
+-- | Global application data
+data AppGlobals = AppGlobals {
+    templates          :: !(MVar (UTCTime, KontrakcjaGlobalTemplates))
+  , mrediscache        :: !(Maybe R.Connection)
+  , filecache          :: !(MemCache.MemCache FileID BS.ByteString)
+  , lesscache          :: !LessCache
+  , brandedimagescache :: !BrandedImagesCache
+  , docscache          :: !RenderedPagesCache
+  , cryptorng          :: !CryptoRNGState
+  , connsource         :: !(ConnectionTracker -> TrackedConnectionSource)
+  , logrunner          :: !LogRunner
+  }
 
 {- |
     Determines the lang of the current user (whether they are logged in or not), by checking
@@ -143,17 +141,16 @@ type InnerHandlerM = DBT (AWS.AmazonMonadT (CryptoRNGT HandlerM))
 
 -- | Creates a context, routes the request, and handles the session.
 appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> HandlerM Response
-appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler_id" $ \handlerID -> do
+appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler_id" $ do
   realStartTime <- liftBase getCurrentTime
   temp <- liftIO getTemporaryDirectory
   let quota = 10000000
       bodyPolicy = defaultBodyPolicy temp quota quota quota
-      connTracker = detailedConnectionTracker $ withLogger (logrunner appGlobals)
   logInfo_ "Incoming request, decoding body"
   withDecodedBody bodyPolicy $ do
     rq <- askRq
     let routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
-    (res, mdres, ConnectionStats{..}, handlerTime) <- withPostgreSQL (connsource appGlobals $ connTracker ["handler_id" .= handlerID]) $ do
+    (res, mdres, ConnectionStats{..}, handlerTime) <- withPostgreSQL (unConnectionSource $ connsource appGlobals detailedConnectionTracker) $ do
       logInfo_ "Retrieving session"
       session <- getCurrentSession
       logInfo_ "Initializing context"

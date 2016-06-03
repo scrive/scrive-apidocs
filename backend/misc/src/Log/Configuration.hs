@@ -83,7 +83,7 @@ mkLogRunner component LogConfig{..} = do
   where
     defLogger StandardOutput = stdoutLogger
     defLogger (PostgreSQL ci) = do
-      pool <- poolSource def { csConnInfo = encodeUtf8 ci } 1 10 1
+      ConnectionSource pool <- poolSource def { csConnInfo = encodeUtf8 ci } 1 10 1
       withPostgreSQL pool $ do
         migrateDatabase (liftBase . putStrLn) [] [] logsTables logsMigrations
       pgLogger pool

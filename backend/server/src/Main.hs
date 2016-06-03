@@ -72,7 +72,7 @@ main = withCurlDo $ do
       ]
     checkExecutables
 
-    withPostgreSQL (simpleSource $ connSettings []) $ do
+    withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $ do
       checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
       dbUpdate $ SetMainDomainURL $ mainDomainUrl appConf
 
@@ -122,7 +122,7 @@ startSystem LogRunner{..} appGlobals appConf = E.bracket startServer stopServer 
         mapReqHandlerT withLogger $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
-      withPostgreSQL (connsource appGlobals $ maxConnectionTracker withLogger) . runCryptoRNGT (cryptorng appGlobals) $ do
+      withPostgreSQL (unConnectionSource $ connsource appGlobals maxConnectionTracker) . runCryptoRNGT (cryptorng appGlobals) $ do
         initDatabaseEntries appConf
       liftBase $ waitForTermination
       logInfo_ "Termination request received"

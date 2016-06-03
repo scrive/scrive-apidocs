@@ -23,7 +23,6 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Control.Monad.Trans.Control
-import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import Happstack.Server
 import Log
 import Text.StringTemplates.Templates

@@ -40,7 +40,7 @@ main = do
   withLoggerWait $ do
     -- composite types are not available in migrations
     let connSource = simpleSource $ pgConnSettings dbConfig []
-    withPostgreSQL connSource $ do
+    withPostgreSQL (unConnectionSource connSource) $ do
       migrateDatabase (logInfo_ . T.pack) kontraExtensions kontraDomains kontraTables kontraMigrations
       defineComposites kontraComposites
       defineFunctions kontraFunctions

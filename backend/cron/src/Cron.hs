@@ -80,10 +80,11 @@ main = do
     checkExecutables
 
     let connSettings = pgConnSettings $ dbConfig appConf
-    withPostgreSQL (simpleSource $ connSettings []) $
+    withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $
       checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
 
-    pool <- ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource $ connSettings kontraComposites)
+    ConnectionSource pool <- ($ maxConnectionTracker)
+      <$> liftBase (createPoolSource $ connSettings kontraComposites)
     templates <- liftBase readGlobalTemplates
     rng <- newCryptoRNGState
     mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
@@ -204,7 +205,7 @@ main = do
               logDBs = catMaybes . for (lcLoggers $ logConfig appConf) $ \case
                 PostgreSQL ci -> Just ci
                 _             -> Nothing
-          forM_ logDBs $ \ci -> runDBT (connSource ci) def $ do
+          forM_ logDBs $ \ci -> runDBT (unConnectionSource $ connSource ci) def $ do
             runSQL_ "SELECT current_database()::text"
             dbName :: T.Text <- fetchOne runIdentity
             n <- dbUpdate $ CleanLogsOlderThanDays 30
@@ -248,4 +249,4 @@ main = do
       _ -> RerunAfter $ ihours 1
     }
       where
-        logHandlerInfo jobType action = localRandomID "job_id" $ \_ -> localData ["job_type" .= show jobType] action
+        logHandlerInfo jobType action = localRandomID "job_id" $ localData ["job_type" .= show jobType] action

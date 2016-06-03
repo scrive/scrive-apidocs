@@ -63,8 +63,8 @@ main = do
   withLoggerWait $ do
     checkExecutables
 
-    let cs = pgConnSettings $ mscDBConfig conf
-    withPostgreSQL (simpleSource $ cs []) $ do
+    let pgSettings = pgConnSettings $ mscDBConfig conf
+    withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
       checkDatabase (logInfo_ . T.pack) [] mailerTables
     awsconf <- do
       localCache <- MemCache.new BS.length 52428800
@@ -74,22 +74,27 @@ main = do
         , awsLocalCache = localCache
         , awsGlobalCache = globalCache
         }
-    pool <- ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource $ cs mailerComposites)
+    cs@(ConnectionSource pool) <- ($ maxConnectionTracker)
+      <$> liftBase (createPoolSource $ pgSettings mailerComposites)
     rng <- newCryptoRNGState
 
-    E.bracket (startServer lr conf pool rng) (liftBase . killThread) . const $ do
-      let master = createSender pool $ mscMasterSender conf
-          mslave = createSender pool <$> mscSlaveSender conf
-          cron   = jobsWorker conf pool rng
-          sender = mailsConsumer awsconf master mslave pool rng
+    E.bracket (startServer lr conf cs rng) (liftBase . killThread) . const $ do
+      let master = createSender cs $ mscMasterSender conf
+          mslave = createSender cs <$> mscSlaveSender conf
+          cron   = jobsWorker conf cs rng
+          sender = mailsConsumer awsconf master mslave cs rng
 
       finalize (localDomain "cron" $ runConsumer cron pool) $ do
         finalize (localDomain "sender" $ runConsumer sender pool) $ do
           liftBase waitForTermination
   where
-    startServer :: LogRunner -> MailingServerConf
-                -> ConnectionSource -> CryptoRNGState -> MainM ThreadId
-    startServer LogRunner{..} conf pool rng = do
+    startServer
+      :: LogRunner
+      -> MailingServerConf
+      -> TrackedConnectionSource
+      -> CryptoRNGState
+      -> MainM ThreadId
+    startServer LogRunner{..} conf cs rng = do
       let (iface, port) = mscHttpBindAddress conf
           handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
       routes <- case R.compile (handlers conf) of
@@ -100,15 +105,20 @@ main = do
           $unexpectedErrorM "static routing"
         Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase . listenOn (htonl iface) $ fromIntegral port
-      fork . liftBase . runReqHandlerT socket handlerConf . mapReqHandlerT (withLogger) $ router rng pool routes
+      fork . liftBase . runReqHandlerT socket handlerConf . mapReqHandlerT withLogger $ router rng cs routes
 
     hasFailoverTests conf = case mscSlaveSender conf of
-                              Just _ -> not $ null $ testReceivers conf
-                              Nothing -> False
+      Just _ -> not $ null $ testReceivers conf
+      Nothing -> False
 
-    mailsConsumer :: AWS.AmazonConfig -> Sender -> Maybe Sender -> ConnectionSource
-                  -> CryptoRNGState -> ConsumerConfig MainM MailID Mail
-    mailsConsumer awsconf master mslave pool rng = ConsumerConfig {
+    mailsConsumer
+      :: AWS.AmazonConfig
+      -> Sender
+      -> Maybe Sender
+      -> TrackedConnectionSource
+      -> CryptoRNGState
+      -> ConsumerConfig MainM MailID Mail
+    mailsConsumer awsconf master mslave (ConnectionSource pool) rng = ConsumerConfig {
       ccJobsTable = "mails"
     , ccConsumersTable = "mailer_workers"
     , ccJobSelectors = mailSelectors
@@ -156,9 +166,12 @@ main = do
               logInfo_ "Deleting email since there were 100 unsuccessful attempts to send it"
               return Remove
 
-    jobsWorker :: MailingServerConf -> ConnectionSource -> CryptoRNGState
-               -> ConsumerConfig MainM JobType MailerJob
-    jobsWorker conf pool rng = ConsumerConfig {
+    jobsWorker
+      :: MailingServerConf
+      -> TrackedConnectionSource
+      -> CryptoRNGState
+      -> ConsumerConfig MainM JobType MailerJob
+    jobsWorker conf (ConnectionSource pool) rng = ConsumerConfig {
       ccJobsTable = "mailer_jobs"
     , ccConsumersTable = "mailer_workers"
     , ccJobSelectors = mailerJobSelectors
@@ -177,48 +190,46 @@ main = do
           ]
         Ok . RerunAt . nextDayMidnight <$> currentTime
 
-      PerformServiceTest -> withPostgreSQL pool $
-                             if hasFailoverTests conf then
-                               -- If there is no slave sender/test receivers, retry periodically to be
-                               -- able to start the process if the configuration changes.
-                               runCryptoRNGT rng $ do
-                                 logInfo_ "Running service checker"
-                                 token <- random
-                                 mid <- dbUpdate $ CreateServiceTest (token, testSender, testReceivers conf, Just testSender, "test", "test", [], mempty)
-                                 logInfo "Service testing email created" $ object [identifier_ mid]
-                                 dbUpdate $ CollectServiceTestResultIn $ iminutes 10
-                                 return $ Ok MarkProcessed
-                             else do
-                               dbUpdate $ CollectServiceTestResultIn $ iseconds 50
-                               return $ Ok MarkProcessed
-      CollectServiceTestResult -> withPostgreSQL pool $
-                                   if hasFailoverTests conf then
-                                     runCryptoRNGT rng $ do
-                                       events <- dbQuery GetServiceTestEvents
-                                       result <- if any isDelivered events
-                                         then do
-                                           logInfo_ "Service testing emails were delivered successfully"
-                                           return Ok
-                                         else do
-                                           logInfo_ "Service testing emails failed to be delivered within 10 minutes"
-                                           sender <- dbQuery GetCurrentSenderType
-                                           when (sender == MasterSender) $ do
-                                             logInfo_ "Switching to slave sender and resending all emails that were sent within this time"
-                                             dbUpdate SwitchToSlaveSenderImmediately
-                                             resent <- dbUpdate ResendEmailsSentAfterServiceTest
-                                             logInfo "Emails set to be resent" $ object [
-                                                 "emails" .= resent
-                                               ]
-                                           return Failed
-                                       dbUpdate ScheduleServiceTest
-                                       return $ result MarkProcessed
-                                   else do
-                                     dbUpdate ScheduleServiceTest
-                                     return $ Ok MarkProcessed
+      PerformServiceTest -> withPostgreSQL pool $ if hasFailoverTests conf
+        then runCryptoRNGT rng $ do
+          -- If there is no slave sender/test receivers, retry periodically to
+          -- be able to start the process if the configuration changes.
+          logInfo_ "Running service checker"
+          token <- random
+          mid <- dbUpdate $ CreateServiceTest (token, testSender, testReceivers conf, Just testSender, "test", "test", [], mempty)
+          logInfo "Service testing email created" $ object [identifier_ mid]
+          dbUpdate $ CollectServiceTestResultIn $ iminutes 10
+          return $ Ok MarkProcessed
+        else do
+          dbUpdate $ CollectServiceTestResultIn $ iseconds 50
+          return $ Ok MarkProcessed
+      CollectServiceTestResult -> withPostgreSQL pool $ if hasFailoverTests conf
+        then runCryptoRNGT rng $ do
+          events <- dbQuery GetServiceTestEvents
+          result <- if any isDelivered events
+            then do
+              logInfo_ "Service testing emails were delivered successfully"
+              return Ok
+            else do
+              logInfo_ "Service testing emails failed to be delivered within 10 minutes"
+              sender <- dbQuery GetCurrentSenderType
+              when (sender == MasterSender) $ do
+                logInfo_ "Switching to slave sender and resending all emails that were sent within this time"
+                dbUpdate SwitchToSlaveSenderImmediately
+                resent <- dbUpdate ResendEmailsSentAfterServiceTest
+                logInfo "Emails set to be resent" $ object [
+                    "emails" .= resent
+                  ]
+              return Failed
+          dbUpdate ScheduleServiceTest
+          return $ result MarkProcessed
+        else do
+          dbUpdate ScheduleServiceTest
+          return $ Ok MarkProcessed
     , ccOnException = \_ _ -> return . RerunAfter $ ihours 1
     }
       where
-        logHandlerInfo jobType action = localRandomID "job_id" $ \_ -> localData ["job_type" .= show jobType] action
+        logHandlerInfo jobType action = localRandomID "job_id" $ localData ["job_type" .= show jobType] action
 
         isDelivered (_, _, _, SendGridEvent _ SG_Delivered{} _) = True
         isDelivered (_, _, _, MailGunEvent _ MG_Delivered) = True
