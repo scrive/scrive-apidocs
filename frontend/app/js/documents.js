@@ -299,7 +299,7 @@ var Document = exports.Document = Backbone.Model.extend({
         var document = this;
         var signatory = document.currentSignatory();
         return new Submit({
-          url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/signing/check",
+          url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/signing/check?_=" + Math.random(),
           method: "GET",
           ajax: true,
           expectedType : "text",

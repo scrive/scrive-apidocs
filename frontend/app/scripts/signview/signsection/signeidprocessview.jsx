@@ -90,15 +90,12 @@ var classNames = require("classnames");
     addBankIDIframeIfItsNeeded: function () {
       var bankID = this.state.model;
       if (!bankID.isFaultStatus() && !bankID.isWaitingForToken() && bankID.thisDevice()) {
-        if (BrowserInfo.isAndroid() || BrowserInfo.isIOS9()) {
+        if (BrowserInfo.isPadDevice()) {
           if (!this.state.hasBeenRedirected) {
            // on android adn ios9 devices iframes dont work at all
            this.redirectToBankIDApp(bankID);
            this.setState({hasBeenRedirected: true});
           }
-        } else if ($("#bankid-" + bankID.autoStartToken()).size() == 0) {
-          $("body").append($("<iframe width='0' height='0' class='bankid-iframe'/>")
-            .attr("id", "bankid-" + bankID.autoStartToken()).attr("src", bankID.bankIdUrl()));
         }
       }
     },

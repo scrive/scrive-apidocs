@@ -41,6 +41,14 @@ SELECT escape_for_csv(companies.name) AS "Company name"
           WHEN 1 THEN 'recurly'
           ELSE payment_plans.provider :: TEXT
         END) AS "Provider"
+     , (SELECT MIN(d.mtime)::date
+          FROM documents d
+          JOIN signatory_links sl ON d.author_id = sl.id
+          JOIN users u            ON sl.user_id = u.id
+         WHERE d.type = 1
+           AND d.status = 3
+           AND u.company_id = companies.id
+       ) AS "First doc signed"
      , (SELECT count(*)
           FROM documents
          WHERE EXISTS (SELECT TRUE
