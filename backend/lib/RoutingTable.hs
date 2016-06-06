@@ -125,7 +125,6 @@ staticRoutes production = choice
      , dir "account" $ dir "usagestats" $ dir "months" $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserMonths
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
      , dir "accepttos" $ hPost $ toK0 $ UserControl.handleAcceptTOSPost
-     , dir "account" $ dir "phoneme" $ hPostNoXToken $ toK0 $ UserControl.handleRequestPhoneCall
 
      --CompanyAccountsControl
      , dir "account" $ dir "companyaccounts" $ dir "add" $ hPost $ toK0 $ CompanyAccounts.handleAddCompanyAccount

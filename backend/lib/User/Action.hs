@@ -1,7 +1,6 @@
 module User.Action (
     handleActivate
   , createUser
-  , phoneMeRequest
   ) where
 
 import Control.Conditional (whenM)
@@ -23,10 +22,8 @@ import InputValidation
 import Kontra
 import KontraPrelude
 import Log.Identifier
-import Mails.SendMail
 import MinutesTime
 import Payments.Model
-import ThirdPartyStats.Core
 import User.Email
 import User.History.Model
 import User.Model
@@ -88,8 +85,6 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
 
   whenM (not <$> isFieldSet "stoplogin") $ do
     logUserToContext $ Just tosuser
-  whenM (isFieldSet "callme") $ do
-    phoneMeRequest (Just tosuser) phone
   whenM (isFieldSet "promo") $ do
     addCompanyPlanManual (companyid company) TrialPricePlan ActiveStatus
 
@@ -105,39 +100,3 @@ createUser email names companyandrole lang sm = do
       _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> getContextUser ctx)
       return muser
     _ -> return muser
-
-phoneMeRequest :: Kontrakcja m => Maybe User -> String -> m ()
-phoneMeRequest muser phone = do
-  ctx <- getContext
-  let content = case muser of
-        Just user -> "<p>User " ++ getFirstName user ++ " "
-                     ++ getLastName user ++ " "
-                     ++ "&lt;" ++ getEmail user ++ "&gt; "
-                     ++ "has requested a call on "
-                     ++ "&lt;" ++ phone ++ "&gt;.  "
-                     ++ "They have just signed the TOS, "
-                     ++ "and they're setup with lang "
-                     ++ "&lt;" ++ (codeFromLang $ getLang user) ++ "&gt;.</p>"
-        Nothing -> "<p>A person "
-                    ++ "has requested a call on "
-                    ++ "&lt;" ++ phone ++ "&gt;.  "
-                    ++ "</p>"
-  scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
-            to = [MailAddress { fullname = "info@scrive.com", email = "info@scrive.com" }]
-          , title = "Phone Call Request"
-          , content = content
-      }
-  when (isJust muser) $ do
-    let user = $fromJust muser
-        name = getFirstName user ++ " " ++ getLastName user
-    now <- ctxtime <$> getContext
-
-    asyncLogEvent "Phone Request" [UserIDProp (userid user),
-                                   IPProp (ctxipnumber ctx),
-                                   NameProp name,
-                                   TimeProp now,
-                                   MailProp (useremail $ userinfo user)]
-    asyncLogEvent SetUserProps [UserIDProp (userid user),
-                                IPProp (ctxipnumber ctx),
-                                someProp "Phone Request" now]
-    return ()

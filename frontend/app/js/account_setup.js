@@ -17,7 +17,6 @@ var trackTimeout = require("../scripts/common/track_timeout");
     defaults: {
       accepted: false,
       password: '',
-      callme: false,
       validators: [],
       tosValidator: null
     },
@@ -88,15 +87,9 @@ var trackTimeout = require("../scripts/common/track_timeout");
     setTosValidator: function(validator) {
       this.set('tosValidator', validator);
     },
-    callme: function() {
-      return this.get('callme');
+    signupMethod : function() {
+        return this.get('signupmethod');
     },
-    setCallme: function(callme) {
-      this.set('callme', callme);
-    },
-      signupMethod : function() {
-          return this.get('signupmethod');
-      },
     valid: function() {
       if (!this.accepted()) {
         var validator = this.tosValidator();

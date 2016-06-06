@@ -44,7 +44,7 @@ testSignupAndActivate = do
   Just uuser <- dbQuery $ GetUserByID  uarUserID
   assertEqual "Phone number was saved" "123" (userphone $ userinfo uuser)
   emails <- dbQuery GetEmailsForTest
-  assertEqual "An email was sent" 2 (length emails) -- Two mail - one for user and one to info adress.
+  assertEqual "An email was sent to the user" 1 (length emails)
 
 testLoginEventRecordedWhenLoggedInAfterActivation :: TestEnv ()
 testLoginEventRecordedWhenLoggedInAfterActivation = do
@@ -90,7 +90,7 @@ activateAccount ctx uid token tos fstname sndname password password2 phone = do
                           , ("password", inText password)
                           , ("password2", inText password2)
                           ] ++
-                          ([("callme", inText "YES"), ("phone", inText $ $fromJust phone)] <| isJust phone |> [])
+                          ([("phone", inText $ $fromJust phone)] <| isJust phone |> [])
   (_, ctx') <- runTestKontra req ctx $ handleAccountSetupPost uid token AccountRequest
   return ctx'
 
