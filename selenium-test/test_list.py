@@ -35,12 +35,6 @@ REMOTE_DEVICES = [{'device': webdriver.DesiredCapabilities.FIREFOX,
                    'version': '48', 'platform': 'Windows 8'},
                   {'device': webdriver.DesiredCapabilities.CHROME,
                    'version': '38', 'platform': 'Windows 7'}]
-
-SAUCELABS_USER = 'scrive'
-SAUCELABS_PASS = 'b3205df0-32b8-4b73-8e30-e9885c28b33c'
-SAUCELABS_URL = \
-    'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (SAUCELABS_USER,
-                                                       SAUCELABS_PASS)
 ###############################################################################
 #                               CONFIG LOADING                                #
 ###############################################################################
@@ -52,12 +46,14 @@ except ImportError:
     sys.stderr.write('''File %s should contain the configuration,
 with the following schema:
 
-api = {'client_credentials_identifier': '6eb8b9cc96923c23_53',
-       'client_credentials_secret': 'cca38e929f558fa9',
-       'token_credentials_identifier': '0d1b67d4f46783af_52',
-       'token_credentials_secret': '2b9efbc91ee3606e',
-       'api_hostname': 'staging.scrive.com',
-       'https': True}
+scrive_api = {'client_credentials_identifier': '6eb8b9cc96923c23_53',
+              'client_credentials_secret': 'cca38e929f558fa9',
+              'token_credentials_identifier': '0d1b67d4f46783af_52',
+              'token_credentials_secret': '2b9efbc91ee3606e',
+              'api_hostname': 'staging.scrive.com',
+              'https': True}
+
+selenium_url = ('http://USER:KEY@ondemand.saucelabs.com:80/wd/hub')
 ''' % (config_path,))
     raise
 
@@ -99,7 +95,7 @@ def make_remote_drivers(test_name):
         # make sure capabilities is properly captured
         def driver_factory(capabilities=capabilities):
             driver = webdriver.Remote(desired_capabilities=capabilities,
-                                      command_executor=SAUCELABS_URL)
+                                      command_executor=config.selenium_url)
             driver.implicitly_wait(30)
             return driver
 
