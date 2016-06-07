@@ -1,7 +1,12 @@
+import unittest
+
+from selenium import webdriver
 from selenium.webdriver.support import expected_conditions
 
 from scrivepy import _signatory, _field, _file
 
+
+DC = webdriver.DesiredCapabilities
 
 SFT = _field.StandardFieldType
 SigAttachment = _signatory.SignatoryAttachment
@@ -52,6 +57,7 @@ def check_sign_with_signsuccessredirect(test, drv, api):
     drv.open_url(doc.other_signatory().absolute_sign_url())
 
     # click final sign button and wait for confirmation modal to show up
+    drv.scroll_to_bottom()
     drv.wait_for_element('.section.sign .button.action').click()
     drv.wait_for_element('.above-overlay')
 
@@ -115,6 +121,9 @@ def check_sign_and_cancel(test, drv, api):
 
 
 def check_sign_view_advanced(test, drv, api):
+    if drv.driver_name in [DC.SAFARI['browserName'], DC.EDGE['browserName']]:
+        raise unittest.SkipTest('File uploads not supported in Safari/Edge')
+
     doc = test.create_standard_doc(u'sign and cancel')
 
     signatory1 = doc.other_signatory()

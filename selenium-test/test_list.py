@@ -29,18 +29,28 @@ from utils import TestHelper
 ###############################################################################
 #                               CONFIGURATION                                 #
 ###############################################################################
-LOCAL_DEVICES = [webdriver.Firefox]  # , webdriver.Chrome]
+DC = webdriver.DesiredCapabilities
 
-REMOTE_DEVICES = [{'device': webdriver.DesiredCapabilities.FIREFOX,
-                   'version': '48', 'platform': 'Windows 8'},
-                  {'device': webdriver.DesiredCapabilities.CHROME,
-                   'version': '38', 'platform': 'Windows 7'}]
+LOCAL_DEVICES = [{'driver': webdriver.Firefox,
+                  'name': DC.FIREFOX['browserName']}]
 
-SAUCELABS_USER = 'scrive'
-SAUCELABS_PASS = 'b3205df0-32b8-4b73-8e30-e9885c28b33c'
-SAUCELABS_URL = \
-    'http://%s:%s@ondemand.saucelabs.com:80/wd/hub' % (SAUCELABS_USER,
-                                                       SAUCELABS_PASS)
+# LOCAL_DEVICES = [{'driver': webdriver.Firefox,
+#                   'name': DC.FIREFOX['browserName']},
+#                  {'driver': webdriver.Chrome,
+#                   'name': DC.CHROME['browserName']}]
+
+REMOTE_DEVICES = [{'device': DC.INTERNETEXPLORER,
+                   'version': '9.0', 'platform': 'Windows 7'},
+                  {'device': DC.INTERNETEXPLORER,
+                   'version': '10.0', 'platform': 'Windows 7'},
+                  {'device': DC.INTERNETEXPLORER,
+                   'version': '11.0', 'platform': 'Windows 7'},
+                  {'device': DC.SAFARI,
+                   'version': '9.0', 'platform': 'OS X 10.11'},
+                  {'device': DC.CHROME,
+                   'version': 'beta', 'platform': 'OS X 10.11'},
+                  {'device': DC.EDGE,
+                   'version': '', 'platform': 'Windows 10'}]
 ###############################################################################
 #                               CONFIG LOADING                                #
 ###############################################################################
@@ -52,12 +62,14 @@ except ImportError:
     sys.stderr.write('''File %s should contain the configuration,
 with the following schema:
 
-api = {'client_credentials_identifier': '6eb8b9cc96923c23_53',
-       'client_credentials_secret': 'cca38e929f558fa9',
-       'token_credentials_identifier': '0d1b67d4f46783af_52',
-       'token_credentials_secret': '2b9efbc91ee3606e',
-       'api_hostname': 'staging.scrive.com',
-       'https': True}
+scrive_api = {'client_credentials_identifier': '6eb8b9cc96923c23_53',
+              'client_credentials_secret': 'cca38e929f558fa9',
+              'token_credentials_identifier': '0d1b67d4f46783af_52',
+              'token_credentials_secret': '2b9efbc91ee3606e',
+              'api_hostname': 'staging.scrive.com',
+              'https': True}
+
+selenium_url = ('http://USER:KEY@ondemand.saucelabs.com:80/wd/hub')
 ''' % (config_path,))
     raise
 
@@ -65,7 +77,7 @@ api = {'client_credentials_identifier': '6eb8b9cc96923c23_53',
 ###############################################################################
 #                               DRIVER GENERATION                             #
 ###############################################################################
-def wrap_factory(driver_factory, test_name):
+def wrap_factory(driver_factory, driver_name, test_name):
     try:
         screenshots_enabled = \
             os.environ['SELENIUM_TAKE_SCREENSHOTS'] == '1'
@@ -78,15 +90,16 @@ def wrap_factory(driver_factory, test_name):
         lang = 'en'
 
     return SeleniumDriverWrapper(driver_factory,
-                                 name=test_name,
+                                 driver_name=driver_name,
+                                 test_name=test_name,
                                  screenshots_enabled=screenshots_enabled,
                                  lang=lang)
 
 
 def make_local_drivers(test_name):
-    for device in LOCAL_DEVICES:
-        driver_factory = lambda: device()
-        yield wrap_factory(driver_factory, test_name)
+    for device_info in LOCAL_DEVICES:
+        driver_factory = lambda: device_info['driver']()
+        yield wrap_factory(driver_factory, device_info['name'], test_name)
 
 
 def make_remote_drivers(test_name):
@@ -98,12 +111,11 @@ def make_remote_drivers(test_name):
 
         # make sure capabilities is properly captured
         def driver_factory(capabilities=capabilities):
-            driver = webdriver.Remote(desired_capabilities=capabilities,
-                                      command_executor=SAUCELABS_URL)
-            driver.implicitly_wait(30)
-            return driver
+            return webdriver.Remote(desired_capabilities=capabilities,
+                                    command_executor=config.selenium_url)
 
-        yield wrap_factory(driver_factory, test_name)
+        yield wrap_factory(driver_factory, capabilities['browserName'],
+                           test_name)
 
 
 def make_drivers(test_name):
