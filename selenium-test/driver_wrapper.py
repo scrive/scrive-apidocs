@@ -11,10 +11,12 @@ from selenium.webdriver.support import ui as support_ui, expected_conditions
 
 class SeleniumDriverWrapper(object):
 
-    def __init__(self, driver_factory, name, screenshots_enabled, lang):
+    def __init__(self, driver_factory, driver_name, test_name,
+                 screenshots_enabled, lang):
         self._driver_factory = driver_factory
         self._driver = None
-        self._name = name
+        self._test_name = test_name
+        self._driver_name = driver_name
         self._window_height = None
         self._screenshot_count = 0
         self._lang = lang
@@ -32,6 +34,10 @@ class SeleniumDriverWrapper(object):
     @property
     def title(self):
         return self._driver.title
+
+    @property
+    def driver_name(self):
+        return self._driver_name
 
     def wait(self, timeout=10):
         return support_ui.WebDriverWait(self._driver, timeout)
@@ -68,7 +74,7 @@ class SeleniumDriverWrapper(object):
         if first_sleep_for is not None:
             time.sleep(first_sleep_for)
         self._screenshot_count += 1
-        screenshot_name = self._name + '_' + str(self._screenshot_count)
+        screenshot_name = self._test_name + '_' + str(self._screenshot_count)
 
         drv = self._driver
         if self._window_height is None:
