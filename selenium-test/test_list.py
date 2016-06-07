@@ -111,10 +111,8 @@ def make_remote_drivers(test_name):
 
         # make sure capabilities is properly captured
         def driver_factory(capabilities=capabilities):
-            driver = webdriver.Remote(desired_capabilities=capabilities,
-                                      command_executor=config.selenium_url)
-            driver.implicitly_wait(30)
-            return driver
+            return webdriver.Remote(desired_capabilities=capabilities,
+                                    command_executor=config.selenium_url)
 
         yield wrap_factory(driver_factory, capabilities['browserName'],
                            test_name)
