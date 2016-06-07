@@ -43,7 +43,7 @@ main = do
       putNormal "  Automatically runs dependancies, just specify your target"
       putNormal "  Run with one or more targets"
       putNormal ""
-      putNormal "  $> ./shake build-server"
+      putNormal "  $> ./shake server"
       putNormal ""
       putNormal "  To see Environment Variables used run ./shake help-env"
       putNormal ""
