@@ -52,6 +52,7 @@ def check_sign_with_signsuccessredirect(test, drv, api):
     drv.open_url(doc.other_signatory().absolute_sign_url())
 
     # click final sign button and wait for confirmation modal to show up
+    drv.scroll_to_bottom()
     drv.wait_for_element('.section.sign .button.action').click()
     drv.wait_for_element('.above-overlay')
 
