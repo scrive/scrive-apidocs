@@ -201,25 +201,13 @@ getFileFromRedis cache rkey = do
         return mempty
 
 getFileContents
-  :: (MonadBase IO m, MonadLog m)
+  :: forall m. (MonadBase IO m, MonadLog m)
   => S3Action
   -> File
   -> Maybe (R.Connection, RedisKey)
-  -> m (Maybe BS.ByteString)
+  -> m BS.ByteString
 getFileContents s3action File{..} mredis = localData fileData $ do
-  mcontent <- getContent filestorage
-  case mcontent of
-    Nothing -> do
-      logAttention_ "No content for file"
-      return Nothing
-    Just content -> do
-      if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
-        then do
-          logAttention_ "SHA1 checksum of file doesn't match the one in the database"
-          return Nothing
-        else do
-          F.forM_ mredis $ redisPut "content" content
-          return $ Just content
+  getContent filestorage >>= verifyContent >>= cacheContent
   where
     fileData = [
         identifier_ fileid
@@ -227,7 +215,8 @@ getFileContents s3action File{..} mredis = localData fileData $ do
       , "filesize" .= filesize
       ]
 
-    getContent (FileStorageMemory content) = return . Just $ content
+    getContent :: FileStorage -> m (Maybe BS.ByteString)
+    getContent (FileStorageMemory content) = return $ Just content
     getContent (FileStorageAWS url aes) = do
       (result, timeDiff) <- do
         startTime <- liftBase getCurrentTime
@@ -249,3 +238,25 @@ getFileContents s3action File{..} mredis = localData fileData $ do
             , "time" .= timeDiff
             ]
           return Nothing
+
+    verifyContent :: Maybe BS.ByteString -> m (Maybe BS.ByteString)
+    verifyContent = \case
+      Nothing -> do
+        logAttention_ "Couldn't verify file as there is no content"
+        return Nothing
+      jcontent@(Just content) -> do
+        if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
+          then do
+            logAttention_ "SHA1 checksum of file doesn't match the one in the database"
+            return Nothing
+          else return jcontent
+
+    cacheContent :: Maybe BS.ByteString -> m BS.ByteString
+    cacheContent mcontent = do
+      content <- case mcontent of
+        Nothing -> do
+          logAttention_ "Content not verified, returning empty ByteString"
+          return BSC.empty
+        Just content -> return content
+      F.forM_ mredis $ redisPut "content" content
+      return content

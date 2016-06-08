@@ -13,12 +13,12 @@ import DB
 import File.File
 import File.Model
 import KontraPrelude
-import Log.Identifier
 import qualified Amazon as AWS
 import qualified Database.Redis.Cache as RC
 import qualified MemCache as MemCache
 
-{- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
+-- | Gets file content from somewere (Amazon for now), putting it to cache and
+-- returning as BS.
 getFileContents
   :: (MonadBaseControl IO m, MonadMask m, MonadLog m, AWS.AmazonMonad m)
   => File
@@ -26,16 +26,9 @@ getFileContents
 getFileContents file = do
   ac <- AWS.getAmazonConfig
   MemCache.fetch (AWS.awsLocalCache ac) (fileid file) $ do
-    mcontent <- RC.mfetch (AWS.awsGlobalCache ac) rkey
-      (\cache -> fmap Just . AWS.getFileFromRedis cache)
+    RC.mfetch (AWS.awsGlobalCache ac) rkey
+      AWS.getFileFromRedis
       (AWS.getFileContents (AWS.mkAWSAction $ AWS.awsConfig ac) file)
-    case mcontent of
-      Just content -> return content
-      Nothing -> do
-        logAttention "Couldn't get content for file, returning empty ByteString." $ object [
-            identifier_ $ fileid file
-          ]
-        return BS.empty
   where
    rkey = mkRedisKey [
        "files"
