@@ -2,6 +2,8 @@ module MemCache (
     MemCache
   , new
   , fetch
+  , fetch_
+  , invalidate
   ) where
 
 import Control.Concurrent.Lifted
@@ -41,13 +43,14 @@ new sizeFun sizeLimit = MemCache <$> newMVar MemCache_ {
   , mcCache       = Q.empty
   }
 
--- | Fetch an object from cache or construct it if it's not there.
+-- | Fetch an object from cache or construct it if it's not there. Returned Bool
+-- signifies whether constructing action was run.
 fetch
   :: forall k v m. (Ord k, Hashable k, NFData v, MonadBaseControl IO m)
   => MemCache k v
   -> k
   -> m v
-  -> m v
+  -> m (v, Bool)
 fetch (MemCache mv) key construct = mask $ \release -> do
   -- Note: asynchronous exceptions need to be masked in the following places:
   -- (1) When eel is Left and mvAlreadyThere is False: if asynchronous exception
@@ -79,12 +82,12 @@ fetch (MemCache mv) key construct = mask $ \release -> do
           return (mc', Left (mvEl, False))
 
   case eel of
-    Right el -> return el
+    Right el -> return (el, False)
     Left (mvEl, mvAlreadyThere) -> do
       -- If we got existing MVar, wait for its result. Otherwise run
       -- constructing action and update cache accordingly.
       if mvAlreadyThere
-        then release $ throwOrReturn =<< readMVar mvEl
+        then release $ fmap (, False) . throwOrReturn =<< readMVar mvEl
         else do
           evalue <- (`onException` removeInProgress) $ do
             -- Spawn a new thread to avoid catching asynchronous exceptions thrown
@@ -109,7 +112,7 @@ fetch (MemCache mv) key construct = mask $ \release -> do
                   , mcCache       = Q.insert key (mcTick mc) value $ mcCache mc
                   }
             return evalue
-          throwOrReturn evalue
+          (, True) <$> throwOrReturn evalue
   where
     lookupAndIncreasePriorityTo prio = \case
       Nothing        -> (Nothing, Nothing)
@@ -133,3 +136,26 @@ fetch (MemCache mv) key construct = mask $ \release -> do
           | otherwise = case Q.minView cache of
               Nothing -> $unexpectedError "tidyCache: size limit exceeded even though cache is empty"
               Just (_, _, minEl, tidiedCache) -> go tidiedCache $ size - mcSizeFun mc minEl
+
+-- | Fetch an object from cache or construct it if it's not there.
+fetch_
+  :: forall k v m. (Ord k, Hashable k, NFData v, MonadBaseControl IO m)
+  => MemCache k v
+  -> k
+  -> m v
+  -> m v
+fetch_ mc key = fmap fst . fetch mc key
+
+-- | Invalidate a key in cache.
+invalidate
+  :: (Ord k, Hashable k, MonadBaseControl IO m)
+  => MemCache k v
+  -> k
+  -> m ()
+invalidate (MemCache mv) key = modifyMVar_ mv $ \mc ->
+  return $! case Q.deleteView key $ mcCache mc of
+    Nothing -> mc
+    Just (_, value, newCache) -> mc {
+        mcCurrentSize = mcCurrentSize mc - mcSizeFun mc value
+      , mcCache = newCache
+      }

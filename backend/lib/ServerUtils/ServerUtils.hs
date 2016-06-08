@@ -83,7 +83,7 @@ brandedImage = do
     let key = BrandedImagesCacheKey { filename = file , color = color }
         cache = ctxbrandedimagescache ctx
     img <- if ctxproduction ctx
-           then MemCache.fetch cache key $ brandImage file color
+           then MemCache.fetch_ cache key $ brandImage file color
            else brandImage file color
     ok
       . setHeaderBS "Cache-Control" "max-age=604800"

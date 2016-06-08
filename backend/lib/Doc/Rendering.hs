@@ -116,7 +116,7 @@ runRendering
   -> Maybe (R.Connection, RedisKey)
   -> m ()
 runRendering fileContent widthInPixels renderingMode rp mredis = do
-  withSystemTempDirectory "mudraw" $ \tmpPath -> do
+  restrictTime . withSystemTempDirectory "mudraw" $ \tmpPath -> do
     let sourcePath = tmpPath ++ "/source.pdf"
     liftBase $ BS.writeFile sourcePath fileContent
     let pagePath n = tmpPath ++ "/output-" ++ show n ++ ".png"
@@ -138,29 +138,38 @@ runRendering fileContent widthInPixels renderingMode rp mredis = do
           , std_err = CreatePipe
           }
 
-    (Nothing, Just hout, Just herr, ph) <- liftBase $ createProcess_ "mutool draw" mutoolDraw
+    mask $ \release -> do
+      (Nothing, Just hout, Just herr, ph) <- liftBase $ createProcess_ "mutool draw" mutoolDraw
 
-    -- Collect stderr in parallel to stdout so that its buffer won't get full.
-    (_, getStdErr) <- liftBase (LT.fork $ E.evaluate . force =<< LT.hGetContents herr)
+      -- Collect stderr in parallel to stdout so that its buffer won't get full.
+      (_, getStdErr) <- liftBase (LT.fork $ E.evaluate . force =<< LT.hGetContents herr)
 
-    let cleanupProcess = do
-          (err, ec) <- liftBase $ do
-            err <- getStdErr
-            hClose hout
-            hClose herr
-            ec <- waitForProcess ph
-            return (err, ec)
-          logInfo "Rendering completed" $ object [
-              "code" .= show ec
-            , case err of
-                Right msg -> "stderr" .= msg
-                Left ex   -> "error"  .= show ex
-            ]
+      let killProcess = liftBase $ terminateProcess ph
+          cleanupProcess = do
+            (err, ec) <- liftBase $ do
+              err <- getStdErr
+              hClose hout
+              hClose herr
+              ec <- waitForProcess ph
+              return (err, ec)
+            logInfo "Rendering completed" $ object [
+                "code" .= show ec
+              , case err of
+                  Right msg -> "stderr" .= msg
+                  Left ex   -> "error"  .= show ex
+              ]
 
-    (`finally` cleanupProcess) $ do
-      fetchPages pagePath (T.pack sourcePath) (pagesCount rp) hout
-      fetchStatistics hout
+      (`finally` cleanupProcess) . (`onException` killProcess) . release $ do
+        fetchPages pagePath (T.pack sourcePath) (pagesCount rp) hout
+        fetchStatistics hout
   where
+    restrictTime :: forall r. m r -> m r
+    restrictTime m = timeout (5 * 60 * 1000000) m >>= \case
+      Just r  -> return r
+      Nothing -> do
+        logAttention_ "Rendering didn't finish in 5 minutes, aborting"
+        internalError
+
     fetchStatistics :: Handle -> m ()
     fetchStatistics h = do
       stats <- liftBase $ T.hGetContents h
@@ -290,25 +299,29 @@ getRenderedPages :: Kontrakcja m
                  -> m RenderedPages
 getRenderedPages fid pageWidthInPixels renderingMode = logFile fid $ do
   let pageWidth = min 4000 (max 100 pageWidthInPixels)
-  Context{ctxnormalizeddocuments} <- getContext
+  localCache <- ctxnormalizeddocuments <$> getContext
   let key = (fid, pageWidth, renderingMode)
   logInfo "Fetching RenderedPages from cache" $ object [
       "page_width" .= pageWidth
     , "rendering_mode" .= show renderingMode
     ]
-  MemCache.fetch ctxnormalizeddocuments key $ do
-    fileContent <- getFileIDContents fid
-    rp <- case renderingMode of
-      RenderingModeFirstPageOnly -> renderedPages 1
-      RenderingModeWholeDocument -> do
-        liftBase (getNumberOfPDFPages fileContent) >>= \case
-          Left err -> do
-            logAttention "getNumberOfPDFPages failed" $ object [
-                "error" .= err
-              ]
-            internalError
-          Right pagesNo -> renderedPages pagesNo
-    forkAction "Rendering file" $ do
+  mask $ \release -> do
+    (rp, constructed) <- MemCache.fetch localCache key $ do
+      case renderingMode of
+        RenderingModeFirstPageOnly -> renderedPages 1
+        RenderingModeWholeDocument -> do
+          fileContent <- getFileIDContents fid
+          liftBase (getNumberOfPDFPages fileContent) >>= \case
+            Left err -> do
+              logAttention "getNumberOfPDFPages failed" $ object [
+                  "error" .= err
+                ]
+              internalError
+            Right pagesNo -> renderedPages pagesNo
+    -- Run rendering when RenderedPages are already in local cache to be able to
+    -- invalidate it without race condition if something goes wrong.
+    when constructed $ forkAction "Rendering file" . (`onException` deleteKey localCache key) . release $ do
+      fileContent <- getFileIDContents fid
       let rkey = toRedisKey key
       mredis <- ctxmrediscache <$> getContext
       RC.mfetch mredis rkey
@@ -316,6 +329,10 @@ getRenderedPages fid pageWidthInPixels renderingMode = logFile fid $ do
         (runRendering fileContent pageWidth renderingMode rp)
     return rp
   where
+    deleteKey localCache key = do
+      logAttention_ "Exception thrown while rendering file, removing RenderedPages from local cache"
+      MemCache.invalidate localCache key
+
     toRedisKey (fid_, pageWidth, mode) = mkRedisKey [
         "pages"
       , BS.pack . show $ fromFileID fid_

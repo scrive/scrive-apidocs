@@ -25,7 +25,7 @@ getFileContents
   -> m BS.ByteString
 getFileContents file = do
   ac <- AWS.getAmazonConfig
-  MemCache.fetch (AWS.awsLocalCache ac) (fileid file) $ do
+  MemCache.fetch_ (AWS.awsLocalCache ac) (fileid file) $ do
     RC.mfetch (AWS.awsGlobalCache ac) rkey
       AWS.getFileFromRedis
       (AWS.getFileContents (AWS.mkAWSAction $ AWS.awsConfig ac) file)

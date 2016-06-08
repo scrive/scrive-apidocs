@@ -174,7 +174,7 @@ withLessCache :: (Kontrakcja m ) => LessCacheKey -> m BSL.ByteString -> m BSL.By
 withLessCache key generator = do
   ctx <- getContext
   if ctxproduction ctx
-    then MemCache.fetch (ctxlesscache ctx) key generator
+    then MemCache.fetch_ (ctxlesscache ctx) key generator
     else generator
 
 cssResponse :: BSL.ByteString -> Response
