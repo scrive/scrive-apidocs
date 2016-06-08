@@ -4,6 +4,7 @@ module Doc.RenderedPages
   , renderedPages
   , putPage
   , getPage
+  , hasPage
   , pagesCount
   , legacyWidthInPixels
   , RenderingMode(..)
@@ -56,6 +57,12 @@ getPage
   => RenderedPages -> Int -> m BS.ByteString
 getPage rp pageNo = throwIfOutsideRange rp pageNo $ do
   readMVar . (V.! (pageNo - 1)) $ unRenderedPages rp
+
+hasPage
+ :: (MonadBase IO m, MonadLog m, MonadThrow m)
+ => RenderedPages -> Int -> m Bool
+hasPage rp pageNo = throwIfOutsideRange rp pageNo $ do
+  isJust <$> tryReadMVar (unRenderedPages rp V.! (pageNo - 1))
 
 pagesCount :: RenderedPages -> Int
 pagesCount (RenderedPages ps) = V.length ps

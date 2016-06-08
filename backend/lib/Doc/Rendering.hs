@@ -18,6 +18,7 @@ module Doc.Rendering
 
 import Control.Concurrent.Async.Lifted
 import Control.Concurrent.Lifted
+import Control.Conditional (whenM)
 import Control.DeepSeq
 import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
@@ -162,6 +163,16 @@ runRendering fileContent widthInPixels renderingMode rp mredis = do
       (`finally` cleanupProcess) . (`onException` killProcess) . release $ do
         fetchPages pagePath (T.pack sourcePath) (pagesCount rp) hout
         fetchStatistics hout
+        -- If things break for some reason and not all rendered pages are picked
+        -- up by checking output of mutool, sweep for the remaining ones.
+        forM_ [1..pagesCount rp] $ \page -> whenM (not <$> hasPage rp page) $ do
+          logAttention "Page missing, attempting to fetch" $ object [
+              "page" .= page
+            ]
+          fetchPage pagePath PageInfo {
+              piPage = page
+            , piTime = 0
+            }
   where
     restrictTime :: forall r. m r -> m r
     restrictTime m = timeout (5 * 60 * 1000000) m >>= \case
@@ -194,19 +205,22 @@ runRendering fileContent widthInPixels renderingMode rp mredis = do
                     "stdout" .= line
                   ]
                 go k
-              Right info@PageInfo{..} -> localData ["page" .= piPage] $ do
-                content <- liftBase (E.try . BS.readFile $ pagePath piPage) >>= \case
-                  Right content -> return content
-                  Left (e::IOError) -> do
-                    logAttention "Couldn't open page file" $ object [
-                        "error" .= show e
-                      ]
-                    return BS.empty
-                F.forM_ mredis $ redisPut (BS.pack $ show k) content
-                putPage rp piPage content >>= \case
-                  True  -> logInfo "Page retrieved successfully" $ toJSON info
-                  False -> logAttention_ "Page already in place"
+              Right info -> do
+                fetchPage pagePath info
                 go $ k + 1
+
+    fetchPage pagePath info@PageInfo{..} = localData ["page" .= piPage] $ do
+      content <- liftBase (E.try . BS.readFile $ pagePath piPage) >>= \case
+        Right content -> return content
+        Left (e::IOError) -> do
+          logAttention "Couldn't open page file" $ object [
+              "error" .= show e
+            ]
+          return BS.empty
+      F.forM_ mredis $ redisPut (BS.pack $ show piPage) content
+      putPage rp piPage content >>= \case
+        True  -> logInfo "Page retrieved successfully" $ toJSON info
+        False -> logAttention_ "Page already in place"
 
     msToSecsM :: P.Parser Double -> P.Parser Double
     msToSecsM = fmap (/ 1000)
