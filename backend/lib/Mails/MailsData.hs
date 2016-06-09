@@ -1,4 +1,8 @@
-module Mails.MailsData where
+module Mails.MailsData (
+    MailAddress(..)
+  , Mail(..)
+  , emptyMail
+) where
 
 import Data.Aeson
 import qualified Data.ByteString as BS

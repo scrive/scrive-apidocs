@@ -315,7 +315,6 @@ Library
                  , MailingServerConf
                  , Mails.Data
                  , Mails.Events
-                 , Mails.MailsConfig
                  , Mails.MailsData
                  , Mails.Model
                  , Mails.SendMail

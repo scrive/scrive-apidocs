@@ -213,7 +213,7 @@ sendNewCompanyUserMail inviter company user = do
   uar <- newUserAccountRequest $ userid user
   let al = LinkAccountCreated (lang $ usersettings user) (uarUserID uar) (uarToken uar) CompanyInvitation
   mail <- mailNewCompanyUserInvite ctx user inviter company companyui al (uarExpires uar)
-  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
+  scheduleEmailSendout $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
   return ()
 
 sendTakeoverSingleUserMail :: Kontrakcja m => User -> Company -> User -> m ()
@@ -221,7 +221,7 @@ sendTakeoverSingleUserMail inviter company user = do
   ctx <- getContext
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   mail <- mailTakeoverSingleUserInvite ctx user inviter company companyui (LinkCompanyTakeover (companyid company))
-  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
+  scheduleEmailSendout $ mail { to = [getMailAddress user] }
 
 
 

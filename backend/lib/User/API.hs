@@ -166,8 +166,7 @@ apiCallChangeEmail = api $ do
          Nothing -> do
             changeemaillink <- newEmailChangeRequestLink (userid user) newemail
             mail <- mailEmailChangeRequest ctx user newemail changeemaillink
-            scheduleEmailSendout (ctxmailsconfig ctx)
-                        (mail{to = [MailAddress{
+            scheduleEmailSendout (mail{to = [MailAddress{
                                     fullname = getFullName user
                                   , email = unEmail newemail }]})
             Ok <$> (runJSONGenT $ value "send" True)
@@ -248,7 +247,7 @@ apiCallSendPasswordReminder = api $ do
  where
   sendResetPasswordMail ctx link user = do
     mail <- resetPasswordMail ctx user link
-    scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
+    scheduleEmailSendout $ mail { to = [getMailAddress user] }
 
 apiCallAddFlash :: Kontrakcja m => m Response
 apiCallAddFlash = api $  do

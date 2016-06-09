@@ -41,7 +41,6 @@ import KontraMonad
 import KontraPrelude
 import MagicHash
 import MailContext (MailContextMonad(..))
-import Mails.MailsConfig
 import Session.Data
 import Session.Model
 import Templates
@@ -124,7 +123,7 @@ onlySalesOrAdmin m = do
 -}
 onlyBackdoorOpen :: Kontrakcja m => m a -> m a
 onlyBackdoorOpen a = do
-  backdoorOpen <- isBackdoorOpen . ctxmailsconfig <$> getContext
+  backdoorOpen <- ctxismailbackdooropen <$> getContext
   if backdoorOpen
     then a
     else respond404

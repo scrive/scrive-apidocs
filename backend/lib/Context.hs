@@ -29,7 +29,6 @@ import KontraPrelude
 import LiveDocx (LiveDocxConf(..))
 import MagicHash (MagicHash)
 import MailContext (MailContext(..))
-import Mails.MailsConfig
 import Payments.Config (RecurlyConfig)
 import Salesforce.Conf
 import ServerUtils.BrandedImagesCache
@@ -59,7 +58,7 @@ data Context = Context
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlang
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid langs
     , ctxlang                :: Lang -- ^ The current context lang
-    , ctxmailsconfig         :: MailsConfig
+    , ctxismailbackdooropen  :: Bool
     , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
     , ctxcgigrpconfig        :: CgiGrpConfig
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
@@ -99,8 +98,7 @@ anonymousContext ctx = ctx { ctxmaybeuser = Nothing, ctxmaybepaduser = Nothing, 
 
 contextToMailContext :: Context -> MailContext
 contextToMailContext ctx = MailContext {
-    mctxmailsconfig = ctxmailsconfig ctx
-  , mctxlang = ctxlang ctx
+    mctxlang = ctxlang ctx
   , mctxcurrentBrandedDomain = ctxbrandeddomain ctx
   , mctxtime = ctxtime ctx
   }

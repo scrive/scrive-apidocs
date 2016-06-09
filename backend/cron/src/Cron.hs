@@ -105,7 +105,7 @@ main = do
 
         docSealing = documentSealing appConf templates filecache mrediscache pool
         docSigning = documentSigning  appConf templates filecache mrediscache pool
-        apiCallbacks = documentAPICallback appConf runScheduler
+        apiCallbacks = documentAPICallback runScheduler
         cron = cronQueue appConf mmixpanel templates runScheduler runDB
 
     runCryptoRNGT rng
@@ -224,8 +224,7 @@ main = do
         RecurlySynchronization -> do
           time <- runDB $ do
             time <- currentTime
-            handleSyncWithRecurly (mailsConfig appConf)
-              templates (recurlyAPIKey $ recurlyConfig appConf) time
+            handleSyncWithRecurly templates (recurlyAPIKey $ recurlyConfig appConf) time
             handleSyncNoProvider time
             return time
           return . RerunAt $ nextDayMidnight time

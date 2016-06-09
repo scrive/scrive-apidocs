@@ -33,7 +33,6 @@ import DB hiding (update, query)
 import Happstack.Fields
 import Kontra
 import KontraPrelude
-import Mails.MailsConfig
 import Mails.SendMail
 import MinutesTime
 import Payments.Config (RecurlyConfig(..))
@@ -157,8 +156,8 @@ cachePlan time pa ac subscription invoicestatus cid mds mdd = do
 
 
 {- Should be run once per day, preferably at night -}
-handleSyncWithRecurly :: (MonadBase IO m, MonadIO m, MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => MailsConfig -> KontrakcjaGlobalTemplates -> String -> UTCTime -> m ()
-handleSyncWithRecurly mailsconfig templates recurlyapikey time = do
+handleSyncWithRecurly :: (MonadBase IO m, MonadIO m, MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => KontrakcjaGlobalTemplates -> String -> UTCTime -> m ()
+handleSyncWithRecurly templates recurlyapikey time = do
   logInfo_ "Syncing with Recurly"
   plans <- dbQuery $ PaymentPlansRequiringSync RecurlyProvider time
   logInfo "Found plans requiring sync" $ object [
@@ -227,7 +226,7 @@ handleSyncWithRecurly mailsconfig templates recurlyapikey time = do
                 _ <- dbUpdate $ SavePaymentPlan (plan {ppDunningStep = Just (n+1), ppDunningDate = Just $ daysAfter 3 time}) time
                 let lang' = lang $ usersettings user
                 bd <- dbQuery $ GetBrandedDomainByUserID (userid user)
-                _ <- sendInvoiceFailedEmail bd mailsconfig lang' templates user company invoice
+                _ <- sendInvoiceFailedEmail bd lang' templates user company invoice
                 return ()
       _ -> return ()
 
@@ -272,7 +271,7 @@ postBackCache pr = do
       ctx <- getContext
       bd <- dbQuery $ GetBrandedDomainByUserID (userid user)
 
-      sendInvoiceFailedEmail bd (ctxmailsconfig ctx) (lang $ usersettings user) (ctxglobaltemplates ctx) user company invoice
+      sendInvoiceFailedEmail bd (lang $ usersettings user) (ctxglobaltemplates ctx) user company invoice
     (SuccessfulPayment _, _, _) -> do
       -- need to remove dunning step
       _ <- cachePlan time Stats.PushAction ac s is (ppCompanyID plan) Nothing Nothing
@@ -465,18 +464,20 @@ sendInvoiceEmail user company subscription = do
   bd <- dbQuery $ GetBrandedDomainByUserID (userid user)
   theme <- dbQuery $ GetTheme (bdMailTheme bd)
   mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailSignup bd theme user company subscription
-  scheduleEmailSendout (ctxmailsconfig ctx)
-                        (mail{to = [MailAddress{
+  scheduleEmailSendout (mail{to = [MailAddress{
                                      fullname = getFullName user
                                    , email = getEmail user }]})
 
-sendInvoiceFailedEmail :: (MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => BrandedDomain -> MailsConfig -> Lang -> KontrakcjaGlobalTemplates -> User -> Company -> Invoice -> m ()
-sendInvoiceFailedEmail bd mailsconfig lang templates user company invoice = do
+sendInvoiceFailedEmail :: (MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => BrandedDomain -> Lang -> KontrakcjaGlobalTemplates -> User -> Company -> Invoice -> m ()
+sendInvoiceFailedEmail bd lang templates user company invoice = do
   theme <- dbQuery $ GetTheme (bdMailTheme bd)
   mail <- runTemplatesT (lang, templates) $ mailFailed bd theme user company invoice
-  scheduleEmailSendout mailsconfig
-    (mail{to = [MailAddress { fullname = getFullName user
-                            , email = getEmail user}]})
+  scheduleEmailSendout (mail {
+    to = [MailAddress {
+        fullname = getFullName user
+      , email = getEmail user
+      }]
+  })
 
 sendExpiredEmail :: Kontrakcja m => User -> m ()
 sendExpiredEmail user = do
@@ -484,9 +485,12 @@ sendExpiredEmail user = do
   bd <- dbQuery $ GetBrandedDomainByUserID (userid user)
   theme <- dbQuery $ GetTheme (bdMailTheme bd)
   mail <- runTemplatesT (lang $ usersettings user, ctxglobaltemplates ctx) $ mailExpired bd theme
-  scheduleEmailSendout (ctxmailsconfig ctx)
-    (mail{to = [MailAddress { fullname = getFullName user
-                            , email = getEmail user }]})
+  scheduleEmailSendout (mail {
+    to = [ MailAddress {
+        fullname = getFullName user
+      , email = getEmail user
+      }]
+   })
 
 fromRecurlyStatus :: String -> (PaymentPlanStatus, PaymentPlanStatus)
 fromRecurlyStatus "active"   = (ActiveStatus, ActiveStatus)

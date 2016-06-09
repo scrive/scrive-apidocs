@@ -10,12 +10,10 @@ import Data.Time
 
 import BrandedDomain.BrandedDomain
 import KontraPrelude
-import Mails.MailsConfig
 import User.Model
 
 data MailContext = MailContext {
-  mctxmailsconfig          :: !MailsConfig
-, mctxlang                 :: !Lang
+  mctxlang                 :: !Lang
 , mctxcurrentBrandedDomain :: !BrandedDomain
 , mctxtime                 :: !UTCTime
 } deriving Show

@@ -76,7 +76,6 @@ handleAccountGet = checkUserTOSGet $ do
 
 sendChangeToExistingEmailInternalWarningMail :: Kontrakcja m => User -> Email -> m ()
 sendChangeToExistingEmailInternalWarningMail user newemail = do
-  ctx <- getContext
   let securitymsg =
         "User " ++ getEmail user ++ " (" ++ show (userid user) ++ ")"
         ++ " has requested that their email be changed to " ++ unEmail newemail
@@ -90,7 +89,7 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
     , "email" .= getEmail user
     , "new_email" .= unEmail newemail
     ]
-  scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
+  scheduleEmailSendout $ emptyMail {
       to = [MailAddress { fullname = "info@scrive.com", email = "info@scrive.com" }]
     , title = "Request to Change Email to Existing Account"
     , content = content
@@ -221,7 +220,7 @@ sendNewUserMail user = do
   ctx <- getContext
   al <- newUserAccountRequestLink (lang $ usersettings user) (userid user) AccountRequest
   mail <- newUserMail ctx (getEmail user) (getSmartName user) al
-  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
+  scheduleEmailSendout $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
 createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> (CompanyID, Bool) -> Lang -> m (Maybe User)
@@ -233,7 +232,7 @@ createNewUserByAdmin email names companyandrole lg = do
              let fullname = composeFullName names
              chpwdlink <- newUserAccountRequestLink (lang $ usersettings user) (userid user) ByAdmin
              mail <- mailNewAccountCreatedByAdmin ctx (getLang user) fullname email chpwdlink
-             scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
+             scheduleEmailSendout $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
 
@@ -402,16 +401,15 @@ handlePasswordReminderPost uid token = do
 -- please treat this function like a public query form, it's not secure
 handleContactUs :: Kontrakcja m => m KontraLink
 handleContactUs = do
-  Context{..} <- getContext
+  ctx <- getContext
   fname   <- getField' "firstname"
   lname   <- getField' "lastname"
   email   <- getField' "email"
   message <- getField' "message"
   plan    <- getField' "plan"
 
-  let uid = maybe "user not logged in" ((++) "user with id " . show . userid) ctxmaybeuser
-      bd = ctxbrandeddomain
-      domainInfo = " (from domain " ++ bdUrl bd ++ " )"
+  let uid = maybe "user not logged in" ((++) "user with id " . show . userid) (ctxmaybeuser ctx)
+      domainInfo = " (from domain " ++ bdUrl (ctxbrandeddomain ctx) ++ " )"
       content = "<p>Hi there!</p>" ++
                 "<p>Someone requested information from the payments form" ++
                 domainInfo ++
@@ -423,7 +421,7 @@ handleContactUs = do
                 "<p>" ++ uid ++ "</p>" ++
                 "<p>Have a good one!</p>"
       contactEmail = "info@scrive.com"
-      sendEmailTo emailAddress = scheduleEmailSendout ctxmailsconfig $ emptyMail {
+      sendEmailTo emailAddress = scheduleEmailSendout $ emptyMail {
                                    to = [MailAddress { fullname = emailAddress, email = emailAddress }]
                                  , title = "Contact request (" ++ plan ++ ")"
                                  , content = content

@@ -67,8 +67,7 @@ documentSealing appConf templates localCache globalCache pool = ConsumerConfig {
             , A.awsGlobalCache = globalCache
             }
           mc = MailContext {
-              mctxmailsconfig = mailsConfig appConf
-            , mctxlang = lang
+              mctxlang = lang
             , mctxcurrentBrandedDomain = bd
             , mctxtime = now
             }

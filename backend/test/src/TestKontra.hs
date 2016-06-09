@@ -54,7 +54,6 @@ import IPAddress
 import Kontra
 import KontraPrelude
 import Log.Configuration
-import Mails.MailsConfig
 import Payments.Config (RecurlyConfig(..))
 import Salesforce.Conf
 import Session.SessionID
@@ -303,7 +302,7 @@ mkContext lang = do
         , ctxtemplates = localizedVersion lang globaltemplates
         , ctxglobaltemplates = globaltemplates
         , ctxlang = lang
-        , ctxmailsconfig = defaultMailsConfig
+        , ctxismailbackdooropen = False
         , ctxlivedocxconf = def
         , ctxcgigrpconfig = CgiGrpConfig {
             cgGateway = "https://grpt.funktionstjanster.se:18898/grp/v1"

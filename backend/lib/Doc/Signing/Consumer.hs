@@ -104,8 +104,7 @@ documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
             , A.awsGlobalCache = globalCache
             }
           mc = MailContext {
-              mctxmailsconfig = mailsConfig appConf
-            , mctxlang = signingLang
+              mctxlang = signingLang
             , mctxcurrentBrandedDomain = bd
             , mctxtime = now
             }

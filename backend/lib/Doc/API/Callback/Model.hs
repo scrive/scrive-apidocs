@@ -14,7 +14,6 @@ import Log
 
 import ActionQueue.Scheduler
 import API.APIVersion
-import AppConf (AppConf(..))
 import BrandedDomain.Model
 import DB
 import Doc.API.Callback.Data
@@ -30,9 +29,9 @@ import User.Lang (Lang(..))
 import Util.SignatoryLinkUtils
 
 documentAPICallback :: (MonadIO m, MonadBase IO m, MonadLog m, MonadMask m)
-  => AppConf -> (forall r. Scheduler r -> m r)
+  => (forall r. Scheduler r -> m r)
   -> ConsumerConfig m CallbackID DocumentAPICallback
-documentAPICallback appConf runExecute = ConsumerConfig {
+documentAPICallback runExecute = ConsumerConfig {
   ccJobsTable = "document_api_callbacks"
 , ccConsumersTable = "document_api_callback_consumers"
 , ccJobSelectors = ["id", "document_id", "api_version", "url", "attempts"]
@@ -52,8 +51,7 @@ documentAPICallback appConf runExecute = ConsumerConfig {
     bd <- dbQuery GetMainBrandedDomain
     -- Dummy MailContext
     let mc = MailContext {
-            mctxmailsconfig = mailsConfig appConf
-          , mctxlang = LANG_EN
+            mctxlang = LANG_EN
           , mctxcurrentBrandedDomain = bd
           , mctxtime = now
           }

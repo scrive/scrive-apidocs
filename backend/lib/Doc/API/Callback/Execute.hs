@@ -175,7 +175,7 @@ parseAccessToken str = do
     J.Ok js ->  join $ withJSValue js $ fromJSValueFieldCustom "auth" $ fromJSValueField "access_token"
     _ -> Nothing
 
-executeSalesforceCallback :: (MonadDB m, CryptoRNG m, MonadLog m, MonadThrow m, MonadBase IO m, MonadReader c m, HasSalesforceConf c, MailContextMonad m) => Document -> String ->  String -> Int32 -> UserID -> m Bool
+executeSalesforceCallback :: (MonadDB m, CryptoRNG m, MonadLog m, MonadThrow m, MonadBase IO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> Int32 -> UserID -> m Bool
 executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid doc) $ do
   mtoken <- getAccessTokenFromRefreshToken rtoken
   case mtoken of
@@ -212,7 +212,6 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
           sc <- getSalesforceConfM
           when (attempts == 4 && isJust (salesforceErrorEmail sc)) $ do
             logInfo_ "Salesforce API callback failed for 5th time, sending email."
-            mctx <- getMailContext
             user <- fmap $fromJust (dbQuery $ GetUserByID uid)
             company <- dbQuery $ GetCompanyByUserID $ uid
 
@@ -239,4 +238,4 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                           ++ "<strong>User Name:</strong> " ++ escapeHTML (getFullName user) ++ "<br />\r\n"
                           ++ "<strong>User Email:</strong> " ++ escapeHTML (getEmail user) ++ "<br />\r\n"
                   }
-            scheduleEmailSendout (mctxmailsconfig mctx) mail
+            scheduleEmailSendout mail

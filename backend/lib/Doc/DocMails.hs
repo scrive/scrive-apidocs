@@ -21,8 +21,7 @@ import Log
 import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
 import qualified Data.ByteString as BS
 
-import ActionQueue.Scheduler (SchedulerData, sdAppConf, getGlobalTemplates)
-import AppConf (mailsConfig)
+import ActionQueue.Scheduler (SchedulerData, getGlobalTemplates)
 import BrandedDomain.Model
 import Crypto.RNG
 import DB
@@ -57,7 +56,7 @@ import Util.SignatoryLinkUtils
    Say sorry about this to them.
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
-sendDocumentErrorEmail :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => User -> Document -> m ()
+sendDocumentErrorEmail :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, MailContextMonad m) => User -> Document -> m ()
 sendDocumentErrorEmail author document = do
   let signlinks = documentsignatorylinks document
   forM_ signlinks (\sl -> if isAuthor sl
@@ -65,12 +64,11 @@ sendDocumentErrorEmail author document = do
                             else sendDocumentErrorEmailToSignatory sl)
   where
     sendDocumentErrorEmailToAuthor = do
-      mctx <- getMailContext
       let authorlink = $(fromJust) $ getAuthorSigLink document
       sendNotifications authorlink True
         (do
           mail <- mailDocumentErrorForAuthor (getLang author) document
-          scheduleEmailSendout (mctxmailsconfig mctx) $ mail {
+          scheduleEmailSendout $ mail {
                                    to = [getMailAddress authorlink]
                                  })
         (smsDocumentErrorAuthor document authorlink >>= scheduleSMS document)
@@ -78,11 +76,10 @@ sendDocumentErrorEmail author document = do
     -- | Helper function to send emails to invited parties
     -- ??: Should this be in DocControl or in an email-specific file?
     sendDocumentErrorEmailToSignatory signatorylink = do
-      mctx <- getMailContext
       sendNotifications signatorylink False
         (do
           mail <- mailDocumentErrorForSignatory document
-          scheduleEmailSendoutWithAuthorSenderThroughService (documentid document) (mctxmailsconfig mctx) $ mail {
+          scheduleEmailSendoutWithAuthorSenderThroughService (documentid document) $ mail {
                                    to = [getMailAddress signatorylink]
                                  , mailInfo = Invitation (documentid document) (signatorylinkid signatorylink)
                                  })
@@ -123,7 +120,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
       mail <- theDocument >>= mailInvitation True (Sign <| isSignatory signatorylink |> View) (Just signatorylink)
       -- ?? Do we need to read in the contents? -EN
       -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
-      scheduleEmailSendoutWithAuthorSenderThroughService did (mctxmailsconfig mctx) $
+      scheduleEmailSendoutWithAuthorSenderThroughService did $
                            mail { to = [getMailAddress signatorylink]
                                 , mailInfo = Invitation did (signatorylinkid signatorylink)
                                 })
@@ -139,14 +136,12 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
               (systemActor $ mctxtime mctx)
 
 sendInvitationEmail1 authorsiglink = do
-  mctx <- getMailContext
   when (isSignatory authorsiglink) $ do
        void $ sendNotifications authorsiglink False
           (do
             -- send invitation to sign to author when it is his turn to sign
             mail <- theDocument >>= \d -> mailDocumentAwaitingForAuthor (getLang d) d
-            scheduleEmailSendout (mctxmailsconfig mctx) $
-                                 mail { to = [getMailAddress authorsiglink] })
+            scheduleEmailSendout $ mail { to = [getMailAddress authorsiglink] })
           (theDocument >>= \doc -> smsInvitationToAuthor doc authorsiglink >>= scheduleSMS doc)
 
 {- |
@@ -155,13 +150,12 @@ sendInvitationEmail1 authorsiglink = do
 sendReminderEmail :: (MonadLog m, MonadCatch m, TemplatesMonad m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
                           Maybe String -> Actor -> Bool -> SignatoryLink  -> m SignatoryLink
 sendReminderEmail custommessage actor automatic siglink = logSignatory (signatorylinkid siglink) $ do
-  mctx <- getMailContext
   doc <- theDocument
   let domail = do
        mailattachments <- makeMailAttachments doc
        mail <- mailDocumentRemind automatic custommessage siglink (not (null mailattachments)) doc
        docid <- theDocumentID
-       scheduleEmailSendoutWithAuthorSenderThroughService docid (mctxmailsconfig mctx) $ mail {
+       scheduleEmailSendoutWithAuthorSenderThroughService docid $ mail {
            to = [getMailAddress siglink]
          -- We only collect delivery information, if signatory had not signed yet
          , mailInfo = if (isNothing $ maybesigninfo siglink)
@@ -203,9 +197,8 @@ sendReminderEmail custommessage actor automatic siglink = logSignatory (signator
 -- document that wasn't digitally sealed, so now we resend the
 -- document with digital seal.  If the main file is deemed too large
 -- to attach, a link to it is used instead of attaching it.
-sendClosedEmails :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => Bool -> Document -> m ()
+sendClosedEmails :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, MailContextMonad m) => Bool -> Document -> m ()
 sendClosedEmails sealFixed document = do
-    mctx <- getMailContext
     mailattachments <- makeMailAttachments document
     let signatorylinks = documentsignatorylinks document
     forM_ signatorylinks $ \sl -> do
@@ -214,15 +207,14 @@ sendClosedEmails sealFixed document = do
             let scheduleEmailFunc
                   | signatoryisauthor sl = scheduleEmailSendout
                   | otherwise            = scheduleEmailSendoutWithAuthorSender (documentid document)
-            scheduleEmailFunc (mctxmailsconfig mctx) $
-                                 mail { to = [getMailAddress sl]
-                                      , attachments = attachments mail ++ mailattachments
-                                      , replyTo =
+            scheduleEmailFunc $ mail { to = [getMailAddress sl]
+                                     , attachments = attachments mail ++ mailattachments
+                                     , replyTo =
                                           let maybeAuthor = find signatoryisauthor signatorylinks
                                           in if signatoryisauthor sl && isJust maybeAuthor
                                                 then Nothing
                                                 else fmap getMailAddress maybeAuthor
-                                      }
+                                     }
       let sendSMS withMail = (scheduleSMS document =<< smsClosedNotification document sl withMail sealFixed)
       let useMail = isGood $ asValidEmail $ getEmail sl
           useSMS = isGood $  asValidPhoneForSMS $ getMobile sl
@@ -288,11 +280,9 @@ sendRejectEmails customMessage signalink document = do
   forM_ activatedSignatories $ \sl -> do
     void $ sendNotifications sl True
       (do
-         mctx <- getMailContext
          mail <- mailDocumentRejected True customMessage (signatoryisauthor sl) signalink document
-         scheduleEmailSendout (mctxmailsconfig mctx) $ mail {
-                                  to = [getMailAddress sl]
-                                })
+         scheduleEmailSendout $ mail { to = [getMailAddress sl] }
+      )
       (scheduleSMS document =<< smsRejectNotification document sl signalink)
 
 {- |
@@ -333,11 +323,10 @@ sendAllReminderEmailsWithFilter f actor automatic = do
 sendForwardEmail :: (MonadLog m, TemplatesMonad m, MonadThrow m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
                           String -> Bool -> SignatoryLink -> m ()
 sendForwardEmail email noContent asiglink = do
-  mctx <- getMailContext
   mailattachments <- makeMailAttachments =<< theDocument
   mail <- mailForwardSigned asiglink (not (null mailattachments)) =<< theDocument
   did <- documentid <$> theDocument
-  scheduleEmailSendoutWithAuthorSenderThroughService did (mctxmailsconfig mctx) $ mail {
+  scheduleEmailSendoutWithAuthorSenderThroughService did $ mail {
                                to = [MailAddress "" email]
                              , content =  if (noContent)
                                              then ""
@@ -388,13 +377,11 @@ type MailT m = MailContextT (TemplatesT m)
 -- based on document data, and the rest from SchedulerData
 runMailTInScheduler :: (MonadReader SchedulerData m, MonadThrow m, MonadDB m, MonadIO m, MonadLog m) => Document -> MailT m a -> m a
 runMailTInScheduler doc m = do
-  appConf <- asks sdAppConf
   now <- currentTime
   mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) $ join $ maybesignatory <$> getAuthorSigLink doc
   bd <- maybe (dbQuery GetMainBrandedDomain) (dbQuery . GetBrandedDomainByUserID) (userid <$> mauthor)
   let mctx = MailContext {
-          mctxmailsconfig = mailsConfig appConf
-        , mctxlang = documentlang doc
+          mctxlang = documentlang doc
         , mctxcurrentBrandedDomain = bd
         , mctxtime = now
         }

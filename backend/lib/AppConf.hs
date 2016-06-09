@@ -18,7 +18,6 @@ import HubSpot.Conf (HubSpotConf(..))
 import KontraPrelude
 import LiveDocx (LiveDocxConf(..))
 import Log.Configuration
-import Mails.MailsConfig
 import Payments.Config (RecurlyConfig(..))
 import Salesforce.Conf
 import User.Email
@@ -40,7 +39,7 @@ data AppConf = AppConf {
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , cdnBaseUrl         :: Maybe String                 -- ^ for CDN content in prod mode
   , guardTimeConf      :: GuardTimeConf
-  , mailsConfig        :: MailsConfig                  -- ^ mail sendout configuration
+  , isMailBackdoorOpen :: Bool                         -- ^ If true allows admins to access last mail send. Used by selenium
   , liveDocxConfig     :: LiveDocxConf                 -- ^ LiveDocx doc conversion configuration
   , cgiGrpConfig       :: CgiGrpConfig                 -- ^ CGI GRP (E-ID) configuration
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
@@ -103,9 +102,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "guardtime"
       guardTimeConf
       "GuardTime configuration"
-  <*> field "mails"
-      mailsConfig
-      "Mails configuration"
+  <*> fieldDef "mail_backdoor_open" False
+      isMailBackdoorOpen
+      "Enabling mails backdoor for test"
   <*> field "livedocx"
       liveDocxConfig
       "LiveDocx doc conversion configuration"
@@ -162,7 +161,7 @@ instance Default AppConf where
                                          , guardTimeExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
                                          , guardTimeControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
                                          }
-    , mailsConfig        = defaultMailsConfig
+    , isMailBackdoorOpen = False
     , liveDocxConfig     = def
     , cgiGrpConfig       = CgiGrpConfig {
         cgGateway = "https://grpt.funktionstjanster.se:18898/grp/v1"

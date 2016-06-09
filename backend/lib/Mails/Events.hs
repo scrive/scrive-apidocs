@@ -23,7 +23,6 @@ import Text.StringTemplates.Templates hiding (runTemplatesT)
 import qualified Text.StringTemplates.Fields as F
 
 import ActionQueue.Scheduler
-import AppConf
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Control.Monad.Trans.Instances ()
@@ -39,7 +38,6 @@ import Doc.SignatoryLinkID
 import KontraLink
 import KontraPrelude
 import Log.Identifier
-import Mails.MailsConfig
 import Mails.MailsData
 import Mails.Model hiding (Mail)
 import Mails.SendMail
@@ -69,7 +67,6 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
             logInfo_ "Processing invitation event"
             withDocumentID docid $ do
                 markEventAsRead eid
-                appConf <- sdAppConf <$> ask
                 bd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
                             Nothing -> dbQuery $ GetMainBrandedDomain
                             Just uid -> do
@@ -82,7 +79,6 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                           "signatory_email" .= signemail
                         , "event_email" .= email
                         ]
-                    mc = mailsConfig $ appConf
                     -- since when email is reported deferred author has a possibility to
                     -- change email address, we don't want to send him emails reporting
                     -- success/failure for old signatory address, so we need to compare
@@ -91,40 +87,40 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                       logEmails email
                       case ev of
                         SG_Opened -> handleOpenedInvitation slid email muid
-                        SG_Delivered _ -> handleDeliveredInvitation bd mc slid
+                        SG_Delivered _ -> handleDeliveredInvitation bd slid
                         -- we send notification that email is reported deferred after
                         -- fifth attempt has failed - this happens after ~10 minutes
                         -- from sendout
-                        SG_Deferred _ 5 -> handleDeferredInvitation bd mc slid email
-                        SG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
-                        SG_Bounce _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
+                        SG_Deferred _ 5 -> handleDeferredInvitation bd slid email
+                        SG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                        SG_Bounce _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
                         _ -> return ()
                     handleEv (MailGunEvent email ev) = do
                       logEmails email
                       case ev of
                         MG_Opened -> handleOpenedInvitation slid email muid
-                        MG_Delivered -> handleDeliveredInvitation bd mc slid
-                        MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
-                        MG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
+                        MG_Delivered -> handleDeliveredInvitation bd slid
+                        MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                        MG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
                         _ -> return ()
                     handleEv (SocketLabsEvent email ev) = do
                       logEmails email
                       case ev of
                         SL_Opened -> handleOpenedInvitation slid email muid
-                        SL_Delivered -> handleDeliveredInvitation bd mc slid
-                        SL_Failed 0 5001 -> handleDeliveredInvitation bd mc slid -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
-                        SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
+                        SL_Delivered -> handleDeliveredInvitation bd slid
+                        SL_Failed 0 5001 -> handleDeliveredInvitation bd slid -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
+                        SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation bd slid
                         _ -> return ()
                     handleEv (SendinBlueEvent email ev) = do
                       logEmails email
                       case ev of
-                        SiB_Delivered -> handleDeliveredInvitation bd mc slid
+                        SiB_Delivered -> handleDeliveredInvitation bd slid
                         SiB_Opened -> handleOpenedInvitation slid email muid
-                        SiB_Deferred _ -> when (signemail == email) $ handleDeferredInvitation bd mc slid email
-                        SiB_HardBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
-                        SiB_SoftBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
-                        SiB_Blocked      _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
-                        SiB_InvalidEmail _ -> when (signemail == email) $ handleUndeliveredInvitation bd mc slid
+                        SiB_Deferred _ -> when (signemail == email) $ handleDeferredInvitation bd slid email
+                        SiB_HardBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                        SiB_SoftBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                        SiB_Blocked      _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                        SiB_InvalidEmail _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
                         _ -> return ()
 
                 theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
@@ -138,14 +134,14 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
         logAttention_ "Couldn't mark event as read"
 
 handleDeliveredInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m)
-                          => BrandedDomain -> MailsConfig -> SignatoryLinkID -> m ()
-handleDeliveredInvitation bd mc slid = do
+                          => BrandedDomain -> SignatoryLinkID -> m ()
+handleDeliveredInvitation bd slid = do
   getSigLinkFor slid <$> theDocument >>= \case
     Just signlink -> do
       -- send it only if email was reported deferred earlier
       when (mailinvitationdeliverystatus signlink == Deferred) $ do
         mail <- mailDeliveredInvitation bd signlink =<< theDocument
-        theDocument >>= \d -> scheduleEmailSendout mc $ mail {
+        theDocument >>= \d -> scheduleEmailSendout $ mail {
           to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
         }
       time <- currentTime
@@ -161,8 +157,8 @@ handleOpenedInvitation slid email muid = do
           (mailSystemActor now muid email slid)
   return ()
 
-handleDeferredInvitation :: (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> MailsConfig -> SignatoryLinkID -> String -> m ()
-handleDeferredInvitation bd mc slid email = do
+handleDeferredInvitation :: (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> SignatoryLinkID -> String -> m ()
+handleDeferredInvitation bd slid email = do
   time <- currentTime
   getSigLinkFor slid <$> theDocument >>= \case
     Just sl -> do
@@ -170,13 +166,13 @@ handleDeferredInvitation bd mc slid email = do
       success <- dbUpdate $ SetEmailInvitationDeliveryStatus slid Deferred actor
       when success $ do
         mail <- mailDeferredInvitation bd sl =<< theDocument
-        theDocument >>= \d -> scheduleEmailSendout mc $ mail {
+        theDocument >>= \d -> scheduleEmailSendout $ mail {
           to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
         }
     Nothing -> return ()
 
-handleUndeliveredInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> MailsConfig -> SignatoryLinkID -> m ()
-handleUndeliveredInvitation bd mc slid = do
+handleUndeliveredInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m) => BrandedDomain -> SignatoryLinkID -> m ()
+handleUndeliveredInvitation bd slid = do
   getSigLinkFor slid <$> theDocument >>= \case
     Just signlink | mailinvitationdeliverystatus signlink == Delivered -> do
       logInfo "Undelivered email event for email that was already delivered" $ object ["signatory_email" .= getEmail signlink]
@@ -185,7 +181,7 @@ handleUndeliveredInvitation bd mc slid = do
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) slid
       _ <- dbUpdate $ SetEmailInvitationDeliveryStatus slid Undelivered actor
       mail <- mailUndeliveredInvitation bd signlink =<< theDocument
-      theDocument >>= \d -> scheduleEmailSendout mc $ mail {
+      theDocument >>= \d -> scheduleEmailSendout $ mail {
         to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
       }
       triggerAPICallbackIfThereIsOne =<< theDocument

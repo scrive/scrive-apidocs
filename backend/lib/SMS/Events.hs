@@ -21,7 +21,6 @@ import Text.StringTemplates.Templates hiding (runTemplatesT)
 import qualified Text.StringTemplates.Fields as F
 
 import ActionQueue.Scheduler
-import AppConf
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Crypto.RNG
@@ -36,7 +35,6 @@ import EvidenceLog.Model
 import KontraLink
 import KontraPrelude
 import Log.Identifier
-import Mails.MailsConfig
 import Mails.SendMail
 import SMS.Data
 import SMS.Model
@@ -69,12 +67,10 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, m
         msl <- getSigLinkFor slid <$> theDocument
         let signphone = maybe "" getMobile msl
         templates <- getGlobalTemplates
-        appConf <- sdAppConf <$> ask
         bd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
           Nothing -> dbQuery $ GetMainBrandedDomain
           Just uid -> dbQuery $ GetBrandedDomainByUserID uid
         let host = bdUrl bd
-            mc = mailsConfig $ appConf
             -- since when email is reported deferred author has a possibility to
             -- change email address, we don't want to send him emails reporting
             -- success/failure for old signatory address, so we need to compare
@@ -89,7 +85,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, m
               theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case ev of
                 SMSDelivered -> handleDeliveredInvitation slid
                 SMSUndelivered _ -> when (signphone == smsOrigMsisdn) $ do
-                  handleUndeliveredSMSInvitation bd host mc slid
+                  handleUndeliveredSMSInvitation bd host slid
         handleEv eventType
 
     processEvent (eid, _, eventType, SMSPinSendout slid, smsOrigMsisdn) = do
@@ -128,8 +124,8 @@ handleDeliveredInvitation signlinkid = logSignatory signlinkid $ do
       return ()
     Nothing -> return ()
 
-handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => BrandedDomain -> String -> MailsConfig -> SignatoryLinkID -> m ()
-handleUndeliveredSMSInvitation bd hostpart mc signlinkid = logSignatory signlinkid $ do
+handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => BrandedDomain -> String -> SignatoryLinkID -> m ()
+handleUndeliveredSMSInvitation bd hostpart signlinkid = logSignatory signlinkid $ do
   logInfo_ "handleUndeliveredSMSInvitation: logging info"
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
@@ -137,7 +133,7 @@ handleUndeliveredSMSInvitation bd hostpart mc signlinkid = logSignatory signlink
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
       _ <- dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Undelivered actor
       mail <- theDocument >>= \d -> smsUndeliveredInvitation bd hostpart d signlink
-      theDocument >>= \d -> scheduleEmailSendout mc $ mail {
+      theDocument >>= \d -> scheduleEmailSendout $ mail {
         to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
       }
     Nothing -> return ()
