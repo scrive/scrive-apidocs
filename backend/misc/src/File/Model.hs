@@ -39,12 +39,11 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m NewFile FileID where
         sqlResult "id"
     fetchOne runIdentity
 
-data FileMovedToAWS = FileMovedToAWS FileID String String AESConf
+data FileMovedToAWS = FileMovedToAWS FileID String AESConf
 instance MonadDB m => DBUpdate m FileMovedToAWS () where
-  update (FileMovedToAWS fid bucket url aes) =
+  update (FileMovedToAWS fid url aes) =
     runQuery_ $ sqlUpdate "files" $ do
         sqlSet "content" (Nothing :: Maybe (Binary BS.ByteString))
-        sqlSet "amazon_bucket" bucket
         sqlSet "amazon_url" url
         sqlSet "aes_key" $ aesKey aes
         sqlSet "aes_iv" $ aesIV aes
@@ -75,7 +74,6 @@ filesSelectors = [
     "id"
   , "name"
   , "content"
-  , "amazon_bucket"
   , "amazon_url"
   , "checksum"
   , "aes_key"
@@ -83,8 +81,8 @@ filesSelectors = [
   , "size"
   ]
 
-fetchFile :: (FileID, String, Maybe (Binary BS.ByteString), Maybe String, Maybe String, Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString), Int32) -> File
-fetchFile (fid, fname, content, amazon_bucket, amazon_url, checksum, maes_key, maes_iv, size) = File {
+fetchFile :: (FileID, String, Maybe (Binary BS.ByteString), Maybe String, Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString), Maybe (Binary BS.ByteString), Int32) -> File
+fetchFile (fid, fname, content, amazon_url, checksum, maes_key, maes_iv, size) = File {
         fileid = fid
       , filename = fname
       , filestorage =
@@ -93,7 +91,7 @@ fetchFile (fid, fname, content, amazon_bucket, amazon_url, checksum, maes_key, m
         --  * plain data in the database: just return content
         --  * encrypted data in the database (backward compatibility only):
         --      decrypt and return content
-        --  * encrypted data in Amazon S3: return (bucket, url, aes)
+        --  * encrypted data in Amazon S3: return (url, aes)
         --  * invalid AES key: error out at this place
         --
         -- Binary data in database is temporary: next cron run should
@@ -106,9 +104,9 @@ fetchFile (fid, fname, content, amazon_bucket, amazon_url, checksum, maes_key, m
             Nothing          -> FileStorageMemory mem
             Just (Right aes) -> FileStorageMemory (aesDecrypt aes mem)
             Just (Left msg)  -> err msg
-          Nothing -> case (amazon_bucket, amazon_url, eaes) of
-            (Just bucket, Just url, Just (Right aes)) -> FileStorageAWS bucket url aes
-            (Just _,      Just _,   Just (Left msg))  -> err msg
+          Nothing -> case (amazon_url, eaes) of
+            (Just url, Just (Right aes)) -> FileStorageAWS url aes
+            (Just _,   Just (Left msg))  -> err msg
             d                                  -> $unexpectedError $ "invalid AWS data for file with id =" <+> show fid <> ":" <+> show d
       , filechecksum = unBinary `fmap` checksum
       , filesize = size

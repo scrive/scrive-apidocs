@@ -1,4 +1,4 @@
-module File.File 
+module File.File
     ( File(..)
     , FileStorage(..)
     ) where
@@ -13,7 +13,7 @@ import KontraPrelude
 
 data FileStorage =
     FileStorageMemory BS.ByteString
-  | FileStorageAWS String String AESConf -- ^ bucket, url inside bucket, aes key/iv
+  | FileStorageAWS String AESConf -- ^ url inside bucket, aes key/iv
     deriving (Eq, Ord, Show, Typeable)
 
 data File = File {

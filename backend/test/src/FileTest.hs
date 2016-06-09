@@ -63,15 +63,14 @@ testFileDoesNotExist = replicateM_ 5 $ do
 testFileMovedToAWS :: TestEnv ()
 testFileMovedToAWS  = replicateM_ 100 $ do
   (name,content) <- fileData
-  bucket <- viewableS
   url <- viewableS
   fileid' <- dbUpdate $ NewFile name $ Binary content
   let Right aes = mkAESConf (BS.fromString (take 32 $ repeat 'a')) (BS.fromString (take 16 $ repeat 'b'))
 
-  dbUpdate $ FileMovedToAWS fileid' bucket url aes
-  File { filename = fname , filestorage = FileStorageAWS fbucket furl aes2 } <- dbQuery $ GetFileByFileID fileid'
+  dbUpdate $ FileMovedToAWS fileid' url aes
+  File { filename = fname , filestorage = FileStorageAWS furl aes2 } <- dbQuery $ GetFileByFileID fileid'
   assertEqual "File data name does not change" name fname
-  assertEqual "Bucket and url are persistent" (bucket,url) (fbucket,furl)
+  assertEqual "File URL does not change" url furl
   assertEqual "AES key is persistent" aes aes2
 
 testPurgeFiles :: TestEnv ()
@@ -102,7 +101,7 @@ testNewFileThatShouldBeMovedToAWS  = do
                     then return ()
                     else do
                         let Right aes = mkAESConf (BS.fromString (take 32 $ repeat 'a')) (BS.fromString (take 16 $ repeat 'b'))
-                        dbUpdate $ FileMovedToAWS fileid' "" "" aes
+                        dbUpdate $ FileMovedToAWS fileid' "" aes
                         checker fileid'
        Nothing ->  assertFailure  "Newly created file will not"
 

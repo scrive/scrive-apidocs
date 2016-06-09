@@ -92,6 +92,7 @@ kontraMigrations = [
   , changeScriveFavicon
   , createDocumentSigningConsumersTable
   , createDocumentSigningJobsTable
+  , removeAmazonBucketColumn
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

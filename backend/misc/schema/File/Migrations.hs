@@ -34,3 +34,11 @@ filesAddPurgeAtColumn = Migration {
       idxWhere = Just "purged_time IS NOT NULL"
     }
   }
+
+removeAmazonBucketColumn :: MonadDB m => Migration m
+removeAmazonBucketColumn = Migration {
+    mgrTable = tableFiles
+  , mgrFrom = 8
+  , mgrDo = do
+      runSQL_ "ALTER TABLE files DROP COLUMN amazon_bucket"
+  }

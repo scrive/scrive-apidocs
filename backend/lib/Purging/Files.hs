@@ -104,7 +104,6 @@ purgeOrphanFile :: forall m. (MonadDB m, MonadThrow m, MonadLog m, MonadIO m, Am
 purgeOrphanFile = do
   runQuery_ . sqlSelect "files" $ do
     sqlResult "id"
-    sqlResult "amazon_bucket"
     sqlResult "amazon_url"
     sqlResult "content IS NULL"
     sqlWhereFileWasNotPurged
@@ -117,12 +116,12 @@ purgeOrphanFile = do
       purge file
       return True
   where
-    purge :: (FileID, Maybe String, Maybe String, Bool) -> m ()
-    purge (fid, mamazonBucket, mamazonUrl, isOnAmazon) = do
-      purgedFromOtherSystems <- case (mamazonBucket, mamazonUrl, isOnAmazon) of
-        (Just amazonBucket, Just amazonUrl, True) -> do
+    purge :: (FileID, Maybe String, Bool) -> m ()
+    purge (fid, mamazonUrl, isOnAmazon) = do
+      purgedFromOtherSystems <- case (mamazonUrl, isOnAmazon) of
+        (Just amazonUrl, True) -> do
           conf <- getAmazonConfig
-          deleteFile (mkAWSAction $ awsConfig conf) amazonBucket amazonUrl
+          deleteFile (mkAWSAction $ awsConfig conf) amazonUrl
         _ -> return True
       if purgedFromOtherSystems
         then do

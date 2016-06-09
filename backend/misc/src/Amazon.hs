@@ -136,7 +136,7 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
       logInfo "AWS uploaded" $ object [
           "url" .= (bucket </> url)
         ]
-      _ <- dbUpdate $ FileMovedToAWS fileid bucket url aes
+      _ <- dbUpdate $ FileMovedToAWS fileid url aes
       return True
     Left err -> do
       logAttention "AWS failed to upload" $ object [
@@ -149,28 +149,31 @@ exportFile _ _ = do
   logInfo_ "No uploading to Amazon as bucket is ''"
   return False
 
-deleteFile :: (MonadIO m, MonadDB m, MonadLog m) => S3Action -> String -> String -> m Bool
-deleteFile ctxs3action bucket url = do
+deleteFile :: (MonadIO m, MonadDB m, MonadLog m) => S3Action -> String -> m Bool
+deleteFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} url = do
   let action = ctxs3action {
         AWS.s3object    = url
       , AWS.s3operation = HTTP.DELETE
       , AWS.s3metadata  = []
-      , AWS.s3bucket    = bucket
       }
   result <- liftIO $ AWS.runAction action
   case result of
     Right res -> do
       logInfo "AWS file deleted" $ object [
-          "url" .= (bucket </> url)
+          "url" .= (AWS.s3bucket ctxs3action </> url)
         , "result" .= show res
         ]
       return True
     Left err -> do
       logAttention "AWS failed to delete file" $ object [
-           "url" .= (bucket </> url)
+           "url" .= (AWS.s3bucket ctxs3action </> url)
          , "result" .= show err
          ]
       return False
+
+deleteFile _ _ = do
+  logInfo_ "No deleting file from Amazon as bucket is ''"
+  return False
 
 getFileFromRedis
   :: (MonadBaseControl IO m, MonadLog m)
@@ -225,13 +228,12 @@ getFileContents s3action File{..} mredis = localData fileData $ do
       ]
 
     getContent (FileStorageMemory content) = return . Just $ content
-    getContent (FileStorageAWS bucket url aes) = do
+    getContent (FileStorageAWS url aes) = do
       (result, timeDiff) <- do
         startTime <- liftBase getCurrentTime
         logInfo_ "Attempting to fetch file from AWS"
         result <- liftBase . AWS.runAction $ s3action {
             AWS.s3object = url
-          , AWS.s3bucket = bucket
         }
         finishTime <- liftBase getCurrentTime
         return (result, realToFrac $ diffUTCTime finishTime startTime :: Double)

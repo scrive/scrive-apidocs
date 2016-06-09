@@ -76,7 +76,7 @@ unjsonAppConf = objectOf $ pure AppConf
       (objectOf $ pure (,,)
        <*> field "bucket"
          (\(x,_,_) -> x)
-         "In which bucket to store new files"
+         "In which bucket stored files exist"
        <*> field "access_key"
          (\(_,x,_) -> x)
          "Amazon access key"
