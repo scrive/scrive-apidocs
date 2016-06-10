@@ -132,11 +132,11 @@
 "_signviewSigningFailed":"Något gick fel vid signeringen. Vänligen försök igen.",
 "_smsDocumentErrorAuthor":"Scrive kunde inte hantera dokumentet $documenttitle$ och signeringsprocessen har avbrutits. Kontakta oss på support@scrive.com om du har några frågor.",
 "_smsDocumentErrorSignatory":"Scrive kunde inte hantera dokumentet $documenttitle$ och signeringsprocessen har avbrutits. Kontakta oss på support@scrive.com om du har några frågor.",
-"_smsInvitationToSign":"",
+"_smsInvitationToSign":"$creatorname:noescape()$ har bjudit in dig att e-signera dokumentet $documenttitle$. Följ länken för vidare instruktioner $link$",
 "_smsPinSendout":"Din PIN för $documenttitle$ är $pin$",
-"_smsRejectNotification":"",
-"_smsReminder":"",
-"_smsReminderAutomatic":"",
-"_smsReminderSigned":"",
+"_smsRejectNotification":"$rejectorName$ har avvisat att signera dokumentet $documenttitle$. Signeringsprocessen har därför avbrutits. Följ länken för att se dokumentet $link$",
+"_smsReminder":"$creatorname$ vill påminna dig om att signera dokumentet $documenttitle$. Följ länken för vidare instruktioner $link$",
+"_smsReminderAutomatic":"Det här är en automatisk påminnelse att du inte har signerat dokumentet $documenttitle$ från $creatorname$ ännu. Följ länken för vidare instruktioner $link$",
+"_smsReminderSigned":"Det signerade dokumentet $documenttitle$ har skickats till dig på nytt på begäran av $creatorname$. Hitta dokumentet genom att följa denna länk $link$",
 "_unavailableForSign":"Dokumentet går inte längre att signera"
 }
