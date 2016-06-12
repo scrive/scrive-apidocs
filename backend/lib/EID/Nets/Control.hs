@@ -69,7 +69,7 @@ handleResolve = do
           certErrorHandler <- mkCertErrorHandler
           debugFunction <- mkDebugFunction
           let netsAuth =  CurlAuthBasic (netsMerchantIdentifier netsconf) (netsMerchantPassword netsconf)
-              transport = curlTransport SecureSSL netsAuth (T.unpack $ netsAssertionUrl netsconf) id certErrorHandler debugFunction
+              transport = curlTransport SecureSSL netsAuth (T.unpack $ netsAssertionUrl netsconf) return certErrorHandler debugFunction
           res <- soapCall transport "" () (GetAssertionRequest {  assertionArtifact = T.pack art }) xpGetAssertionResponse
           if ("Success" `T.isInfixOf` assertionStatusCode res)
              then do
