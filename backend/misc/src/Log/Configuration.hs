@@ -20,9 +20,12 @@ import Log.Data
 import Log.Logger
 import Log.Monad
 
+import Crypto.RNG
 import DB.Checks
 import DB.PostgreSQL
 import KontraPrelude
+import Log.Backend.ElasticSearch
+import Log.Backend.ElasticSearch.Configuration
 import Log.Migrations
 import Log.Tables
 import Utils.TH
@@ -30,7 +33,7 @@ import Utils.TH
 data LogConfig = LogConfig {
   lcSuffix  :: !Text
 , lcLoggers :: ![LoggerDef]
-} deriving (Eq, Ord, Show)
+} deriving (Eq, Show)
 
 instance Default LogConfig where
   def = LogConfig {
@@ -50,12 +53,18 @@ instance Unjson LogConfig where
 
 data LoggerDef
   = StandardOutput
+  | ElasticSearch ElasticSearchConfig
   | PostgreSQL Text
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Show)
 
 instance Unjson LoggerDef where
   unjsonDef = disjointUnionOf "logger" [
       ("stdout", (== StandardOutput), pure StandardOutput)
+    , ("elasticsearch", $(isConstr 'ElasticSearch), ElasticSearch
+        <$> field "configuration"
+            (\(ElasticSearch es) -> es)
+            "ElasticSearch configuration"
+      )
     , ("postgresql", $(isConstr 'PostgreSQL), PostgreSQL
         <$> fieldBy "database"
             (\(PostgreSQL ci) -> ci)
@@ -71,8 +80,8 @@ data LogRunner = LogRunner {
 , withLoggerWait :: forall m r. (MonadBase IO m, MonadMask m) => LogT m r -> m r
 }
 
-mkLogRunner :: Text -> LogConfig -> IO LogRunner
-mkLogRunner component LogConfig{..} = do
+mkLogRunner :: Text -> LogConfig -> CryptoRNGState -> IO LogRunner
+mkLogRunner component LogConfig{..} rng = do
   logger <- fold <$> mapM defLogger lcLoggers
   let run :: LogT m r -> m r
       run = runLogT (component <> "-" <> lcSuffix) logger
@@ -82,6 +91,7 @@ mkLogRunner component LogConfig{..} = do
   }
   where
     defLogger StandardOutput = stdoutLogger
+    defLogger (ElasticSearch ec) = elasticSearchLogger ec $ runCryptoRNGT rng boundedIntegralRandom
     defLogger (PostgreSQL ci) = do
       ConnectionSource pool <- poolSource def { csConnInfo = encodeUtf8 ci } 1 10 1
       withPostgreSQL pool $ do

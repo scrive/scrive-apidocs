@@ -59,7 +59,8 @@ main = do
   -- All running instances need to have the same configuration.
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   conf <- readConfig putStrLn config
-  lr@LogRunner{..} <- mkLogRunner "mailer" $ mscLogConfig conf
+  rng <- newCryptoRNGState
+  lr@LogRunner{..} <- mkLogRunner "mailer" (mscLogConfig conf) rng
   withLoggerWait $ do
     checkExecutables
 
@@ -76,7 +77,6 @@ main = do
         }
     cs@(ConnectionSource pool) <- ($ maxConnectionTracker)
       <$> liftBase (createPoolSource $ pgSettings mailerComposites)
-    rng <- newCryptoRNGState
 
     E.bracket (startServer lr conf cs rng) (liftBase . killThread) . const $ do
       let master = createSender cs $ mscMasterSender conf

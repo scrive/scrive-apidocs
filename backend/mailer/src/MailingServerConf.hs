@@ -27,7 +27,7 @@ data MailingServerConf = MailingServerConf {
 , mscSlaveSender      :: !(Maybe SenderConfig)
 , mscAmazonConfig     :: !(Maybe (String, String, String))
 , testReceivers       :: ![Address]
-} deriving (Eq, Ord, Show)
+} deriving (Eq, Show)
 
 -- | SMTP callback key authentication will be used to receive callbacks
 -- Right now it's used only for SocketLabs

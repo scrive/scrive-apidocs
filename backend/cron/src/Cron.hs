@@ -75,7 +75,8 @@ main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   appConf <- readConfig putStrLn config
-  LogRunner{..} <- mkLogRunner "cron" $ logConfig appConf
+  rng <- newCryptoRNGState
+  LogRunner{..} <- mkLogRunner "cron" (logConfig appConf) rng
   withLoggerWait $ do
     checkExecutables
 
@@ -86,7 +87,6 @@ main = do
     ConnectionSource pool <- ($ maxConnectionTracker)
       <$> liftBase (createPoolSource $ connSettings kontraComposites)
     templates <- liftBase readGlobalTemplates
-    rng <- newCryptoRNGState
     mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
     filecache <- MemCache.new BS.length 52428800
 

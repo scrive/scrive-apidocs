@@ -10,6 +10,7 @@ import AppDBConfig
 import AppDBMigrations
 import AppDBTables
 import Configuration
+import Crypto.RNG
 import DB
 import DB.Checks
 import DB.PostgreSQL
@@ -36,7 +37,8 @@ main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   AppDBConf{..} <- readConfig putStrLn config
-  LogRunner{..} <- mkLogRunner "kontrakcja-migrate" logConfig
+  rng <- newCryptoRNGState
+  LogRunner{..} <- mkLogRunner "kontrakcja-migrate" logConfig rng
   withLoggerWait $ do
     -- composite types are not available in migrations
     let connSource = simpleSource $ pgConnSettings dbConfig []

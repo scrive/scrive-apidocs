@@ -65,7 +65,8 @@ main = withCurlDo $ do
   appConf <- readConfig putStrLn config
   let connSettings = pgConnSettings $ dbConfig appConf
   pool <- liftBase . createPoolSource $ connSettings kontraComposites
-  lr@LogRunner{..} <- mkLogRunner "kontrakcja" $ logConfig appConf
+  rng <- newCryptoRNGState
+  lr@LogRunner{..} <- mkLogRunner "kontrakcja" (logConfig appConf) rng
   withLoggerWait $ do
     logInfo "Starting kontrakcja-server" $ object [
         "version" .= Version.versionID
@@ -83,7 +84,6 @@ main = withCurlDo $ do
       lesscache <- MemCache.new BSL8.length 50000000
       brandedimagescache <- MemCache.new BSL8.length 50000000
       docs <- MemCache.new RenderedPages.pagesCount 10000
-      rng <- newCryptoRNGState
       return AppGlobals {
           templates = templates
         , mrediscache = mrediscache

@@ -51,7 +51,8 @@ main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   conf <- readConfig putStrLn config
-  lr@LogRunner{..} <- mkLogRunner "messenger" $ mscLogConfig conf
+  rng <- newCryptoRNGState
+  lr@LogRunner{..} <- mkLogRunner "messenger" (mscLogConfig conf) rng
   withLogger $ do
     checkExecutables
 
@@ -60,7 +61,6 @@ main = do
       checkDatabase (logInfo_ . T.pack) [] messengerTables
     cs@(ConnectionSource pool) <- ($ maxConnectionTracker)
       <$> liftBase (createPoolSource pgSettings)
-    rng <- newCryptoRNGState
 
     let cron = jobsWorker cs
         sender = smsConsumer rng cs $ createSender $ sendersConfigFromMessengerConf conf

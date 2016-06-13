@@ -302,6 +302,8 @@ Library
                  , LiveDocx
                  , LiveDocx.Conf
                  , LiveDocx.Types
+                 , Log.Backend.ElasticSearch
+                 , Log.Backend.ElasticSearch.Configuration
                  , Log.Configuration
                  , Log.Identifier
                  , Log.Migrations
@@ -508,6 +510,10 @@ Library
                , yaml
                , zip-archive
                , zlib
+               , aeson-pretty
+               , bloodhound
+               , http-client
+               , text-show
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns
@@ -698,6 +704,17 @@ Executable kontrakcja-migrate
                , unjson
                , utf8-string
                , yaml
+               , DRBG
+               , aeson-pretty
+               , bloodhound
+               , crypto-api
+               , http-client
+               , http-types
+               , random
+               , text-show
+               , transformers
+               , unordered-containers
+               , vector
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns
@@ -796,6 +813,12 @@ Executable mailing-server
                , utf8-string
                , vector
                , yaml
+               , aeson-pretty
+               , bloodhound
+               , http-client
+               , http-types
+               , random
+               , text-show
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns
@@ -886,6 +909,14 @@ Executable messenger-server
                , unjson
                , utf8-string
                , yaml
+               , aeson-pretty
+               , bloodhound
+               , http-client
+               , http-types
+               , random
+               , text-show
+               , unordered-containers
+               , vector
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns

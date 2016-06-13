@@ -52,7 +52,7 @@ data AppConf = AppConf {
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
   , salesforceConf     :: SalesforceConf               -- ^ Configuration of salesforce
   , netsConfig         :: Maybe NetsConfig             -- ^ Configuration of Nets - NO BankID provider
-  } deriving (Eq, Ord, Show)
+  } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
 unjsonAppConf = objectOf $ pure AppConf
