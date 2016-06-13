@@ -19,7 +19,6 @@ module Doc.Rendering
 import Control.Concurrent.Async.Lifted
 import Control.Concurrent.Lifted
 import Control.Conditional (whenM)
-import Control.DeepSeq
 import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Except
@@ -35,7 +34,6 @@ import System.IO
 import System.Process hiding (readProcessWithExitCode)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import System.Timeout.Lifted
-import qualified Control.Concurrent.Thread.Lifted as LT
 import qualified Control.Exception.Lifted as E
 import qualified Data.Attoparsec.Text as P
 import qualified Data.ByteString.Char8 as BS
@@ -44,7 +42,6 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Foldable as F
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import qualified Data.Text.Lazy.IO as LT
 import qualified Data.Unjson as Unjson
 import qualified Database.Redis as R
 import qualified System.IO.Temp
@@ -134,35 +131,32 @@ runRendering fileContent widthInPixels renderingMode rp mredis = do
           , ["-st"]
           , [sourcePath]
           , ["1" | RenderingModeFirstPageOnly <- return renderingMode]
-          ]) {
-            std_out = CreatePipe
-          , std_err = CreatePipe
-          }
+          ])
 
     mask $ \release -> do
-      (Nothing, Just hout, Just herr, ph) <- liftBase $ createProcess_ "mutool draw" mutoolDraw
 
-      -- Collect stderr in parallel to stdout so that its buffer won't get full.
-      (_, getStdErr) <- liftBase (LT.fork $ E.evaluate . force =<< LT.hGetContents herr)
+      (readEnd, writeEnd) <- liftBase createPipe
+      -- Redirect stdout and stderr of mutool to the same pipe so we are not
+      -- dependent on where rendering info is written.
+      (_, _, _, ph) <- liftBase $ createProcess mutoolDraw {
+          std_out = UseHandle writeEnd
+        , std_err = UseHandle writeEnd
+        }
 
       let killProcess = liftBase $ terminateProcess ph
           cleanupProcess = do
-            (err, ec) <- liftBase $ do
-              err <- getStdErr
-              hClose hout
-              hClose herr
+            ec <- liftBase $ do
               ec <- waitForProcess ph
-              return (err, ec)
+              hClose writeEnd
+              hClose readEnd
+              return ec
             logInfo "Rendering completed" $ object [
                 "code" .= show ec
-              , case err of
-                  Right msg -> "stderr" .= msg
-                  Left ex   -> "error"  .= show ex
               ]
 
       (`finally` cleanupProcess) . (`onException` killProcess) . release $ do
-        fetchPages pagePath (T.pack sourcePath) (pagesCount rp) hout
-        fetchStatistics hout
+        fetchPages pagePath (T.pack sourcePath) (pagesCount rp) readEnd
+        fetchStatistics readEnd
         -- If things break for some reason and not all rendered pages are picked
         -- up by checking output of mutool, sweep for the remaining ones.
         forM_ [1..pagesCount rp] $ \page -> whenM (not <$> hasPage rp page) $ do
