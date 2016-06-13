@@ -9,6 +9,7 @@
   "./app/scripts/designview/documentview.jsx",
   "./app/scripts/authorview/fileview/*.jsx",
   "./app/scripts/authorview/signatories/*.jsx",
+  "./app/scripts/authorview/titlebox.jsx",
   "./app/scripts/signview/signatories/*.jsx",
   "./app/scripts/signview/fileview/*.jsx",
   "./app/scripts/signview/signaturemodal/*.jsx",

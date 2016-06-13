@@ -2,7 +2,6 @@ var React = require("react");
 var DocumentViewSignatories = require("../../scripts/authorview/signatories/docviewsignatories");
 var FileView = require("../../scripts/authorview/fileview/fileview");
 var Backbone = require("backbone");
-var AuthorViewTitleBox = require("./authorviewtitlebox.js").AuthorViewTitleBox;
 var AuthorViewHistory = require("./authorsviewhistory.js").AuthorViewHistory;
 var $ = require("jquery");
 var DocumentAuthorAttachments = require("../doctools/docauthorattachments.js").DocumentAuthorAttachments;
@@ -12,11 +11,11 @@ var _ = require("underscore");
 var Document = require("../documents.js").Document;
 var AuthorViewView = require("./authorview.js").AuthorViewView;
 var LoadingDialog = require("../loading.js").LoadingDialog;
+var TitleBoxView = require("../../scripts/authorview/titlebox");
 
 /* Signatory view of document
  * Now unified with author and viewer views
  */
-
 
 var AuthorViewModel = Backbone.Model.extend({
   defaults : {
@@ -31,8 +30,29 @@ var AuthorViewModel = Backbone.Model.extend({
      return this.get("document");
   },
   title : function() {
-    if (this.get("title") == undefined)
-      this.set({"title" : new AuthorViewTitleBox({authorview : this})}, {silent : true});
+    if (this.get("title") == undefined) {
+      var div = $("<div />");
+      var component = React.render(
+        React.createElement(TitleBoxView, {
+          authorview: this,
+          document: this.document()
+        }),
+        div[0]
+      );
+
+      this.set({
+        "title": {
+          el: function () {
+            return div;
+          },
+          component: function () {
+            return component;
+          },
+          destroy: function() {}
+        }
+      });
+    }
+
     return this.get("title");
   },
   history : function() {
