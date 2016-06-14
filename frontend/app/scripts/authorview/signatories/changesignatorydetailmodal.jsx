@@ -60,7 +60,7 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
             className={!model.isSignatoryDetailValueValid() ? "obligatory-input" : undefined}
             inputtype="text"
             autocomplete={false}
-            focus={true}
+            focus={false}
           />
         </div>
       );
