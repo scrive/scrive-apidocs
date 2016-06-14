@@ -2,6 +2,7 @@
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Show",
+"_attachmentAttachedBy":"Attached by <strong class='put-name-here'/>",
 "_cancel":"Cancel",
 "_changePartyTo":"Select next party to sign",
 "_checkYourPhone":"Check your phone",

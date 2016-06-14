@@ -137,6 +137,7 @@ javascriptLocalisation =
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , evidenceAttachmentBoxHeader : "$_evidenceAttachmentBoxHeader()$"
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
+            , signatoryAttachmentAttachedBy: "$_attachmentAttachedBy()$"
             , months : [ "$_january()$",
                          "$_february()$",
                          "$_march()$",
