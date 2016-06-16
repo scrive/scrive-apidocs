@@ -4,14 +4,15 @@ var FileView = require("../../scripts/authorview/fileview/fileview");
 var Backbone = require("backbone");
 var AuthorViewHistory = require("./authorsviewhistory.js").AuthorViewHistory;
 var $ = require("jquery");
-var DocumentAuthorAttachments = require("../doctools/docauthorattachments.js").DocumentAuthorAttachments;
-var DocumentEvidenceAttachments = require("../doctools/docevidenceattachments.js").DocumentEvidenceAttachments;
-var AuthorViewSignatoriesAttachments = require("./authorviewsignatoriesattachments.js").AuthorViewSignatoriesAttachments;
 var _ = require("underscore");
 var Document = require("../documents.js").Document;
 var AuthorViewView = require("./authorview.js").AuthorViewView;
 var LoadingDialog = require("../loading.js").LoadingDialog;
 var TitleBoxView = require("../../scripts/authorview/titlebox");
+
+var AuthorAttachmentsView = require("../../scripts/authorview/authorattachments");
+var SignatoriesAttachmentsView = require("../../scripts/authorview/signatoriesattachments");
+var EvidenceAttachmentsView = require("../../scripts/authorview/evidenceattachments");
 
 /* Signatory view of document
  * Now unified with author and viewer views
@@ -90,24 +91,87 @@ var AuthorViewModel = Backbone.Model.extend({
     return this.document().authorattachments().length > 0;
   },
   authorattachments : function() {
-    if (this.get("authorattachments") == undefined)
-      this.set({"authorattachments" : new DocumentAuthorAttachments({document : this.document(), el : $("<div class='section spacing'/>")})}, {silent : true});
+    if (this.get("authorattachments") == undefined) {
+      var div = $("<div class='section spacing' />");
+
+      var component = React.render(
+        React.createElement(AuthorAttachmentsView, {
+          document: this.document()
+        }),
+        div[0]
+      );
+
+      this.set({
+        "authorattachments": {
+          el: function () {
+            return div;
+          },
+          component: function () {
+            return component;
+          },
+          destroy: function() {}
+        }
+      });
+    }
+
     return this.get("authorattachments");
   },
   hasEvidenceAttachmentsSection : function() {
     return this.document().closed();
   },
   evidenceattachments : function() {
-    if (this.get("evidenceattachments") == undefined)
-      this.set({"evidenceattachments" : new DocumentEvidenceAttachments({document : this.document(), el : $("<div class='section spacing'/>")})}, {silent : true});
+    if (this.get("evidenceattachments") == undefined) {
+      var div = $("<div class='section spacing' />");
+
+      var component = React.render(
+        React.createElement(EvidenceAttachmentsView, {
+          document: this.document()
+        }),
+        div[0]
+      );
+
+      this.set({
+        "evidenceattachments": {
+          el: function () {
+            return div;
+          },
+          component: function () {
+            return component;
+          },
+          destroy: function() {}
+        }
+      });
+    }
+
     return this.get("evidenceattachments");
   },
   hasSignatoriesAttachmentsSection : function() {
     return this.document().signatoryattachments().length > 0;
   },
   signatoryattachments : function() {
-    if (this.get("signatoryattachments") == undefined)
-      this.set({"signatoryattachments" : new AuthorViewSignatoriesAttachments({authorview : this,el : $("<div class='section spacing'/>")})}, {silent : true});
+    if (this.get("signatoryattachments") == undefined) {
+      var div = $("<div class='section spacing' />");
+      
+      var component = React.render(
+        React.createElement(SignatoriesAttachmentsView, {
+          document: this.document()
+        }),
+        div[0]
+      );
+
+      this.set({
+        "signatoryattachments": {
+          el: function () {
+            return div;
+          },
+          component: function () {
+            return component;
+          },
+          destroy: function() {}
+        }
+      });
+    }
+
     return this.get("signatoryattachments");
   },
   readyToShow : function() {
