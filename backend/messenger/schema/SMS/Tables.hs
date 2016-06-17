@@ -65,7 +65,7 @@ tableMessengerJobs = tblTable {
 tableSMSes :: Table
 tableSMSes = tblTable {
     tblName = "smses"
-  , tblVersion = 4
+  , tblVersion = 5
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "originator", colType = TextT, colNullable = False }
@@ -78,6 +78,7 @@ tableSMSes = tblTable {
     , tblColumn { colName = "reserved_by", colType = BigIntT }
     , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False, colDefault = Just "1"}
     , tblColumn { colName = "telia_id", colType = TextT }
+    , tblColumn { colName = "mblox_id", colType = TextT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [

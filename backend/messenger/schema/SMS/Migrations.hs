@@ -19,6 +19,7 @@ messengerMigrations =
   , makeSMSesTableJobQueue
   , createTableMessengerJobs
   , createProviderAndTeliaIDColumns
+  , createMbloxIDColumn
   ]
 
 ----------------------------------------
@@ -152,4 +153,13 @@ createProviderAndTeliaIDColumns =
   , mgrDo = do
       runSQL_ "ALTER TABLE smses ADD COLUMN provider SMALLINT NOT NULL DEFAULT 1"
       runSQL_ "ALTER TABLE smses ADD COLUMN telia_id text"
+  }
+
+createMbloxIDColumn :: MonadDB m => Migration m
+createMbloxIDColumn =
+  Migration {
+    mgrTable = tableSMSes
+  , mgrFrom = 4
+  , mgrDo = do
+      runSQL_ "ALTER TABLE smses ADD COLUMN mblox_id text"
   }

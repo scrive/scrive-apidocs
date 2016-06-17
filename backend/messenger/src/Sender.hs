@@ -13,6 +13,9 @@ import System.Exit
 import System.Process
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Match
+import Text.JSON
+import Text.JSON.FromJSValue
+import Text.JSON.Gen hiding (object)
 import Text.Regex.TDFA
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Text.IConv as IConv
@@ -21,6 +24,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.Lazy.UTF8 as BSU
+import qualified Data.Text as T
 
 import Crypto.RNG (CryptoRNG)
 import DB
@@ -45,17 +49,9 @@ clearMobileNumber :: String -> String
 clearMobileNumber = filter (\c -> not (c `elem` (" -()."::String)))
 
 sendSMSHelper :: (MonadDB m, MonadThrow m, CryptoRNG m, MonadBase IO m, MonadIO m, MonadLog m) => SenderConfig -> ShortMessage -> m Bool
-sendSMSHelper GlobalMouthSender{..} ShortMessage{..} = localData [identifier_ smID] $ do
+sendSMSHelper GlobalMouthSender{..} sm@ShortMessage{..} = localData [identifier_ smID] $ do
   let clearmsisdn = clearMobileNumber smMSISDN
-  logInfo "Sending SMS" $ object [
-      "sender"     .= ("GlobalMouth" :: String)
-    , "provider"   .= show smProvider
-    , "originator" .= smOriginator
-    , "msisdn"     .= smMSISDN -- original/non-clean format
-    , "body"       .= smBody
-    , "data"       .= smData
-    , "attempts"   .= smAttempts
-    ]
+  logInfoSendSMS "GlobalMouth" sm
   let latin_user = toLatin gmSenderUser
       latin_password = toLatin gmSenderPassword
       latin_originator = toLatin smOriginator
@@ -82,19 +78,44 @@ sendSMSHelper GlobalMouthSender{..} ShortMessage{..} = localData [identifier_ sm
   (success, _) <- curlSMSSender [url] clearmsisdn
   return success
 
-sendSMSHelper TeliaCallGuideSender{..} ShortMessage{..} = localData [identifier_ smID] $ do
+sendSMSHelper MbloxSender{..} sm@ShortMessage{..} = localData [identifier_ smID] $ do
+  let clearmsisdn = clearMobileNumber smMSISDN
+  logInfoSendSMS "Mblox" sm
+  let smsDataJSON =  encode $ runJSONGen $ do
+        value "from" smOriginator
+        value "to" $ [clearmsisdn]
+        value "body" smBody
+        value "delivery_report" ("per_recipient" :: String)
+  (success, resp) <- curlSMSSender [
+      "-X" , "POST"
+    , "-H" , "Authorization: Bearer " ++ mbToken
+    , "-H" , "Content-Type: application/json"
+    , "-d" , smsDataJSON
+    , mbURL
+    ] clearmsisdn
+  case (success, decode resp) of
+       (True, Ok jresp) -> case (runIdentity $ withJSValue jresp $ fromJSValueField "id") of
+         Just mbloxID -> do
+           res <- dbUpdate $ UpdateSMSWithMbloxID smID mbloxID
+           return res
+         Nothing -> do
+           logAttention "Sendout with Mblox failed  - no id in response " $ object [
+             "resp" .= show resp
+             ]
+           return False
+       (True, Error err) -> do
+         logAttention "Sendout with Mblox failed  - response is not a valid json " $ object [
+             "resp" .= show resp
+           , "err" .= err
+           ]
+         return False
+       _ -> return False
+
+sendSMSHelper TeliaCallGuideSender{..} sm@ShortMessage{..} = localData [identifier_ smID] $ do
   -- Telia CallGuide doesn't want leading +
   let msisdn = filter (/='+') smMSISDN
   let clearmsisdn = clearMobileNumber msisdn
-  logInfo "Sending SMS" $ object [
-      "sender"     .= ("TeliaCallGuide" :: String)
-    , "provider"   .= show smProvider
-    , "originator" .= smOriginator
-    , "msisdn"     .= smMSISDN -- original/non-clean format
-    , "body"       .= smBody
-    , "data"       .= smData
-    , "attempts"   .= smAttempts
-    ]
+  logInfoSendSMS "TeliaCallGuide" sm
   let userpass = tcgSenderUser ++ ":" ++ tcgSenderPassword
       url = concat [
           tcgSenderUrl
@@ -157,10 +178,11 @@ sendSMSHelper LocalSender{..} ShortMessage{..} = localData [identifier_ smID] $ 
 
 curlSMSSender :: (CryptoRNG m, MonadBase IO m, MonadIO m, MonadLog m) => [String] -> String -> m (Bool, String)
 curlSMSSender params msisdn = do
+  logInfo_ $ T.pack $ show params
   (code, stdout, stderr) <- readCurl (params ++ ["--write-out","\n%{http_code}"]) BS.empty
-  let http_code = case reverse . lines . BSC.unpack $ stdout of
-        [] -> Nothing
-        c:_ -> maybeRead c
+  let (stdout_without_code,http_code) = case reverse . lines . BSC.unpack $ stdout of
+        [] -> ("", Nothing)
+        (lastline:otherlinesreversed) -> (unlines $ reverse $ otherlinesreversed, maybeRead lastline)
   case (code, http_code) of
     (ExitSuccess, Just (httpcode :: Int)) | httpcode >= 200 && httpcode<300 -> do
       logInfo "curlSMSSender success" $ object [
@@ -170,7 +192,7 @@ curlSMSSender params msisdn = do
         , "stderr" `equalsExternalBSL` stderr
         , "number" .= msisdn
         ]
-      return (True, BSC.unpack stdout)
+      return (True, stdout_without_code)
     _ -> do
       logInfo "curlSMSSender failed" $ object [
           "code" .= show code
@@ -179,7 +201,7 @@ curlSMSSender params msisdn = do
         , "stderr" `equalsExternalBSL` stderr
         , "number" .= msisdn
         ]
-      return (False, BSC.unpack stdout)
+      return (False, stdout_without_code)
 
 toLatin :: String -> String
 toLatin x = case toLatinTransliterate x of
@@ -197,3 +219,14 @@ toLatin x = case toLatinTransliterate x of
 
 urlEncode :: String -> String
 urlEncode = URL.encode . map (fromIntegral . ord)
+
+logInfoSendSMS :: MonadLog m => String -> ShortMessage -> m ()
+logInfoSendSMS sender ShortMessage{..} = logInfo "Sending SMS" $ object [
+      "sender"     .= sender
+    , "provider"   .= show smProvider
+    , "originator" .= smOriginator
+    , "msisdn"     .= smMSISDN -- original/non-clean format
+    , "body"       .= smBody
+    , "data"       .= smData
+    , "attempts"   .= smAttempts
+    ]

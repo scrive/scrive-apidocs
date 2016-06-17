@@ -16,23 +16,20 @@ import DB.PostgreSQL
 import GlobalMouth
 import Happstack.Server.ReqHandler
 import KontraPrelude
+import Mblox
 import Messenger
 import TeliaCallGuide
 
 router :: CryptoRNGState -> ConnectionSource -> Messenger Response -> ReqHandlerT (LogT IO) Response
 router rng cs routes = withPostgreSQL cs $ do
-  tempDir <- liftIO getTemporaryDirectory
-  withDecodedBody (bodyPolicy tempDir) $ do
-    runMessenger rng routes
-  where
-    quota = 65536
-    bodyPolicy tempDir = defaultBodyPolicy tempDir quota quota quota
+  runMessenger rng routes
 
 handlers :: Route (Messenger Response)
 handlers = choice [
     hGet showHelloMessage
-  , dir "sms" $ dir "globalmouth" $ hGet handleGlobalMouthEvents
-  , dir "sms" $ dir "telia"       $ hPost handleTeliaCallGuideEvents
+  , dir "sms" $ dir "globalmouth" $ hGet  $ withDecodedBody_ handleGlobalMouthEvents
+  , dir "sms" $ dir "telia"       $ hPost $ withDecodedBody_ handleTeliaCallGuideEvents
+  , dir "sms" $ dir "mblox"       $ hPost handleMbloxEvents
   ]
   where
     hGet = path GET id
@@ -40,3 +37,13 @@ handlers = choice [
 
 showHelloMessage :: Messenger Response
 showHelloMessage = ok $ toResponse "Messenger says hello!"
+
+-- Some providers send a valid POST request that should be decoded for further processing
+-- Mblox events have JSON in body but not as parameter, and should not be decoded.
+withDecodedBody_ :: Messenger Response -> Messenger Response
+withDecodedBody_ action = do
+  tempDir <- liftIO getTemporaryDirectory
+  withDecodedBody (bodyPolicy tempDir) action
+  where
+    quota = 65536
+    bodyPolicy tempDir = defaultBodyPolicy tempDir quota quota quota

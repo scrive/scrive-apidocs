@@ -7,8 +7,10 @@ module SMS.Model (
   , CreateSMS(..)
   , CleanSMSesOlderThanDays(..)
   , UpdateSMSWithTeliaID(..)
+  , UpdateSMSWithMbloxID(..)
   , UpdateWithSMSEvent(..)
   , UpdateWithSMSEventForTeliaID(..)
+  , UpdateWithSMSEventForMbloxID(..)
   , GetUnreadSMSEvents(..)
   , MarkSMSEventAsRead(..)
   ) where
@@ -88,6 +90,13 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSMSWithTeliaID Bool where
       sqlSet "telia_id" tid
       sqlWhereEq "id" mid
 
+data UpdateSMSWithMbloxID = UpdateSMSWithMbloxID ShortMessageID String
+instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSMSWithMbloxID Bool where
+  update (UpdateSMSWithMbloxID mid mlxid) = do
+    runQuery01 . sqlUpdate "smses" $ do
+      sqlSet "mblox_id" mlxid
+      sqlWhereEq "id" mid
+
 data UpdateWithSMSEvent = UpdateWithSMSEvent ShortMessageID SMSEvent
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEvent Bool where
   update (UpdateWithSMSEvent mid ev) = do
@@ -100,6 +109,17 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEventForTeliaID Bo
   update (UpdateWithSMSEventForTeliaID tid ev) = do
     runQuery_ . sqlSelect "smses" $ do
       sqlWhereEq "telia_id" tid
+      sqlResult "id"
+    (mid :: ShortMessageID) <- fetchOne runIdentity
+    runQuery01 . sqlInsert "sms_events" $ do
+      sqlSet "sms_id" mid
+      sqlSet "event" ev
+
+data UpdateWithSMSEventForMbloxID = UpdateWithSMSEventForMbloxID String SMSEvent
+instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEventForMbloxID Bool where
+  update (UpdateWithSMSEventForMbloxID mlxid ev) = do
+    runQuery_ . sqlSelect "smses" $ do
+      sqlWhereEq "mblox_id" mlxid
       sqlResult "id"
     (mid :: ShortMessageID) <- fetchOne runIdentity
     runQuery01 . sqlInsert "sms_events" $ do
