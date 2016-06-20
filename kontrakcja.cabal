@@ -70,7 +70,6 @@ Library
                   backend/server/schema backend/server/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
-  GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   if flag(server-coverage)
