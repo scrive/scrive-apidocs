@@ -9,7 +9,6 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Pool
 import Data.Text (Text)
-import Data.Text.Encoding (encodeUtf8)
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Internal.Connection
 import Log
@@ -45,7 +44,7 @@ maxConnections = 100
 
 pgConnSettings :: Text -> [CompositeType] -> ConnectionSettings
 pgConnSettings dbconf ctypes = def {
-  csConnInfo = encodeUtf8 dbconf
+  csConnInfo = dbconf
 , csComposites = map (unRawSQL . ctName) ctypes
 }
 

@@ -34,6 +34,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL (empty, writeFile)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
+import qualified Data.Text as T
 import qualified Data.Unjson as Unjson
 import qualified Text.StringTemplates.Fields as F
 
@@ -301,7 +302,7 @@ formatUTCTimeForVerificationPage tz mt = withTimeZone tz $ do
       datetimeWithoutOffset = "TO_CHAR(($1 AT TIME ZONE $2)::TIMESTAMPTZ, 'YYYY-MM-DD HH24:MI:SS TZ')"
 
       sqlConcat ss = "CONCAT(" ++ intercalate ", " ss ++ ")"
-  runQuery_ $ rawSQL (BS.fromString $ "SELECT " ++ sqlConcat [datetimeWithoutOffset, "' ('", niceOffsetHours, "')'"]) (mt, toString tz)
+  runQuery_ $ rawSQL (T.pack $ "SELECT " ++ sqlConcat [datetimeWithoutOffset, "' ('", niceOffsetHours, "')'"]) (mt, toString tz)
   fetchOne runIdentity
 
 createSealingTextsForDocument :: (TemplatesMonad m) => Document -> String -> m Seal.SealingTexts
@@ -553,7 +554,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
             logAttention_ $ "Sealing document resulted in an empty output"
             internalError
           _ -> do
-            sealedfileid <- dbUpdate $ NewFile filename $ Binary tmpoutContent
+            sealedfileid <- dbUpdate $ NewFile filename tmpoutContent
             dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
       ExitFailure _ -> do
         systmp <- liftIO $ getTemporaryDirectory

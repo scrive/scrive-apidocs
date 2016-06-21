@@ -438,9 +438,6 @@ instance Arbitrary UserInfo where
 instance Arbitrary Password where
   arbitrary = Password <$> arbitrary <*> arbitrary
 
-instance Arbitrary (Binary BS.ByteString) where
-  arbitrary = Binary <$> arbitrary
-
 instance Arbitrary SignupMethod where
   arbitrary = elements [AccountRequest, ViralInvitation, ByAdmin, CompanyInvitation]
 
@@ -561,7 +558,7 @@ addNewCompany = do
     return company
 
 addNewFile :: (CryptoRNG m, MonadDB m, MonadThrow m) => String -> BS.ByteString -> m FileID
-addNewFile filename content = dbUpdate $ NewFile filename $ Binary content
+addNewFile filename content = dbUpdate $ NewFile filename content
 
 addNewRandomFile :: (MonadIO m, CryptoRNG m, MonadDB m, MonadThrow m) => m FileID
 addNewRandomFile = do

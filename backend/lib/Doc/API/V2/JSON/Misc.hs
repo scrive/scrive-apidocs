@@ -23,7 +23,6 @@ import Data.Text.Encoding
 import Data.Time.Clock
 import Data.Time.Format
 import Data.Unjson
-import Database.PostgreSQL.PQTypes.Binary
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
@@ -128,7 +127,7 @@ unjsonMaybeMainFile = nothingToNullDef $ objectOf $ pure Nothing
 unjsonScreenshots :: UnjsonDef Screenshot.Screenshot
 unjsonScreenshots = objectOf $ pure Screenshot.Screenshot
     <*> field "time"  Screenshot.time  "Time when screenshot was taken"
-    <*> fieldBy "image" Screenshot.image "Image with screenshot, base64 encoded with content type" (invmap Binary unBinary unjsonImage)
+    <*> fieldBy "image" Screenshot.image "Image with screenshot, base64 encoded with content type" unjsonImage
     where
       unjsonImage :: UnjsonDef BS.ByteString
       unjsonImage = SimpleUnjsonDef "Screenshot" parseScreenshot (Aeson.String . decodeUtf8 . (RFC2397.encode "image/jpeg"))

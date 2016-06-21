@@ -75,7 +75,7 @@ handleResolve = do
              then do
                sessionID <- ctxsessionid <$> getContext
                let attributeFromAssertion name = fromMaybe ($unexpectedError $ "missing field in assertion" <+> T.unpack name) . lookup name
-               let decodeCertificate = either ($unexpectedError $ "invalid base64 of nets certificate") Binary . B64.decode . T.encodeUtf8
+               let decodeCertificate = either ($unexpectedError $ "invalid base64 of nets certificate") id . B64.decode . T.encodeUtf8
                let decodeProvider s = case s of
                                       "no_bankid" -> NetsNOBankIDStandard
                                       "no_bidmob" -> NetsNOBankIDMobile
@@ -114,7 +114,7 @@ handleResolve = do
                       F.value "signatory_dob" dob
                       F.value "signatory_pid" mpid
                       F.value "provider_nobankid" True
-                      F.value "signature" $ B64.encode . unBinary $ certificate
+                      F.value "signature" $ B64.encode certificate
                  void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
 
 

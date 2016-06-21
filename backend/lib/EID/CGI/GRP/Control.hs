@@ -222,7 +222,7 @@ checkCGISignStatus CgiGrpConfig{..}  did slid = do
     just_lookup name = fromMaybe (missing name) . lookup name
 
     invalid_b64 txt = $unexpectedError $ "invalid base64:" <+> T.unpack txt
-    mk_binary txt = either (invalid_b64 txt) Binary . B64.decode . T.encodeUtf8 $ txt
+    mk_binary txt = either (invalid_b64 txt) id . B64.decode . T.encodeUtf8 $ txt
 
 checkCGIAuthStatus :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either GrpFault ProgressStatus)
 checkCGIAuthStatus did slid = do
@@ -284,8 +284,8 @@ checkCGIAuthStatus did slid = do
                       F.value "signatory_name" signatoryName
                       F.value "signatory_personal_number" signatoryPersonalNumber
                       F.value "provider_sebankid" True
-                      F.value "signature" $ B64.encode . unBinary $ signature
-                      F.value "ocsp_response" $ B64.encode . unBinary $ ocspResponse
+                      F.value "signature" $ B64.encode signature
+                      F.value "ocsp_response" $ B64.encode ocspResponse
                 withDocument doc $
                   void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
                 dbUpdate $ ChargeCompanyForSEBankIDAuthentication did
@@ -298,7 +298,7 @@ checkCGIAuthStatus did slid = do
     just_lookup name = fromMaybe (missing name) . lookup name
 
     invalid_b64 txt = $unexpectedError $ "invalid base64:" <+> T.unpack txt
-    mk_binary txt = either (invalid_b64 txt) Binary . B64.decode . T.encodeUtf8 $ txt
+    mk_binary txt = either (invalid_b64 txt) id . B64.decode . T.encodeUtf8 $ txt
 
 ----------------------------------------
 

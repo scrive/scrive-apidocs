@@ -128,5 +128,5 @@ kontramailHelper bd theme renderFunc tname fields = do
                        , originatorEmail = noreplyAddress
                        , title   = title
                        , content = content
-                       , attachments = [("logo-"++ (imageAdler32 $ themeLogo  theme) ++ ".png", Left $ unBinary $ themeLogo theme)]
+                       , attachments = [("logo-"++ (imageAdler32 $ themeLogo  theme) ++ ".png", Left $ themeLogo theme)]
                        }

@@ -100,7 +100,7 @@ fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do
     (fi,FileFTV bs)  -> if (BS.null bs)
       then return $ ((fi,FileFV Nothing):changeFields,files')
       else do
-        fileid <- dbUpdate $ NewFile "signature.png" (Binary bs)
+        fileid <- dbUpdate $ NewFile "signature.png" bs
         return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')
 
 

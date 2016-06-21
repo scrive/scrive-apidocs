@@ -1210,7 +1210,7 @@ apiCallV1SetSignatoryAttachment did sid aname = logDocumentAndSignatory did sid 
                   else if ( ".png" `isSuffixOf` (map toLower filename)
                           || ".jpg" `isSuffixOf` (map toLower filename)
                           || ".jpeg" `isSuffixOf` (map toLower filename))
-                    then return $ Binary $ BSL.toStrict content1
+                    then return $ BSL.toStrict content1
                     else throwM . SomeKontraException $ badInput ("Only pdf files or images can be attached. Uploaded filename was " ++ filename)
                 (dbUpdate $ NewFile (dropFilePathFromWindows filename) content)
       _ -> return Nothing
@@ -1321,7 +1321,7 @@ fieldsToFieldsWithFiles (field:fields) = do
     (fi,FileFTV bs)  -> if (BS.null bs)
                           then return $ ((fi,FileFV Nothing):changeFields,files')
                           else do
-                            fileid <- dbUpdate $ NewFile "signature.png" (Binary bs)
+                            fileid <- dbUpdate $ NewFile "signature.png" bs
                             return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')
 
 -- Mandatory attachments parameters

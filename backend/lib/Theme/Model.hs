@@ -29,7 +29,7 @@ import Theme.ThemeID
 data Theme = Theme {
     themeID                       :: !ThemeID
   , themeName                     :: !String
-  , themeLogo                     :: !(Binary BS.ByteString)
+  , themeLogo                     :: !BS.ByteString
   , themeBrandColor               :: !String
   , themeBrandTextColor           :: !String
   , themeActionColor              :: !String
@@ -230,7 +230,7 @@ selectThemesMD5 = sqlResult $ "md5(concat(" <> (sqlConcatComma [
    , "themes.font"
    ]) <> "))"
 
-fetchTheme :: (ThemeID, String,Binary BS.ByteString, String, String, String, String, String, String, String, String, String, String, String) -> Theme
+fetchTheme :: (ThemeID, String, BS.ByteString, String, String, String, String, String, String, String, String, String, String, String) -> Theme
 fetchTheme (tid, name, logo, brand_color, brand_text_color, action_color, action_text_color, action_secondary_color, action_secondary_text_color, positive_color, positive_text_color, negative_color, negative_text_color, font) =
   Theme {
       themeID                       = tid

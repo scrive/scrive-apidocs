@@ -6,7 +6,6 @@ module BrandedDomain.BrandedDomain
 import qualified Data.ByteString.Char8 as BS
 
 import BrandedDomain.BrandedDomainID
-import DB
 import KontraPrelude
 import Theme.ThemeID
 
@@ -22,7 +21,7 @@ data BrandedDomain = BrandedDomain {
                         , bdServiceTheme  :: !ThemeID
                         , bdLoginTheme    :: !ThemeID
                         , bdBrowserTitle  :: !String
-                        , bdFavicon       :: !(Binary BS.ByteString)
+                        , bdFavicon       :: !BS.ByteString
                         , bdParticipantColor1 :: !String
                         , bdParticipantColor2 :: !String
                         , bdParticipantColor3 :: !String

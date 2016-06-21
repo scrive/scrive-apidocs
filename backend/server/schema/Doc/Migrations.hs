@@ -419,7 +419,7 @@ signatoryLinkFieldsAddBinaryValue = Migration {
   -- move empty signatures to bytea
   runQuery_ . sqlUpdate "signatory_link_fields" $ do
     sqlSet "value_text" (Nothing :: Maybe String)
-    sqlSet "value_binary" $ Binary BS.empty
+    sqlSet "value_binary" BS.empty
     sqlWhereEq "type" (8::Int16) -- SignatureFT
     sqlWhereEq "value_text" (""::String)
 

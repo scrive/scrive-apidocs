@@ -11,7 +11,6 @@ import Control.Monad.Catch
 import Data.Default
 import Data.Foldable (fold)
 import Data.Text (Text)
-import Data.Text.Encoding (encodeUtf8)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Log.Backend.PostgreSQL
@@ -93,7 +92,7 @@ mkLogRunner component LogConfig{..} rng = do
     defLogger StandardOutput = stdoutLogger
     defLogger (ElasticSearch ec) = elasticSearchLogger ec $ runCryptoRNGT rng boundedIntegralRandom
     defLogger (PostgreSQL ci) = do
-      ConnectionSource pool <- poolSource def { csConnInfo = encodeUtf8 ci } 1 10 1
+      ConnectionSource pool <- poolSource def { csConnInfo = ci } 1 10 1
       withPostgreSQL pool $ do
         migrateDatabase (liftBase . putStrLn) [] [] logsTables logsMigrations
       pgLogger pool

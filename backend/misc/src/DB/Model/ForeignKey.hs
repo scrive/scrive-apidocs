@@ -9,7 +9,7 @@ module DB.Model.ForeignKey (
   ) where
 
 import Database.PostgreSQL.PQTypes
-import qualified Data.ByteString as BS
+import qualified Data.Text as T
 
 import KontraPrelude
 
@@ -57,7 +57,7 @@ fkName tname ForeignKey{..} = shorten $ mconcat [
   ]
   where
     -- PostgreSQL's limit for identifier is 63 characters
-    shorten = flip rawSQL () . BS.take 63 . unRawSQL
+    shorten = flip rawSQL () . T.take 63 . unRawSQL
 
 sqlAddFK :: RawSQL () -> ForeignKey -> RawSQL ()
 sqlAddFK tname fk@ForeignKey{..} = mconcat [

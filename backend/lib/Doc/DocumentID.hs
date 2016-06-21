@@ -7,7 +7,7 @@ module Doc.DocumentID (
 import Data.Binary
 import Data.Int
 import Data.Unjson
-import Database.PostgreSQL.PQTypes hiding (Binary, put)
+import Database.PostgreSQL.PQTypes hiding (put)
 import Happstack.Server
 
 import DB.Derive

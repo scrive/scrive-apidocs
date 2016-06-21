@@ -9,7 +9,6 @@ import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
 import qualified Data.Traversable as F
 
 import ActionQueue.EmailChangeRequest
@@ -201,7 +200,7 @@ main = do
               ]
           return . RerunAfter $ ihours 1
         OldLogsRemoval -> do
-          let connSource ci = simpleSource def { csConnInfo = T.encodeUtf8 ci }
+          let connSource ci = simpleSource def { csConnInfo = ci }
               logDBs = catMaybes . for (lcLoggers $ logConfig appConf) $ \case
                 PostgreSQL ci -> Just ci
                 _             -> Nothing

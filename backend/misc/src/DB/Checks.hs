@@ -9,10 +9,9 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Int
 import Database.PostgreSQL.PQTypes hiding (def)
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Foldable as F
 import qualified Data.List as L
+import qualified Data.Text as T
 
 import DB.Model
 import DB.SQL
@@ -100,7 +99,7 @@ checkExtension logger (Extension extension) = do
       runSQL_ $ "CREATE EXTENSION IF NOT EXISTS" <+> raw extension
     else logger $ "Extension '" <> sextension <> "' exists"
   where
-    sextension = BSU.toString $ unRawSQL extension
+    sextension = T.unpack $ unRawSQL extension
 
 -- |  Checks whether database returns timestamps in UTC
 checkDBTimeZone :: (MonadDB m, MonadThrow m) => (String -> m ()) -> m Bool
@@ -123,7 +122,7 @@ checkUnknownTables logger tables = do
     sqlWhere "table_type = 'BASE TABLE'"
     sqlWhere "table_schema NOT IN ('information_schema','pg_catalog')"
   desc <- fetchMany runIdentity
-  let absent = desc L.\\ map (BS.unpack . unRawSQL . tblName) tables
+  let absent = desc L.\\ map (T.unpack . unRawSQL . tblName) tables
   when (not (null absent)) $
     mapM_ (\t -> logger $ "Unknown table '" ++ t) absent
 
@@ -259,7 +258,7 @@ checkDBStructure tables = fmap mconcat . forM tables $ \table ->
           , validateTypes $ colType d == colType c || (colType d == BigSerialT && colType c == BigIntT)
           -- there is a problem with default values determined by sequences as
           -- they're implicitely specified by db, so let's omit them in such case
-          , validateDefaults $ colDefault d == colDefault c || (colDefault d == Nothing && ((BS.isPrefixOf "nextval('" . unRawSQL) `liftM` colDefault c) == Just True)
+          , validateDefaults $ colDefault d == colDefault c || (colDefault d == Nothing && ((T.isPrefixOf "nextval('" . unRawSQL) `liftM` colDefault c) == Just True)
           , validateNullables $ colNullable d == colNullable c
           , checkColumns (n+1) defs cols
           ]
@@ -503,7 +502,7 @@ tblNameString :: Table -> String
 tblNameString = sqlToString . tblName
 
 sqlToString :: RawSQL () -> String
-sqlToString = BSU.toString . unRawSQL
+sqlToString = T.unpack . unRawSQL
 
 checkEquality :: (Eq t, Show t) => String -> [t] -> [t] -> ValidationResult
 checkEquality pname defs props = case (defs L.\\ props, props L.\\ defs) of
