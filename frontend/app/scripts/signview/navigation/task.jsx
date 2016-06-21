@@ -45,12 +45,12 @@ module.exports = Backbone.Model.extend({
   onActivate: function () {
     if (!this.active()) {
       this.set("active", true, {silent: true});
-      return this.get("onActivate")();
+      return this.get("onActivate")(this);
     }
   },
 
   forceOnActivate: function () {
-    return this.get("onActivate")();
+    return this.get("onActivate")(this);
   },
 
   onScrollWhenActive: function () {
