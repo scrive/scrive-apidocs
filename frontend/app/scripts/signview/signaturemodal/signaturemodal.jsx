@@ -23,8 +23,8 @@ var scrollToElement = require("../../common/scrolltoelement");
  */
 
 var SignatureDrawingModel = Backbone.Model.extend({
-  onClose: function (shouldScroll, shouldSign) {
-    return this.get("onClose")(shouldScroll, shouldSign);
+  onClose: function () {
+    return this.get("onClose")();
   },
   modal: function () {
     return this.get("modal");
@@ -93,13 +93,7 @@ var SignatureDrawingModel = Backbone.Model.extend({
     return localization.next;
   },
   onAccept: function () {
-    if (this.actionButtonIsSignNow()) {
-      this.onClose(true, true);
-    } else if (this.actionButtonIsFillInExtraDetails()) {
-      this.onClose(true, false);
-    } else if (this.actionButtonIsApply()) {
-      this.onClose(false, false);
-    }
+    this.onClose();
   }
 });
 
@@ -117,7 +111,7 @@ module.exports = function (args) {
     height: args.height,
     signview: args.signview,
     modal: modal,
-    onClose: function (shouldScroll, shouldSign) {
+    onClose: function () {
       modal.removeClass("active");
       document.ontouchmove = function (e) {
         return true;
@@ -128,11 +122,9 @@ module.exports = function (args) {
       }
 
       showArrow();
-      if (shouldScroll) {
-        setTimeout(function () {
-          scrollToElement(args.signview.tasks().active().el());
-        }, 5);
-      }
+      setTimeout(function () {
+        scrollToElement(args.signview.tasks().active().el());
+      }, 5);
 
       modal.removeClass("active");
 
