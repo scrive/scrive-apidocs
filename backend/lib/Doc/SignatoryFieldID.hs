@@ -7,7 +7,7 @@ module Doc.SignatoryFieldID (
 import Data.Binary
 import Data.Data
 import Data.Int
-import Database.PostgreSQL.PQTypes hiding (put)
+import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
 import DB.Derive

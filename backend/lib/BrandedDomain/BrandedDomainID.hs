@@ -9,7 +9,7 @@ import Data.Hashable
 import Data.Int
 import Data.Typeable
 import Data.Unjson
-import Database.PostgreSQL.PQTypes hiding (put)
+import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
 import DB.Derive

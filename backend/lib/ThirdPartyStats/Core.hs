@@ -28,7 +28,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Text.JSON as J
 
 import Company.CompanyID (CompanyID, unsafeCompanyID)
-import DB hiding (put)
+import DB
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import IPAddress
 import KontraPrelude
