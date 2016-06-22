@@ -1,8 +1,8 @@
 module Log.Backend.ElasticSearch (elasticSearchLogger) where
 
 import Control.Arrow (second)
-import Control.Conditional (unlessM)
 import Control.Concurrent
+import Control.Conditional (unlessM)
 import Control.Exception
 import Control.Monad.IO.Class
 import Data.Aeson

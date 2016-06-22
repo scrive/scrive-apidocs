@@ -4,8 +4,8 @@ module DB.Model.Extension (
   ) where
 
 import Data.String
-import Database.PostgreSQL.PQTypes
 import Data.Text (Text)
+import Database.PostgreSQL.PQTypes
 
 import KontraPrelude
 
