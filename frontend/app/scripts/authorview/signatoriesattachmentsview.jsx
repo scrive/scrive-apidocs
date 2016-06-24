@@ -3,8 +3,13 @@ var _ = require("underscore");
 
 var Button = require("../common/button");
 var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
+var Document = require("../../js/documents.js").Document;
+var SignatoryAttachment = require("../../js/signatoryattachment.js").SignatoryAttachment;
 
 var AttachmentsTableRowView = React.createClass({
+  propTypes: {
+    attachment: React.PropTypes.instanceOf(SignatoryAttachment).isRequired
+  },
   onDownloadButtonClick: function (e) {
     window.open(this.props.attachment.file().downloadLink(), "_blank");
   },
@@ -50,11 +55,10 @@ var AttachmentsTableRowView = React.createClass({
 });
 
 module.exports = React.createClass({
+  propTypes: {
+    document: React.PropTypes.instanceOf(Document).isRequired
+  },
   render: function () {
-    if (this.props.document.signatoryattachments().length < 1) {
-      return null;
-    }
-
     return (
       <div className="signatoryattachments">
         <h2>{localization.authorview.requestedAttachments}</h2>

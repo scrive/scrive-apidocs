@@ -6,9 +6,9 @@ var _ = require("underscore");
 var TestUtils = React.addons.TestUtils;
 
 var SignatoryAttachment = require("../../js/signatoryattachment.js").SignatoryAttachment;
-var SignatoriesAttachmentsView = require("../../scripts/authorview/signatoriesattachments.jsx");
+var SignatoriesAttachmentsView = require("../../scripts/authorview/signatoriesattachmentsview.jsx");
 
-describe("authorview/signatoriesattachments", function () {
+describe("authorview/signatoriesattachmentsview", function () {
   var server, document_;
 
   var renderComponent = function() {
@@ -39,13 +39,6 @@ describe("authorview/signatoriesattachments", function () {
 
   afterEach(function () {
     util.cleanTimeoutsAndBody();
-  });
-
-  it("shouldn't render when no author attachments are present", function () {
-    sinon.stub(document_, "signatoryattachments").returns([]);
-
-    var component = renderComponent();
-    assert.lengthOf($(".signatoryattachments", $("body")), 0);
   });
 
   it("should render attachments table", function () {

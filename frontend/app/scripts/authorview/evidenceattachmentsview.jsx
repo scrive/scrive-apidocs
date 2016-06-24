@@ -5,6 +5,7 @@ var _ = require("underscore");
 var BackboneMixin = require("../common/backbone_mixin").BackboneMixin;
 var Button = require("../common/button");
 var classNames = require("classnames");
+var Document = require("../../js/documents.js").Document;
 
 var EvidenceAttachmentsModel = Backbone.Model.extend({
   defaults: {
@@ -29,6 +30,9 @@ var EvidenceAttachmentsModel = Backbone.Model.extend({
 });
 
 var AttachmentsTableRowView = React.createClass({
+  propTypes: {
+    attachment: React.PropTypes.instanceOf(EvidenceAttachmentsModel).isRequired
+  },
   onDownloadButtonClick: function (e) {
     window.open(this.props.attachment.download_url, "_blank");
   },
@@ -61,6 +65,9 @@ var AttachmentsTableRowView = React.createClass({
 
 module.exports = React.createClass({
   mixins: [BackboneMixin],
+  propTypes: {
+    document: React.PropTypes.instanceOf(Document).isRequired
+  },
   getInitialState: function () {
     return {
       model: new EvidenceAttachmentsModel({
@@ -71,11 +78,10 @@ module.exports = React.createClass({
   getBackboneModels: function () {
     return [this.state.model];
   },
+  ready: function () {
+    return this.state.model.ready();
+  },
   render: function () {
-    if (!this.state.model.ready() || this.state.model.attachments().length < 1) {
-      return null;
-    }
-
     return (
       <div className="s-evidenceattachments authorattachments">
         <h2>{localization.evidenceAttachmentBoxHeader}</h2>

@@ -5,9 +5,9 @@ var _ = require("underscore");
 
 var TestUtils = React.addons.TestUtils;
 
-var EvidenceAttachmentsView = require("../../scripts/authorview/evidenceattachments.jsx");
+var EvidenceAttachmentsView = require("../../scripts/authorview/evidenceattachmentsview.jsx");
 
-describe("authorview/evidenceattachments", function () {
+describe("authorview/evidenceattachmentsview", function () {
   var server, document_;
 
   var renderComponent = function() {
@@ -38,23 +38,6 @@ describe("authorview/evidenceattachments", function () {
 
   afterEach(function () {
     util.cleanTimeoutsAndBody();
-  });
-
-  it("shouldn't render when no evidence attachments are present", function (done) {
-    server.emptyEvidenceAttachments = true;
-
-    var component = renderComponent();
-
-    util.waitUntil(
-      function () {
-        return component.state.model.ready();
-      },
-      function () {
-        assert.lengthOf($(".s-evidenceattachments", $("body")), 0);
-        server.emptyEvidenceAttachments = false;
-        done();
-      }
-    );
   });
 
   it("should render attachments table", function (done) {

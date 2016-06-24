@@ -5,7 +5,13 @@ var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
 var Button = require("../common/button");
 var classNames = require("classnames");
 
+var Document = require("../../js/documents.js").Document;
+var AuthorAttachment = require("../../js/authorattachment.js").AuthorAttachment;
+
 var AttachmentsTableRowView = React.createClass({
+  propTypes: {
+    attachment: React.PropTypes.instanceOf(AuthorAttachment).isRequired,
+  },
   onDownloadButtonClick: function (e) {
     window.open(this.props.attachment.downloadLink(), "_blank");
   },
@@ -45,11 +51,10 @@ var AttachmentsTableRowView = React.createClass({
 });
 
 module.exports = React.createClass({
+  propTypes: {
+    document: React.PropTypes.instanceOf(Document).isRequired,
+  },
   render: function () {
-    if (this.props.document.authorattachments().length < 1) {
-      return null;
-    }
-
     var containerClass = classNames({
       "authorattachments": true,
       "small-screen": BrowserInfo.isSmallScreen()

@@ -34,7 +34,7 @@ var ProlongModalModel = Backbone.Model.extend({
     var self = this;
     LoadingDialog.open();
     this.document().prolong(self.days()).sendAjax(function() {
-      self.authorview().reload(true);
+      self.authorview().triggerReload();
     });
   }
 });

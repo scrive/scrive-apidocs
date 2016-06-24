@@ -1,138 +1,86 @@
+var React = require("react");
 var _ = require("underscore");
-var Backbone = require("backbone");
+
+var BackboneMixin = require("../../common/backbone_mixin");
 var FilePageView = require("./filepageview");
-var $ = require("jquery");
+
 var File = require("../../../js/files.js").File;
 
-var FileView = Backbone.View.extend({
-  initialize: function (args) {
-    _.bindAll(this, "render");
-
-    this.listenTo(this.model, "change", this.render);
-
-    this.model.view = this;
-    this.pageviews = [];
-
-    this.model.fetch({
-      data: {signatoryid: this.model.signatoryid()},
-      processData:  true,
-      cache: false
-    });
-
-    this.render();
+module.exports = React.createClass({
+  mixins: [BackboneMixin.BackboneMixin],
+  propTypes: {
+    model: React.PropTypes.instanceOf(File).isRequired,
+    onReady: React.PropTypes.func.isRequired
   },
-
-  destroy: function () {
-    this.stopListening();
-    this.destroyed = true;
-    _.each(this.pageviews || [], function (pv) {pv.destroy();});
-    $(this.el).remove();
+  getBackboneModels: function () {
+    return [this.props.model];
   },
-
-  startReadyChecker: function () {
-    if (this.destroyed) { return; }
-
-    var view = this;
-
-    if (view.ready()) {
-      view.model.trigger("ready");
-      if (view.pageviews != undefined) {
-        _.each(view.pageviews, function (pv) {
-          pv.updateDragablesPosition();
-        });
-      }
-    } else {
-      setTimeout(function () {view.startReadyChecker()}, 100);
-    }
+  getInitialState: function () {
+    return {
+      ready: false
+    };
   },
+  componentWillMount: function () {
+    this._pageRefs = [];
 
-  startReadyCheckerFirstPage: function () {
-    if (this.destroyed) { return; }
-
-    var view = this;
-
-    if (view.readyFirstPage()) {
-     view.model.trigger("FirstPageReady");
-    } else {
-     setTimeout(function () {view.startReadyCheckerFirstPage()}, 100);
-    }
-  },
-
-  ready: function () {
-    return (this.readyToConnectToPage() && $(this.el).parents("body").length > 0);
-  },
-
-  readyToConnectToPage: function () {
-    return (
-      this.model.ready() &&
-      (this.model.pages().length > 0) &&
-      (this.pageviews.length == this.model.pages().length) &&
-      _.all(this.pageviews, function (pv) {return pv.ready();})
-    );
-  },
-
-  readyFirstPage: function () {
-    return this.pageviews.length > 0 && this.pageviews[0].ready();
-  },
-
-  render: function () {
-    var view = this;
-    var file = this.model;
-    var docbox = $(this.el);
-
-    docbox.empty();
-
-    if (!file.ready()) {
-      var waitbox = $("<div class='waiting4page'/>");
-      docbox.append(waitbox);
-    } else {
-      _.each(this.pageviews, function (p) { p.destroy(); });
-
-      this.pageviews = [];
-
-      _.each(file.pages(), function (page) {
-        var pageview = new FilePageView({
-          model: page,
-          arrow: view.arrow,
-          signview: view.signview,
-          el: $("<div/>")
-        });
-
-        view.pageviews.push(pageview);
-        docbox.append($(pageview.el));
+    if (!this.props.model.ready()) {
+      this.props.model.fetch({
+        data: {signatoryid: this.props.model.signatoryid()},
+        processData: true,
+        cache: false
       });
-
-      view.startReadyCheckerFirstPage();
-      view.startReadyChecker();
     }
+  },
+  componentDidUpdate: function () {
+    if (this.ready()) {
+      this.props.onReady();
+    }
+  },
+  ready: function () {
+    return this.state.ready;
+  },
+  allPagesRendered: function () {
+    return (this._pageRefs.length == this.props.model.pages().length);
+  },
+  allPagesReady: function () {
+    return _.all(this._pageRefs, function (item) {
+      return item.ready();
+    });
+  },
+  refreshReady: function () {
+    this.setState({
+      ready: (this.props.model.ready() && this.allPagesRendered() && this.allPagesReady())
+    });
+  },
+  addPageRef: function (page) {
+    if (page && this._pageRefs.indexOf(page) == -1) {
+      this._pageRefs.push(page);
+    }
+  },
+  onPageReady: function (page) {
+    this.refreshReady();
+  },
+  render: function () {
+    var self = this;
+
+    return (
+      <div className="document-pages">
+        { /* if */ (!this.props.model.ready()) &&
+          <div className="waiting4page"></div>
+        }
+        { /* else */ (this.props.model.ready()) &&
+          _.map(this.props.model.pages(), function (item, index) {
+            return (
+              <FilePageView
+                key={index}
+                model={item}
+                ref={(page) => self.addPageRef(page)}
+                onReady={self.onPageReady}
+              />
+            );
+          })
+        }
+      </div>
+    );
   }
 });
-
-module.exports = function (args) {
-  if (args.file) {
-    this.model = args.file;
-  } else {
-    this.model = new File({
-      id: args.id,
-      name: args.name,
-      documentid: args.documentid,
-      attachmentid: args.attachmentid,
-      signatoryid: args.signatoryid
-    });
-  }
-
-  this.view = new FileView({
-    model: this.model,
-    el: $("<div class='document-pages'/>")
-  });
-
-  this.destroy = function () {
-    this.view.destroy();
-  };
-
-  this.readyToConnectToPage = function () {
-    return this.view.readyToConnectToPage();
-  };
-
-  return this;
-};

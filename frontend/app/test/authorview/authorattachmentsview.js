@@ -6,9 +6,9 @@ var _ = require("underscore");
 var TestUtils = React.addons.TestUtils;
 
 var AuthorAttachment = require("../../js/authorattachment.js").AuthorAttachment;
-var AuthorAttachmentsView = require("../../scripts/authorview/authorattachments.jsx");
+var AuthorAttachmentsView = require("../../scripts/authorview/authorattachmentsview.jsx");
 
-describe("authorview/authorattachments", function () {
+describe("authorview/authorattachmentsview", function () {
   var server, document_;
 
   var renderComponent = function() {
@@ -39,13 +39,6 @@ describe("authorview/authorattachments", function () {
 
   afterEach(function () {
     util.cleanTimeoutsAndBody();
-  });
-
-  it("shouldn't render when no author attachments are present", function () {
-    sinon.stub(document_, "authorattachments").returns([]);
-
-    var component = renderComponent();
-    assert.lengthOf($(".authorattachments", $("body")), 0);
   });
 
   it("should render attachments table", function () {

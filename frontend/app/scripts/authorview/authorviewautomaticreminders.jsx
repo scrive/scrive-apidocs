@@ -9,6 +9,7 @@ var Confirmation = require("../../js/confirmations.js").Confirmation;
 var Button = require("../../js/buttons.js").Button;
 var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
 
+var Document = require("../../js/documents.js").Document;
 
 var expose = {};
 
@@ -215,7 +216,7 @@ var AuthorViewAutomaticRemindersChangePopup = function(args) {
 /* Propper UI component that is embedded in author view */
 var AuthorViewAutomaticReminders = React.createClass({
     propTypes: {
-      document    : React.PropTypes.object,
+      document: React.PropTypes.instanceOf(Document).isRequired,
       onAction    : React.PropTypes.func
     },
     handleOpenModal: function() {
@@ -238,7 +239,7 @@ var AuthorViewAutomaticReminders = React.createClass({
                     {this.props.document.autoremindtime() ? localization.autoreminders.willBeSentOn + ": " + this.props.document.autoremindtime().toYMDString() : ""}
                   </div>
                   <NewButton
-                    style= {{"margin-top": "10px"}}
+                    style= {{marginTop: "10px"}}
                     text = {this.props.document.autoremindtime() ? localization.autoreminders.changeDate : localization.autoreminders.setDate}
                     size = "small"
                     onClick = {this.handleOpenModal}

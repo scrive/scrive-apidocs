@@ -6,9 +6,9 @@ var _ = require("underscore");
 var TestUtils = React.addons.TestUtils;
 
 var Document = require("../../js/documents.js").Document;
-var TitleBoxView = require("../../scripts/authorview/titlebox.jsx");
+var TitleBoxView = require("../../scripts/authorview/titleboxview.jsx");
 
-describe("authorview/titlebox", function () {
+describe("authorview/titleboxview", function () {
   var server, document_;
 
   var renderComponent = function() {

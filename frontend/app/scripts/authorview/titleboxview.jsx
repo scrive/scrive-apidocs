@@ -12,7 +12,12 @@ var Select = require("../common/select");
 var Submit = require("../../js/submits.js").Submit;
 var trackTimeout = require("../common/track_timeout");
 
+var Document = require("../../js/documents.js").Document;
+
 var GiveToNextSignatoryPadModalContent = React.createClass({
+  propTypes: {
+    document: React.PropTypes.instanceOf(Document).isRequired
+  },
   getInitialState: function () {
     return {
       padNextSignatory: this.props.document.signatoriesThatCanSignNowOnPad()[0]
@@ -63,6 +68,10 @@ var GiveToNextSignatoryPadModalContent = React.createClass({
 });
 
 module.exports = React.createClass({
+  propTypes: {
+    document: React.PropTypes.instanceOf(Document).isRequired,
+    authorview: React.PropTypes.object.isRequired // Can check for inslance because it will create loop
+  },
   canBeRestarted: function () {
     return (
       (
@@ -111,12 +120,12 @@ module.exports = React.createClass({
         type: "error"
       });
 
-      self.props.authorview.reload(true);
+      self.props.authorview.triggerReload();
     };
 
     this.props.document.cancel().sendAjax(
       function () {
-          self.props.authorview.reload(true);
+          self.props.authorview.triggerReload();
       },
       errorcallback
     );

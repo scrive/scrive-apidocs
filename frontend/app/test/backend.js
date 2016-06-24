@@ -55,6 +55,10 @@ var evidence_attachments = require("./data/evidence_attachments");
       );
     });
 
+    server.respondWith(/\/api\/frontend\/documents\/(\d+?)\/history/, function (xhr) {
+      xhr.respond(200, {"Content-Type": "application/text"}, JSON.stringify([]));
+    });
+
     return server;
   };
 
