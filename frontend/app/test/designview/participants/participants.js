@@ -50,7 +50,7 @@ var Participants = require("../../../scripts/designview/participants/participant
     });
 
     it("should scroll when adding new participant", function (done) {
-      this.timeout(10000);
+      this.timeout(20000);
       designView.document().set("ready",true);
       designView.setParticipantDetail(undefined);
 
@@ -77,7 +77,7 @@ var Participants = require("../../../scripts/designview/participants/participant
     });
 
     it("should scroll when adding opening one of the bottom participants", function (done) {
-      this.timeout(10000);
+      this.timeout(20000);
       designView.document().set("ready",true);
       designView.setParticipantDetail(undefined);
 

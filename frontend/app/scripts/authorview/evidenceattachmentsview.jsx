@@ -31,7 +31,7 @@ var EvidenceAttachmentsModel = Backbone.Model.extend({
 
 var AttachmentsTableRowView = React.createClass({
   propTypes: {
-    attachment: React.PropTypes.instanceOf(EvidenceAttachmentsModel).isRequired
+    attachment: React.PropTypes.object.isRequired
   },
   onDownloadButtonClick: function (e) {
     window.open(this.props.attachment.download_url, "_blank");
