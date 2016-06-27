@@ -30,11 +30,19 @@ var React = require("react");
       return {subs: {}, links:{}, classes:{}, onClicks: {} };
     },
 
-    componentDidMount: function() {
+    bindClickHandlers: function () {
       var node = $(this.getDOMNode());
       _.each(this.props.onClicks, function (value, key) {
-        node.find(key).click(value);
+        node.find(key).off("click").click(value);
       });
+    },
+
+    componentDidUpdate: function() {
+      this.bindClickHandlers();
+    },
+
+    componentDidMount: function() {
+      this.bindClickHandlers();
     },
 
     render: function () {
