@@ -162,7 +162,7 @@ sendReminderEmail custommessage actor automatic siglink = logSignatory (signator
            then Invitation docid (signatorylinkid siglink)
            else None
          -- We only add attachment after document is signed
-         , attachments = attachments mail ++ (if isJust $ maybesigninfo siglink
+         , attachments = attachments mail ++ (if documentstatus doc == Closed
           then mailattachments
           else [])
        }

@@ -35,7 +35,6 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         changedConfirmationDelivery : false,
         deliveryGoldfishMemory : null,
         confirmationDeliveryWasNone  : false,
-        isLastViewer : false
     },
 
     initialize: function(args) {
@@ -55,7 +54,6 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
                 f.authorObligatory = 'optional';
             return f;
         });
-        this.checkLastViewerChange();
         var attachments = _.map(args.attachments, function(attachment) {
                 return new SignatoryAttachment(extendedWithSignatory(attachment));
         });
@@ -369,28 +367,24 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         return !this.author() && !this.signs();
     },
     isLastViewer : function() {
-      return this.get("isLastViewer");
-    },
-    updateLastViewer : function() {
       var self = this;
-      this.set({isLastViewer : !this.signs() &&
-                               _.all(this.document().signatories(), function(s) {
-                                        return !s.signs() || s.signorder() < self.signorder();
-                               })});
+      return (!this.signs() &&
+              _.all(this.document().signatories(), function(s) {
+                return !s.signs() || s.signorder() < self.signorder();
+              }));
     },
     checkLastViewerChange : function() {
-      var previousLastViewerState = this.isLastViewer();
-      this.updateLastViewer();
-      var lastViewerState = this.isLastViewer();
+      var previousLastViewerState = this.lastViewerState;
+      this.lastViewerState = this.isLastViewer();
 
-      if (!previousLastViewerState && lastViewerState) {
+      if (!previousLastViewerState && this.lastViewerState) {
         this.set({ deliveryGoldfishMemory : this.get("delivery_method") });
         this.set({ confirmationDeliveryWasNone : this.get("confirmation_delivery_method") == "none" });
         if (this.get("confirmationDeliveryWasNone")) {
           this.set({ confirmationdelivery : _.contains(["email", "mobile", "email_mobile"], this.get("delivery_method")) ? this.get("delivery_method") : "email"});
         }
         this.set({delivery_method: "pad"});
-      } else if (previousLastViewerState && !lastViewerState) {
+      } else if (previousLastViewerState && !this.lastViewerState) {
         this.set({ delivery_method : this.get("deliveryGoldfishMemory") == null
                               ? "email"
                               : this.get("deliveryGoldfishMemory") });
@@ -427,22 +421,22 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
           return this.get("authentication_method_to_sign") == "sms_pin" && this.signs();
     },
     emailDelivery: function() {
-          return this.get("delivery_method") == "email" && !this.isLastViewer();
+          return this.get("delivery_method") == "email";
     },
     padDelivery : function() {
-          return this.get("delivery_method") == "pad" && !this.isLastViewer();
+          return this.get("delivery_method") == "pad";
     },
     mobileDelivery : function() {
-          return this.get("delivery_method") == "mobile" && !this.isLastViewer();
+          return this.get("delivery_method") == "mobile";
     },
     emailMobileDelivery : function() {
-          return this.get("delivery_method") == "email_mobile" && !this.isLastViewer();
+          return this.get("delivery_method") == "email_mobile";
     },
     apiDelivery : function() {
-          return this.get("delivery_method") == "api" && !this.isLastViewer();
+          return this.get("delivery_method") == "api";
     },
     noneDelivery : function() {
-          return this.get("delivery_method") == this.isLastViewer();
+          return this.isLastViewer();
     },
     emailConfirmationDelivery: function() {
           return this.get("confirmation_delivery_method") == "email";

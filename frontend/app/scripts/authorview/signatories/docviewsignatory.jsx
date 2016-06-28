@@ -68,11 +68,12 @@ var trackTimeout = require("../../common/track_timeout");
           || (document.pending() && signatory.hasSigned())) {
         return false;
       }
-      var canGetInvitation = !signatory.hasSigned() && (
+      var canGetInvitation = (!signatory.signs() || !signatory.hasSigned()) && (
            signatory.emailDelivery()
         || signatory.mobileDelivery()
         || signatory.emailMobileDelivery()
       );
+
       var canGetConfirmation = document.closed() && (
            signatory.emailConfirmationDelivery()
         || signatory.mobileConfirmationDelivery()
@@ -84,6 +85,16 @@ var trackTimeout = require("../../common/track_timeout");
         && signatory.reachedBySignorder()
         && (canGetInvitation || canGetConfirmation)
         && !signatory.undeliveredInvitation();
+    },
+
+    remindText: function () {
+      var signatory = this.props.signatory;
+      var document = signatory.document();
+      if (document.closed() || signatory.hasSigned()) {
+        return localization.process.remindagainbuttontext;
+      } else {
+        return localization.reminder.send;
+      }
     },
 
     hasChangeEmailOption: function () {
@@ -198,6 +209,7 @@ var trackTimeout = require("../../common/track_timeout");
     handleSendReminder: function () {
       var self = this;
       var signatory = this.props.signatory;
+      var document = signatory.document();
       mixpanel.track("Click send reminder", {"Signatory index":signatory.signIndex()});
       if (!signatory.hasSigned()) {
         // if signatory hasnt signed yet, use invitation delivery method
@@ -215,7 +227,8 @@ var trackTimeout = require("../../common/track_timeout");
       }
       if (useEmail) {
         ConfirmationWithEmail.popup({
-          title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
+          title: ((document.closed() || signatory.hasSigned()) ? localization.process.remindagainbuttontext
+                                                               : localization.reminder.formHead),
           mail: signatory.remindMail(),
           acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
           editText: localization.reminder.formOwnMessage,
@@ -482,7 +495,7 @@ var trackTimeout = require("../../common/track_timeout");
           <div className="optionbox" style={this.hasAnyOptions() ? {} : {display:"none"}}>
             {/* if */ this.hasRemindOption() &&
               <Button
-              text={signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.send}
+              text={this.remindText()}
               onClick={this.handleSendReminder}
               />
             }

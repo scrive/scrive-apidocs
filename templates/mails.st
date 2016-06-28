@@ -234,7 +234,7 @@ $endif$
 ####
 remindMailSignedStandardHeader=
 <br/>
-  $_remindMailSignedContractStandardHeaderSendRequest()$
+  $remindMailSignedContractStandardHeaderSendRequest()$
   <br/>
   <br/>
   $if(documentAttached)$
@@ -243,24 +243,41 @@ remindMailSignedStandardHeader=
     $_mailDocumentLinked()$
   $endif$
 ###
+remindMailSignedContractStandardHeaderSendRequest=
+$if(sign)$
+  $_remindMailSignedContractStandardHeaderSendRequest()$
+$else$
+  $_remindMailSignedContractStandardHeaderSendRequestReview()$
+$endif$
 ###
 ### Reminding mails - NOT SIGNED
 ###
 remindMailNotSignedContract=
-    $_remindMailNotSignedTitleContract()$
+    $remindMailNotSignedTitleContract()$
 
     $nicemail(
-        mailheader=_remindMailNotSignedTitleContract();
+        mailheader=remindMailNotSignedTitleContract();
         mailp1=remindMailNotSignedContractBody();
         mailp2=remindMailNotSignedContractP2();
         footer= legalparagraph()
     )$
 #####
+remindMailNotSignedTitleContract=
+$if(sign)$
+  $_remindMailNotSignedTitleContract()$
+$else$
+  $_remindMailNotSignedTitleContractReview()$
+$endif$
+#####
 remindMailNotSignedContractBody=
 $if(automatic)$
         $_remindMailNotSignedContractBodyAutomatic()$
 $else$
-        $_remindMailNotSignedContractBody()$
+        $if(sign)$
+                $_remindMailNotSignedContractBody()$
+        $else$
+                $_remindMailNotReviewedContractBody()$
+        $endif$
 $endif$
 <BR/>
 <BR/>
