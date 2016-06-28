@@ -69,9 +69,11 @@ Library
                   backend/misc/schema backend/misc/src
                   backend/server/schema backend/server/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -552,10 +554,12 @@ Executable kontrakcja-server
 
   Hs-source-dirs: backend/server/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -609,10 +613,12 @@ Executable cron
 
   Hs-source-dirs: backend/cron/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -666,10 +672,12 @@ Executable kontrakcja-migrate
                   backend/misc/schema backend/misc/src
                   backend/server/schema
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -754,10 +762,12 @@ Executable mailing-server
   Hs-source-dirs: backend/mailer/inc backend/mailer/schema backend/mailer/src
                   backend/misc/schema backend/misc/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -858,10 +868,12 @@ Executable messenger-server
   Hs-source-dirs: backend/messenger/inc backend/messenger/schema backend/messenger/src
                   backend/misc/schema backend/misc/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -961,10 +973,12 @@ Executable kontrakcja-test
                   backend/server/schema
                   backend/test/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(test-coverage)
     GHC-Options: -fhpc
 
@@ -1050,9 +1064,12 @@ Executable localization
                   backend/misc/src
                   localization/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
+
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
 
   Main-Is: LocalizationMain.hs
   GHC-options: -main-is LocalizationMain
@@ -1109,9 +1126,12 @@ Executable routinglist
 
   Hs-source-dirs: backend/routinglist
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
+
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
 
   Main-Is: RoutingListMain.hs
   GHC-options: -main-is RoutingListMain
