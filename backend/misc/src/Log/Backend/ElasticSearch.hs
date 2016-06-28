@@ -43,9 +43,13 @@ elasticSearchLogger ElasticSearchConfig{..} genRandomWord = do
       <$> (littleEndianRep <$> liftIO genRandomWord)
       <*> pure (littleEndianRep . floor . realToFrac $ utcTimeToPOSIXSeconds now)
     retryOnException . runBH_ $ do
-      index <- liftIO $ do
-        indexSuffix <- T.pack . formatTime defaultTimeLocale "%F" <$> getCurrentTime
-        return . IndexName $ T.concat [esIndex, "-", indexSuffix]
+      -- ElasticSearch index names are additionally indexed by date so that each
+      -- day is logged to a separate index to make log management easier
+      let index = IndexName $ T.concat [
+              esIndex
+            , "-"
+            , T.pack $ formatTime defaultTimeLocale "%F" now
+            ]
       when (oldIndex /= index) $ do
         -- There is an obvious race condition in the presence of more than one
         -- logger instance running, but it's irrelevant as attempting to create
