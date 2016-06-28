@@ -93,10 +93,9 @@ unjsonMailingServerConf = objectOf $ MailingServerConf
     <*> field "bind_port"
         (snd . mscHttpBindAddress)
         "Port to listen on")
-  <*> fieldBy "database"
+  <*> field "database"
       mscDBConfig
       "Database connection string"
-      unjsonAeson
   <*> fieldOpt "redis_cache"
       mscRedisCacheConfig
       "Redis cache configuration"

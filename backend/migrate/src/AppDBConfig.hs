@@ -15,10 +15,9 @@ data AppDBConf = AppDBConf {
 
 instance Unjson AppDBConf where
   unjsonDef = objectOf $ AppDBConf
-    <$> fieldBy "database"
+    <$> field "database"
         dbConfig
         "Database connection string"
-        unjsonAeson
     <*> field "logging"
         logConfig
         "Logging configuration"

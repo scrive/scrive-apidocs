@@ -83,10 +83,9 @@ unjsonAppConf = objectOf $ pure AppConf
        <*> field "secret_key"
          (\(_,_,x) -> x)
          "Amazon secret key")
-  <*> fieldBy "database"
+  <*> field "database"
       dbConfig
       "Database connection string"
-      unjsonAeson
   <*> fieldOpt "redis_cache"
       redisCacheConfig
       "Redis cache configuration"

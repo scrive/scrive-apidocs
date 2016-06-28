@@ -43,10 +43,9 @@ unjsonMessengerServerConf = objectOf $ MessengerServerConf
     <*> field "bind_port"
         (snd . mscHttpBindAddress)
         "Port to listen on")
-  <*> fieldBy "database"
+  <*> field "database"
       mscDBConfig
       "Database connection string"
-      unjsonAeson
   <*> field "logging"
       mscLogConfig
       "Logging configuration"

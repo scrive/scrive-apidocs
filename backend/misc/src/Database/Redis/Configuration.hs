@@ -30,10 +30,9 @@ instance Unjson RedisConfig where
     <*> field "port"
         rcPort
         "Port"
-    <*> fieldOptBy "password"
+    <*> fieldOpt "password"
         rcAuth
         "Password"
-        unjsonAeson
     <*> field "database"
         rcDatabase
         "Database number"

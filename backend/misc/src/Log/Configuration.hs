@@ -42,10 +42,9 @@ instance Default LogConfig where
 
 instance Unjson LogConfig where
   unjsonDef = objectOf $ LogConfig
-    <$> fieldBy "suffix"
+    <$> field "suffix"
         lcSuffix
         "Suffix of a component"
-        unjsonAeson
     <*> field "loggers"
         lcLoggers
         "List of loggers"
@@ -65,10 +64,9 @@ instance Unjson LoggerDef where
             "ElasticSearch configuration"
       )
     , ("postgresql", $(isConstr 'PostgreSQL), PostgreSQL
-        <$> fieldBy "database"
+        <$> field "database"
             (\(PostgreSQL ci) -> ci)
             "Database connection string"
-            unjsonAeson
       )
     ]
 
