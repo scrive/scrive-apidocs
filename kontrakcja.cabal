@@ -75,6 +75,12 @@ Library
   if flag(server-coverage)
     GHC-Options: -fhpc
 
+  -- Cabal workaround, remove after transition to ghc8.
+  if impl(ghc < 8)
+    Build-depends: unix == 2.7.1.0
+  else
+    Build-depends: unix == 2.7.2.0
+
   Exposed-modules: API.APIVersion
                  , API.Monad.V1
                  , API.V2

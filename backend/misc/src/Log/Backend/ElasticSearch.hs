@@ -22,6 +22,7 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.HashMap.Strict as H
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import qualified Data.Traversable as F
 import qualified Data.Vector as V
 
 import KontraPrelude
@@ -70,7 +71,7 @@ elasticSearchLogger ElasticSearchConfig{..} genRandomWord = do
             Object response <- return replyBody
             Bool hasErrors  <- "errors" `H.lookup` response
             Array jsonItems <- "items"  `H.lookup` response
-            items <- forM jsonItems $ \v -> do
+            items <- F.forM jsonItems $ \v -> do
               Object item   <- return v
               Object index_ <- "index" `H.lookup` item
               return index_
