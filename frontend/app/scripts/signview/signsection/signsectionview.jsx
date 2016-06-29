@@ -338,10 +338,10 @@ var Task = require("../navigation/task");
       if (redirect) {
         window.location = redirect;
       } else {
-        $(window).on("beforeunload", function () {
-          $(window).scrollTop(0);
-        });
-        window.location.reload();
+        $(window).scrollTop(0);
+        setTimeout(function () {
+          window.location.reload();
+        }, 100);
       }
     },
     handlePin: function () {
