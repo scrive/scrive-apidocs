@@ -17,6 +17,9 @@ var _ = require("underscore");
       value       : string,
       inputtype   : string, default is "text", but "password" is also used
       name        : string, name for input
+      focus       : bool, focus initially. WARNING: DO NOT USE THIS
+                    WHEN INPUT IS PART OF ANIMATION, BECAUSE IT WILL FAIL IN IE
+                    BEFORE ANIMATION ENDS
 
       className   : additional css classes
       style       : style object (react format)
