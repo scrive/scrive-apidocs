@@ -52,7 +52,7 @@
 "_ReminderSendTextToReviewArchiveEmailSMSWithText":"",
 "_ReminderSendTextToReviewArchiveEmailWithText":"",
 "_ReminderSendTextToReviewArchiveSMS":"",
-"_ReminderSendTextToReviewArchiveSMSWithText":"",
+"_ReminderSendTextToReviewArchiveSMSWithText":"Un recordatorio para revisar el documento fue enviado a $signatory$ por SMS. El mensaje recordatorio fue: <BR/> <i>$text$</i>",
 "_ReminderSendTextToSignArchiveEmail":"",
 "_ReminderSendTextToSignArchiveEmailSMS":"",
 "_ReminderSendTextToSignArchiveEmailSMSWithText":"",
