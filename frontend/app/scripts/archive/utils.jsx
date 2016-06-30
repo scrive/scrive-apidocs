@@ -239,10 +239,19 @@ var capitaliseFirstLetter = require("../common/capitalise_first_letter");
     return signingPartiesSmartNames.join(", ");
   };
 
+  e.isLastViewer = function (d, s) {
+    return (!s.is_signatory &&
+            _.all(d.field("parties"), function (sig) {
+              return !sig.is_signatory || sig.sign_order < s.sign_order;
+            }));
+  };
+
   e.documentDeliveryText = function(d) {
     var dms = _.map(d.field("parties"),function(s) {
       var dm = s.delivery_method;
-      if (dm == "email") {
+      if (e.isLastViewer(d, s)) {
+        return "";
+      } else if (dm == "email") {
         return capitaliseFirstLetter(localization.delivery.email);
       } else if (dm == "pad") {
         return capitaliseFirstLetter(localization.delivery.pad);
@@ -256,7 +265,7 @@ var capitaliseFirstLetter = require("../common/capitalise_first_letter");
         return "";
       }
     });
-    dms = _.uniq(dms);
+    dms = _.uniq(_.filter(dms, Boolean)); // remove empty strings
     dms.sort();
 
     var text = dms[0] || "";
