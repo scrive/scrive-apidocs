@@ -137,6 +137,6 @@
 "_smsRejectNotification":"$rejectorName$ ir atteicies parakstīt dokumentu $documenttitle$. Tādēļ parakstīšanas process ir atcelts. Noklikšķiniet uz saites, lai apskatītu dokumentu: $link$",
 "_smsReminder":"$creatorname$ vēlas Jums atgādināt, ka jāparaksta dokuments $documenttitle$. Noklikšķiniet uz saites, lai noskaidrotu, kā rīkoties tālāk: $link$",
 "_smsReminderAutomatic":"Šis ir automātisks atgādinājums, ka Jūs joprojām neesat parakstījis dokumentu $documenttitle$ no $creatorname$.  Noklikšķiniet uz saites, lai noskaidrotu, kā rīkoties tālāk: $link$",
-"_smsReminderSigned":"",
+"_smsReminderSigned":"Pēc $creatorname$ lūguma atkārtoti nosūtījām Jums parakstīto dokumentu $documenttitle$. Lai to atvērtu, noklikšķiniet uz šīs saites: $link$",
 "_unavailableForSign":"Dokuments vairs nav pieejams parakstīšanai"
 }
