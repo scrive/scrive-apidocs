@@ -13,6 +13,7 @@ import Data.Foldable (fold)
 import Data.Text (Text)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
+import Log.Backend.ElasticSearch
 import Log.Backend.PostgreSQL
 import Log.Backend.StandardOutput
 import Log.Data
@@ -23,8 +24,6 @@ import Crypto.RNG
 import DB.Checks
 import DB.PostgreSQL
 import KontraPrelude
-import Log.Backend.ElasticSearch
-import Log.Backend.ElasticSearch.Configuration
 import Log.Migrations
 import Log.Tables
 import Utils.TH
@@ -59,9 +58,10 @@ instance Unjson LoggerDef where
   unjsonDef = disjointUnionOf "logger" [
       ("stdout", (== StandardOutput), pure StandardOutput)
     , ("elasticsearch", $(isConstr 'ElasticSearch), ElasticSearch
-        <$> field "configuration"
+        <$> fieldBy "configuration"
             (\(ElasticSearch es) -> es)
             "ElasticSearch configuration"
+            esUnjsonConfig
       )
     , ("postgresql", $(isConstr 'PostgreSQL), PostgreSQL
         <$> field "database"
@@ -69,6 +69,17 @@ instance Unjson LoggerDef where
             "Database connection string"
       )
     ]
+    where
+      esUnjsonConfig = objectOf $ ElasticSearchConfig
+        <$> field "server"
+            esServer
+            "Server (host:port)"
+        <*> field "index"
+            esIndex
+            "Index"
+        <*> field "mapping"
+            esMapping
+            "Mapping"
 
 ----------------------------------------
 
