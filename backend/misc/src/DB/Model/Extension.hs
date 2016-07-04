@@ -3,8 +3,8 @@ module DB.Model.Extension (
   , ununExtension
   ) where
 
-import Data.ByteString (ByteString)
 import Data.String
+import Data.Text (Text)
 import Database.PostgreSQL.PQTypes
 
 import KontraPrelude
@@ -12,5 +12,5 @@ import KontraPrelude
 newtype Extension = Extension { unExtension :: RawSQL () }
   deriving (Eq, Ord, Show, IsString)
 
-ununExtension :: Extension -> ByteString
+ununExtension :: Extension -> Text
 ununExtension = unRawSQL . unExtension

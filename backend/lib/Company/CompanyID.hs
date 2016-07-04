@@ -8,7 +8,7 @@ import Data.Binary
 import Data.Int
 import Data.Typeable
 import Data.Unjson
-import Database.PostgreSQL.PQTypes hiding (Binary, put)
+import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
 import DB.Derive

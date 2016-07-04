@@ -64,13 +64,14 @@ data DocumentSigning = DocumentSigning {
   , signingAttempts             :: !Int32
   }
 
-documentSigning :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-                => AppConf
-                -> KontrakcjaGlobalTemplates
-                -> MemCache FileID ByteString
-                -> Maybe R.Connection
-                -> ConnectionSource
-                -> ConsumerConfig m SignatoryLinkID DocumentSigning
+documentSigning
+  :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
+  => AppConf
+  -> KontrakcjaGlobalTemplates
+  -> MemCache FileID ByteString
+  -> Maybe R.Connection
+  -> ConnectionSourceM m
+  -> ConsumerConfig m SignatoryLinkID DocumentSigning
 documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
     ccJobsTable = "document_signing_jobs"
   , ccConsumersTable = "document_signing_consumers"

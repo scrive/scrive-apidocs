@@ -46,6 +46,7 @@ import qualified Text.StringTemplates.TemplatesLoader as TL
 import BrandedDomain.Model
 import Crypto.RNG
 import DB
+import DB.PostgreSQL
 import EID.CGI.GRP.Config
 import GuardTime
 import Happstack.Server.ReqHandler
@@ -68,8 +69,8 @@ inTestDir :: FilePath -> FilePath
 inTestDir = ("backend/test" </>)
 
 data TestEnvSt = TestEnvSt {
-    teConnSource        :: !ConnectionSource
-  , teStaticConnSource  :: !ConnectionSource
+    teConnSource        :: !BasicConnectionSource
+  , teStaticConnSource  :: !BasicConnectionSource
   , teTransSettings     :: !TransactionSettings
   , teRNGState          :: !CryptoRNGState
   , teLogRunner         :: !LogRunner
@@ -90,7 +91,7 @@ runTestEnv st m = do
   can_be_run <- fst <$> atomically (readTVar $ teActiveTests st)
   when can_be_run $ do
     atomically . modifyTVar' (teActiveTests st) $ second (succ $!)
-    E.finally (runDBT (teStaticConnSource st) (teTransSettings st) $ ununTestEnv st $ withTestDB m) $ do
+    E.finally (runDBT (unConnectionSource $ teStaticConnSource st) (teTransSettings st) $ ununTestEnv st $ withTestDB m) $ do
       atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
@@ -114,10 +115,10 @@ instance MonadDB TestEnv where
     -- a different one, thus we can't use current (static)
     -- connection source, but the one that actually creates
     -- new connection.
-    cs <- asks teConnSource
+    ConnectionSource pool <- asks teConnSource
     LogRunner{..} <- asks teLogRunner
     TestEnv . ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
-      res <- runDBT cs (dbTransactionSettings st) . withLogger $ runReaderT m te
+      res <- runDBT pool (dbTransactionSettings st) . withLogger $ runReaderT m te
       return (res, st)
   getNotification = TestEnv . getNotification
 
@@ -140,8 +141,8 @@ instance MonadBaseControl IO TestEnv where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runTestKontraHelper :: ConnectionSource -> Request -> Context -> Kontra a -> TestEnv (a, Context, Response -> Response)
-runTestKontraHelper cs rq ctx tk = do
+runTestKontraHelper :: BasicConnectionSource -> Request -> Context -> Kontra a -> TestEnv (a, Context, Response -> Response)
+runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   filecache <- MemCache.new BS.length 52428800
   let noflashctx = ctx { ctxflashmessages = [] }
       amazoncfg = AWS.AmazonConfig Nothing filecache Nothing
@@ -154,7 +155,7 @@ runTestKontraHelper cs rq ctx tk = do
   -- being already in progress
   commit' ts { tsAutoTransaction = False }
   ((res, ctx'), st) <- E.finally
-    (liftBase $ withLogger . runStateT (unReqHandlerT . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT cs ts $ runStateT (unKontra tk) noflashctx) $ ReqHandlerSt rq id now)
+    (liftBase $ runStateT (unReqHandlerT . withLogger . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT pool ts $ runStateT (unKontra tk) noflashctx) $ ReqHandlerSt rq id now)
     -- runDBT commits and doesn't run another transaction, so begin new one
     begin
   -- join all of the spawned threads. since exceptions

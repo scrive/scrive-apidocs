@@ -331,8 +331,8 @@ testChangeAuthenticationToViewMethod = do
     CGISEBankIDAuthentication {
         cgisebidaSignatoryName = "AName"
       , cgisebidaSignatoryPersonalNumber = "BName"
-      , cgisebidaSignature = Binary "sig_here"
-      , cgisebidaOcspResponse = Binary "sig_resp"
+      , cgisebidaSignature = "sig_here"
+      , cgisebidaOcspResponse = "sig_resp"
     }
   reqStandardAgain <- mkRequest POST [("authentication_type", inText "standard")]
   (resStandardAgain, _) <- runTestKontra reqStandardAgain ctx' $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid

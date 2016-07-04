@@ -11,15 +11,16 @@ import Control.Monad.Catch
 import Data.Default
 import Data.Foldable (fold)
 import Data.Text (Text)
-import Data.Text.Encoding (encodeUtf8)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
+import Log.Backend.ElasticSearch
 import Log.Backend.PostgreSQL
 import Log.Backend.StandardOutput
 import Log.Data
 import Log.Logger
 import Log.Monad
 
+import Crypto.RNG
 import DB.Checks
 import DB.PostgreSQL
 import KontraPrelude
@@ -30,7 +31,7 @@ import Utils.TH
 data LogConfig = LogConfig {
   lcSuffix  :: !Text
 , lcLoggers :: ![LoggerDef]
-} deriving (Eq, Ord, Show)
+} deriving (Eq, Show)
 
 instance Default LogConfig where
   def = LogConfig {
@@ -40,29 +41,45 @@ instance Default LogConfig where
 
 instance Unjson LogConfig where
   unjsonDef = objectOf $ LogConfig
-    <$> fieldBy "suffix"
+    <$> field "suffix"
         lcSuffix
         "Suffix of a component"
-        unjsonAeson
     <*> field "loggers"
         lcLoggers
         "List of loggers"
 
 data LoggerDef
   = StandardOutput
+  | ElasticSearch ElasticSearchConfig
   | PostgreSQL Text
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Show)
 
 instance Unjson LoggerDef where
   unjsonDef = disjointUnionOf "logger" [
       ("stdout", (== StandardOutput), pure StandardOutput)
+    , ("elasticsearch", $(isConstr 'ElasticSearch), ElasticSearch
+        <$> fieldBy "configuration"
+            (\(ElasticSearch es) -> es)
+            "ElasticSearch configuration"
+            esUnjsonConfig
+      )
     , ("postgresql", $(isConstr 'PostgreSQL), PostgreSQL
-        <$> fieldBy "database"
+        <$> field "database"
             (\(PostgreSQL ci) -> ci)
             "Database connection string"
-            unjsonAeson
       )
     ]
+    where
+      esUnjsonConfig = objectOf $ ElasticSearchConfig
+        <$> field "server"
+            esServer
+            "Server (host:port)"
+        <*> field "index"
+            esIndex
+            "Index"
+        <*> field "mapping"
+            esMapping
+            "Mapping"
 
 ----------------------------------------
 
@@ -71,8 +88,8 @@ data LogRunner = LogRunner {
 , withLoggerWait :: forall m r. (MonadBase IO m, MonadMask m) => LogT m r -> m r
 }
 
-mkLogRunner :: Text -> LogConfig -> IO LogRunner
-mkLogRunner component LogConfig{..} = do
+mkLogRunner :: Text -> LogConfig -> CryptoRNGState -> IO LogRunner
+mkLogRunner component LogConfig{..} rng = do
   logger <- fold <$> mapM defLogger lcLoggers
   let run :: LogT m r -> m r
       run = runLogT (component <> "-" <> lcSuffix) logger
@@ -82,8 +99,9 @@ mkLogRunner component LogConfig{..} = do
   }
   where
     defLogger StandardOutput = stdoutLogger
+    defLogger (ElasticSearch ec) = elasticSearchLogger ec $ runCryptoRNGT rng boundedIntegralRandom
     defLogger (PostgreSQL ci) = do
-      pool <- poolSource def { csConnInfo = encodeUtf8 ci } 1 10 1
+      ConnectionSource pool <- poolSource def { csConnInfo = ci } 1 10 1
       withPostgreSQL pool $ do
         migrateDatabase (liftBase . putStrLn) [] [] logsTables logsMigrations
       pgLogger pool

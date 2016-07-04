@@ -149,7 +149,7 @@ data GetEAuthentication = GetEAuthentication SessionID SignatoryLinkID
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthentication (Maybe EAuthentication) where
   query (GetEAuthentication sid slid) = query (GetEAuthenticationInternal slid (Just sid) )
 
-fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), Binary ByteString, T.Text, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe (Binary ByteString)) -> EAuthentication
+fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), ByteString, T.Text, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe ByteString) -> EAuthentication
 fetchEAuthentication (provider, internal_provider, signature, signatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response) = case provider of
   CgiGrpBankID -> CGISEBankIDAuthentication_ CGISEBankIDAuthentication {
     cgisebidaSignatoryName = signatory_name

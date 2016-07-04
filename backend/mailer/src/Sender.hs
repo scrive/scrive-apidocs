@@ -17,6 +17,7 @@ import qualified Data.ByteString.Lazy as BSL
 import Assembler
 import Crypto.RNG (CryptoRNG)
 import DB
+import DB.PostgreSQL
 import KontraPrelude
 import Log.Identifier
 import Log.Utils
@@ -35,7 +36,7 @@ instance Show Sender where
 instance Eq Sender where
   Sender name _ == Sender name' _ = name == name'
 
-createSender :: ConnectionSource -> SenderConfig -> Sender
+createSender :: TrackedConnectionSource -> SenderConfig -> Sender
 createSender cs mc = case mc of
   SMTPSender{}  -> createSMTPSender cs mc
   LocalSender{} -> createLocalSender cs mc
@@ -43,11 +44,11 @@ createSender cs mc = case mc of
 
 ----------------------------------------
 
-createExternalSender :: ConnectionSource -> String -> String -> (Mail -> [String]) -> Sender
-createExternalSender cs name program createArgs = Sender {
+createExternalSender :: TrackedConnectionSource -> String -> String -> (Mail -> [String]) -> Sender
+createExternalSender (ConnectionSource pool) name program createArgs = Sender {
   senderName = name
 , sendMail = \mail@Mail{..} -> localData [identifier_ mailID] $ do
-  content <- runDBT cs ts $ assembleContent mail
+  content <- runDBT pool ts $ assembleContent mail
   (code, _, bsstderr) <- liftBase $ readProcessWithExitCode program (createArgs mail) content
   case code of
     ExitFailure retcode -> do
@@ -71,7 +72,7 @@ createExternalSender cs name program createArgs = Sender {
       return True
 }
 
-createSMTPSender :: ConnectionSource -> SenderConfig -> Sender
+createSMTPSender :: TrackedConnectionSource -> SenderConfig -> Sender
 createSMTPSender cs config =
   createExternalSender cs (serviceName config) "curl" createArgs
   where
@@ -97,11 +98,11 @@ createSMTPSender cs config =
       , "--mail-from", "<" ++ addrEmail mailFrom ++ ">"
       ] ++ concatMap mailRcpt mailTo
 
-createLocalSender :: ConnectionSource -> SenderConfig -> Sender
-createLocalSender cs config = Sender {
+createLocalSender :: TrackedConnectionSource -> SenderConfig -> Sender
+createLocalSender (ConnectionSource pool) config = Sender {
   senderName = "localSender"
 , sendMail = \mail@Mail{..} -> localData [identifier_ mailID] $ do
-  content <- runDBT cs ts $ assembleContent mail
+  content <- runDBT pool ts $ assembleContent mail
   let filename = localDirectory config ++ "/Email-" ++ addrEmail ($head mailTo) ++ "-" ++ show mailID ++ ".eml"
   liftBase $ BSL.writeFile filename content
   logInfo "Email saved to file" $ object [

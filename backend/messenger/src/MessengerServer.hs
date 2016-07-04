@@ -51,26 +51,31 @@ main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   conf <- readConfig putStrLn config
-  lr@LogRunner{..} <- mkLogRunner "messenger" $ mscLogConfig conf
+  rng <- newCryptoRNGState
+  lr@LogRunner{..} <- mkLogRunner "messenger" (mscLogConfig conf) rng
   withLogger $ do
     checkExecutables
 
-    let cs = pgConnSettings (mscDBConfig conf) []
-    withPostgreSQL (simpleSource cs) $
+    let pgSettings = pgConnSettings (mscDBConfig conf) []
+    withPostgreSQL (unConnectionSource $ simpleSource pgSettings) $
       checkDatabase (logInfo_ . T.pack) [] messengerTables
-    pool <- ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource cs)
-    rng <- newCryptoRNGState
+    cs@(ConnectionSource pool) <- ($ maxConnectionTracker)
+      <$> liftBase (createPoolSource pgSettings)
 
-    E.bracket (startServer lr pool rng conf) (liftBase killThread) . const $ do
-      let cron = jobsWorker pool
-          sender = smsConsumer rng pool $ createSender $ sendersConfigFromMessengerConf conf
-      finalize (localDomain "cron" $ runConsumer cron pool) $ do
-        finalize (localDomain "sender" $ runConsumer sender pool) $ do
-          liftBase waitForTermination
+    let cron = jobsWorker cs
+        sender = smsConsumer rng cs $ createSender $ sendersConfigFromMessengerConf conf
+    E.bracket (startServer lr cs rng conf) (liftBase killThread) . const
+      . finalize (localDomain "cron" $ runConsumer cron pool)
+      . finalize (localDomain "sender" $ runConsumer sender pool) $ do
+      liftBase waitForTermination
   where
-    startServer :: LogRunner -> ConnectionSource
-                -> CryptoRNGState -> MessengerServerConf -> MainM ThreadId
-    startServer LogRunner{..} pool rng conf = do
+    startServer
+      :: LogRunner
+      -> TrackedConnectionSource
+      -> CryptoRNGState
+      -> MessengerServerConf
+      -> MainM ThreadId
+    startServer LogRunner{..} cs rng conf = do
       let (iface, port) = mscHttpBindAddress conf
           handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
       routes <- case R.compile handlers of
@@ -81,11 +86,14 @@ main = do
           $unexpectedErrorM "static routing"
         Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase (listenOn (htonl iface) $ fromIntegral port)
-      fork . liftBase . runReqHandlerT socket handlerConf . mapReqHandlerT withLogger $ router rng pool routes
+      fork . liftBase . runReqHandlerT socket handlerConf . withLogger $ router rng cs routes
 
-    smsConsumer :: CryptoRNGState -> ConnectionSource -> Sender
-                -> ConsumerConfig MainM ShortMessageID ShortMessage
-    smsConsumer rng pool sender = ConsumerConfig {
+    smsConsumer
+      :: CryptoRNGState
+      -> TrackedConnectionSource
+      -> Sender
+      -> ConsumerConfig MainM ShortMessageID ShortMessage
+    smsConsumer rng (ConnectionSource pool) sender = ConsumerConfig {
       ccJobsTable = "smses"
     , ccConsumersTable = "messenger_workers"
     , ccJobSelectors = smsSelectors
@@ -112,9 +120,10 @@ main = do
               logInfo_ "Deleting sms since there was over 100 tries to send it"
               return Remove
 
-    jobsWorker :: ConnectionSource
-               -> ConsumerConfig MainM JobType MessengerJob
-    jobsWorker pool = ConsumerConfig {
+    jobsWorker
+      :: TrackedConnectionSource
+      -> ConsumerConfig MainM JobType MessengerJob
+    jobsWorker (ConnectionSource pool) = ConsumerConfig {
       ccJobsTable = "messenger_jobs"
     , ccConsumersTable = "messenger_workers"
     , ccJobSelectors = messengerJobSelectors

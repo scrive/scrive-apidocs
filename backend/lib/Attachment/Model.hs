@@ -73,7 +73,7 @@ fetchAttachment (aid, title, ctime, mtime, file_id, user_id, shared, deleted) = 
 , attachmentdeleted = deleted
 }
 
-data NewAttachment = NewAttachment UserID String String (Binary ByteString) Actor
+data NewAttachment = NewAttachment UserID String String ByteString Actor
 instance (MonadDB m, MonadThrow m) => DBUpdate m NewAttachment Attachment where
   update (NewAttachment uid title filename filecontents actor) = do
     let ctime = actorTime actor

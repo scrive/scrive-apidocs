@@ -26,7 +26,6 @@ import Text.XML.Cursor hiding (element)
 import Text.XML.Writer hiding (content, many, node)
 import qualified Data.Text as T
 
-import DB hiding (InternalError)
 import KontraPrelude
 import Network.SOAP.Call
 import Session.Cookies
@@ -36,18 +35,17 @@ data CGISEBankIDSignature = CGISEBankIDSignature {
   cgisebidsSignatoryName           :: !T.Text
 , cgisebidsSignatoryPersonalNumber :: !T.Text
 , cgisebidsSignedText              :: !T.Text
-, cgisebidsSignature               :: !(Binary ByteString)
-, cgisebidsOcspResponse            :: !(Binary ByteString)
+, cgisebidsSignature               :: !ByteString
+, cgisebidsOcspResponse            :: !ByteString
 } deriving (Eq, Ord, Show)
 
 -- | Final BankID signature.
 data CGISEBankIDAuthentication = CGISEBankIDAuthentication {
   cgisebidaSignatoryName           :: !T.Text
 , cgisebidaSignatoryPersonalNumber :: !T.Text
-, cgisebidaSignature               :: !(Binary ByteString)
-, cgisebidaOcspResponse            :: !(Binary ByteString)
+, cgisebidaSignature               :: !ByteString
+, cgisebidaOcspResponse            :: !ByteString
 } deriving (Eq, Ord, Show)
-
 
 ----------------------------------------
 

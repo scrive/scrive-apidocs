@@ -35,8 +35,8 @@ brandingAdler32 ctx mcompanyui = do
   return $ BSC8.unpack $ adler32BS $ BSC8.pack $ concat $ [ad1,ad2,ad3,show versionID]
 
 
-imageAdler32 :: Binary BSC8.ByteString -> String
-imageAdler32 image = BSC8.unpack $ adler32BS $ unBinary $ image
+imageAdler32 :: BSC8.ByteString -> String
+imageAdler32 image = BSC8.unpack $ adler32BS $ image
 
 domainAdler32:: (MonadDB m, MonadThrow m) => BrandedDomain -> m String
 domainAdler32 bd = do

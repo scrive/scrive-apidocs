@@ -28,14 +28,13 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Text.JSON as J
 
 import Company.CompanyID (CompanyID, unsafeCompanyID)
-import DB hiding (Binary, put)
+import DB
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import IPAddress
 import KontraPrelude
 import MinutesTime ()
 import User.Email
 import User.UserID (UserID, unsafeUserID)
-import qualified DB (Binary (..))
 
 -- | The various types of values a property can take.
 data PropValue
@@ -265,7 +264,7 @@ asyncProcessEvents process numEvts = do
           _  | otherwise -> return ()
 
     decoder (evts, max_seq) (seqnum, evt) = return
-        (decode (BL.fromChunks [DB.unBinary evt]) : evts, max seqnum max_seq)
+        (decode (BL.fromChunks [evt]) : evts, max seqnum max_seq)
 
     -- Delete all events with a sequence number less than or equal to lastEvt.
     deleteEvents lastEvt = do
@@ -298,7 +297,7 @@ asyncLogEvent name props = do
   runQuery_ $ sqlInsert "async_event_queue" $ do
     sqlSet "event" $ mkBinary $ AsyncEvent name props
   where
-    mkBinary = DB.Binary . B.concat . BL.toChunks . encode
+    mkBinary = B.concat . BL.toChunks . encode
 
 
 -- Arbitrary instances for testing

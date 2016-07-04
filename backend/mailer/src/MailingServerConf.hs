@@ -27,7 +27,7 @@ data MailingServerConf = MailingServerConf {
 , mscSlaveSender      :: !(Maybe SenderConfig)
 , mscAmazonConfig     :: !(Maybe (String, String, String))
 , testReceivers       :: ![Address]
-} deriving (Eq, Ord, Show)
+} deriving (Eq, Show)
 
 -- | SMTP callback key authentication will be used to receive callbacks
 -- Right now it's used only for SocketLabs
@@ -93,10 +93,9 @@ unjsonMailingServerConf = objectOf $ MailingServerConf
     <*> field "bind_port"
         (snd . mscHttpBindAddress)
         "Port to listen on")
-  <*> fieldBy "database"
+  <*> field "database"
       mscDBConfig
       "Database connection string"
-      unjsonAeson
   <*> fieldOpt "redis_cache"
       mscRedisCacheConfig
       "Redis cache configuration"

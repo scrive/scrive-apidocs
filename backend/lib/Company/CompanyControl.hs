@@ -142,8 +142,8 @@ unjsonCompanyUI = objectOf $ pure CompanyUI
       companyFavicon
       "Favicon"
        (invmap
-          (\l -> Binary $ B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') $ l)
-          (\l -> BSC8.unpack $ BS.append (BSC8.pack "data:image/png;base64,") $ B64.encode $ unBinary $ l)
+          (\l -> B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') $ l)
+          (\l -> BSC8.unpack $ BS.append (BSC8.pack "data:image/png;base64,") $ B64.encode l)
           unjsonDef
        )
 

@@ -20,8 +20,12 @@ import Mblox
 import Messenger
 import TeliaCallGuide
 
-router :: CryptoRNGState -> ConnectionSource -> Messenger Response -> ReqHandlerT (LogT IO) Response
-router rng cs routes = withPostgreSQL cs $ do
+router
+  :: CryptoRNGState
+  -> TrackedConnectionSource
+  -> Messenger Response
+  -> LogT (ReqHandlerT IO) Response
+router rng (ConnectionSource pool) routes = withPostgreSQL pool $ do
   runMessenger rng routes
 
 handlers :: Route (Messenger Response)

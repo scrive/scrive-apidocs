@@ -65,14 +65,15 @@ main = withCurlDo $ do
   appConf <- readConfig putStrLn config
   let connSettings = pgConnSettings $ dbConfig appConf
   pool <- liftBase . createPoolSource $ connSettings kontraComposites
-  lr@LogRunner{..} <- mkLogRunner "kontrakcja" $ logConfig appConf
+  rng <- newCryptoRNGState
+  lr@LogRunner{..} <- mkLogRunner "kontrakcja" (logConfig appConf) rng
   withLoggerWait $ do
     logInfo "Starting kontrakcja-server" $ object [
         "version" .= Version.versionID
       ]
     checkExecutables
 
-    withPostgreSQL (simpleSource $ connSettings []) $ do
+    withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $ do
       checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
       dbUpdate $ SetMainDomainURL $ mainDomainUrl appConf
 
@@ -83,7 +84,6 @@ main = withCurlDo $ do
       lesscache <- MemCache.new BSL8.length 50000000
       brandedimagescache <- MemCache.new BSL8.length 50000000
       docs <- MemCache.new RenderedPages.pagesCount 10000
-      rng <- newCryptoRNGState
       return AppGlobals {
           templates = templates
         , mrediscache = mrediscache
@@ -119,10 +119,10 @@ startSystem LogRunner{..} appGlobals appConf = E.bracket startServer stopServer 
           }
 
       fork . liftBase . runReqHandlerT listensocket conf $ do
-        mapReqHandlerT withLogger $ appHandler routes appConf appGlobals
+        withLogger $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
-      withPostgreSQL (connsource appGlobals $ maxConnectionTracker withLogger) . runCryptoRNGT (cryptorng appGlobals) $ do
+      withPostgreSQL (unConnectionSource $ connsource appGlobals maxConnectionTracker) . runCryptoRNGT (cryptorng appGlobals) $ do
         initDatabaseEntries appConf
       liftBase $ waitForTermination
       logInfo_ "Termination request received"

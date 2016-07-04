@@ -34,7 +34,7 @@ import Log.Utils
 -- | Type of SSL connection to be used by curl.
 data SSL = SecureSSL | InsecureSSL
 
-type CurlErrorHandler = BodyP -> Curl -> CurlCode -> IO ByteString
+type CurlErrorHandler = BodyProc -> Curl -> CurlCode -> IO ByteString
 
 -- | Dummy error handler, just throws an exception.
 noopErrorHandler :: CurlErrorHandler
@@ -59,7 +59,7 @@ mkCertErrorHandler = liftBaseWith $ \runInBase ->
           , CurlSSLVerifyPeer False
           ]
         perform curl >>= \case
-          CurlOK -> response_parser <$> final_body
+          CurlOK -> response_parser =<< final_body
           code'  -> curlError code'
       code' -> curlError code'
 
@@ -99,7 +99,7 @@ data CurlAuth = CurlAuthCert FilePath
 curlTransport :: SSL
               -> CurlAuth
               -> String
-              -> BodyP
+              -> BodyProc
               -> CurlErrorHandler
               -> DebugFunction
               -> Transport
@@ -131,5 +131,5 @@ curlTransport ssl curlAuth url response_parser on_failure debug_fun soap_action 
     , CurlDebugFunction debug_fun
     ]
   perform curl >>= \case
-    CurlOK -> response_parser <$> final_body
+    CurlOK -> response_parser =<< final_body
     code   -> on_failure response_parser curl code

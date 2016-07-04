@@ -182,11 +182,11 @@ cssResponse css = setHeaderBS "Cache-Control" "max-age=31536000"
   $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "text/css")
   $ Response 200 Map.empty nullRsFlags css Nothing
 
-imageResponse :: Binary BS.ByteString -> Response
+imageResponse :: BS.ByteString -> Response
 imageResponse image = setHeaderBS "Cache-Control" "max-age=31536000"
   $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString contentType)
-  $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [unBinary image]) Nothing
-  where content = unBinary image
+  $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [image]) Nothing
+  where content = image
         contentType | BS.take 4 content == "\x00\x00\x01\x00" = "image/x-icon"
                     | BS.take 2 content == "\xFF\xD8" = "image/jpeg"
                     | BS.take 8 content == "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A" = "image/png"

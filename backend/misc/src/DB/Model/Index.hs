@@ -16,7 +16,8 @@ import Data.ByteString.Base16
 import Data.Char
 import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BSU
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 import KontraPrelude
 
@@ -61,18 +62,18 @@ uniqueIndexOnColumnWithCondition column whereC = TableIndex {
 }
 
 indexName :: RawSQL () -> TableIndex -> RawSQL ()
-indexName tname TableIndex{..} = flip rawSQL () $ BS.take 63 . unRawSQL $ mconcat [
+indexName tname TableIndex{..} = flip rawSQL () $ T.take 63 . unRawSQL $ mconcat [
     if idxUnique then "unique_idx__" else "idx__"
   , tname
   , "__"
-  , mintercalate "__" $ map (asBS sanitize) idxColumns
+  , mintercalate "__" $ map (asText sanitize) idxColumns
   , maybe "" (("__" <>) . hashWhere) idxWhere
   ]
   where
-    asBS f = flip rawSQL () . f . unRawSQL
+    asText f = flip rawSQL () . f . unRawSQL
     -- See http://www.postgresql.org/docs/9.4/static/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS.
     -- Remove all unallowed characters and replace them by at most one adjacent dollar sign.
-    sanitize = BSU.fromString . foldr go [] . BSU.toString
+    sanitize = T.pack . foldr go [] . T.unpack
       where
         go c acc = if isAlphaNum c || c == '_'
           then c : acc
@@ -81,7 +82,7 @@ indexName tname TableIndex{..} = flip rawSQL () $ BS.take 63 . unRawSQL $ mconca
             _       -> '$' : acc
     -- hash WHERE clause and add it to index name so that indexes
     -- with the same columns, but different constraints can coexist
-    hashWhere = asBS $ encode . BS.take 10 . hash
+    hashWhere = asText $ T.decodeUtf8 . encode . BS.take 10 . hash . T.encodeUtf8
 
 sqlCreateIndex :: RawSQL () -> TableIndex -> RawSQL ()
 sqlCreateIndex tname idx@TableIndex{..} = mconcat [

@@ -67,7 +67,7 @@ data NetsNOBankIDAuthentication = NetsNOBankIDAuthentication {
   , netsNOBankIDSignatoryName        :: !T.Text
   , netsNOBankIDPhoneNumber          :: !(Maybe T.Text)
   , netsNOBankIDDateOfBirth          :: !T.Text
-  , netsNOBankIDCertificate          :: !(Binary ByteString)
+  , netsNOBankIDCertificate          :: !ByteString
 } deriving (Eq, Ord, Show)
 
 

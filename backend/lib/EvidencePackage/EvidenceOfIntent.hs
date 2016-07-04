@@ -5,7 +5,6 @@ module EvidencePackage.EvidenceOfIntent (
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
-import DB
 import Doc.DocStateData
 import Doc.SignatoryIdentification (SignatoryIdentifierMap, signatoryIdentifier)
 import KontraPrelude
@@ -23,7 +22,7 @@ evidenceOfIntentHTML sim title l = do
     let values Nothing = return ()
         values (Just s) = do
           F.value "time" $ formatTimeUTC (Screenshot.time s) ++ " UTC"
-          F.value "image" $ imgEncodeRFC2397 $ unBinary $ Screenshot.image s
+          F.value "image" $ imgEncodeRFC2397 $ Screenshot.image s
     F.objects "entries" $ for l $ \(sl, entry) -> do
       F.value "signatory"  $ signatoryIdentifier sim (signatorylinkid sl) emptyNamePlaceholder
       F.value "ip"         $ show . signipnumber <$> maybesigninfo sl

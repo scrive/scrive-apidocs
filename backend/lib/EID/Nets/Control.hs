@@ -69,13 +69,13 @@ handleResolve = do
           certErrorHandler <- mkCertErrorHandler
           debugFunction <- mkDebugFunction
           let netsAuth =  CurlAuthBasic (netsMerchantIdentifier netsconf) (netsMerchantPassword netsconf)
-              transport = curlTransport SecureSSL netsAuth (T.unpack $ netsAssertionUrl netsconf) id certErrorHandler debugFunction
+              transport = curlTransport SecureSSL netsAuth (T.unpack $ netsAssertionUrl netsconf) return certErrorHandler debugFunction
           res <- soapCall transport "" () (GetAssertionRequest {  assertionArtifact = T.pack art }) xpGetAssertionResponse
           if ("Success" `T.isInfixOf` assertionStatusCode res)
              then do
                sessionID <- ctxsessionid <$> getContext
                let attributeFromAssertion name = fromMaybe ($unexpectedError $ "missing field in assertion" <+> T.unpack name) . lookup name
-               let decodeCertificate = either ($unexpectedError $ "invalid base64 of nets certificate") Binary . B64.decode . T.encodeUtf8
+               let decodeCertificate = either ($unexpectedError $ "invalid base64 of nets certificate") id . B64.decode . T.encodeUtf8
                let decodeProvider s = case s of
                                       "no_bankid" -> NetsNOBankIDStandard
                                       "no_bidmob" -> NetsNOBankIDMobile
@@ -114,7 +114,7 @@ handleResolve = do
                       F.value "signatory_dob" dob
                       F.value "signatory_pid" mpid
                       F.value "provider_nobankid" True
-                      F.value "signature" $ B64.encode . unBinary $ certificate
+                      F.value "signature" $ B64.encode certificate
                  void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
 
 

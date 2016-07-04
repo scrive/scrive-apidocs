@@ -124,7 +124,7 @@ data Attachment = Attachment {
 , attContent :: !(Either ByteString FileID)
 } deriving (Eq, Ord, Show)
 
-type instance CompositeRow Attachment = (String, Maybe (Binary ByteString), Maybe FileID)
+type instance CompositeRow Attachment = (String, Maybe ByteString, Maybe FileID)
 
 instance PQFormat Attachment where
   pqFormat = const "%mail_attachment"
@@ -133,7 +133,7 @@ instance CompositeFromSQL Attachment where
   toComposite (name, mcontent, mfid) = Attachment {
     attName = name
   , attContent = case (mcontent, mfid) of
-    (Just (Binary content), Nothing) -> Left content
+    (Just content, Nothing) -> Left content
     (Nothing, Just fid) -> Right fid
     _ -> $unexpectedError "impossible due to the check constraint"
   }

@@ -3,6 +3,7 @@ module User.Email (
   ) where
 
 import Data.Aeson
+import Data.Functor.Invariant
 import Data.Typeable
 import Data.Unjson
 
@@ -28,4 +29,4 @@ instance ToJSON Email where
   toJSON = toJSON . unEmail
 
 instance Unjson Email where
-  unjsonDef = unjsonAeson
+  unjsonDef = invmap Email unEmail unjsonDef

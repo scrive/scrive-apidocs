@@ -7,7 +7,6 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
-import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import Happstack.Server
 import Log
 
@@ -18,7 +17,7 @@ import Happstack.Server.Instances ()
 import Happstack.Server.ReqHandler
 import KontraPrelude
 
-type InnerMessenger = CryptoRNGT (DBT (ReqHandlerT (LogT IO)))
+type InnerMessenger = CryptoRNGT (DBT (LogT (ReqHandlerT IO)))
 
 newtype Messenger a = Messenger { unMessenger :: InnerMessenger a }
   deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, MonadTime, ServerMonad, MonadLog)
@@ -30,5 +29,5 @@ instance MonadBaseControl IO Messenger where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runMessenger :: CryptoRNGState -> Messenger a -> DBT (ReqHandlerT (LogT IO)) a
+runMessenger :: CryptoRNGState -> Messenger a -> DBT (LogT (ReqHandlerT IO)) a
 runMessenger rng = runCryptoRNGT rng . unMessenger

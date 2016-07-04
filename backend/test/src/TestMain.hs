@@ -132,8 +132,8 @@ testMany (allargs, ts) = do
   templates <- readGlobalTemplates
 
   let connSettings = pgConnSettings pgconf
-  lr@LogRunner{..} <- mkLogRunner "test" def
-  withLogger . runDBT (simpleSource $ connSettings []) def $ do
+  lr@LogRunner{..} <- mkLogRunner "test" def rng
+  withLogger . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
     migrateDatabase (logInfo_ . T.pack) kontraExtensions kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
@@ -144,13 +144,13 @@ testMany (allargs, ts) = do
       return ()
     commit
 
-  staticSource <- (\conn -> ConnectionSource { withConnection = ($ conn) })
-    <$> (connect $ connSettings kontraComposites)
+  staticSource <- (\conn -> ConnectionSource $ ConnectionSourceM { withConnection = ($ conn) }) <$> connect (connSettings kontraComposites)
+  cs <- poolSource (connSettings kontraComposites) 1 10 50
 
   active_tests <- atomically $ newTVar (True, 0)
   rejected_documents <- atomically $ newTVar 0
   let env = envf $ TestEnvSt {
-        teConnSource = simpleSource $ connSettings kontraComposites
+        teConnSource = cs
       , teStaticConnSource = staticSource
       , teTransSettings = def
       , teRNGState = rng
@@ -174,7 +174,7 @@ testMany (allargs, ts) = do
     atomically $ do
       n <- snd <$> readTVar active_tests
       when (n /= 0) retry
-    runDBT staticSource def { tsAutoTransaction = False } $ do
+    runDBT (unConnectionSource staticSource) def { tsAutoTransaction = False } $ do
       stats <- getConnectionStats
       liftBase . putStrLn $ "SQL: " ++ show stats
     rejs <- atomically (readTVar rejected_documents)

@@ -22,7 +22,7 @@ data MessengerServerConf = MessengerServerConf {
 , mscLogConfig       :: !LogConfig
 , mscSenderDefault   :: !SenderConfig
 , mscSenderTelia     :: !SenderConfig
-} deriving (Eq, Ord, Show)
+} deriving (Eq, Show)
 
 newtype SendersConfig = SendersConfig (SMSProvider -> SenderConfig)
 
@@ -43,10 +43,9 @@ unjsonMessengerServerConf = objectOf $ MessengerServerConf
     <*> field "bind_port"
         (snd . mscHttpBindAddress)
         "Port to listen on")
-  <*> fieldBy "database"
+  <*> field "database"
       mscDBConfig
       "Database connection string"
-      unjsonAeson
   <*> field "logging"
       mscLogConfig
       "Logging configuration"

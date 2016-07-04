@@ -57,7 +57,7 @@ test_handleGetCompanyJSON = do
   assertEqual "JSON companyServiceTheme matches companyServiceTheme"  (show <$> companyServiceTheme companyui) (jsonServiceTheme)
   assertEqual "JSON browserTitle matches browserTitle"  (companyBrowserTitle companyui) (jsonBrowserTitle)
   assertEqual "JSON smsOriginator matches SmsOriginator"  (companySmsOriginator companyui) (jsonSmsOriginator)
-  assertEqual "JSON favicon matches favicon"  (companyFavicon companyui) (Binary <$> B64.decodeLenient <$> BS.fromString <$> drop 1 <$> dropWhile ((/=) ',')  <$> jsonFavicon)
+  assertEqual "JSON favicon matches favicon"  (companyFavicon companyui) (B64.decodeLenient <$> BS.fromString <$> drop 1 <$> dropWhile ((/=) ',')  <$> jsonFavicon)
 
 
 

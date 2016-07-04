@@ -22,8 +22,12 @@ import SendGrid
 import SendinBlue
 import SocketLabs
 
-router :: CryptoRNGState -> ConnectionSource -> Mailer Response -> ReqHandlerT (LogT IO) Response
-router rng cs routes = withPostgreSQL cs $
+router
+  :: CryptoRNGState
+  -> TrackedConnectionSource
+  -> Mailer Response
+  -> LogT (ReqHandlerT IO) Response
+router rng (ConnectionSource pool) routes = withPostgreSQL pool $
   runMailer rng routes
 
 handlers :: MailingServerConf -> Route (Mailer Response)
