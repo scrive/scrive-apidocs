@@ -73,6 +73,7 @@ import Control.Monad.Catch
 import Data.Decimal (realFracToDecimal)
 import Data.Int
 import Data.Maybe hiding (fromJust)
+import Data.Time
 import Log
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
@@ -1849,10 +1850,10 @@ updateMTimeAndObjectVersion mtime = updateDocumentWithID $ \did -> do
        sqlSet "mtime" mtime
        sqlWhereEq "id" did
 
-checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
-checkEqualBy name func obj1 obj2
-  | func obj1 /= func obj2 = Just (name, show (func obj1), show (func obj2))
-  | otherwise              = Nothing
+checkEqualBy :: Show b => (b -> b -> Bool) -> String -> (a -> b) -> a -> a -> Maybe (String, String, String)
+checkEqualBy equals name f obj1 obj2
+  | f obj1 `equals` f obj2 = Nothing
+  | otherwise              = Just (name, show (f obj1), show (f obj2))
 
 checkEqualSignatoryFields  :: String ->[SignatoryField] -> [SignatoryField] -> Maybe (String, String, String)
 checkEqualSignatoryFields name (f:fs) (f':fs') = if fieldsAreAlmoustEqual f f'
@@ -1862,10 +1863,11 @@ checkEqualSignatoryFields name (f:_) [] = Just (name, show f, "No field")
 checkEqualSignatoryFields name [] (f:_) = Just (name,  "No field", show f)
 checkEqualSignatoryFields _ [] [] = Nothing
 
-checkEqualByAllowSecondNothing :: (Eq b, Show b) => String -> (a -> Maybe b) -> a -> a -> Maybe (String, String, String)
-checkEqualByAllowSecondNothing name func obj1 obj2
-  | func obj1 /= func obj2 && (not (isNothing (func obj2))) = Just (name, show (func obj1), show (func obj2))
-  | otherwise              = Nothing
+checkEqualByAllowSecondNothing :: Show b => (Maybe b -> Maybe b -> Bool) -> String -> (a -> Maybe b) -> a -> a -> Maybe (String, String, String)
+checkEqualByAllowSecondNothing equals name f obj1 obj2
+  | isNothing (f obj2)     = Nothing
+  | f obj1 `equals` f obj2 = Nothing
+  | otherwise              = Just (name, show (f obj1), show (f obj2))
 
 assertEqualDocuments :: (MonadThrow m, MonadLog m) => Document -> Document -> m ()
 assertEqualDocuments d1 d2 | null inequalities = return ()
@@ -1879,48 +1881,63 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
     showInequality (name,obj1,obj2) = name ++ ": \n" ++ obj1 ++ "\n" ++ obj2 ++ "\n"
     sl1 = documentsignatorylinks d1
     sl2 = documentsignatorylinks d2
-    checkSigLink s1 s2 = map (\f -> f s1 s2)
-                         [
-                           checkEqualByAllowSecondNothing "maybesignatory" maybesignatory
-                         , checkEqualBy "maybesigninfo" maybesigninfo
-                         , checkEqualBy "maybeseeninfo" maybeseeninfo
-                         , checkEqualBy "maybereadinvite" maybereadinvite
-                         , checkEqualBy "mailinvitationdeliverystatus" mailinvitationdeliverystatus
-                         , checkEqualBy "smsinvitationdeliverystatus" smsinvitationdeliverystatus
-                         , checkEqualBy "signatorylinkdeleted" signatorylinkdeleted
-                         , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
-                         , checkEqualBy "signatorylinkcsvupload" signatorylinkcsvupload
-                         , \s1' s2' -> checkEqualSignatoryFields "signatoryfields" (signatoryfields s1') (signatoryfields s2')
-                         , checkEqualBy "signatoryisauthor" (signatoryisauthor)
-                         , checkEqualBy "signatoryispartner" (signatoryispartner)
-                         , checkEqualBy "signatorysignorder" (signatorysignorder)
-                         , checkEqualBy "signatorylinkrejectiontime" signatorylinkrejectiontime
-                         , checkEqualBy "signatorylinkrejectionreason" signatorylinkrejectionreason
-                         , checkEqualBy "signatorylinkauthenticationtosignmethod" signatorylinkauthenticationtosignmethod
-                         , checkEqualBy "signatorylinkdeliverymethod" signatorylinkdeliverymethod
-                         ]
 
-    inequalities = catMaybes $ map (\f -> f d1 d2)
-                   [ checkEqualBy "documenttitle" documenttitle
-                   , checkEqualBy "documentfiles" documentfile
-                   , checkEqualBy "documentsealedfiles" documentsealedfile
-                   , checkEqualBy "documentstatus" documentstatus
-                   , checkEqualBy "documenttype" documenttype
-                   , checkEqualBy "documentctime" documentctime
-                   , checkEqualBy "documentmtime" documentmtime
-                   , checkEqualBy "documentdaystosign" documentdaystosign
-                   , checkEqualBy "documentdaystoremind" documentdaystoremind
-                   , checkEqualBy "documenttimeouttime" documenttimeouttime
-                   , checkEqualBy "documentinvitetime" documentinvitetime
-                   , checkEqualBy "documentinvitetext" documentinvitetext
-                   , checkEqualBy "documentconfirmtext" documentconfirmtext
-                   , checkEqualBy "documentsharing" documentsharing
-                   , checkEqualBy "documenttags" documenttags
-                   , checkEqualBy "documentauthorattachments" (sort . documentauthorattachments)
-                   , checkEqualBy "documentlang" documentlang
-                   , checkEqualBy "documentapiv1callbackurl" documentapiv1callbackurl
-                   , checkEqualBy "documentapiv2callbackurl" documentapiv2callbackurl
-                   , checkEqualBy "documentsealstatus" documentsealstatus
-                   , checkEqualBy "documentsignatorylinks count" (length . documentsignatorylinks)
-                   ] ++
-                   concat (zipWith checkSigLink sl1 sl2)
+    checkSigLink s1 s2 = map (\f -> f s1 s2) [
+        checkEqualByAllowSecondNothing (==) "maybesignatory" maybesignatory
+      , checkEqualBy eqMaybeSignInfo "maybesigninfo" maybesigninfo
+      , checkEqualBy eqMaybeSignInfo "maybeseeninfo" maybeseeninfo
+      , checkEqualBy eqMaybeUtcTime "maybereadinvite" maybereadinvite
+      , checkEqualBy (==) "mailinvitationdeliverystatus" mailinvitationdeliverystatus
+      , checkEqualBy (==) "smsinvitationdeliverystatus" smsinvitationdeliverystatus
+      , checkEqualBy eqMaybeUtcTime "signatorylinkdeleted" signatorylinkdeleted
+      , checkEqualBy eqMaybeUtcTime "signatorylinkreallydeleted" signatorylinkreallydeleted
+      , checkEqualBy (==) "signatorylinkcsvupload" signatorylinkcsvupload
+      , \s1' s2' -> checkEqualSignatoryFields "signatoryfields" (signatoryfields s1') (signatoryfields s2')
+      , checkEqualBy (==) "signatoryisauthor" (signatoryisauthor)
+      , checkEqualBy (==) "signatoryispartner" (signatoryispartner)
+      , checkEqualBy (==) "signatorysignorder" (signatorysignorder)
+      , checkEqualBy eqMaybeUtcTime "signatorylinkrejectiontime" signatorylinkrejectiontime
+      , checkEqualBy (==) "signatorylinkrejectionreason" signatorylinkrejectionreason
+      , checkEqualBy (==) "signatorylinkauthenticationtosignmethod" signatorylinkauthenticationtosignmethod
+      , checkEqualBy (==) "signatorylinkdeliverymethod" signatorylinkdeliverymethod
+      ]
+
+    inequalities = catMaybes $ map (\f -> f d1 d2) [
+        checkEqualBy (==) "documenttitle" documenttitle
+      , checkEqualBy (==) "documentfiles" documentfile
+      , checkEqualBy (==) "documentsealedfiles" documentsealedfile
+      , checkEqualBy (==) "documentstatus" documentstatus
+      , checkEqualBy (==) "documenttype" documenttype
+      , checkEqualBy eqUtcTime "documentctime" documentctime
+      , checkEqualBy eqUtcTime "documentmtime" documentmtime
+      , checkEqualBy (==) "documentdaystosign" documentdaystosign
+      , checkEqualBy (==) "documentdaystoremind" documentdaystoremind
+      , checkEqualBy eqMaybeUtcTime "documenttimeouttime" documenttimeouttime
+      , checkEqualBy eqMaybeSignInfo "documentinvitetime" documentinvitetime
+      , checkEqualBy (==) "documentinvitetext" documentinvitetext
+      , checkEqualBy (==) "documentconfirmtext" documentconfirmtext
+      , checkEqualBy (==) "documentsharing" documentsharing
+      , checkEqualBy (==) "documenttags" documenttags
+      , checkEqualBy (==) "documentauthorattachments" (sort . documentauthorattachments)
+      , checkEqualBy (==) "documentlang" documentlang
+      , checkEqualBy (==) "documentapiv1callbackurl" documentapiv1callbackurl
+      , checkEqualBy (==) "documentapiv2callbackurl" documentapiv2callbackurl
+      , checkEqualBy (==) "documentsealstatus" documentsealstatus
+      , checkEqualBy (==) "documentsignatorylinks count" (length . documentsignatorylinks)
+      ] ++ concat (zipWith checkSigLink sl1 sl2)
+
+    -- getCurrentTime gives precision up to nanoseconds whereas PostgreSQL
+    -- gives precision up to microseconds, so take that into account.
+    eqUtcTime t1 t2 = abs (diffUTCTime t1 t2) < 0.00001
+
+    eqMaybeUtcTime = liftEqMaybe eqUtcTime
+
+    eqMaybeSignInfo = liftEqMaybe $ \si1 si2 -> and [
+        signtime si1 `eqUtcTime`signtime si2
+      , signipnumber si1 == signipnumber si2
+      ]
+
+    liftEqMaybe :: (t -> t -> Bool) -> Maybe t -> Maybe t -> Bool
+    liftEqMaybe f (Just t1) (Just t2) = f t1 t2
+    liftEqMaybe _ Nothing   Nothing   = True
+    liftEqMaybe _ _         _         = False
