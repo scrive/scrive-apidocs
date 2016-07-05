@@ -6,9 +6,9 @@ module Cron.Model (
   ) where
 
 import Control.Monad.Catch
-import Data.ByteString (ByteString)
 import Data.Int
 import Database.PostgreSQL.PQTypes
+import qualified Data.Text as T
 
 import KontraPrelude
 import Utils.List
@@ -36,7 +36,7 @@ data JobType
   | UserAccountRequestEvaluation
   deriving (Eq, Ord, Show)
 
-jobTypeMapper :: [(JobType, ByteString)]
+jobTypeMapper :: [(JobType, T.Text)]
 jobTypeMapper = [
     (AmazonUpload, "amazon_upload")
   , (AsyncEventsProcessing, "async_events_processing")
@@ -61,10 +61,10 @@ jobTypeMapper = [
   ]
 
 instance PQFormat JobType where
-  pqFormat = const $ pqFormat ($undefined::ByteString)
+  pqFormat = const $ pqFormat ($undefined::T.Text)
 
 instance FromSQL JobType where
-  type PQBase JobType = PQBase ByteString
+  type PQBase JobType = PQBase T.Text
   fromSQL mbase = do
     v <- fromSQL mbase
     case v `rlookup` jobTypeMapper of
@@ -75,7 +75,7 @@ instance FromSQL JobType where
       }
 
 instance ToSQL JobType where
-  type PQDest JobType = PQBase ByteString
+  type PQDest JobType = PQBase T.Text
   toSQL tt = toSQL . $fromJust $ tt `lookup` jobTypeMapper
 
 ----------------------------------------

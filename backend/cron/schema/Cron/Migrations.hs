@@ -1,7 +1,7 @@
 module Cron.Migrations (cronMigrations) where
 
 import Control.Monad.Catch
-import Data.ByteString (ByteString)
+import qualified Data.Text as T
 
 import Cron.Tables
 import DB
@@ -94,7 +94,7 @@ createCronJobsTable = Migration {
     runSQL_ $ "INSERT INTO cron_jobs (id, run_at) VALUES (" <?> task <> ", to_timestamp(0))"
 }
   where
-    tasks :: [ByteString]
+    tasks :: [T.Text]
     tasks = [
         "amazon_deletion"
       , "amazon_upload"
