@@ -3,8 +3,8 @@ module Mails.Migrations (
   ) where
 
 import Control.Monad.Catch
-import Data.Text (Text)
 import Data.Int
+import Data.Text (Text)
 import Log
 import qualified Data.Text as T
 
