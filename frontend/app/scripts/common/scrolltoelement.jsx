@@ -82,7 +82,7 @@ function scrollToElement($el, cb) {
   cb = cb || function () { };
 
   if ($el instanceof HTMLElement) {
-    $el = $(el);
+    $el = $($el);
   }
 
   const currentScrollTop = $(window).scrollTop();

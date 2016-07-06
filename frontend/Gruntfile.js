@@ -5,6 +5,7 @@ var util = require("util");
 var webpackConfig = require("./webpack.config.js");
 var generateVersionId = require("./custom_grunt_tasks/utils/version_id_generator");
 var langFromTexts = fs.readdirSync(path.join(__dirname, "../texts"));
+var merge = require("webpack-merge");
 
 // moment.js uses nn locale name for norwegian
 langFromTexts = _.without(langFromTexts, "no");
@@ -43,14 +44,18 @@ module.exports = function (grunt) {
     webpack: {
       all: webpackConfig[0],
       signview: webpackConfig[1],
-      allWatch: _.extend({
+      allWatch: merge({
         watch: true,
         keepalive: true
       }, webpackConfig[0]),
-      signviewWatch: _.extend({
+      signviewWatch: merge({
         watch: true,
         keepalive: true
       }, webpackConfig[1])
+    },
+
+    eslint: {
+      target: ["<%= yeoman.app %>/scripts/**/*.jsx"]
     },
 
     jscs: {
@@ -207,7 +212,7 @@ module.exports = function (grunt) {
     },
 
     uglify: {
-      vendor: {
+      dev: {
         options: {
           sourceMap: true
         },
@@ -220,6 +225,27 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/bower_components/moment/moment.js",
           util.format("<%= yeoman.app %>/bower_components/moment/locale/{%s}.js", langFromTexts.join(",")),
           "<%= yeoman.app %>/bower_components/es6-promise/promise.js",
+          "<%= yeoman.app %>/bower_components/classnames/index.js",
+          "<%= yeoman.app %>/libs/*.js",
+          "<%= yeoman.app %>/js/global/cookie.js",
+          "<%= yeoman.app %>/js/global/time.js",
+          "<%= yeoman.app %>/js/global/shims.js",
+          "<%= yeoman.app %>/js/global/errors.js",
+          "<%= yeoman.app %>/js/global/csrf.js",
+          "<%= yeoman.app %>/js/global/timezone.js"
+        ],
+        dest: "<%= yeoman.app %>/compiled/vendor-" + generateVersionId() + ".js"
+      },
+      prod: {
+        src: [
+          "<%= yeoman.app %>/bower_components/jquery/dist/jquery.min.js",
+          "<%= yeoman.app %>/bower_components/jquery-migrate/jquery-migrate.min.js",
+          "<%= yeoman.app %>/bower_components/underscore/underscore-min.js",
+          "<%= yeoman.app %>/bower_components/backbone/backbone-min.js",
+          "<%= yeoman.app %>/bower_components/react/react-with-addons.min.js",
+          "<%= yeoman.app %>/bower_components/moment/min/moment.min.js",
+          util.format("<%= yeoman.app %>/bower_components/moment/locale/{%s}.js", langFromTexts.join(",")),
+          "<%= yeoman.app %>/bower_components/es6-promise/promise.min.js",
           "<%= yeoman.app %>/bower_components/classnames/index.js",
           "<%= yeoman.app %>/libs/*.js",
           "<%= yeoman.app %>/js/global/cookie.js",
@@ -283,7 +309,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask("buildJs", function (target) {
     var tasks = [
-      "uglify",
+      "uglify:prod",
       "webpack:all",
       "webpack:signview"
     ];
@@ -311,15 +337,15 @@ module.exports = function (grunt) {
       "clean:server",
       "compileStyles",
       "compileGenerateLocalization",
-      "uglify",
+      "uglify:dev",
       "concurrent:watch"
     ]);
   });
 
   grunt.registerTask("compileStyles", ["less", "autoprefixer"]);
   grunt.registerTask("server:dist", ["build"]);
-  grunt.registerTask("test", ["uglify", "karma:full"]);
-  grunt.registerTask("test:fast", ["karma:fast"]);
+  grunt.registerTask("test", ["jscs", "eslint", "uglify:dev", "karma:full"]);
+  grunt.registerTask("test:fast", ["uglify:dev", "karma:fast"]);
   grunt.registerTask("validateJs", []);
-  grunt.registerTask("default", ["gjslint", "build", "test"]);
+  grunt.registerTask("default", ["eslint", "build", "test"]);
 };

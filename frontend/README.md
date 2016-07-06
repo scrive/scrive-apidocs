@@ -15,8 +15,11 @@ To build the frontend once:
 
 > $ grunt build
 
-
 ## Tests & Linting
+
+To run linter:
+
+> $ grunt eslint
 
 To run style checker:
 

@@ -3,10 +3,11 @@ var webpack = require("webpack");
 var _ = require("underscore");
 var glob = require("glob");
 var generateVersionId = require("./custom_grunt_tasks/utils/version_id_generator");
+var merge = require("webpack-merge");
 
-function bowerResolver() {
+function mainResolver(filename) {
   return new webpack.ResolverPlugin(
-    new webpack.ResolverPlugin.DirectoryDescriptionFilePlugin("./bower.json", ["main"])
+    new webpack.ResolverPlugin.DirectoryDescriptionFilePlugin("./" + filename, ["main"])
   );
 }
 
@@ -20,7 +21,7 @@ function allEntryPoints(m) {
 };
 
 function defaultConfig(obj) {
-  return _.extend({
+  return merge({
     context: context,
 
     devtool: "source-map",
@@ -58,8 +59,7 @@ function defaultConfig(obj) {
     resolve: {
       extensions: ["", "min.js", ".js", ".jsx"],
       root: [path.join(__dirname, "./app/bower_components")],
-    },
-
+    }
   }, obj);
 };
 
@@ -71,7 +71,18 @@ var signviewConfig = defaultConfig({
     path: __dirname, filename: "./app/compiled/signview/[name]-" + versionId + ".js", sourceMapFilename: "[file].map"
   },
   entry: allEntryPoints("./app/scripts/entry/signview/*.jsx"),
-  plugins: [bowerResolver()]
+  plugins: [
+    mainResolver("package.json"),
+    mainResolver("bower.json"),
+    new webpack.optimize.UglifyJsPlugin({
+      minimize: true,
+      compress: {warnings: false}
+    }),
+    new webpack.optimize.DedupePlugin(),
+    new webpack.DefinePlugin({
+      "process.env": {"NODE_ENV": JSON.stringify("production")}
+    })
+  ]
 });
 
 var allConfig = defaultConfig({
@@ -80,7 +91,7 @@ var allConfig = defaultConfig({
   output: {
     path: __dirname, filename: "./app/compiled/all/[name]-" + versionId + ".js", sourceMapFilename: "[file].map"
   },
-  plugins: [bowerResolver()]
+  plugins: [mainResolver("package.json"), mainResolver("bower.json")]
 });
 
 module.exports = [allConfig, signviewConfig];
