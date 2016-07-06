@@ -6,7 +6,7 @@ module SMS.Tables (
   , tableSMSEvents
   ) where
 
-import Data.ByteString (ByteString)
+import Data.Text (Text)
 
 import DB
 import KontraPrelude
@@ -57,7 +57,7 @@ tableMessengerJobs = tblTable {
   }
 }
   where
-    jobs :: [ByteString]
+    jobs :: [Text]
     jobs = [
         "clean_old_smses"
       ]

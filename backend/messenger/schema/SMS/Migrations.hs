@@ -2,7 +2,7 @@ module SMS.Migrations (
     messengerMigrations
   ) where
 
-import Data.ByteString (ByteString)
+import Data.Text (Text)
 
 import DB
 import DB.Checks
@@ -50,7 +50,7 @@ createTableMessengerJobs = Migration {
     runSQL_ $ "INSERT INTO messenger_jobs (id, run_at) VALUES (" <?> job <> ", to_timestamp(0))"
 }
   where
-    jobs :: [ByteString]
+    jobs :: [Text]
     jobs = [
         "clean_old_smses"
       ]

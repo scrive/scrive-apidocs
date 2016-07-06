@@ -15,7 +15,7 @@ module Cron.Tables (
   , tableCronJobs
   ) where
 
-import Data.ByteString (ByteString)
+import Data.Text (Text)
 
 import DB
 import KontraPrelude
@@ -70,7 +70,7 @@ tableCronJobs = tblTable {
     }
   }
   where
-    tasks :: [ByteString]
+    tasks :: [Text]
     tasks = [
         "amazon_upload"
       , "async_events_processing"
