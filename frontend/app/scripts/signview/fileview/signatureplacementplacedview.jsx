@@ -8,6 +8,9 @@ var TaskList = require("../navigation/task_list");
 var $ = require("jquery");
 var classNames = require("classnames");
 
+var FONT_SIZE_BASE = 16;
+var SIGNATURE_PLACEMENT_WIDTH_BASE = 284;
+
   module.exports = React.createClass({
     _openTry: 0,
     _openModal: false,
@@ -127,7 +130,11 @@ var classNames = require("classnames");
         left: left
       };
 
-      divStyle.fontSize = (this.scale() * 16) + "px";
+      var ratio = width / (this.scale() * SIGNATURE_PLACEMENT_WIDTH_BASE);
+      var fontSizeMin = this.scale() * FONT_SIZE_BASE;
+      var fontSizeScaled = ratio * fontSizeMin;
+      var fontSize = Math.max(fontSizeScaled, fontSizeMin);
+      divStyle.fontSize = Math.round(fontSize) + "px";
 
       var boxStyle = {
         lineHeight: height + "px",
