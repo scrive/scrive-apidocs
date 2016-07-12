@@ -1,3 +1,7 @@
+import os
+from cStringIO import StringIO
+from contextlib import closing
+
 import enum
 from dateutil import parser as dateparser
 
@@ -45,6 +49,88 @@ class DeletionStatus(enum.Enum):
     not_deleted = 0
     in_trash = 1
     deleted = 2
+
+
+class AuthorAttachment(_file.File):
+
+    @tvu.validate_and_unify(name=tvu.NonEmptyUnicode,
+                            content=tvu.instance(bytes),
+                            mandatory=tvu.instance(bool),
+                            merge=tvu.instance(bool))
+    def __init__(self, name, content, mandatory=False, merge=True):
+        super(AuthorAttachment, self).__init__(name)
+        self._content = content
+        self._mandatory = mandatory
+        self._merge = merge
+
+    def stream(self):
+        return StringIO(self._content)
+
+    @classmethod
+    def from_file_obj(cls, name, file_obj):
+        with closing(file_obj) as f:
+            return AuthorAttachment(name, f.read())
+
+    @classmethod
+    def from_file_path(cls, file_path):
+        with open(file_path, 'rb') as f:
+            return AuthorAttachment.from_file_obj(
+                unicode(os.path.basename(file_path)), f)
+
+    @scrive_property
+    def mandatory(self):
+        return self._mandatory
+
+    @mandatory.setter
+    @tvu.validate_and_unify(mandatory=tvu.instance(bool))
+    def mandatory(self, mandatory):
+        self._mandatory = mandatory
+
+    @scrive_property
+    def merge(self):
+        return self._merge
+
+    @merge.setter
+    @tvu.validate_and_unify(merge=tvu.instance(bool))
+    def merge(self, merge):
+        self._merge = merge
+
+
+class RemoteAuthorAttachment(_file.RemoteFile):
+
+    @tvu.validate_and_unify(id_=_object.ID,
+                            name=tvu.NonEmptyUnicode,
+                            mandatory=tvu.instance(bool),
+                            merge=tvu.instance(bool))
+    def __init__(self, id_, name, mandatory=False, merge=True):
+        super(RemoteAuthorAttachment, self).__init__(id_, name)
+        self._mandatory = mandatory
+        self._merge = merge
+
+    @classmethod
+    def _from_json_obj(cls, json):
+        return RemoteAuthorAttachment(id_=json[u'id'],
+                                      name=json[u'name'],
+                                      mandatory=json[u'required'],
+                                      merge=json[u'add_to_sealed_file'])
+
+    @scrive_property
+    def mandatory(self):
+        return self._mandatory
+
+    @mandatory.setter
+    @tvu.validate_and_unify(mandatory=tvu.instance(bool))
+    def mandatory(self, mandatory):
+        self._mandatory = mandatory
+
+    @scrive_property
+    def merge(self):
+        return self._merge
+
+    @merge.setter
+    @tvu.validate_and_unify(merge=tvu.instance(bool))
+    def merge(self, merge):
+        self._merge = merge
 
 
 class Document(_object.ScriveObject):
@@ -106,7 +192,8 @@ class Document(_object.ScriveObject):
         self._original_file = None
         self._sealed_document = None
         self._author_attachments = _set.ScriveSet()
-        self._author_attachments._elem_validator = tvu.instance(_file.LocalFile)
+        self._author_attachments._elem_validator = \
+            tvu.instance(AuthorAttachment)
 
     @classmethod
     def _from_json_obj(cls, json):
@@ -157,21 +244,14 @@ class Document(_object.ScriveObject):
             document._object_version = json[u'objectversion']
             document._viewed_by_author = json[u'isviewedbyauthor']
             document._access_token = json[u'accesstoken']
-            file_json = json.get(u'file')
-            if file_json is not None:
-                file_ = _file.RemoteFile(id_=file_json[u'id'],
-                                         name=file_json[u'name'])
-                document._original_file = file_
-            sealed_file_json = json.get(u'sealedfile')
-            if sealed_file_json is not None:
-                sealed_file = _file.RemoteFile(id_=sealed_file_json[u'id'],
-                                               name=sealed_file_json[u'name'])
-                document._sealed_document = sealed_file
+            document._original_file = \
+                _file.RemoteFile._from_json_obj(json.get(u'file'))
+            document._sealed_document = \
+                _file.RemoteFile._from_json_obj(json.get(u'sealedfile'))
             author_attachments = \
-                _set.ScriveSet([_file.RemoteFile(id_=att_json[u'id'],
-                                                 name=att_json[u'name'])
+                _set.ScriveSet([RemoteAuthorAttachment._from_json_obj(att_json)
                                 for att_json in json[u'authorattachments']])
-            author_attachments._elem_validator = tvu.instance(_file.LocalFile)
+            author_attachments._elem_validator = tvu.instance(AuthorAttachment)
             document._author_attachments = author_attachments
 
             if document.status is not DocumentStatus.preparation:
@@ -179,7 +259,7 @@ class Document(_object.ScriveObject):
 
             return document
         except (KeyError, TypeError, ValueError) as e:
-            raise _exceptions.InvalidResponse(e)
+            raise _exceptions.InvalidResponse(e, json)
 
     def _set_invalid(self):
         # invalidate subobjects first, before getter stops working

@@ -3,14 +3,14 @@ import unittest
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions
 
-from scrivepy import _signatory, _field, _file
+from scrivepy import _signatory, _field, _document
 
 
 DC = webdriver.DesiredCapabilities
 
 SFT = _field.StandardFieldType
 SigAttachment = _signatory.SignatoryAttachment
-LocalFile = _file.LocalFile
+AuthorAttachment = _document.AuthorAttachment
 
 
 def check_basic_sign(test, drv, api):
@@ -142,8 +142,8 @@ def check_sign_view_advanced(test, drv, api):
 
     with open(test.PDF_PATH, 'rb') as f:
         contents = f.read()
-        author_att1 = LocalFile(u'author-att-1', contents)
-        author_att2 = LocalFile(u'author-att-2', contents)
+        author_att1 = AuthorAttachment(u'author-att-1', contents)
+        author_att2 = AuthorAttachment(u'author-att-2', contents)
 
     doc.author_attachments.update([author_att1, author_att2])
     doc = api.update_document(doc)

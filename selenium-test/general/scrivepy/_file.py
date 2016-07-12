@@ -1,4 +1,3 @@
-import cStringIO
 import contextlib
 import os
 import shutil
@@ -51,6 +50,13 @@ class RemoteFile(File):
     def _to_json_obj(self):
         return {u'id': self.id, u'name': self.name}
 
+    @classmethod
+    def _from_json_obj(cls, json):
+        if json is None:
+            return None
+        else:
+            return RemoteFile(id_=json[u'id'], name=json[u'name'])
+
     def _set_api(self, api, document):
         super(RemoteFile, self)._set_api(api, document)
         self._document = document
@@ -70,26 +76,3 @@ class RemoteFile(File):
                                            method=stream_get)
         response.raw.decode_content = True
         return response.raw
-
-
-class LocalFile(File):
-
-    @tvu.validate_and_unify(name=tvu.NonEmptyUnicode,
-                            content=tvu.instance(bytes))
-    def __init__(self, name, content):
-        super(LocalFile, self).__init__(name)
-        self._content = content
-
-    def stream(self):
-        return cStringIO.StringIO(self._content)
-
-    @classmethod
-    def from_file_obj(cls, name, file_obj):
-        with contextlib.closing(file_obj) as f:
-            return LocalFile(name, f.read())
-
-    @classmethod
-    def from_file_path(cls, file_path):
-        with open(file_path, 'rb') as f:
-            return LocalFile.from_file_obj(
-                unicode(os.path.basename(file_path)), f)

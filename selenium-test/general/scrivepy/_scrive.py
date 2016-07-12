@@ -1,9 +1,10 @@
-from os import path
 import cStringIO
+import json
+from os import path
 
 import requests
 
-from scrivepy import _document, _file
+from scrivepy import _document
 
 
 class Scrive(object):
@@ -70,7 +71,9 @@ class Scrive(object):
         if file_path is None:
             files = None
         else:
-            files = {'file': (path.basename(file_path),
+            ascii_file_name = ''.join(c if ord(c) < 128 else '_'
+                                      for c in path.basename(file_path))
+            files = {'file': (ascii_file_name,
                               open(file_path, 'rb'),
                               'application/pdf')}
 
@@ -85,38 +88,33 @@ class Scrive(object):
                                       method=requests.get)
 
     def update_document(self, document):
-        local_files = filter(lambda f: isinstance(f, _file.LocalFile),
-                             document.author_attachments)
-        if local_files:
-            # remove them temporarily for update call
-            remote_files = filter(lambda f: isinstance(f, _file.RemoteFile),
-                                  document.author_attachments)
-            document.author_attachments.clear()
-            old_validator = document.author_attachments._elem_validator
-            document.author_attachments._elem_validator = None
-            document.author_attachments.update(remote_files)
-            document.author_attachments._elem_validator = old_validator
+        data = {}
+        files = {}
+        att_count = 0
+        for attachment in document.author_attachments:
+            att_key = u'attachment_' + unicode(att_count)
+            att_details = u'attachment_details_' + unicode(att_count)
+            att_descr = {u'name': attachment.name,
+                         u'required': attachment.mandatory,
+                         u'add_to_sealed_file': attachment.merge}
 
-        new_doc = self._make_doc_request(['update', document.id],
-                                         data={'json': document._to_json()})
+            if isinstance(attachment, _document.AuthorAttachment):
+                files[att_key] = (attachment.name,
+                                  attachment.stream(),
+                                  'application/pdf')
+            else:
+                att_descr[u'file_id'] = attachment.id
+                data[att_key] = attachment.id
 
-        if not local_files:
-            # no additions; deletions alraedy handled by update call
-            return new_doc
+            data[att_details] = json.dumps(att_descr)
+            att_count += 1
 
-        remote_files = filter(lambda f: isinstance(f, _file.RemoteFile),
-                              new_doc.author_attachments)
+        new_doc = self._make_doc_request(['setattachments', document.id],
+                                         data=data, files=files)
+        document._author_attachments = new_doc._author_attachments
 
-        data = {u'attachment_' + unicode(i): rf.id
-                for i, rf in enumerate(remote_files)}
-
-        start_index = len(remote_files)
-        files = {u'attachment_' + unicode(i + start_index):
-                 (lf.name, lf.stream(), 'application/pdf')
-                 for i, lf in enumerate(local_files)}
-
-        return self._make_doc_request(['setattachments', document.id],
-                                      data=data, files=files)
+        return self._make_doc_request(['update', document.id],
+                                      data={'json': document._to_json()})
 
     def ready(self, document):
         return self._make_doc_request(['ready', document.id])

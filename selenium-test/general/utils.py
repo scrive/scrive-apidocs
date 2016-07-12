@@ -11,8 +11,9 @@ class TestHelper(object):
         self._driver = driver
         dir_path = os.path.dirname(os.path.abspath(__file__))
         self.PDF_PATH = \
-            os.path.abspath(os.path.join(dir_path, os.pardir, 'backend',
-                                         'test', 'pdfs', 'simple.pdf'))
+            os.path.abspath(os.path.join(dir_path, os.pardir, os.pardir,
+                                         'backend', 'test', 'pdfs',
+                                         'simple.pdf'))
 
     def sleep(self, seconds):
         time.sleep(seconds)
