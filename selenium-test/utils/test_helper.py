@@ -54,6 +54,8 @@ class TestHelper(object):
         doc.signatories.add(self.create_standard_signatory(u'Alex Allen'))
         return doc
 
-    def arrow_scroll(self):
-        self._driver.wait_for_element('.scroll-arrow').click()
+    def arrow_scroll(self, skip_scroll_to_top=False):
+        if not skip_scroll_to_top:
+            self._driver.execute('window.scrollTo(0, 0);')
+        self._driver.wait_for_element_and_click('.scroll-arrow')
         self.sleep(2)  # scrolling takes at most 2s
