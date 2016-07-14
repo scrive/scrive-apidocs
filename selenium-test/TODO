@@ -3,3 +3,4 @@
 * config.py should use "saucelabs" instead of "selenium"
 * bump implicit wait to 30s
 * support named screenshots (with meaningful names)
+* add __str__() method to driver wrapper, so when it's printed in stack traces it show what browser, prefix and settings were used
