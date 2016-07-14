@@ -72,7 +72,7 @@ companyFilterToWhereClause (CompanyFilterByString text) = do
 
 companyFilterToWhereClause (CompanyManyUsers) = do
   sqlWhereAny
-    [ sqlWhere $ "((SELECT count(*) FROM users WHERE users.company_id = companies.id) > 1)"
+    [ sqlWhere $ "((SELECT count(*) FROM users WHERE users.company_id = companies.id AND users.deleted IS NULL) > 1)"
     , sqlWhere $ "((SELECT count(*) FROM companyinvites WHERE companyinvites.company_id = companies.id) > 0)"
     ]
 
