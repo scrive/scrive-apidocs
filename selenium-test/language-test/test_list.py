@@ -51,7 +51,8 @@ try:
     import config
 except ImportError:
     dir_path = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(dir_path, 'config.py')
+    config_path = os.path.abspath(
+        os.path.join(dir_path, os.pardir, 'config.py'))
     sys.stderr.write('''File %s should contain the configuration,
 with the following schema:
 

@@ -1,0 +1,5 @@
+* move most of */test_list.py into utils/
+* move most of */run.py into utils/
+* config.py should use "saucelabs" instead of "selenium"
+* bump implicit wait to 30s
+* support named screenshots (with meaningful names)

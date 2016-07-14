@@ -58,7 +58,8 @@ try:
     import config
 except ImportError:
     dir_path = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(dir_path, 'config.py')
+    config_path = os.path.abspath(
+        os.path.join(dir_path, os.pardir, 'config.py'))
     sys.stderr.write('''File %s should contain the configuration,
 with the following schema:
 
@@ -69,7 +70,8 @@ scrive_api = {'client_credentials_identifier': '6eb8b9cc96923c23_53',
               'api_hostname': 'staging.scrive.com',
               'https': True}
 
-selenium_url = ('http://USER:KEY@ondemand.saucelabs.com:80/wd/hub')
+selenium_key = 'KEY'
+selenium_user = 'USER'
 ''' % (config_path,))
     raise
 
