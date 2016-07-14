@@ -5,6 +5,15 @@ import DB.Checks
 import Doc.Signing.Tables
 import KontraPrelude
 
+documentSigningJobsUseJson :: MonadDB m => Migration m
+documentSigningJobsUseJson = Migration {
+    mgrTable = tableDocumentSigningJobs
+  , mgrFrom = 1
+  , mgrDo = do
+      runSQL_ "ALTER TABLE document_signing_jobs ALTER COLUMN fields TYPE json USING fields::json"
+      runSQL_ "ALTER TABLE document_signing_jobs ALTER COLUMN screenshots TYPE json USING screenshots::json"
+  }
+
 createDocumentSigningConsumersTable :: MonadDB m => Migration m
 createDocumentSigningConsumersTable = Migration {
     mgrTable = tableDocumentSigningConsumers

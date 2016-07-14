@@ -30,12 +30,12 @@ import KontraPrelude
 import User.Lang
 
 instance PQFormat SignatoryFieldsValuesForSigning where
-  pqFormat = const $ pqFormat ($undefined::BS.ByteString)
+  pqFormat = const $ pqFormat ($undefined::JSON BS.ByteString)
 
 instance FromSQL SignatoryFieldsValuesForSigning where
-  type PQBase SignatoryFieldsValuesForSigning = PQBase BS.ByteString
+  type PQBase SignatoryFieldsValuesForSigning = PQBase (JSON BS.ByteString)
   fromSQL mbase = do
-    s <- fromSQL mbase
+    JSON s <- fromSQL mbase
     case Aeson.eitherDecode s of
       Left _ -> hpqTypesError $ "fromSQL (SignatoryFieldsValuesForSigning): can't parse json"
       Right ae -> case (Unjson.parse unjsonSignatoryFieldsValuesForSigning ae) of
@@ -43,16 +43,16 @@ instance FromSQL SignatoryFieldsValuesForSigning where
         (Result _ _) -> hpqTypesError $ "fromSQL (SignatoryFieldsValuesForSigning): can't parse SignatoryFieldsValuesForSigning"
 
 instance ToSQL SignatoryFieldsValuesForSigning where
-  type PQDest SignatoryFieldsValuesForSigning = PQDest BS.ByteString
+  type PQDest SignatoryFieldsValuesForSigning = PQDest (JSON BS.ByteString)
   toSQL s = toSQL (unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) unjsonSignatoryFieldsValuesForSigning s)
 
 instance PQFormat SignatoryScreenshots where
-  pqFormat = const $ pqFormat ($undefined::BS.ByteString)
+  pqFormat = const $ pqFormat ($undefined::JSON BS.ByteString)
 
 instance FromSQL SignatoryScreenshots where
-  type PQBase SignatoryScreenshots = PQBase BS.ByteString
+  type PQBase SignatoryScreenshots = PQBase (JSON BS.ByteString)
   fromSQL mbase = do
-    s <- fromSQL mbase
+    JSON s <- fromSQL mbase
     case Aeson.eitherDecode s of
       Left _ -> hpqTypesError $ "fromSQL (SignatoryScreenshots): can't parse json"
       Right ae -> case (Unjson.parse unjsonSignatoryScreenshots ae) of
@@ -60,7 +60,7 @@ instance FromSQL SignatoryScreenshots where
         (Result _ _) -> hpqTypesError $ "fromSQL (SignatoryScreenshots): can't parse SignatoryScreenshots"
 
 instance ToSQL SignatoryScreenshots where
-  type PQDest SignatoryScreenshots = PQDest BS.ByteString
+  type PQDest SignatoryScreenshots = PQDest (JSON BS.ByteString)
   toSQL s = toSQL (unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) unjsonSignatoryScreenshots s)
 
 data ScheduleDocumentSigning = ScheduleDocumentSigning SignatoryLinkID BrandedDomainID UTCTime IPAddress (Maybe UTCTime) (Maybe String) Lang SignatoryFieldsValuesForSigning [FileID] SignatoryScreenshots
