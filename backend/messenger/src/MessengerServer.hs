@@ -58,7 +58,7 @@ main = do
 
     let pgSettings = pgConnSettings (mscDBConfig conf) []
     withPostgreSQL (unConnectionSource $ simpleSource pgSettings) $
-      checkDatabase (logInfo_ . T.pack) [] messengerTables
+      checkDatabase [] messengerTables
     cs@(ConnectionSource pool) <- ($ maxConnectionTracker)
       <$> liftBase (createPoolSource pgSettings)
 

@@ -4,14 +4,12 @@ import Control.Arrow
 import Control.Concurrent.STM
 import Control.Monad.Base
 import Database.PostgreSQL.PQTypes.Internal.Connection
-import Log
 import System.Directory (createDirectoryIfMissing)
 import System.Environment
 import System.IO
 import Test.Framework
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
-import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import AccountInfoTest
@@ -134,7 +132,7 @@ testMany (allargs, ts) = do
   let connSettings = pgConnSettings pgconf
   lr@LogRunner{..} <- mkLogRunner "test" def rng
   withLogger . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
-    migrateDatabase (logInfo_ . T.pack) kontraExtensions kontraDomains kontraTables kontraMigrations
+    migrateDatabase kontraExtensions kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
     offsets <- dbQuery $ HC.GetNClockErrorEstimates 10

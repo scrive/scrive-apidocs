@@ -66,7 +66,7 @@ main = do
 
     let pgSettings = pgConnSettings $ mscDBConfig conf
     withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
-      checkDatabase (logInfo_ . T.pack) [] mailerTables
+      checkDatabase [] mailerTables
     awsconf <- do
       localCache <- MemCache.new BS.length 52428800
       globalCache <- F.forM (mscRedisCacheConfig conf) mkRedisConnection

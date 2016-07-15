@@ -81,7 +81,7 @@ main = do
 
     let connSettings = pgConnSettings $ dbConfig appConf
     withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $
-      checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
+      checkDatabase kontraDomains kontraTables
 
     ConnectionSource pool <- ($ maxConnectionTracker)
       <$> liftBase (createPoolSource $ connSettings kontraComposites)

@@ -500,6 +500,7 @@ Library
                , template-haskell
                , temporary
                , text
+               , text-show
                , threads
                , time
                , transformers
@@ -708,6 +709,7 @@ Executable kontrakcja-migrate
                , tagsoup
                , template-haskell
                , text
+               , text-show
                , time
                , transformers-base
                , unjson
@@ -804,6 +806,7 @@ Executable mailing-server
                , tagsoup
                , template-haskell
                , text
+               , text-show
                , time
                , transformers
                , transformers-base
@@ -898,6 +901,7 @@ Executable messenger-server
                , tagsoup
                , template-haskell
                , text
+               , text-show
                , time
                , transformers
                , transformers-base
