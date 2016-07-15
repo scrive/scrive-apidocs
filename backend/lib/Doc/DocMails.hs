@@ -137,11 +137,13 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
 
 sendInvitationEmail1 authorsiglink = do
   when (isSignatory authorsiglink) $ do
+       did <- theDocumentID
        void $ sendNotifications authorsiglink False
           (do
             -- send invitation to sign to author when it is his turn to sign
             mail <- theDocument >>= \d -> mailDocumentAwaitingForAuthor (getLang d) d
-            scheduleEmailSendout $ mail { to = [getMailAddress authorsiglink] })
+            scheduleEmailSendout $ mail { to = [getMailAddress authorsiglink]
+                                        , mailInfo = Invitation did (signatorylinkid authorsiglink)})
           (theDocument >>= \doc -> smsInvitationToAuthor doc authorsiglink >>= scheduleSMS doc)
 
 {- |
