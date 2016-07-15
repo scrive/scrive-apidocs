@@ -20,8 +20,13 @@ window.CallResponseView = Backbone.View.extend({
              content.substring(content.length - 500, content.length);
     }
     try {
-      var json = JSON.parse(content);
-      return JSON.stringify(JSON.parse(content), undefined, 2);
+      var json;
+      if (typeof content == "object") {
+        json = content;
+      } else {
+        json = JSON.parse(content);
+      }
+      return JSON.stringify(json, undefined, 2);
     } catch (e) {
       return content;
     }
@@ -72,7 +77,9 @@ window.CallResponseView = Backbone.View.extend({
     panelBody.append($("<div class='response-result well well-sm'></div>")
       .append($("<code class='language-javascript'/>").text(this.niceContent(call.resultContent())))
     );
-    Prism.highlightAll(panelBody);
+    if (call.resultContentLength() < 102400) {
+      Prism.highlightAll(panelBody);
+    }
 
     var copyClient = new ZeroClipboard(copyButton);
 

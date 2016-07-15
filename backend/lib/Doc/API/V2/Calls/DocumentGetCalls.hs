@@ -14,7 +14,6 @@ import Happstack.Server.Types
 import Log
 import Text.JSON.Types (JSValue(..))
 import qualified Data.ByteString.Lazy as BSL (fromStrict)
-import qualified Data.Map as Map hiding (map)
 import qualified Data.Text as T
 import qualified Text.JSON as J
 
@@ -69,7 +68,8 @@ docApiV2List = api $ do
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit (DocumentsVisibleToUser $ userid user) documentFilters documentSorting (offset, 1000, maxcount)
   logInfo_ "Fetching done"
   -- Result
-  return $ Ok $ Response 200 Map.empty nullRsFlags (listToJSONBS (allDocsCount,(\d -> (documentAccessForUser user d,d)) <$> allDocs)) Nothing
+  let headers = mkHeaders [("Content-Type","application/json; charset=UTF-8")]
+  return $ Ok $ Response 200 headers nullRsFlags (listToJSONBS (allDocsCount,(\d -> (documentAccessForUser user d,d)) <$> allDocs)) Nothing
 
 docApiV2Get :: Kontrakcja m => DocumentID -> m Response
 docApiV2Get did = logDocument did . api $ do
@@ -103,7 +103,8 @@ docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ d
   guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user
   doc <- theDocument
   eas <- EvidenceAttachments.fetch doc
-  return $ Ok $ Response 200 Map.empty nullRsFlags (evidenceAttachmentsToJSONBS (documentid doc) eas) Nothing
+  let headers = mkHeaders [("Content-Type","application/json; charset=UTF-8")]
+  return $ Ok $ Response 200 headers nullRsFlags (evidenceAttachmentsToJSONBS (documentid doc) eas) Nothing
 
 docApiV2FilesMain :: Kontrakcja m => DocumentID -> String -> m Response
 docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
