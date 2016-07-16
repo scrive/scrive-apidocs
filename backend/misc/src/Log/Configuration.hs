@@ -19,7 +19,6 @@ import Log.Backend.StandardOutput
 import Log.Data
 import Log.Internal.Logger
 import Log.Monad
-import qualified Data.Text.IO as T
 
 import Crypto.RNG
 import DB.Checks
@@ -100,16 +99,10 @@ mkLogRunner component LogConfig{..} rng = do
     run :: Logger -> LogT m r -> m r
     run = runLogT (component <> "-" <> lcSuffix)
 
-    dummyLogger = Logger {
-        loggerWriteMessage = T.putStrLn . showLogMessage Nothing
-      , loggerWaitForWrite = return ()
-      , loggerFinalizers   = []
-      }
-
     defLogger StandardOutput = stdoutLogger
     defLogger (ElasticSearch ec) = elasticSearchLogger ec $ runCryptoRNGT rng boundedIntegralRandom
     defLogger (PostgreSQL ci) = do
       ConnectionSource pool <- poolSource def { csConnInfo = ci } 1 10 1
-      withPostgreSQL pool . run dummyLogger $ do
+      withPostgreSQL pool . run simpleStdoutLogger $ do
         migrateDatabase [] [] logsTables logsMigrations
       pgLogger pool
