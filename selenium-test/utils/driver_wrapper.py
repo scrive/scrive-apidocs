@@ -68,7 +68,7 @@ class SeleniumDriverWrapper(object):
     def wait(self, timeout=10):
         return support_ui.WebDriverWait(self._driver, timeout)
 
-    def wait_for_element(self, css_selector, timeout=10, extra_requests=0):
+    def wait_for_element(self, css_selector, timeout=30, extra_requests=0):
         self._request_count += extra_requests
         by_css = webdriver.common.by.By.CSS_SELECTOR
         condition = expected_conditions.presence_of_element_located(
