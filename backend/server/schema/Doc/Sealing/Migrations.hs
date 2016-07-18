@@ -1,7 +1,8 @@
 module Doc.Sealing.Migrations where
 
-import DB
 import DB.Checks
+
+import DB
 import Doc.Sealing.Tables
 import KontraPrelude
 

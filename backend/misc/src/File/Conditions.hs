@@ -3,9 +3,9 @@ module File.Conditions where
 import Control.Monad.State.Class
 import Data.Typeable
 import Database.PostgreSQL.PQTypes
+import DB.SQL
 import Text.JSON.Gen
 
-import DB.SQL
 import File.FileID
 import KontraPrelude
 import MinutesTime

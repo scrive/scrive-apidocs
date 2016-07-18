@@ -1,8 +1,9 @@
 module Chargeable.Migrations where
 
+import DB.Checks
+
 import Chargeable.Tables
 import DB
-import DB.Checks
 import KontraPrelude
 
 createChargeableItemsTable :: MonadDB m => Migration m

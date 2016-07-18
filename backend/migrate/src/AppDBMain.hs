@@ -1,5 +1,6 @@
 module AppDBMain where
 
+import DB.Checks
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import System.IO
@@ -10,7 +11,6 @@ import AppDBTables
 import Configuration
 import Crypto.RNG
 import DB
-import DB.Checks
 import DB.PostgreSQL
 import DB.SQLFunction
 import KontraPrelude

@@ -1,9 +1,9 @@
 module Theme.Migrations where
 
+import DB.Checks
 import qualified Data.Text as T
 
 import DB
-import DB.Checks
 import KontraPrelude
 import Theme.Tables
 

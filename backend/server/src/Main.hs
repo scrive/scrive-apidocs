@@ -3,6 +3,7 @@ module Main (main) where
 import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
+import DB.Checks
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
 import Log
@@ -25,7 +26,6 @@ import Configuration
 import Crypto.RNG
 import Database.Redis.Configuration
 import DB
-import DB.Checks
 import DB.PostgreSQL
 import Happstack.Server.ReqHandler
 import KontraPrelude

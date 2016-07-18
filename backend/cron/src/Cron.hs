@@ -4,6 +4,7 @@ import Control.Monad
 import Control.Monad.Base
 import Data.Maybe
 import Database.PostgreSQL.Consumers
+import DB.Checks
 import Log
 import System.Console.CmdArgs hiding (def)
 import System.Environment
@@ -23,7 +24,6 @@ import Cron.Model
 import Crypto.RNG
 import Database.Redis.Configuration
 import DB
-import DB.Checks
 import DB.PostgreSQL
 import Doc.Action
 import Doc.API.Callback.Model

@@ -13,6 +13,7 @@ import Data.Foldable (fold)
 import Data.Text (Text)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
+import DB.Checks
 import Log.Backend.ElasticSearch
 import Log.Backend.PostgreSQL
 import Log.Backend.StandardOutput
@@ -21,7 +22,6 @@ import Log.Internal.Logger
 import Log.Monad
 
 import Crypto.RNG
-import DB.Checks
 import DB.PostgreSQL
 import KontraPrelude
 import Log.Migrations

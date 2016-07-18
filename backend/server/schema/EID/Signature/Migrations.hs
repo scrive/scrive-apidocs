@@ -1,7 +1,8 @@
 module EID.Signature.Migrations where
 
-import DB
 import DB.Checks
+
+import DB
 import EID.Signature.Tables
 import KontraPrelude
 
