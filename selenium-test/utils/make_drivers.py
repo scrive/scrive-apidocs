@@ -23,6 +23,10 @@ scrive_api = {'client_credentials_identifier': '6eb8b9cc96923c23_53',
               'api_hostname': 'staging.scrive.com',
               'https': True}
 
+scrive_www_url = 'https://staging.scrive.com'
+
+scrive_credentials = ('login@scrive.com', 'password')
+
 selenium_key = 'KEY'
 selenium_user = 'USER'
 ''' % (config_path,))
@@ -40,6 +44,8 @@ def make_local_drivers(lang, test_name, local_devices,
                                     driver_name=device_info['name'],
                                     test_name=test_name,
                                     screenshots_enabled=screenshots_enabled,
+                                    screenshot_prefix=
+                                    device_info.get('screenshot-prefix'),
                                     lang=lang)
 
 

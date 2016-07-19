@@ -1,5 +1,8 @@
 import os
+from selenium import webdriver
+import contextlib
 import time
+from driver_wrapper import SeleniumDriverWrapper
 
 from scrivepy import _signatory, _document
 
@@ -59,3 +62,18 @@ class TestHelper(object):
             self._driver.execute('window.scrollTo(0, 0);')
         self._driver.wait_for_element_and_click('.scroll-arrow')
         self.sleep(2)  # scrolling takes at most 2s
+
+    @contextlib.contextmanager
+    def local_ff(self):
+        driver_factory = lambda: webdriver.Firefox()
+        driver = SeleniumDriverWrapper(driver_factory,
+                                       driver_name='local_firefox',
+                                       test_name=self._driver._test_name,
+                                       screenshots_enabled=False,
+                                       screenshot_prefix=
+                                       self._driver._screenshot_prefix,
+                                       lang=self._driver._lang)
+        try:
+            yield driver
+        finally:
+            driver.quit()
