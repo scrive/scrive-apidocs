@@ -51,7 +51,7 @@ EvidenceOfIntentTable=<table>
   <tr>
     <td>$entry.signing.time$</td>
     <td>$entry.ip$</td>
-    <td>$entry.signatory$ signed the document.$if(entry.signing.image)$ <a href="$entry.signing.image$">Click here</a> to see attached screen capture of their signing view.$else$ A screen capture was not done for this event.$endif$$if(entry.reference.image)$ <a href="$entry.reference.image$">Click here</a> to see attached screen capture of the reference signing view created at $entry.reference.time$.$endif$</td>
+    <td>$entry.signatory$ signed the document.$if(entry.signing.image)$ <a href="$entry.signing.image$">Click here</a> to see attached screen capture of their signing view.$else$ A screen capture was not done for this event.$endif$$if(entry.reference.image)$ <a class="reference-screenshot" href="$entry.reference.image$">Click here</a> to see attached screen capture of the reference signing view created at $entry.reference.time$.$endif$</td>
   </tr>}$
 </table>
 ###
