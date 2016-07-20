@@ -2,6 +2,7 @@ from selenium import webdriver
 
 import make_drivers
 import tests
+import tests2
 from scrivepy._scrive import Scrive
 from test_helper import TestHelper
 
@@ -52,3 +53,7 @@ def make_tests():
             test_helper = TestHelper(api, driver)
             test.teardown = lambda: driver.quit()
             yield test, test_helper, driver, api
+
+    for test_name, test in make_drivers.find_tests(tests2):
+        test_helper = TestHelper(api, driver=None)
+        yield test, test_helper, api

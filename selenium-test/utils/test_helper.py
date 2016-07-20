@@ -49,7 +49,8 @@ class TestHelper(object):
         '''
         doc = self._api.create_document_from_file(self.PDF_PATH)
         doc.title = title
-        doc.language = _document.Language(self._driver._lang)
+        lang = self._driver._lang if self._driver else 'en'
+        doc.language = _document.Language(lang)
 
         doc.author.invitation_delivery_method = 'pad'
         doc.author.confirmation_delivery_method = 'none'
