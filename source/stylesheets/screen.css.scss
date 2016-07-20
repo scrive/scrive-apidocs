@@ -47,7 +47,6 @@ html, body {
   width: 20px;
 }
 
-
 @mixin embossed-bg {
   background:
     linear-gradient(to bottom, rgba(#000, 0.2), rgba(#000, 0) 8px),
@@ -150,6 +149,8 @@ html, body {
       height: 30%;
       margin-bottom: 1em;
     }
+
+    background-color: lighten($nav-bg, 4%);
 
     li {
       margin: 1em $nav-padding;
