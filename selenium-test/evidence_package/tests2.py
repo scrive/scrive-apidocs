@@ -97,3 +97,23 @@ def check_evidence_of_time(test, api):
     artifact_path = os.path.join(dir_path, 'artifacts', att_name)
     with open(artifact_path, 'wb') as f:
         f.write(contents)
+
+
+def check_all_attachments_included(test, api):
+    doc = signed_doc(u'attachments included', api, test)
+
+    with temp_file_path() as fp:
+        doc.sealed_document.save_as(fp)
+        output = subprocess.check_output(['pdfdetach', '-list', fp])
+
+    expected_output = '''7 embedded files
+1: Appendix 1 Evidence Quality Framework.html
+2: Appendix 2 Service Description.html
+3: Appendix 3 Evidence Log.html
+4: Appendix 4 Evidence of Time.html
+5: Appendix 5 Evidence of Intent.html
+6: Appendix 6 Digital Signature Documentation.html
+7: Evidence Quality of Scrive E-signed Documents.html
+'''
+
+    assert output == expected_output
