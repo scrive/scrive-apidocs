@@ -498,6 +498,7 @@ html, body {
   aside {
     padding-top: 1em;
     padding-bottom: 1em;
+    text-shadow: none;
     margin-top: 1.5em;
     margin-bottom: 1.5em;
     background: $aside-notice-bg;
@@ -556,6 +557,7 @@ html, body {
     clear:right;
 
     box-sizing: border-box;
+    text-shadow: none;
 
     @extend %right-col;
 

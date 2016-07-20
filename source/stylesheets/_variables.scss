@@ -111,8 +111,12 @@ $phone-width: $tablet-width - $nav-width; // min width before reverting to mobil
 
 // OTHER
 ////////////////////
-$nav-footer-border-color: #666 !default;
-$search-box-border-color: #666 !default;
+$nav-active-shadow: #000;
+$nav-footer-border-color: #666;
+$nav-embossed-border-top: #000;
+$nav-embossed-border-bottom: #939393;
+$main-embossed-text-shadow: none;
+$search-box-border-color: #666;
 
 
 ////////////////////////////////////////////////////////////////////////////////
