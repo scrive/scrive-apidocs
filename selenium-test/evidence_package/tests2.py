@@ -44,9 +44,9 @@ def change_work_dir(path):
         os.chdir(cwd)
 
 
-def check_service_description(test, api):
+def signed_doc(title, api, test):
     doc = api.create_document_from_file(test.PDF_PATH)
-    doc.title = u'service description'
+    doc.title = title
     doc.language = 'english'
     doc.author.invitation_delivery_method = 'pad'
     doc.author.confirmation_delivery_method = 'none'
@@ -56,17 +56,26 @@ def check_service_description(test, api):
     api._sign(doc, doc.author)
 
     test.sleep(10)  # wait for sealing
-    doc = api.get_document(doc.id)  # refresh
+    return api.get_document(doc.id)  # refresh
 
+
+def get_evidence_attachment_contents(doc, number, name):
     with temp_file_path() as fp:
         doc.sealed_document.save_as(fp)
         with temporary_dir() as dir_path:
             with change_work_dir(dir_path):
-                subprocess.call(['pdfdetach', '-save', '2', fp])
-                path = os.path.join(dir_path,
-                                    'Appendix 2 Service Description.html')
+                subprocess.call(['pdfdetach', '-save', str(number), fp])
+                path = os.path.join(dir_path, name)
                 with open(path, 'r') as f:
-                    contents = f.read()
+                    return f.read()
+
+
+def check_service_description(test, api):
+    doc = signed_doc(u'service description', api, test)
+
+    contents = \
+        get_evidence_attachment_contents(doc, 2,
+                                         'Appendix 2 Service Description.html')
 
     timestamp_string = PyQuery(contents)('.update-time').text()
     update_timestamp = time.strptime(timestamp_string[14:],
@@ -75,3 +84,16 @@ def check_service_description(test, api):
             datetime.fromtimestamp(time.mktime(update_timestamp)))
     err_msg = 'Service description has not been updated in two weeks'
     assert diff.total_seconds() < 60 * 60 * 24 * 14, err_msg
+
+
+def check_evidence_of_time(test, api):
+    doc = signed_doc(u'evidence of time', api, test)
+
+    att_name = 'Appendix 4 Evidence of Time.html'
+    contents = \
+        get_evidence_attachment_contents(doc, 4, att_name)
+
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    artifact_path = os.path.join(dir_path, 'artifacts', att_name)
+    with open(artifact_path, 'wb') as f:
+        f.write(contents)
