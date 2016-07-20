@@ -55,6 +55,29 @@ html, body {
     $nav-subitem-bg;
 }
 
+.top-navbar-wrapper {
+  height: $top-navbar-height;
+
+  .top-navbar {
+    background-color: $top-navbar-bg;
+    height: $top-navbar-height;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+
+    border-style: none none solid none;
+    border-color: $top-navbar-border;
+    border-width: 1px;
+
+    &>img {
+      margin-left: $nav-padding;
+      height: 100%;
+    }
+  }
+}
+
 .tocify-wrapper {
   transition: left 0.3s ease-in-out;
 
@@ -62,7 +85,7 @@ html, body {
   overflow-x: hidden;
   position: fixed;
   z-index: 30;
-  top: 0;
+  top: $top-navbar-height;
   left: 0;
   bottom: 0;
   width: $nav-width;
