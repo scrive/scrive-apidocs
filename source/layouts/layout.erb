@@ -50,9 +50,13 @@ under the License.
         <%= image_tag('navbar.png') %>
       </span>
     </a>
-    <div class="toc-wrapper">
-      <%= image_tag "logo.png", class: 'logo' %>
-      <% if language_tabs.any? %>
+    <div class="top-navbar-wrapper">
+      <div class="top-navbar">
+        <%= image_tag "logo.png" %>
+      </div>
+    </div>
+    <div class="tocify-wrapper">
+      <% if language_tabs %>
         <div class="lang-selector">
           <% language_tabs.each do |lang| %>
             <% if lang.is_a? Hash %>

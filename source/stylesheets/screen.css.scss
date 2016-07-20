@@ -47,14 +47,47 @@ html, body {
   width: 20px;
 }
 
-.toc-wrapper {
+
+@mixin embossed-bg {
+  background:
+    linear-gradient(to bottom, rgba(#000, 0.2), rgba(#000, 0) 8px),
+    linear-gradient(to top, rgba(#000, 0.2), rgba(#000, 0) 8px),
+    linear-gradient(to bottom, rgba($nav-embossed-border-top, 1), rgba($nav-embossed-border-top, 0) 1.5px),
+    linear-gradient(to top, rgba($nav-embossed-border-bottom, 1), rgba($nav-embossed-border-bottom, 0) 1.5px),
+    $nav-subitem-bg;
+}
+
+.top-navbar-wrapper {
+  height: $top-navbar-height;
+
+  .top-navbar {
+    background-color: $top-navbar-bg;
+    height: $top-navbar-height;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+
+    border-style: none none solid none;
+    border-color: $top-navbar-border;
+    border-width: 1px;
+
+    &>img {
+      margin-left: $nav-padding;
+      height: 100%;
+    }
+  }
+}
+
+.tocify-wrapper {
   transition: left 0.3s ease-in-out;
 
   overflow-y: auto;
   overflow-x: hidden;
   position: fixed;
   z-index: 30;
-  top: 0;
+  top: $top-navbar-height;
   left: 0;
   bottom: 0;
   width: $nav-width;
