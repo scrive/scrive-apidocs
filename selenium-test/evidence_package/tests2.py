@@ -1,11 +1,14 @@
 import contextlib
+import cStringIO
+import json
 import os
 import shutil
 import subprocess
 import tempfile
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
+import requests
 from pyquery import PyQuery
 
 
@@ -70,6 +73,20 @@ def get_evidence_attachment_contents(doc, number, name):
                     return f.read()
 
 
+def verify_doc(doc):
+    import config
+    files = {'file': (doc.sealed_document.name,
+                      cStringIO.StringIO(doc.sealed_document.get_bytes()),
+                      'application/pdf')}
+    return requests.post(config.scrive_www_url + '/en/verify',
+                         files=files).json()
+
+
+def artifact_path_for(artifact_name):
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(dir_path, 'artifacts', artifact_name)
+
+
 def check_service_description(test, api):
     doc = signed_doc(u'service description', api, test)
 
@@ -93,9 +110,7 @@ def check_evidence_of_time(test, api):
     contents = \
         get_evidence_attachment_contents(doc, 4, att_name)
 
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-    artifact_path = os.path.join(dir_path, 'artifacts', att_name)
-    with open(artifact_path, 'wb') as f:
+    with open(artifact_path_for(att_name), 'wb') as f:
         f.write(contents)
 
 
@@ -117,3 +132,37 @@ def check_all_attachments_included(test, api):
 '''
 
     assert output == expected_output
+
+
+def check_guardtime_extended_sigs(test, api):
+    two_months_ago = datetime.now() - timedelta(days=60)
+    month_year = 'Just (%d,%d)' % (two_months_ago.month,
+                                   two_months_ago.year)
+    time_filter = '(%s,%s)' % (month_year, month_year)
+    filters = [{'name': 'status', 'value': '[signed]'},
+               {'name': 'time', 'value': time_filter}]
+
+    params = {'selectfilter': json.dumps(filters),
+              'documentType': 'Document'}
+    result = api._make_request(['list'], method=requests.get,
+                               params=params)
+    result_docs = result.json()['list']
+    assert result_docs, 'No signed docs from two months ago on this account'
+
+    old_doc = api.get_document(result_docs[0]['fields']['id'])
+    old_doc.sealed_document.save_as(artifact_path_for('old_document.pdf'))
+
+    verification_result = verify_doc(old_doc)
+    err_msg = 'Verification error: ' + str(verification_result)
+    assert verification_result.get('extended') is True, err_msg
+    assert verification_result.get('success') is True, err_msg
+
+
+def check_guardtime_new_sigs(test, api):
+    doc = signed_doc(u'guardtime sig', api, test)
+    doc.sealed_document.save_as(artifact_path_for('new_document.pdf'))
+
+    verification_result = verify_doc(doc)
+    err_msg = 'Verification error: ' + str(verification_result)
+    assert verification_result.get('extended') is False, err_msg
+    assert verification_result.get('success') is True, err_msg
