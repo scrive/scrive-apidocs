@@ -1,5 +1,6 @@
 import cStringIO
 import json
+import urllib
 from os import path
 
 import requests
@@ -39,9 +40,13 @@ class Scrive(object):
         return self._https
 
     def _make_request(self, url_elems, method=requests.post,
-                      data=None, files=None):
+                      data=None, files=None, params=None):
 
         url = self._api_url + b'/'.join(url_elems)
+
+        if params is not None:
+            url += '?' + urllib.urlencode(params)
+        print url
 
         headers = dict(self._headers)
         if files is None:
