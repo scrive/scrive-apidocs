@@ -7,3 +7,4 @@ The only non-python dependency is pdfdetach app (usually available in poppler pa
 cd into any subfolder (except for utils) and start run.py script,
 it will tell you about required/optional arguments and how to
 setup configuration
+* subprojects contain README files with wiki links

@@ -3,3 +3,4 @@
 * support named screenshots (with meaningful names)
 * add __str__() method to driver wrapper, so when it's printed in stack traces it show what browser, prefix and settings were used
 * add browser/prefix info to test name that is being sent to saucelabs
+* use artifacts/ even for saucelabs screenshots
