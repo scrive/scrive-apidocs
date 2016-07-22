@@ -1,18 +1,22 @@
-import os
-from selenium import webdriver
 import contextlib
+import os
+import subprocess
 import time
-from driver_wrapper import SeleniumDriverWrapper
 
+from selenium import webdriver
+
+import utils
+from driver_wrapper import SeleniumDriverWrapper
 from scrivepy import _signatory, _document
 
 
 class TestHelper(object):
 
-    def __init__(self, api, driver):
+    def __init__(self, api, driver, artifact_dir=None):
         self._api = api
         self._driver = driver
         dir_path = os.path.dirname(os.path.abspath(__file__))
+        self._artifact_dir = artifact_dir
         self.PDF_PATH = \
             os.path.abspath(os.path.join(dir_path, os.pardir, os.pardir,
                                          'backend', 'test', 'pdfs',
@@ -78,3 +82,16 @@ class TestHelper(object):
             yield driver
         finally:
             driver.quit()
+
+    def get_evidence_attachment_contents(self, doc, number, name):
+        with utils.temp_file_path() as fp:
+            doc.sealed_document.save_as(fp)
+            with utils.temporary_dir() as dir_path:
+                with utils.change_work_dir(dir_path):
+                    subprocess.call(['pdfdetach', '-save', str(number), fp])
+                    path = os.path.join(dir_path, name)
+                    with open(path, 'r') as f:
+                        return f.read()
+
+    def artifact_path_for(self, artifact_name):
+        return os.path.join(self._artifact_dir, artifact_name)

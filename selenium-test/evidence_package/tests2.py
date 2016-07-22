@@ -1,50 +1,13 @@
-import contextlib
 import cStringIO
 import json
-import os
-import shutil
 import subprocess
-import tempfile
 import time
 from datetime import datetime, timedelta
 
 import requests
 from pyquery import PyQuery
 
-
-@contextlib.contextmanager
-def temp_file_path():
-    fd, file_path = tempfile.mkstemp()
-    try:
-        os.close(fd)
-        yield file_path
-    finally:
-        try:
-            os.remove(file_path)
-        except OSError:
-            pass
-
-
-@contextlib.contextmanager
-def temporary_dir():
-    dir_path = tempfile.mkdtemp()
-    try:
-        yield dir_path
-    finally:
-        try:
-            shutil.rmtree(dir_path)
-        except OSError:
-            pass
-
-
-@contextlib.contextmanager
-def change_work_dir(path):
-    cwd = os.getcwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(cwd)
+import utils
 
 
 def signed_doc(title, api, test):
@@ -62,17 +25,6 @@ def signed_doc(title, api, test):
     return api.get_document(doc.id)  # refresh
 
 
-def get_evidence_attachment_contents(doc, number, name):
-    with temp_file_path() as fp:
-        doc.sealed_document.save_as(fp)
-        with temporary_dir() as dir_path:
-            with change_work_dir(dir_path):
-                subprocess.call(['pdfdetach', '-save', str(number), fp])
-                path = os.path.join(dir_path, name)
-                with open(path, 'r') as f:
-                    return f.read()
-
-
 def verify_doc(doc):
     import config
     files = {'file': (doc.sealed_document.name,
@@ -82,17 +34,11 @@ def verify_doc(doc):
                          files=files).json()
 
 
-def artifact_path_for(artifact_name):
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(dir_path, 'artifacts', artifact_name)
-
-
 def check_service_description(test, api):
     doc = signed_doc(u'service description', api, test)
 
-    contents = \
-        get_evidence_attachment_contents(doc, 2,
-                                         'Appendix 2 Service Description.html')
+    att_name = 'Appendix 2 Service Description.html'
+    contents = test.get_evidence_attachment_contents(doc, 2, att_name)
 
     timestamp_string = PyQuery(contents)('.update-time').text()
     update_timestamp = time.strptime(timestamp_string[14:],
@@ -107,17 +53,16 @@ def check_evidence_of_time(test, api):
     doc = signed_doc(u'evidence of time', api, test)
 
     att_name = 'Appendix 4 Evidence of Time.html'
-    contents = \
-        get_evidence_attachment_contents(doc, 4, att_name)
+    contents = test.get_evidence_attachment_contents(doc, 4, att_name)
 
-    with open(artifact_path_for(att_name), 'wb') as f:
+    with open(test.artifact_path_for(att_name), 'wb') as f:
         f.write(contents)
 
 
 def check_all_attachments_included(test, api):
     doc = signed_doc(u'attachments included', api, test)
 
-    with temp_file_path() as fp:
+    with utils.temp_file_path() as fp:
         doc.sealed_document.save_as(fp)
         output = subprocess.check_output(['pdfdetach', '-list', fp])
 
@@ -150,7 +95,7 @@ def check_guardtime_extended_sigs(test, api):
     assert result_docs, 'No signed docs from two months ago on this account'
 
     old_doc = api.get_document(result_docs[0]['fields']['id'])
-    old_doc.sealed_document.save_as(artifact_path_for('old_document.pdf'))
+    old_doc.sealed_document.save_as(test.artifact_path_for('old_document.pdf'))
 
     verification_result = verify_doc(old_doc)
     err_msg = 'Verification error: ' + str(verification_result)
@@ -160,7 +105,7 @@ def check_guardtime_extended_sigs(test, api):
 
 def check_guardtime_new_sigs(test, api):
     doc = signed_doc(u'guardtime sig', api, test)
-    doc.sealed_document.save_as(artifact_path_for('new_document.pdf'))
+    doc.sealed_document.save_as(test.artifact_path_for('new_document.pdf'))
 
     verification_result = verify_doc(doc)
     err_msg = 'Verification error: ' + str(verification_result)

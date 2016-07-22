@@ -1,3 +1,5 @@
+import os
+
 from selenium import webdriver
 
 import make_drivers
@@ -31,14 +33,10 @@ REMOTE_DEVICES = [{'browserName': "chrome",
                    'platform': 'Windows 8.1',
                    'window-size': (1040, 784),
                    'screenshot-prefix': 'desktop',
-                   'version': 'beta'},
-                  {'browserName': 'Safari',
-                   'appiumVersion': '1.5.3',
-                   'deviceName': 'iPhone 6',
-                   'deviceOrientation': 'portrait',
-                   'platformVersion': '9.3',
-                   'platformName': 'iOS',
-                   'screenshot-prefix': 'mobile'}]
+                   'version': 'beta'}]
+
+dir_path = os.path.dirname(os.path.abspath(__file__))
+artifact_dir = os.path.join(dir_path, 'artifacts')
 
 
 # this function is autocalled by nosetests, so it's like main()
@@ -50,10 +48,10 @@ def make_tests():
                                             REMOTE_DEVICES,
                                             screenshots_enabled=False)
         for driver in drivers:
-            test_helper = TestHelper(api, driver)
+            test_helper = TestHelper(api, driver, artifact_dir=artifact_dir)
             test.teardown = lambda: driver.quit()
             yield test, test_helper, driver, api
 
     for test_name, test in make_drivers.find_tests(tests2):
-        test_helper = TestHelper(api, driver=None)
+        test_helper = TestHelper(api, driver=None, artifact_dir=artifact_dir)
         yield test, test_helper, api

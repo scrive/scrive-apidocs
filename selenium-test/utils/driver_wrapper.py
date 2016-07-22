@@ -26,6 +26,11 @@ class SeleniumDriverWrapper(object):
         self._screenshot_prefix = screenshot_prefix
         self._window_size = window_size
 
+    def is_remote(self):
+        if self._driver is None:
+            raise Exception('Driver not yet initialized')
+        return isinstance(self._driver, webdriver.Remote)
+
     def open_url(self, url):
         if self._driver is None:
             self._driver = self._driver_factory()
