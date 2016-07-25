@@ -83,7 +83,7 @@ html, body {
   width: $nav-width;
   background-color: $nav-bg;
   font-size: 13px;
-  font-weight: bold;
+  font-weight: normal;
 
   // language selector for mobile devices
   .lang-selector {
@@ -197,7 +197,7 @@ html, body {
   .tocify-subheader {
     display: none; // tocify will override this when needed
     background-color: $nav-subitem-bg;
-    font-weight: 500;
+    font-weight: 200;
     .tocify-item>a {
       padding-left: $nav-padding + $nav-indent;
       font-size: 12px;
