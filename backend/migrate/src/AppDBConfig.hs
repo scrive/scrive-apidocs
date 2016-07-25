@@ -11,14 +11,13 @@ import Log.Configuration
 data AppDBConf = AppDBConf {
     dbConfig  :: T.Text    -- ^ postgresql configuration
   , logConfig :: LogConfig -- ^ logging configuration
-  } deriving (Eq, Ord, Show)
+  } deriving (Eq, Show)
 
 instance Unjson AppDBConf where
   unjsonDef = objectOf $ AppDBConf
-    <$> fieldBy "database"
+    <$> field "database"
         dbConfig
         "Database connection string"
-        unjsonAeson
     <*> field "logging"
         logConfig
         "Logging configuration"

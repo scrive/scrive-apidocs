@@ -3,13 +3,13 @@ module Mails.Migrations (
   ) where
 
 import Control.Monad.Catch
-import Data.ByteString (ByteString)
 import Data.Int
+import Data.Text (Text)
+import DB.Checks
 import Log
 import qualified Data.Text as T
 
 import DB
-import DB.Checks
 import KontraPrelude
 import Mails.Tables
 import MinutesTime
@@ -56,7 +56,7 @@ createMailerJobsTable = Migration {
     values
 }
   where
-    jobs :: [(ByteString, Maybe UTCTime, Maybe UTCTime)]
+    jobs :: [(Text, Maybe UTCTime, Maybe UTCTime)]
     jobs = [
         ("clean_old_emails", Just unixEpoch, Nothing)
       , ("perform_service_test", Just unixEpoch, Nothing)

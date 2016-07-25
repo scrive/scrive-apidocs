@@ -5,20 +5,20 @@ var BackboneMixin = require("../common/backbone_mixin");
 var UploadButton = require("../common/uploadbutton");
 var Spinner = require("spin.js");
 var FileView = require("./fileview/fileview");
-var DesignViewModel = require("../../js/designview/docdesignviewmodel.js").DesignViewModel;
+var Document = require("../../js/documents.js").Document;
 var $ = require("jquery");
 var Submit = require("../../js/submits.js").Submit;
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+var DocumentSaveMixin = require("./document_save_mixin");
   module.exports = React.createClass({
     propTypes: {
-      model: React.PropTypes.instanceOf(DesignViewModel).isRequired
+      document: React.PropTypes.instanceOf(Document).isRequired
     },
 
-    mixins: [BackboneMixin.BackboneMixin],
+    mixins: [BackboneMixin.BackboneMixin, DocumentSaveMixin],
 
     getBackboneModels: function () {
-      // We only listen to changes of document. Designview model do not affect this view
-      return [this.props.model.document()];
+      return [this.props.document];
     },
 
     componentDidMount: function () {
@@ -60,8 +60,7 @@ var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 
     fetchFileIfNotFetched: function () {
       var self = this;
-      var model = this.props.model;
-      var document = model.document();
+      var document = this.props.document;
       if (document.ready() && document.mainfile() && !document.mainfile().ready()) {
         document.mainfile().fetch({
           processData: true,
@@ -142,8 +141,7 @@ var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 
     onUpload: function (input, title, multifile) {
       var self = this;
-      var model = this.props.model;
-      var document = model.document();
+      var document = this.props.document;
       document.markAsNotReady();
       var submit = new Submit({
         method: "POST",
@@ -155,7 +153,6 @@ var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
           document.setTitle(title.replace(/\.[^/.]+$/, ""));
           document.save();
           document.afterSave(function () {
-            model.setParticipantDetail(undefined);
             document.killAllPlacements();
             document.recall();
           });
@@ -175,7 +172,7 @@ var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
       });
       submit.addInputs(input);
 
-      model.saveAndFlashMessageIfAlreadySaved();
+      this.saveAndFlashMessageIfAlreadySaved();
       document.afterSave(function () {
         submit.sendAjax();
       });
@@ -183,8 +180,7 @@ var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 
     render: function () {
       var self = this;
-      var model = this.props.model;
-      var document = model.document();
+      var document = this.props.document;
 
       return (
         <div>

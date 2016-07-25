@@ -8,7 +8,7 @@ module Mails.Tables (
   , tableMailAttachments
   ) where
 
-import Data.ByteString (ByteString)
+import Data.Text (Text)
 
 import DB
 import KontraPrelude
@@ -67,7 +67,7 @@ tableMailerJobs = tblTable {
   }
 }
   where
-    jobs :: [(ByteString, Maybe UTCTime, Maybe UTCTime)]
+    jobs :: [(Text, Maybe UTCTime, Maybe UTCTime)]
     jobs = [
         ("clean_old_emails", Just unixEpoch, Nothing)
       , ("perform_service_test", Just unixEpoch, Nothing)

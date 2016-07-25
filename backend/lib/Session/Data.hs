@@ -7,7 +7,6 @@ module Session.Data (
 
 import Control.Monad.Catch
 import Data.Typeable
-import Database.PostgreSQL.PQTypes.Class.Instances.Overlapping ()
 import Happstack.Server hiding (Session)
 
 import ActionQueue.Core

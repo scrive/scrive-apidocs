@@ -3,6 +3,7 @@ module Main (main) where
 import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
+import DB.Checks
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
 import Log
@@ -13,7 +14,6 @@ import System.IO
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL8
-import qualified Data.Text as T
 import qualified Data.Traversable as F
 
 import AppConf
@@ -26,7 +26,6 @@ import Configuration
 import Crypto.RNG
 import Database.Redis.Configuration
 import DB
-import DB.Checks
 import DB.PostgreSQL
 import Happstack.Server.ReqHandler
 import KontraPrelude
@@ -65,15 +64,16 @@ main = withCurlDo $ do
   appConf <- readConfig putStrLn config
   let connSettings = pgConnSettings $ dbConfig appConf
   pool <- liftBase . createPoolSource $ connSettings kontraComposites
-  lr@LogRunner{..} <- mkLogRunner "kontrakcja" $ logConfig appConf
+  rng <- newCryptoRNGState
+  lr@LogRunner{..} <- mkLogRunner "kontrakcja" (logConfig appConf) rng
   withLoggerWait $ do
     logInfo "Starting kontrakcja-server" $ object [
         "version" .= Version.versionID
       ]
     checkExecutables
 
-    withPostgreSQL (simpleSource $ connSettings []) $ do
-      checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
+    withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $ do
+      checkDatabase kontraDomains kontraTables
       dbUpdate $ SetMainDomainURL $ mainDomainUrl appConf
 
     appGlobals <- do
@@ -83,7 +83,6 @@ main = withCurlDo $ do
       lesscache <- MemCache.new BSL8.length 50000000
       brandedimagescache <- MemCache.new BSL8.length 50000000
       docs <- MemCache.new RenderedPages.pagesCount 10000
-      rng <- newCryptoRNGState
       return AppGlobals {
           templates = templates
         , mrediscache = mrediscache
@@ -119,10 +118,10 @@ startSystem LogRunner{..} appGlobals appConf = E.bracket startServer stopServer 
           }
 
       fork . liftBase . runReqHandlerT listensocket conf $ do
-        mapReqHandlerT withLogger $ appHandler routes appConf appGlobals
+        withLogger $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
-      withPostgreSQL (connsource appGlobals $ maxConnectionTracker withLogger) . runCryptoRNGT (cryptorng appGlobals) $ do
+      withPostgreSQL (unConnectionSource $ connsource appGlobals maxConnectionTracker) . runCryptoRNGT (cryptorng appGlobals) $ do
         initDatabaseEntries appConf
       liftBase $ waitForTermination
       logInfo_ "Termination request received"

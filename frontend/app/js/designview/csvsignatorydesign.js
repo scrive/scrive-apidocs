@@ -118,28 +118,27 @@ var CsvProblem = Backbone.Model.extend({
   },
   upload : function(input) {
        var self = this;
-       var submit = new Submit({ url : "/parsecsv", method : "POST", expectedType:"text"});
+       var submit = new Submit({ url : "/parsecsv", method : "POST"});
        submit.addInputs(input);
        submit.sendAjax(function (resp) {
-           var jresp = JSON.parse(resp);
            var problems = [];
-           if (jresp.parseError)
+           if (resp.parseError)
               problems.push(new CsvProblem({description: localization.csv.formatError,
                                             header: true}));
-           if(BlockingInfo && jresp.rows && BlockingInfo.shouldBlockDocs(jresp.rows.length)) {
-               problems.push(new CsvProblem({description:BlockingInfo.csvMessage(jresp.rows.length)}));
+           if(BlockingInfo && resp.rows && BlockingInfo.shouldBlockDocs(resp.rows.length)) {
+               problems.push(new CsvProblem({description:BlockingInfo.csvMessage(resp.rows.length)}));
            }
-           if (jresp.header == undefined || jresp.header.length < 3) {
+           if (resp.header == undefined || resp.header.length < 3) {
               problems.push(new CsvProblem({description: localization.csv.atLeast3Columns}));
            }
-           if (jresp.length < 2) {
+           if (resp.length < 2) {
               problems.push(new CsvProblem({description: localization.csv.atLeast1Party}));
            }
-           if (jresp.header != undefined) {
-              for(var i=0;i<jresp.header.length;i++)
-                jresp.header[i] = _.keys(self.csvstandardheaders)[i] || jresp.header[i];
+           if (resp.header != undefined) {
+              for(var i=0;i<resp.header.length;i++)
+                resp.header[i] = _.keys(self.csvstandardheaders)[i] || resp.header[i];
            }
-           self.set({'header': jresp.header , 'rows': jresp.rows, 'problems': problems });
+           self.set({'header': resp.header , 'rows': resp.rows, 'problems': problems });
            self.trigger("change");
       });
   }
@@ -270,11 +269,12 @@ var CsvSignatoryDesignView = Backbone.View.extend({
 
 
 var CsvSignatoryDesignPopup = exports.CsvSignatoryDesignPopup =  function(args) {
+         var document = args.document;
+         var setParticipantDetail = args.setParticipantDetail;
+
          var csv = [];
          var csvSignatory = undefined;
-         var designview = args.designview;
-         var document = designview.document();
-         _.each(document.signatories(), function(s) {
+         _.each(args.document.signatories(), function(s) {
            if (s.isCsv()) {
              csv = s.csv();
              csvSignatory = s;
@@ -302,7 +302,7 @@ var CsvSignatoryDesignPopup = exports.CsvSignatoryDesignPopup =  function(args) 
                       csv : model.csv()
                     });
                     document.addExistingSignatory(signatory);
-                    designview.setParticipantDetail(signatory);
+                    setParticipantDetail(signatory);
                   } else {
                     for(var i = 0; i < model.header().length; i ++)
                       if (!model.csvSignatoryHasTextFieldWithName(csvSignatory, model.header()[i])) {

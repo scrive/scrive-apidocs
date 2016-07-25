@@ -70,6 +70,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
     send: false,
     details: undefined,
     resultContent: undefined,
+    resultContentLength: undefined,
     responseStatusCode: undefined
   },
   initialize: function (args) {
@@ -83,6 +84,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
             send: false,
             details: undefined,
             resultContent: undefined,
+            resultContentLength: undefined,
             responseStatusCode: undefined
           });
           this.trigger("send");
@@ -156,6 +158,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
   responseStatusCode: function () {return this.get("responseStatusCode");},
   details: function () {return this.get("details");},
   resultContent: function () {return this.get("resultContent");},
+  resultContentLength: function () {return this.get("resultContentLength");},
   getDetails: function (jqXHR) {
           return {
             "Status Code":
@@ -193,6 +196,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
           args.success = function (data, textStatus, jqXHR) {
             self.set("details", self.getDetails(jqXHR));
             self.set("resultContent", data);
+            self.set("resultContentLength", jqXHR.getResponseHeader("Content-Length"));
             self.set("responseStatusCode", jqXHR.status);
             if (form != undefined) {
               self.detachFileParamsFromForm(form);
@@ -205,6 +209,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
           args.error = function (jqXHR, textStatus, errorThrown) {
             self.set("details", self.getDetails(jqXHR));
             self.set("resultContent", jqXHR.responseText);
+            self.set("resultContentLength", jqXHR.getResponseHeader("Content-Length"));
             self.set("responseStatusCode", jqXHR.status);
             if (form != undefined) {
               self.detachFileParamsFromForm(form);

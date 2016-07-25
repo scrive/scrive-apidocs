@@ -82,7 +82,7 @@ migrateCompanyUIEmailSettingsToTheme = do
     ((tlogo,tbrandcolor,tbrandtextcolor,
      tactioncolor,tactiontextcolor,tactionsecondarycolor,
      tactionsecondarytextcolor,tpositivecolor,tpositivetextcolor,
-     tnegativecolor,tnegativetextcolor,tfont) :: (Binary BS.ByteString,String,String,String,String,String,String,String,String,String,String,String)) <- fetchOne id
+     tnegativecolor,tnegativetextcolor,tfont) :: (BS.ByteString,String,String,String,String,String,String,String,String,String,String,String)) <- fetchOne id
 
     runQuery_ $ sqlSelect "company_uis" $ do
                  sqlWhereAny [
@@ -96,7 +96,7 @@ migrateCompanyUIEmailSettingsToTheme = do
                  sqlResult "email_emailbackgroundcolour"
                  sqlResult "email_buttoncolour"
                  sqlResult "email_font"
-    company_uis :: [(Int64, Maybe (Binary BS.ByteString),Maybe String,Maybe String,Maybe String)] <- fetchMany id
+    company_uis :: [(Int64, Maybe BS.ByteString,Maybe String,Maybe String,Maybe String)] <- fetchMany id
     forM_ company_uis $ \(cid,mclogo,mcbackground,mcbutton,mcfont) -> do
       runQuery_ $ sqlInsert "themes" $ do
         sqlSet "name" $ ("Email" ::String)
@@ -143,7 +143,7 @@ migrateCompanyUISignviewSettingsToTheme = do
     ((tlogo,tbrandcolor,tbrandtextcolor,
      tactioncolor,tactiontextcolor,tactionsecondarycolor,
      tactionsecondarytextcolor,tpositivecolor,tpositivetextcolor,
-     tnegativecolor,tnegativetextcolor,tfont) :: (Binary BS.ByteString,String,String,String,String,String,String,String,String,String,String,String)) <- fetchOne id
+     tnegativecolor,tnegativetextcolor,tfont) :: (BS.ByteString,String,String,String,String,String,String,String,String,String,String,String)) <- fetchOne id
 
     runQuery_ $ sqlSelect "company_uis" $ do
                  sqlWhereAny [
@@ -165,7 +165,7 @@ migrateCompanyUISignviewSettingsToTheme = do
                  sqlResult "signview_secondarycolour"
                  sqlResult "signview_secondarytextcolour"
                  sqlResult "signview_textfont"
-    company_uis :: [(Int64, Maybe (Binary BS.ByteString),Maybe String,Maybe String,Maybe String,Maybe String,Maybe String,Maybe String,Maybe String)] <- fetchMany id
+    company_uis :: [(Int64, Maybe BS.ByteString,Maybe String,Maybe String,Maybe String,Maybe String,Maybe String,Maybe String,Maybe String)] <- fetchMany id
     forM_ company_uis $ \(cid,mclogo,mcbarscolor,mcbarstextcolor,mcactioncolor,mcactiontextscolor,mcactionsecondarycolor,mcactionsecondarytextcolor,mcfont) -> do
       runQuery_ $ sqlInsert "themes" $ do
         sqlSet "name" $ ("Signing page" ::String)
@@ -212,7 +212,7 @@ migrateCompanyUIServiceSettingsToTheme = do
     ((tlogo,tbrandcolor,tbrandtextcolor,
      tactioncolor,tactiontextcolor,tactionsecondarycolor,
      tactionsecondarytextcolor,tpositivecolor,tpositivetextcolor,
-     tnegativecolor,tnegativetextcolor,tfont) :: (Binary BS.ByteString,String,String,String,String,String,String,String,String,String,String,String)) <- fetchOne id
+     tnegativecolor,tnegativetextcolor,tfont) :: (BS.ByteString,String,String,String,String,String,String,String,String,String,String,String)) <- fetchOne id
 
     runQuery_ $ sqlSelect "company_uis" $ do
                  sqlWhereAny [
@@ -225,7 +225,7 @@ migrateCompanyUIServiceSettingsToTheme = do
                  sqlResult "custom_barscolour"
                  sqlResult "custom_barstextcolour"
 
-    company_uis :: [(Int64, Maybe (Binary BS.ByteString),Maybe String,Maybe String)] <- fetchMany id
+    company_uis :: [(Int64, Maybe BS.ByteString,Maybe String,Maybe String)] <- fetchMany id
     forM_ company_uis $ \(cid,mclogo,mcbarscolor,mcbarstextcolor) -> do
       runQuery_ $ sqlInsert "themes" $ do
         sqlSet "name" $ ("Service" ::String)
@@ -251,10 +251,10 @@ migrateCompanyUIServiceSettingsToTheme = do
         sqlWhereEq "company_id" $ cid
 
 -- Utils for themes migration
-fromLogo :: Maybe (Binary BS.ByteString) -> (Binary BS.ByteString) -> (Binary BS.ByteString)
+fromLogo :: Maybe BS.ByteString -> BS.ByteString -> BS.ByteString
 fromLogo mclogo tlogo =  case mclogo of
   Nothing -> tlogo
-  Just clogo -> if (BS.null $ unBinary clogo)
+  Just clogo -> if (BS.null clogo)
                   then tlogo
                   else clogo
 

@@ -233,7 +233,7 @@ insertEmail service_test (token, sender, to, reply_to, title, content, attachmen
     runQuery_ $ sqlInsert "mail_attachments" $ do
       sqlSet "mail_id" mid
       sqlSetList "name" names
-      sqlSetList "content" $ either (Just . Binary) (const Nothing) `map` contents
+      sqlSetList "content" $ either Just (const Nothing) `map` contents
       sqlSetList "file_id" $ either (const Nothing) Just `map` contents
   notify mailNotificationChannel ""
   return mid

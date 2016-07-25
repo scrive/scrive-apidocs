@@ -6,31 +6,30 @@ module EID.Signature.Legacy (
   ) where
 
 import Data.ByteString (ByteString)
-import Database.PostgreSQL.PQTypes
 import qualified Data.Text as T
 
 import KontraPrelude
 
 data LegacyBankIDSignature = LegacyBankIDSignature {
   lbidsSignedText  :: !T.Text
-, lbidsSignature   :: !(Binary ByteString)
-, lbidsCertificate :: !(Binary ByteString)
+, lbidsSignature   :: !ByteString
+, lbidsCertificate :: !ByteString
 } deriving (Eq, Ord, Show)
 
 data LegacyTeliaSignature = LegacyTeliaSignature {
   ltsSignedText  :: !T.Text
-, ltsSignature   :: !(Binary ByteString)
-, ltsCertificate :: !(Binary ByteString)
+, ltsSignature   :: !ByteString
+, ltsCertificate :: !ByteString
 } deriving (Eq, Ord, Show)
 
 data LegacyNordeaSignature = LegacyNordeaSignature {
   lnsSignedText  :: !T.Text
-, lnsSignature   :: !(Binary ByteString)
-, lnsCertificate :: !(Binary ByteString)
+, lnsSignature   :: !ByteString
+, lnsCertificate :: !ByteString
 } deriving (Eq, Ord, Show)
 
 data LegacyMobileBankIDSignature = LegacyMobileBankIDSignature {
   lmbidsSignedText   :: !T.Text
-, lmbidsSignature    :: !(Binary ByteString)
-, lmbidsOcspResponse :: !(Binary ByteString)
+, lmbidsSignature    :: !ByteString
+, lmbidsOcspResponse :: !ByteString
 } deriving (Eq, Ord, Show)

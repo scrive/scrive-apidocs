@@ -14,7 +14,7 @@ $(function () {
   mixpanel.track("View Design View");
 
   $(".body-container").replaceWith(
-    $("<div />").append(BlockingInfo.el())
+    $("<div />").append(window.BlockingInfo.el())
     .append(dv.el())
     .children()
   );

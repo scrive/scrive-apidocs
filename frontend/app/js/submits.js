@@ -26,7 +26,7 @@ var Submit = exports.Submit = Backbone.Model.extend({
         ajaxsuccess: function() {},
         ajaxerror: function() {},
 
-        expectedType: null
+        expectedType: "json"
     },
     ignored : function(k)
     {
@@ -119,14 +119,24 @@ var Submit = exports.Submit = Backbone.Model.extend({
                                 if (p1.substring(p1.length - 6, p1.length).toLowerCase() === '</pre>') {
                                   p1 = p1.substring(0, p1.length - 6);
                                 }
+                              }
+
+                              if (!p1) {
+                                // Default to an empty object if the response
+                                // content is empty.
+                                p1 = {};
+                              }
+
+                              if (typeof p1 === "string") {
                                 try {
-                                  JSON.parse(p1);
+                                  p1 = JSON.parse(p1);
                                 } catch(e) {
                                   self.get('ajaxerror')(p1,p2,p3,p4);
                                   form.remove();
                                   return;
                                 }
                               }
+
                               self.get('ajaxsuccess')(p1,p2,p3,p4);
                               form.remove();
                            },

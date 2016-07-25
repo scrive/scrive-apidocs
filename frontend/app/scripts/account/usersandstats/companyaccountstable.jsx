@@ -65,10 +65,10 @@ var openCreateAccountPopup = function(callback) {
                         ajax : true,
                         ajaxsuccess : function(resp) {
                           callback();
-                          if (JSON.parse(resp).added)
+                          if (resp.added)
                              new FlashMessage({type : "success", content : localization.account.companyAccounts.companyInviteSent});
                           else {
-                             if (JSON.parse(resp).samecompany)
+                             if (resp.samecompany)
                                 new FlashMessage({type : "success", content : localization.account.companyAccounts.companyInviteNotSentSameCompany});
                              else
                                 new FlashMessage({type : "error", content : localization.account.companyAccounts.companyInviteNotSent});
@@ -112,7 +112,7 @@ var openRemoveUserPopup = function(d,callback) {
         ajax : true,
         ajaxsuccess : function(resp) {
           popup.close();
-          if (JSON.parse(resp).removed)
+          if (resp.removed)
             new FlashMessage({type : "success", content : localization.account.companyAccounts.companyAccountDeleted});
           else
             new FlashMessage({type : "error", content : localization.account.companyAccounts.deleteFailedHasDocuments});
@@ -135,7 +135,7 @@ var openResendInvitationPopup = function(d,callback) {
                                         ajax : true,
                                         ajaxsuccess : function(resp) {
                                           popup.close();
-                                          if (JSON.parse(resp).resent)
+                                          if (resp.resent)
                                               new FlashMessage({type : "success", content : localization.account.companyAccounts.companyInviteResent});
                                           callback();
                                         },

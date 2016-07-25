@@ -155,7 +155,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
           case res of
             Right r -> return r
             Left _ ->  apiError $ requestParameterParseError name $ "filename suggests PDF, but not a valid PDF"
-        (_, True) -> return $ Binary $ content'
+        (_, True) -> return content'
         _ -> apiError $ requestParameterParseError name "not a PDF or image (PNG or JPG)"
       fileid <- dbUpdate $ NewFile filename content
       file <- dbQuery $ GetFileByFileID fileid

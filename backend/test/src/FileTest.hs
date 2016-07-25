@@ -45,7 +45,7 @@ testFileIDUriShow = replicateM_ 100 $  do
 testFileNewFile :: TestEnv ()
 testFileNewFile  = replicateM_ 100 $ do
   (name, content) <- fileData
-  fileid' <- dbUpdate $ NewFile name $ Binary content
+  fileid' <- dbUpdate $ NewFile name content
   File { fileid = fileid, filename = fname1, filestorage = FileStorageMemory fcontent1 } <- dbQuery $ GetFileByFileID fileid'
 
   assertEqual "We got the file we were asking for" fileid' fileid
@@ -64,7 +64,7 @@ testFileMovedToAWS :: TestEnv ()
 testFileMovedToAWS  = replicateM_ 100 $ do
   (name,content) <- fileData
   url <- viewableS
-  fileid' <- dbUpdate $ NewFile name $ Binary content
+  fileid' <- dbUpdate $ NewFile name content
   let Right aes = mkAESConf (BS.fromString (take 32 $ repeat 'a')) (BS.fromString (take 16 $ repeat 'b'))
 
   dbUpdate $ FileMovedToAWS fileid' url aes
@@ -77,7 +77,7 @@ testPurgeFiles :: TestEnv ()
 testPurgeFiles  = replicateM_ 100 $ do
   let maxMarked = 1000
   (name,content) <- fileData
-  fid <- dbUpdate $ NewFile name $ Binary content
+  fid <- dbUpdate $ NewFile name content
   fidsToPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
   assertEqual "File successfully marked for purge" [fid] fidsToPurge
   dbUpdate $ PurgeFile fid
@@ -91,7 +91,7 @@ testPurgeFiles  = replicateM_ 100 $ do
 testNewFileThatShouldBeMovedToAWS :: TestEnv ()
 testNewFileThatShouldBeMovedToAWS  = do
   (name,content) <- fileData
-  fileid' <- dbUpdate $ NewFile name $ Binary content
+  fileid' <- dbUpdate $ NewFile name content
   checker fileid'
  where
   checker fileid' = do

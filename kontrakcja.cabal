@@ -69,12 +69,19 @@ Library
                   backend/misc/schema backend/misc/src
                   backend/server/schema backend/server/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
-  GHC-Options: -threaded -rtsopts
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
+
+  -- Cabal workaround, remove after transition to ghc8.
+  if impl(ghc < 8)
+    Build-depends: unix == 2.7.1.0
+  else
+    Build-depends: unix == 2.7.2.0
 
   Exposed-modules: API.APIVersion
                  , API.Monad.V1
@@ -142,27 +149,13 @@ Library
                  , Database.Redis.Configuration
                  , Database.Redis.Helpers
                  , DB
-                 , DB.Checks
                  , DB.Derive
-                 , DB.Model
-                 , DB.Model.Check
-                 , DB.Model.ColumnType
-                 , DB.Model.CompositeType
-                 , DB.Model.Domain
-                 , DB.Model.Extension
-                 , DB.Model.ForeignKey
-                 , DB.Model.Index
-                 , DB.Model.Migration
-                 , DB.Model.PrimaryKey
-                 , DB.Model.Table
                  , DB.PostgreSQL
                  , DB.Query
                  , DB.RowCache
-                 , DB.SQL
                  , DB.SQLFunction
                  , DB.TimeZoneName
                  , DB.Utils
-                 , DB.Versions
                  , DB.XML
                  , Data.ByteString.RFC2397
                  , Doc.API
@@ -446,6 +439,7 @@ Library
                , curl
                , data-default
                , dataenc
+               , db-extras
                , deepseq
                , digest
                , directory
@@ -541,10 +535,12 @@ Executable kontrakcja-server
 
   Hs-source-dirs: backend/server/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -556,6 +552,7 @@ Executable kontrakcja-server
                , bytestring
                , cmdargs
                , curl
+               , db-extras
                , exceptions
                , happstack-server
                , happstack-static-routing
@@ -598,10 +595,12 @@ Executable cron
 
   Hs-source-dirs: backend/cron/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -610,6 +609,7 @@ Executable cron
                , bytestring
                , cmdargs
                , consumers
+               , db-extras
                , hedis
                , log
                , text
@@ -655,10 +655,12 @@ Executable kontrakcja-migrate
                   backend/misc/schema backend/misc/src
                   backend/server/schema
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -666,6 +668,7 @@ Executable kontrakcja-migrate
   GHC-options: -main-is AppDBMain
 
   Build-depends: base
+               , DRBG
                , HaXml
                , MissingH
                , aeson
@@ -676,8 +679,10 @@ Executable kontrakcja-migrate
                , cmdargs
                , cond
                , containers
+               , crypto-api
                , cryptohash
                , data-default
+               , db-extras
                , exceptions
                , fields-json
                , hpqtypes
@@ -732,10 +737,12 @@ Executable mailing-server
   Hs-source-dirs: backend/mailer/inc backend/mailer/schema backend/mailer/src
                   backend/misc/schema backend/misc/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -759,6 +766,7 @@ Executable mailing-server
                , crypto-api
                , cryptohash
                , data-default
+               , db-extras
                , deepseq
                , directory
                , exceptions
@@ -830,10 +838,12 @@ Executable messenger-server
   Hs-source-dirs: backend/messenger/inc backend/messenger/schema backend/messenger/src
                   backend/misc/schema backend/misc/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -856,6 +866,7 @@ Executable messenger-server
                , cryptohash
                , data-default
                , dataenc
+               , db-extras
                , deepseq
                , directory
                , exceptions
@@ -925,10 +936,12 @@ Executable kontrakcja-test
                   backend/server/schema
                   backend/test/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
   if flag(test-coverage)
     GHC-Options: -fhpc
 
@@ -950,6 +963,7 @@ Executable kontrakcja-test
                , cond
                , containers
                , data-default
+               , db-extras
                , directory
                , exceptions
                , fields-json
@@ -1014,9 +1028,12 @@ Executable localization
                   backend/misc/src
                   localization/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
+
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
 
   Main-Is: LocalizationMain.hs
   GHC-options: -main-is LocalizationMain
@@ -1073,9 +1090,12 @@ Executable routinglist
 
   Hs-source-dirs: backend/routinglist
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
+
+  if impl(ghc > 8)
+    GHC-options: -fno-warn-redundant-constraints
 
   Main-Is: RoutingListMain.hs
   GHC-options: -main-is RoutingListMain

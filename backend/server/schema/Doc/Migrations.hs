@@ -4,6 +4,7 @@ import Control.Monad.Catch
 import Data.Char
 import Data.Int
 import Data.String.Utils
+import DB.Checks
 import Log
 import Text.HTML.TagSoup.Entity
 import Text.XML.HaXml(render)
@@ -14,7 +15,6 @@ import qualified Data.ByteString as BS
 import qualified Text.XML.HaXml.Types as XML
 
 import DB
-import DB.Checks
 import Doc.Tables
 import KontraPrelude
 import Utils.String
@@ -419,7 +419,7 @@ signatoryLinkFieldsAddBinaryValue = Migration {
   -- move empty signatures to bytea
   runQuery_ . sqlUpdate "signatory_link_fields" $ do
     sqlSet "value_text" (Nothing :: Maybe String)
-    sqlSet "value_binary" $ Binary BS.empty
+    sqlSet "value_binary" BS.empty
     sqlWhereEq "type" (8::Int16) -- SignatureFT
     sqlWhereEq "value_text" (""::String)
 

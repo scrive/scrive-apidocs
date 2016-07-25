@@ -68,7 +68,7 @@ var _ = require("underscore");
           </div>
           <div className="column middle">
             {/* if */ self.hasList() &&
-              <div className="list spacing grey-box" style={{padding:"0px;"}}>
+              <div className="list spacing grey-box" style={{padding:"0px"}}>
                 {self.signatories().map(function (s, i) {
                   return (
                     <DocumentViewSignatoryForList

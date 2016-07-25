@@ -286,7 +286,6 @@ var AdminCompanyDetailsView = Backbone.View.extend({
                       if (new NumberValidation().validateData(v)) {
                         new Submit({
                           url: "/adminonly/companyadmin/details/"+ v,
-                          expectedType: "json",
                           ajaxsuccess: function(resp) {
                             nameBox.text("Company with name: " + resp.companyname);
                           },

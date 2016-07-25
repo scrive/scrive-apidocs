@@ -6,6 +6,8 @@ module AppDBTables (
   , kontraTables
   ) where
 
+import DB.Model
+
 import ActionQueue.Tables
 import Attachment.Tables
 import BrandedDomain.Tables
@@ -13,7 +15,6 @@ import Chargeable.Tables
 import Company.Tables
 import CompanyAccounts.Tables
 import Cron.Tables
-import DB.Model
 import DB.SQLFunction
 import Doc.API.Callback.Tables
 import Doc.AutomaticReminder.Tables

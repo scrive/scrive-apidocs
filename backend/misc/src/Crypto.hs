@@ -11,7 +11,6 @@ import Codec.Crypto.AES
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 
-import DB
 import KontraPrelude
 
 data AESConf = AESConf ByteString ByteString -- key, iv
@@ -34,8 +33,8 @@ aesEncrypt (AESConf key iv) = crypt' CFB key iv Encrypt
 aesDecrypt :: AESConf -> ByteString -> ByteString
 aesDecrypt (AESConf key iv) = crypt' CFB key iv Decrypt
 
-aesKey :: AESConf -> Binary BS.ByteString
-aesKey (AESConf key _) = Binary key
+aesKey :: AESConf -> BS.ByteString
+aesKey (AESConf key _) = key
 
-aesIV :: AESConf -> Binary BS.ByteString
-aesIV (AESConf _ iv) = Binary iv
+aesIV :: AESConf -> BS.ByteString
+aesIV (AESConf _ iv) = iv

@@ -64,7 +64,7 @@ main = do
       putNormal "   fix-hs-import-order       : Sort Haskell imports"
       putNormal ""
       putNormal "   test-frontend-tests       : Run frontend Grunt Tests"
-      putNormal "   test-frontend-jscs        : Run frontend Grunt JSCS Style Checker"
+      putNormal "   test-frontend-lint        : Run frontend Grunt Style Checkers"
       putNormal ""
       putNormal "# Distribution targets"
       putNormal ""
@@ -91,7 +91,9 @@ main = do
     "test-hs-import-order" ~> need ["_build/hs-import-order"]
 
     "test-frontend-tests"      ~> need ["grunt-test"]
-    "test-frontend-jscs"       ~> need ["grunt-jscs"]
+    "test-frontend-lint"       ~> need ["grunt-jscs","grunt-eslint"]
+    -- Backwards compatibility, remove when not needed
+    "test-frontend-jscs"       ~> need ["test-frontend-lint"]
 
     "dist" ~> need ["_build/kontrakcja.tar.gz"]
 
@@ -288,6 +290,11 @@ frontendTestRules = do
     need ["_build/npm-install"]
     withGitHub "JSCS" $
       cmd (Cwd "frontend") "grunt jscs"
+
+  "grunt-eslint" ~> do
+    need ["_build/npm-install"]
+    withGitHub "eslint" $
+      cmd (Cwd "frontend") "grunt eslint"
 
   "grunt-coverage" ~> do
     need ["_build/grunt-build"]

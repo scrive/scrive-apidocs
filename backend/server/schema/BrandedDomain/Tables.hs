@@ -66,7 +66,7 @@ tableBrandedDomains = tblTable {
         let favicon = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAJcEhZcwAACxMAAAsTAQCanBgAAABCUExURVBQUFJSUktLS/r6+lBQUP///0VFRVBQUFBQUE5OTmVlZVpaWvDw8MLCwrKysubm5t3d3Y+Pj4ODg3d3d6WlpdLS0jBFWHAAAAAJdFJOU5n///////8ImNkf7DAAAAFcSURBVDjLhVNbloMgDCUR0kbeAvvf6gTUam3H5sN66DW5j6AeT31Tz4dS+raUgnsA/GggLQ4sAPeS368AQEKw1moigk+A/F1qi8652GoR6AUAaL05qs1HkxWANprJGJdackbe3PzqMQBAXk59AUa2S5P3pPkMwFk+90T9kGmgl32IGg2WcWQ3Piv8A1AJuZshVZalfI6YQhkmEGF/6HeSwUwdE1uoucxMcJHJfLZhShn54iTT0tx0YDxenAQgsnPJ1bfYZwnlk4quXeznQQ5hrtIiAh8AhhpCFnNhRI3ilJnEbDhGRGMS6q2pFU2SxiZV7Spl6mo1kpXAEs116VpeRvWwLKNQyD3ZbIVrEKabUdnsccch1lPtqVveZVJJJ6dcZfmkh36sHHEJ68oln63Q4zDFgvBaWtC0Lq1sJzF0b4TRZe31WHu9BSVOwRvgv4vz8+r9aPFUD3V//f8ANZsWxjENgZ8AAAAASUVORK5CYII="
         runQuery_ . sqlInsert "themes" $  do
           sqlSet "name" ("Scrive email theme" :: String)
-          sqlSet "logo" $ Binary $ B64.decodeLenient $ BS.fromString $ darkTextLogo
+          sqlSet "logo" $ B64.decodeLenient $ BS.fromString $ darkTextLogo
           sqlSet "brand_color" $ ("#ffffff":: String)
           sqlSet "brand_text_color" $ ("#495259":: String)
           sqlSet "action_color" $ ("#53b688":: String)
@@ -82,7 +82,7 @@ tableBrandedDomains = tblTable {
         (mailThemeId::Int64) <- fetchOne runIdentity
         runQuery_ . sqlInsert "themes" $ do
           sqlSet "name" ("Scrive signing theme" :: String)
-          sqlSet "logo" $ Binary $ B64.decodeLenient $ BS.fromString $ lightTextLogo
+          sqlSet "logo" $ B64.decodeLenient $ BS.fromString $ lightTextLogo
           sqlSet "brand_color" $ ("#495259":: String)
           sqlSet "brand_text_color" $ ("#ffffff":: String)
           sqlSet "action_color" $ ("#53b688":: String)
@@ -98,7 +98,7 @@ tableBrandedDomains = tblTable {
         (signviewThemeId::Int64) <- fetchOne runIdentity
         runQuery_ . sqlInsert "themes" $  do
           sqlSet "name" ("Scrive service theme" :: String)
-          sqlSet "logo" $ Binary $ B64.decodeLenient $ BS.fromString $ lightTextLogo
+          sqlSet "logo" $ B64.decodeLenient $ BS.fromString $ lightTextLogo
           sqlSet "brand_color" $ ("#495259":: String)
           sqlSet "brand_text_color" $ ("#ffffff":: String)
           sqlSet "action_color" $ ("#53b688":: String)
@@ -114,7 +114,7 @@ tableBrandedDomains = tblTable {
         (mainThemeId::Int64) <- fetchOne runIdentity
         runQuery_ . sqlInsert "themes" $  do
           sqlSet "name" ("Scrive login theme" :: String)
-          sqlSet "logo" $ Binary $ B64.decodeLenient $ BS.fromString $ lightTextLogo
+          sqlSet "logo" $ B64.decodeLenient $ BS.fromString $ lightTextLogo
           sqlSet "brand_color" $ ("#495259":: String)
           sqlSet "brand_text_color" $ ("#ffffff":: String)
           sqlSet "action_color" $ ("#53b688":: String)
@@ -139,7 +139,7 @@ tableBrandedDomains = tblTable {
                     sqlSet "email_originator" ("Scrive":: String)
                     sqlSet "noreply_email" ("noreply@scrive.com":: String)
                     sqlSet "browser_title" ("Scrive":: String)
-                    sqlSet "favicon" $ Binary $ B64.decodeLenient $ BS.fromString $ favicon
+                    sqlSet "favicon" $ B64.decodeLenient $ BS.fromString $ favicon
                     sqlSet "participant_color_1" ("#ff3377":: String)
                     sqlSet "participant_color_2" ("#009999":: String)
                     sqlSet "participant_color_3" ("#ffd700":: String)

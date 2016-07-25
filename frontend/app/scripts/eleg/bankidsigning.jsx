@@ -85,8 +85,7 @@ module.exports = Backbone.Model.extend({
         method: "POST",
         url: "/s/eid/cgi/grp/sign/" + self.document().documentid() + "/" + self.signatory().signatoryid(),
         personal_number: BankIDUtils.normalizedPersonalNumber(self.signatory()),
-        ajaxsuccess: function (d, s, xhr) {
-          var resp = JSON.parse(d);
+        ajaxsuccess: function (resp, s, xhr) {
           if (resp.auto_start_token && resp.session_id) {
             self.setAutoStartTokenAndSessionID(resp.auto_start_token, resp.session_id);
             self.triggerStatusChange();

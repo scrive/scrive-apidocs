@@ -1,6 +1,6 @@
 var _ = require("underscore");
 var Backbone = require("backbone");
-var _Base64 = require("base64");
+var Base64 = require("base64");
 var LocationUtils = require("../../../common/location");
 
 var link = link;

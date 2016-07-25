@@ -278,7 +278,6 @@ var Document = exports.Document = Backbone.Model.extend({
             method: "POST",
             mobile: document.currentSignatory().mobile(),
             ajax: true,
-            expectedType : "text",
             ajaxsuccess : successCallback,
             ajaxerror : errorCallback
             });
@@ -290,7 +289,6 @@ var Document = exports.Document = Backbone.Model.extend({
         url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/signing/cancel",
         method: "POST",
         ajax: true,
-        expectedType : "text",
         ajaxsuccess : successCallback,
         ajaxerror : errorCallback
       });
@@ -302,15 +300,13 @@ var Document = exports.Document = Backbone.Model.extend({
           url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/signing/check?_=" + Math.random(),
           method: "GET",
           ajax: true,
-          expectedType : "text",
           ajaxsuccess : function(data) {
-            var resJSON = JSON.parse(data);
-            if (resJSON.signed) {
+            if (data.signed) {
               successCallback();
-            } else if (resJSON.in_progress) {
-              inProgressCallback(resJSON.last_check_status);
+            } else if (data.in_progress) {
+              inProgressCallback(data.last_check_status);
             } else {
-              errorCallback(resJSON.last_check_status);
+              errorCallback(data.last_check_status);
             }
           },
           ajaxerror : errorCallback
@@ -330,7 +326,6 @@ var Document = exports.Document = Backbone.Model.extend({
             authentication_value: signatory.authenticationToSignFieldValue(),
             accepted_author_attachments: JSON.stringify(acceptedAuthorAttachments),
             ajax: true,
-            expectedType : "text",
             ajaxsuccess : successCallback,
             ajaxerror : errorCallback
             }).addMany(extraSignFields);
@@ -350,10 +345,8 @@ var Document = exports.Document = Backbone.Model.extend({
             authentication_value: signatory.authenticationToSignFieldValue(),
             accepted_author_attachments: JSON.stringify(acceptedAuthorAttachments),
             ajax: true,
-            expectedType : "text",
             ajaxsuccess : function(newDocumentRaw) {
-	      var newDocumentJSON = JSON.parse(newDocumentRaw),
-              newDocument = new Document(new Document({}).parse(newDocumentJSON)),
+              newDocument = new Document(new Document({}).parse(newDocumentRaw)),
               oldDocument = document;
 	      successCallback(newDocument, oldDocument);
             },
@@ -373,9 +366,8 @@ var Document = exports.Document = Backbone.Model.extend({
               method: "POST",
               ajaxtimeout : 120000,
               ajaxsuccess : function(resp) {
-                var jresp = JSON.parse(resp);
-                var nd = new Document({id : jresp.id, screenshots : document.get("screenshots") }); // Note that we are not cloning screenshot object, as it may be too big.
-                nd.set(nd.parse(jresp));
+                var nd = new Document({id : resp.id, screenshots : document.get("screenshots") }); // Note that we are not cloning screenshot object, as it may be too big.
+                nd.set(nd.parse(resp));
                 callback(nd);
               }
           });
@@ -385,7 +377,6 @@ var Document = exports.Document = Backbone.Model.extend({
          return new Submit({
               url : "/api/frontend/documents/" + this.documentid() + "/start",
               method: "POST",
-              expectedType : "json",
               ajaxtimeout : 120000
           });
     },

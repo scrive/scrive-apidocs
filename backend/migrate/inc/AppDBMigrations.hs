@@ -93,6 +93,7 @@ kontraMigrations = [
   , createDocumentSigningConsumersTable
   , createDocumentSigningJobsTable
   , removeAmazonBucketColumn
+  , documentSigningJobsUseJson
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

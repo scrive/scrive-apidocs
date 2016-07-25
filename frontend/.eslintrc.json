@@ -1,0 +1,31 @@
+{
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es6": true
+  },
+  "globals": {
+    "localization": true,
+    "mixpanel": true,
+    "_gaq": true,
+    "Cookies": true,
+    "hbspt": true,
+    "fromTemplate": true,
+    "fromTemplateHeader": true,
+    "fromTemplateFooter": true,
+    "fromTemplateFlash": true,
+    "fromTemplateHasFlash": true,
+    "getLink": true,
+    "hubspotConf": true
+  },
+  "parserOptions": {
+    "sourceType":"module",
+    "ecmaFeatures": {
+      "jsx": true,
+      "modules": true
+    }
+  },
+  "rules": {
+    "no-undef": "error"
+  }
+}

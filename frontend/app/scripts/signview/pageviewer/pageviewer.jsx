@@ -3,6 +3,8 @@ import ZoomControls from "./zoomcontrols";
 import vars from "../../../less/signview/vars.less";
 import isTouchDevice from "../../common/is_touch_device";
 import _ from "underscore";
+import $ from "jquery";
+import classNames from "classnames";
 
 const ZOOM_STEPS = 4;
 const MAX_ZOOM_PIXELS = 2000;

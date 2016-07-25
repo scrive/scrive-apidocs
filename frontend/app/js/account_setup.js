@@ -125,11 +125,10 @@ var trackTimeout = require("../scripts/common/track_timeout");
         company : model.company(),
         position : model.position(),
         ajaxsuccess: function(rs) {
-          var resp = JSON.parse(rs);
           var tosDate = new Date();
-          if (resp.ok === true) {
-              mixpanel.alias(resp.userid);
-              mixpanel.identify(resp.userid);
+          if (rs.ok === true) {
+              mixpanel.alias(rs.userid);
+              mixpanel.identify(rs.userid);
               var ps = {'Phone' : model.phone(),
                         'Company Name' : model.company(),
                         'Position' : model.position(),
@@ -154,11 +153,11 @@ var trackTimeout = require("../scripts/common/track_timeout");
                               "jobtitle" : model.position()});
 
               trackTimeout('Sign TOS', {}, function() {
-                  window.location = resp.location;
+                  window.location = rs.location;
               }, 1000);
-          } else if (resp.error == 'already_active') {
+          } else if (rs.error == 'already_active') {
             new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, type: 'error'});
-          } else if (resp.error == 'reload') {
+          } else if (rs.error == 'reload') {
             model.trigger('reload');
           }
         }

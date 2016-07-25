@@ -21,7 +21,7 @@ data CompanyUI = CompanyUI
   , companyServiceTheme               :: !(Maybe ThemeID)
   , companyBrowserTitle               :: !(Maybe String)
   , companySmsOriginator              :: !(Maybe String)
-  , companyFavicon                    :: !(Maybe (Binary BS.ByteString))
+  , companyFavicon                    :: !(Maybe BS.ByteString)
 } deriving (Eq, Ord, Show, Typeable)
 
 data GetCompanyUI = GetCompanyUI CompanyID
@@ -69,7 +69,7 @@ selectCompanyUIsSelectors = do
   sqlResult "sms_originator"
   sqlResult "favicon"
 
-fetchCompanyUI :: (CompanyID, Maybe ThemeID, Maybe ThemeID, Maybe ThemeID, Maybe String, Maybe String, Maybe (Binary BS.ByteString)) -> CompanyUI
+fetchCompanyUI :: (CompanyID, Maybe ThemeID, Maybe ThemeID, Maybe ThemeID, Maybe String, Maybe String, Maybe BS.ByteString) -> CompanyUI
 fetchCompanyUI (company_id,mail_theme,signview_theme,service_theme,browser_title,sms_originator,favicon) = CompanyUI {
   companyuicompanyid = company_id
 , companyMailTheme = mail_theme
@@ -81,5 +81,5 @@ fetchCompanyUI (company_id,mail_theme,signview_theme,service_theme,browser_title
 }
   where
     -- We should interpret empty logos as no logos.
-    faviconFromBinary (Just f) = if (BS.null $ unBinary f) then Nothing else Just f
+    faviconFromBinary (Just f) = if (BS.null f) then Nothing else Just f
     faviconFromBinary Nothing = Nothing

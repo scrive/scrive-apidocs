@@ -2,10 +2,10 @@ module SMS.Migrations (
     messengerMigrations
   ) where
 
-import Data.ByteString (ByteString)
+import Data.Text (Text)
+import DB.Checks
 
 import DB
-import DB.Checks
 import KontraPrelude
 import SMS.Tables
 
@@ -19,6 +19,7 @@ messengerMigrations =
   , makeSMSesTableJobQueue
   , createTableMessengerJobs
   , createProviderAndTeliaIDColumns
+  , createMbloxIDColumn
   ]
 
 ----------------------------------------
@@ -49,7 +50,7 @@ createTableMessengerJobs = Migration {
     runSQL_ $ "INSERT INTO messenger_jobs (id, run_at) VALUES (" <?> job <> ", to_timestamp(0))"
 }
   where
-    jobs :: [ByteString]
+    jobs :: [Text]
     jobs = [
         "clean_old_smses"
       ]
@@ -152,4 +153,13 @@ createProviderAndTeliaIDColumns =
   , mgrDo = do
       runSQL_ "ALTER TABLE smses ADD COLUMN provider SMALLINT NOT NULL DEFAULT 1"
       runSQL_ "ALTER TABLE smses ADD COLUMN telia_id text"
+  }
+
+createMbloxIDColumn :: MonadDB m => Migration m
+createMbloxIDColumn =
+  Migration {
+    mgrTable = tableSMSes
+  , mgrFrom = 4
+  , mgrDo = do
+      runSQL_ "ALTER TABLE smses ADD COLUMN mblox_id text"
   }

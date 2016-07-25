@@ -18,7 +18,7 @@ tableDocumentSigningConsumers = tblTable {
 tableDocumentSigningJobs :: Table
 tableDocumentSigningJobs = tblTable {
     tblName = "document_signing_jobs"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "run_at", colType = TimestampWithZoneT, colNullable = False }
@@ -32,9 +32,9 @@ tableDocumentSigningJobs = tblTable {
     , tblColumn { colName = "client_time", colType = TimestampWithZoneT }
     , tblColumn { colName = "client_name", colType = TextT }
     , tblColumn { colName = "lang", colType = SmallIntT, colNullable = False }
-    , tblColumn { colName = "fields", colType = TextT, colNullable = False }
+    , tblColumn { colName = "fields", colType = JsonT, colNullable = False }
     , tblColumn { colName = "accepted_attachments", colType = ArrayT BigIntT, colNullable = False }
-    , tblColumn { colName = "screenshots", colType = TextT, colNullable = False }
+    , tblColumn { colName = "screenshots", colType = JsonT, colNullable = False }
     , tblColumn { colName = "last_check_status", colType = TextT }
     ]
   , tblPrimaryKey = pkOnColumn "id"

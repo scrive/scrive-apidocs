@@ -22,8 +22,12 @@ import SendGrid
 import SendinBlue
 import SocketLabs
 
-router :: CryptoRNGState -> ConnectionSource -> Mailer Response -> ReqHandlerT (LogT IO) Response
-router rng cs routes = withPostgreSQL cs $
+router
+  :: CryptoRNGState
+  -> TrackedConnectionSource
+  -> Mailer Response
+  -> LogT (ReqHandlerT IO) Response
+router rng (ConnectionSource pool) routes = withPostgreSQL pool $
   runMailer rng routes
 
 handlers :: MailingServerConf -> Route (Mailer Response)
@@ -41,7 +45,7 @@ handlers conf = choice [
 showHelloMessage :: Mailer Response
 showHelloMessage = ok $ toResponse "Mailer says hello!"
 
--- All providers except SendGrid send a valid POST request that should be decoded for further processing
+-- All providers except SendGrid and SendinBlue send a valid POST request that should be decoded for further processing
 -- SendGrid and SendinBlue events have JSON in body but not as parameter, and should not be decoded.
 withDecodedBody_ :: Mailer Response -> Mailer Response
 withDecodedBody_ action = do

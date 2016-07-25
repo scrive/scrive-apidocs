@@ -5,11 +5,16 @@ var moment = require("moment");
 var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
 var $ = require("jquery");
 
+var Document = require("../../js/documents.js").Document;
 
-var DocumentHistoryView =  React.createClass({
+module.exports = React.createClass({
+    propTypes: {
+      documentid: React.PropTypes.string.isRequired,
+      expanded: React.PropTypes.bool
+    },
     getDefaultProps: function() {
       return {
-        expaded: false
+        expanded: false
       };
     },
     getInitialState: function() {
@@ -116,15 +121,3 @@ var DocumentHistoryView =  React.createClass({
       );
     }
 });
-
-module.exports = function(args){
-        var el = $("<div/>");
-        var view = React.render(React.createElement(DocumentHistoryView,{documentid : args.document.documentid()}), el[0]);
-        this.el     = function() {return el;};
-        this.recall = function() { view().reload();};
-        this.expanded = function() { return view.expanded();};
-        this.setExpanded = function(expanded) {view.setExpanded(expanded);};
-        this.ready  = function() {return view.ready()};
-        this.destroy = function() { React.unmountComponentAtNode(el[0]); this.checkIfHistoryChangedAndCallback = function() {};};
-        this.checkIfHistoryChangedAndCallback = function(changedcallback,errorcallback) { view.checkIfHistoryChangedAndCallback(changedcallback,errorcallback);};
-};

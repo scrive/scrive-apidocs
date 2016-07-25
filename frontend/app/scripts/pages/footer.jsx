@@ -43,7 +43,6 @@ var LanguageSelect = require("./languageselect");
       httplink :  React.PropTypes.string,
       langprefix : React.PropTypes.string,
       color :  React.PropTypes.string,
-      textcolor :  React.PropTypes.string,
       highlightcolor : React.PropTypes.string,
       textcolor :  React.PropTypes.string
     },

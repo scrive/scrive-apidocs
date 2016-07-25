@@ -11,7 +11,7 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Log
 import qualified Control.Exception.Lifted as E
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.Text as T
 
 import ActionQueue.Core
 import Amazon
@@ -53,7 +53,7 @@ actionQueue qa = currentTime
         commit
     )
   where
-    tableName = BS.unpack . unRawSQL . tblName $ qaTable qa
+    tableName = T.unpack . unRawSQL . tblName $ qaTable qa
 
     printSuccess a = logInfo "Action evaluated successfully" $ object [
         "action" .= show a

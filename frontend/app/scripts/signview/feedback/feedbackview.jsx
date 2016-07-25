@@ -1,6 +1,8 @@
 var React = require("react");
 var Question = require("./questionview");
 var HubSpot = require("../../common/hubspot_service");
+var _ = require("underscore");
+
   var QUESTIONS = {
     Q1: {
       title: localization.feedbackQ1,

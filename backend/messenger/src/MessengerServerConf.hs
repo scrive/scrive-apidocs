@@ -22,7 +22,7 @@ data MessengerServerConf = MessengerServerConf {
 , mscLogConfig       :: !LogConfig
 , mscSenderDefault   :: !SenderConfig
 , mscSenderTelia     :: !SenderConfig
-} deriving (Eq, Ord, Show)
+} deriving (Eq, Show)
 
 newtype SendersConfig = SendersConfig (SMSProvider -> SenderConfig)
 
@@ -43,10 +43,9 @@ unjsonMessengerServerConf = objectOf $ MessengerServerConf
     <*> field "bind_port"
         (snd . mscHttpBindAddress)
         "Port to listen on")
-  <*> fieldBy "database"
+  <*> field "database"
       mscDBConfig
       "Database connection string"
-      unjsonAeson
   <*> field "logging"
       mscLogConfig
       "Logging configuration"
@@ -64,6 +63,9 @@ data SenderConfig = GlobalMouthSender {
 gmSenderUser       :: !String
 , gmSenderPassword :: !String
 , gmURL            :: !String -- "https://gw3.mcm.globalmouth.com:8443/api/mcm"
+} | MbloxSender {
+  mbToken          :: !String
+, mbURL            :: !String -- "https://api.mblox.com/xms/v1/{username}/batches"
 } | TeliaCallGuideSender {
   tcgSenderUrl      :: !String -- "https://sms.ccs.teliasonera.com/smsplus/smsextended"
 , tcgSenderUser     :: !String
@@ -85,6 +87,14 @@ instance Unjson SenderConfig where
         <*> field "url"
             gmURL
             "GlobalMouth address to contact"
+      )
+    , ("mblox", $(isConstr 'MbloxSender), MbloxSender
+        <$> field "token"
+            mbToken
+            "Mblox api token"
+        <*> field "url"
+            mbURL
+            "Mblox url, with username embedded"
       )
     , ("telia_callguide", $(isConstr 'TeliaCallGuideSender), TeliaCallGuideSender
         <$> field "url"

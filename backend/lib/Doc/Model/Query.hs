@@ -73,13 +73,13 @@ instance (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, Amazon.Amaz
     screenshotsWithoutBinaryData <- fetchMany id
     let getBinaries (slid, ty, time, fid) = do
            bin <- getFileIDContents fid
-           return (slid, ty, time, Binary bin)
+           return (slid, ty, time, bin)
     screenshotsWithBinaryData <- mapM getBinaries screenshotsWithoutBinaryData
 
     let folder ((slid', s):a) (slid, ty, time, i) | slid' == slid = (slid, mkss ty time i s):a
         folder a (slid, ty, time, i) = (slid, mkss ty time i emptySignatoryScreenshots) : a
 
-        mkss :: String -> UTCTime -> Binary BS.ByteString -> SignatoryScreenshots -> SignatoryScreenshots
+        mkss :: String -> UTCTime -> BS.ByteString -> SignatoryScreenshots -> SignatoryScreenshots
         mkss "first"     time i s = s{ first = Just $ Screenshot time i }
         mkss "signing"   time i s = s{ signing = Just $ Screenshot time i }
         mkss "reference" time i s = s{ reference = Just $ Right $ Screenshot time i }

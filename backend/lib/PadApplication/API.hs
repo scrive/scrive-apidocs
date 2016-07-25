@@ -4,6 +4,7 @@ module PadApplication.API (
 
 import Control.Monad.Catch
 import Data.Unjson as Unjson
+import DB.SQL
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Text.JSON.Gen
@@ -15,7 +16,6 @@ import BrandedDomain.BrandedDomain
 import Company.CompanyUI
 import Company.Model
 import DB.Query
-import DB.SQL
 import Happstack.Fields
 import Kontra
 import KontraPrelude

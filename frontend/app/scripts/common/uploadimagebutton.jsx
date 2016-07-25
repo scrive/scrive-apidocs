@@ -36,7 +36,7 @@ var $ = require("jquery");
       width       : React.PropTypes.number,
       className   : React.PropTypes.string,
       style       : React.PropTypes.object,
-      extensions  : React.PropTypes.list,
+      extensions  : React.PropTypes.array,
       unsupportedFileMessage: React.PropTypes.string,
       onUploadComplete : React.PropTypes.func
     },
@@ -64,8 +64,7 @@ var $ = require("jquery");
           }
         },
         ajaxsuccess: function (rs) {
-          var response = JSON.parse(rs);
-          var logo_base64 = response.logo_base64;
+          var logo_base64 = rs.logo_base64;
           self.props.onUploadComplete('data:image/png;base64,' + logo_base64);
         }
       });

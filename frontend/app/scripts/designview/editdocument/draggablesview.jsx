@@ -9,15 +9,15 @@ var Document = require("../../../js/documents.js").Document;
     mixins: [BackboneMixin.BackboneMixin],
 
     propTypes: {
-      model: React.PropTypes.instanceOf(Document),
-      showCoordinateAxes: React.PropTypes.func.isRequired,
-      hideCoordinateAxes: React.PropTypes.func.isRequired,
-      moveCoordinateAxes: React.PropTypes.func.isRequired,
-      openTypeSetterFor: React.PropTypes.func.isRequired
+      document: React.PropTypes.instanceOf(Document),
+      proxiedShowCoordinateAxes: React.PropTypes.func.isRequired,
+      proxiedHideCoordinateAxes: React.PropTypes.func.isRequired,
+      proxiedMoveCoordinateAxes: React.PropTypes.func.isRequired,
+      proxiedOpenTypeSetterFor: React.PropTypes.func.isRequired
     },
 
     getBackboneModels: function () {
-      return [this.props.model];
+      return [this.props.document];
     },
 
     render: function () {
@@ -43,11 +43,29 @@ var Document = require("../../../js/documents.js").Document;
               </div>
             </div>
           </div>
-          {this.props.model.ready() &&
+          {this.props.document.ready() &&
             <span>
-             <DraggableText {...this.props}/>
-             <DraggableSignature {...this.props}/>
-             <DraggableCheckbox {...this.props}/>
+             <DraggableText
+              document={this.props.document}
+              showCoordinateAxes={this.props.proxiedShowCoordinateAxes()}
+              hideCoordinateAxes={this.props.proxiedHideCoordinateAxes()}
+              moveCoordinateAxes={this.props.proxiedMoveCoordinateAxes()}
+              openTypeSetterFor={this.props.proxiedOpenTypeSetterFor()}
+             />
+             <DraggableSignature
+              document={this.props.document}
+              showCoordinateAxes={this.props.proxiedShowCoordinateAxes()}
+              hideCoordinateAxes={this.props.proxiedHideCoordinateAxes()}
+              moveCoordinateAxes={this.props.proxiedMoveCoordinateAxes()}
+              openTypeSetterFor={this.props.proxiedOpenTypeSetterFor()}
+             />
+             <DraggableCheckbox
+              document={this.props.document}
+              showCoordinateAxes={this.props.proxiedShowCoordinateAxes()}
+              hideCoordinateAxes={this.props.proxiedHideCoordinateAxes()}
+              moveCoordinateAxes={this.props.proxiedMoveCoordinateAxes()}
+              openTypeSetterFor={this.props.proxiedOpenTypeSetterFor()}
+             />
             </span>
           }
         </div>

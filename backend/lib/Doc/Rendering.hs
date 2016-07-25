@@ -47,7 +47,6 @@ import qualified Database.Redis as R
 import qualified System.IO.Temp
 
 import Database.Redis.Helpers
-import DB
 import Doc.Logging
 import Doc.RenderedPages
 import File.Model
@@ -450,7 +449,7 @@ preCheckPDFHelper content tmppath =
 -- content or 'FileError' enumeration stating what is going on.
 --
 preCheckPDF :: (MonadLog m, MonadBaseControl IO m) => BS.ByteString
-            -> m (Either FileError (Binary BS.ByteString))
+            -> m (Either FileError BS.ByteString)
 preCheckPDF content =
   liftBaseOp (withSystemTempDirectory "precheck") $ \tmppath -> do
     res <- liftBase (preCheckPDFHelper content tmppath)
@@ -460,7 +459,7 @@ preCheckPDF content =
           "error" .= show x
         ]
       Right _ -> return ()
-    return $ Binary <$> res
+    return res
 
 findStringAfterKey :: String -> BS.ByteString -> [String]
 findStringAfterKey key content =

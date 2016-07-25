@@ -258,7 +258,7 @@ var Task = require("../navigation/task");
       var signatory = document.currentSignatory();
        document.cancelSigning(
           function () { self.setStep("eid")},
-          function () { new ErrorModal(xhr);}
+          function () { new ErrorModal();}
         ).send();
     },
     handleSign: function (pin) {

@@ -36,13 +36,14 @@ data DocumentSealing = DocumentSealing {
   , dsAttempts        :: !Int32
   }
 
-documentSealing :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-                => AppConf
-                -> KontrakcjaGlobalTemplates
-                -> MemCache FileID ByteString
-                -> Maybe R.Connection
-                -> ConnectionSource
-                -> ConsumerConfig m DocumentID DocumentSealing
+documentSealing
+  :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
+  => AppConf
+  -> KontrakcjaGlobalTemplates
+  -> MemCache FileID ByteString
+  -> Maybe R.Connection
+  -> ConnectionSourceM m
+  -> ConsumerConfig m DocumentID DocumentSealing
 documentSealing appConf templates localCache globalCache pool = ConsumerConfig {
     ccJobsTable = "document_sealing_jobs"
   , ccConsumersTable = "document_sealing_consumers"

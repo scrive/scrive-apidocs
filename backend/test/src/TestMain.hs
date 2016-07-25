@@ -4,14 +4,13 @@ import Control.Arrow
 import Control.Concurrent.STM
 import Control.Monad.Base
 import Database.PostgreSQL.PQTypes.Internal.Connection
-import Log
+import DB.Checks
 import System.Directory (createDirectoryIfMissing)
 import System.Environment
 import System.IO
 import Test.Framework
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
-import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import AccountInfoTest
@@ -29,7 +28,6 @@ import Crypto.RNG
 import CSSGenerationTest
 import CSVUtilTest
 import DB
-import DB.Checks
 import DB.PostgreSQL
 import DB.SQLFunction
 import Doc.API.V1.CallsTest
@@ -132,9 +130,9 @@ testMany (allargs, ts) = do
   templates <- readGlobalTemplates
 
   let connSettings = pgConnSettings pgconf
-  lr@LogRunner{..} <- mkLogRunner "test" def
-  withLogger . runDBT (simpleSource $ connSettings []) def $ do
-    migrateDatabase (logInfo_ . T.pack) kontraExtensions kontraDomains kontraTables kontraMigrations
+  lr@LogRunner{..} <- mkLogRunner "test" def rng
+  withLogger . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
+    migrateDatabase kontraExtensions kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
     offsets <- dbQuery $ HC.GetNClockErrorEstimates 10
@@ -144,13 +142,13 @@ testMany (allargs, ts) = do
       return ()
     commit
 
-  staticSource <- (\conn -> ConnectionSource { withConnection = ($ conn) })
-    <$> (connect $ connSettings kontraComposites)
+  staticSource <- (\conn -> ConnectionSource $ ConnectionSourceM { withConnection = ($ conn) }) <$> connect (connSettings kontraComposites)
+  cs <- poolSource (connSettings kontraComposites) 1 10 50
 
   active_tests <- atomically $ newTVar (True, 0)
   rejected_documents <- atomically $ newTVar 0
   let env = envf $ TestEnvSt {
-        teConnSource = simpleSource $ connSettings kontraComposites
+        teConnSource = cs
       , teStaticConnSource = staticSource
       , teTransSettings = def
       , teRNGState = rng
@@ -174,7 +172,7 @@ testMany (allargs, ts) = do
     atomically $ do
       n <- snd <$> readTVar active_tests
       when (n /= 0) retry
-    runDBT staticSource def { tsAutoTransaction = False } $ do
+    runDBT (unConnectionSource staticSource) def { tsAutoTransaction = False } $ do
       stats <- getConnectionStats
       liftBase . putStrLn $ "SQL: " ++ show stats
     rejs <- atomically (readTVar rejected_documents)

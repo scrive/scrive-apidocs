@@ -3,6 +3,7 @@ var doc1 = require("./data/document");
 var doc2 = require("./data/document2");
 var profile = require("./data/profile");
 var file = require("./data/file");
+var evidence_attachments = require("./data/evidence_attachments");
   var exports = {};
 
   exports.createServer = function () {
@@ -44,6 +45,18 @@ var file = require("./data/file");
 
     server.respondWith(/\/api\/frontend\/getprofile/, function (xhr) {
       xhr.respond(200, { "Content-Type": "application/text" }, JSON.stringify(_.clone(profile)));
+    });
+
+    server.respondWith(/\/api\/frontend\/documents\/(\d+?)\/evidenceattachments/, function (xhr) {
+      rsp = (server.emptyEvidenceAttachments) ? {attachments: []} : _.clone(evidence_attachments);
+      xhr.respond(
+        200, {"Content-Type": "application/text"},
+        JSON.stringify(rsp)
+      );
+    });
+
+    server.respondWith(/\/api\/frontend\/documents\/(\d+?)\/history/, function (xhr) {
+      xhr.respond(200, {"Content-Type": "application/text"}, JSON.stringify([]));
     });
 
     return server;

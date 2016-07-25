@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  InspectXML
@@ -45,6 +46,11 @@ deriveInspectXML name = do
                               (map pcon cons) ) |]
 
   case info of
+#if MIN_VERSION_template_haskell(2,11,0)
+    TH.TyConI (TH.DataD _ _ _ _ cons _fields) -> d name cons
+    TH.TyConI (TH.NewtypeD _ _ _ _ con _fields) -> d name [con]
+#else
     TH.TyConI (TH.DataD _ _ _ cons _fields) -> d name cons
     TH.TyConI (TH.NewtypeD _ _ _ con _fields) -> d name [con]
+#endif
     _ -> $unexpectedError $ "deriveInspectXML cannot handle: " ++ show info

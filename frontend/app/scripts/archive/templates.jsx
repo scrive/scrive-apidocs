@@ -20,12 +20,10 @@ module.exports = React.createClass({
         url : "/api/frontend/documents/new",
         ajax: true,
         saved: "true",
-        expectedType : "text",
         onSend: function() {
           LoadingDialog.open();
         },
-        ajaxsuccess: function(d) {
-          var doc = JSON.parse(d);
+        ajaxsuccess: function(doc) {
           doc.is_template = true;
           new Submit({
             method : "POST",

@@ -1,9 +1,9 @@
 module Theme.Migrations where
 
-import qualified Data.ByteString as BS
+import DB.Checks
+import qualified Data.Text as T
 
 import DB
-import DB.Checks
 import KontraPrelude
 import Theme.Tables
 
@@ -21,9 +21,9 @@ createThemesTable =
           , domChecks = mkChecks [Check "color_hex" "VALUE ~ '^#[0-9a-f]{6}$'::text"]
         }
 
-        let fontInSetSql = rawSQL (BS.intercalate " OR " $ map fontInSetValue fonts) ()
-            fontInSetValue font = BS.concat ["VALUE = '", font, "'::text"]
-            fonts :: [BS.ByteString] = ["\"arial black\",sans-serif"
+        let fontInSetSql = rawSQL (T.intercalate " OR " $ map fontInSetValue fonts) ()
+            fontInSetValue font = T.concat ["VALUE = '", font, "'::text"]
+            fonts :: [T.Text] = ["\"arial black\",sans-serif"
                   , "\"arial narrow\",sans-serif"
                   , "\"comic sans ms\",sans-serif"
                   , "\"courier new\",monospace"

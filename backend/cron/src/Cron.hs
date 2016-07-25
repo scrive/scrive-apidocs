@@ -4,12 +4,12 @@ import Control.Monad
 import Control.Monad.Base
 import Data.Maybe
 import Database.PostgreSQL.Consumers
+import DB.Checks
 import Log
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
 import qualified Data.Traversable as F
 
 import ActionQueue.EmailChangeRequest
@@ -24,7 +24,6 @@ import Cron.Model
 import Crypto.RNG
 import Database.Redis.Configuration
 import DB
-import DB.Checks
 import DB.PostgreSQL
 import Doc.Action
 import Doc.API.Callback.Model
@@ -75,17 +74,18 @@ main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   appConf <- readConfig putStrLn config
-  LogRunner{..} <- mkLogRunner "cron" $ logConfig appConf
+  rng <- newCryptoRNGState
+  LogRunner{..} <- mkLogRunner "cron" (logConfig appConf) rng
   withLoggerWait $ do
     checkExecutables
 
     let connSettings = pgConnSettings $ dbConfig appConf
-    withPostgreSQL (simpleSource $ connSettings []) $
-      checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
+    withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $
+      checkDatabase kontraDomains kontraTables
 
-    pool <- ($ maxConnectionTracker withLogger) <$> liftBase (createPoolSource $ connSettings kontraComposites)
+    ConnectionSource pool <- ($ maxConnectionTracker)
+      <$> liftBase (createPoolSource $ connSettings kontraComposites)
     templates <- liftBase readGlobalTemplates
-    rng <- newCryptoRNGState
     mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
     filecache <- MemCache.new BS.length 52428800
 
@@ -200,11 +200,11 @@ main = do
               ]
           return . RerunAfter $ ihours 1
         OldLogsRemoval -> do
-          let connSource ci = simpleSource def { csConnInfo = T.encodeUtf8 ci }
+          let connSource ci = simpleSource def { csConnInfo = ci }
               logDBs = catMaybes . for (lcLoggers $ logConfig appConf) $ \case
                 PostgreSQL ci -> Just ci
                 _             -> Nothing
-          forM_ logDBs $ \ci -> runDBT (connSource ci) def $ do
+          forM_ logDBs $ \ci -> runDBT (unConnectionSource $ connSource ci) def $ do
             runSQL_ "SELECT current_database()::text"
             dbName :: T.Text <- fetchOne runIdentity
             n <- dbUpdate $ CleanLogsOlderThanDays 30
@@ -248,4 +248,4 @@ main = do
       _ -> RerunAfter $ ihours 1
     }
       where
-        logHandlerInfo jobType action = localRandomID "job_id" $ \_ -> localData ["job_type" .= show jobType] action
+        logHandlerInfo jobType action = localRandomID "job_id" $ localData ["job_type" .= show jobType] action

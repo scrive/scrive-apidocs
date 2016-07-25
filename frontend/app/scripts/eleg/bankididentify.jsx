@@ -120,8 +120,7 @@ module.exports = Backbone.Model.extend({
         url: "/s/eid/cgi/grp/auth/" + self.document().documentid() +
           "/" + self.signatory().signatoryid(),
         personal_number: BankIDUtils.normalizedPersonalNumber(self.signatory()),
-        ajaxsuccess: function (d, s, xhr) {
-          var resp = JSON.parse(d);
+        ajaxsuccess: function (resp, s, xhr) {
           if (resp.auto_start_token && resp.session_id) {
             self.setAutoStartTokenAndSessionID(resp.auto_start_token, resp.session_id);
             self.triggerStatusChange();
@@ -145,11 +144,10 @@ module.exports = Backbone.Model.extend({
           method: "GET",
           url: "/s/eid/cgi/grp/checkcgiauthstatus/" + self.document().documentid() + "/" +
             self.signatory().signatoryid() + "?_=" + Math.random(),
-          ajaxsuccess: function (d, s, xhr) {
+          ajaxsuccess: function (resp, s, xhr) {
             if (self.cancelled()) {
               return; // If action was cancelled we stop processing any results and we will stop polling
             }
-            var resp = JSON.parse(d);
             if (resp.progress_status && BankIDUtils.isProgressStatus(resp.progress_status)) {
               self.setStatus(resp.progress_status);
               self.triggerStatusChange();

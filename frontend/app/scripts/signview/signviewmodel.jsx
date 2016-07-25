@@ -213,7 +213,13 @@ var TaskList = require("./navigation/task_list");
     },
 
     hasSignatoriesAttachmentsSection: function () {
-      return !this.document().closed() && this.document().currentSignatory().attachments().length > 0;
+      return !this.document().closed() && (
+        this.document().currentSignatory().attachments().length > 0 ||
+        _.any(this.document().signatories(),
+          function (s) {
+            return s.hasSigned() && _.any(s.attachments(), function (a) { return a.hasFile(); })
+        })
+      );
     },
 
     hasArrows: function () {

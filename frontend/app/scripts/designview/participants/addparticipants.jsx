@@ -7,33 +7,30 @@ var _ = require("underscore");
 module.exports = React.createClass({
   onDone: function () {
     mixpanel.track("Close participant");
-    this.props.model.setParticipantDetail(undefined);
+    this.props.setParticipantDetail(undefined);
   },
   addSingleParticipant: function () {
-    var model = this.props.model;
-    var doc = model.document();
     var sig = new Signatory({
-      document:doc,
+      document:this.props.document,
       signs:true
     });
-    doc.addExistingSignatory(sig);
-    model.setParticipantDetail(sig);
+    this.props.document.addExistingSignatory(sig);
+    this.props.setParticipantDetail(sig);
     this.props.onAddSingle();
   },
   addMultisendParticipant: function () {
     mixpanel.track("Click add CSV");
     new CsvSignatoryDesignPopup({
-      designview: this.props.model
+      document: this.props.document,
+      setParticipantDetail: this.props.setParticipantDetail
     });
   },
   render: function () {
     var self = this;
-    var model = this.props.model;
-    var doc = model.document();
 
     return (
       <div className="design-view-action-participant-new-box-buttons">
-        {/* if */ model.participantDetail() != undefined &&
+        {/* if */ this.props.currentParticipantDetail != undefined &&
           <div className="design-view-action-participant-done">
             <Button
                ref="close-button"
@@ -43,9 +40,9 @@ module.exports = React.createClass({
             />
           </div>
         }
-        {/* else */ model.participantDetail() == undefined &&
+        {/* else */ this.props.currentParticipantDetail == undefined &&
           <div>
-            {/* if */ !_.any(model.document().signatories(), function (x) { return x.isCsv(); }) &&
+            {/* if */ !_.any(this.props.document.signatories(), function (x) { return x.isCsv(); }) &&
               <div className="design-view-action-participant-new-multi">
                 <Button
                   ref="add-multi-button"

@@ -3,7 +3,6 @@ module Doc.DigitalSignature
   , extendDigitalSignature
   ) where
 
-import Control.Arrow (first)
 import Control.Monad.Catch
 import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
@@ -19,7 +18,7 @@ import ActionQueue.Scheduler (SchedulerData, getGlobalTemplates, sdAppConf)
 import Amazon (AmazonMonad)
 import AppConf (guardTimeConf)
 import Crypto.RNG (CryptoRNG)
-import DB (Binary(..), dbUpdate)
+import DB (dbUpdate)
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.Data.Document (documentsealedfile)
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
@@ -48,7 +47,7 @@ addDigitalSignature = theDocumentID >>= \did ->
   gtconf <- getGuardTimeConf
   -- GuardTime signs in place
   code <- GT.digitallySign gtconf mainpath
-  (newfilepdf, status) <- first Binary <$> case code of
+  (newfilepdf, status) <- case code of
     ExitSuccess -> do
       vr <- GT.verify gtconf mainpath
       case vr of
@@ -137,7 +136,7 @@ digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
     Nothing -> return False
     Just (extendedfilepdf, status) -> do
       logInfo_ "Adding new extended file to DB"
-      sealedfileid <- dbUpdate $ NewFile pdfname (Binary extendedfilepdf)
+      sealedfileid <- dbUpdate $ NewFile pdfname extendedfilepdf
       logInfo "Finished adding extended file to DB, adding to document" $ object [
           identifier_ sealedfileid
         ]

@@ -126,7 +126,7 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetESignature (Maybe ESignature)
     fetchMaybe fetchESignature
 
 -- | Fetch e-signature.
-fetchESignature :: (SignatureProvider, T.Text, Binary ByteString, Maybe (Binary ByteString), Maybe T.Text, Maybe T.Text, Maybe (Binary ByteString)) -> ESignature
+fetchESignature :: (SignatureProvider, T.Text, ByteString, Maybe ByteString, Maybe T.Text, Maybe T.Text, Maybe ByteString) -> ESignature
 fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msignatory_personal_number, mocsp_response) = case provider of
   LegacyBankID -> LegacyBankIDSignature_ LegacyBankIDSignature {
     lbidsSignedText = sdata

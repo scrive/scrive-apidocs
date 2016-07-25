@@ -1,7 +1,8 @@
 module Log.Migrations (logsMigrations) where
 
-import DB
 import DB.Checks
+
+import DB
 import KontraPrelude
 import Log.Tables
 

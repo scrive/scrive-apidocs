@@ -8,7 +8,7 @@ import classNames from "classnames";
 
 import arrowVars from "../../../less/signview/arrows.less";
 
-const defaultErd = require("element-resize-detector")();
+const defaultErd = require("element-resize-detector")({"strategy": "scroll"});
 
 const ARROW = {NONE: -1, UP: 0, DOWN: 1, LEFT: 2, RIGHT: 3};
 

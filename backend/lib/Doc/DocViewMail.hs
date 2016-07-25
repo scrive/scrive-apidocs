@@ -53,14 +53,16 @@ mailDocumentRemind :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, M
                    -> Bool
                    -> Document
                    -> m Mail
-mailDocumentRemind automatic cm s documentAttached d = case s of
-  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned automatic True cm d s
+mailDocumentRemind automatic cm s documentAttached d = case (d, s) of
+  (_, SignatoryLink {maybesigninfo = Nothing, signatoryispartner = True}) -> remindMailNotSigned automatic True cm d s
+  (Document {documentstatus = Pending}, SignatoryLink {signatoryispartner = False}) -> remindMailNotSigned automatic True cm d s
   _                                       -> remindMailSigned    True cm d s documentAttached
 
 mailDocumentRemindContent :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
                           => Maybe String -> Document -> SignatoryLink -> Bool -> m String
-mailDocumentRemindContent cm d s documentAttached = content <$> case s of
-  SignatoryLink {maybesigninfo = Nothing} -> remindMailNotSigned False False cm d s
+mailDocumentRemindContent cm d s documentAttached = content <$> case (d, s) of
+  (_, SignatoryLink {maybesigninfo = Nothing, signatoryispartner = True}) -> remindMailNotSigned False False cm d s
+  (Document {documentstatus = Pending}, SignatoryLink {signatoryispartner = False}) -> remindMailNotSigned False False cm d s
   _                                       -> remindMailSigned    False cm d s documentAttached
 
 remindMailNotSigned :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m)
@@ -75,6 +77,7 @@ remindMailNotSigned automatic forMail customMessage document signlink = do
     let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document)
         authorname = getAuthorName document
     documentMailWithDocLang document (templateName "remindMailNotSignedContract") $ do
+        F.value "sign" $ signatoryispartner signlink
         F.value  "custommessage" $ asCustomMessage <$> customMessage
         F.value  "authorname" authorname
         F.value  "automatic" automatic
@@ -101,6 +104,7 @@ remindMailNotSigned automatic forMail customMessage document signlink = do
 documentAttachedFields :: (MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m) => Bool -> SignatoryLink -> Bool -> Document -> Fields m ()
 documentAttachedFields forMail signlink documentAttached document = do
   mctx <- getMailContext
+  F.value "sign" $ signatoryispartner signlink
   F.value "documentAttached" documentAttached
   F.value "ispreview" $ not $ forMail
   F.value "mainfilelink" $ protectLink forMail mctx $ LinkMainFile document signlink

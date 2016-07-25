@@ -2,6 +2,8 @@ var React = require("react");
 var Button = require("../../common/button");
 var InfoTextInput = require("../../common/infotextinput");
 var ViewSize = require("../viewsize");
+var $ = require("jquery");
+var _ = require("underscore");
 
   module.exports = React.createClass({
 

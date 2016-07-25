@@ -2,7 +2,6 @@ module Doc.Screenshot
   ( Screenshot(..),
   ) where
 
-import Database.PostgreSQL.PQTypes (Binary(..))
 import Text.JSON.FromJSValue (FromJSValue(..), fromJSValueField)
 import Text.JSON.Gen (value, runJSONGen)
 import Text.JSON.ToJSValue (ToJSValue(..))
@@ -14,7 +13,7 @@ import qualified Data.ByteString.RFC2397 as RFC2397
 
 data Screenshot = Screenshot
  { time  :: UTCTime
- , image :: Binary BS.ByteString
+ , image :: BS.ByteString
  }
  deriving (Show, Eq, Ord)
 
@@ -28,9 +27,9 @@ instance FromJSValue Screenshot where
       else f (fst <$> s) (snd <$> s) -- old array format
    where f :: Maybe String -> Maybe String -> Maybe Screenshot
          f t i = Screenshot <$> (parseTimeISO =<< t)
-                             <*> (fmap (Binary . snd) . RFC2397.decode . BS.fromString =<< i)
+                            <*> (fmap snd . RFC2397.decode . BS.fromString =<< i)
 
 instance ToJSValue Screenshot where
-  toJSValue (Screenshot time' (Binary image')) = runJSONGen $ do
+  toJSValue (Screenshot time' image') = runJSONGen $ do
     value "time"  $ toJSValue $ formatTimeISO time'
     value "image" $ toJSValue $ BS.toString $ RFC2397.encode "image/jpeg" image'

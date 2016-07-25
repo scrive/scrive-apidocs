@@ -16,7 +16,6 @@ module.exports = React.createClass({
         method : "POST",
         url: "/api/frontend/documents/newfromtemplate/" +  id,
         ajax: true,
-        expectedType : "text",
         onSend: function() {
           LoadingDialog.open();
         },
@@ -25,7 +24,7 @@ module.exports = React.createClass({
         },
         ajaxsuccess: function(d) {
           try {
-            window.location.href = "/ts/"+JSON.parse(d).id;
+            window.location.href = "/ts/"+d.id;
           } catch(e) {
             LoadingDialog.close();
           }

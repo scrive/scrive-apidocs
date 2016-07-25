@@ -367,7 +367,7 @@ var AdminUserDetailsView = Backbone.View.extend({
               , style: "margin-left:20px"
               , onClick : function() {
                   model.saveDetails(function (resp) {
-                    if (JSON.parse(resp).changed) {
+                    if (resp.changed) {
                       new FlashMessage({type: 'success', content: "Saved"});
                       model.refresh();
                     } else {
@@ -391,7 +391,6 @@ var AdminUserDetailsView = Backbone.View.extend({
                       if (new NumberValidation().validateData(v)) {
                         new Submit({
                           url: "/adminonly/companyadmin/details/"+ v,
-                          expectedType: "json",
                           ajaxsuccess: function(resp) {
                             nameBox.text("Company with name: " + resp.companyname);
                           },

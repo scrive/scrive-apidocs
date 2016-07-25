@@ -1,7 +1,8 @@
 module EID.CGI.GRP.Transaction.Migrations where
 
-import DB
 import DB.Checks
+
+import DB
 import EID.CGI.GRP.Transaction.Tables
 import KontraPrelude
 
