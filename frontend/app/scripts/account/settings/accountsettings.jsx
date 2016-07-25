@@ -148,8 +148,7 @@ module.exports = Backbone.Model.extend({
       url: "/api/frontend/changeemail",
       ajax: true,
       ajaxsuccess: function (rs) {
-        var res = JSON.parse(rs);
-        if (res.send) {
+        if (rs.send) {
           var msg = $("<span>" + localization.account.accountDetails.changeEmailMailSent + "</span>");
           msg.find(".email-confirmation-address").text(self.newemail());
           new FlashMessage({content: msg, type: "success"});

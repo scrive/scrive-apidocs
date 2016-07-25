@@ -52,8 +52,7 @@ var ChangePasswordPopupModel = Backbone.Model.extend({
       password  : this.password1(),
       ajax : true,
       ajaxsuccess : function(rs) {
-         var resp = JSON.parse(rs);
-         if (resp.changed === true) {
+         if (rs.changed === true) {
             callback();
          }
          else

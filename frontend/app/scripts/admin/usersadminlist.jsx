@@ -102,7 +102,6 @@ var openCreateUserModal = function(callback) {
 
       if (validationResult) {
         var successCallback = function(resp) {
-          resp = JSON.parse(resp);
           if (resp.success) {
             confirmation.close();
             callback();

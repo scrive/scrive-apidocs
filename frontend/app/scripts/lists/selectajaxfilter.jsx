@@ -33,7 +33,12 @@ module.exports = React.createClass({
           {
             cache: false,
             success : function(res) {
-              var options = self.props.optionsParse(JSON.parse(res));
+              var resp = res;
+              if (typeof resp === "string") {
+                resp = JSON.parse(resp);
+              }
+
+              var options = self.props.optionsParse(resp);
               self.setState({ajaxOptions : options});
             }
           }

@@ -69,7 +69,15 @@ module.exports = React.createClass({
     });
   },
   componentDidMount: function() {
-    this.focusOfFirstField();
+    if (this.refs.authorview) {
+      $('.responsive.signview').removeClass('responsive');
+
+      var authorView = new AuthorView({id: this.props.document.id});
+      var awNode = $(this.refs.authorview.getDOMNode());
+      awNode.append(authorView.el());
+    } else {
+      this.focusOfFirstField();
+    }
   },
   focusOfFirstField: function() {
     var signatory =_.find(this.orderedSignatories(), function(s) {
@@ -89,18 +97,6 @@ module.exports = React.createClass({
     var buttonClass = "send-button";
 
     if (documentSent) {
-      var authorView = new AuthorView({
-        id: document.id
-      });
-
-      // TODO. THis is very wrong and should be fixed when AuhtorView is in React
-      this.componentDidMount = function() {
-        $('.responsive.signview').removeClass('responsive');
-        var awNode = $(this.refs.authorview.getDOMNode());
-        awNode.empty();
-        awNode.append(authorView.el);
-      };
-
       return (<div className="authorview" ref="authorview"></div>);
     }
 

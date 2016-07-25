@@ -61,9 +61,6 @@ var PasswordValidation = require("./validation.js").PasswordValidation;
         ajax: true,
         password: model.password(),
         ajaxsuccess: function(resp) {
-          if (typeof resp === 'string') {
-            resp = JSON.parse(resp);
-          }
           if (resp.logged === true) {
             window.location = resp.location;
           } else {

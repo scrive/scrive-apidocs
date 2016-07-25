@@ -40,7 +40,6 @@ var Task = require("../navigation/task");
         url: self.setAttachmentURL(),
         name: model.name(),
         ajax: true,
-        expectedType: "json",
         onSend: function () {
           model.loading();
         },
@@ -214,7 +213,6 @@ var Task = require("../navigation/task");
                         model.loading();
                         new Submit({
                           method: "POST",
-                          expectedType: "json",
                           url: self.setAttachmentURL(),
                           name: model.name(),
                           ajax: true,

@@ -75,7 +75,7 @@ var FileVerifierView = Backbone.View.extend({
               },
               ajaxsuccess: function(res) {
                 LoadingDialog.close();
-                view.showResultDialog(JSON.parse(res));
+                view.showResultDialog(res);
                 view.render();
               }
             });

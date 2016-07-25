@@ -62,8 +62,7 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
           email : email,
           password : password,
           ajaxsuccess: function(rs) {
-            var resp = JSON.parse(rs);
-            if (resp.logged == true)
+            if (rs.logged == true)
             {
               window.location = window.location;
             }
@@ -82,8 +81,7 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
           email : email,
           ajax: true,
           ajaxsuccess: function(rs) {
-            resp = JSON.parse(rs);
-            if (resp.sent === true) {
+            if (rs.sent === true) {
               mixpanel.track('Create new account from API permissions');
               mixpanel.people.set({
                   '$email'      :  email,
@@ -91,7 +89,7 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
               });
               var content = localization.payments.outside.confirmAccountCreatedUserHeader;
               new FlashMessage({content: content, type: 'success'});
-            } else if (resp.sent === false) {
+            } else if (rs.sent === false) {
               mixpanel.track('Error',
                             {Message : 'signup failed'});
               new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, type: 'error'});

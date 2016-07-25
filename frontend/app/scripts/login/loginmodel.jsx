@@ -79,8 +79,7 @@ module.exports = Backbone.Model.extend({
           email : email,
           password : model.password(),
           ajaxsuccess: function(rs) {
-            var resp = JSON.parse(rs);
-            callback(resp);
+            callback(rs);
           }
         });
     if (model.pad())
@@ -95,8 +94,7 @@ module.exports = Backbone.Model.extend({
           ajax: true,
           email : model.email(),
           ajaxsuccess: function(rs) {
-            var resp = JSON.parse(rs);
-            callback(resp);
+            callback(rs);
           }
         }).send();
   },
@@ -110,13 +108,7 @@ module.exports = Backbone.Model.extend({
       lang : Language.current(),
       email: model.email(),
       ajaxsuccess: function(rs) {
-        var resp;
-        try {
-          resp = JSON.parse(rs);
-        } catch (e) {
-          resp = JSON.parse($(rs).text());
-        }
-        callback(resp);
+        callback(rs);
       }
     }).send();
   }

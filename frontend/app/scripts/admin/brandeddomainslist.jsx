@@ -14,8 +14,7 @@ module.exports = React.createClass({
         ajax: true,
         ajaxsuccess: function(js) {
           self.props.onSelect(js.id);
-        },
-        expectedType: "json"
+        }
       }).send();
     },
     render: function() {

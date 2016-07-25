@@ -161,7 +161,12 @@ module.exports = Backbone.Model.extend({
         data : this.urlParams(),
         cache: false,
         success : function(res) {
-          if (self.list() != undefined && self.dataFetcher()(JSON.parse(res)).length != self.list().length)
+          var resp = res;
+          if (typeof resp === "string") {
+            resp = JSON.parse(resp);
+          }
+
+          if (self.list() != undefined && self.dataFetcher()(resp).length != self.list().length)
             changedcallback();
         },
         error : function() {

@@ -133,12 +133,11 @@ module.exports = React.createClass({
   onRestartButtonClick: function () {
     mixpanel.track("Click restart button");
     this.props.document.restart().sendAjax(function (resp) {
-       var newdocdata = JSON.parse(resp);
        new FlashMessage({
         type: "success",
         content: localization.flashDocumentRestarted,
         withRedirect: true,
-        redirect: "/d/" + newdocdata.id
+        redirect: "/d/" + resp.id
       });
     });
   },
