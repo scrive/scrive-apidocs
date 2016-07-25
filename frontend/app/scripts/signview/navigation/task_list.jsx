@@ -81,7 +81,7 @@ module.exports = Backbone.Model.extend({
     var active = this.active();
 
     if (active) {
-      active.get("onActivate")();
+      active.forceOnActivate();
     }
   }
 });

@@ -68,7 +68,7 @@ var ORIGINAL_PAGE_SIZE = 950;
         onArrowClick: function () {
           self.startInlineEditing();
         },
-        onActivate: function () {
+        onActivate: function (task) {
           // Wait for other textplacements to blur.
           setTimeout(function () {
             self.setState({active: false});
@@ -76,7 +76,7 @@ var ORIGINAL_PAGE_SIZE = 950;
             // inline editing.
             var nothingHasFocus = $(":focus").length === 0;
             var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
-            if (nothingHasFocus && !field.readyForSign() && windowIsFocused && !isTouchDevice()) {
+            if (nothingHasFocus && !field.readyForSign() && windowIsFocused && !isTouchDevice() && task.active()) {
               self.startInlineEditing();
               mixpanel.track("Begin editing field", {Label: field.name()});
             }
