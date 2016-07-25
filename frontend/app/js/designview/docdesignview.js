@@ -262,7 +262,7 @@ function buildBoldList(list) {
             var signatory = document.currentSignatory();
 
             var spinner = this.spinnerSmall();
-            var spinnerContainer = $("<span class='spinner-container' />");
+            var spinnerContainer = $("<div class='spinner-container' />");
             spinnerContainer.append(spinner.el);
             var span = $('<span class="float-right"/>');
 
