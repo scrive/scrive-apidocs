@@ -77,6 +77,7 @@ html, body {
   position: fixed;
   z-index: 30;
   top: $top-navbar-height;
+  padding-top: $nav-top-padding;
   left: 0;
   bottom: 0;
   width: $nav-width;
