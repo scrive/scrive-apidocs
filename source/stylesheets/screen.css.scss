@@ -431,16 +431,15 @@ html, body {
       padding: 10px;
     }
 
+    tr {
+      background-color: darken($main-bg,2.8%);
+      border-bottom-style: solid;
+      border-bottom-color: #f1f1f1;
+      border-bottom-width: 1px;
+    }
+
     tr:last-child {
       border-bottom: 1px solid #ccc;
-    }
-
-    tr:nth-child(odd)>td {
-      background-color: lighten($main-bg,4.2%);
-    }
-
-    tr:nth-child(even)>td {
-      background-color: lighten($main-bg,2.4%);
     }
   }
 
