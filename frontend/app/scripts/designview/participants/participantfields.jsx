@@ -13,7 +13,6 @@ module.exports = React.createClass({
   render: function () {
     var self = this;
     var sig = this.props.model;
-    var viewmodel = this.props.viewmodel;
     var lastTextFieldIndex = _.findLastIndex(sig.fields(), function (f) {
       return f.isText();
     });
@@ -59,7 +58,8 @@ module.exports = React.createClass({
               onClick={function () {
                 mixpanel.track("Open CSV Popup");
                 new CsvSignatoryDesignPopup({
-                  designview: viewmodel
+                  document: self.props.document,
+                  setParticipantDetail: self.props.setParticipantDetail
                 });
               }}
             />

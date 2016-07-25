@@ -8,10 +8,17 @@ var _ = require("underscore");
 module.exports = React.createClass({
   mixins: [BackboneMixin.BackboneMixin],
   getBackboneModels: function () {
-    return [this.props.model, this.props.model.document()];
+    return [this.props.document];
   },
   getInitialState: function () {
-    return {needsToScroll: false, closingSig: undefined};
+    return {
+      participantDetail: undefined,
+      needsToScroll: false,
+      closingSig: undefined
+    };
+  },
+  componentWillUnmount: function () {
+    // this.setState({participantDetail: undefined});;
   },
   maxHeight: function () {
     var heightOfNavigationTabs = 350;  // Height of navigation tabs on page.
@@ -27,14 +34,14 @@ module.exports = React.createClass({
     var heightOfParticipantBorder = 4;
     var height = 0;
 
-    height += this.props.model.document().signatories().length * heightOfUnexpandedSignatory;
+    height += this.props.document.signatories().length * heightOfUnexpandedSignatory;
 
-    if (this.props.model.participantDetail() != undefined) {
+    if (this.state.participantDetail != undefined) {
       height += heightOfParticipantBorder + heightOfParticipantSettings;
       height += heightOfSignatoryPadding;
       var fields = 0;
       var nameIncluded = false;
-      _.each(this.props.model.participantDetail().fields(), function (f) {
+      _.each(this.state.participantDetail.fields(), function (f) {
         if (f.isFstName() || f.isSndName()) {
           if (!nameIncluded) {
             nameIncluded = true;
@@ -65,14 +72,12 @@ module.exports = React.createClass({
   },
   scrollToOpenParticipant: function () {
     var self = this;
-    var model = this.props.model;
-    var doc = model.document();
     var openParticipant;
     var openParticipantNumber;
     var closingParticipant;
     var closingParticipantNumber;
-    _.map(doc.signatories(), function (s, i) {
-      if (model.participantDetail() === s) {
+    _.map(this.props.document.signatories(), function (s, i) {
+      if (self.state.participantDetail === s) {
         openParticipant = self.refs["participant-" + i];
         openParticipantNumber = i;
       } else if (self.state.closingSig === s) {
@@ -99,7 +104,7 @@ module.exports = React.createClass({
                                (openParticipantNumber - closingParticipantNumber) * heightOfUnexpandedSignatory;
     }
 
-    // This should be $(openParticipantNode).outerHeight(), but before the animation ends it's lower than is should be
+    // This should be $(openParticipantNode).outerHeight(), but before the animation ends it"s lower than is should be
     var bottomOfOpenParticipantBox = topOfOpenParticipantBox + 345;
 
     if (bottomOfOpenParticipantBox > lowestVisiblePositionInBox ||
@@ -108,11 +113,12 @@ module.exports = React.createClass({
     }
     this.setState({closingSig: undefined});
   },
+  setParticipantDetail: function (newParticipantDetail) {
+    this.setState({participantDetail: newParticipantDetail});
+  },
   render: function () {
     var self = this;
-    var model = this.props.model;
-    var doc = model.document();
-    if (!doc.ready()) {
+    if (!this.props.document.ready()) {
       return <div/>;
     } else {
       return (
@@ -122,18 +128,20 @@ module.exports = React.createClass({
             className="design-view-action-participant-container-participants-box"
             style={{
               height: self.currentHeight(),
-              overflow: self.hasScrollbar() ? "auto" : "hidden" // Can't use auto due to transitions
+              overflow: self.hasScrollbar() ? "auto" : "hidden" // Can"t use auto due to transitions
             }}
           >
             {
-              _.map(doc.signatories(), function (s, i) {
+              _.map(this.props.document.signatories(), function (s, i) {
                 return (
                   <Participant
                     key={s.cid}
                     ref={"participant-" + i}
                     model={s}
                     number={i}
-                    viewmodel={model}
+                    document={self.props.document}
+                    currentParticipantDetail={self.state.participantDetail}
+                    setParticipantDetail={self.setParticipantDetail}
                     onExpand={function (oldSig) {self.setState({needsToScroll: true, closingSig: oldSig})}}
                   />
                 );
@@ -143,7 +151,9 @@ module.exports = React.createClass({
           <div className="design-view-action-participant-new-box">
             <AddParticipants
               ref="add-participants"
-              model={model}
+              document={self.props.document}
+              currentParticipantDetail={self.state.participantDetail}
+              setParticipantDetail={self.setParticipantDetail}
               onAddSingle={function () {self.setState({needsToScroll: true});}}
               />
           </div>

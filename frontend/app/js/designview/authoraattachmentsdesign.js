@@ -13,6 +13,9 @@ var Confirmation = require("../confirmations.js").Confirmation;
 
   var DesignAuthorAttachmentsPopup = exports.DesignAuthorAttachmentsPopup = function(args) {
     var self = this;
+    var document = args.document;
+    var saveAndFlashMessageIfAlreadySaved = args.saveAndFlashMessageIfAlreadySaved;
+
     var onStartShowingList = function() {
       if (self.popup) {
           self.popup.hideCancel();
@@ -31,8 +34,7 @@ var Confirmation = require("../confirmations.js").Confirmation;
         self.backLabel.css("display","none");
       }
     };
-    var viewmodel = args.viewmodel;
-    var document = viewmodel.document();
+
     var model = new DesignAuthorAttachments({ document : document});
     var contentDiv = $("<div/>");
     var view = React.render(React.createElement(AttachmentsDesign,{model : model, onStartShowingList : onStartShowingList, onStopShowingList : onStopShowingList}), contentDiv[0]);
@@ -74,7 +76,7 @@ var Confirmation = require("../confirmations.js").Confirmation;
                 document.recall(function() {
                     document.trigger("change");
                     LoadingDialog.close();
-                    viewmodel.saveAndFlashMessageIfAlreadySaved();
+                    saveAndFlashMessageIfAlreadySaved();
                     self.popup.close();
                 });
             },

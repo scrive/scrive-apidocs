@@ -5,35 +5,41 @@ var AddParticipants = require("../../../scripts/designview/participants/addparti
 
   var TestUtils = React.addons.TestUtils;
 
-  describe("designview/participants/addparticipant", function () {
-    var server, designView;
+  describe("designview/participants/addparticipants", function () {
+    var server, document_;
 
     before(function (done) {
       server = backend.createServer();
-      util.createDesignView(function (dv) {
-        designView = dv;
+      util.createDesignView(function (doc) {
+        document_ = doc;
         done();
       });
     });
 
     it("should test component", function () {
-      designView.setParticipantDetail(undefined)
       var addParticipants = TestUtils.renderIntoDocument(React.createElement(AddParticipants, {
-        model: designView,
+        document: document_,
+        currentParticipantDetail: undefined,
+        setParticipantDetail: function () {},
         onAddSingle: function() {}
         , element: $("body")[0]
       }));
-      var initialSignatoriesLenght = designView.document().signatories().length;
+
+      sinon.stub(addParticipants.props, "setParticipantDetail", function (newParticipant) {
+        addParticipants.props.currentParticipantDetail = newParticipant;
+      });
+
+      var initialSignatoriesLenght = document_.signatories().length;
       assert.ok($(".design-view-action-participant-new-single",addParticipants.getDOMNode()).length > 0);
       TestUtils.Simulate.click(addParticipants.refs["add-single-button"].getDOMNode());
 
-      var signatories = designView.document().signatories();
+      var signatories = document_.signatories();
       assert.notEqual(initialSignatoriesLenght,signatories.length);
-      assert.equal(designView.participantDetail(), signatories[signatories.length - 1]);
+      assert.isTrue(addParticipants.props.setParticipantDetail.calledWith(signatories[signatories.length - 1]));
       addParticipants.forceUpdate();
       assert.ok($(".design-view-action-participant-done",addParticipants.getDOMNode()).length > 0);
       TestUtils.Simulate.click(addParticipants.refs["close-button"].getDOMNode());
-      assert.equal(designView.participantDetail(), undefined);
+      assert.isTrue(addParticipants.props.setParticipantDetail.calledWith(undefined));
       addParticipants.forceUpdate();
       assert.ok($(".design-view-action-participant-new-multi",addParticipants.getDOMNode()).length > 0);
       assert.ok($(".modal").length == 0);

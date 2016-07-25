@@ -269,11 +269,12 @@ var CsvSignatoryDesignView = Backbone.View.extend({
 
 
 var CsvSignatoryDesignPopup = exports.CsvSignatoryDesignPopup =  function(args) {
+         var document = args.document;
+         var setParticipantDetail = args.setParticipantDetail;
+
          var csv = [];
          var csvSignatory = undefined;
-         var designview = args.designview;
-         var document = designview.document();
-         _.each(document.signatories(), function(s) {
+         _.each(args.document.signatories(), function(s) {
            if (s.isCsv()) {
              csv = s.csv();
              csvSignatory = s;
@@ -301,7 +302,7 @@ var CsvSignatoryDesignPopup = exports.CsvSignatoryDesignPopup =  function(args) 
                       csv : model.csv()
                     });
                     document.addExistingSignatory(signatory);
-                    designview.setParticipantDetail(signatory);
+                    setParticipantDetail(signatory);
                   } else {
                     for(var i = 0; i < model.header().length; i ++)
                       if (!model.csvSignatoryHasTextFieldWithName(csvSignatory, model.header()[i])) {

@@ -6,20 +6,19 @@ var Field = require("../../../js/fields").Field;
 
   var TestUtils = React.addons.TestUtils;
 
-  describe("designview/participants/addparticipant", function () {
-    var server, signatory, designView;
+  describe("designview/participants/participantfields", function () {
+    var server, signatory, document_;
 
     before(function (done) {
       server = backend.createServer();
-      util.createDesignView(function (dv) {
-        designView = dv;
-        signatory = dv.document().signatories()[1];
+      util.createDesignView(function (doc) {
+        document_ = doc;
+        signatory = document_.signatories()[1];
         done();
       });
     });
 
     it("should test component", function () {
-      designView.setParticipantDetail(signatory)
       signatory.addField(new Field({
         name: "",
         type: "",
@@ -44,8 +43,9 @@ var Field = require("../../../js/fields").Field;
 
       var fields = TestUtils.renderIntoDocument(React.createElement(ParticipantFields, {
         model: signatory,
-        viewmodel: designView
-        , element: $("body")[0]
+        document: document_,
+        setParticipantDetail: sinon.stub(),
+        element: $("body")[0]
       }));
 
       signatory.setCsv([["fstname","sndname","email"],["M","R","mariusz@scrive.com"]])

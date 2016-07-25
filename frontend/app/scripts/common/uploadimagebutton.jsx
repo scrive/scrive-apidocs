@@ -36,7 +36,7 @@ var $ = require("jquery");
       width       : React.PropTypes.number,
       className   : React.PropTypes.string,
       style       : React.PropTypes.object,
-      extensions  : React.PropTypes.list,
+      extensions  : React.PropTypes.array,
       unsupportedFileMessage: React.PropTypes.string,
       onUploadComplete : React.PropTypes.func
     },

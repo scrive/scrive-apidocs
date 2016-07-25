@@ -2,7 +2,6 @@ var React = require("react");
 var Document = require("../js/documents").Document;
 var Field = require("../js/fields").Field;
 var FieldPlacement = require("../js/placements").FieldPlacement;
-var DesignViewModel = require("../js/designview/docdesignviewmodel").DesignViewModel;
 
   var exports = {};
 
@@ -56,10 +55,7 @@ var DesignViewModel = require("../js/designview/docdesignviewmodel").DesignViewM
 
   var createDesignView = exports.createDesignView = function (cb) {
     createDocument(function(doc) {
-      var designView = new DesignViewModel({
-        document : doc
-      });
-      cb(designView);
+      cb(doc);
     })
   };
 

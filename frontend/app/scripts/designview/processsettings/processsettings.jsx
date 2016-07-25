@@ -3,12 +3,19 @@ var BackboneMixin = require("../../common/backbone_mixin");
 var BasicSettings = require("./basicsettings");
 var MessageSettings = require("./messagesettings");
 var AttachmentAndSignviewSettings = require("./attachmentsandsignviewsettings");
+var Document = require("../../../js/documents.js").Document;
 
 
 module.exports = React.createClass({
+  propTypes: {
+    document: React.PropTypes.instanceOf(Document).isRequired
+  },
   mixins: [BackboneMixin.BackboneMixin],
   getBackboneModels : function() {
-    return [this.props.model,this.props.model.document()];
+    return [this.props.document];
+  },
+  componentWillUnmount: function () {
+    this.hideAllCalendars();
   },
   hideAllCalendars :  function() {
     if (this.refs.basicSettings) {
@@ -16,9 +23,7 @@ module.exports = React.createClass({
     }
   },
   render: function() {
-    var self = this;
-    var doc = self.props.model.document();
-    if (!doc.ready()) {
+    if (!this.props.document.ready()) {
       return <div/>;
     } else {
       return (
@@ -26,17 +31,17 @@ module.exports = React.createClass({
           <div className="design-view-action-process-left-column">
             <BasicSettings
               ref="basicSettings"
-              document = {doc}
+              document={this.props.document}
             />
           </div>
           <div className="design-view-action-process-middle-column">
             <MessageSettings
-              document = {doc}
+              document={this.props.document}
             />
           </div>
           <div className="design-view-action-process-right-column">
             <AttachmentAndSignviewSettings
-              model = {this.props.model}
+              document={this.props.document}
             />
           </div>
         </div>

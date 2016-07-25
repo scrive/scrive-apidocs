@@ -5,15 +5,21 @@ var Button = require("../../common/button");
 var DesignAuthorAttachmentsPopup = require("../../../js/designview/authoraattachmentsdesign.js").DesignAuthorAttachmentsPopup;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var DesignSignatoryAttachmentsPopup = require("../../../js/designview/signatoryattachmentsdesignview.js").DesignSignatoryAttachmentsPopup;
+var DocumentSaveMixin = require("../document_save_mixin");
+var Document = require("../../../js/documents.js").Document;
 
 
 module.exports = React.createClass({
+  propTypes: {
+    document: React.PropTypes.instanceOf(Document).isRequired
+  },
+  mixins: [DocumentSaveMixin],
   getInitialState: function() {
-      return {settingsModalOpened: this.props['false']};
-    },
+    return {settingsModalOpened: false};
+  },
   render: function() {
     var self = this;
-    var document = self.props.model.document();
+    var document = self.props.document;
     return (
       <div>
         <div className="design-view-action-process-signview-settings">
@@ -40,7 +46,10 @@ module.exports = React.createClass({
             onClick= {function() {
               mixpanel.track('Open author attachments');
               document.save();
-              new DesignAuthorAttachmentsPopup({viewmodel: self.props.model});
+              new DesignAuthorAttachmentsPopup({
+                document: document,
+                saveAndFlashMessageIfAlreadySaved: self.saveAndFlashMessageIfAlreadySaved
+              });
             }}
           />
           <Button
@@ -53,7 +62,10 @@ module.exports = React.createClass({
               } else {
                 mixpanel.track('Open signatory attachments');
                 document.save();
-                new DesignSignatoryAttachmentsPopup({viewmodel: self.props.model});
+                new DesignSignatoryAttachmentsPopup({
+                  document: document,
+                  saveAndFlashMessageIfAlreadySaved: self.saveAndFlashMessageIfAlreadySaved
+                });
               }
             }}
           />

@@ -356,3 +356,20 @@ th.editSignatoryAttachmentTDRemove {
 div.mCSB_inside > div.mCSB_container {
   margin-right: 0px;
 }
+
+// Fixes bug where you can't click on elements under tab overlay.
+.design-view-tabs {
+  pointer-events: none;
+
+  .tab-viewer-header {
+    pointer-events: auto;
+  }
+
+  .design-view-tab-center {
+    pointer-events: none;
+
+    > div > div {
+      pointer-events: auto;
+    }
+  }
+}

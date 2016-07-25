@@ -15,12 +15,12 @@ var _ = require("underscore");
 
   module.exports = {
     propTypes: {
-      model: React.PropTypes.instanceOf(Document),
+      document: React.PropTypes.instanceOf(Document),
       openTypeSetterFor: React.PropTypes.func.isRequired
     },
 
     document: function () {
-      return this.props.model;
+      return this.props.document;
     },
 
     getInitialState: function () {

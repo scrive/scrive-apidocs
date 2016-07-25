@@ -12,14 +12,13 @@ var _ = require("underscore");
 module.exports = React.createClass({
   toogleView: function () {
     var sig = this.props.model;
-    var viewmodel = this.props.viewmodel;
-    if (viewmodel.participantDetail() === sig) {
+    if (this.props.currentParticipantDetail === sig) {
       mixpanel.track("Close participant detail");
-      viewmodel.setParticipantDetail(undefined);
+      this.props.setParticipantDetail(undefined);
     } else {
       mixpanel.track("Open participant detail");
-      var oldSig = viewmodel.participantDetail();
-      viewmodel.setParticipantDetail(sig);
+      var oldSig = this.props.currentParticipantDetail;
+      this.props.setParticipantDetail(sig);
       if (this.props.onExpand !== undefined) {
         this.props.onExpand(oldSig);
       }
@@ -27,8 +26,7 @@ module.exports = React.createClass({
   },
   onRemove: function () {
     var sig = this.props.model;
-    var viewmodel = this.props.viewmodel;
-    viewmodel.setParticipantDetail(undefined);
+    this.props.setParticipantDetail(undefined);
     _.each(sig.fields(), function (field) {
       field.removeAllPlacements();
     });
@@ -43,7 +41,6 @@ module.exports = React.createClass({
   // but it will not work with hide/show css transitions.
   height: function () {
     var sig = this.props.model;
-    var viewmodel = this.props.viewmodel;
     var heightOfParticipantBorder = 4;
     var heightOfUnexpandedSignatory = 46;  // Height each signatory description when signatory is not expanded
     var heightOfField = 50; // Height each field row
@@ -51,7 +48,7 @@ module.exports = React.createClass({
     var heightOfExpandedSignatoryHeader = 58;
     var height = heightOfUnexpandedSignatory;
 
-    if (viewmodel.participantDetail() === sig) {
+    if (this.props.currentParticipantDetail === sig) {
       height = heightOfExpandedSignatoryHeader + heightOfParticipantBorder;
       height += heightOfParticipantSettings;
       var fields = 0;
@@ -75,7 +72,6 @@ module.exports = React.createClass({
   render: function () {
     var self = this;
     var sig = this.props.model;
-    var viewmodel = this.props.viewmodel;
 
     return (
       <div className={"design-view-action-participant"}>
@@ -90,9 +86,9 @@ module.exports = React.createClass({
         <div
           className={
             "design-view-action-participant-inner " +
-            (viewmodel.participantDetail() === sig ? "expanded " : "")  +
+            (self.props.currentParticipantDetail === sig ? "expanded " : "")  +
             (self.signatoryHasProblems() ? "is-has-problems" : "")}
-            style={{height: this.height()}}
+            style={{height: self.height()}}
         >
           <div
             ref="participant-details"
@@ -128,7 +124,11 @@ module.exports = React.createClass({
             <ConfirmationDeliveryIcon model={sig}/>
           </div>
           <div className="design-view-action-participant-details">
-            <ParticipantFields model={sig} viewmodel={this.props.viewmodel}/>
+            <ParticipantFields
+              model={sig}
+              document={this.props.document}
+              setParticipantDetail={this.props.setParticipantDetail}
+            />
             <ParticipantSettings model={sig}/>
           </div>
         </div>
