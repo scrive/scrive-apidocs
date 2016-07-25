@@ -1,10 +1,9 @@
 module AppDBMain where
 
-import Log
+import DB.Checks
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import System.IO
-import qualified Data.Text as T
 
 import AppDBConfig
 import AppDBMigrations
@@ -12,7 +11,6 @@ import AppDBTables
 import Configuration
 import Crypto.RNG
 import DB
-import DB.Checks
 import DB.PostgreSQL
 import DB.SQLFunction
 import KontraPrelude
@@ -43,6 +41,6 @@ main = do
     -- composite types are not available in migrations
     let connSource = simpleSource $ pgConnSettings dbConfig []
     withPostgreSQL (unConnectionSource connSource) $ do
-      migrateDatabase (logInfo_ . T.pack) kontraExtensions kontraDomains kontraTables kontraMigrations
+      migrateDatabase kontraExtensions kontraDomains kontraTables kontraMigrations
       defineComposites kontraComposites
       defineFunctions kontraFunctions

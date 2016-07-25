@@ -3,6 +3,7 @@ module Main (main) where
 import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
+import DB.Checks
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
 import Log
@@ -13,7 +14,6 @@ import System.IO
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL8
-import qualified Data.Text as T
 import qualified Data.Traversable as F
 
 import AppConf
@@ -26,7 +26,6 @@ import Configuration
 import Crypto.RNG
 import Database.Redis.Configuration
 import DB
-import DB.Checks
 import DB.PostgreSQL
 import Happstack.Server.ReqHandler
 import KontraPrelude
@@ -74,7 +73,7 @@ main = withCurlDo $ do
     checkExecutables
 
     withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $ do
-      checkDatabase (logInfo_ . T.pack) kontraDomains kontraTables
+      checkDatabase kontraDomains kontraTables
       dbUpdate $ SetMainDomainURL $ mainDomainUrl appConf
 
     appGlobals <- do

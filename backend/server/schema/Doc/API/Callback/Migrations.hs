@@ -1,7 +1,8 @@
 module Doc.API.Callback.Migrations where
 
-import DB
 import DB.Checks
+
+import DB
 import Doc.API.Callback.Tables
 import KontraPrelude
 

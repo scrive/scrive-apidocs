@@ -3,9 +3,9 @@ module SMS.Migrations (
   ) where
 
 import Data.Text (Text)
+import DB.Checks
 
 import DB
-import DB.Checks
 import KontraPrelude
 import SMS.Tables
 

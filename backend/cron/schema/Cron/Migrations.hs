@@ -1,11 +1,11 @@
 module Cron.Migrations (cronMigrations) where
 
 import Control.Monad.Catch
+import DB.Checks
 import qualified Data.Text as T
 
 import Cron.Tables
 import DB
-import DB.Checks
 import KontraPrelude
 
 cronMigrations :: (MonadDB m, MonadThrow m) => [Migration m]

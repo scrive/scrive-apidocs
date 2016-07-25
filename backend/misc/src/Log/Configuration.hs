@@ -13,15 +13,15 @@ import Data.Foldable (fold)
 import Data.Text (Text)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
+import DB.Checks
 import Log.Backend.ElasticSearch
 import Log.Backend.PostgreSQL
 import Log.Backend.StandardOutput
 import Log.Data
-import Log.Logger
+import Log.Internal.Logger
 import Log.Monad
 
 import Crypto.RNG
-import DB.Checks
 import DB.PostgreSQL
 import KontraPrelude
 import Log.Migrations
@@ -91,17 +91,18 @@ data LogRunner = LogRunner {
 mkLogRunner :: Text -> LogConfig -> CryptoRNGState -> IO LogRunner
 mkLogRunner component LogConfig{..} rng = do
   logger <- fold <$> mapM defLogger lcLoggers
-  let run :: LogT m r -> m r
-      run = runLogT (component <> "-" <> lcSuffix) logger
   return LogRunner {
-    withLogger = run
-  , withLoggerWait = \m -> run m `finally` liftBase (waitForLogger logger)
+    withLogger = run logger
+  , withLoggerWait = \m -> run logger m `finally` liftBase (waitForLogger logger)
   }
   where
+    run :: Logger -> LogT m r -> m r
+    run = runLogT (component <> "-" <> lcSuffix)
+
     defLogger StandardOutput = stdoutLogger
     defLogger (ElasticSearch ec) = elasticSearchLogger ec $ runCryptoRNGT rng boundedIntegralRandom
     defLogger (PostgreSQL ci) = do
       ConnectionSource pool <- poolSource def { csConnInfo = ci } 1 10 1
-      withPostgreSQL pool $ do
-        migrateDatabase (liftBase . putStrLn) [] [] logsTables logsMigrations
+      withPostgreSQL pool . run simpleStdoutLogger $ do
+        migrateDatabase [] [] logsTables logsMigrations
       pgLogger pool

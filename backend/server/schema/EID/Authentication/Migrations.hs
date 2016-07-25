@@ -1,7 +1,8 @@
 module EID.Authentication.Migrations where
 
-import DB
 import DB.Checks
+
+import DB
 import EID.Authentication.Tables
 import KontraPrelude
 

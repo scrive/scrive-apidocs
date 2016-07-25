@@ -5,6 +5,7 @@ import Control.Monad.Base
 import Data.Aeson
 import Data.Monoid
 import Database.PostgreSQL.Consumers
+import DB.Checks
 import Happstack.Server hiding (result, waitForTermination)
 import Log
 import System.Console.CmdArgs hiding (def)
@@ -19,7 +20,6 @@ import Configuration
 import Crypto.RNG
 import Database.Redis.Configuration
 import DB
-import DB.Checks
 import DB.PostgreSQL
 import Handlers
 import Happstack.Server.ReqHandler
@@ -66,7 +66,7 @@ main = do
 
     let pgSettings = pgConnSettings $ mscDBConfig conf
     withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
-      checkDatabase (logInfo_ . T.pack) [] mailerTables
+      checkDatabase [] mailerTables
     awsconf <- do
       localCache <- MemCache.new BS.length 52428800
       globalCache <- F.forM (mscRedisCacheConfig conf) mkRedisConnection

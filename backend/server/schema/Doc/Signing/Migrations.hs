@@ -1,7 +1,8 @@
 module Doc.Signing.Migrations where
 
-import DB
 import DB.Checks
+
+import DB
 import Doc.Signing.Tables
 import KontraPrelude
 

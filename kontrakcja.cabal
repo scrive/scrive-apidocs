@@ -149,27 +149,13 @@ Library
                  , Database.Redis.Configuration
                  , Database.Redis.Helpers
                  , DB
-                 , DB.Checks
                  , DB.Derive
-                 , DB.Model
-                 , DB.Model.Check
-                 , DB.Model.ColumnType
-                 , DB.Model.CompositeType
-                 , DB.Model.Domain
-                 , DB.Model.Extension
-                 , DB.Model.ForeignKey
-                 , DB.Model.Index
-                 , DB.Model.Migration
-                 , DB.Model.PrimaryKey
-                 , DB.Model.Table
                  , DB.PostgreSQL
                  , DB.Query
                  , DB.RowCache
-                 , DB.SQL
                  , DB.SQLFunction
                  , DB.TimeZoneName
                  , DB.Utils
-                 , DB.Versions
                  , DB.XML
                  , Data.ByteString.RFC2397
                  , Doc.API
@@ -453,6 +439,7 @@ Library
                , curl
                , data-default
                , dataenc
+               , db-extras
                , deepseq
                , digest
                , directory
@@ -565,6 +552,7 @@ Executable kontrakcja-server
                , bytestring
                , cmdargs
                , curl
+               , db-extras
                , exceptions
                , happstack-server
                , happstack-static-routing
@@ -621,6 +609,7 @@ Executable cron
                , bytestring
                , cmdargs
                , consumers
+               , db-extras
                , hedis
                , log
                , text
@@ -693,6 +682,7 @@ Executable kontrakcja-migrate
                , crypto-api
                , cryptohash
                , data-default
+               , db-extras
                , exceptions
                , fields-json
                , hpqtypes
@@ -776,6 +766,7 @@ Executable mailing-server
                , crypto-api
                , cryptohash
                , data-default
+               , db-extras
                , deepseq
                , directory
                , exceptions
@@ -875,6 +866,7 @@ Executable messenger-server
                , cryptohash
                , data-default
                , dataenc
+               , db-extras
                , deepseq
                , directory
                , exceptions
@@ -971,6 +963,7 @@ Executable kontrakcja-test
                , cond
                , containers
                , data-default
+               , db-extras
                , directory
                , exceptions
                , fields-json
