@@ -81,7 +81,8 @@ def check_evidence_log(test, drv, api):
         my_ip = drv.find_element('pre').text
 
         ips = map(lambda td: td.text, html('#event-table td:nth-child(3)'))
-        assert ips == ['10.0.0.252', my_ip, my_ip, None, None]
+        ips = ips[1:]  # skip first ip because it's ip of the local machine
+        assert ips == [my_ip, my_ip, None, None], str(ips)
 
     five_minutes_ago = datetime.utcnow() - timedelta(minutes=5)
     hour_ago = datetime.utcnow() - timedelta(hours=1)
