@@ -92,7 +92,7 @@ describe("designview/buttonbarview", function () {
     assert.lengthOf($(".button-remove-pdf", React.findDOMNode(component)), 0);
   });
 
-  it("should disable the send button if document isn"t ready", function () {
+  it("should disable the send button if document isn't ready", function () {
     sinon.stub(document_, "ready").returns(false);
 
     var component = renderComponent();
@@ -117,7 +117,7 @@ describe("designview/buttonbarview", function () {
     assert.isFalse($(".sendButton", React.findDOMNode(component)).hasClass("disabled"));
   });
 
-  it("should render the can"t sign modal", function () {
+  it("should render the can't sign modal", function () {
     var component = renderComponent();
     component.showCantSignModal();
 
@@ -242,7 +242,7 @@ describe("designview/buttonbarview", function () {
     assert.isTrue(component.saveDocument.called);
   });
 
-  it("should show can"t sign modal", function () {
+  it("should show can't sign modal", function () {
     sinon.stub(document_, "hasProblems").returns(true);
 
     var component = renderComponent();
