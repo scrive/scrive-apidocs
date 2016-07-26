@@ -22,7 +22,7 @@ var evidence_attachments = require("./data/evidence_attachments");
     };
 
     server.autoRespond = true;
-    server.debug = true;
+    server.debug = false;
 
     server.respondWith(function (xhr) {
       if (server.debug) {

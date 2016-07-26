@@ -4,6 +4,7 @@ var React = require("react");
 
 var TestUtils = React.addons.TestUtils;
 
+var BlockingInfo = require("../../../js/blocking.js").Blocking;
 var ButtonBarView = require("../../../scripts/designview/buttonbar/buttonbarview.jsx");
 
 describe("designview/buttonbarview", function () {
@@ -15,7 +16,7 @@ describe("designview/buttonbarview", function () {
         ButtonBarView,
         {document: document_}
       ),
-      $('body')[0]
+      $("body")[0]
     );
 
     return component;
@@ -23,6 +24,9 @@ describe("designview/buttonbarview", function () {
 
   before(function () {
     server = backend.createServer();
+
+    window.BlockingInfo = new BlockingInfo();
+    sinon.stub(window.BlockingInfo, "shouldBlockDocs").returns(false);
   });
 
   beforeEach(function (done) {
@@ -34,6 +38,8 @@ describe("designview/buttonbarview", function () {
 
   after(function () {
     server.restore();
+
+    window.BlockingInfo = undefined;
   });
 
   afterEach(function () {
@@ -41,91 +47,91 @@ describe("designview/buttonbarview", function () {
   });
 
   it("should render buttons for template with file", function () {
-    sinon.stub(document_, 'isTemplate').returns(true);
+    sinon.stub(document_, "isTemplate").returns(true);
 
     var component = renderComponent();
 
-    assert.lengthOf($('.button', React.findDOMNode(component)), 2);
-    assert.lengthOf($('.button-save-template', React.findDOMNode(component)), 1);
-    assert.lengthOf($('.button-remove-pdf', React.findDOMNode(component)), 1);
-    assert.lengthOf($('.button-save-draft', React.findDOMNode(component)), 0);
-    assert.lengthOf($('.button-save-as-template', React.findDOMNode(component)), 0);
-    assert.lengthOf($('.sendButton', React.findDOMNode(component)), 0);
+    assert.lengthOf($(".button", React.findDOMNode(component)), 2);
+    assert.lengthOf($(".button-save-template", React.findDOMNode(component)), 1);
+    assert.lengthOf($(".button-remove-pdf", React.findDOMNode(component)), 1);
+    assert.lengthOf($(".button-save-draft", React.findDOMNode(component)), 0);
+    assert.lengthOf($(".button-save-as-template", React.findDOMNode(component)), 0);
+    assert.lengthOf($(".sendButton", React.findDOMNode(component)), 0);
   });
 
   it("should render buttons for template without file", function () {
-    sinon.stub(document_, 'isTemplate').returns(true);
-    sinon.stub(document_, 'mainfile').returns(null);
+    sinon.stub(document_, "isTemplate").returns(true);
+    sinon.stub(document_, "mainfile").returns(null);
 
     var component = renderComponent();
 
-    assert.lengthOf($('.button', React.findDOMNode(component)), 1);
-    assert.lengthOf($('.button-remove-pdf', React.findDOMNode(component)), 0);
+    assert.lengthOf($(".button", React.findDOMNode(component)), 1);
+    assert.lengthOf($(".button-remove-pdf", React.findDOMNode(component)), 0);
   });
 
   it("should render buttons for document with file", function () {
-    sinon.stub(document_, 'isTemplate').returns(false);
+    sinon.stub(document_, "isTemplate").returns(false);
 
     var component = renderComponent();
 
-    assert.lengthOf($('.button', React.findDOMNode(component)), 4);
-    assert.lengthOf($('.button-save-template', React.findDOMNode(component)), 0);
-    assert.lengthOf($('.button-remove-pdf', React.findDOMNode(component)), 1);
-    assert.lengthOf($('.button-save-draft', React.findDOMNode(component)), 1);
-    assert.lengthOf($('.button-save-as-template', React.findDOMNode(component)), 1);
-    assert.lengthOf($('.sendButton', React.findDOMNode(component)), 1);
+    assert.lengthOf($(".button", React.findDOMNode(component)), 4);
+    assert.lengthOf($(".button-save-template", React.findDOMNode(component)), 0);
+    assert.lengthOf($(".button-remove-pdf", React.findDOMNode(component)), 1);
+    assert.lengthOf($(".button-save-draft", React.findDOMNode(component)), 1);
+    assert.lengthOf($(".button-save-as-template", React.findDOMNode(component)), 1);
+    assert.lengthOf($(".sendButton", React.findDOMNode(component)), 1);
   });
 
   it("should render buttons for document without file", function () {
-    sinon.stub(document_, 'isTemplate').returns(false);
-    sinon.stub(document_, 'mainfile').returns(null);
+    sinon.stub(document_, "isTemplate").returns(false);
+    sinon.stub(document_, "mainfile").returns(null);
 
     var component = renderComponent();
 
-    assert.lengthOf($('.button', React.findDOMNode(component)), 3);
-    assert.lengthOf($('.button-remove-pdf', React.findDOMNode(component)), 0);
+    assert.lengthOf($(".button", React.findDOMNode(component)), 3);
+    assert.lengthOf($(".button-remove-pdf", React.findDOMNode(component)), 0);
   });
 
-  it("should disable the send button if document isn't ready", function () {
-    sinon.stub(document_, 'ready').returns(false);
+  it("should disable the send button if document isn"t ready", function () {
+    sinon.stub(document_, "ready").returns(false);
 
     var component = renderComponent();
 
-    assert.isTrue($('.sendButton', React.findDOMNode(component)).hasClass('disabled'));
+    assert.isTrue($(".sendButton", React.findDOMNode(component)).hasClass("disabled"));
   });
 
   it("should disable the send button if document has problems", function () {
-    sinon.stub(document_, 'hasProblems').returns(true);
+    sinon.stub(document_, "hasProblems").returns(true);
 
     var component = renderComponent();
 
-    assert.isTrue($('.sendButton', React.findDOMNode(component)).hasClass('disabled'));
+    assert.isTrue($(".sendButton", React.findDOMNode(component)).hasClass("disabled"));
   });
 
   it("should enable the send button if document is OK", function () {
-    sinon.stub(document_, 'ready').returns(true);
-    sinon.stub(document_, 'hasProblems').returns(false);
+    sinon.stub(document_, "ready").returns(true);
+    sinon.stub(document_, "hasProblems").returns(false);
 
     var component = renderComponent();
 
-    assert.isFalse($('.sendButton', React.findDOMNode(component)).hasClass('disabled'));
+    assert.isFalse($(".sendButton", React.findDOMNode(component)).hasClass("disabled"));
   });
 
-  it("should show the can't sign modal", function () {
+  it("should render the can"t sign modal", function () {
     var component = renderComponent();
     component.showCantSignModal();
 
     assert.lengthOf($(".designview-cant-sign-modal"), 1);
   });
 
-  it("should show the sign confirmation modal", function () {
+  it("should render the sign confirmation modal", function () {
     var component = renderComponent();
     component.showSignConfirmationModal();
 
     assert.lengthOf($(".designview-sign-confirmation-modal"), 1);
   });
 
-  it("should show the send confirmation modal", function () {
+  it("should render the send confirmation modal", function () {
     var component = renderComponent();
     component.showSendConfirmationModal();
 
@@ -175,7 +181,23 @@ describe("designview/buttonbarview", function () {
     );
   });
 
-  it("should save a template", function () {
+  it("should remove PDF from document", function (done) {
+    sinon.stub(document_, "recall");
+
+    var component = renderComponent();
+    component.removePDF();
+
+    util.waitUntil(
+      function() {
+        return document_.recall.called;
+      },
+      function () {
+        done();
+      }
+    );
+  });
+
+  it("should handle click on save template button", function () {
     sinon.stub(document_, "isTemplate").returns(false);
     sinon.stub(document_, "makeTemplate");
 
@@ -188,24 +210,28 @@ describe("designview/buttonbarview", function () {
     assert.isTrue(component.saveDocument.called);
   });
 
-  it("should remove the file from document", function (done) {
+  it("should handle click on remove PDF button", function (done) {
     sinon.spy(document_, "markAsNotReady");
-    sinon.spy(document_, "recall");
 
     var component = renderComponent();
+    sinon.spy(component, "saveAndFlashMessageIfAlreadySaved");
+    sinon.stub(component, "removePDF");
+
     TestUtils.Simulate.click($(".button-remove-pdf")[0]);
 
     util.waitUntil(
       function () {
-        return document_.recall.called;
+        return component.removePDF.called;
       },
       function () {
+        assert(component.saveAndFlashMessageIfAlreadySaved.called);
+        assert.isTrue(document_.markAsNotReady.called);
         done();
       }
     );
   });
 
-  it("should save a draft", function () {
+  it("should handle click on save draft button", function () {
     sinon.stub(document_, "isTemplate").returns(false);
 
     var component = renderComponent();
@@ -216,8 +242,8 @@ describe("designview/buttonbarview", function () {
     assert.isTrue(component.saveDocument.called);
   });
 
-  it("should show can't sign modal when trying to send a document with problems", function () {
-    sinon.stub(document_, "hasProblems", true);
+  it("should show can"t sign modal", function () {
+    sinon.stub(document_, "hasProblems").returns(true);
 
     var component = renderComponent();
     sinon.stub(component, "showCantSignModal");
@@ -225,5 +251,116 @@ describe("designview/buttonbarview", function () {
     TestUtils.Simulate.click($(".sendButton")[0]);
 
     assert.isTrue(component.showCantSignModal.called);
+  });
+
+  it("should show sign confirmation modal", function () {
+    sinon.stub(document_, "hasProblems").returns(false);
+    sinon.stub(document_, "authorCanSignFirst").returns(true);
+    sinon.stub(document_, "save");
+
+    var component = renderComponent();
+    sinon.stub(component, "showSignConfirmationModal");
+
+    TestUtils.Simulate.click($(".sendButton")[0]);
+
+    assert.isTrue(document_.save.called);
+    assert.isTrue(component.showSignConfirmationModal.called);
+  });
+
+  it("should show send confirmation modal", function () {
+    sinon.stub(document_, "hasProblems").returns(false);
+    sinon.stub(document_, "authorCanSignFirst").returns(false);
+    sinon.stub(document_, "save");
+
+    var component = renderComponent();
+    sinon.stub(component, "showSendConfirmationModal");
+
+    TestUtils.Simulate.click($(".sendButton")[0]);
+
+    assert.isTrue(document_.save.called);
+    assert.isTrue(component.showSendConfirmationModal.called);
+  });
+
+  it("should start signing process", function (done) {
+    sinon.stub(document_, "hasProblems").returns(false);
+    sinon.stub(document_, "authorCanSignFirst").returns(true);
+    sinon.stub(document_, "save");
+
+    sinon.stub(document_, "takeSigningScreenshot", function (callback) {
+      callback();
+    });
+
+    sinon.stub(document_, "afterSave", function (callback) {
+      callback();
+    });
+
+    var component = renderComponent();
+    sinon.stub(component, "signWithCSV");
+
+    TestUtils.Simulate.click($(".sendButton")[0]);
+
+    util.waitUntil(
+      function () {
+        return $(".modal").length > 0;
+      },
+      function () {
+        TestUtils.Simulate.click($(".modal .button")[0]);
+
+        util.waitUntil(
+          function () {
+            return component.signWithCSV.called;
+          },
+          function () {
+            assert.isTrue(document_.takeSigningScreenshot.called);
+            assert.isTrue(document_.afterSave.called);
+
+            assert.isTrue(component.signWithCSV.calledWith(
+              document_, 1, undefined
+            ));
+
+            done();
+          }
+        );
+      }
+    );
+  });
+
+  it("should start sending process", function (done) {
+    sinon.stub(document_, "hasProblems").returns(false);
+    sinon.stub(document_, "authorCanSignFirst").returns(false);
+    sinon.stub(document_, "save");
+
+    sinon.stub(document_, "takeSigningScreenshot", function (callback) {
+      callback();
+    });
+
+    var component = renderComponent();
+    sinon.stub(component, "sendWithCSV");
+
+    TestUtils.Simulate.click($(".sendButton")[0]);
+
+    util.waitUntil(
+      function () {
+        return $(".modal").length > 0;
+      },
+      function () {
+        TestUtils.Simulate.click($(".modal .button")[0]);
+
+        util.waitUntil(
+          function () {
+            return component.sendWithCSV.called;
+          },
+          function () {
+            assert.isTrue(document_.takeSigningScreenshot.called);
+
+            assert.isTrue(component.sendWithCSV.calledWith(
+              document_, 1, undefined
+            ));
+
+            done();
+          }
+        );
+      }
+    );
   });
 });
