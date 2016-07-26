@@ -1,5 +1,6 @@
 var React = require("react");
 var $ = require("jquery");
+
 var DesignViewComponent = require("../../scripts/designview/designview");
 var Document = require("../documents.js").Document;
 

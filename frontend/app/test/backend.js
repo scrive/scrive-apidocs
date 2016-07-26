@@ -9,8 +9,20 @@ var evidence_attachments = require("./data/evidence_attachments");
   exports.createServer = function () {
     var server = sinon.fakeServer.create();
 
+    var getDocumentById = function (id) {
+      var clone;
+      if (id == 2) {
+        clone = _.clone(doc2);
+      } else {
+        clone = _.clone(doc1);
+      }
+      clone.id = id;
+
+      return clone;
+    };
+
     server.autoRespond = true;
-    server.debug = false;
+    server.debug = true;
 
     server.respondWith(function (xhr) {
       if (server.debug) {
@@ -25,13 +37,7 @@ var evidence_attachments = require("./data/evidence_attachments");
     });
 
     server.respondWith(/\/api\/frontend\/documents\/(\d+)\/get/, function (xhr, id) {
-      var clone;
-      if (id == 2) {
-        clone = _.clone(doc2);
-      } else {
-        clone = _.clone(doc1);
-      }
-      clone.id = id;
+      var clone = getDocumentById(id);
       xhr.respond(200, { "Content-Type": "application/json" }, JSON.stringify(clone));
     });
 
@@ -57,6 +63,16 @@ var evidence_attachments = require("./data/evidence_attachments");
 
     server.respondWith(/\/api\/frontend\/documents\/(\d+?)\/history/, function (xhr) {
       xhr.respond(200, {"Content-Type": "application/text"}, JSON.stringify([]));
+    });
+
+    server.respondWith(/\/api\/frontend\/documents\/(\d+)\/update/, function (xhr, id) {
+      var clone = getDocumentById(id);
+      xhr.respond(200, { "Content-Type": "application/json" }, JSON.stringify(clone));
+    });
+
+    server.respondWith(/\/api\/frontend\/documents\/(\d+)\/setfile/, function (xhr, id) {
+      var clone = getDocumentById(id);
+      xhr.respond(200, { "Content-Type": "application/json" }, JSON.stringify(clone));
     });
 
     return server;

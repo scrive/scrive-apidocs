@@ -49,7 +49,9 @@ module.exports = React.createClass({
     }
 
     return (
-      <p><span>{content}</span></p>
+      <p className="designview-send-confirmation-modal">
+        <span>{content}</span>
+      </p>
     );
   }
 });

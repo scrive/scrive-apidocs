@@ -110,4 +110,120 @@ describe("designview/buttonbarview", function () {
 
     assert.isFalse($('.sendButton', React.findDOMNode(component)).hasClass('disabled'));
   });
+
+  it("should show the can't sign modal", function () {
+    var component = renderComponent();
+    component.showCantSignModal();
+
+    assert.lengthOf($(".designview-cant-sign-modal"), 1);
+  });
+
+  it("should show the sign confirmation modal", function () {
+    var component = renderComponent();
+    component.showSignConfirmationModal();
+
+    assert.lengthOf($(".designview-sign-confirmation-modal"), 1);
+  });
+
+  it("should show the send confirmation modal", function () {
+    var component = renderComponent();
+    component.showSendConfirmationModal();
+
+    assert.lengthOf($(".designview-send-confirmation-modal"), 1);
+  });
+
+  it("should compute the save template button text for template", function () {
+    sinon.stub(document_, "isTemplate").returns(true);
+    sinon.stub(document_, "saved").returns(true);
+
+    var component = renderComponent();
+
+    assert.equal(
+      component.saveTemplateButtonText(), localization.designview.saveTemplateButton
+    );
+
+    document_.saved.returns(false);
+
+    assert.equal(
+      component.saveTemplateButtonText(), localization.designview.saveAsTemplateButton
+    );
+  });
+
+  it("should compute the save template button text for document", function () {
+    sinon.stub(document_, "isTemplate").returns(false);
+
+    var component = renderComponent();
+
+    assert.equal(
+      component.saveTemplateButtonText(), localization.designview.saveAsTemplateButton
+    );
+  });
+
+  it("should compute the save draft button text", function () {
+    sinon.stub(document_, "saved").returns(true);
+
+    var component = renderComponent();
+
+    assert.equal(
+      component.saveDraftButtonText(), localization.designview.saveDraftButton
+    );
+
+    document_.saved.returns(false);
+
+    assert.equal(
+      component.saveDraftButtonText(), localization.designview.saveAsDraftButton
+    );
+  });
+
+  it("should save a template", function () {
+    sinon.stub(document_, "isTemplate").returns(false);
+    sinon.stub(document_, "makeTemplate");
+
+    var component = renderComponent();
+    sinon.stub(component, "saveDocument");
+
+    TestUtils.Simulate.click($(".button-save-as-template")[0]);
+
+    assert.isTrue(document_.makeTemplate.called);
+    assert.isTrue(component.saveDocument.called);
+  });
+
+  it("should remove the file from document", function (done) {
+    sinon.spy(document_, "markAsNotReady");
+    sinon.spy(document_, "recall");
+
+    var component = renderComponent();
+    TestUtils.Simulate.click($(".button-remove-pdf")[0]);
+
+    util.waitUntil(
+      function () {
+        return document_.recall.called;
+      },
+      function () {
+        done();
+      }
+    );
+  });
+
+  it("should save a draft", function () {
+    sinon.stub(document_, "isTemplate").returns(false);
+
+    var component = renderComponent();
+    sinon.stub(component, "saveDocument");
+
+    TestUtils.Simulate.click($(".button-save-draft")[0]);
+
+    assert.isTrue(component.saveDocument.called);
+  });
+
+  it("should show can't sign modal when trying to send a document with problems", function () {
+    sinon.stub(document_, "hasProblems", true);
+
+    var component = renderComponent();
+    sinon.stub(component, "showCantSignModal");
+
+    TestUtils.Simulate.click($(".sendButton")[0]);
+
+    assert.isTrue(component.showCantSignModal.called);
+  });
 });
