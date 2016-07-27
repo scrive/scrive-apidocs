@@ -98,6 +98,8 @@ module.exports = function(ownerDocument, containerDocument, width, height, optio
         documentClone.write("<!DOCTYPE html><html></html>");
         // Chrome scrolls the parent document for some reason after the write to the cloned window???
         restoreOwnerScroll(ownerDocument, x, y);
+        // Force re-application of styles, fixes bug in IE where media queries are not in Iframe.
+        container.width = width + 1;
         documentClone.replaceChild(documentClone.adoptNode(documentElement), documentClone.documentElement);
         documentClone.close();
     });

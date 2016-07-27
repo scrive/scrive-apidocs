@@ -32,6 +32,8 @@ function Font(family, size) {
     span.appendChild(document.createTextNode(sampleText));
     container.appendChild(span);
     container.appendChild(img);
+    // Measurements randomly fail in IE without this.
+    container.appendChild(document.createTextNode(""));
     baseline = (img.offsetTop - span.offsetTop) + 1;
 
     container.removeChild(span);

@@ -54,6 +54,23 @@ NodeContainer.prototype.isElementVisible = function() {
     );
 };
 
+NodeContainer.prototype.textDecoration = function() {
+    var style = "none";
+    var node = this;
+
+    while (node) {
+        style = node.css("textDecoration");
+
+        if (style !== "none") {
+            return style;
+        }
+
+        node = node.parent;
+    }
+
+    return style;
+};
+
 NodeContainer.prototype.css = function(attribute) {
     if (!this.computedStyles) {
         this.computedStyles = this.isPseudoElement ? this.parent.computedStyle(this.before ? ":before" : ":after") : this.computedStyle(null);

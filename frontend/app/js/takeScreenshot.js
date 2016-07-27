@@ -46,7 +46,7 @@ var _ = require("underscore");
         if (window.html2canvas === undefined) {
           window.html2canvas = html2canvas;
         }
-        html2canvas($("body"), {logging: false, type: "view"}).then(function (canvas) {
+        html2canvas($("body"), {letterRendering: true, logging: false, type: "view"}).then(function (canvas) {
           var newCanvas = scaleCanvas(canvas, 0.6); // smallest scale that still makes text readable
           canvas = null;
           if (!callbackCalled) {

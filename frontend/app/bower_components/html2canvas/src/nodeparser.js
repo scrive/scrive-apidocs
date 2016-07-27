@@ -224,7 +224,7 @@ NodeParser.prototype.sortStackingContexts = function(stack) {
 
 NodeParser.prototype.parseTextBounds = function(container) {
     return function(text, index, textList) {
-        if (container.parent.css("textDecoration").substr(0, 4) !== "none" || text.trim().length !== 0) {
+        if (container.parent.textDecoration().substr(0, 4) !== "none" || text.trim().length !== 0) {
             if (this.support.rangeBounds && !container.parent.hasTransform()) {
                 var offset = textList.slice(0, index).join("").length;
                 return this.getRangeBounds(container.node, offset, text.length);
@@ -461,7 +461,7 @@ NodeParser.prototype.paintText = function(container) {
 };
 
 NodeParser.prototype.renderTextDecoration = function(container, bounds, metrics) {
-    switch(container.css("textDecoration").split(" ")[0]) {
+    switch(container.textDecoration().split(" ")[0]) {
     case "underline":
         // Draws a line at the baseline of the font
         // TODO As some browsers display the line as more than 1px if the font-size is big, need to take that into account both in position and size
