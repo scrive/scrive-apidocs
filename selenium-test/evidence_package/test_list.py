@@ -33,7 +33,15 @@ REMOTE_DEVICES = [{'browserName': "chrome",
                    'platform': 'Windows 8.1',
                    'window-size': (1040, 784),
                    'screenshot-prefix': 'desktop',
-                   'version': 'beta'}]
+                   'version': 'beta'},
+                  {'browserName': 'Safari',
+                   'appiumVersion': '1.5.3',
+                   'deviceName': 'iPhone 6',
+                   'deviceOrientation': 'portrait',
+                   'platformVersion': '9.3',
+                   'platformName': 'iOS',
+                   'screenshot-prefix': 'mobile'}]
+
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
 artifact_dir = os.path.join(dir_path, 'artifacts')

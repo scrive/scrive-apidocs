@@ -1,9 +1,32 @@
 # coding: utf-8
+import inspect
+from unittest import SkipTest
 import os
 from datetime import datetime, timedelta
 import re
 
 from pyquery import PyQuery
+
+
+def driver_check(cond):
+    def outer(f):
+        def inner(*args, **kwargs):
+            arguments = inspect.getcallargs(f, *args, **kwargs)
+            print arguments
+            drv = arguments['drv']
+            cond(drv, f)  # this can raise SkipTest
+            return f(*args, **kwargs)
+        return inner
+    return outer
+
+
+def single_run_cond(drv, f):
+    if getattr(f, '__has_run_already__', False):
+        raise SkipTest('This test only needs to be run once')
+    else:
+        setattr(f, '__has_run_already__', True)
+
+single_run = driver_check(single_run_cond)
 
 
 def check_reference_screenshot(test, drv, api):
@@ -51,6 +74,7 @@ def check_reference_screenshot(test, drv, api):
             f.write(screenshot)
 
 
+@single_run
 def check_evidence_log(test, drv, api):
     doc = test.create_standard_doc(u'evidence log')
     doc = api.ready(api.update_document(doc))
@@ -82,7 +106,7 @@ def check_evidence_log(test, drv, api):
 
         ips = map(lambda td: td.text, html('#event-table td:nth-child(3)'))
         ips = ips[1:]  # skip first ip because it's ip of the local machine
-        assert ips == [my_ip, my_ip, None, None], str(ips)
+        assert ips == [my_ip, my_ip, None, None], (str(ips) + ':' + my_ip)
 
     five_minutes_ago = datetime.utcnow() - timedelta(minutes=5)
     hour_ago = datetime.utcnow() - timedelta(hours=1)
