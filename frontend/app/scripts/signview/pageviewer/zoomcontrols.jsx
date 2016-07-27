@@ -1,5 +1,6 @@
 import React from "react";
 import $ from "jquery";
+import "jquery.documentsize";
 import BlinkMixin from "../../common/blink_mixin";
 import classNames from "classnames";
 
@@ -58,8 +59,8 @@ module.exports = React.createClass({
   computePosition: function () {
     const $parent = $(this.getDOMNode()).parent();
 
-    const viewportWidth = $(window).width();
-    const viewportHeight = $(window).height();
+    const viewportWidth = $.windowWidth();
+    const viewportHeight = $.windowHeight();
 
     const parentWidth = $parent.outerWidth();
     const parentHeight = $parent.height();
@@ -71,20 +72,18 @@ module.exports = React.createClass({
 
     const scrollTop = $(window).scrollTop();
     const scrollLeft = $(window).scrollLeft();
-    const scrollBottom =  scrollTop + viewportHeight;
     const scrollRight = scrollLeft + viewportWidth;
-    const scrollMiddle = scrollTop + (viewportHeight / 2);
 
-    const halfHeight = this.height() / 2;
+    const height = this.height()
 
-    if (scrollMiddle < parentTop + halfHeight) {
+    if (scrollTop < parentTop) {
       return {
         position: "absolute",
         right: Math.max(0, parentRight - scrollRight),
         bottom: null,
         top: 49 // half size of zoom controls minus borders and shadow.
       }
-    } else if (scrollMiddle > parentBottom - halfHeight) {
+    } else if (scrollTop + height > parentBottom) {
       return {
         position: "absolute",
         right: Math.max(0, parentRight - scrollRight),
@@ -95,7 +94,7 @@ module.exports = React.createClass({
       return {
         position: "fixed",
         right: parentWidth < viewportWidth ? (viewportWidth - parentWidth) / 2 : 0,
-        bottom: (viewportHeight / 2) - halfHeight,
+        bottom: viewportHeight - height,
         top: null
       }
     }
