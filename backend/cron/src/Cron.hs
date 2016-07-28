@@ -4,7 +4,7 @@ import Control.Monad
 import Control.Monad.Base
 import Data.Maybe
 import Database.PostgreSQL.Consumers
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 import Log
 import System.Console.CmdArgs hiding (def)
 import System.Environment

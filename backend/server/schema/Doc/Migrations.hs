@@ -4,7 +4,7 @@ import Control.Monad.Catch
 import Data.Char
 import Data.Int
 import Data.String.Utils
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 import Log
 import Text.HTML.TagSoup.Entity
 import Text.XML.HaXml(render)

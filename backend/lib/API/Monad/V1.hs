@@ -75,7 +75,7 @@ data APIError = BadInput           String
               | ConflictError      String
               deriving (Show, Eq, Typeable)
 
-instance KontraException APIError
+instance DBExtraException APIError
 
 instance ToJSValue APIError where
   toJSValue (BadInput msg) = jsonError $ value "message" msg
@@ -98,8 +98,8 @@ httpCodeFromAPIError (ActionNotAvailable {}) = 500
 httpCodeFromAPIError (NoAvailableYet {}) = 420
 httpCodeFromAPIError (ConflictError {}) = 409
 
-httpCodeFromSomeKontraException :: SomeKontraException -> Int
-httpCodeFromSomeKontraException (SomeKontraException ex) =
+httpCodeFromSomeDBExtraException :: SomeDBExtraException -> Int
+httpCodeFromSomeDBExtraException (SomeDBExtraException ex) =
   case cast ex of
     Just (apierror :: APIError) -> httpCodeFromAPIError apierror
     Nothing -> 400
@@ -201,14 +201,14 @@ jsonError rest = runJSONGen $ do
 -- This defines the possible outputs of the api.
 api :: (Kontrakcja m, ToAPIResponse v) => m v -> m Response
 api acc = (toAPIResponse <$> acc) `catches` [
-    Handler $ \ex@(SomeKontraException e) -> do
+    Handler $ \ex@(SomeDBExtraException e) -> do
       -- API handler always returns a valid response. Due to that appHandler will not rollback - and we need to do it here
       rollback
       logAttention "API error" $ object [
           "error" .= jsonToAeson (toJSValue e)
         ]
       return $ (toAPIResponse $ toJSValue e) {
-        rsCode = httpCodeFromSomeKontraException ex
+        rsCode = httpCodeFromSomeDBExtraException ex
       }
   ]
 
@@ -220,13 +220,13 @@ apiGuardL :: (Kontrakcja m, APIGuard m a b) => APIError -> m a -> m b
 apiGuardL e acc = apiGuard e =<< acc
 
 apiGuard' :: (MonadThrow m, APIGuard m a b) => a -> m b
-apiGuard' a = guardEither a >>= either (throwM . SomeKontraException) return
+apiGuard' a = guardEither a >>= either (throwM . SomeDBExtraException) return
 
 apiGuard :: (MonadThrow m, APIGuard m a b) => APIError -> a -> m b
-apiGuard e a = guardEither a >>= either (const $ (throwM . SomeKontraException) e) return
+apiGuard e a = guardEither a >>= either (const $ (throwM . SomeDBExtraException) e) return
 
 apiGuardJustM :: (MonadThrow m) => APIError -> m (Maybe a) -> m a
-apiGuardJustM e a = a >>= maybe ((throwM . SomeKontraException) e) return
+apiGuardJustM e a = a >>= maybe ((throwM . SomeDBExtraException) e) return
 
 
 -- | Unify the different types of guards with this class
@@ -275,25 +275,25 @@ getAPIUserWithPrivileges :: Kontrakcja m => [APIPrivilege] -> m (User, Actor, Bo
 getAPIUserWithPrivileges privs = do
   moauthuser <- getOAuthUser privs
   case moauthuser of
-    Just (Left err) -> (throwM . SomeKontraException) $ notLoggedIn err
+    Just (Left err) -> (throwM . SomeDBExtraException) $ notLoggedIn err
     Just (Right (user, actor)) -> return (user, actor, True)
     Nothing -> do
       msessionuser <- getSessionUser
       case msessionuser of
         Just (user, actor) -> return (user, actor, False)
-        Nothing -> (throwM . SomeKontraException) notLoggedIn'
+        Nothing -> (throwM . SomeDBExtraException) notLoggedIn'
 
 getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor, Bool)
 getAPIUserWithPad priv = do
   moauthuser <- getOAuthUser [priv]
   case moauthuser of
-    Just (Left err) -> (throwM . SomeKontraException) $ notLoggedIn err
+    Just (Left err) -> (throwM . SomeDBExtraException) $ notLoggedIn err
     Just (Right (user, actor)) -> return (user, actor, True)
     Nothing -> do
       msessionuser <- getSessionUserWithPad
       case msessionuser of
         Just (user, actor) -> return (user, actor, False)
-        Nothing -> (throwM . SomeKontraException) notLoggedIn'
+        Nothing -> (throwM . SomeDBExtraException) notLoggedIn'
 
 
 getSessionUser :: Kontrakcja m => m (Maybe (User, Actor))

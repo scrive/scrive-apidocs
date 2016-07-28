@@ -68,7 +68,7 @@ instance ToAPIResponse () where
 -- This defines the possible outputs of the API.
 api :: (Kontrakcja m, ToAPIResponse v) => m (APIResponse v) -> m Response
 api acc =  (toAPIResponse <$> acc) `catches` [
-    Handler $ \ex@(SomeKontraException e) -> do
+    Handler $ \ex@(SomeDBExtraException e) -> do
       -- API handler always returns a valid response. Due to that appHandler will not rollback - and we need to do it here
       rollback
       -- For some exceptions we do a conversion to APIError
@@ -76,11 +76,11 @@ api acc =  (toAPIResponse <$> acc) `catches` [
 
       logAttention "API v2 Error:" $ object [
         "error" .= jsonToAeson (toJSValue e),
-        "response_json" .= jsonToAeson (jsonFromSomeKontraException ex')
+        "response_json" .= jsonToAeson (jsonFromSomeDBExtraException ex')
         ]
 
-      return $ (toAPIResponse $ jsonFromSomeKontraException ex') {
-        rsCode = httpCodeFromSomeKontraException ex'
+      return $ (toAPIResponse $ jsonFromSomeDBExtraException ex') {
+        rsCode = httpCodeFromSomeDBExtraException ex'
       }
   ]
 
@@ -88,4 +88,4 @@ apiGuardJustM :: (MonadThrow m) => APIError -> m (Maybe a) -> m a
 apiGuardJustM e a = a >>= maybe (apiError e) return
 
 apiError :: (MonadThrow m) => APIError -> m a
-apiError e = throwM . SomeKontraException $ e
+apiError e = throwM . SomeDBExtraException $ e

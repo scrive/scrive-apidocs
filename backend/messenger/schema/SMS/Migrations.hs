@@ -3,7 +3,7 @@ module SMS.Migrations (
   ) where
 
 import Data.Text (Text)
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import KontraPrelude

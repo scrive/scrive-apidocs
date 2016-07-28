@@ -5,7 +5,7 @@ import Control.Monad.Base
 import Data.Aeson
 import Data.Monoid
 import Database.PostgreSQL.Consumers
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 import Happstack.Server hiding (result, waitForTermination)
 import Log
 import System.Console.CmdArgs hiding (def)

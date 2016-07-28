@@ -6,7 +6,7 @@ module AppDBTables (
   , kontraTables
   ) where
 
-import DB.Model
+import Database.PostgreSQL.PQTypes.Model
 
 import ActionQueue.Tables
 import Attachment.Tables

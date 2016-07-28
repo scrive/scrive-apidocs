@@ -1,7 +1,7 @@
 module Cron.Migrations (cronMigrations) where
 
 import Control.Monad.Catch
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 import qualified Data.Text as T
 
 import Cron.Tables

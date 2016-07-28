@@ -17,8 +17,8 @@ module API.V2.Errors (
   , invalidAuthorization
   , invalidAuthorizationWithMsg
   , insufficientPrivileges
-  , httpCodeFromSomeKontraException
-  , jsonFromSomeKontraException
+  , httpCodeFromSomeDBExtraException
+  , jsonFromSomeDBExtraException
   , tryToConvertConditionalExceptionIntoAPIError
 ) where
 
@@ -46,7 +46,7 @@ instance ToJSValue APIError where
     value "error_message" (T.unpack $ errorMessage a)
     value "http_code" (errorHttpCode $ a)
 
-instance KontraException APIError
+instance DBExtraException APIError
 
 data APIErrorType = ServerError
                | EndpointNotFound
@@ -78,11 +78,11 @@ errorIDFromAPIErrorType DocumentObjectVersionMismatch = "document_object_version
 errorIDFromAPIErrorType DocumentStateError            = "document_state_error"
 errorIDFromAPIErrorType SignatoryStateError           = "signatory_state_error"
 
-jsonFromSomeKontraException :: SomeKontraException -> JSValue
-jsonFromSomeKontraException (SomeKontraException ex)  = toJSValue ex
+jsonFromSomeDBExtraException :: SomeDBExtraException -> JSValue
+jsonFromSomeDBExtraException (SomeDBExtraException ex)  = toJSValue ex
 
-httpCodeFromSomeKontraException :: SomeKontraException -> Int
-httpCodeFromSomeKontraException (SomeKontraException ex) =
+httpCodeFromSomeDBExtraException :: SomeDBExtraException -> Int
+httpCodeFromSomeDBExtraException (SomeDBExtraException ex) =
   case cast ex of
     Just (apierror :: APIError) -> errorHttpCode apierror
     Nothing -> 500
@@ -163,7 +163,7 @@ resourceNotFound info = APIError { errorType = ResourceNotFound, errorHttpCode =
 
 -- Conversion of DB exception / document conditionals into API errors
 
-tryToConvertConditionalExceptionIntoAPIError :: SomeKontraException -> SomeKontraException
+tryToConvertConditionalExceptionIntoAPIError :: SomeDBExtraException -> SomeDBExtraException
 tryToConvertConditionalExceptionIntoAPIError  =  foldr (.) id [
       convertDocumentDoesNotExist
     , convertDocumentTypeShouldBe
@@ -184,99 +184,99 @@ tryToConvertConditionalExceptionIntoAPIError  =  foldr (.) id [
   ]
 
 
-convertDocumentDoesNotExist :: SomeKontraException -> SomeKontraException
-convertDocumentDoesNotExist (SomeKontraException ex) =
+convertDocumentDoesNotExist :: SomeDBExtraException -> SomeDBExtraException
+convertDocumentDoesNotExist (SomeDBExtraException ex) =
   case cast ex of
-    Just (DocumentDoesNotExist did) ->  SomeKontraException $ documentNotFound did
-    Nothing -> (SomeKontraException ex)
+    Just (DocumentDoesNotExist did) ->  SomeDBExtraException $ documentNotFound did
+    Nothing -> (SomeDBExtraException ex)
 
-convertDocumentTypeShouldBe :: SomeKontraException -> SomeKontraException
-convertDocumentTypeShouldBe (SomeKontraException ex) =
+convertDocumentTypeShouldBe :: SomeDBExtraException -> SomeDBExtraException
+convertDocumentTypeShouldBe (SomeDBExtraException ex) =
   case cast ex of
-    Just (DocumentTypeShouldBe  {documentTypeShouldBe = Template}) ->  SomeKontraException $ documentStateError $ "Document is not a template"
-    Just (DocumentTypeShouldBe  {documentTypeShouldBe = Signable}) ->  SomeKontraException $ documentStateError $ "Document is a template"
-    Nothing -> (SomeKontraException ex)
+    Just (DocumentTypeShouldBe  {documentTypeShouldBe = Template}) ->  SomeDBExtraException $ documentStateError $ "Document is not a template"
+    Just (DocumentTypeShouldBe  {documentTypeShouldBe = Signable}) ->  SomeDBExtraException $ documentStateError $ "Document is a template"
+    Nothing -> (SomeDBExtraException ex)
 
-convertDocumentStatusShouldBe :: SomeKontraException -> SomeKontraException
-convertDocumentStatusShouldBe (SomeKontraException ex) =
+convertDocumentStatusShouldBe :: SomeDBExtraException -> SomeDBExtraException
+convertDocumentStatusShouldBe (SomeDBExtraException ex) =
   case cast ex of
-    Just (DocumentStatusShouldBe{}) ->  SomeKontraException $ documentStateError $ "Invalid document state"
-    Nothing -> (SomeKontraException ex)
+    Just (DocumentStatusShouldBe{}) ->  SomeDBExtraException $ documentStateError $ "Invalid document state"
+    Nothing -> (SomeDBExtraException ex)
 
-convertUserShouldBeSelfOrCompanyAdmin :: SomeKontraException -> SomeKontraException
-convertUserShouldBeSelfOrCompanyAdmin (SomeKontraException ex) =
+convertUserShouldBeSelfOrCompanyAdmin :: SomeDBExtraException -> SomeDBExtraException
+convertUserShouldBeSelfOrCompanyAdmin (SomeDBExtraException ex) =
   case cast ex of
-    Just (UserShouldBeSelfOrCompanyAdmin{}) ->  SomeKontraException $ insufficientPrivileges
-    Nothing -> (SomeKontraException ex)
+    Just (UserShouldBeSelfOrCompanyAdmin{}) ->  SomeDBExtraException $ insufficientPrivileges
+    Nothing -> (SomeDBExtraException ex)
 
-convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument :: SomeKontraException -> SomeKontraException
-convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument (SomeKontraException ex) =
+convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument :: SomeDBExtraException -> SomeDBExtraException
+convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument (SomeDBExtraException ex) =
   case cast ex of
-    Just (UserShouldBeDirectlyOrIndirectlyRelatedToDocument {}) ->  SomeKontraException $ insufficientPrivileges
-    Nothing -> (SomeKontraException ex)
+    Just (UserShouldBeDirectlyOrIndirectlyRelatedToDocument {}) ->  SomeDBExtraException $ insufficientPrivileges
+    Nothing -> (SomeDBExtraException ex)
 
-convertSignatoryLinkDoesNotExist :: SomeKontraException -> SomeKontraException
-convertSignatoryLinkDoesNotExist (SomeKontraException ex) =
+convertSignatoryLinkDoesNotExist :: SomeDBExtraException -> SomeDBExtraException
+convertSignatoryLinkDoesNotExist (SomeDBExtraException ex) =
   case cast ex of
-    Just (SignatoryLinkDoesNotExist sig) ->  SomeKontraException $ signatoryStateError $ "Signatory"  <+> T.pack (show sig) <+> "does not exists"
-    Nothing -> (SomeKontraException ex)
+    Just (SignatoryLinkDoesNotExist sig) ->  SomeDBExtraException $ signatoryStateError $ "Signatory"  <+> T.pack (show sig) <+> "does not exists"
+    Nothing -> (SomeDBExtraException ex)
 
-convertSignatoryHasNotYetSigned :: SomeKontraException -> SomeKontraException
-convertSignatoryHasNotYetSigned (SomeKontraException ex) =
+convertSignatoryHasNotYetSigned :: SomeDBExtraException -> SomeDBExtraException
+convertSignatoryHasNotYetSigned (SomeDBExtraException ex) =
   case cast ex of
-    Just (SignatoryHasNotYetSigned {}) ->  SomeKontraException $ signatoryStateError $ "Signatory has not signed yet"
-    Nothing -> (SomeKontraException ex)
+    Just (SignatoryHasNotYetSigned {}) ->  SomeDBExtraException $ signatoryStateError $ "Signatory has not signed yet"
+    Nothing -> (SomeDBExtraException ex)
 
-convertSignatoryIsNotPartner :: SomeKontraException -> SomeKontraException
-convertSignatoryIsNotPartner (SomeKontraException ex) =
+convertSignatoryIsNotPartner :: SomeDBExtraException -> SomeDBExtraException
+convertSignatoryIsNotPartner (SomeDBExtraException ex) =
   case cast ex of
-    Just (SignatoryIsNotPartner {}) ->  SomeKontraException $ signatoryStateError $ "Signatory should not sign this document"
-    Nothing -> (SomeKontraException ex)
+    Just (SignatoryIsNotPartner {}) ->  SomeDBExtraException $ signatoryStateError $ "Signatory should not sign this document"
+    Nothing -> (SomeDBExtraException ex)
 
-convertSignatoryHasAlreadySigned :: SomeKontraException -> SomeKontraException
-convertSignatoryHasAlreadySigned (SomeKontraException ex) =
+convertSignatoryHasAlreadySigned :: SomeDBExtraException -> SomeDBExtraException
+convertSignatoryHasAlreadySigned (SomeDBExtraException ex) =
   case cast ex of
-    Just (SignatoryHasAlreadySigned {}) ->  SomeKontraException $ signatoryStateError $ "Signatory already signed"
-    Nothing -> (SomeKontraException ex)
+    Just (SignatoryHasAlreadySigned {}) ->  SomeDBExtraException $ signatoryStateError $ "Signatory already signed"
+    Nothing -> (SomeDBExtraException ex)
 
-convertSignatoryTokenDoesNotMatch :: SomeKontraException -> SomeKontraException
-convertSignatoryTokenDoesNotMatch (SomeKontraException ex) =
+convertSignatoryTokenDoesNotMatch :: SomeDBExtraException -> SomeDBExtraException
+convertSignatoryTokenDoesNotMatch (SomeDBExtraException ex) =
   case cast ex of
-    Just (SignatoryTokenDoesNotMatch {}) -> SomeKontraException $ invalidAuthorizationWithMsg "Signatory token does not match"
-    Nothing -> (SomeKontraException ex)
+    Just (SignatoryTokenDoesNotMatch {}) -> SomeDBExtraException $ invalidAuthorizationWithMsg "Signatory token does not match"
+    Nothing -> (SomeDBExtraException ex)
 
-convertDocumentObjectVersionDoesNotMatch :: SomeKontraException -> SomeKontraException
-convertDocumentObjectVersionDoesNotMatch (SomeKontraException ex) =
+convertDocumentObjectVersionDoesNotMatch :: SomeDBExtraException -> SomeDBExtraException
+convertDocumentObjectVersionDoesNotMatch (SomeDBExtraException ex) =
   case cast ex of
-    Just (e@DocumentObjectVersionDoesNotMatch {}) -> SomeKontraException $ documentObjectVersionMismatch e
-    Nothing -> (SomeKontraException ex)
+    Just (e@DocumentObjectVersionDoesNotMatch {}) -> SomeDBExtraException $ documentObjectVersionMismatch e
+    Nothing -> (SomeDBExtraException ex)
 
-convertDocumentWasPurged ::  SomeKontraException -> SomeKontraException
-convertDocumentWasPurged (SomeKontraException ex) =
+convertDocumentWasPurged ::  SomeDBExtraException -> SomeDBExtraException
+convertDocumentWasPurged (SomeDBExtraException ex) =
   case cast ex of
-    Just (DocumentWasPurged {}) -> SomeKontraException $ documentStateError $ "Document was purged"
-    Nothing -> (SomeKontraException ex)
+    Just (DocumentWasPurged {}) -> SomeDBExtraException $ documentStateError $ "Document was purged"
+    Nothing -> (SomeDBExtraException ex)
 
-convertDocumentIsDeleted ::  SomeKontraException -> SomeKontraException
-convertDocumentIsDeleted (SomeKontraException ex) =
+convertDocumentIsDeleted ::  SomeDBExtraException -> SomeDBExtraException
+convertDocumentIsDeleted (SomeDBExtraException ex) =
   case cast ex of
-    Just (DocumentIsDeleted {}) -> SomeKontraException $ documentStateError $ "The document is in Trash"
-    Nothing -> (SomeKontraException ex)
+    Just (DocumentIsDeleted {}) -> SomeDBExtraException $ documentStateError $ "The document is in Trash"
+    Nothing -> (SomeDBExtraException ex)
 
-convertDocumentIsNotDeleted ::  SomeKontraException -> SomeKontraException
-convertDocumentIsNotDeleted (SomeKontraException ex) =
+convertDocumentIsNotDeleted ::  SomeDBExtraException -> SomeDBExtraException
+convertDocumentIsNotDeleted (SomeDBExtraException ex) =
   case cast ex of
-    Just (DocumentIsNotDeleted {}) -> SomeKontraException $ documentStateError $ "The document is not in Trash"
-    Nothing -> (SomeKontraException ex)
+    Just (DocumentIsNotDeleted {}) -> SomeDBExtraException $ documentStateError $ "The document is not in Trash"
+    Nothing -> (SomeDBExtraException ex)
 
-convertDocumentIsReallyDeleted ::  SomeKontraException -> SomeKontraException
-convertDocumentIsReallyDeleted (SomeKontraException ex) =
+convertDocumentIsReallyDeleted ::  SomeDBExtraException -> SomeDBExtraException
+convertDocumentIsReallyDeleted (SomeDBExtraException ex) =
   case cast ex of
-    Just (DocumentIsReallyDeleted {}) -> SomeKontraException $ documentStateError $ "The document is deleted. It is not avaialbe and will be purged soon"
-    Nothing -> (SomeKontraException ex)
+    Just (DocumentIsReallyDeleted {}) -> SomeDBExtraException $ documentStateError $ "The document is deleted. It is not avaialbe and will be purged soon"
+    Nothing -> (SomeDBExtraException ex)
 
-convertSignatoryAuthenticationToSignDoesNotMatch ::  SomeKontraException -> SomeKontraException
-convertSignatoryAuthenticationToSignDoesNotMatch (SomeKontraException ex) =
+convertSignatoryAuthenticationToSignDoesNotMatch ::  SomeDBExtraException -> SomeDBExtraException
+convertSignatoryAuthenticationToSignDoesNotMatch (SomeDBExtraException ex) =
   case cast ex of
-    Just (SignatoryAuthenticationToSignDoesNotMatch {}) -> SomeKontraException $ signatoryStateError $ "Invalid authorization for signatory"
-    Nothing -> (SomeKontraException ex)
+    Just (SignatoryAuthenticationToSignDoesNotMatch {}) -> SomeDBExtraException $ signatoryStateError $ "Invalid authorization for signatory"
+    Nothing -> (SomeDBExtraException ex)

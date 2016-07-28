@@ -11,7 +11,7 @@ import Data.Pool
 import Data.Text (Text)
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Internal.Connection
-import DB.Model.CompositeType
+import Database.PostgreSQL.PQTypes.Model.CompositeType
 import Log
 
 import KontraPrelude

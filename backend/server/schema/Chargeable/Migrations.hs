@@ -1,6 +1,6 @@
 module Chargeable.Migrations where
 
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 
 import Chargeable.Tables
 import DB

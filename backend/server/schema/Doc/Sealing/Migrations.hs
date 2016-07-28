@@ -1,6 +1,6 @@
 module Doc.Sealing.Migrations where
 
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import Doc.Sealing.Tables

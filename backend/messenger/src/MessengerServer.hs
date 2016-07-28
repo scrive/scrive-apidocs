@@ -3,7 +3,7 @@ module MessengerServer (main) where
 import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Database.PostgreSQL.Consumers
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 import Happstack.Server hiding (waitForTermination)
 import Log
 import System.Console.CmdArgs hiding (def)

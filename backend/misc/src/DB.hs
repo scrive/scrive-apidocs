@@ -1,15 +1,15 @@
 module DB (
     module Database.PostgreSQL.PQTypes
   , module DB.Derive
-  , module DB.Model
+  , module Database.PostgreSQL.PQTypes.Model
   , module DB.Query
-  , module DB.SQL
+  , module Database.PostgreSQL.PQTypes.SQL.Builder
   , module DB.Utils
   ) where
 
 import Database.PostgreSQL.PQTypes
-import DB.Model
-import DB.SQL
+import Database.PostgreSQL.PQTypes.Model
+import Database.PostgreSQL.PQTypes.SQL.Builder
 
 import DB.Derive
 import DB.Query

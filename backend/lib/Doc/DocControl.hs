@@ -228,7 +228,7 @@ handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $ (do
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
     dbUpdate $ AddDocumentSessionToken sid mh
     -- Redirect to propper page
-    sendRedirect $ LinkSignDocNoMagicHash did sid) `catchKontra` (\(DocumentDoesNotExist _) -> respond404)
+    sendRedirect $ LinkSignDocNoMagicHash did sid) `catchDBExtraException` (\(DocumentDoesNotExist _) -> respond404)
 
 -- |
 --   /s/[documentid]/[signatorylinkid] and /sp/[documentid]/[signatorylinkid]

@@ -1,6 +1,6 @@
 module EID.CGI.GRP.Transaction.Migrations where
 
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import EID.CGI.GRP.Transaction.Tables

@@ -31,7 +31,7 @@ import Utils.Monad
 checkDraftTimeZoneName ::  (Kontrakcja m) =>  Document -> m ()
 checkDraftTimeZoneName draft = do
   void $  (mkTimeZoneName $ toString (documenttimezonename draft))
-    `E.catch` (\(_::E.SomeException) ->  throwM $ SomeKontraException $ badInput "Timezone name is invalid.")
+    `E.catch` (\(_::E.SomeException) ->  throwM $ SomeDBExtraException $ badInput "Timezone name is invalid.")
 
 applyDraftDataToDocument :: (Kontrakcja m, DocumentMonad m) =>  Document -> Actor -> m ()
 applyDraftDataToDocument draft actor = do
@@ -40,7 +40,7 @@ applyDraftDataToDocument draft actor = do
       theDocument >>= \doc -> logAttention "Document is not in preparation" $ object [
           "status" .= show (documentstatus doc)
         ]
-      throwM $ SomeKontraException $ serverError "applyDraftDataToDocument failed"
+      throwM $ SomeDBExtraException $ serverError "applyDraftDataToDocument failed"
     _ <- theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
                                   documenttitle = documenttitle draft
                                 , documentinvitetext = documentinvitetext draft
@@ -66,7 +66,7 @@ applyDraftDataToDocument draft actor = do
             when_ (not $ (authorattachmentfileid att) `elem` (authorattachmentfileid <$> documentauthorattachments draft)) $ do -- We need to compare fileid - since name is not parsed in V1
               dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
     documentsignatorylinks <$> theDocument >>= \siglinks -> case (mergeAuthorDetails siglinks (sortBy compareSL $ documentsignatorylinks draft)) of
-         Nothing   -> throwM $ SomeKontraException $ serverError "Problem with author details while sending draft"
+         Nothing   -> throwM $ SomeDBExtraException $ serverError "Problem with author details while sending draft"
          Just sigs -> do
            -- Checking if some integrations depend on fact that we don't change fstname and lastname for author. To be removed till 20. II.
            let  (Just oldAuthor) = find isAuthor $ documentsignatorylinks $ draft
@@ -79,7 +79,7 @@ applyDraftDataToDocument draft actor = do
            -- End testing
 
            res <- dbUpdate $ ResetSignatoryDetails (sortBy compareSL $ sigs) actor
-           unless res $ throwM $ SomeKontraException $ serverError "applyDraftDataToDocument failed"
+           unless res $ throwM $ SomeDBExtraException $ serverError "applyDraftDataToDocument failed"
 
 
 compareSL :: SignatoryLink -> SignatoryLink -> Ordering

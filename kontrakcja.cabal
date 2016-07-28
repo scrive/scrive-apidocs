@@ -439,7 +439,7 @@ Library
                , curl
                , data-default
                , dataenc
-               , db-extras
+               , hpqtypes-extras
                , deepseq
                , digest
                , directory
@@ -552,7 +552,7 @@ Executable kontrakcja-server
                , bytestring
                , cmdargs
                , curl
-               , db-extras
+               , hpqtypes-extras
                , exceptions
                , happstack-server
                , happstack-static-routing
@@ -609,7 +609,7 @@ Executable cron
                , bytestring
                , cmdargs
                , consumers
-               , db-extras
+               , hpqtypes-extras
                , hedis
                , log
                , text
@@ -682,7 +682,7 @@ Executable kontrakcja-migrate
                , crypto-api
                , cryptohash
                , data-default
-               , db-extras
+               , hpqtypes-extras
                , exceptions
                , fields-json
                , hpqtypes
@@ -766,7 +766,7 @@ Executable mailing-server
                , crypto-api
                , cryptohash
                , data-default
-               , db-extras
+               , hpqtypes-extras
                , deepseq
                , directory
                , exceptions
@@ -866,7 +866,7 @@ Executable messenger-server
                , cryptohash
                , data-default
                , dataenc
-               , db-extras
+               , hpqtypes-extras
                , deepseq
                , directory
                , exceptions
@@ -963,7 +963,7 @@ Executable kontrakcja-test
                , cond
                , containers
                , data-default
-               , db-extras
+               , hpqtypes-extras
                , directory
                , exceptions
                , fields-json

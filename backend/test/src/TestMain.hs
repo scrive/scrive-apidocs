@@ -3,8 +3,8 @@ module TestMain where
 import Control.Arrow
 import Control.Concurrent.STM
 import Control.Monad.Base
+import Database.PostgreSQL.PQTypes.Checks
 import Database.PostgreSQL.PQTypes.Internal.Connection
-import DB.Checks
 import System.Directory (createDirectoryIfMissing)
 import System.Environment
 import System.IO

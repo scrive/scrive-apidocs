@@ -1,6 +1,6 @@
 module Doc.API.Callback.Migrations where
 
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import Doc.API.Callback.Tables

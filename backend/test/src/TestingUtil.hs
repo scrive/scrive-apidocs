@@ -906,25 +906,25 @@ assertRaisesDBException a = (a >>= (\v -> assertFailure $ "Expecting db exceptio
         ]
 
 
-assertRaisesKontra :: forall e v m. (KontraException e, Show v, MonadIO m, MonadMask m)
+assertRaisesKontra :: forall e v m. (DBExtraException e, Show v, MonadIO m, MonadMask m)
              => (e -> Bool) -> m v -> m ()
 assertRaisesKontra correctException action =
-  (action >>= \r -> assertString $ "Expected KontraException " ++ typeOfE ++ ", instead returned result " ++ show r) `catches` [
+  (action >>= \r -> assertString $ "Expected DBExtraException " ++ typeOfE ++ ", instead returned result " ++ show r) `catches` [
     Handler helper
-  -- support also KontraException nested within DBException
+  -- support also DBExtraException nested within DBException
   , Handler $ \e@DBException{..} -> case cast dbeError of
     Just e' -> helper e'
     Nothing -> invExc e
   ]
   where
-    helper (SomeKontraException e) = case cast e of
+    helper (SomeDBExtraException e) = case cast e of
       Just e' -> if correctException e'
         then return ()
-        else assertString $ "KontraException " ++ typeOfE ++ " is not correct " ++ show e'
+        else assertString $ "DBExtraException " ++ typeOfE ++ " is not correct " ++ show e'
       Nothing -> invExc e
 
     invExc :: (Show a, Typeable a) => a -> m ()
-    invExc e = assertString $ "Expected KontraException " ++ typeOfE ++ ", instead got exception " ++ show e
+    invExc e = assertString $ "Expected DBExtraException " ++ typeOfE ++ ", instead got exception " ++ show e
 
     typeOfE = show $ typeOf ($undefined :: e)
 

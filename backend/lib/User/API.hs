@@ -89,10 +89,10 @@ apiCallGetUserPersonalToken = api $ do
                   _success <- dbUpdate $ CreatePersonalToken uid
                   token <- dbQuery $ GetPersonalToken uid
                   case token of
-                       Nothing ->  throwM . SomeKontraException $ serverError "No token found, this should not happend"
+                       Nothing ->  throwM . SomeDBExtraException $ serverError "No token found, this should not happend"
                        Just t ->  return $ Ok $ jsonFromPersonalToken t
-              else throwM . SomeKontraException $ serverError "Email and password don't match"
-        _ -> throwM . SomeKontraException $ serverError "Email or password is missing"
+              else throwM . SomeDBExtraException $ serverError "Email and password don't match"
+        _ -> throwM . SomeDBExtraException $ serverError "Email or password is missing"
 
 apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do
@@ -117,7 +117,7 @@ apiCallChangeUserPassword = api $ do
             else do
               _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (Just $ userid $ user)
               Ok <$> (runJSONGenT $ value "changed" False)
-     _ ->  throwM . SomeKontraException $ serverError "Newpassword fields do not match Scrive standard"
+     _ ->  throwM . SomeDBExtraException $ serverError "Newpassword fields do not match Scrive standard"
 
 apiCallLoginUser :: Kontrakcja m => m Response
 apiCallLoginUser = api $ do
@@ -186,7 +186,7 @@ apiCallSignup = api $ do
   ctx <- getContext
   memail <- getOptionalField asValidEmail "email"
   when (isNothing memail) $ do
-    throwM . SomeKontraException $ serverError "Email not provided or invalid"
+    throwM . SomeDBExtraException $ serverError "Email not provided or invalid"
   let email = $fromJust memail
   firstname <- fromMaybe "" <$> getOptionalField asValidName "firstName"
   lastname <- fromMaybe "" <$> getOptionalField asValidName "lastName"
@@ -322,7 +322,7 @@ apiCallTestSalesforceIntegration = api $ do
   scheme <- dbQuery $ GetUserCallbackSchemeByUserID $ userid user
   murl <- getField "url"
   when (isNothing murl) $ do
-    throwM . SomeKontraException $ badInput $ "No 'url' parameter provided"
+    throwM . SomeDBExtraException $ badInput $ "No 'url' parameter provided"
   let url = $fromJust murl
   fmap Ok $ case scheme of
       Just (SalesforceScheme token)  -> do
@@ -340,4 +340,4 @@ apiCallTestSalesforceIntegration = api $ do
             value "curl_exit_code" curl_err
             value "curl_stdout" stdout
             value "curl_stderr" stderr
-      _ -> throwM . SomeKontraException $ conflictError "Salesforce callback scheme is not set for this user"
+      _ -> throwM . SomeDBExtraException $ conflictError "Salesforce callback scheme is not set for this user"

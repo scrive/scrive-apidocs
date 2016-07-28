@@ -1,6 +1,6 @@
 module Log.Migrations (logsMigrations) where
 
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import KontraPrelude

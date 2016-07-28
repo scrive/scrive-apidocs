@@ -37,7 +37,7 @@ instance ToJSValue DocumentTypeShouldBe where
           x (Template {}) = "Template"
 
 
-instance KontraException DocumentTypeShouldBe
+instance DBExtraException DocumentTypeShouldBe
 
 sqlWhereDocumentTypeIs :: (MonadState v m, SqlWhere v)
                        => DocumentType -> m ()
@@ -63,7 +63,7 @@ instance ToJSValue DocumentStatusShouldBe where
     where x (DocumentError {}) = "DocumentError {}"
           x v = show v
 
-instance KontraException DocumentStatusShouldBe
+instance DBExtraException DocumentStatusShouldBe
 
 sqlWhereDocumentStatusIsOneOf :: (MonadState v m, SqlWhere v)
                               => [DocumentStatus] -> m ()
@@ -94,7 +94,7 @@ instance ToJSValue UserShouldBeSelfOrCompanyAdmin where
                      value "user_email" (a)
                      value "company_id" (show b)
 
-instance KontraException UserShouldBeSelfOrCompanyAdmin
+instance DBExtraException UserShouldBeSelfOrCompanyAdmin
 
 sqlWhereUserIsSelfOrCompanyAdmin :: (MonadState v m, SqlWhere v)
                                  => m ()
@@ -119,7 +119,7 @@ instance ToJSValue UserShouldBeDirectlyOrIndirectlyRelatedToDocument where
                      value "document_title" (g)
                      value "user_email" (b)
 
-instance KontraException UserShouldBeDirectlyOrIndirectlyRelatedToDocument
+instance DBExtraException UserShouldBeDirectlyOrIndirectlyRelatedToDocument
 
 sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument :: (MonadState v m, SqlWhere v)
                                                     => UserID -> m ()
@@ -137,7 +137,7 @@ instance ToJSValue DocumentDoesNotExist where
                      value "message" ("Document does not exists" :: String)
                      value "document_id" (show d)
 
-instance KontraException DocumentDoesNotExist
+instance DBExtraException DocumentDoesNotExist
 
 sqlWhereDocumentIDIs :: (MonadState v m, SqlWhere v)
                      => DocumentID -> m ()
@@ -158,7 +158,7 @@ instance ToJSValue SignatoryLinkDoesNotExist where
                      value "message" ("Signatory link does not exists" :: String)
                      value "signatory_link_id" (show d)
 
-instance KontraException SignatoryLinkDoesNotExist
+instance DBExtraException SignatoryLinkDoesNotExist
 
 sqlWhereSignatoryLinkIDIs :: (MonadState v m, SqlWhere v)
                           => SignatoryLinkID -> m ()
@@ -173,7 +173,7 @@ instance ToJSValue SignatoryHasNotYetSigned where
   toJSValue (SignatoryHasNotYetSigned) = runJSONGen $ do
                      value "message" ("Not all signatories have signed" :: String)
 
-instance KontraException SignatoryHasNotYetSigned
+instance DBExtraException SignatoryHasNotYetSigned
 
 sqlWhereAllSignatoriesHaveSigned :: (MonadState v m, SqlWhere v)
                                  => m ()
@@ -189,7 +189,7 @@ instance ToJSValue SignatoryIsNotPartner where
   toJSValue (SignatoryIsNotPartner) = runJSONGen $ do
                      value "message" ("Signatory is not partner" :: String)
 
-instance KontraException SignatoryIsNotPartner
+instance DBExtraException SignatoryIsNotPartner
 
 sqlWhereSignatoryIsPartner :: (MonadState v m, SqlWhere v)
                                  => m ()
@@ -203,7 +203,7 @@ instance ToJSValue SignatoryHasAlreadyAuthenticatedToView where
   toJSValue SignatoryHasAlreadyAuthenticatedToView = runJSONGen $ do
     value "messsage" ("Signatory has already authenticated to view" :: String)
 
-instance KontraException SignatoryHasAlreadyAuthenticatedToView
+instance DBExtraException SignatoryHasAlreadyAuthenticatedToView
 
 sqlWhereSignatoryHasNotAuthenticatedToView :: (MonadState v m, SqlWhere v) => m ()
 sqlWhereSignatoryHasNotAuthenticatedToView = sqlWhereE (SignatoryHasAlreadyAuthenticatedToView)
@@ -220,7 +220,7 @@ instance ToJSValue SignatoryHasAlreadySigned where
     value "message" ("Signatory has already signed" :: String)
     value "sign_time" (show signatoryHasAlreadySignedTime)
 
-instance KontraException SignatoryHasAlreadySigned
+instance DBExtraException SignatoryHasAlreadySigned
 
 sqlWhereSignatoryHasNotSigned :: (MonadState v m, SqlWhere v)
                                  => m ()
@@ -235,7 +235,7 @@ instance ToJSValue SignatoryTokenDoesNotMatch where
   toJSValue (SignatoryTokenDoesNotMatch) = runJSONGen $ do
                      value "message" ("Signatory token does not match" :: String)
 
-instance KontraException SignatoryTokenDoesNotMatch
+instance DBExtraException SignatoryTokenDoesNotMatch
 
 sqlWhereSignatoryLinkMagicHashIs :: (MonadState v m, SqlWhere v)
                                  => MagicHash -> m ()
@@ -255,7 +255,7 @@ instance ToJSValue DocumentObjectVersionDoesNotMatch where
     value "expected" (show documentObjectVersionShouldBe)
     value "actual" (show documentObjectVersionIs)
 
-instance KontraException DocumentObjectVersionDoesNotMatch
+instance DBExtraException DocumentObjectVersionDoesNotMatch
 
 sqlWhereDocumentObjectVersionIs :: (MonadState v m, SqlWhere v)
                                  => Int64 -> m ()
@@ -272,7 +272,7 @@ instance ToJSValue DocumentWasPurged where
     value "purged_time" (show time)
     value "title" title
 
-instance KontraException DocumentWasPurged
+instance DBExtraException DocumentWasPurged
 
 sqlWhereDocumentWasNotPurged :: (MonadState v m, SqlWhere v)
                              => m ()
@@ -292,7 +292,7 @@ instance ToJSValue DocumentIsDeleted where
     value "deleted_time" (show time)
     value "title" title
 
-instance KontraException DocumentIsDeleted
+instance DBExtraException DocumentIsDeleted
 
 sqlWhereDocumentIsNotDeleted :: (MonadState v m, SqlWhere v)
                              => m ()
@@ -312,7 +312,7 @@ instance ToJSValue DocumentIsNotDeleted where
     value "signatory_link_id" (show slid)
     value "title" title
 
-instance KontraException DocumentIsNotDeleted
+instance DBExtraException DocumentIsNotDeleted
 
 sqlWhereDocumentIsDeleted :: (MonadState v m, SqlWhere v)
                              => m ()
@@ -332,7 +332,7 @@ instance ToJSValue DocumentIsReallyDeleted where
     value "deleted_time" (show time)
     value "title" title
 
-instance KontraException DocumentIsReallyDeleted
+instance DBExtraException DocumentIsReallyDeleted
 
 sqlWhereDocumentIsNotReallyDeleted :: (MonadState v m, SqlWhere v)
                              => m ()
@@ -353,7 +353,7 @@ instance ToJSValue SignatoryAuthenticationToSignDoesNotMatch where
     value "expected" (show expected)
     value "actual" (show actual)
 
-instance KontraException SignatoryAuthenticationToSignDoesNotMatch
+instance DBExtraException SignatoryAuthenticationToSignDoesNotMatch
 
 sqlWhereSignatoryAuthenticationToSignMethodIs :: (MonadState v m, SqlWhere v)
                                         => AuthenticationToSignMethod -> m ()

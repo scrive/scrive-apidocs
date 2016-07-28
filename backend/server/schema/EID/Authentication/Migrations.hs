@@ -1,6 +1,6 @@
 module EID.Authentication.Migrations where
 
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import EID.Authentication.Tables

@@ -4,7 +4,7 @@ module PadApplication.API (
 
 import Control.Monad.Catch
 import Data.Unjson as Unjson
-import DB.SQL
+import Database.PostgreSQL.PQTypes.SQL.Builder
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Text.JSON.Gen
@@ -43,7 +43,7 @@ apiCallCheckClient :: Kontrakcja m => m Response
 apiCallCheckClient = api $ do
     mclient  <- getField "client"
     when (isNothing mclient) $ do
-      throwM . SomeKontraException $ serverError "No client description"
+      throwM . SomeDBExtraException $ serverError "No client description"
     runJSONGenT $ do
       value "valid" True
       value "upgrade_warning" False

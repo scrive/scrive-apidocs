@@ -97,7 +97,7 @@ guardThatObjectVersionMatchesIfProvided did = do
   case reqObjectVersion of
     Nothing -> return ()
     Just ov -> (dbQuery $ CheckDocumentObjectVersionIs did (fromIntegral ov))
-      `catchKontra` (\e@DocumentObjectVersionDoesNotMatch {} -> apiError $ documentObjectVersionMismatch e)
+      `catchDBExtraException` (\e@DocumentObjectVersionDoesNotMatch {} -> apiError $ documentObjectVersionMismatch e)
 
 guardSignatoryNeedsToIdentifyToView :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
 guardSignatoryNeedsToIdentifyToView slid = do

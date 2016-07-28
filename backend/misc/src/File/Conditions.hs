@@ -3,7 +3,7 @@ module File.Conditions where
 import Control.Monad.State.Class
 import Data.Typeable
 import Database.PostgreSQL.PQTypes
-import DB.SQL
+import Database.PostgreSQL.PQTypes.SQL.Builder
 import Text.JSON.Gen
 
 import File.FileID
@@ -20,7 +20,7 @@ instance ToJSValue FileDoesNotExist where
     value "message" ("File does not exists" :: String)
     value "file_id" (show fid)
 
-instance KontraException FileDoesNotExist
+instance DBExtraException FileDoesNotExist
 
 sqlWhereFileIDIs :: (MonadState v m, SqlWhere v) => FileID -> m ()
 sqlWhereFileIDIs fid =
@@ -35,7 +35,7 @@ instance ToJSValue FileWasPurged where
     value "file_id" (show fid)
     value "purged_time" (show time)
 
-instance KontraException FileWasPurged
+instance DBExtraException FileWasPurged
 
 sqlWhereFileWasNotPurged :: (MonadState v m, SqlWhere v) => m ()
 sqlWhereFileWasNotPurged =

@@ -1,6 +1,6 @@
 module Theme.Migrations where
 
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 import qualified Data.Text as T
 
 import DB

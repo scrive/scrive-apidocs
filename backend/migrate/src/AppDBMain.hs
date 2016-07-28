@@ -1,6 +1,6 @@
 module AppDBMain where
 
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import System.IO

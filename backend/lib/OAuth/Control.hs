@@ -52,7 +52,7 @@ tempCredRequest = api $ do
 
   etcr <- getTempCredRequest
   case etcr of
-    Left errors -> (throwM . SomeKontraException) $ badInput errors
+    Left errors -> (throwM . SomeDBExtraException) $ badInput errors
     Right tcr -> do
       logInfo "TempCredRequest got successfully" $ Log.object [
           "temp_cred_request" .= show tcr
@@ -113,7 +113,7 @@ tokenCredRequest = api $ do
   time <- ctxtime <$> getContext
   etr <- getTokenRequest
   case etr of
-    Left errors -> (throwM . SomeKontraException) $ badInput errors
+    Left errors -> (throwM . SomeDBExtraException) $ badInput errors
     Right tr -> do
       (accesstoken, accesssecret) <- apiGuardL' $ dbUpdate $ RequestAccessToken tr time
       return $ setHeader "Content-Type" "application/x-www-form-urlencoded" $

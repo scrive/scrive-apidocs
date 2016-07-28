@@ -3,7 +3,7 @@ module Main (main) where
 import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
-import DB.Checks
+import Database.PostgreSQL.PQTypes.Checks
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
 import Log

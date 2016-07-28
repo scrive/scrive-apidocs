@@ -260,15 +260,15 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                 "dbeQueryContext" .= show dbeQueryContext
               , case cast dbeError of
                   Nothing -> "dbeError" .= show dbeError
-                  Just (SomeKontraException ee) -> "exception" .= jsonToAeson (toJSValue ee)
+                  Just (SomeDBExtraException ee) -> "exception" .= jsonToAeson (toJSValue ee)
               , "stacktrace" .= reverse stack
               ] ++ logRequest rq mbody
             internalServerErrorPage >>= internalServerError
-        , E.Handler $ \e@(SomeKontraException ee) -> Left <$> do
+        , E.Handler $ \e@(SomeDBExtraException ee) -> Left <$> do
             rq <- askRq
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
             stack <- liftIO $ whoCreated e
-            logAttention "SomeKontraException" . object $ [
+            logAttention "SomeDBExtraException" . object $ [
                 "exception" .= jsonToAeson (toJSValue ee)
               , "stacktrace" .= reverse stack
               ] ++ logRequest rq mbody

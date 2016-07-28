@@ -220,7 +220,7 @@ docApiV2SigSetAttachment did slid = logDocumentAndSignatory did slid . api $ do
       Nothing -> dbUpdate . DeleteSigAttachment slid sigAttachment =<< signatoryActor ctx sl
       Just file ->
         (dbUpdate . SaveSigAttachment slid sigAttachment (fileid file) =<< signatoryActor ctx sl)
-        `catchKontra`
+        `catchDBExtraException`
         (\(DBBaseLineConditionIsFalse _) -> apiError $ signatoryStateError
           "An attachment of this name for this signatory and document is already set, remove it first.")
     -- Return
