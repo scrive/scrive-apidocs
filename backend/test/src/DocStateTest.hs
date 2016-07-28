@@ -53,7 +53,7 @@ import qualified MemCache
 docStateTests :: TestEnvSt -> Test
 docStateTests env = testGroup "DocState" [
   testThat "Document with seal status Missing gets sealed" env testSealMissingSignatures,
-  --testThat "Document with extensible digital signature can be extended" env testExtendDigitalSignatures,
+  testThat "Document with extensible digital signature can be extended" env testExtendDigitalSignatures,
   testThat "RejectDocument adds to the log" env testRejectDocumentEvidenceLog,
   testThat "RestartDocument adds to the log" env testRestartDocumentEvidenceLog,
   testThat "SignDocument adds to the log" env testSignDocumentEvidenceLog,
@@ -227,9 +227,8 @@ testSealMissingSignatures = do
   unless (hasGuardtimeSignature doc') $ do
     assertFailure $ "Unexpected seal status: " ++ show (documentsealstatus doc')
 
--- TODO: 7.VII.2016 - Enable this test again when Piotr will check out why we get PUBLICATION_FAILURE error from GT
-_testExtendDigitalSignatures :: TestEnv ()
-_testExtendDigitalSignatures = do
+testExtendDigitalSignatures :: TestEnv ()
+testExtendDigitalSignatures = do
   author <- addNewRandomUser
   let filename = inTestDir "pdfs/extensible.pdf"
   filecontent <- liftIO $ BS.readFile filename
