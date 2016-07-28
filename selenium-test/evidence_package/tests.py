@@ -89,6 +89,12 @@ def check_evidence_log(test, drv, api):
     test.sleep(1)  # wait for animation to finish
     drv.wait_for_element_to_disappear('.sign.section')
 
+    if drv.is_remote():
+        # do it asap, because saucelabs machine can change its external ip
+        # and it will not match the one used for frontend api requests
+        drv.open_url('https://api.ipify.org/?format=html')
+        my_ip = drv.find_element('pre').text
+
     test.sleep(10)  # wait for sealing
     doc = api.get_document(doc.id)  # refresh
 
@@ -101,9 +107,6 @@ def check_evidence_log(test, drv, api):
     html = PyQuery(contents)
 
     if drv.is_remote():
-        drv.open_url('https://api.ipify.org/?format=html')
-        my_ip = drv.find_element('pre').text
-
         ips = map(lambda td: td.text, html('#event-table td:nth-child(3)'))
         ips = ips[1:]  # skip first ip because it's ip of the local machine
         assert ips == [my_ip, my_ip, None, None], (str(ips) + ':' + my_ip)
