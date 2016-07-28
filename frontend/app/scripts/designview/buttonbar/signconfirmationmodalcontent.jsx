@@ -28,6 +28,12 @@ module.exports = React.createClass({
       }
     }
 
-    return <HtmlTextWithSubstitution secureText={content} subs={subs} />;
+    return (
+      <HtmlTextWithSubstitution
+        className="designview-sign-confirmation-modal"
+        secureText={content}
+        subs={subs}
+      />
+    );
   }
 });

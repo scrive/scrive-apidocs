@@ -121,6 +121,24 @@ module.exports = React.createClass({
       return localization.designview.saveAsDraftButton;
     }
   },
+  removePDF: function () {
+    var doc = this.props.document;
+
+    var submit = new Submit({
+      method: "POST",
+      url:  "/api/frontend/documents/" + doc.documentid() + "/setfile",
+      ajax: true,
+      onSend: function () {},
+      ajaxerror: function (d, a) {
+        doc.recall();
+      },
+      ajaxsuccess: function () {
+        doc.recall();
+      }
+    });
+
+    submit.send();
+  },
   onSaveTemplateButtonClick: function () {
     mixpanel.track("Click save as template");
     this.props.document.makeTemplate();
@@ -134,22 +152,7 @@ module.exports = React.createClass({
     doc.markAsNotReady();
     this.saveAndFlashMessageIfAlreadySaved();
 
-    doc.afterSave(function () {
-      var submit = new Submit({
-        method: "POST",
-        url:  "/api/frontend/documents/" + doc.documentid() + "/setfile",
-        ajax: true,
-        onSend: function () {},
-        ajaxerror: function (d, a) {
-          doc.recall();
-        },
-        ajaxsuccess: function () {
-          doc.recall();
-        }
-      });
-
-      submit.send();
-    });
+    doc.afterSave(this.removePDF);
   },
   onSaveDraftButtonClick: function () {
     mixpanel.track("Click save as draft");
@@ -173,20 +176,18 @@ module.exports = React.createClass({
       });
 
       doc.save();
-      if (!doc.hasProblems()) {
-        if (BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
-          mixpanel.track("Open blocking popup");
-          mixpanel.people.set({
-            "Blocking Popup": new Date()
-          });
+      if (BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
+        mixpanel.track("Open blocking popup");
+        mixpanel.people.set({
+          "Blocking Popup": new Date()
+        });
 
-          BlockingInfo.createPopup();
+        BlockingInfo.createPopup();
+      } else {
+        if (isSigning) {
+          this.showSignConfirmationModal();
         } else {
-          if (isSigning) {
-            this.showSignConfirmationModal();
-          } else {
-            this.showSendConfirmationModal();
-          }
+          this.showSendConfirmationModal();
         }
       }
     }
