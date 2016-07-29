@@ -76,7 +76,6 @@ var signviewConfig = defaultConfig({
     mainResolver("bower.json"),
     new webpack.optimize.UglifyJsPlugin({
       minimize: true,
-      mangle: false,
       compress: {warnings: false}
     }),
     new webpack.optimize.DedupePlugin(),
