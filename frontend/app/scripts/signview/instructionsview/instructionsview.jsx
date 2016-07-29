@@ -80,11 +80,22 @@ var classNames = require("classnames");
       });
     },
 
+    continueUrl: function () {
+      var doc = this.props.model;
+      var sig = doc.currentSignatory();
+      if (sig.hasSigned()) {
+        return sig.signsuccessredirect();
+      } else if (sig.rejecteddate()) {
+        return sig.rejectredirect();
+      }
+    },
+
     render: function () {
       var self = this;
       var doc = this.props.model;
       var sig = doc.currentSignatory();
       var hasDownloadButton = doc.showpdfdownload();
+      var continueUrl = this.continueUrl();
 
       var sectionClass = {
         "section": true,
@@ -107,6 +118,13 @@ var classNames = require("classnames");
                 onClicks={{".arrowtext": function () {self.handleArrowTextClick();}}}
               />
             </h1>
+            {/* if */ continueUrl &&
+              <div className="continue-button-wrapper">
+                <Button text={localization.docsignview.continueButtonText}
+                        href={continueUrl}
+                />
+              </div>
+            }
             {/* if */ hasDownloadButton &&
               <Menu
                 title={doc.title()}
