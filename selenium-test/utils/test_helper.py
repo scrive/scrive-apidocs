@@ -95,3 +95,7 @@ class TestHelper(object):
 
     def artifact_path_for(self, artifact_name):
         return os.path.join(self._artifact_dir, artifact_name)
+
+    def write_artifact(self, artifact_name, contents):
+        with open(self.artifact_path_for(artifact_name), 'wb') as f:
+            f.write(contents)
