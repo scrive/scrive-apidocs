@@ -8,6 +8,7 @@
 "_checkYourPhone":"Skoðaðu símann þinn",
 "_company":"Fyrirtæki",
 "_companyNumberLabel":"Skráningarnr. fyrirtækis",
+"_continueButtonText":"",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, með því að smella á hnappinn skrifar þú undir skjalið <strong class='put-document-title-here'></strong> og undirskrift þín verður skráð af rafrænni undirskriftarþjónustu Scrive.",
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, þú hefur skrifað undir skjalið <strong class='put-document-title-here'></strong>. Þegar þú smellir á hnappinn verður undirskrift þín skráð í rafræna undirskriftarþjónustu Scrive.",
 "_contractSignatorySignModalTitle":"Ertu búin/n?",

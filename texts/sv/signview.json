@@ -8,6 +8,7 @@
 "_checkYourPhone":"Kolla din telefon",
 "_company":"Företag",
 "_companyNumberLabel":"Org. nr",
+"_continueButtonText":"",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, genom att klicka på knappen kommer du att signera dokumentet <strong class='put-document-title-here'></strong> och din signatur kommer att registreras av e-signeringstjänsten Scrive.",
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, du har signerat dokumentet <strong class='put-document-title-here'></strong>. När du klickar på knappen kommer din signatur att registreras av e-signeringstjänsten Scrive.",
 "_contractSignatorySignModalTitle":"Klar?",

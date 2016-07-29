@@ -8,6 +8,7 @@
 "_checkYourPhone":"Patikrinkite savo telefono numerį",
 "_company":"Įmonė",
 "_companyNumberLabel":"Įmonės kodas",
+"_continueButtonText":"",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, paspausdami mygtuką, pasirašysite dokumentą <strong class='put-document-title-here'></strong>, o Jūsų parašą įregistruos „Scrive“ skaitmeninio parašo paslauga.",
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, Jūs pasirašėte dokumentą <strong class='put-document-title-here'></strong>. Paspaudus mygtuką, Jūsų parašą įregistruos „Scrive“ skaitmeninio parašo paslauga.",
 "_contractSignatorySignModalTitle":"Ar jau baigėte?",

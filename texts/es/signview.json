@@ -8,6 +8,7 @@
 "_checkYourPhone":"Revise su teléfono",
 "_company":"Empresa",
 "_companyNumberLabel":"N° reg. de empresa",
+"_continueButtonText":"",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, al hacer clic en el botón firmará el documento <strong class='put-document-title-here'></strong> y su firma será registrada por el servicio de firma electrónica de Scrive.",
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, ha firmado el documento <strong class='put-document-title-here'></strong>. Cuando haga clic en el botón, su firma será registrada por el servicio de firma electrónica de Scrive.",
 "_contractSignatorySignModalTitle":"¿Terminado?",

@@ -8,6 +8,7 @@
 "_checkYourPhone":"Kontrollige enda telefoni.",
 "_company":"Ettevõte",
 "_companyNumberLabel":"Ettevõtte registrikood",
+"_continueButtonText":"",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, nupul klõpsates dokument allkirjastatakse <strong class='put-document-title-here'></strong> ja Teie allkiri registreeritakse e-allkirjastamisteenusega Scrive.",
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, olete allkirjastanud dokumendi <strong class='put-document-title-here'></strong>. Nupul klõpsates registreeritakse Teie allkiri e-allkirjastamisteenusega Scrive.",
 "_contractSignatorySignModalTitle":"Lõpetamine?",

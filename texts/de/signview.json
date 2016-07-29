@@ -8,6 +8,7 @@
 "_checkYourPhone":"Per SMS auf Ihrem Handy",
 "_company":"Unternehmen",
 "_companyNumberLabel":"Unternehmens Reg.-Nr.",
+"_continueButtonText":"",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, mit einem Klick auf die Schaltfläche signieren Sie das Dokument <strong class='put-document-title-here'></strong> und Ihre Signatur wird durch den E-Signierungsdienst von Scrive registriert.",
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, Sie haben das Dokument <strong class='put-document-title-here'></strong> signiert. Mit einem Klick auf die Schaltfläche wird  Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",
 "_contractSignatorySignModalTitle":"Fertig?",

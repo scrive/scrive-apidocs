@@ -8,6 +8,7 @@
 "_checkYourPhone":"Controlla il tuo telefono",
 "_company":"Azienda",
 "_companyNumberLabel":"N° di registrazione aziendale",
+"_continueButtonText":"",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, facendo clic sul pulsante firmi il documento <strong class='put-document-title-here'></strong> e la tua firma sarà registrata dal servizio di e-signing di Scrive.",
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, hai firmato il documento <strong class='put-document-title-here'></strong>. Facendo clic sul pulsante la tua firma sarà registrata dal servizio di firma elettronica di Scrive.",
 "_contractSignatorySignModalTitle":"Finito?",

@@ -8,6 +8,7 @@
 "_checkYourPhone":"Pārbaudiet savu tālruņa numuru",
 "_company":"Uzņēmums",
 "_companyNumberLabel":"Uzņēmuma reģ. nr.",
+"_continueButtonText":"",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, noklikšķinot uz šīs pogas, Jūs parakstīsiet dokumentu <strong class='put-document-title-here'></strong>, un Jūsu paraksts tiks reģistrēts elektroniskās parakstīšanas pakalpojumā Scrive.",
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, Jūs esat parakstījis dokumentu <strong class='put-document-title-here'></strong>. Klikšķinot uz pogas, Jūsu paraksts tiks reģistrēts elektroniskās parakstīšanās pakalpojumā Scrive.",
 "_contractSignatorySignModalTitle":"Vai pabeidzāt darbu?",

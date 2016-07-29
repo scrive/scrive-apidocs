@@ -8,6 +8,7 @@
 "_checkYourPhone":"Verifique o seu telefone",
 "_company":"Empresa",
 "_companyNumberLabel":"Registo comercial nº",
+"_continueButtonText":"",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, ao clicar no botão, vai assinar o documento <strong class='put-document-title-here'></strong> e a sua assinatura será registada pelo serviço de assinatura electrónica Scrive.",
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, assinou o documento <strong class='put-document-title-here'></strong>. Quando clicar no botão, a sua assinatura será registada pelo serviço de assinatura electrónica Scrive.",
 "_contractSignatorySignModalTitle":"Terminou?",

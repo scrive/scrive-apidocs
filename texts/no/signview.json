@@ -8,6 +8,7 @@
 "_checkYourPhone":"Sjekk telefonen din",
 "_company":"Foretak",
 "_companyNumberLabel":"Organisasjonsnr.",
+"_continueButtonText":"",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, ved å klikke på knappen vil du signere dokumentet <strong class='put-document-title-here'></strong>, og signaturen din vil bli registrert av e-signeringstjenesten Scrive.",
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, du har signert dokumentet <strong class='put-document-title-here'></strong>. Når du klikker på knappen vil signaturen din registreres av e-signeringstjenesten Scrive.",
 "_contractSignatorySignModalTitle":"Ferdig?",

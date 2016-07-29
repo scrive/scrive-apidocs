@@ -8,6 +8,7 @@
 "_checkYourPhone":"Ελέγξτε το τηλέφωνό σας",
 "_company":"Εταιρεία ",
 "_companyNumberLabel":"Α.Μ. εταιρείας",
+"_continueButtonText":"",
 "_contractSignConfirmation":"<strong class='put-signatory-name-here'></strong>, πιέζοντας το κουμπί θα υπογράψετε το έγγραφο <strong class='put-document-title-here'></strong> και η υπογραφή σας θα καταχωριστεί από την υπηρεσία ηλεκτρονικής υπογραφής Scrive.",
 "_contractSignConfirmationSignaturePlaced":"<strong class='put-signatory-name-here'></strong>, έχετε υπογράψει το έγγραφο<strong class='put-document-title-here'></strong>. Μόλις πιέσετε το πλήκτρο η υπογραφή σας θα καταχωρηθεί από την υπηρεσία ηλεκτρονικής υπογραφής Scrive. ",
 "_contractSignatorySignModalTitle":"Ολοκληρώθηκε;",
