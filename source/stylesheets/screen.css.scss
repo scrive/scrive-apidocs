@@ -440,6 +440,15 @@ html, body {
     tr:last-child {
       border-bottom: 1px solid #ccc;
     }
+
+    &.table-left-col-25 {
+      th:first-child, td:first-child {
+        width: 25%;
+      }
+      td:first-child {
+        text-align: right
+      }
+    }
   }
 
   dt {
