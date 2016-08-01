@@ -7,4 +7,3 @@
 * move driver_check to utils/
 * unify check_screenshot and check_reference_screenshot
 * use write_artifact
-* make_drivers.find_tests should be generate_tests() and do more stuff that is done in test_list.py

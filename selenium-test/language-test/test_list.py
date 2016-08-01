@@ -1,10 +1,9 @@
-from selenium import webdriver
+import os
 
-import make_drivers
 import tests
+from make_drivers import generate_tests
 from scrivepy._document import Language
-from scrivepy._scrive import Scrive
-from test_helper import TestHelper
+from selenium import webdriver
 
 
 ###############################################################################
@@ -39,17 +38,14 @@ REMOTE_DEVICES = [{'browserName': "chrome",
                    'version': 'beta'}]
 
 
+dir_path = os.path.dirname(os.path.abspath(__file__))
+artifact_dir = os.path.join(dir_path, 'artifacts')
+
+
 # this function is autocalled by nosetests, so it's like main()
 def make_tests():
-    import config
-    api = Scrive(**config.scrive_api)
     for lang in Language:
-        for test_name, test in make_drivers.find_tests(tests):
-            drivers = make_drivers.make_drivers(test_name, LOCAL_DEVICES,
-                                                REMOTE_DEVICES,
-                                                lang=lang.value,
-                                                screenshots_enabled=True)
-            for driver in drivers:
-                test_helper = TestHelper(api, driver)
-                test.teardown = lambda: driver.quit()
-                yield test, test_helper, driver, api
+        for x in generate_tests(tests, artifact_dir,
+                                LOCAL_DEVICES, REMOTE_DEVICES,
+                                lang=lang.value, screenshots_enabled=True):
+            yield x

@@ -1,13 +1,10 @@
 import os
 
-from selenium import webdriver
-
-import make_drivers
+import screenshot_tests
 import tests
 import tests2
-import screenshot_tests
-from scrivepy._scrive import Scrive
-from test_helper import TestHelper
+from make_drivers import generate_tests
+from selenium import webdriver
 
 
 ###############################################################################
@@ -94,26 +91,11 @@ artifact_dir = os.path.join(dir_path, 'artifacts')
 
 # this function is autocalled by nosetests, so it's like main()
 def make_tests():
-    import config
-    api = Scrive(**config.scrive_api)
-    for test_name, test in make_drivers.find_tests(tests):
-        drivers = make_drivers.make_drivers(test_name, LOCAL_DEVICES,
-                                            REMOTE_DEVICES,
-                                            screenshots_enabled=False)
-        for driver in drivers:
-            test_helper = TestHelper(api, driver, artifact_dir=artifact_dir)
-            test.teardown = lambda: driver.quit()
-            yield test, test_helper, driver, api
-
-    for test_name, test in make_drivers.find_tests(tests2):
-        test_helper = TestHelper(api, driver=None, artifact_dir=artifact_dir)
-        yield test, test_helper, api
-
-    for test_name, test in make_drivers.find_tests(screenshot_tests):
-        drivers = make_drivers.make_drivers(test_name, LOCAL_DEVICES,
-                                            REMOTE_DEVICES_FOR_SCREENSHOTS,
-                                            screenshots_enabled=False)
-        for driver in drivers:
-            test_helper = TestHelper(api, driver, artifact_dir=artifact_dir)
-            test.teardown = lambda: driver.quit()
-            yield test, test_helper, driver, api
+    for x in generate_tests(tests, artifact_dir,
+                            LOCAL_DEVICES, REMOTE_DEVICES):
+        yield x
+    for x in generate_tests(tests2, artifact_dir, selenium=False):
+        yield x
+    for x in generate_tests(screenshot_tests, artifact_dir,
+                            LOCAL_DEVICES, REMOTE_DEVICES_FOR_SCREENSHOTS):
+        yield x
