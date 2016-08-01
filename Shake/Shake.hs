@@ -87,13 +87,11 @@ main = do
 
     "test" ~> need ["test-server","test-frontend","test-hs-import-order"]
     "test-server" ~> need ["kontrakcja-test"]
-    "test-frontend" ~> need ["test-frontend-tests","test-frontend-jscs"]
+    "test-frontend" ~> need ["test-frontend-tests","test-frontend-lint"]
     "test-hs-import-order" ~> need ["_build/hs-import-order"]
 
     "test-frontend-tests"      ~> need ["grunt-test"]
     "test-frontend-lint"       ~> need ["grunt-jscs","grunt-eslint"]
-    -- Backwards compatibility, remove when not needed
-    "test-frontend-jscs"       ~> need ["test-frontend-lint"]
 
     "dist" ~> need ["_build/kontrakcja.tar.gz"]
 
