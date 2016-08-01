@@ -155,7 +155,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         }
     },
     fstname: function() {
-        return this.fstnameField().value();
+      return this.fstnameField() != undefined ? (this.fstnameField().value() != undefined ? this.fstnameField().value() : "") : "";
     },
     sndname: function() {
         return this.sndnameField() != undefined ? (this.sndnameField().value() != undefined ? this.sndnameField().value() : "") : "";
