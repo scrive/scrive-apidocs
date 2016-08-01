@@ -465,6 +465,18 @@ html, body {
     border-radius: 3px;
     @extend %break-words;
     @extend %code-font;
+
+    &.operation-method {
+      display: inline-block;
+      padding: 10px;
+
+      &.operation-method-GET {
+        background: lighten($aside-notice-bg, 6%);
+      }
+      &.operation-method-POST {
+        background: lighten($aside-success-bg, 6%);
+      }
+    }
   }
 
   pre>code {
