@@ -130,7 +130,8 @@ JSON is the data interchange format, but we also use query parameters.</p>
 
 <p>The API is accessed through a versioned URL.
 This allows users to clearly identify which API they are using, and to make
-it easier to upgrade to any newer versions.</p>
+it easier to upgrade to any newer versions.
+It also avoids having to use version codes in HTTP headers.</p>
 
 <p>Any breaking changes to the API will be introduced through a new version
 number.
@@ -160,7 +161,7 @@ API calls, or new API calls.
 </tr>
 </thead><tbody>
 <tr>
-<td>2016-xx-xx</td>
+<td>2016-TODO</td>
 <td>Scrive Document API Version 2 is released.</td>
 </tr>
 </tbody></table>
@@ -512,19 +513,203 @@ equivalent to storing a user password.
 Due to this, we do recommend using OAuth instead.
 </aside>
 
+<h1 id="errors">Errors</h1>
+
+<blockquote>
+<p>Error responses will contain a JSON response body, structured as follows:</p>
+</blockquote>
+<pre class="highlight plaintext"><code>{
+  "error_type": "$error_type$"
+, "error_message": "$error_message$"
+, "http_code": $http_code$
+}
+</code></pre>
+
+<blockquote>
+<p>For example:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"error_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"resource_not_found"</span><span class="w">
+</span><span class="p">,</span><span class="w"> </span><span class="nt">"error_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The resource was not found. A document with id $id$ was not found."</span><span class="w">
+</span><span class="p">,</span><span class="w"> </span><span class="nt">"http_code"</span><span class="p">:</span><span class="w"> </span><span class="mi">404</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Scrive uses HTTP status codes to indicate the success or failure of an API
+request.</p>
+
+<p>HTTP response codes in the <code class="prettyprint">2xx</code> range indicate that the API call completed
+successfully.
+The <code class="prettyprint">4xx</code> range indicates an error, either due to missing, incomplete, or
+not applicable information (e.g. missing or invalid parameters, invalid
+authorisation, etc.).</p>
+
+<p>When a request is well formed, but does not satisfy necessary conditions,
+then we will return a <code class="prettyprint">409</code> code.
+For example, when trying to start the signing process for a document that
+has already been signed.</p>
+
+<p>Codes in the <code class="prettyprint">5xx</code> range suggest an error with Scrive’s eSign system, they
+could also indicate planned system downtime, and will be rare.</p>
+
+<p>The following table of error responses applies to all API calls, there may
+be additional errors which are specific to the respective API calls, but
+will follow the same structure.</p>
+
+<table>
+<thead>
+  <tr> <th>HTTP code</th> <th>Reason</th> <th>Error Type and Message</th> </tr>
+</thead>
+<tbody>
+
+  <tr>
+    <td>400 Bad Request</td>
+    <td>Obligatory parameters were missing</td>
+    <td>
+      <p><code>request_parameters_missing</code><p>
+      <p>
+        The parameter(s) <code>$bad_parameters$</code> were missing.
+        Please refer to our API documentation.
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td>400 Bad Request</td>
+    <td>Parameter(s) could not be parsed</td>
+    <td>
+      <p><code>request_parameters_parse_error</code><p>
+      <p>
+        The parameter(s) <code>$bad_parameters$</code> could not be parsed.
+        Please refer to our API documentation.
+      </p>
+      <p>
+        <em>Some debugging information may also be present, detailing why
+        parsing failed.</em>
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td>400 Bad Request</td>
+    <td>Parameter(s) were present and could be parsed, but were not valid.</td>
+    <td>
+      <p><code>request_parameters_invalid</code><p>
+      <p>
+        <em>Error message should detail what is wrong with the parameter(s).</em>
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td>401 Unauthorised</td>
+    <td>No or invalid access credentials</td>
+    <td>
+      <p><code>invalid_authorisation</code><p>
+      <p>
+        No valid access credentials were provided.
+        Please refer to our API documentation.
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td>403 Forbidden</td>
+    <td>Insufficient access privileges for request</td>
+    <td>
+      <p><code>insufficient_privileges</code><p>
+      <p>
+        The access credentials provided do not have sufficient privileges
+        for this request.
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td>403 Forbidden</td>
+    <td>User doesn’t have permission for a document action or retrieval</td>
+    <td>
+      <p><code>document_action_forbidden</code><p>
+      <p>
+        You do not have permission to perform this action on the document.
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td>404 Not Found</td>
+    <td>Non existent API endpoint</td>
+    <td>
+      <p><code>endpoint_not_found</code><p>
+      <p>
+        The endpoint was not found.
+        See our website for API documentation.
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td>404 Not Found</td>
+    <td>The endpoint exists but the resource was not found.</td>
+    <td>
+      <p><code>resource_not_found</code><p>
+      <p>
+        The resource was not found.
+      </p>
+      <p>
+        <em>We will try to give additional information about what is missing.</em>
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td>409 Conflict</td>
+    <td>The document’s <code>object_version</code> does not match</td>
+    <td>
+      <p><code>document_object_version_mismatch</code><p>
+      <p>
+        The document has a different <code>object_version</code> to the one
+        provided and so the request was not processed.
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td>500 Server Error</td>
+    <td>Other unexpected server error</td>
+    <td>
+      <p><code>server_error</code><p>
+      <p>
+        We encountered an unexpected error.
+        Please contact Scrive support and include as much details about
+        what caused the error, including the <code>document_id</code> and
+        any other details.
+      </p>
+    </td>
+  </tr>
+
+</tbody>
+</table>
+
+<aside class="notice">
+API version 1 could return HTTP <code>5xx</code> codes for errors that were not due to
+Scrive eSign.
+The information presented here thus only applies for the current version of
+the API.
+</aside>
+
+<p>We recommend writing integration code that handles the possibility of the
+Scrive eSign system returning errors.</p>
+
 <h1 id="create">Create</h1>
 
 <h2 id="new-document">New document</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/new</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /new</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/apicreatefromfile</code></p>
 
@@ -536,14 +721,21 @@ API call.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>file</td><td>formData</td><td>file</td><td><p>The PDF to use as the main file in the new document.</p>
-</td></tr>
-<tr><td>saved</td><td>formData</td><td>boolean</td><td><p>Whether the document should start out as being &ldquo;saved&rdquo; (<em>i.e.</em> appear in the E-archive).</p>
-<p>The document can be &ldquo;saved&rdquo; later, by setting the &ldquo;saved&rdquo; field to <code>true</code> via an <code>update</code> call.
-All API operations are applied immediately, the &ldquo;saved&rdquo; flag simply represents visibility in the E-archive.</p>
-</td></tr>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>file</code><br/><em>optional</em></td><td><p><strong>The PDF to use for the document.</strong></p>
+<p>If supplied, the document’s title will be set to the filename (with the
+extensions removed).
+Otherwise a default document title will be set, depending on the user
+language settings.</p>
+</td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
+<tr><td><code>saved</code><br/><em>optional</em></td><td><p>Whether the document should start out as being &ldquo;saved&rdquo; (<em>i.e.</em> appear
+in the E-archive).</p>
+<p>The document can be &ldquo;saved&rdquo; later, by setting the &ldquo;saved&rdquo; field to
+<code>true</code> via an <code>update</code> call.
+All API operations are applied immediately, the &ldquo;saved&rdquo; flag simply
+represents visibility in the E-archive.</p>
+</td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -551,9 +743,9 @@ All API operations are applied immediately, the &ldquo;saved&rdquo; flag simply 
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>201</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>400</td> <td><p>The parameter <code>file</code> could not be parsed.</p>
 </td> </tr>
@@ -561,15 +753,11 @@ fields will not be changed without bumping the API version.</p>
 
 <h2 id="new-document-from-template">New document from Template</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/newfromtemplate/{document_id}</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /newfromtemplate/{document_id}</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/createfromtemplate/{template_id}</code></p>
 
@@ -579,15 +767,15 @@ fields will not be changed without bumping the API version.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
 the operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -595,9 +783,9 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>201</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>409</td> <td><p>The document is not a template.</p>
 </td> </tr>
@@ -605,15 +793,11 @@ fields will not be changed without bumping the API version.</p>
 
 <h2 id="clone-a-document">Clone a document</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/clone</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/clone</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/clone/{document_id}</code></p>
 
@@ -624,15 +808,15 @@ will use the current author details for the author signatory fields.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
 the operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -640,23 +824,19 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>201</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 </table>
 
 <h2 id="update-a-document">Update a document</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/update</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/update</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/update/{document_id}</code></p>
 
@@ -664,16 +844,12 @@ fields will not be changed without bumping the API version.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
-Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
-<tr><td>document</td><td>formData</td><td>string</td><td><p><strong>The document metadata</strong></p>
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>document</code><br/><em>required</em></td><td><p><strong>The document metadata</strong></p>
 <p>Must of of type <a href="#/definitions/Document">Document</a>.</p>
 <p>Can be a subset of the JSON structure, for example it is possible to
 just update the title of a document with <code>{&quot;title&quot;: &quot;New title&quot;}</code>.</p>
@@ -685,7 +861,11 @@ The call will return the full Document metadata structure, though.</p>
 <p>Extra items in the <code>document</code> value are discarded.
 However, you can include &ldquo;user defined&rdquo; items in the <code>tags</code> item, which
 is a key-value pair list.</p>
-</td></tr>
+</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+the operation if these match.
+Otherwise you will get a <code>HTTP 409</code>.</p>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -693,9 +873,9 @@ is a key-value pair list.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>409</td> <td><p>The document status should be <code>Preparation</code>.</p>
 </td> </tr>
@@ -703,15 +883,11 @@ fields will not be changed without bumping the API version.</p>
 
 <h2 id="set-the-main-file">Set the Main File</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/setfile</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/setfile</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/changemainfile/{document_id}</code></p>
 
@@ -722,18 +898,18 @@ removed (if any).</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>file</code><br/><em>optional</em></td><td><p>If provided, the PDF will be set as the main file for the document.</p>
+<p>If not provided, the current main file for the document will be removed.</p>
+</td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
 the operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
-<tr><td>file</td><td>formData</td><td>file</td><td><p>If provided, the PDF will be set as the main file for the document.</p>
-<p>If not provided, the current main file for the document will be removed.</p>
-</td></tr>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -741,9 +917,9 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>400</td> <td><p>The parameter <code>file</code> could not be parsed.</p>
 </td> </tr>
@@ -753,15 +929,11 @@ fields will not be changed without bumping the API version.</p>
 
 <h2 id="set-author-attachments">Set Author Attachments</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/setattachments</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/setattachments</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/setattachments/{document_id}</code></p>
 
@@ -772,16 +944,12 @@ use of this call.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
-Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
-<tr><td>attachments</td><td>formData</td><td>string</td><td><p><strong>List of author attachments.</strong></p>
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>attachments</code><br/><em>required</em></td><td><p><strong>List of author attachments.</strong></p>
 <p>The list provided will replace any existing attachments (if any).
 Therefore, to add an attachment to an existing list, you would need to
 first fetch the existing attachments <code>file_id</code> and use it for this
@@ -800,15 +968,19 @@ You must have the rights to access the <code>file_id</code> to use it.</p>
 </li>
 </ul>
 <p>Must of of type <a href="#/definitions/AuthorAttachments">AuthorAttachments</a>.</p>
-</td></tr>
-<tr><td>{attachment_name}</td><td>formData</td><td>file</td><td><p><strong>The named file parameters</strong></p>
+</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><code>{attachment_name}</code><br/><em>optional</em></td><td><p><strong>The named file parameters</strong></p>
 <p>Any <code>file_param</code> in the <code>attachments</code> JSON must be supplied as named
 file parameters.</p>
 <p>If converting from API version 1, it is convenient to name these
 parameters <code>attachment_1</code>, <code>attachment_2</code>, etc, and reference them as
 such in the <code>attachments</code> JSON.
 Although it is possible to use any HTTP compatible naming scheme.</p>
-</td></tr>
+</td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+the operation if these match.
+Otherwise you will get a <code>HTTP 409</code>.</p>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -816,9 +988,9 @@ Although it is possible to use any HTTP compatible naming scheme.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>409</td> <td><p>The document status should be <code>Preparation</code>.</p>
 </td> </tr>
@@ -826,15 +998,11 @@ fields will not be changed without bumping the API version.</p>
 
 <h2 id="start-the-signing-process">Start the signing process</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/start</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/start</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/ready/{document_id}</code></p>
 
@@ -842,21 +1010,21 @@ fields will not be changed without bumping the API version.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
-Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
-<tr><td>author_signs_now</td><td>formData</td><td>boolean</td><td><p><strong>Internal use only.</strong></p>
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>author_signs_now</code><br/><em>optional</em></td><td><p><strong>Internal use only.</strong></p>
 <p>Setting to ‘true’ will result in no invitation to sign being sent to the
 author.
 This is useful for when the author signs immediately after the ‘start’
 call.</p>
-</td></tr>
+</td><td><p>boolean</p></td><td>formData</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+the operation if these match.
+Otherwise you will get a <code>HTTP 409</code>.</p>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -864,9 +1032,9 @@ call.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>409</td> <td><p>TODO</p>
 </td> </tr>
@@ -876,15 +1044,11 @@ fields will not be changed without bumping the API version.</p>
 
 <h2 id="get-a-document">Get a document</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>GET</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/get</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /{document_id}/get</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/get/{document_id}</code></p>
 
@@ -892,11 +1056,11 @@ fields will not be changed without bumping the API version.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -904,67 +1068,53 @@ Will not change.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 </table>
 
 <h2 id="list-documents">List documents</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /list</code>
+</strong>
+</p>
 
-<p><strong>GET</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/list</code></p>
-</blockquote>
+<p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/list</code></p>
 
 <p>Fetch a list of documents, with filtering and sorting options.</p>
 
-<aside class="notice">
-Replaces API Version 1 operation: <code>api/v1/list</code>
-</aside>
-
-<aside class="success">
-Replaces API Version 1 operation: <code>api/v1/list</code>
-</aside>
-
-<aside class="warning">
-Replaces API Version 1 operation: <code>api/v1/list</code>
-</aside>
-
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>offset</td><td>query</td><td>integer</td><td><p><strong>Starting offset for documents to return.</strong></p>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>offset</code><br/><em>optional</em></td><td><p><strong>Starting offset for documents to return.</strong></p>
 <p>If offset is larger than the total number of matching documents, an
 empty list is returned.</p>
-</td></tr>
-<tr><td>max</td><td>query</td><td>integer</td><td><p><strong>Maximum number of documents to return.</strong></p>
+</td><td><p>integer<br><em>int32</em></p></td><td>query</td></tr>
+<tr><td><code>max</code><br/><em>optional</em></td><td><p><strong>Maximum number of documents to return.</strong></p>
 <p>Server may cap to a lower value.
 Default is chosen by server, and may change without notice.</p>
-</td></tr>
-<tr><td>filter</td><td>query</td><td>string</td><td><p><strong>List of filtering options.</strong></p>
+</td><td><p>integer<br><em>int32</em></p></td><td>query</td></tr>
+<tr><td><code>filter</code><br/><em>optional</em></td><td><p><strong>List of filtering options.</strong></p>
 <p>You can supply a list of filtering options to apply.
 Only documents that match <strong>all</strong> filters will be returned.
 Therefore, it is easy to apply a set of filters that will return no
 documents.</p>
 <p>If not supplied, the default is not to apply any filter, i.e. <code>[]</code>.</p>
 <p>Must be of type <a href="#/definitions/ListFilter">ListFilter</a>, for example:</p>
-<p><code>[ { &quot;filter_by&quot;:&quot;status&quot;, &quot;statuses&quot;:[&quot;preparation&quot;, &quot;pending&quot;] } ]</code></p>
-</td></tr>
-<tr><td>sorting</td><td>query</td><td>string</td><td><p><strong>List of sorting options.</strong></p>
+<p><code>[ { &quot;filter_by&quot;:&quot;status&quot;, &quot;statuses&quot;: [&quot;preparation&quot;,&quot;pending&quot;] } ]</code></p>
+</td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
+<tr><td><code>sorting</code><br/><em>optional</em></td><td><p><strong>List of sorting options.</strong></p>
 <p>You can supply a list of sorting options, which will be applied to list
 of documents in the order you provided.</p>
 <p>If not supplied, the default is
-<code>[{&quot;sort_by&quot;: &quot;mtime&quot;, &quot;order&quot;: &quot;ascending&quot;}]</code>,
+<code>[ { &quot;sort_by&quot;:&quot;mtime&quot;, &quot;order&quot;:&quot;ascending&quot; } ]</code>,
 <em>i.e.</em>, sort by modification time, newest first.</p>
 <p>Must of of type <a href="#/definitions/ListSorting">ListSorting</a>.</p>
-</td></tr>
+</td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -979,17 +1129,92 @@ the <code>total_matching</code> is 1,000.</p>
 </td> </tr>
 </table>
 
+<h2 id="get-the-main-file">Get the main file</h2>
+
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /{document_id}/files/main/{filename}</code>
+</strong>
+</p>
+
+<p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/downloadmainfile/{document_id}</code></p>
+
+<p>Get the main PDF file for a document.</p>
+
+<p>The <code class="prettyprint">filename</code> parameter in the URL can be set to any valid file name.
+This allows you to download the file with user-specified file name.</p>
+
+<p><strong>Internal use:</strong>
+<code class="prettyprint">signatory_id</code> parameter can be supplied to authenticate as specific
+signatory with session tokens.</p>
+
+<h3 id="parameters">Parameters</h3>
+
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
+Will not change.</p>
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+</table>
+
+<h3 id="responses">Responses</h3>
+
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>The PDF file.</p>
+</td> </tr>
+</table>
+
+<h2 id="get-a-related-file">Get a related file</h2>
+
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /{document_id}/files/{file_id}/{filename}</code>
+</strong>
+</p>
+
+<p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/downloadfile/{document_id}/{file_id}</code></p>
+
+<p>Get a file related to a document.</p>
+
+<p>This can be used to get author or signatory attachments by looking up their
+respective <code class="prettyprint">file_id</code> the Document JSON.</p>
+
+<p>The <code class="prettyprint">filename</code> parameter in the URL can be set to any valid file name.
+This allows you to download the file with user-specified file name.</p>
+
+<p><strong>Internal use:</strong>
+<code class="prettyprint">signatory_id</code> parameter can be supplied to authenticate as specific
+signatory with session tokens.</p>
+
+<h3 id="parameters">Parameters</h3>
+
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
+Will not change.</p>
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>file_id</code><br/><em>required</em></td><td><p>Unique identifier for a file available via Scrive.</p>
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+</table>
+
+<h3 id="responses">Responses</h3>
+
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>The file</p>
+<p>Usually an image (JPG, PNG) or PDF, but this may change.
+<code>Content-Type</code> header will be set according to the file type.</p>
+</td> </tr>
+</table>
+
 <h2 id="trigger-an-api-callback">Trigger an API callback</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/callback</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/callback</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/triggercallback/{document_id}</code></p>
 
@@ -998,15 +1223,15 @@ If one is set, no effect otherwise.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
 the operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -1024,15 +1249,11 @@ callback URL was set.</p>
 
 <h2 id="remind-signatories">Remind signatories</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/remind</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/remind</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/remind/{document_id}</code></p>
 
@@ -1041,15 +1262,15 @@ signed.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
 the operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -1065,15 +1286,11 @@ signatories that have not yet signed.</p>
 
 <h2 id="prolong-a-document">Prolong a document</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/prolong</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/prolong</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/prolong/{document_id}</code></p>
 
@@ -1081,17 +1298,17 @@ signatories that have not yet signed.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>days</code><br/><em>required</em></td><td><p>Number of days to prolong the document by.</p>
+</td><td><p>integer</p></td><td>formData</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
 the operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
-<tr><td>days</td><td>formData</td><td>integer</td><td><p>Number of days to prolong the document by.</p>
-</td></tr>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -1099,9 +1316,9 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>400</td> <td><p>The <code>days</code> parameter must be a number between 1 and 90.</p>
 </td> </tr>
@@ -1112,15 +1329,11 @@ Only timed out documents can be prolonged.</p>
 
 <h2 id="cancel-a-pending-document">Cancel a pending document</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/cancel</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/cancel</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/cancel/{document_id}</code></p>
 
@@ -1128,15 +1341,15 @@ Only timed out documents can be prolonged.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
 the operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -1144,9 +1357,9 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>409</td> <td><p>The document state is not <code>Pending</code>.</p>
 </td> </tr>
@@ -1154,15 +1367,11 @@ fields will not be changed without bumping the API version.</p>
 
 <h2 id="move-a-document-to-trash">Move a document to Trash</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/trash</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/trash</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/delete/{document_id}</code></p>
 
@@ -1172,15 +1381,15 @@ fields will not be changed without bumping the API version.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
 the operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -1188,9 +1397,9 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>409</td> <td><p>Pending documents can not be trashed or deleted.</p>
 </td> </tr>
@@ -1198,15 +1407,11 @@ fields will not be changed without bumping the API version.</p>
 
 <h2 id="delete-a-document">Delete a document</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/delete</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/delete</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/reallydelete/{document_id}</code></p>
 
@@ -1216,15 +1421,15 @@ fields will not be changed without bumping the API version.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
 the operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -1232,9 +1437,9 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>409</td> <td><p>Pending documents can not be trashed or deleted.</p>
 </td> </tr>
@@ -1242,35 +1447,31 @@ fields will not be changed without bumping the API version.</p>
 
 <h2 id="forward-a-document">Forward a document</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/forward</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/forward</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/forward/{document_id}</code></p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
-Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
-<tr><td>email</td><td>formData</td><td>string</td><td><p>The email address to forward the document to.</p>
-</td></tr>
-<tr><td>no_content</td><td>formData</td><td>boolean</td><td><p>When set to true only the signed document will be forwarded, with no
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>email</code><br/><em>required</em></td><td><p>The email address to forward the document to.</p>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><code>no_content</code><br/><em>optional</em></td><td><p>When set to true only the signed document will be forwarded, with no
 other email content.
 Otherwise a template email content is used, with the document attached.</p>
-</td></tr>
+</td><td><p>boolean</p></td><td>formData</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+the operation if these match.
+Otherwise you will get a <code>HTTP 409</code>.</p>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -1285,15 +1486,11 @@ Otherwise a template email content is used, with the document attached.</p>
 
 <h2 id="set-an-auto-reminder">Set an auto-reminder</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/setautoreminder</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/setautoreminder</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/setautoreminder/{document_id}</code></p>
 
@@ -1302,19 +1499,19 @@ message to the signatories that have not yet signed by that date.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
-Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
-<tr><td>days</td><td>formData</td><td>integer</td><td><p>Including this parameter sets the number of days in which to send
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>days</code><br/><em>optional</em></td><td><p>Including this parameter sets the number of days in which to send
 automatic reminders.</p>
 <p>Excluding it will remove automatic reminders from the document.</p>
-</td></tr>
+</td><td><p>integer<br><em>int32</em></p></td><td>formData</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+the operation if these match.
+Otherwise you will get a <code>HTTP 409</code>.</p>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -1322,9 +1519,9 @@ automatic reminders.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>400</td> <td><p>The <code>days</code> parameter must a number between 1 and the number of days left
 before the document expires.</p>
@@ -1335,15 +1532,11 @@ before the document expires.</p>
 
 <h2 id="restart-a-document">Restart a document</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/restart</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/restart</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/restart/{document_id}</code></p>
 
@@ -1351,15 +1544,15 @@ before the document expires.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
 the operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -1367,9 +1560,9 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>201</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>409</td> <td><p>Documents that are in Preparation, Pending, or Closed can not be
 restarted.</p>
@@ -1378,15 +1571,11 @@ restarted.</p>
 
 <h2 id="set-the-signatory-authentication-to-view-method">Set the signatory authentication-to-view method</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/{signatory_id}/setauthenticationtoview</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/{signatory_id}/setauthenticationtoview</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/changeauthenticationtoview/{document_id}/{signatory_id}</code></p>
 
@@ -1401,31 +1590,31 @@ adding the field to the signatory with a valid personal number.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>signatory_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a signatory.
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>signatory_id</code><br/><em>required</em></td><td><p>Unique identifier for a signatory.
 This value can change before document is made ready for signing, and should
 not be used to identify signatories while document is a draft.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
-Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
-<tr><td>authentication_type</td><td>formData</td><td>string</td><td><p>The type of authentication-to-view method to set for the signatory.</p>
-</td></tr>
-<tr><td>personal_number</td><td>formData</td><td>string</td><td><p>If the <code>authentication_type</code> requires a personal number, and the
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>authentication_type</code><br/><em>required</em></td><td><p>The type of authentication-to-view method to set for the signatory.</p>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><code>personal_number</code><br/><em>optional</em></td><td><p>If the <code>authentication_type</code> requires a personal number, and the
 signatory doesn’t have one set already, then it must be provided and
 valid for the chosen authentication-to-view method.</p>
-</td></tr>
-<tr><td>mobile_number</td><td>formData</td><td>string</td><td><p>Can be used for <code>authentication_type</code> that makes use of a mobile
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><code>mobile_number</code><br/><em>optional</em></td><td><p>Can be used for <code>authentication_type</code> that makes use of a mobile
 number.
 Similar requirements as <code>personal_number</code>.</p>
 <p>Currently only Norwegian BankID uses this and therefore must be a valid
 Norwegian mobile number.</p>
-</td></tr>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+the operation if these match.
+Otherwise you will get a <code>HTTP 409</code>.</p>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -1433,9 +1622,9 @@ Norwegian mobile number.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>409</td> <td><p>TODO</p>
 </td> </tr>
@@ -1443,15 +1632,11 @@ fields will not be changed without bumping the API version.</p>
 
 <h2 id="set-the-signatory-authentication-to-sign-method">Set the signatory authentication-to-sign method</h2>
 
-<blockquote>
-<h3 id="http-method">HTTP Method</h3>
-
-<p><strong>POST</strong></p>
-
-<h3 id="api-endpoint">API Endpoint</h3>
-
-<p><code class="prettyprint">/{document_id}/{signatory_id}/setauthenticationtosign</code></p>
-</blockquote>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /{document_id}/{signatory_id}/setauthenticationtosign</code>
+</strong>
+</p>
 
 <p><em>Replaces API Version 1 operation</em>: <code class="prettyprint">api/v1/changeauthentication/{document_id}/{signatory_id}</code></p>
 
@@ -1466,29 +1651,29 @@ mobile number field to the signatory and setting it as obligatory.</p>
 
 <h3 id="parameters">Parameters</h3>
 
-<table>
-<tr> <th>Name</th> <th>In</th> <th>Type</th> <th>Description</th> </tr>
-<tr><td>document_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a document.
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><code>document_id</code><br/><em>required</em></td><td><p>Unique identifier for a document.
 Will not change.</p>
-</td></tr>
-<tr><td>signatory_id</td><td>path</td><td>integer</td><td><p>Unique identifier for a signatory.
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>signatory_id</code><br/><em>required</em></td><td><p>Unique identifier for a signatory.
 This value can change before document is made ready for signing, and should
 not be used to identify signatories while document is a draft.</p>
-</td></tr>
-<tr><td>object_version</td><td>formData</td><td>integer</td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
-Otherwise you will get a <code>HTTP 409</code>.</p>
-</td></tr>
-<tr><td>authentication_type</td><td>formData</td><td>string</td><td><p>The type of authentication-to-sign method to set for the signatory.</p>
-</td></tr>
-<tr><td>authentication_value</td><td>formData</td><td>string</td><td><p>Including this parameter will set the value associated with
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><code>authentication_type</code><br/><em>required</em></td><td><p>The type of authentication-to-sign method to set for the signatory.</p>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><code>authentication_value</code><br/><em>optional</em></td><td><p>Including this parameter will set the value associated with
 <code>authentication_type</code> to this value (e.g. mobile number for SMS PIN).</p>
 <p>Setting it to empty string will clear the associated value, if present.</p>
 <p>Excluding it will not affect any signatory properties other than
 necessary side-effects.
 In particular, if a value for the associated field was already set, it
 will not be cleared.</p>
-</td></tr>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><code>object_version</code><br/><em>optional</em></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
+the operation if these match.
+Otherwise you will get a <code>HTTP 409</code>.</p>
+</td><td><p>integer</p></td><td>formData</td></tr>
 </table>
 
 <h3 id="responses">Responses</h3>
@@ -1496,9 +1681,9 @@ will not be cleared.</p>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
-<p>Most API calls return this JSON structure.</p>
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 </td> </tr>
 <tr> <td>409</td> <td><p>TODO</p>
 </td> </tr>
@@ -1508,796 +1693,117 @@ fields will not be changed without bumping the API version.</p>
 
 <h2 id="document">Document</h2>
 
-<p>The document metadata as a JSON.</p>
-
-<p>Most API calls return this JSON structure.</p>
-
-<p><strong>Note:</strong> Additional fields may be added without notice, but existing
-fields will not be changed without bumping the API version.</p>
-
+<blockquote>
 <p><strong>Example Response</strong></p>
 
 <p><strong><code class="prettyprint">application/json</code></strong></p>
-<pre class="highlight plaintext"><code>{
- "id": "9179748218119260717",
- "title": "Untitled 2016-06-21 11:01",
- "parties": [
-  {
-   "id": "9220293573270366783",
-   "user_id": "9206820953483508074",
-   "is_author": true,
-   "is_signatory": true,
-   "fields": [
-    {
-     "type": "name",
-     "order": 1,
-     "value": "JOJOJO",
-     "is_obligatory": true,
-     "should_be_filled_by_sender": true,
-     "placements": []
-    },
-    {
-     "type": "name",
-     "order": 2,
-     "value": "",
-     "is_obligatory": true,
-     "should_be_filled_by_sender": true,
-     "placements": []
-    },
-    {
-     "type": "email",
-     "value": "jonathan+dev@scrive.com",
-     "is_obligatory": true,
-     "should_be_filled_by_sender": true,
-     "placements": []
-    },
-    {
-     "type": "company",
-     "value": "",
-     "is_obligatory": false,
-     "should_be_filled_by_sender": false,
-     "placements": []
-    }
-   ],
-   "sign_order": 1,
-   "sign_time": null,
-   "seen_time": null,
-   "read_invitation_time": null,
-   "rejected_time": null,
-   "sign_success_redirect_url": null,
-   "reject_redirect_url": null,
-   "email_delivery_status": "unknown",
-   "mobile_delivery_status": "unknown",
-   "has_authenticated_to_view": false,
-   "csv": null,
-   "delivery_method": "email",
-   "authentication_method_to_view": "standard",
-   "authentication_method_to_sign": "standard",
-   "confirmation_delivery_method": "email",
-   "attachments": [],
-   "api_delivery_url": null
-  }
- ],
- "file": null,
- "sealed_file": null,
- "author_attachments": [],
- "ctime": "2016-06-21T11:01:16.505271Z",
- "mtime": "2016-06-21T11:01:16.505271Z",
- "timeout_time": null,
- "auto_remind_time": null,
- "status": "preparation",
- "days_to_sign": 90,
- "days_to_remind": null,
- "display_options": {
-  "show_header": true,
-  "show_pdf_download": true,
-  "show_reject_option": true,
-  "allow_reject_reason": true,
-  "show_footer": true
- },
- "invitation_message": "",
- "confirmation_message": "",
- "lang": "en",
- "api_callback_url": null,
- "object_version": 0,
- "access_token": "b5e6bf0eae8bb383",
- "timezone": "Europe/Stockholm",
- "tags": [],
- "is_template": false,
- "is_saved": false,
- "is_shared": false,
- "is_trashed": false,
- "is_deleted": false,
- "viewer": {
-  "signatory_id": "9220293573270366783",
-  "role": "signatory"
- }
-}
-</code></pre>
-
-<h3 id="schema">Schema</h3>
-
-<blockquote>
-<h3 id="json-schema">JSON Schema</h3>
 </blockquote>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
- </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
- </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-  </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"int64"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"parties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"int64"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"int64"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"is_author"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"is_signatory"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The object properties for Signatory `fields` in this definition are only\nthe ones common to all signatory fields.\n\n**Note:**\nA valid definition must include the current definition, in addition to\nbeing one of\n  * [SignatoryFieldCheckbox](#/definitions/SignatoryFieldCheckbox)\n  * [SignatoryFieldName](#/definitions/SignatoryFieldName)\n  * [SignatoryFieldSignature](#/definitions/SignatoryFieldSignature)\n  * [SignatoryFieldStandard](#/definitions/SignatoryFieldStandard)\n  * [SignatoryFieldText](#/definitions/SignatoryFieldText)\n"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-       </span><span class="nt">"discriminator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"type"</span><span class="p">,</span><span class="w">
-       </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="s2">"type"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"is_obligatory"</span><span class="w">
-       </span><span class="p">],</span><span class="w">
-       </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
-         </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-           </span><span class="nt">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="w">
-           </span><span class="p">},</span><span class="w">
-           </span><span class="nt">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="w">
-           </span><span class="p">},</span><span class="w">
-           </span><span class="nt">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="w">
-           </span><span class="p">},</span><span class="w">
-           </span><span class="nt">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="w">
-           </span><span class="p">},</span><span class="w">
-           </span><span class="nt">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="w">
-           </span><span class="p">},</span><span class="w">
-           </span><span class="nt">"page"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="w">
-           </span><span class="p">},</span><span class="w">
-           </span><span class="nt">"tip"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-            </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-             </span><span class="s2">"left"</span><span class="p">,</span><span class="w">
-             </span><span class="s2">"right"</span><span class="w">
-            </span><span class="p">]</span><span class="w">
-           </span><span class="p">},</span><span class="w">
-           </span><span class="nt">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
-            </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-             </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
-             </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-              </span><span class="nt">"text"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-               </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-              </span><span class="p">},</span><span class="w">
-              </span><span class="nt">"index"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-               </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="w">
-              </span><span class="p">}</span><span class="w">
-             </span><span class="p">}</span><span class="w">
-            </span><span class="p">}</span><span class="w">
-           </span><span class="p">}</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-         </span><span class="p">}</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-       </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"sign_order"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"sign_time"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date-time"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"seen_time"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date-time"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"read_invitation_time"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date-time"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"rejected_time"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date-time"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"sign_success_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uri"</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"reject_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uri"</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"email_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-       </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"not_delivered"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"delivered"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"deferred"</span><span class="w">
-      </span><span class="p">]</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"mobile_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-       </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"not_delivered"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"delivered"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"deferred"</span><span class="w">
-      </span><span class="p">]</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"csv"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-       </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
-       </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-       </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"delivery_method"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-       </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"mobile"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"email_mobile"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"pad"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"api"</span><span class="w">
-      </span><span class="p">]</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"authentication_method_to_view"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-       </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"se_bankid"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"no_bankid"</span><span class="w">
-      </span><span class="p">]</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"authentication_method_to_sign"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-       </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"sms_pin"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"se_bankid"</span><span class="w">
-      </span><span class="p">]</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"confirmation_delivery_method"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-       </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"mobile"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"email_mobile"</span><span class="p">,</span><span class="w">
-       </span><span class="s2">"none"</span><span class="w">
-      </span><span class="p">]</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"attachments"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
-      </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-       </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
-       </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"file_id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"file_name"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-       </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"api_delivery_url"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uri"</span><span class="w">
-     </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-   </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"file"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-     </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+ </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9179748218119260717"</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Untitled 2016-06-21 11:01"</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"parties"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9220293573270366783"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9206820953483508074"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"is_author"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"is_signatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"order"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Magnus"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
     </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-     </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-   </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"sealed_file"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-     </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"order"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Söderholm"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
     </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-     </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-   </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"author_attachments"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"add_to_sealed_file"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"file_id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-     </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-   </span><span class="p">},</span><span class="w">
-   </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"ctime"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date-time"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"mtime"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date-time"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"timeout_time"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date-time"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"auto_remind_time"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date-time"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="s2">"preparation"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"pending"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"closed"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"canceled"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"timedout"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"rejected"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"document_error"</span><span class="w">
-   </span><span class="p">]</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"days_to_sign"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"days_to_remind"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"display_options"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"show_header"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"noemail@scrive.com"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
     </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"show_pdf_download"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"show_reject_option"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"allow_reject_reason"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"show_footer"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"company"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
     </span><span class="p">}</span><span class="w">
-   </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"invitation_message"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"confirmation_message"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"lang"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Currently supported language codes"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="s2">"da"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"de"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"el"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"en"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"es"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"et"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"fi"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"fr"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"is"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"it"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"lt"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"lv"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"nl"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"no"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"pt"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"sv"</span><span class="w">
-   </span><span class="p">]</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"api_callback_url"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uri"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"object_version"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"minimum"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"access_token"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"timezone"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
-   </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-     </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-   </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"is_template"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"is_saved"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"is_shared"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"is_trashed"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"is_deleted"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"viewer"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"role"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-     </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"company_shared"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"company_admin"</span><span class="p">,</span><span class="w">
-      </span><span class="s2">"signatory"</span><span class="w">
-     </span><span class="p">]</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"signatory_id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-   </span><span class="p">}</span><span class="w">
+   </span><span class="p">],</span><span class="w">
+   </span><span class="nt">"sign_order"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"sign_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"seen_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"read_invitation_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"rejected_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"sign_success_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"reject_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"email_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"mobile_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"has_authenticated_to_view"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"csv"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"delivery_method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"authentication_method_to_view"</span><span class="p">:</span><span class="w"> </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"authentication_method_to_sign"</span><span class="p">:</span><span class="w"> </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"confirmation_delivery_method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"attachments"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+   </span><span class="nt">"api_delivery_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
   </span><span class="p">}</span><span class="w">
+ </span><span class="p">],</span><span class="w">
+ </span><span class="nt">"file"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"sealed_file"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"author_attachments"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+ </span><span class="nt">"ctime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-21T11:01:16.505271Z"</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"mtime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-21T11:01:16.505271Z"</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"timeout_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"auto_remind_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"preparation"</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"days_to_sign"</span><span class="p">:</span><span class="w"> </span><span class="mi">90</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"days_to_remind"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"display_options"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nt">"show_header"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"show_pdf_download"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"show_reject_option"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"allow_reject_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"show_footer"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+ </span><span class="p">},</span><span class="w">
+ </span><span class="nt">"invitation_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"confirmation_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"lang"</span><span class="p">:</span><span class="w"> </span><span class="s2">"en"</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"api_callback_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"object_version"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"access_token"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b5e6bf0eae8bb383"</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"timezone"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Europe/Stockholm"</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+ </span><span class="nt">"is_template"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"is_saved"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"is_shared"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"is_trashed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"is_deleted"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"viewer"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nt">"signatory_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9220293573270366783"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"signatory"</span><span class="w">
  </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
-<p>The schema defines the following properties:</p>
-
-<h3 id="id-integer"><code class="prettyprint">id</code> (integer)</h3>
-
-<h3 id="title-string"><code class="prettyprint">title</code> (string)</h3>
-
-<h3 id="parties-array"><code class="prettyprint">parties</code> (array)</h3>
-
-<p>The object is an array with all elements of the type <code class="prettyprint">object</code>.</p>
-
-<p>The array object has the following properties:</p>
-
-<h6 id="id-integer"><code class="prettyprint">id</code> (integer)</h6>
-
-<h6 id="user_id-integer"><code class="prettyprint">user_id</code> (integer)</h6>
-
-<h6 id="is_author-boolean"><code class="prettyprint">is_author</code> (boolean)</h6>
-
-<h6 id="is_signatory-boolean"><code class="prettyprint">is_signatory</code> (boolean)</h6>
-
-<h6 id="fields-array"><code class="prettyprint">fields</code> (array)</h6>
-
-<p>The object properties for Signatory <code class="prettyprint">fields</code> in this definition are only
-the ones common to all signatory fields.</p>
-
-<p><strong>Note:</strong>
-A valid definition must include the current definition, in addition to
-being one of
-  * <a href="###/definitions/SignatoryFieldCheckbox">SignatoryFieldCheckbox</a>
-  * <a href="###/definitions/SignatoryFieldName">SignatoryFieldName</a>
-  * <a href="###/definitions/SignatoryFieldSignature">SignatoryFieldSignature</a>
-  * <a href="###/definitions/SignatoryFieldStandard">SignatoryFieldStandard</a>
-  * <a href="###/definitions/SignatoryFieldText">SignatoryFieldText</a></p>
-
-<p>The object is an array with all elements of the type <code class="prettyprint">undefined</code>.</p>
-
-<h6 id="sign_order-integer"><code class="prettyprint">sign_order</code> (integer)</h6>
-
-<h6 id="sign_time-string"><code class="prettyprint">sign_time</code> (string)</h6>
-
-<h6 id="seen_time-string"><code class="prettyprint">seen_time</code> (string)</h6>
-
-<h6 id="read_invitation_time-string"><code class="prettyprint">read_invitation_time</code> (string)</h6>
-
-<h6 id="rejected_time-string"><code class="prettyprint">rejected_time</code> (string)</h6>
-
-<h6 id="sign_success_redirect_url-string"><code class="prettyprint">sign_success_redirect_url</code> (string)</h6>
-
-<h6 id="reject_redirect_url-string"><code class="prettyprint">reject_redirect_url</code> (string)</h6>
-
-<h6 id="email_delivery_status-string"><code class="prettyprint">email_delivery_status</code> (string)</h6>
-
-<h6 id="mobile_delivery_status-string"><code class="prettyprint">mobile_delivery_status</code> (string)</h6>
-
-<h6 id="csv-array"><code class="prettyprint">csv</code> (array)</h6>
-
-<p>The object is an array with all elements of the type <code class="prettyprint">array</code>.</p>
-
-<h6 id="delivery_method-string"><code class="prettyprint">delivery_method</code> (string)</h6>
-
-<h6 id="authentication_method_to_view-string"><code class="prettyprint">authentication_method_to_view</code> (string)</h6>
-
-<h6 id="authentication_method_to_sign-string"><code class="prettyprint">authentication_method_to_sign</code> (string)</h6>
-
-<h6 id="confirmation_delivery_method-string"><code class="prettyprint">confirmation_delivery_method</code> (string)</h6>
-
-<h6 id="attachments-array"><code class="prettyprint">attachments</code> (array)</h6>
-
-<p>The object is an array with all elements of the type <code class="prettyprint">object</code>.</p>
-
-<p>The array object has the following properties:</p>
-
-<h6 id="name-string">### <code class="prettyprint">name</code> (string)</h6>
-
-<h6 id="description-string">### <code class="prettyprint">description</code> (string)</h6>
-
-<h6 id="file_id-string">### <code class="prettyprint">file_id</code> (string)</h6>
-
-<h6 id="file_name-string">### <code class="prettyprint">file_name</code> (string)</h6>
-
-<h6 id="api_delivery_url-string"><code class="prettyprint">api_delivery_url</code> (string)</h6>
-
-<h3 id="file-object"><code class="prettyprint">file</code> (object)</h3>
-
-<p>Properties of the <code class="prettyprint">file</code> object:</p>
-
-<h6 id="id-string"><code class="prettyprint">id</code> (string)</h6>
-
-<h6 id="name-string"><code class="prettyprint">name</code> (string)</h6>
-
-<h3 id="sealed_file-object"><code class="prettyprint">sealed_file</code> (object)</h3>
-
-<p>Properties of the <code class="prettyprint">sealed_file</code> object:</p>
-
-<h6 id="id-string"><code class="prettyprint">id</code> (string)</h6>
-
-<h6 id="name-string"><code class="prettyprint">name</code> (string)</h6>
-
-<h3 id="author_attachments-array"><code class="prettyprint">author_attachments</code> (array)</h3>
-
-<p>The object is an array with all elements of the type <code class="prettyprint">object</code>.</p>
-
-<p>The array object has the following properties:</p>
-
-<h6 id="name-string"><code class="prettyprint">name</code> (string)</h6>
-
-<h6 id="required-boolean"><code class="prettyprint">required</code> (boolean)</h6>
-
-<h6 id="add_to_sealed_file-boolean"><code class="prettyprint">add_to_sealed_file</code> (boolean)</h6>
-
-<h6 id="file_id-string"><code class="prettyprint">file_id</code> (string)</h6>
-
-<h3 id="ctime-string"><code class="prettyprint">ctime</code> (string)</h3>
-
-<h3 id="mtime-string"><code class="prettyprint">mtime</code> (string)</h3>
-
-<h3 id="timeout_time-string"><code class="prettyprint">timeout_time</code> (string)</h3>
-
-<h3 id="auto_remind_time-string"><code class="prettyprint">auto_remind_time</code> (string)</h3>
-
-<h3 id="status-string"><code class="prettyprint">status</code> (string)</h3>
-
-<h3 id="days_to_sign-integer"><code class="prettyprint">days_to_sign</code> (integer)</h3>
-
-<h3 id="days_to_remind-integer"><code class="prettyprint">days_to_remind</code> (integer)</h3>
-
-<h3 id="display_options-object"><code class="prettyprint">display_options</code> (object)</h3>
-
-<p>Properties of the <code class="prettyprint">display_options</code> object:</p>
-
-<h6 id="show_header-boolean"><code class="prettyprint">show_header</code> (boolean)</h6>
-
-<h6 id="show_pdf_download-boolean"><code class="prettyprint">show_pdf_download</code> (boolean)</h6>
-
-<h6 id="show_reject_option-boolean"><code class="prettyprint">show_reject_option</code> (boolean)</h6>
-
-<h6 id="allow_reject_reason-boolean"><code class="prettyprint">allow_reject_reason</code> (boolean)</h6>
-
-<h6 id="show_footer-boolean"><code class="prettyprint">show_footer</code> (boolean)</h6>
-
-<h3 id="invitation_message-string"><code class="prettyprint">invitation_message</code> (string)</h3>
-
-<h3 id="confirmation_message-string"><code class="prettyprint">confirmation_message</code> (string)</h3>
-
-<h3 id="lang-string"><code class="prettyprint">lang</code> (string)</h3>
-
-<p>Currently supported language codes</p>
-
-<h3 id="api_callback_url-string"><code class="prettyprint">api_callback_url</code> (string)</h3>
-
-<h3 id="object_version-integer"><code class="prettyprint">object_version</code> (integer)</h3>
-
-<p>Additional restrictions:</p>
-
-<ul>
-<li>Minimum: <code class="prettyprint">1</code></li>
-</ul>
-
-<h3 id="access_token-string"><code class="prettyprint">access_token</code> (string)</h3>
-
-<h3 id="timezone-string"><code class="prettyprint">timezone</code> (string)</h3>
-
-<h3 id="tags-array"><code class="prettyprint">tags</code> (array)</h3>
-
-<p>The object is an array with all elements of the type <code class="prettyprint">object</code>.</p>
-
-<p>The array object has the following properties:</p>
-
-<h6 id="name-string"><code class="prettyprint">name</code> (string)</h6>
-
-<h6 id="value-string"><code class="prettyprint">value</code> (string)</h6>
-
-<h3 id="is_template-boolean"><code class="prettyprint">is_template</code> (boolean)</h3>
-
-<h3 id="is_saved-boolean"><code class="prettyprint">is_saved</code> (boolean)</h3>
-
-<h3 id="is_shared-boolean"><code class="prettyprint">is_shared</code> (boolean)</h3>
-
-<h3 id="is_trashed-boolean"><code class="prettyprint">is_trashed</code> (boolean)</h3>
-
-<h3 id="is_deleted-boolean"><code class="prettyprint">is_deleted</code> (boolean)</h3>
-
-<h3 id="viewer-object"><code class="prettyprint">viewer</code> (object)</h3>
-
-<p>Properties of the <code class="prettyprint">viewer</code> object:</p>
-
-<h6 id="role-string"><code class="prettyprint">role</code> (string)</h6>
-
-<h6 id="signatory_id-string"><code class="prettyprint">signatory_id</code> (string)</h6>
+<p>The document metadata as a JSON.</p>
+
+<p>Most API calls return this JSON structure.
+Please see the <a href="/#definitions">Definitions</a> for a detailed description of
+the fields.</p>
 
 <h2 id="apierror">APIError</h2>
 
 <p>The JSON structured errors returned by the API.</p>
-
-<h3 id="schema">Schema</h3>
-
-<blockquote>
-<h3 id="json-schema">JSON Schema</h3>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
- </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
- </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-  </span><span class="nt">"error_type"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="s2">"server_error"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"endpoint_not_found"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"invalid_authorisation"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"insufficient_privileges"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"resource_not_found"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"document_action_forbidden"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"request_parameters_missing"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"request_parameters_parse_error"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"request_parameters_invalid"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"document_object_version_mismatch"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"document_state_error"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"signatory_state_error"</span><span class="w">
-   </span><span class="p">]</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"error_message"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"http_code"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"enum"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="mi">400</span><span class="p">,</span><span class="w">
-    </span><span class="mi">401</span><span class="p">,</span><span class="w">
-    </span><span class="mi">403</span><span class="p">,</span><span class="w">
-    </span><span class="mi">404</span><span class="p">,</span><span class="w">
-    </span><span class="mi">409</span><span class="p">,</span><span class="w">
-    </span><span class="mi">500</span><span class="p">,</span><span class="w">
-    </span><span class="mi">603</span><span class="w">
-   </span><span class="p">]</span><span class="w">
-  </span><span class="p">}</span><span class="w">
- </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>The schema defines the following properties:</p>
-
-<h3 id="error_type-string"><code class="prettyprint">error_type</code> (string)</h3>
-
-<h3 id="error_message-string"><code class="prettyprint">error_message</code> (string)</h3>
-
-<h3 id="http_code-integer"><code class="prettyprint">http_code</code> (integer)</h3>
 
 <h1 id="definitions">Definitions</h1>
 
@@ -2308,40 +1814,46 @@ being one of
 </blockquote>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"**TODO**\n"</span><span class="p">,</span><span class="w">
  </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
   </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"int64"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"**Unique identifier for a document.**\n\nWill not change over time, and cannot be changed.\n"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
+   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"**The title of the document.**\n\nCan be modified while a document is in preparation.\nThe title will be used in messages sent to the document’s parties.\n"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"parties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"**TODO**\n"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"int64"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"**Unique identifier for a party.**\n\nWill not change over time, and cannot be changed.\n"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
      </span><span class="p">},</span><span class="w">
      </span><span class="nt">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"If this party has an account on the Scrive eSign system, it will be set\nhere.\n"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"int64"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
      </span><span class="p">},</span><span class="w">
      </span><span class="nt">"is_author"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Whether this party is the author of the document."</span><span class="p">,</span><span class="w">
       </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
      </span><span class="p">},</span><span class="w">
      </span><span class="nt">"is_signatory"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Whether this party is a signatory to the document, otherwise they are\nviewers and will not sign the document.\n"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
      </span><span class="p">},</span><span class="w">
      </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The object properties for Signatory `fields` in this definition are only\nthe ones common to all signatory fields.\n\n**Note:**\nA valid definition must include the current definition, in addition to\nbeing one of\n  * [SignatoryFieldCheckbox](#/definitions/SignatoryFieldCheckbox)\n  * [SignatoryFieldName](#/definitions/SignatoryFieldName)\n  * [SignatoryFieldSignature](#/definitions/SignatoryFieldSignature)\n  * [SignatoryFieldStandard](#/definitions/SignatoryFieldStandard)\n  * [SignatoryFieldText](#/definitions/SignatoryFieldText)\n"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
        </span><span class="nt">"discriminator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"type"</span><span class="p">,</span><span class="w">
        </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
@@ -2430,10 +1942,12 @@ being one of
       </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
      </span><span class="p">},</span><span class="w">
      </span><span class="nt">"sign_success_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The URL to redirect this party after they have signed the document.\n"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uri"</span><span class="w">
      </span><span class="p">},</span><span class="w">
      </span><span class="nt">"reject_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The URL to redirect this party if they reject the document.\n"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uri"</span><span class="w">
      </span><span class="p">},</span><span class="w">
@@ -2525,11 +2039,13 @@ being one of
       </span><span class="p">}</span><span class="w">
      </span><span class="p">},</span><span class="w">
      </span><span class="nt">"api_delivery_url"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"If the `delivery_method` is set to `api`, then this field will hold the\nrelative URL for the party.\n\nThis will only be available after the signing process has been started,\nand will only be visible when accessing the document as the author.\n"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uri"</span><span class="w">
      </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
-   </span><span class="p">}</span><span class="w">
+   </span><span class="p">},</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"**List of signing and viewing parties.**\n\nDefines their details, how the document is delivered to them, what\nauthentication method they must use, fields they must fill, fields placed\non the PDF, etc.\n"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"file"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
@@ -2545,6 +2061,7 @@ being one of
    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"sealed_file"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"**The cryptographically sealed file.**\n\nWill only exist for documents that have been closed.\nThis field may be `null` for a short period of time after a document has\nbeen signed by all parties, while the Scrive eSign system seals the\ndocument.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -2558,6 +2075,7 @@ being one of
    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"author_attachments"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"**List of author attachments.**\n\nCan be updated during document preparation using the \"set author\nattachments\" (`/{document_id}/setattachments`) API call.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
@@ -2582,16 +2100,19 @@ being one of
    </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"ctime"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Time at which the document was created."</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date-time"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"mtime"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Latest time at which the document was modified."</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date-time"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"timeout_time"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Time after which the document will timeout if it has not been signed.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"date-time"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
@@ -2624,27 +2145,34 @@ being one of
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"show_header"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
+     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Whether to show the Scrive header on the signing page.\n"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"show_pdf_download"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
+     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Whether to show an option to download the PDF on the signing page.\n"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"show_reject_option"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
+     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Whether to allow signatories to reject a document.\n"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"allow_reject_reason"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
+     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Whether to allow signatories to enter a plain text reason for\nrejecting a document.\n"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"show_footer"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+     </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Whether to show the Scrive footer on the signing page.\n"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
     </span><span class="p">}</span><span class="w">
    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"invitation_message"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The invitation message to send to all parties at the start of the signing\nprocess.\n\nDefault is blank.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"confirmation_message"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The confirmation message to send to all parties once the document has\nbeen signed.\n\nDefault is blank.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w">
   </span><span class="p">},</span><span class="w">
@@ -2671,10 +2199,12 @@ being one of
    </span><span class="p">]</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"api_callback_url"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The URL to perform an API callback request.\n\nPlease see [Callbacks](#/callbacks) for details.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uri"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"object_version"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The document object version is auto-incremented by the Scrive eSign\nsystem each time an action is performed on it.\n\nTherefore this can be used as a rudimentary synchronisation mechanism to\nensure you are handling a document that has not changed.\n\nIt is not recommended to use this field unless you are building an\napplication with offline capabilities.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
    </span><span class="nt">"minimum"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
@@ -2687,6 +2217,7 @@ being one of
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"**User defined set of names and values.**\n\nCan be used to manage categories of documents.\nThe list API call can filter based on document tags.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
    </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -2705,6 +2236,7 @@ being one of
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"is_saved"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"A ‘saved’ document will appear in the E-archive.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"is_shared"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -2739,25 +2271,54 @@ being one of
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
+<p><strong>TODO</strong></p>
+
 <p>The schema defines the following properties:</p>
 
-<h3 id="id-integer"><code class="prettyprint">id</code> (integer)</h3>
+<h3 id="id-string"><code class="prettyprint">id</code> (string)</h3>
+
+<p><strong>Unique identifier for a document.</strong></p>
+
+<p>Will not change over time, and cannot be changed.</p>
 
 <h3 id="title-string"><code class="prettyprint">title</code> (string)</h3>
 
+<p><strong>The title of the document.</strong></p>
+
+<p>Can be modified while a document is in preparation.
+The title will be used in messages sent to the document’s parties.</p>
+
 <h3 id="parties-array"><code class="prettyprint">parties</code> (array)</h3>
+
+<p><strong>List of signing and viewing parties.</strong></p>
+
+<p>Defines their details, how the document is delivered to them, what
+authentication method they must use, fields they must fill, fields placed
+on the PDF, etc.</p>
 
 <p>The object is an array with all elements of the type <code class="prettyprint">object</code>.</p>
 
 <p>The array object has the following properties:</p>
 
-<h6 id="id-integer"><code class="prettyprint">id</code> (integer)</h6>
+<h6 id="id-string"><code class="prettyprint">id</code> (string)</h6>
+
+<p><strong>Unique identifier for a party.</strong></p>
+
+<p>Will not change over time, and cannot be changed.</p>
 
 <h6 id="user_id-integer"><code class="prettyprint">user_id</code> (integer)</h6>
 
+<p>If this party has an account on the Scrive eSign system, it will be set
+here.</p>
+
 <h6 id="is_author-boolean"><code class="prettyprint">is_author</code> (boolean)</h6>
 
+<p>Whether this party is the author of the document.</p>
+
 <h6 id="is_signatory-boolean"><code class="prettyprint">is_signatory</code> (boolean)</h6>
+
+<p>Whether this party is a signatory to the document, otherwise they are
+viewers and will not sign the document.</p>
 
 <h6 id="fields-array"><code class="prettyprint">fields</code> (array)</h6>
 
@@ -2787,7 +2348,11 @@ being one of
 
 <h6 id="sign_success_redirect_url-string"><code class="prettyprint">sign_success_redirect_url</code> (string)</h6>
 
+<p>The URL to redirect this party after they have signed the document.</p>
+
 <h6 id="reject_redirect_url-string"><code class="prettyprint">reject_redirect_url</code> (string)</h6>
+
+<p>The URL to redirect this party if they reject the document.</p>
 
 <h6 id="email_delivery_status-string"><code class="prettyprint">email_delivery_status</code> (string)</h6>
 
@@ -2821,6 +2386,12 @@ being one of
 
 <h6 id="api_delivery_url-string"><code class="prettyprint">api_delivery_url</code> (string)</h6>
 
+<p>If the <code class="prettyprint">delivery_method</code> is set to <code class="prettyprint">api</code>, then this field will hold the
+relative URL for the party.</p>
+
+<p>This will only be available after the signing process has been started,
+and will only be visible when accessing the document as the author.</p>
+
 <h3 id="file-object"><code class="prettyprint">file</code> (object)</h3>
 
 <p>Properties of the <code class="prettyprint">file</code> object:</p>
@@ -2831,6 +2402,13 @@ being one of
 
 <h3 id="sealed_file-object"><code class="prettyprint">sealed_file</code> (object)</h3>
 
+<p><strong>The cryptographically sealed file.</strong></p>
+
+<p>Will only exist for documents that have been closed.
+This field may be <code class="prettyprint">null</code> for a short period of time after a document has
+been signed by all parties, while the Scrive eSign system seals the
+document.</p>
+
 <p>Properties of the <code class="prettyprint">sealed_file</code> object:</p>
 
 <h6 id="id-string"><code class="prettyprint">id</code> (string)</h6>
@@ -2838,6 +2416,11 @@ being one of
 <h6 id="name-string"><code class="prettyprint">name</code> (string)</h6>
 
 <h3 id="author_attachments-array"><code class="prettyprint">author_attachments</code> (array)</h3>
+
+<p><strong>List of author attachments.</strong></p>
+
+<p>Can be updated during document preparation using the &ldquo;set author
+attachments&rdquo; (<code class="prettyprint">/{document_id}/setattachments</code>) API call.</p>
 
 <p>The object is an array with all elements of the type <code class="prettyprint">object</code>.</p>
 
@@ -2853,9 +2436,15 @@ being one of
 
 <h3 id="ctime-string"><code class="prettyprint">ctime</code> (string)</h3>
 
+<p>Time at which the document was created.</p>
+
 <h3 id="mtime-string"><code class="prettyprint">mtime</code> (string)</h3>
 
+<p>Latest time at which the document was modified.</p>
+
 <h3 id="timeout_time-string"><code class="prettyprint">timeout_time</code> (string)</h3>
+
+<p>Time after which the document will timeout if it has not been signed.</p>
 
 <h3 id="auto_remind_time-string"><code class="prettyprint">auto_remind_time</code> (string)</h3>
 
@@ -2871,17 +2460,38 @@ being one of
 
 <h6 id="show_header-boolean"><code class="prettyprint">show_header</code> (boolean)</h6>
 
+<p>Whether to show the Scrive header on the signing page.</p>
+
 <h6 id="show_pdf_download-boolean"><code class="prettyprint">show_pdf_download</code> (boolean)</h6>
+
+<p>Whether to show an option to download the PDF on the signing page.</p>
 
 <h6 id="show_reject_option-boolean"><code class="prettyprint">show_reject_option</code> (boolean)</h6>
 
+<p>Whether to allow signatories to reject a document.</p>
+
 <h6 id="allow_reject_reason-boolean"><code class="prettyprint">allow_reject_reason</code> (boolean)</h6>
+
+<p>Whether to allow signatories to enter a plain text reason for
+rejecting a document.</p>
 
 <h6 id="show_footer-boolean"><code class="prettyprint">show_footer</code> (boolean)</h6>
 
+<p>Whether to show the Scrive footer on the signing page.</p>
+
 <h3 id="invitation_message-string"><code class="prettyprint">invitation_message</code> (string)</h3>
 
+<p>The invitation message to send to all parties at the start of the signing
+process.</p>
+
+<p>Default is blank.</p>
+
 <h3 id="confirmation_message-string"><code class="prettyprint">confirmation_message</code> (string)</h3>
+
+<p>The confirmation message to send to all parties once the document has
+been signed.</p>
+
+<p>Default is blank.</p>
 
 <h3 id="lang-string"><code class="prettyprint">lang</code> (string)</h3>
 
@@ -2889,7 +2499,20 @@ being one of
 
 <h3 id="api_callback_url-string"><code class="prettyprint">api_callback_url</code> (string)</h3>
 
+<p>The URL to perform an API callback request.</p>
+
+<p>Please see <a href="###/callbacks">Callbacks</a> for details.</p>
+
 <h3 id="object_version-integer"><code class="prettyprint">object_version</code> (integer)</h3>
+
+<p>The document object version is auto-incremented by the Scrive eSign
+system each time an action is performed on it.</p>
+
+<p>Therefore this can be used as a rudimentary synchronisation mechanism to
+ensure you are handling a document that has not changed.</p>
+
+<p>It is not recommended to use this field unless you are building an
+application with offline capabilities.</p>
 
 <p>Additional restrictions:</p>
 
@@ -2903,6 +2526,11 @@ being one of
 
 <h3 id="tags-array"><code class="prettyprint">tags</code> (array)</h3>
 
+<p><strong>User defined set of names and values.</strong></p>
+
+<p>Can be used to manage categories of documents.
+The list API call can filter based on document tags.</p>
+
 <p>The object is an array with all elements of the type <code class="prettyprint">object</code>.</p>
 
 <p>The array object has the following properties:</p>
@@ -2914,6 +2542,8 @@ being one of
 <h3 id="is_template-boolean"><code class="prettyprint">is_template</code> (boolean)</h3>
 
 <h3 id="is_saved-boolean"><code class="prettyprint">is_saved</code> (boolean)</h3>
+
+<p>A ‘saved’ document will appear in the E-archive.</p>
 
 <h3 id="is_shared-boolean"><code class="prettyprint">is_shared</code> (boolean)</h3>
 
@@ -2955,27 +2585,31 @@ being one of
 </blockquote>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span><span class="w">
+ </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"**TODO**\n"</span><span class="p">,</span><span class="w">
  </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
   </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"int64"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"**Unique identifier for a party.**\n\nWill not change over time, and cannot be changed.\n"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"If this party has an account on the Scrive eSign system, it will be set\nhere.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"int64"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"is_author"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Whether this party is the author of the document."</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"is_signatory"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Whether this party is a signatory to the document, otherwise they are\nviewers and will not sign the document.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The object properties for Signatory `fields` in this definition are only\nthe ones common to all signatory fields.\n\n**Note:**\nA valid definition must include the current definition, in addition to\nbeing one of\n  * [SignatoryFieldCheckbox](#/definitions/SignatoryFieldCheckbox)\n  * [SignatoryFieldName](#/definitions/SignatoryFieldName)\n  * [SignatoryFieldSignature](#/definitions/SignatoryFieldSignature)\n  * [SignatoryFieldStandard](#/definitions/SignatoryFieldStandard)\n  * [SignatoryFieldText](#/definitions/SignatoryFieldText)\n"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"discriminator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"type"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
@@ -3064,10 +2698,12 @@ being one of
    </span><span class="nt">"readOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"sign_success_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The URL to redirect this party after they have signed the document.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uri"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"reject_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The URL to redirect this party if they reject the document.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uri"</span><span class="w">
   </span><span class="p">},</span><span class="w">
@@ -3159,6 +2795,7 @@ being one of
    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"api_delivery_url"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"If the `delivery_method` is set to `api`, then this field will hold the\nrelative URL for the party.\n\nThis will only be available after the signing process has been started,\nand will only be visible when accessing the document as the author.\n"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uri"</span><span class="w">
   </span><span class="p">}</span><span class="w">
@@ -3166,15 +2803,29 @@ being one of
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
+<p><strong>TODO</strong></p>
+
 <p>The schema defines the following properties:</p>
 
-<h3 id="id-integer"><code class="prettyprint">id</code> (integer)</h3>
+<h3 id="id-string"><code class="prettyprint">id</code> (string)</h3>
+
+<p><strong>Unique identifier for a party.</strong></p>
+
+<p>Will not change over time, and cannot be changed.</p>
 
 <h3 id="user_id-integer"><code class="prettyprint">user_id</code> (integer)</h3>
 
+<p>If this party has an account on the Scrive eSign system, it will be set
+here.</p>
+
 <h3 id="is_author-boolean"><code class="prettyprint">is_author</code> (boolean)</h3>
 
+<p>Whether this party is the author of the document.</p>
+
 <h3 id="is_signatory-boolean"><code class="prettyprint">is_signatory</code> (boolean)</h3>
+
+<p>Whether this party is a signatory to the document, otherwise they are
+viewers and will not sign the document.</p>
 
 <h3 id="fields-array"><code class="prettyprint">fields</code> (array)</h3>
 
@@ -3204,7 +2855,11 @@ being one of
 
 <h3 id="sign_success_redirect_url-string"><code class="prettyprint">sign_success_redirect_url</code> (string)</h3>
 
+<p>The URL to redirect this party after they have signed the document.</p>
+
 <h3 id="reject_redirect_url-string"><code class="prettyprint">reject_redirect_url</code> (string)</h3>
+
+<p>The URL to redirect this party if they reject the document.</p>
 
 <h3 id="email_delivery_status-string"><code class="prettyprint">email_delivery_status</code> (string)</h3>
 
@@ -3237,6 +2892,12 @@ being one of
 <h6 id="file_name-string"><code class="prettyprint">file_name</code> (string)</h6>
 
 <h3 id="api_delivery_url-string"><code class="prettyprint">api_delivery_url</code> (string)</h3>
+
+<p>If the <code class="prettyprint">delivery_method</code> is set to <code class="prettyprint">api</code>, then this field will hold the
+relative URL for the party.</p>
+
+<p>This will only be available after the signing process has been started,
+and will only be visible when accessing the document as the author.</p>
 
 <h2 id="signatoryfieldname">SignatoryFieldName</h2>
 
