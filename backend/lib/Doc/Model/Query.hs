@@ -26,6 +26,7 @@ module Doc.Model.Query
   , GetDocumentTags(..)
   , CheckDocumentObjectVersionIs(..)
   , DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor(..)
+  , GetRandomSignatoriesThatSignedRecently(..)
   ) where
 
 import Control.Monad.Catch
@@ -373,3 +374,13 @@ instance (MonadDB m, MonadThrow m) => DBQuery m DocumentExistsAndIsNotPurgedOrRe
 
 instance (MonadDB m, MonadThrow m) => GetRow Document m where
   getRow did = dbQuery $ GetDocumentByDocumentID did
+
+data GetRandomSignatoriesThatSignedRecently = GetRandomSignatoriesThatSignedRecently Int32 UTCTime
+instance MonadDB m => DBQuery m GetRandomSignatoriesThatSignedRecently [SignatoryLinkID] where
+  query (GetRandomSignatoriesThatSignedRecently count time) = do
+    runQuery_ . sqlSelect "signatory_links" $ do
+      sqlResult "id"
+      sqlWhere $ "sign_time > " <?> time
+      sqlOrderBy "random()"
+      sqlLimit count
+    fetchMany runIdentity
