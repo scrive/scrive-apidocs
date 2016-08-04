@@ -4,24 +4,24 @@ module Interactive where
 
 import Control.Concurrent
 import Log
-import Log.Configuration
 import System.IO
+import Text.StringTemplates.Templates (TemplatesT)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL8
 
-import AppDBTables
 import AppConf
 import AppControl
+import AppDBTables
 import Configuration
 import Crypto.RNG
 import DB
-import User.Lang
 import DB.PostgreSQL
 import KontraPrelude
+import Log.Configuration
 import Templates
+import User.Lang
 import qualified Amazon as AWS
 import qualified Doc.RenderedPages as RenderedPages
-import Text.StringTemplates.Templates (TemplatesT)
 import qualified MemCache
 
 run :: TemplatesT (AWS.AmazonMonadT (CryptoRNGT (DBT (LogT IO)))) a -> IO a
