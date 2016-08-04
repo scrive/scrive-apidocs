@@ -9,7 +9,7 @@
     "backbone": "~1.3.2",
     "react": "~0.13.0",
     "moment": "~2.12.0",
-    "html2canvas": "~0.5.0-beta3",
+    "html2canvas": "git://github.com/scrive/html2canvas#32e7bf5",
     "es6-promise": "^3.2.1",
     "classnames": "~2.2.3",
     "element-resize-detector": "^1.1.0"

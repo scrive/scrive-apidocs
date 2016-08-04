@@ -124,6 +124,9 @@ module.exports = React.createClass({
       <div style={divStyle} className={divClass}>
         <button
           className="zoom-in"
+          // IE9 can't correctly compute backgroundPosition in getComputedStyle if it's not directly applied to the
+          // element, this is important for html2canvas.
+          style={{backgroundPosition: "50% 50%"}}
           onTouchStart={() => { return; }}
           onClick={(e) => {
             this.cancelBlink();
@@ -133,6 +136,7 @@ module.exports = React.createClass({
         />
         <button
           className="zoom-out"
+          style={{backgroundPosition: "50% 50%"}}
           onTouchStart={() => { return; }}
           onClick={(e) => {
             this.cancelBlink();
