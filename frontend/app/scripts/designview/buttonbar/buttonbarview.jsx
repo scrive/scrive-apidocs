@@ -53,7 +53,10 @@ module.exports = React.createClass({
     React.render(
       React.createElement(
         ConfirmationModalAcceptButton,
-        {onClick: this.onSignConfirmationModalAccept}
+        {
+          text: localization.designview.sign,
+          onClick: this.onSignConfirmationModalAccept
+        }
       ),
       buttonContent[0]
     );
@@ -84,20 +87,30 @@ module.exports = React.createClass({
       modalContent[0]
     );
 
+    var buttonText = null;
+    if (otherSignatoriesSignInPerson) {
+      buttonText = localization.process.startsigningbuttontext;
+    } else {
+      buttonText = localization.process.sendbuttontext;
+    }
+
     var buttonContent = $("<div/>");
     React.render(
       React.createElement(
         ConfirmationModalAcceptButton,
-        {onClick: this.onSendConfirmationModalAccept}
+        {
+          text: buttonText,
+          onClick: this.onSendConfirmationModalAccept
+        }
       ),
       buttonContent[0]
     );
 
     var modalTitle = null;
     if (otherSignatoriesSignInPerson) {
-      modalTitle = localization.process.startsigningbuttontext;
+      modalTitle = localization.process.startsigningtitle;
     } else {
-      modalTitle = localization.process.sendbuttontext;
+      modalTitle = localization.process.confirmsendtitle;
     }
 
     this._confirmationModal = new Confirmation({
