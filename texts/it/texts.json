@@ -855,7 +855,7 @@
 "_reminderByMobileQuestionAlreadySigned":"Vuoi inviare un link al documento via SMS?",
 "_reminderFormFooterOwnMessage":"Scrivi il tuo messaggio",
 "_reminderFormHead":"Invia promemoria",
-"_reminderFormSendReminder":"Manda promemoria",
+"_reminderFormSendReminder":"",
 "_restore":"Ripristina",
 "_role":"Ruolo",
 "_sampleEmailButtonLabel":"Vai al documento",

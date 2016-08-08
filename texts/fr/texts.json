@@ -855,7 +855,7 @@
 "_reminderByMobileQuestionAlreadySigned":"Souhaitez-vous envoyer un lien vers le document par SMS?",
 "_reminderFormFooterOwnMessage":"Rédiger votre propre message",
 "_reminderFormHead":"Envoyer un rappel",
-"_reminderFormSendReminder":"Envoyer un rappel",
+"_reminderFormSendReminder":"",
 "_restore":"Restaurer",
 "_role":"Rôle",
 "_sampleEmailButtonLabel":"Accéder au document",

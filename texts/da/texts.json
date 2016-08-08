@@ -855,7 +855,7 @@
 "_reminderByMobileQuestionAlreadySigned":"Ønsker du at sende et link til dokumentet via SMS?",
 "_reminderFormFooterOwnMessage":"Skriv din egen besked",
 "_reminderFormHead":"Send påmindelse",
-"_reminderFormSendReminder":"Send påmindelse",
+"_reminderFormSendReminder":"",
 "_restore":"Gendan",
 "_role":"Rolle",
 "_sampleEmailButtonLabel":"Gå til dokument",

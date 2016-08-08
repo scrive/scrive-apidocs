@@ -855,7 +855,7 @@
 "_reminderByMobileQuestionAlreadySigned":"Viltu senda hlekk í skjalið með textaskilaboðum?",
 "_reminderFormFooterOwnMessage":"Skrifaðu þín eigin skilaboð",
 "_reminderFormHead":"Senda áminningu",
-"_reminderFormSendReminder":"Senda áminningu",
+"_reminderFormSendReminder":"",
 "_restore":"Endurheimta",
 "_role":"Hlutverk",
 "_sampleEmailButtonLabel":"Fara í skjal",
