@@ -29,7 +29,8 @@ var SpinnerComponent = React.createClass({
 
 module.exports = React.createClass({
   propTypes: {
-    onClick: React.PropTypes.func.isRequired
+    onClick: React.PropTypes.func.isRequired,
+    text: React.PropTypes.string.isRequired
   },
   getInitialState: function () {
     return {
@@ -48,7 +49,7 @@ module.exports = React.createClass({
         }
         <Button
           type="action"
-          text={localization.designview.sign}
+          text={this.props.text}
           oneClick={true}
           onClick={this.onClick}
         />

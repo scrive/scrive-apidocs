@@ -39,7 +39,7 @@ var classNames = require("classnames");
           <Button
             type="action"
             ref="signButton"
-            className="button-block"
+            className="button-block sign-button"
             onClick={this.props.onSign}
             text={hasSignaturesPlaced ? localization.process.signbuttontextfromsignaturedrawing :
                                         localization.process.signbuttontext}

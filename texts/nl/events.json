@@ -46,7 +46,7 @@
 "_RejectDocumentEvidenceTextSimpleArchive":"De uitnodiging om het document te ondertekenen is afgewezen.",
 "_RejectDocumentEvidenceTextSimpleArchiveWithText":"De uitnodiging om het document te ondertekenen is afgewezen. Het afwijzingsbericht is: <BR/><i>$text$</i>",
 "_RejectDocumentEvidenceTextSimpleNotArchive":"De uitnodiging om het document te ondertekenen is afgewezen door $actor$.",
-"_RejectDocumentEvidenceTextSimpleNotArchiveWithText":"",
+"_RejectDocumentEvidenceTextSimpleNotArchiveWithText":"De uitnodiging om het document te ondertekenen is afgewezen door $actor$. Het afwijzingsbericht van $actor$ is: <BR/> <i>$text$</i>",
 "_ReminderSendTextToReviewArchiveEmail":"En herinnering om het document te ondertekenen is verstuurd naar $signatory$ via e-mail.",
 "_ReminderSendTextToReviewArchiveEmailSMS":"Een herinnering om het document te bekijken is verstuurd naar $signatory$ via e-mail en SMS.",
 "_ReminderSendTextToReviewArchiveEmailSMSWithText":"Een herinnering om het document te bekijken is gestuurd naar $signatory$ via e-mail en SMS. Het herinneringsbericht was: <BR/> <i>$text$</i>",

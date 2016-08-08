@@ -50,7 +50,7 @@ new APICallV1({
           }),
           new APICallParam({
             type: "text",
-            argName: "selectfilters",
+            argName: "selectfilter",
             name: "Select filters",
             sendAsParam: true,
             description: "List of select filters as described in documentation.",

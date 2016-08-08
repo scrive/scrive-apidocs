@@ -1,8 +1,13 @@
 import os
+import nose.tools
 import sys
+
 from selenium import webdriver
 
 from driver_wrapper import SeleniumDriverWrapper
+from scrivepy._scrive import Scrive
+from test_helper import TestHelper
+
 
 ###############################################################################
 #                               CONFIG LOADING                                #
@@ -126,3 +131,25 @@ def find_tests(module):
     for test_name in filter(lambda x: x.startswith('check_'), dir(module)):
         if single_test_name is None or test_name == single_test_name:
             yield test_name, getattr(module, test_name)
+
+
+@nose.tools.nottest
+def generate_tests(module, artifact_dir, local_devices=None,
+                   remote_devices=None, screenshots_enabled=False,
+                   lang=None, selenium=True):
+    import config
+    api = Scrive(**config.scrive_api)
+    for test_name, test in find_tests(module):
+        if selenium:
+            drivers = make_drivers(test_name, local_devices,
+                                   remote_devices, lang=lang,
+                                   screenshots_enabled=screenshots_enabled)
+            for driver in drivers:
+                test_helper = TestHelper(api, driver,
+                                         artifact_dir=artifact_dir)
+                test.teardown = lambda: driver.quit()
+                yield test, test_helper, driver, api
+        else:
+            test_helper = TestHelper(api, driver=None,
+                                     artifact_dir=artifact_dir)
+            yield test, test_helper, api
