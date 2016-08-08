@@ -143,7 +143,8 @@ module.exports = React.createClass({
   },
   onProlongButtonClick: function () {
     mixpanel.track("Click prolong button");
-    new ProlongModal({authorview: this.props.authorview});
+    new ProlongModal({authorview: this.props.authorview,
+                      document: this.props.document});
   },
   onWithdrawButtonClick: function () {
     mixpanel.track("Click withdraw button");

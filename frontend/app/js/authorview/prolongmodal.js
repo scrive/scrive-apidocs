@@ -8,7 +8,7 @@ var Confirmation = require("../confirmations.js").Confirmation;
 
 /* This modal asks user for how long he wants to extend document timeout time.
  * Usage:
- * new ProlongModal({authorview : authorview});
+ * new ProlongModal({authorview: authorview, document: document});
  */
 
 
@@ -28,7 +28,7 @@ var ProlongModalModel = Backbone.Model.extend({
     return  this.get("authorview");
   },
   document : function() {
-    return this.authorview().document();
+    return this.get("document");
   },
   prolong : function() {
     var self = this;
@@ -101,7 +101,8 @@ var ProlongModalView = Backbone.View.extend({
 
 var ProlongModal = exports.ProlongModal = function(args){
         var model = new ProlongModalModel( {
-                        authorview : args.authorview
+                        authorview: args.authorview,
+                        document: args.document
                     });
         var view = new ProlongModalView ({
                         model: model,
