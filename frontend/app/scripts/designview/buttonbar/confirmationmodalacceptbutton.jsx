@@ -23,7 +23,7 @@ var SpinnerComponent = React.createClass({
     this.getDOMNode.removeChild(this.spinner.el);
   },
   render: function () {
-    return <div className="spinner-container" />;
+    return <div className="spinner-container design-view-modal-spinner" />;
   }
 });
 
