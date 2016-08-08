@@ -350,6 +350,14 @@ th.editSignatoryAttachmentTDRemove {
     }
   }
 
+  // Fixes the spinner being misplaced if the accept button text
+  // was too long.
+  .spinner-container {
+    &.design-view-modal-spinner {
+      float: left;
+      margin-right: 0px !important;
+    }
+  }
 }
 
 // Don't set margin, as we want to see the X for the participants
