@@ -9,7 +9,7 @@ import DB (dbQuery, MonadDB)
 import Interactive (run)
 import Doc.DocStateData (Document(..))
 import Doc.SignatoryLinkID (SignatoryLinkID)
-import Doc.Model.Query (GetRandomSignatoriesThatSignedRecently(..), GetSignatoryScreenshots(..), GetDocumentBySignatoryLinkID(..))
+import Doc.Model.Query (GetRandomSignatoryLinkIDsThatSignedRecently(..), GetSignatoryScreenshots(..), GetDocumentBySignatoryLinkID(..))
 import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryScreenshots (SignatoryScreenshots(..))
 import qualified Data.ByteString.UTF8 as BS
@@ -35,7 +35,7 @@ main :: IO ()
 main = run $ do
   now <- currentTime
   let lastWeek = 7 `daysBefore` now
-  ids <- dbQuery $ GetRandomSignatoriesThatSignedRecently 5 lastWeek
+  ids <- dbQuery $ GetRandomSignatoryLinkIDsThatSignedRecently 5 lastWeek
   screenshots :: [(SignatoryLinkID, SignatoryScreenshots)] <- dbQuery $ GetSignatoryScreenshots ids
   images <- sequence $ map getImagesFromScreenshots screenshots
   let serialize (first', userAgent, image) = do
@@ -44,4 +44,4 @@ main = run $ do
         F.value "first" first'
   renderedElems <- mapM (renderTemplate "screenshotReviewElem" . serialize) $ concat images
   result <- renderTemplate "screenshotReview" $ F.value "content" $ concat renderedElems
-  liftIO $ writeFile "/tmp/screenshots.html" result
+  liftIO $ writeFile "screenshots.html" result
