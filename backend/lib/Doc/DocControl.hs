@@ -471,14 +471,18 @@ handleDownloadClosedFile did sid mh _nameForBrowser = do
     return $ respondWithPDF True content
    else respond404
 
-handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
-handleResend docid signlinkid  = withUserPost $
-  getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
-  signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
-  customMessage <- fmap strip <$> getField "customtext"
-  actor <- guardJustM $ fmap mkAuthorActor getContext
-  _ <- sendReminderEmail customMessage actor False signlink
-  return (LinkIssueDoc docid)
+handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either KontraLink JSValue)
+handleResend docid signlinkid  = do
+  ctx <- getContext
+  case ctxmaybeuser ctx of
+    Nothing -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged
+    Just _  -> Right <$> do
+      getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
+        signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
+        customMessage <- fmap strip <$> getField "customtext"
+        actor <- guardJustM $ fmap mkAuthorActor getContext
+        _ <- sendReminderEmail customMessage actor False signlink
+        J.runJSONGenT (return ())
 
 --This only works for undelivered mails. We shoulkd check if current user is author
 handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
