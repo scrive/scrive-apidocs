@@ -332,6 +332,7 @@ distributionRules = do
                     , "dist/build/kontrakcja-migrate/kontrakcja-migrate"
                     , "dist/build/mailing-server/mailing-server"
                     , "dist/build/messenger-server/messenger-server"
+                    , "dist/build/screenshot-review/screenshot-review"
                     , "evidence-package/samples.p"
                     , "frontend/app/img"
                     , "frontend/app/less"
