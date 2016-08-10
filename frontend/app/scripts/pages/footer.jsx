@@ -130,17 +130,17 @@ var LanguageSelect = require("./languageselect");
                <div className="content">
                  <ul className="icons">
                    <li>
-                     <a href="http://www.linkedin.com/company/scrive" target="_blank">
+                     <a href="http://www.linkedin.com/company/scrive" target="_blank" rel="noopener noreferrer">
                        <img src="/img/sm-linkedin.png" width="32" height="32" alt="LinkedIn" />
                      </a>
                    </li>
                    <li>
-                     <a href="https://twitter.com/scrive" target="_blank">
+                     <a href="https://twitter.com/scrive" target="_blank" rel="noopener noreferrer">
                        <img src="/img/sm-twitter.png" width="32" height="32" alt="Twitter" />
                      </a>
                    </li>
                    <li className="last">
-                     <a href="https://www.facebook.com/pages/Scrive/237391196280189" target="_blank">
+                     <a href="https://www.facebook.com/pages/Scrive/237391196280189" target="_blank" rel="noopener noreferrer">
                        <img src="/img/sm-facebook.png" width="32" height="32" alt="Facebook" />
                      </a>
                    </li>
