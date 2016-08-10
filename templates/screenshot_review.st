@@ -1,7 +1,7 @@
 screenshotReviewElem=
 <tr>
   <td>
-    <img src="$image:noescape()$">
+    <img src="$image:noescape()$"></img>
   </td>
   <td>
     $userAgent$
@@ -15,8 +15,7 @@ screenshotReviewElem=
   </td>
 </tr>
 ########
-screenshotReview=
-<!DOCTYPE html>
+screenshotReview=<!DOCTYPE html>
 <html>
   <body>
     <table>
