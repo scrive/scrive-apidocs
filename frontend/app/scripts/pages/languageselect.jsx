@@ -1,6 +1,7 @@
 var React = require("react");
 var Backbone = require("backbone");
 var Select = require("../common/select");
+var Track = require("../common/track");
 var Language = require("../../js/utils/language.js").Language;
 var _ = require("underscore");
 
@@ -11,7 +12,7 @@ var _ = require("underscore");
       langprefix : React.PropTypes.string
     },
     changeLang : function(l) {
-      mixpanel.track('Click switch languages', { 'Language' : l });
+      Track.track('Click switch languages', { 'Language' : l });
       Language.changeForPageAndReload(l);
     },
     languages : function() {

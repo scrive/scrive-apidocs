@@ -2,6 +2,7 @@ var Backbone = require("backbone");
 var html2canvas = require("html2canvas");
 var $ = require("jquery");
 var _ = require("underscore");
+var Track = require("../scripts/common/track");
 
 /* takeScreenshot(success, error, timeout, timeoutval):
     Render a canvas with current viewport and calls exactly one of three callbacks:
@@ -27,7 +28,7 @@ var _ = require("underscore");
                            "Browser": $.browser.name,
                            "Browser version": $.browser.version,
                            "Platform": $.browser.platform};
-          mixpanel.track("Take screenshot failed", _.extend(errorInfo, extraParams, extraErrorLogParams));
+          Track.track("Take screenshot failed", _.extend(errorInfo, extraParams, extraErrorLogParams));
         };
 
         var callbackCalled = false;
@@ -54,7 +55,7 @@ var _ = require("underscore");
             var errorInfo = {"Browser": $.browser.name,
                              "Browser version": $.browser.version,
                              "Platform": $.browser.platform};
-            mixpanel.track("Take screenshot success", _.extend(errorInfo, extraErrorLogParams));
+            Track.track("Take screenshot success", _.extend(errorInfo, extraErrorLogParams));
             success(newCanvas);
           }
         })["catch"](function (err) { // use catch as key, because IE8 cannot handle catch attribute

@@ -3,6 +3,7 @@ var Backbone = require("backbone");
 var React = require("react");
 var BackboneMixin = require("../common/backbone_mixin");
 var UploadButton = require("../common/uploadbutton");
+var Track = require("../common/track");
 var Spinner = require("spin.js");
 var FileView = require("./fileview/fileview");
 var Document = require("../../js/documents.js").Document;
@@ -147,7 +148,7 @@ var DocumentSaveMixin = require("./document_save_mixin");
         method: "POST",
         url: "/api/frontend/documents/" + document.documentid() + "/setfile",
         ajaxsuccess: function (d) {
-          mixpanel.track("Upload main file");
+          Track.track("Upload main file");
           // Note that update is happening twice: before and after file upload
           // Reason is that we want set title only if upload succeed
           document.setTitle(title.replace(/\.[^/.]+$/, ""));
@@ -161,11 +162,11 @@ var DocumentSaveMixin = require("./document_save_mixin");
           if (a === "parsererror") { // file too large
             new FlashMessage({content: localization.fileTooLarge, type: "error"});
             document.markAsNotReady();
-            mixpanel.track("Error", {Message: "main file too large"});
+            Track.track("Error", {Message: "main file too large"});
           } else {
             new FlashMessage({content: localization.couldNotUpload, type: "error"});
             document.markAsNotReady();
-            mixpanel.track("Error", {Message: "could not upload main file"});
+            Track.track("Error", {Message: "could not upload main file"});
           }
           document.recall();
         }

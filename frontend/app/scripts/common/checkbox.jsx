@@ -1,5 +1,6 @@
 var React = require("react");
 var classNames = require("classnames");
+var Track = require("./track");
 
 /**
  * A checkbox component. Used in branding settings.
@@ -27,7 +28,7 @@ var classNames = require("classnames");
     handleClick: function() {
       // The mixpanel events are named "Check|Uncheck <label>"
       var eventName = (this.props.checked ? 'Uncheck' : 'Check') + ' ' + this.props.label;
-      mixpanel.track(eventName);
+      Track.track(eventName);
       if (this.props.onChange) { this.props.onChange(!this.props.checked); }
 
     },

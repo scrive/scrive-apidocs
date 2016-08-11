@@ -2,6 +2,7 @@ var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
 var HubSpot = require("../../common/hubspot_service");
 var Select = require("../../common/select");
+var Track = require("../../common/track");
 var List = require("../../lists/list");
 var jQuery = require("jquery");
 var Confirmation = require("../../../js/confirmations.js").Confirmation;
@@ -22,7 +23,7 @@ var userFullName = function(d) {
 };
 
 var openCreateAccountPopup = function(callback) {
-            mixpanel.track('Click new account');
+            Track.track('Click new account');
             var body = jQuery("<div class='standard-input-table'>");
             var table = jQuery("<table/>");
 
@@ -95,7 +96,7 @@ var openCreateAccountPopup = function(callback) {
 };
 
 var openRemoveUserPopup = function(d,callback) {
-  mixpanel.track('Click delete user');
+  Track.track('Click delete user');
   var confirmationText = $('<span />').html(localization.account.companyAccounts.deleteModalBody);
   var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here').text(userFullName(d));
   var content = jQuery("<p/>").append(confirmationText);
@@ -105,7 +106,7 @@ var openRemoveUserPopup = function(d,callback) {
     title: localization.account.companyAccounts.deleteModalTitle,
     content: content,
     onAccept: function() {
-      mixpanel.track('Click delete user');
+      Track.track('Click delete user');
       var submit = new Submit({
         url: "/account/companyaccounts/remove",
         method: "POST",
@@ -129,7 +130,7 @@ var openRemoveUserPopup = function(d,callback) {
 var openResendInvitationPopup = function(d,callback) {
   var popup = new Confirmation({
                                   onAccept: function() {
-                                     mixpanel.track('Click resend confirmation');
+                                     Track.track('Click resend confirmation');
                                       var submit = new Submit({
                                         url: "/account/companyaccounts/resend",
                                         ajax : true,

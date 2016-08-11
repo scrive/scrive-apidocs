@@ -11,7 +11,7 @@ var $ = require("jquery");
 var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
-var trackTimeout = require("../../common/track_timeout");
+var Track = require("../../common/track");
 var classNames = require("classnames");
 
   var ChangeAuthenticationModalModel = Backbone.Model.extend({
@@ -269,7 +269,7 @@ var classNames = require("classnames");
           return false;
         }
 
-        trackTimeout("Accept", {
+        Track.track_timeout("Accept", {
           "Accept": "change authentication",
            "Signatory index": model.signatory().signIndex(),
            "Authentication method": authmethod,

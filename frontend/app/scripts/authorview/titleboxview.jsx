@@ -10,7 +10,7 @@ var LocalStorage = require("../../js/storage.js").LocalStorage;
 var ProlongModal = require("../../js/authorview/prolongmodal.js").ProlongModal;
 var Select = require("../common/select");
 var Submit = require("../../js/submits.js").Submit;
-var trackTimeout = require("../common/track_timeout");
+var Track = require("../common/track");
 
 var Document = require("../../js/documents.js").Document;
 
@@ -131,7 +131,7 @@ module.exports = React.createClass({
     );
   },
   onRestartButtonClick: function () {
-    mixpanel.track("Click restart button");
+    Track.track("Click restart button");
     this.props.document.restart().sendAjax(function (resp) {
        new FlashMessage({
         type: "success",
@@ -142,12 +142,12 @@ module.exports = React.createClass({
     });
   },
   onProlongButtonClick: function () {
-    mixpanel.track("Click prolong button");
+    Track.track("Click prolong button");
     new ProlongModal({authorview: this.props.authorview,
                       document: this.props.document});
   },
   onWithdrawButtonClick: function () {
-    mixpanel.track("Click withdraw button");
+    Track.track("Click withdraw button");
     var somebodysigned = _.any(this.props.document.signatories(), function (s) {
       return s.hasSigned() && !s.author();
     });
@@ -167,7 +167,7 @@ module.exports = React.createClass({
       acceptType: "action",
       extraClass: "s-withdraw-confirmation",
       onAccept: function () {
-        trackTimeout(
+        Track.track_timeout(
           "Accept",
           {"Accept": "withdraw document"},
           function () {
@@ -179,7 +179,7 @@ module.exports = React.createClass({
     });
   },
   onGoToSignViewButtonClick: function () {
-    mixpanel.track("Click go to sign view");
+    Track.track("Click go to sign view");
     LocalStorage.set("backlink", "target", "document");
     new Submit({
       method: "'GET",
@@ -195,7 +195,7 @@ module.exports = React.createClass({
       return;
     }
 
-    mixpanel.track("Give for pad signing to some pad signatory - opening modal");
+    Track.track("Give for pad signing to some pad signatory - opening modal");
     var padNextSignatoryModalContent = $("<div/>");
     var modalContentComponent = React.render(
       React.createElement(GiveToNextSignatoryPadModalContent, {document: document_}),
@@ -206,7 +206,7 @@ module.exports = React.createClass({
       title: localization.authorview.goToSignView,
       content: padNextSignatoryModalContent,
       onAccept: function () {
-          mixpanel.track("Give for pad signing to some pad signatory - opening signview");
+          Track.track("Give for pad signing to some pad signatory - opening signview");
           LocalStorage.set("backlink", "target", "document");
           if (modalContentComponent.state.padNextSignatory != undefined) {
             modalContentComponent.state.padNextSignatory.giveForPadSigning().send();

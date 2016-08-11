@@ -10,6 +10,7 @@ var Button = require("./buttons.js").Button;
 var LoadingDialog = require("./loading.js").LoadingDialog;
 var Submit = require("./submits.js").Submit;
 var Recurly = require("./recurly");
+var Track = require("../scripts/common/track");
 
 function parseQueryString() {
     var match,
@@ -549,7 +550,7 @@ function parseQueryString() {
             this.onClick = args.onClick;
             var view = this;
             this.$el.click(function() {
-                mixpanel.track('Team Box Purchase click');
+                Track.track('Team Box Purchase click');
                 view.onClick();
                 return false;
             });
@@ -928,24 +929,24 @@ function parseQueryString() {
             this.oneBox = new ContactBoxView({model: args.model,
                                             plan:'one',
                                             onClick: function() {
-                                              mixpanel.track('Click one plan');
+                                              Track.track('Click one plan');
                                             }});
 
             this.teamBox = new ContactBoxView({model: args.model,
                                             hideContacts: args.hideContacts,
                                             plan:'team',
                                             onClick: function() {
-                                                mixpanel.track('Click team plan');
+                                                Track.track('Click team plan');
                                             }});
             this.companyBox = new ContactBoxView({model: args.model,
                                                plan:'company',
                                                onClick: function() {
-                                                   mixpanel.track('Click company plan');
+                                                   Track.track('Click company plan');
                                                }});
             this.enterpriseBox = new ContactBoxView({model: args.model,
                                                plan:'enterprise',
                                                onClick: function() {
-                                                   mixpanel.track('Click enterprise plan');
+                                                   Track.track('Click enterprise plan');
                                                }});
 
             this.topTabs = new TopTabsView({model: args.model});
@@ -1170,7 +1171,7 @@ function parseQueryString() {
                  },
                  addressRequirement: 'zip',
                  successHandler: function(stuff) {
-                     mixpanel.track('Change billing information');
+                     Track.track('Change billing information');
                      model.fetch({success: function() {
                          LoadingDialog.close();
                          model.trigger('fetch');
@@ -1207,7 +1208,7 @@ function parseQueryString() {
 
 	    var cancelSubscriptionButton = $('<a href="">' + localization.payments.cancelsubscription + '</a>');
 	    cancelSubscriptionButton.click(function() {
-                mixpanel.track('Click cancel subscription button');
+                Track.track('Click cancel subscription button');
                 var message = localization.payments.cancelDialog;
 
                 var popup = new Confirmation({
@@ -1229,7 +1230,7 @@ function parseQueryString() {
                                             }});
                                         },
                                         onSend: function() {
-                                            mixpanel.track('Accept',
+                                            Track.track('Accept',
                                                            {'Accept' : 'Cancel subscription'});
                                             popup.clear();
                                             LoadingDialog.open({header: localization.payments.cancelingSubscription});
@@ -1286,7 +1287,7 @@ function parseQueryString() {
                                       cssClass: 'renew-button',
                                       text: localization.payments.renewSubscription,
                                       onClick: function() {
-                                          mixpanel.track('Click renew subscription');
+                                          Track.track('Click renew subscription');
                                           var message = $("<p>" + localization.payments.renewDialog+"</p>");
                                           $(".put-price-here",message).text(price);
                                           var popup = new Confirmation({
@@ -1307,7 +1308,7 @@ function parseQueryString() {
                                                                       }});
                                                                   },
                                                                   onSend: function() {
-                                                                      mixpanel.track('Accept',
+                                                                      Track.track('Accept',
                                                                                      {'Accept' : 'Renew subscription'});
                                                                       popup.clear();
                                                                       LoadingDialog.open({header: localization.payments.renewingSubscription});

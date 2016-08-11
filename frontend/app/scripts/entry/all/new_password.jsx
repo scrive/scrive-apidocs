@@ -1,13 +1,14 @@
 var React = require("react");
 var NewPassword = require("../../../js/new_password").NewPassword;
 var $ = require("jquery");
+var Track = require("../../common/track");
 
 $(function () {
   var linkchangepassword = fromTemplate.linkchangepassword;
   var accessnewaccount = fromTemplate.accessnewaccount;
 
   if (accessnewaccount) {
-    mixpanel.track("View access new account page", {
+    Track.track("View access new account page", {
       branded: true
     });
   }

@@ -8,6 +8,7 @@ var $ = require("jquery");
 var Tab = require("../tabs.js").Tab;
 var _ = require("underscore");
 var KontraTabs = require("../tabs.js").KontraTabs;
+var Track = require("../../scripts/common/track");
 
 /* Main archive definition. Its a tab based set of different documents lists. */
 
@@ -45,7 +46,7 @@ var ArchiveModel = Backbone.Model.extend({
                         onActivate : function() {
                             list.reload();
                             mixpanel.register({Subcontext : 'Documents tab'});
-                            mixpanel.track('View Documents Tab');
+                            Track.track('View Documents Tab');
                         }
                     });
   },
@@ -62,7 +63,7 @@ var ArchiveModel = Backbone.Model.extend({
                         onActivate : function() {
                             list.reload();
                             mixpanel.register({Subcontext : 'Templates tab'});
-                            mixpanel.track('View Templates Tab');
+                            Track.track('View Templates Tab');
                         }
                     });
   },
@@ -79,7 +80,7 @@ var ArchiveModel = Backbone.Model.extend({
                         onActivate : function() {
                             list.reload();
                             mixpanel.register({Subcontext : 'Attachments tab'});
-                            mixpanel.track('View Attachments Tab');
+                            Track.track('View Attachments Tab');
                         }
                     });
   },
@@ -99,7 +100,7 @@ var ArchiveModel = Backbone.Model.extend({
                         onActivate : function() {
                             list.reload();
                             mixpanel.register({Subcontext : 'Trash tab'});
-                            mixpanel.track('View Trash Tab');
+                            Track.track('View Trash Tab');
                         }
                     });
   }

@@ -10,6 +10,7 @@ var $ = require("jquery");
 var _ = require("underscore");
 var KontraTabs = require("../tabs.js").KontraTabs;
 var AccountSettingsPanel = require("../../scripts/account/settings/accountsettingspanel");
+var Track = require("../../scripts/common/track");
 
 /*
  * Account view build from tabs with different settings
@@ -59,7 +60,7 @@ var AccountModel = Backbone.Model.extend({
           );
         }
         mixpanel.register({Subcontext : 'Account details tab'});
-        mixpanel.track('View Account Details Tab');
+        Track.track('View Account Details Tab');
       }
     });
   },
@@ -79,7 +80,7 @@ var AccountModel = Backbone.Model.extend({
               self.brandingPanel = React.render(React.createElement(CompanyBrandingPanel,{}), div[0]);
             }
             mixpanel.register({Subcontext : 'Company settings tab'});
-            mixpanel.track('View Company Settings Tab');
+            Track.track('View Company Settings Tab');
         }
     });
   },
@@ -93,7 +94,7 @@ var AccountModel = Backbone.Model.extend({
         onActivate : function() {
             self.companyAccountsAndStats().refresh();
             mixpanel.register({Subcontext : 'Subaccounts and stats tab'});
-            mixpanel.track('View Subaccounts and stats tab');
+            Track.track('View Subaccounts and stats tab');
         }
     });
   },
@@ -108,7 +109,7 @@ var AccountModel = Backbone.Model.extend({
         onActivate : function() {
             self.apisettings().refresh();
             mixpanel.register({Subcontext : 'API settings tab'});
-            mixpanel.track('View API settings tab');
+            Track.track('View API settings tab');
         }
     });
   },
@@ -121,7 +122,7 @@ var AccountModel = Backbone.Model.extend({
         onActivate : function() {
             self.stats().refresh();
             mixpanel.register({Subcontext : 'Stats tab'});
-            mixpanel.track('View Stats Tab');
+            Track.track('View Stats Tab');
         }
     });
   },
@@ -135,7 +136,7 @@ var AccountModel = Backbone.Model.extend({
         onActivate : function() {
             self.subscription().refresh();
             mixpanel.register({Subcontext : 'Subscription tab'});
-            mixpanel.track('View Subscription Tab');
+            Track.track('View Subscription Tab');
             mixpanel.people.set({
                 'View subscription tab' : new Date()
             });

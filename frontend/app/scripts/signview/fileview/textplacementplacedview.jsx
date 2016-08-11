@@ -8,6 +8,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
 var classNames = require("classnames");
 var isElementInViewport = require("../../common/iselementinviewport");
 var isTouchDevice = require("../../common/is_touch_device");
+var Track = require("../../common/track");
 
 var ORIGINAL_PAGE_SIZE = 950;
 
@@ -78,7 +79,7 @@ var ORIGINAL_PAGE_SIZE = 950;
             var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
             if (nothingHasFocus && !field.readyForSign() && windowIsFocused && !isTouchDevice() && task.active()) {
               self.startInlineEditing();
-              mixpanel.track("Begin editing field", {Label: field.name()});
+              Track.track("Begin editing field", {Label: field.name()});
             }
           }, 50);
         },

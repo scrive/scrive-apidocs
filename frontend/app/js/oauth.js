@@ -8,6 +8,7 @@ var Button = require("./buttons.js").Button;
 var InfoTextInput = require("./infotextinputs.js").InfoTextInput;
 var EmailValidation = require("./validation.js").EmailValidation;
 var OAuthConfirationModel = require("./oauth.js").OAuthConfirationModel;
+var Track = require("../scripts/common/track");
 
 /* Page for accepting API Access  */
 
@@ -82,7 +83,7 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
           ajax: true,
           ajaxsuccess: function(rs) {
             if (rs.sent === true) {
-              mixpanel.track('Create new account from API permissions');
+              Track.track('Create new account from API permissions');
               mixpanel.people.set({
                   '$email'      :  email,
                   'Signup Method' : 'API'
@@ -90,7 +91,7 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
               var content = localization.payments.outside.confirmAccountCreatedUserHeader;
               new FlashMessage({content: content, type: 'success'});
             } else if (rs.sent === false) {
-              mixpanel.track('Error',
+              Track.track('Error',
                             {Message : 'signup failed'});
               new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, type: 'error'});
             }

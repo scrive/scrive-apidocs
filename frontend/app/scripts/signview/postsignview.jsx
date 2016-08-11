@@ -2,6 +2,7 @@ var React = require("react");
 var Backbone = require("backbone");
 var FeedbackView = require("./feedback/feedbackview");
 var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
+var Track = require("../common/track");
 
 module.exports = React.createClass({
     propTypes: {
@@ -25,7 +26,7 @@ module.exports = React.createClass({
       if (this.isQuestionaire()) {
         promotionName = "Questionnaire";
       }
-      mixpanel.track("Store copy button shown", promotionName ? { promo: promotionName } : {});
+      Track.track("Store copy button shown", promotionName ? { promo: promotionName } : {});
     },
     render: function() {
       var document = this.props.document;

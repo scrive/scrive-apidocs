@@ -2,10 +2,10 @@ var jQuery = require("jquery");
 var FlashMessage = require("../../flashmessages.js").FlashMessage;
 var Confirmation = require("../../confirmations.js").Confirmation;
 var EmailValidation = require("../../validation.js").EmailValidation;
-var trackTimeout = require("../../../scripts/common/track_timeout");
+var Track = require("../../../scripts/common/track");
 
 module.exports = function(model) {
-  mixpanel.track('Click change email button');
+  Track.track('Click change email button');
   var body = jQuery("<div/>");
   var p = jQuery("<p/>").text(localization.account.accountDetails.changeEmailExplaination);
   body.append(p);
@@ -40,7 +40,7 @@ module.exports = function(model) {
         new FlashMessage({type: 'error', content : localization.account.accountDetails.mismatchedEmails });
         return false;
       }
-      trackTimeout(
+      Track.track_timeout(
         'Accept',
         {'Accept' : 'Change email'},
         function () {
@@ -56,7 +56,7 @@ module.exports = function(model) {
       );
     },
     onReject : function() {
-      mixpanel.track('Reject', {'Reject' : 'Change email'});
+      Track.track('Reject', {'Reject' : 'Change email'});
       model.setNewEmail("");
       model.setNewEmailAgain("");
     },

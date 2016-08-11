@@ -7,16 +7,17 @@ var AuthToSignIcon = require("./authtosignicon");
 var ConfirmationDeliveryIcon = require("./confirmationdeliveryicon");
 var ParticipantSettings = require("./participantsettings");
 var ParticipantFields = require("./participantfields");
+var Track = require("../../common/track");
 var _ = require("underscore");
 
 module.exports = React.createClass({
   toogleView: function () {
     var sig = this.props.model;
     if (this.props.currentParticipantDetail === sig) {
-      mixpanel.track("Close participant detail");
+      Track.track("Close participant detail");
       this.props.setParticipantDetail(undefined);
     } else {
-      mixpanel.track("Open participant detail");
+      Track.track("Open participant detail");
       var oldSig = this.props.currentParticipantDetail;
       this.props.setParticipantDetail(sig);
       if (this.props.onExpand !== undefined) {

@@ -1,6 +1,7 @@
 var Backbone = require("backbone");
 var React = require("react");
 var Select = require("../../common/select");
+var Track = require("../../common/track");
 
   var SignatorySelector = React.createClass({
     propTypes: {
@@ -19,7 +20,7 @@ var Select = require("../../common/select");
       if (this.props.useDefaultBehavior) {
         var field = this.props.field;
 
-        mixpanel.track("Choose signature signatory");
+        Track.track("Choose signature signatory");
 
         field.moveToSignatory(s);
       }

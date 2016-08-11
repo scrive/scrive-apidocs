@@ -1,5 +1,6 @@
 var React = require("react");
 var Select = require("../common/select");
+var Track = require("../common/track");
 var $ = require("jquery");
 var _ = require("underscore");
 
@@ -66,7 +67,7 @@ module.exports = React.createClass({
             width={this.props.width}
             onSelect={function(value) {
                       var selectedOption = _.find(options,function(o) {return o.value == value;});
-                      mixpanel.track('Filter ' + self.props.name,
+                      Track.track('Filter ' + self.props.name,
                                     {Value : selectedOption.name});
                       model.selectfiltering().setFilter(self.props.name, value);
             }}

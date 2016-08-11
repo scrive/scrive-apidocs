@@ -3,6 +3,7 @@ var Utils = require("../archive/utils");
 var List = require("../lists/list");
 var StatusTooltipMixin = require("../archive/statustooltipmixin");
 var Select = require("../common/select");
+var Track = require("../common/track");
 var moment = require("moment");
 var $ = require("jquery");
 var Confirmation = require("../../js/confirmations.js").Confirmation;
@@ -53,7 +54,7 @@ var SelectPartyModal = function(signingIndexes,doc) {
             title : localization.authorview.goToSignView,
             content :self.content,
             onAccept : function() {
-                mixpanel.track('Give for pad signing to some pad signatory - opening signview -from list');
+                Track.track('Give for pad signing to some pad signatory - opening signview -from list');
                 new Submit({
                    url : "/padsign/" + doc.field("id") + "/" + doc.field("parties")[signingIndexes[self.current]].id,
                    method : "POST"
@@ -123,7 +124,7 @@ module.exports = React.createClass({
         title: localization.archive.documents.remove.action,
         content: confirmtext,
         onAccept : function() {
-          mixpanel.track('Delete document');
+          Track.track('Delete document');
           new Submit({
             url: "/d/delete",
             method: "POST",

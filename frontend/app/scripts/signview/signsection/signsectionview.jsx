@@ -20,7 +20,7 @@ var ScreenBlockingDialog = require("../../../js/dialog.js").ScreenBlockingDialog
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var FlashMessagesCleaner = require("../../../js/flashmessages.js").FlashMessagesCleaner;
 var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
-var trackTimeout = require("../../common/track_timeout");
+var Track = require("../../common/track");
 var classNames = require("classnames");
 var Task = require("../navigation/task");
 
@@ -166,7 +166,7 @@ var Task = require("../navigation/task");
       var model = this.props.model;
       var doc = model.document();
 
-      trackTimeout("Accept", {"Accept": "reject document"}, function () {
+      Track.track_timeout("Accept", {"Accept": "reject document"}, function () {
         doc.currentSignatory().reject(text).sendAjax(function () {
           var shouldRedirect = doc.currentSignatory().rejectredirect() != undefined &&
             doc.currentSignatory().rejectredirect() != "";
@@ -315,7 +315,7 @@ var Task = require("../navigation/task");
           setTimeout(function () {
             self.setSignedStatus(1);
 
-            trackTimeout("Accept", {"Accept": "sign document"});
+            Track.track_timeout("Accept", {"Accept": "sign document"});
 
             document.sign(errorCallback, function (newDocument, oldDocument) {
               setTimeout(function () {
@@ -361,7 +361,7 @@ var Task = require("../navigation/task");
         });
       }
 
-      mixpanel.track("Requesting SMS PIN", {
+      Track.track("Requesting SMS PIN", {
         documentid: doc.documentid(),
         signatoryid: sig.signatoryid(),
         phone: phone

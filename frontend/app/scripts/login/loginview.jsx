@@ -7,7 +7,7 @@ var LanguageSelect = require("../pages/languageselect");
 var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
 var $ = require("jquery");
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
-var trackTimeout = require("../common/track_timeout");
+var Track = require("../common/track");
 
 
 
@@ -27,7 +27,7 @@ module.exports = React.createClass({
         });
       }
       else if( resp.ipaddr ) {
-        mixpanel.track('Error',{
+        Track.track('Error',{
           Message: 'login failed due to IP restriction',
           IP: resp.ipaddr,
           Admin: resp.adminname
@@ -37,7 +37,7 @@ module.exports = React.createClass({
         $(".put-adminname-here",text).text(resp.adminname);
         new FlashMessage({ content: text, type : "error"});
       } else {
-        mixpanel.track('Error',{
+        Track.track('Error',{
           Message: 'login failed'
         });
         new FlashMessage({ content: localization.loginModal.loginFailed, type : "error"});

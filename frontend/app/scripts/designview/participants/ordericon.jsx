@@ -1,9 +1,10 @@
 var React = require("react");
+var Track = require("../../common/track");
 
 module.exports = React.createClass({
   onClick: function () {
     var sig = this.props.model;
-    mixpanel.track("Choose sign order", {
+    Track.track("Choose sign order", {
       Where: "icon"
     });
     var max = sig.document().maxPossibleSignOrder();

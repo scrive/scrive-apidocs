@@ -1,5 +1,6 @@
 var React = require("react");
 var Button = require("../../common/button");
+var Track = require("../../common/track");
 var Field = require("../../../js/fields.js").Field;
 
 module.exports = React.createClass({
@@ -12,7 +13,7 @@ module.exports = React.createClass({
           ref="add-field-button"
           text={localization.designview.addField}
           onClick={function () {
-            mixpanel.track("Click add field");
+            Track.track("Click add field");
             var field = new Field({
               name: "",
               type: "",

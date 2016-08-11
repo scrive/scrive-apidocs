@@ -1,6 +1,7 @@
 var React = require("react");
 var Question = require("./questionview");
 var HubSpot = require("../../common/hubspot_service");
+var Track = require("../../common/track");
 var _ = require("underscore");
 
   var QUESTIONS = {
@@ -95,7 +96,7 @@ var _ = require("underscore");
       mixpanel.identify(mail);
       mixpanel.register(props);
       mixpanel.people.set(props);
-      mixpanel.track("Questionnaire Done");
+      Track.track("Questionnaire Done");
     },
 
     onChangeQuestion: function (event, from, to, text) {
@@ -103,14 +104,14 @@ var _ = require("underscore");
       var isDone = endPoints.indexOf(to) > -1;
 
       if (from === "Q1" && event === "good") {
-        mixpanel.track("Questionnaire #1 Accept");
+        Track.track("Questionnaire #1 Accept");
       }
 
       if (from === "Q3") {
         if (event === "sometimes" || event == "often") {
-          mixpanel.track("Questionnaire #2 Accept");
+          Track.track("Questionnaire #2 Accept");
         } else {
-          mixpanel.track("Questionnaire #2 Deny");
+          Track.track("Questionnaire #2 Deny");
         }
       }
 

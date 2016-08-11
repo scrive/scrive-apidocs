@@ -1,6 +1,7 @@
 var React = require("react");
 var DesignAuthorAttachments = require("../../scripts/designview/authorattachments/designviewattachments");
 var AttachmentsDesign = require("../../scripts/designview/authorattachments/attachmentsdesign");
+var Track = require("../../scripts/common/track");
 var $ = require("jquery");
 var Button = require("../buttons.js").Button;
 var _ = require("underscore");
@@ -52,7 +53,7 @@ var Confirmation = require("../confirmations.js").Confirmation;
                             content: localization.signatoryAttachments.uniqueAttachmentNamesError});
           return false;
         }
-        mixpanel.track('Save attachments', {documentid:document.documentid()});
+        Track.track('Save attachments', {documentid:document.documentid()});
         document.afterSave( function() {
           var submit = document.setAttachments();
           var counter = 0;

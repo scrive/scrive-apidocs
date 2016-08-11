@@ -7,6 +7,7 @@ var Button = require("../../common/button");
 var UploadButton = require("../../common/uploadbutton");
 var Select = require("../../common/select");
 var InfoTextInput = require("../../common/infotextinput");
+var Track = require("../../common/track");
 var $ = require("jquery");
 var _ = require("underscore");
 
@@ -52,7 +53,7 @@ var _ = require("underscore");
                     maxlength={2}
                     style={{float: "right"}}
                     onUploadComplete={function (input, title, multifile) {
-                      mixpanel.track("Upload attachment", {"File Title as supplied by browser": title});
+                      Track.track("Upload attachment", {"File Title as supplied by browser": title});
                       var nameParts = title.split("\\").reverse()[0].split(".");
                       nameParts.pop(); // drop the extension
                       var newAttachment = new DesignViewAttachment({
@@ -70,7 +71,7 @@ var _ = require("underscore");
                     style={{float: "left"}}
                     text={localization.authorattachments.selectAttachment}
                     onClick={function () {
-                      mixpanel.track("Click select attachment");
+                      Track.track("Click select attachment");
                       self.showAttachmentsList();
                     }}
                   />

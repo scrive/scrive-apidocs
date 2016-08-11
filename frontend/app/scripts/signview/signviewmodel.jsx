@@ -8,6 +8,7 @@ var SSNForNOBankIDValidation = require("../../js/validation.js").SSNForNOBankIDV
 var SSNForSEBankIDValidation = require("../../js/validation.js").SSNForSEBankIDValidation;
 var PhoneValidation = require("../../js/validation.js").PhoneValidation;
 var TaskList = require("./navigation/task_list");
+var Track = require("../common/track");
 
     module.exports = Backbone.Model.extend({
     defaults: {
@@ -270,7 +271,7 @@ var TaskList = require("./navigation/task_list");
 
       mixpanel.people.set(ps);
 
-      mixpanel.track("View sign view");
+      Track.track("View sign view");
     },
 
     takeFirstScreenshotWithDelay: function () {

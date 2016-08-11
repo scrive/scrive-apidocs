@@ -1,7 +1,7 @@
 var React = require("react");
 var NewButton = require("../common/button");
 var NewInfoTextInput = require("../common/infotextinput");
-
+var Track = require("../common/track");
 
 
 
@@ -15,7 +15,7 @@ module.exports = React.createClass({
             text={localization.searchBoxButtonText}
             className= "float-right search-button"
             onClick = {function() {
-                        mixpanel.track('Search',
+                        Track.track('Search',
                                         {Query : self.refs.searchinput.value(),
                                         Input : "Button"});
                         model.setText(self.refs.searchinput.value());
@@ -27,7 +27,7 @@ module.exports = React.createClass({
             className="list-search float-right"
             ref="searchinput"
             onEnter={function() {
-                      mixpanel.track('Search',{
+                      Track.track('Search',{
                                       Input : "Enter",
                                       Query : self.refs.searchinput.value()
                                     });

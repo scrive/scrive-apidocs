@@ -1,4 +1,5 @@
 var $ = require("jquery");
+var Track = require("../../common/track");
 
 $(function () {
   var cookies = Cookies.buildCookieMap();
@@ -8,7 +9,7 @@ $(function () {
     cookieNames.push(key);
   }
 
-  mixpanel.track("Cookies not enabled", {
+  Track.track("Cookies not enabled", {
     "cookie": cookieNames.toString(),
     "user-agent": navigator.userAgent
   });

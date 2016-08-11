@@ -1,5 +1,6 @@
 var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
+var Track = require("../../common/track");
 var CustomTextEditor = require("./customtexteditor");
 var _ = require("underscore");
 var ConfirmationWithEmail = require("../../../js/confirmationsWithEmails.js").ConfirmationWithEmail;
@@ -36,7 +37,7 @@ module.exports = React.createClass({
               placeholder = {localization.designview.editInvitation}
               disabledPlaceholder = {localization.designview.editInvitationMessagePlaceholder}
               onPreview = {function() {
-                mixpanel.track('Open invitation preview');
+                Track.track('Open invitation preview');
                 doc.save();
                 doc.afterSave(function() {
                 var popup = ConfirmationWithEmail.popup({
@@ -62,7 +63,7 @@ module.exports = React.createClass({
               disabledPlaceholder = {localization.designview.editConfirmationMessagePlaceholder}
               onChange = {function(c) {doc.setConfirmationMessage(c);}}
               onPreview = {function() {
-                mixpanel.track('Open confirmation preview');
+                Track.track('Open confirmation preview');
                 doc.save();
                 doc.afterSave(function() {
                 var popup = ConfirmationWithEmail.popup({

@@ -1,11 +1,12 @@
 var React = require("react");
 var Button = require("../../common/button");
+var Track = require("../../common/track");
 var List = require("../../lists/list");
 var DesignAuthorAttachment = require("./designviewattachment");
 
   module.exports = React.createClass({
       addAttachment: function (title, file, attachmentid) {
-        mixpanel.track("Select attachment from list");
+        Track.track("Select attachment from list");
         this.props.model.addAttachment(
           new DesignAuthorAttachment({
             name: title,

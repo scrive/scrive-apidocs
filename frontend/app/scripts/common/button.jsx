@@ -2,6 +2,7 @@ var React = require("react");
 var $ = require("jquery");
 var _ = require("underscore");
 var classNames = require("classnames");
+var Track = require("./track");
 
 /**
  * A button component in React. It does not have all properties of original backbone button,
@@ -68,7 +69,7 @@ var classNames = require("classnames");
     handleClick: function() {
       var eventName = 'Clicked button' + this.props.text;
       var fireClick = !this.state.clicked ||  !this.props.oneClick;
-      mixpanel.track(eventName);
+      Track.track(eventName);
       this.setState({'clicked': true});
       if (fireClick) {
         this.props.onClick();

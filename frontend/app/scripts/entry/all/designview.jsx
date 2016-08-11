@@ -2,6 +2,7 @@ var React = require("react");
 var $ = require("jquery");
 var Blocking = require("../../../js/blocking").Blocking;
 var DesignView = require("../../../js/designview/docdesignview").DesignView;
+var Track = require("../../common/track");
 
 $(function () {
   window.BlockingInfo = Blocking();
@@ -11,7 +12,7 @@ $(function () {
   });
 
   mixpanel.register({DocumentID: fromTemplate.documentId, Context: "design view"});
-  mixpanel.track("View Design View");
+  Track.track("View Design View");
 
   $(".body-container").replaceWith(
     $("<div />").append(window.BlockingInfo.el())

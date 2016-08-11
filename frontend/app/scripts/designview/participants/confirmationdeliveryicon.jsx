@@ -1,9 +1,10 @@
 var React = require("react");
+var Track = require("../../common/track");
 
 module.exports = React.createClass({
   onClick: function () {
     var sig = this.props.model;
-    mixpanel.track("Choose confirmation delivery method", {
+    Track.track("Choose confirmation delivery method", {
       Where: "icon"
     });
     if (sig.confirmationdelivery() == "email") {

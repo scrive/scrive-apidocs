@@ -1,10 +1,11 @@
 var React = require("react");
+var Track = require("../../common/track");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
 module.exports = React.createClass({
   onClick: function () {
     var sig = this.props.model;
-    mixpanel.track("Choose auth to view", {
+    Track.track("Choose auth to view", {
       Where: "icon"
     });
     if (!sig.signs()) {

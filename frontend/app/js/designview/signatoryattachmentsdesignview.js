@@ -1,6 +1,7 @@
 var Backbone = require("backbone");
 var React = require("react");
 var Select = require("../../scripts/common/select");
+var Track = require("../../scripts/common/track");
 var _ = require("underscore");
 var Button = require("../buttons.js").Button;
 var $ = require("jquery");
@@ -105,7 +106,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
             size: 'big',
             text: localization.signatoryAttachments.addAttachment,
             onClick: function() {
-                mixpanel.track('Click add sig attachment (popup)');
+                Track.track('Click add sig attachment (popup)');
             attachments.addNewAttachment();
             return false;
             }
@@ -119,7 +120,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         editName.val(attachment.name());
         editName.change(function() {
             attachment.setName(editName.val());
-            mixpanel.track('Set attachment name');
+            Track.track('Set attachment name');
         });
         td1.append(editName);
 
@@ -128,7 +129,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         editDesc.val(attachment.description());
         editDesc.change(function() {
             attachment.setDescription(editDesc.val());
-            mixpanel.track('Set attachment description');
+            Track.track('Set attachment description');
         });
         td2.append(editDesc);
 
@@ -161,7 +162,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
           options: options,
           onSelect: function(sig) {
             attachment.setSignatory(sig);
-            mixpanel.track('Set signatory (in attachment)');
+            Track.track('Set signatory (in attachment)');
             return true;
           }
         }), td3[0]);
@@ -170,7 +171,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         var removeIcon = $("<div class='removeSignatoryAttachmentIcon'>X</div>");
         removeIcon.click(function() {
             attachments.removeAttachment(attachment);
-            mixpanel.track('Remove sig attachment');
+            Track.track('Remove sig attachment');
         });
         td4.append(removeIcon);
 

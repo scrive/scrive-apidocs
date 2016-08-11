@@ -2,6 +2,7 @@ var React = require("react");
 var Select = require("../../common/select");
 var InfoTextInput = require("../../common/infotextinput");
 var DaysInputWithCalendar = require("../../common/daysinputwithcalendar");
+var Track = require("../../common/track");
 var _ = require("underscore");
 
 
@@ -71,7 +72,7 @@ module.exports = React.createClass({
             options={self.languages()}
             width={158}
             onSelect= {function(v) {
-              mixpanel.track('Select language', {'New Language': v});
+              Track.track('Select language', {'New Language': v});
               doc.setLanguage(v);
             }}
           />

@@ -10,6 +10,7 @@ var Confirmation = require("../../js/confirmations.js").Confirmation;
 var Submit = require("../../js/submits.js").Submit;
 var _ = require("underscore");
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+var Track = require("../common/track");
 
 
 module.exports = React.createClass({
@@ -32,7 +33,7 @@ module.exports = React.createClass({
         title: localization.archive.documents.sendreminder.action,
         content: content,
         onAccept : function() {
-          mixpanel.track('Send reminder');
+          Track.track('Send reminder');
           new Submit({
             url: "/d/remind",
             method: "POST",
@@ -60,7 +61,7 @@ module.exports = React.createClass({
         title: localization.archive.documents.cancel.action,
         content: jQuery("<p/>").text(localization.archive.documents.cancel.body),
         onAccept : function() {
-          mixpanel.track('Cancel document');
+          Track.track('Cancel document');
           new Submit({
             url: "/d/cancel",
             method: "POST",
@@ -95,7 +96,7 @@ module.exports = React.createClass({
         content: confirmationText,
         oneClick: true,
         onAccept : function() {
-          mixpanel.track('Delete document');
+          Track.track('Delete document');
           new Submit({
             url: "/d/delete",
             method: "POST",
@@ -211,7 +212,7 @@ module.exports = React.createClass({
               {
                 name: localization.archive.documents.csv.action,
                 onSelect : function(listmodel) {
-                  mixpanel.track('Download CSV');
+                  Track.track('Download CSV');
                   var url = "/d/csv?";
                   var params =  listmodel.urlParams();
                   _.each(params,function(a,b){url+=(b+"="+a+"&");});
@@ -222,7 +223,7 @@ module.exports = React.createClass({
               {
                 name: localization.archive.documents.zip.action,
                 onSelect : function(listmodel) {
-                  mixpanel.track('Download PDFs');
+                  Track.track('Download PDFs');
                   var selected = listmodel.list().getSelected();
                   if (selected.length == 0 ) {
                     new FlashMessage({type: 'error', content : localization.archive.documents.zip.emptyMessage});

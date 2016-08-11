@@ -1,6 +1,7 @@
 var React = require("react");
 var Login = require("../../login/login");
 var $ = require("jquery");
+var Track = require("../../common/track");
 
 $(function () {
   React.render(React.createElement(Login, {
@@ -13,5 +14,5 @@ $(function () {
     Context : "Login page - to start page"
   });
 
-  mixpanel.track("View login page - to start");
+  Track.track("View login page - to start");
 });

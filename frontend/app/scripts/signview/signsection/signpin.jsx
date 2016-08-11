@@ -3,6 +3,7 @@ var Backbone = require("backbone");
 var React = require("react");
 var Button = require("../../common/button");
 var InfoTextInput = require("../../common/infotextinput");
+var Track = require("../../common/track");
 var TaskMixin = require("../navigation/task_mixin");
 var ViewSize = require("../viewsize");
 var Field = require("../../../js/fields.js").Field;
@@ -46,10 +47,10 @@ var classNames = require("classnames");
         },
         el: $(self.refs.signButton.getDOMNode()),
         onActivate: function () {
-          mixpanel.track("Begin signature task");
+          Track.track("Begin signature task");
         },
         onDeactivate: function () {
-          mixpanel.track("Finish signature task");
+          Track.track("Finish signature task");
         }
       });
     },
