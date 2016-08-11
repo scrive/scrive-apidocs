@@ -115,7 +115,7 @@ var React = require("react");
       });
 
       _.each(this.props.links, function (value, key) {
-        $el.find(key).attr("href",value).attr("target", "_blank");
+        $el.find(key).attr("href",value).attr("target", "_blank").attr("rel", "noopener noreferrer");
       });
 
       _.each(this.props.classes, function (value, key) {

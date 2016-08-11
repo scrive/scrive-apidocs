@@ -167,6 +167,7 @@ describe("common/htmltextwithsubstitution", function () {
 
     assert.equal($("a.link", componentEl).attr("href"), "http://www.example.com/");
     assert.equal($("a.link", componentEl).attr("target"), "_blank");
+    assert.equal($("a.link", componentEl).attr("rel"), "noopener noreferrer");
   });
 
   it("should handle additional classes", function () {
