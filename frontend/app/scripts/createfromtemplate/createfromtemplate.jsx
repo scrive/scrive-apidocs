@@ -7,6 +7,20 @@ var Submit = require("../../js/submits.js").Submit;
 var LoadingDialog = require("../../js/loading.js").LoadingDialog;
 
 module.exports = React.createClass({
+    onPageShow: function (event) {
+      if (event.persisted) {
+        // If the page is loaded from the browser's cache (e.g. after the user
+        // clicked the Back button), refresh the UI.
+        this.refs.templatesList.reload();
+        LoadingDialog.close();
+      }
+    },
+    componentWillMount: function () {
+      window.addEventListener("pageshow", this.onPageShow, false);
+    },
+    componentWillUnmount: function () {
+      window.removeEventListener("pageshow", this.onPageShow, false);
+    },
     createFromTemplate : function(id) {
       new Submit({
         method : "POST",
@@ -42,6 +56,7 @@ module.exports = React.createClass({
             dataFetcher={Utils.dataFetcher}
             idFetcher={Utils.idFetcher}
             loadLater={self.props.loadLater}
+            ref="templatesList"
           >
           <List.ListHeader>
             <div className="headline">
