@@ -1,6 +1,7 @@
 var expose = {};
 
 expose.track = function (event_name, properties, callback) {
+  trackJs.track(event_name);
   return mixpanel.track(event_name, properties, callback);
 };
 

@@ -47,6 +47,7 @@ data AppConf = AppConf {
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
   , recurlyConfig      :: RecurlyConfig                -- ^ for payments (api key + private key)
   , mixpanelToken      :: String                       -- ^ for mixpanel integration
+  , trackjsToken       :: Maybe String                 -- ^ for Track.js integration
   , hubspotConf        :: HubSpotConf                  -- ^ for hubspot integration
   , googleanalyticsToken      :: String                -- ^ for google-analytics integration
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
@@ -125,6 +126,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "mixpanel"
       mixpanelToken
       "Token for Mixpanel"
+  <*> fieldOpt "trackjs"
+      trackjsToken
+      "API Token for Track.js"
   <*> field "hubspot"
       hubspotConf
       "Configuration of HubSpot"
@@ -176,6 +180,7 @@ instance Default AppConf where
                                          , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
                                          }
     , mixpanelToken      = "5b04329b972851feac0e9b853738e742"
+    , trackjsToken       = Nothing
     , hubspotConf        = HubSpotConf "" Map.empty
     , googleanalyticsToken = "f25e59c70a8570a12fe57e7835d1d881"
     , ntpServers         = defaultNtpServers

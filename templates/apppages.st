@@ -36,6 +36,7 @@ standardHeaderContents=
           <meta name="viewport" content="width=1020" />
         $endif$
         <link rel=" icon" href="$cdnbaseurl$/favicon/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$" />
+        $trackjsLoader()$
         <script src="$cdnbaseurl$/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
         <script type="text/javascript"> window.hubspotConf = $analytics.hubspotConf:noescape()$;</script>
@@ -141,6 +142,12 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
   $endif$
   _gaq.push(['_trackPageview']);
 // end Google analytics
+####
+trackjsLoader=
+$if(trackjstoken)$
+  <script type="text/javascript">window._trackJs = { token: "$trackjstoken$" };</script>
+  <script type="text/javascript" src="https://cdn.trackjs.com/releases/current/tracker.js"></script>
+$endif$
 ####
 analyticsLoaderKontrakcja=
 $loadScript(src="//js.hubspot.com/forms/current.js")$

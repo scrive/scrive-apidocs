@@ -97,6 +97,10 @@ $htmlopentag()$
           authorPhone: "$authorPhone$"
         };
 
+      if (trackJs !== undefined) {
+        trackJs.configure({userId: "$siglinkid$"});
+      }
+
       mixpanel.register({
         Context : 'Sign view',
         DocumentID : "$documentid$",
