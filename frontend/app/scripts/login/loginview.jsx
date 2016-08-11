@@ -22,7 +22,7 @@ module.exports = React.createClass({
     loginCallback : function(resp) {
       var model = this.props.model;
       if (resp.logged == true) {
-        trackTimeout('Login successful', {}, function() {
+        Track.track_timeout('Login successful', {}, function() {
           window.location = model.referer() != undefined && model.referer() != "" && model.referer() != "/" ? model.referer() : "/newdocument";
         });
       }

@@ -1,6 +1,7 @@
 var React = require("react");
 var InfoTextInput = require("../../common/infotextinput");
 var Button = require("../../common/button");
+var Track = require("../../common/track");
 var _ = require("underscore");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
