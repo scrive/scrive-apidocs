@@ -79,7 +79,7 @@ addDigitalSignature = theDocumentID >>= \did ->
     dbUpdate $ AppendSealedFile sealedfileid status $ systemActor now
 
 -- | Extend a document: replace the digital signature with a keyless one.  Trigger callbacks.
-extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadMask m, MonadLog m, MonadReader SchedulerData m, CryptoRNG m, DocumentMonad m, AmazonMonad m) => m ()
+extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadMask m, MonadLog m, MonadReader SchedulerData m, CryptoRNG m, DocumentMonad m, AmazonMonad m) => m Bool
 extendDigitalSignature = do
   Just file <- fileFromMainFile =<< (documentsealedfile <$>theDocument)
   did <- theDocumentID
@@ -92,6 +92,7 @@ extendDigitalSignature = do
     templates <- getGlobalTemplates
     res <- runTemplatesT (def, templates) $ digitallyExtendFile now gtconf sealedpath (filename file)
     when res $ triggerAPICallbackIfThereIsOne =<< theDocument -- Users that get API callback on document change, also get information about sealed file being extended.
+    return res
 
     -- Here, we have the option of notifying signatories of the
     -- extended version.  However: customers that choose to create an
