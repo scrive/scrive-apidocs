@@ -82,7 +82,7 @@ module.exports = Backbone.Model.extend({
       return BankIDUtils.isStatusComplete(this.status());
     },
     isFaultStatus: function () {
-      return BankIDUtils.isFaultStatus(this.status())
+      return BankIDUtils.isFaultStatus(this.status());
     },
     statusMessage: function () {
       return BankIDUtils.statusMessage(this.thisDevice(), this.status(), this.signatory());

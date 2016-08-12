@@ -127,7 +127,7 @@ var TaskList = require("./navigation/task_list");
 
     hasSignatoriesSection: function () {
       return !this.document().closed()
-        && _.filter(this.document().signatories(), function (sig) {return sig.signs();}).length > 1;
+        && _.filter(this.document().signatories(), function (sig) { return sig.signs(); }).length > 1;
     },
 
     hasAuthorAttachmentsSection: function () {
@@ -217,7 +217,7 @@ var TaskList = require("./navigation/task_list");
         this.document().currentSignatory().attachments().length > 0 ||
         _.any(this.document().signatories(),
           function (s) {
-            return s.hasSigned() && _.any(s.attachments(), function (a) { return a.hasFile(); })
+            return s.hasSigned() && _.any(s.attachments(), function (a) { return a.hasFile(); });
         })
       );
     },

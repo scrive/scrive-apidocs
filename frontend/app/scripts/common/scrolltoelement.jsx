@@ -4,19 +4,19 @@ const PIXEL_SPEED = 800;
 const MAX_SCROLL_TIME = 2000;
 const SCROLL_MARGIN = 150;
 
-function get$top($el) {
+function get$top ($el) {
   return $("html,body");
 }
 
-function get$left($el) {
+function get$left ($el) {
   return $el.hasClass("placedfield") ? $(".scroller") : $(window);
 }
 
-function scrollWithInterrupt($el, scrollKey, scrollValue, timeToScroll, finish) {
+function scrollWithInterrupt ($el, scrollKey, scrollValue, timeToScroll, finish) {
   finish = finish || function () { };
   const $all = $("html,body");
 
-  function stop() {
+  function stop () {
     $el.stop(true, false);
 
     $all.unbind("mousewheel", stop);
@@ -38,7 +38,7 @@ function scrollWithInterrupt($el, scrollKey, scrollValue, timeToScroll, finish) 
   $all.bind("touchstart", stop);
 }
 
-function computeTargetScrollTop($el) {
+function computeTargetScrollTop ($el) {
   const viewportHeight = window.innerHeight || $(window).height();
   const documentHeight = $(document).height();
   const elementOffsetTop = $el.offset().top;
@@ -66,7 +66,7 @@ function computeTargetScrollTop($el) {
   return targetScrollTop;
 }
 
-function computeTargetScrollLeft($el) {
+function computeTargetScrollLeft ($el) {
   const viewportWidth = window.innerWidth || $(window).width();
   const elementOffsetLeft = $el.position().left;
   const elementWidth = $el.outerWidth();
@@ -78,7 +78,7 @@ function computeTargetScrollLeft($el) {
   return currentScrollLeft + scrollDiff;
 }
 
-function scrollToElement($el, cb) {
+function scrollToElement ($el, cb) {
   cb = cb || function () { };
 
   if ($el instanceof HTMLElement) {

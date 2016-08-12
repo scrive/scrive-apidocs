@@ -181,7 +181,7 @@ module.exports = React.createClass({
     mixpanel.track("Click go to sign view");
     LocalStorage.set("backlink", "target", "document");
     new Submit({
-      method:"'GET",
+      method: "'GET",
       url: "/d/signview/" + this.props.document.documentid()
     }).send();
   },
@@ -214,7 +214,7 @@ module.exports = React.createClass({
     });
   },
   render: function () {
-    var document_ = this.props.document
+    var document_ = this.props.document;
     var downloadLink = document_.mainfile().downloadLinkForMainFile(document_.title(), true);
 
     return (

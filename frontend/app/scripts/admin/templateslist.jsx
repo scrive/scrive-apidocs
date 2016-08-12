@@ -24,9 +24,9 @@ module.exports = React.createClass({
       return (
         <List.List
           url={self.url()}
-          dataFetcher={function (d) {return d.documents;}}
-          idFetcher={function (d) {return d.field("id");}}
-          totalCountFunction={function (data) { return data.total_matching;}}
+          dataFetcher={function (d) { return d.documents; }}
+          idFetcher={function (d) { return d.field("id"); }}
+          totalCountFunction={function (data) { return data.total_matching; }}
           maxPageSize={100}
           loadLater={self.props.loadLater}
           paramsFunction = {function (text, selectfiltering, sorting, offset, maxPageSize) {

@@ -5,7 +5,7 @@ var glob = require("glob");
 var generateVersionId = require("./custom_grunt_tasks/utils/version_id_generator");
 var merge = require("webpack-merge");
 
-function mainResolver(filename) {
+function mainResolver (filename) {
   return new webpack.ResolverPlugin(
     new webpack.ResolverPlugin.DirectoryDescriptionFilePlugin("./" + filename, ["main"])
   );
@@ -13,14 +13,14 @@ function mainResolver(filename) {
 
 var context = path.join(__dirname, "/app");
 
-function allEntryPoints(m) {
+function allEntryPoints (m) {
   return _.object(glob.sync(m).map(function (entry) {
     var name = path.basename(entry).split(".")[0];
     return [name, "./" + path.relative(context, entry)];
   }));
-};
+}
 
-function defaultConfig(obj) {
+function defaultConfig (obj) {
   return merge({
     context: context,
 
@@ -37,7 +37,7 @@ function defaultConfig(obj) {
         },
         {
           test: /.less$/,
-          loader: "less-interop",
+          loader: "less-interop"
         }
       ],
       noParse: [
@@ -58,10 +58,10 @@ function defaultConfig(obj) {
 
     resolve: {
       extensions: ["", "min.js", ".js", ".jsx"],
-      root: [path.join(__dirname, "./app/bower_components")],
+      root: [path.join(__dirname, "./app/bower_components")]
     }
   }, obj);
-};
+}
 
 var versionId = generateVersionId();
 

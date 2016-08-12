@@ -10,7 +10,7 @@ var AuthorAttachment = require("../../js/authorattachment.js").AuthorAttachment;
 
 var AttachmentsTableRowView = React.createClass({
   propTypes: {
-    attachment: React.PropTypes.instanceOf(AuthorAttachment).isRequired,
+    attachment: React.PropTypes.instanceOf(AuthorAttachment).isRequired
   },
   onDownloadButtonClick: function (e) {
     window.open(this.props.attachment.downloadLink(), "_blank");
@@ -52,7 +52,7 @@ var AttachmentsTableRowView = React.createClass({
 
 module.exports = React.createClass({
   propTypes: {
-    document: React.PropTypes.instanceOf(Document).isRequired,
+    document: React.PropTypes.instanceOf(Document).isRequired
   },
   render: function () {
     var containerClass = classNames({

@@ -27,9 +27,9 @@ window.OAuthRequest = Backbone.Model.extend({
 /* This request is done at the begining, using ajax */
 window.OAuthTemporaryCredentialRequest = OAuthRequest.extend({
   defaults: {
-    oauth_consumer_key:"",
+    oauth_consumer_key: "",
     oauth_callback: window.location.href,
-    oauth_client_shared_secret:"",
+    oauth_client_shared_secret: ""
   },
   requestUrl: function () {
     return "/oauth/temporarycredentials";
@@ -52,7 +52,7 @@ window.OAuthTemporaryCredentialRequest = OAuthRequest.extend({
  */
 window.OAuthResourceOwnerAuthorization =  Backbone.Model.extend({
   defaults: {
-    oauth_token:"",
+    oauth_token: ""
   },
   requestUrl: function () {
     return Scrive.serverUrl() + "/oauth/authorization?oauth_token=" + this.get("oauth_token");
@@ -62,11 +62,11 @@ window.OAuthResourceOwnerAuthorization =  Backbone.Model.extend({
 /* After user confirmed identity with Scrive, this one is ussed to get key to authorizaed user requests*/
 window.OAuthTokenRequest = OAuthRequest.extend({
   defaults: {
-    oauth_consumer_key:"",
+    oauth_consumer_key: "",
     oauth_token: "",
     oauth_verifier: "",
-    oauth_client_shared_secret:"",
-    oauth_token_secret: "",
+    oauth_client_shared_secret: "",
+    oauth_token_secret: ""
   },
   requestUrl: function () {
     return "/oauth/tokencredentials";

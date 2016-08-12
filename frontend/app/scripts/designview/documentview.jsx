@@ -83,7 +83,7 @@ var DocumentSaveMixin = require("./document_save_mixin");
             speed: 1.5,    // Rounds per second
             trail: 74,     // Afterglow percentage
             shadow: false, // Whether to render a shadow
-            zIndex:100     // Don't be extreme and put spinner over error dialog
+            zIndex: 100     // Don't be extreme and put spinner over error dialog
           }).spin(div);
         }, 10);
       }
@@ -145,7 +145,7 @@ var DocumentSaveMixin = require("./document_save_mixin");
       document.markAsNotReady();
       var submit = new Submit({
         method: "POST",
-        url:  "/api/frontend/documents/" + document.documentid() + "/setfile",
+        url: "/api/frontend/documents/" + document.documentid() + "/setfile",
         ajaxsuccess: function (d) {
           mixpanel.track("Upload main file");
           // Note that update is happening twice: before and after file upload

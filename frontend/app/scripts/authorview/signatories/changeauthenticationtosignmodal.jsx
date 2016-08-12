@@ -19,7 +19,7 @@ var classNames = require("classnames");
       this.setNewAuthenticationMethod(this.signatory().authenticationToSign());
     },
 
-    document:function () {
+    document: function () {
       return this.signatory().document();
     },
 
@@ -50,7 +50,7 @@ var classNames = require("classnames");
       }
     },
 
-    setNewAuthenticationValue:  function (value) {
+    setNewAuthenticationValue: function (value) {
       this.set({newAuthenticationValue: value});
     },
 
@@ -288,4 +288,4 @@ var classNames = require("classnames");
         return true;
       }
     });
-  }
+  };

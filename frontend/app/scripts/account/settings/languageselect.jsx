@@ -6,7 +6,7 @@ var _ = require("underscore");
 module.exports = React.createClass({
   languages: function () {
     if (!this._languages) {
-      var known_languages = [
+      var knownLanguages = [
         {name: localization.languages.enInEn, value: "en"},
         {name: localization.languages.svInSv, value: "sv"},
         {name: localization.languages.deInDe, value: "de"},
@@ -22,10 +22,10 @@ module.exports = React.createClass({
         {name: localization.languages.isInIs, value: "is"},
         {name: localization.languages.etInEt, value: "et"},
         {name: localization.languages.lvInLv, value: "lv"},
-        {name: localization.languages.ltInLt, value: "lt"},
+        {name: localization.languages.ltInLt, value: "lt"}
       ];
 
-      this._languages = _.sortBy(known_languages, function (l) {
+      this._languages = _.sortBy(knownLanguages, function (l) {
         return l.name.toLowerCase();
       });
     }

@@ -2,7 +2,7 @@ import $ from "jquery";
 import _ from "underscore";
 import Backbone from "backbone";
 
-function sortByView(tasks) {
+function sortByView (tasks) {
   var newList = tasks.slice(0);
 
   newList.sort(function (t1, t2) {

@@ -55,17 +55,7 @@ module.exports = function (grunt) {
     },
 
     eslint: {
-      target: ["<%= yeoman.app %>/scripts/**/*.jsx"]
-    },
-
-    jscs: {
-      src: require("./jscs_manifest.json"),
-      options: {
-        preset: "yandex",
-        validateQuoteMarks: "\"",
-        disallowQuotedKeysInObjects: null,
-        esprima: "esprima-fb"
-      }
+      src: require("./linter_manifest.json")
     },
 
     karma: {
@@ -344,8 +334,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask("compileStyles", ["less", "autoprefixer"]);
   grunt.registerTask("server:dist", ["build"]);
-  grunt.registerTask("test", ["jscs", "eslint", "uglify:dev", "karma:full"]);
+  grunt.registerTask("test", ["eslint", "uglify:dev", "karma:full"]);
   grunt.registerTask("test:fast", ["uglify:dev", "karma:fast"]);
-  grunt.registerTask("validateJs", []);
   grunt.registerTask("default", ["eslint", "build", "test"]);
 };

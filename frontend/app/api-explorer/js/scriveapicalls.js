@@ -96,7 +96,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
           return this.get("callPrototype");
         },
   getParamValue: function (p) {
-          return this.get(p.argName())
+          return this.get(p.argName());
         },
   includeParam: function (p) {
           return !p.optional() || (this.getParamValue(p) !== "" || this.getParamSendEmpty(p));
@@ -125,15 +125,15 @@ window.ApiCallInstance = AbstractAPICall.extend({
         },
   attachFileParamsToForm: function (form, p) {
     var multifile = this.getParamValue(p);
-    this.slaves = _.filter(multifile.slaves, function (s) {return s != undefined;});
-    this.slavesParents = _.map(this.slaves, function (s) {return $(s).parent();});
+    this.slaves = _.filter(multifile.slaves, function (s) { return s != undefined; });
+    this.slavesParents = _.map(this.slaves, function (s) { return $(s).parent(); });
     var upto = this.getParamSendEmpty(p) ? this.slaves.length : this.slaves.length - 1;
-    for (var i = 0;i < upto;i++) {
+    for (var i = 0; i < upto; i++) {
       form.append($(this.slaves[i]).attr("name", p.argName(i)));
     }
   },
   detachFileParamsFromForm: function (form) {
-    for (var i = 0;i < this.slaves.length && i < this.slavesParents.length;i++) {
+    for (var i = 0; i < this.slaves.length && i < this.slavesParents.length; i++) {
       this.slavesParents[i].append(this.slaves[i]);
     }
   },
@@ -155,10 +155,10 @@ window.ApiCallInstance = AbstractAPICall.extend({
   authorization: function () {
     return this.get("oauth").authorizationForRequests();
   },
-  responseStatusCode: function () {return this.get("responseStatusCode");},
-  details: function () {return this.get("details");},
-  resultContent: function () {return this.get("resultContent");},
-  resultContentLength: function () {return this.get("resultContentLength");},
+  responseStatusCode: function () { return this.get("responseStatusCode"); },
+  details: function () { return this.get("details"); },
+  resultContent: function () { return this.get("resultContent"); },
+  resultContentLength: function () { return this.get("resultContentLength"); },
   getDetails: function (jqXHR) {
           return {
             "Status Code":
@@ -170,7 +170,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
             "Request Method": this.method(),
             "Authorisation needed": this.needsAuthorization() ? "Yes" : "No",
             "Date": jqXHR.getResponseHeader("Date")
-          } ;
+          };
         },
   send: function (args) {
           var self = this;
@@ -181,7 +181,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
           if (!self.hasFileParams()) {
             args.data = this.getCallArgs();
           } else {
-            var form = this.getCallArgsWithFilesForm();
+            form = this.getCallArgsWithFilesForm();
             args.processData = false;
             args.contentType = false;
             args.data = new FormData(form[0]);
@@ -205,7 +205,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
             self.trigger("send");
             setTimeout(function () { $(".response-result, .request-details").addClass("success"); }, 10);
             setTimeout(function () { $(".response-result, .request-details").removeClass("success"); }, 210);
-          }
+          };
           args.error = function (jqXHR, textStatus, errorThrown) {
             self.set("details", self.getDetails(jqXHR));
             self.set("resultContent", jqXHR.responseText);
@@ -218,7 +218,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
             self.trigger("send");
             setTimeout(function () { $(".response-result, .request-details").addClass("error"); }, 10);
             setTimeout(function () { $(".response-result, .request-details").removeClass("error"); }, 210);
-          }
+          };
           $.ajax(Scrive.serverUrl() + this.getCallUrl(), args);
         }
 });
@@ -238,12 +238,12 @@ window.APICalls = new (Backbone.Model.extend({
   apiV1Calls: function () {
           return _.filter(this.calls(), function (c) {
             return c.apiVersion() == "v1";
-          })
+          });
         },
   apiV2Calls: function () {
           return _.filter(this.calls(), function (c) {
             return c.apiVersion() == "v2";
-          })
+          });
         },
   registerNewCall: function (props, constructor) {
           props.constructor_ = constructor;
@@ -252,7 +252,7 @@ window.APICalls = new (Backbone.Model.extend({
 }))();
 
 var APICall = function (props) {
-  var static_prop_names = [
+  var staticPropNames = [
     "name",
     "apiVersion",
     "description",
@@ -265,29 +265,29 @@ var APICall = function (props) {
     "tryToUseDocumentIDWithCopy",
     "expectBinaryResponse"
   ];
-  var static_props = {};
-  var dynamic_props = {};
+  var staticProps = {};
+  var dynamicProps = {};
   _.each(_.keys(props), function (k) {
-    if (_.contains(static_prop_names, k)) {
-      static_props[k] = props[k];
+    if (_.contains(staticPropNames, k)) {
+      staticProps[k] = props[k];
     } else {
-      dynamic_props[k] = props[k];
+      dynamicProps[k] = props[k];
     }
   });
-  var constructor = function (instance_props) {
-    return new (ApiCallInstance.extend(dynamic_props))($.extend(instance_props, static_props));
+  var constructor = function (instanceProps) {
+    return new (ApiCallInstance.extend(dynamicProps))($.extend(instanceProps, staticProps));
   };
-  APICalls.registerNewCall(static_props, constructor);
-}
+  APICalls.registerNewCall(staticProps, constructor);
+};
 
 window.APICallV1 = function (props) {
   props.apiVersion = "v1";
   return APICall(props);
-}
+};
 
 window.APICallV2 = function (props) {
   props.apiVersion = "v2";
   return APICall(props);
-}
+};
 
 })(window);

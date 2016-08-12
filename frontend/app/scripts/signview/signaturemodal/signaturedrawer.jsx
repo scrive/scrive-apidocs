@@ -224,14 +224,14 @@ module.exports = React.createClass({
       height: React.PropTypes.number,
       acceptText: React.PropTypes.string,
       onClose: React.PropTypes.func,
-      onAccept:  React.PropTypes.func,
+      onAccept: React.PropTypes.func,
       onStartDrawing: React.PropTypes.func,
       onStopDrawing: React.PropTypes.func
     },
     getInitialState: function () {
       var model =  new SignatureDrawerModel({
         field: this.props.field,
-        width:  this.props.width,
+        width: this.props.width,
         height: this.props.height
       });
       return {
@@ -342,7 +342,8 @@ module.exports = React.createClass({
       var canvasLeft = $(this.refs.drawingArea.getDOMNode()).offset().left;
       /*
        * There is a problem with modern IE on touch devices and using jQuery's offset:
-       * http://connect.microsoft.com/IE/feedback/details/768781/ie10-window-pageyoffset-incorrect-value-when-page-zoomed-breaks-jquery-etc
+       * http://connect.microsoft.com/IE/feedback/details/768781/ie10-window-pageyoffset-incorrect-
+       * value-when-page-zoomed-breaks-jquery-etc
        * http://bugs.jquery.com/ticket/14742 ('cantfix') since browser don't expose zoom information through an API
        */
       if (BrowserInfo.isIETouch()) {

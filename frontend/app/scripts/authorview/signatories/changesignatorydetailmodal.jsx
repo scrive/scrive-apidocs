@@ -38,8 +38,8 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
     propTypes: {
       model: React.PropTypes.object,
-      label:  React.PropTypes.string,
-      placeholder:  React.PropTypes.string
+      label: React.PropTypes.string,
+      placeholder: React.PropTypes.string
     },
 
     getBackboneModels: function () {
@@ -56,7 +56,7 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
           <InfoTextInput
             infotext={this.props.placeholder}
             value={model.signatoryDetailValue()}
-            onChange={function (v) {model.setSignatoryDetailValue(v);}}
+            onChange={function (v) { model.setSignatoryDetailValue(v); }}
             className={!model.isSignatoryDetailValueValid() ? "obligatory-input" : undefined}
             inputtype="text"
             autocomplete={false}
@@ -97,4 +97,4 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
         }
       }
     });
-  }
+  };

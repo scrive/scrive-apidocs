@@ -52,19 +52,19 @@ var $ = require("jquery");
       return helper;
     },
 
-    componentDidMount: function (el) {
+    componentDidMount: function () {
       var self = this;
       var el = $(this.getDOMNode());
       self.initializeOnClickCreatePlacement({
         el: el,
-        isEnabledFunc: function () { return true;},
+        isEnabledFunc: function () { return true; },
         expectedSizeFunc: self.newTextExpectedSize,
         newPlacementFromPosition: self.newTextPlacementFromPosition,
         openTypeSetterFor: self.props.openTypeSetterFor
       });
       self.initializeDraggable({
         el: el,
-        cursorAt: {top:7, left:7},
+        cursorAt: {top: 7, left: 7},
         verticalOffset: -1,
         xAxisOffset: FieldPlacementGlobal.textPlacementXOffset,
         yAxisOffset: FieldPlacementGlobal.textPlacementYOffset,

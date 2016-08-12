@@ -32,7 +32,7 @@ module.exports = React.createClass({
           onChange={function (val) {
             field.setValue(val.trim());
           }}
-          onTab={function (e) {if (self.props.last) {e.preventDefault();}}}
+          onTab={function (e) { if (self.props.last) { e.preventDefault(); } }}
           onRemove={(
             !field.canBeRemoved() ?
               undefined :

@@ -163,7 +163,7 @@ var trackTimeout = require("../../common/track_timeout");
     handleStartChangingEmail: function () {
       var self = this;
       var signatory = this.props.signatory;
-      mixpanel.track("Click change email", {"Signatory index":signatory.signIndex()});
+      mixpanel.track("Click change email", {"Signatory index": signatory.signIndex()});
       new ChangeSignatoryDetailModal({
         value: signatory.email(),
         validator: new EmailValidation(),
@@ -186,7 +186,7 @@ var trackTimeout = require("../../common/track_timeout");
     handleStartChangingMobile: function () {
       var self = this;
       var signatory = this.props.signatory;
-      mixpanel.track("Click change phone", {"Signatory index":signatory.signIndex()});
+      mixpanel.track("Click change phone", {"Signatory index": signatory.signIndex()});
       new ChangeSignatoryDetailModal({
         value: signatory.mobile(),
         validator: new PhoneValidation(),
@@ -210,19 +210,22 @@ var trackTimeout = require("../../common/track_timeout");
       var self = this;
       var signatory = this.props.signatory;
       var document = signatory.document();
-      mixpanel.track("Click send reminder", {"Signatory index":signatory.signIndex()});
+      mixpanel.track("Click send reminder", {"Signatory index": signatory.signIndex()});
+      var useEmail;
+      var useMobile;
+      var useEmailAndMobile;
       if (!signatory.hasSigned()) {
         // if signatory hasnt signed yet, use invitation delivery method
-        var useEmail = signatory.emailDelivery();
-        var useMobile = signatory.mobileDelivery();
-        var useEmailAndMobile = signatory.emailMobileDelivery();
+        useEmail = signatory.emailDelivery();
+        useMobile = signatory.mobileDelivery();
+        useEmailAndMobile = signatory.emailMobileDelivery();
       } else {
         // signatory has already signed, prefer confirmation delivery method
-        var useEmail = signatory.noneConfirmationDelivery() ?
+        useEmail = signatory.noneConfirmationDelivery() ?
           signatory.emailDelivery() : signatory.emailConfirmationDelivery();
-        var useMobile = signatory.noneConfirmationDelivery() ?
+        useMobile = signatory.noneConfirmationDelivery() ?
           signatory.mobileDelivery() : signatory.mobileConfirmationDelivery();
-        var useEmailAndMobile = signatory.noneConfirmationDelivery() ?
+        useEmailAndMobile = signatory.noneConfirmationDelivery() ?
           signatory.emailMobileDelivery() : signatory.emailMobileConfirmationDelivery();
       }
       if (useEmail) {
@@ -302,7 +305,7 @@ var trackTimeout = require("../../common/track_timeout");
     goToSignView: function () {
       var signatory = this.props.signatory;
       LocalStorage.set("backlink", "target", "document");
-      mixpanel.track("Accept", {"Signatory index":signatory.signIndex(), "Accept": "give for signing"});
+      mixpanel.track("Accept", {"Signatory index": signatory.signIndex(), "Accept": "give for signing"});
       signatory.giveForPadSigning().send();
     },
 
@@ -492,7 +495,7 @@ var trackTimeout = require("../../common/track_timeout");
               </span>
             </div>
           </div>
-          <div className="optionbox" style={this.hasAnyOptions() ? {} : {display:"none"}}>
+          <div className="optionbox" style={this.hasAnyOptions() ? {} : {display: "none"}}>
             {/* if */ this.hasRemindOption() &&
               <Button
               text={this.remindText()}

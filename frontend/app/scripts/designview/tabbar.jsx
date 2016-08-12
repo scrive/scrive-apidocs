@@ -55,7 +55,7 @@ var TabBarView = React.createClass({
   },
   componentWillMount: function () {
     this._currentTabIdx = null;
-    this._currentTabContent = null
+    this._currentTabContent = null;
     this._previousTabIdx = null;
     this._reactivatePreviousTabTimeout = null;
 
@@ -91,7 +91,7 @@ var TabBarView = React.createClass({
   },
   addTabRef: function (tab) {
     if (tab && this._tabs.indexOf(tab) == -1) {
-      this._tabs.push(tab)
+      this._tabs.push(tab);
     }
   },
   renderCurrentTabContent: function () {

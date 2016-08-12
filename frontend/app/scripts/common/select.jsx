@@ -52,17 +52,17 @@ module.exports = React.createClass({
     isOptionSelected: React.PropTypes.func,
     className: React.PropTypes.string,
     width: React.PropTypes.number,
-    style:  React.PropTypes.object,
+    style: React.PropTypes.object,
     onSelect: React.PropTypes.func,
     onRemove: React.PropTypes.func,
-    options: React.PropTypes.array.isRequired,
+    options: React.PropTypes.array.isRequired
   },
 
   getDefaultProps: function () {
     return {
       style: {},
       width: 160,
-      isOptionSelected: function (o) {return o.selected;}
+      isOptionSelected: function (o) { return o.selected; }
     };
   },
 

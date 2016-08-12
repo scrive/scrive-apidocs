@@ -68,6 +68,6 @@ module.exports = React.createClass({
               ref="docHistoryView"
           />
       </div>
-    )
+    );
   }
 });

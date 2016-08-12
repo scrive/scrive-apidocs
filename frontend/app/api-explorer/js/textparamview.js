@@ -24,7 +24,7 @@ window.TextParamView  = Backbone.View.extend({
       });
     input.keypress(function (e) {
         if (e.which == 13) {
-          setTimeout(function () {call.send();}, 10);
+          setTimeout(function () { call.send(); }, 10);
         }
       });
 
@@ -43,7 +43,7 @@ window.TextParamView  = Backbone.View.extend({
       );
     }
 
-    var inputColumn = $("<div class='col-xs-6'>").append(input)
+    var inputColumn = $("<div class='col-xs-6'>").append(input);
     if (param.optionToSendEmpty()) {
       inputColumn.append(sendEmptyMain);
     }

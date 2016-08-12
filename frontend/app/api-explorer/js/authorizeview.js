@@ -106,8 +106,8 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           "email",
           "Email",
           "Email",
-          function () {return oauth.email()},
-          function (v) {return oauth.set_email(v)}
+          function () { return oauth.email(); },
+          function (v) { return oauth.set_email(v); }
         )
       );
       self.appendLeftRow(
@@ -117,9 +117,9 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           "password",
           "Password",
           "Password",
-          function () {return oauth.password()},
-          function (v) {return oauth.set_password(v)},
-          function () {oauth.tryToGetPesonalToken()}
+          function () { return oauth.password(); },
+          function (v) { return oauth.set_password(v); },
+          function () { oauth.tryToGetPesonalToken(); }
         )
       );
       self.appendCenteredRow(container, $("<p/>").append(
@@ -139,8 +139,8 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           "oauth_consumer_key",
           "Client credentials identifier",
           "oauth_consumer_key",
-          function () {return oauth.consumer_key()},
-          function (v) {return oauth.set_consumer_key(v)}
+          function () { return oauth.consumer_key(); },
+          function (v) { return oauth.set_consumer_key(v); }
         )
       );
       self.appendLeftRow(
@@ -150,8 +150,8 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           "oauth_signature",
           "Client credentials secret",
           "oauth_signature",
-          function () {return oauth.client_shared_secret()},
-          function (v) {return oauth.set_client_shared_secret(v)}
+          function () { return oauth.client_shared_secret(); },
+          function (v) { return oauth.set_client_shared_secret(v); }
         )
       );
       self.appendLeftRow(container, self.priviligesSelect());
@@ -169,7 +169,7 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
             "oauth_token",
             "Temporary credentials identifier",
             "oauth_token",
-            function () {return oauth.token()}
+            function () { return oauth.token(); }
           )
         );
         self.appendLeftRow(
@@ -179,7 +179,7 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
             "oauth_token_secret",
             "Temporary credentials secret",
             "oauth_token_secret",
-            function () {return oauth.token_secret()}
+            function () { return oauth.token_secret(); }
           )
         );
 
@@ -197,7 +197,7 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
               "oauth_verifier",
               "Verifier",
               "oauth_verifier",
-              function () {return oauth.verifier()}
+              function () { return oauth.verifier(); }
             )
           );
           self.appendCenteredRow(container, $("<p/>").append(
@@ -222,8 +222,8 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           "credentials_consumer_key",
           "Client credentials identifier",
           "oauth_consumer_key",
-          function () {return oauth.consumer_key()},
-          function (v) {return oauth.set_consumer_key(v)}
+          function () { return oauth.consumer_key(); },
+          function (v) { return oauth.set_consumer_key(v); }
         )
       );
       self.appendLeftRow(
@@ -233,8 +233,8 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           "credentials_signature",
           "Client credentials secret",
           "oauth_signature",
-          function () {return oauth.client_shared_secret()},
-          function (v) {return oauth.set_client_shared_secret(v)}
+          function () { return oauth.client_shared_secret(); },
+          function (v) { return oauth.set_client_shared_secret(v); }
         )
       );
       self.appendLeftRow(
@@ -244,8 +244,8 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           "credentials_token",
           "Token credentials identifier",
           "oauth_token",
-          function () {return oauth.final_token()},
-          function (v) {return oauth.set_final_token(v)}
+          function () { return oauth.final_token(); },
+          function (v) { return oauth.set_final_token(v); }
         )
       );
       self.appendLeftRow(
@@ -255,9 +255,9 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           "credentials_token_secret",
           "Token credentials secret",
           "oauth_token_secret",
-          function () {return oauth.final_token_secret()},
-          function (v) {return oauth.set_final_token_secret(v)},
-          function () {oauth.trigger("change");}
+          function () { return oauth.final_token_secret(); },
+          function (v) { return oauth.set_final_token_secret(v); },
+          function () { oauth.trigger("change"); }
         )
       );
       self.appendCenteredRow(container, $("<p/>").append(

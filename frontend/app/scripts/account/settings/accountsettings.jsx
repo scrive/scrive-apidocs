@@ -129,7 +129,7 @@ module.exports = Backbone.Model.extend({
         newemail: "",
         newemailagain: "",
         phone: this.user().phone(),
-        lang:  this.user().lang() ||  "en",
+        lang: this.user().lang() ||  "en",
         companyname: this.company().companyname(),
         companynumber: this.company().companynumber(),
         companyposition: this.user().companyposition(),
@@ -179,13 +179,13 @@ module.exports = Backbone.Model.extend({
       email: this.email(),
       phone: this.phone(),
       lang: this.lang(),
-      companyname:  this.companyname(),
-      companynumber:  this.companynumber(),
+      companyname: this.companyname(),
+      companynumber: this.companynumber(),
       companyposition: this.companyposition(),
-      companyaddress:  this.companyaddress(),
-      companyzip:      this.companyzip(),
-      companycity:     this.companycity(),
-      companycountry:  this.companycountry()
+      companyaddress: this.companyaddress(),
+      companyzip: this.companyzip(),
+      companycity: this.companycity(),
+      companycountry: this.companycountry()
     }).send();
   },
   valid: function () {
@@ -216,8 +216,8 @@ module.exports = Backbone.Model.extend({
          // This is why we are loading localization object in new language before reload.
          $.ajax("/localization/" + window.versioncode + "." + self.lang() + ".js", {
            cache: false,
-           success: function (localization_script) {
-             eval(localization_script);
+           success: function (localizationScript) {
+             eval(localizationScript);
              new FlashMessage({
                content: localization.account.accountDetails.detailSaved,
                type: "success",

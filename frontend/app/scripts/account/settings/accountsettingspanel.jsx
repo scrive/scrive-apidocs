@@ -8,7 +8,7 @@ var Button = require("../../common/button");
 module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     propTypes: {
-      companyAdmin: React.PropTypes.bool,
+      companyAdmin: React.PropTypes.bool
     },
     getInitialState: function () {
       return {

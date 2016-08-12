@@ -27,7 +27,7 @@ module.exports = React.createClass({
     this._confirmationModal = null;
   },
   getBackboneModels: function () {
-    return [this.props.document]
+    return [this.props.document];
   },
   showCantSignModal: function () {
     var modalContent = $("<div/>");
@@ -139,7 +139,7 @@ module.exports = React.createClass({
 
     var submit = new Submit({
       method: "POST",
-      url:  "/api/frontend/documents/" + doc.documentid() + "/setfile",
+      url: "/api/frontend/documents/" + doc.documentid() + "/setfile",
       ajax: true,
       onSend: function () {},
       ajaxerror: function (d, a) {

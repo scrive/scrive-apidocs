@@ -64,9 +64,9 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
         el: $(self.getDOMNode()),
         verticalOffset: -1,
         xAxisOffset: FieldPlacementGlobal.textPlacementXOffset,
-        yAxisOffset:  FieldPlacementGlobal.textPlacementYOffset,
+        yAxisOffset: FieldPlacementGlobal.textPlacementYOffset,
         dropXOffset: FieldPlacementGlobal.textPlacementXOffset,
-        dropYOffset:  FieldPlacementGlobal.textPlacementYOffset,
+        dropYOffset: FieldPlacementGlobal.textPlacementYOffset,
         onStart: self.closeTypeSetter,
         onDropOnPage: function (page, x, y, pageW, pageH) {
           var oldPage = document.file().page(placement.page());

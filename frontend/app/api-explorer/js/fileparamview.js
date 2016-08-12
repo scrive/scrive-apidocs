@@ -34,7 +34,7 @@ window.FileParamView  = Backbone.View.extend({
     }
 
     var multifile =  call.getParamValue(param);
-    slavesWithFiles = _.filter(multifile.slaves, function (s) { return s != undefined && s != multifile.current;});
+    var slavesWithFiles = _.filter(multifile.slaves, function (s) { return s != undefined && s != multifile.current; });
     if (slavesWithFiles.length < param.limit()) {
 
       var description = $("<p>");
@@ -70,7 +70,7 @@ window.FileParamView  = Backbone.View.extend({
             );
           tbody.append(row);
         }
-      };
+      }
     }
     return this;
   }

@@ -19,7 +19,7 @@ module.exports = React.createClass({
     return {
       topBarStyle: {},
       frameStyle: {}
-    }
+    };
   },
   componentWillMount: function () {
     this.fixed = undefined;
@@ -121,7 +121,7 @@ module.exports = React.createClass({
     }
   },
   onWindowResizeScroll: function () {
-    this.affix()
+    this.affix();
   },
   render: function () {
     var self = this;

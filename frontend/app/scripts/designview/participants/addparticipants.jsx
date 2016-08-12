@@ -11,8 +11,8 @@ module.exports = React.createClass({
   },
   addSingleParticipant: function () {
     var sig = new Signatory({
-      document:this.props.document,
-      signs:true
+      document: this.props.document,
+      signs: true
     });
     this.props.document.addExistingSignatory(sig);
     this.props.setParticipantDetail(sig);
@@ -36,7 +36,7 @@ module.exports = React.createClass({
                ref="close-button"
                type="action"
                text={localization.designview.addParties.close}
-               onClick={function () {self.onDone();}}
+               onClick={function () { self.onDone(); }}
             />
           </div>
         }
@@ -47,7 +47,7 @@ module.exports = React.createClass({
                 <Button
                   ref="add-multi-button"
                   text={localization.designview.addMultisend}
-                  onClick={function () {self.addMultisendParticipant();}}
+                  onClick={function () { self.addMultisendParticipant(); }}
                 />
               </div>
             }
@@ -57,7 +57,7 @@ module.exports = React.createClass({
                 ref="add-single-button"
                 type="action"
                 text={localization.designview.addParty}
-                onClick={function () {self.addSingleParticipant();}}
+                onClick={function () { self.addSingleParticipant(); }}
               />
             </div>
 

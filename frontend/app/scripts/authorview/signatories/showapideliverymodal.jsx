@@ -59,4 +59,4 @@ var Confirmation = require("../../../js/confirmations.js").Confirmation;
 
     // Text selection needs to happend after input is appended somewhere in body
     contentComp.selectText();
-  }
+  };

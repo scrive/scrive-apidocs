@@ -14,13 +14,13 @@ window.CallSelector = Backbone.View.extend({
     } else {
       availableCalls = APICalls.apiV2Calls();
     }
-    availableCalls = _.sortBy(availableCalls, function (c) {return c.name();});
+    availableCalls = _.sortBy(availableCalls, function (c) { return c.name(); });
 
-    var mainCalls = _.filter(availableCalls, function (c) { return c.hasCategory("main");});
-    var fetchCalls = _.filter(availableCalls, function (c) { return c.hasCategory("fetch");});
-    var draftsCalls = _.filter(availableCalls, function (c) { return c.hasCategory("draft");});
-    var signingCalls = _.filter(availableCalls, function (c) { return c.hasCategory("signing");});
-    var otherCalls = _.filter(availableCalls, function (c) { return c.hasCategory("other");});
+    var mainCalls = _.filter(availableCalls, function (c) { return c.hasCategory("main"); });
+    var fetchCalls = _.filter(availableCalls, function (c) { return c.hasCategory("fetch"); });
+    var draftsCalls = _.filter(availableCalls, function (c) { return c.hasCategory("draft"); });
+    var signingCalls = _.filter(availableCalls, function (c) { return c.hasCategory("signing"); });
+    var otherCalls = _.filter(availableCalls, function (c) { return c.hasCategory("other"); });
 
     select.append("<option disabled>-- Most common calls --</option>");
     _.each(mainCalls, function (c) {
@@ -63,7 +63,7 @@ window.CallSelector = Backbone.View.extend({
     });
 
     select.change(function () {
-      var call = _.find(availableCalls, function (c) {return c.cid == select.val()})
+      var call = _.find(availableCalls, function (c) { return c.cid == select.val(); });
       model.setSelectedApiCall(call);
     });
     return select;

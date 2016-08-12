@@ -32,7 +32,7 @@ module.exports = React.createClass({
     var sig = this.props.model;
     return (
       <div className="design-view-action-participant-icon-auth-to-view"
-           onClick={function (e) {self.onClick(); e.stopPropagation();}}
+           onClick={function (e) { self.onClick(); e.stopPropagation(); }}
       >
         <div className="design-view-action-participant-icon-auth-to-view-inner">
           <div className={"design-view-action-participant-icon-auth-to-view-icon " + self.icon()}>

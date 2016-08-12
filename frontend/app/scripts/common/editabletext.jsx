@@ -80,7 +80,7 @@ var InfoTextInput = require("./infotextinput");
 
     handleClick: function () {
       if (this.state.edit || this.props.disabled) {
-        return ;
+        return;
       }
 
       this.edit();

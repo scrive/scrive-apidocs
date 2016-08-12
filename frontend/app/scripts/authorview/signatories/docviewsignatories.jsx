@@ -16,7 +16,7 @@ var _ = require("underscore");
     },
 
     setCurrentIndex: function (i) {
-      this.setState({currentIndex:i});
+      this.setState({currentIndex: i});
     },
 
     currentIndex: function () {
@@ -25,7 +25,7 @@ var _ = require("underscore");
 
     signatories: function () {
       var signatories = this.props.document.signatories();
-      var current = _.find  (signatories, function (s) { return s.current(); });
+      var current = _.find(signatories, function (s) { return s.current(); });
       var others  = _.filter(signatories, function (s) { return !s.current(); });
       var sigs = _.compact([current].concat(others));
       return sigs;
@@ -62,19 +62,19 @@ var _ = require("underscore");
       return (
         <div className="signatories section" >
           <div className="column first">
-            <h2 style={{width: "260px", float:"none", paddingLeft:"0px"}}>
+            <h2 style={{width: "260px", float: "none", paddingLeft: "0px"}}>
               {localization.authorview.signatoriesTitle}
             </h2>
           </div>
           <div className="column middle">
             {/* if */ self.hasList() &&
-              <div className="list spacing grey-box" style={{padding:"0px"}}>
+              <div className="list spacing grey-box" style={{padding: "0px"}}>
                 {self.signatories().map(function (s, i) {
                   return (
                     <DocumentViewSignatoryForList
                       key={String(s.signatoryid())}
                       signatory={s}
-                      onSelect={function () {self.setCurrentIndex(i);}}
+                      onSelect={function () { self.setCurrentIndex(i); }}
                       first= {i == 0}
                       last={i == self.signatories().length - 1}
                       active={i == self.currentIndex()}

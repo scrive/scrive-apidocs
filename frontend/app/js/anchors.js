@@ -1,6 +1,5 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
-var PlacementAnchor = require("./anchors.js").PlacementAnchor;
 
 /* Anchors on placements */
 

@@ -38,7 +38,7 @@ window.CallResponseView = Backbone.View.extend({
     var res = "";
     _.each(_.keys(details), function (k) {
       res += "<span class='header'>" + k +  ": </span>" + "<span class='detail'>" + details[k] + "</span>" + "\n";
-    })
+    });
     return res;
   },
   render: function () {
@@ -47,7 +47,7 @@ window.CallResponseView = Backbone.View.extend({
     var call = model.selectedApiCall();
     var callPrototype = call.callPrototype();
     var panel = $(this.el);
-    var panelBody = $("<div class='panel-body'></div>")
+    var panelBody = $("<div class='panel-body'></div>");
     panel.empty().append(panelBody);
 
     if (call.needsAuthorization() && call.responseStatusCode() == 403 && !model.oauth().isSetUp()) {
@@ -62,12 +62,12 @@ window.CallResponseView = Backbone.View.extend({
       panelBody.append(buttonRow.append(buttonCol.append(button)));
     }
 
-    panelBody.append("<p><strong>Request details</strong></p>")
+    panelBody.append("<p><strong>Request details</strong></p>");
     panelBody.append($("<div class='request-details well well-sm'></div>")
       .append($("<code class='language-request'/>").html(this.niceDetails(call.details())))
     );
 
-    panelBody.append("<p><strong>Response body</strong></p>")
+    panelBody.append("<p><strong>Response body</strong></p>");
     if (call.resultContent()) {
       var copyButton = $("<div class='btn btn-copy'>Copy</div>");
       copyButton.attr("data-clipboard-text", self.niceContent(call.resultContent()));
@@ -91,7 +91,7 @@ window.CallResponseView = Backbone.View.extend({
         copyButton.off("hidden.bs.tooltip");
         copyButton.tooltip("destroy");
         copyButton.tooltip({title: "Copy to clipoard", trigger: "hover", placement: "top", animation: false});
-      })
+      });
 
       if (callPrototype.tryToUseDocumentIDWithCopy()) {
         try {
@@ -102,7 +102,7 @@ window.CallResponseView = Backbone.View.extend({
           }
         } catch (e) { }
       }
-    })
+    });
 
     return this;
   }

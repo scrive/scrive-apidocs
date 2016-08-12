@@ -64,7 +64,7 @@ module.exports = {
       // If RP did not try to start the client automatically [...] RFA1 should be used.
     } else if (status == "outstanding_transaction" && thisDevice) {
       return localization.docsignview.eleg.bankid.rfa13;
-    } else if (status == "outstanding_transaction" && !thisDevice){
+    } else if (status == "outstanding_transaction" && !thisDevice) {
       return localization.docsignview.eleg.bankid.rfa1;
     } else if (status == "started") {
       return localization.docsignview.eleg.bankid.rfa14;
@@ -94,4 +94,4 @@ module.exports = {
       return pp;
     }
   }
-}
+};

@@ -45,7 +45,7 @@ var _ = require("underscore");
                 {localization.selectFiles}
               </div>
               <div className="attachmentsButtonsTable">
-                <div style={{width:"45%", display: "inline-block"}}>
+                <div style={{width: "45%", display: "inline-block"}}>
                   <UploadButton
                     size="big"
                     text={localization.authorattachments.selectFile}
@@ -53,18 +53,18 @@ var _ = require("underscore");
                     style={{float: "right"}}
                     onUploadComplete={function (input, title, multifile) {
                       mixpanel.track("Upload attachment", {"File Title as supplied by browser": title});
-                      var name_parts = title.split("\\").reverse()[0].split(".");
-                      name_parts.pop(); // drop the extension
+                      var nameParts = title.split("\\").reverse()[0].split(".");
+                      nameParts.pop(); // drop the extension
                       var newAttachment = new DesignViewAttachment({
-                        name: name_parts.join("."),
+                        name: nameParts.join("."),
                         fileUpload: $(input)
                       });
                       self.props.model.addAttachment(newAttachment);
                     }}
                   />
                 </div>
-                <div style={{width:"10%", display: "inline-block"}}/>
-                <div  style={{width:"45%", display: "inline-block"}}>
+                <div style={{width: "10%", display: "inline-block"}}/>
+                <div  style={{width: "45%", display: "inline-block"}}>
                   <Button
                     size="big"
                     style={{float: "left"}}
@@ -80,12 +80,12 @@ var _ = require("underscore");
               (<table className="attachmentsList">
                 <thead>
                   <tr>
-                    <td style={{width:"210px"}}>{localization.authorattachments.nameOfAttachment}</td>
-                    <td style={{width:"25px"}}></td>
-                    <td style={{width:"142px"}}>{localization.authorattachments.typeOfAttachment}</td>
-                    <td style={{width:"142px"}}>{localization.authorattachments.mergedQuestion}</td>
-                    <td style={{width:"28px"}}></td>
-                    <td style={{width:"12px"}}></td>
+                    <td style={{width: "210px"}}>{localization.authorattachments.nameOfAttachment}</td>
+                    <td style={{width: "25px"}}></td>
+                    <td style={{width: "142px"}}>{localization.authorattachments.typeOfAttachment}</td>
+                    <td style={{width: "142px"}}>{localization.authorattachments.mergedQuestion}</td>
+                    <td style={{width: "28px"}}></td>
+                    <td style={{width: "12px"}}></td>
                   </tr>
                 </thead>
                 <tbody>
@@ -96,7 +96,7 @@ var _ = require("underscore");
                           <InfoTextInput
                           value={a.name()}
                           className="name-input"
-                          style={{width:"210px"}}
+                          style={{width: "210px"}}
                           onChange={function (v) {
                             a.setName(v);
                           }}
@@ -115,12 +115,12 @@ var _ = require("underscore");
                               {
                                 name: localization.authorattachments.required,
                                 selected: a.isRequired(),
-                                onSelect: function () { a.makeRequired();}
+                                onSelect: function () { a.makeRequired(); }
                               },
                               {
                                 name: localization.authorattachments.optional,
                                 selected: !a.isRequired(),
-                                onSelect: function () { a.makeOptional();}
+                                onSelect: function () { a.makeOptional(); }
                               }
                             ]}
                           />
@@ -132,12 +132,12 @@ var _ = require("underscore");
                               {
                                 name: localization.authorattachments.merged,
                                 selected: a.isAddToSealedFile(),
-                                onSelect: function () { a.setAddToSealedFile(true);}
+                                onSelect: function () { a.setAddToSealedFile(true); }
                               },
                               {
                                 name: localization.authorattachments.notMerged,
                                 selected: !a.isAddToSealedFile(),
-                                onSelect: function () { a.setAddToSealedFile(false);}
+                                onSelect: function () { a.setAddToSealedFile(false); }
                               }
                             ]}
                           />

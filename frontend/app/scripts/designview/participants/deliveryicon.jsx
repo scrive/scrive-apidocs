@@ -43,7 +43,7 @@ module.exports = React.createClass({
     return (
       <div
         className="design-view-action-participant-icon-device"
-        onClick={function (e) {self.onClick(); e.stopPropagation();}}
+        onClick={function (e) { self.onClick(); e.stopPropagation(); }}
       >
         <div className="design-view-action-participant-icon-device-inner">
           <div className={"design-view-action-participant-icon-device-icon " + self.icon()}>

@@ -6,15 +6,15 @@ window.OAuth = Backbone.Model.extend({
     mode: "email", // Available modes "email", "oauth", credentials
     consumer_key: LocalStorage.get("oauth", "consumer_key") || "",
     client_shared_secret: LocalStorage.get("oauth", "client_shared_secret")  || "",
-    callback:  window.location.href,
+    callback: window.location.href,
     token: LocalStorage.get("oauth", "token")  || "",
     token_secret: LocalStorage.get("oauth", "token_secret") || "",
     verifier: LocalStorage.get("oauth", "verifier") || "",
-    final_token:   LocalStorage.get("oauth", "final_token") || "",
+    final_token: LocalStorage.get("oauth", "final_token") || "",
     final_token_secret: LocalStorage.get("oauth", "final_token_secret") || "",
-    priviliges:  LocalStorage.get("oauth", "priviliges") || "DOC_CREATE",
-    email:  LocalStorage.get("oauth", "email") ||  "",
-    password: "",
+    priviliges: LocalStorage.get("oauth", "priviliges") || "DOC_CREATE",
+    email: LocalStorage.get("oauth", "email") ||  "",
+    password: ""
   },
   save: function () {
     LocalStorage.set("oauth", "email", this.email());
@@ -151,7 +151,7 @@ window.OAuth = Backbone.Model.extend({
     var model = this;
     new OAuthTemporaryCredentialRequest({
       oauth_consumer_key: this.consumer_key(),
-      oauth_callback:  this.callback(),
+      oauth_callback: this.callback(),
       oauth_client_shared_secret: this.client_shared_secret(),
       priviliges: this.priviliges()
     }).send(function (res) {
@@ -181,14 +181,14 @@ window.OAuth = Backbone.Model.extend({
     return "oauth_signature_method=\"PLAINTEXT\"," +
            "oauth_consumer_key=\"" + this.consumer_key() + "\"," +
            "oauth_token=\""        + this.final_token()     + "\"," +
-           "oauth_signature=\""    + this.client_shared_secret() + "&" + this.final_token_secret()    + "\""
+           "oauth_signature=\""    + this.client_shared_secret() + "&" + this.final_token_secret()    + "\"";
 
   },
   tryToGetPesonalToken: function () {
     var model = this;
     $.post(Scrive.serverUrl() + "/api/v1/getpersonaltoken", {email: model.email(), password: model.password()},
               function (rs) {
-                var resp = JSON.parse(rs)
+                var resp = JSON.parse(rs);
                 model.set_consumer_key(resp.apitoken);
                 model.set_client_shared_secret(resp.apisecret);
                 model.set_final_token(resp.accesstoken);
@@ -213,8 +213,7 @@ $.extend({
     var hash;
     var hashes = window.location.href.slice(window.location.href.indexOf("?") + 1, window.location.href.indexOf("#"));
     hashes = hashes.split("&");
-    for (var i = 0; i < hashes.length; i++)
-    {
+    for (var i = 0; i < hashes.length; i++) {
       hash = hashes[i].split("=");
       vars.push(hash[0]);
       vars[hash[0]] = hash[1];

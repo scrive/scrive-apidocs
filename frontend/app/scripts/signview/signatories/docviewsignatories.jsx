@@ -12,7 +12,7 @@ var _ = require("underscore");
 
     signatories: function () {
       var signatories = this.props.model.signatories();
-      var current = _.find  (signatories, function (s) { return s.current(); });
+      var current = _.find(signatories, function (s) { return s.current(); });
       var others  = _.filter(signatories, function (s) { return !s.current(); });
       var sigs = _.compact([current].concat(others));
       return _.filter(sigs, function (s) { return s.signs(); });

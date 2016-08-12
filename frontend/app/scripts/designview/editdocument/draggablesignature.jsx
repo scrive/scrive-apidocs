@@ -91,14 +91,14 @@ var $ = require("jquery");
       self.disableDragAndClickIfNoneCanSign(el);
       self.initializeOnClickCreatePlacement({
         el: el,
-        isEnabledFunc: function () { return self.document().signatoriesWhoSign().length > 0;},
+        isEnabledFunc: function () { return self.document().signatoriesWhoSign().length > 0; },
         expectedSizeFunc: self.newSignatureExpectedSize,
         newPlacementFromPosition: self.newSignaturePlacementFromPosition,
         openTypeSetterFor: self.props.openTypeSetterFor
       });
       self.initializeDraggable({
         el: el,
-        cursorAt: {top:7, left:7},
+        cursorAt: {top: 7, left: 7},
         verticalOffset: 0,
         xAxisOffset: 0,
         yAxisOffset: 0,

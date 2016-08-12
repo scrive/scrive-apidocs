@@ -142,7 +142,7 @@ module.exports = React.createClass({
                     document={self.props.document}
                     currentParticipantDetail={self.state.participantDetail}
                     setParticipantDetail={self.setParticipantDetail}
-                    onExpand={function (oldSig) {self.setState({needsToScroll: true, closingSig: oldSig})}}
+                    onExpand={function (oldSig) { self.setState({needsToScroll: true, closingSig: oldSig}); }}
                   />
                 );
               })
@@ -154,7 +154,7 @@ module.exports = React.createClass({
               document={self.props.document}
               currentParticipantDetail={self.state.participantDetail}
               setParticipantDetail={self.setParticipantDetail}
-              onAddSingle={function () {self.setState({needsToScroll: true});}}
+              onAddSingle={function () { self.setState({needsToScroll: true}); }}
               />
           </div>
         </div>

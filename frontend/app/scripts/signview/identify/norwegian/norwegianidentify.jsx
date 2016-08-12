@@ -57,7 +57,7 @@ var classNames = require("classnames");
             <div
               ref="identify-box-desktop-button"
               className={buttonDesktopClass}
-              onClick={function () { model.setDesktopMode()}}
+              onClick={function () { model.setDesktopMode(); }}
             >
               {localization.identifyBankIdNo}
             </div>
@@ -65,7 +65,7 @@ var classNames = require("classnames");
               ref="identify-box-mobile-button"
               className={buttonMobileClass}
               text={localization.identifyBankIdNoMobile}
-              onClick={function () { model.setMobileMode()}}
+              onClick={function () { model.setMobileMode(); }}
             >
               {localization.identifyBankIdNoMobile}
             </div>
@@ -80,7 +80,7 @@ var classNames = require("classnames");
                 <InfoTextInput
                   ref="identify-box-phone-input"
                   value={model.mobile()}
-                  onChange={function (v) {model.setMobile(v)}}
+                  onChange={function (v) { model.setMobile(v); }}
                   onFocus={this.toggleEditing}
                   onBlur={this.toggleEditing}
                   className={textinputClass}

@@ -9,7 +9,7 @@ module.exports = React.createClass({
     var self = this;
     var field =  this.props.model;
     var customFields = this.props.model.signatory().customFields();
-    return _.any(customFields, function (c) { return self.state.name == c.name() && c != field;});
+    return _.any(customFields, function (c) { return self.state.name == c.name() && c != field; });
   },
   getInitialState: function () {
     return {name: ""};
@@ -42,7 +42,7 @@ module.exports = React.createClass({
             });
             field.setName(self.state.name);
           }}
-          onTab={function (e) {if (self.props.last) {e.preventDefault();}}}
+          onTab={function (e) { if (self.props.last) { e.preventDefault(); } }}
           onRemove={function () {
             mixpanel.track("Click remove field", {
               Type: field.type(),

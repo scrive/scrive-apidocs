@@ -4,7 +4,6 @@ var React = require("react");
 var Button = require("../../common/button");
 var InfoTextInput = require("../../common/infotextinput");
 var TaskMixin = require("../navigation/task_mixin");
-var Task = require("../navigation/task");
 var ViewSize = require("../viewsize");
 var Field = require("../../../js/fields.js").Field;
 var Task = require("../navigation/task");
@@ -45,7 +44,7 @@ var classNames = require("classnames");
         isComplete: function () {
           return !model.document().currentSignatoryCanSign();
         },
-        el:  $(self.refs.signButton.getDOMNode()),
+        el: $(self.refs.signButton.getDOMNode()),
         onActivate: function () {
           mixpanel.track("Begin signature task");
         },
@@ -126,7 +125,7 @@ var classNames = require("classnames");
             type="action"
             className={buttonClass}
             text={localization.next}
-            onClick={function (e) { if (canSign) { onNext(e) } }}
+            onClick={function (e) { if (canSign) { onNext(e); } }}
           />
           {/* if */ canHaveRejectButton &&
             <Button

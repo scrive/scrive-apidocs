@@ -60,8 +60,8 @@ var _ = require("underscore");
         var page = index + 1;
         var pageWidth = pageDiv.width();
         var pageHeight = pageDiv.height();
-        var x = x - pageDiv.offset().left - (expectedPlacementWidth / 2);
-        var y = y - pageDiv.offset().top;
+        x = x - pageDiv.offset().left - (expectedPlacementWidth / 2);
+        y = y - pageDiv.offset().top;
         var step = 20;
         while (
              self.documentHasConflictingPlacement(page, x / pageWidth, y / pageHeight)

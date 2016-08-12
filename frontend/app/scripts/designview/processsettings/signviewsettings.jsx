@@ -85,7 +85,7 @@ var SignviewSettingsView = React.createClass({
               <Checkbox
                 checked={model.showHeader()}
                 label={localization.designview.signviewsettings.showheader}
-                onChange={function (c) {model.setShowHeader(c);}}
+                onChange={function (c) { model.setShowHeader(c); }}
               />
               <Checkbox
                 checked={model.showRejectOption()}
@@ -114,12 +114,12 @@ var SignviewSettingsView = React.createClass({
               <Checkbox
                 checked={model.showPDFDownload()}
                 label={localization.designview.signviewsettings.showpdfdownload}
-                onChange={function (c) {model.setShowPdfDownload(c);}}
+                onChange={function (c) { model.setShowPdfDownload(c); }}
               />
               <Checkbox
                 checked={model.showFooter()}
                 label={localization.designview.signviewsettings.showfooter}
-                onChange={function (c) {model.setShowFooter(c);}}
+                onChange={function (c) { model.setShowFooter(c); }}
               />
             </div>
             <div className="container">

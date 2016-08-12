@@ -139,8 +139,8 @@ module.exports = function (args) {
     width: args.width,
     height: args.height,
     acceptText: model.acceptText(),
-    onClose: function () {model.onClose();},
-    onAccept: function () {model.onAccept();},
+    onClose: function () { model.onClose(); },
+    onAccept: function () { model.onAccept(); },
     onStartDrawing: function () {
       document.ontouchmove = function (e) {
         e.preventDefault();

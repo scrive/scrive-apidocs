@@ -19,7 +19,7 @@ var PlacementsContainerView = React.createClass({
     return {
       pageWidth: 0,
       pageHeight: 0
-    }
+    };
   },
   render: function () {
     var self = this;
@@ -37,7 +37,7 @@ var PlacementsContainerView = React.createClass({
               model: item,
               pageWidth: self.state.pageWidth,
               pageHeight: self.state.pageHeight
-            }
+            };
 
             if (item.field().isSignature()) {
               return <SignaturePlacementView {...viewArgs} />;

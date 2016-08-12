@@ -8,7 +8,7 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var order = sig.signorder();
     var options = [];
-    for (var i = 1;i <= sig.document().maxPossibleSignOrder();i++) {
+    for (var i = 1; i <= sig.document().maxPossibleSignOrder(); i++) {
       options.push({
         name: LanguageService.localizedOrdinal(i),
         value: i
@@ -36,13 +36,13 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var deliveryTypes = sig.isLastViewer() ? ["none"] : ["email", "pad", "mobile", "email_mobile", "api"];
     return _.map(deliveryTypes, function (t) {
-      return {name: self.deliveryText(t), value:t};
+      return {name: self.deliveryText(t), value: t};
     });
   },
   roleOptions: function () {
     return [
-      {name: localization.designview.addParties.roleSignatory, value: "signatory", selected:  this.props.model.signs()},
-      {name: localization.designview.addParties.roleViewer, value: "viewer", selected:  !this.props.model.signs()}
+      {name: localization.designview.addParties.roleSignatory, value: "signatory", selected: this.props.model.signs()},
+      {name: localization.designview.addParties.roleViewer, value: "viewer", selected: !this.props.model.signs()}
     ];
   },
   authenticationToViewText: function (t) {
@@ -59,7 +59,7 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var authTypes =  sig.signs() ? ["standard", "se_bankid", "no_bankid"] : ["standard"];
     return _.map(authTypes, function (t) {
-      return {name: self.authenticationToViewText(t), value:t};
+      return {name: self.authenticationToViewText(t), value: t};
     });
   },
   authenticationToSignText: function (t) {
@@ -76,7 +76,7 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var authTypes = sig.signs() ? ["standard", "se_bankid", "sms_pin"] : ["standard"];
     return _.map(authTypes, function (t) {
-      return {name: self.authenticationToSignText(t), value:t};
+      return {name: self.authenticationToSignText(t), value: t};
     });
   },
   confirmationDeliveryText: function (t) {
@@ -97,7 +97,7 @@ module.exports = React.createClass({
       ["email", "mobile", "email_mobile"] :
       ["email", "mobile", "email_mobile", "none"];
     return _.map(deliveryTypes, function (t) {
-      return {name: self.confirmationDeliveryText(t), value:t};
+      return {name: self.confirmationDeliveryText(t), value: t};
     });
   },
   render: function () {

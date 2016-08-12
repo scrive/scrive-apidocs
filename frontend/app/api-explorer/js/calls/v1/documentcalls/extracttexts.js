@@ -8,7 +8,7 @@ new APICallV1({
   sampleUrl: "/api/v1/extracttexts/$docid$/$fileid$",
   method: "GET",
   getCallUrl: function () {
-          return "/api/v1/extracttexts/" + this.get("documentid")  + "/" + this.get("fileid") ;
+          return "/api/v1/extracttexts/" + this.get("documentid")  + "/" + this.get("fileid");
         },
   needsAuthorization: true,
   equivalentCalls: {

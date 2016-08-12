@@ -74,7 +74,7 @@ module.exports = React.createClass({
     const scrollLeft = $(window).scrollLeft();
     const scrollRight = scrollLeft + viewportWidth;
 
-    const height = this.height()
+    const height = this.height();
 
     if (scrollTop < parentTop) {
       return {
@@ -82,21 +82,21 @@ module.exports = React.createClass({
         right: Math.max(0, parentRight - scrollRight),
         bottom: null,
         top: 49 // half size of zoom controls minus borders and shadow.
-      }
+      };
     } else if (scrollTop + height > parentBottom) {
       return {
         position: "absolute",
         right: Math.max(0, parentRight - scrollRight),
         bottom: 0,
         top: null
-      }
+      };
     } else {
       return {
         position: "fixed",
         right: parentWidth < viewportWidth ? (viewportWidth - parentWidth) / 2 : 0,
         bottom: viewportHeight - height,
         top: null
-      }
+      };
     }
   },
 
@@ -139,7 +139,7 @@ module.exports = React.createClass({
           onTouchStart={() => { return; }}
           onClick={(e) => {
             this.cancelBlink();
-            this.props.onZoomOut(e)
+            this.props.onZoomOut(e);
           }}
           disabled={!canZoomOut}
         />

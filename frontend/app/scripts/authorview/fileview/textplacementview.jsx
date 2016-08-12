@@ -16,7 +16,7 @@ module.exports = React.createClass({
     var fieldStyle = {
       fontSize: Math.floor(this.props.model.fsrel() * pageWidth),
       left: Math.floor(this.props.model.xrel() * pageWidth + 1.5) - FieldPlacementGlobal.textPlacementXOffset,
-      top: Math.floor(this.props.model.yrel() * pageHeight + 1.5) - FieldPlacementGlobal.textPlacementYOffset,
+      top: Math.floor(this.props.model.yrel() * pageHeight + 1.5) - FieldPlacementGlobal.textPlacementYOffset
     };
 
     if (!this.props.model.field().value()) {

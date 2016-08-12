@@ -65,7 +65,7 @@ var Task = require("../navigation/task");
         isComplete: function () {
           return !self.shouldHaveOverlay();
         },
-        el:  $(self.getDOMNode())
+        el: $(self.getDOMNode())
       })];
     },
 
@@ -232,10 +232,10 @@ var Task = require("../navigation/task");
       var document = self.props.model.document();
       var checkSigning = function () {
         document.checkingSigning(
-          function () { self.handleAfterSignRedirectOrReload()},
+          function () { self.handleAfterSignRedirectOrReload(); },
           function (s) {
             bankIDSigning.setStatus(s);
-            setTimeout(checkSigning, 1000)
+            setTimeout(checkSigning, 1000);
           },
           function (s) {
             bankIDSigning.setStatus(s);
@@ -257,8 +257,8 @@ var Task = require("../navigation/task");
       var document = self.props.model.document();
       var signatory = document.currentSignatory();
        document.cancelSigning(
-          function () { self.setStep("eid")},
-          function () { new ErrorModal();}
+          function () { self.setStep("eid"); },
+          function () { new ErrorModal(); }
         ).send();
     },
     handleSign: function (pin) {
@@ -461,7 +461,7 @@ var Task = require("../navigation/task");
               signatory={sig}
               thisDevice={this.state.eidThisDevice}
               onBack={this.handleCancelSwedishBankID}
-              onInitiated={function (bankIDSigning) {self.handleSignSwedishEID(bankIDSigning);}}
+              onInitiated={function (bankIDSigning) { self.handleSignSwedishEID(bankIDSigning); }}
             />
           }
           {/* if */ this.isOnStep("pin") &&

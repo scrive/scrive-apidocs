@@ -17,9 +17,9 @@ new APICallV1({
             description: "Description of API client that is supposed to be checked.",
             defaultValue: JSON.stringify({
               platform: "iOS",
-              platform_version:"5.0",
-              client:"Scrive iPad App",
-              client_version:"0.1"
+              platform_version: "5.0",
+              client: "Scrive iPad App",
+              client_version: "0.1"
             })
           })
         ]

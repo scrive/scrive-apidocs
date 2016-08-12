@@ -19,7 +19,7 @@ var classNames = require("classnames");
       this.setAuthenticationMethod(this.signatory().authenticationToView());
     },
 
-    document:function () {
+    document: function () {
       return this.signatory().document();
     },
 
@@ -167,21 +167,21 @@ var classNames = require("classnames");
         selected: model.isAuthenticationStandard(),
         value: model.standardAuthenticationValue()
       };
-      var se_bankid = {
+      var seBankid = {
         name: localization.docview.signatory.authenticationToViewSEBankID,
         selected: model.isAuthenticationSEBankID(),
         value: model.SEBankIDAuthenticationValue()
       };
-      var no_bankid = {
+      var noBankid = {
         name: localization.docview.signatory.authenticationToViewNOBankID,
         selected: model.isAuthenticationNOBankID(),
         value: model.NOBankIDAuthenticationValue()
       };
 
       if (model.canUseNOBankID()) {
-        return [standard, se_bankid, no_bankid];
+        return [standard, seBankid, noBankid];
       } else {
-        return [standard, se_bankid];
+        return [standard, seBankid];
       }
     },
 
@@ -296,7 +296,8 @@ var classNames = require("classnames");
 
         model.signatory().changeAuthenticationToView(authenticationMethod, personalNumber, mobileNumber)
           .sendAjax(function () {
-            args.onAction();}, function (err) {
+            args.onAction();
+            }, function (err) {
               LoadingDialog.close();
               new FlashMessage({
                 content: localization.docview.changeAuthenticationToView.errorFlashMessage,
@@ -307,4 +308,4 @@ var classNames = require("classnames");
         return true;
       }
     });
-  }
+  };

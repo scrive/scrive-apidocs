@@ -30,14 +30,14 @@ var ApiDemoModel = Backbone.Model.extend({
       } else {
         apiCalls = APICalls.apiV2Calls();
       }
-      var findEquivalent = _.find(apiCalls, function (c) {return c.name() == equivalent});
+      var findEquivalent = _.find(apiCalls, function (c) { return c.name() == equivalent; });
       if (findEquivalent != undefined) {
         this.setSelectedApiCall(findEquivalent);
       } else {
         if (v == "v1") {
           this.setSelectedApiCall(APICalls.apiV1Calls()[0]);
         } else {
-          var defaultV2Call = _.find(APICalls.apiV2Calls(), function (c) {return c.name() == "Get"});
+          var defaultV2Call = _.find(APICalls.apiV2Calls(), function (c) { return c.name() == "Get"; });
           this.setSelectedApiCall(defaultV2Call);
         }
       }
@@ -51,11 +51,11 @@ var ApiDemoModel = Backbone.Model.extend({
     var oauth = new OAuth();
     if ($.getUrlVar("oauth_verifier") != undefined) {
       oauth.set_verifier($.getUrlVar("oauth_verifier"));
-      window.location.href = window.location.href.substring(0, window.location.href.indexOf("?")) + "#oauth"
+      window.location.href = window.location.href.substring(0, window.location.href.indexOf("?")) + "#oauth";
       self.set("willBeReloaded");
       return;
     }
-    this.set({oauth:oauth, selectedApiCall: APICalls.apiV1Calls()[0].createCall({oauth: oauth})});
+    this.set({oauth: oauth, selectedApiCall: APICalls.apiV1Calls()[0].createCall({oauth: oauth})});
     this.listenTo(oauth, "change", function () {
       if (oauth.isSetUp() && self.authorizeMode()) {
         this.setMode("explore");
@@ -90,12 +90,12 @@ var ApiDemoModel = Backbone.Model.extend({
         if (window.location.hash == "#" + c.urlHash()) {
           self.setSelectedApiCall(c);
         }
-      })
+      });
       _.each(APICalls.apiV2Calls(), function (c) {
         if (window.location.hash == "#" + c.urlHash()) {
           self.setSelectedApiCall(c);
         }
-      })
+      });
     }
   },
   oauth: function () {
@@ -162,9 +162,9 @@ window.ApiDemo = function () {
     el: $("<div class='main'/>")
   });
   return {
-    model: function () {return model;},
-    view: function () {return view;}
+    model: function () { return model; },
+    view: function () { return view; }
   };
-}
+};
 
 })(window);

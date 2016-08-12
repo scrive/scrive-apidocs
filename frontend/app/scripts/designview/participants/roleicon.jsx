@@ -26,7 +26,7 @@ module.exports = React.createClass({
     return (
       <div
         className="design-view-action-participant-icon-role"
-        onClick={function (e) {self.onClick(); e.stopPropagation();}}
+        onClick={function (e) { self.onClick(); e.stopPropagation(); }}
       >
         <div className="design-view-action-participant-icon-role-inner">
           <div className={"design-view-action-participant-icon-role-icon " + self.icon()}>

@@ -17,9 +17,9 @@ module.exports = React.createClass({
   allPossibleFields: function () {
     var res = this.basicFields();
     var document = this.props.model.signatory().document();
-    function isNotOnList(field) {
+    function isNotOnList (field) {
       return _.every(res, function (o) {
-        return field.type() !== o.type && field.name() !== o.name ;
+        return field.type() !== o.type && field.name() !== o.name;
       });
     }
     _.each(document.signatories(), function (signatory) {
@@ -54,7 +54,7 @@ module.exports = React.createClass({
     var self = this;
     var sig = self.props.model.signatory();
     var allPossibleFields = self.allPossibleFields();
-    var options = [{name: localization.designview.whatField, selected: true, disabled:true}];
+    var options = [{name: localization.designview.whatField, selected: true, disabled: true}];
     _.each(allPossibleFields, function (f) {
       if (!sig.hasField(f.type, f.order, f.name)) {
         if (f.name === undefined) {

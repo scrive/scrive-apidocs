@@ -115,7 +115,7 @@ var classNames = require("classnames");
               <HtmlTextWithSubstitution
                 secureText={self.headlineText()}
                 subs={{".signatory-name": sig.name()}}
-                onClicks={{".arrowtext": function () {self.handleArrowTextClick();}}}
+                onClicks={{".arrowtext": function () { self.handleArrowTextClick(); }}}
               />
             </h1>
             {/* if */ continueUrl &&

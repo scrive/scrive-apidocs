@@ -37,7 +37,7 @@ var classNames = require("classnames");
         isComplete: function () {
           return !model.document().currentSignatoryCanSign();
         },
-        el:  $(self.refs.signButton.getDOMNode()),
+        el: $(self.refs.signButton.getDOMNode()),
         onActivate: function () {
           mixpanel.track("Begin signature task");
         },

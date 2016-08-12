@@ -60,7 +60,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
           name: localization.fontSize.custom,
           selected: true,
           disabled: true
-        })
+        });
       }
       return options;
     },

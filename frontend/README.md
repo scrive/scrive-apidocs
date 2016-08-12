@@ -21,10 +21,6 @@ To run linter:
 
 > $ grunt eslint
 
-To run style checker:
-
-> $ grunt jscs
-
 To run tests with coverage:
 
 > $ grunt test

@@ -79,7 +79,7 @@ module.exports = React.createClass({
           <div
             className="design-view-action-participant-close"
             ref="remove-icon"
-            onClick={function () {self.onRemove();} }
+            onClick={function () { self.onRemove(); } }
           />
         }
 
@@ -93,7 +93,7 @@ module.exports = React.createClass({
           <div
             ref="participant-details"
             className="design-view-action-participant-info-box"
-            onClick={function () {self.toogleView();}}
+            onClick={function () { self.toogleView(); }}
           >
             <div
               className={

@@ -20,8 +20,8 @@ var DesignAuthorAttachment = require("./designviewattachment");
         return (
           <List.List
             url="/a?domain=All"
-            dataFetcher={function (d) {return d.attachments;}}
-            idFetcher={function (d) {return d.field("id");}}
+            dataFetcher={function (d) { return d.attachments; }}
+            idFetcher={function (d) { return d.field("id"); }}
             ref='list'
           >
             <List.Column

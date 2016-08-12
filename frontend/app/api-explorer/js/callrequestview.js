@@ -43,7 +43,7 @@ window.CallRequestView = Backbone.View.extend({
   onScroll: function () {
     var limit = $(this.el).offset().top;
     if ($(window).scrollTop() >= limit + 2) {
-      this.createScrollPanel()
+      this.createScrollPanel();
     } else if (this.scrollpanel != undefined) {
       this.scrollpanel.remove();
     }
@@ -90,7 +90,7 @@ window.CallRequestView = Backbone.View.extend({
         paramList.append(
           $("<li class='list-group-item'/>").append(paramView.el)
         );
-      })
+      });
     }
     this.onScroll();
     return this;

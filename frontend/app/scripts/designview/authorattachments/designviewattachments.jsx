@@ -19,7 +19,7 @@ var _ = require("underscore");
               addToSealedFile: attachment.isAddToSealedFile(),
               documentid: args.document.documentid()
           });
-          self.listenTo(newAttachment, "change", function () {self.trigger("change");});
+          self.listenTo(newAttachment, "change", function () { self.trigger("change"); });
           attachments.push(newAttachment);
         });
       this.set({"attachments": attachments});
@@ -32,7 +32,7 @@ var _ = require("underscore");
     addAttachment: function (newAttachment) {
       var self = this;
       this.attachments().push(newAttachment);
-      this.listenTo(newAttachment, "change", function () {self.trigger("change");});
+      this.listenTo(newAttachment, "change", function () { self.trigger("change"); });
       this.trigger("change");
     },
 

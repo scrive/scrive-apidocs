@@ -14,7 +14,7 @@ var Document = require("../../../js/documents.js").Document;
 
     attachmentsToShow: function () {
       var doc = this.props.model;
-      doc.authorattachments()
+      doc.authorattachments();
       return _.filter(doc.authorattachments(), function (a) {
         return !doc.isSignedAndClosed()  || !a.isAddToSealedFile();
       });

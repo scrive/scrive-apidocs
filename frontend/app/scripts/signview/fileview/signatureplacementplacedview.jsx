@@ -90,7 +90,7 @@ var SIGNATURE_PLACEMENT_WIDTH_BASE = 284;
       var doc = signatory.document();
       var queryPart = doc.currentSignatory() ? "?signatory_id=" + doc.currentSignatory().signatoryid()  : "";
       if (field.value()) {
-        return field.value()
+        return field.value();
       } else if (field.signatureFile()) {
         return "/api/frontend/documents/" + doc.documentid() + "/files/" + field.signatureFile() +
                "/image.png" + queryPart;

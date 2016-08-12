@@ -71,7 +71,7 @@ var TaskList = require("./navigation/task_list");
 
         blinkArrow: function () {
           if (self.refs.arrow) {
-            self.refs.arrow.blink()
+            self.refs.arrow.blink();
           }
         },
 

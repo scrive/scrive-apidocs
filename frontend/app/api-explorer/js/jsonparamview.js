@@ -32,10 +32,10 @@ window.JSONParamView  = Backbone.View.extend({
     var textarea = $("<textarea  id='" + id + "' class='form-control'/>");
     textarea.autoGrow();
     // This needs to be done in timeout since textarea (or one of it's parents) is not yet appended to body
-    setTimeout(function () {textarea.autoGrow();}, 1);
+    setTimeout(function () { textarea.autoGrow(); }, 1);
     textarea.val(call.getParamValue(param));
     textarea.bind("paste", function () {
-        setTimeout(function () {textarea.autoGrow();}, 1);
+        setTimeout(function () { textarea.autoGrow(); }, 1);
       });
     textarea.change(function () {
         call.setParamValue(param, textarea.val());

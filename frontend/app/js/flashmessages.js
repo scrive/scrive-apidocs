@@ -97,8 +97,8 @@ var Submit = require("./submits.js").Submit;
         ajax: true,
         type: args.type,
         content: args.content,
-        ajaxsuccess: function () {window.location.reload();},
-        ajaxerror: function () {window.location.reload();}
+        ajaxsuccess: function () { window.location.reload(); },
+        ajaxerror: function () { window.location.reload(); }
       }).send();
       return;
     }
@@ -122,7 +122,7 @@ var Submit = require("./submits.js").Submit;
             window.location = args.redirect;
           }
         },
-        ajaxerror: function () {window.location = args.redirect;}
+        ajaxerror: function () { window.location = args.redirect; }
       }).send();
       return;
     }

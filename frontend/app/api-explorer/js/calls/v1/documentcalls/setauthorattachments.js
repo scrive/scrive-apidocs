@@ -26,7 +26,7 @@ new APICallV1({
           }),
           new APICallParam({
             type: "file",
-            argName: function (i) { return "attachment_" + i;},
+            argName: function (i) { return "attachment_" + i; },
             name: "Attachments",
             sendAsParam: true,
             description: "Attachment files.",
@@ -35,7 +35,7 @@ new APICallV1({
               var input = $("<input type='file' class='form-control multiFileInput'/>");
               input.MultiFile({
                 afterFileAppend: function (input, title, fileinput) {
-                  setTimeout(function () {self.trigger("files-changed");}, 10);
+                  setTimeout(function () { self.trigger("files-changed"); }, 10);
                 }
               });
               return input.data("MultiFile");

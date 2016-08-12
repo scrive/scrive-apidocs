@@ -6,11 +6,11 @@ module.exports = Backbone.Model.extend({
   defaults: {
     active: false,
     complete: false, // Cache for isCompleate
-    isComplete: function () {return false;},
-    onActivate: function () {return false;},
-    onScrollWhenActive: function () {return false;},
+    isComplete: function () { return false; },
+    onActivate: function () { return false; },
+    onScrollWhenActive: function () { return false; },
     onArrowClick: function () { return false; },
-    onDeactivate: function () {return false;},
+    onDeactivate: function () { return false; },
     tipSide: "right",
     pointSelector: undefined,
     margin: -22,

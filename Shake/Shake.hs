@@ -91,7 +91,7 @@ main = do
     "test-hs-import-order" ~> need ["_build/hs-import-order"]
 
     "test-frontend-tests"      ~> need ["grunt-test"]
-    "test-frontend-lint"       ~> need ["grunt-jscs","grunt-eslint"]
+    "test-frontend-lint"       ~> need ["grunt-eslint"]
 
     "dist" ~> need ["_build/kontrakcja.tar.gz"]
 
@@ -284,11 +284,6 @@ frontendBuildRules = do
 -- | Frontend test rules
 frontendTestRules :: Rules ()
 frontendTestRules = do
-  "grunt-jscs" ~> do
-    need ["_build/npm-install"]
-    withGitHub "JSCS" $
-      cmd (Cwd "frontend") "grunt jscs"
-
   "grunt-eslint" ~> do
     need ["_build/npm-install"]
     withGitHub "eslint" $

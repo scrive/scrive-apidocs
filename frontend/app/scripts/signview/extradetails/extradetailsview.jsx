@@ -255,7 +255,7 @@ var classNames = require("classnames");
                     tabIndex={2}
                     className={emailClass}
                     value={emailField.value()}
-                    onChange={function (value) {emailField.setValue(value);}}
+                    onChange={function (value) { emailField.setValue(value); }}
                     onFocus={this.handleFocus("email")}
                     onBlur={this.handleBlur}
                   />
@@ -270,7 +270,7 @@ var classNames = require("classnames");
                     tabIndex={3}
                     className={ssnClass}
                     value={ssnField.value()}
-                    onChange={function (value) {ssnField.setValue(value);}}
+                    onChange={function (value) { ssnField.setValue(value); }}
                     onFocus={this.handleFocus("ssn")}
                     onBlur={this.handleBlur}
                   />
@@ -286,7 +286,7 @@ var classNames = require("classnames");
                     tabIndex={4}
                     className={phoneClass}
                     value={phoneField.value()}
-                    onChange={function (value) {phoneField.setValue(value);}}
+                    onChange={function (value) { phoneField.setValue(value); }}
                     onFocus={this.handleFocus("phone")}
                     onBlur={this.handleBlur}
                   />

@@ -53,13 +53,13 @@ var $ = require("jquery");
         }
       },
 
-      downloadLink: function (as_download) {
+      downloadLink: function (asDownload) {
         var name = this.name();
         if (name.toLowerCase().indexOf(".pdf", name.length - 4) === -1) {
           name += ".pdf"; // Same old attachments have names taken directly from files, and .pdf should not be added
         }
         return "/api/frontend/documents/" + this.documentid() + "/files/" + this.fileid() +
-               "/" + encodeURIComponent(name) + this.queryPart({as_download: as_download});
+               "/" + encodeURIComponent(name) + this.queryPart({as_download: asDownload});
       },
 
       fileid: function () {
@@ -118,7 +118,7 @@ var $ = require("jquery");
           } else if (response.wait != undefined) {
             _.delay(_.bind(this.fetch, this), 2000, {
                 data: {signatory_id: this.signatoryid()},
-                processData:  true,
+                processData: true,
                 cache: false
             });
           } else {

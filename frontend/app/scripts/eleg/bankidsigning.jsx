@@ -66,7 +66,7 @@ module.exports = Backbone.Model.extend({
       return this.autoStartToken() == undefined;
     },
     isFaultStatus: function () {
-      return BankIDUtils.isFaultStatus(this.status())
+      return BankIDUtils.isFaultStatus(this.status());
     },
     statusMessage: function () {
       return BankIDUtils.statusMessage(this.thisDevice(), this.status(), this.signatory());

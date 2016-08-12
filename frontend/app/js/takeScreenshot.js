@@ -31,13 +31,13 @@ var _ = require("underscore");
         };
 
         var callbackCalled = false;
-        function timedout() {
+        function timedout () {
             if (!callbackCalled) {
                 callbackCalled = true;
                 mixpanelScreenshotError("Timeout");
                 timeout();
             }
-        };
+        }
 
         if (timeout) {
             window.setTimeout(timedout, timeoutval);

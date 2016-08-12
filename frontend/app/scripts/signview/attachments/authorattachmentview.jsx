@@ -109,7 +109,7 @@ var Page = require("../pageviewer/page");
                   className="large-checkbox branded-checkbox"
                   checked={model.isAccepted()}
                   label={this.mandatoryCheckboxLabel()}
-                  onChange={function (v) { model.setAccepted(v);}}
+                  onChange={function (v) { model.setAccepted(v); }}
                 />
               }
             </div>
@@ -150,7 +150,7 @@ var Page = require("../pageviewer/page");
                           className="large-checkbox branded-checkbox"
                           checked={model.isAccepted()}
                           label={this.mandatoryCheckboxLabel()}
-                          onChange={function (v) { model.setAccepted(v);}}
+                          onChange={function (v) { model.setAccepted(v); }}
                         />
                       }
                     </div>

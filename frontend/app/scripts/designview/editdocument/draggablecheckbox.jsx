@@ -42,8 +42,8 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
     newCheckboxPlacementFromPosition: function (args) {
       return this.newCheckboxPlacement({
         page: args.page,
-        xrel:  args.x / args.pageWidth,
-        yrel:  args.y / args.pageHeight,
+        xrel: args.x / args.pageWidth,
+        yrel: args.y / args.pageHeight,
         wrel: FieldPlacementGlobal.checkboxSprite / args.pageWidth,
         hrel: FieldPlacementGlobal.checkboxSprite / args.pageHeight
       });
@@ -83,7 +83,7 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
       self.initializeOnClickCreatePlacement({
         el: el,
-        isEnabledFunc: function () { return self.document().signatoriesWhoSign().length > 0;},
+        isEnabledFunc: function () { return self.document().signatoriesWhoSign().length > 0; },
         expectedSizeFunc: self.newCheckboxExpectedSize,
         newPlacementFromPosition: self.newCheckboxPlacementFromPosition,
         openTypeSetterFor: self.props.openTypeSetterFor
@@ -91,7 +91,7 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
       self.initializeDraggable({
         el: el,
-        cursorAt: {top:7, left:7},
+        cursorAt: {top: 7, left: 7},
         verticalOffset: 0,
         xAxisOffset: 0,
         yAxisOffset: 0,

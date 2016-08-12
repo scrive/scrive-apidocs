@@ -10,7 +10,7 @@ const ZOOM_STEPS = 4;
 const MAX_ZOOM_PIXELS = 2000;
 const MAX_WIDTH_SHOW_CONTROLS = 1200;
 
-function zoomPointMiddle() {
+function zoomPointMiddle () {
   return {x: $(window).width() / 2, y: $(window).height() / 2};
 }
 
@@ -234,7 +234,7 @@ module.exports = React.createClass({
   render: function () {
     const viewportWidth = $(window).width();
     const showZoomControls = !this.props.showOverlay && this.props.showArrow
-      && (viewportWidth < MAX_WIDTH_SHOW_CONTROLS || isTouchDevice())
+      && (viewportWidth < MAX_WIDTH_SHOW_CONTROLS || isTouchDevice());
 
     const sectionClass = classNames({
       "grab": this.canBeGrabbed(),

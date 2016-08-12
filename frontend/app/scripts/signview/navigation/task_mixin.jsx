@@ -3,7 +3,7 @@ var TaskList = require("../navigation/task_list");
 
   module.exports = {
     contextTypes: {
-      taskList: React.PropTypes.instanceOf(TaskList),
+      taskList: React.PropTypes.instanceOf(TaskList)
     },
 
     hasTaskContext: function () {

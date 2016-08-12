@@ -8,7 +8,7 @@ new APICallV1({
   sampleUrl: "/api/v1/downloadmainfile/$docid$/file.pdf",
   method: "GET",
   getCallUrl: function () {
-          return "/api/v1/downloadmainfile/" + this.get("documentid")  + "/file.pdf" ;
+          return "/api/v1/downloadmainfile/" + this.get("documentid")  + "/file.pdf";
         },
   needsAuthorization: true,
   expectBinaryResponse: true,

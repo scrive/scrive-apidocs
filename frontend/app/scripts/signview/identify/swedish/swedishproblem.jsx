@@ -24,7 +24,7 @@ var SwedishIdentifyModel = require("./swedishidentifymodel");
               size="big"
               type="action"
               text={localization.ok}
-              onClick={function () {model.back();}}
+              onClick={function () { model.back(); }}
             />
           </div>
         </span>
