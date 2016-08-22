@@ -65,7 +65,11 @@ checkExecutables = logInfo "Checking paths to executables:" . object
     check (filepath, options) = do
       realpathlines <- lines `fmap` (liftBase $ checkPathToExecutable $ T.unpack filepath)
       case realpathlines of
-        [] -> return $ filepath .= ("*** not found ***"::T.Text)
+        [] -> do
+          logAttention "Not all important executables are present" $ object [
+              "executable" .= show filepath
+            ]
+          liftBase exitFailure
         (realpath:_) -> if null options
           then return $ filepath .= realpath
           else do
