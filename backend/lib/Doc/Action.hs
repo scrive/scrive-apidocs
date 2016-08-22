@@ -10,7 +10,7 @@ module Doc.Action (
   ) where
 
 import Control.Conditional (whenM, unlessM, ifM)
-import Control.Monad.Base (MonadBase)
+import Control.Monad.Base (MonadBase, liftBase)
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -254,7 +254,7 @@ findAndDoPostDocumentClosedActions = do
 findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadMask m, MonadIO m, MonadLog m) => m ()
 findAndExtendDigitalSignatures = do
   lpt <- latest_publication_time
-  logInfo "extendSignatures: logging latest publication time" $ object [
+  logInfo "findAndExtendDigitalSignatures: logging latest publication time" $ object [
       "time" .= lpt
     ]
   docs <- dbQuery $ GetDocuments DocumentsOfWholeUniverse
@@ -269,12 +269,23 @@ findAndExtendDigitalSignatures = do
     logInfo "findAndExtendDigitalSignatures: considering documents" $ object [
         "documents" .= length docs
       ]
-  forM_ docs $ \d ->
+  startTime <- liftBase getCurrentTime
+  (alreadyExtended, failedExtend, success) <- foldM (\(ext,f,s) d ->
     case documentsealstatus d of
       Just (Guardtime{ extended = False }) -> do
-        void $ withDocument d extendDigitalSignature
+        r <- withDocument d extendDigitalSignature
         commit
-      _ -> return ()
+        if r then return (ext,f,s+1)
+             else return (ext,f+1,s)
+      _ -> return (ext+1,f,s)
+    ) (0,0,0) docs
+  finishTime <- liftBase getCurrentTime
+  logInfo "findAndExtendDigitalSignatures: done considering documents" $ object [
+      "documents_already_extended" .= (alreadyExtended :: Int)
+    , "documents_failed_extending" .= (failedExtend :: Int)
+    , "documents_successfully_extended" .= (success :: Int)
+    , "time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
+    ]
 
 -- | Estimate when the latest Guardtime publication code was published
 -- (sometime after the 15th of the month).

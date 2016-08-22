@@ -855,7 +855,7 @@
 "_reminderByMobileQuestionAlreadySigned":"Deseja enviar uma hiperligação para o documento por SMS?",
 "_reminderFormFooterOwnMessage":"Escrever a sua própria mensagem",
 "_reminderFormHead":"Enviar lembrete",
-"_reminderFormSendReminder":"Enviar lembrete",
+"_reminderFormSendReminder":"",
 "_restore":"Restaurar",
 "_role":"Função",
 "_sampleEmailButtonLabel":"Aceder ao documento",

@@ -855,7 +855,7 @@
 "_reminderByMobileQuestionAlreadySigned":"Θα θέλατε να στείλετε ένα σύνδεσμο στο έγγραφο μέσω SMS; ",
 "_reminderFormFooterOwnMessage":"Γράψτε το μήνυμά σας ",
 "_reminderFormHead":"Αποστολή υπενθύμισης ",
-"_reminderFormSendReminder":"Αποστολή υπενθύμισης ",
+"_reminderFormSendReminder":"",
 "_restore":"Επαναφορά",
 "_role":"Ρόλος ",
 "_sampleEmailButtonLabel":"Πηγαίνετε στο έγγραφο ",

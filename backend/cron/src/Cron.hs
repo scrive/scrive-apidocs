@@ -175,7 +175,7 @@ main = do
           return . RerunAfter $ ihours 6
         FindAndExtendDigitalSignatures -> do
           runScheduler findAndExtendDigitalSignatures
-          return . RerunAfter $ iminutes 30
+          return . RerunAfter $ iminutes 5
         FindAndTimeoutDocuments -> do
           runScheduler findAndTimeoutDocuments
           return . RerunAfter $ iminutes 10

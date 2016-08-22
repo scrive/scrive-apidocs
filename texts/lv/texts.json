@@ -855,7 +855,7 @@
 "_reminderByMobileQuestionAlreadySigned":"Vai vēlaties nosūtīt saiti uz dokumentu īsziņā?",
 "_reminderFormFooterOwnMessage":"Ierakstiet savu ziņu",
 "_reminderFormHead":"Nosūtīt atgādinājumu",
-"_reminderFormSendReminder":"Nosūtiet atgādinājumu",
+"_reminderFormSendReminder":"",
 "_restore":"Atjaunot",
 "_role":"Funkcija",
 "_sampleEmailButtonLabel":"Doties uz dokumentu",

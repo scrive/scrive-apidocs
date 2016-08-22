@@ -107,7 +107,7 @@ purgeOrphanFile = do
     sqlResult "amazon_url"
     sqlResult "content IS NULL"
     sqlWhereFileWasNotPurged
-    sqlWhere "purge_at >= now()"
+    sqlWhere "purge_at < now()"
     sqlOrderBy "purge_at"
     sqlLimit 1
   fetchMaybe id >>= \case
