@@ -95,6 +95,7 @@
  "showrejectoption": true,
  "allowrejectreason":true,
  "showfooter": true,
+ "isreceipt": false,
  "invitationmessage": "<p>424242</p>",
  "confirmationmessage": "<p>363636</p>",
  "lang": "sv",

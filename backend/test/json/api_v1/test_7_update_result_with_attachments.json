@@ -744,6 +744,7 @@
    "showrejectoption":true,
    "allowrejectreason":true,
    "showfooter":true,
+   "isreceipt": false,
    "invitationmessage":"<p>My super invitation message</p>",
    "confirmationmessage":"<p>NULL NULL &lt;XXXX&gt;</p>",
    "lang":"fr",

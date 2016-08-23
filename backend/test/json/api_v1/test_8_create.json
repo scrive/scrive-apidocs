@@ -95,6 +95,7 @@
  "showpdfdownload": true,
  "showrejectoption": true,
  "showfooter": true,
+ "isreceipt": false,
  "invitationmessage": "",
  "confirmationmessage": "",
  "lang": "sv",

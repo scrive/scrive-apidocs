@@ -181,6 +181,7 @@ data SealSpec = SealSpec
     , staticTexts    :: SealingTexts
     , attachments    :: [SealAttachment]
     , filesList      :: [FileDesc]
+    , disableFooter  :: Bool
     }
     deriving (Eq,Ord,Show,Read)
 
@@ -198,6 +199,7 @@ unjsonSealSpec = Unjson.objectOf $ pure SealSpec
     <*> Unjson.fieldBy "staticTexts" staticTexts "" unjsonSealingTexts
     <*> Unjson.fieldBy "attachments" attachments "" (Unjson.arrayOf unjsonSealAttachment)
     <*> Unjson.fieldBy "filesList" filesList "" (Unjson.arrayOf unjsonFileDesc)
+    <*> Unjson.field "disableFooter" disableFooter ""
 
 
 data FileDesc = FileDesc

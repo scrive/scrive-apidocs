@@ -15,7 +15,8 @@
     "show_pdf_download": false,
     "show_reject_option": false,
     "allow_reject_reason": false,
-    "show_footer": false
+    "show_footer": false,
+    "document_is_receipt": true
   },
   "parties": [
     {},

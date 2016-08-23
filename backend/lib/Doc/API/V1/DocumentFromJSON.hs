@@ -421,6 +421,7 @@ instance FromJSValueWithUpdate Document where
         showrejectoption <- fromJSValueField "showrejectoption"
         allowrejectreason <- fromJSValueField "allowrejectreason"
         showfooter <- fromJSValueField "showfooter"
+        isreceipt <- fromJSValueField "isreceipt"
         authentication <-  fromJSValueField "authentication"
         delivery <-  fromJSValueField "delivery"
         signatories <-  fromJSValueFieldCustom "signatories" (fromJSValueManyWithUpdate (fromMaybe [] $ documentsignatorylinks <$> mdoc))
@@ -452,6 +453,7 @@ instance FromJSValueWithUpdate Document where
             documentallowrejectreason = updateWithDefaultAndField True documentallowrejectreason allowrejectreason,
             documentshowrejectoption = updateWithDefaultAndField True documentshowrejectoption showrejectoption,
             documentshowfooter = updateWithDefaultAndField True documentshowfooter showfooter,
+            documentisreceipt = updateWithDefaultAndField False documentisreceipt isreceipt,
             documentsignatorylinks = mapAuth authentication $ mapDL delivery $ updateWithDefaultAndField [] documentsignatorylinks signatories,
             -- Author attachments read by V1 for update call can be only used for deletion - this is why we can actually set name to "-" and required to False
             documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap (\fid -> AuthorAttachment "-" False True fid) <$> authorattachments),

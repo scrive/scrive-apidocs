@@ -94,6 +94,7 @@ kontraMigrations = [
   , createDocumentSigningJobsTable
   , removeAmazonBucketColumn
   , documentSigningJobsUseJson
+  , addIsReceiptToDocument
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

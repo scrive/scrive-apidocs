@@ -46,6 +46,7 @@ applyDraftDataToDocument draft actor = do
                                 , documentshowrejectoption = documentshowrejectoption draft
                                 , documentallowrejectreason = documentallowrejectreason draft
                                 , documentshowfooter = documentshowfooter draft
+                                , documentisreceipt = documentisreceipt draft
                                 , documentlang = documentlang draft
                                 , documenttags = documenttags draft
                                 , documentapiv2callbackurl = documentapiv2callbackurl draft

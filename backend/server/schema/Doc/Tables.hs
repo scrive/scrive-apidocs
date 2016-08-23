@@ -6,7 +6,7 @@ import KontraPrelude
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 43
+  , tblVersion = 44
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -36,6 +36,7 @@ tableDocuments = tblTable {
     , tblColumn { colName = "api_v2_callback_url", colType = TextT }
     , tblColumn { colName = "author_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "allow_reject_reason", colType = BoolT, colNullable = False, colDefault = Just "true" }
+    , tblColumn { colName = "is_receipt", colType = BoolT, colNullable = False, colDefault = Just "false" }
 
     ]
   , tblPrimaryKey = pkOnColumn "id"
@@ -85,6 +86,7 @@ ctDocument = CompositeType {
   , CompositeColumn { ccName = "show_reject_option", ccType = BoolT }
   , CompositeColumn { ccName = "allow_reject_reason", ccType = BoolT }
   , CompositeColumn { ccName = "show_footer", ccType = BoolT }
+  , CompositeColumn { ccName = "is_receipt", ccType = BoolT }
   , CompositeColumn { ccName = "lang", ccType = SmallIntT }
   , CompositeColumn { ccName = "sharing", ccType = SmallIntT }
   , CompositeColumn { ccName = "tags", ccType = ArrayT $ CustomT "document_tag" }

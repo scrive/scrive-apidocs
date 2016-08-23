@@ -423,6 +423,7 @@ var Document = exports.Document = Backbone.Model.extend({
             show_reject_option: this.get("showrejectoption"),
             allow_reject_reason: this.get("allowrejectreason"),
             show_footer: this.get("showfooter"),
+            document_is_receipt: this.get("documentisreceipt")
           }
       };
     },
@@ -671,6 +672,7 @@ var Document = exports.Document = Backbone.Model.extend({
        showpdfdownload: args.display_options.show_pdf_download,
        showrejectoption: args.display_options.show_reject_option,
        allowrejectreason: args.display_options.allow_reject_reason,
+       documentisreceipt:  args.display_options.document_is_receipt,
        showfooter: args.display_options.show_footer,
        invitationmessage: args.invitation_message,
        confirmationmessage: args.confirmation_message,

@@ -474,6 +474,7 @@ sealSpecFromDocument boxImages hostpart document elog offsets eotData content tm
         , Seal.hostpart       = hostpart
         , Seal.staticTexts    = staticTexts
         , Seal.attachments    = docAttachments ++ [evidenceattachment, evidenceOfTime, evidenceOfIntent]
+        , Seal.disableFooter = documentisreceipt document
         , Seal.filesList      =
           [ Seal.FileDesc { fileTitle = documenttitle document
                           , fileRole = mainDocumentText

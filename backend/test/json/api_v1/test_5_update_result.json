@@ -181,6 +181,7 @@
  "showrejectoption": true,
  "allowrejectreason":true,
  "showfooter": true,
+ "isreceipt": true,
  "invitationmessage": "",
  "confirmationmessage": "",
  "lang": "sv",

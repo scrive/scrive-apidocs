@@ -567,3 +567,13 @@ addAddedToSealedFileToAuthorAttachment = Migration {
           sqlAlterColumn "add_to_sealed_file" "DROP DEFAULT"
           ]
     }
+
+addIsReceiptToDocument :: MonadDB m => Migration m
+addIsReceiptToDocument = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 43
+  , mgrDo = do
+      runQuery_ $ sqlAlterTable "documents" [
+          sqlAddColumn tblColumn { colName = "is_receipt", colType = BoolT, colNullable = False, colDefault = Just "false" }
+        ]
+  }

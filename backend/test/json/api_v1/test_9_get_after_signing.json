@@ -142,6 +142,7 @@
    "showrejectoption":true,
    "allowrejectreason":true,
    "showfooter":true,
+   "isreceipt": false,
    "invitationmessage":"",
    "confirmationmessage":"",
    "lang":"gb",
