@@ -138,7 +138,7 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           "text",
           "oauth_consumer_key",
           "Client credentials identifier",
-          "oauth_consumer_key",
+          "",
           function () { return oauth.consumer_key(); },
           function (v) { return oauth.set_consumer_key(v); }
         )
@@ -149,7 +149,7 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           "text",
           "oauth_signature",
           "Client credentials secret",
-          "oauth_signature",
+          "",
           function () { return oauth.client_shared_secret(); },
           function (v) { return oauth.set_client_shared_secret(v); }
         )
@@ -168,7 +168,7 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
             "text",
             "oauth_token",
             "Temporary credentials identifier",
-            "oauth_token",
+            "",
             function () { return oauth.token(); }
           )
         );
@@ -178,7 +178,7 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
             "text",
             "oauth_token_secret",
             "Temporary credentials secret",
-            "oauth_token_secret",
+            "",
             function () { return oauth.token_secret(); }
           )
         );
