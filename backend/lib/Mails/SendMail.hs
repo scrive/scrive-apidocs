@@ -117,7 +117,7 @@ kontramailHelper bd theme renderFunc tname fields = do
     wholemail <- renderFunc tname fields
     let (title, content) = case split "\r\n" $ dropWhile (isControl || isSpace) wholemail of
                              [] -> $unexpectedError "Couldnt separate email content from title"
-                             (title':contentChunks) -> (title', join "\r\n" contentChunks)
+                             (title':contentChunks) -> (unescapeHTML title', join "\r\n" contentChunks)
         noreplyAddress = case strip $ bdNoreplyEmail bd of
                            -- add a fallback noreply address if it's not set in bd settings
                            -- otherwise emails will not be sent
