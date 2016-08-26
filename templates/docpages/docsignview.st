@@ -97,7 +97,7 @@ $htmlopentag()$
           authorPhone: "$authorPhone$"
         };
 
-      if (trackJs !== undefined) {
+      if (trackJs) {
         trackJs.configure({userId: "$siglinkid$"});
       }
 
@@ -131,6 +131,10 @@ $htmlopentag()$
       </div>
     </div>
     <script>
+    if (trackJs) {
+      trackJs.configure({userId: "$siglinkid$"});
+    }
+
     window.netsIdentifyUrl = "$netsIdentifyUrl$";
     window.netsMerchantIdentifier = "$netsMerchantIdentifier$";
     window.netsTrustedDomain = "$netsTrustedDomain$";

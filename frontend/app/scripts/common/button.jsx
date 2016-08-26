@@ -67,7 +67,7 @@ var Track = require("./track");
               originalType: this.props.type};
     },
     handleClick: function() {
-      var eventName = 'Clicked button' + this.props.text;
+      var eventName = "Clicked button " + this.props.text;
       var fireClick = !this.state.clicked ||  !this.props.oneClick;
       Track.track(eventName);
       this.setState({'clicked': true});

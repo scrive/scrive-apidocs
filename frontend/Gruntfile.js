@@ -207,6 +207,7 @@ module.exports = function (grunt) {
           sourceMap: true
         },
         src: [
+          "<%= yeoman.app %>/bower_components/trackjs/tracker.js",
           "<%= yeoman.app %>/bower_components/jquery/dist/jquery.js",
           "<%= yeoman.app %>/bower_components/jquery-migrate/jquery-migrate.js",
           "<%= yeoman.app %>/bower_components/underscore/underscore.js",
@@ -228,6 +229,7 @@ module.exports = function (grunt) {
       },
       prod: {
         src: [
+          "<%= yeoman.app %>/bower_components/trackjs/tracker.js",
           "<%= yeoman.app %>/bower_components/jquery/dist/jquery.min.js",
           "<%= yeoman.app %>/bower_components/jquery-migrate/jquery-migrate.min.js",
           "<%= yeoman.app %>/bower_components/underscore/underscore-min.js",

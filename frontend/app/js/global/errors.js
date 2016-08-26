@@ -24,15 +24,13 @@ $(document).ajaxError(function(event, jqxhr, settings, exception) {
         'Error Message' : exception.toString()
     });
 
-    if (trackJs === undefined) {
-      return;
+    if (trackJs) {
+      // This will be visible and searchable in the track.js telemetry timeline
+      console.log(exception);
+      console.log(jqxhr.getAllResponseHeaders())
+      var statusCode = jqxhr.status;
+      var method = settings.type;
+      var url = settings.url;
+      trackJs.track(method + " " + statusCode + ": " + url);
     }
-
-    // This will be visible and searchable in the track.js telemetry timeline
-    console.log(exception);
-    console.log(jqxhr.getAllResponseHeaders())
-    var statusCode = jqxhr.status;
-    var method = settings.type;
-    var url = settings.url;
-    trackJs.track(method + " " + statusCode + ": " + url);
 });
