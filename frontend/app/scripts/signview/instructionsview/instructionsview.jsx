@@ -4,6 +4,7 @@ var Button = require("../../common/button");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 var Document = require("../../../js/documents.js").Document;
 var classNames = require("classnames");
+var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 
   var Menu = React.createClass({
     getInitialState: function () {
@@ -78,6 +79,10 @@ var classNames = require("classnames");
         "Can sign": doc.currentSignatoryCanSign() ? "yes" : "no",
         "Delivery method": sig.delivery()
       });
+      ReloadManager.stopBlocking();
+      setTimeout(function () {
+        ReloadManager.startBlocking();
+      }, 1000);
     },
 
     continueUrl: function () {
