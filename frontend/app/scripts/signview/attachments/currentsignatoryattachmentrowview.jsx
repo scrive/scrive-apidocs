@@ -3,6 +3,7 @@ var Backbone = require("backbone");
 var Button = require("../../common/button");
 var UploadButton = require("../../common/uploadbutton");
 var BackboneMixin = require("../../common/backbone_mixin");
+var Track = require("../../common/track");
 var TaskMixin = require("../navigation/task_mixin");
 var ViewSize = require("../viewsize");
 var Submit = require("../../../js/submits.js").Submit;
@@ -145,10 +146,10 @@ var Task = require("../navigation/task");
           uploadArea.uploadButton().openFileDialogue();
         },
         onActivate: function () {
-          mixpanel.track("Begin attachment task");
+          Track.track("Begin attachment task");
         },
         onDeactivate: function () {
-          mixpanel.track("Finish attachment task");
+          Track.track("Finish attachment task");
         }
       })];
     },

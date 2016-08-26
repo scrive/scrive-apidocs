@@ -97,6 +97,10 @@ $htmlopentag()$
           authorPhone: "$authorPhone$"
         };
 
+      if (trackJs) {
+        trackJs.configure({userId: "$siglinkid$"});
+      }
+
       mixpanel.register({
         Context : 'Sign view',
         DocumentID : "$documentid$",
@@ -127,6 +131,10 @@ $htmlopentag()$
       </div>
     </div>
     <script>
+    if (trackJs) {
+      trackJs.configure({userId: "$siglinkid$"});
+    }
+
     window.netsIdentifyUrl = "$netsIdentifyUrl$";
     window.netsMerchantIdentifier = "$netsMerchantIdentifier$";
     window.netsTrustedDomain = "$netsTrustedDomain$";

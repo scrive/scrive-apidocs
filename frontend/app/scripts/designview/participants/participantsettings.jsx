@@ -1,5 +1,6 @@
 var React = require("react");
 var Select = require("../../common/select");
+var Track = require("../../common/track");
 var LanguageService = require("../../common/language_service");
 var _ = require("underscore");
 
@@ -117,7 +118,7 @@ module.exports = React.createClass({
               width={297}
               options={self.signorderOptions()}
               onSelect={function (v) {
-                mixpanel.track("Choose sign order", {
+                Track.track("Choose sign order", {
                   Where: "select"
                 });
                 sig.setSignOrder(v);
@@ -135,7 +136,7 @@ module.exports = React.createClass({
               width={297}
               options={self.deliveryOptions()}
               onSelect={function (v) {
-                mixpanel.track("Choose delivery method", {
+                Track.track("Choose delivery method", {
                   Where: "select"
                 });
                 if (!sig.isLastViewer()) {
@@ -155,7 +156,7 @@ module.exports = React.createClass({
               width={297}
               options={self.authenticationToViewOptions()}
               onSelect={function (v) {
-                mixpanel.track("Choose auth", {
+                Track.track("Choose auth", {
                   Where: "select"
                 });
                 sig.setAuthenticationToView(v);
@@ -178,7 +179,7 @@ module.exports = React.createClass({
               width={297}
               options={self.roleOptions()}
               onSelect={function (v) {
-                mixpanel.track("Choose participant role", {
+                Track.track("Choose participant role", {
                   Where: "Icon"
                 });
                 if (v === "signatory") {
@@ -200,7 +201,7 @@ module.exports = React.createClass({
               width={297}
               options={self.authenticationToSignOptions()}
               onSelect={function (v) {
-                mixpanel.track("Choose auth", {
+                Track.track("Choose auth", {
                   Where: "select"
                 });
                 sig.setAuthenticationToSign(v);
@@ -218,7 +219,7 @@ module.exports = React.createClass({
               width={297}
               options={self.confirmationDeliveryOptions()}
               onSelect={function (v) {
-                mixpanel.track("Choose confirmation delivery method", {
+                Track.track("Choose confirmation delivery method", {
                   Where: "select"
                 });
                 sig.setConfirmationDelivery(v);

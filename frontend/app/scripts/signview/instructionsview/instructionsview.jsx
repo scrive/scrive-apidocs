@@ -2,6 +2,7 @@ var Backbone = require("backbone");
 var React = require("react");
 var Button = require("../../common/button");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
+var Track = require("../../common/track");
 var Document = require("../../../js/documents.js").Document;
 var classNames = require("classnames");
 
@@ -66,7 +67,7 @@ var classNames = require("classnames");
     },
 
     handleArrowTextClick: function () {
-      mixpanel.track("Click arrow text");
+      Track.track("Click arrow text");
       this.props.goToCurrentTask();
     },
 
@@ -74,7 +75,7 @@ var classNames = require("classnames");
       var doc = this.props.model;
       var sig = doc.currentSignatory();
 
-      mixpanel.track("Download pdf", {
+      Track.track("Download pdf", {
         "Can sign": doc.currentSignatoryCanSign() ? "yes" : "no",
         "Delivery method": sig.delivery()
       });

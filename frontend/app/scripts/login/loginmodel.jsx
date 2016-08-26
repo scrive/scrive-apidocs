@@ -3,6 +3,7 @@ var Backbone = require("backbone");
 var LocalStorage = require("../../js/storage.js").LocalStorage;
 var Submit = require("../../js/submits.js").Submit;
 var Language = require("../../js/utils/language.js").Language;
+var Track = require("../common/track");
 var $ = require("jquery");
 
 
@@ -100,7 +101,7 @@ module.exports = Backbone.Model.extend({
   },
   signup : function(callback) {
     var model = this;
-    mixpanel.track('Submit signup');
+    Track.track('Submit signup');
     new Submit({
       method: 'POST',
       url: "/api/frontend/signup",

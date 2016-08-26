@@ -1,6 +1,7 @@
 var React = require("react");
 var BackboneMixin = require("../common/backbone_mixin");
 var Button = require("../common/button");
+var Track = require("../common/track");
 var ToStartSignatory = require("./signatory");
 var ToStartHeader = require("./header");
 var _ = require("underscore");
@@ -34,7 +35,7 @@ module.exports = React.createClass({
     var signatories = document.signatories();
     var self = this;
 
-    mixpanel.track('Initialized send in to-start');
+    Track.track('Initialized send in to-start');
 
     document.save();
     var probs = document.hasProblems();

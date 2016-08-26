@@ -13,7 +13,8 @@
     "html2canvas": "git://github.com/scrive/html2canvas#32e7bf5",
     "es6-promise": "^3.2.1",
     "classnames": "~2.2.3",
-    "element-resize-detector": "^1.1.0"
+    "element-resize-detector": "^1.1.0",
+    "trackjs": "^2.5.1"
   },
   "license": "MIT",
   "private": true,

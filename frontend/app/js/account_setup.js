@@ -10,7 +10,7 @@ var PasswordValidation = require("./validation.js").PasswordValidation;
 var PasswordEqValidation = require("./validation.js").PasswordEqValidation;
 var CheckboxReqValidation = require("./validation.js").CheckboxReqValidation;
 var Button = require("./buttons.js").Button;
-var trackTimeout = require("../scripts/common/track_timeout");
+var Track = require("../scripts/common/track");
 
 
   var AccountSetupModel = Backbone.Model.extend({
@@ -152,7 +152,7 @@ var trackTimeout = require("../scripts/common/track_timeout");
                               "company" : model.company(),
                               "jobtitle" : model.position()});
 
-              trackTimeout('Sign TOS', {}, function() {
+              Track.track_timeout('Sign TOS', {}, function() {
                   window.location = rs.location;
               }, 1000);
           } else if (rs.error == 'already_active') {
@@ -343,7 +343,7 @@ var trackTimeout = require("../scripts/common/track_timeout");
   });
 
   var AccountSetup = exports.AccountSetup = function(args) {
-    mixpanel.track('Visit account setup');
+    Track.track('Visit account setup');
     var model = new AccountSetupModel(args);
     var view =  new AccountSetupView({model: model, el: $("<div class='short-input-section account-setup'/>")});
     this.el = function() {return $(view.el);};

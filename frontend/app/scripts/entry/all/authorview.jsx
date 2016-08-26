@@ -1,6 +1,7 @@
 var React = require("react");
 var $ = require("jquery");
 var AuthorView = require("../../../js/authorview/authorview").AuthorView;
+var Track = require("../../common/track");
 
 $(function () {
   var authorView = new AuthorView({
@@ -15,5 +16,5 @@ $(function () {
     "Admin of author?": fromTemplate.authorcompanyadmin
   });
 
-  mixpanel.track("View Author View");
+  Track.track("View Author View");
 });

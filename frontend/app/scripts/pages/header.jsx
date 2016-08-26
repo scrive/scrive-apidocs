@@ -1,7 +1,7 @@
 var React = require("react");
 var Backbone = require("backbone");
 var NewButton = require("../common/button");
-var trackTimeout = require("../common/track_timeout");
+var Track = require("../common/track");
 
 
 
@@ -12,19 +12,19 @@ var trackTimeout = require("../common/track_timeout");
       account : React.PropTypes.bool
     },
     handleNewDocument : function() {
-      trackTimeout("Click start new process",{}, function(e) {
+      Track.track_timeout("Click start new process",{}, function(e) {
         window.location.href = "/newdocument";
       });
       return false;
     },
     handleNewFromTemplate : function() {
-      trackTimeout("Click create from template",{}, function(e) {
+      Track.track_timeout("Click create from template",{}, function(e) {
               window.location.href = "/fromtemplate";
         });
       return false;
     },
     handleLogout : function() {
-      trackTimeout( "Click Logout",{}, function(e) {
+      Track.track_timeout( "Click Logout",{}, function(e) {
               window.location.href = "/logout";
       });
       return false;

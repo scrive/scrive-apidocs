@@ -1,5 +1,6 @@
 var React = require("react");
 var Button = require("../../common/button");
+var Track = require("../../common/track");
 var ParticipantNameField = require("./participantnamefield");
 var ParticipantField = require("./participantfield");
 var ParticipantSelectField = require("./participantselectfield");
@@ -56,7 +57,7 @@ module.exports = React.createClass({
               text={localization.designview.viewCSV}
               type="optional"
               onClick={function () {
-                mixpanel.track("Open CSV Popup");
+                Track.track("Open CSV Popup");
                 new CsvSignatoryDesignPopup({
                   document: self.props.document,
                   setParticipantDetail: self.props.setParticipantDetail

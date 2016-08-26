@@ -5,6 +5,7 @@ var InfoTextInput = require("../common/infotextinput");
 var HubSpot = require("../common/hubspot_service");
 var AdwordsConversionService = require("../common/adwords_conversion_service");
 var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
+var Track = require("../common/track");
 var Language = require("../../js/utils/language.js").Language;
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 var EmailValidation = require("../../js/validation.js").EmailValidation;
@@ -23,7 +24,7 @@ module.exports = React.createClass({
       if (resp.sent === true) {
         _gaq.push(['_trackEvent', 'Signup', 'Clicked']);
         AdwordsConversionService.markAsSignupConversion();
-        mixpanel.track('Create new account', {'Email' : model.email()});
+        Track.track('Create new account', {'Email' : model.email()});
         mixpanel.people.set({'$email' : model.email() });
         HubSpot.track(HubSpot.FORM_SIGNUP, {
           email :  model.email(),
@@ -34,7 +35,7 @@ module.exports = React.createClass({
         var content = localization.payments.outside.confirmAccountCreatedUserHeader;
         new FlashMessage({content: content, type: 'success'});
       } else if (resp.sent === false) {
-        mixpanel.track('Error', {Message : 'signup failed'});
+        Track.track('Error', {Message : 'signup failed'});
         new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, type: 'error'});
       }
     },

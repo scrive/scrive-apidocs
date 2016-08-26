@@ -233,6 +233,7 @@ standardPageFields ctx mcompanyui ad = do
   F.value "brandinguserid" (fmap (show . userid) (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx))
   F.value "ctxlang" $ codeFromLang $ ctxlang ctx
   F.object "analytics" $ analyticsTemplates ad
+  F.value "trackjstoken" (ctxtrackjstoken ctx)
   F.valueM "brandinghash" $ brandingAdler32 ctx mcompanyui
   F.value "title" $ case emptyToNothing . strip =<< companyBrowserTitle =<< mcompanyui of
                       Just ctitle -> ctitle ++ " - " ++ (bdBrowserTitle $ ctxbrandeddomain ctx)

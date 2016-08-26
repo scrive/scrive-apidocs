@@ -2,6 +2,7 @@ var React = require("react");
 var SignviewSettings = require("./signviewsettings");
 var AttachmentsList = require("./attachmentslist");
 var Button = require("../../common/button");
+var Track = require("../../common/track");
 var DesignAuthorAttachmentsPopup = require("../../../js/designview/authoraattachmentsdesign.js").DesignAuthorAttachmentsPopup;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var DesignSignatoryAttachmentsPopup = require("../../../js/designview/signatoryattachmentsdesignview.js").DesignSignatoryAttachmentsPopup;
@@ -29,7 +30,7 @@ module.exports = React.createClass({
             onClick= {function() {
               if (self.state.settingsModalOpened == true) return; // We want to be sure that we will not open modal twice
               self.setState({modalOpened : true});
-              mixpanel.track('Open signview settings');
+              Track.track('Open signview settings');
               new SignviewSettings({
                 document: document,
                 onClose: function() {
@@ -44,7 +45,7 @@ module.exports = React.createClass({
             text={localization.designview.addRemove}
             className='design-view-action-process-left-column-attachments-author-button'
             onClick= {function() {
-              mixpanel.track('Open author attachments');
+              Track.track('Open author attachments');
               document.save();
               new DesignAuthorAttachmentsPopup({
                 document: document,
@@ -57,10 +58,10 @@ module.exports = React.createClass({
             className="design-view-action-process-left-column-attachments-signatory-button"
             onClick= {function() {
               if(document.signatoriesWhoSign().length == 0 || document.authorIsOnlySignatory()) {
-                mixpanel.track('Open signatory attachments but not enough participants');
+                Track.track('Open signatory attachments but not enough participants');
                 new FlashMessage({ type: 'error' , content: localization.designview.validation.requestAttachmentFlashMessage});
               } else {
-                mixpanel.track('Open signatory attachments');
+                Track.track('Open signatory attachments');
                 document.save();
                 new DesignSignatoryAttachmentsPopup({
                   document: document,

@@ -1,5 +1,6 @@
 var React = require("react");
 var Select = require("../../common/select");
+var Track = require("../../common/track");
 var _ = require("underscore");
 
 module.exports = React.createClass({
@@ -83,21 +84,21 @@ module.exports = React.createClass({
            options={self.fieldOptions()}
            onSelect={function (v) {
              if (v.name === "--text") {
-               mixpanel.track("Select field type", {
+               Track.track("Select field type", {
                   Type: "text"
                 });
                field.setType("text");
              } else {
                field.setType(v.type);
                field.setName(v.name);
-               mixpanel.track("Select field type", {
+               Track.track("Select field type", {
                   Type: v.type,
                   Name: v.name
                 });
              }
            }}
           onRemove={function () {
-            mixpanel.track("Click remove field", {
+            Track.track("Click remove field", {
                 Type: field.type(),
                 Name: field.name()
               });

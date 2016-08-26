@@ -9,6 +9,7 @@ var jQuery = require("jquery");
 var Submit = require("../../js/submits.js").Submit;
 var _ = require("underscore");
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+var Track = require("../common/track");
 var $ = require("jquery");
 
 
@@ -56,7 +57,7 @@ module.exports = React.createClass({
         title: localization.archive.trash.remove.action,
         content: confirmationText,
         onAccept : function() {
-          mixpanel.track('Really delete document');
+          Track.track('Really delete document');
           new Submit({
             url: "/d/reallydelete",
             method: "POST",

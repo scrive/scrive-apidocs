@@ -3,7 +3,7 @@ var jQuery = require("jquery");
 var _ = require("underscore");
 var $ = require("jquery");
 var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
-var trackTimeout = require("../scripts/common/track_timeout");
+var Track = require("../scripts/common/track");
 
 /* Use Submit object to skip usage of form elements.
  * Usage
@@ -150,7 +150,7 @@ var Submit = exports.Submit = Backbone.Model.extend({
 
         this.get('beforeSend')();
         if(this.mixpanel())
-          trackTimeout(this.mixpanel().name, this.mixpanel().props, function() {
+          Track.track_timeout(this.mixpanel().name, this.mixpanel().props, function() {
               form.submit();
           });
         else

@@ -73,6 +73,7 @@ data Context = Context
     , ctxusehttps            :: Bool
     , ctxrecurlyconfig       :: RecurlyConfig
     , ctxsessionid           :: SessionID
+    , ctxtrackjstoken        :: Maybe String
     , ctxmixpaneltoken       :: String
     , ctxhubspotconf         :: HubSpotConf
     , ctxgoogleanalyticstoken :: String

@@ -23,5 +23,5 @@ $(function () {
   // > mixpanel.register({
   // >   Context : 'Login page - branded'
   // > });
-  // > mixpanel.track('View login page -branded');
+  // > Track.track('View login page -branded');
 });

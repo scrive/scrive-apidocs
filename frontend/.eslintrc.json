@@ -17,6 +17,7 @@
     "fromTemplateFooter": true,
     "fromTemplateFlash": true,
     "fromTemplateHasFlash": true,
+    "trackJs": true,
     "getLink": true,
     "hubspotConf": true,
     "APICallV1": true,

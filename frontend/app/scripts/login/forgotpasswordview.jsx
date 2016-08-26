@@ -2,6 +2,7 @@ var React = require("react");
 var BackboneMixin = require("../common/backbone_mixin");
 var Button = require("../common/button");
 var InfoTextInput = require("../common/infotextinput");
+var Track = require("../common/track");
 var LoginModel = require("./loginmodel");
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 
@@ -16,7 +17,7 @@ module.exports = React.createClass({
     },
     sendPasswordReminderCallback : function(resp) {
       if (resp.send == true) {
-        mixpanel.track('Password reminder sent');
+        Track.track('Password reminder sent');
         new FlashMessage({ content: localization.loginModal.passwordReminderSend, type : "success"});
       } else {
         var text = "";
@@ -26,7 +27,7 @@ module.exports = React.createClass({
           text = localization.loginModal.noUser;
         else if (resp.toomuch == true)
           text = localization.loginModal.tooMuch;
-        mixpanel.track('Error',{Message: 'password reminder failed: ' + text});
+        Track.track('Error',{Message: 'password reminder failed: ' + text});
         new FlashMessage({ content: text, type : "error"});
       }
     },

@@ -1,5 +1,6 @@
 var React = require("react");
 var BackboneMixin = require("../common/backbone_mixin");
+var Track = require("../common/track");
 var ToStartField = require("./field");
 var _ = require("underscore");
 
@@ -25,7 +26,7 @@ module.exports = React.createClass({
     this.setState({'minified': false});
   },
   toggleVisibility: function() {
-    mixpanel.track('Toggle visibility of to-start header');
+    Track.track('Toggle visibility of to-start header');
     this.setState({'minified': !this.state.minified});
   },
   getAuthenticationMethodText: function() { 

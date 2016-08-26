@@ -1,5 +1,6 @@
 var React = require("react");
 var Button = require("../common/button");
+var Track = require("../common/track");
 var Submit = require("../../js/submits.js").Submit;
 var ReloadManager = require("../../js/reloadmanager.js").ReloadManager;
 var $ = require("jquery");
@@ -28,7 +29,7 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
 
   module.exports = function(xhr) {
     ReloadManager.stopBlocking();
-    mixpanel.track('Error', {
+    Track.track('Error', {
       Message : 'Signing failed: reload modal',
       Status  : xhr.status,
       ResponseText: xhr.responseText

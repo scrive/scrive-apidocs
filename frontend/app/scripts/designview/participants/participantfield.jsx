@@ -1,5 +1,6 @@
 var React = require("react");
 var InfoTextInput = require("../../common/infotextinput");
+var Track = require("../../common/track");
 
 module.exports = React.createClass({
   placeholderText: function () {
@@ -37,7 +38,7 @@ module.exports = React.createClass({
             !field.canBeRemoved() ?
               undefined :
               function () {
-                mixpanel.track("Click remove field", {
+                Track.track("Click remove field", {
                   Type: field.type(),
                   Name: field.name()
                 });

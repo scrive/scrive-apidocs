@@ -1,6 +1,7 @@
 var React = require("react");
 var InfoTextInput = require("../../common/infotextinput");
 var Button = require("../../common/button");
+var Track = require("../../common/track");
 var _ = require("underscore");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
@@ -37,14 +38,14 @@ module.exports = React.createClass({
               new FlashMessage({type: "error", content: localization.designview.fieldWithSameNameExists});
               return;
             }
-            mixpanel.track("Enter custom field name", {
+            Track.track("Enter custom field name", {
               "Field name": self.state.name
             });
             field.setName(self.state.name);
           }}
           onTab={function (e) { if (self.props.last) { e.preventDefault(); } }}
           onRemove={function () {
-            mixpanel.track("Click remove field", {
+            Track.track("Click remove field", {
               Type: field.type(),
               Name: field.name()
             });
@@ -62,7 +63,7 @@ module.exports = React.createClass({
               new FlashMessage({type: "error", content: localization.designview.fieldWithSameNameExists});
               return;
             }
-            mixpanel.track("Enter custom field name", {
+            Track.track("Enter custom field name", {
               "Field name": self.state.name
             });
             field.setName(self.state.name);

@@ -2,6 +2,7 @@ var _ = require("underscore");
 var React = require("react");
 var Button = require("../../common/button");
 var Select = require("../../common/select");
+var Track = require("../../common/track");
 var TypeSetterMixin = require("./typesettermixin");
 var Done = require("./done");
 var Remove = require("./remove");
@@ -65,7 +66,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
     handleDone: function () {
       var model = this.props.model;
       var field = model.field();
-      mixpanel.track("Click save inline field");
+      Track.track("Click save inline field");
       field.makeReady();
       model.trigger("change");
     },

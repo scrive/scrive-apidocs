@@ -1,6 +1,7 @@
 var Backbone = require("backbone");
 var moment = require("moment");
 var Language = require("../scripts/common/language_service");
+var Track = require("../scripts/common/track");
 var _ = require("underscore");
 var $ = require("jquery");
 var Confirmation = require("./confirmations.js").Confirmation;
@@ -268,7 +269,7 @@ var BlockingInfoView = require("./blocking.js").BlockingInfoView;
         clickAction: function() {
             var view = this;
             var model = view.model;
-            mixpanel.track('Click blocking header');
+            Track.track('Click blocking header');
             if(model.isFree()) {
                 view.paymentsPopup({
                     title: localization.blocking.free.click.title

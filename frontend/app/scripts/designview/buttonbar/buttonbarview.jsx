@@ -7,6 +7,7 @@ var _ = require("underscore");
 
 var BackboneMixin = require("../../common/backbone_mixin");
 var Button = require("../../common/button");
+var Track = require("../../common/track");
 var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var Document = require("../../../js/documents.js").Document;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
@@ -153,12 +154,12 @@ module.exports = React.createClass({
     submit.send();
   },
   onSaveTemplateButtonClick: function () {
-    mixpanel.track("Click save as template");
+    Track.track("Click save as template");
     this.props.document.makeTemplate();
     this.saveDocument();
   },
   onRemoveDocumentButtonClick: function () {
-    mixpanel.track("Click remove file");
+    Track.track("Click remove file");
 
     var doc = this.props.document;
 
@@ -168,7 +169,7 @@ module.exports = React.createClass({
     doc.afterSave(this.removePDF);
   },
   onSaveDraftButtonClick: function () {
-    mixpanel.track("Click save as draft");
+    Track.track("Click save as draft");
     this.saveDocument();
   },
   onSendButtonClick: function () {
@@ -179,7 +180,7 @@ module.exports = React.createClass({
 
       var isSigning = doc.authorCanSignFirst();
 
-      mixpanel.track("Click sign button", {
+      Track.track("Click sign button", {
         "Is Signing": isSigning,
         "Uses eleg": doc.hasEleg(),
         "Uses email delivery": doc.hasEmail(),
@@ -190,7 +191,7 @@ module.exports = React.createClass({
 
       doc.save();
       if (BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
-        mixpanel.track("Open blocking popup");
+        Track.track("Open blocking popup");
         mixpanel.people.set({
           "Blocking Popup": new Date()
         });
@@ -206,7 +207,7 @@ module.exports = React.createClass({
     }
   },
   onSignConfirmationModalAccept: function () {
-    mixpanel.track("Click accept sign", {"Button": "sign"});
+    Track.track("Click accept sign", {"Button": "sign"});
 
     if (this._confirmationModal) {
       this._confirmationModal.hideCancel();
@@ -231,7 +232,7 @@ module.exports = React.createClass({
     var self = this;
     var doc = this.props.document;
 
-    mixpanel.track("Click accept sign", {"Button": "send"});
+    Track.track("Click accept sign", {"Button": "send"});
     doc.takeSigningScreenshot(function () {
       self.sendWithCSV(doc, 1, doc.isCsv() ? doc.csv().length - 1 : undefined);
     });

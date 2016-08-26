@@ -14,7 +14,7 @@ var ConfirmationWithEmail = require("../../../js/confirmationsWithEmails.js").Co
 var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var $ = require("jquery");
 var LocalStorage = require("../../../js/storage.js").LocalStorage;
-var trackTimeout = require("../../common/track_timeout");
+var Track = require("../../common/track");
 
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -163,7 +163,7 @@ var trackTimeout = require("../../common/track_timeout");
     handleStartChangingEmail: function () {
       var self = this;
       var signatory = this.props.signatory;
-      mixpanel.track("Click change email", {"Signatory index": signatory.signIndex()});
+      Track.track("Click change email", {"Signatory index": signatory.signIndex()});
       new ChangeSignatoryDetailModal({
         value: signatory.email(),
         validator: new EmailValidation(),
@@ -173,7 +173,7 @@ var trackTimeout = require("../../common/track_timeout");
         acceptButton: localization.changeEmailModal.acceptButton,
         invalidValueFlash: localization.changeEmailModal.invalidEmailFlash,
         onAction: function (newValue) {
-          trackTimeout("Accept", {"Signatory index": signatory.signIndex(),
+          Track.track_timeout("Accept", {"Signatory index": signatory.signIndex(),
                                   "Accept": "change email"});
           LoadingDialog.open();
           signatory.changeEmail(newValue).sendAjax(function () {
@@ -186,7 +186,7 @@ var trackTimeout = require("../../common/track_timeout");
     handleStartChangingMobile: function () {
       var self = this;
       var signatory = this.props.signatory;
-      mixpanel.track("Click change phone", {"Signatory index": signatory.signIndex()});
+      Track.track("Click change phone", {"Signatory index": signatory.signIndex()});
       new ChangeSignatoryDetailModal({
         value: signatory.mobile(),
         validator: new PhoneValidation(),
@@ -196,7 +196,7 @@ var trackTimeout = require("../../common/track_timeout");
         acceptButton: localization.changeMobileModal.acceptButton,
         invalidValueFlash: localization.changeMobileModal.invalidMobileFlash,
         onAction: function (newValue) {
-          trackTimeout("Accept", {"Signatory index": signatory.signIndex(),
+          Track.track_timeout("Accept", {"Signatory index": signatory.signIndex(),
                                   "Accept": "change phone"});
           LoadingDialog.open();
           signatory.changePhone(newValue).sendAjax(function () {
@@ -210,10 +210,10 @@ var trackTimeout = require("../../common/track_timeout");
       var self = this;
       var signatory = this.props.signatory;
       var document = signatory.document();
-      mixpanel.track("Click send reminder", {"Signatory index": signatory.signIndex()});
       var useEmail;
       var useMobile;
       var useEmailAndMobile;
+      Track.track("Click send reminder", {"Signatory index": signatory.signIndex()});
       if (!signatory.hasSigned()) {
         // if signatory hasnt signed yet, use invitation delivery method
         useEmail = signatory.emailDelivery();
@@ -237,7 +237,7 @@ var trackTimeout = require("../../common/track_timeout");
           editText: localization.reminder.formOwnMessage,
           rejectText: localization.cancel,
           onAccept: function (customtext) {
-            trackTimeout("Accept",
+            Track.track_timeout("Accept",
               {"Accept": "send reminder",
                "Signatory index": signatory.signIndex(),
                "Delivery method": "Email"});
@@ -257,7 +257,7 @@ var trackTimeout = require("../../common/track_timeout");
           acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
           rejectText: localization.cancel,
           onAccept: function (customtext) {
-           trackTimeout("Accept",
+           Track.track_timeout("Accept",
              {"Accept": "send reminder",
               "Signatory index": signatory.signIndex(),
               "Delivery method": "Mobile"});
@@ -275,7 +275,7 @@ var trackTimeout = require("../../common/track_timeout");
           acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
           rejectText: localization.cancel,
           onAccept: function (customtext) {
-          trackTimeout("Accept",
+          Track.track_timeout("Accept",
           {"Accept": "send reminder",
            "Signatory index": signatory.signIndex(),
            "Delivery method": "Email and Mobile"});
@@ -305,7 +305,7 @@ var trackTimeout = require("../../common/track_timeout");
     goToSignView: function () {
       var signatory = this.props.signatory;
       LocalStorage.set("backlink", "target", "document");
-      mixpanel.track("Accept", {"Signatory index": signatory.signIndex(), "Accept": "give for signing"});
+      Track.track("Accept", {"Signatory index": signatory.signIndex(), "Accept": "give for signing"});
       signatory.giveForPadSigning().send();
     },
 

@@ -1,5 +1,6 @@
 var React = require("react");
 var BackboneMixin = require("../common/backbone_mixin");
+var Track = require("../common/track");
 var Utils = require("../archive/utils");
 var List = require("../lists/list");
 var DeliveryMethodTooltipMixin = require("./deliverymethodtooltip");
@@ -11,7 +12,7 @@ var _ = require("underscore");
 module.exports = React.createClass({
   mixins: [DeliveryMethodTooltipMixin],
     createFromTemplate : function(id) {
-      mixpanel.track('Click on template in to-start list');
+      Track.track('Click on template in to-start list');
       new Submit({
         method : "POST",
         url: "/api/frontend/documents/newfromtemplate/" +  id,

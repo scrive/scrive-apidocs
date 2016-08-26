@@ -9,6 +9,7 @@ var File = require("./files.js").File;
 var AuthorAttachment = require("./authorattachment.js").AuthorAttachment;
 var Signatory = require("./signatories.js").Signatory;
 var takeScreenshot = require("./takeScreenshot").takeScreenshot;
+var Track = require("../scripts/common/track");
 
 /* Document model
  */
@@ -241,7 +242,7 @@ var Document = exports.Document = Backbone.Model.extend({
                       document.get("screenshots").signing = shot;
                 } catch(e) {
                   // Some old browsers can throw exception here. We need to catch it, to execute callDone later.
-                  mixpanel.track('Take screenshot failed',{
+                  Track.track('Take screenshot failed',{
                     'Reason': "Canvas exception",
                     'Exception': e,
                     'Browser': $.browser.name,

@@ -1,5 +1,6 @@
 var React = require("react");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
+var Track = require("../../common/track");
 var _ = require("underscore");
 
 
@@ -55,7 +56,7 @@ module.exports = React.createClass({
                           submit.add("attachments", JSON.stringify(attachments));
                           submit.sendAjax();
                           document.removeattachment(a);
-                          mixpanel.track('Click remove attachment', {  Type: 'Author'});
+                          Track.track('Click remove attachment', {  Type: 'Author'});
                         }}
                       />
                     </td>
@@ -88,7 +89,7 @@ module.exports = React.createClass({
                             className='remove-icon'
                             onClick={function() {
                               sig.removeAttachment(a);
-                              mixpanel.track('Click remove attachment', {
+                              Track.track('Click remove attachment', {
                                 Type: 'Signatory'
                               });
                             }}
