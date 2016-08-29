@@ -84,8 +84,10 @@ module.exports = React.createClass({
   },
   canBeProlonged: function () {
     return (
-      this.props.document.timedout() &&
-      this.props.document.currentViewerIsAuthor()
+      this.props.document.timedout() && (
+        this.props.document.currentViewerIsAuthor() ||
+        this.props.document.currentViewerIsAuthorsCompanyAdmin()
+      )
     );
   },
   canBeWithdrawn: function () {
