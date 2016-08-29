@@ -50,6 +50,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, m
   let smsType = fromMaybe None $ maybeRead msmsType
       ids = case smsType of
           Invitation did slid -> [identifier_ slid, identifier_ did]
+          DocumentRelatedMail did -> [identifier_ did]
           SMSPinSendout slid  -> [identifier_ slid]
           None                -> []
   localData ids $ do

@@ -18,6 +18,7 @@ module Mails.Events (
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Functor
+import Data.Time
 import Log
 import Text.StringTemplates.Templates hiding (runTemplatesT)
 import qualified Text.StringTemplates.Fields as F
@@ -55,7 +56,13 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
     processEvent event
   )
   where
-    processEvent (eid, _mid, XSMTPAttrs [("mailinfo", mi)], eventType) = do
+    processEvent (eid, mid, XSMTPAttrs [("mailinfo", mi)], eventType) = do
+      now <- currentTime
+      mmailSendTimeStamp <- dbQuery $ GetEmailSendoutTime mid
+      let timeDiff = case mmailSendTimeStamp of
+                       Nothing -> Nothing
+                       Just mailSendTimeStamp -> Just $ floor $ toRational $ mailSendTimeStamp `diffUTCTime` now
+      templates <- getGlobalTemplates
       case maybeRead mi of
         Just (Invitation docid slid) -> logDocumentAndSignatory docid slid $ do
           exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor docid
@@ -74,7 +81,6 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                 msl <- getSigLinkFor slid <$> theDocument
                 let muid = maybe Nothing maybesignatory msl
                 let signemail = maybe "" getEmail msl
-                templates <- getGlobalTemplates
                 let logEmails email = logInfo "Comparing emails" $ object [
                           "signatory_email" .= signemail
                         , "event_email" .= email
@@ -87,7 +93,7 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                       logEmails email
                       case ev of
                         SG_Opened -> handleOpenedInvitation slid email muid
-                        SG_Delivered _ -> handleDeliveredInvitation bd slid
+                        SG_Delivered _ -> handleDeliveredInvitation bd slid timeDiff
                         -- we send notification that email is reported deferred after
                         -- fifth attempt has failed - this happens after ~10 minutes
                         -- from sendout
@@ -99,7 +105,7 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                       logEmails email
                       case ev of
                         MG_Opened -> handleOpenedInvitation slid email muid
-                        MG_Delivered -> handleDeliveredInvitation bd slid
+                        MG_Delivered -> handleDeliveredInvitation bd slid timeDiff
                         MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
                         MG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
                         _ -> return ()
@@ -107,14 +113,14 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                       logEmails email
                       case ev of
                         SL_Opened -> handleOpenedInvitation slid email muid
-                        SL_Delivered -> handleDeliveredInvitation bd slid
-                        SL_Failed 0 5001 -> handleDeliveredInvitation bd slid -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
+                        SL_Delivered -> handleDeliveredInvitation bd slid timeDiff
+                        SL_Failed 0 5001 -> handleDeliveredInvitation bd slid timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
                         SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation bd slid
                         _ -> return ()
                     handleEv (SendinBlueEvent email ev) = do
                       logEmails email
                       case ev of
-                        SiB_Delivered -> handleDeliveredInvitation bd slid
+                        SiB_Delivered -> handleDeliveredInvitation bd slid timeDiff
                         SiB_Opened -> handleOpenedInvitation slid email muid
                         SiB_Deferred _ -> when (signemail == email) $ handleDeferredInvitation bd slid email
                         SiB_HardBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
@@ -124,6 +130,22 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                         _ -> return ()
 
                 theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
+        Just (DocumentRelatedMail docid) -> withDocumentID docid $ do
+          let handleEv (SendGridEvent _ ev _) = case ev of
+                                                  SG_Delivered _ -> logDeliveryTime timeDiff
+                                                  _ -> return ()
+              handleEv (MailGunEvent _ ev) = case ev of
+                                               MG_Delivered -> logDeliveryTime timeDiff
+                                               _ -> return ()
+              handleEv (SocketLabsEvent _ ev) = case ev of
+                                                  SL_Delivered -> logDeliveryTime timeDiff
+                                                  SL_Failed 0 5001 -> logDeliveryTime timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
+                                                  _ -> return ()
+              handleEv (SendinBlueEvent _ ev) = case ev of
+                                                  SiB_Delivered -> logDeliveryTime timeDiff
+                                                  _ -> return ()
+          theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
+          markEventAsRead eid
         _ -> markEventAsRead eid
     processEvent (eid, _ , _, _) = markEventAsRead eid
 
@@ -133,11 +155,18 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
       when (not success) $
         logAttention_ "Couldn't mark event as read"
 
+logDeliveryTime :: (DocumentMonad m, MonadLog m, MonadThrow m) => Maybe Int -> m ()
+logDeliveryTime timeDiff = theDocument >>= \d -> do
+  logInfo "Email delivered" $ object [ "author company id" .= show (documentauthorcompanyid d)
+                                     , "delivery time" .= timeDiff
+                                     ]
+
 handleDeliveredInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m)
-                          => BrandedDomain -> SignatoryLinkID -> m ()
-handleDeliveredInvitation bd slid = do
+                          => BrandedDomain -> SignatoryLinkID -> Maybe Int -> m ()
+handleDeliveredInvitation bd slid timeDiff = do
   getSigLinkFor slid <$> theDocument >>= \case
     Just signlink -> do
+      logDeliveryTime timeDiff
       -- send it only if email was reported deferred earlier
       when (mailinvitationdeliverystatus signlink == Deferred) $ do
         mail <- mailDeliveredInvitation bd signlink =<< theDocument

@@ -11,5 +11,6 @@ import KontraPrelude
 data MessageData =
     Invitation DocumentID SignatoryLinkID
   | SMSPinSendout SignatoryLinkID
+  | DocumentRelatedMail DocumentID
   | None
     deriving (Eq, Ord, Show, Read)

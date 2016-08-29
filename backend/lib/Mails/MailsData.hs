@@ -53,6 +53,10 @@ instance ToJSON Mail where
         , identifier_ did
         , identifier_ slid
         ]
+      jsonizeMailInfo (DocumentRelatedMail did) = [
+          "type" .= ("document_related_mail"::T.Text)
+        , identifier_ did
+        ]
       jsonizeMailInfo (SMSPinSendout slid) = [
           "type" .= ("sms_pin_sendout"::T.Text)
         , identifier_ slid
