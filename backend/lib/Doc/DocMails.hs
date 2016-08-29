@@ -162,7 +162,7 @@ sendReminderEmail custommessage actor automatic siglink = logSignatory (signator
          -- We only collect delivery information, if signatory had not signed yet
          , mailInfo = if (isNothing $ maybesigninfo siglink)
            then Invitation docid (signatorylinkid siglink)
-           else None
+           else DocumentRelatedMail docid
          -- We only add attachment after document is signed
          , attachments = attachments mail ++ (if documentstatus doc == Closed
           then mailattachments
@@ -211,6 +211,7 @@ sendClosedEmails sealFixed document = do
                   | otherwise            = scheduleEmailSendoutWithAuthorSender (documentid document)
             scheduleEmailFunc $ mail { to = [getMailAddress sl]
                                      , attachments = attachments mail ++ mailattachments
+                                     , mailInfo = DocumentRelatedMail $ documentid document
                                      , replyTo =
                                           let maybeAuthor = find signatoryisauthor signatorylinks
                                           in if signatoryisauthor sl && isJust maybeAuthor
@@ -334,6 +335,7 @@ sendForwardEmail email noContent asiglink = do
                                              then ""
                                              else content mail
                              , attachments = attachments mail ++ mailattachments
+                             , mailInfo = DocumentRelatedMail did
                              }
   return ()
 

@@ -12,6 +12,7 @@ module Mails.Model (
   , CreateEmail(..)
   , CreateServiceTest(..)
   , GetEmail(..)
+  , GetEmailSendoutTime(..)
   , GetEmailForRecipient(..)
   , GetEmailsForTest(..)
   , ResendEmailsSentAfterServiceTest(..)
@@ -151,6 +152,14 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetEmail (Maybe Mail) where
       sqlWhereEq "id" mid
       sqlWhereEq "token" token
     fetchMaybe mailFetcher
+
+data GetEmailSendoutTime = GetEmailSendoutTime MailID
+instance (MonadDB m, MonadThrow m) => DBQuery m GetEmailSendoutTime (Maybe UTCTime) where
+  query (GetEmailSendoutTime mid) = do
+    runQuery01_ . sqlSelect "mails" $ do
+      sqlResult "finished_at"
+      sqlWhereEq "id" mid
+    fetchMaybe runIdentity
 
 data GetEmailForRecipient = GetEmailForRecipient String String UTCTime
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetEmailForRecipient (Maybe Mail) where
