@@ -84,7 +84,16 @@ var classNames = require("classnames");
       setTimeout(function () {
         ReloadManager.startBlocking();
       }, 5000);
-      window.location = bankID.bankIdUrl();
+      if (bankID.thisDevice() && BrowserInfo.isChromeiOS()) {
+        // Chrome on iOS is very stupid, and after changing window.location to bankid://
+        // it throws Cross-Origin Policy errors for pending AJAX requests
+        // so we have to wait for them to finish
+        setTimeout(function () {
+          window.location = bankID.bankIdUrl();
+        }, 2000);
+      } else {
+        window.location = bankID.bankIdUrl();
+      }
     },
 
     addBankIDIframeIfItsNeeded: function () {
