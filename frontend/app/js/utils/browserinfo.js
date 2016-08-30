@@ -32,6 +32,9 @@ var BrowserInfo = exports.BrowserInfo = {
     isChrome : function() {
         return navigator.userAgent.match(/Chrome/i) != null; //
     },
+    isChromeiOS : function() {
+        return navigator.userAgent.match(/CriOS/i) != null;
+    },
     isIE : function() {
         return navigator.userAgent.match(/MSIE|Trident/i) != null; // MSIE for IE <=10 and Trident for IE 11=<
     },
