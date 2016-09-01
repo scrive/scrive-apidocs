@@ -193,6 +193,10 @@ var Task = require("../navigation/task");
                 <div className="loading" />
               </div>
             }
+            {/* if */ (isLoading && hasFile) &&
+              <div className="loader">
+              </div>
+            }
             {/* if */ hasFile && !isLoading &&
               <span>
                 <div className={canUpload && "button-group small-buttons"}>
