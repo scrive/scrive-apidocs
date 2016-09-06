@@ -181,4 +181,19 @@ describe("common/htmltextwithsubstitution", function () {
     var componentEl = $(React.findDOMNode(component));
     assert.lengthOf($("span.secure.someClass", componentEl), 1);
   });
+
+  it("should handle list substitution with four items", function () {
+    // This is a test for the bug fixed in #326.
+    var component = renderComponent({
+      secureText: "<span class='list'></span>",
+      lists: {
+        ".list": {
+          items: ["first", "second", "third", "fourth"]
+        }
+      }
+    });
+
+    var componentEl = $(React.findDOMNode(component));
+    assert.equal($("span.list").text(), "first, second, third and fourth");
+  });
 });

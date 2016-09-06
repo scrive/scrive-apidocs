@@ -91,7 +91,7 @@ var React = require("react");
       } else {
         _.each(items.slice(0, items.length - 2), function(item, index) {
           $container.append(makeListItem(item));
-          $container.append($separator);
+          $container.append($separator.clone());
         });
 
         $container.append(makeListItem(items[items.length - 2]));
