@@ -16,6 +16,7 @@ module Doc.Rendering
     , getPageSizeOfPDFInPoints
     ) where
 
+import Codec.Picture.Png
 import Control.Concurrent.Async.Lifted
 import Control.Concurrent.Lifted
 import Control.Conditional (whenM)
@@ -202,14 +203,29 @@ runRendering fileContent widthInPixels renderingMode rp mredis = do
                 fetchPage pagePath info
                 go $ k + 1
 
-    fetchPage pagePath info@PageInfo{..} = localData ["page" .= piPage] $ do
-      content <- liftBase (E.try . BS.readFile $ pagePath piPage) >>= \case
-        Right content -> return content
+    readPngContents :: MonadBaseControl IO m => String -> Int -> m BS.ByteString
+    readPngContents path retries = liftBase (E.try $ BS.readFile path) >>= \case
+        Right content -> do
+          case decodePng content of
+            Left e -> do
+              logAttention "Couldn't decode PNG page file" $ object ["error" .= e]
+              if retries > 0 then do
+                  -- sleep for 100ms, because sometimes the png file is not fully written yet
+                  -- for an unknown reason (even its size is wrong),
+                  -- and reading it returns clipped contents
+                  liftBase $ threadDelay 100000
+                  readPngContents path $ retries - 1
+              else
+                  return BS.empty
+            Right _ -> return content
         Left (e::IOError) -> do
           logAttention "Couldn't open page file" $ object [
               "error" .= show e
             ]
           return BS.empty
+
+    fetchPage pagePath info@PageInfo{..} = localData ["page" .= piPage] $ do
+      content <- readPngContents (pagePath piPage) 1
       F.forM_ mredis $ redisPut (BS.pack $ show piPage) content
       putPage rp piPage content >>= \case
         True  -> logInfo "Page retrieved successfully" $ toJSON info

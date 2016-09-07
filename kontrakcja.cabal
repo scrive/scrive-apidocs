@@ -458,6 +458,7 @@ Library
                , iconv
                , invariant
                , json
+               , JuicyPixels
                , kontrakcja-templates
                , lifted-async
                , lifted-base
