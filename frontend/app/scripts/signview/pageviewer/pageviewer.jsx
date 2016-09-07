@@ -78,7 +78,7 @@ module.exports = React.createClass({
 
   maybeResetZoom: function () {
     if (!this.isViewportSize() && this.state.zoom !== 1) {
-      this.setState({zoom: 1});
+      this.setState({zoom: 1, zoomStep: 0});
     } else if (this.state.zoom * this.standardWidth() > MAX_ZOOM_PIXELS) {
       this.setState({zoom: MAX_ZOOM_PIXELS / this.standardWidth()});
     }

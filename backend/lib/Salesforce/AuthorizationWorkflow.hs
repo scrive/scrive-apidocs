@@ -38,7 +38,8 @@ getRefreshTokenFromCode :: (MonadDB m, MonadLog m, MonadBase IO m, MonadReader c
 getRefreshTokenFromCode code = do
   sc <- getSalesforceConfM
   (exitcode, stdout , stderr) <- readCurl [
-                "-X", "POST"
+                "--tlsv1.2"
+              , "-X", "POST"
               , "-d", "grant_type=authorization_code&" ++
                       "code=" ++ code ++ "&" ++
                       "client_id=" ++ salesforceConsumerKey sc ++ "&" ++
@@ -72,7 +73,8 @@ getAccessTokenFromRefreshToken :: (MonadDB m, MonadBase IO m, MonadLog m, MonadR
 getAccessTokenFromRefreshToken rtoken = do
   sc <- getSalesforceConfM
   (exitcode, stdoutWithCode, stderr) <- readCurl [
-      "-X", "POST"
+      "--tlsv1.2"
+    , "-X", "POST"
     , "--write-out","\n%{http_code}"
     , "-d", "grant_type=refresh_token&" ++
             "refresh_token=" ++ rtoken ++ "&" ++
@@ -119,7 +121,8 @@ testSalesforce rtoken url = do
       return $ Left ("Getting access token failed: " ++ msg, curlErr, stdout, stderr, httpCode)
     Right atoken -> do
       (exitcode, stdoutWithCode, stderr) <- readCurl [
-          "-X", "POST"
+          "--tlsv1.2"
+        , "-X", "POST"
         , "--write-out","\n%{http_code}"
         , "-f" -- make curl return exit code (22) if it got anything else but 2XX
         , "-L" -- make curl follow redirects

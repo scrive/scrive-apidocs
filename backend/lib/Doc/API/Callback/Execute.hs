@@ -184,7 +184,8 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
          return False
        Right token -> do
         (exitcode, stdout, stderr) <- readCurl [
-            "-X", "POST"
+            "--tlsv1.2"
+          , "-X", "POST"
           , "--write-out","\n%{http_code}"
           , "-f" -- make curl return exit code (22) if it got anything else but 2XX
           , "-L" -- make curl follow redirects
