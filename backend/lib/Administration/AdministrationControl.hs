@@ -51,6 +51,7 @@ import Doc.DocumentMonad (withDocumentID)
 import Doc.Model
 import Doc.SignatoryLinkID
 import EvidenceLog.Model
+import File.File
 import File.Model
 import File.Storage
 import Happstack.Fields
@@ -599,10 +600,13 @@ daveCompany companyid = onlyAdmin $ do
 
 daveFile :: Kontrakcja m => FileID -> String -> m Response
 daveFile fileid' _title = onlyAdmin $ do
-   contents <- getFileIDContents fileid'
+   file <- dbQuery $ GetFileByFileID fileid'
+   contents <- getFileContents file
    if BS.null contents
       then internalError
-      else return $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+      else
+        return $ setHeader "Content-Disposition" ("attachment;filename=" ++ filename file)
+                 $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 handleAdminUserUsageStatsDays :: Kontrakcja m => UserID -> m JSValue
 handleAdminUserUsageStatsDays uid = onlySalesOrAdmin $ do
