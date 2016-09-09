@@ -17,14 +17,16 @@ import KontraPrelude
 import Log.Configuration
 
 data CmdConf = CmdConf {
-  config :: String
+  config :: String,
+  force :: Bool
 } deriving (Data, Typeable)
 
 cmdConf :: String -> CmdConf
 cmdConf progName = CmdConf {
   config = configFile
         &= help ("Configuration file (default: " ++ configFile ++ ")")
-        &= typ "FILE"
+        &= typ "FILE",
+  force =  False &= help ("Force commit after each migrationg - DB will be permanently changed even if migrations will fail")
 } &= program progName
   where
     configFile = "kontrakcja.conf"
@@ -40,7 +42,8 @@ main = do
   withLoggerWait $ do
     -- composite types are not available in migrations
     let connSource = simpleSource $ pgConnSettings dbConfig []
+    let migrationOptions = if (force) then [ForceCommitAfterEveryMigration] else []
     withPostgreSQL (unConnectionSource connSource) $ do
-      migrateDatabase kontraExtensions kontraDomains kontraTables kontraMigrations
+      migrateDatabase migrationOptions kontraExtensions kontraDomains kontraTables kontraMigrations
       defineComposites kontraComposites
       defineFunctions kontraFunctions

@@ -104,5 +104,5 @@ mkLogRunner component LogConfig{..} rng = do
     defLogger (PostgreSQL ci) = do
       ConnectionSource pool <- poolSource def { csConnInfo = ci } 1 10 1
       withPostgreSQL pool . run simpleStdoutLogger $ do
-        migrateDatabase [] [] logsTables logsMigrations
+        migrateDatabase [] [] [] logsTables logsMigrations
       pgLogger pool
