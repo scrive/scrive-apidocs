@@ -75,7 +75,7 @@ var _ = require("underscore");
         "$first_name": document.currentSignatory().fstname(),
         "$last_name": document.currentSignatory().sndname(),
         "$email": document.currentSignatory().email(),
-        "Language": document.lang().simpleCode(),
+        "Language": document.lang(),
         "Company Name": document.currentSignatory().company(),
         "Referring Company": document.author().company(),
         "Signup Method": "BySigning"
