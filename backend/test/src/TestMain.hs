@@ -132,7 +132,7 @@ testMany (allargs, ts) = do
   let connSettings = pgConnSettings pgconf
   lr@LogRunner{..} <- mkLogRunner "test" def rng
   withLogger . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
-    migrateDatabase kontraExtensions kontraDomains kontraTables kontraMigrations
+    migrateDatabase [] kontraExtensions kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
     offsets <- dbQuery $ HC.GetNClockErrorEstimates 10
