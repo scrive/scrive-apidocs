@@ -1,5 +1,6 @@
 import StringIO
 import os
+import sys
 import time
 
 import requests
@@ -53,7 +54,9 @@ class SeleniumDriverWrapper(object):
         if self._driver is not None:
             self._driver.quit()
         if self._screenshots_enabled:
-            self._download_screenshots()
+            # only download screenshots if it was successfull
+            if sys.exc_info() == (None, None, None):
+                self._download_screenshots()
 
     def _download_screenshots(self):
         import config
