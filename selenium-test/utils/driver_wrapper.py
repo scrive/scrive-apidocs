@@ -129,6 +129,7 @@ class SeleniumDriverWrapper(object):
             prefix = ''
         screenshot_name = (prefix + self._lang + '_' +
                            self._test_name + '_' +
+                           repr(self) + '_' +
                            '%02d' % (self._screenshot_count,))
 
         # force sauce labs to take env screenshot at this moment

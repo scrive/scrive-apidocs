@@ -83,7 +83,9 @@ def make_remote_drivers(lang, test_name, remote_devices, screenshots_enabled):
                 webdriver.remote.file_detector.LocalFileDetector()
             return driver
 
-        driver_name = capabilities['browserName'] + capabilities['version']
+        driver_name = (capabilities.get('platformName',
+                                        capabilities['browserName'])
+                       + capabilities.get('version', ''))
         yield SeleniumDriverWrapper(driver_factory,
                                     driver_name=driver_name,
                                     test_name=test_name,
