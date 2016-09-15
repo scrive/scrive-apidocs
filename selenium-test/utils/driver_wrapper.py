@@ -131,8 +131,8 @@ class SeleniumDriverWrapper(object):
                            self._test_name + '_' +
                            '%02d' % (self._screenshot_count,))
 
-        self._driver.get_screenshot_as_png()
-        self._request_count += 1
+        # force sauce labs to take env screenshot at this moment
+        self.execute('return 1')
 
         remote_screenshot_name = ('%04d' % (self._request_count - 1,) +
                                   'screenshot.png')
