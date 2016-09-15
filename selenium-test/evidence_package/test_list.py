@@ -26,7 +26,7 @@ LOCAL_DEVICES = [{'driver': webdriver.Firefox,
                   'name': DC.FIREFOX['browserName'],
                   'screenshot-prefix': 'desktop'}]
 
-REMOTE_DEVICES = [{'browserName': "chrome",
+REMOTE_DEVICES = [{'browserName': 'chrome',
                    'chromeOptions': {'args': ['--disable-extensions']},
                    'platform': 'Windows 8.1',
                    'window-size': (1040, 784),

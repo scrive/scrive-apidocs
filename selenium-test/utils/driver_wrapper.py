@@ -26,7 +26,7 @@ class SeleniumDriverWrapper(object):
         self._screenshot_prefix = screenshot_prefix
         self._window_size = window_size
 
-    def __str__(self):
+    def __repr__(self):
         result = 'DRV(' + self._driver_name + ')'
         if self._lang != 'en':
             result += ' in ' + self._lang
