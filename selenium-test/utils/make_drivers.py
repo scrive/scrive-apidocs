@@ -138,7 +138,7 @@ def find_tests(module):
 
 @nose.tools.nottest
 def generate_tests(module, artifact_dir, local_devices=None,
-                   remote_devices=None, screenshots_enabled=False,
+                   remote_devices=None, screenshots_enabled=None,
                    lang=None, selenium=True):
     import config
     api = Scrive(**config.scrive_api)
