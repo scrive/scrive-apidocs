@@ -8,7 +8,7 @@ Placement = _field_placement.FieldPlacement
 
 def check_language_tst(test, drv, api):
     # prepare doc
-    doc = test.create_standard_doc(u'language test')
+    doc = test.create_standard_doc(u'language test - ' + drv._lang)
 
     # clear name to request it in extra details
     sig = doc.signatories.get_by_attrs(full_name=u'Alex Allen')

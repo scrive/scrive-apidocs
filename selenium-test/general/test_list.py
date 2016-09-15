@@ -47,7 +47,19 @@ REMOTE_DEVICES = [{'browserName': 'internet explorer',
                    'platform': 'OS X 10.11'},
                   {'browserName': 'MicrosoftEdge',
                    'version': '',
-                   'platform': 'Windows 10'}]
+                   'platform': 'Windows 10'},
+                  {'browserName': 'Safari',
+                   'appiumVersion': '1.5.3',
+                   'deviceName': 'iPhone 6',
+                   'deviceOrientation': 'portrait',
+                   'platformVersion': '9.3',
+                   'platformName': 'iOS'},
+                  {'browserName': 'Browser',
+                   'appiumVersion': '1.5.3',
+                   'deviceName': 'Samsung Galaxy S4 Emulator',
+                   'deviceOrientation': 'portrait',
+                   'platformVersion': '4.4',
+                   'platformName': 'Android'}]
 
 
 dir_path = os.path.dirname(os.path.abspath(__file__))

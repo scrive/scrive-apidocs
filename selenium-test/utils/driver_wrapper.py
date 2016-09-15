@@ -1,5 +1,6 @@
 import StringIO
 import os
+import sys
 import time
 
 import requests
@@ -26,7 +27,7 @@ class SeleniumDriverWrapper(object):
         self._screenshot_prefix = screenshot_prefix
         self._window_size = window_size
 
-    def __str__(self):
+    def __repr__(self):
         result = 'DRV(' + self._driver_name + ')'
         if self._lang != 'en':
             result += ' in ' + self._lang
@@ -53,7 +54,9 @@ class SeleniumDriverWrapper(object):
         if self._driver is not None:
             self._driver.quit()
         if self._screenshots_enabled:
-            self._download_screenshots()
+            # only download screenshots if it was successfull
+            if sys.exc_info() == (None, None, None):
+                self._download_screenshots()
 
     def _download_screenshots(self):
         import config
@@ -126,10 +129,11 @@ class SeleniumDriverWrapper(object):
             prefix = ''
         screenshot_name = (prefix + self._lang + '_' +
                            self._test_name + '_' +
+                           repr(self) + '_' +
                            '%02d' % (self._screenshot_count,))
 
-        self._driver.get_screenshot_as_png()
-        self._request_count += 1
+        # force sauce labs to take env screenshot at this moment
+        self.execute('return 1')
 
         remote_screenshot_name = ('%04d' % (self._request_count - 1,) +
                                   'screenshot.png')

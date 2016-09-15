@@ -1,5 +1,3 @@
-import unittest
-
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions
 
@@ -68,34 +66,21 @@ def check_sign_with_signsuccessredirect(test, drv, api):
     drv.wait(30).until(expected_conditions.title_contains('Google'))
 
 
-def check_basic_reject(test, drv, api):
-    doc = test.create_standard_doc(u'basic reject')
-    doc = api.update_document(doc)
-    doc = api.ready(doc)
+def check_regular_rejection(test, drv, api):
+    doc = test.create_standard_doc(u'regular rejection')
+    doc = api.ready(api.update_document(doc))
 
-    # open signview
     drv.open_url(doc.other_signatory().absolute_sign_url())
-
-    # scroll to the reject button
-    drv.scroll_to_bottom()
+    test.arrow_scroll(skip_scroll_to_top=True)
+    drv.screenshot(first_sleep_for=1)
 
     # click reject button and wait for confirmation modal to show up
-    drv.wait_for_element('.section.sign .transparent-button').click()
+    drv.wait_for_element_and_click('.section.sign .transparent-button')
     drv.wait_for_element('.above-overlay')
     drv.screenshot(first_sleep_for=1)
-
-    # click 'back' to see if the modal hides properly
-    drv.wait_for_element('.section.sign .transparent-button').click()
-    drv.wait_for_element_to_disappear('.above-overlay')
-    test.sleep(.5)  # there's a 0.2s transition on z-index
-
-    # click reject button again
-    drv.wait_for_element('.section.sign .transparent-button').click()
-    drv.wait_for_element('.above-overlay')
 
     # confirm rejecting
-    drv.wait_for_element('.section.sign .button-reject').click()
-    drv.screenshot(first_sleep_for=1)
+    drv.wait_for_element_and_click('.section.sign .button-reject')
 
     # wait for modal to disappear
     drv.wait_for_element_to_disappear('.sign.section')
@@ -103,6 +88,47 @@ def check_basic_reject(test, drv, api):
     # wait for header of post signview that is cancelled
     drv.wait_for_element('.instructions.s-header-doc-cancelled')
     drv.screenshot()
+
+
+def check_custom_rejection(test, drv, api):
+    doc = test.create_standard_doc(u'custom rejection')
+    doc = api.ready(api.update_document(doc))
+
+    drv.open_url(doc.other_signatory().absolute_sign_url())
+    test.arrow_scroll(skip_scroll_to_top=True)
+
+    # click reject button and wait for confirmation modal to show up
+    drv.wait_for_element_and_click('.section.sign .transparent-button')
+    drv.wait_for_element('.above-overlay')
+
+    # fill text input
+    textarea = drv.get_element('.reject-textarea textarea', number=1)
+    textarea.send_keys('A custom reason for rejection.')
+    drv.screenshot()
+
+    # click 'back' to see if the modal hides properly
+    drv.wait_for_element_and_click('.section.sign .transparent-button')
+    drv.wait_for_element_to_disappear('.above-overlay')
+    test.sleep(.5)  # there's a 0.2s transition on z-index
+
+    # click reject button again
+    drv.wait_for_element_and_click('.section.sign .transparent-button')
+    drv.wait_for_element('.above-overlay')
+
+    textarea = drv.get_element('.reject-textarea textarea', number=1)
+    value = textarea.get_attribute('value')
+    assert value == '', 'textarea should be empty, not: ' + value
+
+    textarea.send_keys('A custom reason for rejection.')
+
+    # confirm rejecting
+    drv.wait_for_element_and_click('.section.sign .button-reject')
+
+    # wait for modal to disappear
+    drv.wait_for_element_to_disappear('.sign.section')
+
+    # wait for header of post signview that is cancelled
+    drv.wait_for_element('.instructions.s-header-doc-cancelled')
 
 
 def check_sign_and_cancel(test, drv, api):
@@ -118,96 +144,3 @@ def check_sign_and_cancel(test, drv, api):
     drv.open_url(sign_url)
     drv.wait_for_element('span.icon.status.cancelled')
     drv.screenshot()
-
-
-def check_sign_view_advanced(test, drv, api):
-    if drv.driver_name in [DC.SAFARI['browserName'], DC.EDGE['browserName']]:
-        raise unittest.SkipTest('File uploads not supported in Safari/Edge')
-
-    doc = test.create_standard_doc(u'sign and cancel')
-
-    signatory1 = doc.other_signatory()
-    att1 = SigAttachment(requested_name=u'first sig att',
-                         description=u'first sig att desc')
-    att2 = SigAttachment(requested_name=u'second sig att',
-                         description=u'second sig att desc')
-    signatory1.attachments.update([att1, att2])
-
-    signatory2 = test.create_standard_signatory(u'Robert Rodriguez')
-    signatory2.attachments.add(att1)
-    doc.signatories.add(signatory2)
-
-    signatory3 = test.create_standard_signatory(u'Jordan Jones')
-    doc.signatories.add(signatory3)
-
-    with open(test.PDF_PATH, 'rb') as f:
-        contents = f.read()
-        author_att1 = AuthorAttachment(u'author-att-1', contents)
-        author_att2 = AuthorAttachment(u'author-att-2', contents)
-
-    doc.author_attachments.update([author_att1, author_att2])
-    doc = api.update_document(doc)
-    doc = api.ready(doc)
-
-    # open signview for the first person
-    signatory1 = doc.signatories.get_by_attrs(full_name=u'Alex Allen')
-    drv.open_url(signatory1.absolute_sign_url())
-
-    # scroll to the first attachment upload task
-    test.arrow_scroll()
-    drv.screenshot()
-
-    # upload a pdf
-    drv.get_element('.file-input', number=1).send_keys(test.PDF_PATH)
-
-    # same thing with the second one
-    test.arrow_scroll()
-    drv.screenshot()
-    drv.get_element('.file-input', number=2).send_keys(test.PDF_PATH)
-
-    # sign the doc
-    drv.scroll_to_bottom()
-    drv.wait_for_element('.section.sign .button.action:not(.inactive)').click()
-    drv.wait_for_element('.above-overlay')
-    drv.wait_for_element('.section.sign .button.action').click()
-    drv.wait_for_element_to_disappear('.sign.section')
-
-    drv.wait_for_element('span.icon.status.signed')
-    test.assertEqual(1, len(drv.find_elements('span.icon.status.signed')))
-
-    # open signview for the second person
-    signatory2 = doc.signatories.get_by_attrs(full_name=u'Robert Rodriguez')
-    drv.open_url(signatory2.absolute_sign_url())
-
-    # there is an inactive sign button
-    drv.wait_for_element('.section.sign .button.action.inactive')
-
-    # upload attachment
-    test.arrow_scroll()
-    drv.get_element('.file-input').send_keys(test.PDF_PATH)
-
-    # inactive button disappears/becomes active
-    drv.wait_for_element_to_disappear('.section.sign .button.action.inactive')
-
-    # sign the doc
-    drv.wait_for_element('.section.sign .button.action').click()
-    drv.wait_for_element('.above-overlay')
-    drv.wait_for_element('.section.sign .button.action').click()
-    drv.wait_for_element_to_disappear('.sign.section')
-
-    drv.wait_for_element('span.icon.status.signed')
-    test.assertEqual(2, len(drv.find_elements('span.icon.status.signed')))
-
-    # open signview for the third person
-    signatory3 = doc.signatories.get_by_attrs(full_name=u'Jordan Jones')
-    drv.open_url(signatory3.absolute_sign_url())
-
-    # sign the doc
-    drv.wait_for_element('.section.sign .button.action').click()
-    drv.wait_for_element('.above-overlay')
-    test.sleep(.5)  # there's a 0.2s transition on opacity
-    drv.wait_for_element('.section.sign .button.action').click()
-
-    # check that post-signview has a download doc button
-    drv.wait_for_element('.instructions')
-    drv.wait_for_element('a.download-button')
