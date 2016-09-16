@@ -38,7 +38,7 @@ pagePrivilegesConfirm =$doctype()$
           token : "$token$"
         };
         </script>
-        <script src="$cdnbaseurl$/compiled/all/oauth_accept-$versioncode$.js"></script>
+        <script src="$cdnbaseurl$/compiled/all/oauth_accept-$versioncode$.js" crossorigin="anonymous"></script>
       </body>
     $htmlclosingtag()$
 #####

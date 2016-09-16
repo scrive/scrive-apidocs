@@ -18,7 +18,7 @@ $htmlopentag()$
     };
 
     </script>
-    <script src="$cdnbaseurl$/compiled/all/designview-$versioncode$.js"></script>
+    <script src="$cdnbaseurl$/compiled/all/designview-$versioncode$.js" crossorigin="anonymous"></script>
     </div>
     </div>
   $postPageCode()$

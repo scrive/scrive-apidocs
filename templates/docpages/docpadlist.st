@@ -18,7 +18,7 @@ $htmlopentag()$
               headerLogOut: "$_headerLogOut()$"
             };
           </script>
-          <script src="$cdnbaseurl$/compiled/all/padlist-$versioncode$.js"></script>
+          <script src="$cdnbaseurl$/compiled/all/padlist-$versioncode$.js" crossorigin="anonymous"></script>
         </div>
       </div>
     </div>
