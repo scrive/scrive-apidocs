@@ -12,7 +12,7 @@ pageDocumentsList=
     idledoctimeout : $if(idledoctimeout)$$idledoctimeout$$else$null$endif$
   };
 </script>
-  <script src="$cdnbaseurl$/compiled/all/archive-$versioncode$.js"></script>
+  <script src="$cdnbaseurl$/compiled/all/archive-$versioncode$.js" crossorigin="anonymous"></script>
 </div>
 </div>
 ####

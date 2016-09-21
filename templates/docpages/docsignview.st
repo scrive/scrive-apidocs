@@ -23,7 +23,7 @@ $htmlopentag()$
       <div class="global-table-cell">
       </div>
   </div>
-  <script src="$cdnbaseurl$/compiled/all/padlogin-$versioncode$.js" type="text/javascript"></script>
+  <script src="$cdnbaseurl$/compiled/all/padlogin-$versioncode$.js" type="text/javascript" crossorigin="anonymous"></script>
   </body>
 $htmlclosingtag()$
 ########
@@ -111,7 +111,7 @@ $htmlopentag()$
        'Last document sign view' : new Date()
       });
    </script>
-   <script src="$cdnbaseurl$/compiled/signview/signview-$versioncode$.js"></script>
+   <script src="$cdnbaseurl$/compiled/signview/signview-$versioncode$.js" crossorigin="anonymous"></script>
   </body>
 $htmlclosingtag()$
 ####
@@ -143,7 +143,7 @@ $htmlopentag()$
       sigLinkId: "$siglinkid$"
     };
     </script>
-    <script src="$cdnbaseurl$/compiled/signview/identifyview-$versioncode$.js"></script>
+    <script src="$cdnbaseurl$/compiled/signview/identifyview-$versioncode$.js" crossorigin="anonymous"></script>
   </body>
 $htmlclosingtag()$
 ####

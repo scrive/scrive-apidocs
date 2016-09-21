@@ -39,7 +39,7 @@ standardHeaderContents=
         <script type="text/javascript">
           window._trackJs = { token: "$trackjstoken$", enabled: $if(trackjstoken)$ true $else$ false $endif$ };
         </script>
-        <script src="$cdnbaseurl$/localization/$versioncode$.$ctxlang$.js"  type="text/javascript"></script>
+        <script src="$cdnbaseurl$/localization/$versioncode$.$ctxlang$.js"  type="text/javascript" crossorigin="anonymous"></script>
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
         <script type="text/javascript"> window.hubspotConf = $analytics.hubspotConf:noescape()$;</script>
         $if(production)$
@@ -56,7 +56,7 @@ standardHeaderContents=
         $endif$
         $endif$
 
-        <script src="$cdnbaseurl$/compiled/vendor-$versioncode$.js"></script>
+        <script src="$cdnbaseurl$/compiled/vendor-$versioncode$.js" crossorigin="anonymous"></script>
         <link href='$cdnbaseurl$/domain_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
 
         $if(nobranding)$
@@ -169,7 +169,7 @@ pageFooter=
     highlightcolor : "$custombarshighlightcolour$"
   };
 </script>
-<script src="$cdnbaseurl$/compiled/all/footer-$versioncode$.js"></script>
+<script src="$cdnbaseurl$/compiled/all/footer-$versioncode$.js" crossorigin="anonymous"></script>
 ####
 postPageCode=
 
@@ -215,7 +215,7 @@ var fromTemplateHeader = {
   account : $if(account)$true$else$false$endif$
 };
 </script>
-<script src="$cdnbaseurl$/compiled/all/header-$versioncode$.js"></script>
+<script src="$cdnbaseurl$/compiled/all/header-$versioncode$.js" crossorigin="anonymous"></script>
 ####
 contactUs=
 <aside class="contact">

@@ -11,7 +11,7 @@ var fromTemplate = {
   authorcompanyadmin : $if(authorcompanyadmin)$true$else$false$endif$
 };
 </script>
-<script src="$cdnbaseurl$/compiled/all/authorview-$versioncode$.js"></script>
+<script src="$cdnbaseurl$/compiled/all/authorview-$versioncode$.js" crossorigin="anonymous"></script>
 </div>
 </div>
 ####

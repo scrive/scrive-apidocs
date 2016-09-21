@@ -19,7 +19,7 @@ $htmlopentag()$
       langprefix : "$langprefix()$"
     };
   </script>
-  <script src="$cdnbaseurl$/compiled/all/login-$versioncode$.js"></script>
+  <script src="$cdnbaseurl$/compiled/all/login-$versioncode$.js" crossorigin="anonymous"></script>
   </body>
 $htmlclosingtag()$
 ###
@@ -42,7 +42,7 @@ $htmlopentag()$
     accessnewaccount: false
   };
 </script>
-  <script src="$cdnbaseurl$/compiled/all/new_password-$versioncode$.js"></script>
+  <script src="$cdnbaseurl$/compiled/all/new_password-$versioncode$.js" crossorigin="anonymous"></script>
   </body>
 $htmlclosingtag()$
 ###
@@ -65,7 +65,7 @@ $htmlopentag()$
     accessnewaccount: true
   };
 </script>
-  <script src="$cdnbaseurl$/compiled/all/new_password-$versioncode$.js"></script>
+  <script src="$cdnbaseurl$/compiled/all/new_password-$versioncode$.js" crossorigin="anonymous"></script>
   </body>
 $htmlclosingtag()$
 ###
@@ -102,7 +102,7 @@ accountSetupPage=$doctype()$
           companyAdmin : $if(companyAdmin)$true$else$false$endif$
         };
         </script>
-        <script src="$cdnbaseurl$/compiled/all/account_setup-$versioncode$.js"></script>
+        <script src="$cdnbaseurl$/compiled/all/account_setup-$versioncode$.js" crossorigin="anonymous"></script>
       </div>
 
     </body>
@@ -111,7 +111,7 @@ accountSetupPage=$doctype()$
 pageAcceptTOS =
 <div class='mainContainer big'>
 <div class='inner'>
-<script src="$cdnbaseurl$/compiled/all/accept_tos-$versioncode$.js"></script>
+<script src="$cdnbaseurl$/compiled/all/accept_tos-$versioncode$.js" crossorigin="anonymous"></script>
 </div>
 </div>
 ####
