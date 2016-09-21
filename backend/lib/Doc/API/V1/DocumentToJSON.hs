@@ -443,6 +443,7 @@ signatoryForListCSV doc sl = [
             , getPersonalNumber sl
             , getCompanyName sl
             , getCompanyNumber sl
+            , getMobile sl
             ] ++ (map fieldValue $ sortBy fieldNameSort customFieldsOrCheckbox)
     where
         customFieldsOrCheckbox = filter isCustomOrCheckbox $ signatoryfields sl
@@ -481,4 +482,5 @@ docForListCSVHeaderV1 = [
                         , "Party personal number"
                         , "Party company name"
                         , "Party company number"
-                       ]
+                        , "Party mobile number"
+                        ]
