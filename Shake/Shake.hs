@@ -20,6 +20,48 @@ opts v = shakeOptions { shakeVersion = v
                       -- Run on single thread until we figure this out
                       , shakeThreads = 1
                       }
+usageMsg :: String
+usageMsg = unlines
+  [ ""
+  , "# Shake build system for Scrive"
+  , "  Automatically runs dependancies, just specify your target"
+  , "  Run with one or more targets"
+  , ""
+  , "  $> ./shake server"
+  , ""
+  , "  To see Environment Variables used run ./shake help-env"
+  , ""
+  , "# Build targets"
+  , ""
+  , "   all             : Build both server and frontend"
+  , "   server          : Build all server-side executables"
+  , "   frontend        : Build all frontend resources"
+  , ""
+  , "   haddock         : Build Haddock Documentation"
+  , ""
+  , "# Test targets"
+  , ""
+  , "   test                      : Run all tests"
+  , "   test-server               : Run all server-side tests"
+  , "   test-frontend             : Run all frontend tests"
+  , "   test-hs-import-order      : Run Haskell Import Order checking script"
+  , "   fix-hs-import-order       : Sort Haskell imports"
+  , ""
+  , "   test-frontend-tests       : Run frontend Grunt Tests"
+  , "   test-frontend-lint        : Run frontend Grunt Style Checkers"
+  , ""
+  , "# Distribution targets"
+  , ""
+  , "   dist                      : Build all and create .tar.gz archive"
+  , ""
+  , "# Clean"
+  , ""
+  , "   clean          : Clean all except Shake directory"
+  , "   fresh          : Clean all (including Shake build data)"
+  , "   clean-server   : Clean with 'cabal clean'"
+  , "   clean-frontend : Clean with 'grunt clean'"
+  , ""
+  ]
 
 main :: IO ()
 main = do
@@ -37,47 +79,7 @@ main = do
     addOracles
 
     -- * The "help" phony task that is the default target
-    "help" ~> do
-      putNormal ""
-      putNormal "# Shake build system for Scrive"
-      putNormal "  Automatically runs dependancies, just specify your target"
-      putNormal "  Run with one or more targets"
-      putNormal ""
-      putNormal "  $> ./shake server"
-      putNormal ""
-      putNormal "  To see Environment Variables used run ./shake help-env"
-      putNormal ""
-      putNormal "# Build targets"
-      putNormal ""
-      putNormal "   all             : Build both server and frontend"
-      putNormal "   server          : Build all server-side executables"
-      putNormal "   frontend        : Build all frontend resources"
-      putNormal ""
-      putNormal "   haddock         : Build Haddock Documentation"
-      putNormal ""
-      putNormal "# Test targets"
-      putNormal ""
-      putNormal "   test                      : Run all tests"
-      putNormal "   test-server               : Run all server-side tests"
-      putNormal "   test-frontend             : Run all frontend tests"
-      putNormal "   test-hs-import-order      : Run Haskell Import Order checking script"
-      putNormal "   fix-hs-import-order       : Sort Haskell imports"
-      putNormal ""
-      putNormal "   test-frontend-tests       : Run frontend Grunt Tests"
-      putNormal "   test-frontend-lint        : Run frontend Grunt Style Checkers"
-      putNormal ""
-      putNormal "# Distribution targets"
-      putNormal ""
-      putNormal "   dist                      : Build all and create .tar.gz archive"
-      putNormal ""
-      putNormal "# Clean"
-      putNormal ""
-      putNormal "   clean          : Clean all except Shake directory"
-      putNormal "   fresh          : Clean all (including Shake build data)"
-      putNormal "   clean-server   : Clean with 'cabal clean'"
-      putNormal "   clean-frontend : Clean with 'grunt clean'"
-      putNormal ""
-
+    "help" ~> putNormal usageMsg
     -- * Main targets
     "all"       ~> need ["server", "frontend"]
     "server"    ~> need ["_build/cabal-build"]

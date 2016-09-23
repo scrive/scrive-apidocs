@@ -77,39 +77,67 @@ oracleHelpRule = do
   "help-env" ~> do
     putNormal "# Environment variables (normally only used by CI builds):"
     putNormal ""
-    putNormal   "   SHAKE_BUILD_TARGET         : master, staging, or production"
+
     target <- askOracle (BuildTarget ())
-    putNormal $ "                              = " ++ target
-    putNormal   "   SHAKE_BUILD_SANDBOX        : Path to sandbox to use"
+    explainVar "SHAKE_BUILD_TARGET" "master, staging, or production"
+    showVarVal target
+
     sandbox <- askOracle (BuildSandbox ())
-    putNormal $ "                              = " ++ sandbox
-    putNormal   "   SHAKE_BUILD_TEST_CONF_PATH : Path to kontrakcja_test.conf file to use"
+    explainVar "SHAKE_BUILD_SANDBOX" "Path to sandbox to use"
+    showVarVal sandbox
+
     testconf <- askOracle (BuildTestConfPath ())
-    putNormal $ "                              = " ++ testconf
-    putNormal   "   SHAKE_BUILD_GITHUB         : If not empty, will ping GitHub with build status"
+    explainVar "SHAKE_BUILD_TEST_CONF_PATH"
+               "Path to kontrakcja_test.conf file to use"
+    showVarVal testconf
+
     gh <- askOracleWith (BuildGitHub ()) True
-    putNormal $ "                              = " ++ show gh
-    putNormal   "   SHAKE_BUILD_DEV            : If not empty, will not run clean bulid"
+    explainVar "SHAKE_BUILD_GITHUB"
+               "If not empty, will ping GitHub with build status"
+    showVarVal (show gh)
+
     devBuild <- askOracleWith (BuildDev ()) True
-    putNormal $ "                              = " ++ show devBuild
-    putNormal   "   SHAKE_BUILD_TEST_COVERAGE  : If not empty, will create a coverage report from server tests"
+    explainVar "SHAKE_BUILD_DEV" "If not empty, will not run clean bulid"
+    showVarVal (show devBuild)
+
     testCoverage <- askOracleWith (BuildTestCoverage ()) True
-    putNormal $ "                              = " ++ show testCoverage
-    putNormal   "   SHAKE_BUILD_CABAL_CONFIGURE_OPTS : Custom flags to pass to cabal configure"
+    explainVar "SHAKE_BUILD_TEST_COVERAGE"
+      "If not empty, will create a coverage report from server tests"
+    showVarVal (show testCoverage)
+
     cabalFlags <- askOracleWith (BuildCabalConfigureOptions ()) ""
-    putNormal $ "                              = " ++ show cabalFlags
+    explainVar "SHAKE_BUILD_CABAL_CONFIGURE_OPTS "
+               "Custom flags to pass to 'cabal configure'"
+    showVarVal cabalFlags
+
     putNormal ""
-    putNormal   "   TEAMCITY_VERSION           : Used to determine if run by TeamCity CI"
+
     tc <- askOracleWith (TeamCity ()) True
-    putNormal $ "                              = " ++ show tc
+    explainVar "TEAMCITY_VERSION" "Used to determine if run by TeamCity CI"
+    showVarVal (show tc)
+
     nginxconfpath <- askOracle (NginxConfPath ())
-    putNormal   "   NGINX_CONF_PATH            : Used for generating NGINX urls.txt file"
-    putNormal $ "                              = " ++ nginxconfpath
+    explainVar "NGINX_CONF_PATH" "Used for generating NGINX urls.txt file"
+    showVarVal nginxconfpath
+
     putNormal ""
+
     ghc <- askOracleWith (GhcVersion ()) ""
-    putNormal $ "   GHC version: " ++ ghc
+    explainVar "GHC version" ghc
+
     putNormal ""
 
   "env" ~> do
     need ["help-env"]
     cmd "env"
+
+explainVar :: String -> String -> Action ()
+explainVar var desc = putNormal $ indent0 ++ var ++ indent1 ++ ": " ++ desc
+  where
+    l = length var
+    i = 27 - l
+    indent0 = replicate 3 ' '
+    indent1 = if l > 27 then "\n" ++ replicate 30 ' ' else replicate i ' '
+
+showVarVal :: String -> Action ()
+showVarVal val = putNormal $ (replicate 30 ' ') ++ "= " ++ val
