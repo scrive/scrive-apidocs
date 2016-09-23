@@ -18,14 +18,16 @@ withGitHub name a = do
     True -> do
       putNormal $ "## Notifying GitHub that " ++ name ++ " has started"
       liftIO $ notifyGitHub name "pending" ("Checking " ++ name)
-      result <- actionOnException a (notifyGitHub name "error" $ name ++ " failed")
+      result <- actionOnException a (notifyGitHub name "error" $
+                                     name ++ " failed")
       putNormal $ "## Notifying GitHub that " ++ name ++ " was successful"
       liftIO $ notifyGitHub name "success" $ name ++ " successful"
       return result
   where
     notifyGitHub :: String -> String -> String -> IO ()
     notifyGitHub context status message = do
-      (ec,stdout,stderr) <- readProcessWithExitCode "build-scripts/github.sh" [context, status, message] []
+      (ec,stdout,stderr) <- readProcessWithExitCode "build-scripts/github.sh"
+                            [context, status, message] []
       case ec of
         ExitFailure _ -> do
           putStrLn $ "# ERROR: GitHub notification failed, stdout:" ++ stdout

@@ -5,10 +5,11 @@ import Control.Monad
 
 -- * Utilities
 
--- | Perform a `need` on all files matching the given [FilePattern] in the given [FilePath]
--- For each directory we get all the files using `getDirectoryFiles` that match
--- the pattern and apply a `need` on it, this also tracks the result of
--- `getDirectoryFiles` (for matching files)
+-- | Perform a `need` on all files matching the given [FilePattern] in
+-- the given [FilePath] For each directory we get all the files using
+-- `getDirectoryFiles` that match the pattern and apply a `need` on
+-- it, this also tracks the result of `getDirectoryFiles` (for
+-- matching files)
 needPatternsInDirectories :: [FilePattern] -> [FilePath] -> Action ()
 needPatternsInDirectories pats dirs = do
   forM_ dirs ( \d -> do

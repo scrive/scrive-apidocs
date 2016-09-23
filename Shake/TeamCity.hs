@@ -36,7 +36,8 @@ createTeamcityLine :: String -> [(String,String)] -> String
 createTeamcityLine messageName attributes =
   "##teamcity[" ++ messageName ++
     concatMap (\(attrname,attrvalue) ->
-           " " ++ attrname ++ "='" ++ escapeTeamcityString attrvalue ++ "'") attributes ++ "]"
+                 " " ++ attrname ++ "='" ++ escapeTeamcityString attrvalue
+                 ++ "'") attributes ++ "]"
 
 escapeTeamcityString :: String -> String
 escapeTeamcityString = concatMap escapeTeamcityChar
