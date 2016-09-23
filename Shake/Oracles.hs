@@ -38,21 +38,37 @@ newtype BuildCabalConfigureOptions = BuildCabalConfigureOptions ()
 
 addOracles :: Rules ()
 addOracles = do
-  -- * Oracles for using environment variables
-  -- See Shake documentation or newtype declarations for some background
-  _ <- addOracle $ \(GhcVersion _) -> fmap fromStdout $ cmd "ghc --numeric-version" :: Action String
-  _ <- addOracle $ \(TeamCity _) -> not . null . fromMaybe "" <$> getEnv "TEAMCITY_VERSION"
-  -- This is needed by our build
+  -- * Oracles for using environment variables.
+  -- See Shake documentation or newtype declarations for some background.
+  _ <- addOracle $ \(GhcVersion _) ->
+                     withVerbosity Silent $
+                     (fromStdout <$>
+                      cmd "ghc --numeric-version" :: Action String)
+  _ <- addOracle $ \(TeamCity _) ->
+                     not . null . fromMaybe ""
+                     <$> getEnv "TEAMCITY_VERSION"
+  -- This is needed by our build.
   -- FIXME should be part of SHAKE_BUILD_ env vars?
-  _ <- addOracle $ \(NginxConfPath _) -> fromMaybe "" <$> getEnv "NGINX_CONF_PATH"
+  _ <- addOracle $ \(NginxConfPath _) ->
+                     fromMaybe "" <$> getEnv "NGINX_CONF_PATH"
   -- These are our build options
-  _ <- addOracle $ \(BuildTarget _)        -> fromMaybe "" <$> getEnv "SHAKE_BUILD_TARGET"
-  _ <- addOracle $ \(BuildSandbox _)       -> fromMaybe "" <$> getEnv "SHAKE_BUILD_SANDBOX"
-  _ <- addOracle $ \(BuildTestConfPath _)  -> fromMaybe "" <$> getEnv "SHAKE_BUILD_TEST_CONF_PATH"
-  _ <- addOracle $ \(BuildGitHub _)  ->       not . null . fromMaybe "" <$> getEnv "SHAKE_BUILD_GITHUB"
-  _ <- addOracle $ \(BuildDev _)     ->       not . null . fromMaybe "" <$> getEnv "SHAKE_BUILD_DEV"
-  _ <- addOracle $ \(BuildTestCoverage _) ->  not . null . fromMaybe "" <$> getEnv "SHAKE_BUILD_TEST_COVERAGE"
-  _ <- addOracle $ \(BuildCabalConfigureOptions _)  -> fromMaybe "" <$> getEnv "SHAKE_BUILD_CABAL_CONFIGURE_OPTS"
+  _ <- addOracle $ \(BuildTarget _)        ->
+                     fromMaybe "" <$> getEnv "SHAKE_BUILD_TARGET"
+  _ <- addOracle $ \(BuildSandbox _)       ->
+                     fromMaybe "" <$> getEnv "SHAKE_BUILD_SANDBOX"
+  _ <- addOracle $ \(BuildTestConfPath _)  ->
+                     fromMaybe "" <$> getEnv "SHAKE_BUILD_TEST_CONF_PATH"
+  _ <- addOracle $ \(BuildGitHub _)  ->
+                     not . null . fromMaybe ""
+                     <$> getEnv "SHAKE_BUILD_GITHUB"
+  _ <- addOracle $ \(BuildDev _)     ->
+                     not . null . fromMaybe ""
+                     <$> getEnv "SHAKE_BUILD_DEV"
+  _ <- addOracle $ \(BuildTestCoverage _) ->
+                     not . null . fromMaybe ""
+                     <$> getEnv "SHAKE_BUILD_TEST_COVERAGE"
+  _ <- addOracle $ \(BuildCabalConfigureOptions _)  ->
+                     fromMaybe "" <$> getEnv "SHAKE_BUILD_CABAL_CONFIGURE_OPTS"
   return ()
 
 oracleHelpRule :: Rules ()
