@@ -1,8 +1,11 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Shake.Oracles where
 
+#if !MIN_VERSION_base(4,8,0)
 import Control.Applicative
+#endif
 import Data.Maybe
 import Development.Shake
 import Development.Shake.Classes
