@@ -438,7 +438,6 @@ Library
                , cryptohash
                , curl
                , data-default
-               , dataenc
                , hpqtypes-extras
                , deepseq
                , digest
@@ -866,7 +865,6 @@ Executable messenger-server
                , crypto-api
                , cryptohash
                , data-default
-               , dataenc
                , hpqtypes-extras
                , deepseq
                , directory
@@ -875,6 +873,7 @@ Executable messenger-server
                , happstack-server
                , happstack-static-routing
                , hpqtypes
+               , HTTP
                , iconv
                , json
                , lifted-base

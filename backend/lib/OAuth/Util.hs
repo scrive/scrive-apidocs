@@ -8,9 +8,8 @@ import Control.Conditional ((<|), (|>))
 import Happstack.Server.Monads
 import Happstack.Server.RqData
 import Happstack.Server.Types
+import Network.HTTP.Base (urlDecode)
 import Network.URI
-import qualified Codec.Binary.Url as URL
-import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 
@@ -41,7 +40,7 @@ getTempCredRequest = do
       mprivilegesstring <- getDataFn' (look "privileges")
       let msigtype          = lookupAndRead "oauth_signature_method" params
           mapisecret        = splitSignature =<< lookupAndRead "oauth_signature" params
-          mcallback         = parseURI =<< UTF.decode <$> (URL.decode =<< lookupAndRead "oauth_callback" params)
+          mcallback         = parseURI =<< (urlDecode <$> lookup "oauth_callback" params)
           mapitoken         = lookupAndReadString "oauth_consumer_key" params
           mprivileges       = readPrivileges =<< mprivilegesstring
           errors            = intercalate "; "

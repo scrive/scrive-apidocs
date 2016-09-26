@@ -5,8 +5,7 @@ module Redirect
   ) where
 
 import Happstack.Server hiding (finishWith)
-import qualified Codec.Binary.Url as URL
-import qualified Codec.Binary.UTF8.String as UTF
+import Network.HTTP.Base (urlEncode)
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS
 
@@ -40,9 +39,9 @@ sendRedirect (LinkLogin lang reason) = do
   qr <- rqQuery <$> askRq
   referer <- getField "referer"
   addFlashM $ flashMessageLoginRedirectReason reason
-  let link' = "/" ++ (codeFromLang lang) ++  "/enter?referer=" ++ (URL.encode . UTF.encode $ fromMaybe (curr++qr) referer)
+  let link' = "/" ++ (codeFromLang lang) ++  "/enter?referer=" ++ (urlEncode $ fromMaybe (curr++qr) referer)
   -- NOTE We could add  "#log-in" at the end. But it would overwrite hash that can be there, and hash is not send to server.
-  -- So we let frontend take care of that on it's own. And frontend will fetch hash for referer 
+  -- So we let frontend take care of that on it's own. And frontend will fetch hash for referer
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
 
 
@@ -50,7 +49,7 @@ sendRedirect (LinkLogin lang reason) = do
 sendRedirect (LinkLoginDirect lang) = do
   referer <- getField "referer"
   let link' = case referer of
-       Just r -> "/" ++ (codeFromLang lang) ++  "/enter?referer=" ++ (URL.encode . UTF.encode $ r)
+       Just r -> "/" ++ (codeFromLang lang) ++  "/enter?referer=" ++ (urlEncode r)
        Nothing ->  "/" ++ (codeFromLang lang) ++  "/enter"
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
 

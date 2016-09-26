@@ -6,9 +6,9 @@ module Sender (
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
-import Data.Char
 import Data.Hash.MD5
 import Log
+import Network.HTTP.Base (urlEncode)
 import System.Exit
 import System.Process
 import Text.HTML.TagSoup
@@ -17,7 +17,6 @@ import Text.JSON
 import Text.JSON.FromJSValue
 import Text.JSON.Gen hiding (object)
 import Text.Regex.TDFA
-import qualified Codec.Binary.Url as URL
 import qualified Codec.Text.IConv as IConv
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -216,9 +215,6 @@ toLatin x = case toLatinTransliterate x of
     toLatinTransliterate = BSC.unpack . IConv.convertFuzzy IConv.Transliterate "utf8" "latin1" . BSU.fromString
     toLatinDiscard :: String -> String
     toLatinDiscard = BSC.unpack . IConv.convertFuzzy IConv.Discard "utf8" "latin1" . BSU.fromString
-
-urlEncode :: String -> String
-urlEncode = URL.encode . map (fromIntegral . ord)
 
 logInfoSendSMS :: MonadLog m => String -> ShortMessage -> m ()
 logInfoSendSMS sender ShortMessage{..} = logInfo "Sending SMS" $ object [
