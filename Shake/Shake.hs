@@ -70,6 +70,7 @@ main = do
                                , "Shake/Shake.hs"
                                , "Shake/GitHub.hs"
                                , "Shake/Oracles.hs"
+                               , "Shake/TeamCity.hs"
                                , "Shake/Utils.hs"
                                ]
   shakeArgs (opts ver) $ do
