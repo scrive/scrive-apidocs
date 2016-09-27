@@ -13,6 +13,7 @@ import Happstack.Server
 
 import DB.Derive
 import KontraPrelude
+import Log.Identifier
 
 newtype CompanyID = CompanyID Int64
   deriving (Eq, Ord, PQFormat, Typeable)
@@ -45,3 +46,6 @@ unjsonCompanyID = unjsonInvmapR ((maybe (fail "Can't parse CompanyID")  return) 
 
 instance Unjson CompanyID where
   unjsonDef = unjsonCompanyID
+
+instance Identifier CompanyID Int64 where
+  gidentifier f n = f "company_id" .= fmap (\(CompanyID k) -> k) n

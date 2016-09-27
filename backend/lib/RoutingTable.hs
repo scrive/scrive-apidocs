@@ -19,6 +19,7 @@ import LangRouting
 import Login
 import OAuth.Control
 import PadApplication.API
+import Partner.API
 import Redirect
 import Routing
 import Salesforce.Control as Salesforce
@@ -172,6 +173,7 @@ staticRoutes production = choice
      , allLangDirs $ dir "enable-cookies" $ dir "enable-cookies.html" $ hGetAllowHttp $ toK0 $ enableCookiesPage
      , allLangDirs $ dir "terms" $ hGet $ toK0 $ handleTermsOfService
      , documentAPI
+     , partnerAPI
      , userAPI
      , padApplicationAPI
      , oauth

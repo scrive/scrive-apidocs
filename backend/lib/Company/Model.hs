@@ -16,6 +16,7 @@ module Company.Model (
 
 import Control.Monad.Catch
 import Control.Monad.State
+import Data.Default
 import Data.Int (Int16)
 import Data.Typeable
 
@@ -23,7 +24,8 @@ import Company.CompanyID
 import DB
 import IPAddress
 import KontraPrelude
-import SMS.Data (SMSProvider)
+import Partner.Model
+import SMS.Data (SMSProvider(..))
 import User.UserID
 
 data Company = Company {
@@ -44,7 +46,27 @@ data CompanyInfo = CompanyInfo {
   , companycgidisplayname :: Maybe String
   , companysmsprovider    :: SMSProvider
   , companycgiserviceid   :: Maybe String
+  , companypartnerid      :: PartnerID
   } deriving (Eq, Ord, Show)
+
+-- @devnote will be no partner ID '0' so we'll remove this in the API endpoints when we
+-- encounter it (i.e. when not given explicitly by the API client)
+instance Default CompanyInfo where
+    def = CompanyInfo
+          { companyname                = ""
+          , companynumber              = ""
+          , companyaddress             = ""
+          , companyzip                 = ""
+          , companycity                = ""
+          , companycountry             = ""
+          , companyipaddressmasklist   = []
+          , companyallowsavesafetycopy = True
+          , companyidledoctimeout      = Nothing
+          , companycgidisplayname      = Nothing
+          , companysmsprovider         = SMSDefault
+          , companycgiserviceid        = Nothing
+          , companypartnerid           = unsafePartnerID 0
+          }
 
 -- Synchronize these definitions with frontend/app/js/account/company.js
 minCompanyIdleDocTimeout, maxCompanyIdleDocTimeout :: Int16
@@ -61,7 +83,7 @@ companyFilterToWhereClause (CompanyFilterByString text) = do
   -- ALL words from 'text' are in ANY of the fields
   mapM_ (sqlWhere . parenthesize . findWord) (words text)
   where
-      findWordInField word field = ("companies." <> field) <+> "ILIKE" <?> sqlwordpat word
+      findWordInField word fieldName = ("companies." <> fieldName) <+> "ILIKE" <?> sqlwordpat word
       findWordList word = map (findWordInField word) ["name", "number", "address", "zip", "city", "country"]
       findWord word = sqlConcatOR $ findWordList word
       sqlwordpat word = "%" ++ concatMap escape word ++ "%"
@@ -112,6 +134,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateCompany Company where
   update (CreateCompany) = do
     runQuery_ $ sqlInsert "companies" $ do
       sqlSetCmd "id" "DEFAULT"
+      sqlSetCmd "partner_id" "(SELECT partners.id FROM partners WHERE partners.default_partner LIMIT 1)"
       sqlResult "id"
     companyidx :: CompanyID <- fetchOne runIdentity
     runQuery_ $ sqlInsert "company_uis" $ do
@@ -148,6 +171,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyInfo Bool where
       sqlSet "cgi_display_name" companycgidisplayname
       sqlSet "sms_provider" companysmsprovider
       sqlSet "cgi_service_id" companycgiserviceid
+      sqlSet "partner_id" companypartnerid
       sqlWhereEq "id" cid
 
 -- helpers
@@ -167,9 +191,10 @@ selectCompaniesSelectors = do
   sqlResult "companies.cgi_display_name"
   sqlResult "companies.sms_provider"
   sqlResult "companies.cgi_service_id"
+  sqlResult "companies.partner_id"
 
-fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String) -> Company
-fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id) = Company {
+fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String, PartnerID) -> Company
+fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, partner_id) = Company {
   companyid = cid
 , companyinfo = CompanyInfo {
     companyname = name
@@ -184,5 +209,6 @@ fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_l
   , companycgidisplayname = cgi_display_name
   , companysmsprovider = sms_provider
   , companycgiserviceid = cgi_service_id
+  , companypartnerid = partner_id
   }
 }

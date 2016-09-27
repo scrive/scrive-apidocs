@@ -444,6 +444,7 @@ getCompanyInfoChange = do
       , companycgidisplayname = fromMaybe companycgidisplayname mcompanycgidisplayname
       , companycgiserviceid = fromMaybe companycgiserviceid mcompanycgiserviceid
       , companysmsprovider = fromMaybe companysmsprovider mcompanysmsprovider
+      , companypartnerid = companypartnerid
     }
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}

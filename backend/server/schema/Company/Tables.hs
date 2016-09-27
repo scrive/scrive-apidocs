@@ -6,7 +6,7 @@ import KontraPrelude
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 20
+  , tblVersion = 21
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False, colDefault = Just "''::text" }
@@ -21,8 +21,10 @@ tableCompanies = tblTable {
     , tblColumn { colName = "cgi_display_name", colType = TextT }
     , tblColumn { colName = "sms_provider", colType = SmallIntT, colNullable = False, colDefault = Just "1"}
     , tblColumn { colName = "cgi_service_id", colType = TextT }
+    , tblColumn { colName = "partner_id", colType = BigIntT, colNullable = False}
     ]
   , tblPrimaryKey = pkOnColumn "id"
+  , tblForeignKeys = [(fkOnColumn "partner_id" "partners" "id") { fkOnDelete = ForeignKeySetNull }]
   }
 
 tableCompanyUIs :: Table
