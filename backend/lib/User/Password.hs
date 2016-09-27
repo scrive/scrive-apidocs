@@ -37,4 +37,4 @@ maybePassword (Just hash, Just salt) = Just Password { pwdHash = hash, pwdSalt =
 maybePassword _ = Nothing
 
 randomPassword :: CryptoRNG m => m String
-randomPassword = randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
+randomPassword = randomString 32 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])

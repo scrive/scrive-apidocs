@@ -20,6 +20,7 @@ module User.Model (
   , GetCompanyAdmins(..)
   , GetUsageStats(..)
   , SetUserCompany(..)
+  , MakeUserIDAdminForPartnerID(..)
   , DeleteUser(..)
   , RemoveInactiveUser(..)
   , AddUser(..)
@@ -44,6 +45,7 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Data.ByteString (ByteString)
 import Data.Char
+import Data.Default
 import Data.Int
 import Happstack.Server (FromReqURI(..))
 import qualified Control.Exception.Lifted as E
@@ -54,6 +56,7 @@ import DB
 import Doc.DocStateData (DocumentStatus(..),FieldType(..), NameOrder(..))
 import KontraPrelude
 import MinutesTime
+import Partner.Model
 import SMS.Data (SMSProvider)
 import User.Email
 import User.Lang
@@ -66,7 +69,7 @@ data InviteType = Viral | Admin
   deriving (Eq, Ord, Show)
 
 {- BySigning is not used anymore. We can't drop it right away, but it doesn't need to be supported -}
-data SignupMethod = AccountRequest | ViralInvitation | BySigning | ByAdmin | CompanyInvitation
+data SignupMethod = AccountRequest | ViralInvitation | BySigning | ByAdmin | CompanyInvitation | PartnerInvitation
   deriving (Eq, Ord, Show, Read)
 
 instance PQFormat SignupMethod where
@@ -82,8 +85,9 @@ instance FromSQL SignupMethod where
       3 -> return BySigning
       4 -> return ByAdmin
       5 -> return CompanyInvitation
+      6 -> return PartnerInvitation
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 5)]
+        reRange = [(1, 6)]
       , reValue = n
       }
 
@@ -94,6 +98,7 @@ instance ToSQL SignupMethod where
   toSQL BySigning         = toSQL (3::Int16)
   toSQL ByAdmin           = toSQL (4::Int16)
   toSQL CompanyInvitation = toSQL (5::Int16)
+  toSQL PartnerInvitation = toSQL (6::Int16)
 
 instance FromReqURI SignupMethod where
   fromReqURI = maybeRead
@@ -141,6 +146,31 @@ data UserInfo = UserInfo {
   , userphone           :: String
   , useremail           :: Email
   } deriving (Eq, Ord, Show)
+
+instance Default User where
+    def = User {
+    userid                        = unsafeUserID 0
+  , userpassword                  = Nothing
+  , useriscompanyadmin            = False
+  , useraccountsuspended          = False
+  , userhasacceptedtermsofservice = Nothing
+  , usersignupmethod              = ByAdmin
+  , userinfo                      = def
+  , usersettings                  = UserSettings LANG_EN
+  , usercompany                   = unsafeCompanyID 0
+  , userassociateddomainid        = unsafeBrandedDomainID 0
+  }
+
+instance Default UserInfo where
+    def = UserInfo {
+    userfstname         = ""
+  , usersndname         = ""
+  , userpersonalnumber  = ""
+  , usercompanyposition = ""
+  , userphone           = ""
+  , useremail           = Email ""
+  }
+
 
 data UserSettings  = UserSettings {
     lang                :: Lang
@@ -234,6 +264,13 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserCompany Bool where
       sqlSet "company_id" cid
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
+
+data MakeUserIDAdminForPartnerID = MakeUserIDAdminForPartnerID UserID PartnerID
+instance (MonadDB m, MonadThrow m) => DBUpdate m MakeUserIDAdminForPartnerID Bool where
+  update (MakeUserIDAdminForPartnerID uid pid) =
+    runQuery01 . sqlInsert "partner_admins" $ do
+      sqlSet "user_id" uid
+      sqlSet "partner_id" pid
 
 data IsUserDeletable = IsUserDeletable UserID
 instance MonadDB m => DBQuery m IsUserDeletable Bool where
@@ -561,12 +598,13 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> ", c.cgi_display_name"
   <> ", c.sms_provider"
   <> ", c.cgi_service_id"
+  <> ", c.partner_id as partner_id"
   <> "  FROM users"
   <> "  LEFT JOIN companies c ON users.company_id = c.id"
   <> "  WHERE users.deleted IS NULL"
 
-fetchUserWithCompany :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String) -> (User, Company)
-fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, cid, name, number, address, zip', city, country, ip_address_mask, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id) = (user, company)
+fetchUserWithCompany :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String, PartnerID) -> (User, Company)
+fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, cid, name, number, address, zip', city, country, ip_address_mask, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, partner_id) = (user, company)
   where
     user = User {
       userid = uid
@@ -602,6 +640,7 @@ fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, 
       , companycgidisplayname = cgi_display_name
       , companysmsprovider = sms_provider
       , companycgiserviceid = cgi_service_id
+      , companypartnerid = partner_id
       }
     }
 

@@ -327,6 +327,13 @@ Library
                  , PDF.Matrix
                  , PDF.Model
                  , PadApplication.API
+                 , Partner.API
+                 , Partner.JSON
+                 , Partner.Logging
+                 , Partner.Model
+                 , Partner.Partner
+                 , Partner.PartnerID
+                 , Partner.Tables
                  , Payments.Action
                  , Payments.Config
                  , Payments.Control

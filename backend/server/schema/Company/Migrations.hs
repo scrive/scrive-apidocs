@@ -361,3 +361,22 @@ companiesAddCgiServiceID = Migration {
     sqlAddColumn $ tblColumn { colName = "cgi_service_id", colType = TextT }
   ]
 }
+
+companiesAddPartnerID :: (MonadThrow m, MonadDB m) => Migration m
+companiesAddPartnerID = Migration {
+  mgrTable = tableCompanies
+, mgrFrom = 20
+, mgrDo = do
+    runQuery_ $ sqlAlterTable (tblName tableCompanies)
+                              [ sqlAddColumn $ tblColumn
+                                                 { colName = "partner_id"
+                                                 , colType = BigIntT
+                                                 , colNullable = True
+                                                 }
+                              , sqlAddFK (tblName tableCompanies) $
+                                    (fkOnColumn "partner_id" "partners" "id" )
+                                      { fkOnDelete = ForeignKeySetNull } ]
+    runSQL_ "UPDATE companies SET partner_id = (SELECT partners.id FROM partners WHERE partners.default_partner) WHERE partner_id IS NULL"
+    runSQL_ "ALTER TABLE companies ALTER partner_id SET NOT NULL"
+
+}

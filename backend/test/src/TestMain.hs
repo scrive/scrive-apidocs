@@ -53,6 +53,7 @@ import LoginTest
 import MailModelTest
 import MailsTest
 import OAuth
+import Partner.APITest
 import PaymentsTest
 import ReferenceScreenshotsTest
 import SessionsTest
@@ -80,6 +81,7 @@ allTests = [
   , apiV1CallsTests
   , apiV2CallsTests
   , apiV2JSONTests
+  , partnerAPITests
   , archiveTests
   , docControlTests
   , docStateTests

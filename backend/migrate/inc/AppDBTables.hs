@@ -32,6 +32,7 @@ import HostClock.Tables
 import KontraPrelude
 import Mails.Tables
 import OAuth.Tables
+import Partner.Tables
 import Payments.Tables
 import Session.Tables
 import SMS.Tables
@@ -72,10 +73,12 @@ kontraFunctions = [
 
 kontraTables :: [Table]
 kontraTables =
-  [ tableCompanies
-  , tableThemes
+  [ tableThemes
   , tableBrandedDomains
+  , tablePartners
+  , tableCompanies
   , tableUsers
+  , tablePartnerAdmins
   , tableUsersHistory
   , tableCompanyInvites
   , tableFiles

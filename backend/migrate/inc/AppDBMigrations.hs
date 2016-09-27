@@ -21,6 +21,7 @@ import EvidenceLog.Migrations
 import File.Migrations
 import KontraPrelude
 import Mails.Migrations
+import Partner.Migrations
 import SMS.Migrations
 import Theme.Migrations
 import User.Migrations
@@ -95,6 +96,9 @@ kontraMigrations = [
   , removeAmazonBucketColumn
   , documentSigningJobsUseJson
   , addIsReceiptToDocument
+  , createTablePartners
+  , companiesAddPartnerID
+  , createTablePartnerAdmins
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations
