@@ -17,6 +17,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader (ReaderT(..), runReaderT, ask)
 import Control.Monad.Trans
 import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftWith, defaultRestoreT, defaultLiftBaseWith, defaultRestoreM)
+import Data.Time
 import Log
 import System.Exit
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
@@ -81,16 +82,23 @@ digitallySign conf inputFileName = do
 
 digitallyExtend :: (MonadLog m, MonadIO m) => GuardTimeConf -> String -> m ExitCode
 digitallyExtend conf inputFileName = do
+  startTime <- currentTime
   (code,stdout,stderr) <- invokeGuardtimeTool "PdfExtender"
              [ "-x", guardTimeExtendingServiceURL conf
              , "-f"
              , inputFileName
              ]
-  when (code /= ExitSuccess) $ do
-    logAttention "GuardTime extending failed" $ object [
+  finishTime <- currentTime
+  let elapsedTime = realToFrac $ diffUTCTime finishTime startTime :: Double
+  case code of
+    ExitFailure _ -> logAttention "GuardTime extending failed" $ object [
         "exit_code" .= show code
       , "stdout" `equalsExternalBSL` stdout
       , "stderr" `equalsExternalBSL` stderr
+      , "time" .= elapsedTime
+      ]
+    ExitSuccess -> logInfo "GuardTime digitallyExtend completed successfully" $ object [
+        "time" .= elapsedTime
       ]
 
   return code
