@@ -6,17 +6,29 @@ import scrollToElement from "../../common/scrolltoelement";
 import BlinkMixin from "../../common/blink_mixin";
 import classNames from "classnames";
 
+import ArrowDown from "../../icons/arrow-down.svg";
+import ArrowRight from "../../icons/arrow-right.svg";
+
 import arrowVars from "../../../less/signview/arrows.less";
 
 const defaultErd = require("element-resize-detector")({"strategy": "scroll"});
 
+import Transporter from "../../common/transporter";
+
 const ARROW = {NONE: -1, UP: 0, DOWN: 1, LEFT: 2, RIGHT: 3};
 
 function transformWithPrefixes (style, value) {
-  style.transform = value;
-  style.msTransform = value;
-  style.MozTransform = value;
-  style.WebkitTransform = value;
+  const oldValue = style.transform;
+  let newValue = value;
+
+  if (oldValue) {
+    newValue += " " + oldValue;
+  }
+
+  style.transform = newValue;
+  style.msTransform = newValue;
+  style.MozTransform = newValue;
+  style.WebkitTransform = newValue;
 }
 
 function scrollerFromTask (task) {
@@ -24,6 +36,8 @@ function scrollerFromTask (task) {
 }
 
 module.exports = React.createClass({
+  _mountNode: null,
+
   displayName: "Arrow",
 
   mixins: [React.addons.PureRenderMixin, BlinkMixin],
@@ -34,6 +48,7 @@ module.exports = React.createClass({
   },
 
   componentWillMount: function () {
+    this.computeMountNode(this.props.task);
     this.update();
   },
 
@@ -59,6 +74,7 @@ module.exports = React.createClass({
 
   componentWillUpdate: function (nextProps) {
     if (this.props.task !== nextProps.task) {
+      this.computeMountNode(nextProps.task);
       this.stopListenToTask(this.props.task);
       this.listenToTask(nextProps.task);
     }
@@ -92,7 +108,8 @@ module.exports = React.createClass({
   },
 
   update: function () {
-    let newState = this.sizeAndPositionOfElement();
+    const task = this.props.task;
+    let newState = this.sizeAndPositionOfElement(task.isFieldTask());
     newState.type = this.computeArrowType();
     newState.angle = this.computeAngle();
     newState.scale = this.computeScale();
@@ -111,6 +128,16 @@ module.exports = React.createClass({
     } else {
       this.blink();
     }
+  },
+
+  computeMountNode: function (task) {
+    let $node = $("#default-place-for-arrows");
+
+    if (task.isFieldTask()) {
+      $node = scrollerFromTask(task).find(".place-for-arrows");
+    }
+
+    this._mountNode = $node.first();
   },
 
   computeScale: function () {
@@ -142,14 +169,19 @@ module.exports = React.createClass({
 
     const angle = Math.atan2(y2 - y1, x2 - x1);
 
-    return angle + (Math.PI / 2);
+    return angle + ((3 * Math.PI) / 2);
   },
 
-  sizeAndPositionOfElement: function () {
-    const $el = this.props.task.el();
+  sizeAndPositionOfElement: function (relative) {
+    const task = this.props.task;
+    const $el = task.el();
     const width = $el.outerWidth();
     const height = $el.outerHeight();
-    const offset = $el.offset();
+    let offset = $el.offset();
+
+    if (relative) {
+      offset = $el.position();
+    }
 
     return {
       width: width,
@@ -251,12 +283,11 @@ module.exports = React.createClass({
     } else if (type === ARROW.RIGHT) {
       arrowStyle = {
         left: right + "px",
-        top: top + (height / 2),
-        display: right > window.innerWidth ? "none" : ""
+        top: top + (height / 2)
       };
     } else if ((type === ARROW.UP || ARROW.DOWN) && task.isFieldTask()) {
       transformWithPrefixes(arrowStyle, "rotate(" + angle + "rad)");
-    } else if (type === ARROW.DOWN && !task.isFieldTask()) {
+    } else if (type === ARROW.UP && !task.isFieldTask()) {
       transformWithPrefixes(arrowStyle, "rotate(" + Math.PI + "rad)");
     }
 
@@ -272,10 +303,21 @@ module.exports = React.createClass({
       arrowStyle.marginLeft = Math.max(1, scale) * arrowVars.actionArrowLeftMargin;
     }
 
+    if (type === ARROW.LEFT) {
+      transformWithPrefixes(arrowStyle, "rotate(180deg)");
+    }
+
     return (
-      <div style={{display: show ? "block" : "none"}} className="arrows" onClick={this.handleClick}>
-        <div className={arrowClass} style={arrowStyle} />
-      </div>
+      <Transporter node={this._mountNode}>
+        <div style={{display: show ? "block" : "none"}} className="arrows" onClick={this.handleClick}>
+          {(type === ARROW.DOWN || type === ARROW.UP) &&
+            <ArrowDown className={arrowClass} style={arrowStyle} />
+          }
+          {!(type === ARROW.DOWN || type === ARROW.UP) &&
+            <ArrowRight className={arrowClass} style={arrowStyle} />
+          }
+        </div>
+      </Transporter>
     );
   }
 });

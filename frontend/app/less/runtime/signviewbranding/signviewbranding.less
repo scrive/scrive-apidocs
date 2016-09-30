@@ -135,19 +135,12 @@
 }
 /* Arrows */
 .signview .arrows {
-  .scroll-arrow {
-    @url : %('/colored_image?file=sign-arrow-up.png&color=%D', @actioncolor);
-    background : url(@url);
+  .actioncolor {
+    fill: @actioncolor;
   }
 
-  .action-arrow.left {
-    @url : %('/colored_image?file=sign-arrow-action-left.png&color=%D', @actioncolor);
-    background : url(@url);
-  }
-
-  .action-arrow.right {
-    @url : %('/colored_image?file=sign-arrow-action-right.png&color=%D', @actioncolor);
-    background : url(@url);
+  .textcolor {
+    fill: @brandtextcolor;
   }
 }
 

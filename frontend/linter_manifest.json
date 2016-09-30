@@ -41,6 +41,7 @@
   "./app/scripts/common/select.jsx",
   "./app/scripts/common/location.jsx",
   "./app/scripts/common/iselementinviewport.jsx",
+  "./app/scripts/common/transporter.jsx",
   "./app/scripts/account/settings/*.jsx",
   "./app/js/anchors.js",
   "./app/js/flashmessages.js",

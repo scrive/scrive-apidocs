@@ -55,7 +55,7 @@ module.exports = function(config) {
       module: {
         preLoaders: [
           {
-            test: /.jsx$/,
+            test: /\.jsx$/,
             loader: "babel",
             query: {
               presets: ["react", "es2015", "stage-2"]
@@ -64,6 +64,10 @@ module.exports = function(config) {
           {
             test: /\.jsx$/,
             loader: "isparta"
+          },
+          {
+            test: /\.svg$/,
+            loader: "babel?presets[]=stage-2,presets[]=es2015,presets[]=react!svg-react"
           }
         ],
         loaders: [
@@ -82,6 +86,7 @@ module.exports = function(config) {
         "backbone": "Backbone",
         "underscore": "_",
         "react": "React",
+        "react-dom": "React",
         "react/addons": "React",
         "tinycolor": "tinycolor",
         "moment": "moment",

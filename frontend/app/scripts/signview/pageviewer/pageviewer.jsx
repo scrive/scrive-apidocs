@@ -266,7 +266,7 @@ module.exports = React.createClass({
             onZoomIn={this.handleZoomIn}
             onZoomOut={this.handleZoomOut}
           />
-
+          <div className="place-for-arrows" />
           {/* if */ !this.props.ready &&
             <div className="col-xs-12 center">
               <div classsName="waiting4data" />

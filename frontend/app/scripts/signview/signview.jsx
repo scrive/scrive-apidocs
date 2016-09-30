@@ -149,6 +149,7 @@ var TaskList = require("./navigation/task_list");
               authorPhone={this.props.authorPhone}
             />
           }
+          <div id="default-place-for-arrows" />
           {/* if */ model.hasArrows() && model.tasks().active() &&
             <Arrow ref="arrow" show={this.state.showArrow} task={model.tasks().active()} />
           }

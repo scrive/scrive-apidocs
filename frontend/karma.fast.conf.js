@@ -45,15 +45,19 @@ module.exports = function(config) {
       module: {
         loaders: [
           {
-            test: /.jsx$/,
+            test: /\.jsx$/,
             loader: "babel",
             query: {
               presets: ["react", "es2015", "stage-2"]
             }
           },
           {
-            test: /.less$/,
+            test: /\.less$/,
             loader: "less-interop",
+          },
+          {
+            test: /\.svg$/,
+            loader: "babel?presets[]=stage-2,presets[]=es2015,presets[]=react!svg-react"
           }
         ],
         noParse: [
@@ -66,6 +70,7 @@ module.exports = function(config) {
         "backbone": "Backbone",
         "underscore": "_",
         "react": "React",
+        "react-dom": "React",
         "react/addons": "React",
         "tinycolor": "tinycolor",
         "moment": "moment",
