@@ -337,7 +337,9 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewMethodNOBankIDToStandardEvidence |
   ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidence |
   AuthorAttachmentHashComputed                       |
-  AuthorAttachmentAccepted
+  AuthorAttachmentAccepted                           |
+  PageHighlightingAdded                              |
+  PageHighlightingCleared
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -526,6 +528,8 @@ instance ToSQL EvidenceEventType where
   toSQL (Obsolete ObsoleteAuthorAttachmentAccepted) = toSQL (113::Int16)
   toSQL (Current AuthorAttachmentHashComputed) = toSQL (114::Int16)
   toSQL (Current AuthorAttachmentAccepted) = toSQL (115::Int16)
+  toSQL (Current PageHighlightingAdded) = toSQL (116::Int16)
+  toSQL (Current PageHighlightingCleared) = toSQL (117::Int16)
 
 
 instance FromSQL EvidenceEventType where
@@ -648,7 +652,9 @@ instance FromSQL EvidenceEventType where
       113 -> return (Obsolete ObsoleteAuthorAttachmentAccepted)
       114 -> return (Current AuthorAttachmentHashComputed)
       115 -> return (Current AuthorAttachmentAccepted)
+      116 -> return (Current PageHighlightingAdded)
+      117 -> return (Current PageHighlightingCleared)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 115)]
+        reRange = [(1, 117)]
       , reValue = n
       }

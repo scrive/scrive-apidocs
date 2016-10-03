@@ -64,16 +64,16 @@ module.exports = function(config) {
           {
             test: /\.jsx$/,
             loader: "isparta"
-          },
-          {
-            test: /\.svg$/,
-            loader: "babel?presets[]=stage-2,presets[]=es2015,presets[]=react!svg-react"
           }
         ],
         loaders: [
           {
             test: /.less$/,
             loader: "less-interop",
+          },
+          {
+            test: /\.svg$/,
+            loader: "babel?presets[]=stage-2,presets[]=es2015,presets[]=react!svg-react"
           }
         ],
         noParse: [

@@ -9,6 +9,7 @@ var TextPlacementView = require("./textplacementview");
 
 var FieldPlacement = require("../../../js/placements.js").FieldPlacement;
 var FilePage = require("../../../js/files.js").FilePage;
+var HighlightedPage = require("../../../js/highlightedpage.js").HighlightedPage;
 
 var PlacementsContainerView = React.createClass({
   propTypes: {
@@ -57,7 +58,8 @@ var PlacementsContainerView = React.createClass({
 
 module.exports = React.createClass({
   propTypes: {
-    model: React.PropTypes.instanceOf(FilePage).isRequired,
+    page: React.PropTypes.instanceOf(FilePage).isRequired,
+    highlightedPages: React.PropTypes.instanceOf(HighlightedPage).isRequired,
     onReady: React.PropTypes.func.isRequired
   },
   componentDidUpdate: function (prevProps, prevState) {
@@ -76,10 +78,10 @@ module.exports = React.createClass({
   },
   imageSrc: function () {
     var srcParts = [
-      "/pages/", this.props.model.file().fileid(), "/",
-      this.props.model.number(),
-      this.props.model.file().queryPart({
-        "pixelwidth": this.props.model.width()
+      "/pages/", this.props.page.file().fileid(), "/",
+      this.props.page.number(),
+      this.props.page.file().queryPart({
+        "pixelwidth": this.props.page.width()
       })
     ];
 
@@ -98,8 +100,8 @@ module.exports = React.createClass({
   updatePlacementsContainerState: function () {
     if (this.refs.placementsContainer) {
       this.refs.placementsContainer.setState({
-        pageWidth: this.props.model.width(),
-        pageHeight: this.props.model.height()
+        pageWidth: this.props.page.width(),
+        pageHeight: this.props.page.height()
       });
     }
   },
@@ -114,14 +116,20 @@ module.exports = React.createClass({
         pageHeight = (pageWidth / imageNode.width) * imageNode.height;
       }
 
-      this.props.model.setSize(pageWidth, pageHeight);
+      this.props.page.setSize(pageWidth, pageHeight);
     }
   },
   render: function () {
-    var pageId = "page" + this.props.model.number();
+    var pageId = "page" + this.props.page.number();
 
     return (
       <div id={pageId} className="pagediv">
+        { _.map(this.props.highlightedPages, function (hp) {
+          return (
+            <img style={{"position": "absolute"}} src={hp.file().downloadLink()} />
+          ); })
+        }
+
         <img
           className="pagejpg"
           ref="pagejpg"
@@ -129,11 +137,11 @@ module.exports = React.createClass({
           onLoad={this.onImageLoad}
         />
 
-        { /* if */ (!this.props.model.file().document().closed()) &&
+        { /* if */ (!this.props.page.file().document().closed()) &&
           <PlacementsContainerView
             ref="placementsContainer"
-            pageNumber={this.props.model.number()}
-            placements={this.props.model.placements()}
+            pageNumber={this.props.page.number()}
+            placements={this.props.page.placements()}
           />
         }
       </div>

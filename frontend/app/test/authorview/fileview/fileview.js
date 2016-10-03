@@ -14,7 +14,7 @@ describe("/authorview/fileview/fileview", function () {
     var component = React.render(
       React.createElement(
         FileView,
-        {model: document_.mainfile(), onReady: sinon.spy()}
+        {model: document_, onReady: sinon.spy()}
       ),
       $("body")[0]
     );
@@ -52,7 +52,7 @@ describe("/authorview/fileview/fileview", function () {
 
     util.waitUntil(
       function () {
-        return component.props.model.pages().length > 0;
+        return component.props.model.mainfile().pages().length > 0;
       },
       function () {
         assert.lengthOf($(".waiting4page", componentNode), 1);
@@ -69,7 +69,7 @@ describe("/authorview/fileview/fileview", function () {
 
     util.waitUntil(
       function () {
-        return component.props.model.ready();
+        return component.props.model.mainfile().ready();
       },
       function () {
         assert.lengthOf($(".waiting4page", componentNode), 0);
@@ -85,7 +85,7 @@ describe("/authorview/fileview/fileview", function () {
 
     util.waitUntil(
       function () {
-        return component.props.model.ready();
+        return component.props.model.mainfile().ready();
       },
       function () {
         sinon.stub(document_.mainfile(), 'ready').returns(false);
@@ -103,7 +103,7 @@ describe("/authorview/fileview/fileview", function () {
 
     util.waitUntil(
       function () {
-        return component.props.model.ready();
+        return component.props.model.mainfile().ready();
       },
       function () {
         _.each(component._pageRefs, function(item, index) {
@@ -123,7 +123,7 @@ describe("/authorview/fileview/fileview", function () {
 
     util.waitUntil(
       function () {
-        return component.props.model.ready();
+        return component.props.model.mainfile().ready();
       },
       function () {
         _.each(component._pageRefs, function(item, index) {
@@ -143,7 +143,7 @@ describe("/authorview/fileview/fileview", function () {
 
     util.waitUntil(
       function () {
-        return component.props.model.ready();
+        return component.props.model.mainfile().ready();
       },
       function () {
         _.each(component._pageRefs, function(item, index) {

@@ -3,6 +3,7 @@ var moment = require("moment");
 var _ = require("underscore");
 var Field = require("./fields.js").Field;
 var SignatoryAttachment = require("./signatoryattachment.js").SignatoryAttachment;
+var HighlightedPage = require("./highlightedpage.js").HighlightedPage;
 var Submit = require("./submits.js").Submit;
 var Mail = require("./confirmationsWithEmails.js").Mail;
 
@@ -30,11 +31,14 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         authentication_method_to_view: "standard",
         delivery_method: "email",
         confirmation_delivery_method : "email",
+        allows_highlighting: false,
         // Internal properties used by design view for "goldfish" memory
         changedDelivery : false,
         changedConfirmationDelivery : false,
         deliveryGoldfishMemory : null,
         confirmationDeliveryWasNone  : false,
+        highlightedPages : [],
+        willGetHighlighedPageSoon: false
     },
 
     initialize: function(args) {
@@ -60,6 +64,13 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         signatory.set({"fields": fields,
                        "attachments": attachments
                       });
+
+        var highlightedPages =  _.map(args.highlighted_pages, function(attachment) {
+                return new HighlightedPage(extendedWithSignatory(attachment));
+        });
+
+        signatory.set({"highlighted_pages": highlightedPages });
+
         signatory.bindBubble();
     },
     document: function() {
@@ -348,6 +359,53 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     clearAttachments: function() {
         this.set({attachments: []});
     },
+    highlightedPages: function() {
+       return this.get("highlighted_pages");
+    },
+    // This is used to mark that addHighlightedPage will be called soon.
+    // Frontend will have a chance to render stuff before it
+    markThatWillGetHighlighedPageSoon: function() {
+      this.set("willGetHighlighedPageSoon", true);
+      this.triggerMainFileChange();
+    },
+    willGetHighlighedPageSoon : function() {
+      return this.get("willGetHighlighedPageSoon");
+    },
+    addHighlightedPage: function(pageno,file_id) {
+      this.get("highlighted_pages").push(new HighlightedPage({
+        signatory: this,
+        page:pageno,
+        file_id:file_id
+      }));
+      this.set("willGetHighlighedPageSoon", false);
+      this.triggerMainFileChange();
+    },
+    updateHighlightedPage : function(pageno,file_id) {
+      _.each(this.get("highlighted_pages"), function(hp) {
+        if (pageno == hp.page()) {
+          console.log("Setting file " + file_id);
+          hp.setFile(file_id);
+        }
+      });
+      this.set("willGetHighlighedPageSoon", false);
+      this.triggerMainFileChange();
+    },
+    removeHighlightedPage: function(pageno) {
+      var newHighlightedPages = _.filter(this.highlightedPages(), function(hp) {
+        return pageno != hp.page();
+      });
+      this.set("highlighted_pages", newHighlightedPages);
+      this.triggerMainFileChange();
+    },
+    /* FIXME: Fileview in signview  doesn't listen on document change events - only on mainfile events
+     * I don't want to make it listen to whole document right now - this is why I trigger change
+     * of mainfile directly.
+     */
+    triggerMainFileChange: function() {
+      if (this.document() && this.document().mainfile()) {
+        this.document().mainfile().trigger("change");
+      }
+    },
     reachedBySignorder : function() {
         return this.signorder() <= this.document().signorder();
     },
@@ -569,7 +627,8 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
               authentication_method_to_sign: this.authenticationToSign(),
               authentication_method_to_view: this.authenticationToView(),
               delivery_method: this.delivery(),
-              confirmation_delivery_method : this.confirmationdelivery()
+              confirmation_delivery_method : this.confirmationdelivery(),
+              allows_highlighting : this.allowshighlighting()
         };
     },
     delivery: function() {
@@ -802,6 +861,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
             email.setObligatoryAndShouldBeFilledBySender(false,false);
          }
       }
+    },
+    allowshighlighting: function() {
+      return this.get("allows_highlighting");
     },
     bindBubble: function() {
         var signatory = this;

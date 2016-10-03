@@ -577,3 +577,40 @@ addIsReceiptToDocument = Migration {
           sqlAddColumn tblColumn { colName = "is_receipt", colType = BoolT, colNullable = False, colDefault = Just "false" }
         ]
   }
+
+addAllowsHighlightingToSignatories  :: MonadDB m => Migration m
+addAllowsHighlightingToSignatories  = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 30
+  , mgrDo = do
+      runQuery_ $ sqlAlterTable "signatory_links" [
+          sqlAddColumn tblColumn { colName = "allows_highlighting", colType = BoolT, colNullable = False, colDefault = Just "false" }
+        ]
+  }
+
+createHighlightedPagesTable :: MonadDB m => Migration m
+createHighlightedPagesTable = Migration {
+    mgrTable = tableHighlightedPages
+  , mgrFrom = 0
+  , mgrDo = createTable True tblTable {
+      tblName = "highlighted_pages"
+    , tblVersion = 1
+    , tblColumns = [
+        tblColumn { colName = "id",          colType = BigSerialT, colNullable = False }
+      , tblColumn { colName = "signatory_link_id", colType = BigIntT,    colNullable = False }
+      , tblColumn { colName = "page",        colType = IntegerT,  colNullable = False }
+      , tblColumn { colName = "file_id",     colType = BigIntT,    colNullable = False }
+      ]
+    , tblPrimaryKey = pkOnColumn "id"
+    , tblForeignKeys = [
+        (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
+      , fkOnColumn "file_id" "files" "id"
+      ]
+    , tblIndexes = [
+        uniqueIndexOnColumns ["signatory_link_id", "page"]
+      , indexOnColumn "signatory_link_id"
+      , indexOnColumn "file_id"
+      ]
+    }
+  }
+

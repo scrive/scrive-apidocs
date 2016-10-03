@@ -141,7 +141,8 @@ docApiV2FilesGet did fid filename = logDocumentAndFile did fid . api $ do
   let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++
                       (authorattachmentfileid <$> documentauthorattachments doc) ++
                       (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc) ++
-                      (catMaybes $ map fieldFileValue $ concatMap signatoryfields $ documentsignatorylinks doc)
+                      (catMaybes $ map fieldFileValue $ concatMap signatoryfields $ documentsignatorylinks doc) ++
+                      (map highlightedPageFileID $ concatMap signatoryhighlightedpages $ documentsignatorylinks doc)
   if (all (/= fid) allfiles)
      then apiError $ resourceNotFound "No file with given fileid associated with document"
      else do

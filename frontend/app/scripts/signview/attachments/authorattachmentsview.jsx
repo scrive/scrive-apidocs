@@ -7,9 +7,7 @@ var Document = require("../../../js/documents.js").Document;
   module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Document).isRequired,
-      canStartFetching: React.PropTypes.bool.isRequired,
-      showOverlay: React.PropTypes.bool.isRequired,
-      showArrow: React.PropTypes.bool.isRequired
+      canStartFetching: React.PropTypes.bool.isRequired
     },
 
     attachmentsToShow: function () {
@@ -19,7 +17,14 @@ var Document = require("../../../js/documents.js").Document;
         return !doc.isSignedAndClosed()  || !a.isAddToSealedFile();
       });
     },
-
+    childContextTypes: {
+      document: React.PropTypes.instanceOf(Document)
+    },
+    getChildContext: function () {
+      return {
+        document: this.props.model
+      };
+    },
     render: function () {
       var self = this;
       var doc = this.props.model;
@@ -33,8 +38,6 @@ var Document = require("../../../js/documents.js").Document;
                model={a}
                canSign={doc.currentSignatoryCanSign()}
                canStartFetching={self.props.canStartFetching}
-               showOverlay={this.props.showOverlay}
-               showArrow={this.props.showArrow}
              />
           );
         })}

@@ -36,6 +36,7 @@
          "author":true,
          "saved":true,
          "datamismatch":null,
+         "allowshighlighting":false,
          "signdate":"2000-01-01T00:00:00Z",
          "seendate":null,
          "readdate":null,

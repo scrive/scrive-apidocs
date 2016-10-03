@@ -46,6 +46,8 @@
       "authentication_method_to_view": "standard",
       "authentication_method_to_sign": "standard",
       "confirmation_delivery_method": "email",
+      "allows_highlighting": false,
+      "highlighted_pages": [],
       "attachments": [],
       "api_delivery_url": null,
       "has_authenticated_to_view":false
@@ -170,6 +172,8 @@
       "authentication_method_to_view": "standard",
       "authentication_method_to_sign": "standard",
       "confirmation_delivery_method": "email",
+      "allows_highlighting": false,
+      "highlighted_pages": [],
       "attachments": [],
       "api_delivery_url": null,
       "has_authenticated_to_view":false

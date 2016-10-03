@@ -10,8 +10,8 @@ var AuthorAttachment = require("../../../js/authorattachment.js").AuthorAttachme
 var Task = require("../navigation/task");
 var $ = require("jquery");
 var classNames = require("classnames");
-var PageViewer = require("../pageviewer/pageviewer");
-var Page = require("../pageviewer/page");
+var AuthorAttachmentFileViewer = require("./authorattachmentfileviewer");
+var Document = require("../../../js/documents.js").Document;
 
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin, TaskMixin],
@@ -22,9 +22,7 @@ var Page = require("../pageviewer/page");
 
     propTypes: {
       model: React.PropTypes.instanceOf(AuthorAttachment).isRequired,
-      canStartFetching: React.PropTypes.bool.isRequired,
-      showOverlay: React.PropTypes.bool.isRequired,
-      showArrow: React.PropTypes.bool.isRequired
+      canStartFetching: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function () {
@@ -78,7 +76,17 @@ var Page = require("../pageviewer/page");
       $(".put-attachment-name-here", textSpan).text(this.props.model.name());
       return textSpan.text();
     },
-
+    contextTypes: {
+      document: React.PropTypes.instanceOf(Document)
+    },
+    childContextTypes: {
+      document: React.PropTypes.instanceOf(Document)
+    },
+    getChildContext: function () {
+      return {
+        document: this.context.document
+      };
+    },
     render: function () {
       var self = this;
       var model = this.props.model;
@@ -125,19 +133,14 @@ var Page = require("../pageviewer/page");
               </div>
             </div>
           </div>
+
           {/* if */ showPages &&
-            <PageViewer
+            <AuthorAttachmentFileViewer
+              attachment={model}
               ready={isPagesLoaded}
-              showOverlay={this.props.showOverlay}
-              showArrow={this.props.showArrow}
-            >
-              {_.map(_.range(model.pages()), function (p) {
-                return (
-                  <Page key={p + 1} number={p + 1} imageSrc={model.pageUrl(p + 1)} />
-                );
-              })}
-            </PageViewer>
+            />
           }
+
           {/* if */ showPages &&
             <div className="section author-attachment">
               <div className="positioned">

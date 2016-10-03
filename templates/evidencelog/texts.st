@@ -591,3 +591,7 @@ AuthorAttachmentHashComputedLog=The attachment "$attachment_name$" will not be m
 <br/>
 <p>Hash: <div>$hash$</div></p>
 ###
+PageHighlightingAddedLog=Highlighting was added to page $pageno$ while <span class="signatory"/> was viewing.
+###
+PageHighlightingClearedLog=Highlighting was removed from page $pageno$ while <span class="signatory"/> was viewing.
+###

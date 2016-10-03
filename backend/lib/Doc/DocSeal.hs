@@ -92,6 +92,7 @@ personFromSignatory tz sim boxImages signatory = do
                             then renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
                          else return ""
     fields <- fieldsFromSignatory boxImages signatory
+    highlightedImages <- mapM highlightedImageFromHighlightedPage (signatoryhighlightedpages signatory)
     return $ Seal.Person { Seal.fullname           = fromMaybe "" $ signatoryIdentifier sim (signatorylinkid signatory) emptyNamePlaceholder
                          , Seal.company            = getCompanyName signatory
                          , Seal.email              = getEmail signatory
@@ -108,6 +109,7 @@ personFromSignatory tz sim boxImages signatory = do
                          , Seal.signedAtText       = signedAtText
                          , Seal.personalNumberText = personalNumberText
                          , Seal.companyNumberText  = companyNumberText
+                         , Seal.highlightedImages  = highlightedImages
                          }
 
 personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
@@ -191,6 +193,14 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
                  , Seal.onlyForSummary   = True
                  , Seal.keyColor         = Just (255,255,255) -- white is transparent
                  }
+
+highlightedImageFromHighlightedPage :: forall m. (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => HighlightedPage -> m Seal.HighlightedImage
+highlightedImageFromHighlightedPage hp = do
+  content <- getFileIDContents $ highlightedPageFileID hp
+  return Seal.HighlightedImage {
+      Seal.hiPage =  highlightedPagePage hp
+    , Seal.hiImage = content
+    }
 
 listAttachmentsFromDocument :: Document -> [(SignatoryAttachment,SignatoryLink)]
 listAttachmentsFromDocument document =

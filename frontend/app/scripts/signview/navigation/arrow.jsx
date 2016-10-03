@@ -275,7 +275,7 @@ module.exports = React.createClass({
       "right": type === ARROW.RIGHT
     });
 
-    let arrowStyle = {};
+    var arrowStyle = {};
     if (type === ARROW.NONE) {
       arrowStyle = {display: "none"};
     } else if (type === ARROW.LEFT) {

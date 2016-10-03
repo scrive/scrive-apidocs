@@ -20,6 +20,7 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 
 import DB.Derive
+import Doc.Data.HighlightedPage
 import Doc.Data.SignatoryAttachment
 import Doc.Data.SignatoryField
 import Doc.SignatoryLinkID
@@ -257,6 +258,7 @@ data SignatoryLink = SignatoryLink {
 , signatorylinkreallydeleted              :: !(Maybe UTCTime)
 , signatorylinkcsvupload                  :: !(Maybe CSVUpload)
 , signatoryattachments                    :: ![SignatoryAttachment]
+, signatoryhighlightedpages               :: ![HighlightedPage]
 , signatorylinksignredirecturl            :: !(Maybe String)
 , signatorylinkrejectredirecturl          :: !(Maybe String)
 , signatorylinkrejectiontime              :: !(Maybe UTCTime)
@@ -265,6 +267,7 @@ data SignatoryLink = SignatoryLink {
 , signatorylinkauthenticationtosignmethod :: !AuthenticationToSignMethod
 , signatorylinkdeliverymethod             :: !DeliveryMethod
 , signatorylinkconfirmationdeliverymethod :: !ConfirmationDeliveryMethod
+, signatorylinkallowshighlighting         :: !Bool
 -- | If a person has identified to view the document
 , signatorylinkidentifiedtoview           :: !Bool
 } deriving (Show)
@@ -287,6 +290,7 @@ instance Default SignatoryLink where
   , signatorylinkreallydeleted = Nothing
   , signatorylinkcsvupload = Nothing
   , signatoryattachments = []
+  , signatoryhighlightedpages = []
   , signatorylinksignredirecturl = Nothing
   , signatorylinkrejectredirecturl = Nothing
   , signatorylinkrejectiontime = Nothing
@@ -295,6 +299,7 @@ instance Default SignatoryLink where
   , signatorylinkauthenticationtosignmethod = StandardAuthenticationToSign
   , signatorylinkdeliverymethod = EmailDelivery
   , signatorylinkconfirmationdeliverymethod = EmailConfirmationDelivery
+  , signatorylinkallowshighlighting = False
   , signatorylinkidentifiedtoview = False
   }
 
@@ -320,6 +325,7 @@ signatoryLinksSelectors = [
   , "signatory_links.really_deleted"
   , "signatory_links.csv_contents"
   , "ARRAY(SELECT (" <> mintercalate ", " signatoryAttachmentsSelectors <> ")::signatory_attachment FROM signatory_attachments LEFT JOIN files ON (files.id = signatory_attachments.file_id) WHERE signatory_links.id = signatory_attachments.signatory_link_id ORDER BY signatory_attachments.file_id, signatory_attachments.name)"
+  , "ARRAY(SELECT (" <> mintercalate ", " highlightedPagesSelectors <> ")::highlighted_page FROM highlighted_pages WHERE signatory_links.id = highlighted_pages.signatory_link_id ORDER BY highlighted_pages.id)"
   , "signatory_links.sign_redirect_url"
   , "signatory_links.reject_redirect_url"
   , "signatory_links.rejection_time"
@@ -328,16 +334,17 @@ signatoryLinksSelectors = [
   , "signatory_links.authentication_to_sign_method"
   , "signatory_links.delivery_method"
   , "signatory_links.confirmation_delivery_method"
+  , "signatory_links.allows_highlighting"
   , "(SELECT EXISTS (SELECT 1 FROM eid_authentications WHERE signatory_links.id = eid_authentications.signatory_link_id))"
   ]
 
-type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool)
+type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool)
 
 instance PQFormat SignatoryLink where
   pqFormat _ = "%signatory_link"
 
 instance CompositeFromSQL SignatoryLink where
-  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, has_identified) = SignatoryLink {
+  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified) = SignatoryLink {
     signatorylinkid = slid
   , signatoryfields = fields
   , signatoryisauthor = is_author
@@ -354,6 +361,7 @@ instance CompositeFromSQL SignatoryLink where
   , signatorylinkreallydeleted = mreally_deleted
   , signatorylinkcsvupload = CSVUpload <$> mcsv_contents
   , signatoryattachments = attachments
+  , signatoryhighlightedpages = highlighted_pages
   , signatorylinksignredirecturl = msign_redirect_url
   , signatorylinkrejectredirecturl = mreject_redirect_url
   , signatorylinkrejectiontime = mrejection_time
@@ -362,5 +370,6 @@ instance CompositeFromSQL SignatoryLink where
   , signatorylinkauthenticationtosignmethod = authentication_to_sign_method
   , signatorylinkdeliverymethod = delivery_method
   , signatorylinkconfirmationdeliverymethod = confirmation_delivery_method
+  , signatorylinkallowshighlighting = allows_highlighting
   , signatorylinkidentifiedtoview = has_identified
   }

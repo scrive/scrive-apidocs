@@ -1,0 +1,108 @@
+@import "vars";
+@import "../branding/elements";
+
+.controls-placeholder {
+  position: relative;
+  display: block;
+  height: @signview-controls-height;
+}
+
+.controls {
+  transition: opacity 0.2s ease-in-out;
+  background-color: #FFFFFF;
+  box-sizing: border-box;
+  border-bottom: 1px solid #f1f1f1;
+  border-top: 1px solid #f1f1f1;
+  overflow: hidden;
+  height: @signview-controls-height;
+  margin: 0px auto;
+  z-index: 3;
+
+  &.controls-hidden {
+    display: none;
+  }
+
+  &.controls-sticky {
+    position: sticky;
+    position: -moz-sticky;
+    position: -o-sticky;
+    position: -ms-sticky;
+    position: -webkit-sticky;
+    display: block;
+  }
+
+  &.controls-relative {
+    position: relative;
+    display: block;
+  }
+
+  &.controls-absolute {
+    position: absolute;
+    display: block;
+  }
+
+  &.controls-fixed {
+    position: fixed;
+    display: block;
+  }
+
+  .status {
+    line-height: @signview-controls-height;
+    white-space: nowrap;
+    font-weight: 400;
+    float: left;
+    box-sizing: border-box;
+    padding: 0 @signview-section-padding;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: calc(~"100% - 196px");
+
+    .on-small-view({
+      padding: 0 @signview-section-padding-small;
+    });
+  }
+
+  .buttons {
+    line-height: @signview-controls-height;
+    float: right;
+    min-width: 196px;
+    text-align: right;
+  }
+
+  button {
+    box-sizing: border-box;
+    background-color: white;
+    background-repeat: no-repeat;
+    border: 0;
+    border-left: 1px solid #f1f1f1;
+    height: @signview-controls-height - 2;
+    padding: 0;
+    width: @signview-controls-height - 2;
+    opacity: 0.8;
+    padding: 3px;
+    font-size: 10px;
+    vertical-align: top;
+
+    &:focus {
+      outline: 0;
+    }
+  }
+
+  button:hover {
+    opacity: 1;
+  }
+
+  button:disabled:hover {
+    opacity: 0.5;
+  }
+
+  button:disabled {
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    -webkit-tap-highlight-color: transparent;
+    background-color: rgba(204, 204, 204, 0.25);
+    opacity: 0.5;
+  }
+
+  z-index: @signview-file-controls-z-index;
+}
+

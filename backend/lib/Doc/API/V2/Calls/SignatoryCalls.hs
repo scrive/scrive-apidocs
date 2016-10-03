@@ -6,6 +6,7 @@ module Doc.API.V2.Calls.SignatoryCalls (
 , docApiV2SigSetAttachment
 , docApiV2SigSigningStatusCheck
 , docApiV2SigSigningCancel
+, docApiV2SetHighlightForPage
 ) where
 
 import Data.Unjson
@@ -226,3 +227,27 @@ docApiV2SigSetAttachment did slid = logDocumentAndSignatory did slid . api $ do
     -- Return
     updatedDoc <- theDocument
     return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid updatedDoc),d)) updatedDoc
+
+docApiV2SetHighlightForPage :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SetHighlightForPage did slid = logDocumentAndSignatory did slid . api $ do
+  -- Permissions
+  mh <- getMagicHashForSignatoryAction did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+    -- Guards
+    guardThatObjectVersionMatchesIfProvided did
+    guardDocumentStatus Pending
+    guardSignatoryHasNotSigned slid
+    -- Parameters
+    page <- apiV2ParameterObligatory (ApiV2ParameterInt "page")
+    mimage <- apiV2ParameterOptional (ApiV2ParameterBase64PNGImage "image")
+    -- API call actions
+    ctx <- getContext
+    Just sl <- getSigLinkFor slid <$> theDocument
+    actor <- signatoryActor ctx sl
+    case mimage of
+       Just image -> dbUpdate $ SetHighlightingForPageAndSignatory sl (fromIntegral page) (fileid image) actor
+       Nothing    -> dbUpdate $ ClearHighlightingForPageAndSignatory sl (fromIntegral page) actor
+    -- Result
+    doc <- theDocument
+    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
+

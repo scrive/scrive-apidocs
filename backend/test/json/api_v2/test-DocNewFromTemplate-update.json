@@ -52,7 +52,9 @@
       "delivery_method": "email",
       "authentication_method_to_view": "standard",
       "authentication_method_to_sign": "standard",
+      "allows_highlighting": false,
       "confirmation_delivery_method": "email",
+      "highlighted_pages": [],
       "attachments": [],
       "api_delivery_url": null,
       "has_authenticated_to_view":false

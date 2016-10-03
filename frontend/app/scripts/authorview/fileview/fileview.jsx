@@ -4,16 +4,16 @@ var _ = require("underscore");
 var BackboneMixin = require("../../common/backbone_mixin");
 var FilePageView = require("./filepageview");
 
-var File = require("../../../js/files.js").File;
+var Document = require("../../../js/documents.js").Document;
 
 module.exports = React.createClass({
   mixins: [BackboneMixin.BackboneMixin],
   propTypes: {
-    model: React.PropTypes.instanceOf(File).isRequired,
+    model: React.PropTypes.instanceOf(Document).isRequired,
     onReady: React.PropTypes.func.isRequired
   },
   getBackboneModels: function () {
-    return [this.props.model];
+    return [this.props.model, this.props.model.mainfile()];
   },
   getInitialState: function () {
     return {
@@ -23,9 +23,9 @@ module.exports = React.createClass({
   componentWillMount: function () {
     this._pageRefs = [];
 
-    if (!this.props.model.ready()) {
-      this.props.model.fetch({
-        data: {signatoryid: this.props.model.signatoryid()},
+    if (!this.props.model.mainfile().ready()) {
+      this.props.model.mainfile().fetch({
+        data: {signatoryid: this.props.model.mainfile().signatoryid()},
         processData: true,
         cache: false
       });
@@ -40,7 +40,7 @@ module.exports = React.createClass({
     return this.state.ready;
   },
   allPagesRendered: function () {
-    return (this._pageRefs.length == this.props.model.pages().length);
+    return (this._pageRefs.length == this.props.model.mainfile().pages().length);
   },
   allPagesReady: function () {
     return _.all(this._pageRefs, function (item) {
@@ -49,7 +49,7 @@ module.exports = React.createClass({
   },
   refreshReady: function () {
     this.setState({
-      ready: (this.props.model.ready() && this.allPagesRendered() && this.allPagesReady())
+      ready: (this.props.model.mainfile().ready() && this.allPagesRendered() && this.allPagesReady())
     });
   },
   addPageRef: function (page) {
@@ -62,19 +62,20 @@ module.exports = React.createClass({
   },
   render: function () {
     var self = this;
-
+    var doc = self.props.model;
     return (
       <div className="document-pages">
-        { /* if */ (!this.props.model.ready()) &&
+        { /* if */ (!this.props.model.mainfile().ready()) &&
           <div className="waiting4page"></div>
         }
-        { /* else */ (this.props.model.ready()) &&
-          _.map(this.props.model.pages(), function (item, index) {
+        { /* else */ (this.props.model.mainfile().ready()) &&
+          _.map(this.props.model.mainfile().pages(), function (page, index) {
             return (
               <FilePageView
                 key={index}
-                model={item}
-                ref={(page) => self.addPageRef(page)}
+                page={page}
+                highlightedPages={doc ? [] : doc.noneditableHighlighedPagesForPageNo(page.number())}
+                ref={(p) => self.addPageRef(p)}
                 onReady={self.onPageReady}
               />
             );

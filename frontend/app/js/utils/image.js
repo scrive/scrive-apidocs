@@ -1,8 +1,8 @@
 exports.ImageUtil = {
   // Returns base64 encoded png image date from canvas,
-  // after setting transparent background.
+  // after setting transparent background and adding opacity.
   // Result is passed as an argument to callback function
-  addTransparentBGAndSerializeCanvas: function(canvas, width, height, callback) {
+  addTransparentBGAndSerializeCanvas: function(canvas, width, height, opacity, callback) {
     var tmpImage = new Image();
     tmpImage.type = 'image/png';
     tmpImage.src = canvas.toDataURL('image/png', 1);
@@ -13,19 +13,19 @@ exports.ImageUtil = {
     var serializer = function(timeout) {
       var tmpCanvas = $('<canvas />').attr('width', width).attr('height', height)[0];
       var context = tmpCanvas.getContext('2d');
-      context.fillStyle = 'rgba(255, 255, 255, 0)';
+      context.fillStyle = 'rgba(0, 0, 0, 0)';
       context.fillRect(0, 0, width, height);
       context.drawImage(tmpImage, 0, 0, width, height);
-
       var imageIsEmpty = true;
-      var imageData = context.getImageData(0, 0, width, height).data;
-      var imageDataLength = imageData.length;
-      for (var i = 0; i < imageDataLength; i += 4) {
-        if(imageData[i] || imageData[i+1] || imageData[i+2]) {
+      var imageData = context.getImageData(0, 0, width, height);
+      var data = imageData.data;
+      for (var i = 0; i < data.length; i += 4) {
+        data[i+3] = data[i+3] * opacity;
+        if(data[i] || data[i+1] || data[i+2] || data[i+3]) {
           imageIsEmpty = false;
-          break;
         }
       }
+      context.putImageData(imageData, 0, 0);
 
       if (imageIsEmpty) {
         // try again with a bigger timeout period

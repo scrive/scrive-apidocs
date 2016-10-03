@@ -89,7 +89,9 @@
       "delivery_method": "api",
       "authentication_method_to_view": "se_bankid",
       "authentication_method_to_sign": "sms_pin",
+      "allows_highlighting": false,
       "confirmation_delivery_method": "none",
+      "highlighted_pages": [],
       "attachments": [
         {
           "name": "#☭ҖATT",

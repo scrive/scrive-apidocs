@@ -107,6 +107,7 @@ instance FromJSValueWithUpdate SignatoryLink where
         authenticationToSign' <-  fromJSValueField "authentication"
         delivery' <-  fromJSValueField "delivery"
         confirmationdelivery' <-  fromJSValueField "confirmationdelivery"
+        allowshighlighting' <-  fromJSValueField "allowshighlighting"
         case (mfields) of
              (Just fields) -> return $ Just $ def {
                     signatorylinkid            = fromMaybe (unsafeSignatoryLinkID 0) (signatorylinkid <$> ms)
@@ -124,6 +125,7 @@ instance FromJSValueWithUpdate SignatoryLink where
                   , signatorylinkauthenticationtosignmethod = updateWithDefaultAndField StandardAuthenticationToSign signatorylinkauthenticationtosignmethod authenticationToSign'
                   , signatorylinkdeliverymethod       = updateWithDefaultAndField EmailDelivery signatorylinkdeliverymethod delivery'
                   , signatorylinkconfirmationdeliverymethod = updateWithDefaultAndField EmailConfirmationDelivery signatorylinkconfirmationdeliverymethod confirmationdelivery'
+                  , signatorylinkallowshighlighting = updateWithDefaultAndField False signatorylinkallowshighlighting allowshighlighting'
                 }
              _ -> return Nothing
       where

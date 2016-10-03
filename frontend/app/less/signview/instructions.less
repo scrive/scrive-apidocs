@@ -1,13 +1,18 @@
 @import "vars";
 
 .instructions {
-  margin-top: 0;
-
+  transition: opacity 0.2s ease-in-out;
+  text-align: right;
+  background-color: #FFFFFF;
+  box-sizing: border-box;
+  border-bottom: 1px solid #f1f1f1;
+  min-height: 51px;
   text-align: center;
+  padding: @signview-section-padding;
 
-  .continue-button-wrapper {
-    margin-top: 20px;
-  }
+  .on-small-view({
+    padding: @signview-section-padding-small;
+  });
 
   .follow {
     font-weight: 300;
@@ -18,9 +23,8 @@
     color: @brand-secondary;
     font-weight: 600;
   }
-
-  .menu-options {
-    overflow: hidden;
-    transition: height 0.2s ease-out;
+  .continue-button-wrapper {
+    margin: 20px
   }
+
 }

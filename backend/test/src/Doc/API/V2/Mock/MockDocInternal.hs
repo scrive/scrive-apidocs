@@ -132,6 +132,8 @@ data MockSigLink = MockSigLink {
   , mockSigLinkAuthMethodToView       :: String
   , mockSigLinkAuthMethodToSign       :: String
   , mockSigLinkConfirmationDelivery   :: String
+  , mockSigLinkAllowsHighlighting     :: Bool
+  , mockSigLinkHighlightedPages       :: [MockSigHighlightedPage]
   , mockSigLinkAttachments            :: [MockSigAttachment]
   , mockSigLinkAPIDeliveryURL         :: Maybe String
 } deriving (Show, Eq)
@@ -160,6 +162,8 @@ instance Unjson MockSigLink where
     <*> field "authentication_method_to_view" mockSigLinkAuthMethodToView ""
     <*> field "authentication_method_to_sign" mockSigLinkAuthMethodToSign ""
     <*> field "confirmation_delivery_method" mockSigLinkConfirmationDelivery ""
+    <*> field "allows_highlighting" mockSigLinkAllowsHighlighting ""
+    <*> field "highlighted_pages" mockSigLinkHighlightedPages ""
     <*> field "attachments" mockSigLinkAttachments ""
     <*> fieldOpt "api_delivery_url" mockSigLinkAPIDeliveryURL ""
 
@@ -229,3 +233,14 @@ instance Unjson MockSigAttachment where
     <*> field "description" mockSigAttachmentDescription  "MockSigAttachment Description"
     <*> fieldOpt "file_id"    mockSigAttachmentFileId     "MockSigAttachment File ID"
     <*> fieldOpt "file_name"  mockSigAttachmentFileName   "MockSigAttachment File Name"
+
+data MockSigHighlightedPage = MockSigHighlightedPage {
+    mockSigHighlightedPagePage    :: Int
+  , mockSigHighlightedPageFileID  :: String
+
+} deriving (Show, Eq)
+instance Unjson MockSigHighlightedPage where
+  unjsonDef = objectOf $ pure MockSigHighlightedPage
+    <*> field "page" mockSigHighlightedPagePage       "MockSigAttachment Page"
+    <*> field "file_id" mockSigHighlightedPageFileID  "MockSigAttachment FileID"
+

@@ -99,6 +99,8 @@ kontraMigrations = [
   , createTablePartners
   , companiesAddPartnerID
   , createTablePartnerAdmins
+  , addAllowsHighlightingToSignatories
+  , createHighlightedPagesTable
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

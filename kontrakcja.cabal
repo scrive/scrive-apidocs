@@ -197,6 +197,7 @@ Library
                  , Doc.Data.DocumentStatus
                  , Doc.Data.DocumentTag
                  , Doc.Data.MainFile
+                 , Doc.Data.HighlightedPage
                  , Doc.Data.SignatoryAttachment
                  , Doc.Data.SignatoryField
                  , Doc.Data.SignatoryFieldUtils

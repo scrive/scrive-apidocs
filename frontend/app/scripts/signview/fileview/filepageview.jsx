@@ -1,101 +1,166 @@
-var _ = require("underscore");
-var Backbone = require("backbone");
-var React = require("react");
-var BackboneMixin = require("../../common/backbone_mixin");
-var SignaturePlacementPlacedView = require("./signatureplacementplacedview");
-var CheckboxPlacementPlacedView = require("./checkboxplacementplacedview");
-var TextPlacementPlacedView = require("./textplacementplacedview");
-var FilePage = require("../../../js/files.js").FilePage;
-var Page = require("../pageviewer/page");
+import  _ from "underscore";
+import  Backbone from "backbone";
+import  React from "react";
+import  {FilePage} from "../../../js/files.js";
+import  {Document} from "../../../js/documents.js";
+import  {HighlightedPage} from "../../../js/highlightedpage.js";
+import  BackboneMixin from "../../common/backbone_mixin";
+import  SignaturePlacementPlacedView from "./signatureplacementplacedview";
+import  CheckboxPlacementPlacedView from "./checkboxplacementplacedview";
+import  TextPlacementPlacedView from "./textplacementplacedview";
+import  Highlight from "./highlight";
 
-  module.exports = React.createClass({
-    displayName: "FilePageView",
+const DEFAULT_PIXEL_WIDTH = 950;
 
-    propTypes: {
-      model: React.PropTypes.instanceOf(FilePage).isRequired,
-      signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      image: React.PropTypes.instanceOf(Image).isRequired,
-      width: React.PropTypes.number
-    },
+module.exports = React.createClass({
 
-    mixins: [BackboneMixin.BackboneMixin],
+  displayName: "FilePageView",
 
-    // TODO: should be replaced with only `change` event later.
-    componentWillMount: function () {
-      this.props.model.on("change:dragables", this.handleChange);
-    },
+  propTypes: {
+    filepage: React.PropTypes.instanceOf(FilePage).isRequired,
+    document: React.PropTypes.instanceOf(Document).isRequired,
+    signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
+    image: React.PropTypes.object.isRequired,
+    highlightingMode: React.PropTypes.bool,
+    removingHighlightingMode: React.PropTypes.bool,
+    onNewHighlight: React.PropTypes.func,
+    onRemoveHighlighting: React.PropTypes.func,
+    width: React.PropTypes.number
+  },
 
-    componentWillUnmount: function () {
-      this.props.model.off("change:dragables", this.handleChange);
-    },
+  mixins: [BackboneMixin.BackboneMixin],
 
-    getBackboneModels: function () {
-      return [this.props.model];
-    },
+  getBackboneModels: function () {
+    return [this.props.filepage];
+  },
 
-    height: function () {
-      if (!this.props.image.complete) {
-        return 0;
-      }
+  canEditHighlighting: function () {
+    var doc = this.props.document;
+    return doc.currentSignatoryCanSign() && doc.currentSignatory().allowshighlighting();
+  },
 
-      return (this.props.width / this.props.image.width) * this.props.image.height;
-    },
+  showHighlighting: function () {
+    return !this.props.document.closed();
+  },
 
-    renderFields: function () {
-      var self = this;
-      var page = self.props.model;
-      var file = page.file();
-      var width = self.props.width;
-      var height = this.height();
-      var doc = file.document();
+  noneditableHighlights: function () {
+    return this.props.document.noneditableHighlighedPagesForPageNo(this.props.filepage.number());
+  },
 
-      return _.map(doc.allPlacements(), function (placement, index) {
-        if (placement.page() === page.number()) {
-          var field = placement.field();
+  editableHighlight: function () {
+    return this.props.document.editableHighlighedPageForPageNo(this.props.filepage.number());
+  },
 
-          var args = {
-            model: placement,
-            pageWidth: width,
-            pageHeight: height,
-            signview: self.props.signview
-          };
+  hasEditableHighlight: function () {
+    return this.editableHighlight() != undefined;
+  },
 
-          if (field.isSignature()) {
-            return <SignaturePlacementPlacedView key={index} {...args} />;
-          }
+  // TODO: should be replaced with only `change` event later.
+  componentWillMount: function () {
+    this.props.filepage.on("change:dragables", this.handleChange);
+    this.props.image.onload = () => this.handleChange;
+  },
 
-          if (field.isCheckbox()) {
-            return <CheckboxPlacementPlacedView key={index} {...args} />;
-          }
+  componentWillUnmount: function () {
+    this.props.filepage.off("change:dragables", this.handleChange);
+  },
 
-          if (field.isText()) {
-            return <TextPlacementPlacedView key={index} {...args} />;
-          }
-
-          throw new Error("unknown field type");
-        }
-      });
-    },
-
-    handleChange: function () {
-      if (this.isMounted()) {
-        this.forceUpdate();
-      }
-    },
-
-    render: function () {
-      var page = this.props.model;
-      var file = page.file();
-      var doc = file.document();
-      var imageSrc = this.props.image.src;
-      var imageComplete = this.props.image.complete;
-
-      return (
-        <Page width={this.props.width} number={page.number()} imageSrc={imageSrc}>
-          {/* if */ imageComplete && !doc.closed() &&
-            this.renderFields()
-          }
-        </Page>
-      );
+  handleChange: function () {
+    if (this.isMounted()) {
+      this.forceUpdate();
     }
-  });
+  },
+
+  height: function () {
+    if (!this.props.image.complete) {
+      return 0;
+    } else {
+      return (this.props.width / this.props.image.width) * this.props.image.height;
+    }
+  },
+
+  handleRemoveHighlighting: function () {
+    this.props.onRemoveHighlighting(this.props.filepage.number());
+  },
+
+  handleNewHighlight: function (canvas) {
+    this.props.onNewHighlight(this.props.filepage.number(), canvas);
+  },
+
+  renderFields: function () {
+    const {filepage, document, width, signview} = this.props;
+    const height = this.height();
+
+    return _.map(document.allPlacements(), function (placement, index) {
+      if (placement.page() === filepage.number()) {
+        var field = placement.field();
+
+        var args = {
+          model: placement,
+          pageWidth: width,
+          pageHeight: height,
+          signview: signview
+        };
+
+        if (field.isSignature()) {
+          return <SignaturePlacementPlacedView key={index} {...args} />;
+        }
+
+        if (field.isCheckbox()) {
+          return <CheckboxPlacementPlacedView key={index} {...args} />;
+        }
+
+        if (field.isText()) {
+          return <TextPlacementPlacedView key={index} {...args} />;
+        }
+
+        throw new Error("unknown field type");
+      }
+    });
+  },
+
+  render: function () {
+    const {filepage, document, width, image} = this.props;
+
+    const pageStyle = {
+      width: width + "px"
+    };
+
+    const height = Math.floor(image.height * (width / DEFAULT_PIXEL_WIDTH));
+
+    return (
+      <div style={pageStyle} id={"page" + filepage.number()} className="pagediv">
+
+        { /* if */ this.showHighlighting() &&
+          _.map(this.noneditableHighlights(), function (hp) {
+            return (
+              <img
+                onDragStart={(e) => { e.preventDefault(); }}
+                style={{"position": "absolute"}}
+                src={hp.file().downloadLink()}
+              />
+            );
+          })
+        }
+
+        <img onDragStart={(e) => { e.preventDefault(); }} src={image.src} />
+
+        { /* if */ this.canEditHighlighting() && (image.height > 0) &&
+          <Highlight
+            active={this.props.highlightingMode}
+            removingHighlightingMode={this.props.removingHighlightingMode && this.hasEditableHighlight() }
+            width={width}
+            height={height}
+            onNewHighlight={this.handleNewHighlight}
+            baseImageURL={ this.hasEditableHighlight() ? this.editableHighlight().file().downloadLink() : undefined }
+            onRemoveHighlighting={this.handleRemoveHighlighting}
+          />
+        }
+
+        { /* if */ image.complete && !document.closed() &&
+          this.renderFields()
+        }
+      </div>
+    );
+  }
+});

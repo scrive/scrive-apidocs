@@ -14,7 +14,7 @@ describe("/authorview/fileview/filepageview", function () {
     var component = React.render(
       React.createElement(
         FilePageView,
-        {model: page, onReady: sinon.spy()}
+        {page: page, highlightedPages: [], onReady: sinon.spy()}
       ),
       $("body")[0]
     );
@@ -113,7 +113,7 @@ describe("/authorview/fileview/filepageview", function () {
         return component.props.onReady.called;
       },
       function () {
-        assert.isTrue(component.props.model.setSize.calledWith(950, 593.75));
+        assert.isTrue(component.props.page.setSize.calledWith(950, 593.75));
         done();
       }
     );
@@ -134,12 +134,12 @@ describe("/authorview/fileview/filepageview", function () {
       function () {
         assert.equal(
           component.refs.placementsContainer.state.pageWidth,
-          component.props.model.width()
+          component.props.page.width()
         );
 
         assert.equal(
           component.refs.placementsContainer.state.pageHeight,
-          component.props.model.height()
+          component.props.page.height()
         );
 
         done();

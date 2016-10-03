@@ -169,7 +169,7 @@ signatoryJSON forauthor doc viewer siglink = do
     J.value "authenticationToView" $ authenticationToViewJSON $ signatorylinkauthenticationtoviewmethod siglink
     J.value "hasAuthenticatedToView" $ signatorylinkidentifiedtoview siglink
     J.value "authentication" $ authenticationToSignJSON $ signatorylinkauthenticationtosignmethod siglink
-
+    J.value "allowshighlighting" $ signatorylinkallowshighlighting siglink
     when (not (isPreparation doc) && forauthor && signatorylinkdeliverymethod siglink == APIDelivery) $ do
         J.value "signlink" $ show $ LinkSignDoc (documentid doc)  siglink
 

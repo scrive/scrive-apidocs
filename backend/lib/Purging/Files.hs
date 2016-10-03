@@ -39,6 +39,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m MarkOrphanFilesForPurgeAfter [F
            , ("signatory_attachments", "file_id")
            , ("signatory_screenshots", "file_id")
            , ("signatory_link_fields", "value_file_id")
+           , ("highlighted_pages", "file_id")
            ]
 
     when (sort expected_refs /= sort refs) $ do
@@ -92,7 +93,15 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m MarkOrphanFilesForPurgeAfter [F
       , "EXCEPT ALL"
       , "SELECT f.id FROM files f"
       , "  JOIN signatory_link_fields slf ON f.id = slf.value_file_id"
+      -- File is refered as highlighted page image by not purged document
+      , "EXCEPT ALL"
+      , "SELECT f.id FROM files f"
+      , "  JOIN highlighted_pages hp ON f.id = hp.file_id"
+      , "  JOIN signatory_links sl ON hp.signatory_link_id = sl.id"
+      , "  JOIN documents d ON sl.document_id = d.id"
+      , " WHERE d.purged_time IS NULL"
       , ")"
+      -- Actual purge
       , "UPDATE files"
       , "   SET purge_at = now() +" <?> interval
       , " WHERE id IN (SELECT id FROM files_to_purge LIMIT" <?> limit <> ")"

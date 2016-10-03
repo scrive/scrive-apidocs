@@ -48,6 +48,7 @@ kontraComposites = [
   , ctSignatoryAttachment
   , ctPlacementAnchor
   , ctFieldPlacement
+  , ctHighlightedPage
   , ctSignatoryField
   , ctDocumentTag
   , ctMainFile
@@ -124,6 +125,7 @@ kontraTables =
   , tableChargeableItems
   , tableThemeOwnership
   , tableEIDAuthentications
+  , tableHighlightedPages
   ] ++ cronTables
     ++ mailerTables
     ++ messengerTables

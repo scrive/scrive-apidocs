@@ -143,7 +143,7 @@ module.exports = React.createClass({
                   ref="signatoriesView"
                 />
                 <FileView
-                  model={this.props.document.mainfile()}
+                  model={this.props.document}
                   ref="fileView"
                   onReady={this.onFileViewReady}
                 />

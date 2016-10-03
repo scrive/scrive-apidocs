@@ -10,6 +10,7 @@ module Doc.API.V2.JSON.Misc (
 , unjsonLang
 , unjsonAuthorAttachment
 , unjsonSignatoryAttachment
+, unjsonHighlightedPage
 , unjsonDocumentTag
 , unjsonMaybeMainFile
 , unjsonSignatoryScreenshots
@@ -112,6 +113,11 @@ unjsonSignatoryAttachment = objectOf $ pure (SignatoryAttachment Nothing Nothing
     <*> field "description" signatoryattachmentdescription "Description of attachment"
     <* fieldReadOnlyOpt "file_id" signatoryattachmentfile "Uploaded file id"
     <* fieldReadOnlyOpt "file_name" signatoryattachmentfilename "Uploaded filename"
+
+unjsonHighlightedPage :: UnjsonDef HighlightedPage
+unjsonHighlightedPage = objectOf $ pure HighlightedPage
+    <*> field "page"  highlightedPagePage  "Page that was highlighted"
+    <*> field "file_id" highlightedPageFileID "File ID of image with highlighting"
 
 unjsonDocumentTag :: UnjsonDef DocumentTag
 unjsonDocumentTag = objectOf $ pure DocumentTag

@@ -26,6 +26,7 @@ import Happstack.Fields
 import Kontra
 import KontraPrelude
 import LiveDocx
+import qualified Data.ByteString.RFC2397 as Base64Image
 
 data ApiV2Parameter a where
   ApiV2ParameterBool  :: T.Text -> ApiV2Parameter Bool
@@ -38,6 +39,7 @@ data ApiV2Parameter a where
   ApiV2ParameterAeson :: Aeson.FromJSON a => T.Text -> ApiV2Parameter a
   ApiV2ParameterFilePDF        :: T.Text -> ApiV2Parameter File
   ApiV2ParameterFilePDFOrImage :: T.Text -> ApiV2Parameter File
+  ApiV2ParameterBase64PNGImage :: T.Text -> ApiV2Parameter File
 
 -- | Get an obligatory parameter
 --
@@ -161,6 +163,16 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
       file <- dbQuery $ GetFileByFileID fileid
       return $ Just file
 
+apiV2ParameterOptional (ApiV2ParameterBase64PNGImage name) = do
+  mValue <- getFieldBS (T.unpack name)
+  case (Base64Image.decode . BS.concat . BSL.toChunks) <$> mValue of
+    Nothing -> return Nothing
+    (Just Nothing) -> apiError $ requestParameterParseError name "expected RFC2397 encoded png"
+    (Just (Just (_,content))) -> do
+      fileid <- dbUpdate $ NewFile "image-param.png" content
+      file <- dbQuery $ GetFileByFileID fileid
+      return $ Just file
+
 -- * Internal
 
 -- | Helper function for all parameters that can just be parsed using `maybeRead`
@@ -183,3 +195,4 @@ getParameterName (ApiV2ParameterTextUnjson n _) = n
 getParameterName (ApiV2ParameterAeson n) = n
 getParameterName (ApiV2ParameterFilePDF n) = n
 getParameterName (ApiV2ParameterFilePDFOrImage n) = n
+getParameterName (ApiV2ParameterBase64PNGImage n) = n

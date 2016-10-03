@@ -212,7 +212,7 @@ ctSignatoryAttachment = CompositeType {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 30
+  , tblVersion = 31
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -238,7 +238,7 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "reject_redirect_url", colType = TextT }
     , tblColumn { colName = "confirmation_delivery_method", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
     , tblColumn { colName = "authentication_to_view_method", colType = SmallIntT, colNullable = False }
-
+    , tblColumn { colName = "allows_highlighting", colType = BoolT, colNullable = False, colDefault = Just "false" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -276,6 +276,7 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "really_deleted", ccType = TimestampWithZoneT }
   , CompositeColumn { ccName = "csv_contents", ccType = TextT }
   , CompositeColumn { ccName = "attachments", ccType = ArrayT $ CustomT "signatory_attachment" }
+  , CompositeColumn { ccName = "highlighted_pages", ccType = ArrayT $ CustomT "highlighted_page" }
   , CompositeColumn { ccName = "sign_redirect_url", ccType = TextT }
   , CompositeColumn { ccName = "reject_redirect_url", ccType = TextT }
   , CompositeColumn { ccName = "rejection_time", ccType = TimestampWithZoneT }
@@ -284,6 +285,7 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "authentication_to_sign_method", ccType = SmallIntT }
   , CompositeColumn { ccName = "delivery_method", ccType = SmallIntT }
   , CompositeColumn { ccName = "confirmation_delivery_method", ccType = SmallIntT }
+  , CompositeColumn { ccName = "allows_highlighting", ccType = BoolT}
   , CompositeColumn { ccName = "has_identified_to_view", ccType = BoolT }
   ]
 }
@@ -470,3 +472,41 @@ tableSignatoryScreenshots = tblTable {
     , indexOnColumn "file_id"
     ]
   }
+
+---------------------------------
+
+tableHighlightedPages :: Table
+tableHighlightedPages = tblTable {
+    tblName = "highlighted_pages"
+  , tblVersion = 1
+  , tblColumns = [
+      tblColumn { colName = "id",                colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "signatory_link_id", colType = BigIntT,    colNullable = False }
+    , tblColumn { colName = "page",              colType = IntegerT,  colNullable = False }
+    , tblColumn { colName = "file_id",           colType = BigIntT,    colNullable = False }
+    ]
+  , tblPrimaryKey = pkOnColumn "id"
+  , tblForeignKeys = [
+      (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
+    , fkOnColumn "file_id" "files" "id"
+
+    ]
+  , tblIndexes = [
+      uniqueIndexOnColumns ["signatory_link_id", "page"]
+    , indexOnColumn "signatory_link_id"
+    , indexOnColumn "file_id"
+    ]
+  }
+
+---------------------------------
+
+ctHighlightedPage:: CompositeType
+ctHighlightedPage = CompositeType {
+    ctName = "highlighted_page"
+  , ctColumns = [
+      CompositeColumn { ccName = "page", ccType = IntegerT }
+    , CompositeColumn { ccName = "file_id", ccType = BigIntT }
+    ]
+  }
+
+---------------------------------

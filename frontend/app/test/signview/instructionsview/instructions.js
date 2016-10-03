@@ -1,7 +1,7 @@
 var backend = require("../../backend");
 var util = require("../../util");
 var React = require("react");
-var InstructionsView = require("../../../scripts/signview/instructionsview/instructionsview");
+var Instructions = require("../../../scripts/signview/instructionsview/instructions");
 
   var TestUtils = React.addons.TestUtils;
 
@@ -16,9 +16,9 @@ var InstructionsView = require("../../../scripts/signview/instructionsview/instr
       });
     });
 
-    describe("InstructionsView", function () {
+    describe("Instructions", function () {
       it("should test component", function () {
-        var insView = TestUtils.renderIntoDocument(React.createElement(InstructionsView, {
+        var insView = TestUtils.renderIntoDocument(React.createElement(Instructions, {
           model: doc,
           arrow: function () { }
         }));

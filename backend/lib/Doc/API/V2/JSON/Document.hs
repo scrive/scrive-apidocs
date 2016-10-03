@@ -111,8 +111,11 @@ unjsonSignatory da =  objectOf $
         <**> (pure $ \sats s -> s { signatorylinkauthenticationtosignmethod = sats }))
   <**> (fieldDefBy "confirmation_delivery_method" (signatorylinkconfirmationdeliverymethod def) signatorylinkconfirmationdeliverymethod "Signatory confirmation delivery method" unjsonConfirmationDeliveryMethod
         <**> (pure $ \scd s -> s { signatorylinkconfirmationdeliverymethod = scd }))
+  <**> (fieldDef "allows_highlighting" (signatorylinkallowshighlighting def) signatorylinkallowshighlighting "Areas of main PDF can highlighted during signing"
+        <**> (pure $ \sah s -> s { signatorylinkallowshighlighting = sah }))
   <**> (fieldDefBy "attachments"  (signatoryattachments def) signatoryattachments "Signatory attachments" (arrayOf unjsonSignatoryAttachment)
         <**> (pure $ \sa s -> s { signatoryattachments = sa }))
+  <*   (fieldReadonlyBy "highlighted_pages" signatoryhighlightedpages "Highlighted page during signing" (arrayOf unjsonHighlightedPage))
   <*   (fieldReadOnlyOpt "api_delivery_url" (\sl ->
           if (daStatus da /= Preparation && signatorylinkdeliverymethod sl == APIDelivery && canSeeSignlinks da)
              then (Just $ show $ LinkSignDoc (daDocumentID da) sl)

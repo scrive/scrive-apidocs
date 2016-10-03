@@ -30,6 +30,8 @@ module Doc.Model.Update
   , ReallyDeleteDocument(..)
   , SaveDocumentForUser(..)
   , SaveSigAttachment(..)
+  , SetHighlightingForPageAndSignatory(..)
+  , ClearHighlightingForPageAndSignatory(..)
   , SetDaysToSign(..)
   , SetDocumentInviteTime(..)
   , SetDocumentLang(..)
@@ -148,6 +150,7 @@ insertSignatoryLinks did links = do
     sqlSetList "authentication_to_sign_method" $ signatorylinkauthenticationtosignmethod <$> links
     sqlSetList "delivery_method" $ signatorylinkdeliverymethod <$> links
     sqlSetList "confirmation_delivery_method" $ signatorylinkconfirmationdeliverymethod <$> links
+    sqlSetList "allows_highlighting" $ signatorylinkallowshighlighting <$> links
     sqlResult "id"
 
   -- Update IDs.
@@ -1111,6 +1114,38 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SaveSig
         SaveSigAttachmentEvidence
         (do F.value "name" name
             F.value "description" $ signatoryattachmentdescription sigattach)
+        actor
+
+data SetHighlightingForPageAndSignatory = SetHighlightingForPageAndSignatory SignatoryLink Int32 FileID Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetHighlightingForPageAndSignatory () where
+  update (SetHighlightingForPageAndSignatory sl page fid actor) = do
+    updateDocumentWithID $ const $ do
+      runQuery_ . sqlDelete "highlighted_pages" $ do
+         sqlWhereEq "signatory_link_id" $ signatorylinkid sl
+         sqlWhereEq "page" page
+      runQuery_ . sqlInsert "highlighted_pages" $ do
+         sqlSet "signatory_link_id" $ signatorylinkid sl
+         sqlSet "page"  page
+         sqlSet "file_id"  fid
+      void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        PageHighlightingAdded
+        (F.value "pageno" page)
+        (Just sl)
+        Nothing
+        actor
+
+data ClearHighlightingForPageAndSignatory = ClearHighlightingForPageAndSignatory SignatoryLink Int32 Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ClearHighlightingForPageAndSignatory () where
+  update (ClearHighlightingForPageAndSignatory sl page actor) = do
+    updateDocumentWithID $ const $ do
+      runQuery_ . sqlDelete "highlighted_pages" $ do
+         sqlWhereEq "signatory_link_id" $ signatorylinkid sl
+         sqlWhereEq "page" page
+      void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        PageHighlightingCleared
+        (F.value "pageno" page)
+        (Just sl)
+        Nothing
         actor
 
 data SetFieldPlacements = SetFieldPlacements SignatoryFieldID [FieldPlacement]

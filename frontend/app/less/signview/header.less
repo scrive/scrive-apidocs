@@ -34,10 +34,9 @@
 
     .link {
       display: inline-block;
-      line-height: @signview-header-height;
+      text-decoration: underline;
 
       .on-small-view({
-        line-height: @signview-header-height-small;
       });
     }
 
@@ -57,10 +56,20 @@
     }
 
     .info {
-      white-space: nowrap;
-      overflow: hidden;
-      line-height: 1em;
-      text-overflow: ellipsis;
+      display: inline-block;
+    }
+    .download {
+
+      .download-icon {
+        background-size: cover;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 30px;
+
+        .on-small-view({
+          margin-right: 20px;
+        });
+      }
     }
   }
 }

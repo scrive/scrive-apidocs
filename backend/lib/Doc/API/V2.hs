@@ -50,4 +50,5 @@ documentAPIV2  = dir "documents" $ choice [
   , param $ param $ dir "setattachment"           $ hPost $ toK2 $ docApiV2SigSetAttachment
   , param $ param $ dir "signing" $ dir "check"   $ hGet  $ toK2 $ docApiV2SigSigningStatusCheck
   , param $ param $ dir "signing" $ dir "cancel"  $ hPost $ toK2 $ docApiV2SigSigningCancel
+  , param $ param $ dir "signing" $ dir "highlight" $ hPost $ toK2 $ docApiV2SetHighlightForPage
   ]

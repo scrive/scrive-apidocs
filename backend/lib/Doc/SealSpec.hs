@@ -27,6 +27,7 @@ data Person =
            , signedAtText        :: String
            , personalNumberText  :: String
            , companyNumberText   :: String
+           , highlightedImages   :: [HighlightedImage]
            }
     deriving (Eq,Ord,Show,Read)
 
@@ -81,6 +82,11 @@ unjsonPerson = Unjson.objectOf $ pure Person
     <*> Unjson.field "companyNumberText"
         companyNumberText
         ""
+    <*> Unjson.fieldBy "highlightedImages"
+        highlightedImages
+        ""
+        (Unjson.arrayOf unjsonHighlightedImage)
+
 
 -- | Field coordinates are in screen coordinate space. That means:
 --
@@ -148,6 +154,25 @@ unjsonField = Unjson.unionOf
                  <*> Unjson.field "onlyForSummary" onlyForSummary ""
                  <*> Unjson.fieldOpt "keyColor" keyColor ""
               )]
+
+
+-- | Image is a transparent layer that was put on pdf page during signing to
+--   highlight important information to signatory. It should cover whole page
+
+data HighlightedImage = HighlightedImage {
+    hiPage             :: Int32  -- ^ on which page should the image be placed
+  , hiImage            :: BS.ByteString -- ^ binary content of image
+  } deriving (Eq, Ord, Show, Read)
+
+unjsonHighlightedImage:: Unjson.UnjsonDef HighlightedImage
+unjsonHighlightedImage = Unjson.objectOf $ pure HighlightedImage
+    <*> Unjson.field "page"
+        hiPage
+        ""
+    <*> Unjson.fieldBy "imageBase64"
+        hiImage
+        ""
+        (invmap (B64.decodeLenient . BS.pack . Text.unpack) (Text.pack . BS.unpack . B64.encode) Unjson.unjsonDef)
 
 
 -- | An attachment that will be put into a PDF. Attachments are put in

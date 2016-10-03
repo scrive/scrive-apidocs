@@ -554,6 +554,18 @@ javascriptLocalisation =
                 , checkYourPhone : "$_checkYourPhone()$"
 
              }
+             , controlsStatus : {
+                  highlighting     : "$_controlsStatusHighlighting()$"
+                , clearingHighlight: "$_controlsStatusClearingHighlight()$"
+                , viewingPending   : "$_controlsStatusViewingPending()$"
+                , viewingSigning   : "$_controlsStatusViewingSigning()$"
+                , viewingClosed    : "$_controlsStatusViewingClosed()$"
+                , viewingCanceled  : "$_controlsStatusViewingCanceled()$"
+                , viewingRejected  : "$_controlsStatusViewingRejected()$"
+                , viewingTimedout : "$_controlsStatusViewingTimedout()$"
+                , authornamePlaceholder : "$_authorParty()$"
+             }
+             , clearHighlightingHere: "$_clearHighlightingHere()$"
              , eleg : {
                   bankid : {
                         faultModalTitle : "$_elegBankIDFaultModalTitle()$"

@@ -52,7 +52,8 @@
     "sourceType":"module",
     "ecmaFeatures": {
       "jsx": true,
-      "modules": true
+      "modules": true,
+      "experimentalObjectRestSpread": true
     }
   },
   "rules": {

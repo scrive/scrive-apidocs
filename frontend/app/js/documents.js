@@ -405,6 +405,32 @@ var Document = exports.Document = Backbone.Model.extend({
               ajax: true
           });
     },
+    setHighlight : function(pageno, imageData, callback) {
+       var doc = this;
+       var sig = doc.currentSignatory();
+       var currentHighlight = _.find(sig.highlightedPages(), function(hp) { return hp.page() == pageno; });
+       return new Submit({
+        method: "POST",
+        ajax: true,
+        url : "/api/frontend/documents/"+ doc.documentid() + "/" + sig.signatoryid() + "/signing/highlight",
+        page : "" + pageno,
+        image : imageData,
+        ajaxsuccess: function (resp) {
+          var newCurrentSig = _.find(resp.parties, function(p) {return p.id == sig.signatoryid();});
+          var newHighlight = _.find(newCurrentSig.highlighted_pages, function(p) {return p.page == pageno;});
+          if (currentHighlight && newHighlight) {
+            sig.updateHighlightedPage(pageno, newHighlight.file_id);
+          } else if (!currentHighlight && newHighlight) {
+            sig.addHighlightedPage(pageno, newHighlight.file_id);
+          } else if (currentHighlight && !newHighlight) {
+            sig.removeHighlightedPage(pageno);
+          }
+          if (callback) {
+            callback();
+          }
+        }
+      });
+    },
     draftData: function() {
       return {
           id: this.documentid(),
@@ -805,6 +831,21 @@ var Document = exports.Document = Backbone.Model.extend({
           if (s.isCsv())
             s.dropFirstCSVLine();
       });
+    },
+    allHighlighedPagesForPageNo: function(pageno) {
+      return _.flatten(_.map(this.signatories(), function(s) {
+        return _.filter(s.highlightedPages(), function(hp) { return hp.page() == pageno; })
+      }));
+    },
+    noneditableHighlighedPagesForPageNo: function(pageno) {
+      return _.filter(this.allHighlighedPagesForPageNo(pageno), function(hp) { return  hp.signatory().hasSigned();});
+    },
+    editableHighlighedPageForPageNo: function(pageno) {
+      if (this.currentSignatoryCanSign()) {
+        return _.find(this.currentSignatory().highlightedPages(), function(hp) { return  hp.page() == pageno;});
+      } else {
+        return undefined;
+      }
     }
 });
 

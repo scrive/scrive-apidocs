@@ -49,6 +49,7 @@ instance (InspectXML a, InspectXML b, InspectXML c, Show a, Show b, Show c) => I
 $(deriveInspectXML ''MainFile)
 $(deriveInspectXML ''Document)
 $(deriveInspectXML ''AuthorAttachment)
+$(deriveInspectXML ''HighlightedPage)
 $(deriveInspectXML ''SignatoryAttachment)
 $(deriveInspectXML ''FieldPlacement)
 $(deriveInspectXML ''TipSide)

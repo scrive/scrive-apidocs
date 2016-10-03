@@ -3,7 +3,6 @@ var React = require("react");
 var BackboneMixin = require("../common/backbone_mixin");
 var DocumentViewSignatories = require("./signatories/docviewsignatories");
 var SignatoryAttachmentsView = require("./attachments/signatoryattachmentsview");
-var InstructionsView = require("./instructionsview/instructionsview");
 var AuthorAttachmentsView = require("./attachments/authorattachmentsview");
 var ExtraDetailsView = require("./extradetails/extradetailsview");
 var SignSectionView = require("./signsection/signsectionview");
@@ -46,11 +45,13 @@ var TaskList = require("./navigation/task_list");
     },
 
     childContextTypes: {
+      document: React.PropTypes.instanceOf(Document).isRequired,
       taskList: React.PropTypes.instanceOf(TaskList).isRequired,
       hideArrow: React.PropTypes.func.isRequired,
       showArrow: React.PropTypes.func.isRequired,
       blinkArrow: React.PropTypes.func.isRequired,
-      zoomToPoint: React.PropTypes.func.isRequired
+      zoomToPoint: React.PropTypes.func.isRequired,
+      goToCurrentTask: React.PropTypes.func.isRequired
     },
 
     // Contexts are an undocumented built in feature of React.
@@ -59,6 +60,8 @@ var TaskList = require("./navigation/task_list");
       var self = this;
 
       return {
+        document: self.state.model.document(),
+
         taskList: self.state.model.tasks(),
 
         hideArrow: function () {
@@ -77,6 +80,14 @@ var TaskList = require("./navigation/task_list");
 
         zoomToPoint: function (zoomPoint, zoom) {
           self.refs.fileView.zoomToPoint(zoomPoint, zoom);
+        },
+
+        goToCurrentTask: function () {
+          var arrow = self.refs.arrow;
+
+          if (arrow) {
+            arrow.goto();
+          }
         }
       };
     },
@@ -165,17 +176,6 @@ var TaskList = require("./navigation/task_list");
           {/* else */ model.isReady() &&
             <div className="main">
               <Overlay on={this.state.overlay} />
-              <InstructionsView
-                model={doc}
-                loggedInAsAuthor={model.loggedInAsAuthor()}
-                goToCurrentTask={() => {
-                  let arrow = this.refs.arrow;
-
-                  if (arrow) {
-                    arrow.goto();
-                  }
-                }}
-              />
               {/* if */ this.props.loggedInAsAuthor && model.hasPadSigning() &&
                 <PadSigningView sigs={doc.signatoriesThatCanSignNowOnPad()} />
               }
@@ -187,15 +187,11 @@ var TaskList = require("./navigation/task_list");
                 pixelWidth={this.state.pixelWidth}
                 model={doc.mainfile()}
                 signview={model}
-                showOverlay={this.state.overlay}
-                showArrow={this.state.showArrow}
               />
               {/* if */ model.hasAuthorAttachmentsSection() &&
                 <AuthorAttachmentsView
                   model={doc}
                   canStartFetching={self.refs.fileView != undefined && self.refs.fileView.ready()}
-                  showOverlay={this.state.overlay}
-                  showArrow={this.state.showArrow}
                 />
               }
               {/* if */ model.hasSignatoriesAttachmentsSection() &&
