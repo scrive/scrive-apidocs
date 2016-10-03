@@ -37,9 +37,17 @@
     .header-text {
       display: table-cell;
       font-size: 10px;
+      line-height:30px;
       padding-right: 52px;
       text-align: right;
       vertical-align: middle;
+
+        .download-icon {
+          margin-right:10px;
+          vertical-align: middle;
+          width:18px;
+        }
+
     }
   }
 
@@ -60,13 +68,21 @@
     }
   }
 
+  .sample-controls {
+    background-color: white;
+    font-size: 12px;
+    text-align: left;
+    padding: 4px 16px;
+    border-bottom: 1px solid #f1f1f1;
+  }
+
   .contentheader {
     margin: 0 !important;
     text-align: center;
     padding-top: 5px;
     font-size: 12px;
     background-color: white;
-    border-bottom-width: 0;
+    border-bottom: 1px solid #f1f1f1;
 
     .document-name {
       text-decoration: underline;
@@ -77,19 +93,6 @@
     p {
       display: inline-block;
       margin: 0;
-    }
-
-    .download {
-      &.hidden {
-        display: none;
-      }
-      background: url(../img/senddoc.png) no-repeat;
-      background-position: 0 2px;
-      cursor: text;
-      display: inline-block;
-      font-size: 11px;
-      font-weight: normal;
-      padding-left: 20px;
     }
 
     .highlight-green {
@@ -109,24 +112,21 @@
 
   .document {
     box-shadow: inset 0 0 10px 0 rgba(0,0,0,.15);
-    padding: @preview-ratio * 45px;
     text-align: center;
     background: #f1f1f1;
     position: relative;
 
     .exampledocument {
-      box-shadow: 0 0 8px rgba(80, 80, 80, 0.31);
-      width: 480px;
+      width: 500px;
     }
 
     .downarrow {
       display: inline-block;
-      height: 102px;
-      width: 102px;
+      height: 108px;
+      width: 108px;
       position: absolute;
       left: 40%;
       bottom: 25px;
-      background: url('../img/sign-arrow-down.png');
     }
 
     .field {
@@ -137,8 +137,8 @@
     }
 
     .mandatoryfield {
-      bottom: 415px;
-      left: 75px;
+      bottom: 425px;
+      left: 85px;
 
       .front {
         position: relative;
@@ -153,8 +153,8 @@
     }
 
     .optionalfield {
-      bottom: 407px;
-      left: 369px;
+      bottom: 417px;
+      left: 379px;
       width: 62px;
     }
 

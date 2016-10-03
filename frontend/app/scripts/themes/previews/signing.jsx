@@ -6,6 +6,9 @@ var Button = require("../../common/button");
 var UploadImageButton = require("../../common/uploadimagebutton");
 var InfoTextInput = require("../../common/infotextinput");
 
+var DownloadPdfIcon = require("../../icons/download_pdf_icon.svg");
+var ArrowDown = require("../../icons/arrow-down.svg");
+var ArrowRight = require("../../icons/arrow-right.svg");
 
 module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -21,38 +24,21 @@ module.exports = React.createClass({
         showFooter: true
       };
     },
-    getInitialState: function() {
-      return this.updatedState();
-    },
-    updatedState : function() {
-      var model = this.props.model;
-      return {
-        iconActionColor : model.actionColor(),
-        iconLegendMandatoryUrl : this.generateBackgroundImageURL("icon-legend-mandatory.png", model.actionColor()),
-        iconLegendOptionalUrl  : this.generateBackgroundImageURL("icon-legend-optional.png", model.actionSecondaryColor()),
-        arrowFrontUrl : this.generateBackgroundImageURL("sign-arrow-action-right.png", model.actionColor()),
-        arrowLabelUrl: this.generateBackgroundImageURL("sign-arrow-action-label.png", model.actionColor()),
-        arrowBackUrl: this.generateBackgroundImageURL("sign-arrow-action-right-back.png", model.actionColor()),
-        arrowDownUrl:  this.generateBackgroundImageURL("sign-arrow-down.png", model.actionColor()),
-        updateTime : new Date().getTime()
-      };
-    },
     componentDidUpdate: function() {
-      var self = this;
-      self._updateCounter = self._updateCounter || 0;
-      self._updateCounter++;
-      var currentUpdateId = self._updateCounter;
-      if (this.state.iconActionColor != self.props.model.actionColor()) {
-        setTimeout(function() {
-          // We will update state only if this is latest update or last update happend more then 200ms ago
-          if (self._updateCounter == currentUpdateId || (Math.abs(new Date().getTime() - self.state.updateTime) > 200)) {
-            self.setState(self.updatedState())}
-          }
-        ,(Math.abs(new Date().getTime() - self.state.updateTime) > 1000) ? 0 : 200); // We shorten the timeout, if color has not been changed for at least 1 sec.
-      }
+      this.updateCustomSVGColors();
     },
-    generateBackgroundImageURL: function(imagePath, color) {
-      return "url(/colored_image?file=" + imagePath + "&color=" + encodeURIComponent(color) + ")";
+    componentDidMount: function() {
+      this.updateCustomSVGColors();
+    },
+    updateCustomSVGColors: function() {
+      var model = this.props.model;
+      if(model.ready() && this.isMounted()) {
+        const $node = $(this.getDOMNode());
+        $node.find(".front .actioncolor").css("fill", model.actionColor());
+        $node.find(".front .textcolor").css("fill", model.actionTextColor());
+        $node.find(".downarrow .actioncolor").css("fill", model.actionColor());
+        $node.find(".downarrow .textcolor").css("fill", model.actionTextColor());
+      }
     },
     render: function() {
       var self = this;
@@ -63,27 +49,32 @@ module.exports = React.createClass({
 
                   <div style={{"backgroundColor": model.brandColor()}} className="sample-sign-view-header">
                       <div className="logo"><img src={model.logo()} /></div>
-                      <div style={{"color": model.brandTextColor()}} className="header-text">{localization.sampleSignView.signViewHeader}</div>
+                      <div style={{"color": model.brandTextColor()}} className="header-text">
+                        {/* if */ self.props.showPDFDownload &&
+                          <DownloadPdfIcon className="download-icon" style={{"fill": model.brandTextColor()}}/>
+                        }
+                        {localization.sampleSignView.signViewHeader}
+                      </div>
                       <div style={{"clear": "both"}}></div>
                   </div>
                 }
                 <div style={{"fontFamily": model.font()}} className="content">
                   <div className="innercontent">
+                     <div className="sample-controls">
+                      Signing document:: Demo contract
+                     </div>
                      <div className="section contentheader">
                         <div className="instructions">
                           <span>Follow the <span style={{"color": model.actionColor()}} className="arrowtext">ARROW</span></span>
-                          {/* if */ self.props.showPDFDownload &&
-                            <div className="document-name">Demo document</div>
-                          }
                         </div>
                       </div>
                       <div className="document">
-                              <div className="downarrow" style={{"background": this.state.arrowDownUrl}}/>
+                              <ArrowDown className="downarrow"/>
                               <div className="field mandatoryfield">
                                   <div className="placedfield mandatoryplacedfield" style={{"borderColor": model.actionColor()}}>
                                       <div className="placedfieldvalue">{localization.sampleSignView.email}</div>
                                   </div>
-                                  <div className="front" style={{"background": this.state.arrowFrontUrl}}/>
+                                  <ArrowRight className="front"/>
                               </div>
                               <div className="field optionalfield">
                                   <div className="placedfield optionalplacedfield" style={{"borderColor": model.actionSecondaryColor()}}>
