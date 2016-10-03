@@ -61,7 +61,7 @@ module.exports = React.createClass({
                 <div style={{"fontFamily": model.font()}} className="content">
                   <div className="innercontent">
                      <div className="sample-controls">
-                      Signing document:: Demo contract
+                      Signing document: Demo contract
                      </div>
                      <div className="section contentheader">
                         <div className="instructions">
