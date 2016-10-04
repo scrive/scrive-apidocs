@@ -40,7 +40,7 @@ data AppConf = AppConf {
   , cdnBaseUrl         :: Maybe String                 -- ^ for CDN content in prod mode
   , guardTimeConf      :: GuardTimeConf
   , isMailBackdoorOpen :: Bool                         -- ^ If true allows admins to access last mail send. Used by selenium
-  , liveDocxConfig     :: LiveDocxConf                 -- ^ LiveDocx doc conversion configuration
+  , liveDocxConfig     :: Maybe LiveDocxConf           -- ^ LiveDocx doc conversion configuration
   , cgiGrpConfig       :: CgiGrpConfig                 -- ^ CGI GRP (E-ID) configuration
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
   , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
@@ -105,7 +105,7 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldDef "mail_backdoor_open" False
       isMailBackdoorOpen
       "Enabling mails backdoor for test"
-  <*> field "livedocx"
+  <*> fieldOpt "livedocx"
       liveDocxConfig
       "LiveDocx doc conversion configuration"
   <*> field "cgi_grp"
@@ -165,7 +165,7 @@ instance Default AppConf where
                                          , guardTimeControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
                                          }
     , isMailBackdoorOpen = False
-    , liveDocxConfig     = def
+    , liveDocxConfig     = Nothing
     , cgiGrpConfig       = CgiGrpConfig {
         cgGateway = "https://grpt.funktionstjanster.se:18898/grp/v1"
       , cgCertFile = "certs/steria3.pem"

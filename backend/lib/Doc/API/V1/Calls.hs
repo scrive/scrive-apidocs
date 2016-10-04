@@ -188,7 +188,10 @@ apiCallV1CreateFromFile = api $ do
       (content'', filename) <- case mformat of
         Nothing -> return (content', filename')
         Just format -> do
-          eres <- convertToPDF (ctxlivedocxconf ctx) content' format
+          eres <- do
+            case ctxlivedocxconf ctx of
+              Nothing -> noConfigurationError "LiveDocx"
+              Just lc -> convertToPDF lc content' format
           case eres of
             Left (LiveDocxIOError e) -> throwM . SomeDBExtraException $ serverError $ show e
             Left (LiveDocxSoapError s)-> throwM . SomeDBExtraException $ serverError s
@@ -1147,7 +1150,10 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
           Nothing -> return content'
           Just format -> do
             ctx <- getContext
-            eres <- convertToPDF (ctxlivedocxconf ctx) content' format
+            eres <- do
+              case ctxlivedocxconf ctx of
+                Nothing -> noConfigurationError "LiveDocx"
+                Just lc -> convertToPDF lc content' format
             case eres of
               Left (LiveDocxIOError e) -> throwM . SomeDBExtraException $ serverError $ show e
               Left (LiveDocxSoapError s)-> throwM . SomeDBExtraException $ serverError s
@@ -1338,4 +1344,3 @@ getAcceptedAuthorAttachments = do
 
 allRequiredAuthorAttachmentsAreAccepted :: (Kontrakcja m, DocumentMonad m) => [FileID] -> m Bool
 allRequiredAuthorAttachmentsAreAccepted acceptedAttachments = allRequiredAttachmentsAreOnList acceptedAttachments <$> theDocument
-

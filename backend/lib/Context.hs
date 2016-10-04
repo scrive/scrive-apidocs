@@ -59,7 +59,7 @@ data Context = Context
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid langs
     , ctxlang                :: Lang -- ^ The current context lang
     , ctxismailbackdooropen  :: Bool
-    , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
+    , ctxlivedocxconf        :: Maybe LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
     , ctxcgigrpconfig        :: CgiGrpConfig
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
     , ctxmrediscache         :: Maybe R.Connection
