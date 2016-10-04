@@ -1,6 +1,7 @@
 import Backbone from "backbone";
 import $ from "jquery";
 import {BrowserInfo} from "../../../js/utils/browserinfo.js";
+import Track from "../../common/track";
 import DrawingUtils from "../drawing/drawingutils";
 import DrawingState from "../drawing/drawingstate";
 import Drawing from "../drawing/drawing";
@@ -79,6 +80,7 @@ module.exports = Backbone.Model.extend({
     var picture = this.picture();
     var canvas = this.canvas();
     img.onload = () => {
+      Track.track("Loaded highlighting image from " + img.src);
       picture.clearRect(0, 0, $(canvas).width(), $(canvas).height());
       picture.fillStyle = "rgba(0, 0, 0, 0)";
       picture.fillRect(0, 0, $(canvas).width(), $(canvas).height());
@@ -89,7 +91,9 @@ module.exports = Backbone.Model.extend({
         data[i + 3] = data[i + 3] / OPACITY_RATE;
       }
       picture.putImageData(imageData, 0, 0);
+      Track.track("Highlighting image from " + img.src + " put is canvas");
     };
+    Track.track("Started downloading highlighting image from " + this.baseImageURL());
     img.src = this.baseImageURL();
     },
     restore: function () {
