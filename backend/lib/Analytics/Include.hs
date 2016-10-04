@@ -28,7 +28,7 @@ import Utils.String
 data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aCompany        :: Maybe Company
                                    , aToken          :: Maybe String
-                                   , aTokenGa          :: String
+                                   , aTokenGa          :: Maybe String
                                    , aHubSpotConf    :: Maybe HubSpotConf
                                    , aPaymentPlan    :: Maybe PaymentPlan
                                    , aLanguage       :: Lang
