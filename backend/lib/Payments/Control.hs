@@ -57,7 +57,11 @@ import qualified Payments.Stats as Stats
 -- to call this, user must not have an account code yet (no payment plan in table)
 handleSyncNewSubscriptionWithRecurly :: Kontrakcja m => m ()
 handleSyncNewSubscriptionWithRecurly = do
-  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
+  RecurlyConfig{..} <- do
+    ctx <- getContext
+    case ctxrecurlyconfig ctx of
+      Nothing -> noConfigurationError "Recurly"
+      Just rc -> return rc
   time <- ctxtime <$> getContext
   ac <- pguardM' "handleSyncNewSubscriptionWithRecurly: account_code must exist and be an integer" $
         readField "account_code"
@@ -75,7 +79,11 @@ handleSyncNewSubscriptionWithRecurly = do
 
 handleChangePlan :: Kontrakcja m => m ()
 handleChangePlan = do
-  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
+  RecurlyConfig {..} <- do
+    ctx <- getContext
+    case ctxrecurlyconfig ctx of
+      Nothing -> noConfigurationError "Recurly"
+      Just rc -> return rc
   time <- ctxtime <$> getContext
   newplan :: PricePlan <- pguardM' "handleChangePlan: field plan must exist and be a recurly plan code (String)" $
                           readField "plan"
@@ -249,13 +257,17 @@ handleSyncNoProvider time = do
 postBackCache :: Kontrakcja m => PushRequest -> m ()
 postBackCache pr = do
   time <- ctxtime <$> getContext
-  recurlyapikey <- recurlyAPIKey . ctxrecurlyconfig <$> getContext
+  RecurlyConfig {..} <- do
+    ctx <- getContext
+    case ctxrecurlyconfig ctx of
+      Nothing -> noConfigurationError "Recurly"
+      Just rc -> return rc
   -- we need to ask recurly for the info again for security
   ac             <- pguard' "post back: Could not parse account code (should be int)" $ maybeRead $ pushAccountCode pr
   plan           <- pguardM' ("post back: Could not find plan for account. acc:" <+> T.pack (show ac)) $ dbQuery $ GetPaymentPlanByAccountCode ac
-  esubscriptions <- pguardM "post back:" $ liftIO $ getSubscriptionsForAccount curl_exe recurlyapikey $ show $ ac
+  esubscriptions <- pguardM "post back:" $ liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ac
   s              <- pguard' "post back: no subscriptions for account" $ listToMaybe esubscriptions
-  ins            <- pguardM "post back:" $ liftIO $ getInvoicesForAccount curl_exe recurlyapikey (show ac)
+  ins            <- pguardM "post back:" $ liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey (show ac)
   invoice        <- pguard' "post back: no invoices for account" $ listToMaybe ins
   let is = inState invoice
   (user, company) <- do
@@ -301,7 +313,11 @@ handleRecurlyPostBack = do
 handlePricePageUserPlanRecurlyJSON :: Kontrakcja m => User -> PaymentPlan -> m JSValue
 handlePricePageUserPlanRecurlyJSON user plan = do
   logInfo_ "Handling Price Page JSON for existing user with payment plan on recurly"
-  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
+  RecurlyConfig {..} <- do
+    ctx <- getContext
+    case ctxrecurlyconfig ctx of
+      Nothing -> noConfigurationError "Recurly"
+      Just rc -> return rc
   billingsig  <- liftIO $ genSignature recurlyPrivateKey [("account[account_code]", show $ ppAccountCode plan)]
   esub <- liftIO $ getSubscriptionsForAccount curl_exe recurlyAPIKey $ show $ ppAccountCode plan
   einvoices <- liftIO $ getInvoicesForAccount curl_exe recurlyAPIKey (show $ ppAccountCode plan)
@@ -348,7 +364,11 @@ handlePricePageUserPlanRecurlyJSON user plan = do
 handlePricePageUserPlanNoneJSON :: Kontrakcja m => User -> PaymentPlan -> m JSValue
 handlePricePageUserPlanNoneJSON user plan = do
   logInfo_ "Handling Price Page JSON for existing user with payment plan no provider"
-  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
+  RecurlyConfig {..} <- do
+    ctx <- getContext
+    case ctxrecurlyconfig ctx of
+      Nothing -> noConfigurationError "Recurly"
+      Just rc -> return rc
   company <- dbQuery $ GetCompany $ usercompany user
   quantity <- dbQuery $ GetCompanyQuantity $ usercompany user
   teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
@@ -373,7 +393,11 @@ handlePricePageUserPlanNoneJSON user plan = do
 handlePricePageUserJSON :: Kontrakcja m => User -> m JSValue
 handlePricePageUserJSON user = do
   logInfo_ "Handling Price Page JSON for existing user"
-  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
+  RecurlyConfig {..} <- do
+    ctx <- getContext
+    case ctxrecurlyconfig ctx of
+      Nothing -> noConfigurationError "Recurly"
+      Just rc -> return rc
   code <- dbUpdate GetAccountCode
   teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
   formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
@@ -398,7 +422,11 @@ handlePricePageUserJSON user = do
 handlePricePageNoUserJSON :: Kontrakcja m => m JSValue
 handlePricePageNoUserJSON = do
   logInfo_ "Handling Price Page JSON for non-existing user"
-  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
+  RecurlyConfig {..} <- do
+    ctx <- getContext
+    case ctxrecurlyconfig ctx of
+      Nothing -> noConfigurationError "Recurly"
+      Just rc -> return rc
   code <- dbUpdate GetAccountCode
   teamsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "team")]
   formsig <- liftIO $ genSignature recurlyPrivateKey [("subscription[plan_code]", "form")]
@@ -438,7 +466,11 @@ handleUserExists = do
 
 handleSyncNewSubscriptionWithRecurlyOutside :: Kontrakcja m => m ()
 handleSyncNewSubscriptionWithRecurlyOutside = do
-  RecurlyConfig{..} <- ctxrecurlyconfig <$> getContext
+  RecurlyConfig {..} <- do
+    ctx <- getContext
+    case ctxrecurlyconfig ctx of
+      Nothing -> noConfigurationError "Recurly"
+      Just rc -> return rc
   time <- ctxtime <$> getContext
   ac <- pguardM' "handleSyncNewSubscriptionWithRecurlyOutside: account_code must exist and be an integer" $
         readField "accountCode"

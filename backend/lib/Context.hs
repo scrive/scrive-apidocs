@@ -71,7 +71,7 @@ data Context = Context
     , ctxsalesaccounts       :: [Email] -- ^
     , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
     , ctxusehttps            :: Bool
-    , ctxrecurlyconfig       :: RecurlyConfig
+    , ctxrecurlyconfig       :: Maybe RecurlyConfig
     , ctxsessionid           :: SessionID
     , ctxtrackjstoken        :: Maybe String
     , ctxmixpaneltoken       :: String

@@ -32,6 +32,7 @@ import Doc.Model
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
 import HostClock.Collector (collectClockError)
+import KontraError
 import KontraPrelude hiding (All)
 import Log.Configuration
 import Log.Identifier
@@ -224,8 +225,12 @@ main = do
         RecurlySynchronization -> do
           time <- runDB $ do
             time <- currentTime
-            handleSyncWithRecurly templates (recurlyAPIKey $ recurlyConfig appConf) time
-            handleSyncNoProvider time
+            case recurlyConfig appConf of
+              Nothing ->
+                noConfigurationWarning "Recurly"
+              Just rc -> do
+                handleSyncWithRecurly templates (recurlyAPIKey rc) time
+                handleSyncNoProvider time
             return time
           return . RerunAt $ nextDayMidnight time
         SessionsEvaluation -> do

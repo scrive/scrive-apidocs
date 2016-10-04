@@ -181,7 +181,11 @@ showAdminCompany companyid = onlySalesOrAdmin $ do
 
 companyPaymentsJSON :: Kontrakcja m => CompanyID -> m JSValue
 companyPaymentsJSON cid = onlySalesOrAdmin $ do
-  RecurlyConfig {..} <- ctxrecurlyconfig <$> getContext
+  RecurlyConfig {..} <- do
+    ctx <- getContext
+    case ctxrecurlyconfig ctx of
+      Nothing -> noConfigurationError "Recurly"
+      Just rc -> return rc
   mpaymentplan <- dbQuery $ GetPaymentPlan cid
   quantity <- dbQuery $ GetCompanyQuantity cid
   paymentPlanJSON mpaymentplan (Just (cid,quantity)) recurlySubdomain

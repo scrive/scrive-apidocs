@@ -54,7 +54,6 @@ import IPAddress
 import Kontra
 import KontraPrelude
 import Log.Configuration
-import Payments.Config (RecurlyConfig(..))
 import Salesforce.Conf
 import Session.SessionID
 import Templates
@@ -318,10 +317,7 @@ mkContext lang = do
                                     , guardTimeExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
                                     , guardTimeControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
                                     }
-        , ctxrecurlyconfig = RecurlyConfig { recurlySubdomain  = "scrive-test"
-                                           , recurlyAPIKey     = "c31afaf14af3457895ee93e7e08e4451"
-                                           , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
-                                           }
+        , ctxrecurlyconfig = Nothing
         , ctxsessionid = tempSessionID
         , ctxtrackjstoken = Nothing
         , ctxmixpaneltoken = "5b04329b972851feac0e9b853738e742"

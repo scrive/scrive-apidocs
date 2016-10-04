@@ -45,7 +45,7 @@ data AppConf = AppConf {
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
   , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
-  , recurlyConfig      :: RecurlyConfig                -- ^ for payments (api key + private key)
+  , recurlyConfig      :: Maybe RecurlyConfig          -- ^ for payments (api key + private key)
   , mixpanelToken      :: String                       -- ^ for mixpanel integration
   , trackjsToken       :: Maybe String                 -- ^ for Track.js integration
   , hubspotConf        :: HubSpotConf                  -- ^ for hubspot integration
@@ -120,7 +120,7 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "initial_users"
       initialUsers
       "email and passwords for initial users"
-  <*> field "recurly"
+  <*> fieldOpt "recurly"
       recurlyConfig
       "Recurly configuration for payments"
   <*> field "mixpanel"
@@ -170,10 +170,7 @@ instance Default AppConf where
     , admins             = map Email ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
     , sales              = []
     , initialUsers       = []
-    , recurlyConfig      = RecurlyConfig { recurlySubdomain  = "scrive-test"
-                                         , recurlyAPIKey     = "c31afaf14af3457895ee93e7e08e4451"
-                                         , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
-                                         }
+    , recurlyConfig      = Nothing
     , mixpanelToken      = "5b04329b972851feac0e9b853738e742"
     , trackjsToken       = Nothing
     , hubspotConf        = HubSpotConf "" Map.empty
