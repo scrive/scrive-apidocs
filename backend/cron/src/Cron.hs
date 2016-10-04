@@ -95,8 +95,11 @@ main = do
     -- than creating a new thread or something like that, since
     -- asyncProcessEvents removes events after processing.
     mmixpanel <- case mixpanelToken appConf of
-      ""    -> logInfo_ "WARNING: no Mixpanel token present!" >> return Nothing
-      token -> return $ Just $ processMixpanelEvent token
+      Nothing -> do
+        noConfigurationWarning "Mixpanel"
+        return Nothing
+      Just mt ->
+        return $ Just $ processMixpanelEvent mt
 
     let runDB :: DBCronM r -> CronM r
         runDB = withPostgreSQL pool

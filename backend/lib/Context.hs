@@ -74,7 +74,7 @@ data Context = Context
     , ctxrecurlyconfig       :: Maybe RecurlyConfig
     , ctxsessionid           :: SessionID
     , ctxtrackjstoken        :: Maybe String
-    , ctxmixpaneltoken       :: String
+    , ctxmixpaneltoken       :: Maybe String
     , ctxhubspotconf         :: HubSpotConf
     , ctxgoogleanalyticstoken :: String
     , ctxbrandeddomain       :: BrandedDomain
