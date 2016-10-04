@@ -25,6 +25,7 @@ import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Crypto.RNG
 import DB
+import Doc.API.Callback.Model
 import Doc.DocStateData
 import Doc.DocumentMonad
 import Doc.DocViewMail
@@ -125,7 +126,7 @@ handleDeliveredInvitation signlinkid = logSignatory signlinkid $ do
       return ()
     Nothing -> return ()
 
-handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => BrandedDomain -> String -> SignatoryLinkID -> m ()
+handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => BrandedDomain -> String -> SignatoryLinkID -> m ()
 handleUndeliveredSMSInvitation bd hostpart signlinkid = logSignatory signlinkid $ do
   logInfo_ "handleUndeliveredSMSInvitation: logging info"
   getSigLinkFor signlinkid <$> theDocument >>= \case
@@ -137,6 +138,7 @@ handleUndeliveredSMSInvitation bd hostpart signlinkid = logSignatory signlinkid 
       theDocument >>= \d -> scheduleEmailSendout $ mail {
         to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
       }
+      triggerAPICallbackIfThereIsOne =<< theDocument
     Nothing -> return ()
 
 smsUndeliveredInvitation :: (TemplatesMonad m,MonadDB m,MonadThrow m) => BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
