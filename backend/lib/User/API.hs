@@ -10,6 +10,7 @@ module User.API (
 
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
+import Control.Monad.Reader
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Text.JSON.Gen
@@ -20,6 +21,7 @@ import ActionQueue.PasswordReminder
 import ActionQueue.UserAccountRequest
 import API.Monad.V1
 import Company.Model
+import Context
 import DB
 import Doc.Model
 import Happstack.Fields
@@ -36,7 +38,6 @@ import Payments.Model
 import Redirect
 import Routing
 import Salesforce.AuthorizationWorkflow
-import Salesforce.Conf
 import ThirdPartyStats.Core
 import User.Action
 import User.CallbackScheme.Model
@@ -327,17 +328,20 @@ apiCallTestSalesforceIntegration = api $ do
   fmap Ok $ case scheme of
       Just (SalesforceScheme token)  -> do
         ctx <- getContext
-        res <- withSalesforceConf ctx $ testSalesforce token url
-        case res of
-          Right (http_code, resp)-> runJSONGenT $ do
-            value "status" ("ok"::String)
-            value "http_code" http_code
-            value "response" resp
-          Left (msg, curl_err, stdout, stderr, http_code) -> runJSONGenT $ do
-            value "status" ("error"::String)
-            value "error_message" msg
-            value "http_code" http_code
-            value "curl_exit_code" curl_err
-            value "curl_stdout" stdout
-            value "curl_stderr" stderr
+        case ctxsalesforceconf ctx of
+          Nothing -> noConfigurationError "Salesforce"
+          Just sc -> do
+            res <- flip runReaderT sc $ testSalesforce token url
+            case res of
+              Right (http_code, resp)-> runJSONGenT $ do
+                value "status" ("ok"::String)
+                value "http_code" http_code
+                value "response" resp
+              Left (msg, curl_err, stdout, stderr, http_code) -> runJSONGenT $ do
+                value "status" ("error"::String)
+                value "error_message" msg
+                value "http_code" http_code
+                value "curl_exit_code" curl_err
+                value "curl_stdout" stdout
+                value "curl_stderr" stderr
       _ -> throwM . SomeDBExtraException $ conflictError "Salesforce callback scheme is not set for this user"

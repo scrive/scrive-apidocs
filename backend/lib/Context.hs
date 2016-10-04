@@ -78,7 +78,7 @@ data Context = Context
     , ctxhubspotconf         :: Maybe HubSpotConf
     , ctxgoogleanalyticstoken :: Maybe String
     , ctxbrandeddomain       :: BrandedDomain
-    , ctxsalesforceconf      :: SalesforceConf
+    , ctxsalesforceconf      :: Maybe SalesforceConf
     , ctxnetsconfig          :: Maybe NetsConfig
     , ctxdelayedresponse     :: Maybe DelayedResponse
     -- | Contains actions that join threads spawned with forkAction
@@ -103,6 +103,3 @@ contextToMailContext ctx = MailContext {
   , mctxcurrentBrandedDomain = ctxbrandeddomain ctx
   , mctxtime = ctxtime ctx
   }
-
-instance HasSalesforceConf Context where
-  getSalesforceConf = ctxsalesforceconf

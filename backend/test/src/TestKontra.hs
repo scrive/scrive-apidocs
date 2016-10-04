@@ -53,7 +53,6 @@ import IPAddress
 import Kontra
 import KontraPrelude
 import Log.Configuration
-import Salesforce.Conf
 import Session.SessionID
 import Templates
 import User.Lang
@@ -323,7 +322,7 @@ mkContext lang = do
         , ctxhubspotconf = Nothing
         , ctxgoogleanalyticstoken = Nothing
         , ctxbrandeddomain = bd
-        , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" "" Nothing
+        , ctxsalesforceconf = Nothing
         , ctxnetsconfig = Nothing
         , ctxdelayedresponse = Nothing
         , ctxthreadjoins = []

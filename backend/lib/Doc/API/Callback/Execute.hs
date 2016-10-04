@@ -17,8 +17,10 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Text.JSON as J
 
+import ActionQueue.Scheduler
 import Amazon
 import API.APIVersion
+import AppConf
 import Company.Model
 import Crypto.RNG
 import DB
@@ -30,6 +32,7 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.Logging
 import Doc.Model
+import KontraError
 import KontraPrelude
 import Log.Identifier
 import Log.Utils
@@ -45,25 +48,36 @@ import Utils.IO
 import Utils.String
 import qualified Utils.HTTP as Utils.HTTP
 
-execute :: (AmazonMonad m, MonadDB m, CryptoRNG m, MonadMask m, MonadLog m, MonadBaseControl IO m,  MonadReader c m, HasSalesforceConf c, MailContextMonad m) => DocumentAPICallback -> m Bool
-execute DocumentAPICallback{..} = logDocument dacDocumentID $ do
+execute ::
+  (AmazonMonad m, MonadDB m, CryptoRNG m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadReader SchedulerData m, MailContextMonad m) =>
+  DocumentAPICallback -> m Bool
+execute DocumentAPICallback {..} = logDocument dacDocumentID $ do
   exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor dacDocumentID
   if not exists then do
     logInfo_ "API callback dropped since document does not exists or is purged/reallydeleted"
     return True
   else do
     doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
-    case (maybesignatory =<< getAuthorSigLink doc) of
-      Nothing -> $unexpectedErrorM $ "Document" <+> show dacDocumentID <+> "has no author"
+    case maybesignatory =<< getAuthorSigLink doc of
+      Nothing  -> $unexpectedErrorM $ "Document" <+> show dacDocumentID <+> "has no author"
       Just uid -> do
         mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID uid
         case mcallbackschema of
-          Just (SalesforceScheme rtoken) -> executeSalesforceCallback doc rtoken dacURL dacAttempts uid
-          Just (BasicAuthScheme lg pwd) -> executeStandardCallback (Just (lg,pwd)) doc dacURL dacApiVersion
+          Just (SalesforceScheme rtoken)            -> do
+            sd <- ask
+            case salesforceConf (sdAppConf sd) of
+              Nothing -> do
+                noConfigurationWarning "Salesforce" -- log a warning rather than raising an error not to disturb cron
+                return False
+              Just sc ->
+                flip runReaderT sc $ executeSalesforceCallback doc rtoken dacURL dacAttempts uid
+          Just (BasicAuthScheme lg pwd)             -> executeStandardCallback (Just (lg, pwd)) doc dacURL dacApiVersion
           Just (OAuth2Scheme lg pwd tokenUrl scope) -> executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dacURL dacApiVersion
-          _ -> executeStandardCallback Nothing doc dacURL dacApiVersion
+          _                                         -> executeStandardCallback Nothing doc dacURL dacApiVersion
 
-executeStandardCallback :: (AmazonMonad m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) => Maybe (String,String) -> Document -> String -> APIVersion -> m Bool
+executeStandardCallback ::
+  (AmazonMonad m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
+  Maybe (String,String) -> Document -> String -> APIVersion -> m Bool
 executeStandardCallback mBasicAuth doc url apiVersion = logDocument (documentid doc) $ do
   callbackParams <- callbackParamsWithDocumentJSON apiVersion doc
   (exitcode, _ , stderr) <- readCurl curlParams callbackParams
@@ -175,7 +189,7 @@ parseAccessToken str = do
     J.Ok js ->  join $ withJSValue js $ fromJSValueFieldCustom "auth" $ fromJSValueField "access_token"
     _ -> Nothing
 
-executeSalesforceCallback :: (MonadDB m, CryptoRNG m, MonadLog m, MonadThrow m, MonadBase IO m, MonadReader c m, HasSalesforceConf c) => Document -> String ->  String -> Int32 -> UserID -> m Bool
+executeSalesforceCallback :: (MonadDB m, CryptoRNG m, MonadLog m, MonadThrow m, MonadBase IO m, MonadReader SalesforceConf m) => Document -> String ->  String -> Int32 -> UserID -> m Bool
 executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid doc) $ do
   mtoken <- getAccessTokenFromRefreshToken rtoken
   case mtoken of
@@ -210,7 +224,7 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                       return False
 
   where emailErrorIfNeeded (msg, curl_err, stdout, stderr, http_code) = do
-          sc <- getSalesforceConfM
+          sc <- ask
           when (attempts == 4 && isJust (salesforceErrorEmail sc)) $ do
             logInfo_ "Salesforce API callback failed for 5th time, sending email."
             user <- fmap $fromJust (dbQuery $ GetUserByID uid)

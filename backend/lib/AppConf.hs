@@ -50,7 +50,7 @@ data AppConf = AppConf {
   , hubspotConf        :: Maybe HubSpotConf            -- ^ for hubspot integration
   , googleanalyticsToken      :: Maybe String          -- ^ for google-analytics integration
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
-  , salesforceConf     :: SalesforceConf               -- ^ Configuration of salesforce
+  , salesforceConf     :: Maybe SalesforceConf         -- ^ Configuration of salesforce
   , netsConfig         :: Maybe NetsConfig             -- ^ Configuration of Nets - NO BankID provider
   } deriving (Eq, Show)
 
@@ -137,7 +137,7 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "ntp_servers"
       ntpServers
       "List of NTP servers to contact to get estimate of host clock error"
-  <*> field "salesforce"
+  <*> fieldOpt "salesforce"
       salesforceConf
       "Configuration of salesforce"
   <*> fieldOpt "nets"
@@ -175,16 +175,7 @@ instance Default AppConf where
     , hubspotConf        = Nothing
     , googleanalyticsToken = Nothing
     , ntpServers         = defaultNtpServers
-    , salesforceConf     = SalesforceConf
-                              { salesforceAuthenticationUrl = "https://login.salesforce.com/services/oauth2/authorize"
-                              , salesforceTokenUrl = "https://login.salesforce.com/services/oauth2/token"
-                              , salesforceConsumerKey = "3MVG9A2kN3Bn17htNVdtvb5RT3xDFJXCsLqYZX0eYz18WEOqZcOCwrusUxSEOanVBEZRYhhFpZbtjEQGJI7Db"
-                              , salesforceConsumerSecret = "5081538550608494771"
-                              , salesforceRedirectUrl = "https://scrive.com/salesforce/integration"
-                              , salesforceIntegrationAPIToken  = "12ef3_22"
-                              , salesforceIntegrationAPISecret = "a1033b2caa"
-                              , salesforceErrorEmail = Just "info@scrive.com"
-                              }
+    , salesforceConf     = Nothing
      , netsConfig        = Just $ NetsConfig {
                                 netsMerchantIdentifier = "SRWUOEDLAXDV"
                               , netsMerchantPassword = "21r1ee95bp4n"
@@ -194,6 +185,3 @@ instance Default AppConf where
                               }
 
     }
-
-instance HasSalesforceConf AppConf where
-  getSalesforceConf =  salesforceConf
