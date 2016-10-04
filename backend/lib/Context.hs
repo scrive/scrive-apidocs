@@ -75,7 +75,7 @@ data Context = Context
     , ctxsessionid           :: SessionID
     , ctxtrackjstoken        :: Maybe String
     , ctxmixpaneltoken       :: Maybe String
-    , ctxhubspotconf         :: HubSpotConf
+    , ctxhubspotconf         :: Maybe HubSpotConf
     , ctxgoogleanalyticstoken :: String
     , ctxbrandeddomain       :: BrandedDomain
     , ctxsalesforceconf      :: SalesforceConf

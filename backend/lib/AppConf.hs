@@ -6,7 +6,6 @@ module AppConf (
 import Data.Default
 import Data.Unjson
 import Data.Word
-import qualified Data.Map as Map
 import qualified Data.Text as T
 
 import Database.Redis.Configuration
@@ -48,7 +47,7 @@ data AppConf = AppConf {
   , recurlyConfig      :: Maybe RecurlyConfig          -- ^ for payments (api key + private key)
   , mixpanelToken      :: Maybe String                 -- ^ for mixpanel integration
   , trackjsToken       :: Maybe String                 -- ^ for Track.js integration
-  , hubspotConf        :: HubSpotConf                  -- ^ for hubspot integration
+  , hubspotConf        :: Maybe HubSpotConf            -- ^ for hubspot integration
   , googleanalyticsToken      :: String                -- ^ for google-analytics integration
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
   , salesforceConf     :: SalesforceConf               -- ^ Configuration of salesforce
@@ -129,7 +128,7 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldOpt "trackjs"
       trackjsToken
       "API Token for Track.js"
-  <*> field "hubspot"
+  <*> fieldOpt "hubspot"
       hubspotConf
       "Configuration of HubSpot"
   <*> field "google_analytics"
@@ -173,7 +172,7 @@ instance Default AppConf where
     , recurlyConfig      = Nothing
     , mixpanelToken      = Nothing
     , trackjsToken       = Nothing
-    , hubspotConf        = HubSpotConf "" Map.empty
+    , hubspotConf        = Nothing
     , googleanalyticsToken = "f25e59c70a8570a12fe57e7835d1d881"
     , ntpServers         = defaultNtpServers
     , salesforceConf     = SalesforceConf

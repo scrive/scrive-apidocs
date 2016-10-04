@@ -49,7 +49,6 @@ import DB
 import DB.PostgreSQL
 import GuardTime
 import Happstack.Server.ReqHandler
-import HubSpot.Conf
 import IPAddress
 import Kontra
 import KontraPrelude
@@ -321,7 +320,7 @@ mkContext lang = do
         , ctxsessionid = tempSessionID
         , ctxtrackjstoken = Nothing
         , ctxmixpaneltoken = Nothing
-        , ctxhubspotconf = HubSpotConf "" M.empty
+        , ctxhubspotconf = Nothing
         , ctxgoogleanalyticstoken = "5b04329b972851feac0e9b853738e741"
         , ctxbrandeddomain = bd
         , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" "" Nothing

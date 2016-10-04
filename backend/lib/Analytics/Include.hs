@@ -29,7 +29,7 @@ data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aCompany        :: Maybe Company
                                    , aToken          :: Maybe String
                                    , aTokenGa          :: String
-                                   , aHubSpotConf    :: HubSpotConf
+                                   , aHubSpotConf    :: Maybe HubSpotConf
                                    , aPaymentPlan    :: Maybe PaymentPlan
                                    , aLanguage       :: Lang
                                    }
