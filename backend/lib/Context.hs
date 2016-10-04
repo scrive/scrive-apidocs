@@ -60,7 +60,7 @@ data Context = Context
     , ctxlang                :: Lang -- ^ The current context lang
     , ctxismailbackdooropen  :: Bool
     , ctxlivedocxconf        :: Maybe LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
-    , ctxcgigrpconfig        :: CgiGrpConfig
+    , ctxcgigrpconfig        :: Maybe CgiGrpConfig
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
     , ctxmrediscache         :: Maybe R.Connection
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^

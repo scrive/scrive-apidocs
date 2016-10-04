@@ -41,7 +41,7 @@ data AppConf = AppConf {
   , guardTimeConf      :: GuardTimeConf
   , isMailBackdoorOpen :: Bool                         -- ^ If true allows admins to access last mail send. Used by selenium
   , liveDocxConfig     :: Maybe LiveDocxConf           -- ^ LiveDocx doc conversion configuration
-  , cgiGrpConfig       :: CgiGrpConfig                 -- ^ CGI GRP (E-ID) configuration
+  , cgiGrpConfig       :: Maybe CgiGrpConfig           -- ^ CGI GRP (E-ID) configuration
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
   , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
@@ -108,7 +108,7 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldOpt "livedocx"
       liveDocxConfig
       "LiveDocx doc conversion configuration"
-  <*> field "cgi_grp"
+  <*> fieldOpt "cgi_grp"
       cgiGrpConfig
       "CGI GRP (E-ID) configuration"
   <*> field "admins"
@@ -166,12 +166,7 @@ instance Default AppConf where
                                          }
     , isMailBackdoorOpen = False
     , liveDocxConfig     = Nothing
-    , cgiGrpConfig       = CgiGrpConfig {
-        cgGateway = "https://grpt.funktionstjanster.se:18898/grp/v1"
-      , cgCertFile = "certs/steria3.pem"
-      , cgServiceID = "logtest004"
-      , cgDisplayName = "Funktionstjänster Test"
-      }
+    , cgiGrpConfig       = Nothing
     , admins             = map Email ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
     , sales              = []
     , initialUsers       = []

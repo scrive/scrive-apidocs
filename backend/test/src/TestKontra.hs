@@ -47,7 +47,6 @@ import BrandedDomain.Model
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
-import EID.CGI.GRP.Config
 import GuardTime
 import Happstack.Server.ReqHandler
 import HubSpot.Conf
@@ -305,12 +304,7 @@ mkContext lang = do
         , ctxlang = lang
         , ctxismailbackdooropen = False
         , ctxlivedocxconf = def
-        , ctxcgigrpconfig = CgiGrpConfig {
-            cgGateway = "https://grpt.funktionstjanster.se:18898/grp/v1"
-          , cgCertFile = "certs/steria3.pem"
-          , cgServiceID = "logtest004"
-          , cgDisplayName = "Funktionstjänster Test"
-          }
+        , ctxcgigrpconfig = Nothing
         , ctxmrediscache = Nothing
         , ctxfilecache = filecache
         , ctxlesscache = lesscache
