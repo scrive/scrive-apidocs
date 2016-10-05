@@ -37,10 +37,6 @@ def check_language_tst(test, drv, api):
     # open signview
     drv.open_url(doc.other_signatory().absolute_sign_url())
 
-    # click doc title to show download button on screenshot
-    drv.wait_for_element_and_click('.download-button')
-    drv.screenshot(first_sleep_for=1)  # wait for animation to finish
-
     # get screenshots of signature box and signature modal
     test.arrow_scroll(skip_scroll_to_top=True)
     drv.screenshot()
@@ -54,9 +50,8 @@ def check_language_tst(test, drv, api):
     drv.wait_for_element_and_click('.button.next.action')
     test.sleep(1)  # wait for animation to finish
 
-    # scroll to author attachment section
-    test.arrow_scroll()
-    drv.screenshot()
+    # scrolling to author attachment section is automatic
+    drv.screenshot(first_sleep_for=2)  # wait for animation to finish
 
     # show author attachment and take screenshot of previously
     # hidden buttons (top and bottom)
