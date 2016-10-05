@@ -378,9 +378,11 @@ instance (MonadDB m, MonadThrow m) => GetRow Document m where
 data GetRandomSignatoryLinkIDsThatSignedRecently = GetRandomSignatoryLinkIDsThatSignedRecently Int32 UTCTime
 instance MonadDB m => DBQuery m GetRandomSignatoryLinkIDsThatSignedRecently [SignatoryLinkID] where
   query (GetRandomSignatoryLinkIDsThatSignedRecently count time) = do
-    runQuery_ . sqlSelect "signatory_links" $ do
-      sqlResult "id"
-      sqlWhere $ "sign_time > " <?> time
-      sqlOrderBy "random()"
-      sqlLimit count
-    fetchMany runIdentity
+      runQuery_ . sqlSelect "signatory_links" $ do
+        sqlJoinOn "documents" "signatory_links.document_id = documents.id"
+        sqlResult "signatory_links.id"
+        sqlWhere $ "signatory_links.sign_time > " <?> time
+        sqlWhereDocumentWasNotPurged
+        sqlOrderBy "random()"
+        sqlLimit count
+      fetchMany runIdentity
