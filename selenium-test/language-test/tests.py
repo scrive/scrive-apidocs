@@ -37,6 +37,9 @@ def check_language_tst(test, drv, api):
     # open signview
     drv.open_url(doc.other_signatory().absolute_sign_url())
 
+    # screenshot of the title box
+    drv.screenshot()
+
     # get screenshots of signature box and signature modal
     test.arrow_scroll(skip_scroll_to_top=True)
     drv.screenshot()

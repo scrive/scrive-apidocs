@@ -49,3 +49,4 @@ def make_tests():
                                 LOCAL_DEVICES, REMOTE_DEVICES,
                                 lang=lang.value, screenshots_enabled=True):
             yield x
+        break
