@@ -32,14 +32,14 @@ preventTailCallOptimization = return ()
 {- | Auxiliary function for configuration errors in code called from
 `RoutingTable.staticRoutes`, e.g.,
 "ERROR, no configuration for Salesforce". -}
-noConfigurationError :: (MonadBase IO m, MonadLog m) => String -> m a
+noConfigurationError :: (MonadBase IO m, MonadLog m) => Text -> m a
 noConfigurationError field = do
-  logAttention_ . pack $ "ERROR, no configuration for " ++ field
+  logAttention_ $ "ERROR, no configuration for " `append` field
   internalError
 
 {- | Auxiliary function for configuration warnings in code called from
 `Cron.main`, e.g.,
 "WARNING, no configuration for Salesforce". -}
-noConfigurationWarning :: (MonadLog m) => String -> m ()
+noConfigurationWarning :: (MonadLog m) => Text -> m ()
 noConfigurationWarning field =
-  logAttention_ .pack $ "WARNING, no configuration for " ++ field
+  logAttention_ $ "WARNING, no configuration for " `append` field

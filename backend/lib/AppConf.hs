@@ -48,7 +48,7 @@ data AppConf = AppConf {
   , mixpanelToken      :: Maybe String                 -- ^ for mixpanel integration
   , trackjsToken       :: Maybe String                 -- ^ for Track.js integration
   , hubspotConf        :: Maybe HubSpotConf            -- ^ for hubspot integration
-  , googleanalyticsToken      :: Maybe String          -- ^ for google-analytics integration
+  , googleanalyticsToken :: Maybe String               -- ^ for google-analytics integration
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
   , salesforceConf     :: Maybe SalesforceConf         -- ^ Configuration of salesforce
   , netsConfig         :: Maybe NetsConfig             -- ^ Configuration of Nets - NO BankID provider
@@ -166,7 +166,7 @@ instance Default AppConf where
     , isMailBackdoorOpen = False
     , liveDocxConfig     = Nothing
     , cgiGrpConfig       = Nothing
-    , admins             = map Email ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
+    , admins             = []
     , sales              = []
     , initialUsers       = []
     , recurlyConfig      = Nothing
@@ -176,12 +176,5 @@ instance Default AppConf where
     , googleanalyticsToken = Nothing
     , ntpServers         = defaultNtpServers
     , salesforceConf     = Nothing
-     , netsConfig        = Just $ NetsConfig {
-                                netsMerchantIdentifier = "SRWUOEDLAXDV"
-                              , netsMerchantPassword = "21r1ee95bp4n"
-                              , netsIdentifyUrl = "https://ti-pp.bbs.no/its/index.html"
-                              , netsAssertionUrl = "https://ti-pp.bbs.no/saml1resp/getassertion"
-                              , netsTrustedDomain = "https://dev.scrive.com"
-                              }
-
+    , netsConfig         = Nothing
     }
