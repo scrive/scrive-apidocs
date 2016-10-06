@@ -8,50 +8,13 @@ var Select = require("../../common/select");
 var EmailPreview = require("../../themes/previews/email");
 var SigningPreview = require("../../themes/previews/signing");
 var ServicePreview = require("../../themes/previews/service");
-var InfoTextInput = require("../../../js/infotextinputs.js").InfoTextInput;
 var $ = require("jquery");
-var Confirmation = require("../../../js/confirmations.js").Confirmation;
-var Submit = require("../../../js/submits.js").Submit;
 var _ = require("underscore");
 
-
 module.exports = React.createClass({
-    opendNewThemeModal : function() {
-      var self = this;
-      var input = new InfoTextInput({infotext: localization.branding.themes.name, value: ""});
-      var content = $("<div/>");
-      content.append($("<div/>").text(localization.branding.enterNameOfThemeBellow))
-             .append(input.el());
-      var popup = new Confirmation({
-        title: localization.branding.newTheme,
-        content : content,
-        acceptText : localization.branding.save,
-        onAccept : function() {
-          new Submit({
-           method: "POST",
-           url: self.newThemeUrl(),
-           name : input.value() || self.props.model.newThemeDefaultName(),
-           ajax: true,
-           ajaxsuccess: function(rs) {
-             self.props.model.reloadThemesList(function() {
-               popup.clear();
-               self.setTheme(rs.id);
-             });
-           }
-          }).send();
-        }
-      });
-    },
-    newThemeUrl : function() {
-      var model = this.props.model;
-      var companybranding = this.props.model.companybranding();
-      if (model.mailThemeMode()) {
-        return companybranding.newThemeUrl("mail");
-      } else if (model.signviewThemeMode()) {
-        return companybranding.newThemeUrl("signview");
-      } else if (model.serviceThemeMode()) {
-        return companybranding.newThemeUrl("service");
-      }
+    propTypes: {
+      model: React.PropTypes.object.isRequired,
+      onOpenNewThemeModal: React.PropTypes.func.isRequired
     },
     setTheme : function(themeid) {
       var model = this.props.model;
@@ -71,7 +34,7 @@ module.exports = React.createClass({
       if (!model.ready())
         return (<div/>);
       var createNewThemeFunction = function() {
-        self.opendNewThemeModal();
+        self.props.onOpenNewThemeModal();
         return true;
       };
       var themeList = model.themeList();
@@ -143,7 +106,6 @@ module.exports = React.createClass({
             </div>
           </div>
         </div>
-
       );
     }
   });

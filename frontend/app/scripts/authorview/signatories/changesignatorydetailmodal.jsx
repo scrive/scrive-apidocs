@@ -3,8 +3,8 @@ var BackboneMixin = require("../../common/backbone_mixin");
 var Backbone = require("backbone");
 var InfoTextInput = require("../../common/infotextinput");
 var $ = require("jquery");
-var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var Modal = require("../../common/modal");
 
   var ChangeSignatoryDetailModalModel = Backbone.Model.extend({
     initialize: function (args) {
@@ -67,34 +67,62 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
     }
   });
 
-  module.exports = function (args) {
-    var model = new ChangeSignatoryDetailModalModel({
-      signatoryDetailValue: args.value,
-      validator: args.validator,
-      onAction: args.onAction
+module.exports = React.createClass({
+  propTypes: {
+    active: React.PropTypes.bool.isRequired,
+    value: React.PropTypes.string.isRequired,
+    validator: React.PropTypes.object.isRequired,
+    label: React.PropTypes.string.isRequired,
+    placeholder: React.PropTypes.string.isRequired,
+    title: React.PropTypes.string.isRequired,
+    acceptButtonText: React.PropTypes.string.isRequired,
+    invalidValueFlash: React.PropTypes.string.isRequired,
+    onAction: React.PropTypes.func.isRequired,
+    onClose: React.PropTypes.func.isRequired
+  },
+  componentWillMount: function () {
+    this._model = new ChangeSignatoryDetailModalModel({
+      signatoryDetailValue: this.props.value,
+      validator: this.props.validator,
+      onAction: this.props.onAction
     });
-
-    var content = $("<div class=\"docview-changeauthentication-modal\">");
-
-    React.render(React.createElement(ChangeSignatoryDetailModalView, {
-      model: model,
-      label: args.label,
-      placeholder: args.placeholder
-    }), content[0]);
-
-    new Confirmation({
-      title: args.title,
-      acceptText: args.acceptButton,
-      content: content,
-      width: 420,
-      onAccept: function () {
-        if (model.isSignatoryDetailValueValid()) {
-          model.triggerOnAction();
-          return true;
-        } else {
-          new FlashMessage({content: args.invalidValueFlash, type: "error"});
-          return false;
-        }
-      }
-    });
-  };
+  },
+  onAccept: function () {
+    if (this._model.isSignatoryDetailValueValid()) {
+      this.props.onClose();
+      this._model.triggerOnAction();
+    } else {
+      new FlashMessage({
+        content: this.props.invalidValueFlash,
+        type: "error"
+      });
+    }
+  },
+  render: function () {
+    return (
+      <Modal.Container active={this.props.active} width={420}>
+        <Modal.Header
+          title={this.props.title}
+          showClose={true}
+          onClose={this.props.onClose}
+        />
+        <Modal.Content>
+          <div className="docview-changeauthentication-modal">
+            <ChangeSignatoryDetailModalView
+              model={this._model}
+              label={this.props.label}
+              placeholder={this.props.placeholder}
+            />
+          </div>
+        </Modal.Content>
+        <Modal.Footer>
+          <Modal.CancelButton onClick={this.props.onClose} />
+          <Modal.AcceptButton
+            title={this.props.acceptButtonText}
+            onClick={this.onAccept}
+          />
+        </Modal.Footer>
+      </Modal.Container>
+    );
+  }
+});

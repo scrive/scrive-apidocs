@@ -1,6 +1,6 @@
 var jQuery = require("jquery");
 var FlashMessage = require("../../flashmessages.js").FlashMessage;
-var Confirmation = require("../../confirmations.js").Confirmation;
+var Confirmation = require("../../react_confirmations");
 var EmailValidation = require("../../validation.js").EmailValidation;
 var Track = require("../../../scripts/common/track");
 
@@ -61,7 +61,7 @@ module.exports = function(model) {
       model.setNewEmailAgain("");
     },
     title: localization.account.accountDetails.changeEmailTitle,
-    acceptButtonText: localization.account.accountDetails.changeEmailAccept,
+    acceptText: localization.account.accountDetails.changeEmailAccept,
     content: body
   });
 };

@@ -1,6 +1,6 @@
 var React = require("react");
 var Backbone = require("backbone");
-var Reminders = require("../authorviewautomaticreminders");
+var AuthorViewAutomaticReminders = require("../authorviewautomaticreminders");
 var DocumentViewSignatoryForList = require("./docviewsignatoryforlist");
 var DocumentViewSignatory = require("./docviewsignatory");
 var _ = require("underscore");
@@ -54,7 +54,6 @@ var _ = require("underscore");
     render: function () {
       var self = this;
       var document = this.props.document;
-      var AuthorViewAutomaticReminders = Reminders.AuthorViewAutomaticReminders;
       var lastSignatoryIndex = self.hasList() ?
         self.currentIndex() : (self.isSingleSignatory() ? 0 : 1);
       var lastSignatory = self.signatories()[lastSignatoryIndex];

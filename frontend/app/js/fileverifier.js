@@ -3,7 +3,7 @@ var React = require("react");
 var UploadButton = require("../scripts/common/uploadbutton");
 var _ = require("underscore");
 var $ = require("jquery");
-var Confirmation = require("./confirmations.js").Confirmation;
+var Confirmation = require("./react_confirmations.js");
 var Submit = require("./submits.js").Submit;
 var LoadingDialog = require("./loading.js").LoadingDialog;
 
@@ -48,7 +48,13 @@ var FileVerifierView = Backbone.View.extend({
               bright.append($("<div/>").text(localization.verification.failedMessage));
               dialog.addClass("failed");
           }
-          new Confirmation({title: title, content : $("<div style='height:100px;width: 546px;margin: auto;'/>").append(bleft).append(bright)});
+
+          var modalContent = $("<div style='height:100px;width: 546px;margin: auto;'/>").append(bleft).append(bright);
+          new Confirmation({
+            title: title,
+            content: modalContent,
+            clearOnAccept: true
+          });
 
     },
     uploadButton : function() {

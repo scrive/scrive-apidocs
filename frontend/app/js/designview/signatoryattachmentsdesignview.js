@@ -5,7 +5,7 @@ var Track = require("../../scripts/common/track");
 var _ = require("underscore");
 var Button = require("../buttons.js").Button;
 var $ = require("jquery");
-var Confirmation = require("../confirmations.js").Confirmation;
+var Confirmation = require("../react_confirmations.js");
 var FlashMessage = require("../flashmessages.js").FlashMessage;
 var SignatoryAttachment = require("../signatoryattachment.js").SignatoryAttachment;
 

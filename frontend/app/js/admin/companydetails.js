@@ -7,7 +7,7 @@ var _ = require("underscore");
 var $ = require("jquery");
 var InfoTextInput = require("../infotextinputs.js").InfoTextInput;
 var NumberValidation = require("../validation.js").NumberValidation;
-var Confirmation = require("../confirmations.js").Confirmation;
+var Confirmation = require("../react_confirmations.js");
 var FlashMessage = require("../flashmessages.js").FlashMessage;
 var Button = require("../buttons.js").Button;
 

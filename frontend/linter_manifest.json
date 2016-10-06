@@ -1,4 +1,5 @@
 [
+  "./app/js/react_confirmations.js",
   "./app/scripts/admin/templateslist.jsx",
   "./app/scripts/designview/typesetters/*.jsx",
   "./app/scripts/designview/processsettings/signviewsettings.jsx",
@@ -15,6 +16,7 @@
   "./app/scripts/authorview/signatories/*.jsx",
   "./app/scripts/authorview/titleboxview.jsx",
   "./app/scripts/authorview/authorattachmentsview.jsx",
+  "./app/scripts/authorview/authorviewautomaticreminders.jsx",
   "./app/scripts/authorview/signatoriesattachmentsview.jsx",
   "./app/scripts/authorview/evidenceattachmentsview.jsx",
   "./app/scripts/authorview/historyboxview.jsx",
@@ -43,6 +45,7 @@
   "./app/scripts/common/location.jsx",
   "./app/scripts/common/iselementinviewport.jsx",
   "./app/scripts/common/transporter.jsx",
+  "./app/scripts/common/modal.jsx",
   "./app/scripts/account/settings/*.jsx",
   "./app/js/anchors.js",
   "./app/js/flashmessages.js",

@@ -4,7 +4,7 @@ var FlashMessage = require("../../flashmessages.js").FlashMessage;
 var _ = require("underscore");
 var $ = require("jquery");
 var PasswordValidation = require("../../validation.js").PasswordValidation;
-var Confirmation = require("../../confirmations.js").Confirmation;
+var Confirmation = require("../../react_confirmations.js");
 
 /*
  * Defines the model and view for the change password popup.

@@ -1,18 +1,21 @@
+@transitionDuration: 500ms;
+
 .modal {
   background: transparent; // TODO: is this a Fallback when rgba is not supported?
   background: rgba(0,0,0,0.6);
   bottom: 0;
   height: 100%;
   left: 0;
-  opacity: 0.01;
+  opacity: 0;
+  overflow: hidden;
   pointer-events: none;
   position: absolute;
   right: 0;
   top: 0;
-  -moz-transition: opacity .5s ease-in;
-  -o-transition: opacity .5s ease-in;
-  -webkit-transition: opacity .5s ease-in;
-  transition: opacity .5s ease-in;
+  -moz-transition: opacity @transitionDuration ease-in;
+  -o-transition: opacity @transitionDuration ease-in;
+  -webkit-transition: opacity @transitionDuration ease-in;
+  transition: opacity @transitionDuration ease-in;
   z-index: 2000;
 
   &.no-transition {
@@ -25,6 +28,7 @@
   &.active {
     pointer-events: auto;
     opacity: 1;
+    overflow: visible;
 
     .modal-container {
       -moz-transform: scale(1.0);
@@ -134,9 +138,9 @@
   z-index: 102;
 
   .box-shadow(rgba(0, 0, 0, .33) 0 .125em 1em);
-  -moz-transition: transform .5s ease-in-out;
-  -webkit-transition: transform .5s ease-in-out;
-  transition: transform .5s ease-in-out;
+  -moz-transition: transform @transitionDuration ease-in-out;
+  -webkit-transition: transform @transitionDuration ease-in-out;
+  transition: transform @transitionDuration ease-in-out;
 }
 
 .modal-header {
@@ -149,7 +153,7 @@
 }
 
 .modal-header-inner {
-  margin: 0;
+  margin-right: 100px; // Moved from confirmations.js:183
   text-align: center;
 }
 
@@ -163,6 +167,12 @@
   line-height: 25px;
   font-weight: 400;
   padding-top: 0;
+
+  &.small-device {
+    font-size: 42px;
+    line-height: 42px;
+    font-weight: bold;
+  }
 }
 
 .modal-subtitle {

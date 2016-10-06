@@ -5,157 +5,74 @@ var Select = require("../../common/select");
 var Track = require("../../common/track");
 var List = require("../../lists/list");
 var jQuery = require("jquery");
-var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var NotEmptyValidation = require("../../../js/validation.js").NotEmptyValidation;
 var EmailValidation = require("../../../js/validation.js").EmailValidation;
 var Submit = require("../../../js/submits.js").Submit;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var Language = require("../../../js/utils/language.js").Language;
 var $ = require("jquery");
+var Modal = require("../../common/modal");
+var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 
+var CreateAccountModal = require("./createaccountmodal");
 
-var userFullName = function(d) {
-    var fullname = d.field("fullname");
+var AccountOperationModalMixin = {
+  userFullName: function () {
+    var fullname = this.props.user.field("fullname");
     if (fullname== undefined || fullname.length < 2) {
-      fullname = d.field("email");
+      fullname = this.props.user.field("email");
     }
+
     return fullname;
-};
+  }
+}
 
-var openCreateAccountPopup = function(callback) {
-            Track.track('Click new account');
-            var body = jQuery("<div class='standard-input-table'>");
-            var table = jQuery("<table/>");
+var RemoveAccountModalContent = React.createClass({
+  mixins: [AccountOperationModalMixin],
+  propTypes: {
+    user: React.PropTypes.object.isRequired
+  },
+  render: function () {
+    return (
+      <p>
+        { /* if */ (this.props.user) &&
+          <HtmlTextWithSubstitution
+            secureText={localization.account.companyAccounts.deleteModalBody}
+            subs={{
+              ".put-one-or-more-things-to-be-deleted-here": this.userFullName(this.props.user)
+            }}
+          />
+        }
+      </p>
+    );
+  }
+});
 
-            var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.fstname));
-            var fstname = jQuery("<input type='text' name='fstname' autocomplete='off' />");
-            tr1.append(jQuery("<td/>").append(fstname));
-            table.append(tr1);
-
-            var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.sndname));
-            var sndname = jQuery("<input type='text' name='sndname' autocomplete='off' />");
-            tr2.append(jQuery("<td/>").append(sndname));
-            table.append(tr2);
-
-            var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text(localization.email));
-            var email = jQuery("<input type='text' name='email' autocomplete='off' />");
-            tr5.append(jQuery("<td/>").append(email));
-            table.append(tr5);
-
-            body.append(table);
-
-
-            var popup = new Confirmation({
-              onAccept : function() {
-
-                 var errorCallback = function (t, e, v) { e.addClass("problem"); };
-                 fstname.css("border-color", "");
-                 sndname.css("border-color", "");
-                 email.css("border-color", "");
-
-                 var emailValidator = new NotEmptyValidation({callback: errorCallback, message: "Email cannot be empty!"}).concat(new EmailValidation({callback: errorCallback}));
-
-                  if (email.validate(emailValidator)) {
-
-                    new Submit({
-                        url: "/account/companyaccounts/add",
-                        method: "POST",
-                        fstname : fstname.val(),
-                        sndname : sndname.val(),
-                        email : email.val(),
-                        ajax : true,
-                        ajaxsuccess : function(resp) {
-                          callback();
-                          if (resp.added)
-                             new FlashMessage({type : "success", content : localization.account.companyAccounts.companyInviteSent});
-                          else {
-                             if (resp.samecompany)
-                                new FlashMessage({type : "success", content : localization.account.companyAccounts.companyInviteNotSentSameCompany});
-                             else
-                                new FlashMessage({type : "error", content : localization.account.companyAccounts.companyInviteNotSent});
-                          }
-                          popup.close();
-                          HubSpot.track(HubSpot.FORM_INVITE,
-                                        { "email" : email.val(),
-                                          "language" : Language.current(),
-                                          "scrive_domain" : location.hostname,
-                                          "signup_method" : "CompanyInvitation",
-                                          "firstname" : fstname.val(),
-                                          "lastname" : sndname.val() }, true);
-                        },
-                        mixpanel : {name : 'Accept',  props : {'Accept' : 'new account'}}
-                    }).sendAjax();
-
-                 }
-              },
-              title : localization.account.companyAccounts.createNewModalTitle,
-              width: 533,
-              acceptButtonText : localization.account.companyAccounts.createNewModalAcceptButton,
-              content: $("<div>").append($("<div class='modal-subtitle'>").html(localization.account.companyAccounts.createNewModalBody)).append(body)
-            });
-};
-
-var openRemoveUserPopup = function(d,callback) {
-  Track.track('Click delete user');
-  var confirmationText = $('<span />').html(localization.account.companyAccounts.deleteModalBody);
-  var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here').text(userFullName(d));
-  var content = jQuery("<p/>").append(confirmationText);
-  var popup = new Confirmation({
-    acceptText: localization.ok,
-    rejectText: localization.cancel,
-    title: localization.account.companyAccounts.deleteModalTitle,
-    content: content,
-    onAccept: function() {
-      Track.track('Click delete user');
-      var submit = new Submit({
-        url: "/account/companyaccounts/remove",
-        method: "POST",
-        ajax : true,
-        ajaxsuccess : function(resp) {
-          popup.close();
-          if (resp.removed)
-            new FlashMessage({type : "success", content : localization.account.companyAccounts.companyAccountDeleted});
-          else
-            new FlashMessage({type : "error", content : localization.account.companyAccounts.deleteFailedHasDocuments});
-          callback();
-        },
-      removeid: d.field("id"),
-      removeemail: d.field("email"),
-      mixpanel : {name : 'Accept', props : {'Accept' : 'delete user'}}
-    }).sendAjax();
-    }
-  });
-};
-
-var openResendInvitationPopup = function(d,callback) {
-  var popup = new Confirmation({
-                                  onAccept: function() {
-                                     Track.track('Click resend confirmation');
-                                      var submit = new Submit({
-                                        url: "/account/companyaccounts/resend",
-                                        ajax : true,
-                                        ajaxsuccess : function(resp) {
-                                          popup.close();
-                                          if (resp.resent)
-                                              new FlashMessage({type : "success", content : localization.account.companyAccounts.companyInviteResent});
-                                          callback();
-                                        },
-                                        method: "POST",
-                                        resendid: d.field("id"),
-                                        mixpanel : {name : 'Accept',
-                                                      props : {'Accept' : 'resend confirmation'}}
-                                      }).sendAjax();
-                                  },
-                                  acceptText: localization.account.companyAccounts.resendModalAccept,
-                                  rejectText: localization.cancel,
-                                  title: localization.account.companyAccounts.resendModalTitle,
-                                  content: $("<p/>").text(localization.account.companyAccounts.resendModalBody + userFullName(d) + ".")
-                                });
-};
-
+var ResendInvitationModalContent = React.createClass({
+  mixins: [AccountOperationModalMixin],
+  propTypes: {
+    user: React.PropTypes.object.isRequired
+  },
+  render: function () {
+    return (
+      <p>
+        { /* if */ (this.props.user) &&
+          <span>{localization.account.companyAccounts.resendModalBody} {this.userFullName(this.props.user)}.</span>
+        }
+      </p>
+    );
+  }
+});
 
 module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
+    getInitialState: function () {
+      return {
+        showCreateAccountModal: false,
+        accountToRemove: null,
+        accountToReinvite: null
+      };
+    },
     changeRole : function(d) {
       var self = this;
       new Submit({
@@ -182,9 +99,112 @@ module.exports = React.createClass({
       return [{name: localization.account.companyAccounts.roleStandard, value: "RoleStandard"},
               {name: localization.account.companyAccounts.roleAdmin, value: "RoleAdmin"}];
     },
+    showCreateAccountModal: function () {
+      Track.track('Click new account');
+      this.setState({showCreateAccountModal: true});
+    },
+    onCreateAccountModalClose: function (reload) {
+      if (reload === true) {
+        this.reload();
+      }
+
+      this.setState({showCreateAccountModal: false});
+    },
+    showRemoveAccountModal: function (user) {
+      Track.track("Click delete user");
+      this.setState({
+        showRemoveAccountModal: true,
+        accountToRemove: user
+      });
+    },
+    onRemoveAccountModalClose: function (reload) {
+      if (reload === true) {
+        this.reload();
+      }
+
+      this.setState({showRemoveAccountModal: false});
+    },
+    onRemoveAccountModalAccept: function () {
+      var self = this;
+      var accountToRemove = this.state.accountToRemove;
+
+      if (accountToRemove) {
+        Track.track('Click delete user');
+        var submit = new Submit({
+          url: "/account/companyaccounts/remove",
+          method: "POST",
+          ajax: true,
+          ajaxsuccess: function(resp) {
+            if (resp.removed) {
+              new FlashMessage({
+                type: "success",
+                content: localization.account.companyAccounts.companyAccountDeleted
+              });  
+            } else {
+              new FlashMessage({
+                type: "error",
+                content: localization.account.companyAccounts.deleteFailedHasDocuments
+              });
+            }
+            
+            self.onRemoveAccountModalClose(true);
+          },
+          removeid: accountToRemove.field("id"),
+          removeemail: accountToRemove.field("email"),
+          mixpanel: {
+            name: "Accept",
+            props: {
+              "Accept" : "delete user"
+            }
+        }
+        }).sendAjax();
+      }
+    },
+    showResendInvitationModal: function (user) {
+      this.setState({
+        showResendInvitationModal: true,
+        accountToReinvite: user
+      });
+    },
+    onResendInvitationModalClose: function (reload) {
+      if (reload === true) {
+        this.reload();
+      }
+
+      this.setState({showResendInvitationModal: false});
+    },
+    onResendInvitationModalAccept: function () {
+      var self = this;
+      var accountToReinvite = this.state.accountToReinvite;
+
+      if (accountToReinvite) {
+        Track.track("Click resend confirmation");
+        var submit = new Submit({
+          url: "/account/companyaccounts/resend",
+          ajax: true,
+          ajaxsuccess: function(resp) {
+            if (resp.resent) {
+              new FlashMessage({
+                type: "success",
+                content: localization.account.companyAccounts.companyInviteResent
+              });  
+            }
+
+            self.onResendInvitationModalClose(true);
+          },
+          method: "POST",
+          resendid: accountToReinvite.field("id"),
+          mixpanel: {
+            name: "Accept",
+            props: {"Accept": "resend confirmation"}
+          }
+        }).sendAjax();
+      }
+    },
     render: function() {
       var self = this;
       return (
+        <div>
           <List.List
             ref='list'
             url="/companyaccounts"
@@ -207,9 +227,7 @@ module.exports = React.createClass({
             <List.ListAction
               name={localization.account.companyAccounts.createNewButtonText}
               type="action"
-              onSelect={function() {
-                openCreateAccountPopup(function() {self.reload();});
-              }}
+              onSelect={this.showCreateAccountModal}
             />
             <List.Column
               name={localization.account.companyAccounts.columnName}
@@ -260,7 +278,11 @@ module.exports = React.createClass({
                 var canBeReinvited = !d.field("activated");
                 if (canBeReinvited) {
                   return (
-                      <a className='remind icon' style={{marginTop : "3px"}} onClick={function() {openResendInvitationPopup(d,function() {self.reload();})} }/>
+                      <a
+                        className='remind icon'
+                        style={{marginTop : "3px"}}
+                        onClick={() => self.showResendInvitationModal(d)}
+                      />
                     );
                 } else {
                   return (<span/>);
@@ -276,7 +298,11 @@ module.exports = React.createClass({
                 var canBeDeleted = (!d.field("isctxuser")) && d.field("deletable");
                 if (canBeDeleted) {
                   return (
-                      <a className='icon delete' style={{marginTop : "3px"}} onClick={function() {openRemoveUserPopup(d,function() {self.reload();})} }/>
+                      <a
+                        className='icon delete'
+                        style={{marginTop : "3px"}}
+                        onClick={() => self.showRemoveAccountModal(d)}
+                      />
                     );
                 } else {
                   return (<span/>);
@@ -284,6 +310,45 @@ module.exports = React.createClass({
               }}
             />
           </List.List>
+
+          <CreateAccountModal
+            active={self.state.showCreateAccountModal}
+            onClose={self.onCreateAccountModalClose}
+          />
+
+          <Modal.Container active={(self.state.showRemoveAccountModal)}>
+            <Modal.Header
+              title={localization.account.companyAccounts.deleteModalTitle}
+              showClose={true}
+              onClose={self.onRemoveAccountModalClose}
+            />
+            <Modal.Content>
+              <RemoveAccountModalContent user={self.state.accountToRemove} />
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.CancelButton onClick={self.onRemoveAccountModalClose} />
+              <Modal.AcceptButton onClick={self.onRemoveAccountModalAccept} />
+            </Modal.Footer>
+          </Modal.Container>
+
+          <Modal.Container active={(self.state.showResendInvitationModal)}>
+            <Modal.Header
+              title={localization.account.companyAccounts.resendModalTitle}
+              showClose={true}
+              onClose={self.onResendInvitationModalClose}
+            />
+            <Modal.Content>
+              <ResendInvitationModalContent user={self.state.accountToReinvite} />
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.CancelButton onClick={self.onResendInvitationModalClose} />
+              <Modal.AcceptButton
+                text={localization.account.companyAccounts.resendModalAccept}
+                onClick={self.onResendInvitationModalAccept}
+              />
+            </Modal.Footer>
+          </Modal.Container>
+        </div>
       );
     }
 });

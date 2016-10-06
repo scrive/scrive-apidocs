@@ -4,7 +4,7 @@ var _ = require("underscore");
 var $ = require("jquery");
 var Calendar = require("../calendar.js").Calendar;
 var InfoTextInput = require("../infotextinputs.js").InfoTextInput;
-var Confirmation = require("../confirmations.js").Confirmation;
+var Confirmation = require("../react_confirmations.js");
 
 /* This modal asks user for how long he wants to extend document timeout time.
  * Usage:

@@ -1,5 +1,5 @@
 var React = require("react");
-var SignviewSettings = require("./signviewsettings");
+var SignviewSettingsModal = require("./signviewsettings");
 var AttachmentsList = require("./attachmentslist");
 var Button = require("../../common/button");
 var Track = require("../../common/track");
@@ -8,6 +8,7 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var DesignSignatoryAttachmentsPopup = require("../../../js/designview/signatoryattachmentsdesignview.js").DesignSignatoryAttachmentsPopup;
 var DocumentSaveMixin = require("../document_save_mixin");
 var Document = require("../../../js/documents.js").Document;
+var Modal = require("../../common/modal");
 
 
 module.exports = React.createClass({
@@ -17,6 +18,9 @@ module.exports = React.createClass({
   mixins: [DocumentSaveMixin],
   getInitialState: function() {
     return {settingsModalOpened: false};
+  },
+  onSignviewSettingsModalCancel: function () {
+    this.setState({settingsModalOpened: false});
   },
   render: function() {
     var self = this;
@@ -28,15 +32,10 @@ module.exports = React.createClass({
             text={localization.designview.signviewsettings.button}
             className='design-view-action-process-signview-settings-button'
             onClick= {function() {
-              if (self.state.settingsModalOpened == true) return; // We want to be sure that we will not open modal twice
-              self.setState({modalOpened : true});
-              Track.track('Open signview settings');
-              new SignviewSettings({
-                document: document,
-                onClose: function() {
-                  self.setState({settingsModalOpened : false});
-                }
-              });
+              if (!self.state.settingsModalOpened) {
+                Track.track('Open signview settings');
+                self.setState({settingsModalOpened: true});
+              }
             }}
           />
         </div>
@@ -72,6 +71,12 @@ module.exports = React.createClass({
           />
           <AttachmentsList
             document={document}
+          />
+
+          <SignviewSettingsModal
+            active={self.state.settingsModalOpened}
+            document={document}
+            onClose={self.onSignviewSettingsModalCancel}
           />
         </div>
       </div>

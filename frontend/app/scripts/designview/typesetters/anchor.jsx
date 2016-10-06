@@ -4,36 +4,31 @@ var React = require("react");
 var Button = require("../../common/button");
 var AnchorTable = require("./anchortableview");
 var $ = require("jquery");
-var Confirmation = require("../../../js/confirmations.js").Confirmation;
+
+var Modal = require("../../common/modal");
 
   module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired
     },
 
+    getInitialState: function () {
+      return {
+        showAnchorModal: false
+      };
+    },
+
     launchModal: function () {
-      var self = this;
-      var model = this.props.model;
+      this.setState({showAnchorModal: true});
+    },
 
-      var $content = $("<div>");
-      var modalContent = React.render(
-        <AnchorTable anchors={model.anchors()} />,
-        $content[0]
-      );
+    onAnchorModalClose: function () {
+      this.setState({showAnchorModal: false});
+    },
 
-      var popup = new Confirmation({
-        title: localization.designview.anchor,
-        acceptText: localization.save,
-        content: $content,
-        onReject: function () {
-          React.unmountComponentAtNode($content[0]);
-        },
-        onAccept: function () {
-          self.handleSave(modalContent.getAnchors());
-          React.unmountComponentAtNode($content[0]);
-          return true;
-        }
-      });
+    onAnchorModalAccept: function () {
+      this.handleSave(this.refs.anchorTable.getAnchors());
+      this.onAnchorModalClose();
     },
 
     formatAnchor: function (anchor) {
@@ -74,6 +69,24 @@ var Confirmation = require("../../../js/confirmations.js").Confirmation;
               onClick={this.launchModal}
             />
           </div>
+
+          <Modal.Container active={this.state.showAnchorModal}>
+            <Modal.Header
+              title={localization.designview.anchor}
+              showClose={true}
+              onClose={this.onAnchorModalClose}
+            />
+            <Modal.Content>
+              <AnchorTable ref="anchorTable" anchors={model.anchors()} />
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.CancelButton onClick={this.onAnchorModalClose} />
+              <Modal.AcceptButton
+                text={localization.save}
+                onClick={this.onAnchorModalAccept}
+              />
+            </Modal.Footer>
+          </Modal.Container>
         </div>
       );
     }

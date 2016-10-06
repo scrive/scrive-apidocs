@@ -8,11 +8,11 @@ var _ = require("underscore");
 var BackboneMixin = require("../../common/backbone_mixin");
 var Button = require("../../common/button");
 var Track = require("../../common/track");
-var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var Document = require("../../../js/documents.js").Document;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
 var Submit = require("../../../js/submits.js").Submit;
 var DocumentSaveMixin = require("../document_save_mixin");
+var Modal = require("../../common/modal");
 
 var CantSignModalContent = require("./cantsignmodalcontent");
 var ConfirmationModalAcceptButton = require("./confirmationmodalacceptbutton");
@@ -30,96 +30,22 @@ module.exports = React.createClass({
   getBackboneModels: function () {
     return [this.props.document];
   },
+  getInitialState: function () {
+    return {
+      showCantSignModal: false,
+      showSignConfirmationModal: false,
+      acceptedDocument: false,
+      showSendConfirmationModal: false
+    };
+  },
   showCantSignModal: function () {
-    var modalContent = $("<div/>");
-    React.render(React.createElement(CantSignModalContent, {}), modalContent[0]);
-
-    new Confirmation({
-      title: localization.designview.cantSignModal.title,
-      cancelVisible: false,
-      content: modalContent
-    });
+    this.setState({showCantSignModal: true});
   },
   showSignConfirmationModal: function () {
-    var modalContent = $("<div/>");
-    React.render(
-      React.createElement(
-        SignConfirmationModalContent,
-        {document: this.props.document}
-      ),
-      modalContent[0]
-    );
-
-    var buttonContent = $("<div/>");
-    React.render(
-      React.createElement(
-        ConfirmationModalAcceptButton,
-        {
-          text: localization.designview.sign,
-          onClick: this.onSignConfirmationModalAccept
-        }
-      ),
-      buttonContent[0]
-    );
-
-    this._confirmationModal = new Confirmation({
-      title: localization.signByAuthor.modalTitle,
-      acceptButton: buttonContent,
-      rejectText: localization.cancel,
-      content: modalContent
-    });
+    this.setState({showSignConfirmationModal: true});
   },
   showSendConfirmationModal: function () {
-    var otherSignatoriesSignInPerson = _.every(
-      this.props.document.signatories(), function (sig) {
-        return sig.padDelivery() || sig.author();
-      }
-    );
-
-    var modalContent = $("<div/>");
-    React.render(
-      React.createElement(
-        SendConfirmationModalContent,
-        {
-          document: this.props.document,
-          otherSignatoriesSignInPerson: otherSignatoriesSignInPerson
-        }
-      ),
-      modalContent[0]
-    );
-
-    var buttonText = null;
-    if (otherSignatoriesSignInPerson) {
-      buttonText = localization.process.startsigningbuttontext;
-    } else {
-      buttonText = localization.process.sendbuttontext;
-    }
-
-    var buttonContent = $("<div/>");
-    React.render(
-      React.createElement(
-        ConfirmationModalAcceptButton,
-        {
-          text: buttonText,
-          onClick: this.onSendConfirmationModalAccept
-        }
-      ),
-      buttonContent[0]
-    );
-
-    var modalTitle = null;
-    if (otherSignatoriesSignInPerson) {
-      modalTitle = localization.process.startsigningtitle;
-    } else {
-      modalTitle = localization.process.confirmsendtitle;
-    }
-
-    this._confirmationModal = new Confirmation({
-      title: modalTitle,
-      acceptButton: buttonContent,
-      rejectText: localization.cancel,
-      content: modalContent
-    });
+    this.setState({showSendConfirmationModal: true});
   },
   saveTemplateButtonText: function () {
     if (this.props.document.isTemplate() && this.props.document.saved()) {
@@ -206,13 +132,13 @@ module.exports = React.createClass({
       }
     }
   },
+  onCantSignModalAcceptClose: function () {
+    this.setState({showCantSignModal: false});
+  },
   onSignConfirmationModalAccept: function () {
     Track.track("Click accept sign", {"Button": "sign"});
 
-    if (this._confirmationModal) {
-      this._confirmationModal.hideCancel();
-      this._confirmationModal.hideClose();
-    }
+    this.setState({acceptedDocument: true});
 
     var self = this;
     var doc = this.props.document;
@@ -223,11 +149,11 @@ module.exports = React.createClass({
       });
     });
   },
+  onSignConfirmationModalCancel: function () {
+    this.setState({showSignConfirmationModal: false});
+  },
   onSendConfirmationModalAccept: function () {
-    if (this._confirmationModal) {
-      this._confirmationModal.hideCancel();
-      this._confirmationModal.hideClose();
-    }
+    this.setState({acceptedDocument: true});
 
     var self = this;
     var doc = this.props.document;
@@ -236,6 +162,9 @@ module.exports = React.createClass({
     doc.takeSigningScreenshot(function () {
       self.sendWithCSV(doc, 1, doc.isCsv() ? doc.csv().length - 1 : undefined);
     });
+  },
+  onSendConfirmationModalCancel: function () {
+    this.setState({showSendConfirmationModal: false});
   },
   signWithCSV: function (doc, index, totalCount) {
     var self = this;
@@ -346,6 +275,23 @@ module.exports = React.createClass({
     }
   },
   render: function () {
+    var otherSignatoriesSignInPerson = _.every(
+      this.props.document.signatories(), function (sig) {
+        return sig.padDelivery() || sig.author();
+      }
+    );
+
+    var sendConfirmationModalTitle = null;
+    var sendConfirmationModalAcceptText = null;
+
+    if (otherSignatoriesSignInPerson) {
+      sendConfirmationModalTitle = localization.process.startsigningbuttontext;
+      sendConfirmationModalAcceptText = localization.process.startsigningbuttontext;
+    } else {
+      sendConfirmationModalTitle = localization.process.sendbuttontext;
+      sendConfirmationModalAcceptText = localization.process.sendbuttontext;
+    }
+
     return (
       <div className="design-view-button-bar">
         <div className="design-view-button-bar-inner">
@@ -381,6 +327,69 @@ module.exports = React.createClass({
               })}
               onClick={this.onSendButtonClick}
             />
+          }
+
+          { /* if */ (this.props.document.ready()) &&
+            <Modal.Container active={this.state.showCantSignModal}>
+              <Modal.Header
+                title={localization.designview.cantSignModal.title}
+                onClose={this.onCantSignModalAcceptClose}
+                showClose={false}
+              />
+              <Modal.Content>
+                <CantSignModalContent />
+              </Modal.Content>
+              <Modal.Footer>
+                <Modal.AcceptButton onClick={this.onCantSignModalAcceptClose} />
+              </Modal.Footer>
+            </Modal.Container>
+          }
+
+          { /* if */ (this.props.document.ready()) &&
+            <Modal.Container active={this.state.showSignConfirmationModal} >
+              <Modal.Header
+                title={localization.signByAuthor.modalTitle}
+                onClose={this.onSignConfirmationModalCancel}
+                showClose={!this.state.acceptedDocument}
+              />
+              <Modal.Content>
+                <SignConfirmationModalContent document={this.props.document} />
+              </Modal.Content>
+              <Modal.Footer>
+                { /* if */ (this.props.document.ready()) &&
+                  <Modal.CancelButton onClick={this.onSignConfirmationModalCancel} />
+                }
+                <ConfirmationModalAcceptButton
+                  onClick={this.onSignConfirmationModalAccept}
+                  text={localization.designview.sign}
+                />
+              </Modal.Footer>
+            </Modal.Container>
+          }
+
+          { /* if */ (this.props.document.ready()) &&
+            <Modal.Container active={this.state.showSendConfirmationModal} >
+              <Modal.Header
+                title={sendConfirmationModalTitle}
+                onClose={this.onSendConfirmationModalCancel}
+                showClose={!this.state.acceptedDocument}
+              />
+              <Modal.Content>
+                <SendConfirmationModalContent
+                  document={this.props.document}
+                  otherSignatoriesSignInPerson={otherSignatoriesSignInPerson}
+                />
+              </Modal.Content>
+              <Modal.Footer>
+                { /* if */ (!this.state.acceptedDocument) &&
+                  <Modal.CancelButton onClick={this.onSendConfirmationModalCancel} />
+                }
+                <ConfirmationModalAcceptButton
+                  onClick={this.onSignConfirmationModalAccept}
+                  text={sendConfirmationModalAcceptText}
+                />
+              </Modal.Footer>
+            </Modal.Container>
           }
         </div>
       </div>

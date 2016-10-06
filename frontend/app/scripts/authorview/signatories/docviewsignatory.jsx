@@ -11,16 +11,29 @@ var EmailValidation = require("../../../js/validation.js").EmailValidation;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
 var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
 var ConfirmationWithEmail = require("../../../js/confirmationsWithEmails.js").ConfirmationWithEmail;
-var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var $ = require("jquery");
 var LocalStorage = require("../../../js/storage.js").LocalStorage;
 var Track = require("../../common/track");
+
+var Modal = require("../../common/modal");
 
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
 
     getBackboneModels: function () {
       return [this.props.signatory];
+    },
+
+    getInitialState: function () {
+      return {
+        showShowAPIDeliveryModal: false,
+        showChangeAuthenticationToSignMethodModal: false,
+        showChangeAuthenticationToViewMethodModal: false,
+        showChangeEmailModal: false,
+        showChangeMobileModal: false,
+        showRemindViaEmailAndSMSModal: false,
+        showRemindViaSMSModal: false
+      };
     },
 
     propTypes: {
@@ -161,48 +174,66 @@ var Track = require("../../common/track");
     },
 
     handleStartChangingEmail: function () {
-      var self = this;
-      var signatory = this.props.signatory;
-      Track.track("Click change email", {"Signatory index": signatory.signIndex()});
-      new ChangeSignatoryDetailModal({
-        value: signatory.email(),
-        validator: new EmailValidation(),
-        label: localization.changeEmailModal.label,
-        placeholder: localization.changeEmailModal.placeholder,
-        title: localization.changeEmailModal.title,
-        acceptButton: localization.changeEmailModal.acceptButton,
-        invalidValueFlash: localization.changeEmailModal.invalidEmailFlash,
-        onAction: function (newValue) {
-          Track.track_timeout("Accept", {"Signatory index": signatory.signIndex(),
-                                  "Accept": "change email"});
-          LoadingDialog.open();
-          signatory.changeEmail(newValue).sendAjax(function () {
-            self.triggerOnAction();
-          });
+      Track.track(
+        "Click change email",
+        {
+          "Signatory index": this.props.signatory.signIndex()
         }
+      );
+
+      this.setState({showChangeEmailModal: true});
+    },
+
+    onChangeEmailModalClose: function () {
+      this.setState({showChangeEmailModal: false});
+    },
+
+    onChangeEmailModalAction: function (newValue) {
+      Track.track_timeout(
+        "Accept",
+        {
+          "Signatory index": this.props.signatory.signIndex(),
+          "Accept": "change email"
+        }
+      );
+
+      LoadingDialog.open();
+
+      var self = this;
+      this.props.signatory.changeEmail(newValue).sendAjax(function () {
+        self.triggerOnAction();
       });
     },
 
     handleStartChangingMobile: function () {
-      var self = this;
-      var signatory = this.props.signatory;
-      Track.track("Click change phone", {"Signatory index": signatory.signIndex()});
-      new ChangeSignatoryDetailModal({
-        value: signatory.mobile(),
-        validator: new PhoneValidation(),
-        label: localization.changeMobileModal.label,
-        placeholder: localization.changeMobileModal.placeholder,
-        title: localization.changeMobileModal.title,
-        acceptButton: localization.changeMobileModal.acceptButton,
-        invalidValueFlash: localization.changeMobileModal.invalidMobileFlash,
-        onAction: function (newValue) {
-          Track.track_timeout("Accept", {"Signatory index": signatory.signIndex(),
-                                  "Accept": "change phone"});
-          LoadingDialog.open();
-          signatory.changePhone(newValue).sendAjax(function () {
-            self.triggerOnAction();
-          });
+      Track.track(
+        "Click change phone",
+        {
+          "Signatory index": this.props.signatory.signIndex()
         }
+      );
+
+      this.setState({showChangeMobileModal: true});
+    },
+
+    onChangeMobileModalClose: function () {
+      this.setState({showChangeMobileModal: false});
+    },
+
+    onChangeMobileModalAction: function (newValue) {
+      Track.track_timeout(
+        "Accept",
+        {
+          "Signatory index": this.props.signatory.signIndex(),
+          "Accept": "change phone"
+        }
+      );
+
+      LoadingDialog.open();
+
+      var self = this;
+      this.props.signatory.changePhone(newValue).sendAjax(function () {
+        self.triggerOnAction();
       });
     },
 
@@ -249,57 +280,26 @@ var Track = require("../../common/track");
           }
         });
       } else if (useMobile) {
-        var reminderText = signatory.hasSigned() ?
-          localization.reminder.mobileQuestionAlreadySigned : localization.reminder.mobileQuestion;
-        new Confirmation({
-          title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
-          content: $("<div>").text(reminderText),
-          acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
-          rejectText: localization.cancel,
-          onAccept: function (customtext) {
-           Track.track_timeout("Accept",
-             {"Accept": "send reminder",
-              "Signatory index": signatory.signIndex(),
-              "Delivery method": "Mobile"});
-           LoadingDialog.open();
-           signatory.remind().sendAjax(function () {
-             self.triggerOnAction();
-           });
-           return true;
-         }
-        });
+        this.setState({showRemindViaSMSModal: true});
       } else if (useEmailAndMobile) {
-        new Confirmation({
-          title: signatory.hasSigned() ? localization.process.remindagainbuttontext : localization.reminder.formHead,
-          content: $("<div>").text(localization.reminder.emailMobileQuestion),
-          acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
-          rejectText: localization.cancel,
-          onAccept: function (customtext) {
-          Track.track_timeout("Accept",
-          {"Accept": "send reminder",
-           "Signatory index": signatory.signIndex(),
-           "Delivery method": "Email and Mobile"});
-          LoadingDialog.open();
-          signatory.remind().sendAjax(function () {
-            self.triggerOnAction();
-          });
-          return true;
-        }
-        });
+        this.setState({showRemindViaEmailAndSMSModal: true});
       }
     },
 
     handleChangeAuthenticationToViewMethod: function () {
-      new ChangeAuthenticationToViewModal({
-        signatory: this.props.signatory,
-        onAction: this.props.onAction
-      });
+      this.setState({showChangeAuthenticationToViewMethodModal: true});
     },
+
+    onChangeAuthenticationToViewMethodModalClose: function () {
+      this.setState({showChangeAuthenticationToViewMethodModal: false});
+    },
+
     handleChangeAuthenticationToSignMethod: function () {
-      new ChangeAuthenticationToSignModal({
-        signatory: this.props.signatory,
-        onAction: this.props.onAction
-      });
+      this.setState({showChangeAuthenticationToSignMethodModal: true});
+    },
+
+    onChangeAuthenticationToSignMethodModalClose: function () {
+      this.setState({showChangeAuthenticationToSignMethodModal: false});
     },
 
     goToSignView: function () {
@@ -318,9 +318,15 @@ var Track = require("../../common/track");
     },
 
     handleShowAPIDeliveryModal: function () {
-      new ShowAPIDeliveryModal({
-        signatory: this.props.signatory
-      });
+      this.setState({showShowAPIDeliveryModal: true});
+    },
+
+    onShowAPIDeliveryModalClose: function () {
+      this.setState({showShowAPIDeliveryModal: false});
+    },
+
+    onShowAPIDeliveryModalShow: function () {
+      this.refs.showAPIDeliveryModal.selectText();
     },
 
     getDeliveryMethod: function () {
@@ -382,6 +388,48 @@ var Track = require("../../common/track");
       } else if (signatory.noneConfirmationDelivery()) {
         return localization.docview.signatory.confirmationNone;
       }
+    },
+
+    onRemindViaEmailAndSMSModalClose: function () {
+      this.setState({showRemindViaEmailAndSMSModal: false});
+    },
+
+    onRemindViaEmailAndSMSModalAccept: function () {
+      Track.track_timeout(
+        "Accept",
+        {
+          "Accept": "send reminder",
+          "Signatory index": this.props.signatory.signIndex(),
+          "Delivery method": "Email and Mobile"
+        }
+      );
+
+      var self = this;
+      LoadingDialog.open();
+      this.props.signatory.remind().sendAjax(function () {
+        self.triggerOnAction();
+      });
+    },
+
+    onRemindViaSMSModalClose: function () {
+      this.setState({showRemindViaSMSModal: false});
+    },
+
+    onRemindViaSMSModalAccept: function () {
+      Track.track_timeout(
+        "Accept",
+        {
+          "Accept": "send reminder",
+          "Signatory index": this.props.signatory.signIndex(),
+          "Delivery method": "Mobile"
+        }
+      );
+
+      var self = this;
+      LoadingDialog.open();
+      this.props.signatory.remind().sendAjax(function () {
+        self.triggerOnAction();
+      });
     },
 
     render: function () {
@@ -522,6 +570,116 @@ var Track = require("../../common/track");
               />
             }
           </div>
+
+          <Modal.Container
+            active={this.state.showShowAPIDeliveryModal}
+            width={420}
+            onShow={this.onShowAPIDeliveryModalShow}
+          >
+            <Modal.Header
+              title={localization.docview.showAPIDelivery.title}
+              showClose={true}
+              onClose={this.onShowAPIDeliveryModalClose}
+            />
+            <Modal.Content>
+              <ShowAPIDeliveryModal
+                ref="showAPIDeliveryModal"
+                signatory={signatory} />
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.AcceptButton
+                text={localization.docview.showAPIDelivery.accept}
+                onClick={this.onShowAPIDeliveryModalClose}
+              />
+            </Modal.Footer>
+          </Modal.Container>
+
+          <ChangeAuthenticationToSignModal
+            active={this.state.showChangeAuthenticationToSignMethodModal}
+            signatory={signatory}
+            onClose={this.onChangeAuthenticationToSignMethodModalClose}
+            onAction={this.props.onAction}
+          />
+
+          <ChangeAuthenticationToViewModal
+            active={this.state.showChangeAuthenticationToViewMethodModal}
+            signatory={signatory}
+            onClose={this.onChangeAuthenticationToViewMethodModalClose}
+            onAction={this.props.onAction}
+          />
+
+          <ChangeSignatoryDetailModal active={this.state.showChangeEmailModal}
+            value={signatory.email()}
+            validator={new EmailValidation()}
+            label={localization.changeEmailModal.label}
+            placeholder={localization.changeEmailModal.placeholder}
+            title={localization.changeEmailModal.title}
+            acceptButtonText={localization.changeEmailModal.acceptButton}
+            invalidValueFlash={localization.changeEmailModal.invalidEmailFlash}
+            onAction={this.onChangeEmailModalAction}
+            onClose={this.onChangeEmailModalClose}
+          />
+
+          <ChangeSignatoryDetailModal active={this.state.showChangeMobileModal}
+            value={signatory.mobile()}
+            validator={new PhoneValidation()}
+            label={localization.changeMobileModal.label}
+            placeholder={localization.changeMobileModal.placeholder}
+            title={localization.changeMobileModal.title}
+            acceptButtonText={localization.changeMobileModal.acceptButton}
+            invalidValueFlash={localization.changeMobileModal.invalidMobileFlash}
+            onAction={this.onChangeMobileModalAction}
+            onClose={this.onChangeMobileModalClose}
+          />
+
+          <Modal.Container active={this.state.showRemindViaEmailAndSMSModal}>
+            <Modal.Header
+              title={
+                signatory.hasSigned()
+                ? localization.process.remindagainbuttontext
+                : localization.reminder.formHead
+              }
+              showClose={true}
+              onClose={this.onRemindViaEmailAndSMSModalClose}
+            />
+            <Modal.Content>
+              <div>{localization.reminder.emailMobileQuestion}</div>
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.CancelButton onClick={this.onRemindViaEmailAndSMSModalClose} />
+              <Modal.AcceptButton
+                text={signatory.hasSigned() ? localization.send : localization.reminder.formSend}
+                onClick={this.onRemindViaEmailAndSMSModalAccept}
+              />
+            </Modal.Footer>
+          </Modal.Container>
+
+          <Modal.Container active={this.state.showRemindViaSMSModal}>
+            <Modal.Header
+              title={
+                signatory.hasSigned()
+                ? localization.process.remindagainbuttontext
+                : localization.reminder.formHead
+              }
+              showClose={true}
+              onClose={this.onRemindViaSMSModalClose}
+            />
+            <Modal.Content>
+              <div>
+                {(signatory.hasSigned())
+                  ? localization.reminder.mobileQuestionAlreadySigned
+                  : localization.reminder.mobileQuestion
+                }
+              </div>
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.CancelButton onClick={this.onRemindViaSMSModalClose} />
+              <Modal.AcceptButton
+                text={signatory.hasSigned() ? localization.send : localization.reminder.formSend}
+                onClick={this.onRemindViaSMSModalAccept}
+              />
+            </Modal.Footer>
+          </Modal.Container>
         </div>
       );
     }

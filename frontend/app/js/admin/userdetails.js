@@ -9,7 +9,7 @@ var Button = require("../buttons.js").Button;
 var FlashMessage = require("../flashmessages.js").FlashMessage;
 var InfoTextInput = require("../infotextinputs.js").InfoTextInput;
 var NumberValidation = require("../validation.js").NumberValidation;
-var Confirmation = require("../confirmations.js").Confirmation;
+var Confirmation = require("../react_confirmations.js");
 
 /* Main admin only site definition. Its a tab based set of different lists.
  * This is the entry point for /adminonly/. */

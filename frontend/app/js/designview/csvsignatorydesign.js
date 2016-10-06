@@ -4,7 +4,7 @@ var UploadButton = require("../../scripts/common/uploadbutton");
 var _ = require("underscore");
 var Submit = require("../submits.js").Submit;
 var $ = require("jquery");
-var Confirmation = require("../confirmations.js").Confirmation;
+var Confirmation = require("../react_confirmations.js");
 var Signatory = require("../signatories.js").Signatory;
 var Field = require("../fields.js").Field;
 
@@ -288,6 +288,7 @@ var CsvSignatoryDesignPopup = exports.CsvSignatoryDesignPopup =  function(args) 
               title  : localization.csv.title,
               width: model.ready() && model.hasData() ? 1018 : 530,
               acceptVisible : model.ready(),
+              clearOnAccept: true,
               onAccept : function() {
                   if (csvSignatory == undefined) {
                     var fields = [];

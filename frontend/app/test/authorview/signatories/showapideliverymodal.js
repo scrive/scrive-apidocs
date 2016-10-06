@@ -19,10 +19,12 @@ var ShowAPIDeliveryModal = require("../../../scripts/authorview/signatories/show
     });
 
     it("should test component works", function () {
+      var component = TestUtils.renderIntoDocument(
+        React.createElement(ShowAPIDeliveryModal, {signatory: signatory})
+      );
 
-      new ShowAPIDeliveryModal({ signatory: signatory });
-      assert.ok($(".docview-showapidelivery-modal").length > 0);
-
+      var componentNode = React.findDOMNode(component);
+      assert.ok($(".api-delivery-url", $(componentNode)).length > 0);
     });
 
     after(function () {

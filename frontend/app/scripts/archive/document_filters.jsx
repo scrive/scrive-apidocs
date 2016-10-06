@@ -1,24 +1,46 @@
 var React = require("react");
 var List = require("../lists/list");
 var _ = require("underscore");
-var capitaliseFirstLetter = require("../common/capitalise_first_letter");
 /* List of filters used by out archive view. Used by both, Documents and Trash list*/
+
+var SELECT_STATUS_OPTIONS = [
+  {
+    name: localization.filterByStatus.showAnyStatus,
+    value: []
+  },
+  {
+    name: localization.filterByStatus.showDraft,
+    value: [{"filter_by": "status", "statuses": ["preparation"]}]
+  },
+  {
+    name: localization.filterByStatus.showCancelled,
+    value: [
+      {"filter_by": "status", "statuses": ["canceled", "timedout", "rejected", "document_error"]}
+    ]
+  },
+  {
+    name: localization.filterByStatus.showSent,
+    value: [{"filter_by": "status", "statuses": ["pending"]}]
+  },
+  {
+    name: localization.filterByStatus.showSigned,
+    value: [{"filter_by": "status", "statuses": ["closed"]}]
+  }
+];
 
 
 module.exports = function(args) {
   var self = args.list;
+  var fromToFilterOptions = args.fromToFilterOptions;
+
+  console.log('DocumentFilters()', fromToFilterOptions);
+
   return [
     <List.SelectFilter
       key="status"
       name="status"
       width={167}
-      options = {[
-        {name: localization.filterByStatus.showAnyStatus, value: []},
-        {name: localization.filterByStatus.showDraft,     value: [{ "filter_by" : "status", "statuses" : ["preparation"]}]},
-        {name: localization.filterByStatus.showCancelled, value: [{ "filter_by" : "status", "statuses" : ["canceled", "timedout", "rejected", "document_error"]}]},
-        {name: localization.filterByStatus.showSent,      value: [{ "filter_by" : "status", "statuses" : ["pending"]}]},
-        {name: localization.filterByStatus.showSigned,    value: [{ "filter_by" : "status", "statuses" : ["closed"]}]}
-      ]}
+      options = {SELECT_STATUS_OPTIONS}
    />,
    self.props.forCompanyAdmin &&
    (<List.SelectAjaxFilter
@@ -46,26 +68,7 @@ module.exports = function(args) {
      fromText={localization.filterByTime.filterForm}
      toText= {localization.filterByTime.filterTo}
      emptyValue={[]}
-     options={
-       (function() {
-          var time = new Date();
-          var year = self.props.year;
-          var month = self.props.month;
-          var options = [];
-          while (year < time.getFullYear() || (year == time.getFullYear() && month <= time.getMonth() + 1)) {
-            var name = capitaliseFirstLetter(localization.months[month-1].slice(0,3) + " " + year);
-            //options.push({name : name , valueFrom : "("+month + "," + year + ")" });
-            options.push({
-              name : name ,
-              fromValue : [{"filter_by" :"mtime", "start_time" : new Date(year,month-1).toISOString()}] ,
-              toValue : [{"filter_by" :"mtime", "end_time" : new Date(year,month).toISOString()}]
-            });
-            month++;
-            if (month == 13) {month = 1; year++;}
-          }
-          return options;
-       }())
-     }
+     options={fromToFilterOptions}
    />
 
   ];

@@ -8,11 +8,12 @@ var EmptyValidation = require("../../../js/validation.js").EmptyValidation;
 var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
 var SSNForSEBankIDValidation = require("../../../js/validation.js").SSNForSEBankIDValidation;
 var $ = require("jquery");
-var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
 var Track = require("../../common/track");
 var classNames = require("classnames");
+
+var Modal = require("../../common/modal");
 
   var ChangeAuthenticationModalModel = Backbone.Model.extend({
     initialize: function (args) {
@@ -245,47 +246,78 @@ var classNames = require("classnames");
     }
   });
 
-  module.exports = function (args) {
-    var model = new ChangeAuthenticationModalModel({signatory: args.signatory});
-    var content = $("<div class='docview-changeauthentication-modal'>");
-
-    React.render(React.createElement(ChangeAuthenticationModalView, {
-      model: model
-    }), content[0]);
-
-    new Confirmation({
-      title: localization.docview.changeAuthentication.title,
-      acceptText: localization.docview.changeAuthentication.accept,
-      content: content,
-      width: 420,
-      onAccept: function () {
-        var authmethod = model.newAuthenticationMethod();
-        var authvalue = model.newAuthenticationValue();
-        var personalNumber = model.isNewAuthenticationELeg() ? authvalue : undefined;
-        var mobileNumber = model.isNewAuthenticationPINbySMS() ? authvalue : undefined;
-
-        if (model.isAuthenticationValueInvalid()) {
-          new FlashMessage({content: model.getAuthenticationValueInvalidFlashMessageText(), type: "error"});
-          return false;
-        }
-
-        Track.track_timeout("Accept", {
-          "Accept": "change authentication",
-           "Signatory index": model.signatory().signIndex(),
-           "Authentication method": authmethod,
-           "Authentication value": authvalue
-        });
-
-        LoadingDialog.open();
-
-        model.signatory().changeAuthenticationToSign(authmethod, personalNumber, mobileNumber).sendAjax(function () {
-          args.onAction();
-        }, function (err) {
-          LoadingDialog.close();
-          new FlashMessage({content: localization.docview.changeAuthentication.errorFlashMessage, type: "error"});
-        });
-
-        return true;
-      }
+module.exports = React.createClass({
+  propTypes: {
+    active: React.PropTypes.bool.isRequired,
+    signatory: React.PropTypes.object.isRequired,
+    onClose: React.PropTypes.func.isRequired,
+    onAction: React.PropTypes.func.isRequired
+  },
+  componentWillMount: function () {
+    this._model = new ChangeAuthenticationModalModel({
+      signatory: this.props.signatory
     });
-  };
+  },
+  onAccept: function () {
+    var authmethod = this._model.newAuthenticationMethod();
+    var authvalue = this._model.newAuthenticationValue();
+    var personalNumber = this._model.isNewAuthenticationELeg() ? authvalue : undefined;
+    var mobileNumber = this._model.isNewAuthenticationPINbySMS() ? authvalue : undefined;
+
+    if (this._model.isAuthenticationValueInvalid()) {
+      new FlashMessage({
+        content: this._model.getAuthenticationValueInvalidFlashMessageText(),
+        type: "error"
+      });
+
+      return;
+    }
+
+    Track.track_timeout("Accept", {
+      "Accept": "change authentication",
+      "Signatory index": this._model.signatory().signIndex(),
+      "Authentication method": authmethod,
+      "Authentication value": authvalue
+    });
+
+    this.props.onClose();
+    LoadingDialog.open();
+
+    var self = this;
+    this._model.signatory().changeAuthenticationToSign(authmethod, personalNumber, mobileNumber).sendAjax(
+      function () {
+        self.props.onAction();
+      },
+      function (err) {
+        LoadingDialog.close();
+        new FlashMessage({
+          content: localization.docview.changeAuthentication.errorFlashMessage,
+          type: "error"
+        });
+      }
+    );
+  },
+  render: function () {
+    return (
+      <Modal.Container active={this.props.active} width={420}>
+        <Modal.Header
+          title={localization.docview.changeAuthentication.title}
+          showClose={true}
+          onClose={this.props.onClose}
+        />
+        <Modal.Content>
+          <div className="docview-changeauthentication-modal">
+            <ChangeAuthenticationModalView model={this._model} />
+          </div>
+        </Modal.Content>
+        <Modal.Footer>
+          <Modal.CancelButton onClick={this.props.onClose} />
+          <Modal.AcceptButton
+            text={localization.docview.changeAuthentication.accept}
+            onClick={this.onAccept}
+          />
+        </Modal.Footer>
+      </Modal.Container>
+    );
+  }
+});

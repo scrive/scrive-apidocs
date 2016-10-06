@@ -1,5 +1,5 @@
 var React = require("react");
-var Confirmation = require("../../../js/confirmations").Confirmation;
+var Confirmation = require("../../../js/react_confirmations");
 var Submit = require("../../../js/submits").Submit;
 var $ = require("jquery");
 

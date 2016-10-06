@@ -4,16 +4,57 @@ var List = require("../lists/list");
 var moment = require("moment");
 var Submit = require("../../js/submits.js").Submit;
 var LoadingDialog = require("../../js/loading.js").LoadingDialog;
-var Confirmation = require("../../js/confirmations.js").Confirmation;
 var jQuery = require("jquery");
 var _ = require("underscore");
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 var $ = require("jquery");
 
+var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
+var Modal = require("../common/modal");
 
+var RemoveModalContent = React.createClass({
+  propTypes: {
+    templates: React.PropTypes.array
+  },
+  render: function () {
+    if (this.props.templates === null) {
+      return <span />;
+    } else if (this.props.templates.length == 1) {
+      return (
+        <HtmlTextWithSubstitution
+          secureText={localization.archive.templates.remove.body}
+          lists={{
+            ".put-one-or-more-things-to-be-deleted-here": {
+              items: [this.props.templates[0].field("title")],
+              wrapper: "<strong />"
+            }
+          }}
+        />
+      );
+    } else {
+      var sub = this.props.templates.length + (" " + localization.templates).toLowerCase();
+      return (
+        <HtmlTextWithSubstitution
+          secureText={localization.archive.templates.remove.body}
+          subs={{
+            ".put-one-or-more-things-to-be-deleted-here": sub
+          }}
+        />
+      );
+    }
+  }
+});
 
 module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
+    getInitialState: function () {
+      return {
+        showShareModal: false,
+        templatesToShare: null,
+        showRemoveModal: false,
+        templatesToRemove: null
+      };
+    },
     createNewTemplate : function() {
       new Submit({
         method : "POST",
@@ -39,147 +80,202 @@ module.exports = React.createClass({
       }).sendAjax();
     },
     openShareModal: function(selected) {
-      var self = this;
-      var confirmationPopup = new Confirmation({
-          acceptText: localization.ok,
-          rejectText: localization.cancel,
-          title: localization.archive.templates.share.head,
-          content: jQuery("<p/>").text(localization.archive.templates.share.body),
-          onAccept : function() {
-            new Submit({
-              url: "/d/share",
-              method: "POST",
-              documentids: "[" + _.map(selected, function(doc){return doc.field("id");}) + "]",
-              ajaxsuccess : function() {
-                new FlashMessage({type: "success", content : localization.archive.templates.share.successMessage});
-                self.reload();
-                confirmationPopup.clear();
-              }
-            }).sendAjax();
+      this.setState({
+        showShareModal: true,
+        templatesToShare: _.map(
+          selected,
+          function (doc) {
+            return doc.field("id");
           }
+        )
       });
-      return true;
+    },
+    onShareModalClose: function () {
+      this.setState({
+        showShareModal: false,
+        templatesToShare: null
+      });
+    },
+    onShareModalAccept: function () {
+      var self = this;
+
+      new Submit({
+        url: "/d/share",
+        method: "POST",
+        documentids: "[" + this.state.templatesToShare + "]",
+        ajaxsuccess : function() {
+          new FlashMessage({
+            type: "success",
+            content: localization.archive.templates.share.successMessage
+          });
+
+          self.reload();
+          self.onShareModalClose();
+        }
+      }).sendAjax();
     },
     openRemoveModal : function(selected) {
-      var self = this;
-      var confirmationText = $('<span />').html(localization.archive.templates.remove.body);
-      var listElement = confirmationText.find('.put-one-or-more-things-to-be-deleted-here');
-      if (selected.length == 1) {
-        listElement.html($('<strong />').text(selected[0].field("title")));
-      } else {
-        listElement.text(selected.length + (" " + localization.templates).toLowerCase());
-      }
-      var confirmationPopup = new Confirmation({
-        acceptText: localization.archive.templates.remove.action,
-        rejectText: localization.cancel,
-        title: localization.archive.templates.remove.action,
-        content: confirmationText,
-        oneClick: true,
-        onAccept : function() {
-          new Submit({
-            url: "/d/delete",
-            method: "POST",
-            documentids: "[" + _.map(selected, function(doc){return doc.field("id");}) + "]",
-            ajaxsuccess : function() {
-              new FlashMessage({type: "success", content : localization.archive.templates.remove.successMessage});
-              self.reload();
-              confirmationPopup.clear();
-            }
-          }).sendAjax();
-        }
+      this.setState({
+        showRemoveModal: true,
+        templatesToRemove: selected
       });
-      return true;
+    },
+    onRemoveModalClose: function () {
+      this.setState({
+        showRemoveModal: false,
+        templatesToRemove: null
+      });
+    },
+    onRemoveModalAccept: function () {
+      var self = this;
+      var templateIds = _.map(
+        this.state.templatesToRemove,
+        function (doc) {
+          return doc.field("id");
+        }
+      );
+
+      new Submit({
+        url: "/d/delete",
+        method: "POST",
+        documentids: "[" + templateIds + "]",
+        ajaxsuccess : function() {
+          new FlashMessage({
+            type: "success",
+            content: localization.archive.templates.remove.successMessage
+          });
+
+          self.reload();
+          self.onRemoveModalClose();
+        }
+      }).sendAjax();
     },
     render: function() {
       var self = this;
       return (
-        <List.List
-          maxPageSize={Utils.maxPageSize}
-          totalCountFunction={Utils.totalCountFunction}
-          url={Utils.listCallUrl}
-          paramsFunction={Utils.paramsFunctionWithFilter([
-              {"filter_by" : "is_template"},
-              {"filter_by" : "is_author"},
-              {"filter_by" : "is_not_in_trash"}
-            ])}
-          dataFetcher={Utils.dataFetcher}
-          idFetcher={Utils.idFetcher}
-          loadLater={self.props.loadLater}
-          ref='list'
-        >
+        <div>
+          <List.List
+            maxPageSize={Utils.maxPageSize}
+            totalCountFunction={Utils.totalCountFunction}
+            url={Utils.listCallUrl}
+            paramsFunction={Utils.paramsFunctionWithFilter([
+                {"filter_by" : "is_template"},
+                {"filter_by" : "is_author"},
+                {"filter_by" : "is_not_in_trash"}
+              ])}
+            dataFetcher={Utils.dataFetcher}
+            idFetcher={Utils.idFetcher}
+            loadLater={self.props.loadLater}
+            ref='list'
+          >
 
-         <List.TextFiltering text={localization.archive.templates.search} />
+           <List.TextFiltering text={localization.archive.templates.search} />
 
-          <List.ListAction
-            name={localization.archive.templates.createnew}
-            onSelect={function() {
-              self.createNewTemplate();
-            }}
-          />
+            <List.ListAction
+              name={localization.archive.templates.createnew}
+              onSelect={function() {
+                self.createNewTemplate();
+              }}
+            />
 
-          <List.ListAction
-            name={localization.archive.templates.share.action}
-            onSelect={function(selected,model) {
-              if (selected.length ==0 ) {
-                new FlashMessage({type: "error", content: localization.archive.templates.share.emptyMessage});
-                return false;
-              }
-              self.openShareModal(selected);
-            }}
-          />
+            <List.ListAction
+              name={localization.archive.templates.share.action}
+              onSelect={function(selected,model) {
+                if (selected.length ==0 ) {
+                  new FlashMessage({type: "error", content: localization.archive.templates.share.emptyMessage});
+                  return false;
+                }
+                self.openShareModal(selected);
+              }}
+            />
 
-          <List.ListAction
-            name={localization.archive.templates.remove.action}
-            onSelect={function(selected,model) {
-              if (selected.length ==0 ) {
-                new FlashMessage({type: "error", content: localization.archive.templates.remove.emptyMessage});
-                return false;
-              }
-              self.openRemoveModal(selected);
-            }}
-          />
+            <List.ListAction
+              name={localization.archive.templates.remove.action}
+              onSelect={function(selected,model) {
+                if (selected.length ==0 ) {
+                  new FlashMessage({type: "error", content: localization.archive.templates.remove.emptyMessage});
+                  return false;
+                }
+                self.openRemoveModal(selected);
+              }}
+            />
 
-          <List.Column
-            select={true}
-            width="30px"
-          />
-          <List.Column
-            name={localization.archive.templates.columns.time}
-            width="105px"
-            sorting="mtime"
-            rendering={function(d) {
-              var time = moment(d.field("mtime")).toDate();
-              // FIXME The fullTime() function doesn't work for some reason,
-              // it is located in app/js/utils/time.js and works in scripts/archive/templates.jsx
-              return (<span title={time.fullTime()}>{time.toTimeAbrev()}</span>);
-            }}
-          />
-          <List.Column
-            name={localization.archive.templates.columns.verificationMethod}
-            width="150px"
-            rendering={function(d) {
-              return (<div>{Utils.documentDeliveryText(d)}</div>);
-            }}
-          />
-         <List.Column
-            name={localization.archive.templates.columns.template}
-            width="535px"
-            sorting="title"
-            rendering={function(d) {
-              return (<a href={Utils.documentLink(d)}>{d.field("title")}</a>);
-            }}
-          />
-          <List.Column
-            name={localization.archive.templates.columns.shared}
-            width="75px"
-            className="archive-table-shared-column-header"
-            rendering={function(d) {
-              return (<div className={"archive-table-shared-column " + ((d.field("is_shared")) ? "sharedIcon" : "")}/>);
-            }}
-          />
+            <List.Column
+              select={true}
+              width="30px"
+            />
+            <List.Column
+              name={localization.archive.templates.columns.time}
+              width="105px"
+              sorting="mtime"
+              rendering={function(d) {
+                var time = moment(d.field("mtime")).toDate();
+                // FIXME The fullTime() function doesn't work for some reason,
+                // it is located in app/js/utils/time.js and works in scripts/archive/templates.jsx
+                return (<span title={time.fullTime()}>{time.toTimeAbrev()}</span>);
+              }}
+            />
+            <List.Column
+              name={localization.archive.templates.columns.verificationMethod}
+              width="150px"
+              rendering={function(d) {
+                return (<div>{Utils.documentDeliveryText(d)}</div>);
+              }}
+            />
+           <List.Column
+              name={localization.archive.templates.columns.template}
+              width="535px"
+              sorting="title"
+              rendering={function(d) {
+                return (<a href={Utils.documentLink(d)}>{d.field("title")}</a>);
+              }}
+            />
+            <List.Column
+              name={localization.archive.templates.columns.shared}
+              width="75px"
+              className="archive-table-shared-column-header"
+              rendering={function(d) {
+                return (<div className={"archive-table-shared-column " + ((d.field("is_shared")) ? "sharedIcon" : "")}/>);
+              }}
+            />
 
-          <List.Pagination/>
-        </List.List>
+            <List.Pagination/>
+          </List.List>
+
+          <Modal.Container active={self.state.showShareModal}>
+            <Modal.Header
+              title={localization.archive.templates.share.head}
+              showClose={true}
+              onClose={this.onShareModalClose}
+            />
+            <Modal.Content>
+              <p>{localization.archive.templates.share.body}</p>
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.CancelButton onClick={this.onShareModalClose} />
+              <Modal.AcceptButton onClick={this.onShareModalAccept} />
+            </Modal.Footer>
+          </Modal.Container>
+
+          <Modal.Container active={self.state.showRemoveModal}>
+            <Modal.Header
+              title={localization.archive.templates.remove.action}
+              showClose={true}
+              onClose={this.onRemoveModalClose}
+            />
+            <Modal.Content>
+              <RemoveModalContent templates={this.state.templatesToRemove} />
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.CancelButton onClick={this.onRemoveModalClose} />
+              <Modal.AcceptButton
+                text={localization.archive.templates.remove.action}
+                oneClick={true}
+                onClick={this.onRemoveModalAccept}
+              />
+            </Modal.Footer>
+          </Modal.Container>
+        </div>
       );
     }
 });

@@ -3,7 +3,6 @@ var Button = require("../../common/button");
 var Select = require("../../common/select");
 var InfoTextInput = require("../../../js/infotextinputs.js").InfoTextInput;
 var $ = require("jquery");
-var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var Submit = require("../../../js/submits.js").Submit;
 var _ = require("underscore");
 
@@ -11,31 +10,13 @@ var _ = require("underscore");
 
 
 module.exports = React.createClass({
-    opendNewThemeModal : function(getTheme,setTheme,newThemeUrl) {
-      var self = this;
-      var input = new InfoTextInput({infotext: localization.branding.themes.name ,value: ""});
-      var content = $("<div/>");
-      content.append($("<div/>").text(localization.branding.enterNameOfThemeBellow))
-             .append(input.el());
-      var popup = new Confirmation({
-        title: localization.branding.newTheme,
-        content : content,
-        acceptText : localization.branding.save,
-        onAccept : function() {
-          new Submit({
-           method: "POST",
-           url: newThemeUrl,
-           name : input.value() || self.props.model.newThemeDefaultName(),
-           ajax: true,
-           ajaxsuccess: function(rs) {
-             self.props.model.reloadThemesList(function() {
-               popup.clear();
-               setTheme(rs.id);
-             });
-           }
-          }).send();
-        }
-      });
+    propTypes: {
+      model: React.PropTypes.object,
+      onOpenNewThemeModal: React.PropTypes.func.isRequired,
+      onSave: React.PropTypes.func
+    },
+    opendNewThemeModal : function() {
+      this.props.onOpenNewThemeModal();
     },
     themeSelector : function(getTheme,setTheme,newThemeUrl) {
       var self = this;
@@ -66,7 +47,7 @@ module.exports = React.createClass({
       availableThemesOptions.push({
             name: localization.branding.newThemeWithDots,
             onSelect : function() {
-              self.opendNewThemeModal(getTheme,setTheme,newThemeUrl);
+              self.opendNewThemeModal();
             }
       });
       return (

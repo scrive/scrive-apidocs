@@ -3,9 +3,8 @@ var Backbone = require("backbone");
 var InfoTextInput = require("../../common/infotextinput");
 var LocationUtils = require("../../common/location");
 var $ = require("jquery");
-var Confirmation = require("../../../js/confirmations.js").Confirmation;
 
-  var ShowAPIDeliveryModalView = React.createClass({
+  module.exports = React.createClass({
 
     propTypes: {
       signatory: React.PropTypes.object.isRequired
@@ -40,23 +39,3 @@ var Confirmation = require("../../../js/confirmations.js").Confirmation;
       );
     }
   });
-
-  module.exports = function (args) {
-    var content = $("<div class='docview-showapidelivery-modal'>");
-
-    var contentComp = React.render(React.createElement(ShowAPIDeliveryModalView, {
-      signatory: args.signatory
-    }), content[0]);
-
-    new Confirmation({
-      title: localization.docview.showAPIDelivery.title,
-      closeVisible: true,
-      acceptText: localization.docview.showAPIDelivery.accept,
-      cancelVisible: false,
-      content: content,
-      width: 420
-    });
-
-    // Text selection needs to happend after input is appended somewhere in body
-    contentComp.selectText();
-  };

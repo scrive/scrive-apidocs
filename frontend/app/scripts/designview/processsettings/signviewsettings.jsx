@@ -5,7 +5,7 @@ var Checkbox = require("../../common/checkbox");
 var Theme = require("../../themes/theme");
 var SignviewPreview = require("../../themes/previews/signing");
 var $ = require("jquery");
-var Confirmation = require("../../../js/confirmations.js").Confirmation;
+var Modal = require("../../common/modal");
 
 var SignviewSettingsModel = Backbone.Model.extend({
   initialize: function (args) {
@@ -149,35 +149,44 @@ var SignviewSettingsView = React.createClass({
     }
 });
 
-module.exports = function (args) {
-  var document = args.document;
-  var model = new SignviewSettingsModel({document: document});
-  var settingsView = $("<div/>");
-  React.render(React.createElement(SignviewSettingsView, {
-    model: model
-  }), settingsView[0]);
-  var popup = new Confirmation({
-    content: settingsView,
-    title: localization.designview.signviewsettings.title,
-    icon: undefined,
-    acceptText: localization.save,
-    width: 940,
-    onAccept: function () {
-      document.setShowheader(model.showHeader());
-      document.setShowrejectoption(model.showRejectOption());
-      document.setAllowrejectreason(model.allowRejectReason());
-      document.setShowpdfdownload(model.showPDFDownload());
-      document.setShowfooter(model.showFooter());
-      document.save();
-      if (args.onClose !== undefined) {
-        args.onClose();
-      }
-      return true;
-    },
-    onReject: function () {
-      if (args.onClose !== undefined) {
-        args.onClose();
-      }
-   }
- });
-};
+module.exports = React.createClass({
+  close: function () {
+    this._model = null;
+    this.props.onClose();
+  },
+  onAccept: function () {
+    this.props.document.setShowheader(this._model.showHeader());
+    this.props.document.setShowrejectoption(this._model.showRejectOption());
+    this.props.document.setAllowrejectreason(this._model.allowRejectReason());
+    this.props.document.setShowpdfdownload(this._model.showPDFDownload());
+    this.props.document.setShowfooter(this._model.showFooter());
+    this.props.document.save();
+
+    this.close();
+  },
+  render: function () {
+    if (!this._model) {
+      this._model = new SignviewSettingsModel({document: this.props.document});
+    }
+
+    return (
+      <Modal.Container width={940} active={this.props.active}>
+        <Modal.Header
+          title={localization.designview.signviewsettings.title}
+          onClose={this.close}
+          showClose={true}
+        />
+        <Modal.Content>
+          <SignviewSettingsView model={this._model} />
+        </Modal.Content>
+        <Modal.Footer>
+          <Modal.CancelButton onClick={this.close} />
+          <Modal.AcceptButton
+            text={localization.save}
+            onClick={this.onAccept}
+          />
+        </Modal.Footer>
+      </Modal.Container>
+    );
+  }
+});

@@ -1,256 +1,228 @@
 var React = require("react");
-var NewButton = require("../common/button");
 var Backbone = require("backbone");
-var _ = require("underscore");
 var $ = require("jquery");
-var Calendar = require("../../js/calendar.js").Calendar;
-var InfoTextInput = require("../../js/infotextinputs.js").InfoTextInput;
-var Confirmation = require("../../js/confirmations.js").Confirmation;
-var Button = require("../../js/buttons.js").Button;
+
+var BackboneMixin = require("../common/backbone_mixin").BackboneMixin;
 var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
-
+var Button = require("../common/button");
+var Calendar = require("../../js/calendar.js").Calendar;
 var Document = require("../../js/documents.js").Document;
+var InfoTextInput = require("../common/infotextinput");
+var Modal = require("../common/modal");
 
-var expose = {};
-
-
-/* Modal for setting reminder - still done using Backbone */
 var AuthorViewAutomaticRemindersModel = Backbone.Model.extend({
-  defaults : {
-    onAction : function() {}
+  defaults: {
+    onAction: function () {}
   },
   initialize: function (args) {
-    if (this.document().autoremindtime() != undefined)
-      this.set({newdaystoremind: this.document().autoremindtime().diffDays()});
-    else
-      this.set({newdaystoremind: Math.max(1,Math.floor(this.maxDaysLeftToSign() / 2))});
+    if (this.document().autoremindtime() != undefined) {
+      this.set({
+        newdaystoremind: this.document().autoremindtime().diffDays()
+      });
+    } else {
+      this.set({
+        newdaystoremind: Math.max(1, Math.floor(this.maxDaysLeftToSign() / 2))
+      });
+    }
   },
-  triggerOnAction : function() {
-    if (this.get("onAction"))
+  triggerOnAction: function () {
+    if (this.get("onAction")) {
       this.get("onAction")();
+    }
   },
-  authorview : function() {
-     return this.get("authorview");
+  authorview: function () {
+    return this.get("authorview");
   },
-  maxDaysLeftToSign : function() {
-    return Math.max(1,this.document().timeouttime().diffDays());
-
+  maxDaysLeftToSign: function () {
+    return Math.max(1, this.document().timeouttime().diffDays());
   },
-  newdaystoremind: function() {
-     return this.get("newdaystoremind");
+  newdaystoremind: function () {
+    return this.get("newdaystoremind");
   },
-  setNewdaystoremind: function(newdaystoremind) {
-     var old = this.get("newdaystoremind");
-     if (newdaystoremind == undefined || (1 <= newdaystoremind || newdaystoremind <= this.maxDaysLeftToSign())) {
+  setNewdaystoremind: function (newdaystoremind) {
+    var old = this.get("newdaystoremind");
+    if (newdaystoremind == undefined || (1 <= newdaystoremind || newdaystoremind <= this.maxDaysLeftToSign())) {
       this.set({"newdaystoremind": newdaystoremind}, {silent: true});
-     }
-     // Triggering of events is tricky here since we can end in loop in UI (calendar updates input -> input updates calendar -> ..).
-     if (old != this.get("newdaystoremind"))
-        this.trigger("change:newdaystoremind");
-  },
-  document :function() {
-     return this.get("document");
-  },
-  setautoreminder : function(days, callback) {
-     var self = this;
-     this.document().setautoreminder(days).sendAjax(function() {
-          if (callback!= undefined) callback();
-          self.triggerOnAction();
+    }
 
+    this.trigger("change");
+  },
+  document: function () {
+    return this.get("document");
+  },
+  setautoreminder: function (days, callback) {
+    var self = this;
+    this.document().setautoreminder(days).sendAjax(function () {
+      if (callback != undefined) {
+        callback();
+      }
+
+      self.triggerOnAction();
     });
   }
 });
 
-var AuthorViewAutomaticRemindersView = Backbone.View.extend({
-  initialize: function(args) {
+module.exports = React.createClass({
+  mixins: [BackboneMixin],
+  propTypes: {
+    document: React.PropTypes.instanceOf(Document).isRequired,
+    onAction: React.PropTypes.func
+  },
+  getBackboneModels: function () {
+    return [this._model];
+  },
+  getInitialState: function () {
+    return {
+      showModal: false
+    };
+  },
+  componentWillMount: function () {
+    this._model = new AuthorViewAutomaticRemindersModel({
+      document: this.props.document,
+      onAction: this.props.onAction
+    });
+  },
+  componentDidMount: function () {
     var self = this;
-    _.bindAll(this, 'render', 'updateNewDaysToRemind');
-    this.listenTo(this.model,'change:newdaystoremind', self.updateNewDaysToRemind);
-    this.render();
-  },
-  destroy : function() {
-    this.stopListening();
-    $(this.el).remove();
-  },
-  updateNewDaysToRemind : function() {
-     this.daysinput.setValue(this.model.newdaystoremind());
-     this.calendar.setDays(this.model.newdaystoremind());
-  },
-  changeReminderDateBody : function() {
-    var self = this;
-    var model = self.model;
-    var document = model.document();
-    var div = $("<div class='autoreminder-modal-content'/>");
-
-    var deadlinedecription = $("<div class='line-before-calendar'/>").text(localization.autoreminders.dueDateIn +" " + document.timeouttime().diffDays() + " " + localization.autoreminders.days+" (" +document.timeouttime().toYMDString()+ ")");
-    div.append(deadlinedecription);
-
-
-
-    var label = $("<div class='text'/>");
-    label.text(localization.autoreminders.daysToRemind + ':');
-    var calendarbutton = $("<div class='calendarbutton'/>");
-    self.calendar = new Calendar({on : calendarbutton,
-                                         days : model.newdaystoremind(),
-                                         maxValue : model.maxDaysLeftToSign(),
-                                         change: function(days) {
-                                            if (days != model.newdaystoremind()) {
-                                              model.setNewdaystoremind(days);
-                                            }
-                                          }
-                        });
-
-    self.daysinput = new InfoTextInput({
-                infotext: "1",
-                value: model.newdaystoremind(),
-                onChange: function(v) {
-                    var days = parseInt(v);
-                    if (isNaN(days)) {
-                      days = undefined;
-                    } else {
-                      days = Math.min(document.daystosign(), days);
-                      days = Math.max(1, days);
-                    }
-                    if (days != model.newdaystoremind()) {
-                      model.setNewdaystoremind(days);
-                    } else if (days == undefined && v != "") {
-                      self.daysinput.setValue("");
-                    } else if (days + "" != v && v != "") {
-                      self.daysinput.setValue(days + "");
-                    }
-                }
-            });
-
-  div.append(label)
-      .append(self.daysinput.el())
-      .append($("<div class='text'/>").text(localization.designview.days))
-      .append(calendarbutton);
-
-  return div;
-  },
-  startSetReminderDateModal : function() {
-      var self = this;
-      self.modal = new Confirmation({
-                title: localization.autoreminders.setAutoReminderTitle,
-                content: $("<div>").append($("<div class='modal-subtitle'>").html(localization.autoreminders.changeAutoreminderDescription)).append($(self.changeReminderDateBody())),
-                width : 420,
-                onReject : function() {
-                  if (self.calendar != undefined)
-                    self.calendar.close();
-                },
-                acceptButton : function() {
-                  return self.buttonChangeForModal();
-                }()
-        });
-  },
-  buttonChangeForModal : function() {
-    var self = this;
-    return new Button({
-      type: "action",
-      style : (BrowserInfo.isSmallScreen() ? "margin-top:-10px" : ""),
-      size: "small",
-      text : (self.model.document().autoremindtime() != undefined ? localization.autoreminders.changeAutoreminderButton : localization.autoreminders.setAutoreminderButton),
-      onClick : function() {
-        if (self.model.newdaystoremind() == undefined) {
-          self.model.setNewdaystoremind(1);
-        }
-        self.model.setautoreminder(self.model.newdaystoremind(),function() {
-          self.modal.close();
-        });
+    this._calendar = new Calendar({
+      on: $(this.refs.calendarButton.getDOMNode()),
+      days: this._model.newdaystoremind(),
+      maxValue: this._model.maxDaysLeftToSign(),
+      change: function (days) {
+        self._model.setNewdaystoremind(days);
       }
-    }).el();
+    });
   },
-  buttonClearForModal : function() {
-    var self = this;
-    return new Button({
-      style : "margin-right:10px;" + (BrowserInfo.isSmallScreen() ? "margin-top:-10px" : ""),
-      size: "small",
-      text : localization.autoreminders.removeAutoreminderButton,
-      onClick : function() {
-        self.model.setautoreminder(undefined,function() {
-          self.modal.close();
-        });
-      }
-    }).el();
+  componentDidUpdate: function () {
+    this.refs.daysInput.setValue(this.daysInputValue());
+    this._calendar.setDays(this._model.newdaystoremind());
   },
-  startChangeReminderDateModal : function() {
-      var self = this;
-      self.modal = new Confirmation({
-                title: localization.autoreminders.changeAutoReminderTitle,
-                content: $("<div>").append($("<div class='modal-subtitle'>").html(localization.autoreminders.changeAutoreminderDescription)).append($(self.changeReminderDateBody())),
-                width : 420,
-                onReject : function() {
-                  if (self.calendar != undefined)
-                    self.calendar.close();
-                },
-                acceptButton : function() {
-                  var box = $("<div>");
-                  return box.append(self.buttonClearForModal()).append(self.buttonChangeForModal());
-                }()
-        });
+  handleOpenModal: function () {
+    this.setState({showModal: true});
   },
-  render: function() {
-    return this;
-  }
-
-});
-
-/* Two interfaces for modal classes */
-var AuthorViewAutomaticRemindersSetPopup = function(args) {
-          var model = new AuthorViewAutomaticRemindersModel(args);
-          var view =  new AuthorViewAutomaticRemindersView({model : model, el :$("<div/>")});
-          view.startSetReminderDateModal();
-
-};
-
-var AuthorViewAutomaticRemindersChangePopup = function(args) {
-          var model = new AuthorViewAutomaticRemindersModel(args);
-          var view =  new AuthorViewAutomaticRemindersView({model : model, el :$("<div/>")});
-          view.startChangeReminderDateModal();
-
-
-};
-
-
-
-/* Propper UI component that is embedded in author view */
-var AuthorViewAutomaticReminders = React.createClass({
-    propTypes: {
-      document: React.PropTypes.instanceOf(Document).isRequired,
-      onAction    : React.PropTypes.func
-    },
-    handleOpenModal: function() {
-        if (this.props.document.autoremindtime() == undefined)
-          new AuthorViewAutomaticRemindersSetPopup({document : this.props.document,onAction :this.props.onAction});
-        else
-          new AuthorViewAutomaticRemindersChangePopup({document : this.props.document,onAction :this.props.onAction});
-    },
-    render: function() {
-      return (
-           <div className='grey-box auto-reminder'>
-             <div className='titleinfo'>
-                  <div className='name'>
-                      {localization.autoreminders.automaticRemindersTitle}
-                  </div>
-             </div>
-              <div className='inner'>
-                <div className='details'>
-                  <div>
-                    {this.props.document.autoremindtime() ? localization.autoreminders.willBeSentOn + ": " + this.props.document.autoremindtime().toYMDString() : ""}
-                  </div>
-                  <NewButton
-                    style= {{marginTop: "10px"}}
-                    text = {this.props.document.autoremindtime() ? localization.autoreminders.changeDate : localization.autoreminders.setDate}
-                    size = "small"
-                    onClick = {this.handleOpenModal}
-                  />
-               </div>
-             </div>
-           </div>
-      );
+  onModalClose: function () {
+    this.setState({showModal: false});
+  },
+  onModalAccept: function () {
+    if (this._model.newdaystoremind() == undefined) {
+      this._model.setNewdaystoremind(1);
     }
 
-});
+    var self = this;
+    this._model.setautoreminder(this._model.newdaystoremind(), function () {
+      self.onModalClose();
+    });
+  },
+  onRemoveReminderClick: function () {
+    var self = this;
+    this._model.setautoreminder(undefined, function () {
+      self.onModalClose();
+    });
+  },
+  onDaysInputChange: function (value) {
+    var days = parseInt(value);
+    if (isNaN(days)) {
+      days = undefined;
+    } else {
+      days = Math.min(this.props.document.daystosign(), days);
+      days = Math.max(1, days);
+    }
 
-  expose.AuthorViewAutomaticReminders = AuthorViewAutomaticReminders;
-  module.exports = expose;
+    this._model.setNewdaystoremind(days);
+  },
+  daysInputValue: function () {
+    var value = "";
+    if (this._model && this._model.newdaystoremind()) {
+      value = this._model.newdaystoremind() + "";
+    }
+
+    return value;
+  },
+  render: function () {
+    var detailsText = "";
+    var buttonText = localization.autoreminders.setDate;
+    var modalTitle = localization.autoreminders.setAutoReminderTitle;
+    var modalSubtitle = localization.autoreminders.changeAutoreminderDescription;
+    var acceptButtonText = localization.autoreminders.setAutoreminderButton;
+
+    if (this.props.document.autoremindtime()) {
+      detailsText = localization.autoreminders.willBeSentOn + ": ";
+      detailsText += this.props.document.autoremindtime().toYMDString();
+
+      buttonText = localization.autoreminders.changeDate;
+
+      modalTitle = localization.autoreminders.changeAutoReminderTitle;
+      modalSubtitle = localization.autoreminders.changeAutoreminderDescription;
+
+      acceptButtonText = localization.autoreminders.changeAutoreminderButton;
+    }
+
+    var modalButtonStyle = {};
+    if (BrowserInfo.isSmallScreen()) {
+      modalButtonStyle.marginTop = "-10px";
+    }
+
+    return (
+      <div className="grey-box auto-reminder">
+        <div className="titleinfo">
+          <div className="name">{localization.autoreminders.automaticRemindersTitle}</div>
+        </div>
+        <div className="inner">
+          <div className="details">
+            <div>{detailsText}</div>
+            <Button
+              style={{marginTop: "10px"}}
+              text={buttonText}
+              size="small"
+              onClick={this.handleOpenModal}
+            />
+          </div>
+        </div>
+
+        <Modal.Container active={this.state.showModal} width={420}>
+          <Modal.Header
+            title={modalTitle}
+            showClose={true}
+            onClose={this.onModalClose}
+          />
+          <Modal.Content>
+            <div>
+              <div className="modal-subtitle">{modalSubtitle}</div>
+              <div className="autoreminder-modal-content">
+                <div className="line-before-calendar">
+                  <span>{localization.autoreminders.dueDateIn} </span>
+                  <span>{this.props.document.timeouttime().diffDays()} </span>
+                  <span>{localization.autoreminders.days} ({this.props.document.timeouttime().toYMDString()})</span>
+                </div>
+                <div className="text">{localization.autoreminders.daysToRemind}:</div>
+                <InfoTextInput
+                  ref="daysInput"
+                  infotext="1"
+                  value={this.daysInputValue()}
+                  onChange={this.onDaysInputChange}
+                />
+                <div className="text">{localization.designview.days}</div>
+                <div ref="calendarButton" className="calendarbutton"></div>
+              </div>
+            </div>
+          </Modal.Content>
+          <Modal.Footer>
+            <Modal.CancelButton onClick={this.onModalClose} />
+            <Modal.AcceptButton
+              text={acceptButtonText}
+              onClick={this.onModalAccept}
+            />
+            { /* if */ this.props.document.autoremindtime() &&
+              <Modal.ExtraButtons marginRight={10}>
+                <Button
+                  text={localization.autoreminders.removeAutoreminderButton}
+                  onClick={this.onRemoveReminderClick}
+                />
+              </Modal.ExtraButtons>
+            }
+          </Modal.Footer>
+        </Modal.Container>
+      </div>
+    );
+  }
+});

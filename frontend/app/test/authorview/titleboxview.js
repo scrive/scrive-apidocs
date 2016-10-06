@@ -190,7 +190,7 @@ describe("authorview/titleboxview", function () {
       $('.s-withdraw-button', React.findDOMNode(component))[0]
     );
 
-    assert.lengthOf($(".s-withdraw-confirmation"), 1);
+    assert.isTrue(component.state.showWithdrawModal);
   });
 
   // Go To Sign View button
@@ -312,6 +312,6 @@ describe("authorview/titleboxview", function () {
       $('.s-give-to-next-signatory-pad-button', React.findDOMNode(component))[0]
     );
 
-    assert.lengthOf($(".give-to-next-signatory-pad-modal-content"), 1);
+    assert.isTrue(component.state.showGiveToNextSignatoryPadModal);
   });
 });

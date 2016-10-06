@@ -121,21 +121,21 @@ describe("designview/buttonbarview", function () {
     var component = renderComponent();
     component.showCantSignModal();
 
-    assert.lengthOf($(".designview-cant-sign-modal"), 1);
+    assert.isTrue(component.state.showCantSignModal);
   });
 
   it("should render the sign confirmation modal", function () {
     var component = renderComponent();
     component.showSignConfirmationModal();
 
-    assert.lengthOf($(".designview-sign-confirmation-modal"), 1);
+    assert.isTrue(component.state.showSignConfirmationModal);
   });
 
   it("should render the send confirmation modal", function () {
     var component = renderComponent();
     component.showSendConfirmationModal();
 
-    assert.lengthOf($(".designview-send-confirmation-modal"), 1);
+    assert.isTrue(component.state.showSendConfirmationModal);
   });
 
   it("should compute the save template button text for template", function () {
@@ -297,30 +297,21 @@ describe("designview/buttonbarview", function () {
     var component = renderComponent();
     sinon.stub(component, "signWithCSV");
 
-    TestUtils.Simulate.click($(".sendButton")[0]);
+    component.onSignConfirmationModalAccept();
 
     util.waitUntil(
       function () {
-        return $(".modal").length > 0;
+        return component.signWithCSV.called;
       },
       function () {
-        TestUtils.Simulate.click($(".modal .button")[0]);
+        assert.isTrue(document_.takeSigningScreenshot.called);
+        assert.isTrue(document_.afterSave.called);
 
-        util.waitUntil(
-          function () {
-            return component.signWithCSV.called;
-          },
-          function () {
-            assert.isTrue(document_.takeSigningScreenshot.called);
-            assert.isTrue(document_.afterSave.called);
+        assert.isTrue(component.signWithCSV.calledWith(
+          document_, 1, undefined
+        ));
 
-            assert.isTrue(component.signWithCSV.calledWith(
-              document_, 1, undefined
-            ));
-
-            done();
-          }
-        );
+        done();
       }
     );
   });
@@ -337,29 +328,20 @@ describe("designview/buttonbarview", function () {
     var component = renderComponent();
     sinon.stub(component, "sendWithCSV");
 
-    TestUtils.Simulate.click($(".sendButton")[0]);
+    component.onSendConfirmationModalAccept();
 
     util.waitUntil(
       function () {
-        return $(".modal").length > 0;
+        return component.sendWithCSV.called;
       },
       function () {
-        TestUtils.Simulate.click($(".modal .button")[0]);
+        assert.isTrue(document_.takeSigningScreenshot.called);
 
-        util.waitUntil(
-          function () {
-            return component.sendWithCSV.called;
-          },
-          function () {
-            assert.isTrue(document_.takeSigningScreenshot.called);
+        assert.isTrue(component.sendWithCSV.calledWith(
+          document_, 1, undefined
+        ));
 
-            assert.isTrue(component.sendWithCSV.calledWith(
-              document_, 1, undefined
-            ));
-
-            done();
-          }
-        );
+        done();
       }
     );
   });

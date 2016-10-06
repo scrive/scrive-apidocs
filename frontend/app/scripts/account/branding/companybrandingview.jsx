@@ -11,39 +11,25 @@ var SigningPreview = require("../../themes/previews/signing");
 var LoginPreview = require("../../themes/previews/login");
 var ServicePreview = require("../../themes/previews/service");
 var $ = require("jquery");
-var Confirmation = require("../../../js/confirmations.js").Confirmation;
-var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
-var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var Button = require("../../../js/buttons.js").Button;
 var _ = require("underscore");
-
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
 module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
+    getInitialState: function () {
+      return {
+        themeToDelete: null
+      };
+    },
     getBackboneModels : function() {
       return [this.props.model];
     },
     propTypes: {
-      model: React.PropTypes.object
-    },
-    onThemeDelete : function(theme) {
-      var model = this.props.model;
-      var content = $("<div/>").html(localization.branding.doYouWantToDeleteTheme);
-      content.find('.put-theme-name-here').text(theme.name());
-      var popup = new Confirmation({
-        title : localization.branding.deleteTheme,
-        content : content,
-        acceptText : localization.branding.deleteNow,
-        onAccept : function() {
-          popup.close();
-          LoadingDialog.open();
-          model.deleteTheme(theme, function() {
-            LoadingDialog.close();
-            new FlashMessage({type: "success", content : localization.branding.themeDeleted});
-            model.reload();
-          });
-        }
-      });
+      model: React.PropTypes.object,
+      onOpenNewThemeModal: React.PropTypes.func.isRequired,
+      onThemeDelete: React.PropTypes.func.isRequired,
+      onChangeMode: React.PropTypes.func.isRequired
     },
     save : function(callback,urlInsteadOfCallback) {
       var self = this;
@@ -92,32 +78,29 @@ module.exports = React.createClass({
     changeMode : function(switchModeFunction, newModeUrl) {
       var self = this;
       var model = self.props.model;
+
       if (!model.dirty()) {
         switchModeFunction();
-      }
-      else {
-        var popup;
-        var onSave = function() {
-          self.save(function(afterSave) {
-            switchModeFunction();
-            popup.close();
-            afterSave();
-          }, newModeUrl);
+      } else {
+        var onSave = function(closeModal) {
+          self.save(
+            function(afterSave) {
+              switchModeFunction();
+              closeModal();
+              // afterSave(); // Should this be removed?
+            },
+            newModeUrl
+          );
         };
-        var onDiscard = function() {
+
+        var onDiscard = function(closeModal) {
             model.reload();
             switchModeFunction();
-            popup.close();
+            closeModal();
         };
-        var acceptButton = new Button({type: "action", text: localization.branding.saveNow, style: "margin-left : 20px" , onClick : onSave});
-        var discardButton = new Button({text: localization.branding.discard, onClick : onDiscard});
-        popup = new Confirmation({
-          title : localization.branding.unsavedChangesTitle,
-          content : $("<div/>").text(localization.branding.unsavedChangesDescription),
-          acceptButton : $("<div/>").append(discardButton.el()).append(acceptButton.el())
-        });
-      }
 
+        this.props.onChangeMode(onSave, onDiscard);
+      }
     },
     render: function() {
       var self = this;
@@ -160,12 +143,16 @@ module.exports = React.createClass({
               <div className="companybranding">
                 { /*if*/ (model.themeMode() ) &&
                   <div>
-                    <CompanyThemesManagementBar model={model} onSave={function() {self.save();}} />
+                    <CompanyThemesManagementBar
+                      model={model}
+                      onSave={function() {self.save();}}
+                      onOpenNewThemeModal={this.props.onOpenNewThemeModal}
+                    />
                     {/*if*/ (model.mailThemeMode() && model.mailThemeForEditing() != undefined) &&
                       <ThemeView
                         model={model.mailThemeForEditing()}
                         getDefaultName={function() {return model.newThemeDefaultName()}}
-                        onDelete={function() {self.onThemeDelete(model.mailThemeForEditing())}}
+                        onDelete={function() {self.props.onThemeDelete(model.mailThemeForEditing())}}
                         onSave={function() {self.save();}}
                         previews={_.compact([
                             EmailPreview,
@@ -178,13 +165,14 @@ module.exports = React.createClass({
                     {/*else*/ (model.mailThemeMode() && model.mailThemeForEditing() == undefined) &&
                       <CompanyBrandingNewThemeView
                         model={model}
+                        onOpenNewThemeModal={this.props.onOpenNewThemeModal}
                       />
                     }
                     {/*else if*/ (model.signviewThemeMode() && model.signviewThemeForEditing() != undefined) &&
                       <ThemeView
                         model={model.signviewThemeForEditing()}
                         getDefaultName={function() {return model.newThemeDefaultName()}}
-                        onDelete={function() {self.onThemeDelete(model.signviewThemeForEditing())}}
+                        onDelete={function() {self.props.onThemeDelete(model.signviewThemeForEditing())}}
                         onSave={function() {self.save();}}
                         previews={_.compact([
                             SigningPreview,
@@ -197,13 +185,14 @@ module.exports = React.createClass({
                     {/*else*/ (model.signviewThemeMode() && model.signviewThemeForEditing() == undefined) &&
                       <CompanyBrandingNewThemeView
                         model={model}
+                        onOpenNewThemeModal={this.props.onOpenNewThemeModal}
                       />
                     }
                     {/*else if*/ (model.serviceThemeMode() && model.serviceThemeForEditing() != undefined) &&
                       <ThemeView
                         model={model.serviceThemeForEditing()}
                         getDefaultName={function() {return model.newThemeDefaultName()}}
-                        onDelete={function() {self.onThemeDelete(model.serviceThemeForEditing())}}
+                        onDelete={function() {self.props.onThemeDelete(model.serviceThemeForEditing())}}
                         onSave={function() {self.save();}}
                         previews={_.compact([
                             ServicePreview,
@@ -216,6 +205,7 @@ module.exports = React.createClass({
                     {/*else*/ (model.serviceThemeMode() && model.serviceThemeForEditing() == undefined) &&
                       <CompanyBrandingNewThemeView
                         model={model}
+                        onOpenNewThemeModal={this.props.onOpenNewThemeModal}
                       />
                     }
                   </div>

@@ -3,10 +3,11 @@ var $ = require("jquery");
 var _ = require("underscore");
 
 var Button = require("../common/button");
-var Confirmation = require("../../js/confirmations.js").Confirmation;
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
 var LoadingDialog = require("../../js/loading.js").LoadingDialog;
 var LocalStorage = require("../../js/storage.js").LocalStorage;
+var Modal = require("../common/modal");
 var ProlongModal = require("../../js/authorview/prolongmodal.js").ProlongModal;
 var Select = require("../common/select");
 var Submit = require("../../js/submits.js").Submit;
@@ -16,12 +17,23 @@ var Document = require("../../js/documents.js").Document;
 
 var GiveToNextSignatoryPadModalContent = React.createClass({
   propTypes: {
-    document: React.PropTypes.instanceOf(Document).isRequired
+    document: React.PropTypes.instanceOf(Document).isRequired,
+    onSignatoryChange: React.PropTypes.func.isRequired
   },
   getInitialState: function () {
     return {
       padNextSignatory: this.props.document.signatoriesThatCanSignNowOnPad()[0]
     };
+  },
+  componentDidUpdate: function (prevProps, prevState) {
+    if (prevState.padNextSignatory != this.state.padNextSignatory) {
+      this.props.onSignatoryChange(this.state.padNextSignatory);
+    }
+  },
+  componentDidMount: function () {
+    if (this.state.padNextSignatory) {
+      this.props.onSignatoryChange(this.state.padNextSignatory);
+    }
   },
   render: function () {
     var self = this;
@@ -67,10 +79,37 @@ var GiveToNextSignatoryPadModalContent = React.createClass({
   }
 });
 
+var WithdrawModalContent = React.createClass({
+  propTypes: {
+    document: React.PropTypes.instanceOf(Document).isRequired
+  },
+  render: function () {
+    var somebodysigned = _.any(this.props.document.signatories(), function (s) {
+      return s.hasSigned() && !s.author();
+    });
+
+    var content = localization.process.cancelmodaltext;
+    if (this.props.somebodysigned) {
+      content = localization.process.cancelmodaltextwithsignatures;
+    }
+
+    return (
+      <p><HtmlTextWithSubstitution secureText={content} /></p>
+    );
+  }
+});
+
 module.exports = React.createClass({
   propTypes: {
     document: React.PropTypes.instanceOf(Document).isRequired,
     authorview: React.PropTypes.object.isRequired // Can check for inslance because it will create loop
+  },
+  getInitialState: function () {
+    return {
+      showWithdrawModal: false,
+      showGiveToNextSignatoryPadModal: false,
+      padNextSignatory: null
+    };
   },
   canBeRestarted: function () {
     return (
@@ -150,35 +189,23 @@ module.exports = React.createClass({
   },
   onWithdrawButtonClick: function () {
     Track.track("Click withdraw button");
-    var somebodysigned = _.any(this.props.document.signatories(), function (s) {
-      return s.hasSigned() && !s.author();
-    });
-
-    var modalcontent = localization.process.cancelmodaltext;
-    if (somebodysigned) {
-      modalcontent = localization.process.cancelmodaltextwithsignatures;
-    }
-
+    this.setState({showWithdrawModal: true});
+  },
+  onWithdrawModalClose: function () {
+    this.setState({showWithdrawModal: false});
+  },
+  onWithdrawModalAccept: function () {
     var self = this;
-    new Confirmation({
-      title: localization.process.cancelmodaltitle,
-      content: $("<p>" + modalcontent + "</p>"),
-      width: 533,
-      acceptText: localization.process.cancelbuttontext,
-      rejectText: localization.cancel,
-      acceptType: "action",
-      extraClass: "s-withdraw-confirmation",
-      onAccept: function () {
-        Track.track_timeout(
-          "Accept",
-          {"Accept": "withdraw document"},
-          function () {
-            self.withdraw();
-          }
-        );
-        return true;
+
+    Track.track_timeout(
+      "Accept",
+      {"Accept": "withdraw document"},
+      function () {
+        self.withdraw();
       }
-    });
+    );
+
+    this.onWithdrawModalClose();
   },
   onGoToSignViewButtonClick: function () {
     Track.track("Click go to sign view");
@@ -198,23 +225,20 @@ module.exports = React.createClass({
     }
 
     Track.track("Give for pad signing to some pad signatory - opening modal");
-    var padNextSignatoryModalContent = $("<div/>");
-    var modalContentComponent = React.render(
-      React.createElement(GiveToNextSignatoryPadModalContent, {document: document_}),
-      padNextSignatoryModalContent[0]
-    );
-
-    new Confirmation({
-      title: localization.authorview.goToSignView,
-      content: padNextSignatoryModalContent,
-      onAccept: function () {
-          Track.track("Give for pad signing to some pad signatory - opening signview");
-          LocalStorage.set("backlink", "target", "document");
-          if (modalContentComponent.state.padNextSignatory != undefined) {
-            modalContentComponent.state.padNextSignatory.giveForPadSigning().send();
-          }
-      }
-    });
+    this.setState({showGiveToNextSignatoryPadModal: true});
+  },
+  onGiveToNextSignatoryPadModalClose: function () {
+    this.setState({showGiveToNextSignatoryPadModal: false});
+  },
+  onGiveToNextSignatoryPadModalSignatoryChange: function (sig) {
+    this.setState({padNextSignatory: sig});
+  },
+  onGiveToNextSignatoryPadModalAccept: function () {
+    Track.track("Give for pad signing to some pad signatory - opening signview");
+    LocalStorage.set("backlink", "target", "document");
+    if (this.state.padNextSignatory != null) {
+      this.state.padNextSignatory.giveForPadSigning().send();
+    }
   },
   render: function () {
     var document_ = this.props.document;
@@ -277,6 +301,50 @@ module.exports = React.createClass({
             href={downloadLink}
           />
         </div>
+
+        <Modal.Container
+          className="s-withdraw-confirmation"
+          active={this.state.showWithdrawModal}
+          width={533}
+        >
+          <Modal.Header
+            title={localization.process.cancelmodaltitle}
+            showClose={true}
+            onClose={this.onWithdrawModalClose}
+          />
+          <Modal.Content>
+            <WithdrawModalContent document={this.props.document} />
+          </Modal.Content>
+          <Modal.Footer>
+            <Modal.CancelButton onClick={this.onWithdrawModalClose} />
+            <Modal.AcceptButton
+              title={localization.process.cancelbuttontext}
+              onClick={this.onWithdrawModalAccept}
+            />
+          </Modal.Footer>
+        </Modal.Container>
+
+        { /* if */ (this.canGiveToNextSignatoryPad()) &&
+          <Modal.Container active={this.state.showGiveToNextSignatoryPadModal} >
+            <Modal.Header
+              title={localization.authorview.goToSignView}
+              showClose={true}
+              onClose={this.onGiveToNextSignatoryPadModalClose}
+            />
+            <Modal.Content>
+              <GiveToNextSignatoryPadModalContent
+                document={this.props.document}
+                onSignatoryChange={this.onGiveToNextSignatoryPadModalSignatoryChange}
+              />
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.CancelButton onClick={this.onGiveToNextSignatoryPadModalClose} />
+              <Modal.AcceptButton
+                onClick={this.onGiveToNextSignatoryPadModalAccept}
+              />
+            </Modal.Footer>
+          </Modal.Container>
+        }
       </div>
     );
   }

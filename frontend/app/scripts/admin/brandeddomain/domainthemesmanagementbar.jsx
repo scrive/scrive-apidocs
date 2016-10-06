@@ -1,41 +1,66 @@
 var React = require("react");
 var Button = require("../../common/button");
 var Select = require("../../common/select");
-var InfoTextInput = require("../../../js/infotextinputs.js").InfoTextInput;
+var InfoTextInput = require("../../common/infotextinput");
 var $ = require("jquery");
-var Confirmation = require("../../../js/confirmations.js").Confirmation;
 var Submit = require("../../../js/submits.js").Submit;
 var _ = require("underscore");
+var Modal = require("../../common/modal");
 
+var NewThemeModal = React.createClass({
+  propTypes: {
+    active: React.PropTypes.bool.isRequired,
+    onClose: React.PropTypes.func.isRequired,
+    onAccept: React.PropTypes.func.isRequired
+  },
+  getInitialState: function () {
+    return {
+      name: ""
+    };
+  },
+  onNameChange: function (value) {
+    this.setState({name: value});
+  },
+  onAccept: function () {
+    this.props.onAccept(this.state.name);
+  },
+  onClose: function () {
+    this.setState({name: ""});
+    this.props.onClose();
+  },
+  render: function () {
+    return (
+      <Modal.Container active={this.props.active}>
+        <Modal.Header
+          title={localization.branding.newTheme}
+          showClose={true}
+          onClose={this.onClose}
+        />
+        <Modal.Content>
+          <div>
+            <div>{localization.branding.enterNameOfThemeBellow}</div>
+            <InfoTextInput
+              infotext={localization.branding.themes.name}
+              value={this.state.name}
+              onChange={this.onNameChange}
+            />
+          </div>
+        </Modal.Content>
+        <Modal.Footer>
+          <Modal.CancelButton onClick={this.onClose} />
+          <Modal.AcceptButton
+            text={localization.branding.save}
+            onClick={this.onAccept}
+          />
+        </Modal.Footer>
+      </Modal.Container>
+    );
+  }
+});
 
-
-
-module.exports = React.createClass({
+var DomainThemesManagementBar = React.createClass({
     opendNewThemeModal : function(getTheme,setTheme) {
-      var self = this;
-      var input = new InfoTextInput({infotext: localization.branding.themes.name ,value: ""});
-      var content = $("<div/>");
-      content.append($("<div/>").text(localization.branding.enterNameOfThemeBellow))
-             .append(input.el());
-      var popup = new Confirmation({
-        title: localization.branding.newTheme,
-        content : content,
-        acceptText : localization.branding.save,
-        onAccept : function() {
-          new Submit({
-           method: "POST",
-           url: "/adminonly/brandeddomain/newtheme/" + self.props.model.domainid() + "/" + getTheme(),
-           name : input.value() || self.props.model.newThemeDefaultName(),
-           ajax: true,
-           ajaxsuccess: function(rs) {
-             self.props.model.reloadThemesList(function() {
-               popup.clear();
-               setTheme(rs.id);
-             });
-           }
-          }).send();
-        }
-      });
+      this.props.openNewThemeModal(getTheme, setTheme);
     },
     themeSelector : function(getTheme,setTheme) {
       var self = this;
@@ -122,3 +147,60 @@ module.exports = React.createClass({
       );
     }
   });
+
+module.exports = React.createClass({
+  getInitialState: function () {
+    return {
+      showNewThemeModal: false
+    };
+  },
+  componentWillMount: function () {
+    this._newThemeModalGetTheme = null;
+    this._newThemeModalSetTheme = null;
+  },
+  openNewThemeModal: function (getTheme, setTheme) {
+    this.setState({showNewThemeModal: true});
+    this._newThemeModalGetTheme = getTheme;
+    this._newThemeModalSetTheme = setTheme;
+  },
+  onNewThemeModalClose: function () {
+    self._newThemeModalGetTheme = null;
+    self._newThemeModalSetTheme = null;
+
+    this.setState({showNewThemeModal: false});
+  },
+  onNewThemeModalAccept: function (name) {
+    var self = this;
+    var theme = this._newThemeModalGetTheme();
+
+    new Submit({
+      method: "POST",
+      url: "/adminonly/brandeddomain/newtheme/" + self.props.model.domainid() + "/" + theme,
+      name: name || self.props.model.newThemeDefaultName(),
+      ajax: true,
+      ajaxsuccess: function(rs) {
+        self.props.model.reloadThemesList(function() {
+          self._newThemeModalSetTheme(rs.id);
+          self.onNewThemeModalClose();
+        });
+      }
+    }).send();
+  },
+  render: function () {
+    return (
+      <div>
+        <DomainThemesManagementBar
+          model={this.props.model}
+          onSave={this.props.onSave}
+          openNewThemeModal={this.openNewThemeModal}
+        />
+
+        <NewThemeModal
+          active={this.state.showNewThemeModal}
+          onClose={this.onNewThemeModalClose}
+          onAccept={this.onNewThemeModalAccept}
+        />
+      </div>
+    );
+  }
+});
