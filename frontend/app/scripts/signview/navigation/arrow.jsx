@@ -179,8 +179,9 @@ module.exports = React.createClass({
     const height = $el.outerHeight();
     let offset = $el.offset();
 
-    if (relative) {
-      offset = $el.position();
+    if (relative && this._mountNode) {
+      offset.left = offset.left - $(this._mountNode).offset().left;
+      offset.top = offset.top - $(this._mountNode).offset().top;
     }
 
     return {

@@ -16,7 +16,7 @@
   overflow: hidden;
   height: @signview-controls-height;
   margin: 0px auto;
-  z-index: 3;
+  z-index: @signview-file-controls-z-index;
 
   &.controls-hidden {
     display: none;
@@ -102,7 +102,5 @@
     background-color: rgba(204, 204, 204, 0.25);
     opacity: 0.5;
   }
-
-  z-index: @signview-file-controls-z-index;
 }
 
