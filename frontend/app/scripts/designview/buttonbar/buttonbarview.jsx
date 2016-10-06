@@ -385,7 +385,7 @@ module.exports = React.createClass({
                   <Modal.CancelButton onClick={this.onSendConfirmationModalCancel} />
                 }
                 <ConfirmationModalAcceptButton
-                  onClick={this.onSignConfirmationModalAccept}
+                  onClick={this.onSendConfirmationModalAccept}
                   text={sendConfirmationModalAcceptText}
                 />
               </Modal.Footer>
