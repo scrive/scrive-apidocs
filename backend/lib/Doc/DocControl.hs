@@ -484,34 +484,31 @@ handleResend docid signlinkid  = do
         _ <- sendReminderEmail customMessage actor False signlink
         J.runJSONGenT (return ())
 
---This only works for undelivered mails. We shoulkd check if current user is author
-handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
-handleChangeSignatoryEmail docid slid = withUserPost $ do
-  memail <- getOptionalField asValidEmail "email"
-  case memail of
-    Just email -> getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
-      muser <- dbQuery $ GetUserByEmail (Email email)
-      actor <- guardJustM $ mkAuthorActor <$> getContext
-      dbUpdate $ ChangeSignatoryEmailWhenUndelivered slid muser email actor
-      sl <- guardJust . getSigLinkFor slid =<< theDocument
-      _ <- sendInvitationEmail1 sl
-      return $ LoopBack
-    _ -> return LoopBack
+-- This only works for undelivered mails
+handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
+handleChangeSignatoryEmail docid slid = do
+  guardLoggedIn
+  email <- getCriticalField asValidEmail "email"
+  getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
+    muser <- dbQuery $ GetUserByEmail (Email email)
+    actor <- guardJustM $ mkAuthorActor <$> getContext
+    dbUpdate $ ChangeSignatoryEmailWhenUndelivered slid muser email actor
+    sl <- guardJust . getSigLinkFor slid =<< theDocument
+    _ <- sendInvitationEmail1 sl
+    J.runJSONGenT $ return ()
 
---This only works for undelivered mails. We shoulkd check if current user is author
-handleChangeSignatoryPhone :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
-handleChangeSignatoryPhone docid slid = withUserPost $ do
-  mphone <- getOptionalField asValidPhone "phone"
-  case mphone of
-    Just phone -> getDocByDocIDForAuthor docid `withDocumentM` do
-      actor <- guardJustM $ mkAuthorActor <$> getContext
-      dbUpdate $ ChangeSignatoryPhoneWhenUndelivered slid phone actor
-      -- get (updated) siglink from updated document
-      sl <- guardJust . getSigLinkFor slid =<< theDocument
-      _ <- sendInvitationEmail1 sl
-      return $ LoopBack
-    _ -> return LoopBack
-
+-- This only works for undelivered smses
+handleChangeSignatoryPhone :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
+handleChangeSignatoryPhone docid slid = do
+  guardLoggedIn
+  phone <- getCriticalField asValidPhone "phone"
+  getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
+    actor <- guardJustM $ mkAuthorActor <$> getContext
+    dbUpdate $ ChangeSignatoryPhoneWhenUndelivered slid phone actor
+    -- get (updated) siglink from updated document
+    sl <- guardJust . getSigLinkFor slid =<< theDocument
+    _ <- sendInvitationEmail1 sl
+    J.runJSONGenT $ return ()
 
 handlePadList :: Kontrakcja m => m Response
 handlePadList = do
