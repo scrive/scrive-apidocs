@@ -47,16 +47,12 @@ import BrandedDomain.Model
 import Crypto.RNG
 import DB
 import DB.PostgreSQL
-import EID.CGI.GRP.Config
 import GuardTime
 import Happstack.Server.ReqHandler
-import HubSpot.Conf
 import IPAddress
 import Kontra
 import KontraPrelude
 import Log.Configuration
-import Payments.Config (RecurlyConfig(..))
-import Salesforce.Conf
 import Session.SessionID
 import Templates
 import User.Lang
@@ -305,12 +301,7 @@ mkContext lang = do
         , ctxlang = lang
         , ctxismailbackdooropen = False
         , ctxlivedocxconf = def
-        , ctxcgigrpconfig = CgiGrpConfig {
-            cgGateway = "https://grpt.funktionstjanster.se:18898/grp/v1"
-          , cgCertFile = "certs/steria3.pem"
-          , cgServiceID = "logtest004"
-          , cgDisplayName = "Funktionstjänster Test"
-          }
+        , ctxcgigrpconfig = Nothing
         , ctxmrediscache = Nothing
         , ctxfilecache = filecache
         , ctxlesscache = lesscache
@@ -324,17 +315,14 @@ mkContext lang = do
                                     , guardTimeExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
                                     , guardTimeControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
                                     }
-        , ctxrecurlyconfig = RecurlyConfig { recurlySubdomain  = "scrive-test"
-                                           , recurlyAPIKey     = "c31afaf14af3457895ee93e7e08e4451"
-                                           , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
-                                           }
+        , ctxrecurlyconfig = Nothing
         , ctxsessionid = tempSessionID
         , ctxtrackjstoken = Nothing
-        , ctxmixpaneltoken = "5b04329b972851feac0e9b853738e742"
-        , ctxhubspotconf = HubSpotConf "" M.empty
-        , ctxgoogleanalyticstoken = "5b04329b972851feac0e9b853738e741"
+        , ctxmixpaneltoken = Nothing
+        , ctxhubspotconf = Nothing
+        , ctxgoogleanalyticstoken = Nothing
         , ctxbrandeddomain = bd
-        , ctxsalesforceconf = SalesforceConf "" "" "" "" "" "" "" Nothing
+        , ctxsalesforceconf = Nothing
         , ctxnetsconfig = Nothing
         , ctxdelayedresponse = Nothing
         , ctxthreadjoins = []

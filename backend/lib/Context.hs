@@ -59,8 +59,8 @@ data Context = Context
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid langs
     , ctxlang                :: Lang -- ^ The current context lang
     , ctxismailbackdooropen  :: Bool
-    , ctxlivedocxconf        :: LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
-    , ctxcgigrpconfig        :: CgiGrpConfig
+    , ctxlivedocxconf        :: Maybe LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
+    , ctxcgigrpconfig        :: Maybe CgiGrpConfig
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
     , ctxmrediscache         :: Maybe R.Connection
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
@@ -71,14 +71,14 @@ data Context = Context
     , ctxsalesaccounts       :: [Email] -- ^
     , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
     , ctxusehttps            :: Bool
-    , ctxrecurlyconfig       :: RecurlyConfig
+    , ctxrecurlyconfig       :: Maybe RecurlyConfig
     , ctxsessionid           :: SessionID
     , ctxtrackjstoken        :: Maybe String
-    , ctxmixpaneltoken       :: String
-    , ctxhubspotconf         :: HubSpotConf
-    , ctxgoogleanalyticstoken :: String
+    , ctxmixpaneltoken       :: Maybe String
+    , ctxhubspotconf         :: Maybe HubSpotConf
+    , ctxgoogleanalyticstoken :: Maybe String
     , ctxbrandeddomain       :: BrandedDomain
-    , ctxsalesforceconf      :: SalesforceConf
+    , ctxsalesforceconf      :: Maybe SalesforceConf
     , ctxnetsconfig          :: Maybe NetsConfig
     , ctxdelayedresponse     :: Maybe DelayedResponse
     -- | Contains actions that join threads spawned with forkAction
@@ -103,6 +103,3 @@ contextToMailContext ctx = MailContext {
   , mctxcurrentBrandedDomain = ctxbrandeddomain ctx
   , mctxtime = ctxtime ctx
   }
-
-instance HasSalesforceConf Context where
-  getSalesforceConf = ctxsalesforceconf

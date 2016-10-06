@@ -52,7 +52,6 @@ import Log.Configuration
 import Log.Identifier
 import Log.Utils
 import MinutesTime
-import Salesforce.Conf
 import ServerUtils.BrandedImagesCache
 import Session.Data hiding (session)
 import Session.Model
@@ -366,7 +365,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , ctxhubspotconf = hubspotConf appConf
         , ctxgoogleanalyticstoken = googleanalyticsToken appConf
         , ctxbrandeddomain = brandeddomain
-        , ctxsalesforceconf = getSalesforceConf appConf
+        , ctxsalesforceconf = salesforceConf appConf
         , ctxnetsconfig = netsConfig appConf
         , ctxdelayedresponse = Nothing
         , ctxthreadjoins = []

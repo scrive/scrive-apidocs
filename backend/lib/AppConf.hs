@@ -6,7 +6,6 @@ module AppConf (
 import Data.Default
 import Data.Unjson
 import Data.Word
-import qualified Data.Map as Map
 import qualified Data.Text as T
 
 import Database.Redis.Configuration
@@ -40,18 +39,18 @@ data AppConf = AppConf {
   , cdnBaseUrl         :: Maybe String                 -- ^ for CDN content in prod mode
   , guardTimeConf      :: GuardTimeConf
   , isMailBackdoorOpen :: Bool                         -- ^ If true allows admins to access last mail send. Used by selenium
-  , liveDocxConfig     :: LiveDocxConf                 -- ^ LiveDocx doc conversion configuration
-  , cgiGrpConfig       :: CgiGrpConfig                 -- ^ CGI GRP (E-ID) configuration
+  , liveDocxConfig     :: Maybe LiveDocxConf           -- ^ LiveDocx doc conversion configuration
+  , cgiGrpConfig       :: Maybe CgiGrpConfig           -- ^ CGI GRP (E-ID) configuration
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
   , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
-  , recurlyConfig      :: RecurlyConfig                -- ^ for payments (api key + private key)
-  , mixpanelToken      :: String                       -- ^ for mixpanel integration
+  , recurlyConfig      :: Maybe RecurlyConfig          -- ^ for payments (api key + private key)
+  , mixpanelToken      :: Maybe String                 -- ^ for mixpanel integration
   , trackjsToken       :: Maybe String                 -- ^ for Track.js integration
-  , hubspotConf        :: HubSpotConf                  -- ^ for hubspot integration
-  , googleanalyticsToken      :: String                -- ^ for google-analytics integration
+  , hubspotConf        :: Maybe HubSpotConf            -- ^ for hubspot integration
+  , googleanalyticsToken :: Maybe String               -- ^ for google-analytics integration
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
-  , salesforceConf     :: SalesforceConf               -- ^ Configuration of salesforce
+  , salesforceConf     :: Maybe SalesforceConf         -- ^ Configuration of salesforce
   , netsConfig         :: Maybe NetsConfig             -- ^ Configuration of Nets - NO BankID provider
   } deriving (Eq, Show)
 
@@ -105,10 +104,10 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldDef "mail_backdoor_open" False
       isMailBackdoorOpen
       "Enabling mails backdoor for test"
-  <*> field "livedocx"
+  <*> fieldOpt "livedocx"
       liveDocxConfig
       "LiveDocx doc conversion configuration"
-  <*> field "cgi_grp"
+  <*> fieldOpt "cgi_grp"
       cgiGrpConfig
       "CGI GRP (E-ID) configuration"
   <*> field "admins"
@@ -120,25 +119,25 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "initial_users"
       initialUsers
       "email and passwords for initial users"
-  <*> field "recurly"
+  <*> fieldOpt "recurly"
       recurlyConfig
       "Recurly configuration for payments"
-  <*> field "mixpanel"
+  <*> fieldOpt "mixpanel"
       mixpanelToken
       "Token for Mixpanel"
   <*> fieldOpt "trackjs"
       trackjsToken
       "API Token for Track.js"
-  <*> field "hubspot"
+  <*> fieldOpt "hubspot"
       hubspotConf
       "Configuration of HubSpot"
-  <*> field "google_analytics"
+  <*> fieldOpt "google_analytics"
       googleanalyticsToken
       "Token for Google Analytics"
   <*> field "ntp_servers"
       ntpServers
       "List of NTP servers to contact to get estimate of host clock error"
-  <*> field "salesforce"
+  <*> fieldOpt "salesforce"
       salesforceConf
       "Configuration of salesforce"
   <*> fieldOpt "nets"
@@ -165,44 +164,17 @@ instance Default AppConf where
                                          , guardTimeControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
                                          }
     , isMailBackdoorOpen = False
-    , liveDocxConfig     = def
-    , cgiGrpConfig       = CgiGrpConfig {
-        cgGateway = "https://grpt.funktionstjanster.se:18898/grp/v1"
-      , cgCertFile = "certs/steria3.pem"
-      , cgServiceID = "logtest004"
-      , cgDisplayName = "Funktionstjänster Test"
-      }
-    , admins             = map Email ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
+    , liveDocxConfig     = Nothing
+    , cgiGrpConfig       = Nothing
+    , admins             = []
     , sales              = []
     , initialUsers       = []
-    , recurlyConfig      = RecurlyConfig { recurlySubdomain  = "scrive-test"
-                                         , recurlyAPIKey     = "c31afaf14af3457895ee93e7e08e4451"
-                                         , recurlyPrivateKey = "49c1b30592fa475b8535a0ca04f88e65"
-                                         }
-    , mixpanelToken      = "5b04329b972851feac0e9b853738e742"
+    , recurlyConfig      = Nothing
+    , mixpanelToken      = Nothing
     , trackjsToken       = Nothing
-    , hubspotConf        = HubSpotConf "" Map.empty
-    , googleanalyticsToken = "f25e59c70a8570a12fe57e7835d1d881"
+    , hubspotConf        = Nothing
+    , googleanalyticsToken = Nothing
     , ntpServers         = defaultNtpServers
-    , salesforceConf     = SalesforceConf
-                              { salesforceAuthenticationUrl = "https://login.salesforce.com/services/oauth2/authorize"
-                              , salesforceTokenUrl = "https://login.salesforce.com/services/oauth2/token"
-                              , salesforceConsumerKey = "3MVG9A2kN3Bn17htNVdtvb5RT3xDFJXCsLqYZX0eYz18WEOqZcOCwrusUxSEOanVBEZRYhhFpZbtjEQGJI7Db"
-                              , salesforceConsumerSecret = "5081538550608494771"
-                              , salesforceRedirectUrl = "https://scrive.com/salesforce/integration"
-                              , salesforceIntegrationAPIToken  = "12ef3_22"
-                              , salesforceIntegrationAPISecret = "a1033b2caa"
-                              , salesforceErrorEmail = Just "info@scrive.com"
-                              }
-     , netsConfig        = Just $ NetsConfig {
-                                netsMerchantIdentifier = "SRWUOEDLAXDV"
-                              , netsMerchantPassword = "21r1ee95bp4n"
-                              , netsIdentifyUrl = "https://ti-pp.bbs.no/its/index.html"
-                              , netsAssertionUrl = "https://ti-pp.bbs.no/saml1resp/getassertion"
-                              , netsTrustedDomain = "https://dev.scrive.com"
-                              }
-
+    , salesforceConf     = Nothing
+    , netsConfig         = Nothing
     }
-
-instance HasSalesforceConf AppConf where
-  getSalesforceConf =  salesforceConf

@@ -8,8 +8,6 @@ import Control.Monad.Reader
 
 import ActionQueue.Monad
 import AppConf
-import KontraPrelude
-import Salesforce.Conf
 import Templates
 
 data SchedulerData = SchedulerData {
@@ -27,6 +25,3 @@ type Scheduler = ActionQueue SchedulerData
 
 getGlobalTemplates :: MonadReader SchedulerData m => m KontrakcjaGlobalTemplates
 getGlobalTemplates = asks sdTemplates
-
-instance HasSalesforceConf SchedulerData where
-  getSalesforceConf =  getSalesforceConf . sdAppConf

@@ -118,7 +118,10 @@ apiV2ParameterOptional (ApiV2ParameterFilePDF name) = do
       (content'', filename) <- case mformat of
         Nothing -> return (content', filename')
         Just format -> do
-          eres <- convertToPDF (ctxlivedocxconf ctx) content' format
+          eres <- do
+            case ctxlivedocxconf ctx of
+              Nothing -> noConfigurationError "LiveDocx"
+              Just lc -> convertToPDF lc content' format
           case eres of
             Left (LiveDocxIOError e) -> apiError $ requestParameterParseError name $ "LiveDocX conversion IO failed" <+> T.pack (show e)
             Left (LiveDocxSoapError s)-> apiError $ requestParameterParseError name $ "LiveDocX conversion SOAP failed" <+> T.pack s

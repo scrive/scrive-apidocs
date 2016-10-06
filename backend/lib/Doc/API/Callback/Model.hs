@@ -31,53 +31,56 @@ import Util.SignatoryLinkUtils
 documentAPICallback :: (MonadIO m, MonadBase IO m, MonadLog m, MonadMask m)
   => (forall r. Scheduler r -> m r)
   -> ConsumerConfig m CallbackID DocumentAPICallback
-documentAPICallback runExecute = ConsumerConfig {
-  ccJobsTable = "document_api_callbacks"
-, ccConsumersTable = "document_api_callback_consumers"
-, ccJobSelectors = ["id", "document_id", "api_version", "url", "attempts"]
-, ccJobFetcher = \(cid, did, apiVersion, url, attempts) -> DocumentAPICallback {
-    dacID = cid
-  , dacDocumentID = did
-  , dacApiVersion = apiVersion
-  , dacURL = url
-  , dacAttempts = attempts
-  }
-, ccJobIndex = dacID
-, ccNotificationChannel = Just apiCallbackNotificationChannel
-, ccNotificationTimeout = 60 * 1000000 -- 1 minute
-, ccMaxRunningJobs = 32
-, ccProcessJob = \dac@DocumentAPICallback{..} -> logDocument dacDocumentID . runExecute $ do
-    now <- currentTime
-    bd <- dbQuery GetMainBrandedDomain
-    -- Dummy MailContext
-    let mc = MailContext {
-            mctxlang = LANG_EN
-          , mctxcurrentBrandedDomain = bd
-          , mctxtime = now
+documentAPICallback runExecute =
+  ConsumerConfig {
+      ccJobsTable = "document_api_callbacks"
+    , ccConsumersTable = "document_api_callback_consumers"
+    , ccJobSelectors = ["id", "document_id", "api_version", "url", "attempts"]
+    , ccJobFetcher = \ (cid, did, apiVersion, url, attempts) ->
+        DocumentAPICallback {
+            dacID = cid
+          , dacDocumentID = did
+          , dacApiVersion = apiVersion
+          , dacURL = url
+          , dacAttempts = attempts
           }
-    runMailContextT mc $ execute dac >>= \case
-      True  -> return $ Ok Remove
-      False -> dbQuery (CheckQueuedCallbacksFor dacDocumentID) >>= \case
-        True -> do
-          logInfo_ "Callback for document failed and there are more queued, discarding"
-          return $ Failed Remove
-        False -> Failed <$> onFailure dac
-, ccOnException = const onFailure
-}
-  where
-    onFailure DocumentAPICallback{..} = logDocument dacDocumentID $ case dacAttempts of
-      1 -> return . RerunAfter $ iminutes 5
-      2 -> return . RerunAfter $ iminutes 10
-      3 -> return . RerunAfter $ iminutes 30
-      4 -> return . RerunAfter $ ihours 1
-      5 -> return . RerunAfter $ ihours 2
-      6 -> return . RerunAfter $ ihours 4
-      7 -> return . RerunAfter $ ihours 4
-      8 -> return . RerunAfter $ ihours 4
-      9 -> return . RerunAfter $ ihours 8
-      _ -> do
-        logInfo_ "10th call attempt failed, discarding"
-        return Remove
+    , ccJobIndex = dacID
+    , ccNotificationChannel = Just apiCallbackNotificationChannel
+    , ccNotificationTimeout = 60 * 1000000 -- 1 minute
+    , ccMaxRunningJobs = 32
+    , ccProcessJob = \ dac@DocumentAPICallback {..} -> logDocument dacDocumentID . runExecute $ do
+        now <- currentTime
+        bd <- dbQuery GetMainBrandedDomain
+        -- Dummy MailContext
+        let mc = MailContext {
+              mctxlang = LANG_EN
+            , mctxcurrentBrandedDomain = bd
+            , mctxtime = now
+            }
+        runMailContextT mc $ execute dac >>= \ case
+          True  -> return $ Ok Remove
+          False -> dbQuery (CheckQueuedCallbacksFor dacDocumentID) >>= \ case
+            True  -> do
+              logInfo_ "Callback for document failed and there are more queued, discarding"
+              return $ Failed Remove
+            False -> Failed <$> onFailure dac
+    , ccOnException = const onFailure
+    }
+      where
+        onFailure DocumentAPICallback {..} = logDocument dacDocumentID $
+          case dacAttempts of
+            1 -> return . RerunAfter $ iminutes 5
+            2 -> return . RerunAfter $ iminutes 10
+            3 -> return . RerunAfter $ iminutes 30
+            4 -> return . RerunAfter $ ihours 1
+            5 -> return . RerunAfter $ ihours 2
+            6 -> return . RerunAfter $ ihours 4
+            7 -> return . RerunAfter $ ihours 4
+            8 -> return . RerunAfter $ ihours 4
+            9 -> return . RerunAfter $ ihours 8
+            _ -> do
+              logInfo_ "10th call attempt failed, discarding"
+              return Remove
 
 triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadCatch m, MonadLog m)
   => Document -> m ()

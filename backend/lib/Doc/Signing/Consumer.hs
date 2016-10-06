@@ -38,6 +38,7 @@ import EID.Signature.Model
 import File.FileID
 import GuardTime
 import IPAddress
+import KontraError
 import KontraPrelude
 import MailContext
 import MemCache (MemCache)
@@ -95,7 +96,8 @@ documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
   , ccNotificationChannel = Nothing
   , ccNotificationTimeout = (fromIntegral secondsToRetry) * 1000000
   , ccMaxRunningJobs = 5
-  , ccProcessJob = \DocumentSigning{..} -> withPostgreSQL pool . withDocumentM (dbQuery $ GetDocumentBySignatoryLinkID signingSignatoryID) $ do
+  , ccProcessJob = \DocumentSigning{..} ->
+      withPostgreSQL pool . withDocumentM (dbQuery $ GetDocumentBySignatoryLinkID signingSignatoryID) $ do
       signingDocumentID <- documentid <$> theDocument
       now <- currentTime
       bd <- dbQuery $ GetBrandedDomainByID signingBrandedDomainID
@@ -119,40 +121,45 @@ documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
               else return $ Ok Remove
             else do
               logInfo_ "Collecting operation"
-              collectResult <- checkCGISignStatus (cgiGrpConfig appConf) signingDocumentID signingSignatoryID
-              case collectResult of
-                CGISignStatusAlreadySigned -> return $ Ok Remove
-                CGISignStatusFailed grpFault -> do
-                  dbUpdate $ UpdateDocumentSigning signingSignatoryID True (grpFaultText grpFault)
-                  return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction
-                CGISignStatusInProgress status -> do
-                  dbUpdate $ UpdateDocumentSigning signingSignatoryID False (progressStatusText status)
-                  return $ Ok $ RerunAfter $ iseconds secondsToRetry
-                CGISignStatusSuccess ->  do
-                  esig <- $fromJust <$> dbQuery (GetESignature signingSignatoryID) -- collectRequestForBackroundSigning should return true only if there is ESignature in DB
-                  initialDoc <- theDocument
-                  let sl = $fromJust (getSigLinkFor signingSignatoryID initialDoc)
-                      magicHash = signatorymagichash sl
-                  initialActor <- recreatedSignatoryActor signingTime signingClientTime signingClientName signingClientIP4 sl
-                  fieldsWithFiles <- fieldsToFieldsWithFiles signingFields
+              case cgiGrpConfig appConf of
+                Nothing -> do
+                  noConfigurationWarning "CGI Group" -- log a warning rather than raising an error as documentSigning is called from cron
+                  return $ Failed Remove
+                Just cc -> do
+                  collectResult <- checkCGISignStatus cc signingDocumentID signingSignatoryID
+                  case collectResult of
+                    CGISignStatusAlreadySigned -> return $ Ok Remove
+                    CGISignStatusFailed grpFault -> do
+                      dbUpdate $ UpdateDocumentSigning signingSignatoryID True (grpFaultText grpFault)
+                      return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction
+                    CGISignStatusInProgress status -> do
+                      dbUpdate $ UpdateDocumentSigning signingSignatoryID False (progressStatusText status)
+                      return $ Ok $ RerunAfter $ iseconds secondsToRetry
+                    CGISignStatusSuccess ->  do
+                      esig <- $fromJust <$> dbQuery (GetESignature signingSignatoryID) -- collectRequestForBackroundSigning should return true only if there is ESignature in DB
+                      initialDoc <- theDocument
+                      let sl = $fromJust (getSigLinkFor signingSignatoryID initialDoc)
+                          magicHash = signatorymagichash sl
+                      initialActor <- recreatedSignatoryActor signingTime signingClientTime signingClientName signingClientIP4 sl
+                      fieldsWithFiles <- fieldsToFieldsWithFiles signingFields
 
-                  dbUpdate $ UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) initialActor
+                      dbUpdate $ UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) initialActor
 
-                  slWithUpdatedName <- $fromJust <$> getSigLinkFor signingSignatoryID <$> theDocument
-                  actorWithUpdatedName <- recreatedSignatoryActor signingTime signingClientTime signingClientName signingClientIP4 slWithUpdatedName
+                      slWithUpdatedName <- $fromJust <$> getSigLinkFor signingSignatoryID <$> theDocument
+                      actorWithUpdatedName <- recreatedSignatoryActor signingTime signingClientTime signingClientName signingClientIP4 slWithUpdatedName
 
-                  authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments initialDoc) $ \a -> do
-                    acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
-                    return (acceptanceText,a)
+                      authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments initialDoc) $ \a -> do
+                        acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
+                        return (acceptanceText,a)
 
-                  dbUpdate $ AddAcceptedAuthorAttachmentsEvents slWithUpdatedName signingAcceptedAttachments authorAttachmetsWithAcceptanceText actorWithUpdatedName
+                      dbUpdate $ AddAcceptedAuthorAttachmentsEvents slWithUpdatedName signingAcceptedAttachments authorAttachmetsWithAcceptanceText actorWithUpdatedName
 
-                  actorWithUpdatedNameAndCurrentTime <- recreatedSignatoryActor now signingClientTime signingClientName signingClientIP4 slWithUpdatedName
-                  dbUpdate $ SignDocument signingSignatoryID magicHash (Just esig) Nothing signingScreenshots actorWithUpdatedNameAndCurrentTime
+                      actorWithUpdatedNameAndCurrentTime <- recreatedSignatoryActor now signingClientTime signingClientName signingClientIP4 slWithUpdatedName
+                      dbUpdate $ SignDocument signingSignatoryID magicHash (Just esig) Nothing signingScreenshots actorWithUpdatedNameAndCurrentTime
 
-                  postDocumentPendingChange initialDoc
-                  handleAfterSigning signingSignatoryID
-                  return $ Ok Remove
+                      postDocumentPendingChange initialDoc
+                      handleAfterSigning signingSignatoryID
+                      return $ Ok Remove
   , ccOnException = \_ DocumentSigning{..} -> do
       now <- currentTime
       if (minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now)

@@ -63,7 +63,11 @@ grpRoutes = dir "cgi" . dir "grp" $ choice [
 
 handleAuthRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleAuthRequest did slid = do
-  CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
+  CgiGrpConfig{..} <- do
+    ctx <- getContext
+    case ctxcgigrpconfig ctx of
+      Nothing -> noConfigurationError "CGI Group"
+      Just cc -> return cc
   (doc,_) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
   mcompany_service_id   <- getCompanyServiceID doc
@@ -99,7 +103,11 @@ handleAuthRequest did slid = do
 
 handleSignRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleSignRequest did slid = do
-  CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
+  CgiGrpConfig{..} <- do
+    ctx <- getContext
+    case ctxcgigrpconfig ctx of
+      Nothing -> noConfigurationError "CGI Group"
+      Just cc -> return cc
   (doc,_) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
   mcompany_service_id   <- getCompanyServiceID doc
@@ -226,7 +234,11 @@ checkCGISignStatus CgiGrpConfig{..}  did slid = do
 
 checkCGIAuthStatus :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either GrpFault ProgressStatus)
 checkCGIAuthStatus did slid = do
-  CgiGrpConfig{..} <- ctxcgigrpconfig <$> getContext
+  CgiGrpConfig{..} <- do
+    ctx <- getContext
+    case ctxcgigrpconfig ctx of
+      Nothing -> noConfigurationError "CGI Group"
+      Just cc -> return cc
   (doc,sl) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
   mcompany_service_id   <- getCompanyServiceID doc
