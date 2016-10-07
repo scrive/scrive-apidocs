@@ -134,20 +134,9 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
 
         $endif$
    // end Mixpanel
-
-  // Google analytics tracking
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', '$analytics.tokenGa$']);
-  $if(analytics.userid)$
-    // Mark this visitor as a user in GA, in slot 2 (also on session)
-    _gaq.push(['_setCustomVar', 2, 'User?', 'true', 2]);
-  $endif$
-  _gaq.push(['_trackPageview']);
-// end Google analytics
 ####
 analyticsLoaderKontrakcja=
 $loadScript(src="//js.hubspot.com/forms/current.js")$
-$loadScript(src="https://ssl.google-analytics.com/ga.js")$
 $loadScript(src="//js.hs-analytics.net/analytics/431732.js")$
 
 <script>

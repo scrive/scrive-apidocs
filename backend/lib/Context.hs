@@ -76,7 +76,6 @@ data Context = Context
     , ctxtrackjstoken        :: Maybe String
     , ctxmixpaneltoken       :: Maybe String
     , ctxhubspotconf         :: Maybe HubSpotConf
-    , ctxgoogleanalyticstoken :: Maybe String
     , ctxbrandeddomain       :: BrandedDomain
     , ctxsalesforceconf      :: Maybe SalesforceConf
     , ctxnetsconfig          :: Maybe NetsConfig

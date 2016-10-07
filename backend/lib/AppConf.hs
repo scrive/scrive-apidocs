@@ -48,7 +48,6 @@ data AppConf = AppConf {
   , mixpanelToken      :: Maybe String                 -- ^ for mixpanel integration
   , trackjsToken       :: Maybe String                 -- ^ for Track.js integration
   , hubspotConf        :: Maybe HubSpotConf            -- ^ for hubspot integration
-  , googleanalyticsToken :: Maybe String               -- ^ for google-analytics integration
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
   , salesforceConf     :: Maybe SalesforceConf         -- ^ Configuration of salesforce
   , netsConfig         :: Maybe NetsConfig             -- ^ Configuration of Nets - NO BankID provider
@@ -131,9 +130,6 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldOpt "hubspot"
       hubspotConf
       "Configuration of HubSpot"
-  <*> fieldOpt "google_analytics"
-      googleanalyticsToken
-      "Token for Google Analytics"
   <*> field "ntp_servers"
       ntpServers
       "List of NTP servers to contact to get estimate of host clock error"
@@ -173,7 +169,6 @@ instance Default AppConf where
     , mixpanelToken      = Nothing
     , trackjsToken       = Nothing
     , hubspotConf        = Nothing
-    , googleanalyticsToken = Nothing
     , ntpServers         = defaultNtpServers
     , salesforceConf     = Nothing
     , netsConfig         = Nothing

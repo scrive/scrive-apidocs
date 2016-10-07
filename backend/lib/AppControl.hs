@@ -363,7 +363,6 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , ctxtrackjstoken = trackjsToken appConf
         , ctxmixpaneltoken = mixpanelToken appConf
         , ctxhubspotconf = hubspotConf appConf
-        , ctxgoogleanalyticstoken = googleanalyticsToken appConf
         , ctxbrandeddomain = brandeddomain
         , ctxsalesforceconf = salesforceConf appConf
         , ctxnetsconfig = netsConfig appConf

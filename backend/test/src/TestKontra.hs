@@ -320,7 +320,6 @@ mkContext lang = do
         , ctxtrackjstoken = Nothing
         , ctxmixpaneltoken = Nothing
         , ctxhubspotconf = Nothing
-        , ctxgoogleanalyticstoken = Nothing
         , ctxbrandeddomain = bd
         , ctxsalesforceconf = Nothing
         , ctxnetsconfig = Nothing
