@@ -24,7 +24,7 @@ var $ = require("jquery");
       var signatory = this.props.signatory;
 
       return (
-        <div>
+        <div className="docview-showapidelivery-modal">
           <label>{localization.docview.showAPIDelivery.description}</label>
           <InfoTextInput
             className="api-delivery-url"
