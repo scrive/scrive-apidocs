@@ -127,13 +127,13 @@
 
 <h3 id="version-2-0-0">Version <code class="prettyprint">2.0.0</code></h3>
 
-<h3 id="host-amp-base-path">Host &amp; base path</h3>
-
-<p><code class="prettyprint">scrive.com/api/v2/documents/</code></p>
-
 <h3 id="schemes">Schemes</h3>
 
 <p><code class="prettyprint">https</code></p>
+
+<h3 id="host-amp-base-path">Host &amp; base path</h3>
+
+<p><code class="prettyprint">scrive.com/api/v2/documents/</code></p>
 
 <h3 id="terms-of-service">Terms of Service</h3>
 
@@ -364,7 +364,7 @@ The Document JSON is used to create documents, define the workflow for
 signing and non-signing parties, monitor the progress of the document, etc.</p>
 
 <p>A key property of a document is its <code class="prettyprint">status</code> (as defined by
-<a href="#documentstatus">DocumentStatus</a>).</p>
+<a href="#document-status">DocumentStatus</a>).</p>
 
 <p>Newly created documents have <code class="prettyprint">status: &quot;preparation&quot;</code> and can be easily
 modified.
@@ -499,13 +499,42 @@ If the <code class="prettyprint">Authorization</code> header is set, any browser
 <h2 id="personal-access-credentials">Personal Access Credentials</h2>
 
 <blockquote>
-<p>Given the following personal access credentials:</p>
+<p>You can retrieve personal access credentials for a user account using a
+special endpoint and supplying their login details.</p>
+
+<p>Using cURL, you can do:</p>
+</blockquote>
+<pre class="highlight shell"><code>curl -X POST <span class="s1">'https://{server_address}/api/v2/getpersonaltoken'</span> <span class="se">\</span>
+  --data-urlencode <span class="s1">'email={user_email}'</span> <span class="se">\</span>
+  --data-urlencode <span class="s1">'password={user_password}'</span>
+</code></pre>
+
+<blockquote>
+<p>Replacing <code class="prettyprint">{server_address}</code>, <code class="prettyprint">{user_email}</code> and <code class="prettyprint">{user_password}</code> to
+match your needs.</p>
+
+<p>This will return the personal access tokens as a JSON:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"apitoken"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"987dfsd312sd76sh_123"</span><span class="w">
+</span><span class="p">,</span><span class="w"> </span><span class="nt">"apisecret"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"c47b87126dsacbhb"</span><span class="w">
+</span><span class="p">,</span><span class="w"> </span><span class="nt">"accesstoken"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"2d1287dassg22jke_114"</span><span class="w">
+</span><span class="p">,</span><span class="w"> </span><span class="nt">"accesssecret"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"12876adsdhght665"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>Then, given the following example personal access credentials:</p>
 
 <ul>
-<li>Client credentials identifier: <code class="prettyprint">123</code></li>
-<li>Client credentials secret: <code class="prettyprint">abc</code></li>
-<li>Token credentials identifier: <code class="prettyprint">456</code></li>
-<li>Token credentials secret: <code class="prettyprint">cde</code></li>
+<li>Client credentials identifier:
+<code class="prettyprint">apitoken = 123</code></li>
+<li>Client credentials secret:
+<code class="prettyprint">apisecret = abc</code></li>
+<li>Token credentials identifier:
+<code class="prettyprint">accesstoken = 456</code></li>
+<li>Token credentials secret:
+<code class="prettyprint">accesssecret = cde</code></li>
 </ul>
 
 <p>The following authorisation header can be used:</p>
@@ -517,9 +546,7 @@ If the <code class="prettyprint">Authorization</code> header is set, any browser
 credentials.
 A user can create personal access credentials in the <a href="https://scrive.com/account#api-dashboard">Scrive Account
 Section</a> through the web
-interface, or using a dedicated API call.</p>
-
-<p><strong>TODO</strong> Document this dedicated call!</p>
+interface, or using a dedicated API call, as described in the right column.</p>
 
 <p>Only one personal token is available per user.
 Such credentials can be used instead of OAuth client and token credentials
@@ -859,7 +886,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 <tr><td><p><code>document</code><br/><em>required</em></p></td><td><p><strong>The document metadata</strong></p>
-<p>Must of of type <a href="#/definitions/Document">Document</a>.</p>
+<p>Must of of type <code>Document</code>, see <a href="#definitions">Definitions</a>.</p>
 <p>Can be a subset of the JSON structure, for example it is possible to
 just update the title of a document with <code>{&quot;title&quot;: &quot;New title&quot;}</code>.</p>
 <p><strong>TODO make this description better</strong></p>
@@ -968,7 +995,7 @@ This is the suggested way to include files.</p>
 You must have the rights to access the <code>file_id</code> to use it.</p>
 </li>
 </ul>
-<p>Must of of type <a href="#/definitions/AuthorAttachments">AuthorAttachments</a>.</p>
+<p>Must of of type <a href="#author-attachments">Author Attachments</a>.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 <tr><td><p><code>{attachment_name}</code><br/><em>optional</em></p></td><td><p><strong>The named file parameters</strong></p>
 <p>Any <code>file_param</code> in the <code>attachments</code> JSON must be supplied as named
@@ -1087,7 +1114,7 @@ Only documents that match <strong>all</strong> filters will be returned.
 Therefore, it is easy to apply a set of filters that will return no
 documents.</p>
 <p>If not supplied, the default is not to apply any filter, i.e. <code>[]</code>.</p>
-<p>Must be of type <a href="#/definitions/ListFilter">ListFilter</a>, for example:</p>
+<p>Must be of type <a href="#list-filter">List Filter</a>, for example:</p>
 <p><code>[ { &quot;filter_by&quot;:&quot;status&quot;, &quot;statuses&quot;: [&quot;preparation&quot;,&quot;pending&quot;] } ]</code></p>
 </td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
 <tr><td><p><code>sorting</code><br/><em>optional</em></p><p><em>default:</em> <code>[ { "sort_by":"mtime", "order":"ascending" } ]</code></p></td><td><p><strong>List of sorting options.</strong></p>
@@ -1096,7 +1123,7 @@ of documents in the order you provided.</p>
 <p>If not supplied, the default is
 <code>[ { &quot;sort_by&quot;:&quot;mtime&quot;, &quot;order&quot;:&quot;ascending&quot; } ]</code>,
 <em>i.e.</em>, sort by modification time, newest first.</p>
-<p>Must of of type <a href="#/definitions/ListSorting">ListSorting</a>.</p>
+<p>Must of of type <a href="#list-sorting">List Sorting</a>.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
 </table>
 
@@ -2162,7 +2189,7 @@ been signed.</p>
 
 <p>The URL to perform an API callback request.</p>
 
-<p>Please see <a href="#/callbacks">Callbacks</a> for details.</p>
+<p>Please see <a href="#callbacks">Callbacks</a> for details.</p>
 
 <h5 id="object_version-integer-read-only"><code class="prettyprint">object_version</code> (integer, read only)</h5>
 
@@ -2824,7 +2851,7 @@ been signed.</p>
 
 <p>The URL to perform an API callback request.</p>
 
-<p>Please see <a href="#/callbacks">Callbacks</a> for details.</p>
+<p>Please see <a href="#callbacks">Callbacks</a> for details.</p>
 
 <h3 id="object_version-integer-read-only"><code class="prettyprint">object_version</code> (integer, read only)</h3>
 
