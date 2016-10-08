@@ -17,11 +17,13 @@ toc_footers:
 ## General Information
 ### Version `2.0.0`
 
-### Host & base path
-`scrive.com/api/v2/documents/`
-
 ### Schemes
 `https`
+
+
+
+### Host & base path
+`scrive.com/api/v2/documents/`
 
 
 ### Terms of Service
@@ -183,7 +185,7 @@ The Document JSON is used to create documents, define the workflow for
 signing and non-signing parties, monitor the progress of the document, etc.
 
 A key property of a document is its `status` (as defined by
-[DocumentStatus](#documentstatus)).
+[DocumentStatus](#document-status)).
 
 Newly created documents have `status: "preparation"` and can be easily
 modified.
@@ -309,12 +311,41 @@ support two modes of authentication: OAuth based, and browser cookie based.
 If the `Authorization` header is set, any browser cookies are ignored.
 
 ## Personal Access Credentials
-> Given the following personal access credentials:
+> You can retrieve personal access credentials for a user account using a
+> special endpoint and supplying their login details.
 >
-> * Client credentials identifier: `123`
-> * Client credentials secret: `abc`
-> * Token credentials identifier: `456`
-> * Token credentials secret: `cde`
+> Using cURL, you can do:
+
+```bash
+curl -X POST 'https://{server_address}/api/v2/getpersonaltoken' \
+  --data-urlencode 'email={user_email}' \
+  --data-urlencode 'password={user_password}'
+```
+
+> Replacing `{server_address}`, `{user_email}` and `{user_password}` to
+> match your needs.
+>
+> This will return the personal access tokens as a JSON:
+
+```json
+{
+  "apitoken" : "987dfsd312sd76sh_123"
+, "apisecret" : "c47b87126dsacbhb"
+, "accesstoken" : "2d1287dassg22jke_114"
+, "accesssecret" : "12876adsdhght665"
+}
+```
+
+> Then, given the following example personal access credentials:
+>
+> * Client credentials identifier:
+>   `apitoken = 123`
+> * Client credentials secret:
+>   `apisecret = abc`
+> * Token credentials identifier:
+>   `accesstoken = 456`
+> * Token credentials secret:
+>   `accesssecret = cde`
 >
 > The following authorisation header can be used:
 >
@@ -324,9 +355,7 @@ Instead of OAuth, clients may access the Scrive API using personal access
 credentials.
 A user can create personal access credentials in the [Scrive Account
 Section](https://scrive.com/account#api-dashboard) through the web
-interface, or using a dedicated API call.
-
-**TODO** Document this dedicated call!
+interface, or using a dedicated API call, as described in the right column.
 
 Only one personal token is available per user.
 Such credentials can be used instead of OAuth client and token credentials
@@ -667,7 +696,7 @@ Update the metadata for a document in preparation.
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 <tr><td><p><code>document</code><br/><em>required</em></p></td><td><p><strong>The document metadata</strong></p>
-<p>Must of of type <a href="#/definitions/Document">Document</a>.</p>
+<p>Must of of type <code>Document</code>, see <a href="#definitions">Definitions</a>.</p>
 <p>Can be a subset of the JSON structure, for example it is possible to
 just update the title of a document with <code>{&quot;title&quot;: &quot;New title&quot;}</code>.</p>
 <p><strong>TODO make this description better</strong></p>
@@ -776,7 +805,7 @@ This is the suggested way to include files.</p>
 You must have the rights to access the <code>file_id</code> to use it.</p>
 </li>
 </ul>
-<p>Must of of type <a href="#/definitions/AuthorAttachments">AuthorAttachments</a>.</p>
+<p>Must of of type <a href="#author-attachments">Author Attachments</a>.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 <tr><td><p><code>{attachment_name}</code><br/><em>optional</em></p></td><td><p><strong>The named file parameters</strong></p>
 <p>Any <code>file_param</code> in the <code>attachments</code> JSON must be supplied as named
@@ -894,7 +923,7 @@ Only documents that match <strong>all</strong> filters will be returned.
 Therefore, it is easy to apply a set of filters that will return no
 documents.</p>
 <p>If not supplied, the default is not to apply any filter, i.e. <code>[]</code>.</p>
-<p>Must be of type <a href="#/definitions/ListFilter">ListFilter</a>, for example:</p>
+<p>Must be of type <a href="#list-filter">List Filter</a>, for example:</p>
 <p><code>[ { &quot;filter_by&quot;:&quot;status&quot;, &quot;statuses&quot;: [&quot;preparation&quot;,&quot;pending&quot;] } ]</code></p>
 </td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
 <tr><td><p><code>sorting</code><br/><em>optional</em></p><p><em>default:</em> <code>[ { "sort_by":"mtime", "order":"ascending" } ]</code></p></td><td><p><strong>List of sorting options.</strong></p>
@@ -903,7 +932,7 @@ of documents in the order you provided.</p>
 <p>If not supplied, the default is
 <code>[ { &quot;sort_by&quot;:&quot;mtime&quot;, &quot;order&quot;:&quot;ascending&quot; } ]</code>,
 <em>i.e.</em>, sort by modification time, newest first.</p>
-<p>Must of of type <a href="#/definitions/ListSorting">ListSorting</a>.</p>
+<p>Must of of type <a href="#list-sorting">List Sorting</a>.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
 </table>
 
@@ -1976,7 +2005,7 @@ This element must be one of the following enum values:
 
 The URL to perform an API callback request.
 
-Please see [Callbacks](#/callbacks) for details.
+Please see [Callbacks](#callbacks) for details.
 
 
 ##### `object_version` (integer, read only)
@@ -2642,7 +2671,7 @@ This element must be one of the following enum values:
 
 The URL to perform an API callback request.
 
-Please see [Callbacks](#/callbacks) for details.
+Please see [Callbacks](#callbacks) for details.
 
 
 ### `object_version` (integer, read only)
