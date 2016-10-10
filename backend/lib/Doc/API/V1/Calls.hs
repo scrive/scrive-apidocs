@@ -208,6 +208,8 @@ apiCallV1CreateFromFile = api $ do
       Nothing -> return ()
       Just fileid' -> do
         dbUpdate $ AttachFile fileid' actor
+    did <- documentid <$> theDocument
+    logInfo "New document created" $ object [ "new_document_id" .= show did ]
     Created <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 apiCallV1CreateFromTemplate :: Kontrakcja m => DocumentID -> m Response
@@ -225,6 +227,11 @@ apiCallV1CreateFromTemplate did = logDocument did . api $ do
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
+    newDocid <- documentid <$> theDocument
+    logInfo "New document created from template" $ object
+      [ "new_document_id" .= show newDocid
+      , "template_id"     .= show did
+      ]
     Created <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 apiCallV1Clone :: Kontrakcja m => DocumentID -> m Response
