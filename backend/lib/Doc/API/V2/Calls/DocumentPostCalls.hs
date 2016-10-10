@@ -22,6 +22,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 import Data.Unjson
 import Data.Unjson as Unjson
 import Happstack.Server.Types
+import Log
 import System.FilePath (dropExtension)
 import Text.StringTemplates.Templates
 import qualified Data.Text as T
@@ -80,6 +81,8 @@ docApiV2New = api $ do
       Just f -> do
         dbUpdate $ AttachFile (fileid f) actor
   -- Result
+    did <- documentid <$> theDocument
+    logInfo "New document created" $ object [ "new_document_id" .= show did ]
     Created <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
 
@@ -99,6 +102,11 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
     dbUpdate $ DocumentFromTemplate actor
     dbUpdate $ SetDocumentUnsavedDraft False
   -- Result
+    newDocid <- documentid <$> theDocument
+    logInfo "New document created from template" $ object
+      [ "new_document_id" .= show newDocid
+      , "template_id"     .= show did
+      ]
     Created <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
 

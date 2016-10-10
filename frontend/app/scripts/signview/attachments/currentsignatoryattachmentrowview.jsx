@@ -143,7 +143,10 @@ var Task = require("../navigation/task");
         pointSelector: ".loader,.button",
         el: $(self.refs["upload-or-load-area"].getDOMNode()),
         onArrowClick: function () {
-          uploadArea.uploadButton().openFileDialogue();
+          if (!model.get("loading")) {
+            // don't open 2nd dialog if one file is already uploading
+            uploadArea.uploadButton().openFileDialogue();
+          }
         },
         onActivate: function () {
           Track.track("Begin attachment task");
