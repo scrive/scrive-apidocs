@@ -109,7 +109,7 @@ module.exports = React.createClass({
     if (this.state.imageReady) {
       var imageNode = React.findDOMNode(this.refs.pagejpg);
 
-      var pageWidth = DocumentPagesLess.pageDivWidth;
+      var pageWidth = DocumentPagesLess.pageWidth;
       var pageHeight = imageNode.height;
 
       if (imageNode.width != pageWidth) {

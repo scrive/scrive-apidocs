@@ -222,7 +222,7 @@ var DocumentSaveMixin = require("./document_save_mixin");
             <FileView
               ref="fileView"
               model={document.mainfile()}
-              pixelWidth={950}
+              pixelWidth={1040}
             />
           }
         </div>
