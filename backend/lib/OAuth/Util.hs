@@ -40,7 +40,7 @@ getTempCredRequest = do
       mprivilegesstring <- getDataFn' (look "privileges")
       let msigtype          = lookupAndRead "oauth_signature_method" params
           mapisecret        = splitSignature =<< lookupAndRead "oauth_signature" params
-          mcallback         = parseURI =<< (urlDecode <$> lookup "oauth_callback" params)
+          mcallback         = parseURI =<< (urlDecode <$> lookupAndRead "oauth_callback" params)
           mapitoken         = lookupAndReadString "oauth_consumer_key" params
           mprivileges       = readPrivileges =<< mprivilegesstring
           errors            = intercalate "; "
