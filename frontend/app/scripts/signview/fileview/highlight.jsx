@@ -47,7 +47,9 @@ module.exports = React.createClass({
     }
 
     if (prevProps.baseImageURL != this.props.baseImageURL) {
-      if (!this.props.baseImageURL) {
+      if (this.props.baseImageURL) {
+        this._hl.setBaseImageURL(this.props.baseImageURL);
+      } else {
         this._hl.clear();
       }
     }
