@@ -61,7 +61,6 @@ module.exports = Backbone.Model.extend({
   },
   setBaseImageURL: function (v) {
     this.set("baseImageURL", v);
-    this.downloadAndDrawBaseImage();
   },
   startDrawing: function () {
     this.drawing().setLineWidth(LINE_WIDTH_BASE * $(this.canvas()).width() / CANVAS_WIDTH_BASE);
