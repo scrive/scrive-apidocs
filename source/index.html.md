@@ -1574,6 +1574,77 @@ Most API calls return this JSON structure.
       "confirmation_delivery_method": "email",
       "attachments": [],
       "api_delivery_url": null
+    },
+    {
+      "id": "98",
+      "user_id": null,
+      "is_author": false,
+      "is_signatory": true,
+      "fields": [
+        {
+          "type": "name",
+          "order": 1,
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "email",
+          "value": "",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "mobile",
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "company",
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "company_number",
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        }
+      ],
+      "sign_order": 1,
+      "sign_time": null,
+      "seen_time": null,
+      "read_invitation_time": null,
+      "rejected_time": null,
+      "sign_success_redirect_url": null,
+      "reject_redirect_url": null,
+      "email_delivery_status": "unknown",
+      "mobile_delivery_status": "unknown",
+      "has_authenticated_to_view": false,
+      "csv": null,
+      "delivery_method": "email",
+      "authentication_method_to_view": "standard",
+      "authentication_method_to_sign": "standard",
+      "confirmation_delivery_method": "email",
+      "allows_highlighting": false,
+      "attachments": [],
+      "highlighted_pages": [],
+      "api_delivery_url": null
     }
   ],
   "file": null,
@@ -2239,6 +2310,77 @@ This element must be one of the following enum values:
       "authentication_method_to_sign": "standard",
       "confirmation_delivery_method": "email",
       "attachments": [],
+      "api_delivery_url": null
+    },
+    {
+      "id": "98",
+      "user_id": null,
+      "is_author": false,
+      "is_signatory": true,
+      "fields": [
+        {
+          "type": "name",
+          "order": 1,
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "email",
+          "value": "",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "mobile",
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "company",
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "company_number",
+          "value": "",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        }
+      ],
+      "sign_order": 1,
+      "sign_time": null,
+      "seen_time": null,
+      "read_invitation_time": null,
+      "rejected_time": null,
+      "sign_success_redirect_url": null,
+      "reject_redirect_url": null,
+      "email_delivery_status": "unknown",
+      "mobile_delivery_status": "unknown",
+      "has_authenticated_to_view": false,
+      "csv": null,
+      "delivery_method": "email",
+      "authentication_method_to_view": "standard",
+      "authentication_method_to_sign": "standard",
+      "confirmation_delivery_method": "email",
+      "allows_highlighting": false,
+      "attachments": [],
+      "highlighted_pages": [],
       "api_delivery_url": null
     }
   ],
