@@ -41,7 +41,7 @@ var TaskList = require("./navigation/task_list");
         loggedInAsAuthor: this.props.loggedInAsAuthor
       });
 
-      return {model: model, overlay: false, showArrow: true, pixelWidth: 1040};
+      return {model: model, overlay: false, showArrow: true, pixelWidth: 950};
     },
 
     childContextTypes: {

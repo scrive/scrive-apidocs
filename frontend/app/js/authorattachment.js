@@ -13,7 +13,7 @@ var $ = require("jquery");
           required: false,
           add_to_sealed_file: true,
           accepted: false,
-          pixelWidth: 1040,
+          pixelWidth: 950,
           pages: undefined
         };
       },

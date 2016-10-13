@@ -14,7 +14,7 @@ var File = exports.File = Backbone.Model.extend({
         id : 0,
         pages : [],
         name: "",
-        pixelWidth: 1040,
+        pixelWidth: 950,
         broken : false
       };
     },
@@ -151,7 +151,7 @@ var FilePage = exports.FilePage = Backbone.Model.extend({
     defaults: function() { return {
         number : 0,
         placements : [],
-        width: 1040,
+        width: 950,
         height: 1335
     }},
     initialize: function (args) {
