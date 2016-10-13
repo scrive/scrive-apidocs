@@ -215,7 +215,7 @@ Scrive eSign system.</p>
 
 <aside class="warning">
 This is not to be used with any critical information.
-We make no guarentees as to the availability of the server, or the data
+We make no guarantees as to the availability of the server, or the data
 stored by it.
 </aside>
 
@@ -487,8 +487,7 @@ API requests on behalf of the user.</p>
 <code class="prettyprint">DOC_CREATE</code>, <code class="prettyprint">DOC_CHECK</code>, and <code class="prettyprint">DOC_SEND</code>.</p>
 
 <p>Permission levels required for each API call are described on a per call
-basis.
-<strong>TODO</strong> This is not currently the case&hellip; needs to be done!</p>
+basis.</p>
 
 <h3 id="oauth-and-cookies">OAuth and Cookies</h3>
 
@@ -767,6 +766,8 @@ The new document will have state <code class="prettyprint">Preparation</code>, a
 <p>If no PDF is provided, you can set one using the <code class="prettyprint">{document_id}/setfile</code>
 API call.</p>
 
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_CREATE</code></em></p>
+
 <h3 id="parameters">Parameters</h3>
 
 <table class="table-left-col-25">
@@ -809,6 +810,8 @@ represents visibility in the E-archive.</p>
 
 <p>The new document will have state <code class="prettyprint">Preparation</code> and will not be a template, and the signing process can thus be carried out.</p>
 
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_CREATE</code></em></p>
+
 <h3 id="parameters">Parameters</h3>
 
 <table class="table-left-col-25">
@@ -846,6 +849,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <p>You can only clone documents for which you are the author, the new document
 will use the current author details for the author signatory fields.</p>
 
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_CREATE</code></em></p>
+
 <h3 id="parameters">Parameters</h3>
 
 <table class="table-left-col-25">
@@ -877,6 +882,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 </p>
 
 <p>Update the metadata for a document in preparation.</p>
+
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_CREATE</code></em></p>
 
 <h3 id="parameters">Parameters</h3>
 
@@ -928,6 +935,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <p>If the <code class="prettyprint">file</code> parameter is blank, the main file for the document will be
 removed (if any).</p>
 
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_CREATE</code></em></p>
+
 <h3 id="parameters">Parameters</h3>
 
 <table class="table-left-col-25">
@@ -969,6 +978,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 <p>Replaces any existing attachments, so all attachments must be set by any
 use of this call.</p>
+
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_CREATE</code></em></p>
 
 <h3 id="parameters">Parameters</h3>
 
@@ -1032,6 +1043,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 <p>Start the signing process for a document in preparation.</p>
 
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_SEND</code></em></p>
+
 <h3 id="parameters">Parameters</h3>
 
 <table class="table-left-col-25">
@@ -1068,6 +1081,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 <p>Get the JSON metadata for a given <code class="prettyprint">document_id</code>.</p>
 
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_CHECK</code></em></p>
+
 <h3 id="parameters">Parameters</h3>
 
 <table class="table-left-col-25">
@@ -1095,6 +1110,8 @@ Will not change.</p>
 </p>
 
 <p>Fetch a list of documents, with filtering and sorting options.</p>
+
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_CHECK</code></em></p>
 
 <h3 id="parameters">Parameters</h3>
 
@@ -1152,6 +1169,8 @@ the <code>total_matching</code> is 1,000.</p>
 <p>The <code class="prettyprint">filename</code> parameter in the URL can be set to any valid file name.
 This allows you to download the file with user-specified file name.</p>
 
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_CHECK</code></em></p>
+
 <h3 id="parameters">Parameters</h3>
 
 <table class="table-left-col-25">
@@ -1185,6 +1204,8 @@ respective <code class="prettyprint">file_id</code> the Document JSON.</p>
 <p>The <code class="prettyprint">filename</code> parameter in the URL can be set to any valid file name.
 This allows you to download the file with user-specified file name.</p>
 
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_CHECK</code></em></p>
+
 <h3 id="parameters">Parameters</h3>
 
 <table class="table-left-col-25">
@@ -1216,6 +1237,8 @@ Will not change.</p>
 
 <p>Explicitly trigger an extra API callback to the URL set for the document.
 If one is set, no effect otherwise.</p>
+
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_SEND</code></em></p>
 
 <h3 id="parameters">Parameters</h3>
 
@@ -1254,6 +1277,8 @@ callback URL was set.</p>
 <p>Send a reminder invitation message to all signatories that have not yet
 signed.</p>
 
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_SEND</code></em></p>
+
 <h3 id="parameters">Parameters</h3>
 
 <table class="table-left-col-25">
@@ -1287,6 +1312,8 @@ signatories that have not yet signed.</p>
 </p>
 
 <p>Prolong a document that has timed out.</p>
+
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_SEND</code></em></p>
 
 <h3 id="parameters">Parameters</h3>
 
@@ -1327,6 +1354,8 @@ Only timed out documents can be prolonged.</p>
 
 <p>Cancel a pending document.</p>
 
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_SEND</code></em></p>
+
 <h3 id="parameters">Parameters</h3>
 
 <table class="table-left-col-25">
@@ -1362,6 +1391,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <p><strong>Note</strong>: In API Version 2 <code class="prettyprint">delete</code> and <code class="prettyprint">trash</code> behave differently to Version 1.</p>
 
 <p>Move a document to Trash.</p>
+
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_SEND</code></em></p>
 
 <h3 id="parameters">Parameters</h3>
 
@@ -1399,6 +1430,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 <p>Delete a document that is in Trash.</p>
 
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_SEND</code></em></p>
+
 <h3 id="parameters">Parameters</h3>
 
 <table class="table-left-col-25">
@@ -1432,6 +1465,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 </p>
 
 <p>Forward a signed document to a third party.</p>
+
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_SEND</code></em></p>
 
 <h3 id="parameters">Parameters</h3>
 
@@ -1472,6 +1507,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 <p>Set the number of days in which to send an automatic invitation reminder
 message to the signatories that have not yet signed by that date.</p>
+
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_SEND</code></em></p>
 
 <h3 id="parameters">Parameters</h3>
 
@@ -1514,6 +1551,8 @@ before the document expires.</p>
 
 <p>Restart a document that has been cancelled, timed out, or rejected.</p>
 
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_CREATE</code></em></p>
+
 <h3 id="parameters">Parameters</h3>
 
 <table class="table-left-col-25">
@@ -1555,6 +1594,8 @@ started.</p>
 <p>For example, if the signatory does not have a field for personal number,
 then setting the authentication method to Swedish BankID will necessitate
 adding the field to the signatory with a valid personal number.</p>
+
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_SEND</code></em></p>
 
 <h3 id="parameters">Parameters</h3>
 
@@ -1612,6 +1653,8 @@ started.</p>
 <p>For example, if the signatory does not have a field for mobile number, then
 setting the authentication method to SMS PIN will necessitate adding a
 mobile number field to the signatory and setting it as obligatory.</p>
+
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_SEND</code></em></p>
 
 <h3 id="parameters">Parameters</h3>
 
@@ -1723,6 +1766,77 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
       </span><span class="nt">"authentication_method_to_sign"</span><span class="p">:</span><span class="w"> </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"confirmation_delivery_method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"attachments"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+      </span><span class="nt">"api_delivery_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"98"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"is_author"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"is_signatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"order"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"order"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mobile"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"company"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"company_number"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="nt">"sign_order"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"sign_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"seen_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"read_invitation_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"rejected_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"sign_success_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"reject_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"email_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"mobile_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"has_authenticated_to_view"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"csv"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"delivery_method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"authentication_method_to_view"</span><span class="p">:</span><span class="w"> </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"authentication_method_to_sign"</span><span class="p">:</span><span class="w"> </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"confirmation_delivery_method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"allows_highlighting"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"attachments"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+      </span><span class="nt">"highlighted_pages"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
       </span><span class="nt">"api_delivery_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
@@ -2385,6 +2499,77 @@ The list API call can filter based on document tags.</p>
       </span><span class="nt">"authentication_method_to_sign"</span><span class="p">:</span><span class="w"> </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"confirmation_delivery_method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"attachments"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+      </span><span class="nt">"api_delivery_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"98"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"is_author"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"is_signatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"order"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"order"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mobile"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"company"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"company_number"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="nt">"sign_order"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"sign_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"seen_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"read_invitation_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"rejected_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"sign_success_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"reject_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"email_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"mobile_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"has_authenticated_to_view"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"csv"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"delivery_method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"authentication_method_to_view"</span><span class="p">:</span><span class="w"> </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"authentication_method_to_sign"</span><span class="p">:</span><span class="w"> </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"confirmation_delivery_method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"allows_highlighting"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"attachments"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+      </span><span class="nt">"highlighted_pages"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
       </span><span class="nt">"api_delivery_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
