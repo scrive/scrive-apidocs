@@ -108,12 +108,13 @@ var ProlongModal = exports.ProlongModal = function(args){
                         model: model,
                         el: $("<div class='prolong-modal-content'/>")
                     });
-        new Confirmation({
+        var popup = new Confirmation({
                 title: localization.prolongmodal.title,
                 content: $(view.el),
                 width: 382,
                 acceptText: localization.prolongmodal.button,
                 onAccept : function() {
+                  popup.reject();
                   model.prolong();
                   return true;
                 }
