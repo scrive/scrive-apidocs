@@ -94,7 +94,7 @@ Scrive eSign system.
 
 <aside class="warning">
 This is not to be used with any critical information.
-We make no guarentees as to the availability of the server, or the data
+We make no guarantees as to the availability of the server, or the data
 stored by it.
 </aside>
 
@@ -303,7 +303,6 @@ The current API version accepts the following privileges names:
 
 Permission levels required for each API call are described on a per call
 basis.
-**TODO** This is not currently the case... needs to be done!
 
 ### OAuth and Cookies
 As the Scrive eSign web interface uses the Scrive API, all API calls
@@ -578,6 +577,8 @@ The new document will have state `Preparation`, and will not be a template.
 If no PDF is provided, you can set one using the `{document_id}/setfile`
 API call.
 
+*OAuth Privileges required: `DOC_CREATE`*
+
 ### Parameters
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -620,6 +621,8 @@ Create a new document from a template, given the document ID for a document that
 
 The new document will have state `Preparation` and will not be a template, and the signing process can thus be carried out.
 
+*OAuth Privileges required: `DOC_CREATE`*
+
 ### Parameters
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -657,6 +660,8 @@ Clone an existing document, returning a new document in `Preparation`.
 You can only clone documents for which you are the author, the new document
 will use the current author details for the author signatory fields.
 
+*OAuth Privileges required: `DOC_CREATE`*
+
 ### Parameters
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -688,6 +693,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 </p>
 
 Update the metadata for a document in preparation.
+
+*OAuth Privileges required: `DOC_CREATE`*
 
 ### Parameters
 <table class="table-left-col-25">
@@ -739,6 +746,8 @@ Set or replace the main PDF file for a document in `Preparation`.
 If the `file` parameter is blank, the main file for the document will be
 removed (if any).
 
+*OAuth Privileges required: `DOC_CREATE`*
+
 ### Parameters
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -780,6 +789,8 @@ Set or remove author attachments for the document.
 
 Replaces any existing attachments, so all attachments must be set by any
 use of this call.
+
+*OAuth Privileges required: `DOC_CREATE`*
 
 ### Parameters
 <table class="table-left-col-25">
@@ -843,6 +854,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 Start the signing process for a document in preparation.
 
+*OAuth Privileges required: `DOC_SEND`*
+
 ### Parameters
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -878,6 +891,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 Get the JSON metadata for a given `document_id`.
 
+*OAuth Privileges required: `DOC_CHECK`*
+
 ### Parameters
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -905,6 +920,8 @@ Will not change.</p>
 </p>
 
 Fetch a list of documents, with filtering and sorting options.
+
+*OAuth Privileges required: `DOC_CHECK`*
 
 ### Parameters
 <table class="table-left-col-25">
@@ -962,6 +979,8 @@ the <code>total_matching</code> is 1,000.</p>
 The `filename` parameter in the URL can be set to any valid file name.
 This allows you to download the file with user-specified file name.
 
+*OAuth Privileges required: `DOC_CHECK`*
+
 ### Parameters
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -995,6 +1014,8 @@ respective `file_id` the Document JSON.
 The `filename` parameter in the URL can be set to any valid file name.
 This allows you to download the file with user-specified file name.
 
+*OAuth Privileges required: `DOC_CHECK`*
+
 ### Parameters
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -1026,6 +1047,8 @@ Will not change.</p>
 
 Explicitly trigger an extra API callback to the URL set for the document.
 If one is set, no effect otherwise.
+
+*OAuth Privileges required: `DOC_SEND`*
 
 ### Parameters
 <table class="table-left-col-25">
@@ -1063,6 +1086,8 @@ callback URL was set.</p>
 Send a reminder invitation message to all signatories that have not yet
 signed.
 
+*OAuth Privileges required: `DOC_SEND`*
+
 ### Parameters
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -1096,6 +1121,8 @@ signatories that have not yet signed.</p>
 </p>
 
 Prolong a document that has timed out.
+
+*OAuth Privileges required: `DOC_SEND`*
 
 ### Parameters
 <table class="table-left-col-25">
@@ -1136,6 +1163,8 @@ Only timed out documents can be prolonged.</p>
 
 Cancel a pending document.
 
+*OAuth Privileges required: `DOC_SEND`*
+
 ### Parameters
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -1171,6 +1200,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 **Note**: In API Version 2 `delete` and `trash` behave differently to Version 1.
 
 Move a document to Trash.
+
+*OAuth Privileges required: `DOC_SEND`*
 
 ### Parameters
 <table class="table-left-col-25">
@@ -1208,6 +1239,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 Delete a document that is in Trash.
 
+*OAuth Privileges required: `DOC_SEND`*
+
 ### Parameters
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -1241,6 +1274,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 </p>
 
 Forward a signed document to a third party.
+
+*OAuth Privileges required: `DOC_SEND`*
 
 ### Parameters
 <table class="table-left-col-25">
@@ -1281,6 +1316,8 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 Set the number of days in which to send an automatic invitation reminder
 message to the signatories that have not yet signed by that date.
+
+*OAuth Privileges required: `DOC_SEND`*
 
 ### Parameters
 <table class="table-left-col-25">
@@ -1323,6 +1360,8 @@ before the document expires.</p>
 
 Restart a document that has been cancelled, timed out, or rejected.
 
+*OAuth Privileges required: `DOC_CREATE`*
+
 ### Parameters
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -1364,6 +1403,8 @@ started.
 For example, if the signatory does not have a field for personal number,
 then setting the authentication method to Swedish BankID will necessitate
 adding the field to the signatory with a valid personal number.
+
+*OAuth Privileges required: `DOC_SEND`*
 
 ### Parameters
 <table class="table-left-col-25">
@@ -1421,6 +1462,8 @@ started.
 For example, if the signatory does not have a field for mobile number, then
 setting the authentication method to SMS PIN will necessitate adding a
 mobile number field to the signatory and setting it as obligatory.
+
+*OAuth Privileges required: `DOC_SEND`*
 
 ### Parameters
 <table class="table-left-col-25">
