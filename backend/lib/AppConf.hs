@@ -15,7 +15,6 @@ import GuardTime (GuardTimeConf(..))
 import HostClock.System (defaultNtpServers)
 import HubSpot.Conf (HubSpotConf(..))
 import KontraPrelude
-import LiveDocx (LiveDocxConf(..))
 import Log.Configuration
 import Payments.Config (RecurlyConfig(..))
 import Salesforce.Conf
@@ -39,7 +38,6 @@ data AppConf = AppConf {
   , cdnBaseUrl         :: Maybe String                 -- ^ for CDN content in prod mode
   , guardTimeConf      :: GuardTimeConf
   , isMailBackdoorOpen :: Bool                         -- ^ If true allows admins to access last mail send. Used by selenium
-  , liveDocxConfig     :: Maybe LiveDocxConf           -- ^ LiveDocx doc conversion configuration
   , cgiGrpConfig       :: Maybe CgiGrpConfig           -- ^ CGI GRP (E-ID) configuration
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
   , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
@@ -103,9 +101,6 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldDef "mail_backdoor_open" False
       isMailBackdoorOpen
       "Enabling mails backdoor for test"
-  <*> fieldOpt "livedocx"
-      liveDocxConfig
-      "LiveDocx doc conversion configuration"
   <*> fieldOpt "cgi_grp"
       cgiGrpConfig
       "CGI GRP (E-ID) configuration"
@@ -160,7 +155,6 @@ instance Default AppConf where
                                          , guardTimeControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
                                          }
     , isMailBackdoorOpen = False
-    , liveDocxConfig     = Nothing
     , cgiGrpConfig       = Nothing
     , admins             = []
     , sales              = []

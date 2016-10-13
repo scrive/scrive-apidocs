@@ -31,6 +31,7 @@
 "_controlsStatusViewingSigning":"Signing document: <span class='put-document-title-here'/>",
 "_controlsStatusViewingTimedout":"Reviewing expired document: <span class='put-document-title-here'/>",
 "_couldNotUpload":"Sorry, the file could not be uploaded. Please try again or with a different file.",
+"_couldNotUploadOnlyPDF":"Only PDF documents can be signed. Please try again.",
 "_deliveryEmail":"email",
 "_deliveryEmailMobile":"email and SMS",
 "_deliveryMobile":"SMS",

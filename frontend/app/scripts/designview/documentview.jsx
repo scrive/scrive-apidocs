@@ -164,7 +164,10 @@ var DocumentSaveMixin = require("./document_save_mixin");
             document.markAsNotReady();
             Track.track("Error", {Message: "main file too large"});
           } else {
-            new FlashMessage({content: localization.couldNotUpload, type: "error"});
+            var filepath = "" || $(input).val();
+            var fileext = filepath.substring(filepath.length - 3).toLowerCase();
+            var text = fileext === "pdf" ? localization.couldNotUpload : localization.couldNotUploadOnlyPDF;
+            new FlashMessage({content: text, type: "error"});
             document.markAsNotReady();
             Track.track("Error", {Message: "could not upload main file"});
           }

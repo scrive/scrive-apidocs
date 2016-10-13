@@ -94,7 +94,6 @@ import Happstack.Fields
 import InputValidation
 import Kontra
 import KontraPrelude
-import LiveDocx
 import Log.Identifier
 import MagicHash (MagicHash)
 import MinutesTime
@@ -174,9 +173,8 @@ apiCallV1CreateFromFile = api $ do
       title <- renderTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
       return (Nothing,  replace "  " " " $ title ++ " " ++ formatTimeSimple (ctxtime ctx))
     Just (Input _ Nothing _) -> throwM . SomeDBExtraException $ badInput "Missing file"
-    Just (Input contentspec (Just filename'') _contentType) -> do
-      let filename' = dropFilePathFromWindows filename''
-      let mformat = getFileFormatForConversion filename'
+    Just (Input contentspec (Just filename') _contentType) -> do
+      let filename = dropFilePathFromWindows filename'
       content1' <- case contentspec of
         Left filepath -> liftIO $ BS.readFile filepath
         Right content -> return (BS.concat $ BSL.toChunks content)
@@ -185,22 +183,8 @@ apiCallV1CreateFromFile = api $ do
       -- dropped with Happstack 7.0.4. It seems to be used till now
       -- for example by Avis.
       let content' = either (const content1') id (B64.decode content1')
-      (content'', filename) <- case mformat of
-        Nothing -> return (content', filename')
-        Just format -> do
-          eres <- do
-            case ctxlivedocxconf ctx of
-              Nothing -> noConfigurationError "LiveDocx"
-              Just lc -> convertToPDF lc content' format
-          case eres of
-            Left (LiveDocxIOError e) -> throwM . SomeDBExtraException $ serverError $ show e
-            Left (LiveDocxSoapError s)-> throwM . SomeDBExtraException $ serverError s
-            Right res -> do
-              -- change extension from .doc, .docx and others to .pdf
-              let filename = takeBaseName filename' ++ ".pdf"
-              return $ (res, filename)
 
-      pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content''
+      pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content'
       fileid' <- dbUpdate $ NewFile filename pdfcontent
       return (Just fileid', takeBaseName filename)
   mtimezone <- getField "timezone"
@@ -1143,7 +1127,6 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
       Just (Input _ Nothing _) -> throwM . SomeDBExtraException $ badInput "Missing file"
       Just (Input contentspec (Just filename') _contentType) -> do
         let filename = takeBaseName filename' ++ ".pdf"
-        let mformat = getFileFormatForConversion filename'
         content1' <- case contentspec of
           Left filepath -> liftIO $ BS.readFile filepath
           Right content -> return (BS.concat (BSL.toChunks content))
@@ -1153,19 +1136,7 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
         -- for example by Avis.
         let content' = either (const content1') id (B64.decode content1')
 
-        content'' <- case mformat of
-          Nothing -> return content'
-          Just format -> do
-            ctx <- getContext
-            eres <- do
-              case ctxlivedocxconf ctx of
-                Nothing -> noConfigurationError "LiveDocx"
-                Just lc -> convertToPDF lc content' format
-            case eres of
-              Left (LiveDocxIOError e) -> throwM . SomeDBExtraException $ serverError $ show e
-              Left (LiveDocxSoapError s)-> throwM . SomeDBExtraException $ serverError s
-              Right res -> return $ res
-        pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content''
+        pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content'
         fileid' <- dbUpdate $ NewFile filename pdfcontent
         return $ Just (fileid', takeBaseName filename)
 

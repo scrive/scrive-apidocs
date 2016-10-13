@@ -154,6 +154,7 @@ javascriptLocalisation =
 
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
+            , couldNotUploadOnlyPDF: "$_couldNotUploadOnlyPDF()$"
             , flashDocumentRestarted : "$_flashMessageContractRestarted()$"
             , prolongmodal : {
                  title : "$_prolongModalTitle()$"

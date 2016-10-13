@@ -25,7 +25,6 @@ import File.Model
 import Happstack.Fields
 import Kontra
 import KontraPrelude
-import LiveDocx
 import qualified Data.ByteString.RFC2397 as Base64Image
 
 data ApiV2Parameter a where
@@ -107,31 +106,14 @@ apiV2ParameterOptional (ApiV2ParameterFilePDF name) = do
   case mValue of
     Nothing -> return Nothing
     Just (Input _ Nothing _) -> apiError $ requestParameterInvalid name "file was empty"
-    Just (Input contentspec (Just filename'') _contentType) -> do
-      ctx <- getContext
-      let filename' = reverse . takeWhile (/='\\') . reverse $ filename'' -- Drop filepath for windows
-      let mformat = getFileFormatForConversion filename'
+    Just (Input contentspec (Just filename') _contentType) -> do
+      let filename = reverse . takeWhile (/='\\') . reverse $ filename' -- Drop filepath for windows
       content' <- case contentspec of
         Left filepath -> liftIO $ BS.readFile filepath
         Right content -> return (BS.concat $ BSL.toChunks content)
 
-      (content'', filename) <- case mformat of
-        Nothing -> return (content', filename')
-        Just format -> do
-          eres <- do
-            case ctxlivedocxconf ctx of
-              Nothing -> noConfigurationError "LiveDocx"
-              Just lc -> convertToPDF lc content' format
-          case eres of
-            Left (LiveDocxIOError e) -> apiError $ requestParameterParseError name $ "LiveDocX conversion IO failed" <+> T.pack (show e)
-            Left (LiveDocxSoapError s)-> apiError $ requestParameterParseError name $ "LiveDocX conversion SOAP failed" <+> T.pack s
-            Right res -> do
-              -- change extension from .doc, .docx and others to .pdf
-              let filename = takeBaseName filename' ++ ".pdf"
-              return $ (res, filename)
-
       pdfcontent <- do
-        res <- preCheckPDF content''
+        res <- preCheckPDF content'
         case res of
           Right r -> return r
           Left _ ->  apiError $ requestParameterParseError name $ "not a valid PDF"

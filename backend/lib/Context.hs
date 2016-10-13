@@ -26,7 +26,6 @@ import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf
 import IPAddress
 import KontraPrelude
-import LiveDocx (LiveDocxConf(..))
 import MagicHash (MagicHash)
 import MailContext (MailContext(..))
 import Payments.Config (RecurlyConfig)
@@ -59,7 +58,6 @@ data Context = Context
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid langs
     , ctxlang                :: Lang -- ^ The current context lang
     , ctxismailbackdooropen  :: Bool
-    , ctxlivedocxconf        :: Maybe LiveDocxConf -- ^ LiveDocx configuration (does doc conversion)
     , ctxcgigrpconfig        :: Maybe CgiGrpConfig
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
     , ctxmrediscache         :: Maybe R.Connection

@@ -300,7 +300,6 @@ mkContext lang = do
         , ctxglobaltemplates = globaltemplates
         , ctxlang = lang
         , ctxismailbackdooropen = False
-        , ctxlivedocxconf = def
         , ctxcgigrpconfig = Nothing
         , ctxmrediscache = Nothing
         , ctxfilecache = filecache

@@ -293,9 +293,6 @@ Library
                  , KontraMonad
                  , KontraPrelude
                  , LangRouting
-                 , LiveDocx
-                 , LiveDocx.Conf
-                 , LiveDocx.Types
                  , Log.Configuration
                  , Log.Identifier
                  , Log.Migrations
@@ -353,7 +350,6 @@ Library
                  , SMS.Model
                  , SMS.SMS
                  , SMS.Tables
-                 , SOAP.SOAP
                  , Salesforce.AuthorizationWorkflow
                  , Salesforce.Conf
                  , Salesforce.Control

@@ -347,7 +347,6 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , ctxlang = userlang
         , ctxismailbackdooropen = isMailBackdoorOpen appConf
         , ctxgtconf = guardTimeConf appConf
-        , ctxlivedocxconf = liveDocxConfig appConf
         , ctxcgigrpconfig = cgiGrpConfig appConf
         , ctxmrediscache = mrediscache appGlobals
         , ctxfilecache = filecache appGlobals
