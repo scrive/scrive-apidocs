@@ -22,7 +22,6 @@ module.exports = React.createClass({
     signupCallback : function(resp) {
     var model = this.props.model;
       if (resp.sent === true) {
-        _gaq.push(['_trackEvent', 'Signup', 'Clicked']);
         AdwordsConversionService.markAsSignupConversion();
         Track.track('Create new account', {'Email' : model.email()});
         mixpanel.people.set({'$email' : model.email() });

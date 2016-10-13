@@ -21,9 +21,10 @@ module.exports = React.createClass({
     height: React.PropTypes.number.isRequired
   },
   componentDidMount: function () {
+    this.initCanvas();
     this._hl = new Highlighter({
-      canvas: this.refs.canvas.getDOMNode(),
-      onNewHighlight: () => this.props.onNewHighlight(this.refs.canvas.getDOMNode()),
+      canvas: this._canvas,
+      onNewHighlight: () => this.props.onNewHighlight(this._canvas),
       baseImageURL: this.props.baseImageURL
     });
 
@@ -37,7 +38,7 @@ module.exports = React.createClass({
   },
   componentDidUpdate: function (prevProps) {
     if (prevProps.width !== this.props.width || prevProps.height !== this.props.height) {
-      this._hl.restore();
+      this.updateCanvas();
     }
 
     if (this.props.active) {
@@ -54,7 +55,36 @@ module.exports = React.createClass({
       }
     }
   },
-
+  initCanvas: function () {
+    this._canvas = $("<canvas class='highlight-canvas'/>")[0];
+    $(this._canvas).height(this.props.height);
+    $(this._canvas).width(this.props.width);
+    $(this._canvas).attr("height", this.props.height);
+    $(this._canvas).attr("width", this.props.width);
+    $(this._canvas).toggleClass("active", this.props.active);
+    $(this.refs.placeForCanvas.getDOMNode()).append($(this._canvas));
+  },
+  updateCanvas: function () {
+    var self = this;
+    if (this.isMounted() && this._canvas) {
+      var tmpImage = new Image();
+      tmpImage.type = "image/png";
+      tmpImage.onload = function () {
+        setTimeout(function () {
+          // In IE10 image may not be fully loaded. We need to deloay drawing it by few miliseconds
+          if (self.isMounted() && self._canvas) {
+            self._canvas.getContext("2d").drawImage(tmpImage, 0, 0, self.props.width, self.props.height);
+          }
+        }, 100);
+      };
+      tmpImage.src = this._canvas.toDataURL("image/png", 1);
+      $(this._canvas).height(this.props.height);
+      $(this._canvas).width(this.props.width);
+      $(this._canvas).attr("height", this.props.height);
+      $(this._canvas).attr("width", this.props.width);
+      $(this._canvas).toggleClass("active", this.props.active);
+    }
+  },
   handleRemoveHighlighting: function () {
     this.props.onRemoveHighlighting();
   },
@@ -69,12 +99,7 @@ module.exports = React.createClass({
 
     return (
       <span>
-        <canvas
-          ref="canvas"
-          className={classNames("highlight-canvas", {"active": this.props.active})}
-          width={this.props.width}
-          height={this.props.height}
-        />
+        <span ref="placeForCanvas"/>
         <div className="highlight-clear" style={clearHighlightStyle}>
           <div onClick={this.handleRemoveHighlighting} className="highlight-clear-button">
             <div className="clear-icon">

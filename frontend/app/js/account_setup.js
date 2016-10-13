@@ -140,8 +140,6 @@ var Track = require("../scripts/common/track");
               };
               mixpanel.register(ps);
               mixpanel.people.set(ps);
-              _gaq.push(['_trackEvent', 'ToS', 'Signed']);
-
               HubSpot.track(HubSpot.FORM_TOS_SUBMIT,
                             { "signup_method" : model.signupMethod(),
                               "fullname" : model.sndname() ? model.fstname() + ' ' + model.sndname() : model.fstname(),
