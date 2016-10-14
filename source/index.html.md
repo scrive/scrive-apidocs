@@ -13,7 +13,6 @@ toc_footers:
 
 # Scrive Document API
 
-
 ## General Information
 ### Version `2.0.0`
 
@@ -21,19 +20,15 @@ toc_footers:
 `https`
 
 
+###Host & base path
 
-### Host & base path
 `scrive.com/api/v2/documents/`
-
 
 ### Terms of Service
 
 In using this API you agree to be bound by the Scrive Terms of Service,
 available at [http://scrive.com/en/terms](http://scrive.com/en/terms)
 
-
-### External resources
-[API Explorer](https://scrive.com/api-explorer/)
 
 # Overview
 
@@ -76,7 +71,9 @@ We will list any changes to the current version of the API here.
 ### Production
 The main application is available through the `scrive.com` domain.
 
-**This is the live production environment.**
+<aside class="notice">
+This is the live production environment, for testing, please use API Testbed.
+</aside>
 
 The IP addresses that will be used as endpoints to and from our system are:
 
@@ -558,7 +555,6 @@ the API.
 
 We recommend writing integration code that handles the possibility of the
 Scrive eSign system returning errors.
-
 
 
 # Create
