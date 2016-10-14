@@ -62,9 +62,9 @@ API calls, or new API calls.
 ## Changelog
 We will list any changes to the current version of the API here.
 
-| Date       | Details of changes                                         |
-| ---------- | ---------------------------------------------------------- |
-| 2016-TODO  | Scrive Document API Version 2 is released.                 |
+| Date        | Details of changes                                         |
+| ----------- | ---------------------------------------------------------- |
+| 2016-10-14  | Pre-release of Scrive Document API Version 2               |
 
 ## Environments & IP Addresses
 
@@ -272,39 +272,9 @@ We may modify the specifics of this behaviour without notice.
 # Authentication
 The Scrive Document API supports OAuth 1.0 and personal access credentials
 based on this.
-The recommended approach is to use the full OAuth workflow.
 
-## OAuth
-
-Managing API access is done through a Scrive user account, and each user
-account may have zero or more client credentials.
-These client credentials are managed in the [Integration settings
-tab](https://scrive.com/account#api-dashboard) of the user account
-settings.
-
-These client credentials may be used to request privileges from users.
-Users, in turn, can approve or deny granting such privileges.
-They may also remove privileges as they see fit, from the Integration
-settings tab.
-
-The OAuth authorisation sequence allows you to request privileges from a
-user and retrieve token credentials.
-Once these have been approved, you may use the token credentials to make
-API requests on behalf of the user.
-
-**TODO** Describe OAuth workflow in detail
-
-### OAuth privileges
-The current API version accepts the following privileges names:
-`DOC_CREATE`, `DOC_CHECK`, and `DOC_SEND`.
-
-Permission levels required for each API call are described on a per call
-basis.
-
-### OAuth and Cookies
-As the Scrive eSign web interface uses the Scrive API, all API calls
-support two modes of authentication: OAuth based, and browser cookie based.
-If the `Authorization` header is set, any browser cookies are ignored.
+Where your application needs to perform actions on behalf of Users, the
+recommended approach is to use the full OAuth workflow.
 
 ## Personal Access Credentials
 > You can retrieve personal access credentials for a user account using a
@@ -365,8 +335,156 @@ a sandbox environment.
 Storing personal access tokens outside of the Scrive eSign system is
 equivalent to storing a user password.
 
-Due to this, we do recommend using OAuth instead.
+Due to this, we do recommend using OAuth where possible.
 </aside>
+
+## OAuth
+
+Managing API access is done through a Scrive user account, and each user
+account may have zero or more client credentials.
+These client credentials are managed in the [Integration settings
+tab](https://scrive.com/account#api-dashboard) of the user account
+settings.
+
+These client credentials may be used to request privileges from users.
+Users, in turn, can approve or deny granting such privileges.
+They may also remove privileges as they see fit, from the Integration
+settings tab.
+
+The OAuth authorisation sequence allows you to request privileges from a
+user and retrieve token credentials.
+Once these have been approved, you may use the token credentials to make
+API requests on behalf of the user.
+
+### OAuth privileges
+The current API version accepts the following privileges names:
+`DOC_CREATE`, `DOC_CHECK`, and `DOC_SEND`.
+
+Permission levels required for each API call are described on a per call
+basis.
+
+### OAuth and Cookies
+As the Scrive eSign web interface uses the Scrive API, all API calls
+support two modes of authentication: OAuth based, and browser cookie based.
+If the `Authorization` header is set, any browser cookies are ignored.
+
+### OAuth 1.0 Workflow
+> ### OAuth Workflow using cURL
+> Here we provide some examples using the cURL command.
+>
+> **1. Temporary credentials request using cURL and response:**
+
+```bash
+$ curl 'https://${host}/oauth/temporarycredentials?privileges=DOC_CREATE%2BDOC_SEND' \
+  -H 'Authorization: oauth_realm="Scrive",oauth_signature_method="PLAINTEXT",oauth_consumer_key="4d224b89875b39af_2",oauth_signature="f446cae781995b05&aaaaaa",oauth_callback="http://www.mywebsite.com/scrive"'
+
+oauth_token=b0d6be3270a2b3ad_8&oauth_token_secret=dac0ec76e037c01d&oauth_callback_confirmed=true
+```
+
+> **2. Now redirect the user to:**
+
+```
+https://${host}/oauth/authorization?oauth_token=b0d6be3270a2b3ad_8
+```
+
+> If the user grants access to your application, they will be redirected to:
+
+```
+http://www.mywebsite.com/scrive?=&oauth_token=b0d6be3270a2b3ad_8&oauth_verifier=6382be3e8fcafd94
+```
+
+> **3. You should now request for an OAuth token using all the information:**
+
+```
+$ curl '${host}/oauth/tokencredentials' \
+  -H 'Authorization: oauth_realm="Scrive",oauth_signature_method="PLAINTEXT",oauth_consumer_key="4d224b89875b39af_2",oauth_signature="f446cae781995b05&dac0ec76e037c01d",oauth_token="b0d6be3270a2b3ad_8",oauth_verifier="6382be3e8fcafd94"'
+
+oauth_token=0e870aa5ff434d5a_2&oauth_token_secret=22adb49346ba7674
+```
+
+> You should now be able to perform an API call, for example:
+
+```
+curl -X POST '${host}/api/v2/documents/new' \
+  -H 'Authorization: oauth_realm="Scrive",oauth_signature_method="PLAINTEXT",oauth_consumer_key="4d224b89875b39af_2",oauth_signature="f446cae781995b05&22adb49346ba7674",oauth_token="0e870aa5ff434d5a_2"'
+```
+
+The OAuth workflow consists of three steps, which we will describe in turn:
+
+1. Temporary credentials request and response
+2. Authorisation redirect
+3. Token request and response
+
+**1. Temporary Credentials**
+
+You must first request temporary credentials using the client credentials
+identifier and secret from your account’s [Integration settings
+tab](https://scrive.com/account#api-dashboard).
+
+To do so you must issue a `GET` request to
+`https://${host}/oauth/temporarycredentials?privileges=${privileges}` with
+the following parameters in the `authorization` header:
+
+* `oauth_signature_method="PLAINTEXT"`
+* `oauth_consumer_key="${consumer_key}"`
+* `oauth_signature="${consumer_secret}&aaaaaa"`
+* `oauth_callback="${oauth_callback_url}"`
+
+`${priviliges}` must be separated by a `+`, for example
+`"DOC_CREATE+DOC_SEND"` (or `%2B` when URL encoded).
+You can set `${oauth_callback_url}` to what you like, but it must be set.
+The `oauth_signature` must be appended with a dummy `&aaaaaa` at this
+stage, it will be replaced with other tokens later.
+
+The reponse should include an `oauth_token`, `oauth_token_secret`, and
+`oauth_callback_confirmed=true`.
+
+**2. Authorisation redirect**
+
+You must now redirect the User to
+`https://${host}/oauth/authorization?oauth_token=${oauth_token}` using the
+`oauth_token` from the previous step.
+
+The user will be asked to grant you the requested privileges, displaying
+your company name.
+
+If they accept, they will be redirected to:
+
+* `${oauth_callback}?=&oauth_token=${oauth_token}&oauth_verifier=${oauth_verifier}`
+
+If they reject, the redirection will be to:
+
+* `${oauth_callback}?=&oauth_token=${oauth_token}&denied=true`
+
+Therefore, you should be able to inspect the redirection to the callback
+URL.
+
+**3. Token request**
+
+Now you should have the following pieces of information:
+
+* `oauth_consumer_key`
+* `oauth_token`
+* `oauth_verifier`
+
+We then use `oauth_signature_method="PLAINTEXT"` and construct a new
+`oauth_signature` from the client credentials secret and temporary
+credentials secret:
+
+* `oauth_signature_method="PLAINTEXT"`
+* `oauth_signature="${consumer_secret}&${oauth_token_secret}"`
+
+Finally, we wrap all of this into the `Authorization` header to
+`https://${host}/oauth/tokencredentials` and get back an `oauth_token` and
+`oauth_token_secret`.
+
+We can now make API calls on behalf of the User by including the finalised
+tokens in the `Authorization` header:
+
+* `oauth_consumer_key`
+* `oauth_token`
+* `oauth_signature_method="PLAINTEXT"`
+* `oauth_signature`
 
 # Errors
 
