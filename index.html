@@ -972,6 +972,46 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 </strong>
 </p>
 
+<blockquote>
+<h3 id="example">Example</h3>
+
+<p>As this call can be a little tricky to understand, we provide a concrete
+example.</p>
+
+<p>Suppose we wanted to set two author attachments:</p>
+
+<ol>
+<li><code class="prettyprint">terms_and_conditions.pdf</code></li>
+<li><code class="prettyprint">proof_of_purchase.pdf</code></li>
+</ol>
+
+<p>To do this we would need to include the two files as form data in our
+request.
+We are then free to chose names for the form data elements, so suppose we
+chose <code class="prettyprint">toc_file</code> for the first, and <code class="prettyprint">proof_file</code> for the second.</p>
+
+<p>In this case the <code class="prettyprint">attachments</code> JSON would need to resemble:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Terms and Conditions"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"add_to_sealed_file"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"file_param"</span><span class="p">:</span><span class="w"> </span><span class="s2">"toc_file"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Proof of purchase"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"add_to_sealed_file"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"file_param"</span><span class="p">:</span><span class="w"> </span><span class="s2">"toc_file"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>And we would include our files as named form elements.</p>
+</blockquote>
+
 <p>Set or remove author attachments for the document.</p>
 
 <p>Replaces any existing attachments, so all attachments must be set by any
@@ -3922,6 +3962,25 @@ be changed.</p>
 <h2 id="author-attachments">Author Attachments</h2>
 
 <p><code class="prettyprint">(array)</code></p>
+
+<blockquote>
+<h3 id="example-json-for-quot-author-attachments-quot">Example JSON for &ldquo;Author Attachments&rdquo;:</h3>
+</blockquote>
+<pre class="highlight json"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Attachment using ID"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"add_to_sealed_file"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"file_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"36"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Attachment using parameter"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"add_to_sealed_file"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"file_param"</span><span class="p">:</span><span class="w"> </span><span class="s2">"file_1"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre>
 
 <p>Attachments that have been added to a document by the author.</p>
 
