@@ -180,8 +180,8 @@ API calls, or new API calls.
 </tr>
 </thead><tbody>
 <tr>
-<td>2016-TODO</td>
-<td>Scrive Document API Version 2 is released.</td>
+<td>2016-10-14</td>
+<td>Pre-release of Scrive Document API Version 2</td>
 </tr>
 </tbody></table>
 
@@ -456,42 +456,10 @@ After 10 failed attempts, we will no longer attempt the callback.</p>
 <h1 id="authentication">Authentication</h1>
 
 <p>The Scrive Document API supports OAuth 1.0 and personal access credentials
-based on this.
-The recommended approach is to use the full OAuth workflow.</p>
+based on this.</p>
 
-<h2 id="oauth">OAuth</h2>
-
-<p>Managing API access is done through a Scrive user account, and each user
-account may have zero or more client credentials.
-These client credentials are managed in the <a href="https://scrive.com/account#api-dashboard">Integration settings
-tab</a> of the user account
-settings.</p>
-
-<p>These client credentials may be used to request privileges from users.
-Users, in turn, can approve or deny granting such privileges.
-They may also remove privileges as they see fit, from the Integration
-settings tab.</p>
-
-<p>The OAuth authorisation sequence allows you to request privileges from a
-user and retrieve token credentials.
-Once these have been approved, you may use the token credentials to make
-API requests on behalf of the user.</p>
-
-<p><strong>TODO</strong> Describe OAuth workflow in detail</p>
-
-<h3 id="oauth-privileges">OAuth privileges</h3>
-
-<p>The current API version accepts the following privileges names:
-<code class="prettyprint">DOC_CREATE</code>, <code class="prettyprint">DOC_CHECK</code>, and <code class="prettyprint">DOC_SEND</code>.</p>
-
-<p>Permission levels required for each API call are described on a per call
-basis.</p>
-
-<h3 id="oauth-and-cookies">OAuth and Cookies</h3>
-
-<p>As the Scrive eSign web interface uses the Scrive API, all API calls
-support two modes of authentication: OAuth based, and browser cookie based.
-If the <code class="prettyprint">Authorization</code> header is set, any browser cookies are ignored.</p>
+<p>Where your application needs to perform actions on behalf of Users, the
+recommended approach is to use the full OAuth workflow.</p>
 
 <h2 id="personal-access-credentials">Personal Access Credentials</h2>
 
@@ -557,8 +525,174 @@ a sandbox environment.</p>
 Storing personal access tokens outside of the Scrive eSign system is
 equivalent to storing a user password.
 
-Due to this, we do recommend using OAuth instead.
+Due to this, we do recommend using OAuth where possible.
 </aside>
+
+<h2 id="oauth">OAuth</h2>
+
+<p>Managing API access is done through a Scrive user account, and each user
+account may have zero or more client credentials.
+These client credentials are managed in the <a href="https://scrive.com/account#api-dashboard">Integration settings
+tab</a> of the user account
+settings.</p>
+
+<p>These client credentials may be used to request privileges from users.
+Users, in turn, can approve or deny granting such privileges.
+They may also remove privileges as they see fit, from the Integration
+settings tab.</p>
+
+<p>The OAuth authorisation sequence allows you to request privileges from a
+user and retrieve token credentials.
+Once these have been approved, you may use the token credentials to make
+API requests on behalf of the user.</p>
+
+<h3 id="oauth-privileges">OAuth privileges</h3>
+
+<p>The current API version accepts the following privileges names:
+<code class="prettyprint">DOC_CREATE</code>, <code class="prettyprint">DOC_CHECK</code>, and <code class="prettyprint">DOC_SEND</code>.</p>
+
+<p>Permission levels required for each API call are described on a per call
+basis.</p>
+
+<h3 id="oauth-and-cookies">OAuth and Cookies</h3>
+
+<p>As the Scrive eSign web interface uses the Scrive API, all API calls
+support two modes of authentication: OAuth based, and browser cookie based.
+If the <code class="prettyprint">Authorization</code> header is set, any browser cookies are ignored.</p>
+
+<h3 id="oauth-1-0-workflow">OAuth 1.0 Workflow</h3>
+
+<blockquote>
+<h3 id="oauth-workflow-using-curl">OAuth Workflow using cURL</h3>
+
+<p>Here we provide some examples using the cURL command.</p>
+
+<p><strong>1. Temporary credentials request using cURL and response:</strong></p>
+</blockquote>
+<pre class="highlight shell"><code><span class="gp">$ </span>curl <span class="s1">'https://${host}/oauth/temporarycredentials?privileges=DOC_CREATE%2BDOC_SEND'</span> <span class="se">\</span>
+  -H <span class="s1">'Authorization: oauth_realm="Scrive",oauth_signature_method="PLAINTEXT",oauth_consumer_key="4d224b89875b39af_2",oauth_signature="f446cae781995b05&amp;aaaaaa",oauth_callback="http://www.mywebsite.com/scrive"'</span>
+
+<span class="nv">oauth_token</span><span class="o">=</span>b0d6be3270a2b3ad_8&amp;oauth_token_secret<span class="o">=</span>dac0ec76e037c01d&amp;oauth_callback_confirmed<span class="o">=</span><span class="nb">true</span>
+</code></pre>
+
+<blockquote>
+<p><strong>2. Now redirect the user to:</strong></p>
+</blockquote>
+<pre class="highlight plaintext"><code>https://${host}/oauth/authorization?oauth_token=b0d6be3270a2b3ad_8
+</code></pre>
+
+<blockquote>
+<p>If the user grants access to your application, they will be redirected to:</p>
+</blockquote>
+<pre class="highlight plaintext"><code>http://www.mywebsite.com/scrive?=&amp;oauth_token=b0d6be3270a2b3ad_8&amp;oauth_verifier=6382be3e8fcafd94
+</code></pre>
+
+<blockquote>
+<p><strong>3. You should now request for an OAuth token using all the information:</strong></p>
+</blockquote>
+<pre class="highlight plaintext"><code>$ curl '${host}/oauth/tokencredentials' \
+  -H 'Authorization: oauth_realm="Scrive",oauth_signature_method="PLAINTEXT",oauth_consumer_key="4d224b89875b39af_2",oauth_signature="f446cae781995b05&amp;dac0ec76e037c01d",oauth_token="b0d6be3270a2b3ad_8",oauth_verifier="6382be3e8fcafd94"'
+
+oauth_token=0e870aa5ff434d5a_2&amp;oauth_token_secret=22adb49346ba7674
+</code></pre>
+
+<blockquote>
+<p>You should now be able to perform an API call, for example:</p>
+</blockquote>
+<pre class="highlight plaintext"><code>curl -X POST '${host}/api/v2/documents/new' \
+  -H 'Authorization: oauth_realm="Scrive",oauth_signature_method="PLAINTEXT",oauth_consumer_key="4d224b89875b39af_2",oauth_signature="f446cae781995b05&amp;22adb49346ba7674",oauth_token="0e870aa5ff434d5a_2"'
+</code></pre>
+
+<p>The OAuth workflow consists of three steps, which we will describe in turn:</p>
+
+<ol>
+<li>Temporary credentials request and response</li>
+<li>Authorisation redirect</li>
+<li>Token request and response</li>
+</ol>
+
+<p><strong>1. Temporary Credentials</strong></p>
+
+<p>You must first request temporary credentials using the client credentials
+identifier and secret from your account’s <a href="https://scrive.com/account#api-dashboard">Integration settings
+tab</a>.</p>
+
+<p>To do so you must issue a <code class="prettyprint">GET</code> request to
+<code class="prettyprint">https://${host}/oauth/temporarycredentials?privileges=${privileges}</code> with
+the following parameters in the <code class="prettyprint">authorization</code> header:</p>
+
+<ul>
+<li><code class="prettyprint">oauth_signature_method=&quot;PLAINTEXT&quot;</code></li>
+<li><code class="prettyprint">oauth_consumer_key=&quot;${consumer_key}&quot;</code></li>
+<li><code class="prettyprint">oauth_signature=&quot;${consumer_secret}&amp;aaaaaa&quot;</code></li>
+<li><code class="prettyprint">oauth_callback=&quot;${oauth_callback_url}&quot;</code></li>
+</ul>
+
+<p><code class="prettyprint">${priviliges}</code> must be separated by a <code class="prettyprint">+</code>, for example
+<code class="prettyprint">&quot;DOC_CREATE+DOC_SEND&quot;</code> (or <code class="prettyprint">%2B</code> when URL encoded).
+You can set <code class="prettyprint">${oauth_callback_url}</code> to what you like, but it must be set.
+The <code class="prettyprint">oauth_signature</code> must be appended with a dummy <code class="prettyprint">&amp;aaaaaa</code> at this
+stage, it will be replaced with other tokens later.</p>
+
+<p>The reponse should include an <code class="prettyprint">oauth_token</code>, <code class="prettyprint">oauth_token_secret</code>, and
+<code class="prettyprint">oauth_callback_confirmed=true</code>.</p>
+
+<p><strong>2. Authorisation redirect</strong></p>
+
+<p>You must now redirect the User to
+<code class="prettyprint">https://${host}/oauth/authorization?oauth_token=${oauth_token}</code> using the
+<code class="prettyprint">oauth_token</code> from the previous step.</p>
+
+<p>The user will be asked to grant you the requested privileges, displaying
+your company name.</p>
+
+<p>If they accept, they will be redirected to:</p>
+
+<ul>
+<li><code class="prettyprint">${oauth_callback}?=&amp;oauth_token=${oauth_token}&amp;oauth_verifier=${oauth_verifier}</code></li>
+</ul>
+
+<p>If they reject, the redirection will be to:</p>
+
+<ul>
+<li><code class="prettyprint">${oauth_callback}?=&amp;oauth_token=${oauth_token}&amp;denied=true</code></li>
+</ul>
+
+<p>Therefore, you should be able to inspect the redirection to the callback
+URL.</p>
+
+<p><strong>3. Token request</strong></p>
+
+<p>Now you should have the following pieces of information:</p>
+
+<ul>
+<li><code class="prettyprint">oauth_consumer_key</code></li>
+<li><code class="prettyprint">oauth_token</code></li>
+<li><code class="prettyprint">oauth_verifier</code></li>
+</ul>
+
+<p>We then use <code class="prettyprint">oauth_signature_method=&quot;PLAINTEXT&quot;</code> and construct a new
+<code class="prettyprint">oauth_signature</code> from the client credentials secret and temporary
+credentials secret:</p>
+
+<ul>
+<li><code class="prettyprint">oauth_signature_method=&quot;PLAINTEXT&quot;</code></li>
+<li><code class="prettyprint">oauth_signature=&quot;${consumer_secret}&amp;${oauth_token_secret}&quot;</code></li>
+</ul>
+
+<p>Finally, we wrap all of this into the <code class="prettyprint">Authorization</code> header to
+<code class="prettyprint">https://${host}/oauth/tokencredentials</code> and get back an <code class="prettyprint">oauth_token</code> and
+<code class="prettyprint">oauth_token_secret</code>.</p>
+
+<p>We can now make API calls on behalf of the User by including the finalised
+tokens in the <code class="prettyprint">Authorization</code> header:</p>
+
+<ul>
+<li><code class="prettyprint">oauth_consumer_key</code></li>
+<li><code class="prettyprint">oauth_token</code></li>
+<li><code class="prettyprint">oauth_signature_method=&quot;PLAINTEXT&quot;</code></li>
+<li><code class="prettyprint">oauth_signature</code></li>
+</ul>
 
 <h1 id="errors">Errors</h1>
 
