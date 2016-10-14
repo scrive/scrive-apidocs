@@ -781,6 +781,42 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 </strong>
 </p>
 
+> ### Example
+>
+> As this call can be a little tricky to understand, we provide a concrete
+> example.
+>
+> Suppose we wanted to set two author attachments:
+>
+> 1. `terms_and_conditions.pdf`
+> 2. `proof_of_purchase.pdf`
+>
+> To do this we would need to include the two files as form data in our
+> request.
+> We are then free to chose names for the form data elements, so suppose we
+> chose `toc_file` for the first, and `proof_file` for the second.
+>
+> In this case the `attachments` JSON would need to resemble:
+
+```json
+[
+  {
+    "name": "Terms and Conditions",
+    "required": true,
+    "add_to_sealed_file": false,
+    "file_param": "toc_file"
+  },
+  {
+    "name": "Proof of purchase",
+    "required": false,
+    "add_to_sealed_file": true,
+    "file_param": "toc_file"
+  }
+]
+```
+
+> And we would include our files as named form elements.
+
 Set or remove author attachments for the document.
 
 Replaces any existing attachments, so all attachments must be set by any
@@ -3706,6 +3742,26 @@ This element must be one of the following enum values:
 
 ## Author Attachments
 `(array)`
+
+> ### Example JSON for "Author Attachments":
+
+```json
+[
+  {
+    "name": "Attachment using ID",
+    "required": false,
+    "add_to_sealed_file": true,
+    "file_id": "36"
+  },
+  {
+    "name": "Attachment using parameter",
+    "required": false,
+    "add_to_sealed_file": true,
+    "file_param": "file_1"
+  }
+]
+```
+
 
 Attachments that have been added to a document by the author.
 
