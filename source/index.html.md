@@ -33,7 +33,7 @@ available at [http://scrive.com/en/terms](http://scrive.com/en/terms)
 # Overview
 
 The Scrive Document API uses HTTPS methods and RESTful endpoints to create,
-edit, and manage the lifecycle of documents in the Scrive eSign system.
+edit, and manage the life-cycle of documents in the Scrive eSign system.
 Authorisation uses OAuth 1.0 and personal tokens.
 JSON is the data interchange format, but we also use query parameters.
 
@@ -86,7 +86,7 @@ The IP addresses that will be used as endpoints to and from our system are:
 A testing environment is available through the `api-testbed.scrive.com`
 domain.
 
-This environment should be used when developping an integration with the
+This environment should be used when developing an integration with the
 Scrive eSign system.
 
 <aside class="warning">
@@ -96,7 +96,7 @@ stored by it.
 </aside>
 
 We usually deploy the latest production environment to our API testbed, but
-may occssionally update it with newer bulids, which may not be as reliable
+may occasionally update it with newer builds, which may not be as reliable
 or well tested.
 
 The API testbed uses `54.229.20.170` as its IP address.
@@ -132,7 +132,7 @@ However, the parameters for the `/list` call have undergone significant
 structural changes.
 
 The following table summarises the changes in naming of the API calls.
-For details of the new parmeters and JSON data structures, please consult
+For details of the new parameters and JSON data structures, please consult
 the documentation.
 
 | API endpoint in Version 1                                    | Equivalent API endpoint in Version 2                        |
@@ -198,7 +198,7 @@ Once the document signing process has been started, using the `start` API
 call, the `status` will change to `"pending"` and relatively few
 modifications by the author are possible.
 Making the `start` API call will also deliver the document to the parties,
-depending on the delivery methods set (e.g. by email or sms).
+depending on the delivery methods set (e.g. by email or SMS).
 
 After all signing parties have successfully signed the document, its status
 will change to `"closed"`, after which it cannot be modified.
@@ -625,8 +625,8 @@ The new document will have state `Preparation` and will not be a template, and t
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -664,8 +664,8 @@ will use the current author details for the author signatory fields.
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -711,8 +711,8 @@ The call will return the full Document metadata structure, though.</p>
 However, you can include &quot;user defined&quot; items in the <code>tags</code> item, which
 is a key-value pair list.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -753,8 +753,8 @@ Will not change.</p>
 <tr><td><p><code>file</code><br/><em>optional</em></p></td><td><p>If provided, the PDF will be set as the main file for the document.</p>
 <p>If not provided, the current main file for the document will be removed.</p>
 </td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -858,8 +858,8 @@ parameters <code>attachment_1</code>, <code>attachment_2</code>, etc, and refere
 such in the <code>attachments</code> JSON.
 Although it is possible to use any HTTP compatible naming scheme.</p>
 </td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -894,8 +894,8 @@ Start the signing process for a document in preparation.
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -1088,8 +1088,8 @@ If one is set, no effect otherwise.
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -1126,8 +1126,8 @@ signed.
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -1164,8 +1164,8 @@ Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 <tr><td><p><code>days</code><br/><em>required</em></p></td><td><p>Number of days to prolong the document by.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -1203,8 +1203,8 @@ Cancel a pending document.
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -1241,8 +1241,8 @@ Move a document to Trash.
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -1279,8 +1279,8 @@ Delete a document that is in Trash.
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -1321,8 +1321,8 @@ Will not change.</p>
 other email content.
 Otherwise a template email content is used, with the document attached.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -1361,8 +1361,8 @@ Will not change.</p>
 automatic reminders.</p>
 <p>Excluding it will remove automatic reminders from the document.</p>
 </td><td><p>integer<br><em>int32</em></p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -1400,8 +1400,8 @@ Restart a document that has been cancelled, timed out, or rejected.
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -1460,8 +1460,8 @@ Similar requirements as <code>personal_number</code>.</p>
 <p>Currently only Norwegian BankID uses this and therefore must be a valid
 Norwegian mobile number.</p>
 </td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
@@ -1517,8 +1517,8 @@ necessary side-effects.
 In particular, if a value for the associated field was already set, it
 will not be cleared.</p>
 </td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the the document <code>object_version</code> and only perform
-the operation if these match.
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
