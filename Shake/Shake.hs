@@ -24,7 +24,7 @@ usageMsg :: String
 usageMsg = unlines
   [ ""
   , "# Shake build system for Scrive"
-  , "  Automatically runs dependancies, just specify your target"
+  , "  Automatically runs dependencies, just specify your target"
   , "  Run with one or more targets"
   , ""
   , "  $> ./shake server"
