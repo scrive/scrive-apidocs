@@ -238,52 +238,97 @@ removeLocalizationCallFromLocalization
           Attribute x -> x]
     format = concat . intersperse "."
 
+    auxFinalElemFunCall m functionName =
+      case Map.lookup functionName m of
+        Nothing ->
+          myError $ "Detected function/method like access to non-existing key '"
+          ++ functionName ++ "'"
+        Just (Object _) ->
+          myError $ "Detected function/method like access to a sub-dict '"
+          ++ functionName ++ "'"
+        Just (Value "<function>") ->
+          Right $ Object $ Map.delete functionName m
+        Just (Value "<array>") ->
+          myError $ "Detected function/method like access to an array '"
+          ++ functionName ++ "'"
+        Just (Value _) ->
+          myError $ "Detected function/method like access to a string '"
+          ++ functionName ++ "'"
+
+    auxFinalElemDictAccess m dictName =
+      case Map.lookup dictName m of
+        Nothing ->
+          myError $ "Detected dict/array like access to non-existing key '"
+          ++ dictName ++ "'"
+        Just (Object _) ->
+          myError $ "Detected dict access (" ++ dictName
+          ++ "), probably using dynamic keys. "
+          ++ "Please add needed manually keys to the whitelist"
+        Just (Value "<function>") ->
+          myError $ "Detected dict/array like access to a function '"
+          ++ dictName ++ "'"
+        Just (Value "<array>") -> Right $ Object $ Map.delete dictName m
+        Just (Value _) ->
+          myError $ "Detected dict/array like access to a string '"
+          ++ dictName ++ "'"
+
+    auxFinalElemAttribute m attr =
+      case Map.lookup attr m of
+        Nothing ->
+          myError $ "Detected access to non-existing key '" ++ attr ++ "'"
+        Just (Object _) ->
+          myError $ "Detected access to a whole sub-dict '" ++ attr
+          ++ "'. Please add needed keys to the whitelist manuall."
+        Just (Value "<function>") ->
+          myError $ "Detected attribute access to a function '" ++ attr ++ "'"
+        Just (Value "<array>") ->
+          myError $ "Detected attribute access to an array '" ++ attr ++ "'"
+        Just (Value _) -> Right $ Object $ Map.delete attr m
+
+    auxEmptyChildrenFunCall m v node =
+      case v of
+        "<function>" -> -- "foo.quux(" "{foo: function() {}}"
+          myError $ "Detected function call on a function '"
+          ++ format path ++ "'"
+        "<array>" -> -- "foo.quux(" "{foo: []}"
+          myError $ "Detected function call on an array '"
+          ++ format path ++ "'"
+        _ -> -- "foo.quux(" "{foo: 'bar'}", string method call
+          return $ Object $ Map.delete node m
+
+    auxEmptyChildrenDictAccess v =
+      case v of
+        "<function>" -> -- "foo.quux[" "{foo: function() {}}"
+          myError $ "Detected attribute access "
+          ++ "(followed by a key retrieval)"
+          ++ "to a function '" ++ format path ++ "'"
+        "<array>" -> -- "foo.quux[" "{foo: []}"
+          myError $ "Detected attribute access "
+          ++ "(followed by a key retrieval) "
+          ++ "to an array '" ++ format path ++ "'"
+        _ -> -- "foo.quux[" "{foo: 'bar'}"
+          myError $ "Detected attribute access "
+          ++ "(followed by a key retrieval) " ++ "to a string '"
+          ++ format path ++ "'"
+
+    auxEmptyChildrenAttribute v =
+      case v of
+        "<function>" -> -- "foo.quux" "{foo: function() {}}"
+          myError $ "Detected attribute access to a function '"
+          ++ format path ++ "'"
+        "<array>" -> -- "foo.quux" "{foo: []}"
+          myError $ "Detected attribute access to an array '"
+          ++ format path ++ "'"
+        _ -> -- "foo.quux" "{foo: 'bar'}"
+          myError $ "Detected attribute access to a string '"
+          ++ format path ++ "'"
+
     aux _ (Value _) = error "Trying to remove from Value Localization"
     aux [] (Object m) =
       case finalElem of
-        FunCall functionName ->
-          case Map.lookup functionName m of
-            Nothing -> myError $
-              "Detected function/method like access to non-existing key '"
-              ++ functionName ++ "'"
-            Just (Object _) -> myError $
-              "Detected function/method like access to a sub-dict '"
-              ++ functionName ++ "'"
-            Just (Value "<function>") ->
-              Right $ Object $ Map.delete functionName m
-            Just (Value "<array>") -> myError $
-              "Detected function/method like access to an array '"
-              ++ functionName ++ "'"
-            Just (Value _) -> myError $
-              "Detected function/method like access to a string '"
-              ++ functionName ++ "'"
-        DictAccess dictName ->
-          case Map.lookup dictName m of
-            Nothing -> myError $
-              "Detected dict/array like access to non-existing key '"
-              ++ dictName ++ "'"
-            Just (Object _) -> myError $
-              "Detected dict access (" ++ dictName
-              ++ "), probably using dynamic keys. "
-              ++ "Please add needed manually keys to the whitelist"
-            Just (Value "<function>") -> myError $
-              "Detected dict/array like access to a function '"
-              ++ dictName ++ "'"
-            Just (Value "<array>") -> Right $ Object $ Map.delete dictName m
-            Just (Value _) -> myError $
-              "Detected dict/array like access to a string '" ++ dictName ++ "'"
-        Attribute attr ->
-          case Map.lookup attr m of
-            Nothing -> myError $
-              "Detected access to non-existing key '" ++ attr ++ "'"
-            Just (Object _) -> myError $
-              "Detected access to a whole sub-dict '" ++ attr
-              ++ "'. Please add needed keys to the whitelist manuall."
-            Just (Value "<function>") -> myError $
-              "Detected attribute access to a function '" ++ attr ++ "'"
-            Just (Value "<array>") -> myError $
-              "Detected attribute access to an array '" ++ attr ++ "'"
-            Just (Value _) -> Right $ Object $ Map.delete attr m
+        FunCall functionName -> auxFinalElemFunCall m functionName
+        DictAccess dictName  -> auxFinalElemDictAccess m dictName
+        Attribute attr       -> auxFinalElemAttribute m attr
 
     aux (node:children) (Object m)
       | node `elem` whitelist = return $ Object m
@@ -293,43 +338,13 @@ removeLocalizationCallFromLocalization
           Just (Value v) -> -- "foo....QUUX" "{foo: v}"
             case children of
               [] -> -- "foo.QUUX" "{foo: v}"
-                  case finalElem of
-                    FunCall _ -> -- "foo.quux(" "{foo: v}"
-                      case v of
-                        "<function>" -> -- "foo.quux(" "{foo: function() {}}"
-                          myError $ "Detected function call on a function '"
-                                    ++ format path ++ "'"
-                        "<array>" -> -- "foo.quux(" "{foo: []}"
-                          myError $ "Detected function call on an array '"
-                          ++ format path ++ "'"
-                        _ -> -- "foo.quux(" "{foo: 'bar'}", string method call
-                          return $ Object $ Map.delete node m
-                    DictAccess _ -> -- "foo.quux[" "{foo: v}"
-                      case v of
-                        "<function>" -> -- "foo.quux[" "{foo: function() {}}"
-                          myError $ "Detected attribute access "
-                                    ++ "(followed by a key retrieval)"
-                                    ++ "to a function '" ++ format path ++ "'"
-                        "<array>" -> -- "foo.quux[" "{foo: []}"
-                          myError $ "Detected attribute access "
-                                    ++ "(followed by a key retrieval) "
-                                    ++ "to an array '" ++ format path ++ "'"
-                        _ -> -- "foo.quux[" "{foo: 'bar'}"
-                          myError $ "Detected attribute access "
-                                    ++ "(followed by a key retrieval) "
-                                    ++ "to a string '"
-                                    ++ format path ++ "'"
-                    Attribute _ -> -- "foo.quux" "{foo: v}"
-                      case v of
-                        "<function>" -> -- "foo.quux" "{foo: function() {}}"
-                          myError $ "Detected attribute access to a function '"
-                                    ++ format path ++ "'"
-                        "<array>" -> -- "foo.quux" "{foo: []}"
-                          myError $ "Detected attribute access to an array '"
-                                    ++ format path ++ "'"
-                        _ -> -- "foo.quux" "{foo: 'bar'}"
-                          myError $ "Detected attribute access to a string '"
-                                    ++ format path ++ "'"
+                case finalElem of
+                  FunCall _ -> -- "foo.quux(" "{foo: v}"
+                    auxEmptyChildrenFunCall m v node
+                  DictAccess _ -> -- "foo.quux[" "{foo: v}"
+                    auxEmptyChildrenDictAccess v
+                  Attribute _ -> -- "foo.quux" "{foo: v}"
+                    auxEmptyChildrenAttribute v
               (_:_) -> -- "foo....QUUX" "{foo: v}"
                 let badPrefix = take (length path - length children) path
                 in myError $ "Detected dict-like acces ('"
