@@ -49,6 +49,7 @@
     "time-grunt": "~0.1.0",
     "underscore": "~1.8.2",
     "webpack": "^1.12.12",
+    "webpack-dev-server": "^1.16.2",
     "webpack-merge": "^0.14.0"
   },
   "dependencies": {
