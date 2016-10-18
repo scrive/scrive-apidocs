@@ -164,20 +164,20 @@ main' ("diff":(user:(password:(lang:(res:_))))) =
     _ -> error "Invalid parameters. Resource name is invalid"
 
 main' ("diff":_) =
-  error "Invalid parameters. Usage: transifex.sh diff user password lang resource"
+  error "Invalid parameters. Usage: transifex diff user password lang resource"
 
 main' ("diff-lang":(user:(password:(lang:_)))) =
   mapM_ (diff user password lang) allResources
 
 main' ("diff-lang":_) =
-  error "Invalid parameters. Usage: transifex.sh diff-lang user password lang"
+  error "Invalid parameters. Usage: transifex diff-lang user password lang"
 
 main' ("diff-all":(user:(password:_))) =
   forM_ allLangs $ \lang -> do putStrLn ("Diff for language " ++ lang)
                                mapM_ (diff user password lang) allResources
 
 main' ("diff-all":_) =
-  error "Invalid parameters. Usage: transifex.sh diff-all user password"
+  error "Invalid parameters. Usage: transifex diff-all user password"
 
 main' ("merge":(user:(password:(lang:(res:_))))) =
   case (readResource res) of
@@ -186,7 +186,7 @@ main' ("merge":(user:(password:(lang:(res:_))))) =
 
 main' ("merge":_) =
   error $ "Invalid parameters. "
-          ++ "Usage: transifex.sh merge user password lang resource"
+          ++ "Usage: transifex merge user password lang resource"
 
 main' ("push":(user:(password:(lang:(res:_))))) =
   case (readResource res) of
@@ -195,24 +195,24 @@ main' ("push":(user:(password:(lang:(res:_))))) =
 
 main' ("push":_) =
   error $ "Invalid parameters. "
-          ++ "Usage: transifex.sh push user password lang resource"
+          ++ "Usage: transifex push user password lang resource"
 
 main' ("push-lang":(user:(password:("en":_)))) =
   mapM_ (push user password "en") allResources
 
 main' ("push-lang":(_user:(_password:(_lang:_)))) =
   error $ "Invalid parameters. "
-    ++ "Usage: transifex.sh push-lang user password lang "
+    ++ "Usage: transifex push-lang user password lang "
     ++ "is allowed only with en lang"
 
 main' ("push-lang":_) =
-  error "Invalid parameters. Usage: transifex.sh push-lang user password lang"
+  error "Invalid parameters. Usage: transifex push-lang user password lang"
 
 main' ("merge-lang":(user:(password:(lang:_)))) =
   mapM_ (merge user password lang) allResources
 
 main' ("merge-lang":_) =
-  error "Invalid parameters. Usage: transifex.sh merge-lang user password lang"
+  error "Invalid parameters. Usage: transifex merge-lang user password lang"
 
 main' ("merge-all":(user:(password:_))) =
   forM_ allTargetLangs $ \lang -> do
@@ -220,7 +220,7 @@ main' ("merge-all":(user:(password:_))) =
     mapM_ (merge user password lang) allResources
 
 main' ("merge-all":_) =
-  error "Invalid parameters. Usage: transifex.sh merge-all user password"
+  error "Invalid parameters. Usage: transifex merge-all user password"
 
 main' ("move":(source:(sres:(tres:_)))) =
   case (readResource sres, readResource tres) of
@@ -230,8 +230,30 @@ main' ("move":(source:(sres:(tres:_)))) =
 
 main' ("move":_) =
   error $ "Invalid parameters. "
-          ++ "Usage: transifex.sh move templates_name "
+          ++ "Usage: transifex move templates_name "
           ++ "source_resource target_resource"
+
+main' [] = putStr usageMsg
 
 main' _ =
   error "Invalid command. Valid commands are fix, diff, merge and push."
+
+usageMsg :: String
+usageMsg = unlines
+  [ "Transifex integration tool."
+  , ""
+  , "Usage:"
+  , "transifex fix                                "
+    ++ "-- Sort local .json files with translations."
+  , "transifex push user password lang resource   "
+    ++ "-- Push local language to Transifex. "
+    ++ "It will overwrite the external version."
+  , "transifex diff user password lang resource   "
+    ++ "-- Show a diff between the external version and your local one."
+  , "transifex merge user password lang resource  "
+    ++ "-- Merge the external version with your local one."
+  , ""
+  , "Available languages : en | sv | de | fr | it | es | pt | "
+    ++ "nl | da | no | fi | is | et | lv | lt"
+  , "Available resources : texts | events | signview"
+  ]
