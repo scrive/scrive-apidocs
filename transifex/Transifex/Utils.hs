@@ -1,5 +1,10 @@
-module Transifex.Utils (TranslationResource(..), allResources, readResource, translationFile, allLangs, allTargetLangs, sourceLang , encodeTranslationJSON, textsToJSON,textsFromStringJSON, textsFromJSON, Change(..), compareTranslations,parsePushResponse) where
-
+module Transifex.Utils
+  ( TranslationResource(..)
+  , allResources, readResource, translationFile
+  , allLangs, allTargetLangs, sourceLang
+  , encodeTranslationJSON, textsToJSON, textsFromStringJSON, textsFromJSON
+  , Change(..), compareTranslations, parsePushResponse )
+where
 
 import Data.Char (isSpace, isControl)
 import Data.List (isSuffixOf)
@@ -36,7 +41,8 @@ translationFile lang Signview = "texts/" ++ lang ++ "/signview.json"
 
 
 allLangs :: [String]
-allLangs = ["en","sv","de","fr","it","es","pt","nl","da","no","el","fi","is","et","lv","lt"]
+allLangs = ["en","sv","de","fr","it","es","pt"
+           ,"nl","da","no","el","fi","is","et","lv","lt"]
 
 sourceLang :: String
 sourceLang = "en"
@@ -45,23 +51,27 @@ allTargetLangs :: [String]
 allTargetLangs = delete sourceLang allLangs
 
 encodeTranslationJSON :: JSValue -> String
-encodeTranslationJSON  (JSObject jso) = "{ \n" ++ (intercalate ",\n" $ map (\(s,js) -> encode s ++ ":" ++ encode js) (fromJSObject jso)) ++ "\n}\n"
+encodeTranslationJSON  (JSObject jso) =
+  "{ \n" ++ (intercalate ",\n" $ map (\(s,js) -> encode s ++ ":" ++ encode js)
+             (fromJSObject jso)) ++ "\n}\n"
 encodeTranslationJSON  e = encode e
 
 textsFromJSON :: JSValue -> [(String,String)]
-textsFromJSON (JSObject jso) = map (\(a,JSString js) -> (a, fromJSString js)) (fromJSObject jso)
+textsFromJSON (JSObject jso) =
+  map (\(a,JSString js) -> (a, fromJSString js)) (fromJSObject jso)
 textsFromJSON _ = error "While decoding JSON with translations"
 
 
 textsFromStringJSON  :: Bool -> JSValue -> [(String,String)]
-textsFromStringJSON acceptNotReviewed js =  fromJust $ runIdentity $ withJSValue js $ fromJSValueCustomMany $ do
-                                mk <- fromJSValueField "key"
-                                mv <- fromJSValueField "translation"
-                                isReviewed <- fmap (fromMaybe False) $ fromJSValueField "reviewed"
-                                case (mk,mv,acceptNotReviewed || isReviewed) of
-                                     (Just k, Just v,True) -> return $ Just (k,v)
-                                     (Just k, Just v,False) -> return $ Just (k,"")
-                                     _ -> return Nothing
+textsFromStringJSON acceptNotReviewed js =
+  fromJust $ runIdentity $ withJSValue js $ fromJSValueCustomMany $ do
+    mk <- fromJSValueField "key"
+    mv <- fromJSValueField "translation"
+    isReviewed <- fmap (fromMaybe False) $ fromJSValueField "reviewed"
+    case (mk,mv,acceptNotReviewed || isReviewed) of
+      (Just k, Just v, True)  -> return $ Just (k,v)
+      (Just k, Just v, False) -> return $ Just (k,"")
+      _                       -> return Nothing
 
 textsToJSON :: [(String,String)] -> JSValue
 textsToJSON s = runJSONGen $ textsToJSON_ s
@@ -69,8 +79,6 @@ textsToJSON s = runJSONGen $ textsToJSON_ s
     textsToJSON_ :: [(String,String)] -> JSONGen ()
     textsToJSON_ ((n,v):ss) = value n v >> textsToJSON_ ss
     textsToJSON_ [] = return ()
-
-
 
 
 data Change =   Remove String String
@@ -86,15 +94,14 @@ instance Show Change where
 compareTranslations :: [(String,String)] -> [(String,String)] -> [Change]
 compareTranslations [] ts = map (\t -> (Add (fst t) (snd t))) ts
 compareTranslations ts [] = map (\t -> (Remove (fst t) (snd t))) ts
-compareTranslations (t1:ts1) (t2:ts2)  = if (fst t1 == fst t2)
-                                           then if (snd t1 == snd t2)
-                                                  then compareTranslations ts1 ts2
-                                                  else (Change (fst t1) (snd t1) (snd t2)) : (compareTranslations ts1 ts2)
-                                           else if fst t1 < fst t2
-                                                  then (Remove (fst t1) (snd t1)) : (compareTranslations ts1 (t2:ts2))
-                                                  else (Add (fst t2) (snd t2)) : (compareTranslations (t1:ts1) ts2)
-
-
+compareTranslations (t1:ts1) (t2:ts2)  =
+  if (fst t1 == fst t2)
+  then if (snd t1 == snd t2)
+       then compareTranslations ts1 ts2
+       else (Change (fst t1) (snd t1) (snd t2)) : (compareTranslations ts1 ts2)
+  else if fst t1 < fst t2
+       then (Remove (fst t1) (snd t1)) : (compareTranslations ts1 (t2:ts2))
+       else (Add (fst t2) (snd t2))    : (compareTranslations (t1:ts1) ts2)
 
 parsePushResponse :: String -> Maybe (Int,Int,Int)
 parsePushResponse  s = case decode s of

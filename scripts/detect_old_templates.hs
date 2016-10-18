@@ -1,12 +1,4 @@
---- run with: runhaskell -itransifex -isrc scripts/detect_old_templates.hs
 {-# OPTIONS_GHC -Wall -Werror #-}
-{- needed packages:
-    MissingH
-    HStringTemplate
-    filemanip
-    haskell-src-exts
-    kontrakcja-templates
--}
 import qualified Data.Set as S
 import Data.Maybe
 import Control.Applicative
@@ -29,7 +21,9 @@ whiteList = S.fromList [ "newTemplateTitle"
                        , "nomorethanonelistnormal"
                        , "dumpAllEvidenceTexts"
                        , "javascriptLocalisation"
-                       -- Old evidence events. Calls for rendering are convoluted, so it's try to autodetect that they are needed
+                       -- Old evidence events. Calls for rendering are
+                       -- convoluted, so it tries to autodetect that
+                       -- they are needed.
                        , "CancelDocumenElegEvidenceText"
                        , "SignatoryLinkVisitedArchive"
                        ]
@@ -94,7 +88,8 @@ rhsExps (UnGuardedRhs e) = expExps e
 rhsExps (GuardedRhss guardedRhss) = S.unions $ map guardedRhsExps guardedRhss
 
 guardedRhsExps :: GuardedRhs -> S.Set Exp
-guardedRhsExps (GuardedRhs _ stmts e) = S.unions (map stmtExps stmts) `S.union` expExps e
+guardedRhsExps (GuardedRhs _ stmts e) = S.unions (map stmtExps stmts)
+                                        `S.union` expExps e
 
 expExps :: Exp -> S.Set Exp
 expExps e = e `S.insert`
@@ -119,13 +114,17 @@ expExps e = e `S.insert`
       LeftSection e' _ -> expExps e'
       RightSection _ e' -> expExps e'
       RecConstr _ fieldUpdates -> S.unions $ map fieldUpdateExps fieldUpdates
-      RecUpdate e' fieldUpdates -> expExps e' `S.union` (S.unions $ map fieldUpdateExps fieldUpdates)
+      RecUpdate e' fieldUpdates -> expExps e' `S.union`
+        (S.unions $ map fieldUpdateExps fieldUpdates)
       EnumFrom e' -> expExps e'
       EnumFromTo e1 e2 -> expExps e1 `S.union` expExps e2
       EnumFromThen e1 e2 -> expExps e1 `S.union` expExps e2
-      EnumFromThenTo e1 e2 e3 -> expExps e1 `S.union` expExps e2 `S.union` expExps e3
-      ListComp e' qualStmts -> expExps e' `S.union` (S.unions $ map qualStmtExps qualStmts)
-      ParComp e' qualStmts -> expExps e' `S.union` (S.unions $ map (S.unions . map qualStmtExps) qualStmts)
+      EnumFromThenTo e1 e2 e3 -> expExps e1 `S.union` expExps e2
+                                 `S.union` expExps e3
+      ListComp e' qualStmts -> expExps e' `S.union`
+                               (S.unions $ map qualStmtExps qualStmts)
+      ParComp e' qualStmts -> expExps e' `S.union`
+        (S.unions $ map (S.unions . map qualStmtExps) qualStmts)
       ExpTypeSig _ e' _ -> expExps e'
       VarQuote _ -> S.empty
       TypQuote _ -> S.empty
@@ -179,13 +178,20 @@ qualStmtExps _ = S.empty
 -- these are needed, because every event types has associated template
 elogEvents :: IO (S.Set String)
 elogEvents = do
-  ParseOk (Module _ _ _ _ _ _ decls) <- parseFileWithExts kontraExtensions "backend/lib/EvidenceLog/Model.hs"
-  let documentCurrentEvidenceEventDeclCtors (DataDecl _ DataType _ (Ident "CurrentEvidenceEventType") _ ctors _) = Just ctors
+  ParseOk (Module _ _ _ _ _ _ decls) <- parseFileWithExts kontraExtensions
+                                        "backend/lib/EvidenceLog/Model.hs"
+  let documentCurrentEvidenceEventDeclCtors
+        (DataDecl _ DataType _ (Ident "CurrentEvidenceEventType") _ ctors _)
+        = Just ctors
       documentCurrentEvidenceEventDeclCtors _ = Nothing
-      documentObsoleteEvidenceEventDeclCtors (DataDecl _ DataType _ (Ident "ObsoleteEvidenceEventType") _ ctors _) = Just ctors
+      documentObsoleteEvidenceEventDeclCtors
+        (DataDecl _ DataType _ (Ident "ObsoleteEvidenceEventType") _ ctors _)
+        = Just ctors
       documentObsoleteEvidenceEventDeclCtors _ = Nothing
-      currentEventCtorDecls = head $ catMaybes $ map documentCurrentEvidenceEventDeclCtors decls
-      obsoleteEventCtorDecls = head $ catMaybes $ map documentObsoleteEvidenceEventDeclCtors decls
+      currentEventCtorDecls = head $ catMaybes $
+                              map documentCurrentEvidenceEventDeclCtors decls
+      obsoleteEventCtorDecls = head $ catMaybes $
+                               map documentObsoleteEvidenceEventDeclCtors decls
 
       nameToString (Ident x) = x
       nameToString (Symbol x) = x
@@ -194,7 +200,8 @@ elogEvents = do
       eventCtor (QualConDecl _ _ _ (InfixConDecl _ name' _)) = nameToString name'
       eventCtor (QualConDecl _ _ _ (RecDecl name' _)) = nameToString name'
 
-  return $ S.fromList $ map eventCtor (currentEventCtorDecls ++ obsoleteEventCtorDecls)
+  return $ S.fromList $ map eventCtor (currentEventCtorDecls
+                                       ++ obsoleteEventCtorDecls)
 
 --------------------------------------------------
 -- returns template name from expression of certain forms
@@ -213,18 +220,21 @@ expTemplateName (App (Var (UnQual (Ident funName))) (Lit (String template)))
                      , "render"
                      ] = Just template
     | otherwise = Nothing
-expTemplateName (App (App (Var (UnQual (Ident funName))) _) (Lit (String template)))
+expTemplateName (App (App (Var (UnQual (Ident funName))) _)
+                  (Lit (String template)))
     | funName `elem` [ "renderLocalTemplate"
                      , "renderLocalTemplate_"
                      , "flashMessageWithFieldName"
                      , "renderTemplateAsPage"] = Just template
     | otherwise = Nothing
-expTemplateName (App (App (App (Var (UnQual (Ident funName))) _) _) (Lit (String template)))
+expTemplateName (App (App (App (Var (UnQual (Ident funName))) _) _)
+                  (Lit (String template)))
     | funName `elem` [ "documentMailWithDocLang"
                      , "kontramail"
                      ] = Just template
     | otherwise = Nothing
-expTemplateName (App (App (App (App (Var (UnQual (Ident funName))) _) _) _) (Lit (String template)))
+expTemplateName (App (App (App (App (Var (UnQual (Ident funName))) _) _) _)
+                  (Lit (String template)))
     | funName `elem` [ "documentMail"
                      , "kontramaillocal"
                      ] = Just template
@@ -238,14 +248,18 @@ templateDeps tmpl = fromMaybe S.empty $ S.fromList <$> deps
           (_, _, immDeps) = checkTemplate parsedTmpl
           deps = filter (/= "noescape") <$> immDeps
 
--- recursive template dependency scanner
--- takes a map from template names to template strings (all known templates in the system)
--- set of already seen templates (empty in the beginning)
--- names of templates that we wish to recursively scan for dependencies
--- returns list of all (indirectly) dependent template names (of that ^^ set)
-go :: S.Set String -> Map.Map String String -> S.Set String -> S.Set String -> S.Set String
+-- Recursive template dependency scanner.
+--
+-- Takes a map from template names to template strings (all known
+-- templates in the system), set of already seen templates (empty in
+-- the beginning), and names of templates that we wish to recursively
+-- scan for dependencies. Returns a list of all (indirectly) dependent
+-- template names (of that ^^ set).
+go :: S.Set String -> Map.Map String String -> S.Set String -> S.Set String
+   -> S.Set String
 go elogTemplates allTmpls seenTmpls tmpls | S.null tmpls = seenTmpls
-                            | otherwise = go elogTemplates allTmpls seenTmpls' $ newDeps `S.union` tmpls'
+                            | otherwise = go elogTemplates allTmpls seenTmpls'
+                                          $ newDeps `S.union` tmpls'
     where (tmpl, tmpls') = S.deleteFindMin tmpls
           tmplDef = fromMaybe traceNotFound $ Map.lookup tmpl allTmpls
           traceNotFound = if tmpl `S.member` elogTemplates
@@ -264,10 +278,14 @@ main = do
   exps <- S.unions <$> mapM fileExps files
   let topLevelTemplatesFromSources = setCatMaybes $ S.map expTemplateName exps
   events <- elogEvents
-  let elogTemplates = S.unions [S.map (++"Log") events, S.map (++"Archive") events, S.map (++"VerificationPages") events]
-  let topLevelTemplates = S.unions [elogTemplates, topLevelTemplatesFromSources, whiteList]
+  let elogTemplates = S.unions [ S.map (++"Log") events
+                               , S.map (++"Archive") events
+                               ,  S.map (++"VerificationPages") events]
+  let topLevelTemplates = S.unions [elogTemplates
+                                   , topLevelTemplatesFromSources, whiteList]
   translations <- fmap concat $ mapM (fetchLocal "en") allResources
-  templatesFilesPath <-filter (".st" `isSuffixOf`) <$>  directoryFilesRecursive "templates"
+  templatesFilesPath <- filter (".st" `isSuffixOf`)
+                        <$> directoryFilesRecursive "templates"
   templates <- concat <$> mapM getTemplates templatesFilesPath
   let templatesMap = Map.fromList $ templates ++ translations
       allTemplates = S.fromList $ Map.keys templatesMap
@@ -279,8 +297,9 @@ main = do
 
 -- UTILS
 
-directoryEntriesRecursive :: FilePath -- ^ dir path to be searched for recursively
-                          -> IO ([FilePath], [FilePath]) -- ^ (list of all subdirs, list of all files)
+directoryEntriesRecursive
+  :: FilePath                    -- ^ dir path to be searched for recursively
+  -> IO ([FilePath], [FilePath]) -- ^ (list of all subdirs, list of all files)
 directoryEntriesRecursive path | "." `isSuffixOf` path = return ([], [])
                                | otherwise = do
   isDir <- doesDirectoryExist path
@@ -294,7 +313,7 @@ directoryEntriesRecursive path | "." `isSuffixOf` path = return ([], [])
       return ([], [path])
  where biConcat = (\(x, y) -> (concat x, concat y)) . unzip
 
-directoryFilesRecursive :: FilePath -- ^ dir path to be searched for recursively
-                        -> IO [FilePath] -- ^ list of all files in that dir
+directoryFilesRecursive
+  :: FilePath      -- ^ dir path to be searched for recursively
+  -> IO [FilePath] -- ^ list of all files in that dir
 directoryFilesRecursive path = snd `fmap` directoryEntriesRecursive path
-
