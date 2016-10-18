@@ -8,7 +8,6 @@ import Data.List (isPrefixOf,isSuffixOf, unfoldr, intersperse)
 import Data.Foldable (foldlM)
 import Data.Maybe
 import Control.Monad (forM)
-import Control.Applicative
 import Language.JavaScript.Parser
 import Text.Regex.TDFA
 import qualified Data.Map as Map
@@ -81,14 +80,14 @@ pruneLocalization (Object m) = Object $ Map.fromList $
     nonEmptyElem (Value _) = True
     nonEmptyElem (Object m') = not $ Map.null m'
 
--- | Get key, must be called on Objects and with existing keys.
-(!) :: Localization -> String -> Localization
-(!) (Value _) _ = error "(!) must be called on Object localization"
-(!) (Object m) k = m Map.! k
+-- -- | Get key, must be called on Objects and with existing keys.
+-- (!) :: Localization -> String -> Localization
+-- (!) (Value _) _ = error "(!) must be called on Object localization"
+-- (!) (Object m) k = m Map.! k
 
-nullLocalization :: Localization -> Bool
-nullLocalization (Value _) = False
-nullLocalization (Object m) = Map.null m
+-- nullLocalization :: Localization -> Bool
+-- nullLocalization (Value _) = False
+-- nullLocalization (Object m) = Map.null m
 
 instance Show Localization where
   show = aux 0
@@ -130,9 +129,9 @@ filterWhitelist (Object m)  = Object $ Map.fromList $ catMaybes $
       if k `elem` whitelist then Nothing
       else Just x
 
-    aux (k, m@(Object _)) =
+    aux (k, m'@(Object _)) =
       if  k `elem` whitelist then Nothing
-      else Just (k, filterWhitelist m)
+      else Just (k, filterWhitelist m')
 
 filterWhitelist v = v
 
@@ -263,7 +262,7 @@ removeLocalizationCallFromLocalization
             Nothing -> myError $
               "Detected dict/array like access to non-existing key '"
               ++ dictName ++ "'"
-            Just l@(Object _) -> myError $
+            Just (Object _) -> myError $
               "Detected dict access (" ++ dictName
               ++ "), probably using dynamic keys. "
               ++ "Please add needed manually keys to the whitelist"

@@ -1,24 +1,14 @@
-module Transifex.Synch (push, merge, diff, fix, fetchLocal)where
+module Transifex.Synch (push, merge, diff, fix, fetchLocal, main') where
 
 
-import Data.Char (isSpace, isControl)
-import Data.List (isSuffixOf)
 import System.IO
-import Data.Map (Map)
-import qualified Data.Map as M
-import Text.ParserCombinators.Parsec (parse)
-import Text.JSON.Gen
 import Text.JSON
-import Text.JSON.Pretty
-import Text.PrettyPrint.HughesPJ
 import Data.List
 import System.Process
 import Transifex.Utils
 import Control.Monad
-import System.Environment
 import System.Time
 import System.Locale
-import Data.Time.Calendar
 
 apiURL :: String
 apiURL = "http://www.transifex.com/api/2/"
@@ -103,12 +93,12 @@ merge user password lang resource = do
         hClose h
         putStrLn $ "Done."
 
-getOneOfChars :: [Char] -> IO Char
-getOneOfChars l = do
-  c <- getChar
-  if (c `elem` l)
-     then return c
-     else getOneOfChars l
+-- getOneOfChars :: [Char] -> IO Char
+-- getOneOfChars l = do
+--   c <- getChar
+--   if (c `elem` l)
+--      then return c
+--      else getOneOfChars l
 
 diff :: String -> String -> String -> TranslationResource ->  IO ()
 diff user password lang resource = do
@@ -210,7 +200,7 @@ main' ("push":_) =
 main' ("push-lang":(user:(password:("en":_)))) =
   mapM_ (push user password "en") allResources
 
-main' ("push-lang":(user:(password:(lang:_)))) =
+main' ("push-lang":(_user:(_password:(_lang:_)))) =
   error $ "Invalid parameters. "
     ++ "Usage: transifex.sh push-lang user password lang "
     ++ "is allowed only with en lang"

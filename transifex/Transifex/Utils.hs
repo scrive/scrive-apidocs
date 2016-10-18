@@ -6,17 +6,9 @@ module Transifex.Utils
   , Change(..), compareTranslations, parsePushResponse )
 where
 
-import Data.Char (isSpace, isControl)
-import Data.List (isSuffixOf)
-import System.IO
-import Data.Map (Map)
-import qualified Data.Map as M
-import Text.ParserCombinators.Parsec (parse)
+import Data.List
 import Text.JSON.Gen
 import Text.JSON
-import Text.JSON.Pretty
-import Text.PrettyPrint.HughesPJ
-import Data.List
 import Text.JSON.FromJSValue
 import Control.Monad.Identity
 import Data.Maybe
@@ -69,9 +61,9 @@ textsFromStringJSON acceptNotReviewed js =
     mv <- fromJSValueField "translation"
     isReviewed <- fmap (fromMaybe False) $ fromJSValueField "reviewed"
     case (mk,mv,acceptNotReviewed || isReviewed) of
-      (Just k, Just v, True)  -> return $ Just (k,v)
-      (Just k, Just v, False) -> return $ Just (k,"")
-      _                       -> return Nothing
+      (Just k, Just v, True)   -> return $ Just (k,v)
+      (Just k, Just _v, False) -> return $ Just (k,"")
+      _                        -> return Nothing
 
 textsToJSON :: [(String,String)] -> JSValue
 textsToJSON s = runJSONGen $ textsToJSON_ s

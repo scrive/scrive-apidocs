@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -Wall -Werror #-}
 import qualified Data.Set as S
 import Data.Maybe
-import Control.Applicative
 import System.IO
 import Language.Haskell.Exts
 import Text.StringTemplates.Files
