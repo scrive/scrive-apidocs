@@ -1,7 +1,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 import Control.Monad
+import Data.List
 import Development.Shake
+import Development.Shake.FilePath
+import System.Console.GetOpt
 import System.Exit (exitFailure)
 
 import Shake.GitHub
@@ -54,6 +57,18 @@ usageMsg = unlines
   , ""
   , "   dist                      : Build all and create .tar.gz archive"
   , ""
+  , "# Utility scripts"
+  , ""
+  , "   transifex-fix              : Sort local Transifex .json translation files"
+  , "   transifex-push             : Push local translation to Transifex"
+  , "   transifex-diff             : Diff local translation against the remote"
+  , "   transifex-merge            : Merge local translation with the remote"
+  , "   transifex-help             : Help on using Transifex"
+  , "   detect_old_localizations   : Detect old localizations"
+  , "   detect_old_templates       : Detect old templates"
+  , "   take_reference_screenshots : Take reference screenshots"
+  , "   scripts-help               : Help on using utility scripts"
+  , ""
   , "# Clean"
   , ""
   , "   clean          : Clean all except Shake directory"
@@ -62,6 +77,19 @@ usageMsg = unlines
   , "   clean-frontend : Clean with 'grunt clean'"
   , ""
   ]
+
+data TransifexFlag = User String | Password String | Lang String | Resource String
+  deriving (Eq, Ord)
+
+transifexFlags :: [OptDescr (Either String TransifexFlag)]
+transifexFlags =
+  [ Option "" ["user"]     (reqArg User     "USER") "User name"
+  , Option "" ["password"] (reqArg Password "PASS") "Password"
+  , Option "" ["lang"]     (reqArg Lang     "LANG") "Language"
+  , Option "" ["resource"] (reqArg Resource "NAME") "Resource"
+  ]
+  where
+    reqArg toFlag name = ReqArg (Right . toFlag) name
 
 main :: IO ()
 main = do
@@ -73,8 +101,8 @@ main = do
                                , "Shake/TeamCity.hs"
                                , "Shake/Utils.hs"
                                ]
-  shakeArgs (opts ver) $ do
-    want ["help"]
+  shakeArgsWith (opts ver) transifexFlags $ \flags targets -> return . Just $ do
+    if null targets then want ["help"] else want targets
 
     -- * First add Oracles
     addOracles
@@ -98,6 +126,19 @@ main = do
 
     "dist" ~> need ["_build/kontrakcja.tar.gz"]
 
+    "transifex-fix"              ~> runTransifexScript "fix"   []
+    "transifex-push"             ~> runTransifexScript "push"  flags
+    "transifex-diff"             ~> runTransifexScript "diff"  flags
+    "transifex-merge"            ~> runTransifexScript "merge" flags
+    "transifex-help"             ~> do putNormal transifexUsageMsg
+                                       putNormal "-----------------------------"
+                                       putNormal "Output of 'transifex --help':"
+                                       putNormal "-----------------------------"
+                                       runTransifexScript "" []
+    "detect_old_localizations"   ~> runDetectOldLocalizationsScript
+    "detect_old_templates"       ~> runDetectOldTemplatesScript
+    "take_reference_screenshots" ~> runTakeReferenceScreenshotsScript
+
     "clean" ~> need ["clean-server","clean-frontend"]
     "clean-server" ~> need ["cabal-clean"]
     "clean-frontend" ~> need ["grunt-clean"]
@@ -111,6 +152,7 @@ main = do
     serverTestRules
     frontendBuildRules
     frontendTestRules
+    utilityScriptRules
     distributionRules
     oracleHelpRule
 
@@ -359,3 +401,157 @@ distributionRules = do
                     , "certs"
                     ]
     command_ [Shell] "tar" $ ["-czf","_build/kontrakcja.tar.gz"] ++ distFiles
+
+-- * Utility scripts.
+
+utilityScriptRules :: Rules ()
+utilityScriptRules = do
+  "dist/build/detect_old_localizations" <.> exe %> \_ -> do
+    let detectOldLocalizationsSources = ["scripts/detect_old_localizations.hs"]
+    need $ ["dist/setup-config"] ++ detectOldLocalizationsSources
+    cmd "cabal build detect_old_localizations"
+
+  "dist/build/detect_old_templates" <.> exe %> \_ -> do
+    let detectOldTemplatesSources = ["scripts/detect_old_templates.hs"]
+    transifexSources             <- getTransifexSources
+    need $ ["dist/setup-config"] ++ detectOldTemplatesSources ++ transifexSources
+    cmd "cabal build detect_old_templates"
+
+  "dist/build/transifex/transifex" <.> exe %> \_ -> do
+    transifexSources <- getTransifexSources
+    need $ ["dist/setup-config"] ++ transifexSources
+    cmd "cabal build transifex"
+
+  "scripts-help" ~> putNormal scriptsUsageMsg
+
+  where
+    -- FIXME: Use Cabal API to get the list of hs-source-dirs/modules
+    -- from the .cabal file instead of duplicating the info here.
+    getTransifexSources = getDirectoryFiles "" ["transifex//*.hs"]
+
+scriptsUsageMsg :: String
+scriptsUsageMsg = unlines $
+  [ "Using utility scripts"
+  , "====================="
+  , ""
+  , "transifex-fix"
+  , "-------------"
+  , "Sort local Transifex .json translation files."
+  , "To use, run 'shake.sh transifex-fix ARGS'."
+  , ""
+  , "transifex-push"
+  , "-------------"
+  , "Push local translation to the Transifex server."
+  , "To use, run 'shake.sh transifex-push ARGS'."
+  , "Required arguments: --user, --password, --lang, --resource."
+  , ""
+  , "transifex-diff"
+  , "-------------"
+  , "Diff local translation against the version on the server."
+  , "To use, run 'shake.sh transifex-diff ARGS'."
+  , "Required arguments: --user, --password, --lang, --resource."
+  , ""
+  , "transifex-merge"
+  , "-------------"
+  , "Merge local translation with the remote one."
+  , "To use, run 'shake.sh transifex-merge ARGS'."
+  , "Required arguments: --user, --password, --lang, --resource."
+  , ""
+  , "transifex-help"
+  , "--------------"
+  , "Help on using Transifex."
+  , ""
+  , "detect_old_localizations"
+  , "------------------------"
+  , "Detect old localizations. To use, run 'shake.sh detect_old_localizations'."
+  , ""
+  , "detect_old_templates"
+  , "--------------------"
+  , "Detect old templates. To use, run 'shake.sh detect_old_templates'."
+  , ""
+  , "take_reference_screenshots"
+  , "--------------------------"
+  , "Update reference screenshots."
+  , "After running 'shake.sh take_reference_screenshots', do the following steps:"
+  , ""
+  -- TODO: Explain the process better.
+  , "x = concatLines base64 /tmp/author.png"
+  , "authorJson = {\"time\":str(now()), in format 2015-09-22T16:00:00Z"
+  , "              \"image\":\"data:image/jpeg;base64,\" + x}"
+  , "writeFile files/reference_screenshots/author.json (dumps(authorJson))"
+  , "same thing for /tmp/desktop2.png into "
+    ++ "files/reference_screenshots/standard.json"
+  , "same thing for /tmp/mobile2.png into files/reference_screenshots/mobile.json"
+
+  ]
+
+transifexUsageMsg :: String
+transifexUsageMsg = unlines $
+  [ "------------------------------------"
+  , "How to do Transifex synchronisation:"
+  , "------------------------------------"
+  , ""
+  , "First make sure that you are on good branch - the one that is"
+  , "synched with TX. Right now it's staging."
+  , ""
+  , "WARNING: If you're on a different branch, you can destroy texts."
+  , ""
+  , "First, do:"
+  , ""
+  , " ./transifex.sh diff-lang user password en"
+  , ""
+  , "And check if response looks reasonable. If there are 500 texts"
+  , "changed, it's bad, but 50 are ok. Now push your local source texts"
+  , "to transifex. This will make all English texts available to"
+  , "translators."
+  , ""
+  , "./transifex.sh push-lang user password en"
+  , ""
+  , "You should never do this with any other language, since it will"
+  , "overwrite translations. And translations should be done in TX, not"
+  , "in sources."
+  , ""
+  , "Now it's time to fetch stuff from TX. You do that with"
+  , "./transifex.sh merge-all user password"
+  , ""
+  , "This will fetch all source files for all languages. It will include"
+  , "English, and it is possible that TX will drop some spaces, etc. It"
+  , "still should be fine. For every change it will overwrite local file."
+  , ""
+  , "After you merged it is always good to run tests with -t"
+  , "Localization. Errors should be fixed in TX, and then you just do"
+  , "synchronization again. But at this point you will not need to push"
+  , "English texts."
+  ]
+
+runTransifexScript :: String -> [TransifexFlag] -> Action ()
+runTransifexScript subcommand flags = do
+  checkFlags
+  need ["dist/build/transifex/transifex" <.> exe]
+  let extractArg (User u)     = u
+      extractArg (Password p) = p
+      extractArg (Lang l)     = l
+      extractArg (Resource r) = r
+      args = map extractArg $ sort flags
+  cmd $ "dist/build/transifex/transifex " ++ subcommand
+        ++ " " ++ intercalate " " args
+    where
+      checkFlags = if (subcommand `elem` ["push", "diff", "merge"])
+                      && (length flags /= 4)
+                   then error "transifex: Some required arguments are missing!"
+                   else return ()
+
+runDetectOldLocalizationsScript :: Action ()
+runDetectOldLocalizationsScript = do
+  need ["dist/build/detect_old_localizations/detect_old_localizations" <.> exe]
+  cmd "dist/build/detect_old_localizations/detect_old_localizations"
+
+runDetectOldTemplatesScript :: Action ()
+runDetectOldTemplatesScript = do
+  need ["dist/build/detect_old_templates/detect_old_templates" <.> exe]
+  cmd "dist/build/detect_old_templates/detect_old_templates"
+
+runTakeReferenceScreenshotsScript :: Action ()
+runTakeReferenceScreenshotsScript = do
+  need ["scripts/take_reference_screenshots.py"]
+  cmd "python scripts/take_reference_screenshots.py"
