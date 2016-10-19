@@ -517,7 +517,7 @@ interface, or using a dedicated API call, as described in the right column.</p>
 Such credentials can be used instead of OAuth client and token credentials
 in API calls.
 The personal access credentials are associated with the user and can be
-used instead of any other OAuth priviliges, they are intended for special
+used instead of any other OAuth privileges, they are intended for special
 cases where OAuth is not a viable option, or for getting started quickly in
 a sandbox environment.</p>
 
@@ -628,7 +628,7 @@ the following parameters in the <code class="prettyprint">authorization</code> h
 <li><code class="prettyprint">oauth_callback=&quot;${oauth_callback_url}&quot;</code></li>
 </ul>
 
-<p><code class="prettyprint">${priviliges}</code> must be separated by a <code class="prettyprint">+</code>, for example
+<p><code class="prettyprint">${privileges}</code> must be separated by a <code class="prettyprint">+</code>, for example
 <code class="prettyprint">&quot;DOC_CREATE+DOC_SEND&quot;</code> (or <code class="prettyprint">%2B</code> when URL encoded).
 You can set <code class="prettyprint">${oauth_callback_url}</code> to what you like, but it must be set.
 The <code class="prettyprint">oauth_signature</code> must be appended with a dummy <code class="prettyprint">&amp;aaaaaa</code> at this
@@ -2176,6 +2176,74 @@ the ones common to all signatory fields.</p>
 A valid definition must be one of the concrete types (e.g.
 <code class="prettyprint">SignatoryFieldCheckbox</code>).</p>
 
+<p>All array elements must be of type:</p>
+
+<h5 id="signatory-field">Signatory Field</h5>
+
+<p><code class="prettyprint">(object)</code></p>
+
+<p>The common elements of all <code class="prettyprint">SignatoryField</code> types.
+This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code class="prettyprint">SignatoryFieldName</code>).</p>
+
+<p>This object has the following properties:</p>
+
+<h5 id="type-string-required"><code class="prettyprint">type</code> (string, required)</h5>
+
+<h5 id="is_obligatory-boolean-required"><code class="prettyprint">is_obligatory</code> (boolean, required)</h5>
+
+<h5 id="placements-array"><code class="prettyprint">placements</code> (array)</h5>
+
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+
+<p>The easiest way to set the <code class="prettyprint">xrel</code>, <code class="prettyprint">yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="xrel-number"><code class="prettyprint">xrel</code> (number)</h5>
+
+<h5 id="yrel-number"><code class="prettyprint">yrel</code> (number)</h5>
+
+<h5 id="wrel-number"><code class="prettyprint">wrel</code> (number)</h5>
+
+<h5 id="hrel-number"><code class="prettyprint">hrel</code> (number)</h5>
+
+<h5 id="fsrel-number"><code class="prettyprint">fsrel</code> (number)</h5>
+
+<h5 id="page-integer"><code class="prettyprint">page</code> (integer)</h5>
+
+<p>The page number for this placement.</p>
+
+<h5 id="tip-string-enum"><code class="prettyprint">tip</code> (string, enum)</h5>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+<li><code class="prettyprint">left</code></li>
+<li><code class="prettyprint">right</code></li>
+</ul>
+
+<h5 id="anchors-array"><code class="prettyprint">anchors</code> (array)</h5>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="text-string"><code class="prettyprint">text</code> (string)</h5>
+
+<h5 id="index-integer"><code class="prettyprint">index</code> (integer)</h5>
+
 <h5 id="sign_order-integer"><code class="prettyprint">sign_order</code> (integer)</h5>
 
 <p>Default: <code class="prettyprint">1</code></p>
@@ -2909,6 +2977,74 @@ the ones common to all signatory fields.</p>
 A valid definition must be one of the concrete types (e.g.
 <code class="prettyprint">SignatoryFieldCheckbox</code>).</p>
 
+<p>All array elements must be of type:</p>
+
+<h5 id="signatory-field">Signatory Field</h5>
+
+<p><code class="prettyprint">(object)</code></p>
+
+<p>The common elements of all <code class="prettyprint">SignatoryField</code> types.
+This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code class="prettyprint">SignatoryFieldName</code>).</p>
+
+<p>This object has the following properties:</p>
+
+<h5 id="type-string-required"><code class="prettyprint">type</code> (string, required)</h5>
+
+<h5 id="is_obligatory-boolean-required"><code class="prettyprint">is_obligatory</code> (boolean, required)</h5>
+
+<h5 id="placements-array"><code class="prettyprint">placements</code> (array)</h5>
+
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+
+<p>The easiest way to set the <code class="prettyprint">xrel</code>, <code class="prettyprint">yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="xrel-number"><code class="prettyprint">xrel</code> (number)</h5>
+
+<h5 id="yrel-number"><code class="prettyprint">yrel</code> (number)</h5>
+
+<h5 id="wrel-number"><code class="prettyprint">wrel</code> (number)</h5>
+
+<h5 id="hrel-number"><code class="prettyprint">hrel</code> (number)</h5>
+
+<h5 id="fsrel-number"><code class="prettyprint">fsrel</code> (number)</h5>
+
+<h5 id="page-integer"><code class="prettyprint">page</code> (integer)</h5>
+
+<p>The page number for this placement.</p>
+
+<h5 id="tip-string-enum"><code class="prettyprint">tip</code> (string, enum)</h5>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+<li><code class="prettyprint">left</code></li>
+<li><code class="prettyprint">right</code></li>
+</ul>
+
+<h5 id="anchors-array"><code class="prettyprint">anchors</code> (array)</h5>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="text-string"><code class="prettyprint">text</code> (string)</h5>
+
+<h5 id="index-integer"><code class="prettyprint">index</code> (integer)</h5>
+
 <h5 id="sign_order-integer"><code class="prettyprint">sign_order</code> (integer)</h5>
 
 <p>Default: <code class="prettyprint">1</code></p>
@@ -3405,6 +3541,74 @@ the ones common to all signatory fields.</p>
 A valid definition must be one of the concrete types (e.g.
 <code class="prettyprint">SignatoryFieldCheckbox</code>).</p>
 
+<p>All array elements must be of type:</p>
+
+<h4 id="signatory-field">Signatory Field</h4>
+
+<p><code class="prettyprint">(object)</code></p>
+
+<p>The common elements of all <code class="prettyprint">SignatoryField</code> types.
+This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code class="prettyprint">SignatoryFieldName</code>).</p>
+
+<p>This object has the following properties:</p>
+
+<h5 id="type-string-required"><code class="prettyprint">type</code> (string, required)</h5>
+
+<h5 id="is_obligatory-boolean-required"><code class="prettyprint">is_obligatory</code> (boolean, required)</h5>
+
+<h5 id="placements-array"><code class="prettyprint">placements</code> (array)</h5>
+
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+
+<p>The easiest way to set the <code class="prettyprint">xrel</code>, <code class="prettyprint">yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="xrel-number"><code class="prettyprint">xrel</code> (number)</h5>
+
+<h5 id="yrel-number"><code class="prettyprint">yrel</code> (number)</h5>
+
+<h5 id="wrel-number"><code class="prettyprint">wrel</code> (number)</h5>
+
+<h5 id="hrel-number"><code class="prettyprint">hrel</code> (number)</h5>
+
+<h5 id="fsrel-number"><code class="prettyprint">fsrel</code> (number)</h5>
+
+<h5 id="page-integer"><code class="prettyprint">page</code> (integer)</h5>
+
+<p>The page number for this placement.</p>
+
+<h5 id="tip-string-enum"><code class="prettyprint">tip</code> (string, enum)</h5>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+<li><code class="prettyprint">left</code></li>
+<li><code class="prettyprint">right</code></li>
+</ul>
+
+<h5 id="anchors-array"><code class="prettyprint">anchors</code> (array)</h5>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="text-string"><code class="prettyprint">text</code> (string)</h5>
+
+<h5 id="index-integer"><code class="prettyprint">index</code> (integer)</h5>
+
 <h3 id="sign_order-integer"><code class="prettyprint">sign_order</code> (integer)</h3>
 
 <p>Default: <code class="prettyprint">1</code></p>
@@ -3541,6 +3745,72 @@ relative URL for the party.</p>
 <p>This will only be available after the signing process has been started,
 and will only be visible when accessing the document as the author.</p>
 
+<h2 id="signatory-field">Signatory Field</h2>
+
+<p><code class="prettyprint">(object)</code></p>
+
+<p>The common elements of all <code class="prettyprint">SignatoryField</code> types.
+This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code class="prettyprint">SignatoryFieldName</code>).</p>
+
+<p>This object has the following properties:</p>
+
+<h3 id="type-string-required"><code class="prettyprint">type</code> (string, required)</h3>
+
+<h3 id="is_obligatory-boolean-required"><code class="prettyprint">is_obligatory</code> (boolean, required)</h3>
+
+<h3 id="placements-array"><code class="prettyprint">placements</code> (array)</h3>
+
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+
+<p>The easiest way to set the <code class="prettyprint">xrel</code>, <code class="prettyprint">yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+<p>All array elements must be of type:</p>
+
+<h4 id="object">(object)</h4>
+
+<p>This object has the following properties:</p>
+
+<h5 id="xrel-number"><code class="prettyprint">xrel</code> (number)</h5>
+
+<h5 id="yrel-number"><code class="prettyprint">yrel</code> (number)</h5>
+
+<h5 id="wrel-number"><code class="prettyprint">wrel</code> (number)</h5>
+
+<h5 id="hrel-number"><code class="prettyprint">hrel</code> (number)</h5>
+
+<h5 id="fsrel-number"><code class="prettyprint">fsrel</code> (number)</h5>
+
+<h5 id="page-integer"><code class="prettyprint">page</code> (integer)</h5>
+
+<p>The page number for this placement.</p>
+
+<h5 id="tip-string-enum"><code class="prettyprint">tip</code> (string, enum)</h5>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+<li><code class="prettyprint">left</code></li>
+<li><code class="prettyprint">right</code></li>
+</ul>
+
+<h5 id="anchors-array"><code class="prettyprint">anchors</code> (array)</h5>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="text-string"><code class="prettyprint">text</code> (string)</h5>
+
+<h5 id="index-integer"><code class="prettyprint">index</code> (integer)</h5>
+
 <h2 id="signatoryfieldname">SignatoryFieldName</h2>
 
 <blockquote>
@@ -3573,15 +3843,75 @@ and will only be visible when accessing the document as the author.</p>
 
 <h3 id="signatory-field">Signatory Field</h3>
 
+<p><code class="prettyprint">(object)</code></p>
+
 <p>The common elements of all <code class="prettyprint">SignatoryField</code> types.
 This definition by itself is not sufficient, you need to use it in
 combination with one of the concrete types (e.g. <code class="prettyprint">SignatoryFieldName</code>).</p>
+
+<p>This object has the following properties:</p>
+
+<h4 id="type-string-required"><code class="prettyprint">type</code> (string, required)</h4>
+
+<h4 id="is_obligatory-boolean-required"><code class="prettyprint">is_obligatory</code> (boolean, required)</h4>
+
+<h4 id="placements-array"><code class="prettyprint">placements</code> (array)</h4>
+
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+
+<p>The easiest way to set the <code class="prettyprint">xrel</code>, <code class="prettyprint">yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="xrel-number"><code class="prettyprint">xrel</code> (number)</h5>
+
+<h5 id="yrel-number"><code class="prettyprint">yrel</code> (number)</h5>
+
+<h5 id="wrel-number"><code class="prettyprint">wrel</code> (number)</h5>
+
+<h5 id="hrel-number"><code class="prettyprint">hrel</code> (number)</h5>
+
+<h5 id="fsrel-number"><code class="prettyprint">fsrel</code> (number)</h5>
+
+<h5 id="page-integer"><code class="prettyprint">page</code> (integer)</h5>
+
+<p>The page number for this placement.</p>
+
+<h5 id="tip-string-enum"><code class="prettyprint">tip</code> (string, enum)</h5>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+<li><code class="prettyprint">left</code></li>
+<li><code class="prettyprint">right</code></li>
+</ul>
+
+<h5 id="anchors-array"><code class="prettyprint">anchors</code> (array)</h5>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="text-string"><code class="prettyprint">text</code> (string)</h5>
+
+<h5 id="index-integer"><code class="prettyprint">index</code> (integer)</h5>
 
 <h3 id="object">(object)</h3>
 
 <p>This object has the following properties:</p>
 
-<h4 id="type-string-enum"><code class="prettyprint">type</code> (string, enum)</h4>
+<h4 id="type-string-enum-required"><code class="prettyprint">type</code> (string, enum, required)</h4>
 
 <p>This element must be one of the following enum values:</p>
 
@@ -3589,7 +3919,7 @@ combination with one of the concrete types (e.g. <code class="prettyprint">Signa
 <li><code class="prettyprint">name</code></li>
 </ul>
 
-<h4 id="order-integer"><code class="prettyprint">order</code> (integer)</h4>
+<h4 id="order-integer-required"><code class="prettyprint">order</code> (integer, required)</h4>
 
 <h4 id="value-string"><code class="prettyprint">value</code> (string)</h4>
 
@@ -3620,21 +3950,85 @@ combination with one of the concrete types (e.g. <code class="prettyprint">Signa
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
-<p>A <code class="prettyprint">SignatoryField</code> for placing checkboxes on the document.</p>
+<p>A <code class="prettyprint">SignatoryField</code> for placing a number of standard text fields on the
+document.</p>
+
+<p>This excludes their name, but includes email, mobile number, personal number,
+and company number.</p>
 
 <p>The elements of this item must match <em>all</em> of the following properties:</p>
 
 <h3 id="signatory-field">Signatory Field</h3>
 
+<p><code class="prettyprint">(object)</code></p>
+
 <p>The common elements of all <code class="prettyprint">SignatoryField</code> types.
 This definition by itself is not sufficient, you need to use it in
 combination with one of the concrete types (e.g. <code class="prettyprint">SignatoryFieldName</code>).</p>
+
+<p>This object has the following properties:</p>
+
+<h4 id="type-string-required"><code class="prettyprint">type</code> (string, required)</h4>
+
+<h4 id="is_obligatory-boolean-required"><code class="prettyprint">is_obligatory</code> (boolean, required)</h4>
+
+<h4 id="placements-array"><code class="prettyprint">placements</code> (array)</h4>
+
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+
+<p>The easiest way to set the <code class="prettyprint">xrel</code>, <code class="prettyprint">yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="xrel-number"><code class="prettyprint">xrel</code> (number)</h5>
+
+<h5 id="yrel-number"><code class="prettyprint">yrel</code> (number)</h5>
+
+<h5 id="wrel-number"><code class="prettyprint">wrel</code> (number)</h5>
+
+<h5 id="hrel-number"><code class="prettyprint">hrel</code> (number)</h5>
+
+<h5 id="fsrel-number"><code class="prettyprint">fsrel</code> (number)</h5>
+
+<h5 id="page-integer"><code class="prettyprint">page</code> (integer)</h5>
+
+<p>The page number for this placement.</p>
+
+<h5 id="tip-string-enum"><code class="prettyprint">tip</code> (string, enum)</h5>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+<li><code class="prettyprint">left</code></li>
+<li><code class="prettyprint">right</code></li>
+</ul>
+
+<h5 id="anchors-array"><code class="prettyprint">anchors</code> (array)</h5>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="text-string"><code class="prettyprint">text</code> (string)</h5>
+
+<h5 id="index-integer"><code class="prettyprint">index</code> (integer)</h5>
 
 <h3 id="object">(object)</h3>
 
 <p>This object has the following properties:</p>
 
-<h4 id="type-string-enum"><code class="prettyprint">type</code> (string, enum)</h4>
+<h4 id="type-string-enum-required"><code class="prettyprint">type</code> (string, enum, required)</h4>
 
 <p>This element must be one of the following enum values:</p>
 
@@ -3681,15 +4075,75 @@ combination with one of the concrete types (e.g. <code class="prettyprint">Signa
 
 <h3 id="signatory-field">Signatory Field</h3>
 
+<p><code class="prettyprint">(object)</code></p>
+
 <p>The common elements of all <code class="prettyprint">SignatoryField</code> types.
 This definition by itself is not sufficient, you need to use it in
 combination with one of the concrete types (e.g. <code class="prettyprint">SignatoryFieldName</code>).</p>
+
+<p>This object has the following properties:</p>
+
+<h4 id="type-string-required"><code class="prettyprint">type</code> (string, required)</h4>
+
+<h4 id="is_obligatory-boolean-required"><code class="prettyprint">is_obligatory</code> (boolean, required)</h4>
+
+<h4 id="placements-array"><code class="prettyprint">placements</code> (array)</h4>
+
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+
+<p>The easiest way to set the <code class="prettyprint">xrel</code>, <code class="prettyprint">yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="xrel-number"><code class="prettyprint">xrel</code> (number)</h5>
+
+<h5 id="yrel-number"><code class="prettyprint">yrel</code> (number)</h5>
+
+<h5 id="wrel-number"><code class="prettyprint">wrel</code> (number)</h5>
+
+<h5 id="hrel-number"><code class="prettyprint">hrel</code> (number)</h5>
+
+<h5 id="fsrel-number"><code class="prettyprint">fsrel</code> (number)</h5>
+
+<h5 id="page-integer"><code class="prettyprint">page</code> (integer)</h5>
+
+<p>The page number for this placement.</p>
+
+<h5 id="tip-string-enum"><code class="prettyprint">tip</code> (string, enum)</h5>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+<li><code class="prettyprint">left</code></li>
+<li><code class="prettyprint">right</code></li>
+</ul>
+
+<h5 id="anchors-array"><code class="prettyprint">anchors</code> (array)</h5>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="text-string"><code class="prettyprint">text</code> (string)</h5>
+
+<h5 id="index-integer"><code class="prettyprint">index</code> (integer)</h5>
 
 <h3 id="object">(object)</h3>
 
 <p>This object has the following properties:</p>
 
-<h4 id="type-string-enum"><code class="prettyprint">type</code> (string, enum)</h4>
+<h4 id="type-string-enum-required"><code class="prettyprint">type</code> (string, enum, required)</h4>
 
 <p>This element must be one of the following enum values:</p>
 
@@ -3697,7 +4151,7 @@ combination with one of the concrete types (e.g. <code class="prettyprint">Signa
 <li><code class="prettyprint">text</code></li>
 </ul>
 
-<h4 id="name-string"><code class="prettyprint">name</code> (string)</h4>
+<h4 id="name-string-required"><code class="prettyprint">name</code> (string, required)</h4>
 
 <h4 id="value-string"><code class="prettyprint">value</code> (string)</h4>
 
@@ -3735,15 +4189,75 @@ combination with one of the concrete types (e.g. <code class="prettyprint">Signa
 
 <h3 id="signatory-field">Signatory Field</h3>
 
+<p><code class="prettyprint">(object)</code></p>
+
 <p>The common elements of all <code class="prettyprint">SignatoryField</code> types.
 This definition by itself is not sufficient, you need to use it in
 combination with one of the concrete types (e.g. <code class="prettyprint">SignatoryFieldName</code>).</p>
+
+<p>This object has the following properties:</p>
+
+<h4 id="type-string-required"><code class="prettyprint">type</code> (string, required)</h4>
+
+<h4 id="is_obligatory-boolean-required"><code class="prettyprint">is_obligatory</code> (boolean, required)</h4>
+
+<h4 id="placements-array"><code class="prettyprint">placements</code> (array)</h4>
+
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+
+<p>The easiest way to set the <code class="prettyprint">xrel</code>, <code class="prettyprint">yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="xrel-number"><code class="prettyprint">xrel</code> (number)</h5>
+
+<h5 id="yrel-number"><code class="prettyprint">yrel</code> (number)</h5>
+
+<h5 id="wrel-number"><code class="prettyprint">wrel</code> (number)</h5>
+
+<h5 id="hrel-number"><code class="prettyprint">hrel</code> (number)</h5>
+
+<h5 id="fsrel-number"><code class="prettyprint">fsrel</code> (number)</h5>
+
+<h5 id="page-integer"><code class="prettyprint">page</code> (integer)</h5>
+
+<p>The page number for this placement.</p>
+
+<h5 id="tip-string-enum"><code class="prettyprint">tip</code> (string, enum)</h5>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+<li><code class="prettyprint">left</code></li>
+<li><code class="prettyprint">right</code></li>
+</ul>
+
+<h5 id="anchors-array"><code class="prettyprint">anchors</code> (array)</h5>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="text-string"><code class="prettyprint">text</code> (string)</h5>
+
+<h5 id="index-integer"><code class="prettyprint">index</code> (integer)</h5>
 
 <h3 id="object">(object)</h3>
 
 <p>This object has the following properties:</p>
 
-<h4 id="type-string-enum"><code class="prettyprint">type</code> (string, enum)</h4>
+<h4 id="type-string-enum-required"><code class="prettyprint">type</code> (string, enum, required)</h4>
 
 <p>This element must be one of the following enum values:</p>
 
@@ -3751,7 +4265,7 @@ combination with one of the concrete types (e.g. <code class="prettyprint">Signa
 <li><code class="prettyprint">signature</code></li>
 </ul>
 
-<h4 id="name-string"><code class="prettyprint">name</code> (string)</h4>
+<h4 id="name-string-required"><code class="prettyprint">name</code> (string, required)</h4>
 
 <h4 id="signature-string-read-only"><code class="prettyprint">signature</code> (string, read only)</h4>
 
@@ -3787,15 +4301,75 @@ combination with one of the concrete types (e.g. <code class="prettyprint">Signa
 
 <h3 id="signatory-field">Signatory Field</h3>
 
+<p><code class="prettyprint">(object)</code></p>
+
 <p>The common elements of all <code class="prettyprint">SignatoryField</code> types.
 This definition by itself is not sufficient, you need to use it in
 combination with one of the concrete types (e.g. <code class="prettyprint">SignatoryFieldName</code>).</p>
+
+<p>This object has the following properties:</p>
+
+<h4 id="type-string-required"><code class="prettyprint">type</code> (string, required)</h4>
+
+<h4 id="is_obligatory-boolean-required"><code class="prettyprint">is_obligatory</code> (boolean, required)</h4>
+
+<h4 id="placements-array"><code class="prettyprint">placements</code> (array)</h4>
+
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+
+<p>The easiest way to set the <code class="prettyprint">xrel</code>, <code class="prettyprint">yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="xrel-number"><code class="prettyprint">xrel</code> (number)</h5>
+
+<h5 id="yrel-number"><code class="prettyprint">yrel</code> (number)</h5>
+
+<h5 id="wrel-number"><code class="prettyprint">wrel</code> (number)</h5>
+
+<h5 id="hrel-number"><code class="prettyprint">hrel</code> (number)</h5>
+
+<h5 id="fsrel-number"><code class="prettyprint">fsrel</code> (number)</h5>
+
+<h5 id="page-integer"><code class="prettyprint">page</code> (integer)</h5>
+
+<p>The page number for this placement.</p>
+
+<h5 id="tip-string-enum"><code class="prettyprint">tip</code> (string, enum)</h5>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+<li><code class="prettyprint">left</code></li>
+<li><code class="prettyprint">right</code></li>
+</ul>
+
+<h5 id="anchors-array"><code class="prettyprint">anchors</code> (array)</h5>
+
+<p>All array elements must be of type:</p>
+
+<h5 id="object">(object)</h5>
+
+<p>This object has the following properties:</p>
+
+<h5 id="text-string"><code class="prettyprint">text</code> (string)</h5>
+
+<h5 id="index-integer"><code class="prettyprint">index</code> (integer)</h5>
 
 <h3 id="object">(object)</h3>
 
 <p>This object has the following properties:</p>
 
-<h4 id="type-string-enum"><code class="prettyprint">type</code> (string, enum)</h4>
+<h4 id="type-string-enum-required"><code class="prettyprint">type</code> (string, enum, required)</h4>
 
 <p>This element must be one of the following enum values:</p>
 
@@ -3803,7 +4377,7 @@ combination with one of the concrete types (e.g. <code class="prettyprint">Signa
 <li><code class="prettyprint">checkbox</code></li>
 </ul>
 
-<h4 id="name-string"><code class="prettyprint">name</code> (string)</h4>
+<h4 id="name-string-required"><code class="prettyprint">name</code> (string, required)</h4>
 
 <h4 id="is_checked-boolean"><code class="prettyprint">is_checked</code> (boolean)</h4>
 
