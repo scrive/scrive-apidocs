@@ -327,7 +327,7 @@ Only one personal token is available per user.
 Such credentials can be used instead of OAuth client and token credentials
 in API calls.
 The personal access credentials are associated with the user and can be
-used instead of any other OAuth priviliges, they are intended for special
+used instead of any other OAuth privileges, they are intended for special
 cases where OAuth is not a viable option, or for getting started quickly in
 a sandbox environment.
 
@@ -430,7 +430,7 @@ the following parameters in the `authorization` header:
 * `oauth_signature="${consumer_secret}&aaaaaa"`
 * `oauth_callback="${oauth_callback_url}"`
 
-`${priviliges}` must be separated by a `+`, for example
+`${privileges}` must be separated by a `+`, for example
 `"DOC_CREATE+DOC_SEND"` (or `%2B` when URL encoded).
 You can set `${oauth_callback_url}` to what you like, but it must be set.
 The `oauth_signature` must be appended with a dummy `&aaaaaa` at this
@@ -1971,6 +1971,73 @@ A valid definition must be one of the concrete types (e.g.
 `SignatoryFieldCheckbox`).
 
 
+All array elements must be of type:
+
+##### Signatory Field
+`(object)`
+
+The common elements of all `SignatoryField` types.
+This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. `SignatoryFieldName`).
+
+
+This object has the following properties:
+
+##### `type` (string, required)
+
+##### `is_obligatory` (boolean, required)
+
+##### `placements` (array)
+
+If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.
+
+Note that this is an array, you can have multiple placements for the same
+field.
+
+The easiest way to set the `xrel`, `yrel`, etc. values is to create a
+template in the document UI design view, and use those values.
+
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `xrel` (number)
+
+##### `yrel` (number)
+
+##### `wrel` (number)
+
+##### `hrel` (number)
+
+##### `fsrel` (number)
+
+##### `page` (integer)
+
+The page number for this placement.
+
+##### `tip` (string, enum)
+
+This element must be one of the following enum values:
+
+* `left`
+* `right`
+
+##### `anchors` (array)
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `text` (string)
+
+##### `index` (integer)
+
 ##### `sign_order` (integer)
 
 Default: `1`
@@ -2708,6 +2775,73 @@ A valid definition must be one of the concrete types (e.g.
 `SignatoryFieldCheckbox`).
 
 
+All array elements must be of type:
+
+##### Signatory Field
+`(object)`
+
+The common elements of all `SignatoryField` types.
+This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. `SignatoryFieldName`).
+
+
+This object has the following properties:
+
+##### `type` (string, required)
+
+##### `is_obligatory` (boolean, required)
+
+##### `placements` (array)
+
+If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.
+
+Note that this is an array, you can have multiple placements for the same
+field.
+
+The easiest way to set the `xrel`, `yrel`, etc. values is to create a
+template in the document UI design view, and use those values.
+
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `xrel` (number)
+
+##### `yrel` (number)
+
+##### `wrel` (number)
+
+##### `hrel` (number)
+
+##### `fsrel` (number)
+
+##### `page` (integer)
+
+The page number for this placement.
+
+##### `tip` (string, enum)
+
+This element must be one of the following enum values:
+
+* `left`
+* `right`
+
+##### `anchors` (array)
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `text` (string)
+
+##### `index` (integer)
+
 ##### `sign_order` (integer)
 
 Default: `1`
@@ -3206,6 +3340,73 @@ A valid definition must be one of the concrete types (e.g.
 `SignatoryFieldCheckbox`).
 
 
+All array elements must be of type:
+
+#### Signatory Field
+`(object)`
+
+The common elements of all `SignatoryField` types.
+This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. `SignatoryFieldName`).
+
+
+This object has the following properties:
+
+##### `type` (string, required)
+
+##### `is_obligatory` (boolean, required)
+
+##### `placements` (array)
+
+If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.
+
+Note that this is an array, you can have multiple placements for the same
+field.
+
+The easiest way to set the `xrel`, `yrel`, etc. values is to create a
+template in the document UI design view, and use those values.
+
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `xrel` (number)
+
+##### `yrel` (number)
+
+##### `wrel` (number)
+
+##### `hrel` (number)
+
+##### `fsrel` (number)
+
+##### `page` (integer)
+
+The page number for this placement.
+
+##### `tip` (string, enum)
+
+This element must be one of the following enum values:
+
+* `left`
+* `right`
+
+##### `anchors` (array)
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `text` (string)
+
+##### `index` (integer)
+
 ### `sign_order` (integer)
 
 Default: `1`
@@ -3333,6 +3534,71 @@ This will only be available after the signing process has been started,
 and will only be visible when accessing the document as the author.
 
 
+## Signatory Field
+`(object)`
+
+The common elements of all `SignatoryField` types.
+This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. `SignatoryFieldName`).
+
+
+This object has the following properties:
+
+### `type` (string, required)
+
+### `is_obligatory` (boolean, required)
+
+### `placements` (array)
+
+If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.
+
+Note that this is an array, you can have multiple placements for the same
+field.
+
+The easiest way to set the `xrel`, `yrel`, etc. values is to create a
+template in the document UI design view, and use those values.
+
+
+All array elements must be of type:
+
+#### (object)
+
+This object has the following properties:
+
+##### `xrel` (number)
+
+##### `yrel` (number)
+
+##### `wrel` (number)
+
+##### `hrel` (number)
+
+##### `fsrel` (number)
+
+##### `page` (integer)
+
+The page number for this placement.
+
+##### `tip` (string, enum)
+
+This element must be one of the following enum values:
+
+* `left`
+* `right`
+
+##### `anchors` (array)
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `text` (string)
+
+##### `index` (integer)
+
 ## SignatoryFieldName
 
 
@@ -3367,24 +3633,81 @@ A `SignatoryField` for the name(s) of the party.
 The elements of this item must match *all* of the following properties:
 
 ### Signatory Field
-
+`(object)`
 
 The common elements of all `SignatoryField` types.
 This definition by itself is not sufficient, you need to use it in
 combination with one of the concrete types (e.g. `SignatoryFieldName`).
 
 
+This object has the following properties:
+
+#### `type` (string, required)
+
+#### `is_obligatory` (boolean, required)
+
+#### `placements` (array)
+
+If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.
+
+Note that this is an array, you can have multiple placements for the same
+field.
+
+The easiest way to set the `xrel`, `yrel`, etc. values is to create a
+template in the document UI design view, and use those values.
+
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `xrel` (number)
+
+##### `yrel` (number)
+
+##### `wrel` (number)
+
+##### `hrel` (number)
+
+##### `fsrel` (number)
+
+##### `page` (integer)
+
+The page number for this placement.
+
+##### `tip` (string, enum)
+
+This element must be one of the following enum values:
+
+* `left`
+* `right`
+
+##### `anchors` (array)
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `text` (string)
+
+##### `index` (integer)
+
 ### (object)
 
 This object has the following properties:
 
-#### `type` (string, enum)
+#### `type` (string, enum, required)
 
 This element must be one of the following enum values:
 
 * `name`
 
-#### `order` (integer)
+#### `order` (integer, required)
 
 #### `value` (string)
 
@@ -3417,24 +3740,85 @@ This element must be one of the following enum values:
 ```
 
 
-A `SignatoryField` for placing checkboxes on the document.
+A `SignatoryField` for placing a number of standard text fields on the
+document.
+
+This excludes their name, but includes email, mobile number, personal number,
+and company number.
 
 
 The elements of this item must match *all* of the following properties:
 
 ### Signatory Field
-
+`(object)`
 
 The common elements of all `SignatoryField` types.
 This definition by itself is not sufficient, you need to use it in
 combination with one of the concrete types (e.g. `SignatoryFieldName`).
 
 
+This object has the following properties:
+
+#### `type` (string, required)
+
+#### `is_obligatory` (boolean, required)
+
+#### `placements` (array)
+
+If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.
+
+Note that this is an array, you can have multiple placements for the same
+field.
+
+The easiest way to set the `xrel`, `yrel`, etc. values is to create a
+template in the document UI design view, and use those values.
+
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `xrel` (number)
+
+##### `yrel` (number)
+
+##### `wrel` (number)
+
+##### `hrel` (number)
+
+##### `fsrel` (number)
+
+##### `page` (integer)
+
+The page number for this placement.
+
+##### `tip` (string, enum)
+
+This element must be one of the following enum values:
+
+* `left`
+* `right`
+
+##### `anchors` (array)
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `text` (string)
+
+##### `index` (integer)
+
 ### (object)
 
 This object has the following properties:
 
-#### `type` (string, enum)
+#### `type` (string, enum, required)
 
 This element must be one of the following enum values:
 
@@ -3481,24 +3865,81 @@ A custom text `SignatoryField` that can be used for any other information.
 The elements of this item must match *all* of the following properties:
 
 ### Signatory Field
-
+`(object)`
 
 The common elements of all `SignatoryField` types.
 This definition by itself is not sufficient, you need to use it in
 combination with one of the concrete types (e.g. `SignatoryFieldName`).
 
 
+This object has the following properties:
+
+#### `type` (string, required)
+
+#### `is_obligatory` (boolean, required)
+
+#### `placements` (array)
+
+If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.
+
+Note that this is an array, you can have multiple placements for the same
+field.
+
+The easiest way to set the `xrel`, `yrel`, etc. values is to create a
+template in the document UI design view, and use those values.
+
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `xrel` (number)
+
+##### `yrel` (number)
+
+##### `wrel` (number)
+
+##### `hrel` (number)
+
+##### `fsrel` (number)
+
+##### `page` (integer)
+
+The page number for this placement.
+
+##### `tip` (string, enum)
+
+This element must be one of the following enum values:
+
+* `left`
+* `right`
+
+##### `anchors` (array)
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `text` (string)
+
+##### `index` (integer)
+
 ### (object)
 
 This object has the following properties:
 
-#### `type` (string, enum)
+#### `type` (string, enum, required)
 
 This element must be one of the following enum values:
 
 * `text`
 
-#### `name` (string)
+#### `name` (string, required)
 
 #### `value` (string)
 
@@ -3538,24 +3979,81 @@ A `SignatoryField` for placing signature boxes on the document.
 The elements of this item must match *all* of the following properties:
 
 ### Signatory Field
-
+`(object)`
 
 The common elements of all `SignatoryField` types.
 This definition by itself is not sufficient, you need to use it in
 combination with one of the concrete types (e.g. `SignatoryFieldName`).
 
 
+This object has the following properties:
+
+#### `type` (string, required)
+
+#### `is_obligatory` (boolean, required)
+
+#### `placements` (array)
+
+If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.
+
+Note that this is an array, you can have multiple placements for the same
+field.
+
+The easiest way to set the `xrel`, `yrel`, etc. values is to create a
+template in the document UI design view, and use those values.
+
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `xrel` (number)
+
+##### `yrel` (number)
+
+##### `wrel` (number)
+
+##### `hrel` (number)
+
+##### `fsrel` (number)
+
+##### `page` (integer)
+
+The page number for this placement.
+
+##### `tip` (string, enum)
+
+This element must be one of the following enum values:
+
+* `left`
+* `right`
+
+##### `anchors` (array)
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `text` (string)
+
+##### `index` (integer)
+
 ### (object)
 
 This object has the following properties:
 
-#### `type` (string, enum)
+#### `type` (string, enum, required)
 
 This element must be one of the following enum values:
 
 * `signature`
 
-#### `name` (string)
+#### `name` (string, required)
 
 #### `signature` (string, read only)
 
@@ -3593,24 +4091,81 @@ A `SignatoryField` for placing checkboxes on the document.
 The elements of this item must match *all* of the following properties:
 
 ### Signatory Field
-
+`(object)`
 
 The common elements of all `SignatoryField` types.
 This definition by itself is not sufficient, you need to use it in
 combination with one of the concrete types (e.g. `SignatoryFieldName`).
 
 
+This object has the following properties:
+
+#### `type` (string, required)
+
+#### `is_obligatory` (boolean, required)
+
+#### `placements` (array)
+
+If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.
+
+Note that this is an array, you can have multiple placements for the same
+field.
+
+The easiest way to set the `xrel`, `yrel`, etc. values is to create a
+template in the document UI design view, and use those values.
+
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `xrel` (number)
+
+##### `yrel` (number)
+
+##### `wrel` (number)
+
+##### `hrel` (number)
+
+##### `fsrel` (number)
+
+##### `page` (integer)
+
+The page number for this placement.
+
+##### `tip` (string, enum)
+
+This element must be one of the following enum values:
+
+* `left`
+* `right`
+
+##### `anchors` (array)
+
+All array elements must be of type:
+
+##### (object)
+
+This object has the following properties:
+
+##### `text` (string)
+
+##### `index` (integer)
+
 ### (object)
 
 This object has the following properties:
 
-#### `type` (string, enum)
+#### `type` (string, enum, required)
 
 This element must be one of the following enum values:
 
 * `checkbox`
 
-#### `name` (string)
+#### `name` (string, required)
 
 #### `is_checked` (boolean)
 
