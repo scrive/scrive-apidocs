@@ -917,7 +917,6 @@
 "_textFieldFor":"Partie",
 "_textFieldObligatory":"Signature obligatoire ici",
 "_textFieldRemove":"Retirer",
-"_thisActionCannotBeUndone":"Vous ne pouvez pas annuler cette action.",
 "_toFilter":"A:",
 "_toStartDocSent":"Votre document a été envoyé!",
 "_tooLargeAttachment":"La taille du fichier excède la limite de 10 MB. Essayer de le rendre moins volumineux.",
