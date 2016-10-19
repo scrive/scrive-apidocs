@@ -917,7 +917,6 @@
 "_textFieldFor":"Party",
 "_textFieldObligatory":"Mandatory to sign here",
 "_textFieldRemove":"Remove",
-"_thisActionCannotBeUndone":"You can't undo this action.",
 "_toFilter":"To:",
 "_toStartDocSent":"Your document has been sent!",
 "_tooLargeAttachment":"The file exceeds the maximum size of 10 MB. Try to make it smaller.",
