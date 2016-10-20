@@ -917,6 +917,7 @@
 "_textFieldFor":"Partij",
 "_textFieldObligatory":"Verplicht om hier te ondertekenen",
 "_textFieldRemove":"Verwijder",
+"_thisActionCannotBeUndone":"U kunt deze actie niet ongedaan maken.",
 "_toFilter":"Aan:",
 "_toStartDocSent":"Uw document is verstuurd!",
 "_tooLargeAttachment":"Het bestand overschrijdt de maximumgrootte van 10MB. Probeer het kleiner te maken. ",

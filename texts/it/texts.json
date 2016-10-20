@@ -917,6 +917,7 @@
 "_textFieldFor":"Parte",
 "_textFieldObligatory":"Obbligatorio firmare qui",
 "_textFieldRemove":"Rimuovi",
+"_thisActionCannotBeUndone":"Non è possibile annullare questa azione.",
 "_toFilter":"A:",
 "_toStartDocSent":"Il tuo documento è stato inviato!",
 "_tooLargeAttachment":"Il file supera la dimensione massima di 10 MB. Prova a renderlo più leggero.",

@@ -917,6 +917,7 @@
 "_textFieldFor":"Μετέχων",
 "_textFieldObligatory":"Υποχρεωτικό να υπογράψετε εδώ ",
 "_textFieldRemove":"Αφαίρεση ",
+"_thisActionCannotBeUndone":"Δεν μπορείτε να αναιρέσετε αυτή την ενέργεια. ",
 "_toFilter":"Προς: ",
 "_toStartDocSent":"Το έγγραφό σας έχει αποσταλεί! ",
 "_tooLargeAttachment":"Το αρχείο υπερβαίνει το μέγιστο μέγεθος των 10 MB. Προσπαθήστε να το κάνετε μικρότερο. ",

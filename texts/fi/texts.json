@@ -917,6 +917,7 @@
 "_textFieldFor":"Osapuoli",
 "_textFieldObligatory":"Pakollinen allekirjoitus tähän",
 "_textFieldRemove":"Poista",
+"_thisActionCannotBeUndone":"Et voi poistaa tätä tapahtumaa.",
 "_toFilter":"Asti:",
 "_toStartDocSent":"Dokumenttisi on lähetetty!",
 "_tooLargeAttachment":"Tiedosto ylittää 10 MB enimmäiskoon. Yritä saada siitä pienempi.",
