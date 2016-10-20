@@ -406,12 +406,12 @@ distributionRules = do
 
 utilityScriptRules :: Rules ()
 utilityScriptRules = do
-  "dist/build/detect_old_localizations" <.> exe %> \_ -> do
+  "dist/build/detect_old_localizations/detect_old_localizations" <.> exe %> \_ -> do
     let detectOldLocalizationsSources = ["scripts/detect_old_localizations.hs"]
     need $ ["dist/setup-config"] ++ detectOldLocalizationsSources
     cmd "cabal build detect_old_localizations"
 
-  "dist/build/detect_old_templates" <.> exe %> \_ -> do
+  "dist/build/detect_old_templates/detect_old_templates" <.> exe %> \_ -> do
     let detectOldTemplatesSources = ["scripts/detect_old_templates.hs"]
     transifexSources             <- getTransifexSources
     need $ ["dist/setup-config"] ++ detectOldTemplatesSources ++ transifexSources
