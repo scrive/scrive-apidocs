@@ -1262,3 +1262,48 @@ Executable screenshot-review
                     , TypeOperators
                     , TypeSynonymInstances
                     , UndecidableInstances
+
+Executable transifex
+  Hs-source-dirs:   transifex
+  Main-is:          Main.hs
+  Other-Modules:    Transifex.Synch,
+                    Transifex.Utils
+  GHC-Options:      -Wall -Werror
+  Build-Depends:    base,
+                    fields-json,
+                    json,
+                    mtl,
+                    old-locale,
+                    old-time,
+                    process
+  Default-Language: Haskell2010
+
+Executable detect_old_localizations
+  Hs-source-dirs:   scripts
+  Main-is:          detect_old_localizations.hs
+  GHC-Options:      -Wall -Werror
+  Build-Depends:    base,
+                    containers,
+                    directory,
+                    language-javascript < 0.6,
+                    regex-tdfa
+
+  Default-Language: Haskell2010
+
+Executable detect_old_templates
+  Hs-source-dirs:   scripts, transifex
+  Main-is:          detect_old_templates.hs
+  GHC-Options:      -Wall -Werror
+  Build-Depends:    base,
+                    containers,
+                    directory,
+                    fields-json,
+                    haskell-src-exts < 1.17,
+                    HStringTemplate,
+                    json,
+                    kontrakcja-templates,
+                    mtl,
+                    process,
+                    old-time,
+                    old-locale
+  Default-Language: Haskell2010

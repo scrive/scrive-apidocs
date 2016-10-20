@@ -1,5 +1,7 @@
 _local/
 /dist/
+/dist-newstyle/
+/.ghc.environment.*
 coverage-reports/
 log/
 kontrakcja.conf

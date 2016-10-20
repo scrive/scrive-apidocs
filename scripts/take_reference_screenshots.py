@@ -191,7 +191,8 @@ if __name__ == '__main__':
 
     with quitting(webdriver.Firefox()) as driver:
         driver.get(URL + '/d/' + doc_data['id'])
-        wait_for_element(driver, 'input[name=email]').send_keys('bartek+reference-screenshot@scrive.com')
+        wait_for_element(driver, 'input[name=email]').send_keys(
+            'bartek+reference-screenshot@scrive.com')
         wait_for_element(driver, 'input[name=password]').send_keys('dupadupa12')
         wait_for_element(driver, '.button.main').click()
         wait_for_element(driver, '.sendButton').click()
@@ -209,7 +210,8 @@ if __name__ == '__main__':
         time.sleep(2)  # wait for pages to load
         wait_for_element(driver, '.section.sign .button.action').click()
         time.sleep(1)  # wait for confirm signing modal to be shown
-        wait_for_element(driver, '.section.sign.above-overlay .button.action').click()
+        wait_for_element(driver,
+                         '.section.sign.above-overlay .button.action').click()
         time.sleep(1)  # wait for signinginprogress modal to be shown
         save_screenshot(driver, '/tmp/desktop.png')
         wait_for_element_to_disappear(driver, '.above-overlay')
@@ -222,21 +224,27 @@ if __name__ == '__main__':
         driver.execute_script('window.scrollTo(0, document.body.scrollHeight)');
         wait_for_element(driver, '.section.sign .button.action').click()
         time.sleep(1)  # wait for confirm signing modal to be shown
-        wait_for_element(driver, '.section.sign.above-overlay .button.action').click()
+        wait_for_element(driver,
+                         '.section.sign.above-overlay .button.action').click()
         time.sleep(1)  # wait for signinginprogress modal to be shown
         save_screenshot(driver, '/tmp/mobile.png')
 
     # Creating screenshots for bankid signing - desktop and mobile version
     doc_data = api.createfromfile('backend/test/pdfs/simple.pdf')
     doc_data['delivery'] = 'api'
-    doc_data['authentication'] = 'mixed' # only non-author signatories will use SE BankID
+    doc_data['authentication'] = 'mixed' # only non-author signatories
+                                         # will use SE BankID
     doc_data['signatories'][0]['delivery'] = 'api'
-    doc_data['signatories'] += [api_signatory_json(first_name='Dave',
-                                                   last_name='Desktop',
-                                                   ssn='8303180338'), # Johan Nilo SSN, need a real one for staging
-                                api_signatory_json(first_name='Mike',
-                                                   last_name='Mobile',
-                                                   ssn='8303180338')] # Johan Nilo SSN, need a real one for staging
+    doc_data['signatories'] += [
+        api_signatory_json(first_name='Dave',
+                           last_name='Desktop',
+                           ssn='8303180338'),
+                           # ^ Johan Nilo SSN, need a real one for staging
+        api_signatory_json(first_name='Mike',
+                           last_name='Mobile',
+                           ssn='8303180338')
+                           # ^ Johan Nilo SSN, need a real one for staging
+        ]
     doc_data['signatories'][1]['authentication'] = 'eleg'
     doc_data['signatories'][2]['authentication'] = 'eleg'
 
@@ -244,7 +252,8 @@ if __name__ == '__main__':
 
     with quitting(webdriver.Firefox()) as driver:
         driver.get(URL + '/d/' + doc_data['id'])
-        wait_for_element(driver, 'input[name=email]').send_keys('bartek+reference-screenshot@scrive.com')
+        wait_for_element(driver, 'input[name=email]').send_keys(
+            'bartek+reference-screenshot@scrive.com')
         wait_for_element(driver, 'input[name=password]').send_keys('dupadupa12')
         wait_for_element(driver, '.button.main').click()
         wait_for_element(driver, '.sendButton').click()
