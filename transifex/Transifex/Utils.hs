@@ -61,7 +61,7 @@ textsFromStringJSON acceptNotReviewed js =
     mv <- fromJSValueField "translation"
     isReviewed <- fmap (fromMaybe False) $ fromJSValueField "reviewed"
     case (mk,mv,acceptNotReviewed || isReviewed) of
-      (Just k, Just v, True)   -> return $ Just (k,v)
+      (Just k, Just v,  True)  -> return $ Just (k,v)
       (Just k, Just _v, False) -> return $ Just (k,"")
       _                        -> return Nothing
 
