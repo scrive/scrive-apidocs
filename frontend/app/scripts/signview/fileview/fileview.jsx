@@ -41,6 +41,7 @@ module.exports = React.createClass({
   propTypes: {
     model: React.PropTypes.instanceOf(File).isRequired,
     signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
+    dimControls: React.PropTypes.bool.isRequired,
     pixelWidth: React.PropTypes.number.isRequired
   },
 
@@ -410,6 +411,7 @@ module.exports = React.createClass({
           highlightingMode={this.state.highlighting}
           removingHighlightingMode={this.state.removingHighlighting}
           zoom={this.state.zoom}
+          dim={this.props.dimControls}
           canZoomIn={this.state.zoomStep < ZOOM_STEPS && this.isViewportSize()}
           canZoomOut={this.state.zoomStep > 0}
           canHighlight={currentSigCanHighlight}
