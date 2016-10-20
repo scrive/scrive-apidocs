@@ -64,9 +64,9 @@ usageMsg = unlines
   , "   transifex-diff             : Diff local translation against the remote"
   , "   transifex-merge            : Merge local translation with the remote"
   , "   transifex-help             : Help on using Transifex"
-  , "   detect_old_localizations   : Detect old localizations"
-  , "   detect_old_templates       : Detect old templates"
-  , "   take_reference_screenshots : Take reference screenshots"
+  , "   detect-old-localizations   : Detect old localizations"
+  , "   detect-old-templates       : Detect old templates"
+  , "   take-reference-screenshots : Take reference screenshots"
   , "   scripts-help               : Help on using utility scripts"
   , ""
   , "# Clean"
@@ -135,9 +135,9 @@ main = do
                                        putNormal "Output of 'transifex --help':"
                                        putNormal "-----------------------------"
                                        runTransifexScript "" []
-    "detect_old_localizations"   ~> runDetectOldLocalizationsScript
-    "detect_old_templates"       ~> runDetectOldTemplatesScript
-    "take_reference_screenshots" ~> runTakeReferenceScreenshotsScript
+    "detect-old-localizations"   ~> runDetectOldLocalizationsScript
+    "detect-old-templates"       ~> runDetectOldTemplatesScript
+    "take-reference-screenshots" ~> runTakeReferenceScreenshotsScript
 
     "clean" ~> need ["clean-server","clean-frontend"]
     "clean-server" ~> need ["cabal-clean"]
@@ -461,18 +461,18 @@ scriptsUsageMsg = unlines $
   , "--------------"
   , "Help on using Transifex."
   , ""
-  , "detect_old_localizations"
+  , "detect-old-localizations"
   , "------------------------"
-  , "Detect old localizations. To use, run 'shake.sh detect_old_localizations'."
+  , "Detect old localizations. To use, run 'shake.sh detect-old-localizations'."
   , ""
-  , "detect_old_templates"
+  , "detect-old-templates"
   , "--------------------"
-  , "Detect old templates. To use, run 'shake.sh detect_old_templates'."
+  , "Detect old templates. To use, run 'shake.sh detect-old-templates'."
   , ""
-  , "take_reference_screenshots"
+  , "take-reference-screenshots"
   , "--------------------------"
   , "Update reference screenshots."
-  , "After running 'shake.sh take_reference_screenshots', do the following steps:"
+  , "After running 'shake.sh take-reference-screenshots', do the following steps:"
   , ""
   -- TODO: Explain the process better.
   , "x = concatLines base64 /tmp/author.png"
