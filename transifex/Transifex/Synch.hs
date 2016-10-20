@@ -247,7 +247,6 @@ usageMsg = unlines
   , "transifex merge user password lang resource  "
     ++ "-- Merge the external version with your local one."
   , ""
-  , "Available languages : en | sv | de | fr | it | es | pt | "
-    ++ "nl | da | no | fi | is | et | lv | lt"
+  , "Available languages : " ++ intercalate " " allLangs
   , "Available resources : texts | events | signview"
   ]
