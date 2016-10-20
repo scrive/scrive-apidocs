@@ -93,13 +93,6 @@ merge user password lang resource = do
         hClose h
         putStrLn $ "Done."
 
--- getOneOfChars :: [Char] -> IO Char
--- getOneOfChars l = do
---   c <- getChar
---   if (c `elem` l)
---      then return c
---      else getOneOfChars l
-
 diff :: String -> String -> String -> TranslationResource ->  IO ()
 diff user password lang resource = do
   external <- fetch user password lang resource
