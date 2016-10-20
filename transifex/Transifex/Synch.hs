@@ -1,14 +1,15 @@
 module Transifex.Synch (push, merge, diff, fix, fetchLocal, main') where
 
 
-import System.IO
-import Text.JSON
-import Data.List
-import System.Process
-import Transifex.Utils
 import Control.Monad
-import System.Time
+import Data.List
+import System.IO
 import System.Locale
+import System.Process
+import System.Time
+import Text.JSON
+
+import Transifex.Utils
 
 apiURL :: String
 apiURL = "http://www.transifex.com/api/2/"
