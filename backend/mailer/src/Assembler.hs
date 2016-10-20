@@ -130,10 +130,12 @@ mailHeader :: String -> String -> String
 mailHeader headerName headerValue = prefix ++ mailEncode (Just $ 75 - length prefix) headerValue ++ "\r\n"
     where prefix = headerName ++ ": "
 
+asciiPrintable :: String -> Bool
+asciiPrintable = all $ \c -> ord c >= 32 && ord c <= 126 && ord c /= ord ';'
+
 mailEncode :: Maybe Int -> String -> String
-mailEncode mFirstLineLength source | all asciiPrintable source = asciiMailEncode mFirstLineLength source
+mailEncode mFirstLineLength source | asciiPrintable source = asciiMailEncode mFirstLineLength source
                                    | otherwise = unicodeMailEncode mFirstLineLength source
-  where asciiPrintable c = ord c >= 32 && ord c <= 126 && ord c /= ord ';'
 
 -- only line breaking
 asciiMailEncode :: Maybe Int -> String -> String
@@ -203,7 +205,14 @@ createMailTos :: [Address] -> String
 createMailTos = intercalate ", " . map (\a -> createAddrString a)
 
 createAddrString :: Address -> String
-createAddrString Address{..} = mailEncode Nothing addrName ++ " <" ++ addrEmail ++ ">"
+createAddrString Address{..}
+    | asciiPrintable addrName = mailEncode Nothing escapedName ++ " <" ++ addrEmail ++ ">"
+    | otherwise = mailEncode Nothing addrName ++ " <" ++ addrEmail ++ ">"
+  -- wrap in quotes to handle commas correctly in names
+  -- discard quotes from the inside, to block any injections
+  -- most clients do this anyway
+  -- Only do this for ascii-only names - unicode names will get encoded anyway
+  where escapedName = "\"" ++ filter (/='"') addrName ++ "\""
 
 createBoundaries :: CryptoRNG m => m (String, String,String)
 createBoundaries = return (,,) `ap` f `ap` f `ap` f

@@ -37,7 +37,6 @@ module.exports = React.createClass({
         $node.find(".front .actioncolor").css("fill", model.actionColor());
         $node.find(".front .textcolor").css("fill", model.actionTextColor());
         $node.find(".downarrow .actioncolor").css("fill", model.actionColor());
-        $node.find(".downarrow .textcolor").css("fill", model.actionTextColor());
       }
     },
     render: function() {

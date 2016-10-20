@@ -27,7 +27,7 @@
 "_controlsStatusViewingCanceled":"",
 "_controlsStatusViewingClosed":"",
 "_controlsStatusViewingPending":"",
-"_controlsStatusViewingRejected":"",
+"_controlsStatusViewingRejected":"Gennemser det afviste dokument: <span class='put-document-title-here'/>",
 "_controlsStatusViewingSigning":"",
 "_controlsStatusViewingTimedout":"",
 "_couldNotUpload":"Beklager, filen kunne ikke uploades. Prøv venligst igen eller med en anden fil. ",

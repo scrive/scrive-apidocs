@@ -185,6 +185,7 @@ var TaskList = require("./navigation/task_list");
               <FileView
                 ref="fileView"
                 pixelWidth={this.state.pixelWidth}
+                dimControls={this.state.overlay}
                 model={doc.mainfile()}
                 signview={model}
               />

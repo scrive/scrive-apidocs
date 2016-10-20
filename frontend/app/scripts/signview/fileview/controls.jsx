@@ -26,6 +26,7 @@ module.exports = React.createClass({
     removingHighlightingMode: React.PropTypes.bool.isRequired,
     canZoomIn: React.PropTypes.bool.isRequired,
     canZoomOut: React.PropTypes.bool.isRequired,
+    dim: React.PropTypes.bool.isRequired,
     canHighlight: React.PropTypes.bool.isRequired,
     canRemoveHighlighting: React.PropTypes.bool.isRequired,
     onZoomIn: React.PropTypes.func.isRequired,
@@ -97,9 +98,11 @@ module.exports = React.createClass({
     var topOffset = $pages.offset().top - height;
     var bottomOffset = $pages.offset().top + $pages.height();
 
+    const dimClassName = {"controls-dim": this.props.dim};
+
     if (this.useSticky()) {
       return {
-        className: "controls-sticky",
+        className: classNames("controls-sticky", dimClassName),
         left: Math.max(pagesLeft, 0),
         width: width,
         top: 0,
@@ -107,7 +110,7 @@ module.exports = React.createClass({
       };
     } else if (scrollTop < topOffset) {
       return {
-        className: "controls-relative",
+        className: classNames("controls-relative", dimClassName),
         left: "auto",
         width: width,
         top: 0,
@@ -115,7 +118,7 @@ module.exports = React.createClass({
       };
     } else if (scrollTop < topOffset + height) {
       return {
-        className: "controls-absolute",
+        className: classNames("controls-absolute", dimClassName),
         left: Math.max(pagesLeft, 0),
         width: width,
         top: (scrollTop - topOffset),
@@ -123,7 +126,7 @@ module.exports = React.createClass({
       };
     } else if (scrollTop > bottomOffset - height) {
       return {
-        className: "controls-absolute",
+        className: classNames("controls-absolute", dimClassName),
         left: Math.max(pagesLeft, 0),
         width: width,
         top: bottomOffset -  height - headerHeight,
@@ -131,7 +134,7 @@ module.exports = React.createClass({
       };
     } else {
       return {
-        className: "controls-fixed",
+        className: classNames("controls-fixed", dimClassName),
         left: Math.max(pagesLeft, 0),
         width: width,
         top: 0,
