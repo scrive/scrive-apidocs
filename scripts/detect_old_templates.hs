@@ -1,4 +1,5 @@
-{-# OPTIONS_GHC -Wall -Werror #-}
+{-# LANGUAGE CPP #-}
+
 import qualified Data.Set as S
 import Data.Maybe
 import System.IO
@@ -11,6 +12,10 @@ import Data.List (isSuffixOf)
 import Transifex.Synch
 import Transifex.Utils
 import Debug.Trace
+
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative
+#endif
 
 whiteList :: S.Set String
 whiteList = S.fromList [ "newTemplateTitle"

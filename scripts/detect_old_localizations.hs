@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Main (main) where
 
 -- TODO:
@@ -14,6 +15,10 @@ import qualified Data.Map as Map
 import System.IO
 import System.Exit
 import System.Directory
+
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative
+#endif
 
 ------------------------------
 -- WHITELIST
