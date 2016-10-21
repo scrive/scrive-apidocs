@@ -469,7 +469,7 @@ Library
                , lifted-async
                , lifted-base
                , lifted-threads
-               , log
+               , log >= 0.5.4
                , mixpanel
                , mmap
                , monad-control
@@ -565,7 +565,7 @@ Executable kontrakcja-server
                , happstack-static-routing
                , hedis
                , lifted-base
-               , log
+               , log >= 0.5.4
                , text
                , transformers-base
                , utf8-string
@@ -618,7 +618,7 @@ Executable cron
                , consumers
                , hpqtypes-extras
                , hedis
-               , log
+               , log >= 0.5.4
                , text
                , transformers-base
 
@@ -695,7 +695,7 @@ Executable kontrakcja-migrate
                , hpqtypes
                , json
                , lifted-base
-               , log
+               , log >= 0.5.4
                , monad-control
                , monad-time
                , mtl
@@ -788,7 +788,7 @@ Executable mailing-server
                , json
                , lifted-async
                , lifted-base
-               , log
+               , log >= 0.5.4
                , monad-control
                , monad-time
                , mtl
@@ -885,7 +885,7 @@ Executable messenger-server
                , iconv
                , json
                , lifted-base
-               , log
+               , log >= 0.5.4
                , monad-control
                , monad-time
                , mtl
@@ -981,7 +981,7 @@ Executable kontrakcja-test
                , json
                , kontrakcja-templates
                , lifted-base
-               , log
+               , log >= 0.5.4
                , monad-control
                , mtl
                , network-uri
@@ -1212,7 +1212,7 @@ Executable screenshot-review
                , kontrakcja-templates
                , lifted-async
                , lifted-base
-               , log
+               , log >= 0.5.4
                , monad-control
                , monad-time
                , mtl
