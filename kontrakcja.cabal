@@ -64,7 +64,8 @@ Library
   Hs-source-dirs: backend/cron/inc backend/cron/schema
                   backend/lib
                   backend/mailer/inc backend/mailer/schema backend/mailer/src
-                  backend/messenger/inc backend/messenger/schema backend/messenger/src
+                  backend/messenger/inc backend/messenger/schema
+                  backend/messenger/src
                   backend/migrate/inc
                   backend/misc/schema backend/misc/src
                   backend/server/schema backend/server/src
@@ -841,7 +842,8 @@ Executable mailing-server
 
 Executable messenger-server
 
-  Hs-source-dirs: backend/messenger/inc backend/messenger/schema backend/messenger/src
+  Hs-source-dirs: backend/messenger/inc backend/messenger/schema
+                  backend/messenger/src
                   backend/misc/schema backend/misc/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
