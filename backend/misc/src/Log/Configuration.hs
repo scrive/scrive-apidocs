@@ -58,9 +58,9 @@ instance Unjson LoggerDef where
   unjsonDef = disjointUnionOf "logger" [
       ("stdout", (== StandardOutput), pure StandardOutput)
     , ("elasticsearch", $(isConstr 'ElasticSearch), ElasticSearch
-        <$> fieldBy "configuration"
+        <$> fieldDefBy "configuration" defaultElasticSearchConfig
             (\(ElasticSearch es) -> es)
-            "ElasticSearch configuration"
+            "ElasticSearch configuration, defaults to localhost:9200/logs/log"
             esUnjsonConfig
       )
     , ("postgresql", $(isConstr 'PostgreSQL), PostgreSQL
@@ -70,6 +70,7 @@ instance Unjson LoggerDef where
       )
     ]
     where
+
       esUnjsonConfig = objectOf $ ElasticSearchConfig
         <$> field "server"
             esServer
