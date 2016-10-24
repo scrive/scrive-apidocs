@@ -144,3 +144,77 @@ def check_sign_and_cancel(test, drv, api):
     drv.open_url(sign_url)
     drv.wait_for_element('span.icon.status.cancelled')
     drv.screenshot()
+
+
+def check_signing_settings1(test, drv, api):
+    doc = test.create_standard_doc(u'signing settings 1')
+    doc.show_header = False
+    doc.show_pdf_download = False
+    doc.show_footer = False
+    doc.show_reject_option = False
+    doc.show_reject_reason = False
+    doc = api.ready(api.update_document(doc))
+
+    # open signview
+    drv.open_url(doc.other_signatory().absolute_sign_url())
+    # screenshot not showing header
+    drv.screenshot()
+
+    drv.scroll_to_bottom()
+
+    # screenshot not showing reject button or footer
+    drv.screenshot(first_sleep_for=1)
+
+
+def check_signing_settings2(test, drv, api):
+    doc = test.create_standard_doc(u'signing settings 2')
+    doc.show_header = True
+    doc.show_pdf_download = False
+    doc.show_footer = True
+    doc.show_reject_option = True
+    doc.show_reject_reason = False
+    doc = api.ready(api.update_document(doc))
+
+    # open signview
+    drv.open_url(doc.other_signatory().absolute_sign_url())
+    # screenshot showing header without pdf download button
+    drv.screenshot()
+
+    drv.scroll_to_bottom()
+
+    # screenshot showing reject button and footer
+    drv.screenshot(first_sleep_for=1)
+
+    # click reject button and wait for confirmation modal to show up
+    drv.wait_for_element_and_click('.section.sign .transparent-button')
+    drv.wait_for_element('.above-overlay')
+
+    # screenshot showing reject modal without a reason
+    drv.screenshot(first_sleep_for=1)
+
+
+def check_signing_settings3(test, drv, api):
+    doc = test.create_standard_doc(u'signing settings 3')
+    doc.show_header = True
+    doc.show_pdf_download = True
+    doc.show_footer = True
+    doc.show_reject_option = True
+    doc.show_reject_reason = True
+    doc = api.ready(api.update_document(doc))
+
+    # open signview
+    drv.open_url(doc.other_signatory().absolute_sign_url())
+    # screenshot showing header with pdf download button
+    drv.screenshot()
+
+    drv.scroll_to_bottom()
+
+    # screenshot showing reject button and footer
+    drv.screenshot(first_sleep_for=1)
+
+    # click reject button and wait for confirmation modal to show up
+    drv.wait_for_element_and_click('.section.sign .transparent-button')
+    drv.wait_for_element('.above-overlay')
+
+    # screenshot showing reject modal with a reason field
+    drv.screenshot(first_sleep_for=1)
