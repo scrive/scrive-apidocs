@@ -93,7 +93,7 @@ module.exports = React.createClass({
     const height = vars.signviewControlsHeight;
     const headerHeight = $header.height();
     const visiblePages = pagesRight - scrollLeft;
-    const width = Math.min(viewportWidth, vars.signviewLargeView, visiblePages);
+    const width = Math.min(viewportWidth, vars.signviewLargeView, visiblePages, pagesWidth);
 
     var topOffset = $pages.offset().top - height;
     var bottomOffset = $pages.offset().top + $pages.height();
