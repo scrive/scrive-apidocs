@@ -95,15 +95,15 @@ testNewFileThatShouldBeMovedToAWS  = do
   checker fileid'
  where
   checker fileid' = do
-   mf <- dbQuery $ GetFileThatShouldBeMovedToAmazon
+   mf <- dbQuery $ GetFilesThatShouldBeMovedToAmazon 1
    case mf of
-       Just f -> if (fileid f == fileid')
+       [f] -> if (fileid f == fileid')
                     then return ()
                     else do
                         let Right aes = mkAESConf (BS.fromString (take 32 $ repeat 'a')) (BS.fromString (take 16 $ repeat 'b'))
                         dbUpdate $ FileMovedToAWS fileid' "" aes
                         checker fileid'
-       Nothing ->  assertFailure  "Newly created file will not"
+       _ ->  assertFailure  "Newly created file will not"
 
 viewableS :: TestEnv String
 viewableS = rand 10 $ arbString 10 100
