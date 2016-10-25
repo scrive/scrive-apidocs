@@ -917,6 +917,7 @@
 "_textFieldFor":"Part",
 "_textFieldObligatory":"Obligatorisk å signere her",
 "_textFieldRemove":"Fjern",
+"_thisActionCannotBeUndone":"Du kan ikke angre denne handlingen.",
 "_toFilter":"Til:",
 "_toStartDocSent":"Ditt dokument har blitt sendt!",
 "_tooLargeAttachment":"Filen overskrider den maksimale størrelsen på 10 MB. Prøv å gjøre den mindre.",

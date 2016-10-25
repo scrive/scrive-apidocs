@@ -143,6 +143,7 @@ class Document(_object.ScriveObject):
                             show_header=tvu.instance(bool),
                             show_pdf_download=tvu.instance(bool),
                             show_reject_option=tvu.instance(bool),
+                            show_reject_reason=tvu.instance(bool),
                             show_footer=tvu.instance(bool),
                             invitation_message=MaybeUnicode,
                             confirmation_message=MaybeUnicode,
@@ -153,11 +154,11 @@ class Document(_object.ScriveObject):
     def __init__(self, title=u'', number_of_days_to_sign=14,
                  number_of_days_to_remind=None,
                  show_header=True, show_pdf_download=True,
-                 show_reject_option=True, show_footer=True,
-                 invitation_message=None, confirmation_message=None,
-                 api_callback_url=None, language=Language.swedish,
-                 is_template=False, saved_as_draft=False,
-                 timezone=u'Europe/Stockholm'):
+                 show_reject_option=True, show_reject_reason=True,
+                 show_footer=True, invitation_message=None,
+                 confirmation_message=None, api_callback_url=None,
+                 language=Language.swedish, is_template=False,
+                 saved_as_draft=False, timezone=u'Europe/Stockholm'):
         super(Document, self).__init__()
         self._id = None
         self._title = title
@@ -173,6 +174,7 @@ class Document(_object.ScriveObject):
         self._show_header = show_header
         self._show_pdf_download = show_pdf_download
         self._show_reject_option = show_reject_option
+        self._show_reject_reason = show_reject_reason
         self._show_footer = show_footer
         self.invitation_message = invitation_message  # setter has better logic
         self.confirmation_message = \
@@ -210,6 +212,7 @@ class Document(_object.ScriveObject):
                                 show_header=json[u'showheader'],
                                 show_pdf_download=json[u'showpdfdownload'],
                                 show_reject_option=json[u'showrejectoption'],
+                                show_reject_reason=json[u'allowrejectreason'],
                                 show_footer=json[u'showfooter'],
                                 invitation_message=json[u'invitationmessage'],
                                 confirmation_message=
@@ -290,6 +293,7 @@ class Document(_object.ScriveObject):
                 u'showheader': self.show_header,
                 u'showpdfdownload': self.show_pdf_download,
                 u'showrejectoption': self.show_reject_option,
+                u'allowrejectreason': self.show_reject_reason,
                 u'showfooter': self.show_footer,
                 u'invitationmessage': self.invitation_message or u'',
                 u'confirmationmessage': self.confirmation_message or u'',
@@ -462,6 +466,15 @@ class Document(_object.ScriveObject):
     @tvu.validate_and_unify(show_reject_option=tvu.instance(bool))
     def show_reject_option(self, show_reject_option):
         self._show_reject_option = show_reject_option
+
+    @scrive_property
+    def show_reject_reason(self):
+        return self._show_reject_reason
+
+    @show_reject_reason.setter
+    @tvu.validate_and_unify(show_reject_reason=tvu.instance(bool))
+    def show_reject_reason(self, show_reject_reason):
+        self._show_reject_reason = show_reject_reason
 
     @scrive_property
     def show_footer(self):

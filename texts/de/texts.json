@@ -917,6 +917,7 @@
 "_textFieldFor":"Partei",
 "_textFieldObligatory":"Sie müssen hier signieren",
 "_textFieldRemove":"Entfernen",
+"_thisActionCannotBeUndone":"Sie können diese Aktion nicht rückgängig machen.",
 "_toFilter":"An:",
 "_toStartDocSent":"Ihr Dokument wurde gesendet!",
 "_tooLargeAttachment":"Die Datei überschreitet die maximale Größe von 10 MB. Versuchen Sie sie kleiner zu machen.",

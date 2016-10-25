@@ -917,6 +917,7 @@
 "_textFieldFor":"Puse",
 "_textFieldObligatory":"Obligāti jāparakstās šeit",
 "_textFieldRemove":"Noņemt",
+"_thisActionCannotBeUndone":"Jūs nevarat atsaukt šo darbību.",
 "_toFilter":"Kam:",
 "_toStartDocSent":"Jūsu dokuments ir nosūtīts!",
 "_tooLargeAttachment":"Faila apmērs pārsniedz maksimālo apmēru 10 MB. Mēģiniet to samazināt.",

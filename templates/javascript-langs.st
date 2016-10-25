@@ -911,6 +911,7 @@ javascriptLocalisation =
                     ,  remove : {
                               action: "$_delete()$"
                             , body : "$_listLocalDialogsBody()$"
+                            , cannotUndo: "$_thisActionCannotBeUndone()$"
                             , successMessage : "$_flashMessageDocumentArchiveDone()$"
                             , emptyMessage : "$_noDocumentChosen()$"
                         }

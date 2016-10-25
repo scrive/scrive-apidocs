@@ -183,6 +183,8 @@ module.exports = Backbone.Model.extend({
           e.target.style.cursor = "default";
           _.bind(fn, self)(DrawingUtils.xPos(e), DrawingUtils.yPos(e), type, e);
           return false;
+        } else {
+          e.target.style.cursor = "inherit";
         }
       };
     };

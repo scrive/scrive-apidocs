@@ -265,7 +265,7 @@ module.exports = React.createClass({
   },
 
   canBeGrabbed: function () {
-    return !this.state.grabbing && this.width() > $.windowWidth();
+    return !this.state.grabbing;
   },
 
   maybeResetZoom: function () {

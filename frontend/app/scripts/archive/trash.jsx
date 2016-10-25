@@ -20,12 +20,14 @@ var RemoveModalContent = React.createClass({
     documents: React.PropTypes.array
   },
   render: function () {
+    var message = (localization.archive.trash.remove.body + " " +
+                   localization.archive.trash.remove.cannotUndo);
     if (this.props.documents === null) {
       return <p />;
     } else if (this.props.documents.length == 1) {
       return (
         <HtmlTextWithSubstitution
-          secureText={localization.archive.trash.remove.body}
+          secureText={message}
           lists={{
             ".put-one-or-more-things-to-be-deleted-here": {
               items: [this.props.documents[0].field("title")],
@@ -38,7 +40,7 @@ var RemoveModalContent = React.createClass({
       var sub = this.props.documents.length + (" " + localization.documents).toLowerCase();
       return (
         <HtmlTextWithSubstitution
-          secureText={localization.archive.trash.remove.body}
+          secureText={message}
           subs={{
             ".put-one-or-more-things-to-be-deleted-here": sub
           }}
