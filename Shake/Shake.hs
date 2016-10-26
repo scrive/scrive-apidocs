@@ -7,6 +7,7 @@ import Development.Shake.FilePath
 import System.Console.GetOpt
 import System.Exit (exitFailure)
 
+import Shake.GetHsDeps
 import Shake.GitHub
 import Shake.Oracles
 import Shake.TeamCity
@@ -94,13 +95,8 @@ transifexFlags =
 main :: IO ()
 main = do
   -- Used to check if Shake.hs rules changed, triggering a full rebuild
-  ver <- getHashedShakeVersion ["shake.sh"
-                               , "Shake/Shake.hs"
-                               , "Shake/GitHub.hs"
-                               , "Shake/Oracles.hs"
-                               , "Shake/TeamCity.hs"
-                               , "Shake/Utils.hs"
-                               ]
+  hsDeps <- getHsDeps "Shake/Shake.hs" "_shake/.depend"
+  ver <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
   shakeArgsWith (opts ver) transifexFlags $ \flags targets -> return . Just $ do
     if null targets then want ["help"] else want targets
 
