@@ -75,7 +75,7 @@ var ORIGINAL_PAGE_SIZE = 950;
             self.setState({active: false});
             // It the window does not have focus (for some old browsers we can't really tell), we should not start
             // inline editing.
-            var nothingHasFocus = $(":focus").length === 0;
+            var nothingHasFocus = $("input:focus").length === 0;
             var windowIsFocused = window.document.hasFocus == undefined || window.document.hasFocus();
             if (nothingHasFocus && !field.readyForSign() && windowIsFocused && !isTouchDevice() && task.active()) {
               self.startInlineEditing();
@@ -248,7 +248,14 @@ var ORIGINAL_PAGE_SIZE = 950;
             className="text-inline-editing"
             autoGrowth={true}
             onEnter={self.accept}
-            onTab={(e) => { e.preventDefault(); self.accept(); }}
+            onTab={(e) => {
+              e.preventDefault();
+              // force InfoTextInput to trigger blur event on input elemnt
+              // because Firefox will not trigger it in this case
+              self.refs.input.blurInput();
+              self.accept();
+            }
+            }
             onBlur={self.handleBlur}
           />
         </div>

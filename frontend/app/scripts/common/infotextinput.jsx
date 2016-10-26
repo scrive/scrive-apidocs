@@ -196,6 +196,11 @@ var _ = require("underscore");
         this.props.onTab(e);
       }
     },
+    blurInput: function() {
+      if (this.isMounted() && this.refs.input) {
+        $(this.refs.input.getDOMNode()).blur();
+      }
+    },
     render: function() {
       var fakePlaceholder = BrowserInfo.isIE9orLower() && !this.state.focus && (this.state.value == undefined || this.state.value =="") ;
 
