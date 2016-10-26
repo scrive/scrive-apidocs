@@ -2,7 +2,7 @@ module File.Model (
       module File.FileID
     , FileMovedToAWS(..)
     , GetFileByFileID(..)
-    , GetFileThatShouldBeMovedToAmazon(..)
+    , GetFilesThatShouldBeMovedToAmazon(..)
     , NewFile(..)
     , PurgeFile(..)
     ) where
@@ -50,15 +50,15 @@ instance MonadDB m => DBUpdate m FileMovedToAWS () where
         sqlWhereFileIDIs fid
         sqlWhereFileWasNotPurged
 
-data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
-instance (MonadDB m, MonadThrow m) => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) where
-  query GetFileThatShouldBeMovedToAmazon = do
+data GetFilesThatShouldBeMovedToAmazon = GetFilesThatShouldBeMovedToAmazon Int
+instance (MonadDB m, MonadThrow m) => DBQuery m GetFilesThatShouldBeMovedToAmazon [File] where
+  query (GetFilesThatShouldBeMovedToAmazon n) = do
     runQuery_ $ sqlSelect "files" $ do
       mapM_ sqlResult filesSelectors
       sqlWhere "content IS NOT NULL"
       sqlOrderBy "id"
-      sqlLimit 1
-    fetchMaybe fetchFile
+      sqlLimit n
+    fetchMany fetchFile
 
 data PurgeFile = PurgeFile FileID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m PurgeFile () where

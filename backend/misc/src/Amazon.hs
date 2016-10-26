@@ -3,7 +3,7 @@ module Amazon (
     module Amazon.Class
   , isAWSConfigOk
   , mkAWSAction
-  , uploadSomeFileToAmazon
+  , uploadSomeFilesToAmazon
   , getFileFromRedis
   , getFileContents
   , AmazonMonadT
@@ -83,17 +83,17 @@ instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
 instance Monad m => AmazonMonad (AmazonMonadT m) where
   getAmazonConfig = AmazonMonadT ask
 
-uploadSomeFileToAmazon :: (AmazonMonad m, MonadIO m, MonadLog m, MonadDB m, MonadThrow m, CryptoRNG m) => m Bool
-uploadSomeFileToAmazon = do
-  mfile <- dbQuery GetFileThatShouldBeMovedToAmazon
-  case mfile of
-    Nothing -> return False
-    Just file -> do
+uploadSomeFilesToAmazon :: (AmazonMonad m, MonadIO m, MonadLog m, MonadDB m, MonadThrow m, CryptoRNG m) => Int -> m Bool
+uploadSomeFilesToAmazon n = do
+  files <- dbQuery $ GetFilesThatShouldBeMovedToAmazon n
+  case files of
+    [] -> return False
+    _ -> do
       conf <- getAmazonConfig
-      success <- exportFile (mkAWSAction $ awsConfig conf) file
-      if success
-        then return True
-        else $unexpectedErrorM $ "Moving file " <+> show (fileid file) <+> " to Amazon failed."
+      forM_ files $ \file -> do
+        success <- exportFile (mkAWSAction $ awsConfig conf) file
+        when (not success) $ $unexpectedErrorM $ "Moving file " <+> show (fileid file) <+> " to Amazon failed."
+      return True
 
 
 -- | Convert a file to Amazon URL. We use the following format:

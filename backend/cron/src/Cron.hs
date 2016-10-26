@@ -140,7 +140,7 @@ main = do
         AmazonUpload -> do
           if AWS.isAWSConfigOk $ amazonConfig appConf
             then do
-              moved <- runScheduler AWS.uploadSomeFileToAmazon
+              moved <- runScheduler (AWS.uploadSomeFilesToAmazon 2)
               if moved
                 then return . RerunAfter $ iseconds 1
                 else return . RerunAfter $ iminutes 1
