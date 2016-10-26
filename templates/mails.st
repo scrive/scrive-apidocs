@@ -30,7 +30,7 @@ mailClosedCustomeMessage=
 $if(custommessage)$
  $_mailClosedCustomTextHeader()$:
   <br/>
-  <i><p>$custommessage:br()$</p></i>
+  <p>$custommessage:br()$</p>
 <br/>
 $endif$
 #####
@@ -136,7 +136,7 @@ $if(hascustommessage)$
   <br/>
   $_mailRejectionCustomInvitationHeader()$:
   <br/>
-  <i>$custommessage:br()$</i>
+  <span>$custommessage:br()$</span>
 $else$
   <div class="editable" name="custommessage"></div>
 $endif$
@@ -187,23 +187,23 @@ mailInvitationCustomHeader=
 $if(sign)$
   $_mailInvitationToSignContractDefaultHeader()$
   <br/>
-  <br/>
-  $_mailInvitationToSignFollowInstructions()$
-  <br/>
 $elseif(view)$
   $_mailInvitationToViewDefaultHeader()$
-  <br/>
-  <br/>
-  $_mailInvitationToSignFollowInstructions()$
   <br/>
 $endif$
 
 $if(hascustommessage)$
   <br/>
+
   $_mailInvitationCustomInvitationHeader()$:
   <br/>
-  <i style="color: $nicemailfgcolour()$"><p>$custommessage:br()$</p></i>
+  <p>$custommessage:br()$</p>
 $endif$
+
+  <br/>
+  <strong>$_mailInvitationToSignFollowInstructions()$</strong>
+  <br/>
+
 ### Reminding mails - SIGNED
 ###
 ###
@@ -211,15 +211,24 @@ remindMailSigned=
     $_remindMailSignedTitle()$
     $nicemail(
         mailheader= _remindMailSignedTitle();
-        mailp1 = remindMailSignedStandardHeader();
-        mailp2 = remindMailSignedP2()
+        mailp1 = remindMailSignedStandardHeader()
     )$
 ###
-remindMailSignedP2=
+remindMailSignedStandardHeader=
+<br/>
+  $remindMailSignedContractStandardHeaderSendRequest()$
+  <br/>
+  <br/>
+  $if(documentAttached)$
+    $_remindMailSignedContractStandardHeaderSendRequest2()$
+  $else$
+    $_mailDocumentLinked()$
+  $endif$
+
 $if(custommessage)$
   $_mailInvitationCustomInvitationHeader()$:
   <br/>
-  <i><p>$custommessage:br()$</p></i>
+  <p>$custommessage:br()$</p>
   <br/>
 
 $else$
@@ -231,17 +240,6 @@ $if(!documentAttached)$
   $endif$
   $nicebutton(link=mainfilelink; text=_mailDocumentLinkedButton())$
 $endif$
-####
-remindMailSignedStandardHeader=
-<br/>
-  $remindMailSignedContractStandardHeaderSendRequest()$
-  <br/>
-  <br/>
-  $if(documentAttached)$
-    $_remindMailSignedContractStandardHeaderSendRequest2()$
-  $else$
-    $_mailDocumentLinked()$
-  $endif$
 ###
 remindMailSignedContractStandardHeaderSendRequest=
 $if(sign)$
@@ -258,7 +256,6 @@ remindMailNotSignedContract=
     $nicemail(
         mailheader=remindMailNotSignedTitleContract();
         mailp1=remindMailNotSignedContractBody();
-        mailp2=remindMailNotSignedContractP2();
         footer= legalparagraph()
     )$
 #####
@@ -280,18 +277,19 @@ $else$
         $endif$
 $endif$
 <BR/>
-<BR/>
-$_remindMailNotSignedContractBodyFurther()$
-#####
-remindMailNotSignedContractP2=
 $if(custommessage)$
+  <BR/>
   $_mailInvitationCustomInvitationHeader()$:
   <br/>
-  <i><p>$custommessage:br()$</p></i>
+  <p>$custommessage:br()$</p>
   <br/>
 $else$
-      <div class="editable" name="custommessage"></div>
+  <BR/>
+  <div class="editable" name="custommessage"></div>
 $endif$
+<strong>$_remindMailNotSignedContractBodyFurther()$</strong>
+<BR/>
+<BR/>
 $nicebutton(link=link; text=_mailGoToDocument())$
 ###
 ###

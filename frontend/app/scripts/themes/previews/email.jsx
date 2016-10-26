@@ -35,7 +35,7 @@ module.exports = React.createClass({
                   />
                 </p>
                 <p>
-                  {localization.companyBranding.brandingPreview.emailInstructions}
+                  <strong>{localization.companyBranding.brandingPreview.emailInstructions}</strong>
                 </p>
 
                 <Button
