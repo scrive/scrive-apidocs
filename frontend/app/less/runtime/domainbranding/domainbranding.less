@@ -91,6 +91,18 @@
   border: 2px solid @participantcolor1;
 }
 
+/* Default for checkbox can't be inlined in SVG*/
+.placedcheckbox {
+  .full-color {
+    fill: @black;
+  }
+
+  .transparent-color {
+    fill: @white;
+    stroke: @black;
+  }
+}
+
 .signatory_mixin(@color) {
  &.placedfieldvalue.value {
     border-color: @color;
@@ -101,7 +113,14 @@
   }
 
   &.placedcheckbox {
-    border-color: @color;
+    .full-color {
+      fill: @color;
+    }
+
+    .transparent-color {
+      fill: fadeout(@color, 80%);
+      stroke: @color;
+    }
   }
 
   &.text-field-placement-setter-field-editor {

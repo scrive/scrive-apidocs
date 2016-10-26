@@ -199,6 +199,18 @@
         border-color: @actioncolor;
         background: #FFFFF;
       }
+
+
+      .placedcheckbox {
+        .full-color {
+          fill: @actioncolor;
+        }
+
+        .transparent-color {
+          fill: fadeout(@actioncolor, 80%);
+          stroke: @actioncolor;
+        }
+      }
     }
 
     &.empty-text-field {
@@ -236,6 +248,17 @@
             .background_with_ie_support(fade(@actioncolor,20%));
           }
         }
+      }
+    }
+
+    .placedcheckbox {
+      .full-color {
+        fill: @actionsecondarycolor;
+      }
+
+      .transparent-color {
+        fill: fadeout(@actionsecondarycolor, 80%);
+        stroke: @actionsecondarycolor;
       }
     }
   }

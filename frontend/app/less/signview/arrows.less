@@ -6,7 +6,7 @@
 @scroll-arrow-margin: 50px;
 @action-arrow-width: 20px;
 @action-arrow-height: 37px;
-@action-arrow-left-margin: -13px;
+@action-arrow-left-margin: -16px;
 @action-arrow-right-margin: -10px;
 
 .arrows {
@@ -33,7 +33,7 @@
     cursor: pointer;
     display: block;
     height: @action-arrow-height;
-    margin-top: -(@action-arrow-height / 2);
+    margin-top: floor(-(@action-arrow-height / 2));
     position: absolute;
     width: @action-arrow-width;
     z-index: @signview-arrow-z-index;

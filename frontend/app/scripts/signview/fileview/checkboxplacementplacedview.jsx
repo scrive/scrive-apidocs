@@ -6,6 +6,8 @@ var $ = require("jquery");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 var classNames = require("classnames");
 
+var Checkbox = require("../../icons/checkbox");
+
   module.exports = React.createClass({
     mixins: [PlacementMixin, TaskMixin],
 
@@ -58,41 +60,42 @@ var classNames = require("classnames");
         "obligatory": field.obligatory()
       });
 
-      var boxClass = classNames({
-        "placedcheckbox": current,
-        "placedcheckbox-noactive": !current,
-        "checked": checked
-      });
-
       var width = Math.round(this.width());
-      var height = Math.round(this.height());
-      var top = Math.round(this.top() - FieldPlacementGlobal.placementBorder);
-      var left = Math.round(this.left() - FieldPlacementGlobal.placementBorder);
-      var borderWidth = this.borderWidth();
-
-      if (!current && checked) {
-        width += borderWidth;
-        height += borderWidth;
-      }
+      var top = Math.round(this.top());
+      var left = Math.round(this.left());
 
       var divStyle = {
         cursor: current ? "pointer" : "",
         top: top,
         left: left,
         width: width,
-        height: height,
-        borderWidth: borderWidth
+        height: width
       };
 
       var boxStyle = {
-        backgroundSize: width + "px " + height + "px",
         width: width,
-        height: height
+        height: width
       };
 
       return (
         <div onClick={this.toggleCheck} className={divClass} style={divStyle}>
-          <div className={boxClass} style={boxStyle} />
+          <div className="placedcheckbox" style={boxStyle} >
+            <div
+              className="checkboxClickableArea"
+              style={{
+                width: FieldPlacementGlobal.checkboxClickableAreaWidth,
+                height: FieldPlacementGlobal.checkboxClickableAreaHeight,
+                marginTop: Math.round(-0.5 * FieldPlacementGlobal.checkboxClickableAreaWidth + 0.5 * this.width()),
+                marginLeft: Math.round((-0.5 * FieldPlacementGlobal.checkboxClickableAreaHeight  + 0.5 * this.width()))
+              }}
+            />
+            <Checkbox
+              wrel={this.props.model.wrel()}
+              pageWidth={this.props.pageWidth}
+              checked={field.isChecked()}
+              active={current}
+            />
+          </div>
         </div>
       );
     }

@@ -4,8 +4,6 @@ var FieldPlacementGlobal = require("./fieldplacementglobal.js").FieldPlacementGl
 var FieldPlacementGlobal = exports.FieldPlacementGlobal = {};
 
 /* Borders for all placements */
-FieldPlacementGlobal.placementBorder = 2;
-
 FieldPlacementGlobal.signatoryCSSClass = function(sig) {
   if (sig)
     return "signatory-field-" + ((sig.participantIndex() -1 ) % 6 + 1);
@@ -30,8 +28,8 @@ FieldPlacementGlobal.textPlacementHorSpace = 7;
 FieldPlacementGlobal.textPlacementExtraLineHeight = 4;
 FieldPlacementGlobal.textPlacementVerSpace = 5;
 FieldPlacementGlobal.textPlacementSpacingString = FieldPlacementGlobal.textPlacementVerSpace + 'px ' + FieldPlacementGlobal.textPlacementHorSpace + 'px';
-FieldPlacementGlobal.textPlacementXOffset = FieldPlacementGlobal.placementBorder + FieldPlacementGlobal.textPlacementHorSpace;
-FieldPlacementGlobal.textPlacementYOffset = FieldPlacementGlobal.placementBorder + FieldPlacementGlobal.textPlacementVerSpace + FieldPlacementGlobal.textPlacementExtraLineHeight;
+FieldPlacementGlobal.textPlacementXOffset = 2 + FieldPlacementGlobal.textPlacementHorSpace;
+FieldPlacementGlobal.textPlacementYOffset = 2 + FieldPlacementGlobal.textPlacementVerSpace + FieldPlacementGlobal.textPlacementExtraLineHeight;
 
 /* Font sizes for text placements */
 FieldPlacementGlobal.fontSizeSmall  = 12;
@@ -43,8 +41,8 @@ FieldPlacementGlobal.fontSizeHuge   = 24;
 FieldPlacementGlobal.checkboxSprite = 10;
 FieldPlacementGlobal.checkboxSpriteBorder = 1;
 
-FieldPlacementGlobal.checkboxPlacementDDTopOffset  = FieldPlacementGlobal.placementBorder + 1;
-FieldPlacementGlobal.checkboxPlacementDDLeftOffset = FieldPlacementGlobal.placementBorder + 1;
+FieldPlacementGlobal.checkboxPlacementDDTopOffset  = 1;
+FieldPlacementGlobal.checkboxPlacementDDLeftOffset = 1;
 
 /* D&D for signatures needs to be adjusted. */
 FieldPlacementGlobal.signaturePlacementDDTopOffset = 1;
@@ -54,16 +52,25 @@ FieldPlacementGlobal.signatureBorderWidth = 2;
 /* Offsets for type setter placements */
 FieldPlacementGlobal.textTypeSetterVerticalOffset = -19;
 FieldPlacementGlobal.textTypeSetterArrowOffset = 18;
-FieldPlacementGlobal.checkboxTypeSetterHorizontalOffset = 22;
+FieldPlacementGlobal.checkboxTypeSetterHorizontalOffset = 19;
 FieldPlacementGlobal.checkboxTypeSetterVerticalOffset = -22;
 FieldPlacementGlobal.signatureTypeSetterHorizontalOffset = 18;
 FieldPlacementGlobal.signatureTypeSetterVerticalOffset = -19;
 
-/* Stanadard placement sizes */
+/* Standard placement sizes */
 FieldPlacementGlobal.signatureWidth = 260;
 FieldPlacementGlobal.signatureHeight = 102;
-FieldPlacementGlobal.checkboxWidth = 10;
-FieldPlacementGlobal.checkboxHeight = 10;
-FieldPlacementGlobal.textfieldWidth = 77;
-FieldPlacementGlobal.textfieldHeight = 34;
+
+/* Checkbox sizes */
+FieldPlacementGlobal.smallCheckboxRatio = 0.011538
+FieldPlacementGlobal.mediumCheckboxRatio = 0.021153;
+FieldPlacementGlobal.largeCheckboxRatio = 0.0423076;
+FieldPlacementGlobal.checkboxClickableAreaWidth = 44;
+FieldPlacementGlobal.checkboxClickableAreaHeight = 44;
+
+
+/* Other defaults */
+FieldPlacementGlobal.defaultCheckboxWRel = FieldPlacementGlobal.smallCheckboxRatio;
+FieldPlacementGlobal.designviewPageWidth = 950;
+
 

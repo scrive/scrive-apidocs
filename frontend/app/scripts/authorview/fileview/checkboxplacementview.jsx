@@ -1,8 +1,7 @@
 var React = require("react");
-var classNames = require("classnames");
-
 var FieldPlacement = require("../../../js/placements.js").FieldPlacement;
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
+var Checkbox = require("../../icons/checkbox");
 
 module.exports = React.createClass({
   propTypes: {
@@ -13,22 +12,26 @@ module.exports = React.createClass({
   fieldStyle: function () {
     var pageWidth = this.props.pageWidth;
     var pageHeight = this.props.pageHeight;
-
+    var size = Math.round(this.props.model.wrel() * pageWidth);
     return {
-      height: this.props.model.hrel() * pageHeight,
-      left: Math.round(this.props.model.xrel() * pageWidth) - FieldPlacementGlobal.placementBorder,
-      top: Math.round(this.props.model.yrel() * pageHeight) - FieldPlacementGlobal.placementBorder,
-      width: this.props.model.wrel() * pageWidth
+      left: Math.round(this.props.model.xrel() * pageWidth),
+      top: Math.round(this.props.model.yrel() * pageHeight),
+      height: size,
+      width: size
     };
   },
   render: function () {
-    var checkboxClassName = classNames("placedcheckbox-noactive", {
-      "checked": this.props.model.field().isChecked()
-    });
+    var pageWidth = this.props.pageWidth;
+    var size = Math.round(this.props.model.wrel() * pageWidth);
 
     return (
-      <div className="placedfield" style={this.fieldStyle()}>
-        <div className={checkboxClassName}></div>
+      <div className="placedfield placedcheckbox" style={this.fieldStyle()}>
+        <Checkbox
+          wrel={this.props.model.wrel()}
+          pageWidth={pageWidth}
+          checked={this.props.model.field().isChecked()}
+          active={false}
+        />
       </div>
     );
   }

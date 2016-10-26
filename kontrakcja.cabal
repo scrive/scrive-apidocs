@@ -193,6 +193,7 @@ Library
                  , Doc.Class
                  , Doc.Conditions
                  , Doc.Data.AuthorAttachment
+                 , Doc.Data.CheckboxPlacementsUtils
                  , Doc.Data.Document
                  , Doc.Data.DocumentStatus
                  , Doc.Data.DocumentTag

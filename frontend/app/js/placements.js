@@ -65,7 +65,7 @@ var FieldPlacement = exports.FieldPlacement = Backbone.Model.extend({
         return this.get("hrel");
     },
     fsrel : function() {
-      if (this.get("fsrel") != 0)
+      if (this.get("fsrel") != 0 || this.field().isCheckbox())
         return this.get("fsrel");
       else
         return 0.0168;
@@ -154,6 +154,9 @@ var FieldPlacement = exports.FieldPlacement = Backbone.Model.extend({
     },
     setFSRel : function(fsrel) {
       this.set({"fsrel" : fsrel });
+    },
+    setCheckboxRel : function(wrel) {
+      this.set({"wrel" : wrel , "hrel" : 0, "fsrel" : 0}); // hrel and fsres should be set to 0 already
     },
     die: function() {
         this.set({alive:false});

@@ -156,6 +156,11 @@
   white-space: nowrap;
 }
 
+.placedcheckbox svg {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+}
 
 // In design view we have also border so we want to change margin to padding.
 // But in other view we don't want fields overlaping if texts are not overlaping.
@@ -164,33 +169,6 @@
 .designview .placedfieldvalue {
   margin: 0;
 }
-
-.placedcheckbox {
-  background: url(~"@{img-base-url}/checkbox-blue-unchecked.png") no-repeat scroll 0 0;
-  height: 12px;
-  width: 12px;
-
-  &:active {
-    background: url(~"@{img-base-url}/checkbox-blue-active.png") no-repeat scroll 0 0;
-  }
-  &.checked {
-    background: url(~"@{img-base-url}/checkbox-blue-checked.png") no-repeat scroll 0 0;
-  }
-  &.needs-sender-action {
-    background: #fff4f4;
-  }
-}
-
-.placedcheckbox-noactive {
-  background: url(~"@{img-base-url}/checkbox-blue-unchecked.png") no-repeat scroll 0 0;
-  height: 12px;
-  width: 12px;
-
-  &.checked {
-    background: url(~"@{img-base-url}/checkbox-blue-checked.png") no-repeat scroll 0 0;
-  }
-}
-
 
 .signatureBox {
   background-color: @white;

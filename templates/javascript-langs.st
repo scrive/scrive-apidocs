@@ -1152,6 +1152,12 @@ javascriptLocalisation =
              , large :  "$_fontSizeLarge()$"
              , custom :  "$_fontSizeCustom()$"
       }
+      , checkboxSize: {
+               name : "$_checkboxSizeName()$"
+             , small :  "$_checkboxSizeSmall()$"
+             , medium :  "$_checkboxSizeMedium()$"
+             , large :  "$_checkboxSizeLarge()$"
+      }
       , dates : {
                jan       : "$_datesJan()$"
              , january   : "$_datesJanuary()$"

@@ -101,6 +101,7 @@ kontraMigrations = [
   , createTablePartnerAdmins
   , addAllowsHighlightingToSignatories
   , createHighlightedPagesTable
+  , normalizeCheckboxesSize
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

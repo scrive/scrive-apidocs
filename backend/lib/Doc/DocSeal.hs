@@ -12,7 +12,6 @@ module Doc.DocSeal
   , presealDocumentFile
   ) where
 
-import Control.Conditional ((<|), (|>))
 import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Reader
@@ -41,6 +40,7 @@ import qualified Text.StringTemplates.Fields as F
 import Crypto.RNG
 import DB
 import DB.TimeZoneName
+import Doc.Data.CheckboxPlacementsUtils (CheckboxImagesMapping, readCheckboxImagesMapping, getCheckboxImage)
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.DocUtils
@@ -74,8 +74,8 @@ import qualified Doc.SealSpec as Seal
 import qualified HostClock.Model as HC
 
 personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
-                    => TimeZoneName -> SignatoryIdentifierMap -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
-personFromSignatory tz sim boxImages signatory = do
+                    => TimeZoneName -> SignatoryIdentifierMap -> CheckboxImagesMapping-> SignatoryLink -> m Seal.Person
+personFromSignatory tz sim checkboxMapping signatory = do
     emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
     stime <- case  maybesigninfo signatory of
                   Nothing -> return ""
@@ -91,7 +91,7 @@ personFromSignatory tz sim boxImages signatory = do
     personalNumberText <- if (not (null personalnumber))
                             then renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
                          else return ""
-    fields <- fieldsFromSignatory boxImages signatory
+    fields <- fieldsFromSignatory checkboxMapping signatory
     highlightedImages <- mapM highlightedImageFromHighlightedPage (signatoryhighlightedpages signatory)
     return $ Seal.Person { Seal.fullname           = fromMaybe "" $ signatoryIdentifier sim (signatorylinkid signatory) emptyNamePlaceholder
                          , Seal.company            = getCompanyName signatory
@@ -113,9 +113,9 @@ personFromSignatory tz sim boxImages signatory = do
                          }
 
 personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
-                          =>  TimeZoneName -> SignatoryIdentifierMap -> (BS.ByteString,BS.ByteString) -> SignatoryLink -> m Seal.Person
-personExFromSignatoryLink tz sim boxImages sl@SignatoryLink{..} = do
-  person <- personFromSignatory tz sim boxImages sl
+                          =>  TimeZoneName -> SignatoryIdentifierMap -> CheckboxImagesMapping -> SignatoryLink -> m Seal.Person
+personExFromSignatoryLink tz sim checkboxMapping sl@SignatoryLink{..} = do
+  person <- personFromSignatory tz sim checkboxMapping sl
   return person {
        Seal.emailverified    = signatorylinkdeliverymethod == EmailDelivery
      , Seal.fullnameverified = False
@@ -124,8 +124,8 @@ personExFromSignatoryLink tz sim boxImages sl@SignatoryLink{..} = do
      , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationtosignmethod == SMSPinAuthenticationToSign)
      }
 
-fieldsFromSignatory :: forall m. (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => (BS.ByteString,BS.ByteString) -> SignatoryLink -> m [Seal.Field]
-fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryfields} =
+fieldsFromSignatory :: forall m. (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => CheckboxImagesMapping -> SignatoryLink -> m [Seal.Field]
+fieldsFromSignatory checkboxMapping SignatoryLink{signatoryfields} =
   silenceJPEGFieldsFromFirstSignature <$> concat <$> mapM makeSealField signatoryfields
   where
     silenceJPEGFieldsToTheEnd [] = []
@@ -142,7 +142,7 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
                            (_, Nothing) -> return []  -- We skip signature that don't have a drawing
                            ([],Just f) -> (\x -> [x]) <$> fieldJPEGFromSignatureField f
                            (_, Just f) -> mapM (fieldJPEGFromPlacement f) (fieldPlacements  sf)
-       SignatoryCheckboxField schf -> return $ map (uncheckedImageFromPlacement <| not (schfValue schf) |>  checkedImageFromPlacement) (fieldPlacements  sf)
+       SignatoryCheckboxField schf -> return $ map (checkboxJPEG $ schfValue schf) (fieldPlacements  sf)
        _ -> return $ for (fieldPlacements sf) $ fieldFromPlacement False sf
     fieldFromPlacement greyed sf placement =
       Seal.Field { Seal.value            = fromMaybe "" $ fieldTextValue sf
@@ -153,16 +153,13 @@ fieldsFromSignatory (checkedBoxImage,uncheckedBoxImage) SignatoryLink{signatoryf
                  , Seal.greyed           = greyed
                  , Seal.includeInSummary = True
                  }
-
-    checkedImageFromPlacement = iconWithPlacement checkedBoxImage
-    uncheckedImageFromPlacement = iconWithPlacement uncheckedBoxImage
-    iconWithPlacement image placement = Seal.FieldJPG
-                 { valueBinary           = image
+    checkboxJPEG checked placement = Seal.FieldJPG
+                 { valueBinary           = getCheckboxImage checkboxMapping (placementwrel placement) checked
                  , Seal.x                = placementxrel placement
                  , Seal.y                = placementyrel placement
                  , Seal.page             = placementpage placement
                  , Seal.image_w          = placementwrel placement
-                 , Seal.image_h          = placementhrel placement
+                 , Seal.image_h          = 0 -- hrel for checkboxes should be set to 0 anyway
                  , Seal.includeInSummary = False
                  , Seal.onlyForSummary   = False
                  , Seal.keyColor         = Nothing
@@ -350,7 +347,7 @@ createSealingTextsForDocument document hostpart = do
   return sealingTexts
 
 sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, AWS.AmazonMonad m, MonadBaseControl IO m)
-                     => (BS.ByteString,BS.ByteString)
+                     => CheckboxImagesMapping
                      -> String
                      -> Document
                      -> [DocumentEvidenceEvent]
@@ -361,7 +358,7 @@ sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Mo
                      -> String
                      -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument boxImages hostpart document elog offsets eotData content tmppath inputpath outputpath = do
+sealSpecFromDocument checkboxMapping hostpart document elog offsets eotData content tmppath inputpath outputpath = do
   -- Keep only simple events and remove events induced by resealing
   let velog = filter (eventForVerificationPage . evType) $ eventsForLog elog
   -- Form initials from signing parties
@@ -396,19 +393,19 @@ sealSpecFromDocument boxImages hostpart document elog offsets eotData content tm
                                , Seal.histaddress = maybe "" show $ evIP4 ev
                                }
 
-  persons <- sequence $ [ personExFromSignatoryLink (documenttimezonename document) sim boxImages s
+  persons <- sequence $ [ personExFromSignatoryLink (documenttimezonename document) sim checkboxMapping s
                     | s <- documentsignatorylinks document
                     , signatoryispartner $ s
                 ]
 
-  secretaries <- sequence $ [ personFromSignatory (documenttimezonename document) sim boxImages $ s
+  secretaries <- sequence $ [ personFromSignatory (documenttimezonename document) sim checkboxMapping $ s
                     | s <- documentsignatorylinks document
                     , not . signatoryispartner $ s
                 ]
 
   initiator <- if (signatoryispartner authorsiglink)
                 then return Nothing
-                else Just <$> (personFromSignatory (documenttimezonename document) sim boxImages authorsiglink)
+                else Just <$> (personFromSignatory (documenttimezonename document) sim checkboxMapping authorsiglink)
 
   let initials = intercalate ", " $ catMaybes
                    [ siInitials <$> Map.lookup (signatorylinkid s) sim
@@ -496,13 +493,13 @@ sealSpecFromDocument boxImages hostpart document elog offsets eotData content tm
         }
 
 presealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, AWS.AmazonMonad m, MonadBaseControl IO m)
-                           => (BS.ByteString,BS.ByteString)
+                           => CheckboxImagesMapping
                            -> Document
                            -> String
                            -> String
                            -> m Seal.PreSealSpec
-presealSpecFromDocument boxImages document inputpath outputpath = do
-       fields <- concat <$> mapM (fieldsFromSignatory boxImages) (documentsignatorylinks document)
+presealSpecFromDocument checkboxMapping document inputpath outputpath = do
+       fields <- concat <$> mapM (fieldsFromSignatory checkboxMapping) (documentsignatorylinks document)
        return $ Seal.PreSealSpec
             { Seal.pssInput          = inputpath
             , Seal.pssOutput         = outputpath
@@ -535,8 +532,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
     liftIO $ BS.writeFile tmpin content
-    checkedBoxImage <- liftIO $ BS.readFile "frontend/app/img/checkbox_checked.jpg"
-    uncheckedBoxImage <- liftIO $  BS.readFile "frontend/app/img/checkbox_unchecked.jpg"
+    checkboxMapping <- liftIO $ readCheckboxImagesMapping
     elog <- dbQuery $ GetEvidenceLog documentid
     -- Evidence of Time documentation says we collect last 1000 samples
     offsets <- dbQuery $ HC.GetNClockErrorEstimates 1000
@@ -546,7 +542,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
         (return ())
         (systemActor now)
     eotData <- liftBase $ generateEvidenceOfTimeData 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
-    config <- theDocument >>= \d -> sealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) hostpart d elog offsets eotData content tmppath tmpin tmpout
+    config <- theDocument >>= \d -> sealSpecFromDocument checkboxMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
 
     let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonSealSpec config
     (code,_stdout,stderr) <- liftIO $ do
@@ -597,9 +593,8 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
     liftIO $ BS.writeFile tmpin content
-    checkedBoxImage <- liftIO $ BS.readFile "frontend/app/img/checkbox_checked.jpg"
-    uncheckedBoxImage <- liftIO $  BS.readFile "frontend/app/img/checkbox_unchecked.jpg"
-    config <- presealSpecFromDocument (checkedBoxImage,uncheckedBoxImage) document tmpin tmpout
+    checkboxMapping <- liftIO $ readCheckboxImagesMapping
+    config <- presealSpecFromDocument checkboxMapping document tmpin tmpout
 
     let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonPreSealSpec config
     (code,_stdout,stderr) <- liftIO $ do

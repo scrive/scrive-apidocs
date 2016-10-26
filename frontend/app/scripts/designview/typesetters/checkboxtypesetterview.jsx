@@ -8,6 +8,8 @@ var Anchor = require("./anchor");
 var Done = require("./done");
 var Remove = require("./remove");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
+var CheckboxSizeSelector = require("./checkboxsizeselector");
+
 
   module.exports = React.createClass({
     mixins: [TypeSetterMixin],
@@ -35,6 +37,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
       return (
         <span>
           <SignatorySelector field={field} onSelect={this.handleSelect} />
+          <CheckboxSizeSelector model={this.props.model} />
           <div className="fieldTypeSetter-option checkbox-box">
             <Checkbox
               label={localization.designview.checkboxes.prechecked}

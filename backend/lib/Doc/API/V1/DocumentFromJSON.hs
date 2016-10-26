@@ -9,6 +9,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as T
 
 import DB.TimeZoneName
+import Doc.Data.CheckboxPlacementsUtils
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
@@ -321,7 +322,7 @@ instance FromJSValueWithUpdate SignatoryCheckboxField where
                 , schfValue = not $ null $ v
                 , schfObligatory = obligatory
                 , schfShouldBeFilledBySender = filledbysender
-                , schfPlacements = placements
+                , schfPlacements = map fixCheckboxPlacementRatioIfInvalid placements
               }
           _ -> return Nothing
       where

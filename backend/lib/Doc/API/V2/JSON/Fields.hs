@@ -17,6 +17,7 @@ import qualified Data.Text as T
 
 import Doc.API.V2.JSON.Misc()
 import Doc.API.V2.JSON.Utils
+import Doc.Data.CheckboxPlacementsUtils
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import KontraPrelude
@@ -128,11 +129,14 @@ unjsonCheckboxField  = pure (\n v ob sfbs ps -> CheckboxField  (unsafeSignatoryF
   <*> fieldDef "is_checked" False (unsafeFromCheckboxField  schfValue) "Value of the field"
   <*> fieldDef "is_obligatory" True (unsafeFromCheckboxField schfObligatory) "If is oligatory"
   <*> fieldDef "should_be_filled_by_sender" False (unsafeFromCheckboxField schfShouldBeFilledBySender) "If should be filled by sender"
-  <*> fieldDefBy "placements" [] (unsafeFromCheckboxField schfPlacements) "Placements" (arrayOf unsonFieldPlacement)
+  <*> fieldDefBy "placements" [] (unsafeFromCheckboxField schfPlacements) "Placements" (arrayOf (unjsonInvmapR validCheckboxPlacement id unsonFieldPlacement))
   where
     unsafeFromCheckboxField  :: (SignatoryCheckboxField  -> a) -> SignatoryField -> a
     unsafeFromCheckboxField  f (SignatoryCheckboxField  a) = f a
     unsafeFromCheckboxField  _ _ = $unexpectedError "unsafeFromCheckboxField "
+    validCheckboxPlacement fp = if checkboxPlacementHasValidCheckboxRatio fp
+      then return fp
+      else fail "Checkbox placement has invalid wrel, hrel or fsrel"
 
 unjsonSignatureField :: Ap (FieldDef SignatoryField) SignatorySignatureField
 unjsonSignatureField  = pure (\n ob sfbs ps -> SignatureField  (unsafeSignatoryFieldID 0) n Nothing ob sfbs ps)

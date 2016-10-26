@@ -169,7 +169,7 @@ describe("/authorview/fileview/filepageview", function () {
 
   it("should render the checkbox placement", function () {
     var compontent = renderComponent();
-    assert.lengthOf($(".placedcheckbox-noactive", React.findDOMNode(compontent)), 1);
+    assert.lengthOf($(".placedcheckbox", React.findDOMNode(compontent)), 1);
   });
 
   it("should render the signature placement", function () {

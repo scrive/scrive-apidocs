@@ -7,6 +7,8 @@ var FieldPlacement = require("../../../js/placements.js").FieldPlacement;
 var $ = require("jquery");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
+var Checkbox = require("../../icons/checkbox");
+
   module.exports = React.createClass({
     mixins: [CreateFieldsMixin, DraggableMixin],
 
@@ -32,8 +34,9 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
         page: args.page,
         xrel: args.xrel,
         yrel: args.yrel,
-        wrel: args.wrel,
-        hrel: args.hrel
+        wrel: FieldPlacementGlobal.defaultCheckboxWRel,
+        hrel: 0,
+        fsrel: 0
       });
       field.addPlacement(newPlacement);
       return newPlacement;
@@ -44,8 +47,9 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
         page: args.page,
         xrel: args.x / args.pageWidth,
         yrel: args.y / args.pageHeight,
-        wrel: FieldPlacementGlobal.checkboxSprite / args.pageWidth,
-        hrel: FieldPlacementGlobal.checkboxSprite / args.pageHeight
+        wrel: FieldPlacementGlobal.defaultCheckboxWRel,
+        hrel: 0,
+        fsrel: 0
       });
     },
 
@@ -53,12 +57,18 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
       var document = this.document();
       var signatory = document.signatoriesWhoSign()[0] || document.author();
       var helper = $("<div class='placedcheckbox'/>");
+
+      React.render(React.createElement(Checkbox, {
+        wrel: FieldPlacementGlobal.defaultCheckboxWRel,
+        pageWidth: FieldPlacementGlobal.designviewPageWidth,
+        checked: signatory.author(),
+        active: true
+      }), helper[0]);
+
+      var defaultSize = Math.round(FieldPlacementGlobal.defaultCheckboxWRel * FieldPlacementGlobal.designviewPageWidth);
       helper.addClass(FieldPlacementGlobal.signatoryCSSClass(signatory));
-      helper.height(FieldPlacementGlobal.checkboxHeight);
-      helper.width(FieldPlacementGlobal.checkboxWidth);
-      if (signatory.author()) {
-        helper.addClass("checked");
-      }
+      helper.css("width", defaultSize + "px");
+      helper.css("height", defaultSize + "px");
       return helper;
     },
 
@@ -103,8 +113,9 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
             page: page,
             xrel: x / pageW,
             yrel: y / pageH,
-            wrel: FieldPlacementGlobal.checkboxSprite / pageW,
-            hrel: FieldPlacementGlobal.checkboxSprite / pageH
+            wrel: FieldPlacementGlobal.defaultCheckboxWRel,
+            hrel: 0,
+            fsrel: 0
           });
           self.props.openTypeSetterFor(newCheckboxPlacement);
         }

@@ -8,6 +8,9 @@ var FieldPlacement = require("../../../js/placements.js").FieldPlacement;
 var $ = require("jquery");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 
+var Checkbox = require("../../icons/checkbox");
+
+
   module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(FieldPlacement).isRequired,
@@ -52,9 +55,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
           placement.set({
             page: page,
             xrel: x / pageW,
-            yrel: y / pageH,
-            wrel: FieldPlacementGlobal.checkboxSprite / pageW,
-            hrel: FieldPlacementGlobal.checkboxSprite / pageH
+            yrel: y / pageH
           });
           oldPage.removePlacement(placement);
           newPage.addPlacement(placement);
@@ -79,12 +80,13 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
           sname = localization.process.signatoryname + " " + signatory.signIndex();
         }
       }
+      var size = Math.round(placement.wrel() * self.props.pageWidth);
       return (
         <div
           className="placedfield js-checkbox"
           style={{
-            left: Math.round(placement.xrel() * self.props.pageWidth) - FieldPlacementGlobal.placementBorder,
-            top: Math.round(placement.yrel() * self.props.pageHeight) -  FieldPlacementGlobal.placementBorder
+            left: Math.round(placement.xrel() * self.props.pageWidth),
+            top: Math.round(placement.yrel() * self.props.pageHeight)
           }}
           onClick={self.toogleTypeSetterAndCloseOther}
         >
@@ -92,14 +94,20 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
             className={
               "placedcheckbox " +
               FieldPlacementGlobal.signatoryCSSClass(signatory) + " "  +
-              (field.isChecked() ? "checked" : "") + " " +
-              (field.needsSenderAction() ? "needs-sender-action" : "")
+              (field.isChecked() ? "checked" : "")
             }
             style={{
-              width: FieldPlacementGlobal.checkboxWidth,
-              height: FieldPlacementGlobal.checkboxHeight
+              width: size,
+              height: size
             }}
-          />
+          >
+            <Checkbox
+              wrel={placement.wrel()}
+              pageWidth={self.props.pageWidth}
+              checked={field.isChecked()}
+              active={true}
+            />
+          </div>
         </div>
       );
     }

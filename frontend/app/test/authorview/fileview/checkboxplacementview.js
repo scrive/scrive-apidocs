@@ -36,8 +36,8 @@ describe("/authorview/fileview/checkboxplacementview", function () {
       placements: [
         {
           placed: true,
-          fsrel: 0.5,
-          hrel: 0.25,
+          fsrel: 0,
+          hrel: 0,
           wrel: 0.1,
           xrel: 0.1,
           yrel: 0.25
@@ -54,9 +54,9 @@ describe("/authorview/fileview/checkboxplacementview", function () {
     var component = renderComponent();
 
     var computedStyle = component.fieldStyle();
-    assert.equal(computedStyle.height, 50);
-    assert.equal(computedStyle.left, 32 - FieldPlacementGlobal.placementBorder);
-    assert.equal(computedStyle.top, 50 - FieldPlacementGlobal.placementBorder);
+    assert.equal(computedStyle.height, 32);
+    assert.equal(computedStyle.left, 32);
+    assert.equal(computedStyle.top, 50);
     assert.equal(computedStyle.width, 32);
   });
 
@@ -72,17 +72,17 @@ describe("/authorview/fileview/checkboxplacementview", function () {
     assert.equal(componentNode.style["width"], computedStyle.width + "px");
   });
 
-  it("should not set checked class on not checked fields", function () {
+  it("should not have .svg-checked-icon element inside when not checked", function () {
     field.setChecked(false, {silent: true});
 
     var component = renderComponent();
-    assert.lengthOf($(".checked", React.findDOMNode(component)), 0);
+    assert.lengthOf($(".svg-checked-icon", React.findDOMNode(component)), 0);
   });
 
-  it("should set checked class on checked fields", function () {
+  it("should have .svg-checked-icon element inside when checked", function () {
     field.setChecked(true, {silent: true});
 
     var component = renderComponent();
-    assert.lengthOf($(".checked", React.findDOMNode(component)), 1);
+    assert.lengthOf($(".svg-checked-icon", React.findDOMNode(component)), 1);
   });
 });

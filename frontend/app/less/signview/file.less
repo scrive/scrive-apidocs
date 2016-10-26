@@ -137,12 +137,14 @@
     }
   }
 
-  .placedcheckbox-noactive {
-    background: url(~"@{img-base-url}/checkbox-blue-unchecked.png") no-repeat scroll 0 0;
+  .placedcheckbox .checkboxClickableArea {
+    position: absolute;
+  }
 
-    &.checked {
-      background: url(~"@{img-base-url}/checkbox-blue-checked.png") no-repeat scroll 0 0;
-    }
+  .placedcheckbox svg {
+    position: absolute;
+    left: 0px;
+    right: 0px;
   }
 
   .pagejpg {
@@ -182,10 +184,6 @@
   }
 
   .placedfield {
-   .placedcheckbox,
-   .placedcheckbox.checked {
-      background-position: center;
-    }
 
     &.to-fill-now {
       border-style: solid;
@@ -193,18 +191,6 @@
 
       .placedfield-placement-wrapper {
         overflow: hidden;
-      }
-
-      .placedcheckbox {
-        background: url("/img/checkbox-unchecked.png") no-repeat center center;
-
-        &:active {
-          background: url("/img/checkbox-active.png") no-repeat center center;
-        }
-
-        &.checked {
-          background: url("/img/checkbox-checked.png") no-repeat center center;
-        }
       }
     }
 

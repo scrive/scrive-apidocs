@@ -614,3 +614,18 @@ createHighlightedPagesTable = Migration {
     }
   }
 
+
+normalizeCheckboxesSize :: MonadDB m => Migration m
+normalizeCheckboxesSize = Migration {
+    mgrTable = tableFieldPlacements
+  , mgrFrom = 1
+  , mgrDo = do
+      runQuery_ . sqlUpdate "field_placements" $ do
+        sqlSet "wrel" (0.011538 :: Double) -- New default checkbox size
+        sqlSet "hrel" (0 :: Double)
+        sqlWhereInSql "signatory_field_id" $ do
+          sqlSelect "signatory_link_fields" $ do
+            sqlWhereEq "type" (9 :: Int16) -- CheckboxT
+            sqlResult "id"
+  }
+
