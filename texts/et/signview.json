@@ -31,6 +31,7 @@
 "_controlsStatusViewingSigning":"",
 "_controlsStatusViewingTimedout":"",
 "_couldNotUpload":"Vabandame, faili üleslaadimine nurjus. Proovige uuesti või valige teine fail.",
+"_couldNotUploadOnlyPDF":"",
 "_deliveryEmail":"e-mail",
 "_deliveryEmailMobile":"e-mail ja SMS",
 "_deliveryMobile":"SMS",

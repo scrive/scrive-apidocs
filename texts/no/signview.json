@@ -31,6 +31,7 @@
 "_controlsStatusViewingSigning":"",
 "_controlsStatusViewingTimedout":"",
 "_couldNotUpload":"Beklager, filen kunne ikke lastes opp. Vennligst prøv igjen med en annen fil.",
+"_couldNotUploadOnlyPDF":"",
 "_deliveryEmail":"e-post",
 "_deliveryEmailMobile":"e-post og SMS",
 "_deliveryMobile":"SMS",

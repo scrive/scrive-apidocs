@@ -31,6 +31,7 @@
 "_controlsStatusViewingSigning":"",
 "_controlsStatusViewingTimedout":"",
 "_couldNotUpload":"Því miður var ekki hægt að hlaða skránni upp. Vinsamlegast reyndu aftur eða prófaðu aðra skrá.",
+"_couldNotUploadOnlyPDF":"",
 "_deliveryEmail":"netfang",
 "_deliveryEmailMobile":"tölvupóstur og textaskilaboð",
 "_deliveryMobile":"Textaskilaboð",
