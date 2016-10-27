@@ -7,6 +7,7 @@ import Development.Shake.FilePath
 import System.Console.GetOpt
 import System.Exit (exitFailure)
 
+import Shake.GetCabalDeps
 import Shake.GetHsDeps
 import Shake.GitHub
 import Shake.Oracles
@@ -94,9 +95,11 @@ transifexFlags =
 
 main :: IO ()
 main = do
-  -- Used to check if Shake.hs rules changed, triggering a full rebuild
-  hsDeps <- getHsDeps "Shake/Shake.hs" "_shake/.depend"
-  ver <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
+  -- Used to check if Shake.hs rules changed, triggering a full rebuild.
+  hsDeps       <- getHsDeps "Shake/Shake.hs" "_shake/.depend"
+  ver          <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
+  -- Dependency information needed by our rules.
+  hsSourceDirs <- getHsSourceDirs "kontrakcja.cabal"
   shakeArgsWith (opts ver) transifexFlags $ \flags targets -> return . Just $ do
     if null targets then want ["help"] else want targets
 
@@ -144,8 +147,8 @@ main = do
       removeFilesAfter "_shake/" ["//*"]
 
     -- * Rules
-    serverBuildRules
-    serverTestRules
+    serverBuildRules hsSourceDirs
+    serverTestRules  hsSourceDirs
     frontendBuildRules
     frontendTestRules
     utilityScriptRules
@@ -155,8 +158,8 @@ main = do
 -- * Server
 
 -- | Server build rules
-serverBuildRules :: Rules ()
-serverBuildRules = do
+serverBuildRules :: HsSourceDirsMap -> Rules ()
+serverBuildRules hsSourceDirs = do
   let cabalFiles = ["cabal.config", "kontrakcja.cabal"]
 
   "cabal.sandbox.config" %> \_ -> do
@@ -210,12 +213,12 @@ serverBuildRules = do
 
   "_build/cabal-build" %>>> do
     need ["dist/setup-config"]
-    needServerHaskellFiles
+    needServerHaskellFiles hsSourceDirs
     cmd (EchoStdout True) "cabal build"
 
   "_build/cabal-haddock.tar.gz" %> \_ -> do
     need ["_build/cabal-build"]
-    needServerHaskellFiles
+    needServerHaskellFiles hsSourceDirs
     -- Limit to library from package, due to Cabal bug:
     -- https://github.com/haskell/cabal/issues/1919
     command_ [] "cabal" ["haddock","--internal"]
@@ -224,15 +227,16 @@ serverBuildRules = do
   "cabal-clean" ~> cmd "cabal clean"
 
 -- | Server test rules
-serverTestRules :: Rules ()
-serverTestRules = do
+serverTestRules :: HsSourceDirsMap -> Rules ()
+serverTestRules hsSourceDirs = do
   let hsImportOrderAction checkOnly = do
-        let flags = if checkOnly then ("--check":sourceDirsFromCabal)
-                    else sourceDirsFromCabal
+        let allSourceDirs = allHsSourceDirs hsSourceDirs
+            flags = if checkOnly then ("--check":allSourceDirs)
+                    else allSourceDirs
         command ([Shell] ++ langEnv) "runhaskell scripts/sort_imports.hs" flags
 
   "_build/hs-import-order" %>>> do
-    needServerHaskellFiles
+    needServerHaskellFiles hsSourceDirs
     withGitHub "Haskell import order" $ hsImportOrderAction True
 
   "fix-hs-import-order" ~> hsImportOrderAction False
@@ -277,41 +281,9 @@ serverTestRules = do
          ++ "coverage-reports kontrakcja-test.tix") []
       removeFilesAfter "coverage-reports" ["//*"]
 
-needServerHaskellFiles :: Action ()
-needServerHaskellFiles = needPatternsInDirectories ["//*.hs"] sourceDirsFromCabal
-
--- | All HS source directories from kontrakcja.cabal For
--- `needServerHaskellFiles` we could do with top-level directories,
--- but our sort imports procedure needs the directories as defined in
--- .cabal file as it uses this information to decide if an import is
--- foreign or not
---
--- FIXME This can be automated this using grep, ack, sort, uniq on
--- kontrakcja.cabal:
---
--- grep 'hs-source-dirs' -i kontrakcja.cabal
--- | sed -e 's/Hs-source-dirs://g' -e 's/^ *//g' | tr ' ' '\n' | sort -u
-sourceDirsFromCabal :: [FilePath]
-sourceDirsFromCabal =
-  [ "backend/cron/inc"
-  , "backend/cron/schema"
-  , "backend/cron/src"
-  , "backend/lib"
-  , "backend/mailer/inc"
-  , "backend/mailer/schema"
-  , "backend/mailer/src"
-  , "backend/messenger/inc"
-  , "backend/messenger/schema"
-  , "backend/messenger/src"
-  , "backend/migrate/inc"
-  , "backend/migrate/src"
-  , "backend/misc/schema"
-  , "backend/misc/src"
-  , "backend/server/schema"
-  , "backend/server/src"
-  , "backend/test/src"
-  , "localization/src"
-  ]
+needServerHaskellFiles :: HsSourceDirsMap -> Action ()
+needServerHaskellFiles hsSourceDirs =
+  needPatternsInDirectories ["//*.hs"] (allHsSourceDirs hsSourceDirs)
 
 -- * Frontend
 
