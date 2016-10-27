@@ -233,7 +233,7 @@ serverTestRules hsSourceDirs = do
         let allSourceDirs = allHsSourceDirs hsSourceDirs
             flags = if checkOnly then ("--check":allSourceDirs)
                     else allSourceDirs
-        command ([Shell] ++ langEnv) "runhaskell scripts/sort_imports.hs" flags
+        command ([Shell] ++ langEnv) "runghc scripts/sort_imports.hs" flags
 
   "_build/hs-import-order" %>>> do
     needServerHaskellFiles hsSourceDirs

@@ -1,17 +1,15 @@
 module RoutingListMain where
 
 import Control.Monad.State
-import Unsafe.Coerce (unsafeCoerce)
-import System.Environment (getArgs)
-import System.IO
-
 import Happstack.Server (Method, Response)
 import Happstack.StaticRouting (Route)
+import System.Environment (getArgs)
+import System.IO
+import Unsafe.Coerce (unsafeCoerce)
 
 import Kontra
 import KontraPrelude
 import RoutingTable (staticRoutes)
-
 
 ------------------------------------------------------------------------------
 -- MyRoute is an exact copy of Route, but since Route's ctors are not exported

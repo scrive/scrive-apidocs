@@ -6,13 +6,12 @@ module Transifex.Utils
   , Change(..), compareTranslations, parsePushResponse )
 where
 
+import Control.Monad.Identity
 import Data.List
-import Text.JSON.Gen
+import Data.Maybe
 import Text.JSON
 import Text.JSON.FromJSValue
-import Control.Monad.Identity
-import Data.Maybe
-
+import Text.JSON.Gen
 
 data TranslationResource = Texts | Events | Signview deriving Show
 

@@ -1,24 +1,22 @@
-{-# LANGUAGE CPP #-}
-module Main (main) where
+{-# LANGUAGE NoImplicitPrelude #-}
+module Main where
 
 -- TODO:
 -- regex currently parses valid tokens like 'localization2' as 'localization',
 -- which results in a false-positive.
 
-import Data.List (isPrefixOf,isSuffixOf, unfoldr, intersperse)
-import Data.Foldable (foldlM)
-import Data.Maybe
 import Control.Monad (forM)
+import Data.Foldable (foldlM)
+import Data.List (isPrefixOf,isSuffixOf, unfoldr, intersperse)
+import Data.Maybe
 import Language.JavaScript.Parser
+import System.Directory
+import System.Exit
+import System.IO
 import Text.Regex.TDFA
 import qualified Data.Map as Map
-import System.IO
-import System.Exit
-import System.Directory
 
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative
-#endif
+import ScriptsPrelude
 
 ------------------------------
 -- WHITELIST

@@ -2,20 +2,20 @@ module ScreenshotReview where
 
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.Trans (liftIO)
-import KontraPrelude
+import Text.StringTemplates.Templates (renderTemplate)
+import qualified Data.ByteString.UTF8 as BS
+import qualified Text.StringTemplates.Fields as F
 
-import EvidenceLog.Model (GetEvidenceLog(..), DocumentEvidenceEvent(..))
 import DB (dbQuery, MonadDB)
-import Interactive (run)
 import Doc.DocStateData (Document(..))
-import Doc.SignatoryLinkID (SignatoryLinkID)
 import Doc.Model.Query (GetRandomSignatoryLinkIDsThatSignedRecently(..), GetSignatoryScreenshots(..), GetDocumentBySignatoryLinkID(..))
 import Doc.Screenshot (Screenshot(..))
+import Doc.SignatoryLinkID (SignatoryLinkID)
 import Doc.SignatoryScreenshots (SignatoryScreenshots(..))
-import qualified Data.ByteString.UTF8 as BS
-import Text.StringTemplates.Templates (renderTemplate)
+import EvidenceLog.Model (GetEvidenceLog(..), DocumentEvidenceEvent(..))
+import Interactive (run)
+import KontraPrelude
 import MinutesTime (currentTime, daysBefore)
-import qualified Text.StringTemplates.Fields as F
 import qualified Data.ByteString.RFC2397 as RFC2397
 
 getImagesFromScreenshots :: (MonadDB m, MonadThrow m) => (SignatoryLinkID, SignatoryScreenshots) -> m [(Bool, String, BS.ByteString)]

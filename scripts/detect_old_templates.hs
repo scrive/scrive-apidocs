@@ -1,21 +1,20 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+module Main where
 
-import qualified Data.Set as S
+import Data.List (isSuffixOf)
 import Data.Maybe
-import System.IO
+import Debug.Trace
 import Language.Haskell.Exts
+import System.Directory
+import System.IO
+import Text.StringTemplate
 import Text.StringTemplates.Files
 import qualified Data.Map as Map
-import Text.StringTemplate
-import System.Directory
-import Data.List (isSuffixOf)
+import qualified Data.Set as S
+
+import ScriptsPrelude
 import Transifex.Synch
 import Transifex.Utils
-import Debug.Trace
-
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative
-#endif
 
 whiteList :: S.Set String
 whiteList = S.fromList [ "newTemplateTitle"
