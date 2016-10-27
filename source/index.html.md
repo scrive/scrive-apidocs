@@ -125,7 +125,7 @@ The main changes in this version, compared to Version 1, are:
 * Better error messages
 
 The root endpoint for Version 1 was `/api/v1`, this has changed to
-`/api/v2`.
+`/api/v2/documents`.
 
 Most of the parameters have had minor name changes to make it easier for
 newcomers to use.
@@ -292,7 +292,20 @@ on the Document, or the Author should have a User callback scheme defined.
 You will need to contact us to set up a User callback scheme.
 
 The Scrive eSign system will perform an `HTTP POST` request, with the
-Document JSON in the body of the request.
+following `POST` parameters:
+
+* `document_id`: As the name implies, the unique Document ID
+* `document_json`: The Document JSON, see [Definitions](#definitions)
+* `document_signed_and_sealed`: A boolean `true` or `false`, which indicates
+  whether the document has been signed and sealed with an electronic
+  signature
+
+There will generally be two callbacks executed with
+`document_signed_and_sealed` set to `true`.
+The first will be shortly after all signing parties have signed the document
+and Scrive has applied an electronic signature, and the second will be
+issued when a keyless signature has been applied to the document.
+This usually happens between 15-30 days after the original signing date.
 
 We guarantee to make *at least* one callback when the Document status
 changes to one of the following values:
@@ -795,6 +808,12 @@ Scrive eSign system returning errors.
 <p>
 <strong>
 <code class="operation-method operation-method-GET">GET  /api/v2/documents/{document_id}/files/{file_id}/{filename}</code>
+</strong>
+</p>
+
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/documents/{document_id}/history</code>
 </strong>
 </p>
 
@@ -1366,6 +1385,46 @@ Will not change.</p>
 <tr> <td>200</td> <td><p>The file</p>
 <p>Usually an image (JPG, PNG) or PDF, but this may change.
 <code>Content-Type</code> header will be set according to the file type.</p>
+</td> </tr>
+</table>
+
+
+
+## Get the Document History
+
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/documents/{document_id}/history</code>
+</strong>
+</p>
+
+**Get the document history to display to the user.**
+
+Default language for the document history text is the one set for the user
+making the API call.
+This can optionally be overridden.
+
+*OAuth Privileges required: `DOC_CHECK`*
+
+### Parameters
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+Will not change.</p>
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>lang</code><br/><em>optional</em></p><p><em>default:</em> <code>User language</code></p></td><td><p><strong>The language used to display the document history.</strong></p>
+<p>Defaults to the language of the User making the API call.</p>
+<p>Has to be a supported language code.
+Languages may be added or removed without notice.</p>
+</td><td><p>string</p></td><td>query</td></tr>
+</table>
+
+### Responses
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>The list of history items for this document.</p>
+<p>Will be in reverse-chronological order and an array of
+<a href="#history-items">History Items</a>.</p>
 </td> </tr>
 </table>
 
@@ -4650,5 +4709,73 @@ Whether to add the attachment to the sealed file after signing
 
 
 #### `file_id` (integer, required)
+
+## History Items
+`(object)`
+
+> ### Example JSON for "History Items":
+
+```json
+{
+  "events": [
+    {
+      "status": "initiated",
+      "time": "2015-06-06T17:50:15Z",
+      "party": "Not named party (1)",
+      "text": "The signing process was initiated."
+    }
+  ]
+}
+```
+
+
+The type returned by the Document History API call.
+
+This can be used to show the progress of a document to the user.
+
+
+This object has the following properties:
+
+### `events` (array)
+
+All array elements must be of type:
+
+#### (object)
+
+This object has the following properties:
+
+##### `status` (string, enum)
+
+The document status "class", not the same as the statuses
+available for documents.
+
+
+This element must be one of the following enum values:
+
+* `initiated`
+* `draft`
+* `cancelled`
+* `rejected`
+* `timeouted`
+* `problem`
+* `deliveryproblem`
+* `sent`
+* `delivered`
+* `read`
+* `opened`
+* `signed`
+* `prolonged`
+* `sealed`
+* `extended`
+
+##### `time` (string)
+
+##### `text` (string)
+
+The text describing the action.
+
+##### `party` (string)
+
+The name of the party performing the action.
 
 
