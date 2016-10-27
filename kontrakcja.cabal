@@ -1280,7 +1280,8 @@ Executable transifex
   Default-Language: Haskell2010
 
 Executable detect_old_localizations
-  Hs-source-dirs:   scripts
+  Hs-source-dirs:   scripts/detect_old_localizations,
+                    scripts/scripts-prelude
   Main-is:          detect_old_localizations.hs
   GHC-Options:      -Wall -Werror
   Build-Depends:    base,
@@ -1292,7 +1293,9 @@ Executable detect_old_localizations
   Default-Language: Haskell2010
 
 Executable detect_old_templates
-  Hs-source-dirs:   scripts, transifex
+  Hs-source-dirs:   scripts/detect_old_templates,
+                    scripts/scripts-prelude
+                    transifex
   Main-is:          detect_old_templates.hs
   GHC-Options:      -Wall -Werror
   Build-Depends:    base,
@@ -1310,7 +1313,7 @@ Executable detect_old_templates
   Default-Language: Haskell2010
 
 Executable sort_imports
-  Hs-source-dirs:   scripts
+  Hs-source-dirs:   scripts/sort_imports
   Main-is:          sort_imports.hs
   GHC-Options:      -Wall -Werror
   Build-Depends:    base,

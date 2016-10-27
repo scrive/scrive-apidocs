@@ -2,12 +2,10 @@
 
 import Control.Monad
 import Data.List
-import Data.Maybe
 import Development.Shake
 import Development.Shake.FilePath
 import System.Console.GetOpt
 import System.Exit (exitFailure)
-import qualified Data.Map as M
 
 import Shake.GetCabalDeps
 import Shake.GetHsDeps
@@ -381,35 +379,26 @@ distributionRules = do
 utilityScriptRules :: HsSourceDirsMap -> Rules ()
 utilityScriptRules hsSourceDirs = do
   "dist/build/detect_old_localizations/detect_old_localizations" <.> exe %>
-    \_ -> do
-      let detectOldLocalizationsSources = ["scripts/detect_old_localizations.hs"]
-      need $ ["dist/setup-config"] ++ detectOldLocalizationsSources
-      cmd "cabal build detect_old_localizations"
+    \_ -> buildComponent "detect_old_localizations"
 
-  "dist/build/detect_old_templates/detect_old_templates" <.> exe %> \_ -> do
-    let detectOldTemplatesSources = ["scripts/detect_old_templates.hs"]
-    transifexSources             <- getTransifexSources
-    need $ ["dist/setup-config"] ++ detectOldTemplatesSources ++ transifexSources
-    cmd "cabal build detect_old_templates"
+  "dist/build/detect_old_templates/detect_old_templates" <.> exe %> \_ ->
+    buildComponent "detect_old_templates"
 
-  "dist/build/transifex/transifex" <.> exe %> \_ -> do
-    transifexSources <- getTransifexSources
-    need $ ["dist/setup-config"] ++ transifexSources
-    cmd "cabal build transifex"
+  "dist/build/transifex/transifex" <.> exe %> \_ ->
+    buildComponent "transifex"
 
-  "dist/build/sort_imports/sort_imports" <.> exe %> \_ -> do
-    let sortImportsHsSourceDirs = fromMaybe [] . M.lookup "sort_imports" $
-                                  hsSourceDirs
-    need ["dist/setup-config"]
-    needPatternsInDirectories ["//*.hs"] sortImportsHsSourceDirs
-    cmd "cabal build sort_imports"
+  "dist/build/sort_imports/sort_imports" <.> exe %> \_ ->
+    buildComponent "sort_imports"
 
   "scripts-help" ~> putNormal scriptsUsageMsg
 
   where
-    -- FIXME: Use Cabal API to get the list of hs-source-dirs/modules
-    -- from the .cabal file instead of duplicating the info here.
-    getTransifexSources = getDirectoryFiles "" ["transifex//*.hs"]
+    -- Assumes that all sources of a component are in its hs-source-dirs.
+    buildComponent componentName = do
+      let sourceDirs = componentHsSourceDirs componentName hsSourceDirs
+      need ["dist/setup-config"]
+      needPatternsInDirectories ["//*.hs"] sourceDirs
+      cmd $ "cabal build " ++ componentName
 
 scriptsUsageMsg :: String
 scriptsUsageMsg = unlines $
