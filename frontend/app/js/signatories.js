@@ -566,7 +566,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
                 document: this.document(),
                 signatory: this,
                 type: "remind",
-                editWidth: (this.canSign() && !this.hasSigned()) ? 300 : 540
+                editWidth: 300
         });
     },
     newField : function(t,f) {
