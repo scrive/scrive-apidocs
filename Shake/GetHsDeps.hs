@@ -6,14 +6,11 @@ module Shake.GetHsDeps (getHsDeps)
 import Control.Applicative
 #endif
 
-import Control.Monad
-import Data.Char
 import Data.List
-import Data.Maybe
-import System.IO.Extra
-import System.FilePath
-import System.Process (callProcess)
-import Text.ParserCombinators.ReadP
+import Development.Shake.Util (parseMakefile)
+import System.IO.Extra        (readFile', withTempDir)
+import System.FilePath        ((</>))
+import System.Process         (callProcess)
 
 -- | Given a Haskell source file name, return a list of all local
 -- Haskell source files it depends on, as given by 'ghc -M'.
@@ -22,29 +19,6 @@ getHsDeps mainIs = do
   withTempDir $ \dir -> do
     let tmpFile = dir </> ".depend"
     callProcess "ghc" ["-dep-suffix", "", "-M", mainIs, "-dep-makefile", tmpFile]
-    deps <- nub . catMaybes . map (mfilter (".hs" `isSuffixOf`))
-            . map (fmap snd . parseLine) . trimLines . lines <$> readFile' tmpFile
+    deps <- nub . filter (".hs" `isSuffixOf`)
+      . concatMap snd . parseMakefile <$> readFile' tmpFile
     return deps
-
--- | Filter out comments.
-trimLines :: [String] -> [String]
-trimLines = filter isValidLine
-  where
-    isValidLine ('#':_) = False
-    isValidLine _       = True
-
--- | Parse a line in 'ModuleName : ModuleName' format.
-parseLine :: String -> Maybe (String, String)
-parseLine l = case [ r | (r, rest) <- readP_to_S parser l, all isSpace rest] of
-  []  -> Nothing
-  [r] -> Just r
-  _   -> Nothing
-  where
-    parser = do { skipSpaces; tgt <- parseModuleName
-                ; skipSpaces; void $ char ':'
-                ; skipSpaces; dep <- parseModuleName
-                ; skipSpaces; return (tgt,dep) }
-
-parseModuleName :: ReadP String
-parseModuleName = munch1 (\c -> isAlphaNum c || c == '.'
-                                || c == '-'  || c == '/' || c == '_')
