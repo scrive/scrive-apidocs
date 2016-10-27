@@ -321,7 +321,7 @@ ctDocumentTag = CompositeType {
 tableFieldPlacements :: Table
 tableFieldPlacements = tblTable {
     tblName = "field_placements"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "signatory_field_id", colType = BigIntT, colNullable = False }

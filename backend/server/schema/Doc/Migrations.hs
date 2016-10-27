@@ -629,3 +629,18 @@ normalizeCheckboxesSize = Migration {
             sqlResult "id"
   }
 
+normalizeCheckboxesFSRel :: MonadDB m => Migration m
+normalizeCheckboxesFSRel = Migration {
+    mgrTable = tableFieldPlacements
+  , mgrFrom = 2
+  , mgrDo = do
+      runQuery_ . sqlUpdate "field_placements" $ do
+        sqlSet "fsrel" (0 :: Double)
+        sqlWhereInSql "signatory_field_id" $ do
+          sqlSelect "signatory_link_fields" $ do
+            sqlWhereEq "type" (9 :: Int16) -- CheckboxT
+            sqlResult "id"
+  }
+
+
+

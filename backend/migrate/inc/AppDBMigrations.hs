@@ -102,6 +102,7 @@ kontraMigrations = [
   , addAllowsHighlightingToSignatories
   , createHighlightedPagesTable
   , normalizeCheckboxesSize
+  , normalizeCheckboxesFSRel
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations
