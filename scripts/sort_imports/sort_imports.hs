@@ -114,8 +114,19 @@ sortImports suffix dirs = do
     putStr $ "Sorting imports in " ++ file ++ "..."
     T.readFile file
       >>= return . convert modules
-      >>= T.writeFile (file ++ suffix)
+      >>= rewriteFile (file ++ suffix)
     putStrLn " done."
+
+-- | Write a file, but only if it would have new content, thus
+-- preserving the modification date.
+rewriteFile :: FilePath -> T.Text -> IO ()
+rewriteFile fileName newContent = do
+  fileExists <- doesFileExist fileName
+  if fileExists then do
+    existingContent <- T.readFile fileName
+    unless (existingContent == newContent) $
+      T.writeFile fileName newContent
+  else T.writeFile fileName newContent
 
 -- | Check whether import lists in
 -- files at given locations are sorted.
