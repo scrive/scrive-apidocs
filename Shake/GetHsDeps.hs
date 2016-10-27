@@ -10,17 +10,21 @@ import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
+import System.IO.Extra
+import System.FilePath
 import System.Process (callProcess)
 import Text.ParserCombinators.ReadP
 
 -- | Given a Haskell source file name, return a list of all local
 -- Haskell source files it depends on, as given by 'ghc -M'.
-getHsDeps :: FilePath -> FilePath -> IO [FilePath]
-getHsDeps mainIs tmpFile = do
-  callProcess "ghc" ["-dep-suffix", "", "-M", mainIs, "-dep-makefile", tmpFile]
-  deps <- nub . catMaybes . map (mfilter (".hs" `isSuffixOf`))
-          . map (fmap snd . parseLine) . trimLines . lines <$> readFile tmpFile
-  return deps
+getHsDeps :: FilePath -> IO [FilePath]
+getHsDeps mainIs = do
+  withTempDir $ \dir -> do
+    let tmpFile = dir </> ".depend"
+    callProcess "ghc" ["-dep-suffix", "", "-M", mainIs, "-dep-makefile", tmpFile]
+    deps <- nub . catMaybes . map (mfilter (".hs" `isSuffixOf`))
+            . map (fmap snd . parseLine) . trimLines . lines <$> readFile' tmpFile
+    return deps
 
 -- | Filter out comments.
 trimLines :: [String] -> [String]

@@ -96,7 +96,7 @@ transifexFlags =
 main :: IO ()
 main = do
   -- Used to check if Shake.hs rules changed, triggering a full rebuild.
-  hsDeps       <- getHsDeps "Shake/Shake.hs" "_shake/.depend"
+  hsDeps       <- getHsDeps "Shake/Shake.hs"
   ver          <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
   -- Dependency information needed by our rules.
   hsSourceDirs <- getHsSourceDirs "kontrakcja.cabal"
