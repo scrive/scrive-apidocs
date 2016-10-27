@@ -2,10 +2,12 @@
 
 import Control.Monad
 import Data.List
+import Data.Maybe
 import Development.Shake
 import Development.Shake.FilePath
 import System.Console.GetOpt
 import System.Exit (exitFailure)
+import qualified Data.Map as M
 
 import Shake.GetCabalDeps
 import Shake.GetHsDeps
@@ -147,11 +149,11 @@ main = do
       removeFilesAfter "_shake/" ["//*"]
 
     -- * Rules
-    serverBuildRules hsSourceDirs
-    serverTestRules  hsSourceDirs
+    serverBuildRules   hsSourceDirs
+    serverTestRules    hsSourceDirs
     frontendBuildRules
     frontendTestRules
-    utilityScriptRules
+    utilityScriptRules hsSourceDirs
     distributionRules
     oracleHelpRule
 
@@ -233,13 +235,17 @@ serverTestRules hsSourceDirs = do
         let allSourceDirs = allHsSourceDirs hsSourceDirs
             flags = if checkOnly then ("--check":allSourceDirs)
                     else allSourceDirs
-        command ([Shell] ++ langEnv) "runghc scripts/sort_imports.hs" flags
+        command ([Shell] ++ langEnv)
+          "./dist/build/sort_imports/sort_imports" flags
 
   "_build/hs-import-order" %>>> do
     needServerHaskellFiles hsSourceDirs
+    need ["dist/build/sort_imports/sort_imports" <.> exe]
     withGitHub "Haskell import order" $ hsImportOrderAction True
 
-  "fix-hs-import-order" ~> hsImportOrderAction False
+  "fix-hs-import-order" ~> do
+    need ["dist/build/sort_imports/sort_imports" <.> exe]
+    hsImportOrderAction False
 
   "kontrakcja_test.conf" %> \_ -> do
     tc <- askOracle (TeamCity ())
@@ -372,8 +378,8 @@ distributionRules = do
 
 -- * Utility scripts.
 
-utilityScriptRules :: Rules ()
-utilityScriptRules = do
+utilityScriptRules :: HsSourceDirsMap -> Rules ()
+utilityScriptRules hsSourceDirs = do
   "dist/build/detect_old_localizations/detect_old_localizations" <.> exe %>
     \_ -> do
       let detectOldLocalizationsSources = ["scripts/detect_old_localizations.hs"]
@@ -390,6 +396,13 @@ utilityScriptRules = do
     transifexSources <- getTransifexSources
     need $ ["dist/setup-config"] ++ transifexSources
     cmd "cabal build transifex"
+
+  "dist/build/sort_imports/sort_imports" <.> exe %> \_ -> do
+    let sortImportsHsSourceDirs = fromMaybe [] . M.lookup "sort_imports" $
+                                  hsSourceDirs
+    need ["dist/setup-config"]
+    needPatternsInDirectories ["//*.hs"] sortImportsHsSourceDirs
+    cmd "cabal build sort_imports"
 
   "scripts-help" ~> putNormal scriptsUsageMsg
 

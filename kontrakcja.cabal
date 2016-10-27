@@ -1308,3 +1308,13 @@ Executable detect_old_templates
                     old-time,
                     old-locale
   Default-Language: Haskell2010
+
+Executable sort_imports
+  Hs-source-dirs:   scripts
+  Main-is:          sort_imports.hs
+  GHC-Options:      -Wall -Werror
+  Build-Depends:    base,
+                    containers,
+                    directory,
+                    text
+  Default-Language: Haskell2010
