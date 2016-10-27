@@ -1317,6 +1317,7 @@ Executable sort_imports
   Main-is:          sort_imports.hs
   GHC-Options:      -Wall -Werror
   Build-Depends:    base,
+                    attoparsec,
                     containers,
                     directory,
                     text
