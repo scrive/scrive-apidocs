@@ -596,6 +596,7 @@ var Modal = require("../../common/modal");
 
           <ChangeAuthenticationToSignModal
             active={this.state.showChangeAuthenticationToSignMethodModal}
+            key={"change-auth-sign-modal-" + signatory.signatoryid()}
             signatory={signatory}
             onClose={this.onChangeAuthenticationToSignMethodModalClose}
             onAction={this.props.onAction}
@@ -603,6 +604,7 @@ var Modal = require("../../common/modal");
 
           <ChangeAuthenticationToViewModal
             active={this.state.showChangeAuthenticationToViewMethodModal}
+            key={"change-auth-view-modal-" + signatory.signatoryid()}
             signatory={signatory}
             onClose={this.onChangeAuthenticationToViewMethodModalClose}
             onAction={this.props.onAction}
