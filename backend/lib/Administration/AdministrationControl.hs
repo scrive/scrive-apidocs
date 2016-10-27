@@ -17,8 +17,8 @@ import Control.Monad.State
 import Data.Char
 import Data.Functor.Invariant
 import Data.Unjson
-import Happstack.Server hiding (simpleHTTP,dir,path,https)
-import Happstack.StaticRouting(Route, choice, dir)
+import Happstack.Server hiding (dir, https, path, simpleHTTP)
+import Happstack.StaticRouting (Route, choice, dir)
 import Log
 import Text.JSON
 import Text.JSON.Gen hiding (object)

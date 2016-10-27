@@ -15,7 +15,7 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 
-import Doc.API.V2.JSON.Misc()
+import Doc.API.V2.JSON.Misc ()
 import Doc.API.V2.JSON.Utils
 import Doc.Data.CheckboxPlacementsUtils
 import Doc.DocStateData

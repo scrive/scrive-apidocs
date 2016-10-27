@@ -16,7 +16,7 @@ import Company.CompanyID
 import Context
 import DB
 import Doc.API.V2.Calls.DocumentPostCalls (docApiV2New)
-import Doc.SignatoryLinkID()
+import Doc.SignatoryLinkID ()
 import Kontra
 import KontraPrelude
 import Partner.API

@@ -3,13 +3,13 @@ module EvidenceLogTest (evidenceLogTests) where
 import Data.Int
 import Data.Set (Set)
 import Test.Framework
-import Text.StringTemplate (getStringTemplate, checkTemplateDeep)
+import Text.StringTemplate (checkTemplateDeep, getStringTemplate)
 import Text.StringTemplates.Templates
 import qualified Data.Set as Set
 
 import DB
 import EvidenceLog.Model
-import EvidenceLog.View (simpleEvents, eventForHistory, eventForVerificationPage)
+import EvidenceLog.View (eventForHistory, eventForVerificationPage, simpleEvents)
 import KontraPrelude
 import TestingUtil
 import TestKontra

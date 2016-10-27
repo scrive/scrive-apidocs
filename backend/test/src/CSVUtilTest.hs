@@ -3,7 +3,7 @@ module CSVUtilTest (csvUtilTests) where
 import System.FilePath
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (assert, assertEqual, Assertion)
+import Test.HUnit (Assertion, assert, assertEqual)
 import qualified Data.ByteString.Lazy as BSL
 
 import KontraPrelude

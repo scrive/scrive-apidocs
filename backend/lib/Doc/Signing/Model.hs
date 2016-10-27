@@ -20,7 +20,7 @@ import qualified Data.Text as T
 import BrandedDomain.Model
 import DB
 import Doc.API.V2.JSON.Fields
-import Doc.API.V2.JSON.Misc(unjsonSignatoryScreenshots)
+import Doc.API.V2.JSON.Misc (unjsonSignatoryScreenshots)
 import Doc.DocumentMonad
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots

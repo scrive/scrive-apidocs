@@ -1,6 +1,7 @@
 module Administration.AddPaymentPlan(
             addCompanyPlanManual
 ) where
+
 import Data.Functor
 
 import Company.Model

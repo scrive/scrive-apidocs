@@ -15,20 +15,20 @@ import qualified Text.StringTemplates.Fields as F
 
 import DB (MonadDB)
 import Doc.DocStateData
-import Doc.DocumentMonad (withDocumentID, withDocument, theDocument)
+import Doc.DocumentMonad (theDocument, withDocument, withDocumentID)
 import Doc.SignatoryIdentification (signatoryIdentifierMap)
 import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
-import EvidenceLog.Model (EventRenderTarget(..), DocumentEvidenceEvent(..), EvidenceEventType(..), CurrentEvidenceEventType(..), evidenceLogText)
-import EvidenceLog.View (simpleEvents, simplyfiedEventText, eventForHistory, eventForVerificationPage)
+import EvidenceLog.Model (CurrentEvidenceEventType(..), DocumentEvidenceEvent(..), EventRenderTarget(..), EvidenceEventType(..), evidenceLogText)
+import EvidenceLog.View (eventForHistory, eventForVerificationPage, simpleEvents, simplyfiedEventText)
 import EvidencePackage.EvidenceLog (finalizeEvidenceText)
 import KontraPrelude
 import MinutesTime
 import Templates (runTemplatesT)
-import TestingUtil (testThat, addNewRandomUser, addRandomDocumentWithAuthor, fieldForTests)
-import TestKontra (TestEnvSt, teOutputDirectory, teGlobalTemplates)
+import TestingUtil (addNewRandomUser, addRandomDocumentWithAuthor, fieldForTests, testThat)
+import TestKontra (TestEnvSt, teGlobalTemplates, teOutputDirectory)
 import Text.XML.DirtyContent (renderXMLContent)
-import User.Model (codeFromLang, Lang, allLangs)
-import Util.Actor (Actor(..), actorEmail, actorUserID, actorAPIString, actorIP)
+import User.Model (Lang, allLangs, codeFromLang)
+import Util.Actor (Actor(..), actorAPIString, actorEmail, actorIP, actorUserID)
 import Util.SignatoryLinkUtils (getAuthorSigLink)
 import Version (versionID)
 

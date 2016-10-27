@@ -31,8 +31,8 @@ module User.UserView (
 import Control.Monad.Catch
 import Text.JSON
 import Text.JSON.Gen
-import Text.StringTemplate.GenericStandard()
-import Text.StringTemplate.GenericStandard()
+import Text.StringTemplate.GenericStandard ()
+import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
@@ -45,7 +45,7 @@ import FlashMessage
 import Kontra
 import KontraLink
 import KontraPrelude
-import Mails.SendMail(Mail, kontramail, kontramaillocal)
+import Mails.SendMail (Mail, kontramail, kontramaillocal)
 import MinutesTime
 import Theme.Model
 import User.Email

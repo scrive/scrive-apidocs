@@ -14,7 +14,7 @@ import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.API.V2.Mock.TestUtils
 import Doc.Data.DocumentStatus (DocumentStatus(..))
-import Doc.Data.SignatoryLink (AuthenticationToViewMethod(..), AuthenticationToSignMethod(..))
+import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..))
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Update (SetDocumentSharing(..), TimeoutDocument(..))
 import KontraPrelude

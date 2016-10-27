@@ -12,7 +12,7 @@ import Data.Set (Set)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
-import Doc.DocStateData (Document, documentsignatorylinks, SignatoryLink, signatorylinkid, signatoryispartner, signatoryisauthor)
+import Doc.DocStateData (Document, SignatoryLink, documentsignatorylinks, signatoryisauthor, signatoryispartner, signatorylinkid)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import KontraPrelude
 import Util.HasSomeUserInfo (getFullName)

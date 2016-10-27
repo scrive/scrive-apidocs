@@ -19,7 +19,7 @@ module Doc.API.V1.Calls (
   , apiCallV1SetAuthorAttachemnts -- Exported for tests
   ) where
 
-import Control.Conditional ((<|), (|>), whenM, unlessM, ifM)
+import Control.Conditional ((<|), (|>), ifM, unlessM, whenM)
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Data.Aeson (Value(..))
@@ -55,11 +55,11 @@ import API.Monad.V1
 import AppView (respondWithPDF)
 import Attachment.Model
 import DB
-import DB.TimeZoneName (mkTimeZoneName, defaultTimeZoneName)
+import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 import Doc.Action
 import Doc.Anchors
 import Doc.API.Callback.Model
-import Doc.API.V1.DocumentFromJSON(AuthorAttachmentDetails(..))
+import Doc.API.V1.DocumentFromJSON (AuthorAttachmentDetails(..))
 import Doc.API.V1.DocumentToJSON
 import Doc.API.V1.DocumentUpdateUtils
 import Doc.API.V1.ListUtil
@@ -72,7 +72,7 @@ import Doc.DocSeal as DocSeal
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
-import Doc.DocumentMonad (DocumentMonad, withDocument, withDocumentID, withDocumentM, theDocument)
+import Doc.DocumentMonad (DocumentMonad, theDocument, withDocument, withDocumentID, withDocumentM)
 import Doc.DocUtils
 import Doc.Logging
 import Doc.Model
@@ -80,7 +80,7 @@ import Doc.Model.OrderBy
 import Doc.Rendering
 import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryLinkID
-import Doc.SignatoryScreenshots(SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
+import Doc.SignatoryScreenshots (SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
 import Doc.SMSPin.Model
 import Doc.Texts
 import Doc.Tokens.Model

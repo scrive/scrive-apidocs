@@ -8,7 +8,7 @@ import Data.Unjson
 import qualified Data.Text as T
 
 import Doc.API.V2.DocumentAccess
-import Doc.API.V2.JSON.Misc()
+import Doc.API.V2.JSON.Misc ()
 import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.SignatoryLinkID

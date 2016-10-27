@@ -2,12 +2,12 @@ module Doc.API.V2.DocumentUpdateUtils (
  applyDraftDataToDocument
 ) where
 
-import Control.Conditional (whenM, unlessM)
+import Control.Conditional (unlessM, whenM)
 import Data.Functor
 import Log
 import qualified Control.Exception.Lifted as E
 
-import API.V2 (apiError, serverError, requestParameterInvalid)
+import API.V2 (apiError, requestParameterInvalid, serverError)
 import DB
 import DB.TimeZoneName
 import Doc.DocInfo (isPreparation)

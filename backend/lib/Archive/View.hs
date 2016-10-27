@@ -5,7 +5,7 @@ import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
 import AppView
-import Company.Model (Company, companyinfo, companyidledoctimeout)
+import Company.Model (Company, companyidledoctimeout, companyinfo)
 import Context
 import KontraPrelude
 import MinutesTime

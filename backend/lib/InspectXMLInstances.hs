@@ -9,6 +9,7 @@
 -----------------------------------------------------------------------------
 
 module InspectXMLInstances() where
+
 import Data.Int
 import Text.JSON
 import qualified Data.ByteString.Char8 as B

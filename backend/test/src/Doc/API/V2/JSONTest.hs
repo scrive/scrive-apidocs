@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Doc.API.V2.JSONTest (apiV2JSONTests) where
 
-
 import Control.Monad.IO.Class
 import Data.Aeson
 import Data.Int
@@ -17,7 +16,7 @@ import Context
 import DB
 import Doc.API.V2.Calls
 import Doc.DocumentID
-import Doc.SignatoryLinkID()
+import Doc.SignatoryLinkID ()
 import Kontra
 import KontraPrelude
 import TestingUtil

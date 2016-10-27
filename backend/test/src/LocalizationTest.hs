@@ -6,7 +6,7 @@ import Data.Map ((!))
 import Data.String.Utils
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (assertBool, Assertion)
+import Test.HUnit (Assertion, assertBool)
 import Text.JSON
 import Text.StringTemplate
 import Text.StringTemplates.TextTemplates

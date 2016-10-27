@@ -3,7 +3,7 @@ module Payments.Action where
 import Data.Functor
 
 import Company.Model
-import DB hiding (update, query)
+import DB hiding (query, update)
 import Kontra
 import KontraPrelude
 import Payments.Model

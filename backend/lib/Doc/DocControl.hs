@@ -36,7 +36,7 @@ import Control.Conditional (unlessM, whenM)
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
-import Data.String.Utils (replace,strip)
+import Data.String.Utils (replace, strip)
 import Happstack.Server hiding (lookCookieValue, simpleHTTP, timeout)
 import Log
 import System.Directory
@@ -66,7 +66,7 @@ import Doc.DocMails
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
-import Doc.DocumentMonad (DocumentMonad, withDocumentM, withDocument, theDocument)
+import Doc.DocumentMonad (DocumentMonad, theDocument, withDocument, withDocumentM)
 import Doc.DocUtils (fileFromMainFile)
 import Doc.DocView
 import Doc.DocViewMail
@@ -77,7 +77,7 @@ import Doc.Rendering
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.Tokens.Model
-import EvidenceLog.Model (InsertEvidenceEventWithAffectedSignatoryAndMsg(..), CurrentEvidenceEventType(..))
+import EvidenceLog.Model (CurrentEvidenceEventType(..), InsertEvidenceEventWithAffectedSignatoryAndMsg(..))
 import File.File (fileid)
 import File.Model
 import File.Storage (getFileIDContents)

@@ -33,7 +33,7 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Data.Int
-import Data.List hiding (tail, head)
+import Data.List hiding (head, tail)
 import Data.Maybe hiding (fromJust)
 import Log
 import qualified Data.ByteString as BS

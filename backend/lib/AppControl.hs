@@ -21,7 +21,7 @@ import Data.Functor
 import Data.Time.Clock
 import Data.Typeable
 import GHC.Stack
-import Happstack.Server hiding (simpleHTTP, host, dir, path, lookCookieValue)
+import Happstack.Server hiding (dir, host, lookCookieValue, path, simpleHTTP)
 import Happstack.Server.Internal.Cookie
 import Log
 import Network.Socket

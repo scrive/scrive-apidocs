@@ -10,9 +10,9 @@ module Doc.SignatoryScreenshots
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Text.JSON(Result(..), decode, JSValue(..), fromJSString)
+import Text.JSON (JSValue(..), Result(..), decode, fromJSString)
 import Text.JSON.FromJSValue
-import Text.JSON.Gen (value, runJSONGen)
+import Text.JSON.Gen (runJSONGen, value)
 import Text.JSON.ToJSValue (ToJSValue(..))
 import qualified Control.Exception.Lifted as E
 

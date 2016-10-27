@@ -1,6 +1,5 @@
 module Transifex.Synch (push, merge, diff, fix, fetchLocal, main') where
 
-
 import Control.Monad
 import Data.List
 import System.IO

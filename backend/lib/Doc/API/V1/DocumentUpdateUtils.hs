@@ -5,13 +5,13 @@ module Doc.API.V1.DocumentUpdateUtils (
     draftIsChangingDocument
   ) where
 
-import Control.Conditional (whenM, unlessM)
+import Control.Conditional (unlessM, whenM)
 import Control.Monad.Catch
 import Data.Functor
 import Log
 import qualified Control.Exception.Lifted as E
 
-import API.Monad.V1 (serverError,badInput)
+import API.Monad.V1 (badInput, serverError)
 import DB
 import DB.TimeZoneName
 import Doc.DocInfo (isPreparation)

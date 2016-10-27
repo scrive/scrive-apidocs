@@ -5,7 +5,7 @@ module Partner.PartnerID (
   ) where
 
 import Data.Binary
-import Data.Default(Default(..))
+import Data.Default (Default(..))
 import Data.Hashable
 import Data.Int
 import Data.Typeable

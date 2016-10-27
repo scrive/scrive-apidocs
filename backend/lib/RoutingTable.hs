@@ -5,8 +5,8 @@ module RoutingTable (
     staticRoutes
   ) where
 
-import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
-import Happstack.StaticRouting(Route, choice, dir, remainingPath)
+import Happstack.Server hiding (dir, host, https, path, simpleHTTP)
+import Happstack.StaticRouting (Route, choice, dir, remainingPath)
 
 import API.V2 (noAPIV2CallFoundHandler)
 import AppView

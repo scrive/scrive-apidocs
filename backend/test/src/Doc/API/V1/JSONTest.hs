@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Doc.API.V1.JSONTest (apiV1JSONTests) where
 
-
 import Control.Monad.IO.Class
 import Data.Aeson
 import Data.Int

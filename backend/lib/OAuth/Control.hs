@@ -6,7 +6,7 @@ import Data.Aeson
 import Data.Map (singleton)
 import Happstack.Server.RqData
 import Happstack.Server.Types
-import Happstack.StaticRouting(Route, choice, dir)
+import Happstack.StaticRouting (Route, choice, dir)
 import Log
 import Network.HTTP.Base (urlEncodeVars)
 import Text.JSON

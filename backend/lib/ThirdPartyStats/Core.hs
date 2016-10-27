@@ -16,13 +16,14 @@ module ThirdPartyStats.Core (
     (@@),
     catEventProcs
   ) where
+
 import Control.Monad.IO.Class
 import Data.Binary
 import Data.Int
 import Data.String
 import Data.Time.Clock.POSIX
 import Log
-import Test.QuickCheck (Arbitrary (..), frequency, oneof, suchThat, Gen)
+import Test.QuickCheck (Arbitrary(..), Gen, frequency, oneof, suchThat)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Text.JSON as J

@@ -3,7 +3,7 @@ module Doc.Screenshot
   ) where
 
 import Text.JSON.FromJSValue (FromJSValue(..), fromJSValueField)
-import Text.JSON.Gen (value, runJSONGen)
+import Text.JSON.Gen (runJSONGen, value)
 import Text.JSON.ToJSValue (ToJSValue(..))
 import qualified Data.ByteString.UTF8 as BS
 

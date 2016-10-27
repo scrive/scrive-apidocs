@@ -42,7 +42,7 @@ import AppView
 import BrandedDomain.BrandedDomain
 import Company.CompanyUI
 import Company.Model
-import DB hiding (update, query)
+import DB hiding (query, update)
 import Happstack.Fields
 import InputValidation
 import Kontra

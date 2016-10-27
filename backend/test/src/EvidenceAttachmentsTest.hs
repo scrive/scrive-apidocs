@@ -2,7 +2,7 @@ module EvidenceAttachmentsTest (evidenceAttachmentsTest) where
 
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (assertEqual, Assertion)
+import Test.HUnit (Assertion, assertEqual)
 import qualified Data.ByteString.Char8 as BS
 
 import KontraPrelude

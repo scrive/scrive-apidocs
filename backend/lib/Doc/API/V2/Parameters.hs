@@ -20,7 +20,7 @@ import qualified Data.Text as T
 import API.V2
 import DB
 import Doc.Rendering
-import File.File(File(..))
+import File.File (File(..))
 import File.Model
 import Happstack.Fields
 import Kontra

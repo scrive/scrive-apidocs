@@ -31,7 +31,7 @@ import Control.Monad.Trans.Control
 import Data.Time
 import Database.PostgreSQL.PQTypes.Internal.Monad
 import Database.PostgreSQL.PQTypes.Internal.State
-import Happstack.Server hiding (mkHeaders, dir, getHeader, method, path)
+import Happstack.Server hiding (dir, getHeader, method, mkHeaders, path)
 import Log
 import System.FilePath
 import Text.StringTemplates.Templates

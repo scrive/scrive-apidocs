@@ -7,7 +7,7 @@ module Main where
 
 import Control.Monad (forM)
 import Data.Foldable (foldlM)
-import Data.List (isPrefixOf,isSuffixOf, unfoldr, intersperse)
+import Data.List (intersperse, isPrefixOf, isSuffixOf, unfoldr)
 import Data.Maybe
 import Language.JavaScript.Parser
 import System.Directory

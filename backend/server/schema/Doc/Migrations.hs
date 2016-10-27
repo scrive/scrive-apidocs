@@ -7,10 +7,10 @@ import Data.String.Utils
 import Database.PostgreSQL.PQTypes.Checks
 import Log
 import Text.HTML.TagSoup.Entity
-import Text.XML.HaXml(render)
+import Text.XML.HaXml (render)
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
-import Text.XML.HaXml.Pretty(content)
+import Text.XML.HaXml.Pretty (content)
 import qualified Data.ByteString as BS
 import qualified Text.XML.HaXml.Types as XML
 

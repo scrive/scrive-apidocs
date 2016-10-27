@@ -17,7 +17,7 @@ module Company.CompanyControl (
 import Data.Functor.Invariant
 import Data.Unjson
 import Happstack.Server hiding (dir, simpleHTTP)
-import Happstack.StaticRouting (Route, dir, choice)
+import Happstack.StaticRouting (Route, choice, dir)
 import Log as Log
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as BS

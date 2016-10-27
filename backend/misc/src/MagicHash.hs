@@ -7,7 +7,6 @@ module MagicHash
   , unMagicHash
   ) where
 
-
 import Control.Arrow
 import Data.Int
 import Data.Unjson

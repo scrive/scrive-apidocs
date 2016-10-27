@@ -18,7 +18,6 @@ module Util.HasSomeUserInfo (
   HasSomeUserInfo(..)
   ) where
 
-
 import Data.String.Utils
 import Text.StringTemplates.Templates
 

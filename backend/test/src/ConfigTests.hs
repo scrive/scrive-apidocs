@@ -1,11 +1,10 @@
 module ConfigTests (configTests) where
 
-
 import Data.Default
 import Data.Unjson
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (assertEqual, Assertion)
+import Test.HUnit (Assertion, assertEqual)
 
 import AppConf
 import KontraPrelude

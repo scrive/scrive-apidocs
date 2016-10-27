@@ -9,7 +9,7 @@ module Doc.Action (
   , findAndTimeoutDocuments
   ) where
 
-import Control.Conditional (whenM, unlessM, ifM)
+import Control.Conditional (ifM, unlessM, whenM)
 import Control.Monad.Base (MonadBase, liftBase)
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -29,7 +29,7 @@ import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.DigitalSignature (addDigitalSignature, extendDigitalSignature)
 import Doc.DocInfo
-import Doc.DocMails (sendInvitationEmails, sendRejectEmails, sendDocumentErrorEmail, sendClosedEmails, runMailTInScheduler)
+import Doc.DocMails (runMailTInScheduler, sendClosedEmails, sendDocumentErrorEmail, sendInvitationEmails, sendRejectEmails)
 import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
 import Doc.DocumentMonad

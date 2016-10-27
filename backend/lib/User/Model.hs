@@ -53,7 +53,7 @@ import qualified Control.Exception.Lifted as E
 import BrandedDomain.BrandedDomainID
 import Company.Model
 import DB
-import Doc.DocStateData (DocumentStatus(..),FieldType(..), NameOrder(..))
+import Doc.DocStateData (DocumentStatus(..), FieldType(..), NameOrder(..))
 import KontraPrelude
 import MinutesTime
 import Partner.Model

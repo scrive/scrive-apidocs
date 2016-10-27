@@ -1,6 +1,5 @@
 module EID.Nets.Control (netsRoutes) where
 
-
 import Control.Monad
 import Data.String.Utils (replace)
 import Happstack.Server hiding (dir)

@@ -10,11 +10,11 @@ module Doc.DocumentMonad
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Catch
 import Control.Monad.Reader (MonadIO, MonadTrans)
-import Control.Monad.Trans.Control (MonadBaseControl(..), MonadTransControl(..), ComposeSt, defaultLiftBaseWith, defaultRestoreM, defaultLiftWith, defaultRestoreT)
+import Control.Monad.Trans.Control (ComposeSt, MonadBaseControl(..), MonadTransControl(..), defaultLiftBaseWith, defaultLiftWith, defaultRestoreM, defaultRestoreT)
 import Log
 
 import DB
-import DB.RowCache (RowCacheT, GetRow, runRowCacheT, runRowCacheTID, rowCache, rowCacheID, updateRow, updateRowWithID)
+import DB.RowCache (GetRow, RowCacheT, rowCache, rowCacheID, runRowCacheT, runRowCacheTID, updateRow, updateRowWithID)
 import Doc.Class
 import Doc.Data.Document
 import Doc.DocumentID (DocumentID)

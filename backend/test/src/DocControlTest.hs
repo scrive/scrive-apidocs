@@ -21,11 +21,11 @@ import DB.TimeZoneName (mkTimeZoneName)
 import Doc.API.V1.Calls
 import Doc.DocControl
 import Doc.DocStateData
-import Doc.DocumentMonad (withDocumentM, withDocumentID, theDocument, updateDocumentWithID)
+import Doc.DocumentMonad (theDocument, updateDocumentWithID, withDocumentID, withDocumentM)
 import Doc.DocUtils
 import Doc.Model
 import Doc.Screenshot (Screenshot(..))
-import Doc.SignatoryScreenshots(emptySignatoryScreenshots, SignatoryScreenshots(signing))
+import Doc.SignatoryScreenshots (SignatoryScreenshots(signing), emptySignatoryScreenshots)
 import Doc.SMSPin.Model
 import File.FileID
 import KontraPrelude

@@ -23,7 +23,7 @@ import Data.Time
 import Log
 import System.Directory
 import System.Exit
-import System.FilePath (takeFileName, takeExtension, (</>))
+import System.FilePath ((</>), takeExtension, takeFileName)
 import System.IO hiding (stderr)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.HTML.TagSoup (Tag(..), parseTags)
@@ -40,7 +40,7 @@ import qualified Text.StringTemplates.Fields as F
 import Crypto.RNG
 import DB
 import DB.TimeZoneName
-import Doc.Data.CheckboxPlacementsUtils (CheckboxImagesMapping, readCheckboxImagesMapping, getCheckboxImage)
+import Doc.Data.CheckboxPlacementsUtils (CheckboxImagesMapping, getCheckboxImage, readCheckboxImagesMapping)
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.DocUtils

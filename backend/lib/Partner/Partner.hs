@@ -6,6 +6,7 @@ module Partner.Partner
     , unPartnerID    
     ) where
     
+
 import Data.Unjson
 
 import KontraPrelude

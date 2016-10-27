@@ -8,6 +8,7 @@ module Payments.View where
 --import MagicHash
 --import Misc
 --import OAuth.Model
+
 import Text.StringTemplates.Templates
 import qualified Recurly as Recurly
 import qualified Text.StringTemplates.Fields as F
@@ -16,7 +17,7 @@ import BrandedDomain.BrandedDomain
 import Company.Model
 import Doc.DocViewMail (brandingMailFields)
 import KontraPrelude
-import Mails.SendMail(Mail, kontramail)
+import Mails.SendMail (Mail, kontramail)
 import MinutesTime
 import Theme.Model
 import User.Model

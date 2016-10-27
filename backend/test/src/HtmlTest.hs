@@ -3,7 +3,7 @@ module HtmlTest (htmlTests) where
 import Data.Char
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit (assertFailure, assertBool, Assertion)
+import Test.HUnit (Assertion, assertBool, assertFailure)
 import Text.StringTemplates.TemplatesLoader (renderTemplateMain)
 import Text.XML.HaXml.Html.Pretty
 import Text.XML.HaXml.Parse (xmlParse')

@@ -5,7 +5,7 @@ module Login (
   , handleLogoutAJAX
   ) where
 
-import Happstack.Server hiding (simpleHTTP, host, dir, path)
+import Happstack.Server hiding (dir, host, path, simpleHTTP)
 import Log
 import Text.JSON
 import Text.StringTemplates.Templates

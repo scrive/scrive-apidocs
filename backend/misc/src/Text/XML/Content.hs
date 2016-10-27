@@ -17,15 +17,15 @@ import Control.Exception (SomeException)
 import Control.Monad.ST (runST)
 import Control.Monad.State.Strict
 import Data.Conduit (($$), (=$=))
-import Data.Conduit.List (sourceList, consume)
+import Data.Conduit.List (consume, sourceList)
 import Data.Default (def)
 import Data.Map (Map)
 import Data.String (IsString(..))
 import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Lazy (fromStrict)
-import Data.XML.Types (Event(..), Content(..))
-import Text.XML (Node(..), Element(..), Name, documentRoot, elementNodes, parseText, psDecodeEntities, decodeHtmlEntities)
+import Data.XML.Types (Content(..), Event(..))
+import Text.XML (Element(..), Name, Node(..), decodeHtmlEntities, documentRoot, elementNodes, parseText, psDecodeEntities)
 import Text.XML.Stream.Render (renderBytes)
 import qualified Data.Map as Map
 import qualified Data.Text as T

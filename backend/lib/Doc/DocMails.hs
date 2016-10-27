@@ -35,14 +35,14 @@ import Doc.DocViewMail
 import Doc.DocViewSMS
 import Doc.Logging
 import Doc.Model
-import EvidenceLog.Model (InsertEvidenceEventWithAffectedSignatoryAndMsg(..), CurrentEvidenceEventType(..))
+import EvidenceLog.Model (CurrentEvidenceEventType(..), InsertEvidenceEventWithAffectedSignatoryAndMsg(..))
 import File.File
 import File.Model
 import InputValidation
 import Kontra
 import KontraPrelude
 import Log.Identifier
-import MailContext (getMailContext, MailContext(..), MailContextMonad, MailContextT, runMailContextT)
+import MailContext (MailContext(..), MailContextMonad, MailContextT, getMailContext, runMailContextT)
 import Mails.SendMail
 import SMS.SMS (scheduleSMS)
 import Templates (runTemplatesT)

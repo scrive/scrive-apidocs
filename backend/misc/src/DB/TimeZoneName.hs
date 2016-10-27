@@ -7,7 +7,6 @@ module DB.TimeZoneName
   , toString
   ) where
 
-
 import Control.Monad.Catch
 import Data.Char
 import Data.Functor.Invariant

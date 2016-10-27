@@ -44,10 +44,10 @@ import Log
 import Numeric
 import Text.HTML.TagSoup.Entity
 import Text.Regex.TDFA ((=~))
-import Text.XML.HaXml(render)
+import Text.XML.HaXml (render)
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
-import Text.XML.HaXml.Pretty(content)
+import Text.XML.HaXml.Pretty (content)
 import Text.XML.HaXml.Types
 
 import Attachment.AttachmentID

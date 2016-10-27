@@ -16,7 +16,7 @@ import Context
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 import Doc.DocStateData
-import Doc.DocumentMonad (withDocumentM, theDocument)
+import Doc.DocumentMonad (theDocument, withDocumentM)
 import Doc.DocViewMail
 import Doc.Model
 import KontraPrelude

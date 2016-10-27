@@ -22,7 +22,7 @@ import Doc.DocUtils
 import Doc.Model
 import Doc.SignatoryScreenshots
 import EID.Authentication.Model
-import EID.CGI.GRP.Data()
+import EID.CGI.GRP.Data ()
 import KontraPrelude
 import OAuth.Model
 import Session.Model

@@ -29,7 +29,7 @@ import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.Model
 import Crypto.RNG
-import DB hiding (update, query)
+import DB hiding (query, update)
 import Happstack.Fields
 import Kontra
 import KontraPrelude

@@ -58,7 +58,7 @@ import KontraPrelude
 import MinutesTime
 import OAuth.Model
 import User.Model
-import Util.SignatoryLinkUtils (getSigLinkFor, getAuthorSigLink)
+import Util.SignatoryLinkUtils (getAuthorSigLink, getSigLinkFor)
 
 docApiV2New :: Kontrakcja m => m Response
 docApiV2New = api $ do

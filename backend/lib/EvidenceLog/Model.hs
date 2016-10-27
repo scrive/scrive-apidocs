@@ -28,9 +28,9 @@ import qualified Text.StringTemplates.Fields as F
 
 import DB
 import DB.XML ()
-import Doc.DocStateData (SignatoryLink(..), AuthenticationToSignMethod(..), DeliveryMethod(..))
+import Doc.DocStateData (AuthenticationToSignMethod(..), DeliveryMethod(..), SignatoryLink(..))
 import Doc.DocumentID
-import Doc.DocumentMonad (DocumentMonad, theDocumentID, theDocument)
+import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.SignatoryLinkID
 import IPAddress
 import KontraPrelude

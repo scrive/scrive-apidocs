@@ -1,4 +1,5 @@
 module ThirdPartyStats where
+
 import Data.Binary
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2

@@ -2,6 +2,7 @@
 module ThirdPartyStats.Mixpanel (
   MixpanelToken,
   processMixpanelEvent) where
+
 import Control.Monad.IO.Class
 import Mixpanel.Engage as Mixpanel (set)
 import Mixpanel.Event as Mixpanel

@@ -6,13 +6,13 @@ import Text.StringTemplates.Templates (renderTemplate)
 import qualified Data.ByteString.UTF8 as BS
 import qualified Text.StringTemplates.Fields as F
 
-import DB (dbQuery, MonadDB)
+import DB (MonadDB, dbQuery)
 import Doc.DocStateData (Document(..))
-import Doc.Model.Query (GetRandomSignatoryLinkIDsThatSignedRecently(..), GetSignatoryScreenshots(..), GetDocumentBySignatoryLinkID(..))
+import Doc.Model.Query (GetDocumentBySignatoryLinkID(..), GetRandomSignatoryLinkIDsThatSignedRecently(..), GetSignatoryScreenshots(..))
 import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Doc.SignatoryScreenshots (SignatoryScreenshots(..))
-import EvidenceLog.Model (GetEvidenceLog(..), DocumentEvidenceEvent(..))
+import EvidenceLog.Model (DocumentEvidenceEvent(..), GetEvidenceLog(..))
 import Interactive (run)
 import KontraPrelude
 import MinutesTime (currentTime, daysBefore)

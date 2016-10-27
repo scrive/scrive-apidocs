@@ -27,7 +27,7 @@ import qualified Data.ByteString.Base64.Lazy as B64
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
-import AppView (standardPageFields, companyUIForPage, simpleHtmlResonseClrFlash, entryPointFields)
+import AppView (companyUIForPage, entryPointFields, simpleHtmlResonseClrFlash, standardPageFields)
 import BrandedDomain.BrandedDomain
 import Company.CompanyUI
 import Company.Model

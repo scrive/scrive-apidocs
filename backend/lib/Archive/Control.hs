@@ -16,7 +16,7 @@ import Codec.Archive.Zip
 import Control.Conditional (unlessM)
 import Data.Char
 import Data.Unjson (unjsonDef)
-import Happstack.Server(Response)
+import Happstack.Server (Response)
 import Log
 import Text.JSON
 import qualified Data.ByteString as BSS
@@ -30,14 +30,14 @@ import Archive.View
 import Company.Model (GetCompany(..))
 import DB
 import Doc.Action
-import Doc.API.V1.DocumentToJSON (docForListCSVV1, docForListCSVHeaderV1)
+import Doc.API.V1.DocumentToJSON (docForListCSVHeaderV1, docForListCSVV1)
 import Doc.API.V2.JSON.List
 import Doc.API.V2.Parameters (ApiV2Parameter(..), apiV2ParameterDefault)
 import Doc.DocInfo (isPending)
 import Doc.DocMails
 import Doc.DocStateData
 import Doc.DocumentID
-import Doc.DocumentMonad (withDocument, theDocument, DocumentT)
+import Doc.DocumentMonad (DocumentT, theDocument, withDocument)
 import Doc.Model
 import File.Storage as F
 import InputValidation

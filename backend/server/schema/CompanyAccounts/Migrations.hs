@@ -1,5 +1,6 @@
 module CompanyAccounts.Migrations where
 {-
+
 import Data.Char
 
 import CompanyAccounts.Tables

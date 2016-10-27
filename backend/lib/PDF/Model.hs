@@ -17,7 +17,7 @@ import qualified Data.Binary.Builder as Bin
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Internal as BSB
-import qualified Data.ByteString.Lazy as  BSL
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.Char8 as BSLC
 import qualified Data.Char as Char
 import qualified Data.IntMap as IntMap

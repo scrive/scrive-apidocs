@@ -10,7 +10,7 @@ import Data.Char
 import Data.Either
 import Data.Ord
 import Data.Spreadsheet as SS
-import Happstack.Server (ToMessage(..), setHeaderBS, setHeader)
+import Happstack.Server (ToMessage(..), setHeader, setHeaderBS)
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 

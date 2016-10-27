@@ -6,9 +6,9 @@ import Control.Monad.Trans.Control
 import Log
 import qualified Control.Exception.Lifted as E
 
-import DB (dbUpdate, MonadDB)
+import DB (MonadDB, dbUpdate)
 import HostClock.Model (InsertClockOffsetFrequency(..))
-import HostClock.System (getOffset, getFrequency)
+import HostClock.System (getFrequency, getOffset)
 import KontraPrelude
 
 -- | Update the statistics for the host's clock error versus reference NTP servers.

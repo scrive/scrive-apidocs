@@ -90,12 +90,12 @@ import Company.Model
 import Control.Monad.Trans.Instances ()
 import Crypto.RNG
 import DB
-import DB.TimeZoneName (TimeZoneName, withTimeZone, defaultTimeZoneName)
+import DB.TimeZoneName (TimeZoneName, defaultTimeZoneName, withTimeZone)
 import Doc.Conditions
 import Doc.DocStateCommon
 import Doc.DocStateData
 import Doc.DocumentID
-import Doc.DocumentMonad (updateDocumentWithID, updateDocument, DocumentMonad, withDocument, theDocumentID)
+import Doc.DocumentMonad (DocumentMonad, theDocumentID, updateDocument, updateDocumentWithID, withDocument)
 import Doc.DocUtils
 import Doc.Model.Query
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)

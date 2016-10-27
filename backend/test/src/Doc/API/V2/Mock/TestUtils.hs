@@ -53,10 +53,10 @@ import Data.Unjson
 import Happstack.Server
 
 import Context
-import Doc.API.V2.AesonTestUtils (testRequestHelper, jsonTestRequestHelper)
+import Doc.API.V2.AesonTestUtils (jsonTestRequestHelper, testRequestHelper)
 import Doc.API.V2.Mock.MockDocInternal
 import Doc.Data.DocumentStatus (DocumentStatus(..))
-import Doc.Data.SignatoryLink (AuthenticationToViewMethod(..), AuthenticationToSignMethod(..))
+import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..))
 import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import File.FileID

@@ -17,7 +17,7 @@ import Database.PostgreSQL.PQTypes
 import qualified Data.Set as S
 
 import Company.CompanyID
-import DB.RowCache (ID, HasID(..))
+import DB.RowCache (HasID(..), ID)
 import DB.TimeZoneName
 import Doc.Data.AuthorAttachment
 import Doc.Data.DocumentStatus
@@ -25,7 +25,7 @@ import Doc.Data.DocumentTag
 import Doc.Data.MainFile
 import Doc.Data.SignatoryLink
 import Doc.DocumentID
-import Doc.SealStatus (SealStatus, HasGuardtimeSignature(..))
+import Doc.SealStatus (HasGuardtimeSignature(..), SealStatus)
 import IPAddress
 import KontraPrelude
 import MagicHash

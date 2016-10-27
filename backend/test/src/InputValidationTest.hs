@@ -5,8 +5,8 @@ import Data.Int
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.HUnit (assert, Assertion)
-import Test.QuickCheck (Arbitrary(..), Property, oneof, (==>), property, mapSize)
+import Test.HUnit (Assertion, assert)
+import Test.QuickCheck ((==>), Arbitrary(..), Property, mapSize, oneof, property)
 
 import InputValidation
 import KontraPrelude

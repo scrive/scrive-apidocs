@@ -11,8 +11,8 @@ import Log
 import System.Exit
 import System.Process hiding (readProcessWithExitCode)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
-import qualified  Data.Foldable as F
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Foldable as F
 
 import Assembler
 import Crypto.RNG (CryptoRNG)

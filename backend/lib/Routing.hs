@@ -25,7 +25,7 @@ module Routing ( hGet
 
 import Data.Functor
 import Data.List.Split
-import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), ToMessage(..))
+import Happstack.Server (Method(DELETE, GET, POST, PUT), Response, ToMessage(..))
 import Happstack.StaticRouting
 import Text.JSON
 import qualified Data.Aeson as A

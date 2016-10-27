@@ -3,7 +3,6 @@ module Doc.TestInvariants (
   , documentInvariants
   ) where
 
-
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocUtils
