@@ -1134,7 +1134,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
     "name": "Proof of purchase",
     "required": false,
     "add_to_sealed_file": true,
-    "file_param": "toc_file"
+    "file_param": "proof_file"
   }
 ]
 ```
