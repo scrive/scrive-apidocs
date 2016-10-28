@@ -34,6 +34,7 @@ import qualified Data.ByteString.Lazy as BSL (empty, writeFile)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified Data.Text as T
+import qualified Data.Text.ICU.Normalize as ICU
 import qualified Data.Unjson as Unjson
 import qualified Text.StringTemplates.Fields as F
 
@@ -469,6 +470,8 @@ sealSpecFromDocument checkboxMapping hostpart document elog offsets eotData cont
   initialsText <- renderLocalTemplate document "_contractsealingtextsInitialsText" $ do
     F.value "initials" $ initials
 
+  let title = T.unpack $ ICU.normalize ICU.NFC $ T.pack $ documenttitle document
+
   return $ Seal.SealSpec
         { Seal.input          = inputpath
         , Seal.output         = outputpath
@@ -483,7 +486,7 @@ sealSpecFromDocument checkboxMapping hostpart document elog offsets eotData cont
         , Seal.attachments    = docAttachments ++ [evidenceattachment, evidenceOfTime, evidenceOfIntent]
         , Seal.disableFooter = documentisreceipt document
         , Seal.filesList      =
-          [ Seal.FileDesc { fileTitle = documenttitle document
+          [ Seal.FileDesc { fileTitle = title
                           , fileRole = mainDocumentText
                           , filePagesText = numberOfPagesText
                           , fileAttachedBy = attachedByText

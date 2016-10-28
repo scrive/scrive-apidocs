@@ -491,6 +491,7 @@ Library
                , template-haskell
                , temporary
                , text
+               , text-icu
                , threads
                , time
                , transformers
