@@ -743,151 +743,198 @@ Scrive eSign system returning errors.
 
 
 <p>
+<a href="#apiv2documentsnew">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/new</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documentsnewfromtemplate{document_id}">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/newfromtemplate/{document_id}</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}clone">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/clone</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}update">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/update</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}setfile">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/setfile</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}setattachments">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/setattachments</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}start">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/start</code>
 </strong>
+</a>
 </p>
 
 ## Get
 
 
 <p>
+<a href="#apiv2documents{document_id}get">
 <strong>
 <code class="operation-method operation-method-GET">GET  /api/v2/documents/{document_id}/get</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documentslist">
 <strong>
 <code class="operation-method operation-method-GET">GET  /api/v2/documents/list</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}filesmain{filename}">
 <strong>
 <code class="operation-method operation-method-GET">GET  /api/v2/documents/{document_id}/files/main/{filename}</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}files{file_id}{filename}">
 <strong>
 <code class="operation-method operation-method-GET">GET  /api/v2/documents/{document_id}/files/{file_id}/{filename}</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}history">
 <strong>
 <code class="operation-method operation-method-GET">GET  /api/v2/documents/{document_id}/history</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}callback">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/callback</code>
 </strong>
+</a>
 </p>
 
 ## Modify
 
 
 <p>
+<a href="#apiv2documents{document_id}remind">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/remind</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}prolong">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/prolong</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}cancel">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/cancel</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}trash">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/trash</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}delete">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/delete</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}forward">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/forward</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}setautoreminder">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/setautoreminder</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}restart">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/restart</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}{signatory_id}setauthenticationtoview">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/{signatory_id}/setauthenticationtoview</code>
 </strong>
+</a>
 </p>
 
 <p>
+<a href="#apiv2documents{document_id}{signatory_id}setauthenticationtosign">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/{signatory_id}/setauthenticationtosign</code>
 </strong>
+</a>
 </p>
 
 # Create
 
+<div><a id="apiv2documentsnew"></a></div>
 ## New document
 
 <p>
@@ -933,6 +980,7 @@ represents visibility in the E-archive.</p>
 
 
 
+<div><a id="apiv2documentsnewfromtemplate{document_id}"></a></div>
 ## New document from Template
 
 <p>
@@ -970,6 +1018,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 
 
+<div><a id="apiv2documents{document_id}clone"></a></div>
 ## Clone a document
 
 <p>
@@ -1006,6 +1055,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 
 
+<div><a id="apiv2documents{document_id}update"></a></div>
 ## Update a document
 
 <p>
@@ -1054,6 +1104,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 
 
+<div><a id="apiv2documents{document_id}setfile"></a></div>
 ## Set the Main File
 
 <p>
@@ -1097,6 +1148,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 
 
+<div><a id="apiv2documents{document_id}setattachments"></a></div>
 ## Set Author Attachments
 
 <p>
@@ -1199,6 +1251,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 
 
+<div><a id="apiv2documents{document_id}start"></a></div>
 ## Start the signing process
 
 <p>
@@ -1235,6 +1288,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 # Get
 
+<div><a id="apiv2documents{document_id}get"></a></div>
 ## Get a document
 
 <p>
@@ -1264,6 +1318,7 @@ Will not change.</p>
 
 
 
+<div><a id="apiv2documentslist"></a></div>
 ## List documents
 
 <p>
@@ -1319,6 +1374,7 @@ the <code>total_matching</code> is 1,000.</p>
 
 
 
+<div><a id="apiv2documents{document_id}filesmain{filename}"></a></div>
 ## Get the main file
 
 <p>
@@ -1351,6 +1407,7 @@ Will not change.</p>
 
 
 
+<div><a id="apiv2documents{document_id}files{file_id}{filename}"></a></div>
 ## Get a related file
 
 <p>
@@ -1390,6 +1447,7 @@ Will not change.</p>
 
 
 
+<div><a id="apiv2documents{document_id}history"></a></div>
 ## Get the Document History
 
 <p>
@@ -1430,6 +1488,7 @@ Languages may be added or removed without notice.</p>
 
 
 
+<div><a id="apiv2documents{document_id}callback"></a></div>
 ## Trigger an API callback
 
 <p>
@@ -1468,6 +1527,7 @@ callback URL was set.</p>
 
 # Modify
 
+<div><a id="apiv2documents{document_id}remind"></a></div>
 ## Remind signatories
 
 <p>
@@ -1505,6 +1565,7 @@ signatories that have not yet signed.</p>
 
 
 
+<div><a id="apiv2documents{document_id}prolong"></a></div>
 ## Prolong a document
 
 <p>
@@ -1545,6 +1606,7 @@ Only timed out documents can be prolonged.</p>
 
 
 
+<div><a id="apiv2documents{document_id}cancel"></a></div>
 ## Cancel a pending document
 
 <p>
@@ -1580,6 +1642,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 
 
+<div><a id="apiv2documents{document_id}trash"></a></div>
 ## Move a document to Trash
 
 <p>
@@ -1617,6 +1680,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 
 
+<div><a id="apiv2documents{document_id}delete"></a></div>
 ## Delete a document
 
 <p>
@@ -1654,6 +1718,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 
 
+<div><a id="apiv2documents{document_id}forward"></a></div>
 ## Forward a document
 
 <p>
@@ -1695,6 +1760,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 
 
+<div><a id="apiv2documents{document_id}setautoreminder"></a></div>
 ## Set an auto-reminder
 
 <p>
@@ -1738,6 +1804,7 @@ before the document expires.</p>
 
 
 
+<div><a id="apiv2documents{document_id}restart"></a></div>
 ## Restart a document
 
 <p>
@@ -1774,6 +1841,7 @@ restarted.</p>
 
 
 
+<div><a id="apiv2documents{document_id}{signatory_id}setauthenticationtoview"></a></div>
 ## Set the signatory authentication-to-view method
 
 <p>
@@ -1832,6 +1900,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 
 
 
+<div><a id="apiv2documents{document_id}{signatory_id}setauthenticationtosign"></a></div>
 ## Set the signatory authentication-to-sign method
 
 <p>
