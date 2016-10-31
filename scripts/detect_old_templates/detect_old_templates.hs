@@ -6,6 +6,7 @@ import Data.Maybe
 import Debug.Trace
 import Language.Haskell.Exts
 import System.Directory
+import System.Exit
 import System.IO
 import Text.StringTemplate
 import Text.StringTemplates.Files
@@ -295,7 +296,12 @@ main = do
       knownTemplates = go elogTemplates templatesMap S.empty topLevelTemplates
       unusedTemplates = allTemplates S.\\ knownTemplates
   putStrLn "Templates that could be removed. Please double check them:"
-  putStr $ unlines $ filter (not.null) $ S.toList $ unusedTemplates
+  let couldBeRemoved = filter (not.null) $ S.toList $ unusedTemplates
+  putStr . unlines $ couldBeRemoved
+  if null couldBeRemoved
+    then exitSuccess
+    else exitFailure
+
 
 
 -- UTILS

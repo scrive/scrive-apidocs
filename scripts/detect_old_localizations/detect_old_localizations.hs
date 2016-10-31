@@ -92,6 +92,10 @@ instance Show Localization where
                          ++ k ++ ": " ++ aux (n+4) l
         in unlines $ "": (map foo $ Map.assocs m)
 
+nullLocalization :: Localization -> Bool
+nullLocalization (Value  _) = False
+nullLocalization (Object m) = all nullLocalization $ Map.elems m
+
 -- | Intersect two localizations.
 --
 -- This assumes that the the two localizations have the same shapes
@@ -383,7 +387,13 @@ main = do
   _ <- forM logs $ hPutStrLn stderr
   putStrLn "******************************"
   putStrLn "Unused localization calls:"
-  print $ pruneLocalization unusedLocalization
+  let prunedLocalization = pruneLocalization unusedLocalization
+  print prunedLocalization
+  let noWarnings = null logs
+      noUnused   = nullLocalization prunedLocalization
+  if noWarnings && noUnused
+    then exitSuccess
+    else exitFailure
 
 -- UTILS
 
