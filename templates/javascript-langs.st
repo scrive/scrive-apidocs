@@ -109,15 +109,15 @@ javascriptLocalisation =
              , accept : "$_Accept()$"
              , send : "$_send()$"
              , csvFilePersons : "$_csvFilePersons()$"
-			 , reminder : {
-					     send : "$_authorviewSignatoriesSendReminderButton()$"
-					   , formHead : "$_reminderFormHead()$"
-					   , formSend :	"$_reminderFormSendReminder()$"
+             , reminder : {
+                         send : "$_authorviewSignatoriesSendReminderButton()$"
+                       , formHead : "$_reminderFormHead()$"
+                       , formSend : "$_reminderFormSendReminder()$"
                        , formOwnMessage : "$_reminderFormFooterOwnMessage()$"
                        , mobileQuestion : "$_reminderByMobileQuestion()$"
                        , mobileQuestionAlreadySigned : "$_reminderByMobileQuestionAlreadySigned()$"
                        , emailMobileQuestion : "$_reminderByEmailMobileQuestion()$"
-					}
+                    }
              , signByAuthor : {
                           modalTitle : "$_dialogConfirmSignByAuthorHead()$"
 
@@ -676,7 +676,7 @@ javascriptLocalisation =
            , alreadyGo: "$_paymentPlanAlreadySubscribedGo()$"
            , placeholder : "$_paymentPlanPlaceholder()$"
            , sendmsg : "$_paymentPlanSendMessage()$"
-	   , numberOfUsers: "$_paymentNumberOfUsers()$"
+           , numberOfUsers: "$_paymentNumberOfUsers()$"
            , priceUnit: {
                   EUR: "$_paymentPriceUnitEUR()$"
                 , SEK: "$_paymentPriceUnitSEK()$"
