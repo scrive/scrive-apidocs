@@ -70,6 +70,7 @@ usageMsg = unlines
   , "   detect-old-localizations   : Detect old localizations"
   , "   detect-old-templates       : Detect old templates"
   , "   take-reference-screenshots : Take reference screenshots"
+  , "   localization               : Update localization"
   , "   scripts-help               : Help on using utility scripts"
   , ""
   , "# Clean"
@@ -138,6 +139,7 @@ main = do
     "detect-old-localizations"   ~> runDetectOldLocalizationsScript
     "detect-old-templates"       ~> runDetectOldTemplatesScript
     "take-reference-screenshots" ~> runTakeReferenceScreenshotsScript
+    "localization"               ~> runLocalization
 
     "clean" ~> need ["clean-server","clean-frontend"]
     "clean-server" ~> need ["cabal-clean"]
@@ -302,8 +304,7 @@ frontendBuildRules = do
 
   "_build/grunt-build" %>>> do
     need [ "_build/npm-install"
-         , "dist/setup-config" -- Need `cabal configure` as Grunt uses
-                               -- localization
+         , componentTargetPath "localization"
          ]
     alwaysRerun
     withGitHub "Grunt Build" $
@@ -456,7 +457,10 @@ scriptsUsageMsg = unlines $
   , "same thing for /tmp/desktop2.png into "
     ++ "files/reference_screenshots/standard.json"
   , "same thing for /tmp/mobile2.png into files/reference_screenshots/mobile.json"
-
+  , ""
+  , "localization"
+  , "--------------------------"
+  , "Update the localization"
   ]
 
 transifexUsageMsg :: String
@@ -531,3 +535,9 @@ runTakeReferenceScreenshotsScript :: Action ()
 runTakeReferenceScreenshotsScript = do
   need ["scripts/take_reference_screenshots.py"]
   cmd "python scripts/take_reference_screenshots.py"
+
+runLocalization :: Action ()
+runLocalization = do
+  let exePath = componentTargetPath "localization"
+  need [exePath]
+  cmd  exePath
