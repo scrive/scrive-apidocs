@@ -183,8 +183,6 @@ javascriptLocalisation =
                signModalTitle: "$_contractSignatorySignModalTitle()$",
                sendbuttontext: "$_contractsendbuttontext()$",
                startsigningbuttontext: "$_contractstartsigningbuttontext()$",
-               confirmsendtitle: "$_contractconfirmsendtitle()$",
-               startsigningtitle: "$_contractstartsigningtitle()$",
                restartbuttontext: "$_contractrestartbuttontext()$",
                prolongbuttontext: "$_contractprolongbuttontext()$",
                cancelbuttontext: "$_contractcancelbuttontext()$",
