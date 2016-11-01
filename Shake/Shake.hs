@@ -6,6 +6,7 @@ import Development.Shake
 import Development.Shake.FilePath
 import System.Console.GetOpt
 import System.Exit (exitFailure)
+import qualified Data.Map as M
 
 import Shake.GetCabalDeps
 import Shake.GetHsDeps
@@ -147,11 +148,12 @@ main = do
       removeFilesAfter "_shake/" ["//*"]
 
     -- * Rules
-    serverBuildRules   hsSourceDirs
-    serverTestRules    hsSourceDirs
+    componentBuildRules hsSourceDirs
+    serverBuildRules    hsSourceDirs
+    serverTestRules     hsSourceDirs
     frontendBuildRules
     frontendTestRules
-    utilityScriptRules hsSourceDirs
+    utilityScriptsRules
     distributionRules
     oracleHelpRule
 
@@ -376,29 +378,30 @@ distributionRules = do
 
 -- * Utility scripts.
 
-utilityScriptRules :: HsSourceDirsMap -> Rules ()
-utilityScriptRules hsSourceDirs = do
-  "dist/build/detect_old_localizations/detect_old_localizations" <.> exe %>
-    \_ -> buildComponent "detect_old_localizations"
+-- | For each exe/test-suite/benchmark component in the .cabal file,
+-- add a rule for building the corresponding executable.
+componentBuildRules :: HsSourceDirsMap -> Rules ()
+componentBuildRules hsSourceDirs = do
+  forM_ (M.keys hsSourceDirs) $ \componentName ->
+    if componentName /= ""
+    then (componentTargetPath componentName) %> \_ ->
+      -- Assumes that all sources of a component are in its hs-source-dirs.
+      do let sourceDirs = componentHsSourceDirs componentName hsSourceDirs
+         need ["dist/setup-config"]
+         needPatternsInDirectories ["//*.hs"] sourceDirs
+         cmd $ "cabal build " ++ componentName
+    else return ()
 
-  "dist/build/detect_old_templates/detect_old_templates" <.> exe %> \_ ->
-    buildComponent "detect_old_templates"
+-- | Given a component name, return the path to the corresponding
+-- executable.
+componentTargetPath :: String -> FilePath
+componentTargetPath componentName =
+  "dist" </> "build" </> componentName </> componentName <.> exe
 
-  "dist/build/transifex/transifex" <.> exe %> \_ ->
-    buildComponent "transifex"
-
-  "dist/build/sort_imports/sort_imports" <.> exe %> \_ ->
-    buildComponent "sort_imports"
-
+-- | Rules related to utility scripts.
+utilityScriptsRules :: Rules ()
+utilityScriptsRules = do
   "scripts-help" ~> putNormal scriptsUsageMsg
-
-  where
-    -- Assumes that all sources of a component are in its hs-source-dirs.
-    buildComponent componentName = do
-      let sourceDirs = componentHsSourceDirs componentName hsSourceDirs
-      need ["dist/setup-config"]
-      needPatternsInDirectories ["//*.hs"] sourceDirs
-      cmd $ "cabal build " ++ componentName
 
 scriptsUsageMsg :: String
 scriptsUsageMsg = unlines $
@@ -497,15 +500,15 @@ transifexUsageMsg = unlines $
 
 runTransifexScript :: String -> [TransifexFlag] -> Action ()
 runTransifexScript subcommand flags = do
+  let scriptPath = componentTargetPath "transifex"
   checkFlags
-  need ["dist/build/transifex/transifex" <.> exe]
+  need [scriptPath]
   let extractArg (User u)     = u
       extractArg (Password p) = p
       extractArg (Lang l)     = l
       extractArg (Resource r) = r
       args = map extractArg $ sort flags
-  cmd $ "dist/build/transifex/transifex " ++ subcommand
-        ++ " " ++ intercalate " " args
+  cmd scriptPath (subcommand:args)
     where
       checkFlags = if (subcommand `elem` ["push", "diff", "merge"])
                       && (length flags /= 4)
@@ -514,13 +517,15 @@ runTransifexScript subcommand flags = do
 
 runDetectOldLocalizationsScript :: Action ()
 runDetectOldLocalizationsScript = do
-  need ["dist/build/detect_old_localizations/detect_old_localizations" <.> exe]
-  cmd "dist/build/detect_old_localizations/detect_old_localizations"
+  let scriptPath = componentTargetPath "detect_old_localizations"
+  need [scriptPath]
+  cmd scriptPath
 
 runDetectOldTemplatesScript :: Action ()
 runDetectOldTemplatesScript = do
-  need ["dist/build/detect_old_templates/detect_old_templates" <.> exe]
-  cmd "dist/build/detect_old_templates/detect_old_templates"
+  let scriptPath = componentTargetPath "detect_old_templates"
+  need [scriptPath]
+  cmd scriptPath
 
 runTakeReferenceScreenshotsScript :: Action ()
 runTakeReferenceScreenshotsScript = do
