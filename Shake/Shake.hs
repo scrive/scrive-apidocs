@@ -2,10 +2,13 @@
 
 import Control.Monad
 import Data.List
+import Data.Maybe
+import Extra
 import Development.Shake
 import Development.Shake.FilePath
 import System.Console.GetOpt
 import System.Exit (exitFailure)
+import System.Info (os, arch)
 import qualified Data.Map as M
 
 import Shake.GetCabalDeps
@@ -82,18 +85,29 @@ usageMsg = unlines
   , ""
   ]
 
-data TransifexFlag = User String | Password String | Lang String | Resource String
+data ShakeFlag = TransifexUser String
+               | TransifexPassword String
+               | TransifexLang String
+               | TransifexResource String
+               | NewBuild
   deriving (Eq, Ord)
 
-transifexFlags :: [OptDescr (Either String TransifexFlag)]
-transifexFlags =
-  [ Option "" ["user"]     (reqArg User     "USER") "User name"
-  , Option "" ["password"] (reqArg Password "PASS") "Password"
-  , Option "" ["lang"]     (reqArg Lang     "LANG") "Language"
-  , Option "" ["resource"] (reqArg Resource "NAME") "Resource"
+shakeFlags :: [OptDescr (Either String ShakeFlag)]
+shakeFlags =
+  [ Option "" ["user"]      (reqArg TransifexUser     "USER") "User name"
+  , Option "" ["password"]  (reqArg TransifexPassword "PASS") "Password"
+  , Option "" ["lang"]      (reqArg TransifexLang     "LANG") "Language"
+  , Option "" ["resource"]  (reqArg TransifexResource "NAME") "Resource"
+  , Option "" ["new-build"] (noArg  NewBuild)                 "Use 'new-build'."
   ]
   where
+    noArg  flagVal     = NoArg  (Right flagVal)
     reqArg toFlag name = ReqArg (Right . toFlag) name
+
+newtype UseNewBuild = UseNewBuild { useNewBuild :: Bool }
+
+mkUseNewBuild :: [ShakeFlag] -> UseNewBuild
+mkUseNewBuild flags = UseNewBuild $ NewBuild `elem` flags
 
 main :: IO ()
 main = do
@@ -102,7 +116,9 @@ main = do
   ver          <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
   -- Dependency information needed by our rules.
   hsSourceDirs <- getHsSourceDirs "kontrakcja.cabal"
-  shakeArgsWith (opts ver) transifexFlags $ \flags targets -> return . Just $ do
+  shakeArgsWith (opts ver) shakeFlags $ \flags targets -> return . Just $ do
+    let newBuild = mkUseNewBuild flags
+
     if null targets then want ["help"] else want targets
 
     -- * First add Oracles
@@ -151,7 +167,7 @@ main = do
 
     -- * Rules
     componentBuildRules hsSourceDirs
-    serverBuildRules    hsSourceDirs
+    serverBuildRules    newBuild hsSourceDirs
     serverTestRules     hsSourceDirs
     frontendBuildRules
     frontendTestRules
@@ -162,8 +178,70 @@ main = do
 -- * Server
 
 -- | Server build rules
-serverBuildRules :: HsSourceDirsMap -> Rules ()
-serverBuildRules hsSourceDirs = do
+serverBuildRules :: UseNewBuild -> HsSourceDirsMap -> Rules ()
+serverBuildRules newBuild hsSourceDirs =
+  if useNewBuild newBuild then serverNewBuildRules hsSourceDirs
+  else serverOldBuildRules hsSourceDirs
+
+getNewBuildBuildDir :: Action FilePath
+getNewBuildBuildDir = do
+  ghcVer <- trim <$> askOracle (GhcVersion ())
+  return $ "dist-newstyle" </> "build" </> (arch ++ "-" ++ os)
+    </> ("ghc-" ++ ghcVer) </> "kontrakcja-1.0"
+
+getCabalConfigureFlags :: Action [String]
+getCabalConfigureFlags = do
+  tc           <- askOracle (TeamCity ())
+  testCoverage <- askOracle (BuildTestCoverage ())
+  flags0       <- askOracle (BuildCabalConfigureOptions ())
+  let flags = if tc then ["-fenable-routinglist",flags0]
+              else [flags0]
+      flags'= if testCoverage then "-ftest-coverage":flags
+              else flags
+  return flags'
+
+serverNewBuildRules :: HsSourceDirsMap -> Rules ()
+serverNewBuildRules hsSourceDirs = do
+  let cabalFiles = ["cabal.project.freeze", "kontrakcja.cabal"]
+
+  "_build/cabal-update" %>>> do
+    need cabalFiles
+    cmd (EchoStdout True) "cabal update"
+
+  "cabal.project.local" %> \_ -> do
+    need ("_build/cabal-update":cabalFiles)
+    flags <- getCabalConfigureFlags
+    command [Shell] "cabal" ("new-configure":flags)
+
+  "_build/cabal-build" %>>> do
+    need ["cabal.project.local"]
+    tc <- askOracle (TeamCity ())
+    when tc $ do
+      -- Need to rebuild on TeamCity because version code for
+      -- resources that is generated in src/Version.hs is used for stuff
+      -- that is rebuilt with new version code by `grunt build`.
+      alwaysRerun
+      -- Force GHC to rebuild the TH-containing module.
+      cmd "touch" ("backend" </> "lib" </> "Version.hs")
+    needServerHaskellFiles hsSourceDirs
+    cmd (EchoStdout True) "cabal new-build"
+
+  "_build/cabal-haddock.tar.gz" %> \_ -> do
+    need ["_build/cabal-build"]
+    needServerHaskellFiles hsSourceDirs
+    -- Limit to library from package, due to Cabal bug:
+    -- https://github.com/haskell/cabal/issues/1919
+    buildDir <- getNewBuildBuildDir
+    command_ [] "cabal" ["act-as-setup", "--", "haddock", "--internal"
+                        ,"--builddir", buildDir]
+    command_ [Shell] "tar" ["-czf","_build/cabal-haddock.tar.gz"
+                           ,buildDir </> "doc"]
+
+  "cabal-clean" ~> cmd "rm -rf dist-newstyle"
+
+
+serverOldBuildRules :: HsSourceDirsMap -> Rules ()
+serverOldBuildRules hsSourceDirs = do
   let cabalFiles = ["cabal.config", "kontrakcja.cabal"]
 
   "cabal.sandbox.config" %> \_ -> do
@@ -191,19 +269,15 @@ serverBuildRules hsSourceDirs = do
     need cabalFiles
     need ["_build/cabal-install-deps"]
     tc <- askOracle (TeamCity ())
-    testCoverage <- askOracle (BuildTestCoverage ())
-    cabalFlags <- askOracle (BuildCabalConfigureOptions ())
-    let flags = if tc then ["-fenable-routinglist",cabalFlags]
-                      else [cabalFlags]
-    -- Need to rebuild on TeamCity because versioncode for resources that is
-    -- generated in src/Version.hs is used for stuff that is rebuilt with new
-    -- versioncode by `grunt build`
+    -- Need to rebuild on TeamCity because version code for resources
+    -- that is generated in src/Version.hs is used for stuff that is
+    -- rebuilt with new version code by `grunt build`.
     when tc $ alwaysRerun
-    -- Need to clean for flags to be effective
+    -- Need to clean for flags to be effective.
     command_ [] "cabal" ["clean"]
-    case testCoverage of
-      True -> command [Shell] "cabal" $ "configure":"-ftest-coverage":flags
-      False -> command [Shell] "cabal" $ "configure":flags
+
+    flags <- getCabalConfigureFlags
+    command [Shell] "cabal" ("configure":flags)
 
   "dist/setup-config" %> \_ -> do
     need cabalFiles
@@ -242,11 +316,11 @@ serverTestRules hsSourceDirs = do
 
   "_build/hs-import-order" %>>> do
     needServerHaskellFiles hsSourceDirs
-    need ["dist/build/sort_imports/sort_imports" <.> exe]
+    need [componentTargetPath "sort_imports"]
     withGitHub "Haskell import order" $ hsImportOrderAction True
 
   "fix-hs-import-order" ~> do
-    need ["dist/build/sort_imports/sort_imports" <.> exe]
+    need [componentTargetPath "sort_imports"]
     hsImportOrderAction False
 
   "kontrakcja_test.conf" %> \_ -> do
@@ -502,16 +576,19 @@ transifexUsageMsg = unlines $
   , "English texts."
   ]
 
-runTransifexScript :: String -> [TransifexFlag] -> Action ()
+runTransifexScript :: String -> [ShakeFlag] -> Action ()
 runTransifexScript subcommand flags = do
   let scriptPath = componentTargetPath "transifex"
   checkFlags
   need [scriptPath]
-  let extractArg (User u)     = u
-      extractArg (Password p) = p
-      extractArg (Lang l)     = l
-      extractArg (Resource r) = r
-      args = map extractArg $ sort flags
+  let extractArg (TransifexUser u)     = Just u
+      extractArg (TransifexPassword p) = Just p
+      extractArg (TransifexLang l)     = Just l
+      extractArg (TransifexResource r) = Just r
+      extractArg (NewBuild)            = Nothing
+      -- NB: sorting here relies on ShakeFlag constructors being
+      -- declared in correct order (user, password, lang, resource).
+      args = mapMaybe extractArg $ sort flags
   cmd scriptPath (subcommand:args)
     where
       checkFlags = if (subcommand `elem` ["push", "diff", "merge"])
