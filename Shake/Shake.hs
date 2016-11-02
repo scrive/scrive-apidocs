@@ -9,6 +9,7 @@ import Development.Shake.FilePath
 import System.Console.GetOpt
 import System.Exit (exitFailure)
 import System.Info (os, arch)
+import System.Process (readProcess)
 import qualified Data.Map as M
 
 import Shake.GetCabalDeps
@@ -104,10 +105,24 @@ shakeFlags =
     noArg  flagVal     = NoArg  (Right flagVal)
     reqArg toFlag name = ReqArg (Right . toFlag) name
 
-newtype UseNewBuild = UseNewBuild { useNewBuild :: Bool }
+data UseNewBuild = UseNewBuild FilePath -- ^ New-build build dir.
+                 | DontUseNewBuild
 
-mkUseNewBuild :: [ShakeFlag] -> UseNewBuild
-mkUseNewBuild flags = UseNewBuild $ NewBuild `elem` flags
+useNewBuild :: UseNewBuild -> Bool
+useNewBuild (UseNewBuild _) = True
+useNewBuild DontUseNewBuild = False
+
+mkUseNewBuild :: [ShakeFlag] -> IO UseNewBuild
+mkUseNewBuild flags = if NewBuild `elem` flags
+  then do ghcVer <- trim <$> readProcess "ghc" ["--numeric-version"] ""
+          return . UseNewBuild $ "dist-newstyle" </> "build"
+            </> (arch ++ "-" ++ os)
+            </> ("ghc-" ++ ghcVer) </> "kontrakcja-1.0"
+  else return DontUseNewBuild
+
+ifNewBuild :: UseNewBuild -> (FilePath -> m a) -> m a -> m a
+ifNewBuild (UseNewBuild buildDir) act0 _act1 = act0 buildDir
+ifNewBuild DontUseNewBuild       _act0  act1 = act1
 
 main :: IO ()
 main = do
@@ -117,7 +132,7 @@ main = do
   -- Dependency information needed by our rules.
   hsSourceDirs <- getHsSourceDirs "kontrakcja.cabal"
   shakeArgsWith (opts ver) shakeFlags $ \flags targets -> return . Just $ do
-    let newBuild = mkUseNewBuild flags
+    newBuild <- liftIO $ mkUseNewBuild flags
 
     if null targets then want ["help"] else want targets
 
@@ -143,19 +158,19 @@ main = do
 
     "dist" ~> need ["_build/kontrakcja.tar.gz"]
 
-    "transifex-fix"              ~> runTransifexScript "fix"   []
-    "transifex-push"             ~> runTransifexScript "push"  flags
-    "transifex-diff"             ~> runTransifexScript "diff"  flags
-    "transifex-merge"            ~> runTransifexScript "merge" flags
+    "transifex-fix"              ~> runTransifexScript newBuild "fix"   []
+    "transifex-push"             ~> runTransifexScript newBuild "push"  flags
+    "transifex-diff"             ~> runTransifexScript newBuild "diff"  flags
+    "transifex-merge"            ~> runTransifexScript newBuild "merge" flags
     "transifex-help"             ~> do putNormal transifexUsageMsg
                                        putNormal "-----------------------------"
                                        putNormal "Output of 'transifex --help':"
                                        putNormal "-----------------------------"
-                                       runTransifexScript "" []
-    "detect-old-localizations"   ~> runDetectOldLocalizationsScript
-    "detect-old-templates"       ~> runDetectOldTemplatesScript
+                                       runTransifexScript newBuild "" []
+    "detect-old-localizations"   ~> runDetectOldLocalizationsScript newBuild
+    "detect-old-templates"       ~> runDetectOldTemplatesScript newBuild
     "take-reference-screenshots" ~> runTakeReferenceScreenshotsScript
-    "localization"               ~> runLocalization
+    "localization"               ~> runLocalization newBuild
 
     "clean" ~> need ["clean-server","clean-frontend"]
     "clean-server" ~> need ["cabal-clean"]
@@ -166,10 +181,10 @@ main = do
       removeFilesAfter "_shake/" ["//*"]
 
     -- * Rules
-    componentBuildRules hsSourceDirs
+    componentBuildRules newBuild hsSourceDirs
     serverBuildRules    newBuild hsSourceDirs
-    serverTestRules     hsSourceDirs
-    frontendBuildRules
+    serverTestRules     newBuild hsSourceDirs
+    frontendBuildRules  newBuild
     frontendTestRules
     utilityScriptsRules
     distributionRules
@@ -180,14 +195,8 @@ main = do
 -- | Server build rules
 serverBuildRules :: UseNewBuild -> HsSourceDirsMap -> Rules ()
 serverBuildRules newBuild hsSourceDirs =
-  if useNewBuild newBuild then serverNewBuildRules hsSourceDirs
-  else serverOldBuildRules hsSourceDirs
-
-getNewBuildBuildDir :: Action FilePath
-getNewBuildBuildDir = do
-  ghcVer <- trim <$> askOracle (GhcVersion ())
-  return $ "dist-newstyle" </> "build" </> (arch ++ "-" ++ os)
-    </> ("ghc-" ++ ghcVer) </> "kontrakcja-1.0"
+  ifNewBuild newBuild (serverNewBuildRules hsSourceDirs)
+                      (serverOldBuildRules hsSourceDirs)
 
 getCabalConfigureFlags :: Action [String]
 getCabalConfigureFlags = do
@@ -200,8 +209,8 @@ getCabalConfigureFlags = do
               else flags
   return flags'
 
-serverNewBuildRules :: HsSourceDirsMap -> Rules ()
-serverNewBuildRules hsSourceDirs = do
+serverNewBuildRules :: HsSourceDirsMap -> FilePath -> Rules ()
+serverNewBuildRules hsSourceDirs buildDir = do
   let cabalFiles = ["cabal.project.freeze", "kontrakcja.cabal"]
 
   "_build/cabal-update" %>>> do
@@ -231,7 +240,6 @@ serverNewBuildRules hsSourceDirs = do
     needServerHaskellFiles hsSourceDirs
     -- Limit to library from package, due to Cabal bug:
     -- https://github.com/haskell/cabal/issues/1919
-    buildDir <- getNewBuildBuildDir
     command_ [] "cabal" ["act-as-setup", "--", "haddock", "--internal"
                         ,"--builddir", buildDir]
     command_ [Shell] "tar" ["-czf","_build/cabal-haddock.tar.gz"
@@ -305,22 +313,22 @@ serverOldBuildRules hsSourceDirs = do
   "cabal-clean" ~> cmd "cabal clean"
 
 -- | Server test rules
-serverTestRules :: HsSourceDirsMap -> Rules ()
-serverTestRules hsSourceDirs = do
+serverTestRules :: UseNewBuild -> HsSourceDirsMap -> Rules ()
+serverTestRules newBuild hsSourceDirs = do
   let hsImportOrderAction checkOnly = do
         let allSourceDirs = allHsSourceDirs hsSourceDirs
             flags = if checkOnly then ("--check":allSourceDirs)
                     else allSourceDirs
         command ([Shell] ++ langEnv)
-          "./dist/build/sort_imports/sort_imports" flags
+          (componentTargetPath newBuild "sort_imports") flags
 
   "_build/hs-import-order" %>>> do
     needServerHaskellFiles hsSourceDirs
-    need [componentTargetPath "sort_imports"]
+    need [componentTargetPath newBuild "sort_imports"]
     withGitHub "Haskell import order" $ hsImportOrderAction True
 
   "fix-hs-import-order" ~> do
-    need [componentTargetPath "sort_imports"]
+    need [componentTargetPath newBuild "sort_imports"]
     hsImportOrderAction False
 
   "kontrakcja_test.conf" %> \_ -> do
@@ -370,15 +378,15 @@ needServerHaskellFiles hsSourceDirs =
 -- * Frontend
 
 -- | Frontend build rules
-frontendBuildRules :: Rules ()
-frontendBuildRules = do
+frontendBuildRules :: UseNewBuild -> Rules ()
+frontendBuildRules newBuild = do
   "_build/npm-install" %>>> do
     need ["frontend/package.json"]
     command [EchoStdout True, Cwd "frontend"] "npm" ["install"]
 
   "_build/grunt-build" %>>> do
     need [ "_build/npm-install"
-         , componentTargetPath "localization"
+         , componentTargetPath newBuild "localization"
          ]
     alwaysRerun
     withGitHub "Grunt Build" $
@@ -455,23 +463,28 @@ distributionRules = do
 
 -- | For each exe/test-suite/benchmark component in the .cabal file,
 -- add a rule for building the corresponding executable.
-componentBuildRules :: HsSourceDirsMap -> Rules ()
-componentBuildRules hsSourceDirs = do
+componentBuildRules :: UseNewBuild -> HsSourceDirsMap -> Rules ()
+componentBuildRules newBuild hsSourceDirs = do
   forM_ (M.keys hsSourceDirs) $ \componentName ->
     if componentName /= ""
-    then (componentTargetPath componentName) %> \_ ->
+    then (componentTargetPath newBuild componentName) %> \_ ->
       -- Assumes that all sources of a component are in its hs-source-dirs.
       do let sourceDirs = componentHsSourceDirs componentName hsSourceDirs
          need ["dist/setup-config"]
          needPatternsInDirectories ["//*.hs"] sourceDirs
-         cmd $ "cabal build " ++ componentName
+         if useNewBuild newBuild
+           then cmd $ "cabal new-build " ++ componentName
+           else cmd $ "cabal build " ++ componentName
     else return ()
 
 -- | Given a component name, return the path to the corresponding
 -- executable.
-componentTargetPath :: String -> FilePath
-componentTargetPath componentName =
+componentTargetPath :: UseNewBuild -> String -> FilePath
+componentTargetPath DontUseNewBuild componentName =
   "dist" </> "build" </> componentName </> componentName <.> exe
+componentTargetPath (UseNewBuild buildDir) componentName =
+  buildDir </> "c" </> componentName </> "build"
+           </> componentName </> componentName <.> exe
 
 -- | Rules related to utility scripts.
 utilityScriptsRules :: Rules ()
@@ -576,9 +589,9 @@ transifexUsageMsg = unlines $
   , "English texts."
   ]
 
-runTransifexScript :: String -> [ShakeFlag] -> Action ()
-runTransifexScript subcommand flags = do
-  let scriptPath = componentTargetPath "transifex"
+runTransifexScript :: UseNewBuild -> String -> [ShakeFlag] -> Action ()
+runTransifexScript newBuild subcommand flags = do
+  let scriptPath = componentTargetPath newBuild "transifex"
   checkFlags
   need [scriptPath]
   let extractArg (TransifexUser u)     = Just u
@@ -596,15 +609,15 @@ runTransifexScript subcommand flags = do
                    then error "transifex: Some required arguments are missing!"
                    else return ()
 
-runDetectOldLocalizationsScript :: Action ()
-runDetectOldLocalizationsScript = do
-  let scriptPath = componentTargetPath "detect_old_localizations"
+runDetectOldLocalizationsScript :: UseNewBuild -> Action ()
+runDetectOldLocalizationsScript newBuild = do
+  let scriptPath = componentTargetPath newBuild "detect_old_localizations"
   need [scriptPath]
   cmd scriptPath
 
-runDetectOldTemplatesScript :: Action ()
-runDetectOldTemplatesScript = do
-  let scriptPath = componentTargetPath "detect_old_templates"
+runDetectOldTemplatesScript :: UseNewBuild -> Action ()
+runDetectOldTemplatesScript newBuild = do
+  let scriptPath = componentTargetPath newBuild "detect_old_templates"
   need [scriptPath]
   cmd scriptPath
 
@@ -613,8 +626,8 @@ runTakeReferenceScreenshotsScript = do
   need ["scripts/take_reference_screenshots.py"]
   cmd "python scripts/take_reference_screenshots.py"
 
-runLocalization :: Action ()
-runLocalization = do
-  let exePath = componentTargetPath "localization"
+runLocalization :: UseNewBuild -> Action ()
+runLocalization newBuild = do
+  let exePath = componentTargetPath newBuild "localization"
   need [exePath]
   cmd  exePath
