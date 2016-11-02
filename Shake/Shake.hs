@@ -171,6 +171,7 @@ main = do
     "detect-old-templates"       ~> runDetectOldTemplatesScript newBuild
     "take-reference-screenshots" ~> runTakeReferenceScreenshotsScript
     "localization"               ~> runLocalization newBuild
+    "scripts-help"               ~> putNormal scriptsUsageMsg
 
     "clean" ~> need ["clean-server","clean-frontend"]
     "clean-server" ~> need ["cabal-clean"]
@@ -186,8 +187,7 @@ main = do
     serverTestRules     newBuild hsSourceDirs
     frontendBuildRules  newBuild
     frontendTestRules
-    utilityScriptsRules
-    distributionRules
+    distributionRules   newBuild
     oracleHelpRule
 
 -- * Server
@@ -420,8 +420,8 @@ frontendTestRules = do
           removeFilesAfter "frontend/coverage" ["//*"]
 
 -- * Create distribution
-distributionRules :: Rules ()
-distributionRules = do
+distributionRules :: UseNewBuild -> Rules ()
+distributionRules newBuild = do
   "urls.txt" %> \_ -> do
     tc <- askOracle (TeamCity ())
     nginxconfpath <- askOracle (NginxConfPath ())
@@ -432,18 +432,19 @@ distributionRules = do
     when (null nginxconfpath) $ do
       putLoud "ERROR: NGINX_CONF_PATH is empty"
       liftIO $ exitFailure
-    need ["_build/cabal-build"]
-    command_ [] "./dist/build/routinglist/routinglist" [nginxconfpath]
+    let routingListPath = componentTargetPath newBuild "routinglist"
+    need [routingListPath]
+    command_ [] routingListPath [nginxconfpath]
     removeFilesAfter "." ["urls.txt"]
 
   "_build/kontrakcja.tar.gz" %> \_ -> do
     need ["all", "urls.txt"]
-    let distFiles = [ "dist/build/kontrakcja-server/kontrakcja-server"
-                    , "dist/build/cron/cron"
-                    , "dist/build/kontrakcja-migrate/kontrakcja-migrate"
-                    , "dist/build/mailing-server/mailing-server"
-                    , "dist/build/messenger-server/messenger-server"
-                    , "dist/build/screenshot-review/screenshot-review"
+    let distFiles = [ componentTargetPath newBuild "kontrakcja-server"
+                    , componentTargetPath newBuild "cron"
+                    , componentTargetPath newBuild "kontrakcja-migrate"
+                    , componentTargetPath newBuild "mailing-server"
+                    , componentTargetPath newBuild "messenger-server"
+                    , componentTargetPath newBuild "screenshot-review"
                     , "evidence-package/samples.p"
                     , "frontend/app/img"
                     , "frontend/app/less"
@@ -485,11 +486,6 @@ componentTargetPath DontUseNewBuild componentName =
 componentTargetPath (UseNewBuild buildDir) componentName =
   buildDir </> "c" </> componentName </> "build"
            </> componentName </> componentName <.> exe
-
--- | Rules related to utility scripts.
-utilityScriptsRules :: Rules ()
-utilityScriptsRules = do
-  "scripts-help" ~> putNormal scriptsUsageMsg
 
 scriptsUsageMsg :: String
 scriptsUsageMsg = unlines $
