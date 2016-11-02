@@ -24,6 +24,20 @@ module.exports = function (grunt) {
     kontrakcja: "../"
   };
 
+  // Pick correct defaults when we're using new-build.
+  var newBuild = fs.existsSync(yeomanConfig.kontrakcja + "dist-newstyle");
+  var buildDir = "./dist";
+  if (newBuild) {
+      var spawnSync = require('child_process').spawnSync;
+      var child = spawnSync("ghc", ["--numeric-version"]);
+      var ghcVer = child.output[1].toString().trim();
+      child = spawnSync(
+          "ghc", ["-e", 'print $ System.Info.arch ++ "-" ++ System.Info.os'])
+      var archOs = child.output[1].toString().trim();
+      buildDir = "./dist-newstyle/build/" + archOs + "/ghc-"
+          + ghcVer + "/kontrakcja-1.0/c/localization";
+  }
+
   grunt.initConfig({
     yeoman: yeomanConfig,
 
@@ -126,7 +140,7 @@ module.exports = function (grunt) {
         command: "echo '$(date +%s)' > <%= yeoman.dist %>/LAST_BUILT"
       },
       compileLocalization: {
-        command: "cabal build localization",
+        command: (newBuild ? "cabal new-build" : "cabal build") + " localization",
         options: {
           execOptions: {
             cwd: "<%= yeoman.kontrakcja %>"
@@ -134,7 +148,7 @@ module.exports = function (grunt) {
         }
       },
       generateLocalization: {
-        command: "./dist/build/localization/localization",
+        command: buildDir + "/build/localization/localization",
         options: {
           execOptions: {
             cwd: "<%= yeoman.kontrakcja %>"
