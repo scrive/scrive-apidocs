@@ -6,8 +6,12 @@ var fs = require('fs'),
   generateVersionId = require('./utils/version_id_generator');
 
 module.exports = function(grunt) {
-  grunt.registerMultiTask('deploybuild', 'Prefix static asset file names with a content hash and replace includes of them in index.html', function() {
-    
+  grunt.registerMultiTask(
+    'deploybuild',
+    'Prefix static asset file names with a content hash'
+       + ' and replace includes of them in index.html',
+  function() {
+
     var cssFiles = [],
     jsFiles = [];
 
@@ -15,7 +19,8 @@ module.exports = function(grunt) {
     this.files.forEach(function(filePair) {
       filePair.src.forEach(function(f) {
         var versionId = generateVersionId();
-        if (path.basename(f).indexOf(versionId) == -1) { // Add version only to files that don't have it
+        if (path.basename(f).indexOf(versionId) == -1) {
+          // Add version only to files that don't have it
           var renamed = [versionId, path.basename(f)].join('.');
           var outPath = path.resolve(path.dirname(f), renamed);
 
