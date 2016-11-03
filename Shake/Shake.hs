@@ -3,18 +3,15 @@
 import Control.Monad
 import Data.List
 import Data.Maybe
-import Extra
 import Development.Shake
 import Development.Shake.FilePath
-import System.Console.GetOpt
 import System.Exit (exitFailure)
-import System.Info (os, arch)
-import System.Process (readProcess)
-import qualified Data.Map as M
 
+import Shake.Flags
 import Shake.GetCabalDeps
 import Shake.GetHsDeps
 import Shake.GitHub
+import Shake.NewBuild
 import Shake.Oracles
 import Shake.TeamCity
 import Shake.Utils
@@ -85,44 +82,6 @@ usageMsg = unlines
   , "   clean-frontend : Clean with 'grunt clean'"
   , ""
   ]
-
-data ShakeFlag = TransifexUser String
-               | TransifexPassword String
-               | TransifexLang String
-               | TransifexResource String
-               | NewBuild
-  deriving (Eq, Ord)
-
-shakeFlags :: [OptDescr (Either String ShakeFlag)]
-shakeFlags =
-  [ Option "" ["user"]      (reqArg TransifexUser     "USER") "User name"
-  , Option "" ["password"]  (reqArg TransifexPassword "PASS") "Password"
-  , Option "" ["lang"]      (reqArg TransifexLang     "LANG") "Language"
-  , Option "" ["resource"]  (reqArg TransifexResource "NAME") "Resource"
-  , Option "" ["new-build"] (noArg  NewBuild)                 "Use 'new-build'."
-  ]
-  where
-    noArg  flagVal     = NoArg  (Right flagVal)
-    reqArg toFlag name = ReqArg (Right . toFlag) name
-
-data UseNewBuild = UseNewBuild FilePath -- ^ New-build build dir.
-                 | DontUseNewBuild
-
-useNewBuild :: UseNewBuild -> Bool
-useNewBuild (UseNewBuild _) = True
-useNewBuild DontUseNewBuild = False
-
-mkUseNewBuild :: [ShakeFlag] -> IO UseNewBuild
-mkUseNewBuild flags = if NewBuild `elem` flags
-  then do ghcVer <- trim <$> readProcess "ghc" ["--numeric-version"] ""
-          return . UseNewBuild $ "dist-newstyle" </> "build"
-            </> (arch ++ "-" ++ os)
-            </> ("ghc-" ++ ghcVer) </> "kontrakcja-1.0"
-  else return DontUseNewBuild
-
-ifNewBuild :: UseNewBuild -> (FilePath -> m a) -> m a -> m a
-ifNewBuild (UseNewBuild buildDir) act0 _act1 = act0 buildDir
-ifNewBuild DontUseNewBuild       _act0  act1 = act1
 
 main :: IO ()
 main = do
@@ -462,31 +421,6 @@ distributionRules newBuild = do
     command_ [Shell] "tar" $ ["-czf","_build/kontrakcja.tar.gz"] ++ distFiles
 
 -- * Utility scripts.
-
--- | For each exe/test-suite/benchmark component in the .cabal file,
--- add a rule for building the corresponding executable.
-componentBuildRules :: UseNewBuild -> HsSourceDirsMap -> Rules ()
-componentBuildRules newBuild hsSourceDirs = do
-  forM_ (M.keys hsSourceDirs) $ \componentName ->
-    if componentName /= ""
-    then (componentTargetPath newBuild componentName) %> \_ ->
-      -- Assumes that all sources of a component are in its hs-source-dirs.
-      do let sourceDirs = componentHsSourceDirs componentName hsSourceDirs
-         need ["dist/setup-config"]
-         needPatternsInDirectories ["//*.hs"] sourceDirs
-         if useNewBuild newBuild
-           then cmd $ "cabal new-build " ++ componentName
-           else cmd $ "cabal build " ++ componentName
-    else return ()
-
--- | Given a component name, return the path to the corresponding
--- executable.
-componentTargetPath :: UseNewBuild -> String -> FilePath
-componentTargetPath DontUseNewBuild componentName =
-  "dist" </> "build" </> componentName </> componentName <.> exe
-componentTargetPath (UseNewBuild buildDir) componentName =
-  buildDir </> "c" </> componentName </> "build"
-           </> componentName </> componentName <.> exe
 
 scriptsUsageMsg :: String
 scriptsUsageMsg = unlines $

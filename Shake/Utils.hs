@@ -1,4 +1,6 @@
-module Shake.Utils where
+module Shake.Utils ((%>>>)
+                   ,needPatternsInDirectories
+                   ,langEnv) where
 
 import Development.Shake
 import Control.Monad
