@@ -24,7 +24,7 @@ module.exports = function (grunt) {
     kontrakcja: "../"
   };
 
-  // Pick correct defaults when we're using new-build.
+  // Pick correct defaults when we're using Haskell's 'cabal new-build'.
   var newBuild = fs.existsSync(yeomanConfig.kontrakcja + "dist-newstyle");
   var buildDir = "./dist";
   if (newBuild) {
@@ -140,6 +140,9 @@ module.exports = function (grunt) {
         command: "echo '$(date +%s)' > <%= yeoman.dist %>/LAST_BUILT"
       },
       compileLocalization: {
+        // We can't just invoke `../shake.sh localization` because
+        // Shake doesn't allow us to run two Shake processes in the
+        // same working dir simultaneously.
         command: (newBuild ? "cabal new-build" : "cabal build") + " localization",
         options: {
           execOptions: {
