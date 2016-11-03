@@ -74,7 +74,7 @@ usageMsg = unlines
   , "   detect-old-localizations   : Detect old localizations"
   , "   detect-old-templates       : Detect old templates"
   , "   take-reference-screenshots : Take reference screenshots"
-  , "   localization               : Update localization"
+  , "   localization               : Update localization files"
   , "   scripts-help               : Help on using utility scripts"
   , ""
   , "# Clean"
@@ -544,7 +544,8 @@ scriptsUsageMsg = unlines $
   , ""
   , "localization"
   , "--------------------------"
-  , "Update the localization"
+  , "Update the pre-generated localization files in 'frontend/app/localization/'"
+  , "for all languages. To use, run 'shake.sh localization'."
   ]
 
 transifexUsageMsg :: String
