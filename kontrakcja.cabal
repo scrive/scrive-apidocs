@@ -417,6 +417,7 @@ Library
                  , Utils.Read
                  , Utils.String
                  , Utils.TH
+                 , Version
                  , VersionTH
 
   Build-depends: base
