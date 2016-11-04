@@ -25,7 +25,14 @@ module.exports = function (grunt) {
   };
 
   // Pick correct defaults when we're using Haskell's 'cabal new-build'.
-  var newBuild = fs.existsSync(yeomanConfig.kontrakcja + "dist-newstyle");
+  var newBuild;
+  if (grunt.option('no-new-build')) {
+      newBuild = false;
+  }
+  else {
+      newBuild = grunt.option('new-build')
+          || fs.existsSync(yeomanConfig.kontrakcja + "dist-newstyle");
+  }
   var buildDir = "./dist";
   if (newBuild) {
       var spawnSync = require('child_process').spawnSync;

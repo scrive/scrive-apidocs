@@ -145,7 +145,7 @@ main = do
     serverBuildRules    newBuild hsSourceDirs
     serverTestRules     newBuild hsSourceDirs
     frontendBuildRules  newBuild
-    frontendTestRules
+    frontendTestRules   newBuild
     distributionRules   newBuild
     oracleHelpRule
 
@@ -337,6 +337,10 @@ needServerHaskellFiles hsSourceDirs =
 
 -- * Frontend
 
+gruntNewBuildArg :: UseNewBuild -> String
+gruntNewBuildArg (UseNewBuild _) = "--new-build"
+gruntNewBuildArg DontUseNewBuild = "--no-new-build"
+
 -- | Frontend build rules
 frontendBuildRules :: UseNewBuild -> Rules ()
 frontendBuildRules newBuild = do
@@ -350,30 +354,32 @@ frontendBuildRules newBuild = do
          ]
     alwaysRerun
     withGitHub "Grunt Build" $
-      command ([EchoStdout True, Cwd "frontend"] ++ langEnv) "grunt" ["build"]
+      command ([EchoStdout True, Cwd "frontend"] ++ langEnv) "grunt"
+              ["build", gruntNewBuildArg newBuild]
 
   "grunt-clean" ~> do
     need ["_build/npm-install"]
-    cmd (Cwd "frontend") "grunt clean"
+    cmd [Cwd "frontend"] "grunt" ["clean", gruntNewBuildArg newBuild]
 
 -- | Frontend test rules
-frontendTestRules :: Rules ()
-frontendTestRules = do
+frontendTestRules :: UseNewBuild -> Rules ()
+frontendTestRules newBuild = do
   "grunt-eslint" ~> do
     need ["_build/npm-install"]
     withGitHub "eslint" $
-      cmd (Cwd "frontend") "grunt eslint"
+      cmd [Cwd "frontend"] "grunt" ["eslint", gruntNewBuildArg newBuild]
 
   "grunt-coverage" ~> do
     need ["_build/grunt-build"]
-    command_ [Cwd "frontend"] "grunt" ["test"]
+    command_ [Cwd "frontend"] "grunt" ["test", gruntNewBuildArg newBuild]
 
   "grunt-test" ~> do
     need ["_build/grunt-build"]
     withGitHub "Grunt Test" $ do
       testCoverage <- askOracle (BuildTestCoverage ())
       case testCoverage of
-        False -> cmd (Cwd "frontend") "grunt test:fast"
+        False -> cmd [Cwd "frontend"] "grunt" ["test:fast"
+                                              ,gruntNewBuildArg newBuild]
         True -> do
           need ["grunt-coverage"]
           command_ [Shell] "zip -r _build/JS_coverage.zip frontend/coverage/" []
