@@ -2,8 +2,8 @@ module LocalizationMain(main) where
 
 import System.Directory (createDirectoryIfMissing)
 import Text.StringTemplates.Templates hiding (runTemplatesT)
-import qualified Data.ByteString.UTF8   as BS
 import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Text.StringTemplates.Fields as F
