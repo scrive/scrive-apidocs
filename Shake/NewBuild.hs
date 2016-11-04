@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- | Various new-build related utilities.
 --
 
@@ -7,6 +8,10 @@ module Shake.NewBuild (UseNewBuild(..)
                       ,ifNewBuild
                       ,componentTargetPath
                       ,componentBuildRules) where
+
+#if __GLASGOW_HASKELL__ < 710
+import Control.Applicative
+#endif
 
 import Control.Monad
 import Extra
@@ -20,7 +25,7 @@ import Shake.Flags
 import Shake.GetCabalDeps
 import Shake.Utils
 
--- |
+-- | Whether new-build mode should be used, plus some settings data.
 data UseNewBuild = UseNewBuild FilePath -- ^ New-build build dir.
                  | DontUseNewBuild
 
@@ -31,12 +36,22 @@ useNewBuild DontUseNewBuild = False
 
 -- | Make a 'UseNewBuild' object from command-line flags.
 mkUseNewBuild :: [ShakeFlag] -> IO UseNewBuild
-mkUseNewBuild flags = if NewBuild `elem` flags
-  then do ghcVer <- trim <$> readProcess "ghc" ["--numeric-version"] ""
-          return . UseNewBuild $ "dist-newstyle" </> "build"
-            </> (arch ++ "-" ++ os)
-            </> ("ghc-" ++ ghcVer) </> "kontrakcja-1.0"
+mkUseNewBuild flags =
+  if NewBuild `elem` flags
+  then do
+    cabalVer <- numericVersion "cabal"
+    if cabalVer < "1.25" then do
+      putStrLn $ "Warning: --new-build only works with cabal-install >= 1.25."
+      putStrLn "Falling back to old code path."
+      return DontUseNewBuild
+    else
+      UseNewBuild . newBuildBuildDir <$> numericVersion "ghc"
   else return DontUseNewBuild
+
+  where
+    numericVersion   prog   = trim <$> readProcess prog ["--numeric-version"] ""
+    newBuildBuildDir ghcVer = "dist-newstyle" </> "build" </> (arch ++ "-" ++ os)
+                              </> ("ghc-" ++ ghcVer) </> "kontrakcja-1.0"
 
 -- | Branch based on whether new-build is enabled.
 ifNewBuild :: UseNewBuild -> (FilePath -> m a) -> m a -> m a
