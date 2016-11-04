@@ -1045,6 +1045,7 @@ Executable localization
   GHC-options: -main-is LocalizationMain
 
   Build-depends: base
+               , base16-bytestring
                , cond
                , data-default
                , directory
@@ -1055,6 +1056,7 @@ Executable localization
                , lifted-base
                , mtl
                , split
+               , utf8-string
                , template-haskell
                , text
                , time

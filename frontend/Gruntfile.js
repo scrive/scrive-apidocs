@@ -311,15 +311,13 @@ module.exports = function (grunt) {
   grunt.registerTask("compileGenerateLocalization", function (target) {
     return grunt.task.run([
       "shell:compileLocalization",
-      "shell:generateLocalization",
-      "deploybuild:localization"
+      "shell:generateLocalization"
     ]);
   });
 
   grunt.registerTask("updateLocalization", function (target) {
     return grunt.task.run([
-      "shell:generateLocalization",
-      "deploybuild:localization"
+      "shell:generateLocalization"
     ]);
   });
 
