@@ -18,7 +18,7 @@ import DB
 import KontraPrelude
 import Theme.Model
 import User.Model
-import Version
+import VersionTH
 
 brandingAdler32 :: (MonadDB m, MonadThrow m) => Context -> Maybe CompanyUI -> m String
 brandingAdler32 ctx mcompanyui = do

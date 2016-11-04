@@ -1,4 +1,4 @@
-module Version (versionID) where
+module VersionTH (versionID) where
 
 import Control.Exception.Lifted as E
 import Language.Haskell.TH.Lib

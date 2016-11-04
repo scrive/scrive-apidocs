@@ -39,7 +39,7 @@ import Utils.Network
 import qualified Doc.RenderedPages as RenderedPages
 import qualified HostClock.Model as HC
 import qualified MemCache
-import qualified Version
+import qualified VersionTH
 
 data CmdConf = CmdConf {
   config :: String
@@ -68,7 +68,7 @@ main = withCurlDo $ do
   lr@LogRunner{..} <- mkLogRunner "kontrakcja" (logConfig appConf) rng
   withLoggerWait $ do
     logInfo "Starting kontrakcja-server" $ object [
-        "version" .= Version.versionID
+        "version" .= VersionTH.versionID
       ]
     checkExecutables
 
