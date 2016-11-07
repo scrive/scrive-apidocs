@@ -539,6 +539,12 @@ a {
     border-radius: 4px;
     background: $search-highlight;
   }
+
+  div.json-schema {
+    display: table-cell;
+    padding-left: 2em;
+    border-left: 2px solid $code-bg;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
