@@ -1962,10 +1962,10 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 The document metadata as a JSON.
 
 
-#### Document
+### Document
 `(object)`
 
-> ### Example JSON for "Document":
+> ### Example JSON: for "Document"
 
 ```json
 {
@@ -2137,588 +2137,1022 @@ The document metadata as a JSON.
 ```
 
 
-Defines the entire structure of a document to be signed, including the
+
+
+<div class="json-schema">
+
+<p>Defines the entire structure of a document to be signed, including the
 parties, the processes to follow, etc.
-It is a core data structure used throughout the Scrive Document API.
+It is a core data structure used throughout the Scrive Document API.</p>
 
 
-This object has the following properties:
+<p>This object has the following properties:</p>
 
-##### `id` (string, read only)
-
-**Unique identifier for a document.**
-
-Will not change over time, and cannot be changed.
+<h4><code>id</code> (string, read only)</h4>
 
 
-##### `title` (string)
+<div class="json-schema">
 
-**The title of the document.**
-
-Can be modified while a document is in preparation.
-The title will be used in messages sent to the document’s parties.
+<p><strong>Unique identifier for a document.</strong></p>
+<p>Will not change over time, and cannot be changed.</p>
 
 
-##### `parties` (array)
+</div>
 
-**List of signing and viewing parties.**
+<h4><code>title</code> (string)</h4>
 
-Defines their details, how the document is delivered to them, what
+
+<div class="json-schema">
+
+<p><strong>The title of the document.</strong></p>
+<p>Can be modified while a document is in preparation.
+The title will be used in messages sent to the document’s parties.</p>
+
+
+</div>
+
+<h4><code>parties</code> (array)</h4>
+
+
+<div class="json-schema">
+
+<p><strong>List of signing and viewing parties.</strong></p>
+<p>Defines their details, how the document is delivered to them, what
 authentication method they must use, fields they must fill, fields placed
-on the PDF, etc.
+on the PDF, etc.</p>
 
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-##### Signatory
-`(object)`
-
-> ### Example JSON for "Signatory":
-
-```json
-{
-  "id": "9220293573270366783",
-  "user_id": "9206820953483508074",
-  "is_author": true,
-  "is_signatory": true,
-  "fields": [
-    {
-      "type": "name",
-      "order": 1,
-      "value": "Magnus",
-      "is_obligatory": true,
-      "should_be_filled_by_sender": true,
-      "placements": []
-    },
-    {
-      "type": "name",
-      "order": 2,
-      "value": "Söderholm",
-      "is_obligatory": true,
-      "should_be_filled_by_sender": true,
-      "placements": []
-    },
-    {
-      "type": "email",
-      "value": "noemail@scrive.com",
-      "is_obligatory": true,
-      "should_be_filled_by_sender": true,
-      "placements": []
-    },
-    {
-      "type": "company",
-      "value": "",
-      "is_obligatory": false,
-      "should_be_filled_by_sender": false,
-      "placements": []
-    }
-  ],
-  "sign_order": 1,
-  "sign_time": null,
-  "seen_time": null,
-  "read_invitation_time": null,
-  "rejected_time": null,
-  "sign_success_redirect_url": null,
-  "reject_redirect_url": null,
-  "email_delivery_status": "unknown",
-  "mobile_delivery_status": "unknown",
-  "has_authenticated_to_view": false,
-  "csv": null,
-  "delivery_method": "email",
-  "authentication_method_to_view": "standard",
-  "authentication_method_to_sign": "standard",
-  "confirmation_delivery_method": "email",
-  "attachments": [],
-  "api_delivery_url": null
-}
-```
+<h5>Signatory</h5>
+<code>(object)</code>
 
 
-A signatory defines the details and process for each signing or non-signing
-party to a document.
+<div class="json-schema">
+
+<p>A signatory defines the details and process for each signing or non-signing
+party to a document.</p>
 
 
-This object has the following properties:
+<p>This object has the following properties:</p>
 
-##### `id` (string, read only)
-
-**Unique identifier for a party.**
-
-Will not change over time, and cannot be changed.
+<h6><code>id</code> (string, read only)</h6>
 
 
-##### `user_id` (integer, read only)
+<div class="json-schema">
 
-If this party has an account on the Scrive eSign system, it will be set
-here.
-
-
-##### `is_author` (boolean, read only)
-
-Whether this party is the author of the document.
-
-##### `is_signatory` (boolean)
-
-Whether this party is a signatory to the document, otherwise they are
-viewers and will not sign the document.
+<p><strong>Unique identifier for a party.</strong></p>
+<p>Will not change over time, and cannot be changed.</p>
 
 
-##### `fields` (array)
+</div>
 
-The object properties for Signatory `fields` in this definition are only
-the ones common to all signatory fields.
+<h6><code>user_id</code> (integer, read only)</h6>
 
-**Note:**
+
+<div class="json-schema">
+
+<p>If this party has an account on the Scrive eSign system, it will be set
+here.</p>
+
+
+</div>
+
+<h6><code>is_author</code> (boolean, read only)</h6>
+
+
+<div class="json-schema">
+
+<p>Whether this party is the author of the document.</p>
+
+
+</div>
+
+<h6><code>is_signatory</code> (boolean)</h6>
+
+
+<div class="json-schema">
+
+<p>Whether this party is a signatory to the document, otherwise they are
+viewers and will not sign the document.</p>
+
+
+</div>
+
+<h6><code>fields</code> (array)</h6>
+
+
+<div class="json-schema">
+
+<p>The object properties for Signatory <code>fields</code> in this definition are only
+the ones common to all signatory fields.</p>
+<p><strong>Note:</strong>
 A valid definition must be one of the concrete types (e.g.
-`SignatoryFieldCheckbox`).
+<code>SignatoryFieldCheckbox</code>).</p>
 
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-##### Signatory Field
-`(object)`
+<h6>Signatory Field</h6>
+<code>(object)</code>
 
-The common elements of all `SignatoryField` types.
-This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. `SignatoryFieldName`).
 
+<div class="json-schema">
 
-This object has the following properties:
+<p>The common elements of all <code>SignatoryField</code> types.</p>
+<p>This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
 
-##### `type` (string, required)
 
-##### `is_obligatory` (boolean, required)
+<p>This object has the following properties:</p>
 
-##### `placements` (array)
+<h6><code>type</code> (string, required)</h6>
 
-If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.
 
-Note that this is an array, you can have multiple placements for the same
-field.
+<div class="json-schema">
 
-The easiest way to set the `xrel`, `yrel`, etc. values is to create a
-template in the document UI design view, and use those values.
+</div>
 
+<h6><code>is_obligatory</code> (boolean, required)</h6>
 
-All array elements must be of type:
 
-##### (object)
+<div class="json-schema">
 
-This object has the following properties:
+</div>
 
-##### `xrel` (number)
+<h6><code>placements</code> (array)</h6>
 
-##### `yrel` (number)
 
-##### `wrel` (number)
+<div class="json-schema">
 
-##### `hrel` (number)
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
 
-##### `fsrel` (number)
 
-##### `page` (integer)
+<p>All array elements must be of type:</p>
 
-The page number for this placement.
+<h6>(object)</h6>
 
-##### `tip` (string, enum)
 
-This element must be one of the following enum values:
+<div class="json-schema">
 
-* `left`
-* `right`
+<p>This object has the following properties:</p>
 
-##### `anchors` (array)
+<h6><code>xrel</code> (number)</h6>
 
-All array elements must be of type:
 
-##### (object)
+<div class="json-schema">
 
-This object has the following properties:
+</div>
 
-##### `text` (string)
+<h6><code>yrel</code> (number)</h6>
 
-##### `index` (integer)
 
-##### `sign_order` (integer)
+<div class="json-schema">
 
-Default: `1`
+</div>
 
-##### `sign_time` (string, read only)
+<h6><code>wrel</code> (number)</h6>
 
-##### `seen_time` (string, read only)
 
-##### `read_invitation_time` (string, read only)
+<div class="json-schema">
 
-##### `rejected_time` (string, read only)
+</div>
 
-##### `sign_success_redirect_url` (string)
+<h6><code>hrel</code> (number)</h6>
 
-The URL to redirect this party after they have signed the document.
 
+<div class="json-schema">
 
-##### `reject_redirect_url` (string)
+</div>
 
-The URL to redirect this party if they reject the document.
+<h6><code>fsrel</code> (number)</h6>
 
 
-##### `email_delivery_status` `(string, enum)`
+<div class="json-schema">
 
-The current delivery status.
+</div>
 
-This element must be one of the following enum values:
+<h6><code>page</code> (integer)</h6>
 
-* `unknown`
-* `not_delivered`
-* `delivered`
-* `deferred`
 
-##### `mobile_delivery_status` `(string, enum)`
+<div class="json-schema">
 
-The current delivery status.
+<p>The page number for this placement.</p>
 
-This element must be one of the following enum values:
 
-* `unknown`
-* `not_delivered`
-* `delivered`
-* `deferred`
+</div>
 
-##### `csv` (array)
+<h6><code>tip</code> (string, enum)</h6>
 
-All array elements must be of type:
 
-##### (array)
+<div class="json-schema">
 
-All array elements must be of type:
+<p>This element must be one of the following enum values:</p>
 
-##### (string)
+<ul>
 
-##### `delivery_method` (string, enum)
+<li><code>left</code></li>
+<li><code>right</code></li>
 
-Default: `"email"`
+</ul>
 
-This element must be one of the following enum values:
+</div>
 
-* `email`
-* `mobile`
-* `email_mobile`
-* `pad`
-* `api`
+<h6><code>anchors</code> (array)</h6>
 
-##### `authentication_method_to_view` (string, enum)
 
-Default: `"standard"`
+<div class="json-schema">
 
-This element must be one of the following enum values:
+<p>All array elements must be of type:</p>
 
-* `standard`
-* `se_bankid`
-* `no_bankid`
+<h6>(object)</h6>
 
-##### `authentication_method_to_sign` (string, enum)
 
-Default: `"standard"`
+<div class="json-schema">
 
-This element must be one of the following enum values:
+<p>This object has the following properties:</p>
 
-* `standard`
-* `sms_pin`
-* `se_bankid`
+<h6><code>text</code> (string)</h6>
 
-##### `confirmation_delivery_method` (string, enum)
 
-Default: `"email"`
+<div class="json-schema">
 
-This element must be one of the following enum values:
+</div>
 
-* `email`
-* `mobile`
-* `email_mobile`
-* `none`
+<h6><code>index</code> (integer)</h6>
 
-##### `attachments` (array)
 
-Default:
-```
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<h6><code>sign_order</code> (integer)</h6>
+
+
+<div class="json-schema">
+
+<p>Default: <code>1</code></p>
+
+</div>
+
+<h6><code>sign_time</code> (string, read only)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>seen_time</code> (string, read only)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>read_invitation_time</code> (string, read only)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>rejected_time</code> (string, read only)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>sign_success_redirect_url</code> (string)</h6>
+
+
+<div class="json-schema">
+
+<p>The URL to redirect this party after they have signed the document.</p>
+
+
+</div>
+
+<h6><code>reject_redirect_url</code> (string)</h6>
+
+
+<div class="json-schema">
+
+<p>The URL to redirect this party if they reject the document.</p>
+
+
+</div>
+
+<h6><code>email_delivery_status</code> <code>(string, enum)</code></h6>
+
+
+<div class="json-schema">
+
+<p>The current delivery status.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>unknown</code></li>
+<li><code>not_delivered</code></li>
+<li><code>delivered</code></li>
+<li><code>deferred</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>mobile_delivery_status</code> <code>(string, enum)</code></h6>
+
+
+<div class="json-schema">
+
+<p>The current delivery status.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>unknown</code></li>
+<li><code>not_delivered</code></li>
+<li><code>delivered</code></li>
+<li><code>deferred</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>csv</code> (array)</h6>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h6>(array)</h6>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h6>(string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+<h6><code>delivery_method</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"email"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>email</code></li>
+<li><code>mobile</code></li>
+<li><code>email_mobile</code></li>
+<li><code>pad</code></li>
+<li><code>api</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>authentication_method_to_view</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"standard"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>standard</code></li>
+<li><code>se_bankid</code></li>
+<li><code>no_bankid</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>authentication_method_to_sign</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"standard"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>standard</code></li>
+<li><code>sms_pin</code></li>
+<li><code>se_bankid</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>confirmation_delivery_method</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"email"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>email</code></li>
+<li><code>mobile</code></li>
+<li><code>email_mobile</code></li>
+<li><code>none</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>attachments</code> (array)</h6>
+
+
+<div class="json-schema">
+
+<p>Default:
+<code>
 []
-```
+</code></p>
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-##### (object)
-
-This object has the following properties:
-
-##### `name` (string)
-
-##### `description` (string)
-
-##### `file_id` (string)
-
-##### `file_name` (string)
-
-##### `api_delivery_url` (string)
-
-If the `delivery_method` is set to `api`, then this field will hold the
-relative URL for the party.
-
-This will only be available after the signing process has been started,
-and will only be visible when accessing the document as the author.
+<h6>(object)</h6>
 
 
-##### `file` `(object)`
+<div class="json-schema">
 
-A file that can be accessed using the
-[API call to download related files](#get-a-related-file).
+<p>This object has the following properties:</p>
+
+<h6><code>name</code> (string)</h6>
 
 
-The `file` object has the following properties:
+<div class="json-schema">
 
-##### `id` (string, read only)
+</div>
 
-##### `name` (string, read only)
+<h6><code>description</code> (string)</h6>
 
-##### `sealed_file` `(object)`
 
-**The cryptographically sealed file.**
+<div class="json-schema">
 
-Will only exist for documents that have been closed.
-This field may be `null` for a short period of time after a document has
+</div>
+
+<h6><code>file_id</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>file_name</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+<h6><code>api_delivery_url</code> (string)</h6>
+
+
+<div class="json-schema">
+
+<p>If the <code>delivery_method</code> is set to <code>api</code>, then this field will hold the
+relative URL for the party.</p>
+<p>This will only be available after the signing process has been started,
+and will only be visible when accessing the document as the author.</p>
+
+
+</div>
+
+</div>
+
+</div>
+
+<h4><code>file</code> <code>(object)</code></h4>
+
+
+<div class="json-schema">
+
+<p>A file that can be accessed using the
+<a href="#get-a-related-file">API call to download related files</a>.</p>
+
+
+<p>The <code>file</code> object has the following properties:</p>
+
+<h5><code>id</code> (string, read only)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>name</code> (string, read only)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+<h4><code>sealed_file</code> <code>(object)</code></h4>
+
+
+<div class="json-schema">
+
+<p><strong>The cryptographically sealed file.</strong></p>
+<p>Will only exist for documents that have been closed.
+This field may be <code>null</code> for a short period of time after a document has
 been signed by all parties, while the Scrive eSign system seals the
-document.
+document.</p>
 
 
-The `sealed_file` object has the following properties:
+<p>The <code>sealed_file</code> object has the following properties:</p>
 
-##### `id` (string, read only)
+<h5><code>id</code> (string, read only)</h5>
 
-##### `name` (string, read only)
 
-##### `author_attachments` (array, read only)
+<div class="json-schema">
 
-**List of author attachments.**
+</div>
 
-Can be updated during document preparation using the "set author
-attachments" (`/{document_id}/setattachments`) API call.
+<h5><code>name</code> (string, read only)</h5>
 
 
-All array elements must be of type:
+<div class="json-schema">
 
-##### (object)
+</div>
 
-This object has the following properties:
+</div>
 
-##### `name` (string, read only)
+<h4><code>author_attachments</code> (array, read only)</h4>
 
-##### `required` (boolean, read only)
 
-##### `add_to_sealed_file` (boolean, read only)
+<div class="json-schema">
 
-##### `file_id` (string)
+<p><strong>List of author attachments.</strong></p>
+<p>Can be updated during document preparation using the &quot;set author
+attachments&quot; (<code>/{document_id}/setattachments</code>) API call.</p>
 
-##### `ctime` (string, read only)
 
-Time at which the document was created.
+<p>All array elements must be of type:</p>
 
-##### `mtime` (string, read only)
+<h5>(object)</h5>
 
-Latest time at which the document was modified.
 
-##### `timeout_time` (string, read only)
+<div class="json-schema">
 
-Time after which the document will timeout if it has not been signed.
+<p>This object has the following properties:</p>
 
+<h6><code>name</code> (string, read only)</h6>
 
-##### `auto_remind_time` (string, read only)
 
-##### `status` `(string, enum)`
+<div class="json-schema">
 
-The current document status.
+</div>
 
-A document in "preparation" can be changed using the `update` call and the
-main file can also be set or changed.
+<h6><code>required</code> (boolean, read only)</h6>
 
-Once the document signing process has begun, the document will be "pending".
 
-Once all parties have successfully signed the document is "closed" and cannot
-be changed.
+<div class="json-schema">
 
+</div>
 
-This element must be one of the following enum values:
+<h6><code>add_to_sealed_file</code> (boolean, read only)</h6>
 
-* `preparation`
-* `pending`
-* `closed`
-* `canceled`
-* `timedout`
-* `rejected`
-* `document_error`
 
-##### `days_to_sign` (integer)
+<div class="json-schema">
 
-Default: `90`
+</div>
 
-##### `days_to_remind` (integer)
+<h6><code>file_id</code> (string)</h6>
 
-##### `display_options` (object)
 
-The `display_options` object has the following properties:
+<div class="json-schema">
 
-##### `show_header` (boolean)
+</div>
 
-Whether to show the Scrive header on the signing page.
+</div>
 
+</div>
 
-##### `show_pdf_download` (boolean)
+<h4><code>ctime</code> (string, read only)</h4>
 
-Whether to show an option to download the PDF on the signing page.
 
+<div class="json-schema">
 
-##### `show_reject_option` (boolean)
+<p>Time at which the document was created.</p>
 
-Whether to allow signatories to reject a document.
 
+</div>
 
-##### `allow_reject_reason` (boolean)
+<h4><code>mtime</code> (string, read only)</h4>
 
-Whether to allow signatories to enter a plain text reason for
-rejecting a document.
 
+<div class="json-schema">
 
-##### `show_footer` (boolean)
+<p>Latest time at which the document was modified.</p>
 
-Whether to show the Scrive footer on the signing page.
 
+</div>
 
-##### `invitation_message` (string)
+<h4><code>timeout_time</code> (string, read only)</h4>
 
-The invitation message to send to all parties at the start of the signing
-process.
 
-Default is blank.
+<div class="json-schema">
 
+<p>Time after which the document will timeout if it has not been signed.</p>
 
-Default: `""`
 
-##### `confirmation_message` (string)
+</div>
 
-The confirmation message to send to all parties once the document has
-been signed.
+<h4><code>auto_remind_time</code> (string, read only)</h4>
 
-Default is blank.
 
+<div class="json-schema">
 
-Default: `""`
+</div>
 
-##### `lang` `(string, enum)`
+<h4><code>status</code> <code>(string, enum)</code></h4>
 
-Currently supported language codes
 
-This element must be one of the following enum values:
+<div class="json-schema">
 
-* `da`
-* `de`
-* `el`
-* `en`
-* `es`
-* `et`
-* `fi`
-* `fr`
-* `is`
-* `it`
-* `lt`
-* `lv`
-* `nl`
-* `no`
-* `pt`
-* `sv`
+<p>The current document status.</p>
+<p>A document in &quot;preparation&quot; can be changed using the <code>update</code> call and the
+main file can also be set or changed.</p>
+<p>Once the document signing process has begun, the document will be &quot;pending&quot;.</p>
+<p>Once all parties have successfully signed the document is &quot;closed&quot; and cannot
+be changed.</p>
 
-##### `api_callback_url` (string)
 
-The URL to perform an API callback request.
+<p>This element must be one of the following enum values:</p>
 
-Please see [Callbacks](#callbacks) for details.
+<ul>
 
+<li><code>preparation</code></li>
+<li><code>pending</code></li>
+<li><code>closed</code></li>
+<li><code>canceled</code></li>
+<li><code>timedout</code></li>
+<li><code>rejected</code></li>
+<li><code>document_error</code></li>
 
-##### `object_version` (integer, read only)
+</ul>
 
-The document object version is auto-incremented by the Scrive eSign
-system each time an action is performed on it.
+</div>
 
-Therefore this can be used as a rudimentary synchronisation mechanism to
-ensure you are handling a document that has not changed.
+<h4><code>days_to_sign</code> (integer)</h4>
 
-It is not recommended to use this field unless you are building an
-application with offline capabilities.
 
+<div class="json-schema">
 
-Additional restrictions:
+<p>Default: <code>90</code></p>
 
-* Minimum: `1`
+</div>
 
-##### `access_token` (string, read only)
+<h4><code>days_to_remind</code> (integer)</h4>
 
-##### `timezone` (string)
 
-##### `tags` (array)
+<div class="json-schema">
 
-**User defined set of names and values.**
+</div>
 
-Can be used to manage categories of documents.
-The list API call can filter based on document tags.
+<h4><code>display_options</code> (object)</h4>
 
 
-Default:
-```
+<div class="json-schema">
+
+<p>The <code>display_options</code> object has the following properties:</p>
+
+<h5><code>show_header</code> (boolean)</h5>
+
+
+<div class="json-schema">
+
+<p>Whether to show the Scrive header on the signing page.</p>
+
+
+</div>
+
+<h5><code>show_pdf_download</code> (boolean)</h5>
+
+
+<div class="json-schema">
+
+<p>Whether to show an option to download the PDF on the signing page.</p>
+
+
+</div>
+
+<h5><code>show_reject_option</code> (boolean)</h5>
+
+
+<div class="json-schema">
+
+<p>Whether to allow signatories to reject a document.</p>
+
+
+</div>
+
+<h5><code>allow_reject_reason</code> (boolean)</h5>
+
+
+<div class="json-schema">
+
+<p>Whether to allow signatories to enter a plain text reason for
+rejecting a document.</p>
+
+
+</div>
+
+<h5><code>show_footer</code> (boolean)</h5>
+
+
+<div class="json-schema">
+
+<p>Whether to show the Scrive footer on the signing page.</p>
+
+
+</div>
+
+</div>
+
+<h4><code>invitation_message</code> (string)</h4>
+
+
+<div class="json-schema">
+
+<p>The invitation message to send to all parties at the start of the signing
+process.</p>
+<p>Default is blank.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h4><code>confirmation_message</code> (string)</h4>
+
+
+<div class="json-schema">
+
+<p>The confirmation message to send to all parties once the document has
+been signed.</p>
+<p>Default is blank.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h4><code>lang</code> <code>(string, enum)</code></h4>
+
+
+<div class="json-schema">
+
+<p>Currently supported language codes</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>da</code></li>
+<li><code>de</code></li>
+<li><code>el</code></li>
+<li><code>en</code></li>
+<li><code>es</code></li>
+<li><code>et</code></li>
+<li><code>fi</code></li>
+<li><code>fr</code></li>
+<li><code>is</code></li>
+<li><code>it</code></li>
+<li><code>lt</code></li>
+<li><code>lv</code></li>
+<li><code>nl</code></li>
+<li><code>no</code></li>
+<li><code>pt</code></li>
+<li><code>sv</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>api_callback_url</code> (string)</h4>
+
+
+<div class="json-schema">
+
+<p>The URL to perform an API callback request.</p>
+<p>Please see <a href="#callbacks">Callbacks</a> for details.</p>
+
+
+</div>
+
+<h4><code>object_version</code> (integer, read only)</h4>
+
+
+<div class="json-schema">
+
+<p>The document object version is auto-incremented by the Scrive eSign
+system each time an action is performed on it.</p>
+<p>Therefore this can be used as a rudimentary synchronisation mechanism to
+ensure you are handling a document that has not changed.</p>
+<p>It is not recommended to use this field unless you are building an
+application with offline capabilities.</p>
+
+
+<p>Additional restrictions:</p>
+
+<ul>
+</ul>
+
+</div>
+
+<h4><code>access_token</code> (string, read only)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>timezone</code> (string)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>tags</code> (array)</h4>
+
+
+<div class="json-schema">
+
+<p><strong>User defined set of names and values.</strong></p>
+<p>Can be used to manage categories of documents.
+The list API call can filter based on document tags.</p>
+
+
+<p>Default:
+<code>
 []
-```
+</code></p>
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-##### (object)
-
-This object has the following properties:
-
-##### `name` (string)
-
-##### `value` (string)
-
-##### `is_template` (boolean)
-
-##### `is_saved` (boolean)
-
-A ‘saved’ document will appear in the E-archive.
+<h5>(object)</h5>
 
 
-##### `is_shared` (boolean, read only)
+<div class="json-schema">
 
-##### `is_trashed` (boolean, read only)
+<p>This object has the following properties:</p>
 
-##### `is_deleted` (boolean, read only)
+<h6><code>name</code> (string)</h6>
 
-##### `viewer` (object)
 
-The `viewer` object has the following properties:
+<div class="json-schema">
 
-##### `role` (string, enum)
+</div>
 
-This element must be one of the following enum values:
+<h6><code>value</code> (string)</h6>
 
-* `company_shared`
-* `company_admin`
-* `signatory`
 
-##### `signatory_id` (string)
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+<h4><code>is_template</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>is_saved</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+<p>A ‘saved’ document will appear in the E-archive.</p>
+
+
+</div>
+
+<h4><code>is_shared</code> (boolean, read only)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>is_trashed</code> (boolean, read only)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>is_deleted</code> (boolean, read only)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>viewer</code> (object)</h4>
+
+
+<div class="json-schema">
+
+<p>The <code>viewer</code> object has the following properties:</p>
+
+<h5><code>role</code> (string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>company_shared</code></li>
+<li><code>company_admin</code></li>
+<li><code>signatory</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>signatory_id</code> (string)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
 
 ## APIError
 The JSON structured errors returned by the API.
 
 
-#### API Error
+### API Error
 `(object)`
 
-> ### Example JSON for "API Error":
+> ### Example JSON: for "API Error"
 
 ```json
 {
@@ -2729,47 +3163,78 @@ The JSON structured errors returned by the API.
 ```
 
 
-The structure of errors returned by the Scrive Document API.
 
-This object has the following properties:
 
-##### `error_type` (string, enum)
+<div class="json-schema">
 
-This element must be one of the following enum values:
+<p>The structure of errors returned by the Scrive Document API.</p>
 
-* `server_error`
-* `endpoint_not_found`
-* `invalid_authorisation`
-* `insufficient_privileges`
-* `resource_not_found`
-* `document_action_forbidden`
-* `request_parameters_missing`
-* `request_parameters_parse_error`
-* `request_parameters_invalid`
-* `document_object_version_mismatch`
-* `document_state_error`
-* `signatory_state_error`
 
-##### `error_message` (string)
+<p>This object has the following properties:</p>
 
-##### `http_code` (integer, enum)
+<h4><code>error_type</code> (string, enum)</h4>
 
-This element must be one of the following enum values:
 
-* `400`
-* `401`
-* `403`
-* `404`
-* `409`
-* `500`
-* `603`
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>server_error</code></li>
+<li><code>endpoint_not_found</code></li>
+<li><code>invalid_authorisation</code></li>
+<li><code>insufficient_privileges</code></li>
+<li><code>resource_not_found</code></li>
+<li><code>document_action_forbidden</code></li>
+<li><code>request_parameters_missing</code></li>
+<li><code>request_parameters_parse_error</code></li>
+<li><code>request_parameters_invalid</code></li>
+<li><code>document_object_version_mismatch</code></li>
+<li><code>document_state_error</code></li>
+<li><code>signatory_state_error</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>error_message</code> (string)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>http_code</code> (integer, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>400</code></li>
+<li><code>401</code></li>
+<li><code>403</code></li>
+<li><code>404</code></li>
+<li><code>409</code></li>
+<li><code>500</code></li>
+<li><code>603</code></li>
+
+</ul>
+
+</div>
+
+</div>
 
 
 # Definitions
+
 ## Document
 `(object)`
 
-> ### Example JSON for "Document":
+> ### Example JSON: for "Document"
 
 ```json
 {
@@ -2941,608 +3406,1048 @@ This element must be one of the following enum values:
 ```
 
 
-Defines the entire structure of a document to be signed, including the
+
+
+<div class="json-schema">
+
+<p>Defines the entire structure of a document to be signed, including the
 parties, the processes to follow, etc.
-It is a core data structure used throughout the Scrive Document API.
+It is a core data structure used throughout the Scrive Document API.</p>
 
 
-This object has the following properties:
+<p>This object has the following properties:</p>
 
-### `id` (string, read only)
-
-**Unique identifier for a document.**
-
-Will not change over time, and cannot be changed.
+<h3><code>id</code> (string, read only)</h3>
 
 
-### `title` (string)
+<div class="json-schema">
 
-**The title of the document.**
-
-Can be modified while a document is in preparation.
-The title will be used in messages sent to the document’s parties.
+<p><strong>Unique identifier for a document.</strong></p>
+<p>Will not change over time, and cannot be changed.</p>
 
 
-### `parties` (array)
+</div>
 
-**List of signing and viewing parties.**
+<h3><code>title</code> (string)</h3>
 
-Defines their details, how the document is delivered to them, what
+
+<div class="json-schema">
+
+<p><strong>The title of the document.</strong></p>
+<p>Can be modified while a document is in preparation.
+The title will be used in messages sent to the document’s parties.</p>
+
+
+</div>
+
+<h3><code>parties</code> (array)</h3>
+
+
+<div class="json-schema">
+
+<p><strong>List of signing and viewing parties.</strong></p>
+<p>Defines their details, how the document is delivered to them, what
 authentication method they must use, fields they must fill, fields placed
-on the PDF, etc.
+on the PDF, etc.</p>
 
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-#### Signatory
-`(object)`
-
-> ### Example JSON for "Signatory":
-
-```json
-{
-  "id": "9220293573270366783",
-  "user_id": "9206820953483508074",
-  "is_author": true,
-  "is_signatory": true,
-  "fields": [
-    {
-      "type": "name",
-      "order": 1,
-      "value": "Magnus",
-      "is_obligatory": true,
-      "should_be_filled_by_sender": true,
-      "placements": []
-    },
-    {
-      "type": "name",
-      "order": 2,
-      "value": "Söderholm",
-      "is_obligatory": true,
-      "should_be_filled_by_sender": true,
-      "placements": []
-    },
-    {
-      "type": "email",
-      "value": "noemail@scrive.com",
-      "is_obligatory": true,
-      "should_be_filled_by_sender": true,
-      "placements": []
-    },
-    {
-      "type": "company",
-      "value": "",
-      "is_obligatory": false,
-      "should_be_filled_by_sender": false,
-      "placements": []
-    }
-  ],
-  "sign_order": 1,
-  "sign_time": null,
-  "seen_time": null,
-  "read_invitation_time": null,
-  "rejected_time": null,
-  "sign_success_redirect_url": null,
-  "reject_redirect_url": null,
-  "email_delivery_status": "unknown",
-  "mobile_delivery_status": "unknown",
-  "has_authenticated_to_view": false,
-  "csv": null,
-  "delivery_method": "email",
-  "authentication_method_to_view": "standard",
-  "authentication_method_to_sign": "standard",
-  "confirmation_delivery_method": "email",
-  "attachments": [],
-  "api_delivery_url": null
-}
-```
+<h4>Signatory</h4>
+<code>(object)</code>
 
 
-A signatory defines the details and process for each signing or non-signing
-party to a document.
+<div class="json-schema">
+
+<p>A signatory defines the details and process for each signing or non-signing
+party to a document.</p>
 
 
-This object has the following properties:
+<p>This object has the following properties:</p>
 
-##### `id` (string, read only)
-
-**Unique identifier for a party.**
-
-Will not change over time, and cannot be changed.
+<h5><code>id</code> (string, read only)</h5>
 
 
-##### `user_id` (integer, read only)
+<div class="json-schema">
 
-If this party has an account on the Scrive eSign system, it will be set
-here.
-
-
-##### `is_author` (boolean, read only)
-
-Whether this party is the author of the document.
-
-##### `is_signatory` (boolean)
-
-Whether this party is a signatory to the document, otherwise they are
-viewers and will not sign the document.
+<p><strong>Unique identifier for a party.</strong></p>
+<p>Will not change over time, and cannot be changed.</p>
 
 
-##### `fields` (array)
+</div>
 
-The object properties for Signatory `fields` in this definition are only
-the ones common to all signatory fields.
+<h5><code>user_id</code> (integer, read only)</h5>
 
-**Note:**
+
+<div class="json-schema">
+
+<p>If this party has an account on the Scrive eSign system, it will be set
+here.</p>
+
+
+</div>
+
+<h5><code>is_author</code> (boolean, read only)</h5>
+
+
+<div class="json-schema">
+
+<p>Whether this party is the author of the document.</p>
+
+
+</div>
+
+<h5><code>is_signatory</code> (boolean)</h5>
+
+
+<div class="json-schema">
+
+<p>Whether this party is a signatory to the document, otherwise they are
+viewers and will not sign the document.</p>
+
+
+</div>
+
+<h5><code>fields</code> (array)</h5>
+
+
+<div class="json-schema">
+
+<p>The object properties for Signatory <code>fields</code> in this definition are only
+the ones common to all signatory fields.</p>
+<p><strong>Note:</strong>
 A valid definition must be one of the concrete types (e.g.
-`SignatoryFieldCheckbox`).
+<code>SignatoryFieldCheckbox</code>).</p>
 
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-##### Signatory Field
-`(object)`
+<h6>Signatory Field</h6>
+<code>(object)</code>
 
-The common elements of all `SignatoryField` types.
-This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. `SignatoryFieldName`).
 
+<div class="json-schema">
 
-This object has the following properties:
+<p>The common elements of all <code>SignatoryField</code> types.</p>
+<p>This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
 
-##### `type` (string, required)
 
-##### `is_obligatory` (boolean, required)
+<p>This object has the following properties:</p>
 
-##### `placements` (array)
+<h6><code>type</code> (string, required)</h6>
 
-If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.
 
-Note that this is an array, you can have multiple placements for the same
-field.
+<div class="json-schema">
 
-The easiest way to set the `xrel`, `yrel`, etc. values is to create a
-template in the document UI design view, and use those values.
+</div>
 
+<h6><code>is_obligatory</code> (boolean, required)</h6>
 
-All array elements must be of type:
 
-##### (object)
+<div class="json-schema">
 
-This object has the following properties:
+</div>
 
-##### `xrel` (number)
+<h6><code>placements</code> (array)</h6>
 
-##### `yrel` (number)
 
-##### `wrel` (number)
+<div class="json-schema">
 
-##### `hrel` (number)
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
 
-##### `fsrel` (number)
 
-##### `page` (integer)
+<p>All array elements must be of type:</p>
 
-The page number for this placement.
+<h6>(object)</h6>
 
-##### `tip` (string, enum)
 
-This element must be one of the following enum values:
+<div class="json-schema">
 
-* `left`
-* `right`
+<p>This object has the following properties:</p>
 
-##### `anchors` (array)
+<h6><code>xrel</code> (number)</h6>
 
-All array elements must be of type:
 
-##### (object)
+<div class="json-schema">
 
-This object has the following properties:
+</div>
 
-##### `text` (string)
+<h6><code>yrel</code> (number)</h6>
 
-##### `index` (integer)
 
-##### `sign_order` (integer)
+<div class="json-schema">
 
-Default: `1`
+</div>
 
-##### `sign_time` (string, read only)
+<h6><code>wrel</code> (number)</h6>
 
-##### `seen_time` (string, read only)
 
-##### `read_invitation_time` (string, read only)
+<div class="json-schema">
 
-##### `rejected_time` (string, read only)
+</div>
 
-##### `sign_success_redirect_url` (string)
+<h6><code>hrel</code> (number)</h6>
 
-The URL to redirect this party after they have signed the document.
 
+<div class="json-schema">
 
-##### `reject_redirect_url` (string)
+</div>
 
-The URL to redirect this party if they reject the document.
+<h6><code>fsrel</code> (number)</h6>
 
 
-##### `email_delivery_status` `(string, enum)`
+<div class="json-schema">
 
-The current delivery status.
+</div>
 
-This element must be one of the following enum values:
+<h6><code>page</code> (integer)</h6>
 
-* `unknown`
-* `not_delivered`
-* `delivered`
-* `deferred`
 
-##### `mobile_delivery_status` `(string, enum)`
+<div class="json-schema">
 
-The current delivery status.
+<p>The page number for this placement.</p>
 
-This element must be one of the following enum values:
 
-* `unknown`
-* `not_delivered`
-* `delivered`
-* `deferred`
+</div>
 
-##### `csv` (array)
+<h6><code>tip</code> (string, enum)</h6>
 
-All array elements must be of type:
 
-##### (array)
+<div class="json-schema">
 
-All array elements must be of type:
+<p>This element must be one of the following enum values:</p>
 
-##### (string)
+<ul>
 
-##### `delivery_method` (string, enum)
+<li><code>left</code></li>
+<li><code>right</code></li>
 
-Default: `"email"`
+</ul>
 
-This element must be one of the following enum values:
+</div>
 
-* `email`
-* `mobile`
-* `email_mobile`
-* `pad`
-* `api`
+<h6><code>anchors</code> (array)</h6>
 
-##### `authentication_method_to_view` (string, enum)
 
-Default: `"standard"`
+<div class="json-schema">
 
-This element must be one of the following enum values:
+<p>All array elements must be of type:</p>
 
-* `standard`
-* `se_bankid`
-* `no_bankid`
+<h6>(object)</h6>
 
-##### `authentication_method_to_sign` (string, enum)
 
-Default: `"standard"`
+<div class="json-schema">
 
-This element must be one of the following enum values:
+<p>This object has the following properties:</p>
 
-* `standard`
-* `sms_pin`
-* `se_bankid`
+<h6><code>text</code> (string)</h6>
 
-##### `confirmation_delivery_method` (string, enum)
 
-Default: `"email"`
+<div class="json-schema">
 
-This element must be one of the following enum values:
+</div>
 
-* `email`
-* `mobile`
-* `email_mobile`
-* `none`
+<h6><code>index</code> (integer)</h6>
 
-##### `attachments` (array)
 
-Default:
-```
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<h5><code>sign_order</code> (integer)</h5>
+
+
+<div class="json-schema">
+
+<p>Default: <code>1</code></p>
+
+</div>
+
+<h5><code>sign_time</code> (string, read only)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>seen_time</code> (string, read only)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>read_invitation_time</code> (string, read only)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>rejected_time</code> (string, read only)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>sign_success_redirect_url</code> (string)</h5>
+
+
+<div class="json-schema">
+
+<p>The URL to redirect this party after they have signed the document.</p>
+
+
+</div>
+
+<h5><code>reject_redirect_url</code> (string)</h5>
+
+
+<div class="json-schema">
+
+<p>The URL to redirect this party if they reject the document.</p>
+
+
+</div>
+
+<h5><code>email_delivery_status</code> <code>(string, enum)</code></h5>
+
+
+<div class="json-schema">
+
+<p>The current delivery status.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>unknown</code></li>
+<li><code>not_delivered</code></li>
+<li><code>delivered</code></li>
+<li><code>deferred</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>mobile_delivery_status</code> <code>(string, enum)</code></h5>
+
+
+<div class="json-schema">
+
+<p>The current delivery status.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>unknown</code></li>
+<li><code>not_delivered</code></li>
+<li><code>delivered</code></li>
+<li><code>deferred</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>csv</code> (array)</h5>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h6>(array)</h6>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h6>(string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+<h5><code>delivery_method</code> (string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"email"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>email</code></li>
+<li><code>mobile</code></li>
+<li><code>email_mobile</code></li>
+<li><code>pad</code></li>
+<li><code>api</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>authentication_method_to_view</code> (string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"standard"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>standard</code></li>
+<li><code>se_bankid</code></li>
+<li><code>no_bankid</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>authentication_method_to_sign</code> (string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"standard"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>standard</code></li>
+<li><code>sms_pin</code></li>
+<li><code>se_bankid</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>confirmation_delivery_method</code> (string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"email"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>email</code></li>
+<li><code>mobile</code></li>
+<li><code>email_mobile</code></li>
+<li><code>none</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>attachments</code> (array)</h5>
+
+
+<div class="json-schema">
+
+<p>Default:
+<code>
 []
-```
+</code></p>
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-##### (object)
-
-This object has the following properties:
-
-##### `name` (string)
-
-##### `description` (string)
-
-##### `file_id` (string)
-
-##### `file_name` (string)
-
-##### `api_delivery_url` (string)
-
-If the `delivery_method` is set to `api`, then this field will hold the
-relative URL for the party.
-
-This will only be available after the signing process has been started,
-and will only be visible when accessing the document as the author.
+<h6>(object)</h6>
 
 
-### `file` `(object)`
+<div class="json-schema">
 
-A file that can be accessed using the
-[API call to download related files](#get-a-related-file).
+<p>This object has the following properties:</p>
+
+<h6><code>name</code> (string)</h6>
 
 
-The `file` object has the following properties:
+<div class="json-schema">
 
-#### `id` (string, read only)
+</div>
 
-#### `name` (string, read only)
+<h6><code>description</code> (string)</h6>
 
-### `sealed_file` `(object)`
 
-**The cryptographically sealed file.**
+<div class="json-schema">
 
-Will only exist for documents that have been closed.
-This field may be `null` for a short period of time after a document has
+</div>
+
+<h6><code>file_id</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>file_name</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+<h5><code>api_delivery_url</code> (string)</h5>
+
+
+<div class="json-schema">
+
+<p>If the <code>delivery_method</code> is set to <code>api</code>, then this field will hold the
+relative URL for the party.</p>
+<p>This will only be available after the signing process has been started,
+and will only be visible when accessing the document as the author.</p>
+
+
+</div>
+
+</div>
+
+</div>
+
+<h3><code>file</code> <code>(object)</code></h3>
+
+
+<div class="json-schema">
+
+<p>A file that can be accessed using the
+<a href="#get-a-related-file">API call to download related files</a>.</p>
+
+
+<p>The <code>file</code> object has the following properties:</p>
+
+<h4><code>id</code> (string, read only)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>name</code> (string, read only)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+<h3><code>sealed_file</code> <code>(object)</code></h3>
+
+
+<div class="json-schema">
+
+<p><strong>The cryptographically sealed file.</strong></p>
+<p>Will only exist for documents that have been closed.
+This field may be <code>null</code> for a short period of time after a document has
 been signed by all parties, while the Scrive eSign system seals the
-document.
+document.</p>
 
 
-The `sealed_file` object has the following properties:
+<p>The <code>sealed_file</code> object has the following properties:</p>
 
-#### `id` (string, read only)
+<h4><code>id</code> (string, read only)</h4>
 
-#### `name` (string, read only)
 
-### `author_attachments` (array, read only)
+<div class="json-schema">
 
-**List of author attachments.**
+</div>
 
-Can be updated during document preparation using the "set author
-attachments" (`/{document_id}/setattachments`) API call.
+<h4><code>name</code> (string, read only)</h4>
 
 
-All array elements must be of type:
+<div class="json-schema">
 
-#### (object)
+</div>
 
-This object has the following properties:
+</div>
 
-##### `name` (string, read only)
+<h3><code>author_attachments</code> (array, read only)</h3>
 
-##### `required` (boolean, read only)
 
-##### `add_to_sealed_file` (boolean, read only)
+<div class="json-schema">
 
-##### `file_id` (string)
+<p><strong>List of author attachments.</strong></p>
+<p>Can be updated during document preparation using the &quot;set author
+attachments&quot; (<code>/{document_id}/setattachments</code>) API call.</p>
 
-### `ctime` (string, read only)
 
-Time at which the document was created.
+<p>All array elements must be of type:</p>
 
-### `mtime` (string, read only)
+<h4>(object)</h4>
 
-Latest time at which the document was modified.
 
-### `timeout_time` (string, read only)
+<div class="json-schema">
 
-Time after which the document will timeout if it has not been signed.
+<p>This object has the following properties:</p>
 
+<h5><code>name</code> (string, read only)</h5>
 
-### `auto_remind_time` (string, read only)
 
-### `status` `(string, enum)`
+<div class="json-schema">
 
-The current document status.
+</div>
 
-A document in "preparation" can be changed using the `update` call and the
-main file can also be set or changed.
+<h5><code>required</code> (boolean, read only)</h5>
 
-Once the document signing process has begun, the document will be "pending".
 
-Once all parties have successfully signed the document is "closed" and cannot
-be changed.
+<div class="json-schema">
 
+</div>
 
-This element must be one of the following enum values:
+<h5><code>add_to_sealed_file</code> (boolean, read only)</h5>
 
-* `preparation`
-* `pending`
-* `closed`
-* `canceled`
-* `timedout`
-* `rejected`
-* `document_error`
 
-### `days_to_sign` (integer)
+<div class="json-schema">
 
-Default: `90`
+</div>
 
-### `days_to_remind` (integer)
+<h5><code>file_id</code> (string)</h5>
 
-### `display_options` (object)
 
-The `display_options` object has the following properties:
+<div class="json-schema">
 
-#### `show_header` (boolean)
+</div>
 
-Whether to show the Scrive header on the signing page.
+</div>
 
+</div>
 
-#### `show_pdf_download` (boolean)
+<h3><code>ctime</code> (string, read only)</h3>
 
-Whether to show an option to download the PDF on the signing page.
 
+<div class="json-schema">
 
-#### `show_reject_option` (boolean)
+<p>Time at which the document was created.</p>
 
-Whether to allow signatories to reject a document.
 
+</div>
 
-#### `allow_reject_reason` (boolean)
+<h3><code>mtime</code> (string, read only)</h3>
 
-Whether to allow signatories to enter a plain text reason for
-rejecting a document.
 
+<div class="json-schema">
 
-#### `show_footer` (boolean)
+<p>Latest time at which the document was modified.</p>
 
-Whether to show the Scrive footer on the signing page.
 
+</div>
 
-### `invitation_message` (string)
+<h3><code>timeout_time</code> (string, read only)</h3>
 
-The invitation message to send to all parties at the start of the signing
-process.
 
-Default is blank.
+<div class="json-schema">
 
+<p>Time after which the document will timeout if it has not been signed.</p>
 
-Default: `""`
 
-### `confirmation_message` (string)
+</div>
 
-The confirmation message to send to all parties once the document has
-been signed.
+<h3><code>auto_remind_time</code> (string, read only)</h3>
 
-Default is blank.
 
+<div class="json-schema">
 
-Default: `""`
+</div>
 
-### `lang` `(string, enum)`
+<h3><code>status</code> <code>(string, enum)</code></h3>
 
-Currently supported language codes
 
-This element must be one of the following enum values:
+<div class="json-schema">
 
-* `da`
-* `de`
-* `el`
-* `en`
-* `es`
-* `et`
-* `fi`
-* `fr`
-* `is`
-* `it`
-* `lt`
-* `lv`
-* `nl`
-* `no`
-* `pt`
-* `sv`
+<p>The current document status.</p>
+<p>A document in &quot;preparation&quot; can be changed using the <code>update</code> call and the
+main file can also be set or changed.</p>
+<p>Once the document signing process has begun, the document will be &quot;pending&quot;.</p>
+<p>Once all parties have successfully signed the document is &quot;closed&quot; and cannot
+be changed.</p>
 
-### `api_callback_url` (string)
 
-The URL to perform an API callback request.
+<p>This element must be one of the following enum values:</p>
 
-Please see [Callbacks](#callbacks) for details.
+<ul>
 
+<li><code>preparation</code></li>
+<li><code>pending</code></li>
+<li><code>closed</code></li>
+<li><code>canceled</code></li>
+<li><code>timedout</code></li>
+<li><code>rejected</code></li>
+<li><code>document_error</code></li>
 
-### `object_version` (integer, read only)
+</ul>
 
-The document object version is auto-incremented by the Scrive eSign
-system each time an action is performed on it.
+</div>
 
-Therefore this can be used as a rudimentary synchronisation mechanism to
-ensure you are handling a document that has not changed.
+<h3><code>days_to_sign</code> (integer)</h3>
 
-It is not recommended to use this field unless you are building an
-application with offline capabilities.
 
+<div class="json-schema">
 
-Additional restrictions:
+<p>Default: <code>90</code></p>
 
-* Minimum: `1`
+</div>
 
-### `access_token` (string, read only)
+<h3><code>days_to_remind</code> (integer)</h3>
 
-### `timezone` (string)
 
-### `tags` (array)
+<div class="json-schema">
 
-**User defined set of names and values.**
+</div>
 
-Can be used to manage categories of documents.
-The list API call can filter based on document tags.
+<h3><code>display_options</code> (object)</h3>
 
 
-Default:
-```
+<div class="json-schema">
+
+<p>The <code>display_options</code> object has the following properties:</p>
+
+<h4><code>show_header</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+<p>Whether to show the Scrive header on the signing page.</p>
+
+
+</div>
+
+<h4><code>show_pdf_download</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+<p>Whether to show an option to download the PDF on the signing page.</p>
+
+
+</div>
+
+<h4><code>show_reject_option</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+<p>Whether to allow signatories to reject a document.</p>
+
+
+</div>
+
+<h4><code>allow_reject_reason</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+<p>Whether to allow signatories to enter a plain text reason for
+rejecting a document.</p>
+
+
+</div>
+
+<h4><code>show_footer</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+<p>Whether to show the Scrive footer on the signing page.</p>
+
+
+</div>
+
+</div>
+
+<h3><code>invitation_message</code> (string)</h3>
+
+
+<div class="json-schema">
+
+<p>The invitation message to send to all parties at the start of the signing
+process.</p>
+<p>Default is blank.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h3><code>confirmation_message</code> (string)</h3>
+
+
+<div class="json-schema">
+
+<p>The confirmation message to send to all parties once the document has
+been signed.</p>
+<p>Default is blank.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h3><code>lang</code> <code>(string, enum)</code></h3>
+
+
+<div class="json-schema">
+
+<p>Currently supported language codes</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>da</code></li>
+<li><code>de</code></li>
+<li><code>el</code></li>
+<li><code>en</code></li>
+<li><code>es</code></li>
+<li><code>et</code></li>
+<li><code>fi</code></li>
+<li><code>fr</code></li>
+<li><code>is</code></li>
+<li><code>it</code></li>
+<li><code>lt</code></li>
+<li><code>lv</code></li>
+<li><code>nl</code></li>
+<li><code>no</code></li>
+<li><code>pt</code></li>
+<li><code>sv</code></li>
+
+</ul>
+
+</div>
+
+<h3><code>api_callback_url</code> (string)</h3>
+
+
+<div class="json-schema">
+
+<p>The URL to perform an API callback request.</p>
+<p>Please see <a href="#callbacks">Callbacks</a> for details.</p>
+
+
+</div>
+
+<h3><code>object_version</code> (integer, read only)</h3>
+
+
+<div class="json-schema">
+
+<p>The document object version is auto-incremented by the Scrive eSign
+system each time an action is performed on it.</p>
+<p>Therefore this can be used as a rudimentary synchronisation mechanism to
+ensure you are handling a document that has not changed.</p>
+<p>It is not recommended to use this field unless you are building an
+application with offline capabilities.</p>
+
+
+<p>Additional restrictions:</p>
+
+<ul>
+</ul>
+
+</div>
+
+<h3><code>access_token</code> (string, read only)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>timezone</code> (string)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>tags</code> (array)</h3>
+
+
+<div class="json-schema">
+
+<p><strong>User defined set of names and values.</strong></p>
+<p>Can be used to manage categories of documents.
+The list API call can filter based on document tags.</p>
+
+
+<p>Default:
+<code>
 []
-```
+</code></p>
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-#### (object)
-
-This object has the following properties:
-
-##### `name` (string)
-
-##### `value` (string)
-
-### `is_template` (boolean)
-
-### `is_saved` (boolean)
-
-A ‘saved’ document will appear in the E-archive.
+<h4>(object)</h4>
 
 
-### `is_shared` (boolean, read only)
+<div class="json-schema">
 
-### `is_trashed` (boolean, read only)
+<p>This object has the following properties:</p>
 
-### `is_deleted` (boolean, read only)
+<h5><code>name</code> (string)</h5>
 
-### `viewer` (object)
 
-The `viewer` object has the following properties:
+<div class="json-schema">
 
-#### `role` (string, enum)
+</div>
 
-This element must be one of the following enum values:
+<h5><code>value</code> (string)</h5>
 
-* `company_shared`
-* `company_admin`
-* `signatory`
 
-#### `signatory_id` (string)
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+<h3><code>is_template</code> (boolean)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>is_saved</code> (boolean)</h3>
+
+
+<div class="json-schema">
+
+<p>A ‘saved’ document will appear in the E-archive.</p>
+
+
+</div>
+
+<h3><code>is_shared</code> (boolean, read only)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>is_trashed</code> (boolean, read only)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>is_deleted</code> (boolean, read only)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>viewer</code> (object)</h3>
+
+
+<div class="json-schema">
+
+<p>The <code>viewer</code> object has the following properties:</p>
+
+<h4><code>role</code> (string, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>company_shared</code></li>
+<li><code>company_admin</code></li>
+<li><code>signatory</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>signatory_id</code> (string)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
 
 ## Document Status
 `(string, enum)`
 
-The current document status.
 
-A document in "preparation" can be changed using the `update` call and the
-main file can also be set or changed.
+<div class="json-schema">
 
-Once the document signing process has begun, the document will be "pending".
+<p>The current document status.</p>
+<p>A document in &quot;preparation&quot; can be changed using the <code>update</code> call and the
+main file can also be set or changed.</p>
+<p>Once the document signing process has begun, the document will be &quot;pending&quot;.</p>
+<p>Once all parties have successfully signed the document is &quot;closed&quot; and cannot
+be changed.</p>
 
-Once all parties have successfully signed the document is "closed" and cannot
-be changed.
 
+<p>This element must be one of the following enum values:</p>
 
-This element must be one of the following enum values:
+<ul>
 
-* `preparation`
-* `pending`
-* `closed`
-* `canceled`
-* `timedout`
-* `rejected`
-* `document_error`
+<li><code>preparation</code></li>
+<li><code>pending</code></li>
+<li><code>closed</code></li>
+<li><code>canceled</code></li>
+<li><code>timedout</code></li>
+<li><code>rejected</code></li>
+<li><code>document_error</code></li>
+
+</ul>
+
+</div>
 
 ## Signatory
 `(object)`
 
-> ### Example JSON for "Signatory":
+> ### Example JSON: for "Signatory"
 
 ```json
 {
@@ -3603,308 +4508,644 @@ This element must be one of the following enum values:
 ```
 
 
-A signatory defines the details and process for each signing or non-signing
-party to a document.
 
 
-This object has the following properties:
+<div class="json-schema">
 
-### `id` (string, read only)
-
-**Unique identifier for a party.**
-
-Will not change over time, and cannot be changed.
+<p>A signatory defines the details and process for each signing or non-signing
+party to a document.</p>
 
 
-### `user_id` (integer, read only)
+<p>This object has the following properties:</p>
 
-If this party has an account on the Scrive eSign system, it will be set
-here.
-
-
-### `is_author` (boolean, read only)
-
-Whether this party is the author of the document.
-
-### `is_signatory` (boolean)
-
-Whether this party is a signatory to the document, otherwise they are
-viewers and will not sign the document.
+<h3><code>id</code> (string, read only)</h3>
 
 
-### `fields` (array)
+<div class="json-schema">
 
-The object properties for Signatory `fields` in this definition are only
-the ones common to all signatory fields.
+<p><strong>Unique identifier for a party.</strong></p>
+<p>Will not change over time, and cannot be changed.</p>
 
-**Note:**
+
+</div>
+
+<h3><code>user_id</code> (integer, read only)</h3>
+
+
+<div class="json-schema">
+
+<p>If this party has an account on the Scrive eSign system, it will be set
+here.</p>
+
+
+</div>
+
+<h3><code>is_author</code> (boolean, read only)</h3>
+
+
+<div class="json-schema">
+
+<p>Whether this party is the author of the document.</p>
+
+
+</div>
+
+<h3><code>is_signatory</code> (boolean)</h3>
+
+
+<div class="json-schema">
+
+<p>Whether this party is a signatory to the document, otherwise they are
+viewers and will not sign the document.</p>
+
+
+</div>
+
+<h3><code>fields</code> (array)</h3>
+
+
+<div class="json-schema">
+
+<p>The object properties for Signatory <code>fields</code> in this definition are only
+the ones common to all signatory fields.</p>
+<p><strong>Note:</strong>
 A valid definition must be one of the concrete types (e.g.
-`SignatoryFieldCheckbox`).
+<code>SignatoryFieldCheckbox</code>).</p>
 
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-#### Signatory Field
-`(object)`
+<h4>Signatory Field</h4>
+<code>(object)</code>
 
-The common elements of all `SignatoryField` types.
-This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. `SignatoryFieldName`).
 
+<div class="json-schema">
 
-This object has the following properties:
+<p>The common elements of all <code>SignatoryField</code> types.</p>
+<p>This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
 
-##### `type` (string, required)
 
-##### `is_obligatory` (boolean, required)
+<p>This object has the following properties:</p>
 
-##### `placements` (array)
+<h5><code>type</code> (string, required)</h5>
 
-If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.
 
-Note that this is an array, you can have multiple placements for the same
-field.
+<div class="json-schema">
 
-The easiest way to set the `xrel`, `yrel`, etc. values is to create a
-template in the document UI design view, and use those values.
+</div>
 
+<h5><code>is_obligatory</code> (boolean, required)</h5>
 
-All array elements must be of type:
 
-##### (object)
+<div class="json-schema">
 
-This object has the following properties:
+</div>
 
-##### `xrel` (number)
+<h5><code>placements</code> (array)</h5>
 
-##### `yrel` (number)
 
-##### `wrel` (number)
+<div class="json-schema">
 
-##### `hrel` (number)
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
 
-##### `fsrel` (number)
 
-##### `page` (integer)
+<p>All array elements must be of type:</p>
 
-The page number for this placement.
+<h6>(object)</h6>
 
-##### `tip` (string, enum)
 
-This element must be one of the following enum values:
+<div class="json-schema">
 
-* `left`
-* `right`
+<p>This object has the following properties:</p>
 
-##### `anchors` (array)
+<h6><code>xrel</code> (number)</h6>
 
-All array elements must be of type:
 
-##### (object)
+<div class="json-schema">
 
-This object has the following properties:
+</div>
 
-##### `text` (string)
+<h6><code>yrel</code> (number)</h6>
 
-##### `index` (integer)
 
-### `sign_order` (integer)
+<div class="json-schema">
 
-Default: `1`
+</div>
 
-### `sign_time` (string, read only)
+<h6><code>wrel</code> (number)</h6>
 
-### `seen_time` (string, read only)
 
-### `read_invitation_time` (string, read only)
+<div class="json-schema">
 
-### `rejected_time` (string, read only)
+</div>
 
-### `sign_success_redirect_url` (string)
+<h6><code>hrel</code> (number)</h6>
 
-The URL to redirect this party after they have signed the document.
 
+<div class="json-schema">
 
-### `reject_redirect_url` (string)
+</div>
 
-The URL to redirect this party if they reject the document.
+<h6><code>fsrel</code> (number)</h6>
 
 
-### `email_delivery_status` `(string, enum)`
+<div class="json-schema">
 
-The current delivery status.
+</div>
 
-This element must be one of the following enum values:
+<h6><code>page</code> (integer)</h6>
 
-* `unknown`
-* `not_delivered`
-* `delivered`
-* `deferred`
 
-### `mobile_delivery_status` `(string, enum)`
+<div class="json-schema">
 
-The current delivery status.
+<p>The page number for this placement.</p>
 
-This element must be one of the following enum values:
 
-* `unknown`
-* `not_delivered`
-* `delivered`
-* `deferred`
+</div>
 
-### `csv` (array)
+<h6><code>tip</code> (string, enum)</h6>
 
-All array elements must be of type:
 
-#### (array)
+<div class="json-schema">
 
-All array elements must be of type:
+<p>This element must be one of the following enum values:</p>
 
-##### (string)
+<ul>
 
-### `delivery_method` (string, enum)
+<li><code>left</code></li>
+<li><code>right</code></li>
 
-Default: `"email"`
+</ul>
 
-This element must be one of the following enum values:
+</div>
 
-* `email`
-* `mobile`
-* `email_mobile`
-* `pad`
-* `api`
+<h6><code>anchors</code> (array)</h6>
 
-### `authentication_method_to_view` (string, enum)
 
-Default: `"standard"`
+<div class="json-schema">
 
-This element must be one of the following enum values:
+<p>All array elements must be of type:</p>
 
-* `standard`
-* `se_bankid`
-* `no_bankid`
+<h6>(object)</h6>
 
-### `authentication_method_to_sign` (string, enum)
 
-Default: `"standard"`
+<div class="json-schema">
 
-This element must be one of the following enum values:
+<p>This object has the following properties:</p>
 
-* `standard`
-* `sms_pin`
-* `se_bankid`
+<h6><code>text</code> (string)</h6>
 
-### `confirmation_delivery_method` (string, enum)
 
-Default: `"email"`
+<div class="json-schema">
 
-This element must be one of the following enum values:
+</div>
 
-* `email`
-* `mobile`
-* `email_mobile`
-* `none`
+<h6><code>index</code> (integer)</h6>
 
-### `attachments` (array)
 
-Default:
-```
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<h3><code>sign_order</code> (integer)</h3>
+
+
+<div class="json-schema">
+
+<p>Default: <code>1</code></p>
+
+</div>
+
+<h3><code>sign_time</code> (string, read only)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>seen_time</code> (string, read only)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>read_invitation_time</code> (string, read only)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>rejected_time</code> (string, read only)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>sign_success_redirect_url</code> (string)</h3>
+
+
+<div class="json-schema">
+
+<p>The URL to redirect this party after they have signed the document.</p>
+
+
+</div>
+
+<h3><code>reject_redirect_url</code> (string)</h3>
+
+
+<div class="json-schema">
+
+<p>The URL to redirect this party if they reject the document.</p>
+
+
+</div>
+
+<h3><code>email_delivery_status</code> <code>(string, enum)</code></h3>
+
+
+<div class="json-schema">
+
+<p>The current delivery status.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>unknown</code></li>
+<li><code>not_delivered</code></li>
+<li><code>delivered</code></li>
+<li><code>deferred</code></li>
+
+</ul>
+
+</div>
+
+<h3><code>mobile_delivery_status</code> <code>(string, enum)</code></h3>
+
+
+<div class="json-schema">
+
+<p>The current delivery status.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>unknown</code></li>
+<li><code>not_delivered</code></li>
+<li><code>delivered</code></li>
+<li><code>deferred</code></li>
+
+</ul>
+
+</div>
+
+<h3><code>csv</code> (array)</h3>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h4>(array)</h4>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h5>(string)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+<h3><code>delivery_method</code> (string, enum)</h3>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"email"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>email</code></li>
+<li><code>mobile</code></li>
+<li><code>email_mobile</code></li>
+<li><code>pad</code></li>
+<li><code>api</code></li>
+
+</ul>
+
+</div>
+
+<h3><code>authentication_method_to_view</code> (string, enum)</h3>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"standard"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>standard</code></li>
+<li><code>se_bankid</code></li>
+<li><code>no_bankid</code></li>
+
+</ul>
+
+</div>
+
+<h3><code>authentication_method_to_sign</code> (string, enum)</h3>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"standard"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>standard</code></li>
+<li><code>sms_pin</code></li>
+<li><code>se_bankid</code></li>
+
+</ul>
+
+</div>
+
+<h3><code>confirmation_delivery_method</code> (string, enum)</h3>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"email"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>email</code></li>
+<li><code>mobile</code></li>
+<li><code>email_mobile</code></li>
+<li><code>none</code></li>
+
+</ul>
+
+</div>
+
+<h3><code>attachments</code> (array)</h3>
+
+
+<div class="json-schema">
+
+<p>Default:
+<code>
 []
-```
+</code></p>
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-#### (object)
+<h4>(object)</h4>
 
-This object has the following properties:
 
-##### `name` (string)
+<div class="json-schema">
 
-##### `description` (string)
+<p>This object has the following properties:</p>
 
-##### `file_id` (string)
+<h5><code>name</code> (string)</h5>
 
-##### `file_name` (string)
 
-### `api_delivery_url` (string)
+<div class="json-schema">
 
-If the `delivery_method` is set to `api`, then this field will hold the
-relative URL for the party.
+</div>
 
-This will only be available after the signing process has been started,
-and will only be visible when accessing the document as the author.
+<h5><code>description</code> (string)</h5>
 
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>file_id</code> (string)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>file_name</code> (string)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+<h3><code>api_delivery_url</code> (string)</h3>
+
+
+<div class="json-schema">
+
+<p>If the <code>delivery_method</code> is set to <code>api</code>, then this field will hold the
+relative URL for the party.</p>
+<p>This will only be available after the signing process has been started,
+and will only be visible when accessing the document as the author.</p>
+
+
+</div>
+
+</div>
 
 ## Signatory Field
 `(object)`
 
-The common elements of all `SignatoryField` types.
-This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. `SignatoryFieldName`).
+
+<div class="json-schema">
+
+<p>The common elements of all <code>SignatoryField</code> types.</p>
+<p>This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
 
 
-This object has the following properties:
+<p>This object has the following properties:</p>
 
-### `type` (string, required)
-
-### `is_obligatory` (boolean, required)
-
-### `placements` (array)
-
-If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.
-
-Note that this is an array, you can have multiple placements for the same
-field.
-
-The easiest way to set the `xrel`, `yrel`, etc. values is to create a
-template in the document UI design view, and use those values.
+<h3><code>type</code> (string, required)</h3>
 
 
-All array elements must be of type:
+<div class="json-schema">
 
-#### (object)
+</div>
 
-This object has the following properties:
+<h3><code>is_obligatory</code> (boolean, required)</h3>
 
-##### `xrel` (number)
 
-##### `yrel` (number)
+<div class="json-schema">
 
-##### `wrel` (number)
+</div>
 
-##### `hrel` (number)
+<h3><code>placements</code> (array)</h3>
 
-##### `fsrel` (number)
 
-##### `page` (integer)
+<div class="json-schema">
 
-The page number for this placement.
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
 
-##### `tip` (string, enum)
 
-This element must be one of the following enum values:
+<p>All array elements must be of type:</p>
 
-* `left`
-* `right`
+<h4>(object)</h4>
 
-##### `anchors` (array)
 
-All array elements must be of type:
+<div class="json-schema">
 
-##### (object)
+<p>This object has the following properties:</p>
 
-This object has the following properties:
+<h5><code>xrel</code> (number)</h5>
 
-##### `text` (string)
 
-##### `index` (integer)
+<div class="json-schema">
+
+</div>
+
+<h5><code>yrel</code> (number)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>wrel</code> (number)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>hrel</code> (number)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>fsrel</code> (number)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>page</code> (integer)</h5>
+
+
+<div class="json-schema">
+
+<p>The page number for this placement.</p>
+
+
+</div>
+
+<h5><code>tip</code> (string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>anchors</code> (array)</h5>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
 
 ## SignatoryFieldName
 
 
-> ### Example JSON for "SignatoryFieldName":
+> ### Example JSON: for "SignatoryFieldName"
 
 ```json
 {
@@ -3929,96 +5170,214 @@ This object has the following properties:
 ```
 
 
-A `SignatoryField` for the name(s) of the party.
+
+
+<div class="json-schema">
+
+<p>A <code>SignatoryField</code> for the name(s) of the party.</p>
 
 
 The elements of this item must match *all* of the following properties:
 
-### Signatory Field
-`(object)`
-
-The common elements of all `SignatoryField` types.
-This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. `SignatoryFieldName`).
+<h3>Signatory Field</h3>
+<code>(object)</code>
 
 
-This object has the following properties:
+<div class="json-schema">
 
-#### `type` (string, required)
-
-#### `is_obligatory` (boolean, required)
-
-#### `placements` (array)
-
-If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.
-
-Note that this is an array, you can have multiple placements for the same
-field.
-
-The easiest way to set the `xrel`, `yrel`, etc. values is to create a
-template in the document UI design view, and use those values.
+<p>The common elements of all <code>SignatoryField</code> types.</p>
+<p>This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
 
 
-All array elements must be of type:
+<p>This object has the following properties:</p>
 
-##### (object)
+<h4><code>type</code> (string, required)</h4>
 
-This object has the following properties:
 
-##### `xrel` (number)
+<div class="json-schema">
 
-##### `yrel` (number)
+</div>
 
-##### `wrel` (number)
+<h4><code>is_obligatory</code> (boolean, required)</h4>
 
-##### `hrel` (number)
 
-##### `fsrel` (number)
+<div class="json-schema">
 
-##### `page` (integer)
+</div>
 
-The page number for this placement.
+<h4><code>placements</code> (array)</h4>
 
-##### `tip` (string, enum)
 
-This element must be one of the following enum values:
+<div class="json-schema">
 
-* `left`
-* `right`
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
 
-##### `anchors` (array)
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-##### (object)
+<h5>(object)</h5>
 
-This object has the following properties:
 
-##### `text` (string)
+<div class="json-schema">
 
-##### `index` (integer)
+<p>This object has the following properties:</p>
 
-### (object)
+<h6><code>xrel</code> (number)</h6>
 
-This object has the following properties:
 
-#### `type` (string, enum, required)
+<div class="json-schema">
 
-This element must be one of the following enum values:
+</div>
 
-* `name`
+<h6><code>yrel</code> (number)</h6>
 
-#### `order` (integer, required)
 
-#### `value` (string)
+<div class="json-schema">
 
-#### `should_be_filled_by_sender` (boolean)
+</div>
+
+<h6><code>wrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>hrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>fsrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>page</code> (integer)</h6>
+
+
+<div class="json-schema">
+
+<p>The page number for this placement.</p>
+
+
+</div>
+
+<h6><code>tip</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>anchors</code> (array)</h6>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<h3>(object)</h3>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>type</code> (string, enum, required)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>name</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>order</code> (integer, required)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>value</code> (string)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>should_be_filled_by_sender</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
 
 ## SignatoryFieldStandard
 
 
-> ### Example JSON for "SignatoryFieldStandard":
+> ### Example JSON: for "SignatoryFieldStandard"
 
 ```json
 {
@@ -4042,101 +5401,213 @@ This element must be one of the following enum values:
 ```
 
 
-A `SignatoryField` for placing a number of standard text fields on the
-document.
 
-This excludes their name, but includes email, mobile number, personal number,
-and company number.
+
+<div class="json-schema">
+
+<p>A <code>SignatoryField</code> for placing a number of standard text fields on the
+document.</p>
+<p>This excludes their name, but includes email, mobile number, personal number,
+and company number.</p>
 
 
 The elements of this item must match *all* of the following properties:
 
-### Signatory Field
-`(object)`
-
-The common elements of all `SignatoryField` types.
-This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. `SignatoryFieldName`).
+<h3>Signatory Field</h3>
+<code>(object)</code>
 
 
-This object has the following properties:
+<div class="json-schema">
 
-#### `type` (string, required)
-
-#### `is_obligatory` (boolean, required)
-
-#### `placements` (array)
-
-If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.
-
-Note that this is an array, you can have multiple placements for the same
-field.
-
-The easiest way to set the `xrel`, `yrel`, etc. values is to create a
-template in the document UI design view, and use those values.
+<p>The common elements of all <code>SignatoryField</code> types.</p>
+<p>This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
 
 
-All array elements must be of type:
+<p>This object has the following properties:</p>
 
-##### (object)
+<h4><code>type</code> (string, required)</h4>
 
-This object has the following properties:
 
-##### `xrel` (number)
+<div class="json-schema">
 
-##### `yrel` (number)
+</div>
 
-##### `wrel` (number)
+<h4><code>is_obligatory</code> (boolean, required)</h4>
 
-##### `hrel` (number)
 
-##### `fsrel` (number)
+<div class="json-schema">
 
-##### `page` (integer)
+</div>
 
-The page number for this placement.
+<h4><code>placements</code> (array)</h4>
 
-##### `tip` (string, enum)
 
-This element must be one of the following enum values:
+<div class="json-schema">
 
-* `left`
-* `right`
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
 
-##### `anchors` (array)
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-##### (object)
+<h5>(object)</h5>
 
-This object has the following properties:
 
-##### `text` (string)
+<div class="json-schema">
 
-##### `index` (integer)
+<p>This object has the following properties:</p>
 
-### (object)
+<h6><code>xrel</code> (number)</h6>
 
-This object has the following properties:
 
-#### `type` (string, enum, required)
+<div class="json-schema">
 
-This element must be one of the following enum values:
+</div>
 
-* `company_number`
-* `email`
-* `mobile`
-* `personal_number`
+<h6><code>yrel</code> (number)</h6>
 
-#### `value` (string)
 
-#### `should_be_filled_by_sender` (boolean)
+<div class="json-schema">
+
+</div>
+
+<h6><code>wrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>hrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>fsrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>page</code> (integer)</h6>
+
+
+<div class="json-schema">
+
+<p>The page number for this placement.</p>
+
+
+</div>
+
+<h6><code>tip</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>anchors</code> (array)</h6>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<h3>(object)</h3>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>type</code> (string, enum, required)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>company_number</code></li>
+<li><code>email</code></li>
+<li><code>mobile</code></li>
+<li><code>personal_number</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>value</code> (string)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>should_be_filled_by_sender</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
 
 ## SignatoryFieldText
 
 
-> ### Example JSON for "SignatoryFieldText":
+> ### Example JSON: for "SignatoryFieldText"
 
 ```json
 {
@@ -4161,96 +5632,214 @@ This element must be one of the following enum values:
 ```
 
 
-A custom text `SignatoryField` that can be used for any other information.
+
+
+<div class="json-schema">
+
+<p>A custom text <code>SignatoryField</code> that can be used for any other information.</p>
 
 
 The elements of this item must match *all* of the following properties:
 
-### Signatory Field
-`(object)`
-
-The common elements of all `SignatoryField` types.
-This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. `SignatoryFieldName`).
+<h3>Signatory Field</h3>
+<code>(object)</code>
 
 
-This object has the following properties:
+<div class="json-schema">
 
-#### `type` (string, required)
-
-#### `is_obligatory` (boolean, required)
-
-#### `placements` (array)
-
-If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.
-
-Note that this is an array, you can have multiple placements for the same
-field.
-
-The easiest way to set the `xrel`, `yrel`, etc. values is to create a
-template in the document UI design view, and use those values.
+<p>The common elements of all <code>SignatoryField</code> types.</p>
+<p>This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
 
 
-All array elements must be of type:
+<p>This object has the following properties:</p>
 
-##### (object)
+<h4><code>type</code> (string, required)</h4>
 
-This object has the following properties:
 
-##### `xrel` (number)
+<div class="json-schema">
 
-##### `yrel` (number)
+</div>
 
-##### `wrel` (number)
+<h4><code>is_obligatory</code> (boolean, required)</h4>
 
-##### `hrel` (number)
 
-##### `fsrel` (number)
+<div class="json-schema">
 
-##### `page` (integer)
+</div>
 
-The page number for this placement.
+<h4><code>placements</code> (array)</h4>
 
-##### `tip` (string, enum)
 
-This element must be one of the following enum values:
+<div class="json-schema">
 
-* `left`
-* `right`
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
 
-##### `anchors` (array)
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-##### (object)
+<h5>(object)</h5>
 
-This object has the following properties:
 
-##### `text` (string)
+<div class="json-schema">
 
-##### `index` (integer)
+<p>This object has the following properties:</p>
 
-### (object)
+<h6><code>xrel</code> (number)</h6>
 
-This object has the following properties:
 
-#### `type` (string, enum, required)
+<div class="json-schema">
 
-This element must be one of the following enum values:
+</div>
 
-* `text`
+<h6><code>yrel</code> (number)</h6>
 
-#### `name` (string, required)
 
-#### `value` (string)
+<div class="json-schema">
 
-#### `should_be_filled_by_sender` (boolean)
+</div>
+
+<h6><code>wrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>hrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>fsrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>page</code> (integer)</h6>
+
+
+<div class="json-schema">
+
+<p>The page number for this placement.</p>
+
+
+</div>
+
+<h6><code>tip</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>anchors</code> (array)</h6>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<h3>(object)</h3>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>type</code> (string, enum, required)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>text</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>name</code> (string, required)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>value</code> (string)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>should_be_filled_by_sender</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
 
 ## SignatoryFieldSignature
 
 
-> ### Example JSON for "SignatoryFieldSignature":
+> ### Example JSON: for "SignatoryFieldSignature"
 
 ```json
 {
@@ -4275,94 +5864,207 @@ This element must be one of the following enum values:
 ```
 
 
-A `SignatoryField` for placing signature boxes on the document.
+
+
+<div class="json-schema">
+
+<p>A <code>SignatoryField</code> for placing signature boxes on the document.</p>
 
 
 The elements of this item must match *all* of the following properties:
 
-### Signatory Field
-`(object)`
-
-The common elements of all `SignatoryField` types.
-This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. `SignatoryFieldName`).
+<h3>Signatory Field</h3>
+<code>(object)</code>
 
 
-This object has the following properties:
+<div class="json-schema">
 
-#### `type` (string, required)
-
-#### `is_obligatory` (boolean, required)
-
-#### `placements` (array)
-
-If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.
-
-Note that this is an array, you can have multiple placements for the same
-field.
-
-The easiest way to set the `xrel`, `yrel`, etc. values is to create a
-template in the document UI design view, and use those values.
+<p>The common elements of all <code>SignatoryField</code> types.</p>
+<p>This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
 
 
-All array elements must be of type:
+<p>This object has the following properties:</p>
 
-##### (object)
+<h4><code>type</code> (string, required)</h4>
 
-This object has the following properties:
 
-##### `xrel` (number)
+<div class="json-schema">
 
-##### `yrel` (number)
+</div>
 
-##### `wrel` (number)
+<h4><code>is_obligatory</code> (boolean, required)</h4>
 
-##### `hrel` (number)
 
-##### `fsrel` (number)
+<div class="json-schema">
 
-##### `page` (integer)
+</div>
 
-The page number for this placement.
+<h4><code>placements</code> (array)</h4>
 
-##### `tip` (string, enum)
 
-This element must be one of the following enum values:
+<div class="json-schema">
 
-* `left`
-* `right`
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
 
-##### `anchors` (array)
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-##### (object)
+<h5>(object)</h5>
 
-This object has the following properties:
 
-##### `text` (string)
+<div class="json-schema">
 
-##### `index` (integer)
+<p>This object has the following properties:</p>
 
-### (object)
+<h6><code>xrel</code> (number)</h6>
 
-This object has the following properties:
 
-#### `type` (string, enum, required)
+<div class="json-schema">
 
-This element must be one of the following enum values:
+</div>
 
-* `signature`
+<h6><code>yrel</code> (number)</h6>
 
-#### `name` (string, required)
 
-#### `signature` (string, read only)
+<div class="json-schema">
+
+</div>
+
+<h6><code>wrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>hrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>fsrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>page</code> (integer)</h6>
+
+
+<div class="json-schema">
+
+<p>The page number for this placement.</p>
+
+
+</div>
+
+<h6><code>tip</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>anchors</code> (array)</h6>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<h3>(object)</h3>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>type</code> (string, enum, required)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>signature</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>name</code> (string, required)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>signature</code> (string, read only)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
 
 ## SignatoryFieldCheckbox
 
 
-> ### Example JSON for "SignatoryFieldCheckbox":
+> ### Example JSON: for "SignatoryFieldCheckbox"
 
 ```json
 {
@@ -4387,96 +6089,214 @@ This element must be one of the following enum values:
 ```
 
 
-A `SignatoryField` for placing checkboxes on the document.
+
+
+<div class="json-schema">
+
+<p>A <code>SignatoryField</code> for placing checkboxes on the document.</p>
 
 
 The elements of this item must match *all* of the following properties:
 
-### Signatory Field
-`(object)`
-
-The common elements of all `SignatoryField` types.
-This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. `SignatoryFieldName`).
+<h3>Signatory Field</h3>
+<code>(object)</code>
 
 
-This object has the following properties:
+<div class="json-schema">
 
-#### `type` (string, required)
-
-#### `is_obligatory` (boolean, required)
-
-#### `placements` (array)
-
-If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.
-
-Note that this is an array, you can have multiple placements for the same
-field.
-
-The easiest way to set the `xrel`, `yrel`, etc. values is to create a
-template in the document UI design view, and use those values.
+<p>The common elements of all <code>SignatoryField</code> types.</p>
+<p>This definition by itself is not sufficient, you need to use it in
+combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
 
 
-All array elements must be of type:
+<p>This object has the following properties:</p>
 
-##### (object)
+<h4><code>type</code> (string, required)</h4>
 
-This object has the following properties:
 
-##### `xrel` (number)
+<div class="json-schema">
 
-##### `yrel` (number)
+</div>
 
-##### `wrel` (number)
+<h4><code>is_obligatory</code> (boolean, required)</h4>
 
-##### `hrel` (number)
 
-##### `fsrel` (number)
+<div class="json-schema">
 
-##### `page` (integer)
+</div>
 
-The page number for this placement.
+<h4><code>placements</code> (array)</h4>
 
-##### `tip` (string, enum)
 
-This element must be one of the following enum values:
+<div class="json-schema">
 
-* `left`
-* `right`
+<p>If set, where this should be placed on the document, both for the
+signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
 
-##### `anchors` (array)
 
-All array elements must be of type:
+<p>All array elements must be of type:</p>
 
-##### (object)
+<h5>(object)</h5>
 
-This object has the following properties:
 
-##### `text` (string)
+<div class="json-schema">
 
-##### `index` (integer)
+<p>This object has the following properties:</p>
 
-### (object)
+<h6><code>xrel</code> (number)</h6>
 
-This object has the following properties:
 
-#### `type` (string, enum, required)
+<div class="json-schema">
 
-This element must be one of the following enum values:
+</div>
 
-* `checkbox`
+<h6><code>yrel</code> (number)</h6>
 
-#### `name` (string, required)
 
-#### `is_checked` (boolean)
+<div class="json-schema">
 
-#### `should_be_filled_by_sender` (boolean)
+</div>
+
+<h6><code>wrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>hrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>fsrel</code> (number)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>page</code> (integer)</h6>
+
+
+<div class="json-schema">
+
+<p>The page number for this placement.</p>
+
+
+</div>
+
+<h6><code>tip</code> (string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>anchors</code> (array)</h6>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<h3>(object)</h3>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>type</code> (string, enum, required)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>checkbox</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>name</code> (string, required)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>is_checked</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>should_be_filled_by_sender</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
 
 ## List Filter
 `(array)`
 
-> ### Example JSON for "List Filter":
+> ### Example JSON: for "List Filter"
 
 ```json
 [
@@ -4491,193 +6311,414 @@ This element must be one of the following enum values:
 ```
 
 
-Parameter used to filter documents for the `list` API call.
 
-Default:
-```
+
+<div class="json-schema">
+
+<p>Parameter used to filter documents for the <code>list</code> API call.</p>
+
+
+<p>Default:
+<code>
 []
-```
+</code></p>
 
 The elements of this array must match *at least one* of the following properties:
 
-### Filter by status
-`(object)`
+<h3>Filter by status</h3>
+<code>(object)</code>
 
-This object has the following properties:
 
-#### `filter_by` (string, enum)
+<div class="json-schema">
 
-This element must be one of the following enum values:
+<p>This object has the following properties:</p>
 
-* `status`
+<h4><code>filter_by</code> (string, enum)</h4>
 
-#### `statuses` (array)
 
-All array elements must be of type:
+<div class="json-schema">
 
-##### Document Status
-`(string, enum)`
+<p>This element must be one of the following enum values:</p>
 
-The current document status.
+<ul>
 
-A document in "preparation" can be changed using the `update` call and the
-main file can also be set or changed.
+<li><code>status</code></li>
 
-Once the document signing process has begun, the document will be "pending".
+</ul>
 
-Once all parties have successfully signed the document is "closed" and cannot
-be changed.
+</div>
 
+<h4><code>statuses</code> (array)</h4>
 
-This element must be one of the following enum values:
 
-* `preparation`
-* `pending`
-* `closed`
-* `canceled`
-* `timedout`
-* `rejected`
-* `document_error`
+<div class="json-schema">
 
-### Filter by mtime
-`(object)`
+<p>All array elements must be of type:</p>
 
-This object has the following properties:
+<h5>Document Status</h5>
+<code>(string, enum)</code>
 
-#### `filter_by` (string, enum)
 
-This element must be one of the following enum values:
+<div class="json-schema">
 
-* `mtime`
+<p>The current document status.</p>
+<p>A document in &quot;preparation&quot; can be changed using the <code>update</code> call and the
+main file can also be set or changed.</p>
+<p>Once the document signing process has begun, the document will be &quot;pending&quot;.</p>
+<p>Once all parties have successfully signed the document is &quot;closed&quot; and cannot
+be changed.</p>
 
-#### `start_time` (string)
 
-#### `end_time` (string)
+<p>This element must be one of the following enum values:</p>
 
-### Filter by tag
-`(object)`
+<ul>
 
-This object has the following properties:
+<li><code>preparation</code></li>
+<li><code>pending</code></li>
+<li><code>closed</code></li>
+<li><code>canceled</code></li>
+<li><code>timedout</code></li>
+<li><code>rejected</code></li>
+<li><code>document_error</code></li>
 
-#### `filter_by` (string, enum)
+</ul>
 
-This element must be one of the following enum values:
+</div>
 
-* `tag`
+</div>
 
-#### `value` (string)
+</div>
 
-#### `name` (string)
+<h3>Filter by mtime</h3>
+<code>(object)</code>
 
-### By author
-`(object)`
 
-This object has the following properties:
+<div class="json-schema">
 
-#### `filter_by` (string, enum)
+<p>This object has the following properties:</p>
 
-This element must be one of the following enum values:
+<h4><code>filter_by</code> (string, enum)</h4>
 
-* `is_author`
 
-### Signable on pad
-`(object)`
+<div class="json-schema">
 
-This object has the following properties:
+<p>This element must be one of the following enum values:</p>
 
-#### `filter_by` (string, enum)
+<ul>
 
-This element must be one of the following enum values:
+<li><code>mtime</code></li>
 
-* `is_signable_on_pad`
+</ul>
 
-### Only templates
-`(object)`
+</div>
 
-This object has the following properties:
+<h4><code>start_time</code> (string)</h4>
 
-#### `filter_by` (string, enum)
 
-This element must be one of the following enum values:
+<div class="json-schema">
 
-* `is_template`
+</div>
 
-### Only non-templates
-`(object)`
+<h4><code>end_time</code> (string)</h4>
 
-This object has the following properties:
 
-#### `filter_by` (string, enum)
+<div class="json-schema">
 
-This element must be one of the following enum values:
+</div>
 
-* `is_not_template`
+</div>
 
-### In trash
-`(object)`
+<h3>Filter by tag</h3>
+<code>(object)</code>
 
-This object has the following properties:
 
-#### `filter_by` (string, enum)
+<div class="json-schema">
 
-This element must be one of the following enum values:
+<p>This object has the following properties:</p>
 
-* `is_in_trash`
+<h4><code>filter_by</code> (string, enum)</h4>
 
-### Not in trash
-`(object)`
 
-This object has the following properties:
+<div class="json-schema">
 
-#### `filter_by` (string, enum)
+<p>This element must be one of the following enum values:</p>
 
-This element must be one of the following enum values:
+<ul>
 
-* `is_not_in_trash`
+<li><code>tag</code></li>
 
-### Filter by author
-`(object)`
+</ul>
 
-This object has the following properties:
+</div>
 
-#### `filter_by` (string, enum)
+<h4><code>value</code> (string)</h4>
 
-This element must be one of the following enum values:
 
-* `author`
+<div class="json-schema">
 
-#### `user_id` (string)
+</div>
 
-### Signable by user
-`(object)`
+<h4><code>name</code> (string)</h4>
 
-This object has the following properties:
 
-#### `filter_by` (string, enum)
+<div class="json-schema">
 
-This element must be one of the following enum values:
+</div>
 
-* `user_can_sign`
+</div>
 
-#### `user_id` (string)
+<h3>By author</h3>
+<code>(object)</code>
 
-### Filter by text
-`(object)`
 
-This object has the following properties:
+<div class="json-schema">
 
-#### `filter_by` (string, enum)
+<p>This object has the following properties:</p>
 
-This element must be one of the following enum values:
+<h4><code>filter_by</code> (string, enum)</h4>
 
-* `text`
 
-#### `text` (string)
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>is_author</code></li>
+
+</ul>
+
+</div>
+
+</div>
+
+<h3>Signable on pad</h3>
+<code>(object)</code>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>filter_by</code> (string, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>is_signable_on_pad</code></li>
+
+</ul>
+
+</div>
+
+</div>
+
+<h3>Only templates</h3>
+<code>(object)</code>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>filter_by</code> (string, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>is_template</code></li>
+
+</ul>
+
+</div>
+
+</div>
+
+<h3>Only non-templates</h3>
+<code>(object)</code>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>filter_by</code> (string, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>is_not_template</code></li>
+
+</ul>
+
+</div>
+
+</div>
+
+<h3>In trash</h3>
+<code>(object)</code>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>filter_by</code> (string, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>is_in_trash</code></li>
+
+</ul>
+
+</div>
+
+</div>
+
+<h3>Not in trash</h3>
+<code>(object)</code>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>filter_by</code> (string, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>is_not_in_trash</code></li>
+
+</ul>
+
+</div>
+
+</div>
+
+<h3>Filter by author</h3>
+<code>(object)</code>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>filter_by</code> (string, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>author</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>user_id</code> (string)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+<h3>Signable by user</h3>
+<code>(object)</code>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>filter_by</code> (string, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>user_can_sign</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>user_id</code> (string)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+<h3>Filter by text</h3>
+<code>(object)</code>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h4><code>filter_by</code> (string, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>text</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>text</code> (string)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
 
 ## List Sorting
 `(array)`
 
-> ### Example JSON for "List Sorting":
+> ### Example JSON: for "List Sorting"
 
 ```json
 [
@@ -4689,36 +6730,66 @@ This element must be one of the following enum values:
 ```
 
 
-Parameter used to sort documents for the `list` API call.
 
-All array elements must be of type:
 
-### (object)
+<div class="json-schema">
 
-This object has the following properties:
+<p>Parameter used to sort documents for the <code>list</code> API call.</p>
 
-#### `order` (string, enum)
 
-Default: `"ascending"`
+<p>All array elements must be of type:</p>
 
-This element must be one of the following enum values:
+<h3>(object)</h3>
 
-* `ascending`
-* `descending`
 
-#### `sort_by` (string, enum, required)
+<div class="json-schema">
 
-This element must be one of the following enum values:
+<p>This object has the following properties:</p>
 
-* `title`
-* `status`
-* `mtime`
-* `author`
+<h4><code>order</code> (string, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>Default: <code>"ascending"</code></p>
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>ascending</code></li>
+<li><code>descending</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>sort_by</code> (string, enum, required)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>title</code></li>
+<li><code>status</code></li>
+<li><code>mtime</code></li>
+<li><code>author</code></li>
+
+</ul>
+
+</div>
+
+</div>
+
+</div>
 
 ## Author Attachments
 `(array)`
 
-> ### Example JSON for "Author Attachments":
+> ### Example JSON: for "Author Attachments"
 
 ```json
 [
@@ -4738,51 +6809,110 @@ This element must be one of the following enum values:
 ```
 
 
-Attachments that have been added to a document by the author.
+
+
+<div class="json-schema">
+
+<p>Attachments that have been added to a document by the author.</p>
+
 
 The elements of this array must match *at least one* of the following properties:
 
-### (object)
-
-Attachment that is uploaded as part of the API call.
-
-This object has the following properties:
-
-#### `name` (string, required)
-
-#### `required` (boolean, required)
-
-#### `add_to_sealed_file` (boolean, required)
-
-Whether to add the attachment to the sealed file after signing
+<h3>(object)</h3>
 
 
-#### `file_param` (string, required)
+<div class="json-schema">
 
-The parameter name used in the API call for this attachment.
-
-
-### (object)
-
-Attachment that references a `file_id`.
-
-This object has the following properties:
-
-#### `name` (string, required)
-
-#### `required` (boolean, required)
-
-#### `add_to_sealed_file` (boolean, required)
-
-Whether to add the attachment to the sealed file after signing
+<p>Attachment that is uploaded as part of the API call.</p>
 
 
-#### `file_id` (integer, required)
+<p>This object has the following properties:</p>
+
+<h4><code>name</code> (string, required)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>required</code> (boolean, required)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>add_to_sealed_file</code> (boolean, required)</h4>
+
+
+<div class="json-schema">
+
+<p>Whether to add the attachment to the sealed file after signing</p>
+
+
+</div>
+
+<h4><code>file_param</code> (string, required)</h4>
+
+
+<div class="json-schema">
+
+<p>The parameter name used in the API call for this attachment.</p>
+
+
+</div>
+
+</div>
+
+<h3>(object)</h3>
+
+
+<div class="json-schema">
+
+<p>Attachment that references a <code>file_id</code>.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h4><code>name</code> (string, required)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>required</code> (boolean, required)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4><code>add_to_sealed_file</code> (boolean, required)</h4>
+
+
+<div class="json-schema">
+
+<p>Whether to add the attachment to the sealed file after signing</p>
+
+
+</div>
+
+<h4><code>file_id</code> (integer, required)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+</div>
+
+</div>
 
 ## History Items
 `(object)`
 
-> ### Example JSON for "History Items":
+> ### Example JSON: for "History Items"
 
 ```json
 {
@@ -4798,53 +6928,94 @@ Whether to add the attachment to the sealed file after signing
 ```
 
 
-The type returned by the Document History API call.
-
-This can be used to show the progress of a document to the user.
 
 
-This object has the following properties:
+<div class="json-schema">
 
-### `events` (array)
-
-All array elements must be of type:
-
-#### (object)
-
-This object has the following properties:
-
-##### `status` (string, enum)
-
-The document status "class", not the same as the statuses
-available for documents.
+<p>The type returned by the Document History API call.</p>
+<p>This can be used to show the progress of a document to the user.</p>
 
 
-This element must be one of the following enum values:
+<p>This object has the following properties:</p>
 
-* `initiated`
-* `draft`
-* `cancelled`
-* `rejected`
-* `timeouted`
-* `problem`
-* `deliveryproblem`
-* `sent`
-* `delivered`
-* `read`
-* `opened`
-* `signed`
-* `prolonged`
-* `sealed`
-* `extended`
+<h3><code>events</code> (array)</h3>
 
-##### `time` (string)
 
-##### `text` (string)
+<div class="json-schema">
 
-The text describing the action.
+<p>All array elements must be of type:</p>
 
-##### `party` (string)
+<h4>(object)</h4>
 
-The name of the party performing the action.
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h5><code>status</code> (string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>The document status &quot;class&quot;, not the same as the statuses
+available for documents.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>initiated</code></li>
+<li><code>draft</code></li>
+<li><code>cancelled</code></li>
+<li><code>rejected</code></li>
+<li><code>timeouted</code></li>
+<li><code>problem</code></li>
+<li><code>deliveryproblem</code></li>
+<li><code>sent</code></li>
+<li><code>delivered</code></li>
+<li><code>read</code></li>
+<li><code>opened</code></li>
+<li><code>signed</code></li>
+<li><code>prolonged</code></li>
+<li><code>sealed</code></li>
+<li><code>extended</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>time</code> (string)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5><code>text</code> (string)</h5>
+
+
+<div class="json-schema">
+
+<p>The text describing the action.</p>
+
+
+</div>
+
+<h5><code>party</code> (string)</h5>
+
+
+<div class="json-schema">
+
+<p>The name of the party performing the action.</p>
+
+
+</div>
+
+</div>
+
+</div>
+
+</div>
 
 
