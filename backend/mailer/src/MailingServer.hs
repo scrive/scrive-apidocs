@@ -61,7 +61,7 @@ main = do
   conf <- readConfig putStrLn config
   rng <- newCryptoRNGState
   lr@LogRunner{..} <- mkLogRunner "mailer" (mscLogConfig conf) rng
-  withLoggerWait $ do
+  withLogger $ \logger -> runLogger logger $ do
     checkExecutables
 
     let pgSettings = pgConnSettings $ mscDBConfig conf
@@ -78,7 +78,7 @@ main = do
     cs@(ConnectionSource pool) <- ($ maxConnectionTracker)
       <$> liftBase (createPoolSource $ pgSettings mailerComposites)
 
-    E.bracket (startServer lr conf cs rng) (liftBase . killThread) . const $ do
+    E.bracket (startServer lr logger conf cs rng) (liftBase . killThread) . const $ do
       let master = createSender cs $ mscMasterSender conf
           mslave = createSender cs <$> mscSlaveSender conf
           cron   = jobsWorker conf cs rng
@@ -90,11 +90,12 @@ main = do
   where
     startServer
       :: LogRunner
+      -> Logger
       -> MailingServerConf
       -> TrackedConnectionSource
       -> CryptoRNGState
       -> MainM ThreadId
-    startServer LogRunner{..} conf cs rng = do
+    startServer LogRunner{..} logger conf cs rng = do
       let (iface, port) = mscHttpBindAddress conf
           handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
       routes <- case R.compile (handlers conf) of
@@ -105,7 +106,7 @@ main = do
           $unexpectedErrorM "static routing"
         Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase . listenOn (htonl iface) $ fromIntegral port
-      fork . liftBase . runReqHandlerT socket handlerConf . withLogger $ router rng cs routes
+      fork . liftBase . runReqHandlerT socket handlerConf . runLogger logger $ router rng cs routes
 
     hasFailoverTests conf = case mscSlaveSender conf of
       Just _ -> not $ null $ testReceivers conf

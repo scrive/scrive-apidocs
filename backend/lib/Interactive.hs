@@ -32,7 +32,7 @@ run m = do
   appConf <- readConfig putStrLn "kontrakcja.conf"
 
   rng <- newCryptoRNGState
-  lr@LogRunner{..} <- mkLogRunner "kontrakcja" (logConfig appConf) rng
+  logRunner <- mkLogRunner "kontrakcja" (logConfig appConf) rng
 
   let connSettings = pgConnSettings $ dbConfig appConf
   globalTemplates <- readGlobalTemplates
@@ -52,10 +52,10 @@ run m = do
       , mrediscache = Nothing
       , lesscache = lesscache
       , brandedimagescache = brandedimagescache
-      , logrunner = lr
+      , logrunner = logRunner
       }
 
   ConnectionSource pool <- ($ maxConnectionTracker) `liftM` (createPoolSource $ connSettings kontraComposites)
 
-  withLoggerWait $ withPostgreSQL pool . runCryptoRNGT (cryptorng appGlobals) .
+  runWithLogRunner logRunner $ withPostgreSQL pool . runCryptoRNGT (cryptorng appGlobals) .
    AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals) Nothing) $ runTemplatesT (LANG_EN, globalTemplates) m

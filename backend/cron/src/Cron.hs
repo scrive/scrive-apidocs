@@ -76,8 +76,8 @@ main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   appConf <- readConfig putStrLn config
   rng <- newCryptoRNGState
-  LogRunner{..} <- mkLogRunner "cron" (logConfig appConf) rng
-  withLoggerWait $ do
+  logRunner <- mkLogRunner "cron" (logConfig appConf) rng
+  runWithLogRunner logRunner $ do
     checkExecutables
 
     let connSettings = pgConnSettings $ dbConfig appConf

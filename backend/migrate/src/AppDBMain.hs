@@ -38,8 +38,8 @@ main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   AppDBConf{..} <- readConfig putStrLn config
   rng <- newCryptoRNGState
-  LogRunner{..} <- mkLogRunner "kontrakcja-migrate" logConfig rng
-  withLoggerWait $ do
+  logRunner <- mkLogRunner "kontrakcja-migrate" logConfig rng
+  runWithLogRunner logRunner $ do
     -- composite types are not available in migrations
     let connSource = simpleSource $ pgConnSettings dbConfig []
     let migrationOptions = if (force) then [ForceCommitAfterEveryMigration] else []

@@ -5,6 +5,7 @@ import Control.Concurrent.STM
 import Control.Monad.Base
 import Database.PostgreSQL.PQTypes.Checks
 import Database.PostgreSQL.PQTypes.Internal.Connection
+import Log
 import System.Directory (createDirectoryIfMissing)
 import System.Environment
 import System.IO
@@ -124,16 +125,22 @@ modifyTestEnv (d:r) = first (d:) $ modifyTestEnv r
 
 testMany :: ([String], [(TestEnvSt -> Test)]) -> IO ()
 testMany (allargs, ts) = do
+  rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
+  lr  <- mkLogRunner "test" def rng
+  withLogger lr $ \logger -> testMany' (allargs, ts) lr logger rng
+
+testMany' :: ([String], [(TestEnvSt -> Test)])
+          -> LogRunner -> Logger -> CryptoRNGState -> IO ()
+testMany' (allargs, ts) lr logger rng = do
   let (args, envf) = modifyTestEnv allargs
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
-  pgconf <- T.readFile "kontrakcja_test.conf"
-  rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
+  pgconf    <- T.readFile "kontrakcja_test.conf"
   templates <- readGlobalTemplates
 
   let connSettings = pgConnSettings pgconf
-  lr@LogRunner{..} <- mkLogRunner "test" def rng
-  withLogger . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
+
+  runWithLogRunner lr . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
     migrateDatabase [] kontraExtensions kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
@@ -155,6 +162,7 @@ testMany (allargs, ts) = do
       , teTransSettings = def
       , teRNGState = rng
       , teLogRunner = lr
+      , teLogger    = logger
       , teGlobalTemplates = templates
       , teActiveTests = active_tests
       , teRejectedDocuments = rejected_documents

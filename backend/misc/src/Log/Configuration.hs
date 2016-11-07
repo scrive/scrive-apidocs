@@ -4,12 +4,12 @@ module Log.Configuration (
   , LoggerDef(..)
   , LogRunner(..)
   , mkLogRunner
+  , runWithLogRunner
   ) where
 
-import Control.Monad.Base
-import Control.Monad.Catch
 import Data.Default
-import Data.Foldable (fold)
+import Data.List.NonEmpty (fromList)
+import Data.Semigroup
 import Data.Text (Text)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
@@ -23,7 +23,7 @@ import Log.Monad
 
 import Crypto.RNG
 import DB.PostgreSQL
-import KontraPrelude
+import KontraPrelude hiding ((<>))
 import Log.Migrations
 import Log.Tables
 import Utils.TH
@@ -85,25 +85,59 @@ instance Unjson LoggerDef where
 ----------------------------------------
 
 data LogRunner = LogRunner {
-  withLogger     :: forall m r. LogT m r -> m r
-, withLoggerWait :: forall m r. (MonadBase IO m, MonadMask m) => LogT m r -> m r
+  -- | Run an IO action with a newly-allocated logger, ensuring that
+  -- the logger shuts down properly on exit, even in the presence of
+  -- exceptions. Normally should only be used in the 'main' function
+  -- of the application.
+  withLogger :: forall r . (Logger -> IO r) -> IO r,
+
+  -- | Run a 'LogT' action with a logger previously allocated by
+  -- 'withLogger'. Doesn't imply any costly synchronisation, making it
+  -- appropriate for frequent use (e.g. on every HTTP request).
+  runLogger  :: forall m r . Logger -> LogT m r -> m r
 }
+
+-- | 'withLogger' and 'runLogger' rolled into one. Useful when you
+-- only have a single top-level 'runLogger' call.
+runWithLogRunner :: LogRunner -> LogT IO r -> IO r
+runWithLogRunner LogRunner{..} act =
+  withLogger $ \logger -> runLogger logger act
+
+newtype WithLoggerFun = WithLoggerFun {
+  withLoggerFun :: forall r . (Logger -> IO r) -> IO r
+}
+
+instance Semigroup WithLoggerFun where
+  (WithLoggerFun with0) <> (WithLoggerFun with1) = WithLoggerFun $
+    \f -> with0 (\logger0 -> with1 (\logger1 -> f $ logger0 <> logger1))
 
 mkLogRunner :: Text -> LogConfig -> CryptoRNGState -> IO LogRunner
 mkLogRunner component LogConfig{..} rng = do
-  logger <- fold <$> mapM defLogger lcLoggers
+  withLoggerFuns <- mapM toWithLoggerFun lcLoggers
+  let loggerFun = sconcat . fromList $ withLoggerFuns
   return LogRunner {
-    withLogger = run logger
-  , withLoggerWait = \m -> run logger m `finally` liftBase (waitForLogger logger)
-  }
+    withLogger = \act -> withLoggerFun loggerFun $ act,
+    runLogger  = \logger act -> run logger act
+    }
   where
-    run :: Logger -> LogT m r -> m r
-    run = runLogT (component <> "-" <> lcSuffix)
+    toWithLoggerFun :: LoggerDef -> IO WithLoggerFun
+    toWithLoggerFun StandardOutput     =
+      return WithLoggerFun {
+        withLoggerFun = \act -> withSimpleStdOutLogger act
+        }
+    toWithLoggerFun (ElasticSearch ec) =
+      return WithLoggerFun {
+        withLoggerFun = \act -> withElasticSearchLogger ec
+                                (runCryptoRNGT rng boundedIntegralRandom) act
+        }
+    toWithLoggerFun (PostgreSQL ci)    = do
+      ConnectionSource pool <- poolSource def { csConnInfo = ci} 1 10 1
+      withSimpleStdOutLogger $ \logger ->
+        withPostgreSQL pool $ run logger $ do
+          migrateDatabase [] [] [] logsTables logsMigrations
+      return WithLoggerFun {
+        withLoggerFun = \act -> withPgLogger pool act
+        }
 
-    defLogger StandardOutput = stdoutLogger
-    defLogger (ElasticSearch ec) = elasticSearchLogger ec $ runCryptoRNGT rng boundedIntegralRandom
-    defLogger (PostgreSQL ci) = do
-      ConnectionSource pool <- poolSource def { csConnInfo = ci } 1 10 1
-      withPostgreSQL pool . run simpleStdoutLogger $ do
-        migrateDatabase [] [] [] logsTables logsMigrations
-      pgLogger pool
+    run :: Logger -> LogT m a -> m a
+    run = runLogT (component <> "-" <> lcSuffix)

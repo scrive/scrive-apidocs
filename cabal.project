@@ -5,4 +5,4 @@
 --
 -- packages: . ../path/to/log
 
-packages: .
+packages: . ../log
