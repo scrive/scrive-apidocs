@@ -31,6 +31,7 @@
 "_controlsStatusViewingSigning":"",
 "_controlsStatusViewingTimedout":"",
 "_couldNotUpload":"Helaas, het bestand kon niet geupload worden. Probeer het a.u.b. opnieuw of met een ander bestand. ",
+"_couldNotUploadOnlyPDF":"",
 "_deliveryEmail":"e-mail",
 "_deliveryEmailMobile":"e-mail en SMS",
 "_deliveryMobile":"SMS",

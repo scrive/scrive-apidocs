@@ -31,6 +31,7 @@
 "_controlsStatusViewingSigning":"",
 "_controlsStatusViewingTimedout":"",
 "_couldNotUpload":"Atsiprašome, failo negalima įkelti. Pabandykite dar kartą arba įkelkite kitą failą.",
+"_couldNotUploadOnlyPDF":"",
 "_deliveryEmail":"el. paštas",
 "_deliveryEmailMobile":"el. paštas ir SMS žinutė",
 "_deliveryMobile":"SMS žinutė",

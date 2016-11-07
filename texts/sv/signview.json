@@ -31,6 +31,7 @@
 "_controlsStatusViewingSigning":"Signerar dokument: <span class='put-document-title-here'/>",
 "_controlsStatusViewingTimedout":"Granskar förfallet dokument: <span class='put-document-title-here'/>",
 "_couldNotUpload":"Vi beklagar, filen kunde inte laddas upp. Vänligen försök igen eller med en annan fil.",
+"_couldNotUploadOnlyPDF":"",
 "_deliveryEmail":"e-post",
 "_deliveryEmailMobile":"e-post och SMS",
 "_deliveryMobile":"SMS",

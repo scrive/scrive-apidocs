@@ -31,6 +31,7 @@
 "_controlsStatusViewingSigning":"",
 "_controlsStatusViewingTimedout":"",
 "_couldNotUpload":"Λυπούμαστε, δεν ήταν δυνατή η μεταφόρτωση του αρχείου. Παρακαλώ δοκιμάστε ξανά ή με ένα διαφορετικό αρχείο. ",
+"_couldNotUploadOnlyPDF":"",
 "_deliveryEmail":"email ",
 "_deliveryEmailMobile":"email και SMS",
 "_deliveryMobile":"SMS ",

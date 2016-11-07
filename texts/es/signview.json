@@ -31,6 +31,7 @@
 "_controlsStatusViewingSigning":"",
 "_controlsStatusViewingTimedout":"",
 "_couldNotUpload":"Lo sentimos, el archivo no pudo ser cargado. Inténtelo de nuevo otra vez o con un archivo diferente.",
+"_couldNotUploadOnlyPDF":"",
 "_deliveryEmail":"email",
 "_deliveryEmailMobile":"email y SMS",
 "_deliveryMobile":"SMS",
