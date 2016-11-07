@@ -26,20 +26,19 @@ module.exports = function (grunt) {
 
   // Pick correct defaults when we're using Haskell's 'cabal new-build'.
   var newBuild;
-  if (grunt.option('no-new-build')) {
+  if (grunt.option("no-new-build")) {
       newBuild = false;
-  }
-  else {
-      newBuild = grunt.option('new-build')
+  } else {
+      newBuild = grunt.option("new-build")
           || fs.existsSync(yeomanConfig.kontrakcja + "dist-newstyle");
   }
   var buildDir = "./dist";
   if (newBuild) {
-      var spawnSync = require('child_process').spawnSync;
+      var spawnSync = require("child_process").spawnSync;
       var child = spawnSync("ghc", ["--numeric-version"]);
       var ghcVer = child.output[1].toString().trim();
       child = spawnSync(
-          "ghc", ["-e", 'print $ System.Info.arch ++ "-" ++ System.Info.os'])
+          "ghc", ["-e", 'print $ System.Info.arch ++ "-" ++ System.Info.os']);
       var archOs = child.output[1].toString().trim();
       buildDir = "./dist-newstyle/build/" + archOs + "/ghc-"
           + ghcVer + "/kontrakcja-1.0/c/localization";
