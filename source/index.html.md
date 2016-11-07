@@ -157,6 +157,7 @@ the documentation.
 | `/cancel/$documentid$`                                       | `/{document_id}/cancel`                                     |
 | `/get/$documentid$`                                          | `/{document_id}/get`                                        |
 | `/delete/$documentid$`                                       | `/{document_id}/trash`                                      |
+| `/reallydelete/$documentid$`                                 | `/{document_id}/delete`                                     |
 | `/remind/$documentid$`                                       | `/{document_id}/remind`                                     |
 | `/setattachments/$documentid$`                               | `/{document_id}/setattachments`                             |
 | `/downloadmainfile/$documentid$/$any_name$.pdf`              | `/{document_id}/files/main/{filename}`                      |
@@ -230,9 +231,9 @@ depending on the delivery methods set (e.g. by email or SMS).
 After all signing parties have successfully signed the document, its status
 will change to `"closed"`, after which it cannot be modified.
 
-A document in preparation can also be cancelled by the author using the
-`cancel` API call, or rejected by a signing party, resulting in its status
-being `"cancelled"` or `"rejected"`, respectively.
+A pending document can also be cancelled by the author using the `cancel`
+API call, or rejected by a signing party, resulting in its status being
+`"cancelled"` or `"rejected"`, respectively.
 
 Any actions performed by parties to a document, such as signing, can only
 be performed in the web application interface.
@@ -739,7 +740,7 @@ Scrive eSign system returning errors.
 
 # List of API Calls
 
-## Create
+## Prepare
 
 
 <p>
@@ -932,7 +933,7 @@ Scrive eSign system returning errors.
 </a>
 </p>
 
-# Create
+# Prepare
 
 <div><a id="apiv2documentsnew"></a></div>
 ## New document
@@ -1078,14 +1079,9 @@ Will not change.</p>
 <p>Must of of type <code>Document</code>, see <a href="#definitions">Definitions</a>.</p>
 <p>Can be a subset of the JSON structure, for example it is possible to
 just update the title of a document with <code>{&quot;title&quot;: &quot;New title&quot;}</code>.</p>
-<p><strong>TODO make this description better</strong></p>
-<p>A document medatata structure, indicating the metadata items that are
-requested to be changed.</p>
-<p>Unchanged items need not be included.
-The call will return the full Document metadata structure, though.</p>
-<p>Extra items in the <code>document</code> value are discarded.
-However, you can include &quot;user defined&quot; items in the <code>tags</code> item, which
-is a key-value pair list.</p>
+<p>Not all fields can be set this way, please refer to the definitions for
+details, those marked as read-only cannot be modified using this API
+call.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 <tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
@@ -1281,7 +1277,14 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
 </td> </tr>
-<tr> <td>409</td> <td><p>TODO</p>
+<tr> <td>409</td> <td><p><code>document_state_error</code> with error messages:</p>
+<ul>
+<li>The document state must be 'Preparation'.</li>
+<li>Document is a template, templates can not be started.</li>
+<li>Document must have a file before it can be started.</li>
+<li>The document has missing or invalid data. Some information about what
+is missing or invalid in the document is given.</li>
+</ul>
 </td> </tr>
 </table>
 
@@ -1894,7 +1897,15 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
 </td> </tr>
-<tr> <td>409</td> <td><p>TODO</p>
+<tr> <td>409</td> <td><p>Possible error responses:</p>
+<ul>
+<li><code>document_state_error</code>: The document status should be 'Pending'.</li>
+<li><code>signatory_state_error</code>: The signatory has already authenticated to view.</li>
+<li><code>signatory_state_error</code>: The signatory has already signed.</li>
+<li><code>signatory_state_error</code>: You can’t mix different e-legitimation
+providers (one for viewing and another for signing) for the same
+signatory.</li>
+</ul>
 </td> </tr>
 </table>
 
@@ -1951,7 +1962,14 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
 </td> </tr>
-<tr> <td>409</td> <td><p>TODO</p>
+<tr> <td>409</td> <td><p>Possible error responses:</p>
+<ul>
+<li><code>document_state_error</code>: The document status should be 'Pending'.</li>
+<li><code>signatory_state_error</code>: The signatory has already signed.</li>
+<li><code>signatory_state_error</code>: You can’t mix different e-legitimation
+providers (one for viewing and another for signing) for the same
+signatory.</li>
+</ul>
 </td> </tr>
 </table>
 
