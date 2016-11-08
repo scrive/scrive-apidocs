@@ -142,7 +142,9 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
           case res of
             Right r -> return r
             Left _ ->  apiError $ requestParameterParseError name $ "filename suggests PDF, but not a valid PDF"
-        (_, True) -> return content'
+        (_, True) -> if (not $ BS.null content')
+          then return content'
+          else apiError $ requestParameterParseError name "image is empty"
         _ -> apiError $ requestParameterParseError name "not a PDF or image (PNG or JPG)"
       fileid <- dbUpdate $ NewFile filename content
       file <- dbQuery $ GetFileByFileID fileid
@@ -153,6 +155,7 @@ apiV2ParameterOptional (ApiV2ParameterBase64PNGImage name) = do
   case (Base64Image.decode . BS.concat . BSL.toChunks) <$> mValue of
     Nothing -> return Nothing
     (Just Nothing) -> apiError $ requestParameterParseError name "expected RFC2397 encoded png"
+    (Just (Just (_,""))) -> apiError $ requestParameterParseError name "image is empty"
     (Just (Just (_,content))) -> do
       fileid <- dbUpdate $ NewFile "image-param.png" content
       file <- dbQuery $ GetFileByFileID fileid

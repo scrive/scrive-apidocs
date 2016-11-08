@@ -1194,7 +1194,9 @@ apiCallV1SetSignatoryAttachment did sid aname = logDocumentAndSignatory did sid 
                   else if ( ".png" `isSuffixOf` (map toLower filename)
                           || ".jpg" `isSuffixOf` (map toLower filename)
                           || ".jpeg" `isSuffixOf` (map toLower filename))
-                    then return $ BSL.toStrict content1
+                    then if (not $ BSL.null content1)
+                      then return $ BSL.toStrict content1
+                      else throwM . SomeDBExtraException $ badInput ("Image can't be empty. Uploaded filename was " ++ filename)
                     else throwM . SomeDBExtraException $ badInput ("Only pdf files or images can be attached. Uploaded filename was " ++ filename)
                 (dbUpdate $ NewFile (dropFilePathFromWindows filename) content)
       _ -> return Nothing
