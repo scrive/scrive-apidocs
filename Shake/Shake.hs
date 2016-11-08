@@ -528,12 +528,17 @@ transifexUsageMsg = unlines $
   ]
 
 runTX :: UseNewBuild -> String -> [String] -> Action ()
-runTX newBuild a args = cmd (componentTargetPath newBuild "transifex")
-  ([a] ++ args)
+runTX newBuild a args = do
+  let scriptPath = componentTargetPath newBuild "transifex"
+  need [scriptPath]
+  cmd ([a] ++ args)
 
 runTransifexUsageScript :: UseNewBuild -> Action ()
-runTransifexUsageScript newBuild = cmd (componentTargetPath newBuild "transifex")
-  -- transifex prints out usage info if no command provided
+runTransifexUsageScript newBuild = do
+  let scriptPath = componentTargetPath newBuild "transifex"
+  need [scriptPath]
+  -- 'transifex' prints out usage info if no command provided.
+  cmd scriptPath
 
 runTransifexFixScript :: UseNewBuild -> Action ()
 runTransifexFixScript newBuild = runTX newBuild "fix" []
@@ -554,14 +559,14 @@ transifexServerParams flags = do
 
 runTransifexDiffScript :: UseNewBuild -> [ShakeFlag] -> Action ()
 runTransifexDiffScript newBuild flags = do
-  (u,p,ml)<- transifexServerParams flags
+  (u,p,ml) <- transifexServerParams flags
   case ml of
     Just l -> runTX newBuild "diff-lang" [u, p, l]
     _      -> runTX newBuild "diff-all" [u, p]
 
 runTransifexPushScript :: UseNewBuild -> [ShakeFlag] -> Action ()
 runTransifexPushScript newBuild flags = do
-  (u,p,ml)<- transifexServerParams flags
+  (u,p,ml) <- transifexServerParams flags
   case ml of
     Nothing   -> runTX newBuild "push-lang" [u, p, "en"]
     Just "en" -> runTX newBuild "push-lang" [u, p, "en"]
@@ -570,7 +575,7 @@ runTransifexPushScript newBuild flags = do
 
 runTransifexMergeScript :: UseNewBuild -> [ShakeFlag] -> Action ()
 runTransifexMergeScript newBuild flags = do
-  (u,p,ml)<- transifexServerParams flags
+  (u,p,ml) <- transifexServerParams flags
   case ml of
     Just l -> runTX newBuild "merge-lang" [u, p, l]
     _      -> runTX newBuild "merge-all" [u, p]
