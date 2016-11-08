@@ -1,8 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 import Control.Monad
-import Data.List
-import Data.Maybe
 import Development.Shake
 import Development.Shake.FilePath
 import System.Exit (exitFailure)
@@ -117,15 +115,15 @@ main = do
 
     "dist" ~> need ["_build/kontrakcja.tar.gz"]
 
-    "transifex-fix"              ~> runTransifexScript newBuild "fix"   []
-    "transifex-push"             ~> runTransifexScript newBuild "push"  flags
-    "transifex-diff"             ~> runTransifexScript newBuild "diff"  flags
-    "transifex-merge"            ~> runTransifexScript newBuild "merge" flags
+    "transifex-fix"              ~> runTransifexFixScript newBuild
+    "transifex-push"             ~> runTransifexPushScript newBuild flags
+    "transifex-diff"             ~> runTransifexDiffScript newBuild flags
+    "transifex-merge"            ~> runTransifexMergeScript newBuild flags
     "transifex-help"             ~> do putNormal transifexUsageMsg
                                        putNormal "-----------------------------"
                                        putNormal "Output of 'transifex --help':"
                                        putNormal "-----------------------------"
-                                       runTransifexScript newBuild "" []
+                                       runTransifexUsageScript newBuild
     "detect-old-localizations"   ~> runDetectOldLocalizationsScript newBuild
     "detect-old-templates"       ~> runDetectOldTemplatesScript newBuild
     "take-reference-screenshots" ~> runTakeReferenceScreenshotsScript
@@ -527,25 +525,58 @@ transifexUsageMsg = unlines $
   , "English texts."
   ]
 
-runTransifexScript :: UseNewBuild -> String -> [ShakeFlag] -> Action ()
-runTransifexScript newBuild subcommand flags = do
-  let scriptPath = componentTargetPath newBuild "transifex"
-  checkFlags
-  need [scriptPath]
-  let extractArg (TransifexUser u)     = Just u
-      extractArg (TransifexPassword p) = Just p
-      extractArg (TransifexLang l)     = Just l
-      extractArg (TransifexResource r) = Just r
-      extractArg (NewBuild)            = Nothing
-      -- NB: sorting here relies on ShakeFlag constructors being
-      -- declared in correct order (user, password, lang, resource).
-      args = mapMaybe extractArg $ sort flags
-  cmd scriptPath (subcommand:args)
-    where
-      checkFlags = if (subcommand `elem` ["push", "diff", "merge"])
-                      && (length flags /= 4)
-                   then error "transifex: Some required arguments are missing!"
-                   else return ()
+runTX :: UseNewBuild -> String -> [String] -> Action ()
+runTX newBuild a args = cmd (componentTargetPath newBuild "transifex") ([a] ++ args)
+
+runTransifexUsageScript :: UseNewBuild -> Action ()
+runTransifexUsageScript newBuild = cmd (componentTargetPath newBuild "transifex") -- transifex prints out usage info if no command provided
+
+runTransifexFixScript :: UseNewBuild -> Action ()
+runTransifexFixScript newBuild = runTX newBuild "fix" []
+
+-- Transifex synch commands take USER PASSWORD LANG* as parameters
+-- USER and PASSWORD are obligatory and ShakeFlags can have different order.
+-- This functiona helps with conversion
+transifexServerParams :: [ShakeFlag] -> Action (String, String, Maybe String)
+transifexServerParams flags = do
+  case (findUser flags,findPassword flags) of
+    (Just u,Just p) -> return (u, p, findLang flags)
+    (_) -> do
+      putLoud $ "ERROR: user of password missing for comunication with TX"
+      liftIO $ exitFailure
+  where
+    findUser ((TransifexUser u):_) = Just u
+    findUser (_:fs) = findUser fs
+    findUser _ = Nothing
+    findPassword ((TransifexPassword p):_) = Just p
+    findPassword (_:fs) = findPassword fs
+    findPassword _ = Nothing
+    findLang ((TransifexLang l):_) = Just l
+    findLang (_:fs) = findLang fs
+    findLang _ = Nothing
+
+runTransifexDiffScript :: UseNewBuild -> [ShakeFlag] -> Action ()
+runTransifexDiffScript newBuild flags = do
+  (u,p,ml)<- transifexServerParams flags
+  case ml of
+    Just l -> runTX newBuild "diff-lang" [u, p, l]
+    _ -> runTX newBuild "diff-all" [u, p]
+
+runTransifexPushScript :: UseNewBuild -> [ShakeFlag] -> Action ()
+runTransifexPushScript newBuild flags = do
+  (u,p,ml)<- transifexServerParams flags
+  case ml of
+    Just "en" -> runTX newBuild "push-lang" [u, p, "en"]
+    _ -> do
+      putLoud $ "TX push command has to be run ONLY with language 'en'"
+      liftIO $ exitFailure
+
+runTransifexMergeScript :: UseNewBuild -> [ShakeFlag] -> Action ()
+runTransifexMergeScript newBuild flags = do
+  (u,p,ml)<- transifexServerParams flags
+  case ml of
+    Just l -> runTX newBuild "merge-lang" [u, p, l]
+    _ -> runTX newBuild "merge-all" [u, p]
 
 runDetectOldLocalizationsScript :: UseNewBuild -> Action ()
 runDetectOldLocalizationsScript newBuild = do

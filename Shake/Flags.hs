@@ -8,7 +8,6 @@ import System.Console.GetOpt
 data ShakeFlag = TransifexUser String
                | TransifexPassword String
                | TransifexLang String
-               | TransifexResource String
                | NewBuild
   deriving (Eq, Ord)
 
@@ -17,7 +16,6 @@ shakeFlags =
   [ Option "" ["user"]      (reqArg TransifexUser     "USER") "User name"
   , Option "" ["password"]  (reqArg TransifexPassword "PASS") "Password"
   , Option "" ["lang"]      (reqArg TransifexLang     "LANG") "Language"
-  , Option "" ["resource"]  (reqArg TransifexResource "NAME") "Resource"
   , Option "" ["new-build"] (noArg  NewBuild)                 "Use 'new-build'."
   ]
   where

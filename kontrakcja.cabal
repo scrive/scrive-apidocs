@@ -485,6 +485,7 @@ Library
                , regex-tdfa
                , resource-pool
                , scientific
+               , semigroups
                , soap
                , split
                , spreadsheet
@@ -701,6 +702,7 @@ Executable kontrakcja-migrate
                , mtl
                , regex-tdfa
                , resource-pool
+               , semigroups
                , stm
                , tagsoup
                , template-haskell
@@ -798,6 +800,7 @@ Executable mailing-server
                , psqueues
                , resource-pool
                , scientific
+               , semigroups
                , stm
                , tagsoup
                , template-haskell
@@ -894,6 +897,7 @@ Executable messenger-server
                , process-extras
                , regex-tdfa
                , resource-pool
+               , semigroups
                , stm
                , tagsoup
                , template-haskell
@@ -987,6 +991,7 @@ Executable kontrakcja-test
                , network-uri
                , recurly
                , regex-tdfa
+               , semigroups
                , stm
                , tagsoup
                , test-framework
@@ -1222,6 +1227,7 @@ Executable screenshot-review
                , psqueues
                , resource-pool
                , scientific
+               , semigroups
                , split
                , stm
                , template-haskell
