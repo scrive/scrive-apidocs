@@ -9,7 +9,7 @@ data ShakeFlag = TransifexUser String
                | TransifexPassword String
                | TransifexLang String
                | NewBuild
-  deriving (Eq, Ord)
+  deriving Eq
 
 shakeFlags :: [OptDescr (Either String ShakeFlag)]
 shakeFlags =
