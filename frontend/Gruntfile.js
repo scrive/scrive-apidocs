@@ -24,6 +24,26 @@ module.exports = function (grunt) {
     kontrakcja: "../"
   };
 
+  // Pick correct defaults when we're using Haskell's 'cabal new-build'.
+  var newBuild;
+  if (grunt.option("no-new-build")) {
+      newBuild = false;
+  } else {
+      newBuild = grunt.option("new-build")
+          || fs.existsSync(yeomanConfig.kontrakcja + "dist-newstyle");
+  }
+  var buildDir = "./dist";
+  if (newBuild) {
+      var spawnSync = require("child_process").spawnSync;
+      var child = spawnSync("ghc", ["--numeric-version"]);
+      var ghcVer = child.output[1].toString().trim();
+      child = spawnSync(
+          "ghc", ["-e", 'print $ System.Info.arch ++ "-" ++ System.Info.os']);
+      var archOs = child.output[1].toString().trim();
+      buildDir = "./dist-newstyle/build/" + archOs + "/ghc-"
+          + ghcVer + "/kontrakcja-1.0/c/localization";
+  }
+
   grunt.initConfig({
     yeoman: yeomanConfig,
 
@@ -126,7 +146,10 @@ module.exports = function (grunt) {
         command: "echo '$(date +%s)' > <%= yeoman.dist %>/LAST_BUILT"
       },
       compileLocalization: {
-        command: "cabal build localization",
+        // We can't just invoke `../shake.sh localization` because
+        // Shake doesn't allow us to run two Shake processes in the
+        // same working dir simultaneously.
+        command: (newBuild ? "cabal new-build" : "cabal build") + " localization",
         options: {
           execOptions: {
             cwd: "<%= yeoman.kontrakcja %>"
@@ -134,7 +157,7 @@ module.exports = function (grunt) {
         }
       },
       generateLocalization: {
-        command: "./dist/build/localization/localization",
+        command: buildDir + "/build/localization/localization",
         options: {
           execOptions: {
             cwd: "<%= yeoman.kontrakcja %>"
@@ -287,15 +310,13 @@ module.exports = function (grunt) {
   grunt.registerTask("compileGenerateLocalization", function (target) {
     return grunt.task.run([
       "shell:compileLocalization",
-      "shell:generateLocalization",
-      "deploybuild:localization"
+      "shell:generateLocalization"
     ]);
   });
 
   grunt.registerTask("updateLocalization", function (target) {
     return grunt.task.run([
-      "shell:generateLocalization",
-      "deploybuild:localization"
+      "shell:generateLocalization"
     ]);
   });
 

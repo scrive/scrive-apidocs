@@ -54,7 +54,7 @@ import User.Lang
 import User.Model
 import Utils.HTTP
 import Utils.Monoid
-import Version
+import VersionTH
 
 -- * Main Implementation
 

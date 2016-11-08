@@ -2,14 +2,16 @@
 
 import Control.Monad
 import Data.List
+import Data.Maybe
 import Development.Shake
 import Development.Shake.FilePath
-import System.Console.GetOpt
 import System.Exit (exitFailure)
 
+import Shake.Flags
 import Shake.GetCabalDeps
 import Shake.GetHsDeps
 import Shake.GitHub
+import Shake.NewBuild
 import Shake.Oracles
 import Shake.TeamCity
 import Shake.Utils
@@ -69,6 +71,7 @@ usageMsg = unlines
   , "   detect-old-localizations   : Detect old localizations"
   , "   detect-old-templates       : Detect old templates"
   , "   take-reference-screenshots : Take reference screenshots"
+  , "   localization               : Update localization files"
   , "   scripts-help               : Help on using utility scripts"
   , ""
   , "# Clean"
@@ -80,19 +83,6 @@ usageMsg = unlines
   , ""
   ]
 
-data TransifexFlag = User String | Password String | Lang String | Resource String
-  deriving (Eq, Ord)
-
-transifexFlags :: [OptDescr (Either String TransifexFlag)]
-transifexFlags =
-  [ Option "" ["user"]     (reqArg User     "USER") "User name"
-  , Option "" ["password"] (reqArg Password "PASS") "Password"
-  , Option "" ["lang"]     (reqArg Lang     "LANG") "Language"
-  , Option "" ["resource"] (reqArg Resource "NAME") "Resource"
-  ]
-  where
-    reqArg toFlag name = ReqArg (Right . toFlag) name
-
 main :: IO ()
 main = do
   -- Used to check if Shake.hs rules changed, triggering a full rebuild.
@@ -100,7 +90,9 @@ main = do
   ver          <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
   -- Dependency information needed by our rules.
   hsSourceDirs <- getHsSourceDirs "kontrakcja.cabal"
-  shakeArgsWith (opts ver) transifexFlags $ \flags targets -> return . Just $ do
+  shakeArgsWith (opts ver) shakeFlags $ \flags targets -> return . Just $ do
+    newBuild <- liftIO $ mkUseNewBuild flags
+
     if null targets then want ["help"] else want targets
 
     -- * First add Oracles
@@ -125,18 +117,20 @@ main = do
 
     "dist" ~> need ["_build/kontrakcja.tar.gz"]
 
-    "transifex-fix"              ~> runTransifexScript "fix"   []
-    "transifex-push"             ~> runTransifexScript "push"  flags
-    "transifex-diff"             ~> runTransifexScript "diff"  flags
-    "transifex-merge"            ~> runTransifexScript "merge" flags
+    "transifex-fix"              ~> runTransifexScript newBuild "fix"   []
+    "transifex-push"             ~> runTransifexScript newBuild "push"  flags
+    "transifex-diff"             ~> runTransifexScript newBuild "diff"  flags
+    "transifex-merge"            ~> runTransifexScript newBuild "merge" flags
     "transifex-help"             ~> do putNormal transifexUsageMsg
                                        putNormal "-----------------------------"
                                        putNormal "Output of 'transifex --help':"
                                        putNormal "-----------------------------"
-                                       runTransifexScript "" []
-    "detect-old-localizations"   ~> runDetectOldLocalizationsScript
-    "detect-old-templates"       ~> runDetectOldTemplatesScript
+                                       runTransifexScript newBuild "" []
+    "detect-old-localizations"   ~> runDetectOldLocalizationsScript newBuild
+    "detect-old-templates"       ~> runDetectOldTemplatesScript newBuild
     "take-reference-screenshots" ~> runTakeReferenceScreenshotsScript
+    "localization"               ~> runLocalization newBuild
+    "scripts-help"               ~> putNormal scriptsUsageMsg
 
     "clean" ~> need ["clean-server","clean-frontend"]
     "clean-server" ~> need ["cabal-clean"]
@@ -147,19 +141,74 @@ main = do
       removeFilesAfter "_shake/" ["//*"]
 
     -- * Rules
-    serverBuildRules   hsSourceDirs
-    serverTestRules    hsSourceDirs
-    frontendBuildRules
-    frontendTestRules
-    utilityScriptRules hsSourceDirs
-    distributionRules
+    componentBuildRules newBuild hsSourceDirs
+    serverBuildRules    newBuild hsSourceDirs
+    serverTestRules     newBuild hsSourceDirs
+    frontendBuildRules  newBuild
+    frontendTestRules   newBuild
+    distributionRules   newBuild
     oracleHelpRule
 
 -- * Server
 
 -- | Server build rules
-serverBuildRules :: HsSourceDirsMap -> Rules ()
-serverBuildRules hsSourceDirs = do
+serverBuildRules :: UseNewBuild -> HsSourceDirsMap -> Rules ()
+serverBuildRules newBuild hsSourceDirs =
+  ifNewBuild newBuild (serverNewBuildRules hsSourceDirs)
+                      (serverOldBuildRules hsSourceDirs)
+
+getCabalConfigureFlags :: Action [String]
+getCabalConfigureFlags = do
+  tc           <- askOracle (TeamCity ())
+  testCoverage <- askOracle (BuildTestCoverage ())
+  flags0       <- askOracle (BuildCabalConfigureOptions ())
+  let flags = if tc then ["-fenable-routinglist",flags0]
+              else [flags0]
+      flags'= if testCoverage then "-ftest-coverage":flags
+              else flags
+  return flags'
+
+serverNewBuildRules :: HsSourceDirsMap -> FilePath -> Rules ()
+serverNewBuildRules hsSourceDirs buildDir = do
+  let cabalFiles = ["cabal.project.freeze", "kontrakcja.cabal"]
+
+  "_build/cabal-update" %>>> do
+    need cabalFiles
+    cmd (EchoStdout True) "cabal update"
+
+  "cabal.project.local" %> \_ -> do
+    need ("_build/cabal-update":cabalFiles)
+    flags <- getCabalConfigureFlags
+    command [Shell] "cabal" ("new-configure":flags)
+
+  "_build/cabal-build" %>>> do
+    need ["cabal.project.local"]
+    tc <- askOracle (TeamCity ())
+    when tc $ do
+      -- Need to rebuild on TeamCity because version code for
+      -- resources that is generated in src/Version.hs is used for stuff
+      -- that is rebuilt with new version code by `grunt build`.
+      alwaysRerun
+      -- Force GHC to rebuild the TH-containing module.
+      cmd "touch" ("backend" </> "lib" </> "Version.hs")
+    needServerHaskellFiles hsSourceDirs
+    cmd (EchoStdout True) "cabal new-build"
+
+  "_build/cabal-haddock.tar.gz" %> \_ -> do
+    need ["_build/cabal-build"]
+    needServerHaskellFiles hsSourceDirs
+    -- Limit to library from package, due to Cabal bug:
+    -- https://github.com/haskell/cabal/issues/1919
+    command_ [] "cabal" ["act-as-setup", "--", "haddock", "--internal"
+                        ,"--builddir", buildDir]
+    command_ [Shell] "tar" ["-czf","_build/cabal-haddock.tar.gz"
+                           ,buildDir </> "doc"]
+
+  "cabal-clean" ~> cmd "rm -rf dist-newstyle"
+
+
+serverOldBuildRules :: HsSourceDirsMap -> Rules ()
+serverOldBuildRules hsSourceDirs = do
   let cabalFiles = ["cabal.config", "kontrakcja.cabal"]
 
   "cabal.sandbox.config" %> \_ -> do
@@ -187,19 +236,15 @@ serverBuildRules hsSourceDirs = do
     need cabalFiles
     need ["_build/cabal-install-deps"]
     tc <- askOracle (TeamCity ())
-    testCoverage <- askOracle (BuildTestCoverage ())
-    cabalFlags <- askOracle (BuildCabalConfigureOptions ())
-    let flags = if tc then ["-fenable-routinglist",cabalFlags]
-                      else [cabalFlags]
-    -- Need to rebuild on TeamCity because versioncode for resources that is
-    -- generated in src/Version.hs is used for stuff that is rebuilt with new
-    -- versioncode by `grunt build`
+    -- Need to rebuild on TeamCity because version code for resources
+    -- that is generated in src/Version.hs is used for stuff that is
+    -- rebuilt with new version code by `grunt build`.
     when tc $ alwaysRerun
-    -- Need to clean for flags to be effective
+    -- Need to clean for flags to be effective.
     command_ [] "cabal" ["clean"]
-    case testCoverage of
-      True -> command [Shell] "cabal" $ "configure":"-ftest-coverage":flags
-      False -> command [Shell] "cabal" $ "configure":flags
+
+    flags <- getCabalConfigureFlags
+    command [Shell] "cabal" ("configure":flags)
 
   "dist/setup-config" %> \_ -> do
     need cabalFiles
@@ -227,22 +272,22 @@ serverBuildRules hsSourceDirs = do
   "cabal-clean" ~> cmd "cabal clean"
 
 -- | Server test rules
-serverTestRules :: HsSourceDirsMap -> Rules ()
-serverTestRules hsSourceDirs = do
+serverTestRules :: UseNewBuild -> HsSourceDirsMap -> Rules ()
+serverTestRules newBuild hsSourceDirs = do
   let hsImportOrderAction checkOnly = do
         let allSourceDirs = allHsSourceDirs hsSourceDirs
             flags = if checkOnly then ("--check":allSourceDirs)
                     else allSourceDirs
         command ([Shell] ++ langEnv)
-          "./dist/build/sort_imports/sort_imports" flags
+          (componentTargetPath newBuild "sort_imports") flags
 
   "_build/hs-import-order" %>>> do
     needServerHaskellFiles hsSourceDirs
-    need ["dist/build/sort_imports/sort_imports" <.> exe]
+    need [componentTargetPath newBuild "sort_imports"]
     withGitHub "Haskell import order" $ hsImportOrderAction True
 
   "fix-hs-import-order" ~> do
-    need ["dist/build/sort_imports/sort_imports" <.> exe]
+    need [componentTargetPath newBuild "sort_imports"]
     hsImportOrderAction False
 
   "kontrakcja_test.conf" %> \_ -> do
@@ -252,7 +297,8 @@ serverTestRules hsSourceDirs = do
       copyFile' testConfFile "kontrakcja_test.conf"
 
   "kontrakcja-test" ~> do
-    need ["_build/cabal-build", "kontrakcja_test.conf"]
+    let kontrakcjaTestPath = componentTargetPath newBuild "kontrakcja-test"
+    need [kontrakcjaTestPath, "kontrakcja_test.conf"]
     -- removeFilesAfter is only performed on a successfull build, this file
     -- needs to be cleaned regardless otherwise successive builds will fail
     liftIO $ removeFiles "." ["kontrakcja-test.tix"]
@@ -266,11 +312,11 @@ serverTestRules hsSourceDirs = do
                       "staging" -> ["--staging-tests"]
                       _ -> []
         (Exit c, Stdouterr out) <- command cmdopt
-                                   "./dist/build/kontrakcja-test/kontrakcja-test"
+                                   kontrakcjaTestPath
                                    flags
         liftIO $ hUnitForTeamCity c out
       else do
-        cmd "./dist/build/kontrakcja-test/kontrakcja-test"
+        cmd kontrakcjaTestPath
     testCoverage <- askOracle (BuildTestCoverage ())
     when testCoverage $ do
       putNormal "Checking if kontrakcja-test.tix was generated by tests..."
@@ -291,52 +337,57 @@ needServerHaskellFiles hsSourceDirs =
 
 -- * Frontend
 
+gruntNewBuildArg :: UseNewBuild -> String
+gruntNewBuildArg (UseNewBuild _) = "--new-build"
+gruntNewBuildArg DontUseNewBuild = "--no-new-build"
+
 -- | Frontend build rules
-frontendBuildRules :: Rules ()
-frontendBuildRules = do
+frontendBuildRules :: UseNewBuild -> Rules ()
+frontendBuildRules newBuild = do
   "_build/npm-install" %>>> do
     need ["frontend/package.json"]
     command [EchoStdout True, Cwd "frontend"] "npm" ["install"]
 
   "_build/grunt-build" %>>> do
     need [ "_build/npm-install"
-         , "dist/setup-config" -- Need `cabal configure` as Grunt uses
-                               -- localization
+         , componentTargetPath newBuild "localization"
          ]
     alwaysRerun
     withGitHub "Grunt Build" $
-      command ([EchoStdout True, Cwd "frontend"] ++ langEnv) "grunt" ["build"]
+      command ([EchoStdout True, Cwd "frontend"] ++ langEnv) "grunt"
+              ["build", gruntNewBuildArg newBuild]
 
   "grunt-clean" ~> do
     need ["_build/npm-install"]
-    cmd (Cwd "frontend") "grunt clean"
+    cmd [Cwd "frontend"] "grunt" ["clean", gruntNewBuildArg newBuild]
 
 -- | Frontend test rules
-frontendTestRules :: Rules ()
-frontendTestRules = do
+frontendTestRules :: UseNewBuild -> Rules ()
+frontendTestRules newBuild = do
   "grunt-eslint" ~> do
     need ["_build/npm-install"]
     withGitHub "eslint" $
-      cmd (Cwd "frontend") "grunt eslint"
+      cmd [Cwd "frontend"] "grunt" ["eslint", gruntNewBuildArg newBuild]
 
   "grunt-coverage" ~> do
     need ["_build/grunt-build"]
-    command_ [Cwd "frontend"] "grunt" ["test"]
+    command_ [Cwd "frontend"] "grunt" ["test", gruntNewBuildArg newBuild]
 
   "grunt-test" ~> do
     need ["_build/grunt-build"]
     withGitHub "Grunt Test" $ do
       testCoverage <- askOracle (BuildTestCoverage ())
       case testCoverage of
-        False -> cmd (Cwd "frontend") "grunt test:fast"
+        False -> cmd [Cwd "frontend"] "grunt" ["test:fast"
+                                              ,gruntNewBuildArg newBuild]
         True -> do
           need ["grunt-coverage"]
           command_ [Shell] "zip -r _build/JS_coverage.zip frontend/coverage/" []
           removeFilesAfter "frontend/coverage" ["//*"]
 
 -- * Create distribution
-distributionRules :: Rules ()
-distributionRules = do
+distributionRules :: UseNewBuild -> Rules ()
+distributionRules newBuild = do
   "urls.txt" %> \_ -> do
     tc <- askOracle (TeamCity ())
     nginxconfpath <- askOracle (NginxConfPath ())
@@ -347,18 +398,19 @@ distributionRules = do
     when (null nginxconfpath) $ do
       putLoud "ERROR: NGINX_CONF_PATH is empty"
       liftIO $ exitFailure
-    need ["_build/cabal-build"]
-    command_ [] "./dist/build/routinglist/routinglist" [nginxconfpath]
+    let routingListPath = componentTargetPath newBuild "routinglist"
+    need [routingListPath]
+    command_ [] routingListPath [nginxconfpath]
     removeFilesAfter "." ["urls.txt"]
 
   "_build/kontrakcja.tar.gz" %> \_ -> do
     need ["all", "urls.txt"]
-    let distFiles = [ "dist/build/kontrakcja-server/kontrakcja-server"
-                    , "dist/build/cron/cron"
-                    , "dist/build/kontrakcja-migrate/kontrakcja-migrate"
-                    , "dist/build/mailing-server/mailing-server"
-                    , "dist/build/messenger-server/messenger-server"
-                    , "dist/build/screenshot-review/screenshot-review"
+    let distFiles = [ componentTargetPath newBuild "kontrakcja-server"
+                    , componentTargetPath newBuild "cron"
+                    , componentTargetPath newBuild "kontrakcja-migrate"
+                    , componentTargetPath newBuild "mailing-server"
+                    , componentTargetPath newBuild "messenger-server"
+                    , componentTargetPath newBuild "screenshot-review"
                     , "evidence-package/samples.p"
                     , "frontend/app/img"
                     , "frontend/app/less"
@@ -375,30 +427,6 @@ distributionRules = do
     command_ [Shell] "tar" $ ["-czf","_build/kontrakcja.tar.gz"] ++ distFiles
 
 -- * Utility scripts.
-
-utilityScriptRules :: HsSourceDirsMap -> Rules ()
-utilityScriptRules hsSourceDirs = do
-  "dist/build/detect_old_localizations/detect_old_localizations" <.> exe %>
-    \_ -> buildComponent "detect_old_localizations"
-
-  "dist/build/detect_old_templates/detect_old_templates" <.> exe %> \_ ->
-    buildComponent "detect_old_templates"
-
-  "dist/build/transifex/transifex" <.> exe %> \_ ->
-    buildComponent "transifex"
-
-  "dist/build/sort_imports/sort_imports" <.> exe %> \_ ->
-    buildComponent "sort_imports"
-
-  "scripts-help" ~> putNormal scriptsUsageMsg
-
-  where
-    -- Assumes that all sources of a component are in its hs-source-dirs.
-    buildComponent componentName = do
-      let sourceDirs = componentHsSourceDirs componentName hsSourceDirs
-      need ["dist/setup-config"]
-      needPatternsInDirectories ["//*.hs"] sourceDirs
-      cmd $ "cabal build " ++ componentName
 
 scriptsUsageMsg :: String
 scriptsUsageMsg = unlines $
@@ -453,7 +481,11 @@ scriptsUsageMsg = unlines $
   , "same thing for /tmp/desktop2.png into "
     ++ "files/reference_screenshots/standard.json"
   , "same thing for /tmp/mobile2.png into files/reference_screenshots/mobile.json"
-
+  , ""
+  , "localization"
+  , "--------------------------"
+  , "Update the pre-generated localization files in 'frontend/app/localization/'"
+  , "for all languages. To use, run 'shake.sh localization'."
   ]
 
 transifexUsageMsg :: String
@@ -495,34 +527,45 @@ transifexUsageMsg = unlines $
   , "English texts."
   ]
 
-runTransifexScript :: String -> [TransifexFlag] -> Action ()
-runTransifexScript subcommand flags = do
+runTransifexScript :: UseNewBuild -> String -> [ShakeFlag] -> Action ()
+runTransifexScript newBuild subcommand flags = do
+  let scriptPath = componentTargetPath newBuild "transifex"
   checkFlags
-  need ["dist/build/transifex/transifex" <.> exe]
-  let extractArg (User u)     = u
-      extractArg (Password p) = p
-      extractArg (Lang l)     = l
-      extractArg (Resource r) = r
-      args = map extractArg $ sort flags
-  cmd $ "dist/build/transifex/transifex " ++ subcommand
-        ++ " " ++ intercalate " " args
+  need [scriptPath]
+  let extractArg (TransifexUser u)     = Just u
+      extractArg (TransifexPassword p) = Just p
+      extractArg (TransifexLang l)     = Just l
+      extractArg (TransifexResource r) = Just r
+      extractArg (NewBuild)            = Nothing
+      -- NB: sorting here relies on ShakeFlag constructors being
+      -- declared in correct order (user, password, lang, resource).
+      args = mapMaybe extractArg $ sort flags
+  cmd scriptPath (subcommand:args)
     where
       checkFlags = if (subcommand `elem` ["push", "diff", "merge"])
                       && (length flags /= 4)
                    then error "transifex: Some required arguments are missing!"
                    else return ()
 
-runDetectOldLocalizationsScript :: Action ()
-runDetectOldLocalizationsScript = do
-  need ["dist/build/detect_old_localizations/detect_old_localizations" <.> exe]
-  cmd "dist/build/detect_old_localizations/detect_old_localizations"
+runDetectOldLocalizationsScript :: UseNewBuild -> Action ()
+runDetectOldLocalizationsScript newBuild = do
+  let scriptPath = componentTargetPath newBuild "detect_old_localizations"
+  need [scriptPath]
+  cmd scriptPath
 
-runDetectOldTemplatesScript :: Action ()
-runDetectOldTemplatesScript = do
-  need ["dist/build/detect_old_templates/detect_old_templates" <.> exe]
-  cmd "dist/build/detect_old_templates/detect_old_templates"
+runDetectOldTemplatesScript :: UseNewBuild -> Action ()
+runDetectOldTemplatesScript newBuild = do
+  let scriptPath = componentTargetPath newBuild "detect_old_templates"
+  need [scriptPath]
+  cmd scriptPath
 
 runTakeReferenceScreenshotsScript :: Action ()
 runTakeReferenceScreenshotsScript = do
   need ["scripts/take_reference_screenshots.py"]
   cmd "python scripts/take_reference_screenshots.py"
+
+runLocalization :: UseNewBuild -> Action ()
+runLocalization newBuild = do
+  let exePath = componentTargetPath newBuild "localization"
+  need [exePath]
+  cmd  exePath

@@ -30,7 +30,7 @@ import Text.XML.DirtyContent (renderXMLContent)
 import User.Model (Lang, allLangs, codeFromLang)
 import Util.Actor (Actor(..), actorAPIString, actorEmail, actorIP, actorUserID)
 import Util.SignatoryLinkUtils (getAuthorSigLink)
-import Version (versionID)
+import VersionTH (versionID)
 
 dumpAllEvidenceTexts :: TestEnvSt -> Test
 dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do

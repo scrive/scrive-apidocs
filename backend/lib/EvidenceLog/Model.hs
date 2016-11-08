@@ -41,7 +41,7 @@ import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo (getEmail)
 import Util.SignatoryLinkUtils (getSigLinkFor)
-import Version
+import VersionTH
 import qualified HostClock.Model as HC
 
 data InsertEvidenceEventWithAffectedSignatoryAndMsgs = InsertEvidenceEventWithAffectedSignatoryAndMsgs

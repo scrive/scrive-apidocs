@@ -39,7 +39,7 @@ import Utils.Network
 import qualified Doc.RenderedPages as RenderedPages
 import qualified HostClock.Model as HC
 import qualified MemCache
-import qualified Version
+import qualified VersionTH
 
 data CmdConf = CmdConf {
   config :: String
@@ -66,9 +66,9 @@ main = withCurlDo $ do
   pool <- liftBase . createPoolSource $ connSettings kontraComposites
   rng <- newCryptoRNGState
   lr@LogRunner{..} <- mkLogRunner "kontrakcja" (logConfig appConf) rng
-  withLoggerWait $ do
+  withLogger $ \logger -> runLogger logger $ do
     logInfo "Starting kontrakcja-server" $ object [
-        "version" .= Version.versionID
+        "version" .= VersionTH.versionID
       ]
     checkExecutables
 
@@ -95,10 +95,10 @@ main = withCurlDo $ do
         , logrunner = lr
         }
 
-    startSystem lr appGlobals appConf
+    startSystem lr logger appGlobals appConf
 
-startSystem :: LogRunner -> AppGlobals -> AppConf -> MainM ()
-startSystem LogRunner{..} appGlobals appConf = E.bracket startServer stopServer waitForTerm
+startSystem :: LogRunner -> Logger -> AppGlobals -> AppConf -> MainM ()
+startSystem LogRunner{..} logger appGlobals appConf = E.bracket startServer stopServer waitForTerm
   where
     startServer :: MainM ThreadId
     startServer = do
@@ -118,7 +118,7 @@ startSystem LogRunner{..} appGlobals appConf = E.bracket startServer stopServer 
           }
 
       fork . liftBase . runReqHandlerT listensocket conf $ do
-        withLogger $ appHandler routes appConf appGlobals
+        runLogger logger $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
       withPostgreSQL (unConnectionSource $ connsource appGlobals maxConnectionTracker) . runCryptoRNGT (cryptorng appGlobals) $ do

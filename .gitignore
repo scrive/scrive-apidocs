@@ -23,6 +23,7 @@ jslint.txt
 regular-css-compiled.css
 .cabal-sandbox/
 cabal.sandbox.config
+cabal.project.local
 
 frontend/app/localization/*.js
 

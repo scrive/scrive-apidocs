@@ -64,7 +64,8 @@ Library
   Hs-source-dirs: backend/cron/inc backend/cron/schema
                   backend/lib
                   backend/mailer/inc backend/mailer/schema backend/mailer/src
-                  backend/messenger/inc backend/messenger/schema backend/messenger/src
+                  backend/messenger/inc backend/messenger/schema
+                  backend/messenger/src
                   backend/migrate/inc
                   backend/misc/schema backend/misc/src
                   backend/server/schema backend/server/src
@@ -418,6 +419,7 @@ Library
                  , Utils.String
                  , Utils.TH
                  , Version
+                 , VersionTH
 
   Build-depends: base
                , AES
@@ -467,7 +469,7 @@ Library
                , lifted-async
                , lifted-base
                , lifted-threads
-               , log
+               , log >= 0.5.4
                , mixpanel
                , mmap
                , monad-control
@@ -563,7 +565,7 @@ Executable kontrakcja-server
                , happstack-static-routing
                , hedis
                , lifted-base
-               , log
+               , log >= 0.5.4
                , text
                , transformers-base
                , utf8-string
@@ -616,7 +618,7 @@ Executable cron
                , consumers
                , hpqtypes-extras
                , hedis
-               , log
+               , log >= 0.5.4
                , text
                , transformers-base
 
@@ -693,7 +695,7 @@ Executable kontrakcja-migrate
                , hpqtypes
                , json
                , lifted-base
-               , log
+               , log >= 0.5.4
                , monad-control
                , monad-time
                , mtl
@@ -786,7 +788,7 @@ Executable mailing-server
                , json
                , lifted-async
                , lifted-base
-               , log
+               , log >= 0.5.4
                , monad-control
                , monad-time
                , mtl
@@ -840,7 +842,8 @@ Executable mailing-server
 
 Executable messenger-server
 
-  Hs-source-dirs: backend/messenger/inc backend/messenger/schema backend/messenger/src
+  Hs-source-dirs: backend/messenger/inc backend/messenger/schema
+                  backend/messenger/src
                   backend/misc/schema backend/misc/src
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
@@ -882,7 +885,7 @@ Executable messenger-server
                , iconv
                , json
                , lifted-base
-               , log
+               , log >= 0.5.4
                , monad-control
                , monad-time
                , mtl
@@ -978,7 +981,7 @@ Executable kontrakcja-test
                , json
                , kontrakcja-templates
                , lifted-base
-               , log
+               , log >= 0.5.4
                , monad-control
                , mtl
                , network-uri
@@ -1044,6 +1047,7 @@ Executable localization
   GHC-options: -main-is LocalizationMain
 
   Build-depends: base
+               , base16-bytestring
                , cond
                , data-default
                , directory
@@ -1054,6 +1058,7 @@ Executable localization
                , lifted-base
                , mtl
                , split
+               , utf8-string
                , template-haskell
                , text
                , time
@@ -1207,7 +1212,7 @@ Executable screenshot-review
                , kontrakcja-templates
                , lifted-async
                , lifted-base
-               , log
+               , log >= 0.5.4
                , monad-control
                , monad-time
                , mtl

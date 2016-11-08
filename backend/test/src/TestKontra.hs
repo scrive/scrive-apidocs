@@ -70,6 +70,7 @@ data TestEnvSt = TestEnvSt {
   , teTransSettings     :: !TransactionSettings
   , teRNGState          :: !CryptoRNGState
   , teLogRunner         :: !LogRunner
+  , teLogger            :: !Logger
   , teActiveTests       :: !(TVar (Bool, Int))
   , teGlobalTemplates   :: !KontrakcjaGlobalTemplates
   , teRejectedDocuments :: !(TVar Int)
@@ -91,7 +92,7 @@ runTestEnv st m = do
       atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
-ununTestEnv st m = withLogger (teLogRunner st) $ runReaderT (unTestEnv m) st
+ununTestEnv st m = runLogger (teLogRunner st) (teLogger st) $ runReaderT (unTestEnv m) st
 
 instance CryptoRNG TestEnv where
   randomBytes n = asks teRNGState >>= liftIO . randomBytesIO n
@@ -113,8 +114,9 @@ instance MonadDB TestEnv where
     -- new connection.
     ConnectionSource pool <- asks teConnSource
     LogRunner{..} <- asks teLogRunner
+    logger        <- asks teLogger
     TestEnv . ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
-      res <- runDBT pool (dbTransactionSettings st) . withLogger $ runReaderT m te
+      res <- runDBT pool (dbTransactionSettings st) . runLogger logger $ runReaderT m te
       return (res, st)
   getNotification = TestEnv . getNotification
 
@@ -145,13 +147,14 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   now <- currentTime
   rng <- asks teRNGState
   LogRunner{..} <- asks teLogRunner
+  logger        <- asks teLogger
   ts <- getTransactionSettings
   -- commit previous changes and do not begin new transaction as runDBT
   -- does it and we don't want these pesky warnings about transaction
   -- being already in progress
   commit' ts { tsAutoTransaction = False }
   ((res, ctx'), st) <- E.finally
-    (liftBase $ runStateT (unReqHandlerT . withLogger . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT pool ts $ runStateT (unKontra tk) noflashctx) $ ReqHandlerSt rq id now)
+    (liftBase $ runStateT (unReqHandlerT . runLogger logger . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT pool ts $ runStateT (unKontra tk) noflashctx) $ ReqHandlerSt rq id now)
     -- runDBT commits and doesn't run another transaction, so begin new one
     begin
   -- join all of the spawned threads. since exceptions

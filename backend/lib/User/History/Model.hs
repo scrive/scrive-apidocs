@@ -26,7 +26,7 @@ import KontraPrelude
 import MinutesTime
 import User.Email
 import User.Model
-import qualified Version
+import qualified VersionTH
 
 data UserHistory = UserHistory {
     uhuserid           :: UserID
@@ -238,7 +238,7 @@ addUserHistory user event ip time mpuser =
     sqlSet "event_data" $ maybe "" encode $ uheventdata event
     sqlSet "ip" ip
     sqlSet "time" time
-    sqlSet "system_version" $ Version.versionID
+    sqlSet "system_version" $ VersionTH.versionID
     sqlSet "performing_user_id" mpuser
 
 selectUserHistorySQL :: SQL

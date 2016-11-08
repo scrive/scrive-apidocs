@@ -1,13 +1,7 @@
-{-# LANGUAGE CPP #-}
-
 module Shake.GetCabalDeps (HsSourceDirsMap
                           ,getHsSourceDirs
                           ,allHsSourceDirs
                           ,componentHsSourceDirs) where
-
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative
-#endif
 
 import Data.List
 import Data.Maybe
@@ -24,7 +18,8 @@ type HsSourceDirsMap = M.Map String [FilePath]
 -- hs-source-dirs map. Default library has an empty component name.
 getHsSourceDirs :: FilePath -> IO HsSourceDirsMap
 getHsSourceDirs cabalFile = do
-  pkgDesc <- flattenPackageDescription <$> readPackageDescription normal cabalFile
+  pkgDesc <- flattenPackageDescription `fmap`
+             readPackageDescription normal cabalFile
   let buildInfos =  [("", libBuildInfo $ lib)
                     | lib <- maybeToList $ library pkgDesc ]
                  ++ [(exeName exe, buildInfo exe)
