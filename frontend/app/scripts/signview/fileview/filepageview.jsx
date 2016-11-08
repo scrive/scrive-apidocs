@@ -10,7 +10,7 @@ import  CheckboxPlacementPlacedView from "./checkboxplacementplacedview";
 import  TextPlacementPlacedView from "./textplacementplacedview";
 import  Highlight from "./highlight";
 
-const DEFAULT_PIXEL_WIDTH = 950;
+const DEFAULT_PIXEL_WIDTH = 1040;
 
 module.exports = React.createClass({
 
