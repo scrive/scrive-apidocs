@@ -84,24 +84,26 @@ instance Unjson LoggerDef where
 
 ----------------------------------------
 
-data LogRunner = LogRunner {
+newtype LogRunner = LogRunner {
   -- | Run an IO action with a newly-allocated logger, ensuring that
   -- the logger shuts down properly on exit, even in the presence of
-  -- exceptions. Normally should only be used in the 'main' function
-  -- of the application.
-  withLogger :: forall r . (Logger -> IO r) -> IO r,
-
-  -- | Run a 'LogT' action with a logger previously allocated by
-  -- 'withLogger'. Doesn't imply any costly synchronisation, making it
+  -- exceptions.
+  --
+  -- The IO action gets passed a 'runLogger' function, which should be
+  -- used to run any nested 'LogT' actions. Unlike 'withLogger', it
+  -- doesn't imply any costly synchronisation, and therefore is
   -- appropriate for frequent use (e.g. on every HTTP request).
-  runLogger  :: forall m r . Logger -> LogT m r -> m r
+  --
+  -- Normally 'withLogger' should only be used in the 'main' function
+  -- of the application.
+  withLogger :: forall a . ((forall m r . LogT m r -> m r) -> IO a) -> IO a
 }
 
 -- | 'withLogger' and 'runLogger' rolled into one. Useful when you
 -- only have a single top-level 'runLogger' call.
 runWithLogRunner :: LogRunner -> LogT IO r -> IO r
 runWithLogRunner LogRunner{..} act =
-  withLogger $ \logger -> runLogger logger act
+  withLogger $ \runLogger -> runLogger act
 
 newtype WithLoggerFun = WithLoggerFun {
   withLoggerFun :: forall r . (Logger -> IO r) -> IO r
@@ -116,8 +118,8 @@ mkLogRunner component LogConfig{..} rng = do
   withLoggerFuns <- mapM toWithLoggerFun lcLoggers
   let loggerFun = sconcat . fromList $ withLoggerFuns
   return LogRunner {
-    withLogger = \act -> withLoggerFun loggerFun $ act,
-    runLogger  = \logger act -> run logger act
+    withLogger = \act -> withLoggerFun loggerFun $
+      (\logger -> act (run logger))
     }
   where
     toWithLoggerFun :: LoggerDef -> IO WithLoggerFun

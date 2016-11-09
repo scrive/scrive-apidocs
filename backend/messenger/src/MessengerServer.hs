@@ -52,8 +52,8 @@ main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   conf <- readConfig putStrLn config
   rng <- newCryptoRNGState
-  logRunner@LogRunner{..} <- mkLogRunner "messenger" (mscLogConfig conf) rng
-  withLogger $ \logger -> runLogger logger $ do
+  lr <- mkLogRunner "messenger" (mscLogConfig conf) rng
+  withLogger lr $ \runLogger -> runLogger $ do
     checkExecutables
 
     let pgSettings = pgConnSettings (mscDBConfig conf) []
@@ -64,19 +64,18 @@ main = do
 
     let cron = jobsWorker cs
         sender = smsConsumer rng cs $ createSender $ sendersConfigFromMessengerConf conf
-    E.bracket (startServer logRunner logger cs rng conf) (liftBase killThread) . const
+    E.bracket (startServer runLogger cs rng conf) (liftBase killThread) . const
       . finalize (localDomain "cron" $ runConsumer cron pool)
       . finalize (localDomain "sender" $ runConsumer sender pool) $ do
       liftBase waitForTermination
   where
     startServer
-      :: LogRunner
-      -> Logger
+      :: (forall m r . LogT m r -> m r)
       -> TrackedConnectionSource
       -> CryptoRNGState
       -> MessengerServerConf
       -> MainM ThreadId
-    startServer LogRunner{..} logger cs rng conf = do
+    startServer runLogger cs rng conf = do
       let (iface, port) = mscHttpBindAddress conf
           handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
       routes <- case R.compile handlers of
@@ -87,7 +86,7 @@ main = do
           $unexpectedErrorM "static routing"
         Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase (listenOn (htonl iface) $ fromIntegral port)
-      fork . liftBase . runReqHandlerT socket handlerConf . runLogger logger $
+      fork . liftBase . runReqHandlerT socket handlerConf . runLogger $
         router rng cs routes
 
     smsConsumer

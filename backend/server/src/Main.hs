@@ -65,8 +65,8 @@ main = withCurlDo $ do
   let connSettings = pgConnSettings $ dbConfig appConf
   pool <- liftBase . createPoolSource $ connSettings kontraComposites
   rng <- newCryptoRNGState
-  lr@LogRunner{..} <- mkLogRunner "kontrakcja" (logConfig appConf) rng
-  withLogger $ \logger -> runLogger logger $ do
+  lr <- mkLogRunner "kontrakcja" (logConfig appConf) rng
+  withLogger lr $ \runLogger -> runLogger $ do
     logInfo "Starting kontrakcja-server" $ object [
         "version" .= VersionTH.versionID
       ]
@@ -84,21 +84,21 @@ main = withCurlDo $ do
       brandedimagescache <- MemCache.new BSL8.length 50000000
       docs <- MemCache.new RenderedPages.pagesCount 5000
       return AppGlobals {
-          templates = templates
-        , mrediscache = mrediscache
-        , filecache = filecache
-        , lesscache = lesscache
+          templates          = templates
+        , mrediscache        = mrediscache
+        , filecache          = filecache
+        , lesscache          = lesscache
         , brandedimagescache = brandedimagescache
-        , docscache = docs
-        , cryptorng = rng
-        , connsource = pool
-        , logrunner = lr
+        , docscache          = docs
+        , cryptorng          = rng
+        , connsource         = pool
+        , runlogger          = runLogger
         }
 
-    startSystem lr logger appGlobals appConf
+    startSystem appGlobals appConf
 
-startSystem :: LogRunner -> Logger -> AppGlobals -> AppConf -> MainM ()
-startSystem LogRunner{..} logger appGlobals appConf = E.bracket startServer stopServer waitForTerm
+startSystem :: AppGlobals -> AppConf -> MainM ()
+startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
   where
     startServer :: MainM ThreadId
     startServer = do
@@ -118,7 +118,7 @@ startSystem LogRunner{..} logger appGlobals appConf = E.bracket startServer stop
           }
 
       fork . liftBase . runReqHandlerT listensocket conf $ do
-        runLogger logger $ appHandler routes appConf appGlobals
+        (runlogger appGlobals) $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
       withPostgreSQL (unConnectionSource $ connsource appGlobals maxConnectionTracker) . runCryptoRNGT (cryptorng appGlobals) $ do

@@ -59,9 +59,9 @@ main = do
   -- All running instances need to have the same configuration.
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   conf <- readConfig putStrLn config
-  rng <- newCryptoRNGState
-  lr@LogRunner{..} <- mkLogRunner "mailer" (mscLogConfig conf) rng
-  withLogger $ \logger -> runLogger logger $ do
+  rng  <- newCryptoRNGState
+  lr   <- mkLogRunner "mailer" (mscLogConfig conf) rng
+  withLogger lr $ \runLogger -> runLogger $ do
     checkExecutables
 
     let pgSettings = pgConnSettings $ mscDBConfig conf
@@ -78,7 +78,7 @@ main = do
     cs@(ConnectionSource pool) <- ($ maxConnectionTracker)
       <$> liftBase (createPoolSource $ pgSettings mailerComposites)
 
-    E.bracket (startServer lr logger conf cs rng) (liftBase . killThread) . const $ do
+    E.bracket (startServer runLogger conf cs rng) (liftBase . killThread) . const $ do
       let master = createSender cs $ mscMasterSender conf
           mslave = createSender cs <$> mscSlaveSender conf
           cron   = jobsWorker conf cs rng
@@ -89,13 +89,12 @@ main = do
           liftBase waitForTermination
   where
     startServer
-      :: LogRunner
-      -> Logger
+      :: (forall m r . LogT m r -> m r)
       -> MailingServerConf
       -> TrackedConnectionSource
       -> CryptoRNGState
       -> MainM ThreadId
-    startServer LogRunner{..} logger conf cs rng = do
+    startServer runLogger conf cs rng = do
       let (iface, port) = mscHttpBindAddress conf
           handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
       routes <- case R.compile (handlers conf) of
@@ -106,7 +105,7 @@ main = do
           $unexpectedErrorM "static routing"
         Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase . listenOn (htonl iface) $ fromIntegral port
-      fork . liftBase . runReqHandlerT socket handlerConf . runLogger logger $ router rng cs routes
+      fork . liftBase . runReqHandlerT socket handlerConf . runLogger $ router rng cs routes
 
     hasFailoverTests conf = case mscSlaveSender conf of
       Just _ -> not $ null $ testReceivers conf

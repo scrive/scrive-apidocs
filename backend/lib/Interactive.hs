@@ -36,26 +36,30 @@ run m = do
 
   let connSettings = pgConnSettings $ dbConfig appConf
   globalTemplates <- readGlobalTemplates
-  appGlobals <- do
-    templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
-    filecache <- MemCache.new BS.length 50000000
-    lesscache <- MemCache.new BSL8.length 50000000
-    brandedimagescache <- MemCache.new BSL8.length 50000000
-    docs <- MemCache.new RenderedPages.pagesCount 1000
-    connpool <- createPoolSource $ connSettings kontraComposites
-    return AppGlobals {
-        templates = templates
-      , filecache = filecache
-      , docscache = docs
-      , cryptorng = rng
-      , connsource = connpool
-      , mrediscache = Nothing
-      , lesscache = lesscache
-      , brandedimagescache = brandedimagescache
-      , logrunner = logRunner
-      }
+  withLogger logRunner $ \runLogger -> do
+    appGlobals <- do
+      templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
+      filecache <- MemCache.new BS.length 50000000
+      lesscache <- MemCache.new BSL8.length 50000000
+      brandedimagescache <- MemCache.new BSL8.length 50000000
+      docs <- MemCache.new RenderedPages.pagesCount 1000
+      connpool <- createPoolSource $ connSettings kontraComposites
+      return AppGlobals
+        { templates = templates
+        , filecache = filecache
+        , docscache = docs
+        , cryptorng = rng
+        , connsource = connpool
+        , mrediscache = Nothing
+        , lesscache = lesscache
+        , brandedimagescache = brandedimagescache
+        , runlogger = runLogger
+        }
 
-  ConnectionSource pool <- ($ maxConnectionTracker) `liftM` (createPoolSource $ connSettings kontraComposites)
+    ConnectionSource pool <- ($ maxConnectionTracker)
+      `liftM` (createPoolSource $ connSettings kontraComposites)
 
-  runWithLogRunner logRunner $ withPostgreSQL pool . runCryptoRNGT (cryptorng appGlobals) .
-   AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals) Nothing) $ runTemplatesT (LANG_EN, globalTemplates) m
+    runLogger $ withPostgreSQL pool . runCryptoRNGT (cryptorng appGlobals) .
+      AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf)
+                           (filecache appGlobals) Nothing)
+      $ runTemplatesT (LANG_EN, globalTemplates) m

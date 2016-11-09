@@ -48,7 +48,6 @@ import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
 import KontraPrelude
-import Log.Configuration
 import Log.Identifier
 import Log.Utils
 import MinutesTime
@@ -74,7 +73,7 @@ data AppGlobals = AppGlobals {
   , docscache          :: !RenderedPagesCache
   , cryptorng          :: !CryptoRNGState
   , connsource         :: !(ConnectionTracker -> TrackedConnectionSource)
-  , logrunner          :: !LogRunner
+  , runlogger          :: !(forall m r . LogT m r -> m r)
   }
 
 {- |

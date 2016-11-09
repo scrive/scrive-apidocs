@@ -127,11 +127,11 @@ testMany :: ([String], [(TestEnvSt -> Test)]) -> IO ()
 testMany (allargs, ts) = do
   rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
   lr  <- mkLogRunner "test" def rng
-  withLogger lr $ \logger -> testMany' (allargs, ts) lr logger rng
+  withLogger lr $ \runLogger -> testMany' (allargs, ts) runLogger rng
 
 testMany' :: ([String], [(TestEnvSt -> Test)])
-          -> LogRunner -> Logger -> CryptoRNGState -> IO ()
-testMany' (allargs, ts) lr logger rng = do
+          -> (forall m r . LogT m r -> m r) -> CryptoRNGState -> IO ()
+testMany' (allargs, ts) runLogger rng = do
   let (args, envf) = modifyTestEnv allargs
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
@@ -140,7 +140,7 @@ testMany' (allargs, ts) lr logger rng = do
 
   let connSettings = pgConnSettings pgconf
 
-  runWithLogRunner lr . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
+  runLogger . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
     migrateDatabase [] kontraExtensions kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
@@ -161,8 +161,7 @@ testMany' (allargs, ts) lr logger rng = do
       , teStaticConnSource = staticSource
       , teTransSettings = def
       , teRNGState = rng
-      , teLogRunner = lr
-      , teLogger    = logger
+      , teRunLogger = runLogger
       , teGlobalTemplates = templates
       , teActiveTests = active_tests
       , teRejectedDocuments = rejected_documents

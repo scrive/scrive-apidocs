@@ -52,7 +52,6 @@ import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
 import KontraPrelude
-import Log.Configuration
 import Session.SessionID
 import Templates
 import User.Lang
@@ -69,8 +68,7 @@ data TestEnvSt = TestEnvSt {
   , teStaticConnSource  :: !BasicConnectionSource
   , teTransSettings     :: !TransactionSettings
   , teRNGState          :: !CryptoRNGState
-  , teLogRunner         :: !LogRunner
-  , teLogger            :: !Logger
+  , teRunLogger         :: !(forall m r . LogT m r -> m r)
   , teActiveTests       :: !(TVar (Bool, Int))
   , teGlobalTemplates   :: !KontrakcjaGlobalTemplates
   , teRejectedDocuments :: !(TVar Int)
@@ -92,7 +90,7 @@ runTestEnv st m = do
       atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
-ununTestEnv st m = runLogger (teLogRunner st) (teLogger st) $ runReaderT (unTestEnv m) st
+ununTestEnv st m = teRunLogger st $ runReaderT (unTestEnv m) st
 
 instance CryptoRNG TestEnv where
   randomBytes n = asks teRNGState >>= liftIO . randomBytesIO n
@@ -113,10 +111,9 @@ instance MonadDB TestEnv where
     -- connection source, but the one that actually creates
     -- new connection.
     ConnectionSource pool <- asks teConnSource
-    LogRunner{..} <- asks teLogRunner
-    logger        <- asks teLogger
+    runLogger <- asks teRunLogger
     TestEnv . ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
-      res <- runDBT pool (dbTransactionSettings st) . runLogger logger $ runReaderT m te
+      res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT m te
       return (res, st)
   getNotification = TestEnv . getNotification
 
@@ -146,15 +143,14 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
       amazoncfg = AWS.AmazonConfig Nothing filecache Nothing
   now <- currentTime
   rng <- asks teRNGState
-  LogRunner{..} <- asks teLogRunner
-  logger        <- asks teLogger
+  runLogger <- asks teRunLogger
   ts <- getTransactionSettings
   -- commit previous changes and do not begin new transaction as runDBT
   -- does it and we don't want these pesky warnings about transaction
   -- being already in progress
   commit' ts { tsAutoTransaction = False }
   ((res, ctx'), st) <- E.finally
-    (liftBase $ runStateT (unReqHandlerT . runLogger logger . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT pool ts $ runStateT (unKontra tk) noflashctx) $ ReqHandlerSt rq id now)
+    (liftBase $ runStateT (unReqHandlerT . runLogger . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT pool ts $ runStateT (unKontra tk) noflashctx) $ ReqHandlerSt rq id now)
     -- runDBT commits and doesn't run another transaction, so begin new one
     begin
   -- join all of the spawned threads. since exceptions
