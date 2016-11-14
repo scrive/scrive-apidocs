@@ -100,12 +100,10 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   -- Stat logging
   now <- currentTime
   author <- getDocAuthor =<< theDocument
-  docssent <- dbQuery $ GetDocsSent (userid author)
   -- Log the current time as the last doc sent time
-  asyncLogEvent SetUserProps [UserIDProp (userid author),
-                              someProp "Last Doc Sent" now,
-                              numProp "Docs sent" (fromIntegral $ docssent)
-                              ]
+  asyncLogEvent SetUserProps [ UserIDProp (userid author)
+                             , someProp "Last Doc Sent" now
+                             ]
   theDocument >>= logDocEvent "Doc Sent" author []
 
   sendInvitationEmails authorsignsimmediately

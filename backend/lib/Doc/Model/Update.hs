@@ -64,7 +64,6 @@ module Doc.Model.Update
   , UpdateDraft(..)
   , GetDocsSentBetween(..)
   , FixClosedErroredDocument(..)
-  , GetDocsSent(..)
   , ConnectSignatoriesToUser(..)
 
    -- only for use in tests
