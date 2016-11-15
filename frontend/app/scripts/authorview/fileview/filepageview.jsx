@@ -125,9 +125,10 @@ module.exports = React.createClass({
     return (
       <div id={pageId} className="pagediv">
         { _.map(this.props.highlightedPages, function (hp) {
-          return (
-            <img style={{"position": "absolute"}} src={hp.file().downloadLink()} />
-          ); })
+            return (
+              <img style={{"position": "absolute"}} src={hp.file().downloadLink()} />
+            );
+          })
         }
 
         <img

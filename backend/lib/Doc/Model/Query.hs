@@ -22,7 +22,6 @@ module Doc.Model.Query
   , GetAvailableTemplates(..)
   , GetTimeoutedButPendingDocumentsChunk(..)
   , GetDocsSentBetween(..)
-  , GetDocsSent(..)
   , GetDocumentTags(..)
   , CheckDocumentObjectVersionIs(..)
   , DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor(..)
@@ -333,18 +332,6 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int64 where
                "AND documents.author_id = signatory_links.id " <>
                "AND documents.invite_time >=" <?> start <>
                "AND documents.invite_time <" <?> end <>
-               "AND documents.type =" <?> Signable <>
-               "AND documents.status <>" <?> Preparation
-    foldlDB (\acc (Identity n) -> return $ acc + n) 0
-
-data GetDocsSent = GetDocsSent UserID
-instance MonadDB m => DBQuery m GetDocsSent Int64 where
-  query (GetDocsSent uid) = do
-    runQuery_ $ "SELECT count(documents.id) " <>
-               "FROM documents " <>
-               "JOIN signatory_links ON documents.id = signatory_links.document_id " <>
-               "WHERE signatory_links.user_id =" <?> uid <>
-               "AND documents.author_id = signatory_links.id " <>
                "AND documents.type =" <?> Signable <>
                "AND documents.status <>" <?> Preparation
     foldlDB (\acc (Identity n) -> return $ acc + n) 0
