@@ -6,7 +6,6 @@ module Partner.PartnerID (
 
 import Data.Binary
 import Data.Default (Default(..))
-import Data.Hashable
 import Data.Int
 import Data.Typeable
 import Data.Unjson
@@ -18,7 +17,7 @@ import KontraPrelude
 import Log.Identifier
 
 newtype PartnerID = PartnerID Int64
-  deriving (Eq, Ord, Hashable, PQFormat, Typeable)
+  deriving (Eq, Ord, PQFormat, Typeable)
 $(newtypeDeriveUnderlyingReadShow ''PartnerID)
 
 instance Default PartnerID where

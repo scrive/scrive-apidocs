@@ -13,7 +13,6 @@ import System.Environment
 import System.IO
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy.UTF8 as BSL8
 import qualified Data.Traversable as F
 
 import AppConf
@@ -80,15 +79,11 @@ main = withCurlDo $ do
       templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
       mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
       filecache <- MemCache.new BS.length 200000000
-      lesscache <- MemCache.new BSL8.length 50000000
-      brandedimagescache <- MemCache.new BSL8.length 50000000
       docs <- MemCache.new RenderedPages.pagesCount 5000
       return AppGlobals {
           templates          = templates
         , mrediscache        = mrediscache
         , filecache          = filecache
-        , lesscache          = lesscache
-        , brandedimagescache = brandedimagescache
         , docscache          = docs
         , cryptorng          = rng
         , connsource         = pool

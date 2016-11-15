@@ -7,7 +7,6 @@ import Log
 import System.IO
 import Text.StringTemplates.Templates (TemplatesT)
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy.UTF8 as BSL8
 
 import AppConf
 import AppControl
@@ -40,8 +39,6 @@ run m = do
     appGlobals <- do
       templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
       filecache <- MemCache.new BS.length 50000000
-      lesscache <- MemCache.new BSL8.length 50000000
-      brandedimagescache <- MemCache.new BSL8.length 50000000
       docs <- MemCache.new RenderedPages.pagesCount 1000
       connpool <- createPoolSource $ connSettings kontraComposites
       return AppGlobals
@@ -51,8 +48,6 @@ run m = do
         , cryptorng = rng
         , connsource = connpool
         , mrediscache = Nothing
-        , lesscache = lesscache
-        , brandedimagescache = brandedimagescache
         , runlogger = runLogger
         }
 

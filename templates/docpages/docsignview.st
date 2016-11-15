@@ -36,7 +36,7 @@ $htmlopentag()$
     <meta name="format-detection" content="telephone=no"/>
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
-    <link href='$cdnbaseurl$/document_signview_branding/$brandingdomainid$/$documentid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
+    <link href='$cdnbaseurl$/document_signview_branding/$brandingdomainid$/$documentid$/$brandinghash$-branding.css' rel='stylesheet' type='text/css'/>
   </head>
 
   <body>
@@ -122,7 +122,7 @@ $htmlopentag()$
     $IECompatibilityMetaTag()$
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
-    <link href='$cdnbaseurl$/document_signview_branding/$brandingdomainid$/$documentid$/$brandinghash$/branding.css' rel='stylesheet' type='text/css'/>
+    <link href='$cdnbaseurl$/document_signview_branding/$brandingdomainid$/$documentid$/$brandinghash$-branding.css' rel='stylesheet' type='text/css'/>
     <meta name="viewport" content="width=device-width, maximum-scale=1, initial-scale=1, user-scalable=no" />
   </head>
   <body>

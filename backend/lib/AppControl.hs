@@ -37,7 +37,6 @@ import qualified Database.Redis as R
 import AppConf
 import AppView as V
 import BrandedDomain.Model
-import Branding.Cache
 import Cookies (lookCookieValue)
 import Crypto.RNG
 import DB hiding (ErrorCode(..))
@@ -51,7 +50,6 @@ import KontraPrelude
 import Log.Identifier
 import Log.Utils
 import MinutesTime
-import ServerUtils.BrandedImagesCache
 import Session.Data hiding (session)
 import Session.Model
 import Templates
@@ -68,8 +66,6 @@ data AppGlobals = AppGlobals {
     templates          :: !(MVar (UTCTime, KontrakcjaGlobalTemplates))
   , mrediscache        :: !(Maybe R.Connection)
   , filecache          :: !(MemCache.MemCache FileID BS.ByteString)
-  , lesscache          :: !LessCache
-  , brandedimagescache :: !BrandedImagesCache
   , docscache          :: !RenderedPagesCache
   , cryptorng          :: !CryptoRNGState
   , connsource         :: !(ConnectionTracker -> TrackedConnectionSource)
@@ -349,8 +345,6 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , ctxcgigrpconfig = cgiGrpConfig appConf
         , ctxmrediscache = mrediscache appGlobals
         , ctxfilecache = filecache appGlobals
-        , ctxlesscache = lesscache appGlobals
-        , ctxbrandedimagescache = brandedimagescache appGlobals
         , ctxxtoken = sesCSRFToken session
         , ctxadminaccounts = admins appConf
         , ctxsalesaccounts = sales appConf

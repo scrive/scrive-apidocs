@@ -283,8 +283,6 @@ mkContext lang = do
   liftIO $ do
     docs <- MemCache.new RenderedPages.pagesCount 500
     filecache <- MemCache.new BS.length 52428800
-    lesscache <- MemCache.new BSLU.length 52428800
-    brandedimagescache <- MemCache.new BSLU.length 52428800
     return Context {
           ctxmaybeuser = Nothing
         , ctxflashmessages = []
@@ -302,8 +300,6 @@ mkContext lang = do
         , ctxcgigrpconfig = Nothing
         , ctxmrediscache = Nothing
         , ctxfilecache = filecache
-        , ctxlesscache = lesscache
-        , ctxbrandedimagescache = brandedimagescache
         , ctxxtoken = $unexpectedError "xtoken is not defined"
         , ctxadminaccounts = []
         , ctxsalesaccounts = []

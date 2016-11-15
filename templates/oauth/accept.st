@@ -5,7 +5,7 @@ pagePrivilegesConfirm =$doctype()$
         <title>$pagetitle()$</title>
         $IECompatibilityMetaTag()$
         $standardHeaderContents(nobranding='true')$
-        <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+        <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
        </head>
        <body>
         <header class="site">

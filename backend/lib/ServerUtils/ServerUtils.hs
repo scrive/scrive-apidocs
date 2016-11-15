@@ -27,10 +27,8 @@ import qualified Text.JSON.Gen as J
 import Happstack.Fields
 import Kontra
 import KontraPrelude
-import ServerUtils.BrandedImagesCache
 import Util.CSVUtil
 import Util.MonadUtils
-import qualified MemCache as MemCache
 
 -- Read a csv file from POST, and returns a JSON with content
 handleParseCSV :: Kontrakcja m => m JSValue
@@ -77,14 +75,9 @@ handleSerializeImage = do
 -- Filename is the basename of the file, brandedImage will find it in frontend/app/img/
 brandedImage :: Kontrakcja m =>  m Response
 brandedImage = do
-    ctx <- getContext
     color <- fmap (take 12) $ guardJustM $ getField "color"
     file <- fmap (take 50) $ guardJustM $ getField "file"
-    let key = BrandedImagesCacheKey { filename = file , color = color }
-        cache = ctxbrandedimagescache ctx
-    img <- if ctxproduction ctx
-           then MemCache.fetch_ cache key $ brandImage file color
-           else brandImage file color
+    img <- brandImage file color
     ok
       . setHeaderBS "Cache-Control" "max-age=604800"
       $ toResponseBS "image/png" img
