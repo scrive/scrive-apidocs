@@ -244,14 +244,31 @@ var Modal = require("../../common/modal");
       var useEmail;
       var useMobile;
       var useEmailAndMobile;
+      var useInvitationMethod;
       Track.track("Click send reminder", {"Signatory index": signatory.signIndex()});
-      if (!signatory.hasSigned()) {
-        // if signatory hasnt signed yet, use invitation delivery method
+
+      if (signatory.isViewer()) {
+        if (document.closed()) {
+          // viewer of unsigned document should use invitation method
+          useInvitationMethod = false;
+        } else {
+          // viewer of signed document should use confirmation method
+          useInvitationMethod = true;
+        }
+      } else {
+        if (signatory.hasSigned()) {
+          // partner that signed should use confirmation method
+          useInvitationMethod = false;
+        } else {
+          // partner that didn't sign should use invitation method
+          useInvitationMethod = true;
+        }
+      }
+      if (useInvitationMethod) {
         useEmail = signatory.emailDelivery();
         useMobile = signatory.mobileDelivery();
         useEmailAndMobile = signatory.emailMobileDelivery();
       } else {
-        // signatory has already signed, prefer confirmation delivery method
         useEmail = signatory.noneConfirmationDelivery() ?
           signatory.emailDelivery() : signatory.emailConfirmationDelivery();
         useMobile = signatory.noneConfirmationDelivery() ?
