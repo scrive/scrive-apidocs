@@ -6,9 +6,9 @@ $htmlopentag()$
     $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
     $if(logged)$
-      <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
     $else$
-      <link href='$cdnbaseurl$/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/scrive_branding/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
     $endif$
   </head>
 <body>

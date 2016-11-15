@@ -5,7 +5,6 @@ module Theme.ThemeID (
   ) where
 
 import Data.Binary
-import Data.Hashable
 import Data.Int
 import Data.Typeable
 import Data.Unjson
@@ -16,7 +15,7 @@ import DB.Derive
 import KontraPrelude
 
 newtype ThemeID = ThemeID Int64
-  deriving (Eq, Ord, Hashable, PQFormat, Typeable)
+  deriving (Eq, Ord, PQFormat, Typeable)
 $(newtypeDeriveUnderlyingReadShow ''ThemeID)
 
 instance FromReqURI ThemeID where

@@ -5,7 +5,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
-    <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body >
   $flashmessages()$
@@ -29,7 +29,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
-    <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
   <div class='global-table'>
@@ -52,7 +52,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
-    <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
   <div class='global-table'>
@@ -75,7 +75,7 @@ accountSetupPage=$doctype()$
       <title>$pagetitle()$</title>
       $IECompatibilityMetaTag()$
       $standardHeaderContents(nobranding='true')$
-      <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+      <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
     </head>
     <body>
       $flashmessages()$

@@ -8,7 +8,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
-    <link href='$cdnbaseurl$/scrive_branding/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    <link href='$cdnbaseurl$/scrive_branding/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
   </head>
 <body>
   $header()$
@@ -33,7 +33,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
-    <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+    <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
     <div class="js-terms-of-service terms-of-service">

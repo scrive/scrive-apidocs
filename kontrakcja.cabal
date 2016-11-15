@@ -121,7 +121,6 @@ Library
                  , BrandedDomain.Tables
                  , Branding.Adler32
                  , Branding.CSS
-                 , Branding.Cache
                  , Branding.Control
                  , Chargeable.Model
                  , Chargeable.Tables
@@ -355,7 +354,6 @@ Library
                  , Salesforce.AuthorizationWorkflow
                  , Salesforce.Conf
                  , Salesforce.Control
-                 , ServerUtils.BrandedImagesCache
                  , ServerUtils.ServerUtils
                  , Session.Cookies
                  , Session.Data

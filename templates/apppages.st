@@ -57,14 +57,14 @@ standardHeaderContents=
         $endif$
 
         <script src="$cdnbaseurl$/compiled/vendor-$versioncode$.js" crossorigin="anonymous"></script>
-        <link href='$cdnbaseurl$/domain_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+        <link href='$cdnbaseurl$/domain_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
 
         $if(nobranding)$
         $else$
           $if(logged)$
-          <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+          <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
             $else$
-          <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$/styles.css' rel='stylesheet' type='text/css'/>
+          <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
           $endif$
         $endif$
         <script>

@@ -191,12 +191,12 @@ staticRoutes production = choice
      , dir "colored_image" $ hGet $ toK0 $ ServerUtils.brandedImage
 
 
-     , dir "document_signview_branding" $ hGet $ toK4 $ Branding.handleSignviewBranding
-     , dir "padlist_signview_branding" $ hGet $ toK4 $ Branding.handleSignviewBrandingWithoutDocument
-     , dir "service_branding" $ hGet $ toK4 $ Branding.handleServiceBranding
-     , dir "scrive_branding" $ hGet $ toK2 $ Branding.handleScriveBranding
-     , dir "login_branding" $ hGet $ toK3 $ Branding.handleLoginBranding
-     , dir "domain_branding" $ hGet $ toK3 $ Branding.handleDomainBranding
+     , dir "document_signview_branding" $ hGet $ toK3 $ Branding.handleSignviewBranding
+     , dir "padlist_signview_branding" $ hGet $ toK3 $ Branding.handleSignviewBrandingWithoutDocument
+     , dir "service_branding" $ hGet $ toK3 $ Branding.handleServiceBranding
+     , dir "scrive_branding" $ hGet $ toK1 $ Branding.handleScriveBranding
+     , dir "login_branding" $ hGet $ toK2 $ Branding.handleLoginBranding
+     , dir "domain_branding" $ hGet $ toK2 $ Branding.handleDomainBranding
      , dir "login_logo" $  hGet $ toK2 $ Branding.loginLogo
      , dir "service_logo" $  hGet $ toK3 $ Branding.serviceLogo
      , dir "signview_logo" $  hGet $ toK3 $ Branding.signviewLogo

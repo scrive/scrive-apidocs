@@ -599,7 +599,7 @@ testDownloadSignviewBrandingAccess = do
   emptyContext <- mkContext def
   let bid = bdid $ ctxbrandeddomain emptyContext
   svbr1 <- mkRequest GET [ ]
-  resp1 <- E.try $  runTestKontra svbr1 emptyContext $ handleSignviewBranding bid (documentid doc) "-branding-hash-12xdaad32" "some_name.css"
+  resp1 <- E.try $  runTestKontra svbr1 emptyContext $ handleSignviewBranding bid (documentid doc) "branding-hash-12xdaad32-some_name.css"
   case resp1 of
     Right (cssResp1, _)->  assertBool "CSS should be returned" (rsCode cssResp1 == 200)
     Left (_ :: E.SomeException) -> assertFailure "CSS should be avaialbe for CDN"
@@ -608,7 +608,7 @@ testDownloadSignviewBrandingAccess = do
   -- 2) Check access to main signview branding for author. Used when logged in a to-sign view.
 
   svbr2 <- mkRequest GET [ ]
-  resp2 <- E.try $ runTestKontra svbr2 emptyContext $ handleSignviewBrandingWithoutDocument bid (userid user) "-branding-hash-7cdsgSAq1" "some_name.css"
+  resp2 <- E.try $ runTestKontra svbr2 emptyContext $ handleSignviewBrandingWithoutDocument bid (userid user) "branding-hash-7cdsgSAq1-some_name.css"
   case resp2 of
     Right (cssResp2, _)->  assertBool "CSS should be returned" (rsCode cssResp2 == 200)
     Left (_ :: E.SomeException) -> assertFailure "CSS should be avaialbe for CDN"

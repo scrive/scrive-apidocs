@@ -16,7 +16,6 @@ import qualified Data.ByteString as BS
 import qualified Database.Redis as R
 
 import BrandedDomain.BrandedDomain
-import Branding.Cache
 import Doc.RenderedPages
 import EID.CGI.GRP.Config
 import EID.Nets.Config
@@ -30,7 +29,6 @@ import MagicHash (MagicHash)
 import MailContext (MailContext(..))
 import Payments.Config (RecurlyConfig)
 import Salesforce.Conf
-import ServerUtils.BrandedImagesCache
 import Session.SessionID
 import Templates
 import User.Email
@@ -62,8 +60,6 @@ data Context = Context
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
     , ctxmrediscache         :: Maybe R.Connection
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
-    , ctxlesscache           :: LessCache -- ^
-    , ctxbrandedimagescache  :: BrandedImagesCache -- ^
     , ctxxtoken              :: MagicHash -- ^ The XToken for combatting CSRF
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^
