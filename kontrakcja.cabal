@@ -955,7 +955,46 @@ Executable kontrakcja-test
   if flag(test-coverage)
     GHC-Options: -fhpc
 
-  Main-is: TestMain.hs
+  Main-is:       TestMain.hs
+  Other-Modules: AccountInfoTest,
+                 ArchiveTest,
+                 BrandedDomainTest,
+                 CSSGenerationTest,
+                 CSVUtilTest,
+                 ChargeableTest,
+                 CompanyAccountsTest,
+                 CompanyBrandingTest,
+                 CompanyControlTest,
+                 CompanyStateTest,
+                 ConfigTests,
+                 Doc.API.V1.CallsTest,
+                 Doc.API.V1.JSONTest,
+                 Doc.API.V2.CallsTest,
+                 Doc.API.V2.JSONTest,
+                 DocControlTest,
+                 DocStateTest,
+                 ESignatureTest,
+                 EvidenceAttachmentsTest,
+                 EvidenceLogTest,
+                 FileTest,
+                 HtmlTest,
+                 InputValidationTest,
+                 JSONUtilTest,
+                 LangTest,
+                 LocalizationTest,
+                 LogTest,
+                 LoginTest,
+                 MailModelTest,
+                 MailsTest,
+                 Partner.APITest,
+                 PaymentsTest,
+                 ReferenceScreenshotsTest,
+                 SessionsTest,
+                 SignupTest,
+                 TestKontra,
+                 UserHistoryTest,
+                 UserStateTest
+
   GHC-options: -main-is TestMain
 
   Build-depends: kontrakcja
@@ -983,7 +1022,7 @@ Executable kontrakcja-test
                , json
                , kontrakcja-templates
                , lifted-base
-               , log >= 0.5.4
+               , log >= 0.5.5
                , monad-control
                , mtl
                , network-uri

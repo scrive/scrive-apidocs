@@ -50,6 +50,7 @@ import KontraPrelude
 import LangTest
 import LocalizationTest
 import Log.Configuration
+import LogTest
 import LoginTest
 import MailModelTest
 import MailsTest
@@ -96,6 +97,7 @@ allTests = [
   , jsonUtilTests
   , langTests
   , localizationTest
+  , logTests
   , loginTests
   , mailModelTests
   , mailsTests
