@@ -69,6 +69,11 @@ import qualified HostClock.Model as HC
 allTests :: [TestEnvSt -> Test]
 allTests = [
     accountInfoTests
+  , apiV1CallsTests
+  , apiV1JSONTests
+  , apiV2CallsTests
+  , apiV2JSONTests
+  , archiveTests
   , brandedDomainTests
   , chargeableTest
   , companyAccountsTests
@@ -78,18 +83,12 @@ allTests = [
   , configTests
   , cssGenerationTests
   , csvUtilTests
-  , apiV1JSONTests
-  , apiV1CallsTests
-  , apiV2CallsTests
-  , apiV2JSONTests
-  , partnerAPITests
-  , archiveTests
   , docControlTests
   , docStateTests
+  , dumpAllEvidenceTexts
   , eSignatureTests
   , evidenceAttachmentsTest
   , evidenceLogTests
-  , dumpAllEvidenceTexts
   , fileTests
   , flashMessagesTests
   , htmlTests
@@ -101,6 +100,7 @@ allTests = [
   , mailModelTests
   , mailsTests
   , oauthTest
+  , partnerAPITests
   , paymentsTests
   , sessionsTests
   , signupTests
