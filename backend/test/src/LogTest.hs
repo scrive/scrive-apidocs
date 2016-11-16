@@ -23,6 +23,8 @@ testDocIDFormatting = do
                (\logger -> runLogT "LogTest" logger logAct)
   assertBool ("Document ID formatted as floating-point: " ++ T.unpack txt)
     (not $ "1.23456789" `T.isInfixOf` txt)
+  assertBool ("Document ID formatted incorrectly: " ++ T.unpack txt)
+    ("123456789" `T.isInfixOf` txt)
     where
       dummyDocumentID :: DocumentID
       dummyDocumentID = unsafeDocumentID 123456789
