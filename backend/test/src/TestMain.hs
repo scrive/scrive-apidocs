@@ -157,16 +157,16 @@ testMany' (allargs, ts) runLogger rng = do
   active_tests <- atomically $ newTVar (True, 0)
   rejected_documents <- atomically $ newTVar 0
   let env = envf $ TestEnvSt {
-        teConnSource = cs
-      , teStaticConnSource = staticSource
-      , teTransSettings = def
-      , teRNGState = rng
-      , teRunLogger = runLogger
-      , teGlobalTemplates = templates
-      , teActiveTests = active_tests
+        teConnSource        = cs
+      , teStaticConnSource  = staticSource
+      , teTransSettings     = def
+      , teRNGState          = rng
+      , teRunLogger         = runLogger
+      , teGlobalTemplates   = templates
+      , teActiveTests       = active_tests
       , teRejectedDocuments = rejected_documents
-      , teOutputDirectory = Nothing
-      , teStagingTests = False
+      , teOutputDirectory   = Nothing
+      , teStagingTests      = False
       }
       ts' = if teStagingTests env
         then stagingTests ++ ts
