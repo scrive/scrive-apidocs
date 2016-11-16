@@ -50,8 +50,8 @@ import KontraPrelude
 import LangTest
 import LocalizationTest
 import Log.Configuration
-import LogTest
 import LoginTest
+import LogTest
 import MailModelTest
 import MailsTest
 import OAuth

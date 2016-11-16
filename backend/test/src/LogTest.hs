@@ -1,16 +1,16 @@
 module LogTest (logTests) where
 
 import Control.Monad.IO.Class
-import qualified Data.Text as T
 import Log
 import Log.Backend.Text
 import Test.Framework
+import qualified Data.Text as T
 
 import Doc.DocumentID
 import KontraPrelude
 import Log.Identifier
-import TestKontra
 import TestingUtil
+import TestKontra
 
 logTests :: TestEnvSt -> Test
 logTests env = testGroup "Log" [
