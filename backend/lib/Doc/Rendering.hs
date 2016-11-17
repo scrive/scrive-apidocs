@@ -9,86 +9,32 @@
 -- Also stuff for generating JPEGS from PDF's
 -----------------------------------------------------------------------------
 module Doc.Rendering
-    ( getRenderedPages
+    ( renderPage
     , FileError(..)
     , preCheckPDF
     , getNumberOfPDFPages
-    , getPageSizeOfPDFInPoints
     ) where
 
-import Codec.Picture.Png
-import Control.Concurrent.Async.Lifted
-import Control.Concurrent.Lifted
-import Control.Conditional (whenM)
 import Control.Monad.Base
-import Control.Monad.Catch hiding (handle)
 import Control.Monad.Except
 import Control.Monad.Trans.Control
 import Data.Aeson
-import Data.Char
 import Data.Typeable
 import Log
 import Numeric
 import System.Directory
 import System.Exit
 import System.IO
-import System.Process hiding (readProcessWithExitCode)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import System.Timeout.Lifted
 import qualified Control.Exception.Lifted as E
-import qualified Data.Attoparsec.Text as P
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import qualified Data.Foldable as F
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
 import qualified Data.Unjson as Unjson
-import qualified Database.Redis as R
-import qualified System.IO.Temp
 
-import Database.Redis.Helpers
-import Doc.Logging
-import Doc.RenderedPages
-import File.Model
-import File.Storage
-import ForkAction
-import Kontra
 import KontraPrelude
-import qualified Database.Redis.Cache as RC
-import qualified MemCache as MemCache
-
-data PageInfo = PageInfo {
-    piPage :: !Int
-  , piTime :: !Double
-  } deriving (Eq, Ord, Show)
-
-instance ToJSON PageInfo where
-  toJSON PageInfo{..} = object [
-      "page" .= piPage
-    , "time" .= piTime
-    ]
-
-data RenderingStats = RenderingStats {
-    rsTotal    :: !Double
-  , rsFileSize :: !Int
-  , rsPages    :: !Int
-  , rsAverage  :: !Double
-  , rsFastest  :: !PageInfo
-  , rsSlowest  :: !PageInfo
-  } deriving (Eq, Ord, Show)
-
-instance ToJSON RenderingStats where
-  toJSON RenderingStats{..} = object [
-      "total"    .= rsTotal
-    , "filesize" .= rsFileSize
-    , "pages"    .= rsPages
-    , "average"  .= rsAverage
-    , "fastest"  .= rsFastest
-    , "slowest"  .= rsSlowest
-    ]
-
-----------------------------------------
+import Log.Utils
+import Utils.Directory
 
 data RemoveJavaScriptSpec = RemoveJavaScriptSpec
     { input          :: String
@@ -101,269 +47,53 @@ unjsonRemoveJavaScriptSpec = Unjson.objectOf $ pure RemoveJavaScriptSpec
     <*> Unjson.field "input" input "Path for source document"
     <*> Unjson.field "output" output "Output path"
 
-withSystemTempDirectory :: (MonadBaseControl IO m) => String -> (String -> m a) -> m a
-withSystemTempDirectory = liftBaseOp . System.IO.Temp.withSystemTempDirectory
-
--- |Convert PDF to PNG images of pages
-runRendering
-  :: forall m. (MonadBaseControl IO m, MonadLog m, MonadMask m)
+renderPage :: forall m. (MonadBaseControl IO m, MonadLog m)
   => BS.ByteString
   -> Int
-  -> RenderingMode
-  -> RenderedPages
-  -> Maybe (R.Connection, RedisKey)
-  -> m ()
-runRendering fileContent widthInPixels renderingMode rp mredis = do
-  restrictTime . withSystemTempDirectory "mudraw" $ \tmpPath -> do
+  -> Int
+  -> m (Maybe BS.ByteString)
+renderPage fileContent pageNo widthInPixels = do
+  restrictTime $ withSystemTempDirectory' "mudraw" $ \tmpPath -> do
     let sourcePath = tmpPath ++ "/source.pdf"
     liftBase $ BS.writeFile sourcePath fileContent
-    let pagePath n = tmpPath ++ "/output-" ++ show n ++ ".png"
+    let pagePath = tmpPath ++ "/output-" ++ show pageNo ++ ".png"
         -- Run mutool through stdbuf and set its output buffering to
         -- line buffering as communication via pipes uses block
         -- buffering by default and we would not be able to get page
         -- info immediately.
-        mutoolDraw = (proc "stdbuf" $ concat [
-            ["-oL"]
-          , ["mutool", "draw"]
+    (mudrawcode,mudrawout,mudrawerr) <- liftBase $ readProcessWithExitCode "mutool" (concat [
+            ["draw"]
           , ["-o", tmpPath ++ "/output-%d.png"]
           , ["-w", show widthInPixels]
           , ["-A", "8"]
           , ["-st"]
           , [sourcePath]
-          , ["1" | RenderingModeFirstPageOnly <- return renderingMode]
-          ])
-
-    mask $ \release -> do
-
-      (readEnd, writeEnd) <- liftBase createPipe
-      -- Redirect stdout and stderr of mutool to the same pipe so we are not
-      -- dependent on where rendering info is written.
-      (_, _, _, ph) <- liftBase $ createProcess mutoolDraw {
-          std_out = UseHandle writeEnd
-        , std_err = UseHandle writeEnd
-        }
-
-      let killProcess = liftBase $ terminateProcess ph
-          cleanupProcess = do
-            ec <- liftBase $ do
-              ec <- waitForProcess ph
-              hClose writeEnd
-              hClose readEnd
-              return ec
-            logInfo "Rendering completed" $ object [
-                "code" .= show ec
-              ]
-
-      (`finally` cleanupProcess) . (`onException` killProcess) . release $ do
-        fetchPages pagePath (T.pack sourcePath) (pagesCount rp) readEnd
-        fetchStatistics readEnd
-        -- If things break for some reason and not all rendered pages are picked
-        -- up by checking output of mutool, sweep for the remaining ones.
-        forM_ [1..pagesCount rp] $ \page -> whenM (not <$> hasPage rp page) $ do
-          logAttention "Page missing, attempting to fetch" $ object [
-              "page" .= page
-            ]
-          fetchPage pagePath PageInfo {
-              piPage = page
-            , piTime = 0
-            }
+          , [show pageNo]
+          ]) (BSL.empty)
+    case mudrawcode of
+      ExitSuccess -> do
+        (liftBase (Just <$> BS.readFile pagePath))
+          `E.catch` \(_::IOError) -> do
+            -- mupdf will return last page if pdf has less pages - and not trigger content.
+            -- We detect this issue with IOError - output file will have name with real page
+            -- number and not requested one.
+            logAttentionWithPage "Reading page content failed. Probably PDF has less pages." []
+            return Nothing
+      _ -> do
+        logAttentionWithPage "Rendering of page failed" $ [
+          "exit_code" .= show mudrawcode,
+          "stdout" `equalsExternalBSL` mudrawout,
+          "stderr" `equalsExternalBSL` mudrawerr
+          ]
+        return Nothing
   where
-    restrictTime :: forall r. m r -> m r
-    restrictTime m = timeout (5 * 60 * 1000000) m >>= \case
+    logAttentionWithPage msg l = logAttention msg (object (("page" .= pageNo) : l))
+    restrictTime ::  (MonadBaseControl IO m, MonadLog m) => m (Maybe r) -> m (Maybe r)
+    restrictTime m = timeout (30 * 1000000) m >>= \case
       Just r  -> return r
       Nothing -> do
-        logAttention_ "Rendering didn't finish in 5 minutes, aborting"
-        internalError
-
-    fetchStatistics :: Handle -> m ()
-    fetchStatistics h = do
-      stats <- liftBase $ T.hGetContents h
-      case P.parseOnly (renderingStatsParser $ BS.length fileContent) stats of
-        Right rs -> logInfo "Rendering statistics" $ toJSON rs
-        Left err -> logAttention "Couldn't parse RenderingStats" $ object [
-            "error" .= err
-          , "stdout" .= stats
-          ]
-
-    fetchPages :: (Int -> FilePath) -> T.Text -> Int -> Handle -> m ()
-    fetchPages pagePath sourcePath n h = go 1
-      where
-        go k | k > n = return ()
-        go k = liftBase (hIsEOF h) >>= \case
-          True  -> return ()
-          False -> do
-            line <- liftBase $ T.hGetLine h
-            case P.parseOnly (pageInfoParser sourcePath) line of
-              Left _ -> do
-                logInfo "Mutool returned something else than PageInfo" $ object [
-                    "stdout" .= line
-                  ]
-                go k
-              Right info -> do
-                fetchPage pagePath info
-                go $ k + 1
-
-    readPngContents :: MonadBaseControl IO m => String -> Int -> m BS.ByteString
-    readPngContents path retries = liftBase (E.try $ BS.readFile path) >>= \case
-        Right content -> do
-          case decodePng content of
-            Left e -> do
-              logAttention "Couldn't decode PNG page file" $ object ["error" .= e]
-              if retries > 0 then do
-                  -- sleep for 100ms, because sometimes the png file is not fully written yet
-                  -- for an unknown reason (even its size is wrong),
-                  -- and reading it returns clipped contents
-                  liftBase $ threadDelay 100000
-                  readPngContents path $ retries - 1
-              else
-                  return BS.empty
-            Right _ -> return content
-        Left (e::IOError) -> do
-          logAttention "Couldn't open page file" $ object [
-              "error" .= show e
-            ]
-          return BS.empty
-
-    fetchPage pagePath info@PageInfo{..} = localData ["page" .= piPage] $ do
-      content <- readPngContents (pagePath piPage) 1
-      F.forM_ mredis $ redisPut (BS.pack $ show piPage) content
-      putPage rp piPage content >>= \case
-        True  -> logInfo "Page retrieved successfully" $ toJSON info
-        False -> logAttention_ "Page already in place"
-
-    msToSecsM :: P.Parser Double -> P.Parser Double
-    msToSecsM = fmap (/ 1000)
-
-    renderingStatsParser :: Int -> P.Parser RenderingStats
-    renderingStatsParser fileSize = pure RenderingStats
-      <* P.string "total "
-      <*> msToSecsM P.double
-      <*> pure fileSize
-      <* P.string "ms / "
-      <*> P.decimal
-      <* P.string " pages for an average of "
-      <*> msToSecsM P.double
-      <* P.string "ms"
-      <* P.endOfLine
-      <* P.string "fastest "
-      <*> edgeCase
-      <* P.endOfLine
-      <* P.string "slowest "
-      <*> edgeCase
-      where
-        edgeCase :: P.Parser PageInfo
-        edgeCase = pure PageInfo
-          <* P.string "page "
-          <*> P.decimal
-          <* P.string ": "
-          <*> msToSecsM P.double
-          <* P.string "ms"
-
-    pageInfoParser :: T.Text -> P.Parser PageInfo
-    pageInfoParser pdf = pure PageInfo
-      <* P.string "page "
-      <* P.string pdf
-      <* P.space
-      <*> P.decimal
-      <* P.space
-      <*> msToSecsM P.double
-      <* P.string "ms"
-
-fetchPagesFromRedis
-  :: (MonadBaseControl IO m, MonadLog m, MonadThrow m)
-  => RenderedPages
-  -> R.Connection
-  -> RedisKey
-  -> m ()
-fetchPagesFromRedis rp cache rkey = do
-  -- Subscribe in background to a channel that is posted to whenever a new page
-  -- is rendered. In addition, if the function looking for pages won't find a
-  -- specific page, it stops and waits before retrying at most 1 second to work
-  -- around any unknown quirks (note that a single page should almost never take
-  -- more than one second to render, so we don't lose anything here).
-  semaphore <- newEmptyMVar
-  withAsync (listener semaphore) $ \_ -> go semaphore 1
-  where
-    key = fromRedisKey rkey
-
-    listener semaphore = runRedis_ cache $ do
-      R.pubSub (R.subscribe [key]) $ \_msg -> do
-        void $ tryPutMVar semaphore ()
-        return mempty
-
-    go semaphore k
-      | k > pagesCount rp = return ()
-      | otherwise = do
-        mcontent <- runRedis cache $ R.hget key (BS.pack $ show k)
-        case mcontent of
-          Just content -> do
-            logInfo "Page retrieved successfully" $ object [
-                "page" .= k
-              ]
-            void $ putPage rp k content
-            go semaphore $ k + 1
-          Nothing -> do
-            logInfo "Waiting for page" $ object [
-                "page" .= k
-              ]
-            void . timeout 1000000 $ takeMVar semaphore
-            go semaphore k
-
--- | 'getRenderedPages' returns 'RenderedPages' for document 'fileid'
--- requested to be rendered with width 'pageWidthInPixels' and also a
--- flag if full document should be rendered or only first page is
--- enough.
---
--- This function has internal caching system based on 'Context'
-getRenderedPages :: Kontrakcja m
-                 => FileID
-                 -> Int
-                 -> RenderingMode
-                 -> m RenderedPages
-getRenderedPages fid pageWidthInPixels renderingMode = logFile fid $ do
-  let pageWidth = min 4000 (max 100 pageWidthInPixels)
-  localCache <- ctxnormalizeddocuments <$> getContext
-  let key = (fid, pageWidth, renderingMode)
-  logInfo "Fetching RenderedPages from cache" $ object [
-      "page_width" .= pageWidth
-    , "rendering_mode" .= show renderingMode
-    ]
-  mask $ \release -> do
-    (rp, constructed) <- MemCache.fetch localCache key $ do
-      case renderingMode of
-        RenderingModeFirstPageOnly -> renderedPages 1
-        RenderingModeWholeDocument -> do
-          fileContent <- getFileIDContents fid
-          liftBase (getNumberOfPDFPages fileContent) >>= \case
-            Left err -> do
-              logAttention "getNumberOfPDFPages failed" $ object [
-                  "error" .= err
-                ]
-              internalError
-            Right pagesNo -> renderedPages pagesNo
-    -- Run rendering when RenderedPages are already in local cache to be able to
-    -- invalidate it without race condition if something goes wrong.
-    when constructed $ forkAction "Rendering file" . (`onException` deleteKey localCache key) . release $ do
-      fileContent <- getFileIDContents fid
-      let rkey = toRedisKey key
-      mredis <- ctxmrediscache <$> getContext
-      RC.mfetch mredis rkey
-        (fetchPagesFromRedis rp)
-        (runRendering fileContent pageWidth renderingMode rp)
-    return rp
-  where
-    deleteKey localCache key = do
-      logAttention_ "Exception thrown while rendering file, removing RenderedPages from local cache"
-      MemCache.invalidate localCache key
-
-    toRedisKey (fid_, pageWidth, mode) = mkRedisKey [
-        "pages"
-      , BS.pack . show $ fromFileID fid_
-      , BS.pack . show $ pageWidth
-      , case mode of
-          RenderingModeWholeDocument -> "whole"
-          RenderingModeFirstPageOnly -> "first"
-      ]
+        logAttentionWithPage "Rendering didn't finish in 30 seconds, aborting" []
+        return Nothing
 
 data FileError = FileSizeError Int Int
                | FileFormatError
@@ -467,7 +197,7 @@ preCheckPDFHelper content tmppath =
 preCheckPDF :: (MonadLog m, MonadBaseControl IO m) => BS.ByteString
             -> m (Either FileError BS.ByteString)
 preCheckPDF content =
-  liftBaseOp (withSystemTempDirectory "precheck") $ \tmppath -> do
+  withSystemTempDirectory' "precheck" $ \tmppath -> do
     res <- liftBase (preCheckPDFHelper content tmppath)
       `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
     case res of
@@ -477,17 +207,6 @@ preCheckPDF content =
       Right _ -> return ()
     return res
 
-findStringAfterKey :: String -> BS.ByteString -> [String]
-findStringAfterKey key content =
-    (map (BSC.unpack . dropAfterKey) . findKeys) content
-  where
-    keyPacked = BSC.pack ("/" ++ key)
-    keyLength1 = BSC.length keyPacked
-    findKeys x = case BSC.breakSubstring keyPacked x of
-                     (_, r) -> r : if BS.null r
-                                   then []
-                                   else findKeys (BSC.drop 1 r)
-    dropAfterKey = BSC.drop keyLength1
 
 getNumberOfPDFPages :: BS.ByteString -> IO (Either String Int)
 getNumberOfPDFPages content = do
@@ -504,35 +223,3 @@ getNumberOfPDFPages content = do
                                   _ -> Left $ "Unparsable mutool info output about number of pages"
                     Nothing -> Left $ "Couldn't find number of pdf pages in mutool output"
     ExitFailure code -> Left $ "mutool info failed with return code " ++ show code ++ ", and stderr: " ++ BSL.unpack stderr'
-
-getRotateOfPDFPages :: BS.ByteString -> [Int]
-getRotateOfPDFPages content =
-    (catMaybes . map readNumber . findStringAfterKey "Rotate") content
-  where
-    readNumber = maybeRead . takeWhile isDigit . dropWhile isSpace
-
-getBoxSizesOfPDFPages :: String -> BS.ByteString -> [(Double,Double)]
-getBoxSizesOfPDFPages box content =
-  catMaybes (map maybeReadBox boxStrings)
-  where
-    boxStrings = findStringAfterKey box content
-    maybeReadBox = x . catMaybes . map maybeRead . words . takeWhile (/=']') . drop 1 . dropWhile (/='[') . take 1000
-    x [l,b,r,t] = Just (r-l,t-b)
-    x _ = Nothing
-
-getPageSizeOfPDFInPoints :: BS.ByteString -> (Double,Double)
-getPageSizeOfPDFInPoints content =
-  $head (getPageSizeOfPDFInPointsList content ++ [(595, 842)])
-     -- Defaults to A4
-
-getPageSizeOfPDFInPointsList :: BS.ByteString -> [(Double,Double)]
-getPageSizeOfPDFInPointsList content =
-  if any isSwapping rotates
-     then map swap (cropBoxes ++ mediaBoxes)
-     else cropBoxes ++ mediaBoxes
-  where
-     mediaBoxes = getBoxSizesOfPDFPages "MediaBox" content
-     cropBoxes = getBoxSizesOfPDFPages "CropBox" content
-     rotates = getRotateOfPDFPages content
-     swap (w,h) = (h,w)
-     isSwapping rot = rot == 270 || rot == 90

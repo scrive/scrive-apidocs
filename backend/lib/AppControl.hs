@@ -41,7 +41,6 @@ import Cookies (lookCookieValue)
 import Crypto.RNG
 import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
-import Doc.RenderedPages
 import File.FileID
 import Happstack.Server.ReqHandler
 import IPAddress
@@ -66,7 +65,6 @@ data AppGlobals = AppGlobals {
     templates          :: !(MVar (UTCTime, KontrakcjaGlobalTemplates))
   , mrediscache        :: !(Maybe R.Connection)
   , filecache          :: !(MemCache.MemCache FileID BS.ByteString)
-  , docscache          :: !RenderedPagesCache
   , cryptorng          :: !CryptoRNGState
   , connsource         :: !(ConnectionTracker -> TrackedConnectionSource)
   , runlogger          :: !(forall m r . LogT m r -> m r)
@@ -333,7 +331,6 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , ctxtime = minutestime
         , ctxclientname = clientName `mplus` userAgent
         , ctxclienttime = clientTime
-        , ctxnormalizeddocuments = docscache appGlobals
         , ctxipnumber = peerip
         , ctxproduction = production appConf
         , ctxcdnbaseurl = cdnBaseUrl appConf

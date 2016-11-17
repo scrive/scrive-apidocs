@@ -20,8 +20,7 @@ var $ = require("jquery");
 
       initialize: function (args) {
         if (args.file_id) {
-          var pixelWidth = this.pixelWidth();
-          this.url = "/filepages/" + args.file_id + this.queryPart({"pixelwidth": pixelWidth});
+          this.url = "/filepages/" + args.file_id + this.queryPart();
         }
       },
 

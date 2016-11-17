@@ -35,7 +35,6 @@ import User.Email
 import User.Model
 import Utils.IO
 import Utils.Network
-import qualified Doc.RenderedPages as RenderedPages
 import qualified HostClock.Model as HC
 import qualified MemCache
 import qualified VersionTH
@@ -79,12 +78,10 @@ main = withCurlDo $ do
       templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
       mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
       filecache <- MemCache.new BS.length 200000000
-      docs <- MemCache.new RenderedPages.pagesCount 5000
       return AppGlobals {
           templates          = templates
         , mrediscache        = mrediscache
         , filecache          = filecache
-        , docscache          = docs
         , cryptorng          = rng
         , connsource         = pool
         , runlogger          = runLogger

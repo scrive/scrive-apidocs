@@ -57,7 +57,6 @@ import Templates
 import User.Lang
 import Util.FinishWith
 import qualified Amazon as AWS
-import qualified Doc.RenderedPages as RenderedPages
 import qualified MemCache
 
 inTestDir :: FilePath -> FilePath
@@ -281,7 +280,6 @@ mkContext lang = do
   time <- currentTime
   bd <- dbQuery $ GetMainBrandedDomain
   liftIO $ do
-    docs <- MemCache.new RenderedPages.pagesCount 500
     filecache <- MemCache.new BS.length 52428800
     return Context {
           ctxmaybeuser = Nothing
@@ -289,7 +287,6 @@ mkContext lang = do
         , ctxtime = time
         , ctxclientname = Nothing
         , ctxclienttime = Nothing
-        , ctxnormalizeddocuments = docs
         , ctxipnumber = noIP
         , ctxproduction = False
         , ctxcdnbaseurl = Nothing

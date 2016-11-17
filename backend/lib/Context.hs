@@ -16,7 +16,6 @@ import qualified Data.ByteString as BS
 import qualified Database.Redis as R
 
 import BrandedDomain.BrandedDomain
-import Doc.RenderedPages
 import EID.CGI.GRP.Config
 import EID.Nets.Config
 import File.FileID
@@ -48,7 +47,6 @@ data Context = Context
     , ctxtime                :: UTCTime -- ^ The time of the request.
     , ctxclientname          :: Maybe String -- ^ Client identification from header Client-Name or if that's missing: User-Agent
     , ctxclienttime          :: Maybe UTCTime -- ^ Client-local time when an action was performed (e.g. signing a document)
-    , ctxnormalizeddocuments :: RenderedPagesCache -- ^ Rendered jpeg pages
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
     , ctxproduction          :: Bool -- ^ Is this server the production server?
     , ctxcdnbaseurl          :: Maybe String -- ^ CDN base URL if one shouild be used

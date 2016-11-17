@@ -20,7 +20,6 @@ import Log.Configuration
 import Templates
 import User.Lang
 import qualified Amazon as AWS
-import qualified Doc.RenderedPages as RenderedPages
 import qualified MemCache
 
 run :: TemplatesT (AWS.AmazonMonadT (CryptoRNGT (DBT (LogT IO)))) a -> IO a
@@ -39,12 +38,10 @@ run m = do
     appGlobals <- do
       templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
       filecache <- MemCache.new BS.length 50000000
-      docs <- MemCache.new RenderedPages.pagesCount 1000
       connpool <- createPoolSource $ connSettings kontraComposites
       return AppGlobals
         { templates = templates
         , filecache = filecache
-        , docscache = docs
         , cryptorng = rng
         , connsource = connpool
         , mrediscache = Nothing

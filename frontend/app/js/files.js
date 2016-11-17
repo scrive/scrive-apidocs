@@ -43,7 +43,7 @@ var File = exports.File = Backbone.Model.extend({
     },
     initialize: function (args) {
         var pixelWidth = this.pixelWidth();
-        this.url = "/filepages/" + args.id + this.queryPart({"pixelwidth": pixelWidth});
+        this.url = "/filepages/" + args.id + this.queryPart();
     },
     downloadLink : function(as_download) {
         var link = null;

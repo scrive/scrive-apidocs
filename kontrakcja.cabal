@@ -226,7 +226,6 @@ Library
                  , Doc.Model.OrderBy
                  , Doc.Model.Query
                  , Doc.Model.Update
-                 , Doc.RenderedPages
                  , Doc.Rendering
                  , Doc.SMSPin.Model
                  , Doc.SMSPin.Tables
@@ -462,7 +461,6 @@ Library
                , iconv
                , invariant
                , json
-               , JuicyPixels
                , kontrakcja-templates
                , lifted-async
                , lifted-base

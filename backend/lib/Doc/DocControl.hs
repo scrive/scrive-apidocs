@@ -41,7 +41,6 @@ import Happstack.Server hiding (lookCookieValue, simpleHTTP, timeout)
 import Log
 import System.Directory
 import System.IO.Temp
-import System.Timeout.Lifted
 import Text.JSON hiding (Result)
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
@@ -72,7 +71,6 @@ import Doc.DocView
 import Doc.DocViewMail
 import Doc.Logging
 import Doc.Model
-import Doc.RenderedPages
 import Doc.Rendering
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
@@ -86,7 +84,6 @@ import InputValidation
 import Kontra
 import KontraLink
 import KontraPrelude
-import Log.Identifier
 import MagicHash
 import Redirect
 import User.Email
@@ -377,90 +374,61 @@ handleIssueShowGet docid = checkUserTOSGet $ do
 
 {- We return pending message if file is still pending, else we return JSON with number of pages-}
 handleFilePages :: Kontrakcja m => FileID -> m Response
-handleFilePages fid = do
+handleFilePages fid = logFile fid $ do
   checkFileAccess fid
-  pixelwidth <- guardJustM $ readField "pixelwidth"
-  rp <- getRenderedPages fid pixelwidth RenderingModeWholeDocument
-  simpleJsonResponse . J.runJSONGen . J.value "pages" $ pagesCount rp
+  ePagesCount <- liftIO . getNumberOfPDFPages =<< getFileIDContents fid
+  case ePagesCount of
+    Right pc -> simpleJsonResponse . J.runJSONGen . J.value "pages" $ pc
+    _ -> do
+      logAttention_ "Counting number of pages failed"
+      internalError
 
 {- |
    Get some html to display the images of the files
    URL: /pages/{fileid}
    Method: GET
  -}
-showPage :: Kontrakcja m => FileID -> Int -> m KontraLink
+showPage :: Kontrakcja m => FileID -> Int -> m Response
 showPage fid pageNo = logFile fid $ do
   logInfo_ "Checking file access"
   checkFileAccess fid
   pixelwidth <- guardJustM $ readField "pixelwidth"
-  rp <- getRenderedPages fid pixelwidth RenderingModeWholeDocument
-  if pagesCount rp < pageNo
-    then do
-      logInfo "Requested page doesn't exist" $ object [
-          "page" .= pageNo
-        , "pages" .= pagesCount rp
-        ]
-      respond404
-    else do
-      -- Wait for the page after database connection is freed and loop
-      -- back if it's not there after 1 minute.
-      modifyContext $ \ctx -> ctx { ctxdelayedresponse = Just $ returnPage rp }
-      return LoopBack
-  where
-    returnPage rp = DelayedResponse $ localData ["page" .= pageNo] $ do
-      logInfo_ "Retrieving rendered page"
-      timeout 60000000 (getPage rp pageNo) >>= \case
-        Nothing -> do
-          logInfo_ "Page not found"
-          return Nothing
-        Just page -> do
-          logInfo_ "Page found"
-          return . Just
-            -- max-age same as for brandedSignviewImage
-            . setHeaderBS "Cache-Control" "max-age=604800"
-            . toResponseBS "image/png" $ BSL.fromStrict page
+  fileData <- getFileIDContents fid
+  rp <- renderPage fileData pageNo pixelwidth
+  case rp of
+   Just pageData -> return $ setHeaderBS "Cache-Control" "max-age=604800" $ toResponseBS "image/png" $ BSL.fromStrict pageData
+   Nothing -> do
+     logAttention "Rendering PDF page failed" $ object [ "page" .= show pageNo]
+     internalError
 
 -- | Preview when authorized user is logged in (without magic hash)
-showPreview :: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
+showPreview :: Kontrakcja m => DocumentID -> FileID -> m Response
 showPreview did fid = logDocumentAndFile did fid $ do
   guardLoggedIn
   void $ getDocByDocID did
   if fid == unsafeFileID 0
     then do
       emptyPreview <- liftIO $ BS.readFile "frontend/app/img/empty-preview.jpg"
-      return . Right . toResponseBS "image/jpeg" $ BSL.fromStrict emptyPreview
+      return . toResponseBS "image/jpeg" $ BSL.fromStrict emptyPreview
     else do
       checkFileAccessWith fid Nothing Nothing (Just did) Nothing
-      addDelayedResponsePreview fid
-      return . Left $ LinkDocumentPreview did Nothing fid
+      previewResponse fid
 
 -- | Preview from mail client with magic hash
-showPreviewForSignatory :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m KontraLink
+showPreviewForSignatory :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m Response
 showPreviewForSignatory did slid mh fid = logDocumentAndFile did fid $ do
   checkFileAccessWith fid (Just slid) (Just mh) (Just did) Nothing
-  doc <- dbQuery $ GetDocumentByDocumentID did
-  addDelayedResponsePreview fid
-  return $ LinkDocumentPreview did (getMaybeSignatoryLink (doc, slid)) fid
+  previewResponse fid
 
-addDelayedResponsePreview :: Kontrakcja m => FileID -> m ()
-addDelayedResponsePreview fid = do
-  rp <- getRenderedPages fid 150 RenderingModeFirstPageOnly
-  when (pagesCount rp /= 1) $ do
-    logAttention "preview has invalid number of pages" $ object [
-        identifier_ fid
-      , "pages" .= pagesCount rp
-      ]
-    internalError
-  modifyContext $ \ctx -> ctx {
-      ctxdelayedresponse = Just $ returnPage rp
-    }
-  where
-    returnPage rp = DelayedResponse $ logFile fid $ do
-      logInfo_ "Retrieving preview"
-      timeout 5000000 (getPage rp 1) >>= \case
-        Nothing -> return Nothing
-        Just page -> return . Just
-          . toResponseBS "image/png" $ BSL.fromStrict page
+previewResponse :: Kontrakcja m => FileID -> m Response
+previewResponse fid = do
+  fileData <- getFileIDContents fid
+  rp <- renderPage fileData 1 150
+  case rp of
+   Just pageData -> return $ toResponseBS "image/png" $ BSL.fromStrict pageData
+   Nothing -> do
+     logAttention_ "Rendering PDF preview failed"
+     internalError
 
 handleDownloadClosedFile :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> String -> m Response
 handleDownloadClosedFile did sid mh _nameForBrowser = do
