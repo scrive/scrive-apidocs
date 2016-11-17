@@ -20,6 +20,7 @@ CREATE TEMP TABLE results AS
 SELECT escape_for_csv(companies.name) AS "Company name"
      , (escape_for_csv(companies.id :: TEXT)) AS "Company ID"
      , escape_for_csv(companies.number :: TEXT) AS "Company number"
+     , escape_for_csv(companies.partner_id :: TEXT) AS "Partner ID"
      , escape_for_csv((
        SELECT email
          FROM users
