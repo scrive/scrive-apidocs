@@ -118,8 +118,12 @@
     }
 
     .transparent-color {
-      fill: fadeout(@color, 80%);
+      fill: fadeout(@white, 100%);
       stroke: @color;
+    }
+
+    &.needs-sender-action .transparent-color {
+      fill: fadeout(@color, 60%);
     }
   }
 
