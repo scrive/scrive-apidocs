@@ -18,6 +18,7 @@ Options:
   -c, --config-file PATH   Override default & environment variables' values
                            with those in set in the file at 'PATH'. Must be the
                            first option specified.
+  --no-build               Do not run build, runs by default
 
 Variables:
 
@@ -30,7 +31,11 @@ overridden by environment variables. Any environment variables are overridden
 by values set in a '.env' file (if it exists), and in turn by those set in a
 file specified by the '--config-file' option."
 
-bundle exec middleman build --clean
+if [[ $1 = "--no-build"]]; then
+  echo "Skipping build..."
+else
+  bundle exec middleman build --clean
+fi
 
 parse_args() {
   # Set args from a local environment file.
