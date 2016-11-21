@@ -15,8 +15,9 @@ Options:
                            deploy branch.
   -n, --no-hash            Don't append the source commit's hash to the deploy
                            commit's message.
-      --source-only        Only build but not push
-  --no-build               Do not run build, runs by default
+  -c, --config-file PATH   Override default & environment variables' values
+                           with those in set in the file at 'PATH'. Must be the
+                           first option specified.
 
   GIT_DEPLOY_DIR      Folder path containing the files to deploy.
   GIT_DEPLOY_BRANCH   Commit deployable files to this branch.
@@ -37,9 +38,8 @@ parse_args() {
   # If something is exposed as an environment variable, set/overwrite it
   # here. Otherwise, set/overwrite the internal variable instead.
   while : ; do
-    if [[ $1 = "--no-build"]]; then
+    if [[ $1 = "--no-build" ]]; then
       echo "Skipping build..."
-      shift
     else
       bundle exec middleman build --clean
     fi
