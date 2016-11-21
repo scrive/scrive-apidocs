@@ -531,7 +531,7 @@ runTX :: UseNewBuild -> String -> [String] -> Action ()
 runTX newBuild a args = do
   let scriptPath = componentTargetPath newBuild "transifex"
   need [scriptPath]
-  cmd ([a] ++ args)
+  command_ [] scriptPath ([a] ++ args)
 
 runTransifexUsageScript :: UseNewBuild -> Action ()
 runTransifexUsageScript newBuild = do
