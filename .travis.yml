@@ -7,10 +7,3 @@ rvm:
 
 cache: bundler
 script: bundle exec middleman build --clean
-
-deploy:
-  skip_cleanup: true
-  provider: script
-  script: ./deploy.sh --no-build
-  on:
-    branch: master
