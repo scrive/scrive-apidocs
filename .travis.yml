@@ -11,6 +11,6 @@ script: bundle exec middleman build
 deploy:
   skip_cleanup: true
   provider: script
-  script: ./deploy.sh
+  script: rvm $TRAVIS_RUBY_VERSION do deploy.sh
   on:
     branch: master
