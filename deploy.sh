@@ -16,13 +16,26 @@ Options:
   -n, --no-hash            Don't append the source commit's hash to the deploy
                            commit's message.
       --source-only        Only build but not push
-      --push-only          Only push but not build
-"
+  --no-build               Do not run build, runs by default
 
+  GIT_DEPLOY_DIR      Folder path containing the files to deploy.
+  GIT_DEPLOY_BRANCH   Commit deployable files to this branch.
+  GIT_DEPLOY_REPO     Push the deploy branch to this repository.
+
+These variables have default values defined in the script. The defaults can be
+overridden by environment variables. Any environment variables are overridden
+by values set in a '.env' file (if it exists), and in turn by those set in a
+file specified by the '--config-file' option."
 
 run_build() {
   bundle exec middleman build --clean
 }
+
+if [[ $1 = "--no-build"]]; then
+  echo "Skipping build..."
+else
+  bundle exec middleman build --clean
+fi
 
 parse_args() {
   # Set args from a local environment file.
@@ -205,11 +218,4 @@ sanitize() {
   "$@" 2> >(filter 1>&2) | filter
 }
 
-if [[ $1 = --source-only ]]; then
-  run_build
-elif [[ $1 = --push-only ]]; then
-  main "$@"
-else
-  run_build
-  main "$@"
-fi
+[[ $1 = --source-only ]] || main "$@"
