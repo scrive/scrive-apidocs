@@ -1,8 +1,10 @@
 {-# LANGUAGE OverlappingInstances #-}
 module Amazon.Class where
 
-import Control.Monad.Trans
+import Control.Exception.Lifted
+import Control.Monad.Except
 import Data.ByteString (ByteString)
+import Data.Typeable
 import qualified Database.Redis as R
 
 import File.FileID
@@ -17,6 +19,10 @@ data AmazonConfig = AmazonConfig {
 
 class AmazonMonad m where
   getAmazonConfig :: m AmazonConfig
+
+data AmazonException = AmazonException String
+  deriving (Eq, Ord, Show, Typeable)
+instance Exception AmazonException
 
 -- | Generic, overlapping instance.
 instance (

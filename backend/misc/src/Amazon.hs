@@ -201,13 +201,13 @@ getFileFromRedis cache rkey = do
         return mempty
 
 getFileContents
-  :: forall m. (MonadBase IO m, MonadLog m)
+  :: forall m. (MonadBase IO m, MonadLog m, MonadThrow m)
   => S3Action
   -> File
   -> Maybe (R.Connection, RedisKey)
   -> m BS.ByteString
 getFileContents s3action File{..} mredis = localData fileData $ do
-  getContent filestorage >>= verifyContent >>= cacheContent
+  getContent True filestorage >>= verifyContent >>= cacheContent
   where
     fileData = [
         identifier_ fileid
@@ -215,9 +215,9 @@ getFileContents s3action File{..} mredis = localData fileData $ do
       , "filesize" .= filesize
       ]
 
-    getContent :: FileStorage -> m (Maybe BS.ByteString)
-    getContent (FileStorageMemory content) = return $ Just content
-    getContent (FileStorageAWS url aes) = do
+    getContent :: Bool -> FileStorage -> m BS.ByteString
+    getContent _ (FileStorageMemory content) = return $ content
+    getContent retry fs@(FileStorageAWS url aes) = do
       (result, timeDiff) <- do
         startTime <- liftBase getCurrentTime
         logInfo_ "Attempting to fetch file from AWS"
@@ -231,32 +231,25 @@ getFileContents s3action File{..} mredis = localData fileData $ do
           logInfo "Fetching file from AWS succeeded" $ object [
               "time" .= timeDiff
             ]
-          return . Just . aesDecrypt aes . BSL.toStrict $ HTTP.rspBody rsp
+          return . aesDecrypt aes . BSL.toStrict $ HTTP.rspBody rsp
         Left err -> do
           logAttention "Fetching file from AWS failed" $ object [
               "error" .= show err
             , "time" .= timeDiff
+            , "retry" .= retry
             ]
-          return Nothing
+          if (retry)
+             then getContent False fs
+             else throwM $ AmazonException $ show err
 
-    verifyContent :: Maybe BS.ByteString -> m (Maybe BS.ByteString)
-    verifyContent = \case
-      Nothing -> do
-        logAttention_ "Couldn't verify file as there is no content"
-        return Nothing
-      jcontent@(Just content) -> do
-        if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
-          then do
-            logAttention_ "SHA1 checksum of file doesn't match the one in the database"
-            return Nothing
-          else return jcontent
+    verifyContent :: BS.ByteString -> m BS.ByteString
+    verifyContent content = if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
+      then do
+        logAttention_ "SHA1 checksum of file doesn't match the one in the database"
+        throwM $ AmazonException $ "SHA1 checksum of file doesn't match the one in the database"
+      else return content
 
-    cacheContent :: Maybe BS.ByteString -> m BS.ByteString
-    cacheContent mcontent = do
-      content <- case mcontent of
-        Nothing -> do
-          logAttention_ "Content not verified, returning empty ByteString"
-          return BSC.empty
-        Just content -> return content
+    cacheContent :: BS.ByteString -> m BS.ByteString
+    cacheContent content = do
       F.forM_ mredis $ redisPut "content" content
       return content
