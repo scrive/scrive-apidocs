@@ -464,7 +464,7 @@
 "_docListTabsDocs":"Dokument",
 "_docListTabsTemplates":"Mallar",
 "_docListTabsTrash":"Papperskorg",
-"_documentAttachedBy":"Bifogat av $identifier$",
+"_documentAttachedBy":"Bifogad av $identifier$",
 "_documentSentBy":"Skickat av $identifier$",
 "_documentText":"Dokument",
 "_documentsArchiveIdleRemark":"Inaktiva dokument kommer att flyttas till papperskorgen efter <span class='put-idledoctimeout-here'></span> dagar.",

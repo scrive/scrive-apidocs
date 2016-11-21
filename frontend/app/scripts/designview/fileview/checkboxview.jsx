@@ -94,7 +94,8 @@ var Checkbox = require("../../icons/checkbox");
             className={
               "placedcheckbox " +
               FieldPlacementGlobal.signatoryCSSClass(signatory) + " "  +
-              (field.isChecked() ? "checked" : "")
+              (field.isChecked() ? "checked" : "") + " " +
+              (field.needsSenderAction() ? "needs-sender-action" : "")
             }
             style={{
               width: size,

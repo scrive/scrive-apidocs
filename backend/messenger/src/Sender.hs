@@ -116,15 +116,22 @@ sendSMSHelper TeliaCallGuideSender{..} sm@ShortMessage{..} = localData [identifi
   let clearmsisdn = clearMobileNumber msisdn
   logInfoSendSMS "TeliaCallGuide" sm
   let userpass = tcgSenderUser ++ ":" ++ tcgSenderPassword
-      url = concat [
-          tcgSenderUrl
-        , "?", "correlationId=", take 100 . show $ smID -- Telia Callguide has a 100 char limit on this
-        , "&", "originatingAddress=", take 11 . urlEncode . toLatin $ smOriginator -- Telia Callguide has 11 alphanum char limit on this
-        , "&", "destinationAddress=", urlEncode . toLatin $ clearmsisdn
-        , "&", "userData=", urlEncode . toLatin $ smBody
-        , "&", "statusReportFlags=1"
-        ]
-  (success, resp) <- curlSMSSender ["--user", userpass, url] clearmsisdn
+      url = tcgSenderUrl
+      urlEnc param = ["--data-urlencode", param]
+      userData = urlEnc $ "userData=" ++ toLatin smBody
+      dstAddr = urlEnc $ "destinationAddress=" ++ toLatin clearmsisdn
+      originator = urlEnc $ "originatingAddress=" ++ (take 11 $ toLatin smOriginator) -- Telia Callguide has 11 alphanum char limit on this
+      correlationId = urlEnc $ "correlationId=" ++ (take 100 $ show smID) -- Telia Callguide has a 100 char limit on this
+      statusReportFlags = urlEnc "statusReportFlags=1"
+      args = concat [ ["--user", userpass]
+                    , [url]
+                    , userData
+                    , dstAddr
+                    , originator
+                    , correlationId
+                    , statusReportFlags
+                    ]
+  (success, resp) <- curlSMSSender args clearmsisdn
   -- Example response from Telia CallGuide:
   -- (see Telia CallGuide SMS Interface Extended Interface Specification)
   -- (should be here https://drive.google.com/drive/folders/0B8akyOlg6VShRnJOYVI1N2FaNU0)
