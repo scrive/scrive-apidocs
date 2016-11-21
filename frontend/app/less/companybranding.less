@@ -48,6 +48,8 @@
   .companybranding-settings-edit {
     .companybranding-settings-edit-panel {
       width: 1008px;
+      position:relative;
+      overflow: hidden;
       padding:5px;
       border: 1px solid #DDDDDD;
       background-color:#FFFFFF;
@@ -58,14 +60,33 @@
         padding:5px;
         font-size: 16px;
       }
+
+      .companybranding-settings-edit-panel-separator {
+        .long-thin-absolute-line();
+        margin-top: 5px;
+        background-color: #DDDDDD;
+      }
+
+      .companybranding-settings-edit-panel-separator-bottom-margin {
+        .long-thin-absolute-line();
+        top: 100%;
+        margin-top: -10px;
+        background-color: #FFFFFF;
+      }
+
       .companybranding-settings-edit-panel-column{
         width:480px;
         margin:5px;
         padding:5px;
         display:inline-block;
         vertical-align: top;
+
         &.left {
-          border-right:1px solid #DDDDDD;
+          margin-right: 0px;
+        }
+
+        &.right {
+          margin-left: 10px;
         }
 
         .companybranding-property-editor {

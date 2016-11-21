@@ -16,6 +16,7 @@ module.exports = Backbone.Model.extend({
         this.newthemeurl = "/account/company/companybranding/newtheme";
         this.updatethemeurl = "/account/company/companybranding/updatetheme";
         this.deletethemeurl = "/account/company/companybranding/deletetheme";
+        this._forAdminonly = false;
 
     } else {
         this.url = "/adminonly/companyadmin/branding/companybranding/"+args.companyid;
@@ -23,6 +24,7 @@ module.exports = Backbone.Model.extend({
         this.newthemeurl = "/adminonly/companyadmin/branding/companybranding/newtheme/"+args.companyid;
         this.updatethemeurl = "/adminonly/companyadmin/branding/companybranding/updatetheme/"+args.companyid;
         this.deletethemeurl = "/adminonly/companyadmin/branding/companybranding/deletetheme/"+args.companyid;
+        this._forAdminonly = true;
     }
     var self = this;
     self.fetch();
@@ -74,6 +76,9 @@ module.exports = Backbone.Model.extend({
   },
   changedServiceTheme : function() {
     return this.get("changedServiceTheme") == true;
+  },
+  forAdminonly : function() {
+    return this._forAdminonly;
   },
   dirty: function() {
     return this.get("dirty");

@@ -34,14 +34,18 @@ module.exports = React.createClass({
                 getValue={function() {return model.browserTitle()}}
                 setValue={function(v) {return model.setBrowserTitle(v)}}
               />
-              <CompanyBrandingTextEditor
-                title={localization.branding.companySettings.smsOriginator}
-                description={localization.branding.companySettings.smsOriginatorDescription}
-                getValue={function() {return model.smsOriginator()}}
-                setValue={function(v) {return model.setSmsOriginator(v)}}
-                maxLength={11}
-              />
+              { /* if */ model.forAdminonly() &&
+                <CompanyBrandingTextEditor
+                  title={localization.branding.companySettings.smsOriginator}
+                  description={localization.branding.companySettings.smsOriginatorDescription}
+                  getValue={function() {return model.smsOriginator()}}
+                  setValue={function(v) {return model.setSmsOriginator(v)}}
+                  maxLength={11}
+                />
+              }
             </div>
+            <div className="companybranding-settings-edit-panel-separator"/>
+            <div className="companybranding-settings-edit-panel-separator-bottom-margin"/>
             <div className="companybranding-settings-edit-panel-column right">
               <CompanyBrandingImageEditor
                 title={localization.branding.companySettings.favicon}
