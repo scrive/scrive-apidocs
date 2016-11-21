@@ -20,6 +20,8 @@ deploy:
   provider: script
   skip_cleanup: true
   script: ./deploy.sh --no-build
+  env:
+    - GIT_DEPLOY_REPO="git@github.com:scrive/scrive-apidocs.git"
   on:
     branch: master
 
