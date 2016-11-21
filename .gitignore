@@ -22,3 +22,6 @@ build/
 _yardoc
 doc/
 .idea/
+
+# Travis artifact?
+vendor/
