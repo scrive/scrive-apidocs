@@ -27,7 +27,7 @@ toc_footers:
 ### Terms of Service
 
 In using this API you agree to be bound by the Scrive Terms of Service,
-available at [http://scrive.com/en/terms](http://scrive.com/en/terms)
+available at [http://scrive.com/en/terms](http://scrive.com/en/terms).
 
 
 # Overview
