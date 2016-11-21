@@ -9,7 +9,8 @@ cache: bundler
 script: bundle exec middleman build
 
 deploy:
+  skip_cleanup: true
   provider: script
-  script: deploy.sh
+  script: ./deploy.sh
   on:
     branch: master
