@@ -8,3 +8,9 @@ rvm:
 
 cache: bundler
 script: bundle exec middleman build
+
+deploy:
+  provider: script
+  script: deploy.sh
+  on:
+    branch: master
