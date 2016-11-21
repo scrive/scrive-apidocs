@@ -27,16 +27,6 @@ overridden by environment variables. Any environment variables are overridden
 by values set in a '.env' file (if it exists), and in turn by those set in a
 file specified by the '--config-file' option."
 
-run_build() {
-  bundle exec middleman build --clean
-}
-
-if [[ $1 = "--no-build"]]; then
-  echo "Skipping build..."
-else
-  bundle exec middleman build --clean
-fi
-
 parse_args() {
   # Set args from a local environment file.
   if [ -e ".env" ]; then
@@ -47,6 +37,12 @@ parse_args() {
   # If something is exposed as an environment variable, set/overwrite it
   # here. Otherwise, set/overwrite the internal variable instead.
   while : ; do
+    if [[ $1 = "--no-build"]]; then
+      echo "Skipping build..."
+      shift
+    else
+      bundle exec middleman build --clean
+    fi
     if [[ $1 = "-h" || $1 = "--help" ]]; then
       echo "$help_message"
       return 0
