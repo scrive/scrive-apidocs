@@ -18,7 +18,7 @@ import Log.Backend.ElasticSearch
 import Log.Backend.PostgreSQL
 import Log.Backend.StandardOutput
 import Log.Data
-import Log.Internal.Logger
+import Log.Internal.Logger hiding (withLogger)
 import Log.Monad
 
 import Crypto.RNG
