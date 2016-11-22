@@ -249,10 +249,10 @@ var Modal = require("../../common/modal");
 
       if (signatory.isViewer()) {
         if (document.closed()) {
-          // viewer of unsigned document should use invitation method
+          // viewer of signed document should use confirmation method
           useInvitationMethod = false;
         } else {
-          // viewer of signed document should use confirmation method
+          // viewer of pending document should use invitation method
           useInvitationMethod = true;
         }
       } else {
