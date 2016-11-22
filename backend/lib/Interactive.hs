@@ -34,7 +34,7 @@ run m = do
 
   let connSettings = pgConnSettings $ dbConfig appConf
   globalTemplates <- readGlobalTemplates
-  withLogger logRunner $ \runLogger -> do
+  Log.Configuration.withLogger logRunner $ \runLogger -> do
     appGlobals <- do
       templates <- newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates
       filecache <- MemCache.new BS.length 50000000
