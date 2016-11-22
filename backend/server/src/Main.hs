@@ -64,7 +64,7 @@ main = withCurlDo $ do
   pool <- liftBase . createPoolSource $ connSettings kontraComposites
   rng <- newCryptoRNGState
   lr <- mkLogRunner "kontrakcja" (logConfig appConf) rng
-  Log.Configuration.withLogger lr $ \runLogger -> runLogger $ do
+  withLogger lr $ \runLogger -> runLogger $ do
     logInfo "Starting kontrakcja-server" $ object [
         "version" .= VersionTH.versionID
       ]
