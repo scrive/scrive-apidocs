@@ -36,7 +36,9 @@ var TaskList = require("./navigation/task_list");
 
     getInitialState: function () {
       var model = new SignViewModel({
-        document: new Document({id: this.props.documentId, initialdocumentdata: this.props.documentData}),
+        document: new Document({id: this.props.documentId,
+                                initialdocumentdata: this.props.documentData,
+                                siglinkid: this.props.sigLinkId}),
         allowsavesafetycopy: this.props.allowSaveSafetyCopy,
         loggedInAsAuthor: this.props.loggedInAsAuthor
       });
