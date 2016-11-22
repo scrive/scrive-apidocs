@@ -53,7 +53,7 @@ main = do
   conf <- readConfig putStrLn config
   rng <- newCryptoRNGState
   lr <- mkLogRunner "messenger" (mscLogConfig conf) rng
-  Log.Configuration.withLogger lr $ \runLogger -> runLogger $ do
+  withLogger lr $ \runLogger -> runLogger $ do
     checkExecutables
 
     let pgSettings = pgConnSettings (mscDBConfig conf) []

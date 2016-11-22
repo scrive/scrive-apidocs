@@ -129,7 +129,7 @@ testMany :: ([String], [(TestEnvSt -> Test)]) -> IO ()
 testMany (allargs, ts) = do
   rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
   lr  <- mkLogRunner "test" def rng
-  Log.Configuration.withLogger lr $ \runLogger -> testMany' (allargs, ts) runLogger rng
+  withLogger lr $ \runLogger -> testMany' (allargs, ts) runLogger rng
 
 testMany' :: ([String], [(TestEnvSt -> Test)])
           -> (forall m r . LogT m r -> m r) -> CryptoRNGState -> IO ()
