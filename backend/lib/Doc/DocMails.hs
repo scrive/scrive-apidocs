@@ -169,22 +169,37 @@ sendReminderEmail custommessage actor automatic siglink = logSignatory (signator
           else [])
        }
       dosms = scheduleSMS doc =<< smsReminder automatic doc siglink
+      useInvitationMethod = case ( documentstatus doc
+                                 , maybesigninfo siglink
+                                 , signatoryispartner siglink
+                                 , signatorylinkconfirmationdeliverymethod siglink
+                                 ) of
+                              (_, Just _, True, NoConfirmationDelivery) -> True -- partner that signed, but has no
+                                                                               -- confirmation method should
+                                                                               -- fallback to invitation method
+                              (_, Just _, True, _) -> False -- partner that signed should use confirmation method
+                              (_, Nothing, True, _) -> True -- partner that didn't sign should use invitation method
+                              (Closed, _, False, NoConfirmationDelivery) -> True -- viewer of signed document with no
+                                                                                -- confirmation method, should
+                                                                                -- fallback to invitation method
+                              (Closed, _, False, _) -> False -- viewer of signed document should use confirmation method
+                              (_, _, False, _)  -> True  -- viewer of pending document should use invitation method
+      invMethod = signatorylinkdeliverymethod siglink
+      confMethod = signatorylinkconfirmationdeliverymethod siglink
+      (sendemail, sendsms) = if useInvitationMethod then
+                                 ( invMethod `elem` [EmailDelivery, EmailAndMobileDelivery]
+                                 , invMethod `elem` [MobileDelivery, EmailAndMobileDelivery]
+                                 )
+                             else
+                                 ( confMethod `elem` [EmailConfirmationDelivery, EmailAndMobileConfirmationDelivery]
+                                 , confMethod `elem` [MobileConfirmationDelivery, EmailAndMobileConfirmationDelivery]
+                                 )
 
-  sent <- case maybesigninfo siglink of
-           Just _ -> do
-             -- reminders for signed documents should use confirmation delivery method
-             -- and fallback to invitation delivery method if confirmation delivery method is NoConfirmation
-             let noConfirmationMethod = signatorylinkconfirmationdeliverymethod siglink == NoConfirmationDelivery
-                 sendemail =   signatorylinkconfirmationdeliverymethod siglink `elem` [EmailConfirmationDelivery, EmailAndMobileConfirmationDelivery]
-                             || (noConfirmationMethod && signatorylinkdeliverymethod siglink `elem` [EmailDelivery, EmailAndMobileDelivery])
-                 sendsms =   signatorylinkconfirmationdeliverymethod siglink `elem` [MobileConfirmationDelivery, EmailAndMobileConfirmationDelivery]
-                           || (noConfirmationMethod && signatorylinkdeliverymethod siglink `elem` [MobileDelivery, EmailAndMobileDelivery])
-             case (sendemail, sendsms) of
-               (True, True) -> domail >> dosms >> return True
-               (True, False) -> domail >> return True
-               (False, True) -> dosms >> return True
-               (False, False) -> return False
-           Nothing -> sendNotifications siglink False domail dosms
+  sent <- case (sendemail, sendsms) of
+           (True, True) -> domail >> dosms >> return True
+           (True, False) -> domail >> return True
+           (False, True) -> dosms >> return True
+           (False, False) -> return False
 
   when sent $ do
     when (isPending doc &&  not (hasSigned siglink)) $ do

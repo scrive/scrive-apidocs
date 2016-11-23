@@ -11,7 +11,6 @@ import DownloadPdfIcon from "../icons/download_pdf_icon.svg";
     propTypes: {
       document: React.PropTypes.instanceOf(Backbone.Model).isRequired,
       documentid: React.PropTypes.string.isRequired,
-      signatorylinkid: React.PropTypes.string.isRequired,
       link : React.PropTypes.object,
       authorFullname: React.PropTypes.string,
       authorPhone: React.PropTypes.string
