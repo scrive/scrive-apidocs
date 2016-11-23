@@ -156,7 +156,6 @@ var TaskList = require("./navigation/task_list");
             <Header
               document={doc}
               documentid={this.props.documentId}
-              signatorylinkid={this.props.sigLinkId}
               link={this.props.link}
               authorFullname={this.props.authorFullname}
               authorPhone={this.props.authorPhone}
