@@ -278,7 +278,9 @@ makeMailAttachmentsForNotClosedDocument doc withAttachments = do
     True -> forM (documentauthorattachments doc) $ \aatt -> do
       file <- dbQuery $ GetFileByFileID $ authorattachmentfileid aatt
       return [(authorattachmentname aatt ++ ".pdf", file)]
-  sattachments <- forM (concatMap signatoryattachments $ documentsignatorylinks doc) $ \satt -> case signatoryattachmentfile satt of
+  sattachments <- case withAttachments of
+    False -> return []
+    True -> forM (concatMap signatoryattachments $ documentsignatorylinks doc) $ \satt -> case signatoryattachmentfile satt of
       Nothing -> return []
       Just sattfid -> do
         file <- dbQuery $ GetFileByFileID sattfid

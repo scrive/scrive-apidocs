@@ -255,11 +255,7 @@ docApiV2Forward did = logDocument did . api $ do
     -- Parameters
     email <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "email")
     noContent <- apiV2ParameterDefault True (ApiV2ParameterBool "no_content")
-    mNoAttachments <- apiV2ParameterOptional (ApiV2ParameterBool "no_attachments")
-    let noAttachments = case (mNoAttachments, noContent) of
-          (Just a, _) -> a
-          (Nothing, True)  -> True
-          (Nothing, False) -> False
+    noAttachments <- apiV2ParameterDefault False (ApiV2ParameterBool "no_attachments")
     -- API call actions
     asiglink <- $fromJust <$> getAuthorSigLink <$> theDocument
     validEmail <- case asValidEmail email of
