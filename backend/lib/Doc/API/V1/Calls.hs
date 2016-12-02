@@ -781,8 +781,13 @@ apiCallV1Forward did = logDocument did . api $ do
     when (not $ (auid == userid user)) $ do
           throwM . SomeDBExtraException $ serverError "Permission problem. Not an author."
     email <- apiGuardJustM (badInput "Email adress is no valid.") $ getOptionalField  asValidEmail "email"
-    noContent <- (== Just "true") <$> getField  "nocontent"
-    _ <- sendForwardEmail email noContent asiglink -- Make sure we only send out the document with the author's signatory link when it is closed, otherwise the link may be abused
+    noContent <- (== Just "true") <$> getField "nocontent"
+    mNoAttachments <- getField "noattachments"
+    let noAttachments = case (mNoAttachments, noContent) of
+          (Just s, _)      -> s == "true"
+          (Nothing, True)  -> True
+          (Nothing, False) -> False
+    _ <- sendForwardEmail email noContent noAttachments asiglink -- Make sure we only send out the document with the author's signatory link when it is closed, otherwise the link may be abused
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 apiCallV1Delete :: Kontrakcja m => DocumentID -> m Response
