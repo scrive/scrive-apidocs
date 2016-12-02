@@ -154,7 +154,7 @@ sendReminderEmail :: (MonadLog m, MonadCatch m, TemplatesMonad m, CryptoRNG m, D
 sendReminderEmail custommessage actor automatic siglink = logSignatory (signatorylinkid siglink) $ do
   doc <- theDocument
   let domail = do
-       mailattachments <- makeMailAttachments doc
+       mailattachments <- makeMailAttachments doc True
        mail <- mailDocumentRemind automatic custommessage siglink (not (null mailattachments)) doc
        docid <- theDocumentID
        scheduleEmailSendoutWithAuthorSenderThroughService docid $ mail {
@@ -216,7 +216,7 @@ sendReminderEmail custommessage actor automatic siglink = logSignatory (signator
 -- to attach, a link to it is used instead of attaching it.
 sendClosedEmails :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, MailContextMonad m) => Bool -> Document -> m ()
 sendClosedEmails sealFixed document = do
-    mailattachments <- makeMailAttachments document
+    mailattachments <- makeMailAttachments document True
     let signatorylinks = documentsignatorylinks document
     forM_ signatorylinks $ \sl -> do
       let sendMail = do
@@ -245,20 +245,22 @@ sendClosedEmails sealFixed document = do
                                               when useSMS  $ sendSMS useMail
 
 
-makeMailAttachments :: (MonadDB m, MonadThrow m) => Document -> m [(String, Either BS.ByteString FileID)]
-makeMailAttachments doc = map (\(n,f) -> (n, Right $ fileid f)) <$> if (isClosed doc)
-  then makeMailAttachmentsForClosedDocument doc
-  else makeMailAttachmentsForNotClosedDocument doc
+makeMailAttachments :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(String, Either BS.ByteString FileID)]
+makeMailAttachments doc withAttachments = map (\(n,f) -> (n, Right $ fileid f)) <$> if (isClosed doc)
+  then makeMailAttachmentsForClosedDocument doc withAttachments
+  else makeMailAttachmentsForNotClosedDocument doc withAttachments
 
 
-makeMailAttachmentsForClosedDocument :: (MonadDB m, MonadThrow m) => Document -> m [(String, File)]
-makeMailAttachmentsForClosedDocument doc = do
+makeMailAttachmentsForClosedDocument :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(String, File)]
+makeMailAttachmentsForClosedDocument doc withAttachments = do
   mainfile <- do
     file <- dbQuery $ GetFileByFileID $ mainfileid $ $(fromJust) $ (documentsealedfile doc) `mplus` (documentfile doc)
     return [(documenttitle doc ++ ".pdf", file)]
-  aattachments <- forM (filter (not . authorattachmentaddtosealedfile) $ documentauthorattachments doc) $ \aatt -> do
-    file <- dbQuery $ GetFileByFileID $ authorattachmentfileid aatt
-    return [(authorattachmentname aatt ++ ".pdf", file)]
+  aattachments <- case withAttachments of
+    False -> return []
+    True -> forM (filter (not . authorattachmentaddtosealedfile) $ documentauthorattachments doc) $ \aatt -> do
+      file <- dbQuery $ GetFileByFileID $ authorattachmentfileid aatt
+      return [(authorattachmentname aatt ++ ".pdf", file)]
   let
     allMailAttachments = mainfile ++ (concat aattachments)
     maxFileSize = 10 * 1024 * 1024
@@ -266,14 +268,16 @@ makeMailAttachmentsForClosedDocument doc = do
     then return []
     else return allMailAttachments
 
-makeMailAttachmentsForNotClosedDocument :: (MonadDB m, MonadThrow m) => Document -> m [(String, File)]
-makeMailAttachmentsForNotClosedDocument doc = do
+makeMailAttachmentsForNotClosedDocument :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(String, File)]
+makeMailAttachmentsForNotClosedDocument doc withAttachments = do
   mainfile <- do
     file <- dbQuery $ GetFileByFileID $ mainfileid $ $(fromJust) (documentfile doc)
     return [(documenttitle doc ++ ".pdf", file)]
-  aattachments <- forM (documentauthorattachments doc) $ \aatt -> do
-    file <- dbQuery $ GetFileByFileID $ authorattachmentfileid aatt
-    return [(authorattachmentname aatt ++ ".pdf", file)]
+  aattachments <- case withAttachments of
+    False -> return []
+    True -> forM (documentauthorattachments doc) $ \aatt -> do
+      file <- dbQuery $ GetFileByFileID $ authorattachmentfileid aatt
+      return [(authorattachmentname aatt ++ ".pdf", file)]
   sattachments <- forM (concatMap signatoryattachments $ documentsignatorylinks doc) $ \satt -> case signatoryattachmentfile satt of
       Nothing -> return []
       Just sattfid -> do
@@ -339,9 +343,10 @@ sendAllReminderEmailsWithFilter f actor automatic = do
     Send a forward email
 -}
 sendForwardEmail :: (MonadLog m, TemplatesMonad m, MonadThrow m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
-                          String -> Bool -> SignatoryLink -> m ()
-sendForwardEmail email noContent asiglink = do
-  mailattachments <- makeMailAttachments =<< theDocument
+                          String -> Bool -> Bool -> SignatoryLink -> m ()
+sendForwardEmail email noContent noAttachments asiglink = do
+  doc <- theDocument
+  mailattachments <- makeMailAttachments doc (not noAttachments)
   mail <- mailForwardSigned asiglink (not (null mailattachments)) =<< theDocument
   did <- documentid <$> theDocument
   scheduleEmailSendoutWithAuthorSenderThroughService did $ mail {

@@ -561,7 +561,7 @@ prepareEmailPreview docid slid = do
          "remind" -> do
              doc <- getDocByDocID docid
              Just sl <- return $ getSigLinkFor slid doc
-             mailattachments <- makeMailAttachments doc
+             mailattachments <- makeMailAttachments doc True
              mailDocumentRemindContent Nothing doc sl (not (null mailattachments))
          "invite" -> do
              doc <- getDocByDocID docid
