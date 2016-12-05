@@ -742,99 +742,99 @@ paths:
 
   # Prepare
   /new:
-    $ref: ./paths/new.yaml
+    $ref: ./api/documents/new.yaml
 
   /newfromtemplate/{document_id}:
-    $ref: ./paths/newfromtemplate.yaml
+    $ref: ./api/documents/newfromtemplate.yaml
 
   /{document_id}/clone:
-    $ref: ./paths/document_id/clone.yaml
+    $ref: ./api/documents/document_id/clone.yaml
 
   /{document_id}/update:
-    $ref: ./paths/document_id/update.yaml
+    $ref: ./api/documents/document_id/update.yaml
 
   /{document_id}/setfile:
-    $ref: ./paths/document_id/setfile.yaml
+    $ref: ./api/documents/document_id/setfile.yaml
 
   /{document_id}/setattachments:
-    $ref: ./paths/document_id/setattachments.yaml
+    $ref: ./api/documents/document_id/setattachments.yaml
 
   /{document_id}/start:
-    $ref: ./paths/document_id/start.yaml
+    $ref: ./api/documents/document_id/start.yaml
 
   # Get
   /{document_id}/get:
-    $ref: ./paths/document_id/get.yaml
+    $ref: ./api/documents/document_id/get.yaml
 
   /list:
-    $ref: ./paths/list.yaml
+    $ref: ./api/documents/list.yaml
 
   /{document_id}/files/main/{filename}:
-    $ref: ./paths/document_id/files/main.yaml
+    $ref: ./api/documents/document_id/files/main.yaml
 
   /{document_id}/files/{file_id}/{filename}:
-    $ref: ./paths/document_id/files/file_id.yaml
+    $ref: ./api/documents/document_id/files/file_id.yaml
 
   /{document_id}/texts/{file_id}:
-    $ref: ./paths/document_id/texts.yaml
+    $ref: ./api/documents/document_id/texts.yaml
 
   /{document_id}/history:
-    $ref: ./paths/document_id/history.yaml
+    $ref: ./api/documents/document_id/history.yaml
 
   /{document_id}/evidenceattachments:
-    $ref: ./paths/document_id/evidenceattachments.yaml
+    $ref: ./api/documents/document_id/evidenceattachments.yaml
 
   /{document_id}/callback:
-    $ref: ./paths/document_id/callback.yaml
+    $ref: ./api/documents/document_id/callback.yaml
 
   # Modify
 
   /{document_id}/remind:
-    $ref: ./paths/document_id/remind.yaml
+    $ref: ./api/documents/document_id/remind.yaml
 
   /{document_id}/prolong:
-    $ref: ./paths/document_id/prolong.yaml
+    $ref: ./api/documents/document_id/prolong.yaml
 
   /{document_id}/cancel:
-    $ref: ./paths/document_id/cancel.yaml
+    $ref: ./api/documents/document_id/cancel.yaml
 
   /{document_id}/trash:
-    $ref: ./paths/document_id/trash.yaml
+    $ref: ./api/documents/document_id/trash.yaml
 
   /{document_id}/delete:
-    $ref: ./paths/document_id/delete.yaml
+    $ref: ./api/documents/document_id/delete.yaml
 
   /{document_id}/forward:
-    $ref: ./paths/document_id/forward.yaml
+    $ref: ./api/documents/document_id/forward.yaml
 
   /{document_id}/setautoreminder:
-    $ref: ./paths/document_id/setautoreminder.yaml
+    $ref: ./api/documents/document_id/setautoreminder.yaml
 
   /{document_id}/restart:
-    $ref: ./paths/document_id/restart.yaml
+    $ref: ./api/documents/document_id/restart.yaml
 
   /{document_id}/{signatory_id}/setauthenticationtoview:
-    $ref: ./paths/document_id/signatory_id/setauthenticationtoview.yaml
+    $ref: ./api/documents/document_id/signatory_id/setauthenticationtoview.yaml
 
   /{document_id}/{signatory_id}/setauthenticationtosign:
-    $ref: ./paths/document_id/signatory_id/setauthenticationtosign.yaml
+    $ref: ./api/documents/document_id/signatory_id/setauthenticationtosign.yaml
 
   # Sign
 
   /{document_id}/{signatory_id}/check:
-    $ref: ./paths/document_id/signatory_id/check.yaml
+    $ref: ./api/documents/document_id/signatory_id/check.yaml
 
   /{document_id}/{signatory_id}/sign:
-    $ref: ./paths/document_id/signatory_id/sign.yaml
+    $ref: ./api/documents/document_id/signatory_id/sign.yaml
 
   /{document_id}/{signatory_id}/reject:
-    $ref: ./paths/document_id/signatory_id/reject.yaml
+    $ref: ./api/documents/document_id/signatory_id/reject.yaml
 
   /{document_id}/{signatory_id}/sendsmspin:
-    $ref: ./paths/document_id/signatory_id/sendsmspin.yaml
+    $ref: ./api/documents/document_id/signatory_id/sendsmspin.yaml
 
   /{document_id}/{signatory_id}/setattachment:
-    $ref: ./paths/document_id/signatory_id/setattachment.yaml
+    $ref: ./api/documents/document_id/signatory_id/setattachment.yaml
 
 definitions:
   Document:
