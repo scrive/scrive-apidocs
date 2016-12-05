@@ -16,7 +16,7 @@ get:
     *OAuth Privileges required: `DOC_CHECK`*
 
   parameters:
-    - $ref: ../../../parameters.yaml#/DocumentID
+    - $ref: ../../../extras/parameters.yaml#/DocumentID
     - name: lang
       in: query
       default: User language

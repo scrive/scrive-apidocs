@@ -14,7 +14,7 @@ post:
     *OAuth Privileges required: `DOC_CREATE`*
 
   parameters:
-    - $ref: ../../../parameters.yaml#/DocumentID
+    - $ref: ../../../extras/parameters.yaml#/DocumentID
     - name: file
       in: formData
       type: file
@@ -25,11 +25,11 @@ post:
         If provided, the PDF will be set as the main file for the document.
 
         If not provided, the current main file for the document will be removed.
-    - $ref: ../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     200:
-      $ref: ../../../responses.yaml#/Document
+      $ref: ../../../extras/responses.yaml#/Document
     400:
       description: The parameter `file` could not be parsed.
       # FIXME It is possible to add a schema here, although APIError is too general

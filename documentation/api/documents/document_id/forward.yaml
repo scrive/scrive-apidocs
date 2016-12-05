@@ -12,7 +12,7 @@ post:
     *OAuth Privileges required: `DOC_SEND`*
 
   parameters:
-    - $ref: ../../../parameters.yaml#/DocumentID
+    - $ref: ../../../extras/parameters.yaml#/DocumentID
     - name: email
       in: formData
       type: string
@@ -27,7 +27,7 @@ post:
         When set to true only the signed document will be forwarded, with no
         other email content.
         Otherwise a template email content is used, with the document attached.
-    - $ref: ../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     202:

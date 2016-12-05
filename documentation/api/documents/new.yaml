@@ -44,7 +44,7 @@ post:
 
   responses:
     201:
-      $ref: ../../responses.yaml#/Document
+      $ref: ../../extras/responses.yaml#/Document
     400:
       description: The parameter `file` could not be parsed.
       # FIXME It is possible to add a schema here, although APIError is too general

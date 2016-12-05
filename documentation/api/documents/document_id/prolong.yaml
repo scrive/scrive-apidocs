@@ -12,7 +12,7 @@ post:
     *OAuth Privileges required: `DOC_SEND`*
 
   parameters:
-    - $ref: ../../../parameters.yaml#/DocumentID
+    - $ref: ../../../extras/parameters.yaml#/DocumentID
     - name: days
       in: formData
       type: integer
@@ -20,11 +20,11 @@ post:
       maximum: 90
       required: true
       description: Number of days to prolong the document by.
-    - $ref: ../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     200:
-      $ref: ../../../responses.yaml#/Document
+      $ref: ../../../extras/responses.yaml#/Document
     400:
       description: The `days` parameter must be a number between 1 and 90.
       # FIXME It is possible to add a schema here, although APIError is too general

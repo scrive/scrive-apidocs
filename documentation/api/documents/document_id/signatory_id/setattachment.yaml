@@ -17,8 +17,8 @@ post:
     one and are explicitly named.
 
   parameters:
-    - $ref: ../../../../parameters.yaml#/DocumentID
-    - $ref: ../../../../parameters.yaml#/SignatoryID
+    - $ref: ../../../../extras/parameters.yaml#/DocumentID
+    - $ref: ../../../../extras/parameters.yaml#/SignatoryID
     - name: name
       in: formData
       type: string
@@ -39,11 +39,11 @@ post:
         If provided, this is the file to set as the attachment.
 
         If not provided, this will remove the existing attachment.
-    - $ref: ../../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     200:
-      $ref: ../../../../responses.yaml#/Document
+      $ref: ../../../../extras/responses.yaml#/Document
     400:
       description: The PDF provided is invalid.
       # FIXME It is possible to add a schema here, although APIError is too general

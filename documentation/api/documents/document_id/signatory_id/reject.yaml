@@ -14,8 +14,8 @@ post:
     change the document status to `rejected`.
 
   parameters:
-    - $ref: ../../../../parameters.yaml#/DocumentID
-    - $ref: ../../../../parameters.yaml#/SignatoryID
+    - $ref: ../../../../extras/parameters.yaml#/DocumentID
+    - $ref: ../../../../extras/parameters.yaml#/SignatoryID
     - name: reason
       in: formData
       type: string
@@ -26,11 +26,11 @@ post:
 
         Note that this value is ignored when `allow_reject_reason` in the
         Document is set to `false`.
-    - $ref: ../../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     200:
-      $ref: ../../../../responses.yaml#/Document
+      $ref: ../../../../extras/responses.yaml#/Document
     409:
       description: TODO
     # TODO
