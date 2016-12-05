@@ -976,6 +976,7 @@ Executable kontrakcja-test
                  EvidenceAttachmentsTest,
                  EvidenceLogTest,
                  FileTest,
+                 GTWorkflowTest,
                  HtmlTest,
                  InputValidationTest,
                  JSONUtilTest,
