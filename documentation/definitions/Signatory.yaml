@@ -1,0 +1,191 @@
+---
+$schema: "http://json-schema.org/draft-04/schema#"
+title: Signatory
+type: object
+description: |
+ A signatory defines the details and process for each signing or non-signing
+ party to a document.
+properties:
+  id:
+    description: |
+      **Unique identifier for a party.**
+
+      Will not change over time, and cannot be changed.
+    type: string
+    readOnly: true
+  user_id:
+    description: |
+      If this party has an account on the Scrive eSign system, it will be set
+      here.
+    type: integer
+    format: int64
+    readOnly: true
+  is_author:
+    description: Whether this party is the author of the document.
+    type: boolean
+    readOnly: true
+  is_signatory:
+    description: |
+      Whether this party is a signatory to the document, otherwise they are
+      viewers and will not sign the document.
+    type: boolean
+  fields:
+    description: |
+      The object properties for Signatory `fields` in this definition are only
+      the ones common to all signatory fields.
+
+      **Note:**
+      A valid definition must be one of the concrete types (e.g.
+      `SignatoryFieldCheckbox`).
+    type: array
+    items:
+      $ref: ./SignatoryField.yaml
+  sign_order:
+    type: integer
+    default: 1
+  sign_time:
+    type: string
+    format: date-time
+    readOnly: true
+  seen_time:
+    type: string
+    format: date-time
+    readOnly: true
+  read_invitation_time:
+    type: string
+    format: date-time
+    readOnly: true
+  rejected_time:
+    type: string
+    format: date-time
+    readOnly: true
+  sign_success_redirect_url:
+    description: |
+      The URL to redirect this party after they have signed the document.
+    type: string
+    format: uri
+  reject_redirect_url:
+    description: |
+      The URL to redirect this party if they reject the document.
+    type: string
+    format: uri
+  email_delivery_status:
+    $ref: ./SignatoryDeliveryStatus.yaml
+  mobile_delivery_status:
+    $ref: ./SignatoryDeliveryStatus.yaml
+  csv:
+    type: array
+    items:
+      type: array
+      items:
+        type: string
+  delivery_method:
+    type: string
+    default: email
+    enum:
+      - email
+      - mobile
+      - email_mobile
+      - pad
+      - api
+  authentication_method_to_view:
+    type: string
+    default: standard
+    enum:
+      - standard
+      - se_bankid
+      - no_bankid
+  authentication_method_to_sign:
+    type: string
+    default: standard
+    enum:
+      - standard
+      - sms_pin
+      - se_bankid
+  confirmation_delivery_method:
+    type: string
+    default: email
+    enum:
+      - email
+      - mobile
+      - email_mobile
+      - none
+  attachments:
+    type: array
+    default: []
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        file_id:
+          type: string
+        file_name:
+          type: string
+  api_delivery_url:
+    description: |
+      If the `delivery_method` is set to `api`, then this field will hold the
+      relative URL for the party.
+
+      This will only be available after the signing process has been started,
+      and will only be visible when accessing the document as the author.
+    type: string
+    format: uri
+example:
+  {
+    "id": "9220293573270366783",
+    "user_id": "9206820953483508074",
+    "is_author": true,
+    "is_signatory": true,
+    "fields": [
+      {
+        "type": "name",
+        "order": 1,
+        "value": "Magnus",
+        "is_obligatory": true,
+        "should_be_filled_by_sender": true,
+        "placements": []
+      },
+      {
+        "type": "name",
+        "order": 2,
+        "value": "Söderholm",
+        "is_obligatory": true,
+        "should_be_filled_by_sender": true,
+        "placements": []
+      },
+      {
+        "type": "email",
+        "value": "noemail@scrive.com",
+        "is_obligatory": true,
+        "should_be_filled_by_sender": true,
+        "placements": []
+      },
+      {
+        "type": "company",
+        "value": "",
+        "is_obligatory": false,
+        "should_be_filled_by_sender": false,
+        "placements": []
+      }
+    ],
+    "sign_order": 1,
+    "sign_time": null,
+    "seen_time": null,
+    "read_invitation_time": null,
+    "rejected_time": null,
+    "sign_success_redirect_url": null,
+    "reject_redirect_url": null,
+    "email_delivery_status": "unknown",
+    "mobile_delivery_status": "unknown",
+    "has_authenticated_to_view": false,
+    "csv": null,
+    "delivery_method": "email",
+    "authentication_method_to_view": "standard",
+    "authentication_method_to_sign": "standard",
+    "confirmation_delivery_method": "email",
+    "attachments": [],
+    "api_delivery_url": null
+  }

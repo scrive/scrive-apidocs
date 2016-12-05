@@ -1,0 +1,42 @@
+---
+$schema: "http://json-schema.org/draft-04/schema#"
+title: SignatoryFieldCheckbox
+description: |
+  A `SignatoryField` for placing checkboxes on the document.
+allOf:
+  - $ref: ./SignatoryField.yaml
+  - type: object
+    properties:
+      type:
+        type: string
+        enum:
+          - checkbox
+      name:
+        type: string
+      is_checked:
+        type: boolean
+      should_be_filled_by_sender:
+        type: boolean
+    required:
+      - type
+      - name
+example:
+  {
+    "type": "checkbox",
+    "name": "Checkbox 1",
+    "is_checked": true,
+    "is_obligatory": true,
+    "should_be_filled_by_sender": false,
+    "placements": [
+      {
+        "xrel": 0.8473684210526315,
+        "yrel": 0.16220238095238096,
+        "wrel": 0.010526315789473684,
+        "hrel": 0.00744047619047619,
+        "fsrel": 0.0168,
+        "page": 1,
+        "tip": "left",
+        "anchors": []
+      }
+    ]
+  }

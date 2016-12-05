@@ -1,0 +1,59 @@
+---
+$schema: "http://json-schema.org/draft-04/schema#"
+title: Signatory Field
+description: |
+  The common elements of all `SignatoryField` types.
+
+  This definition by itself is not sufficient, you need to use it in
+  combination with one of the concrete types (e.g. `SignatoryFieldName`).
+discriminator: type
+required:
+  - type
+  - is_obligatory
+type: object
+properties:
+  type:
+    type: string
+  is_obligatory:
+    type: boolean
+  placements:
+    type: array
+    description: |
+      If set, where this should be placed on the document, both for the
+      signatory to fill out on the signing page, and in the final sealed PDF.
+
+      Note that this is an array, you can have multiple placements for the same
+      field.
+
+      The easiest way to set the `xrel`, `yrel`, etc. values is to create a
+      template in the document UI design view, and use those values.
+    items:
+      type: object
+      properties:
+        xrel:
+          type: number
+        yrel:
+          type: number
+        wrel:
+          type: number
+        hrel:
+          type: number
+        fsrel:
+          type: number
+        page:
+          description: The page number for this placement.
+          type: integer
+        tip:
+          type: string
+          enum:
+            - left
+            - right
+        anchors:
+          type: array
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+              index:
+                type: integer
