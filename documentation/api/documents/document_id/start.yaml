@@ -1,0 +1,42 @@
+---
+post:
+
+  summary: Start the signing process
+
+  tags:
+    - Prepare
+
+  description: |
+    Start the signing process for a document in preparation.
+
+    *OAuth Privileges required: `DOC_SEND`*
+
+  parameters:
+    - $ref: ../../../parameters.yaml#/DocumentID
+    - name: author_signs_now
+      x-internalOnly: true
+      in: formData
+      type: boolean
+      required: false
+      default: false
+      description: |
+        **Internal use only.**
+
+        Setting to ‘true’ will result in no invitation to sign being sent to the
+        author.
+        This is useful for when the author signs immediately after the ‘start’
+        call.
+    - $ref: ../../../parameters.yaml#/ObjectVersion
+
+  responses:
+    200:
+      $ref: ../../../responses.yaml#/Document
+    409:
+      description: |
+        `document_state_error` with error messages:
+
+        * The document state must be 'Preparation'.
+        * Document is a template, templates can not be started.
+        * Document must have a file before it can be started.
+        * The document has missing or invalid data. Some information about what
+          is missing or invalid in the document is given.
