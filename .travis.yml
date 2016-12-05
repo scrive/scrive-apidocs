@@ -7,7 +7,12 @@ rvm:
 
 cache: bundler
 
-script: bundle exec middleman build --clean
+before_script:
+  - nvm install 6
+  - nvm use 6
+  - npm install -g openapi2slate
+script:
+  - openapi2slate documentation/scrive_api.yaml > source/index.html.md && bundle exec middleman build --clean
 
 before_deploy:
   - openssl aes-256-cbc -K $encrypted_467135471898_key -iv $encrypted_467135471898_iv
