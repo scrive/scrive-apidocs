@@ -50,7 +50,7 @@ post:
     *OAuth Privileges required: `DOC_CREATE`*
 
   parameters:
-    - $ref: ../../../parameters.yaml#/DocumentID
+    - $ref: ../../../extras/parameters.yaml#/DocumentID
     - name: attachments
       in: formData
       type: string
@@ -93,11 +93,11 @@ post:
         parameters `attachment_1`, `attachment_2`, etc, and reference them as
         such in the `attachments` JSON.
         Although it is possible to use any HTTP compatible naming scheme.
-    - $ref: ../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     200:
-      $ref: ../../../responses.yaml#/Document
+      $ref: ../../../extras/responses.yaml#/Document
     409:
       description: The document status should be `Preparation`.
       # FIXME It is possible to add a schema here, although APIError is too general

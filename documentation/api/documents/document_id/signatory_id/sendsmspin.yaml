@@ -11,8 +11,8 @@ post:
     Send an SMS PIN for the signatory to authenticate.
 
   parameters:
-    - $ref: ../../../../parameters.yaml#/DocumentID
-    - $ref: ../../../../parameters.yaml#/SignatoryID
+    - $ref: ../../../../extras/parameters.yaml#/DocumentID
+    - $ref: ../../../../extras/parameters.yaml#/SignatoryID
     - name: mobile
       in: formData
       type: string
@@ -23,7 +23,7 @@ post:
 
         If the mobile number is not set by the document author, then it must be
         provided.
-    - $ref: ../../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     202:

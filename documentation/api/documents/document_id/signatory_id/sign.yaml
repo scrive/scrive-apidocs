@@ -11,13 +11,13 @@ post:
     Sign a document for the given signatory.
 
   parameters:
-    - $ref: ../../../../parameters.yaml#/DocumentID
-    - $ref: ../../../../parameters.yaml#/SignatoryID
-    - $ref: ../../../../parameters.yaml#/SignParamFields
-    - $ref: ../../../../parameters.yaml#/SignParamAuthType
-    - $ref: ../../../../parameters.yaml#/SignParamAuthValue
-    - $ref: ../../../../parameters.yaml#/SignParamSMSPIN
-    - $ref: ../../../../parameters.yaml#/SignParamAcceptedAttachments
+    - $ref: ../../../../extras/parameters.yaml#/DocumentID
+    - $ref: ../../../../extras/parameters.yaml#/SignatoryID
+    - $ref: ../../../../extras/parameters.yaml#/SignParamFields
+    - $ref: ../../../../extras/parameters.yaml#/SignParamAuthType
+    - $ref: ../../../../extras/parameters.yaml#/SignParamAuthValue
+    - $ref: ../../../../extras/parameters.yaml#/SignParamSMSPIN
+    - $ref: ../../../../extras/parameters.yaml#/SignParamAcceptedAttachments
     - name: screenshots
       in: formData
       type: string
@@ -26,11 +26,11 @@ post:
       description: |
         The screenshots and/or reference screenshots to use for the Evidence of
         Intent as part of the Evidence Package.
-    - $ref: ../../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     200:
-      $ref: ../../../../responses.yaml#/Document
+      $ref: ../../../../extras/responses.yaml#/Document
     409:
       description: TODO
       # TODO

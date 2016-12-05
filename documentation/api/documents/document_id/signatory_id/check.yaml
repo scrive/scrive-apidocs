@@ -11,14 +11,14 @@ post:
     Check if a signatory `sign` call could succeed.
 
   parameters:
-    - $ref: ../../../../parameters.yaml#/DocumentID
-    - $ref: ../../../../parameters.yaml#/SignatoryID
-    - $ref: ../../../../parameters.yaml#/SignParamFields
-    - $ref: ../../../../parameters.yaml#/SignParamAuthType
-    - $ref: ../../../../parameters.yaml#/SignParamAuthValue
-    - $ref: ../../../../parameters.yaml#/SignParamSMSPIN
-    - $ref: ../../../../parameters.yaml#/SignParamAcceptedAttachments
-    - $ref: ../../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../../extras/parameters.yaml#/DocumentID
+    - $ref: ../../../../extras/parameters.yaml#/SignatoryID
+    - $ref: ../../../../extras/parameters.yaml#/SignParamFields
+    - $ref: ../../../../extras/parameters.yaml#/SignParamAuthType
+    - $ref: ../../../../extras/parameters.yaml#/SignParamAuthValue
+    - $ref: ../../../../extras/parameters.yaml#/SignParamSMSPIN
+    - $ref: ../../../../extras/parameters.yaml#/SignParamAcceptedAttachments
+    - $ref: ../../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     200:
