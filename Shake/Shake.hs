@@ -49,15 +49,24 @@ usageMsg = unlines
   , "   test                      : Run all tests"
   , "   test-server               : Run all server-side tests"
   , "   test-frontend             : Run all frontend tests"
-  , "   test-hs-import-order      : Run Haskell Import Order checking script"
-  , "   fix-hs-import-order       : Sort Haskell imports"
-  , ""
   , "   test-frontend-tests       : Run frontend Grunt Tests"
   , "   test-frontend-lint        : Run frontend Grunt Style Checkers"
   , ""
   , "# Distribution targets"
   , ""
   , "   dist                      : Build all and create .tar.gz archive"
+  , ""
+  , "# Formatting and linting targets"
+  , "   hindent                   : Format code with hindent"
+  , "   stylish-haskell           : Format code with stylish-haskell"
+  , "   hlint                     : Run hlint, printing output to stdout"
+  , "   hlint-report              : Run hlint, generating an HTML report"
+  , "   hlint-refactor            : Run hlint, applying all hints automatically"
+  , "   test-hs-import-order      : Run Haskell Import Order checking script"
+  , "   fix-hs-import-order       : Sort Haskell imports"
+  , ""
+  , "                               Use the --src-subdir=DIR option to limit the"
+  , "                               above commands to a part of the tree."
   , ""
   , "# Utility scripts"
   , ""
@@ -105,9 +114,10 @@ main = do
 
     "haddock"   ~> need ["_build/cabal-haddock.tar.gz"]
 
-    "test" ~> need ["test-server","test-frontend","test-hs-import-order"]
-    "test-server" ~> need ["kontrakcja-test"]
-    "test-frontend" ~> need ["test-frontend-tests","test-frontend-lint"]
+    "test"                 ~> need ["test-server","test-frontend"
+                                   ,"test-hs-import-order"]
+    "test-server"          ~> need ["kontrakcja-test"]
+    "test-frontend"        ~> need ["test-frontend-tests","test-frontend-lint"]
     "test-hs-import-order" ~> need ["_build/hs-import-order"]
 
     "test-frontend-tests"      ~> need ["grunt-test"]
@@ -130,21 +140,22 @@ main = do
     "localization"               ~> runLocalization newBuild
     "scripts-help"               ~> putNormal scriptsUsageMsg
 
-    "clean" ~> need ["clean-server","clean-frontend"]
-    "clean-server" ~> need ["cabal-clean"]
+    "clean"          ~> need ["clean-server","clean-frontend"]
+    "clean-server"   ~> need ["cabal-clean"]
     "clean-frontend" ~> need ["grunt-clean"]
-    "fresh" ~> do
+    "fresh"          ~> do
       need ["clean"]
       removeFilesAfter "_build/" ["//*"]
       removeFilesAfter "_shake/" ["//*"]
 
     -- * Rules
-    componentBuildRules newBuild hsSourceDirs
-    serverBuildRules    newBuild hsSourceDirs
-    serverTestRules     newBuild hsSourceDirs
-    frontendBuildRules  newBuild
-    frontendTestRules   newBuild
-    distributionRules   newBuild
+    componentBuildRules   newBuild hsSourceDirs
+    serverBuildRules      newBuild hsSourceDirs
+    serverTestRules       newBuild
+    serverFormatLintRules newBuild hsSourceDirs flags
+    frontendBuildRules    newBuild
+    frontendTestRules     newBuild
+    distributionRules     newBuild
     oracleHelpRule
 
 -- * Server
@@ -270,24 +281,8 @@ serverOldBuildRules hsSourceDirs = do
   "cabal-clean" ~> cmd "cabal clean"
 
 -- | Server test rules
-serverTestRules :: UseNewBuild -> HsSourceDirsMap -> Rules ()
-serverTestRules newBuild hsSourceDirs = do
-  let hsImportOrderAction checkOnly = do
-        let allSourceDirs = allHsSourceDirs hsSourceDirs
-            flags = if checkOnly then ("--check":allSourceDirs)
-                    else allSourceDirs
-        command ([Shell] ++ langEnv)
-          (componentTargetPath newBuild "sort_imports") flags
-
-  "_build/hs-import-order" %>>> do
-    needServerHaskellFiles hsSourceDirs
-    need [componentTargetPath newBuild "sort_imports"]
-    withGitHub "Haskell import order" $ hsImportOrderAction True
-
-  "fix-hs-import-order" ~> do
-    need [componentTargetPath newBuild "sort_imports"]
-    hsImportOrderAction False
-
+serverTestRules :: UseNewBuild -> Rules ()
+serverTestRules newBuild = do
   "kontrakcja_test.conf" %> \_ -> do
     tc <- askOracle (TeamCity ())
     when tc $ do
@@ -332,6 +327,54 @@ serverTestRules newBuild hsSourceDirs = do
 needServerHaskellFiles :: HsSourceDirsMap -> Action ()
 needServerHaskellFiles hsSourceDirs =
   needPatternsInDirectories ["//*.hs"] (allHsSourceDirs hsSourceDirs)
+
+serverFormatLintRules :: UseNewBuild -> HsSourceDirsMap -> [ShakeFlag]
+                          -> Rules ()
+serverFormatLintRules newBuild hsSourceDirs flags = do
+  let srcSubdirs = case [subdir | SrcSubdir subdir <- flags]
+                   of [] -> allHsSourceDirs hsSourceDirs
+                      ds -> ds
+
+  "_build/hs-import-order" %>>> do
+    needServerHaskellFiles hsSourceDirs
+    need [componentTargetPath newBuild "sort_imports"]
+    withGitHub "Haskell import order" $ hsImportOrderAction True srcSubdirs
+
+  "fix-hs-import-order" ~> do
+    need [componentTargetPath newBuild "sort_imports"]
+    hsImportOrderAction False srcSubdirs
+
+  "hindent" ~> do
+    forM_ srcSubdirs $ \subdir ->
+      onEachHsFile subdir ["hindent", "-XNoPatternSynonyms"]
+
+  "stylish-haskell" ~> do
+    forM_ srcSubdirs $ \subdir ->
+      onEachHsFile subdir ["stylish-haskell", "-i"]
+
+  "hlint" ~> do
+    cmd "hlint" (commonHLintOpts ++ srcSubdirs)
+
+  "hlint-report" ~> do
+    unit $ cmd "hlint" (commonHLintOpts ++ ("-q":"--report":srcSubdirs))
+    putNormal "Output written to report.html"
+
+  "hlint-refactor" ~> do
+    forM_ srcSubdirs $ \subdir ->
+      onEachHsFile subdir (["hlint"] ++ commonHLintOpts
+                            ++ [ "--refactor", "--refactor-options=-i"])
+
+    where
+      commonHLintOpts = ["-XNoPatternSynonyms" , "--no-exit-code", "--cross"]
+      onEachHsFile subdir act = unit $
+        cmd "find" $ [subdir, "-type", "f", "-name", "*.hs", "-exec"]
+                     ++ act ++ ["{}", ";"]
+
+      hsImportOrderAction checkOnly dirs = do
+        let sortImportsFlags = if checkOnly then ("--check":dirs) else dirs
+        command ([Shell] ++ langEnv)
+          (componentTargetPath newBuild "sort_imports") sortImportsFlags
+
 
 -- * Frontend
 

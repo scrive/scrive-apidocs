@@ -5,17 +5,20 @@ module Shake.Flags (ShakeFlag(..)
 
 import System.Console.GetOpt
 
-data ShakeFlag = TransifexUser String
+data ShakeFlag = TransifexUser     String
                | TransifexPassword String
-               | TransifexLang String
+               | TransifexLang     String
+               | SrcSubdir         FilePath
                | NewBuild
   deriving Eq
 
 shakeFlags :: [OptDescr (Either String ShakeFlag)]
 shakeFlags =
-  [ Option "" ["user"]      (reqArg TransifexUser     "USER") "User name"
-  , Option "" ["password"]  (reqArg TransifexPassword "PASS") "Password"
-  , Option "" ["lang"]      (reqArg TransifexLang     "LANG") "Language"
+  [ Option "" ["user"]       (reqArg TransifexUser     "USER") "User name"
+  , Option "" ["password"]   (reqArg TransifexPassword "PASS") "Password"
+  , Option "" ["lang"]       (reqArg TransifexLang     "LANG") "Language"
+  , Option "" ["src-subdir"] (reqArg SrcSubdir         "DIR")
+    "Source subdirectory (for hindent/stylish-haskell/hlint)"
   , Option "" ["new-build"] (noArg  NewBuild)                 "Use 'new-build'."
   ]
   where

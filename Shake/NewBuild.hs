@@ -77,7 +77,9 @@ componentBuildRules newBuild hsSourceDirs = do
     then (componentTargetPath newBuild componentName) %> \_ ->
       -- Assumes that all sources of a component are in its hs-source-dirs.
       do let sourceDirs = componentHsSourceDirs componentName hsSourceDirs
-         need ["dist/setup-config"]
+         if useNewBuild newBuild
+           then need ["cabal.project.local"]
+           else need ["dist/setup-config"]
          needPatternsInDirectories ["//*.hs"] sourceDirs
          if useNewBuild newBuild
            then cmd $ "cabal new-build " ++ componentName
