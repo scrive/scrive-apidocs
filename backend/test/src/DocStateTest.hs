@@ -19,7 +19,6 @@ import Company.Model
 import Context (ctxtime)
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
-import Doc.Action (findAndDoPostDocumentClosedActions, findAndExtendDigitalSignatures)
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocSeal
@@ -28,7 +27,7 @@ import Doc.DocumentMonad (DocumentT, theDocument, theDocumentID, withDocument, w
 import Doc.DocUtils
 import Doc.Model
 import Doc.Model.Filter
-import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
+import Doc.SealStatus (SealStatus(..))
 import Doc.TestInvariants
 import EvidenceLog.Model
 import EvidenceLog.View (getSignatoryIdentifierMap, simplyfiedEventText)
@@ -52,8 +51,6 @@ import qualified MemCache
 
 docStateTests :: TestEnvSt -> Test
 docStateTests env = testGroup "DocState" [
-  testThat "Document with seal status Missing gets sealed" env testSealMissingSignatures,
-  testThat "Document with extensible digital signature can be extended" env testExtendDigitalSignatures,
   testThat "RejectDocument adds to the log" env testRejectDocumentEvidenceLog,
   testThat "RestartDocument adds to the log" env testRestartDocumentEvidenceLog,
   testThat "SignDocument adds to the log" env testSignDocumentEvidenceLog,
@@ -214,40 +211,6 @@ docStateTests env = testGroup "DocState" [
 
   testThat "ChangeAuthenticationToSignMethod works and evidence is as expected" env testChangeAuthenticationToSignMethod
   ]
-
-testSealMissingSignatures :: TestEnv ()
-testSealMissingSignatures = do
-  author <- addNewRandomUser
-  let filename = inTestDir "pdfs/simple.pdf"
-  filecontent <- liftIO $ BS.readFile filename
-  file <- addNewFile filename filecontent
-  doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
-  runScheduler findAndDoPostDocumentClosedActions
-  doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  unless (hasGuardtimeSignature doc') $ do
-    assertFailure $ "Unexpected seal status: " ++ show (documentsealstatus doc')
-
-testExtendDigitalSignatures :: TestEnv ()
-testExtendDigitalSignatures = do
-  author <- addNewRandomUser
-  let filename = inTestDir "pdfs/extensible.pdf"
-  filecontent <- liftIO $ BS.readFile filename
-  file <- addNewFile filename filecontent
-  file1 <- addNewFile filename filecontent
-  file2 <- addNewFile filename filecontent
-  did <- documentid <$> addRandomDocumentWithAuthorAndConditionAndFile author (isSignable && isClosed) file
-  withDocumentID did $ do
-    now <- currentTime
-    let actor = systemActor (2 `monthsBefore` now)
-    -- Append a file to tweak the modification time
-    dbUpdate $ AppendSealedFile file1 Guardtime{ extended = False, private = False } actor
-    dbUpdate $ AppendExtendedSealedFile file2 Guardtime{ extended = False, private = False } actor
-    runScheduler findAndExtendDigitalSignatures
-  withDocumentID did $ do
-    documentsealstatus <$> theDocument >>= \case
-      Just (Guardtime{ extended = True }) -> assertSuccess
-      s -> assertFailure $ "Unexpected extension status: " ++ show s
-
 
 testNewDocumentForNonCompanyUser :: TestEnv ()
 testNewDocumentForNonCompanyUser = replicateM_ 10 $ do

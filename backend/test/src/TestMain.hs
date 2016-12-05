@@ -43,6 +43,7 @@ import EvidenceAttachmentsTest
 import EvidenceLogTest
 import FileTest
 import FlashMessages
+import GTWorkflowTest
 import HtmlTest
 import InputValidationTest
 import JSONUtilTest
@@ -113,7 +114,8 @@ allTests = [
 
 stagingTests :: [TestEnvSt -> Test]
 stagingTests = [
-    screenshotTests
+    screenshotTests,
+    gtWorkflowTests
   ]
 
 modifyTestEnv :: [String] -> ([String], TestEnvSt -> TestEnvSt)
