@@ -12,10 +12,13 @@ This then outputs Slate Markdown to `stdout`.
 
 ## Generating documentation on your local machine
 
-Our clone of Slate lives in the
-[`scrive-apidocs`](https://github.com/scrive/scrive-apidocs) repository.
-Instructions there tell you how to install dependencies to get a Slate server
-running, this is:
+You need to generate the Markdown in the directory for Slate to pick it up:
+
+```
+openapi2slate documentation/scrive_api.yaml > source/index.html.md
+```
+
+Then install dependencies for Slate and run a local server:
 
 ```
 bundle install
@@ -24,16 +27,15 @@ bundle exec middleman server
 
 Now you should be able to view the generated page on some `localhost` port (it
 will tell you).
-To update the documentation, take the output from `openapi2slate` and replace
-the `source/index.html.md` in your cloned Slate repository.
-Refresh the browser and you should see changes.
+To update the documentation, update `index.html.md` using `openapi2slate`.
+Refresh the browser and you should see the changes.
 
 ## Updating documentation on http://apidocs.scrive.com/
 
 [http://apidocs.scrive.com/](http://apidocs.scrive.com/) uses GitHub pages as
-configured for the `scrive-apidocs` repository.
+configured for this repository.
 
-Run `openapi2slate` against `scrive_api.yaml` to generate an updated
-`index.html.md`, then use this and create a new Pull Request on
-[`scrive-apidocs` repsitory](https://github.com/scrive/scrive-apidocs), once
-merged to `master` Travis CI will auto-deploy those changes.
+Updating `master` will auto-trigger a build and deployment via
+[Travis CI](https://travis-ci.org/scrive/scrive-apidocs).
+
+That's it!
