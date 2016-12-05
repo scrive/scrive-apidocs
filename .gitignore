@@ -1,3 +1,7 @@
+# We auto-generate this one:
+source/index.html.md
+
+# From Slate project:
 *.gem
 *.rbc
 .bundle

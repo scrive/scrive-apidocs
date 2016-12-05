@@ -41,6 +41,7 @@ parse_args() {
     if [[ $1 = "--no-build" ]]; then
       echo "Skipping build..."
     else
+      openapi2slate documentation/scrive_api.yaml > source/index.html.md
       bundle exec middleman build --clean
     fi
     if [[ $1 = "-h" || $1 = "--help" ]]; then
