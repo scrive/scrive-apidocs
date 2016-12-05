@@ -12,12 +12,12 @@ post:
     *OAuth Privileges required: `DOC_CREATE`*
 
   parameters:
-    - $ref: ../../../parameters.yaml#/DocumentID
-    - $ref: ../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../extras/parameters.yaml#/DocumentID
+    - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     201:
-      $ref: ../../../responses.yaml#/Document
+      $ref: ../../../extras/responses.yaml#/Document
     409:
       description: |
         Documents that are in Preparation, Pending, or Closed can not be

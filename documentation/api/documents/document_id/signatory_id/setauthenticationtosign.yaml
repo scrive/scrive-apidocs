@@ -19,8 +19,8 @@ post:
     *OAuth Privileges required: `DOC_SEND`*
 
   parameters:
-    - $ref: ../../../../parameters.yaml#/DocumentID
-    - $ref: ../../../../parameters.yaml#/SignatoryID
+    - $ref: ../../../../extras/parameters.yaml#/DocumentID
+    - $ref: ../../../../extras/parameters.yaml#/SignatoryID
     - name: authentication_type
       in: formData
       type: string
@@ -46,11 +46,11 @@ post:
         necessary side-effects.
         In particular, if a value for the associated field was already set, it
         will not be cleared.
-    - $ref: ../../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     200:
-      $ref: ../../../../responses.yaml#/Document
+      $ref: ../../../../extras/responses.yaml#/Document
     409:
       description: |
         Possible error responses:

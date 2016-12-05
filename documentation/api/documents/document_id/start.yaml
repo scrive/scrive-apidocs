@@ -12,7 +12,7 @@ post:
     *OAuth Privileges required: `DOC_SEND`*
 
   parameters:
-    - $ref: ../../../parameters.yaml#/DocumentID
+    - $ref: ../../../extras/parameters.yaml#/DocumentID
     - name: author_signs_now
       x-internalOnly: true
       in: formData
@@ -26,11 +26,11 @@ post:
         author.
         This is useful for when the author signs immediately after the ‘start’
         call.
-    - $ref: ../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     200:
-      $ref: ../../../responses.yaml#/Document
+      $ref: ../../../extras/responses.yaml#/Document
     409:
       description: |
         `document_state_error` with error messages:

@@ -17,9 +17,9 @@ get:
     *OAuth Privileges required: `DOC_CHECK`*
 
   parameters:
-    - $ref: ../../../../parameters.yaml#/DocumentID
-    - $ref: ../../../../parameters.yaml#/FileID
-    - $ref: ../../../../parameters.yaml#/SignatoryParamForFile
+    - $ref: ../../../../extras/parameters.yaml#/DocumentID
+    - $ref: ../../../../extras/parameters.yaml#/FileID
+    - $ref: ../../../../extras/parameters.yaml#/SignatoryParamForFile
 
   responses:
     200:

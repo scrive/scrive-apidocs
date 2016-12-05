@@ -13,8 +13,8 @@ post:
     *OAuth Privileges required: `DOC_SEND`*
 
   parameters:
-    - $ref: ../../../parameters.yaml#/DocumentID
-    - $ref: ../../../parameters.yaml#/ObjectVersion
+    - $ref: ../../../extras/parameters.yaml#/DocumentID
+    - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     202:

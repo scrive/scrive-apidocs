@@ -865,7 +865,7 @@ definitions:
     $ref: ./definitions/HistoryItems.yaml
 
 parameters:
-  $ref: ./parameters.yaml
+  $ref: ./extras/parameters.yaml
 
 responses:
-  $ref: ./responses.yaml
+  $ref: ./extras/responses.yaml
