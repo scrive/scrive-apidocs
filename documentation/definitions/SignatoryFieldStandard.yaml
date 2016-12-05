@@ -1,0 +1,45 @@
+---
+$schema: "http://json-schema.org/draft-04/schema#"
+title: SignatoryFieldStandard
+description: |
+  A `SignatoryField` for placing a number of standard text fields on the
+  document.
+
+  This excludes their name, but includes email, mobile number, personal number,
+  and company number.
+allOf:
+  - $ref: ./SignatoryField.yaml
+  - type: object
+    properties:
+      type:
+        type: string
+        enum:
+          - company_number
+          - email
+          - mobile
+          - personal_number
+      value:
+        type: string
+      should_be_filled_by_sender:
+        type: boolean
+    required:
+      - type
+example:
+  {
+    "type": "mobile",
+    "value": "",
+    "is_obligatory": false,
+    "should_be_filled_by_sender": false,
+    "placements": [
+      {
+        "xrel": 0.09052631578947369,
+        "yrel": 0.2700892857142857,
+        "wrel": 0.09157894736842105,
+        "hrel": 0.025297619047619048,
+        "fsrel": 0.016842105263157894,
+        "page": 1,
+        "tip": "right",
+        "anchors": []
+      }
+    ]
+  }
