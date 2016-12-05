@@ -1,0 +1,40 @@
+---
+post:
+
+  summary: Check if a signatory can sign
+
+  tags:
+    - Sign
+    - Internal
+
+  description: |
+    Check if a signatory `sign` call could succeed.
+
+  parameters:
+    - $ref: ../../../../parameters.yaml#/DocumentID
+    - $ref: ../../../../parameters.yaml#/SignatoryID
+    - $ref: ../../../../parameters.yaml#/SignParamFields
+    - $ref: ../../../../parameters.yaml#/SignParamAuthType
+    - $ref: ../../../../parameters.yaml#/SignParamAuthValue
+    - $ref: ../../../../parameters.yaml#/SignParamSMSPIN
+    - $ref: ../../../../parameters.yaml#/SignParamAcceptedAttachments
+    - $ref: ../../../../parameters.yaml#/ObjectVersion
+
+  responses:
+    200:
+      description: |
+        A call to `{document_id}/{signatory_id}/sign` with the same parameters
+        should succeed.
+    400:
+      description: TODO
+      # TODO
+      # request_parameters_invalid; The parameter 'authentication_(type|value)' had the following problems: (problems).
+      # request_parameters_invalid; The parameter 'sms_pin' had the following problems: invalid SMS PIN
+      # FIXME It is possible to add a schema here, although APIError is too general
+    409:
+      description: TODO
+      # TODO
+      # signatory_state_error; The signatory has already signed.
+      # signatory_state_error; Swedish BankID authentication needed before signing.
+      # signatory_state_error; Some mandatory author attachments aren't accepted.
+      # FIXME It is possible to add a schema here, although APIError is too general
