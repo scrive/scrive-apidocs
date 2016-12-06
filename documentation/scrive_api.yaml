@@ -298,8 +298,6 @@ info:
     * `timedout`
     * `rejected`
 
-    Additionally, we will also perform a callback after every successful
-    `update` call.
     We cannot guarantee to make only one callback per status change, and we may
     trigger callbacks for changes not listed here.
     Also, due to the mechanism by which callbacks are triggered, we cannot
