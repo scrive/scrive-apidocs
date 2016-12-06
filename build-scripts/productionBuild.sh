@@ -59,7 +59,7 @@ gtsigningurl="http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.am
 gtextendingurl="http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
 
 echo "Signing with private key"
-openssl dgst -sha256 -sign "/home/builds/key/builds.scrive.com.key" -out "$opensslfile" "$TMP/$ZIP"
+openssl dgst -sha256 -sign "~/key/builds.scrive.com.key" -out "$opensslfile" "$TMP/$ZIP"
 
 echo "Signing with GuardTime"
 gtime -S $gtsigningurl -s -f "$TMP/$ZIP" -o "$signaturefile"
