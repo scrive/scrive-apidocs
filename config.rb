@@ -28,6 +28,14 @@ end
 activate :relative_assets
 set :relative_links, true
 
+# Use openapi2slate to build the index.html.md
+# See https://middlemanapp.com/advanced/external-pipeline/
+activate :external_pipeline,
+  name: :index,
+  command: "mkdir -p index && openapi2slate documentation/scrive_api.yaml > index/index.html.md",
+  source: "index",
+  latency: 2
+
 # Build Configuration
 configure :build do
   # If you're having trouble with Middleman hanging, commenting
