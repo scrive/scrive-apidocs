@@ -282,8 +282,8 @@ the documentation.</p>
 
 <table><thead>
 <tr>
-<th>API endpoint in Version 1</th>
-<th>Equivalent API endpoint in Version 2</th>
+<th>API endpoint in Version 1 (<code class="prettyprint">/api/v1</code>)</th>
+<th>Equivalent API endpoint in Version 2 (<code class="prettyprint">/api/v2/documents</code>)</th>
 </tr>
 </thead><tbody>
 <tr>
@@ -351,6 +351,11 @@ the documentation.</p>
 <td><code class="prettyprint">/{document_id}/{signatory_id}/setauthenticationtosign</code></td>
 </tr>
 </tbody></table>
+
+<p>As an additional note, in API Version 1 the <code class="prettyprint">changemainfile</code> call would
+auto-update field placements that had matching anchors.
+This is not supported in API Version 2.
+Please contact us if you are interested in using such a feature.</p>
 
 <h1 id="quick-start">Quick Start</h1>
 
@@ -516,11 +521,11 @@ changes to one of the following values:</p>
 <li><code class="prettyprint">rejected</code></li>
 </ul>
 
-<p>Additionally, we will also perform a callback after every successful
-<code class="prettyprint">update</code> call.
-We cannot guarantee to make only one callback per status change, and we may
+<p>We cannot guarantee to make only one callback per status change, and we may
 trigger callbacks for changes not listed here.
-Furthermore, callbacks will not be triggered for Documents that have been
+Furthermore, a callback does not indicate <em>what</em> changed in a document, it
+simply tells you the current state of a document.
+Finally, callbacks will not be triggered for documents that have been
 deleted.</p>
 
 <p>The Scrive eSign system will look at the HTTP response code returned by the
