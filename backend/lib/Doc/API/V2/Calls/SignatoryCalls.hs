@@ -104,11 +104,11 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     -- Guards
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Pending
-    guardSignatoryHasNotSigned slid
     guardSignatoryNeedsToIdentifyToView slid
-    guardThatAllAttachmentsAreAcceptedOrIsAuthor slid =<< apiV2ParameterObligatory (ApiV2ParameterJSON "accepted_author_attachments" unjsonDef)
+    guardSignatoryHasNotSigned slid
+    guardDocumentStatus Pending
     -- Parameters
+    guardThatAllAttachmentsAreAcceptedOrIsAuthor slid =<< apiV2ParameterObligatory (ApiV2ParameterJSON "accepted_author_attachments" unjsonDef)
     checkAuthenticationToSignMethodAndValue slid
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     -- API call actions + extra conditional parameter
@@ -134,9 +134,9 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
   olddoc `withDocument` do
     -- Guards
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Pending
-    guardSignatoryHasNotSigned slid
     guardSignatoryNeedsToIdentifyToView slid
+    guardSignatoryHasNotSigned slid
+    guardDocumentStatus Pending
     -- Parameters
     checkAuthenticationToSignMethodAndValue slid
     screenshots <- getScreenshots
