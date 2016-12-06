@@ -60,13 +60,7 @@ in this directory should be enough.  More details are available in the
 
 ### Generating documentation on your local machine
 
-You need to generate the Markdown in the directory for Slate to pick it up:
-
-```
-openapi2slate documentation/scrive_api.yaml > source/index.html.md
-```
-
-Then run a local server that watches changes in `source/`:
+To run a local server that watches changes in `source/`:
 
 ```
 bundle exec middleman server
@@ -75,8 +69,19 @@ bundle exec middleman server
 Now you should be able to view the generated page on some `localhost` port (it
 will tell you).
 
-After editing files in `documentation/` you need to manually update
-`index.html.md` to see the changes :(
+This builds an `index.html.md` for you using `openapi2slate`, but **does not**
+update it if you change anything inside `documentation/`.
+
+Unfortunately you will need to re-generate the Markdown for Slate to pick it up:
+
+```
+openapi2slate documentation/scrive_api.yaml > index/index.html.md
+```
+
+This is because `openapi2slate` does not support watching files.
+See [this guide](https://rossta.net/blog/using-webpack-with-middleman.html) for
+how this Middleman functionality may be used.
+Pull Request that fixes this is welcome :)
 
 ### Updating documentation on http://apidocs.scrive.com/
 

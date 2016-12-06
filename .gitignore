@@ -1,7 +1,3 @@
-# We auto-generate this one:
-source/index.html.md
-
-# From Slate project:
 *.gem
 *.rbc
 .bundle
@@ -17,6 +13,7 @@ test/version_tmp
 tmp
 *.DS_STORE
 build/
+index/
 .cache
 .vagrant
 .sass-cache
