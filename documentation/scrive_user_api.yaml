@@ -1,0 +1,98 @@
+---
+swagger: '2.0'
+
+info:
+  title: Scrive User API
+  description: |
+    # TODO General Description
+  version: 2.0.0
+  contact:
+    name: Scrive AB
+    url: https://scrive.com/
+    email: info@scrive.com
+  termsOfService: |
+    In using this API you agree to be bound by the Scrive Terms of Service,
+    available at [http://scrive.com/en/terms](http://scrive.com/en/terms)
+  license:
+    name: All Rights Reserved
+
+host: scrive.com
+
+basePath: /api/v2
+
+schemes:
+  - https
+
+tags:
+  - name: User
+  - name: Internal
+
+paths:
+
+# TODO
+
+#  /getpersonaltoken:
+#    # hPost $ toK0 $ apiCallGetUserPersonalToken,
+  /signup:
+    # hPost $ toK0 $ apiCallSignup,
+    post:
+      summary: Signup Request
+      tags:
+        - User
+      description: |
+        **TODO Proper description**
+
+        Response will be one of:
+
+        * `{"sent":true}`
+        * `{"sent":false}`
+      parameters:
+        - name: email
+          in: formData
+          type: email
+          required: true
+          description: TODO
+        - name: firstName
+          in: formData
+          type: string
+          required: false
+          description: TODO
+        - name: lastName
+          in: formData
+          type: string
+          required: false
+          description: TODO
+        - name: lang
+          in: formData
+          required: false
+          description: TODO Has to be a valid lang code
+          #$ref: ./definitions/LanguageCode.yaml
+      responses:
+        200:
+          description: TODO
+#  /login:
+#    # hPostNoXToken $ toK0 $ apiCallLoginUser,
+#  /sendpasswordresetmail:
+#    # hPost $ toK0 $ apiCallSendPasswordReminder,
+#  /getprofile:
+#    # hGet $ toK0 $ apiCallGetUserProfile,
+#  /changepassword:
+#    # hPost $ toK0 $ apiCallChangeUserPassword,
+#  /updateprofile:
+#    # hPost $ toK0 $ apiCallUpdateUserProfile,
+#  /changeemail:
+#    # hPost $ toK0 $ apiCallChangeEmail,
+#  /addflash:
+#    # hPost $ toK0 $ apiCallAddFlash,
+#  /paymentinfo:
+#    # hGet $ toK0 $ apiCallPaymentInfo,
+#  /getcallbackscheme:
+#    # hGet $ toK0 $ apiCallUserGetCallbackScheme,
+#  /testsalesforceintegration:
+#    # hGet $ toK0 $ apiCallTestSalesforceIntegration
+
+definitions:
+  Lang:
+    $ref: ./definitions/LanguageCode.yaml
+#parameters:
+#responses:
