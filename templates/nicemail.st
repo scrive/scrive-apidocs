@@ -8,8 +8,8 @@ nicemail=
             <td class="headerContent" style="background-color: $nicemailheaderbackground()$; font-family: Helvetica Neue, Arial, sans-serif; font-size: 40px; font-weight: bold; line-height: 100%; padding: 0; text-align: left; vertical-align: middle" >
               <table cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="padding-top: 32px; padding-bottom: 32px;">
-                    <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:200px;" id="headerImage campaign-icon" alt="$_mailLogoAltText()$" />
+                  <td style="padding-top: 32px; padding-bottom: 32px;" width="200">
+                    <img src="$nicemaillogo()$" style="border: none; font-size: 14px; font-weight: bold; height: auto; line-height: 100%; outline: none; text-decoration: none; text-transform: capitalize; max-width:200px;" id="headerImage campaign-icon" width="200" alt="$_mailLogoAltText()$" />
                   </td>
                 </tr>
               </table>
