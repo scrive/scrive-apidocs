@@ -41,6 +41,7 @@ info:
     | ----------- | ---------------------------------------------------------- |
     | 2016-10-14  | Pre-release of Scrive Document API Version 2               |
     | 2016-10-27  | Small improvements to documentation following internal and customer feedback |
+    | 2016-12-17  | New optional `no_attachments` parameter for the `forward` API call           |
 
     ## Environments & IP Addresses
 
