@@ -300,10 +300,9 @@ info:
 
     We cannot guarantee to make only one callback per status change, and we may
     trigger callbacks for changes not listed here.
-    Also, due to the mechanism by which callbacks are triggered, we cannot
-    guarantee that they are "in-order" (_i.e._ a `pending` status change may
-    arrive after the document has been `closed`).
-    Furthermore, callbacks will not be triggered for Documents that have been
+    Furthermore, a callback does not indicate _what_ changed in a document, it
+    simply tells you the current state of a document.
+    Finally, callbacks will not be triggered for documents that have been
     deleted.
 
     The Scrive eSign system will look at the HTTP response code returned by the
