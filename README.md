@@ -1,112 +1,99 @@
-# How Scrive uses this
+# Scrive API Documentation using Slate
 
-See documentation in `kontrakcja/api-documentation/README.md`.
-
-# Slate Documentation
+Forked and edited from the original
+[Slate repository](https://github.com/lord/slate).
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/lord/img/master/logo-slate.png" alt="Slate: API Documentation Generator" width="226">
-  <br>
-  <a href="https://travis-ci.org/lord/slate"><img src="https://travis-ci.org/lord/slate.svg?branch=master" alt="Build Status"></a>
 </p>
 
-<p align="center">Slate helps you create beautiful, intelligent, responsive API documentation.</p>
+## What's in here?
 
-<p align="center"><img src="https://dl.dropboxusercontent.com/u/95847291/github%20images/slate/slate_screenshot_new.png" width=700 alt="Screenshot of Example Documentation created with Slate"></p>
+**Use with caution:**
+merging to `master` auto-deploys to
+[http://apidocs.scrive.com/](http://apidocs.scrive.com/) using Travis CI.
 
-<p align="center"><em>The example above was created with Slate. Check it out at <a href="https://lord.github.io/slate">lord.github.io/slate</a>.</em></p>
+Although `master` is set up as a protected branch and requires a review and
+Travis CI to pass, so it's not that dangerous...
 
-Features
-------------
+### Differrences from Slate upstream
 
-* **Clean, intuitive design** — With Slate, the description of your API is on the left side of your documentation, and all the code examples are on the right side. Inspired by [Stripe's](https://stripe.com/docs/api) and [Paypal's](https://developer.paypal.com/webapps/developer/docs/api/) API docs. Slate is responsive, so it looks great on tablets, phones, and even in print.
+This repository contains the [Open API specification](https://www.openapis.org/)
+(FKA Swagger 2.0)
+documentation for the Scrive Document API and a copy of _Slate_.
 
-* **Everything on a single page** — Gone are the days when your users had to search through a million pages to find what they wanted. Slate puts the entire documentation on a single page. We haven't sacrificed linkability, though. As you scroll, your browser's hash will update to the nearest header, so linking to a particular point in the documentation is still natural and easy.
+The _Open API_ documentation lives in `documentation/` and instructions on using
+that are included below.
 
-* **Slate is just Markdown** — When you write docs with Slate, you're just writing Markdown, which makes it simple to edit and understand. Everything is written in Markdown — even the code samples are just Markdown code blocks.
+Everything else is from _Slate_, with the following modifications:
 
-* **Write code samples in multiple languages** — If your API has bindings in multiple programming languages, you can easily put in tabs to switch between them. In your document, you'll distinguish different languages by specifying the language name at the top of each code block, just like with Github Flavored Markdown.
+* `source/` has many style changes and `index.html.md` is auto-generated using
+  `openapi2slate`
+* `.travis.yml`, `.gitignore`, `deploy.sh` changed to suit our modified build
+  and deploy needs
+* Removed `.github/*` templates for Issues and Pull Requests
+* Added `deploy_rsa.enc` to magically grant Travis CI accces to GitHub
+  (encrypted access token that only Travis can read)
+* Modified this `README.md`
 
-* **Out-of-the-box syntax highlighting** for [almost 100 languages](http://rouge.jneen.net/), no configuration required.
+Other than that other differences probably mean that upstream made some changes.
 
-* **Automatic, smoothly scrolling table of contents** on the far left of the page. As you scroll, it displays your current position in the document. It's fast, too. We're using Slate at TripIt to build documentation for our new API, where our table of contents has over 180 entries. We've made sure that the performance remains excellent, even for larger documents.
+Also, thanks to all the
+[original contributors](https://github.com/lord/slate#contributors) of _Slate_!
 
-* **Let your users update your documentation for you** — By default, your Slate-generated documentation is hosted in a public Github repository. Not only does this mean you get free hosting for your docs with Github Pages, but it also makes it simple for other developers to make pull requests to your docs if they find typos or other problems. Of course, if you don't want to use GitHub, you're also welcome to host your docs elsewhere.
+## Updating the Documentation
 
-Getting started with Slate is super easy! Simply fork this repository and follow the instructions below. Or, if you'd like to check out what Slate is capable of, take a look at the [sample docs](http://lord.github.io/slate).
+### Dependencies
 
-Getting Started with Slate
-------------------------------
+Unfortunately, the current UI tooling for OpenAPI specifications did not meet
+our requirements, so we hacked together
+[`openapi2slate`](https://www.npmjs.com/package/openapi2slate).
 
-### Prerequisites
+You will need to `npm install --global openapi2slate`.
 
-You're going to need:
+This gives you a command line tool where you specify an input file, and it gives
+you Slate Markdown via `stdout`.
 
- - **Linux or OS X** — Windows may work, but is unsupported.
- - **Ruby, version 2.0 or newer**
- - **Bundler** — If Ruby is already installed, but the `bundle` command doesn't work, just run `gem install bundler` in a terminal.
+You will also need to install the Slate dependencies, running `bundle install`
+in this directory should be enough.  More details are available in the
+[original documentation](https://github.com/lord/slate#getting-started-with-slate).
 
-### Getting Set Up
+### Generating documentation on your local machine
 
-1. Fork this repository on Github.
-2. Clone *your forked repository* (not our original one) to your hard drive with `git clone https://github.com/YOURUSERNAME/slate.git`
-3. `cd slate`
-4. Initialize and start Slate. You can either do this locally, or with Vagrant:
+You need to generate the Markdown in the directory for Slate to pick it up:
 
-```shell
-# either run this to run locally
-bundle install
-bundle exec middleman server
-
-# OR run this to run with vagrant
-vagrant up
+```
+openapi2slate documentation/scrive_api.yaml > source/index.html.md
 ```
 
-You can now see the docs at http://localhost:4567. Whoa! That was fast!
+Then run a local server that watches changes in `source/`:
 
-Now that Slate is all set up your machine, you'll probably want to learn more about [editing Slate markdown](https://github.com/lord/slate/wiki/Markdown-Syntax), or [how to publish your docs](https://github.com/lord/slate/wiki/Deploying-Slate).
+```
+bundle exec middleman server
+```
 
-If you'd prefer to use Docker, instructions are available [in the wiki](https://github.com/lord/slate/wiki/Docker).
+Now you should be able to view the generated page on some `localhost` port (it
+will tell you).
 
-Companies Using Slate
----------------------------------
+After editing files in `documentation/` you need to manually update
+`index.html.md` to see the changes :(
 
-* [NASA](https://api.nasa.gov)
-* [IBM Cloudant](https://docs.cloudant.com/api.html)
-* [Travis-CI](https://docs.travis-ci.com/api/)
-* [Mozilla](http://mozilla.github.io/localForage/)
-* [Appium](http://appium.io/slate/en/master)
-* [Dwolla](https://docs.dwolla.com/)
-* [Clearbit](https://clearbit.com/docs)
-* [Coinbase](https://developers.coinbase.com/api)
-* [Parrot Drones](http://developer.parrot.com/docs/bebop/)
-* [Fidor Bank](http://docs.fidor.de/)
+### Updating documentation on http://apidocs.scrive.com/
 
-You can view more in [the list on the wiki](https://github.com/lord/slate/wiki/Slate-in-the-Wild).
+<p>
+  <a href="https://travis-ci.org/scrive/scrive-apidocs">
+    <img src="https://travis-ci.org/scrive/scrive-apidocs.svg?branch=master" alt="Master Build Status">
+  </a>
+</p>
 
-Need Help? Found a bug?
---------------------
+[http://apidocs.scrive.com/](http://apidocs.scrive.com/) uses GitHub pages as
+configured for this repository.
 
-[Submit an issue](https://github.com/lord/slate/issues) to the Slate Github if you need any help. And, of course, feel free to submit pull requests with bug fixes or changes.
+You will need to create a Pull Request and get someone to review it.
 
-Contributors
---------------------
+Once merged (thus updating `master`)  a build will auto-trigger and deployment
+will happen via [Travis CI](https://travis-ci.org/scrive/scrive-apidocs).  You
+can look into `.travis.yml` if you are curious...
 
-Slate was built by [Robert Lord](https://lord.io) while interning at [TripIt](https://www.tripit.com/).
 
-Thanks to the following people who have submitted major pull requests:
-
-- [@chrissrogers](https://github.com/chrissrogers)
-- [@bootstraponline](https://github.com/bootstraponline)
-- [@realityking](https://github.com/realityking)
-- [@cvkef](https://github.com/cvkef)
-
-Also, thanks to [Sauce Labs](http://saucelabs.com) for helping sponsor the project.
-
-Special Thanks
---------------------
-- [Middleman](https://github.com/middleman/middleman)
-- [jquery.tocify.js](https://github.com/gfranko/jquery.tocify.js)
-- [middleman-syntax](https://github.com/middleman/middleman-syntax)
-- [middleman-gh-pages](https://github.com/edgecase/middleman-gh-pages)
-- [Font Awesome](http://fortawesome.github.io/Font-Awesome/)
+That's it!
