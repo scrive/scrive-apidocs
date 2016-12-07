@@ -24,7 +24,9 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
     },
     render: function () {
       return (
-        <div>{localization.docsignview.errorMessagePrefix} <i>{this.props.errorMessage}</i></div>
+        <div className="errormessage">
+          {localization.docsignview.errorMessagePrefix} &quot;{this.props.errorMessage}&quot;
+        </div>
       );
     }
   });
@@ -55,7 +57,7 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
     });
 
     var textDiv = $("<div/>");
-    var contentDiv = $("<div/>");
+    var contentDiv = $("<div/>").attr("class", "signviewerrormodal");
 
     if (typeof xhr.status === "number" && xhr.status > 0) {
       var errorMessage = "HTTP " + xhr.status;

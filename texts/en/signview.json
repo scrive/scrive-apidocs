@@ -61,7 +61,7 @@
 "_elegSignConfirmationTitle":"Sign with Swedish BankID",
 "_email":"Email",
 "_enterSMSPin":"Enter your SMS PIN",
-"_errorMessagePrefix":"The returned error was:",
+"_errorMessagePrefix":"The error returned was:",
 "_filladitionfieldslabel":"About you",
 "_firstname":"First name",
 "_followTheArrow":"Follow the <span class='arrowtext'>ARROW</span>",
