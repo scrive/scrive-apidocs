@@ -18,6 +18,25 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
     }
   });
 
+  var ErrorMessageComponent = React.createClass({
+    propTypes: {
+      errorMessage: React.PropTypes.string.isRequired
+    },
+    render: function () {
+      return (
+        <div>{localization.docsignview.errorMessagePrefix} <i>{this.props.errorMessage}</i></div>
+      );
+    }
+  });
+
+  var NetworkErrorMessageComponent = React.createClass({
+    render: function () {
+      return (
+        <div>{localization.docsignview.networkIssueErrorMessage}</div>
+      );
+    }
+  });
+
   var buttonParams = {
     color: "action",
     style: {margin: "20px"},
@@ -36,8 +55,37 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
     });
 
     var textDiv = $("<div/>");
+    var contentDiv = $("<div/>");
+
+    if (typeof xhr.status === "number" && xhr.status > 0) {
+      var errorMessage = "HTTP " + xhr.status;
+
+      if (xhr.responseJSON && xhr.responseJSON.error_message) {
+        errorMessage = xhr.responseJSON.error_message;
+        if (xhr.status == 409 && xhr.responseJSON.error_type == "document_state_error") {
+          errorMessage = localization.docsignview.unavailableForSign;
+        }
+      }
+
+      React.render(React.createElement(TextComponent, {}), textDiv[0]);
+
+      var errorMessageDiv = $("<div/>");
+      React.render(
+        React.createElement(ErrorMessageComponent, {errorMessage: errorMessage}),
+        errorMessageDiv[0]
+      );
+
+      errorMessageDiv.appendTo(contentDiv);
+    } else {
+      React.render(
+        React.createElement(NetworkErrorMessageComponent, {}),
+        textDiv[0]
+      );
+    }
+
     var buttonDiv = $("<div/>");
-    React.render(React.createElement(TextComponent,{ }),textDiv[0]);
-    React.render(React.createElement(Button,buttonParams),buttonDiv[0]);
-    return ScreenBlockingDialog.open({header:textDiv, content: buttonDiv});
+    React.render(React.createElement(Button,buttonParams), buttonDiv[0]);
+    buttonDiv.appendTo(contentDiv);
+
+    return ScreenBlockingDialog.open({header:textDiv, content: contentDiv});
   };

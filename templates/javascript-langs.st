@@ -543,6 +543,8 @@ javascriptLocalisation =
              , filladitionfieldslabel: "$_filladitionfieldslabel()$"
              , downloadDocumentButtonText: "$_downloadDocumentButtonText()$"
              , continueButtonText: "$_continueButtonText()$"
+             , errorMessagePrefix: "$_errorMessagePrefix()$"
+             , networkIssueErrorMessage: "$_networkIssueErrorMessage()$"
              , pinSigning : {
                   invalidPhone   :  "$_invalidPhone()$"
                 , signWithSMSPin :  "$_signWithSMSPin()$"
