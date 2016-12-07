@@ -14,6 +14,7 @@ import Control.Monad.Base (MonadBase, liftBase)
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Crypto.RNG
 import Data.Time
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad)
@@ -22,7 +23,6 @@ import ActionQueue.Scheduler
 import Amazon (AmazonMonad)
 import AppConf (guardTimeConf)
 import BrandedDomain.BrandedDomain
-import Crypto.RNG
 import DB
 import DB.TimeZoneName
 import Doc.API.Callback.Model

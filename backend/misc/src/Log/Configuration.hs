@@ -7,6 +7,7 @@ module Log.Configuration (
   , runWithLogRunner
   ) where
 
+import Crypto.RNG
 import Data.Default
 import Data.List.NonEmpty (fromList)
 import Data.Semigroup
@@ -21,7 +22,6 @@ import Log.Data
 import Log.Internal.Logger hiding (withLogger)
 import Log.Monad
 
-import Crypto.RNG
 import DB.PostgreSQL
 import KontraPrelude hiding ((<>))
 import Log.Migrations

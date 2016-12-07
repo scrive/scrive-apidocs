@@ -1,11 +1,11 @@
 module OAuth.Model where
 
 import Control.Monad.Catch
+import Crypto.RNG
 import Data.Int
 import Network.URI
 import qualified Control.Exception.Lifted as E
 
-import Crypto.RNG
 import DB
 import KontraPrelude
 import MagicHash

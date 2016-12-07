@@ -12,11 +12,11 @@ module EID.CGI.GRP.Transaction.Model (
 
 import Control.Monad.Catch
 import Control.Monad.State
+import Crypto.RNG
 import Data.Data
 import Data.Int
 import qualified Data.Text as T
 
-import Crypto.RNG
 import DB
 import Doc.SignatoryLinkID
 import KontraPrelude

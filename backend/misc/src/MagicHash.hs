@@ -8,6 +8,7 @@ module MagicHash
   ) where
 
 import Control.Arrow
+import Crypto.RNG
 import Data.Int
 import Data.Unjson
 import Data.Word
@@ -15,7 +16,6 @@ import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import Numeric
 
-import Crypto.RNG
 import KontraPrelude
 import Utils.Read
 

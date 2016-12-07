@@ -14,6 +14,7 @@ module Payments.Control (
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.State
+import Crypto.RNG
 import Data.Functor
 import Happstack.Server hiding (simpleHTTP)
 import Log
@@ -28,7 +29,6 @@ import qualified Text.JSON.Gen as J
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.Model
-import Crypto.RNG
 import DB hiding (query, update)
 import Happstack.Fields
 import Kontra

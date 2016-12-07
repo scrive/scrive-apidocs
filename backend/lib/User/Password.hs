@@ -1,11 +1,11 @@
 module User.Password where
 
+import Crypto.RNG (CryptoRNG, randomBytes)
+import Crypto.RNG.Utils
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Digest.SHA256 as D
 
-import Crypto.RNG (CryptoRNG, randomBytes)
-import Crypto.RNG.Utils
 import KontraPrelude
 
 data Password = Password {

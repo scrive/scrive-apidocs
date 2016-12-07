@@ -9,13 +9,13 @@ module ActionQueue.EmailChangeRequest (
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
+import Crypto.RNG
 import Data.Typeable
 
 import ActionQueue.Core
 import ActionQueue.Scheduler
 import ActionQueue.Tables
 import Context
-import Crypto.RNG
 import DB
 import KontraLink
 import KontraMonad

@@ -142,9 +142,6 @@ Library
                  , Cron.Tables
                  , CronEnv
                  , Crypto
-                 , Crypto.RNG
-                 , Crypto.RNG.Class
-                 , Crypto.RNG.Utils
                  , Database.Redis.Cache
                  , Database.Redis.Configuration
                  , Database.Redis.Helpers
@@ -439,6 +436,7 @@ Library
                , consumers
                , containers
                , crypto-api
+               , crypto-rng
                , cryptohash
                , curl
                , data-default
@@ -556,6 +554,7 @@ Executable kontrakcja-server
                , base
                , bytestring
                , cmdargs
+               , crypto-rng
                , curl
                , hpqtypes-extras
                , exceptions
@@ -614,6 +613,7 @@ Executable cron
                , bytestring
                , cmdargs
                , consumers
+               , crypto-rng
                , hpqtypes-extras
                , hedis
                , log >= 0.5.4
@@ -685,6 +685,7 @@ Executable kontrakcja-migrate
                , cond
                , containers
                , crypto-api
+               , crypto-rng
                , cryptohash
                , data-default
                , hpqtypes-extras
@@ -770,6 +771,7 @@ Executable mailing-server
                , consumers
                , containers
                , crypto-api
+               , crypto-rng
                , cryptohash
                , data-default
                , hpqtypes-extras
@@ -871,6 +873,7 @@ Executable messenger-server
                , consumers
                , containers
                , crypto-api
+               , crypto-rng
                , cryptohash
                , data-default
                , hpqtypes-extras
@@ -1011,6 +1014,7 @@ Executable kontrakcja-test
                , bytestring
                , cond
                , containers
+               , crypto-rng
                , data-default
                , hpqtypes-extras
                , directory
@@ -1233,6 +1237,7 @@ Executable screenshot-review
                , conduit
                , containers
                , crypto-api
+               , crypto-rng
                , cryptohash
                , data-default
                , db-extras

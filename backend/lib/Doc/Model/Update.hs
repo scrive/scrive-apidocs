@@ -72,6 +72,7 @@ module Doc.Model.Update
 
 import Control.Arrow (second)
 import Control.Monad.Catch
+import Crypto.RNG
 import Data.Decimal (realFracToDecimal)
 import Data.Int
 import Data.Maybe hiding (fromJust)
@@ -87,7 +88,6 @@ import qualified Text.StringTemplates.Fields as F
 import API.APIVersion
 import Company.Model
 import Control.Monad.Trans.Instances ()
-import Crypto.RNG
 import DB
 import DB.TimeZoneName (TimeZoneName, defaultTimeZoneName, withTimeZone)
 import Doc.Conditions

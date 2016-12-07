@@ -6,6 +6,7 @@ module Sender (
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Trans.Control
+import Crypto.RNG (CryptoRNG)
 import Data.List hiding (head)
 import Log
 import System.Exit
@@ -15,7 +16,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Foldable as F
 
 import Assembler
-import Crypto.RNG (CryptoRNG)
 import DB
 import DB.PostgreSQL
 import KontraPrelude

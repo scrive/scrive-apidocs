@@ -6,13 +6,13 @@ module Doc.AutomaticReminder.Model (
 
 import Control.Monad.Catch
 import Control.Monad.Reader
+import Crypto.RNG
 import Data.Int
 import Data.Typeable
 import Log
 
 import ActionQueue.Core
 import ActionQueue.Scheduler
-import Crypto.RNG
 import DB
 import DB.TimeZoneName (TimeZoneName, defaultTimeZoneName, withTimeZone)
 import Doc.AutomaticReminder.Tables

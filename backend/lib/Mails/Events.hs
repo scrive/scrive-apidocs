@@ -17,6 +17,7 @@ module Mails.Events (
 
 import Control.Monad.Catch
 import Control.Monad.Reader
+import Crypto.RNG
 import Data.Functor
 import Data.Time
 import Log
@@ -27,7 +28,6 @@ import ActionQueue.Scheduler
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Control.Monad.Trans.Instances ()
-import Crypto.RNG
 import DB
 import Doc.API.Callback.Model
 import Doc.DocStateData

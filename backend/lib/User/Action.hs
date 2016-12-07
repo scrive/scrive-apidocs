@@ -5,6 +5,7 @@ module User.Action (
 
 import Control.Conditional (whenM)
 import Control.Monad.Catch
+import Crypto.RNG
 import Data.Functor
 import Log
 import Text.StringTemplates.Templates
@@ -14,7 +15,6 @@ import Administration.AddPaymentPlan
 import BrandedDomain.BrandedDomain
 import Company.CompanyID
 import Company.Model
-import Crypto.RNG
 import DB
 import Doc.Model
 import Happstack.Fields

@@ -17,13 +17,13 @@ module Doc.DocMails (
 import Control.Conditional ((<|), (|>), ifM)
 import Control.Monad.Catch
 import Control.Monad.Reader
+import Crypto.RNG
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
 import qualified Data.ByteString as BS
 
 import ActionQueue.Scheduler (SchedulerData, getGlobalTemplates)
 import BrandedDomain.Model
-import Crypto.RNG
 import DB
 import Doc.API.Callback.Model
 import Doc.DocInfo

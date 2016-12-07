@@ -3,8 +3,8 @@ module Doc.SMSPin.Model (
   ) where
 
 import Control.Monad.Catch
-
 import Crypto.RNG
+
 import DB
 import Doc.SignatoryLinkID
 import KontraPrelude

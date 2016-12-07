@@ -3,13 +3,13 @@ module ForkAction (forkAction) where
 import Control.Exception.Lifted
 import Control.Monad.Base
 import Control.Monad.Trans.Control
+import Crypto.RNG
 import Data.Time
 import Database.PostgreSQL.PQTypes
 import Log
 import qualified Control.Concurrent.Thread as T
 
 import Context
-import Crypto.RNG
 import KontraMonad
 import KontraPrelude
 import Log.Utils

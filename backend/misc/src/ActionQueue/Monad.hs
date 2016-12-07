@@ -9,13 +9,13 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
+import Crypto.RNG
 import Log
 import qualified Control.Exception.Lifted as E
 import qualified Data.Text as T
 
 import ActionQueue.Core
 import Amazon
-import Crypto.RNG
 import DB
 import KontraPrelude
 

@@ -4,6 +4,7 @@ module Log.Utils (
   , localRandomID
   ) where
 
+import Crypto.RNG
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Char
@@ -15,7 +16,6 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
-import Crypto.RNG
 import KontraPrelude
 
 equalsExternalBS :: T.Text -> BS.ByteString -> Pair

@@ -8,6 +8,8 @@ import Control.Arrow
 import Control.Monad.Catch
 import Control.Monad.Time
 import Control.Monad.Trans.Control
+import Crypto.RNG
+import Crypto.RNG.Utils
 import Data.Char
 import Log
 import Text.HTML.TagSoup
@@ -21,8 +23,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Text.JSON as J
 
-import Crypto.RNG
-import Crypto.RNG.Utils
 import Data.ByteString.Utils (splitEvery)
 import DB
 import File.Storage

@@ -6,6 +6,7 @@ import Control.Concurrent.STM
 import Control.Monad.Catch
 import Control.Monad.Reader.Class
 import Control.Monad.Trans
+import Crypto.RNG
 import Data.Char
 import Data.Text (pack)
 import Data.Time.Clock.POSIX
@@ -26,7 +27,6 @@ import BrandedDomain.BrandedDomainID
 import BrandedDomain.Model
 import Company.Model
 import Context
-import Crypto.RNG
 import DB
 import Doc.Action
 import Doc.DocStateData

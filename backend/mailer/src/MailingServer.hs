@@ -2,6 +2,7 @@ module MailingServer (main) where
 
 import Control.Concurrent.Lifted
 import Control.Monad.Base
+import Crypto.RNG
 import Data.Aeson
 import Data.Monoid
 import Database.PostgreSQL.Consumers
@@ -17,7 +18,6 @@ import qualified Data.Traversable as F
 import qualified Happstack.StaticRouting as R
 
 import Configuration
-import Crypto.RNG
 import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL

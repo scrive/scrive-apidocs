@@ -8,13 +8,13 @@ module ActionQueue.PasswordReminder (
 
 import Control.Monad.Catch
 import Control.Monad.Trans.Maybe
+import Crypto.RNG
 import Data.Int
 import Data.Typeable
 
 import ActionQueue.Core
 import ActionQueue.Scheduler
 import ActionQueue.Tables
-import Crypto.RNG
 import DB
 import KontraLink
 import KontraPrelude

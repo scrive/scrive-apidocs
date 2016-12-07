@@ -6,12 +6,12 @@ module Session.Data (
   ) where
 
 import Control.Monad.Catch
+import Crypto.RNG
 import Data.Typeable
 import Happstack.Server hiding (Session)
 
 import ActionQueue.Core
 import ActionQueue.Scheduler
-import Crypto.RNG
 import DB
 import KontraPrelude
 import MagicHash

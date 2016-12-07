@@ -2,6 +2,7 @@ module Cron (main) where
 
 import Control.Monad
 import Control.Monad.Base
+import Crypto.RNG
 import Data.Maybe
 import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
@@ -21,7 +22,6 @@ import AppConf
 import AppDBTables
 import Configuration
 import Cron.Model
-import Crypto.RNG
 import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
