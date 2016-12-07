@@ -29,6 +29,7 @@ import qualified Data.Text as T
 
 import API.V2
 import Attachment.Model
+import Chargeable.Model
 import DB
 import DB.TimeZoneName (defaultTimeZoneName)
 import Doc.Action
@@ -151,6 +152,7 @@ docApiV2Start did = logDocument did . api $ do
     dbUpdate $ PreparationToPending actor timezone
     dbUpdate $ SetDocumentInviteTime t actor
     postDocumentPreparationChange authorSignsNow timezone
+    dbUpdate $ ChargeCompanyForStartingDocument did
     -- Result
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
