@@ -7,11 +7,11 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
+import Crypto.RNG
 import Happstack.Server
 import Log
 
 import Control.Monad.Trans.Instances ()
-import Crypto.RNG
 import DB
 import Happstack.Server.Instances ()
 import Happstack.Server.ReqHandler

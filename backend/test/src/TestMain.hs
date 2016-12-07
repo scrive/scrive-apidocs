@@ -3,6 +3,7 @@ module TestMain where
 import Control.Arrow
 import Control.Concurrent.STM
 import Control.Monad.Base
+import Crypto.RNG
 import Database.PostgreSQL.PQTypes.Checks
 import Database.PostgreSQL.PQTypes.Internal.Connection
 import Log
@@ -25,7 +26,6 @@ import CompanyBrandingTest
 import CompanyControlTest
 import CompanyStateTest
 import ConfigTests
-import Crypto.RNG
 import CSSGenerationTest
 import CSVUtilTest
 import DB

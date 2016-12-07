@@ -13,12 +13,12 @@ where
 
 import Control.Monad.Catch
 import Control.Monad.State.Class
+import Crypto.RNG
 import Data.ByteString (ByteString)
 import Data.Default
 import qualified Data.Text as T
 
 import Attachment.AttachmentID
-import Crypto.RNG
 import DB
 import File.FileID
 import File.Model

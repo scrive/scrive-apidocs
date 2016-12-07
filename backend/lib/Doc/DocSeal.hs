@@ -16,6 +16,7 @@ import Control.Monad.Base
 import Control.Monad.Catch hiding (handle)
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
+import Crypto.RNG
 import Data.Char
 import Data.Digest.SHA2
 import Data.Function (on)
@@ -38,7 +39,6 @@ import qualified Data.Text.ICU.Normalize as ICU
 import qualified Data.Unjson as Unjson
 import qualified Text.StringTemplates.Fields as F
 
-import Crypto.RNG
 import DB
 import DB.TimeZoneName
 import Doc.Data.CheckboxPlacementsUtils (CheckboxImagesMapping, getCheckboxImage, readCheckboxImagesMapping)

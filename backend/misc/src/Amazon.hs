@@ -18,6 +18,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
+import Crypto.RNG
 import Data.Time
 import Log
 import Network.AWS.Authentication
@@ -35,7 +36,6 @@ import qualified Network.HTTP as HTTP
 
 import Amazon.Class
 import Crypto
-import Crypto.RNG
 import Database.Redis.Helpers
 import DB
 import File.File

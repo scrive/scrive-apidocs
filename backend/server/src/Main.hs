@@ -3,6 +3,7 @@ module Main (main) where
 import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
+import Crypto.RNG
 import Database.PostgreSQL.PQTypes.Checks
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
@@ -22,7 +23,6 @@ import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.Model
 import Configuration
-import Crypto.RNG
 import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL

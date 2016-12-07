@@ -7,6 +7,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Crypto.RNG (CryptoRNG)
 import Data.Default (def)
 import Log
 import System.Exit (ExitCode(..))
@@ -17,7 +18,6 @@ import qualified Data.ByteString as BS
 import ActionQueue.Scheduler (SchedulerData, getGlobalTemplates, sdAppConf)
 import Amazon (AmazonMonad)
 import AppConf (guardTimeConf)
-import Crypto.RNG (CryptoRNG)
 import DB (dbUpdate)
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.Data.Document (documentsealedfile)

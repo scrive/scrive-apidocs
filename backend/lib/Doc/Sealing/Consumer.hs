@@ -6,6 +6,7 @@ module Doc.Sealing.Consumer (
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
+import Crypto.RNG
 import Data.ByteString (ByteString)
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
@@ -14,7 +15,6 @@ import qualified Database.Redis as R
 
 import AppConf
 import BrandedDomain.Model
-import Crypto.RNG
 import DB
 import DB.PostgreSQL
 import Doc.Action

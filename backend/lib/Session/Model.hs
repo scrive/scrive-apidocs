@@ -10,12 +10,12 @@ module Session.Model (
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
+import Crypto.RNG
 import Happstack.Server hiding (Session)
 import Log
 
 import ActionQueue.Core
 import Context
-import Crypto.RNG
 import DB
 import KontraMonad
 import KontraPrelude

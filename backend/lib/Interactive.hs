@@ -3,6 +3,7 @@ module Interactive where
 -- Use this module for interactively trying out server code and for utility scripts
 
 import Control.Concurrent
+import Crypto.RNG
 import Log
 import System.IO
 import Text.StringTemplates.Templates (TemplatesT)
@@ -12,7 +13,6 @@ import AppConf
 import AppControl
 import AppDBTables
 import Configuration
-import Crypto.RNG
 import DB
 import DB.PostgreSQL
 import KontraPrelude

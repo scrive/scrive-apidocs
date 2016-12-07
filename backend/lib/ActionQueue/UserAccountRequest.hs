@@ -8,13 +8,13 @@ module ActionQueue.UserAccountRequest (
 
 import Control.Monad.Catch
 import Control.Monad.Trans.Maybe
+import Crypto.RNG
 import Data.Typeable
 import Log
 
 import ActionQueue.Core
 import ActionQueue.Scheduler
 import ActionQueue.Tables
-import Crypto.RNG
 import DB
 import KontraLink
 import KontraPrelude

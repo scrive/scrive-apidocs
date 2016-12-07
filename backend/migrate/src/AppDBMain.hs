@@ -1,5 +1,6 @@
 module AppDBMain where
 
+import Crypto.RNG
 import Database.PostgreSQL.PQTypes.Checks
 import System.Console.CmdArgs hiding (def)
 import System.Environment
@@ -9,7 +10,6 @@ import AppDBConfig
 import AppDBMigrations
 import AppDBTables
 import Configuration
-import Crypto.RNG
 import DB
 import DB.PostgreSQL
 import DB.SQLFunction

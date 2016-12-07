@@ -16,6 +16,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
+import Crypto.RNG
 import Data.Aeson.Types
 import Data.Functor
 import Data.Time.Clock
@@ -38,7 +39,6 @@ import AppConf
 import AppView as V
 import BrandedDomain.Model
 import Cookies (lookCookieValue)
-import Crypto.RNG
 import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
 import File.FileID

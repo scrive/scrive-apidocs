@@ -12,6 +12,7 @@ module Mails.SendMail
     ) where
 
 import Control.Monad.Catch
+import Crypto.RNG
 import Data.Char
 import Data.String.Utils
 import Log
@@ -21,7 +22,6 @@ import qualified Text.StringTemplates.Templates as T
 
 import BrandedDomain.BrandedDomain
 import Branding.Adler32
-import Crypto.RNG
 import DB
 import Doc.DocumentID
 import Doc.Model

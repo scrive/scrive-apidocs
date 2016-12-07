@@ -28,6 +28,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Control.Monad.Trans.Control
+import Crypto.RNG
 import Data.Time
 import Database.PostgreSQL.PQTypes.Internal.Monad
 import Database.PostgreSQL.PQTypes.Internal.State
@@ -44,7 +45,6 @@ import qualified Data.Map as M
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import BrandedDomain.Model
-import Crypto.RNG
 import DB
 import DB.PostgreSQL
 import GuardTime

@@ -4,6 +4,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
+import Crypto.RNG
 import Data.Int (Int32)
 import Data.Unjson
 import Log
@@ -22,7 +23,6 @@ import Amazon
 import API.APIVersion
 import AppConf
 import Company.Model
-import Crypto.RNG
 import DB
 import Doc.API.Callback.Data
 import Doc.API.V1.DocumentToJSON

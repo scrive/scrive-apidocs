@@ -5,12 +5,12 @@ module Handlers (
   ) where
 
 import Control.Monad.Reader
+import Crypto.RNG
 import Happstack.Server hiding (dir, path)
 import Happstack.StaticRouting
 import Log
 import System.Directory
 
-import Crypto.RNG
 import DB
 import DB.PostgreSQL
 import Happstack.Server.ReqHandler

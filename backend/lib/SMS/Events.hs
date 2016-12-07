@@ -15,6 +15,7 @@ module SMS.Events (
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
+import Crypto.RNG
 import Data.Functor
 import Log
 import Text.StringTemplates.Templates hiding (runTemplatesT)
@@ -23,7 +24,6 @@ import qualified Text.StringTemplates.Fields as F
 import ActionQueue.Scheduler
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import Crypto.RNG
 import DB
 import Doc.API.Callback.Model
 import Doc.DocStateData

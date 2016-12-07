@@ -23,6 +23,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Control.Monad.Trans.Control
+import Crypto.RNG
 import Happstack.Server
 import Log
 import Text.StringTemplates.Templates
@@ -30,7 +31,6 @@ import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import Context
 import Control.Monad.Trans.Instances ()
-import Crypto.RNG
 import DB
 import GuardTime (GuardTimeConfMonad(..))
 import Happstack.Server.Instances ()

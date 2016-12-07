@@ -9,12 +9,12 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.State
 import Control.Monad.Trans.Control
+import Crypto.RNG
 import Happstack.Server
 import Log
 import Text.StringTemplates.Templates
 
 import Context
-import Crypto.RNG
 import DB
 import GuardTime (GuardTimeConfMonad)
 import KontraPrelude

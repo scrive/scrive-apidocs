@@ -2,6 +2,7 @@ module MessengerServer (main) where
 
 import Control.Concurrent.Lifted
 import Control.Monad.Base
+import Crypto.RNG
 import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
 import Happstack.Server hiding (waitForTermination)
@@ -13,7 +14,6 @@ import qualified Data.Text as T
 import qualified Happstack.StaticRouting as R
 
 import Configuration
-import Crypto.RNG
 import DB
 import DB.PostgreSQL
 import Handlers

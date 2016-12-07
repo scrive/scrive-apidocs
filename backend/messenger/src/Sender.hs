@@ -6,6 +6,7 @@ module Sender (
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
+import Crypto.RNG (CryptoRNG)
 import Data.Hash.MD5
 import Log
 import Network.HTTP.Base (urlEncode)
@@ -25,7 +26,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.Lazy.UTF8 as BSU
 import qualified Data.Text as T
 
-import Crypto.RNG (CryptoRNG)
 import DB
 import KontraPrelude
 import Log.Identifier
