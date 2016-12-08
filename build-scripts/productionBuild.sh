@@ -59,7 +59,7 @@ gtsigningurl="http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.am
 gtextendingurl="http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
 
 echo "Signing with private key"
-openssl dgst -sha256 -sign "~/key/builds.scrive.com.key" -out "$opensslfile" "$TMP/$ZIP"
+openssl dgst -sha256 -sign "$HOME/key/builds.scrive.com.key" -out "$opensslfile" "$TMP/$ZIP"
 
 echo "Signing with GuardTime"
 gtime -S $gtsigningurl -s -f "$TMP/$ZIP" -o "$signaturefile"
@@ -104,7 +104,7 @@ fi
 echo "Copying deployment file to /tmp on $SRV server"
 ssh $TRGMH  "rm -rf /tmp/"$SRV"_deployment && mkdir /tmp/"$SRV"_deployment"
 cat "$TMP/$finalfile" | ssh $TRGMH  "cd /tmp/"$SRV"_deployment && tar -zx"
-scp "/home/builds/key/builds.scrive.com.pubkey.pem" $TRGMH":/tmp/"$SRV"_deployment/."
+scp "$HOME/key/builds.scrive.com.pubkey.pem" $TRGMH":/tmp/"$SRV"_deployment/."
 
 echo "Verifying and unzipping deployment file"
 ssh $TRGMH  "cd /tmp/"$SRV"_deployment && gtime -S $gtextendingurl -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP ; exit \$?"

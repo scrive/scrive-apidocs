@@ -37,10 +37,9 @@ module Doc.DocStateQuery
 import Log
 
 import DB
-import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
-import Doc.DocumentMonad (DocumentMonad, theDocument)
+import Doc.DocumentMonad (DocumentMonad)
 import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Tokens.Model
@@ -134,8 +133,7 @@ signatoryNeedsToIdentifyToView
   => SignatoryLink
   -> m Bool
 signatoryNeedsToIdentifyToView sl = do
-  doc <- theDocument
-  if hasSigned sl || not (isPending doc)
+  if hasSigned sl
     then return False
     else case (signatorylinkauthenticationtoviewmethod sl) of
       StandardAuthenticationToView -> return False
@@ -164,12 +162,6 @@ getDocumentAndSignatoryForEID did slid = dbQuery (GetDocumentSessionToken slid) 
   Just mh -> do
     logInfo_ "Document token found"
     doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
-    when (documentstatus doc /= Pending) $ do
-      logInfo "Unexpected status of the document" $ object [
-          "expected" .= show Pending
-        , "given" .= show (documentstatus doc)
-        ]
-      respond404
     -- this should always succeed as we already got the document
     let slink = $fromJust $ getSigLinkFor slid doc
     when (hasSigned slink) $ do

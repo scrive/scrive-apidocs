@@ -126,7 +126,7 @@ handleResolve = do
                    when (not signatoryHasFilledInPhone && formattedPhoneFromSignatory /= formattedPhoneFromNets) $ do
                      logAttention_ "Not matching phone for NO BankID - Nets should have blocked that"
                      internalError
-                   when signatoryHasFilledInPhone $ do
+                   when (signatoryHasFilledInPhone && Pending == documentstatus doc) $ do
                      dbUpdate . UpdatePhoneAfterIdentificationToView sl phone formattedPhoneFromNets =<< signatoryActor ctx sl
 
                dbUpdate $ ChargeCompanyForNOBankIDAuthentication (documentid doc)
