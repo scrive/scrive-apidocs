@@ -194,6 +194,11 @@ a {
   .tocify-focus {
     background-color: $nav-active-bg;
     color: $nav-active-text;
+
+    a {
+      background-color: $nav-active-bg;
+      color: $nav-active-text;
+    }
   }
 
   // Subheaders are the submenus that slide open
