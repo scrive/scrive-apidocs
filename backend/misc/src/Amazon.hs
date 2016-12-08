@@ -229,13 +229,13 @@ getFileContents s3action File{..} mredis = localData fileData $ do
       case result of
         Right rsp -> do
           logInfo "Fetching file from AWS succeeded" $ object [
-              "time" .= timeDiff
+              "elapsed_time" .= timeDiff
             ]
           return . aesDecrypt aes . BSL.toStrict $ HTTP.rspBody rsp
         Left err -> do
           logAttention "Fetching file from AWS failed" $ object [
               "error" .= show err
-            , "time" .= timeDiff
+            , "elapsed_time" .= timeDiff
             , "retry" .= retry
             ]
           if (retry)

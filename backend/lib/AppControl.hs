@@ -200,7 +200,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
           , "values"  .= statsValues
           , "params"  .= statsParams
           ]
-      , "time" .= handlerTime
+      , "elapsed_time" .= handlerTime
       , "full_time" .= timeDiff realFinishTime realStartTime
       ] ++ routeLogData
 

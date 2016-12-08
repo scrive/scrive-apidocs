@@ -22,6 +22,7 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Logging
 import KontraPrelude
+import Log.Identifier
 import MailContext (MailContext(..), runMailContextT)
 import MinutesTime
 import User.CallbackScheme.Model
@@ -103,7 +104,7 @@ triggerAPICallbackIfThereIsOne doc@Document{..} = logDocument documentid $ case 
   where
     addAPICallback url apiVersion = do
       logInfo "Triggering API callback for document with api version" $
-        object [ "api_version" .= show apiVersion]
+        object [ identifier_ apiVersion]
       dbUpdate $ MergeAPICallback documentid url apiVersion
 
 ----------------------------------------

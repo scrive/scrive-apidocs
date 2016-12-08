@@ -253,7 +253,7 @@ findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerD
 findAndExtendDigitalSignatures = do
   lpt <- latest_publication_time
   logInfo "findAndExtendDigitalSignatures: logging latest publication time" $ object [
-      "time" .= lpt
+      "latest_publication_time" .= lpt
     ]
   docs <- dbQuery $ GetDocuments DocumentsOfWholeUniverse
             [ DocumentFilterStatuses [Closed]
@@ -282,7 +282,7 @@ findAndExtendDigitalSignatures = do
       "documents_already_extended" .= (alreadyExtended :: Int)
     , "documents_failed_extending" .= (failedExtend :: Int)
     , "documents_successfully_extended" .= (success :: Int)
-    , "time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
+    , "elapsed_time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
     ]
 
 -- | Estimate when the latest Guardtime publication code was published

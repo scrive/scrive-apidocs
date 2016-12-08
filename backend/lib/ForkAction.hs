@@ -27,7 +27,7 @@ forkAction title action = do
       Left (e::SomeException) -> do
         rollback
         logInfo "forkAction finished" $ object [
-            "time" .= toDouble duration
+            "elapsed_time" .= toDouble duration
           , "error" .= show e
           ]
         -- rethrow, so it can be propagated to the parent thread
@@ -35,7 +35,7 @@ forkAction title action = do
       Right _ -> do
         commit
         logInfo "forkAction finished" $ object [
-            "time" .= toDouble duration
+            "elapsed_time" .= toDouble duration
           ]
   modifyContext $ \ctx -> ctx { ctxthreadjoins = mjoin : ctxthreadjoins ctx }
   where

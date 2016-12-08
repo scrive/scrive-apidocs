@@ -95,10 +95,10 @@ digitallyExtend conf inputFileName = do
         "exit_code" .= show code
       , "stdout" `equalsExternalBSL` stdout
       , "stderr" `equalsExternalBSL` stderr
-      , "time" .= elapsedTime
+      , "elapsed_time" .= elapsedTime
       ]
     ExitSuccess -> logInfo "GuardTime digitallyExtend completed successfully" $ object [
-        "time" .= elapsedTime
+        "elapsed_time" .= elapsedTime
       ]
 
   return code
