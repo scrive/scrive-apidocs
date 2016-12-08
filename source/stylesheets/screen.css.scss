@@ -194,6 +194,11 @@ a {
   .toc-link.active {
     background-color: $nav-active-bg;
     color: $nav-active-text;
+
+    a {
+      background-color: $nav-active-bg;
+      color: $nav-active-text;
+    }
   }
 
   // this is parent links of the currently selected ToC entry
