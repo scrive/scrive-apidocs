@@ -35,11 +35,13 @@ import DownloadPdfIcon from "../icons/download_pdf_icon.svg";
         ReloadManager.startBlocking();
       }, 1000);
     },
+    isReady: function () {
+      return this.props.document.ready() && this.props.document.mainfile() != undefined;
+    },
     render: function() {
       var doc = this.props.document;
       var hasLink = this.props.link != undefined;
-      var hasDownloadButton = doc.showpdfdownload();
-      var downloadUrl = doc.mainfile().downloadLinkForMainFile(doc.title(), true);
+      var hasDownloadButton = doc.showpdfdownload() && this.isReady();
 
       return (
         <div className={"header"} >
@@ -63,7 +65,7 @@ import DownloadPdfIcon from "../icons/download_pdf_icon.svg";
                             title={localization.docsignview.downloadDocumentButtonText}
                             target="_blank"
                             onClick={this.onDownload}
-                            href={downloadUrl}
+                            href={doc.mainfile().downloadLinkForMainFile(doc.title(), true)}
                           >
                             <DownloadPdfIcon className="download-icon" />
                           </a>
