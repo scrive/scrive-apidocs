@@ -34,6 +34,8 @@ $htmlopentag()$
     $IECompatibilityMetaTag()$
     <meta name="viewport" content="width=device-width, maximum-scale=1, initial-scale=1, user-scalable=no" />
     <meta name="format-detection" content="telephone=no"/>
+    <meta property="og:image" content="$previewLink$" />
+    <meta property="og:title" content="$documenttitle$" />
     $signviewAnalyticsVariables()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
     <link href='$cdnbaseurl$/document_signview_branding/$brandingdomainid$/$documentid$/$brandinghash$-branding.css' rel='stylesheet' type='text/css'/>
@@ -124,6 +126,8 @@ $htmlopentag()$
     $standardHeaderContents(nobranding='true'; noviewport='true'; signview='true')$
     <link href='$cdnbaseurl$/document_signview_branding/$brandingdomainid$/$documentid$/$brandinghash$-branding.css' rel='stylesheet' type='text/css'/>
     <meta name="viewport" content="width=device-width, maximum-scale=1, initial-scale=1, user-scalable=no" />
+    <meta property="og:image" content="$previewLink$" />
+    <meta property="og:title" content="$documenttitle$" />
   </head>
   <body>
     <div class='global-table'>

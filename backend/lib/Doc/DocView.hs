@@ -38,7 +38,9 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
 import EID.Nets.Config
+import File.FileID
 import Kontra
+import KontraLink
 import KontraPrelude
 import User.Model
 import User.Utils
@@ -88,6 +90,8 @@ pageDocumentSignView ctx document siglink ad = do
   let loggedAsSignatory = (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> getContextUser ctx);
   let loggedAsAuthor = (Just authorid == (userid <$> getContextUser ctx));
   let docjson = unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) (unjsonDocument (documentAccessForSlid (signatorylinkid siglink) document)) document
+      mainfile = fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document)
+      lockUrl = ctxDomainUrl ctx ++ "/img/preview_locked.png"
   renderTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
@@ -97,6 +101,9 @@ pageDocumentSignView ctx document siglink ad = do
       F.value "allowsavesafetycopy" $ companyallowsavesafetycopy $ companyinfo acompany
       F.value "authorFullname" $ getFullName auser
       F.value "authorPhone" $ getMobile auser
+      F.value "previewLink" $  case signatorylinkauthenticationtoviewmethod siglink of
+          StandardAuthenticationToView -> show $ LinkDocumentPreview (documentid document) (Just siglink) mainfile 600
+          _ -> lockUrl
       F.value "b64documentdata" $ B64.encode $ docjson
       standardPageFields ctx (Just acompanyui) ad -- Branding for signview depends only on authors company
 
@@ -111,6 +118,7 @@ pageDocumentIdentifyView ctx document siglink ad = do
   auser <- fmap $fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
   acompany <- getCompanyForUser auser
   acompanyui <- dbQuery $ GetCompanyUI (companyid acompany)
+  let lockUrl = ctxDomainUrl ctx ++ "/img/preview_locked.png"
 
   renderTemplate "pageDocumentIdentifyView" $ do
       F.value "documentid" $ show $ documentid document
@@ -119,6 +127,7 @@ pageDocumentIdentifyView ctx document siglink ad = do
       F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctxnetsconfig ctx
       F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctxnetsconfig ctx
       F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctxnetsconfig ctx
+      F.value "previewLink" lockUrl
       standardPageFields ctx (Just acompanyui) ad -- Branding for signview depends only on authors company
 
 pageDocumentPadList:: Kontrakcja m
