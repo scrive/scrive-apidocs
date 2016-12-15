@@ -105,9 +105,6 @@ var LanguageSelect = require("./languageselect");
                        <a href="mailto:info@scrive.com">info@scrive.com</a>
                    </li>
                    <li className="branch">
-                      <a href="http://ideas.scrive.com/" id="nav-give-feedback">{localization.footer.giveFeedback}</a>
-                   </li>
-                   <li className="branch">
                       <a href="http://blog.scrive.com" id="nav-blog">{localization.footer.blog}</a>
                    </li>
                </ul>

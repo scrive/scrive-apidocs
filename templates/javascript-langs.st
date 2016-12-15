@@ -1227,7 +1227,6 @@ javascriptLocalisation =
             , address1             : "$_pageFooterAddress1()$"
             , address3             : "$_pageFooterAddress3()$"
             , address4             : "$_pageFooterAddress4()$"
-            , giveFeedback          : "$_pageFooterGiveFeedback()$"
             , blog                 : "$_pageFooterBlog()$"
 
       }
