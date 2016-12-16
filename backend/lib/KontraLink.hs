@@ -70,7 +70,8 @@ data KontraLink
     | LinkExternal String
     | LinkDesignView
     | LinkPadList
-
+    | LinkPreviewLockedImage
+      
 langFolder :: Lang -> String
 langFolder lang = "/" ++ (codeFromLang lang)
 
@@ -132,6 +133,7 @@ instance Show KontraLink where
     showsPrec _ (LinkDesignView) = (++) "/newdocument"
     showsPrec _ (LinkPadList) = (++) "/to-sign"
     showsPrec _ (LinkExternal s) = (++) s
+    showsPrec _ (LinkPreviewLockedImage) = (++) "/img/preview_locked.png"
 
 
 setParams :: URI -> [(String, String)] -> URI
