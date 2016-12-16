@@ -130,22 +130,30 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
                         _ -> return ()
 
                 theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
-        Just (DocumentRelatedMail docid) -> withDocumentID docid $ do
-          let handleEv (SendGridEvent _ ev _) = case ev of
-                                                  SG_Delivered _ -> logDeliveryTime timeDiff
-                                                  _ -> return ()
-              handleEv (MailGunEvent _ ev) = case ev of
-                                               MG_Delivered -> logDeliveryTime timeDiff
-                                               _ -> return ()
-              handleEv (SocketLabsEvent _ ev) = case ev of
-                                                  SL_Delivered -> logDeliveryTime timeDiff
-                                                  SL_Failed 0 5001 -> logDeliveryTime timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
-                                                  _ -> return ()
-              handleEv (SendinBlueEvent _ ev) = case ev of
-                                                  SiB_Delivered -> logDeliveryTime timeDiff
-                                                  _ -> return ()
-          theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
-          markEventAsRead eid
+        Just (DocumentRelatedMail docid) -> logDocument docid $ do
+          exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor docid
+          if not exists
+            then do
+              logInfo_ "Email event for purged/non-existing document"
+              markEventAsRead eid
+          else do
+            logInfo_ "Processing related mail event"
+            withDocumentID docid $ do
+              let handleEv (SendGridEvent _ ev _) = case ev of
+                                                      SG_Delivered _ -> logDeliveryTime timeDiff
+                                                      _ -> return ()
+                  handleEv (MailGunEvent _ ev) = case ev of
+                                                   MG_Delivered -> logDeliveryTime timeDiff
+                                                   _ -> return ()
+                  handleEv (SocketLabsEvent _ ev) = case ev of
+                                                      SL_Delivered -> logDeliveryTime timeDiff
+                                                      SL_Failed 0 5001 -> logDeliveryTime timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
+                                                      _ -> return ()
+                  handleEv (SendinBlueEvent _ ev) = case ev of
+                                                      SiB_Delivered -> logDeliveryTime timeDiff
+                                                      _ -> return ()
+              theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
+              markEventAsRead eid
         _ -> markEventAsRead eid
     processEvent (eid, _ , _, _) = markEventAsRead eid
 
