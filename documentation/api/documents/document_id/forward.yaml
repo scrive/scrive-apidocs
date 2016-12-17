@@ -27,6 +27,15 @@ post:
         When set to true only the signed document will be forwarded, with no
         other email content.
         Otherwise a template email content is used, with the document attached.
+    - name: no_attachments
+      in: formData
+      type: boolean
+      required: false
+      default: false
+      description: |
+        When set to true, only the main file will be included as email
+        attachments.
+        Any attachments not merged with the main file will not be sent.
     - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
