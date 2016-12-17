@@ -123,7 +123,7 @@ info:
     For details of the new parameters and JSON data structures, please consult
     the documentation.
 
-    | API endpoint in Version 1                                    | Equivalent API endpoint in Version 2                        |
+    | API endpoint in Version 1 (`/api/v1`)                        | Equivalent API endpoint in Version 2 (`/api/v2/documents`)  |
     | ------------------------------------------------------------ | ----------------------------------------------------------- |
     | `/list`                                                      | `/list`                                                     |
     | `/createfromfile`                                            | `/new`                                                      |
@@ -141,6 +141,11 @@ info:
     | `/downloadfile/$documentid$/$fileid$/$any_name$.pdf`         | `/{document_id}/files/{file_id}/{filename}`                 |
     | `/changeauthenticationtoview/$documentid$/$signatorylinkid$` | `/{document_id}/{signatory_id}/setauthenticationtoview`     |
     | `/changeauthentication/$documentid$/$signatorylinkid$`       | `/{document_id}/{signatory_id}/setauthenticationtosign`     |
+
+    As an additional note, in API Version 1 the `changemainfile` call would
+    auto-update field placements that had matching anchors.
+    This is not supported in API Version 2.
+    Please contact us if you are interested in using such a feature.
 
     # Quick Start
     To get started using our API it is recommended to first read the
@@ -294,11 +299,11 @@ info:
     * `timedout`
     * `rejected`
 
-    Additionally, we will also perform a callback after every successful
-    `update` call.
     We cannot guarantee to make only one callback per status change, and we may
     trigger callbacks for changes not listed here.
-    Furthermore, callbacks will not be triggered for Documents that have been
+    Furthermore, a callback does not indicate _what_ changed in a document, it
+    simply tells you the current state of a document.
+    Finally, callbacks will not be triggered for documents that have been
     deleted.
 
     The Scrive eSign system will look at the HTTP response code returned by the
