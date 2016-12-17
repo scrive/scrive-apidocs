@@ -187,6 +187,10 @@ API calls, or new API calls.
 <td>2016-10-27</td>
 <td>Small improvements to documentation following internal and customer feedback</td>
 </tr>
+<tr>
+<td>2016-12-17</td>
+<td>New optional <code class="prettyprint">no_attachments</code> parameter for the <code class="prettyprint">forward</code> API call</td>
+</tr>
 </tbody></table>
 
 <h2 id="environments-amp-ip-addresses">Environments &amp; IP Addresses</h2>
@@ -1995,6 +1999,10 @@ Will not change.</p>
 <tr><td><p><code>no_content</code><br/><em>optional</em></p><p><em>default:</em> <code>true</code></p></td><td><p>When set to true only the signed document will be forwarded, with no
 other email content.
 Otherwise a template email content is used, with the document attached.</p>
+</td><td><p>boolean</p></td><td>formData</td></tr>
+<tr><td><p><code>no_attachments</code><br/><em>optional</em></p><p><em>default:</em> <code>false</code></p></td><td><p>When set to true, only the main file will be included as email
+attachments.
+Any attachments not merged with the main file will not be sent.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
 <tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
