@@ -2,7 +2,6 @@ module Util.FlashUtil (
       module FlashMessage
     , Flashable(..)
     , addFlashM
-    , addFlashMsg
     ) where
 
 import Context

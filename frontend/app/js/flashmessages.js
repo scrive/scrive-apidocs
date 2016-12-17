@@ -91,39 +91,18 @@ var Submit = require("./submits.js").Submit;
 
   var FlashMessage = exports.FlashMessage = function (args) {
     if (args.withReload != undefined && args.withReload == true) {
-      new Submit({
-        method: "POST",
-        url: "/api/frontend/addflash",
-        ajax: true,
-        type: args.type,
-        content: args.content,
-        ajaxsuccess: function () { window.location.reload(); },
-        ajaxerror: function () { window.location.reload(); }
-      }).send();
+      Cookies.set("flashmessage", JSON.stringify({ "type": args.type, "content": args.content}));
+      window.location.reload();
       return;
     }
 
     if (args.withRedirect != undefined && args.withRedirect == true && args.redirect != undefined) {
-      new Submit({
-        method: "POST",
-        url: "/api/frontend/addflash",
-        ajax: true,
-        type: args.type,
-        content: args.content,
-        ajaxsuccess: function () {
-          // If we only change hash - it will not reload page. hashchange may also trigger some default action (like
-          // change content of tab). To avoid this, we block unbind hashchange, change location with hash and force
-          // reload.
-          if (args.hashChangeOnly) {
-            $(window).unbind("hashchange");
-            window.location = args.redirect;
-            location.reload(true);
-          } else {
-            window.location = args.redirect;
-          }
-        },
-        ajaxerror: function () { window.location = args.redirect; }
-      }).send();
+      Cookies.set("flashmessage", JSON.stringify({ "type": args.type, "content": args.content}));
+      window.location = args.redirect;
+      if (args.hashChangeOnly) {
+        $(window).unbind("hashchange");
+        location.reload(true);
+      }
       return;
     }
 
@@ -138,3 +117,11 @@ var Submit = require("./submits.js").Submit;
   var FlashMessagesCleaner = exports.FlashMessagesCleaner = function () {
     $(".flash").css("display", "none");
   };
+
+$(function() {
+  if (Cookies.get("flashmessage")) {
+    var jsonFlash = JSON.parse(Cookies.get("flashmessage"));
+    Cookies.delete("flashmessage");
+    new FlashMessage(jsonFlash);
+  }
+});

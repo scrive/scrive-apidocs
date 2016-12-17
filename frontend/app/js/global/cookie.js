@@ -37,6 +37,9 @@
     set : function(name,value) {
       // Add path to cookie, else it will not be send to server
       document.cookie = name + '=' + value +';path=/';
+    },
+    delete : function(name) {
+      document.cookie = name +'=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT';
     }
   };
 
