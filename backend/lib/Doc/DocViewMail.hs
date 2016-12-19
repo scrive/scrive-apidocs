@@ -90,7 +90,7 @@ remindMailNotSigned automatic forMail customMessage document signlink = do
         F.value "attachments" $ map authorattachmentname $ documentauthorattachments document -- TODO - check if this can be removed
         F.value "ispreview" $ not $ forMail
         F.value "previewLink" $  case (signatorylinkauthenticationtoviewmethod $ signlink) of
-          StandardAuthenticationToView -> Just $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
+          StandardAuthenticationToView -> Just $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile) 150
           _ -> Nothing
         F.value "hassigattachments" $ not $ null $ concat $ signatoryattachments <$> documentsignatorylinks document
         -- We try to use generic templates and this is why we return a tuple
@@ -210,7 +210,7 @@ mailInvitation forMail
         F.value "attachments" $ map authorattachmentname $ documentauthorattachments document -- TODO - check if this can be removed
         F.value "ispreview" $ not $ forMail
         F.value "previewLink" $  case (fromMaybe StandardAuthenticationToView $ signatorylinkauthenticationtoviewmethod <$> msiglink) of
-          StandardAuthenticationToView -> Just $ show $ LinkDocumentPreview (documentid document) (msiglink <| forMail |> Nothing) (mainfile)
+          StandardAuthenticationToView -> Just $ show $ LinkDocumentPreview (documentid document) (msiglink <| forMail |> Nothing) (mainfile) 150
           _ -> Nothing
         F.value "hassigattachments" $ length (concatMap signatoryattachments $ documentsignatorylinks document ) > 0
         -- We try to use generic templates and this is why we return a tuple
@@ -250,7 +250,7 @@ mailDocumentClosed ispreview sl sealFixed documentAttached document = do
           | ispreview -> Nothing
           | isAuthor sl -> Just $ makeFullLink mctx $ show (LinkIssueDoc $ documentid document)
           | otherwise -> Just $ makeFullLink mctx $ show (LinkSignDoc (documentid document) sl)
-        F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Nothing <| ispreview |> Just sl) (mainfile)
+        F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Nothing <| ispreview |> Just sl) (mainfile) 150
         F.value "sealFixed" $ sealFixed
         documentAttachedFields (not ispreview) sl documentAttached document
         F.value "closingtime" $ formatTime' "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
@@ -275,7 +275,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
         F.value "partylistSigned" signatoriesThatSigned
         F.value "someonesigned" $ not $ null $ filter (isSignatory && hasSigned) (documentsignatorylinks document)
         F.value "companyname" $ emptyToNothing $ getCompanyName document
-        F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (getAuthorSigLink document) mainfile
+        F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (getAuthorSigLink document) mainfile 150
 
 -- helpers
 makeFullLink :: MailContext -> String -> String

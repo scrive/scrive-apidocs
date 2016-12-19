@@ -405,6 +405,7 @@ showPage fid pageNo = logFile fid $ do
 showPreview :: Kontrakcja m => DocumentID -> FileID -> m Response
 showPreview did fid = logDocumentAndFile did fid $ do
   guardLoggedIn
+  pixelwidth <- fromMaybe 150 <$> readField "pixelwidth"
   void $ getDocByDocID did
   if fid == unsafeFileID 0
     then do
@@ -412,18 +413,19 @@ showPreview did fid = logDocumentAndFile did fid $ do
       return . toResponseBS "image/jpeg" $ BSL.fromStrict emptyPreview
     else do
       checkFileAccessWith fid Nothing Nothing (Just did) Nothing
-      previewResponse fid
+      previewResponse fid pixelwidth
 
 -- | Preview from mail client with magic hash
 showPreviewForSignatory :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m Response
 showPreviewForSignatory did slid mh fid = logDocumentAndFile did fid $ do
   checkFileAccessWith fid (Just slid) (Just mh) (Just did) Nothing
-  previewResponse fid
+  pixelwidth <- fromMaybe 150 <$> readField "pixelwidth"
+  previewResponse fid pixelwidth
 
-previewResponse :: Kontrakcja m => FileID -> m Response
-previewResponse fid = do
+previewResponse :: Kontrakcja m => FileID -> Int -> m Response
+previewResponse fid pixelwidth = do
   fileData <- getFileIDContents fid
-  rp <- renderPage fileData 1 150
+  rp <- renderPage fileData 1 pixelwidth
   case rp of
    Just pageData -> return $ toResponseBS "image/png" $ BSL.fromStrict pageData
    Nothing -> do

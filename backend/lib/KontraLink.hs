@@ -64,13 +64,14 @@ data KontraLink
     | LinkDaveFile FileID String
     | LinkAttachmentDownload AttachmentID String
     | LinkEnableCookies
-    | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
+    | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID Int
     | LinkOAuthAuthorization APIToken
     | LinkOAuthCallback URI APIToken (Maybe MagicHash)
     | LinkExternal String
     | LinkDesignView
     | LinkPadList
-
+    | LinkPreviewLockedImage
+      
 langFolder :: Lang -> String
 langFolder lang = "/" ++ (codeFromLang lang)
 
@@ -115,12 +116,14 @@ instance Show KontraLink where
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")
     showsPrec _ (LinkDaveFile fileid filename) =  (++) $ "/dave/file/" ++ show fileid ++ "/" ++ filename
     showsPrec _ (LinkEnableCookies) = (++) ("/enable-cookies/enable-cookies.html")
-    showsPrec _ (LinkDocumentPreview did (Just sl) fid) = (++) ("/preview/" ++ show did ++
+    showsPrec _ (LinkDocumentPreview did (Just sl) fid width) = (++) ("/preview/" ++ show did ++
                  "/" ++ show (signatorylinkid sl) ++
                  "/" ++ show (signatorymagichash sl) ++
-                 "/" ++ show fid)
-    showsPrec _ (LinkDocumentPreview did Nothing fid) = (++) ("/preview/" ++ show did ++
-                 "/" ++ show fid)
+                 "/" ++ show fid ++
+                 "?pixelwidth=" ++ show width)
+    showsPrec _ (LinkDocumentPreview did Nothing fid width) = (++) ("/preview/" ++ show did ++
+                 "/" ++ show fid ++
+                 "?pixelwidth=" ++ show width)
     showsPrec _ (LinkOAuthAuthorization token) = (++) ("/oauth/authorization?oauth_token=" ++ show token)
     showsPrec _ (LinkOAuthCallback url token (Just verifier)) =
       (++) (show $ setParams url [("oauth_token", show token), ("oauth_verifier", show verifier)])
@@ -130,6 +133,7 @@ instance Show KontraLink where
     showsPrec _ (LinkDesignView) = (++) "/newdocument"
     showsPrec _ (LinkPadList) = (++) "/to-sign"
     showsPrec _ (LinkExternal s) = (++) s
+    showsPrec _ (LinkPreviewLockedImage) = (++) "/img/preview_locked.png"
 
 
 setParams :: URI -> [(String, String)] -> URI
