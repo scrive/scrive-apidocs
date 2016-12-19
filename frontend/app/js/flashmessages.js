@@ -91,13 +91,13 @@ var Submit = require("./submits.js").Submit;
 
   var FlashMessage = exports.FlashMessage = function (args) {
     if (args.withReload != undefined && args.withReload == true) {
-      Cookies.set("flashmessage", JSON.stringify({ "type": args.type, "content": args.content}));
+      Cookies.set("flashmessage", JSON.stringify({"type": args.type, "content": args.content}));
       window.location.reload();
       return;
     }
 
     if (args.withRedirect != undefined && args.withRedirect == true && args.redirect != undefined) {
-      Cookies.set("flashmessage", JSON.stringify({ "type": args.type, "content": args.content}));
+      Cookies.set("flashmessage", JSON.stringify({"type": args.type, "content": args.content}));
       window.location = args.redirect;
       if (args.hashChangeOnly) {
         $(window).unbind("hashchange");
@@ -118,7 +118,7 @@ var Submit = require("./submits.js").Submit;
     $(".flash").css("display", "none");
   };
 
-$(function() {
+$(function () {
   if (Cookies.get("flashmessage")) {
     var jsonFlash = JSON.parse(Cookies.get("flashmessage"));
     Cookies.delete("flashmessage");
