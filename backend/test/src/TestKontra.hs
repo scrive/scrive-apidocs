@@ -314,7 +314,6 @@ mkContext lang = do
         , ctxbrandeddomain = bd
         , ctxsalesforceconf = Nothing
         , ctxnetsconfig = Nothing
-        , ctxdelayedresponse = Nothing
         , ctxthreadjoins = []
     }
 

@@ -1,15 +1,11 @@
 module Context (
-    DelayedResponse(..)
-  , Context(..)
+    Context(..)
   , ctxDomainUrl
   , getContextUser
   , anonymousContext
   , contextToMailContext
   ) where
 
-import Control.Monad.Catch
-import Control.Monad.Trans.Control
-import Happstack.Server (Response)
 import Log.Class
 import qualified Control.Concurrent.Thread as T
 import qualified Data.ByteString as BS
@@ -33,13 +29,6 @@ import Templates
 import User.Email
 import User.Model
 import qualified MemCache
-
--- | Action that generates Response after database connection is no longer held
--- by the request handler. If present in 'Context', it will overwrite Response
--- object returned by standard means.
-newtype DelayedResponse = DelayedResponse {
-    unDelayedResponse :: forall m. (MonadBaseControl IO m, MonadLog m, MonadThrow m) => m (Maybe Response)
-  }
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -71,7 +60,6 @@ data Context = Context
     , ctxbrandeddomain       :: BrandedDomain
     , ctxsalesforceconf      :: Maybe SalesforceConf
     , ctxnetsconfig          :: Maybe NetsConfig
-    , ctxdelayedresponse     :: Maybe DelayedResponse
     -- | Contains actions that join threads spawned with forkAction
     , ctxthreadjoins       :: [IO (T.Result ())]
     }
