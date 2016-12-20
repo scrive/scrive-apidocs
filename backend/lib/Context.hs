@@ -7,7 +7,6 @@ module Context (
   ) where
 
 import Log.Class
-import qualified Control.Concurrent.Thread as T
 import qualified Data.ByteString as BS
 import qualified Database.Redis as R
 
@@ -60,8 +59,6 @@ data Context = Context
     , ctxbrandeddomain       :: BrandedDomain
     , ctxsalesforceconf      :: Maybe SalesforceConf
     , ctxnetsconfig          :: Maybe NetsConfig
-    -- | Contains actions that join threads spawned with forkAction
-    , ctxthreadjoins       :: [IO (T.Result ())]
     }
 
 ctxDomainUrl :: Context -> String

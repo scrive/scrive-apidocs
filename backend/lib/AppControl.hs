@@ -348,5 +348,4 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , ctxbrandeddomain = brandeddomain
         , ctxsalesforceconf = salesforceConf appConf
         , ctxnetsconfig = netsConfig appConf
-        , ctxthreadjoins = []
         }

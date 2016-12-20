@@ -36,7 +36,6 @@ import Happstack.Server hiding (dir, getHeader, method, mkHeaders, path)
 import Log
 import System.FilePath
 import Text.StringTemplates.Templates
-import qualified Control.Concurrent.Thread as T
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
@@ -152,10 +151,6 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
     (liftBase $ runStateT (unReqHandlerT . runLogger . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT pool ts $ runStateT (unKontra tk) noflashctx) $ ReqHandlerSt rq id now)
     -- runDBT commits and doesn't run another transaction, so begin new one
     begin
-  -- join all of the spawned threads. since exceptions
-  -- thrown in them propagate, the testcase will fail
-  -- if any of them does.
-  liftBase $ sequence (ctxthreadjoins ctx') >>= mapM_ T.result
   return (res, ctx', hsFilter st)
 
 -- | Typeclass for running handlers within TestKontra monad
@@ -314,7 +309,6 @@ mkContext lang = do
         , ctxbrandeddomain = bd
         , ctxsalesforceconf = Nothing
         , ctxnetsconfig = Nothing
-        , ctxthreadjoins = []
     }
 
 -- pgsql database --
