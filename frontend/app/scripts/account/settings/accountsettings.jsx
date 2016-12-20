@@ -220,7 +220,7 @@ module.exports = Backbone.Model.extend({
            cache: false,
            success: function (localizationScript) {
              eval(localizationScript);
-             FlashMessageAfterReload({
+             new FlashMessageAfterReload({
                content: localization.account.accountDetails.detailSaved,
                type: "success"
              });
@@ -228,7 +228,7 @@ module.exports = Backbone.Model.extend({
            }
         });
       } else {
-        FlashMessage({
+        new FlashMessage({
           content: localization.account.accountDetails.detailSaved,
           type: "success"
         });

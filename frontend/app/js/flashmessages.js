@@ -6,17 +6,17 @@ var Submit = require("./submits.js").Submit;
 
 /* Main and only flash messages module
  * Usage
- *   FlashMessage({ type : "success" | "error"
- *               , content: "Text to be displayed"
- *               })
+ *   new FlashMessage({ type : "success" | "error"
+ *                    , content: "Text to be displayed"
+ *                    })
  *
  * If you need to redirect user to different page, and then he should see a flash message,
- * use FlashMessageAfterReload (with same parameter) and then reload the page. The flash message
+ * use "new FlashMessageAfterReload" (with same parameter) and then reload the page. The flash message
  * will be saved in a cookie and displayed after page is reloaded. You still have to reload
  * the page yourself.
  *
  * If you need to clean all flash message do
- *   FlashMessagesCleaner();
+ *   new FlashMessagesCleaner();
  */
 
 var FlashMessageModel = Backbone.Model.extend({
@@ -108,10 +108,14 @@ exports.FlashMessagesCleaner = function () {
   $(".flash").css("display", "none");
 };
 
-exports.FlashMessageFromCookie = function () {
+exports.FlashMessageTryFromCookie = function () {
   if (Cookies.get("flashmessage")) {
-    var jsonFlash = JSON.parse(Cookies.get("flashmessage"));
-    Cookies.delete("flashmessage");
-    FlashMessage(jsonFlash);
+    try {
+      var jsonFlash = JSON.parse(Cookies.get("flashmessage"));
+      new FlashMessage(jsonFlash);
+    }
+    finally {
+      Cookies.delete("flashmessage");
+    }
   }
 };

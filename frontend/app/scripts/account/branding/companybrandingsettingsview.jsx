@@ -14,7 +14,7 @@ module.exports = React.createClass({
     },
     saveSettings : function() {
       this.props.model.save(function() {
-        FlashMessageAfterReload({type : "success", content: "Saved"});
+        new FlashMessageAfterReload({type : "success", content: "Saved"});
         window.location.reload(true);
       });
     },

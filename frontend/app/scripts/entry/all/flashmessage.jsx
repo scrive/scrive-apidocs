@@ -6,5 +6,5 @@ $(function () {
   if (fromTemplateHasFlash) {
     new FlashMessages.FlashMessage(fromTemplateFlash);
   }
-  FlashMessages.FlashMessageFromCookie();
+  FlashMessages.FlashMessageTryFromCookie();
 });

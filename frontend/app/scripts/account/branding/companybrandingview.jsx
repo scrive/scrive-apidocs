@@ -41,18 +41,18 @@ module.exports = React.createClass({
       var saveCompanyBranding = function() {
        model.companybranding().save(function() {
          if (!shouldReloadOnSave) {
-           FlashMessage({type : "success", content: localization.branding.saved});
+           new FlashMessage({type : "success", content: localization.branding.saved});
            if (callback) {
              callback();
            }
          } else {
            if (urlInsteadOfCallback) {
-             FlashMessageAfterReload({type : "success", content: localization.branding.saved});
+             new FlashMessageAfterReload({type : "success", content: localization.branding.saved});
              window.location = urlInsteadOfCallback;
              $(window).unbind("hashchange");
              window.location.reload(true);
            } else {
-             FlashMessageAfterReload({type : "success", content: localization.branding.saved});
+             new FlashMessageAfterReload({type : "success", content: localization.branding.saved});
              window.location.reload(true);
            }
          }
