@@ -113,8 +113,7 @@ exports.FlashMessageTryFromCookie = function () {
     try {
       var jsonFlash = JSON.parse(Cookies.get("flashmessage"));
       new FlashMessage(jsonFlash);
-    }
-    finally {
+    } finally {
       Cookies.delete("flashmessage");
     }
   }
