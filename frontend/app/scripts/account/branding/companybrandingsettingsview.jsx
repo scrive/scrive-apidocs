@@ -3,7 +3,7 @@ var BackboneMixin = require("../../common/backbone_mixin");
 var Button = require("../../common/button");
 var CompanyBrandingTextEditor = require("./companybrandingsettingstexteditor");
 var CompanyBrandingImageEditor = require("./companybrandingsettingsimageeditor");
-var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var FlashMessageAfterReload = require("../../../js/flashmessages.js").FlashMessageAfterReload;
 
 
 
@@ -14,7 +14,8 @@ module.exports = React.createClass({
     },
     saveSettings : function() {
       this.props.model.save(function() {
-        new FlashMessage({type : "success", content: "Saved", withReload: true});
+        new FlashMessageAfterReload({type : "success", content: "Saved"});
+        window.location.reload(true);
       });
     },
     render: function() {

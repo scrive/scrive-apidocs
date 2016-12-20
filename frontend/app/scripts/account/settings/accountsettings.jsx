@@ -1,7 +1,9 @@
 var Backbone = require("backbone");
 var Submit = require("../../../js/submits.js").Submit;
 var User = require("../../../js/account/user.js").User;
-var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var FlashMessages = require("../../../js/flashmessages.js");
+var FlashMessage = FlashMessages.FlashMessage;
+var FlashMessageAfterReload = FlashMessages.FlashMessageAfterReload;
 var $ = require("jquery");
 
 /* View model for account settings */
@@ -218,18 +220,17 @@ module.exports = Backbone.Model.extend({
            cache: false,
            success: function (localizationScript) {
              eval(localizationScript);
-             new FlashMessage({
+             new FlashMessageAfterReload({
                content: localization.account.accountDetails.detailSaved,
-               type: "success",
-               withReload: true
+               type: "success"
              });
+             window.location.reload(true);
            }
         });
       } else {
         new FlashMessage({
           content: localization.account.accountDetails.detailSaved,
-          type: "success",
-          withReload: false
+          type: "success"
         });
         self.user().fetch({cache: false, processData: true});
       }

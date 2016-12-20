@@ -13,7 +13,9 @@ var ServicePreview = require("../../themes/previews/service");
 var $ = require("jquery");
 var Button = require("../../../js/buttons.js").Button;
 var _ = require("underscore");
-var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var FlashMessages = require("../../../js/flashmessages.js");
+var FlashMessage = FlashMessages.FlashMessage;
+var FlashMessageAfterReload = FlashMessages.FlashMessageAfterReload;
 
 module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -45,9 +47,13 @@ module.exports = React.createClass({
            }
          } else {
            if (urlInsteadOfCallback) {
-            new FlashMessage({type : "success", content: localization.branding.saved, withRedirect: true, redirect: urlInsteadOfCallback, hashChangeOnly : true});
+             new FlashMessageAfterReload({type : "success", content: localization.branding.saved});
+             window.location = urlInsteadOfCallback;
+             $(window).unbind("hashchange");
+             window.location.reload(true);
            } else {
-            new FlashMessage({type : "success", content: localization.branding.saved, withReload: true});
+             new FlashMessageAfterReload({type : "success", content: localization.branding.saved});
+             window.location.reload(true);
            }
          }
        });

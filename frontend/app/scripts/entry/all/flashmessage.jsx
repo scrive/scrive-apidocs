@@ -1,9 +1,10 @@
 var React = require("react");
-var FlashMessage = require("../../../js/flashmessages").FlashMessage;
+var FlashMessages = require("../../../js/flashmessages");
 var $ = require("jquery");
 
 $(function () {
   if (fromTemplateHasFlash) {
-    new FlashMessage(fromTemplateFlash);
+    new FlashMessages.FlashMessage(fromTemplateFlash);
   }
+  FlashMessages.FlashMessageTryFromCookie();
 });

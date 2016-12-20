@@ -47,7 +47,6 @@ import User.Model
 import User.UserControl
 import User.UserView
 import User.Utils
-import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Utils.Monad
 
@@ -69,7 +68,6 @@ userAPI' = choice [
   dir "changepassword"  $ hPost $ toK0 $ apiCallChangeUserPassword,
   dir "updateprofile"   $ hPost $ toK0 $ apiCallUpdateUserProfile,
   dir "changeemail"     $ hPost $ toK0 $ apiCallChangeEmail,
-  dir "addflash"        $ hPost $ toK0 $ apiCallAddFlash,
   dir "paymentinfo"     $ hGet $ toK0 $ apiCallPaymentInfo,
   dir "getcallbackscheme" $ hGet $ toK0 $ apiCallUserGetCallbackScheme,
   dir "testsalesforceintegration" $ hGet $ toK0 $ apiCallTestSalesforceIntegration
@@ -249,16 +247,6 @@ apiCallSendPasswordReminder = api $ do
   sendResetPasswordMail ctx link user = do
     mail <- resetPasswordMail ctx user link
     scheduleEmailSendout $ mail { to = [getMailAddress user] }
-
-apiCallAddFlash :: Kontrakcja m => m Response
-apiCallAddFlash = api $  do
-  color <- getField' "type"
-  content <- getField' "content"
-  case color of
-       "error"   -> addFlashMsg (FlashMessage OperationFailed content)
-       "success" -> addFlashMsg (FlashMessage OperationDone content)
-       _ -> return ()
-  Ok <$> (runJSONGenT $ return ())
 
 apiCallPaymentInfo :: Kontrakcja m => m Response
 apiCallPaymentInfo = api $ do
