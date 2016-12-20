@@ -142,7 +142,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
   withDecodedBody bodyPolicy $ do
     rq <- askRq
     let routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
-    (res, mdres, ConnectionStats{..}, handlerTime) <- withPostgreSQL (unConnectionSource $ connsource appGlobals detailedConnectionTracker) $ do
+    (res, ConnectionStats{..}, handlerTime) <- withPostgreSQL (unConnectionSource $ connsource appGlobals detailedConnectionTracker) $ do
       logInfo_ "Retrieving session"
       session <- getCurrentSession
       logInfo_ "Initializing context"
@@ -158,7 +158,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
 
       logInfo "Handler started" $ object routeLogData
 
-      (res, mdres, handlerTime) <- localData [identifier_ $ sesID session] $ do
+      (res, handlerTime) <- localData [identifier_ $ sesID session] $ do
         startTime <- liftBase getCurrentTime
         -- Make Response filters local to the main request handler so
         -- that they do not interfere with delayed response.
@@ -180,17 +180,10 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
             rollback -- if exception was thrown, rollback everything
             return response
 
-        return (res, ctxdelayedresponse ctx', timeDiff finishTime startTime)
+        return (res, timeDiff finishTime startTime)
 
       stats <- getConnectionStats
-      return (res, mdres, stats, handlerTime)
-
-    -- Override response with delayed one if appropriate.
-    finalResponse <- contentLength <$> case mdres of
-      Nothing -> return res
-      Just dr -> do
-        logInfo_ "Waiting for delayed response"
-        maybe (return res) (E.evaluate . force) =<< unDelayedResponse dr
+      return (res, stats, handlerTime)
 
     realFinishTime <- liftBase getCurrentTime
     logInfo "Handler finished" . object $ [
@@ -204,7 +197,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
       , "full_time" .= timeDiff realFinishTime realStartTime
       ] ++ routeLogData
 
-    return finalResponse
+    return $ contentLength res
   where
     timeDiff :: UTCTime -> UTCTime -> Double
     timeDiff t = realToFrac . diffUTCTime t
@@ -355,6 +348,5 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , ctxbrandeddomain = brandeddomain
         , ctxsalesforceconf = salesforceConf appConf
         , ctxnetsconfig = netsConfig appConf
-        , ctxdelayedresponse = Nothing
         , ctxthreadjoins = []
         }
