@@ -29,12 +29,12 @@ def check_basic_sign(test, drv, api):
     drv.screenshot()
 
     # click final sign button and wait for confirmation modal to show up
-    drv.wait_for_element('.section.sign .button.action').click()
+    drv.wait_for_element_and_click('.section.sign .button.action')
     drv.wait_for_element('.above-overlay')
     drv.screenshot(first_sleep_for=1)
 
     # confirm signing
-    drv.wait_for_element('.section.sign .button.action').click()
+    drv.wait_for_element_and_click('.section.sign .button.action')
     drv.screenshot(first_sleep_for=1)
 
     # wait for modal to disappear
@@ -56,11 +56,11 @@ def check_sign_with_signsuccessredirect(test, drv, api):
 
     # click final sign button and wait for confirmation modal to show up
     drv.scroll_to_bottom()
-    drv.wait_for_element('.section.sign .button.action').click()
+    drv.wait_for_element_and_click('.section.sign .button.action')
     drv.wait_for_element('.above-overlay')
 
     # confirm signing
-    drv.wait_for_element('.section.sign .button.action').click()
+    drv.wait_for_element_and_click('.section.sign .button.action')
 
     # wait until we are redirected to google
     drv.wait(30).until(expected_conditions.title_contains('Google'))
