@@ -30,23 +30,19 @@ getCompanyForUser user = dbQuery $ GetCompanyByUserID $ userid user
    Guard against a POST with no logged in user.
    If they are not logged in, redirect to login page.
 -}
-withUserPost :: Kontrakcja m => m KontraLink -> m KontraLink
+withUserPost :: Kontrakcja m => m a -> m (Either (FlashMessage, KontraLink) a)
 withUserPost action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
-         Just _  -> action
-         Nothing -> return $ LinkLogin (ctxlang ctx) NotLogged
+         Just _  -> Right <$> action
+         Nothing -> return $ Left (flashMessageLoginRedirect, LinkLogin (ctxlang ctx))
 
 {- |
    Guard against a GET with no logged in user.
    If they are not logged in, redirect to login page.
 -}
-withUserGet :: Kontrakcja m => m a -> m (Either KontraLink a)
-withUserGet action = do
-  ctx <- getContext
-  case ctxmaybeuser ctx of
-    Just _  -> Right <$> action
-    Nothing -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged
+withUserGet :: Kontrakcja m => m a -> m (Either (FlashMessage, KontraLink) a)
+withUserGet = withUserPost
 
 {- |
    Guard against a GET with logged in users who have not signed the TOS agreement.

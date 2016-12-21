@@ -97,7 +97,7 @@ import Util.Zlib (decompressIfPossible)
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified GuardTime as GuardTime
 
-handleNewDocument :: Kontrakcja m => m KontraLink
+handleNewDocument :: Kontrakcja m => m Response
 handleNewDocument = do
   ctx <- getContext
   if (isJust $ ctxmaybeuser ctx)
@@ -169,7 +169,7 @@ handleNewDocument = do
             _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink, othersiglink'] actor
             dbUpdate $ SetDocumentUnsavedDraft True
         return $ LinkIssueDoc (documentid doc)
-     else return $ LinkLogin (ctxlang ctx) LoginTry
+     else return $ LinkLogin (ctxlang ctx)
 {-
   Document state transitions are described in DocState.
 
@@ -441,18 +441,14 @@ handleDownloadClosedFile did sid mh _nameForBrowser = do
     return $ respondWithPDF True content
    else respond404
 
-handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either KontraLink JSValue)
-handleResend docid signlinkid  = do
-  ctx <- getContext
-  case ctxmaybeuser ctx of
-    Nothing -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged
-    Just _  -> Right <$> do
-      getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
-        signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
-        customMessage <- fmap strip <$> getField "customtext"
-        actor <- guardJustM $ fmap mkAuthorActor getContext
-        _ <- sendReminderEmail customMessage actor False signlink
-        J.runJSONGenT (return ())
+handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either (FlashMessage, KontraLink) JSValue)
+handleResend docid signlinkid = userWithPost $ do
+  getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
+    signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
+    customMessage <- fmap strip <$> getField "customtext"
+    actor <- guardJustM $ fmap mkAuthorActor getContext
+    _ <- sendReminderEmail customMessage actor False signlink
+    J.runJSONGenT (return ())
 
 -- This only works for undelivered mails
 handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
@@ -608,4 +604,3 @@ addEventForVisitingSigningPageIfNeeded ev sl = do
   doc <- theDocument
   when (isPending doc && isNothing (maybesigninfo sl)) $
     void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg ev  (return ()) (Just sl) Nothing =<< signatoryActor ctx sl
-

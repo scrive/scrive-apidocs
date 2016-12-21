@@ -60,39 +60,17 @@ data FlashMessage = FlashMessage {
 toFlashMsg :: FlashType -> String -> FlashMessage
 toFlashMsg = FlashMessage
 
-updateFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => [FlashMessage] -> [FlashMessage] -> m ()
-updateFlashCookie oldflashes newflashes =
-    if null oldflashes && not (null newflashes)
-       then addFlashCookie $ toCookieValue newflashes
-       else
-           if not (null oldflashes) && null newflashes
-              then removeFlashCookie
-              else return ()
+toCookieValue :: FlashMessage -> String
+toCookieValue flash =
+    "{\"type\":\"" <> flashtypestr <> "\", \"content\":\"" <> flashMessage flash <> "\"}"
+  where
+    flashtypestr = flashTypeToStr . flashType $ flash
 
-toCookieValue :: [FlashMessage] -> String
-toCookieValue flashes =
-    BS.unpack . B64.encode . BS.concat
-    . BSL.toChunks . GZip.compress . BSLU.fromString $ show flashes
-
-fromCookieValue :: String -> IO (Maybe [FlashMessage])
-fromCookieValue flashesdata = do
-  eflashes <- E.try $ E.evaluate flashes
-  case eflashes of
-    Left (_ :: E.SomeException) -> return Nothing
-    Right (x :: Maybe [FlashMessage]) -> return x
-  where flashes = case B64.decode $ BS.pack flashesdata of
-                    Right s -> maybeRead $ BSLU.toString $ GZip.decompress $ BSL.fromChunks [s]
-                    _       -> Nothing
+flashTypeToStr :: FlashType -> String
+flashTypeToStr OperationDone   = "success"
+flashTypeToStr OperationFailed = "error"
 
 addFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => String -> m ()
 addFlashCookie flashesdata = do
     ishttps <- isHTTPS
-    addHttpOnlyCookie ishttps (MaxAge $ 60*60*24) $ mkCookie "flashes" $ flashesdata
-
-flashDataFromCookie :: ServerMonad m => m (Maybe String)
-flashDataFromCookie = lookCookieValue "flashes"
-
-removeFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => m ()
-removeFlashCookie = do
-    ishttps <- isHTTPS
-    addHttpOnlyCookie ishttps Expired $ mkCookie "flashes" ""
+    addHttpOnlyCookie ishttps (MaxAge $ 60*60*24) $ mkCookie "flashmessage" $ flashesdata

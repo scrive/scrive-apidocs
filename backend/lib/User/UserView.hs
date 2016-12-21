@@ -13,7 +13,7 @@ module User.UserView (
     mailEmailChangeRequest,
 
     -- flash messages
-    flashMessageLoginRedirectReason,
+    flashMessageLoginRedirect,
     flashMessageUserDetailsSaved,
     flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
@@ -166,16 +166,10 @@ pageDoYouWantToChangeEmail ctx newemail =
     F.value "newemail" $ unEmail newemail
     entryPointFields ctx
 
-flashMessageLoginRedirectReason :: TemplatesMonad m => LoginRedirectReason -> m (Maybe FlashMessage)
-flashMessageLoginRedirectReason reason =
-  case reason of
-       LoginTry             -> return Nothing
-       NotLogged            -> flashWith "notlogged"
-       NotLoggedAsSuperUser -> flashWith "notsu"
-       InvalidLoginInfo _   -> flashWith "invloginfo"
-  where
-    flashWith msg = Just . toFlashMsg OperationFailed <$>
-      (renderTemplate "flashMessageLoginPageRedirectReason" $ F.value msg True)
+flashMessageLoginRedirect :: TemplatesMonad m => m FlashMessage
+flashMessageLoginRedirect =
+  toFlashMsg OperationFailed <$>
+      (renderTemplate "flashMessageLoginPageRedirectReason" $ F.value "notlogged" True)
 
 flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
 flashMessageUserDetailsSaved =

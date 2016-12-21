@@ -33,12 +33,12 @@ import KontraPrelude
 import Mails.SendMail
 import MinutesTime
 import Payments.Model
+import Rou
 import User.Action
 import User.Email
 import User.History.Model
 import User.UserControl
 import User.Utils
-import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 
@@ -265,20 +265,19 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
     the old stuff that was based in UserID.  It checks that the logged in
     user has actually been invited to join the company in the URL.
 -}
-handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either KontraLink (Either KontraLink String))
+handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either (FlashMessage, KontraLink) (Either (FlashMessage, KontraLink) String))
 handleGetBecomeCompanyAccount companyid = withUserGet $ do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   invite <- dbQuery $ GetCompanyInvite companyid (userid user)
   case invite of
        Nothing -> do
-        addFlashM $ flashMessageBecomeCompanyLogInDifferentUser
-        return $ Left LinkAccount
+        return $ Left (flashMessageBecomeCompanyLogInDifferentUser, LinkAccount)
        _ -> do
         ctx <- getContext
         newcompany <- guardJustM $ dbQuery $ GetCompany companyid
         Right <$> pageDoYouWantToBeCompanyAccount ctx newcompany
 
-handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m KontraLink
+handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either (FlashMessage, KontraLink) (FlashMessage, KontraLink))
 handlePostBecomeCompanyAccount cid = withUserPost $ do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   _ <- guardJustM $ dbQuery $ GetCompanyInvite cid (userid user)
@@ -288,5 +287,4 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
   _ <- dbUpdate $ RemoveCompanyInvite cid (userid user)
   -- if we are inviting a user with a plan to join the company, we
   -- should delete their personal plan
-  addFlashM $ flashMessageUserHasBecomeCompanyAccount newcompany
-  return $ LinkAccount
+  return (flashMessageUserHasBecomeCompanyAccount, LinkAccount)

@@ -224,9 +224,6 @@ standardPageFields ctx mcompanyui ad = do
   F.value "langcode" $ codeFromLang $ ctxlang ctx
   F.value "logged" $ isJust (ctxmaybeuser ctx)
   F.value "padlogged" $ isJust (ctxmaybepaduser ctx)
-  case listToMaybe $ ctxflashmessages ctx of
-    Just f -> F.object "flash" $ flashMessageFields f
-    _ -> return ()
   F.value "hostpart" $ ctxDomainUrl ctx
   F.value "production" (ctxproduction ctx)
   F.value "brandingdomainid" (show . bdid . ctxbrandeddomain $ ctx)
@@ -292,11 +289,3 @@ entryPointFields :: TemplatesMonad m => Context -> Fields m ()
 entryPointFields ctx =  do
   F.value "cdnbaseurl" (ctxcdnbaseurl ctx)
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
-
-
-flashMessageFields :: (Monad m) => FlashMessage -> Fields m ()
-flashMessageFields flash = do
-  F.value "type" $  case flashType flash of
-    OperationDone   -> ("success" :: String)
-    OperationFailed -> ("error" :: String)
-  F.value "message" $ replace "\"" "'" $ filter (not . isControl) $ flashMessage flash

@@ -128,12 +128,6 @@ onlyBackdoorOpen a = do
     else respond404
 
 {- |
-   Clears all the flash messages from the context.
--}
-clearFlashMsgs:: KontraMonad m => m ()
-clearFlashMsgs = modifyContext $ \ctx -> ctx { ctxflashmessages = [] }
-
-{- |
    Sticks the logged in user onto the context
 -}
 logUserToContext :: Kontrakcja m => Maybe User -> m ()

@@ -76,7 +76,6 @@ import User.UserControl
 import User.UserView
 import User.Utils
 import Util.Actor
-import Util.FlashUtil
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
@@ -522,13 +521,12 @@ handleBackdoorQuery = onlySalesOrAdmin $ onlyBackdoorOpen $ do
     Nothing -> respond404
     Just email -> renderFromBody $ mailContent email
 
-sendInviteAgain :: Kontrakcja m => m KontraLink
+sendInviteAgain :: Kontrakcja m => m (FlashMessage, KontraLink)
 sendInviteAgain = onlySalesOrAdmin $ do
   uid <- guardJustM $ readField "userid"
   user <- guardJustM $ dbQuery $ GetUserByID uid
   sendNewUserMail user
-  addFlashM flashMessageNewActivationLinkSend
-  return LoopBack
+  return (flashMessageNewActivationLinkSend, LoopBack)
 
 -- This method can be used to reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink

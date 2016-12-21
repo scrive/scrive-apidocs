@@ -30,15 +30,16 @@ import Happstack.StaticRouting
 import Text.JSON
 import qualified Data.Aeson as A
 
-import AppView as V
-import Happstack.Fields
-import Kontra
-import KontraLink
-import KontraPrelude
-import Redirect
-import Util.CSVUtil
-import Util.ZipUtil
-import Utils.HTTP
+import           AppView as V
+import qualified FlashMessage as F
+import           Happstack.Fields
+import           Kontra
+import           KontraLink
+import           KontraPrelude
+import           Redirect
+import           Util.CSVUtil
+import           Util.ZipUtil
+import           Utils.HTTP
 
 class ToResp a where
     toResp :: a -> Kontra Response
@@ -66,6 +67,15 @@ instance ToResp () where
 
 instance (ToResp a , ToResp b) => ToResp (Either a b) where
     toResp = either toResp toResp
+
+instance ToResp F.FlashMessage where
+  toResp = F.addFlashCookie . F.toCookieValue
+
+instance (ToResp a) => ToResp (Maybe a) where
+  toResp = maybe (return ()) toResp
+
+instance (ToResp a, ToResp b) => ToResp (a, b) where
+    toResp (a, b) = toResp a >> toResp b
 
 instance ToResp CSV where
     toResp = return . toResponse

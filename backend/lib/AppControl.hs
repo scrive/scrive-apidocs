@@ -165,7 +165,6 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         ((eres, ctx'), resFilter) <- getFilter $ routeHandlers ctx
         finishTime <- liftBase getCurrentTime
 
-        F.updateFlashCookie (ctxflashmessages ctx) (ctxflashmessages ctx')
         issecure <- isSecure
         let usehttps = useHttps appConf
         when (issecure || not usehttps) $ do
@@ -320,7 +319,6 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
 
       return Context {
           ctxmaybeuser = muser
-        , ctxflashmessages = flashmessages
         , ctxtime = minutestime
         , ctxclientname = clientName `mplus` userAgent
         , ctxclienttime = clientTime

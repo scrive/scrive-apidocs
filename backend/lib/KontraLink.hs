@@ -36,7 +36,7 @@ data LoginRedirectReason = LoginTry
 -}
 data KontraLink
     = LinkHome Lang
-    | LinkLogin Lang LoginRedirectReason
+    | LinkLogin Lang
     | LinkLoginDirect Lang
     | LinkLogout
     | LinkSignup Lang

@@ -16,7 +16,6 @@ import KontraPrelude
 import User.Lang
 import User.UserView
 import Util.FinishWith
-import Util.FlashUtil
 import Utils.HTTP
 import Utils.String
 
@@ -34,16 +33,14 @@ sendRedirect LoopBack = do
   let link = fromMaybe (show mainlink) referer
   seeOther link =<< setRsCode 303 (seeOtherXML link)
 
-sendRedirect (LinkLogin lang reason) = do
+sendRedirect (LinkLogin lang) = do
   curr <- rqUri <$> askRq
   qr <- rqQuery <$> askRq
   referer <- getField "referer"
-  addFlashM $ flashMessageLoginRedirectReason reason
   let link' = "/" ++ (codeFromLang lang) ++  "/enter?referer=" ++ (urlEncode $ fromMaybe (curr++qr) referer)
   -- NOTE We could add  "#log-in" at the end. But it would overwrite hash that can be there, and hash is not send to server.
   -- So we let frontend take care of that on it's own. And frontend will fetch hash for referer
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
-
 
 -- Backward compatibility. Someone could bookmark /login?referer=/d. We will redirect him to /en/enter. We need to make sure to keep original referer.
 sendRedirect (LinkLoginDirect lang) = do
@@ -54,7 +51,7 @@ sendRedirect (LinkLoginDirect lang) = do
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
 
 sendRedirect link = do
- seeOther (show link) =<< setRsCode 303 (seeOtherXML $ show link)
+  seeOther (show link) =<< setRsCode 303 (seeOtherXML $ show link)
 
 sendSecureLoopBack :: Kontrakcja m => m Response
 sendSecureLoopBack = do
