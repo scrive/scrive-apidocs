@@ -131,6 +131,11 @@ instance ToXML AuthRequest where
       element "displayName" arqDisplayName
       element "personalNumber" arqPersonalNumber
       element "provider" arqProvider
+      element "requirementAlternatives" $ do
+        element "requirement" $ do
+          element "condition" $ do
+            element "key" ("AllowFingerprint" :: T.Text)
+            element "value" ("yes" :: T.Text)
 
 ----------------------------------------
 
