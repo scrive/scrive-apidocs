@@ -266,19 +266,20 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
     user has actually been invited to join the company in the URL.
 -}
 handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either (FlashMessage, KontraLink) (Either (FlashMessage, KontraLink) String))
-handleGetBecomeCompanyAccount companyid = withUserGet $ do
+handleGetBecomeCompanyAccount companyid = withUser $ do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   invite <- dbQuery $ GetCompanyInvite companyid (userid user)
   case invite of
        Nothing -> do
-        return $ Left (flashMessageBecomeCompanyLogInDifferentUser, LinkAccount)
+         flashmessage <- flashMessageBecomeCompanyLogInDifferentUser
+         return $ Left (flashmessage, LinkAccount)
        _ -> do
         ctx <- getContext
         newcompany <- guardJustM $ dbQuery $ GetCompany companyid
         Right <$> pageDoYouWantToBeCompanyAccount ctx newcompany
 
 handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either (FlashMessage, KontraLink) (FlashMessage, KontraLink))
-handlePostBecomeCompanyAccount cid = withUserPost $ do
+handlePostBecomeCompanyAccount cid = withUser $ do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   _ <- guardJustM $ dbQuery $ GetCompanyInvite cid (userid user)
   newcompany <- guardJustM $ dbQuery $ GetCompany cid
@@ -287,4 +288,5 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
   _ <- dbUpdate $ RemoveCompanyInvite cid (userid user)
   -- if we are inviting a user with a plan to join the company, we
   -- should delete their personal plan
-  return (flashMessageUserHasBecomeCompanyAccount, LinkAccount)
+  flashmessage <- flashMessageUserHasBecomeCompanyAccount
+  return (flashmessage, LinkAccount)

@@ -76,7 +76,7 @@ handleCreateNew = do
   J.runJSONGenT $ return ()
 
 jsonAttachmentsList ::  Kontrakcja m => m (Either KontraLink Response)
-jsonAttachmentsList = withUserGet $ do
+jsonAttachmentsList = withUser $ do
   uid <- userid <$> guardJustM (ctxmaybeuser <$> getContext)
 
   domain <- getField "domain" >>= \case

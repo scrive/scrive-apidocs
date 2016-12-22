@@ -137,8 +137,7 @@ instance MonadBaseControl IO TestEnv where
 runTestKontraHelper :: BasicConnectionSource -> Request -> Context -> Kontra a -> TestEnv (a, Context, Response -> Response)
 runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   filecache <- MemCache.new BS.length 52428800
-  let noflashctx = ctx { ctxflashmessages = [] }
-      amazoncfg = AWS.AmazonConfig Nothing filecache Nothing
+  let amazoncfg = AWS.AmazonConfig Nothing filecache Nothing
   now <- currentTime
   rng <- asks teRNGState
   runLogger <- asks teRunLogger
@@ -148,7 +147,7 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   -- being already in progress
   commit' ts { tsAutoTransaction = False }
   ((res, ctx'), st) <- E.finally
-    (liftBase $ runStateT (unReqHandlerT . runLogger . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT pool ts $ runStateT (unKontra tk) noflashctx) $ ReqHandlerSt rq id now)
+    (liftBase $ runStateT (unReqHandlerT . runLogger . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT pool ts $ runStateT (unKontra tk) ctx) $ ReqHandlerSt rq id now)
     -- runDBT commits and doesn't run another transaction, so begin new one
     begin
   return (res, ctx', hsFilter st)
@@ -278,7 +277,6 @@ mkContext lang = do
     filecache <- MemCache.new BS.length 52428800
     return Context {
           ctxmaybeuser = Nothing
-        , ctxflashmessages = []
         , ctxtime = time
         , ctxclientname = Nothing
         , ctxclienttime = Nothing

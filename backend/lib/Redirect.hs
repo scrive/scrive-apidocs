@@ -9,6 +9,7 @@ import Network.HTTP.Base (urlEncode)
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS
 
+import FlashMessage (addFlashCookie, toCookieValue)
 import Happstack.Fields
 import Kontra
 import KontraLink
@@ -66,5 +67,7 @@ guardLoggedIn = do
   case ctxmaybeuser of
     Nothing -> do
       ctx <- getContext
-      finishWith $ sendRedirect $ LinkLogin (ctxlang ctx) NotLogged
+      finishWith $ do
+        _ <- (addFlashCookie . toCookieValue) =<< flashMessageLoginRedirect
+        sendRedirect $ LinkLogin (ctxlang ctx)
     Just _ -> return ()

@@ -21,7 +21,7 @@ import User.Utils
 
 {- This handlers sets SalesforceScheme for callbacks for give user -}
 handleSalesforceIntegration :: Kontrakcja m => m (Either KontraLink KontraLink)
-handleSalesforceIntegration  = withUserGet $ do
+handleSalesforceIntegration  = withUser $ do
   ctx <- getContext
   case ctxsalesforceconf ctx of
     Nothing -> noConfigurationError "Salesforce"

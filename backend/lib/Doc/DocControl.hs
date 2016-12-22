@@ -98,78 +98,74 @@ import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified GuardTime as GuardTime
 
 handleNewDocument :: Kontrakcja m => m Response
-handleNewDocument = do
-  ctx <- getContext
-  if (isJust $ ctxmaybeuser ctx)
-     then withUserPost $ do
-        user <- guardJustM $ ctxmaybeuser <$> getContext
-        title <- renderTemplate_ "newDocumentTitle"
-        actor <- guardJustM $ mkAuthorActor <$> getContext
-        mtimezonename <- lookCookieValue "timezone"
-        case mtimezonename of
-          Nothing -> logInfo_ "'timezone' cookie not found"
-          _ -> return ()
-        timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
-        timestamp <- formatTimeSimpleWithTZ timezone (ctxtime ctx)
-        doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ timestamp) Signable timezone 1 actor
-        -- Default document on the frontend has different requirements,
-        -- this sets up the signatories to match those requirements.
-        withDocument doc $ do
-            authorsiglink <- guardJust $ find (\sl -> signatoryisauthor sl) (documentsignatorylinks doc)
-            othersiglink  <- guardJust $ find (\sl -> not $ signatoryisauthor sl)  (documentsignatorylinks doc)
-            let fields  = [
-                    SignatoryNameField $ NameField {
-                        snfID                     = (unsafeSignatoryFieldID 0)
-                      , snfNameOrder              = NameOrder 1
-                      , snfValue                  = ""
-                      , snfObligatory             = False
-                      , snfShouldBeFilledBySender = False
-                      , snfPlacements             = []
-                    }
-                  , SignatoryNameField $ NameField {
-                        snfID                     = (unsafeSignatoryFieldID 0)
-                      , snfNameOrder              = NameOrder 2
-                      , snfValue                  = ""
-                      , snfObligatory             = False
-                      , snfShouldBeFilledBySender = False
-                      , snfPlacements             = []
-                    }
-                  , SignatoryEmailField $ EmailField {
-                        sefID                     = (unsafeSignatoryFieldID 0)
-                      , sefValue                  = ""
-                      , sefObligatory             = True
-                      , sefShouldBeFilledBySender = False
-                      , sefPlacements             = []
-                    }
-                  , SignatoryMobileField $ MobileField {
-                        smfID                     = (unsafeSignatoryFieldID 0)
-                      , smfValue                  = ""
-                      , smfObligatory             = False
-                      , smfShouldBeFilledBySender = False
-                      , smfPlacements             = []
-                    }
-                  , SignatoryCompanyField $ CompanyField {
-                        scfID                     = (unsafeSignatoryFieldID 0)
-                      , scfValue                  = ""
-                      , scfObligatory             = False
-                      , scfShouldBeFilledBySender = False
-                      , scfPlacements             = []
-                    }
-                  , SignatoryCompanyNumberField $ CompanyNumberField {
-                        scnfID                     = (unsafeSignatoryFieldID 0)
-                      , scnfValue                  = ""
-                      , scnfObligatory             = False
-                      , scnfShouldBeFilledBySender = False
-                      , scnfPlacements             = []
-                    }
-                  ]
-                othersiglink' = othersiglink { signatorysignorder = SignOrder 1
-                                             , signatoryfields = fields
-                                             }
-            _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink, othersiglink'] actor
-            dbUpdate $ SetDocumentUnsavedDraft True
-        return $ LinkIssueDoc (documentid doc)
-     else return $ LinkLogin (ctxlang ctx)
+handleNewDocument = withUser $ do
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  title <- renderTemplate_ "newDocumentTitle"
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  mtimezonename <- lookCookieValue "timezone"
+  case mtimezonename of
+    Nothing -> logInfo_ "'timezone' cookie not found"
+    _ -> return ()
+  timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
+  timestamp <- formatTimeSimpleWithTZ timezone (ctxtime ctx)
+  doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ timestamp) Signable timezone 1 actor
+  -- Default document on the frontend has different requirements,
+  -- this sets up the signatories to match those requirements.
+  withDocument doc $ do
+      authorsiglink <- guardJust $ find (\sl -> signatoryisauthor sl) (documentsignatorylinks doc)
+      othersiglink  <- guardJust $ find (\sl -> not $ signatoryisauthor sl)  (documentsignatorylinks doc)
+      let fields  = [
+              SignatoryNameField $ NameField {
+                  snfID                     = (unsafeSignatoryFieldID 0)
+                , snfNameOrder              = NameOrder 1
+                , snfValue                  = ""
+                , snfObligatory             = False
+                , snfShouldBeFilledBySender = False
+                , snfPlacements             = []
+              }
+            , SignatoryNameField $ NameField {
+                  snfID                     = (unsafeSignatoryFieldID 0)
+                , snfNameOrder              = NameOrder 2
+                , snfValue                  = ""
+                , snfObligatory             = False
+                , snfShouldBeFilledBySender = False
+                , snfPlacements             = []
+              }
+            , SignatoryEmailField $ EmailField {
+                  sefID                     = (unsafeSignatoryFieldID 0)
+                , sefValue                  = ""
+                , sefObligatory             = True
+                , sefShouldBeFilledBySender = False
+                , sefPlacements             = []
+              }
+            , SignatoryMobileField $ MobileField {
+                  smfID                     = (unsafeSignatoryFieldID 0)
+                , smfValue                  = ""
+                , smfObligatory             = False
+                , smfShouldBeFilledBySender = False
+                , smfPlacements             = []
+              }
+            , SignatoryCompanyField $ CompanyField {
+                  scfID                     = (unsafeSignatoryFieldID 0)
+                , scfValue                  = ""
+                , scfObligatory             = False
+                , scfShouldBeFilledBySender = False
+                , scfPlacements             = []
+              }
+            , SignatoryCompanyNumberField $ CompanyNumberField {
+                  scnfID                     = (unsafeSignatoryFieldID 0)
+                , scnfValue                  = ""
+                , scnfObligatory             = False
+                , scnfShouldBeFilledBySender = False
+                , scnfPlacements             = []
+              }
+            ]
+          othersiglink' = othersiglink { signatorysignorder = SignOrder 1
+                                       , signatoryfields = fields
+                                       }
+      _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink, othersiglink'] actor
+      dbUpdate $ SetDocumentUnsavedDraft True
+
 {-
   Document state transitions are described in DocState.
 
@@ -182,7 +178,7 @@ formatTimeSimpleWithTZ tz t = do
   fetchOne runIdentity
 
 showCreateFromTemplate :: Kontrakcja m => m (Either KontraLink String)
-showCreateFromTemplate = withUserGet $ pageCreateFromTemplate =<< getContext
+showCreateFromTemplate = withUser $ pageCreateFromTemplate =<< getContext
 
 {- |
     Call after signing in order to save the document for any user, and

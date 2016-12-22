@@ -526,7 +526,8 @@ sendInviteAgain = onlySalesOrAdmin $ do
   uid <- guardJustM $ readField "userid"
   user <- guardJustM $ dbQuery $ GetUserByID uid
   sendNewUserMail user
-  return (flashMessageNewActivationLinkSend, LoopBack)
+  flashmessage <- flashMessageNewActivationLinkSend
+  return (flashmessage, LoopBack)
 
 -- This method can be used to reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink

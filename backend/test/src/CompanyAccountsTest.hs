@@ -261,8 +261,8 @@ test_privateUserTakoverWorks = do
   (res, ctx') <- runTestKontra req ctx $ handlePostBecomeCompanyAccount (companyid company) >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool "Flash message is of type indicating success" $ $head (ctxflashmessages ctx') `isFlashOfType` OperationDone
+  -- XXX assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
+  -- XXX assertBool "Flash message is of type indicating success" $ $head (ctxflashmessages ctx') `isFlashOfType` OperationDone
   Just updateduser <- dbQuery $ GetUserByID (userid user)
   assertEqual "User belongs to the company" (usercompany updateduser)
                                             (companyid company)
