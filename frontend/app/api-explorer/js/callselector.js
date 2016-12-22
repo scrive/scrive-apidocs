@@ -72,7 +72,7 @@ window.CallSelector = Backbone.View.extend({
     var model = this.model;
     var select = $("<select id='version-selector' class='form-control'>");
     select.append($("<option value='v1'>API version 1</option>").attr("selected", model.apiVersion() == "v1"));
-    select.append($("<option value='v2'>API version 2 (beta)</option>").attr("selected", model.apiVersion() == "v2"));
+    select.append($("<option value='v2'>API version 2</option>").attr("selected", model.apiVersion() == "v2"));
     select.change(function () {
       model.changeAPIVersion(select.val());
     });
