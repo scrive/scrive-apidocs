@@ -73,7 +73,7 @@ ls -lh "$TMP/$finalfile"
 if [ $AMZN -ne 0 ]
 then
   echo "Pushing to amazon"
-  s3cmd --config=/home/builds/.s3cfg --acl-private put "$TMP/$finalfile" s3://production-builds
+  s3cmd --config=$HOME/.s3cfg --acl-private put "$TMP/$finalfile" s3://production-builds
 
   # Checking of MD5 sums temporarily disabled as s3cmd lost the ability to return proper MD5 sum from Amazon.
   #
