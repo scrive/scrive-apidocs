@@ -9,6 +9,7 @@ new APICallV2({
   getCallUrl: function () {
           return "/api/v2/documents/" + this.get("document_id") + "/evidenceattachments";
         },
+  isInteral: true,
   needsAuthorization: true,
   tryToUseDocumentIDWithCopy: true,
   params: [

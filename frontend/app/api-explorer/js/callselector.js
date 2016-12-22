@@ -10,9 +10,9 @@ window.CallSelector = Backbone.View.extend({
     var select = $("<select id='call-selector' class='form-control'>");
     var availableCalls;
     if (model.apiVersion() == "v1") {
-      availableCalls = APICalls.apiV1Calls();
+      availableCalls = APICalls.apiV1Calls(false);
     } else {
-      availableCalls = APICalls.apiV2Calls();
+      availableCalls = APICalls.apiV2Calls(false);
     }
     availableCalls = _.sortBy(availableCalls, function (c) { return c.name(); });
 

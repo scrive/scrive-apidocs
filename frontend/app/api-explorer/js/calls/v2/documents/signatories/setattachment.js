@@ -11,6 +11,7 @@ new APICallV2({
                                       + this.get("signatory_id")
                                       + "/setattachment";
         },
+  isInternal: true,
   needsAuthorization: true,
   params: [
           window.APIV2CallParamDocumentID,
