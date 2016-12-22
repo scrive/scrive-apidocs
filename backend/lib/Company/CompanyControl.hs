@@ -95,7 +95,7 @@ handleGetDomainThemes = do
   handleGetThemesUsedByDomain bd
 
 handleGetSignviewTheme :: Kontrakcja m => m Aeson.Value
-handleGetSignviewTheme = withCompanyUser $ \(_,company) -> do
+handleGetSignviewTheme = withUserCompany $ \(_,company) -> do
   cu <- dbQuery $ GetCompanyUI $ companyid company
   bd <- ctxbrandeddomain <$> getContext
   handleGetTheme $ fromMaybe (bdSignviewTheme bd) (companySignviewTheme cu)

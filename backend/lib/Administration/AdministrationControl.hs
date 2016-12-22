@@ -521,13 +521,13 @@ handleBackdoorQuery = onlySalesOrAdmin $ onlyBackdoorOpen $ do
     Nothing -> respond404
     Just email -> renderFromBody $ mailContent email
 
-sendInviteAgain :: Kontrakcja m => m (FlashMessage, KontraLink)
+sendInviteAgain :: Kontrakcja m => m (Redir ())
 sendInviteAgain = onlySalesOrAdmin $ do
   uid <- guardJustM $ readField "userid"
   user <- guardJustM $ dbQuery $ GetUserByID uid
   sendNewUserMail user
   flashmessage <- flashMessageNewActivationLinkSend
-  return (flashmessage, LoopBack)
+  return . Left $ (Just flashmessage, LoopBack)
 
 -- This method can be used to reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink

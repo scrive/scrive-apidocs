@@ -4,7 +4,6 @@ module Kontra
     , module Context
     , Kontra(..)
     , runKontra
-    , clearFlashMsgs
     , logUserToContext
     , logPadUserToContext
     , unsafeSessionTakeover

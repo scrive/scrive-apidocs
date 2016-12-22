@@ -33,7 +33,6 @@ import KontraPrelude
 import Mails.SendMail
 import MinutesTime
 import Payments.Model
-import Rou
 import User.Action
 import User.Email
 import User.History.Model
@@ -265,22 +264,20 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
     the old stuff that was based in UserID.  It checks that the logged in
     user has actually been invited to join the company in the URL.
 -}
-handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either (FlashMessage, KontraLink) (Either (FlashMessage, KontraLink) String))
-handleGetBecomeCompanyAccount companyid = withUser $ do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
+handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Redir String)
+handleGetBecomeCompanyAccount companyid = (join <$>) $ withUser $ \user -> do
   invite <- dbQuery $ GetCompanyInvite companyid (userid user)
   case invite of
-       Nothing -> do
-         flashmessage <- flashMessageBecomeCompanyLogInDifferentUser
-         return $ Left (flashmessage, LinkAccount)
-       _ -> do
-        ctx <- getContext
-        newcompany <- guardJustM $ dbQuery $ GetCompany companyid
-        Right <$> pageDoYouWantToBeCompanyAccount ctx newcompany
+    Nothing -> do
+      flashmessage <- flashMessageBecomeCompanyLogInDifferentUser
+      return $ Left (Just flashmessage, LinkAccount)
+    _ -> do
+      ctx <- getContext
+      newcompany <- guardJustM $ dbQuery $ GetCompany companyid
+      Right <$> pageDoYouWantToBeCompanyAccount ctx newcompany
 
-handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either (FlashMessage, KontraLink) (FlashMessage, KontraLink))
-handlePostBecomeCompanyAccount cid = withUser $ do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
+handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Redir ())
+handlePostBecomeCompanyAccount cid = (join <$>) $ withUser $ \user -> do
   _ <- guardJustM $ dbQuery $ GetCompanyInvite cid (userid user)
   newcompany <- guardJustM $ dbQuery $ GetCompany cid
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) False
@@ -288,5 +285,5 @@ handlePostBecomeCompanyAccount cid = withUser $ do
   _ <- dbUpdate $ RemoveCompanyInvite cid (userid user)
   -- if we are inviting a user with a plan to join the company, we
   -- should delete their personal plan
-  flashmessage <- flashMessageUserHasBecomeCompanyAccount
-  return (flashmessage, LinkAccount)
+  flashmessage <- flashMessageUserHasBecomeCompanyAccount newcompany
+  return . Left $ (Just flashmessage, LinkAccount)

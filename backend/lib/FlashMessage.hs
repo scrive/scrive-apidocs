@@ -2,22 +2,12 @@ module FlashMessage (
       FlashType(..)
     , FlashMessage(..)
     , toFlashMsg
-    , updateFlashCookie
     , addFlashCookie
-    , removeFlashCookie
     , toCookieValue
-    , fromCookieValue
-    , flashDataFromCookie
     ) where
 
 import Control.Monad.IO.Class
 import Happstack.Server hiding (lookCookieValue)
-import qualified Codec.Compression.GZip as GZip
-import qualified Control.Exception.Lifted as E
-import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSLU
 
 import Cookies
 import KontraPrelude hiding (optional)

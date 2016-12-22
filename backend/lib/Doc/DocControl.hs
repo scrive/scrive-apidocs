@@ -97,9 +97,9 @@ import Util.Zlib (decompressIfPossible)
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified GuardTime as GuardTime
 
-handleNewDocument :: Kontrakcja m => m Response
-handleNewDocument = withUser $ do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
+handleNewDocument :: Kontrakcja m => m (Redir ())
+handleNewDocument = withUser $ \user -> do
+  ctx <- getContext
   title <- renderTemplate_ "newDocumentTitle"
   actor <- guardJustM $ mkAuthorActor <$> getContext
   mtimezonename <- lookCookieValue "timezone"
@@ -177,8 +177,9 @@ formatTimeSimpleWithTZ tz t = do
   runQuery_ $ rawSQL "SELECT to_char($1 AT TIME ZONE $2, 'YYYY-MM-DD HH24:MI')" (t, tz)
   fetchOne runIdentity
 
-showCreateFromTemplate :: Kontrakcja m => m (Either KontraLink String)
-showCreateFromTemplate = withUser $ pageCreateFromTemplate =<< getContext
+showCreateFromTemplate :: Kontrakcja m => m (Redir String)
+showCreateFromTemplate = withUser $ \_ -> do
+  pageCreateFromTemplate =<< getContext
 
 {- |
     Call after signing in order to save the document for any user, and
@@ -257,8 +258,8 @@ handleSignShow did slid = logDocumentAndSignatory did slid $ do
 -- |
 --   /ts/[documentid] (doc has to be a draft)
 {-# NOINLINE handleToStartShow #-}
-handleToStartShow :: Kontrakcja m => DocumentID -> m (Either KontraLink Response)
-handleToStartShow documentid = checkUserTOSGet $ do
+handleToStartShow :: Kontrakcja m => DocumentID -> m (Redir Response)
+handleToStartShow documentid = withUserTOS $ \_ -> do
   ctx <- getContext
   document <- getDocByDocIDForAuthor documentid
   ad <- getAnalyticsData
@@ -339,8 +340,8 @@ handleEvidenceAttachment docid file = do
    URL: /d/{documentid}
    Method: GET
  -}
-handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink (Either Response String))
-handleIssueShowGet docid = checkUserTOSGet $ do
+handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Redir (Either Response String))
+handleIssueShowGet docid = withUserTOS $ \_ -> do
   document <- getDocByDocID docid
   muser <- ctxmaybeuser <$> getContext
 
@@ -437,8 +438,8 @@ handleDownloadClosedFile did sid mh _nameForBrowser = do
     return $ respondWithPDF True content
    else respond404
 
-handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either (FlashMessage, KontraLink) JSValue)
-handleResend docid signlinkid = userWithPost $ do
+handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Redir JSValue)
+handleResend docid signlinkid = withUser $ \_ -> do
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
     signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
     customMessage <- fmap strip <$> getField "customtext"

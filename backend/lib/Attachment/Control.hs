@@ -28,7 +28,6 @@ import File.Storage
 import Happstack.Fields
 import InputValidation
 import Kontra
-import KontraLink
 import KontraPrelude
 import Redirect
 import User.Model
@@ -75,10 +74,9 @@ handleCreateNew = do
   _mdoc <- makeAttachmentFromFile input
   J.runJSONGenT $ return ()
 
-jsonAttachmentsList ::  Kontrakcja m => m (Either KontraLink Response)
-jsonAttachmentsList = withUser $ do
-  uid <- userid <$> guardJustM (ctxmaybeuser <$> getContext)
-
+jsonAttachmentsList ::  Kontrakcja m => m (Redir Response)
+jsonAttachmentsList = withUser $ \user -> do
+  let uid = userid user
   domain <- getField "domain" >>= \case
     (Just "All") -> return [AttachmentsOfAuthorDeleteValue uid False, AttachmentsSharedInUsersCompany uid]
     _ -> return [AttachmentsOfAuthorDeleteValue uid False]

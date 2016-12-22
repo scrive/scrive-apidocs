@@ -42,7 +42,6 @@ import Doc.Model
 import File.Storage as F
 import InputValidation
 import Kontra
-import KontraLink
 import KontraPrelude
 import Log.Identifier
 import User.Model
@@ -151,10 +150,8 @@ handleListCSV= do
                }
 
 -- | Main view of the archive
-showArchive :: Kontrakcja m => m (Either KontraLink Response)
-showArchive = checkUserTOSGet $ do
-    tostime <- guardJustM $ join <$> fmap userhasacceptedtermsofservice <$> ctxmaybeuser <$> getContext
-    user    <- guardJustM $ ctxmaybeuser <$> getContext
+showArchive :: Kontrakcja m => m (Redir Response)
+showArchive = withUserTOS $ \(user,tostime) -> do
     mcompany <- dbQuery $ GetCompany (usercompany user)
     ctx <- getContext
     pb <-  pageArchive ctx user mcompany tostime

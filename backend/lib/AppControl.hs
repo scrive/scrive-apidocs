@@ -57,7 +57,6 @@ import User.Model
 import Util.FinishWith
 import Utils.HTTP
 import qualified Amazon as AWS
-import qualified FlashMessage as F
 import qualified MemCache
 
 -- | Global application data
@@ -298,18 +297,6 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
       muser <- getUserFromSession session
       mpaduser <- getPadUserFromSession session
       brandeddomain <- dbQuery $ GetBrandedDomainByURL currhostpart
-
-      mflashmessages <- F.flashDataFromCookie
-      flashmessages <- case mflashmessages of
-                        Nothing -> return []
-                        Just fs -> do
-                          flashes <- liftIO $ F.fromCookieValue fs
-                          case flashes of
-                            Just fs' -> return fs'
-                            _ -> do
-                              logInfo_ "Couldn't read flash messages"
-                              F.removeFlashCookie
-                              return []
 
       -- do reload templates in non-production code
       templates2 <- maybeReadTemplates (production appConf) (templates appGlobals)

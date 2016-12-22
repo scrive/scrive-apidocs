@@ -25,7 +25,6 @@ module AppView(
 
 import Control.Arrow (second)
 import Control.Monad.Catch
-import Data.Char
 import Data.String.Utils hiding (join)
 import Data.Unjson
 import Happstack.Server.SimpleHTTP
@@ -46,7 +45,6 @@ import Branding.Adler32
 import Company.CompanyUI
 import Company.Model
 import DB
-import FlashMessage
 import Kontra
 import KontraPrelude
 import ThirdPartyStats.Core
@@ -78,7 +76,6 @@ renderFromBodyWithFields content fields = do
   ctx <- getContext
   ad <- getAnalyticsData
   res <- simpleHtmlResponse =<< pageFromBody ctx ad content fields
-  clearFlashMsgs
   return res
 
 
@@ -272,7 +269,6 @@ simpleHtmlResponse s = ok $ toResponseBS (BS.fromString "text/html;charset=utf-8
 simpleHtmlResonseClrFlash :: Kontrakcja m => String -> m Response
 simpleHtmlResonseClrFlash rsp = do
   res <- simpleHtmlResponse rsp
-  clearFlashMsgs
   return res
 
 respondWithPDF :: Bool -> BS.ByteString -> Response

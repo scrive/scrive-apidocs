@@ -20,8 +20,8 @@ import User.Model
 import User.Utils
 
 {- This handlers sets SalesforceScheme for callbacks for give user -}
-handleSalesforceIntegration :: Kontrakcja m => m (Either KontraLink KontraLink)
-handleSalesforceIntegration  = withUser $ do
+handleSalesforceIntegration :: Kontrakcja m => m (Redir KontraLink)
+handleSalesforceIntegration  = withUser $ \user -> do
   ctx <- getContext
   case ctxsalesforceconf ctx of
     Nothing -> noConfigurationError "Salesforce"
@@ -35,7 +35,7 @@ handleSalesforceIntegration  = withUser $ do
           case mtoken of
             Left _      -> internalError
             Right token -> do
-              dbUpdate $ UpdateUserCallbackScheme (userid $ $fromJust $ ctxmaybeuser ctx) (SalesforceScheme token)
+              dbUpdate $ UpdateUserCallbackScheme (userid user) (SalesforceScheme token)
               return $ fromMaybe LinkDesignView (LinkExternal <$> mstate)
 
 {- Returns access keys for salesforce user. User by They salesfroce plugin to start propper oauth wokflow. Keys are hardcodded in config file. -}

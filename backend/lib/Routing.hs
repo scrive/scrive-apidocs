@@ -31,7 +31,7 @@ import Text.JSON
 import qualified Data.Aeson as A
 
 import AppView as V
-import FlashMessage (addFlashCookie, toCookieValue)
+import FlashMessage (addFlashCookie, toCookieValue, FlashMessage)
 import Happstack.Fields
 import Kontra
 import KontraLink
@@ -68,14 +68,15 @@ instance ToResp () where
 instance (ToResp a , ToResp b) => ToResp (Either a b) where
     toResp = either toResp toResp
 
-instance ToResp F.FlashMessage where
-  toResp = addFlashCookie . toCookieValue
+instance ToResp a => ToResp (FlashMessage, a) where
+  toResp (flashmessage, a) = do
+    _ <- addFlashCookie . toCookieValue $ flashmessage
+    toResp a
 
-instance (ToResp a) => ToResp (Maybe a) where
-  toResp = maybe (return ()) toResp
-
-instance (ToResp a, ToResp b) => ToResp (a, b) where
-    toResp (a, b) = toResp a >> toResp b
+instance ToResp a => ToResp (Maybe FlashMessage, a) where
+  toResp (mflashmessage, a) = do
+    _ <- maybe (return ()) (addFlashCookie . toCookieValue) mflashmessage
+    toResp a
 
 instance ToResp CSV where
     toResp = return . toResponse

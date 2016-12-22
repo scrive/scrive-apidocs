@@ -8,7 +8,6 @@ import ActionQueue.Core
 import ActionQueue.UserAccountRequest
 import Context
 import DB hiding (query, update)
-import FlashMessage
 import KontraPrelude
 import MagicHash (MagicHash)
 import Mails.Model
