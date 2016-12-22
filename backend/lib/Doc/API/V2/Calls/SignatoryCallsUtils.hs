@@ -13,10 +13,10 @@ import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import API.V2
+import API.V2.Parameters
 import DB
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.JSON.Misc
-import Doc.API.V2.Parameters
 import Doc.DocStateData
 import Doc.DocumentMonad
 import Doc.Model.Update

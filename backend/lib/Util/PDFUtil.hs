@@ -1,14 +1,12 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Doc.Rendering
+-- Module      :  Util.PDFUtil
 -- Maintainer  :  all
 -- Stability   :  development
 -- Portability :  not portable
 --
--- Most of what is connected to storage of documents - getting files from TW and Amazon
--- Also stuff for generating JPEGS from PDF's
 -----------------------------------------------------------------------------
-module Doc.Rendering
+module Util.PDFUtil
     ( renderPage
     , FileError(..)
     , preCheckPDF

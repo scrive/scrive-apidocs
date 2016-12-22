@@ -24,9 +24,9 @@ import Control.Conditional (unlessM, whenM)
 import qualified Data.Text as T
 
 import API.V2
+import API.V2.Parameters
 import DB
 import Doc.API.V2.DocumentAccess
-import Doc.API.V2.Parameters
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocStateData

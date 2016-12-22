@@ -25,6 +25,7 @@ import qualified Data.Text as T
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
+import API.V2.Parameters (ApiV2Parameter(..), apiV2ParameterDefault)
 import AppView
 import Archive.View
 import Company.Model (GetCompany(..))
@@ -32,7 +33,6 @@ import DB
 import Doc.Action
 import Doc.API.V1.DocumentToJSON (docForListCSVHeaderV1, docForListCSVV1)
 import Doc.API.V2.JSON.List
-import Doc.API.V2.Parameters (ApiV2Parameter(..), apiV2ParameterDefault)
 import Doc.DocInfo (isPending)
 import Doc.DocMails
 import Doc.DocStateData

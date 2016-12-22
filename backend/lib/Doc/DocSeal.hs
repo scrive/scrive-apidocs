@@ -48,7 +48,6 @@ import Doc.DocUtils
 import Doc.DocView
 import Doc.Logging
 import Doc.Model
-import Doc.Rendering
 import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryIdentification (SignatoryIdentifierMap, siInitials, siLink, signatoryIdentifier)
 import EvidenceLog.Model
@@ -67,6 +66,7 @@ import Templates
 import Util.Actor
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import Util.PDFUtil
 import Util.SignatoryLinkUtils
 import Utils.Directory
 import Utils.Read

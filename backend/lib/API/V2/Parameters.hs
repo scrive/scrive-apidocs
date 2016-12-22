@@ -1,5 +1,5 @@
 {-# LANGUAGE GADTs #-}
-module Doc.API.V2.Parameters (
+module API.V2.Parameters (
     ApiV2Parameter(..)
   , apiV2ParameterOptional
   , apiV2ParameterDefault
@@ -19,12 +19,12 @@ import qualified Data.Text as T
 
 import API.V2
 import DB
-import Doc.Rendering
 import File.File (File(..))
 import File.Model
 import Happstack.Fields
 import Kontra
 import KontraPrelude
+import Util.PDFUtil
 import qualified Data.ByteString.RFC2397 as Base64Image
 
 data ApiV2Parameter a where

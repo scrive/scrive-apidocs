@@ -28,6 +28,7 @@ import Text.StringTemplates.Templates
 import qualified Data.Text as T
 
 import API.V2
+import API.V2.Parameters
 import Attachment.Model
 import Chargeable.Model
 import DB
@@ -41,7 +42,6 @@ import Doc.API.V2.Guards
 import Doc.API.V2.JSON.AttachmentDetails
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.Misc
-import Doc.API.V2.Parameters
 import Doc.AutomaticReminder.Model (setAutoreminder)
 import Doc.DocInfo (isPending, isTimedout)
 import Doc.DocMails (sendAllReminderEmailsExceptAuthor, sendForwardEmail)

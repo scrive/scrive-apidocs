@@ -78,7 +78,6 @@ import Doc.DocUtils
 import Doc.Logging
 import Doc.Model
 import Doc.Model.OrderBy
-import Doc.Rendering
 import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots (SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
@@ -105,6 +104,7 @@ import User.Model
 import Util.Actor
 import Util.CSVUtil
 import Util.HasSomeUserInfo
+import Util.PDFUtil
 import Util.SignatoryLinkUtils
 import Utils.Monad
 import qualified Data.ByteString.RFC2397 as RFC2397

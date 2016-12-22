@@ -89,6 +89,7 @@ Library
                  , API.V2
                  , API.V2.Errors
                  , API.V2.Monad
+                 , API.V2.Parameters
                  , API.V2.User
                  , ActionQueue.AccessNewAccount
                  , ActionQueue.Core
@@ -182,7 +183,6 @@ Library
                  , Doc.API.V2.JSON.List
                  , Doc.API.V2.JSON.Misc
                  , Doc.API.V2.JSON.Utils
-                 , Doc.API.V2.Parameters
                  , Doc.Action
                  , Doc.Anchors
                  , Doc.AutomaticReminder.Model
@@ -223,7 +223,6 @@ Library
                  , Doc.Model.OrderBy
                  , Doc.Model.Query
                  , Doc.Model.Update
-                 , Doc.Rendering
                  , Doc.SMSPin.Model
                  , Doc.SMSPin.Tables
                  , Doc.Screenshot
@@ -407,6 +406,7 @@ Library
                  , Utils.Monad
                  , Utils.Monoid
                  , Utils.Network
+                 , Util.PDFUtil
                  , Utils.Prelude
                  , Utils.Read
                  , Utils.String

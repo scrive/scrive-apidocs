@@ -71,7 +71,6 @@ import Doc.DocView
 import Doc.DocViewMail
 import Doc.Logging
 import Doc.Model
-import Doc.Rendering
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.Tokens.Model
@@ -92,6 +91,7 @@ import User.Utils
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
+import Util.PDFUtil
 import Util.SignatoryLinkUtils
 import Util.Zlib (decompressIfPossible)
 import qualified Doc.EvidenceAttachments as EvidenceAttachments

@@ -24,7 +24,6 @@ import Attachment.AttachmentID
 import Attachment.JSON
 import Attachment.Model
 import DB
-import Doc.Rendering
 import File.Storage
 import Happstack.Fields
 import InputValidation
@@ -36,6 +35,7 @@ import User.Model
 import User.Utils
 import Util.Actor
 import Util.MonadUtils
+import Util.PDFUtil
 
 handleShare :: Kontrakcja m => m JSValue
 handleShare =  do

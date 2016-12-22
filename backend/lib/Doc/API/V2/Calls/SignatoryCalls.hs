@@ -16,6 +16,7 @@ import qualified Data.Text as T
 import qualified Text.JSON as J
 
 import API.V2
+import API.V2.Parameters
 import BrandedDomain.BrandedDomain
 import DB
 import Doc.Action
@@ -24,7 +25,6 @@ import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.Fields
-import Doc.API.V2.Parameters
 import Doc.DocControl
 import Doc.DocMails (sendPinCode)
 import Doc.DocStateData

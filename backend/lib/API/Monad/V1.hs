@@ -43,7 +43,6 @@ import Text.JSON.Gen hiding (object)
 import qualified Happstack.Server.Response as Web
 
 import DB
-import Doc.Rendering
 import Kontra
 import KontraPrelude
 import OAuth.Model
@@ -52,6 +51,7 @@ import Text.JSON.Convert
 import User.Model
 import Util.Actor
 import Util.CSVUtil
+import Util.PDFUtil
 import Util.ZipUtil
 
 -- | Respond with a 200 Created status

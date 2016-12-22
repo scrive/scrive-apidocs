@@ -18,6 +18,7 @@ import qualified Data.Text as T
 import qualified Text.JSON as J
 
 import API.V2
+import API.V2.Parameters
 import AppView (respondWithPDF)
 import DB
 import Doc.API.V2.DocumentAccess
@@ -25,7 +26,6 @@ import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.List
 import Doc.API.V2.JSON.Misc (evidenceAttachmentsToJSONBS)
-import Doc.API.V2.Parameters
 import Doc.Data.MainFile
 import Doc.DocSeal (presealDocumentFile)
 import Doc.DocStateData

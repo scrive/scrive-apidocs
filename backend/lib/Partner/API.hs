@@ -15,9 +15,9 @@ import Happstack.StaticRouting
 
 import API.V2
 import API.V2.Errors
+import API.V2.Parameters
 import Company.Model
 import DB
-import Doc.API.V2.Parameters
 import InputValidation (Result(..), asValidEmail)
 import Kontra
 import KontraPrelude
