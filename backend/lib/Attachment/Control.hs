@@ -27,6 +27,7 @@ import DB
 import File.Storage
 import Happstack.Fields
 import InputValidation
+import InternalResponse
 import Kontra
 import KontraPrelude
 import Redirect
@@ -74,7 +75,7 @@ handleCreateNew = do
   _mdoc <- makeAttachmentFromFile input
   J.runJSONGenT $ return ()
 
-jsonAttachmentsList ::  Kontrakcja m => m (Redir Response)
+jsonAttachmentsList ::  Kontrakcja m => m InternalKontraResponse
 jsonAttachmentsList = withUser $ \user -> do
   let uid = userid user
   domain <- getField "domain" >>= \case
@@ -98,8 +99,7 @@ jsonAttachmentsList = withUser $ \user -> do
     Nothing -> return []
 
   attachments <- dbQuery $ GetAttachments domain filters sorting
-  return $ Response 200 Map.empty nullRsFlags (Unjson.unjsonToByteStringLazy unjsonAttachments attachments) Nothing
-
+  return $ internalResponse $ Response 200 Map.empty nullRsFlags (Unjson.unjsonToByteStringLazy unjsonAttachments attachments) Nothing
 
 makeAttachmentFromFile :: Kontrakcja m => Input -> m (Maybe Attachment)
 makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do

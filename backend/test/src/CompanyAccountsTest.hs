@@ -15,12 +15,12 @@ import Context
 import DB hiding (query, update)
 import Doc.DocStateData
 import Doc.Model
-import FlashMessage
+import InternalResponse
 import KontraError
+import KontraLink
 import KontraPrelude
 import Mails.Model
 import MinutesTime
-import Redirect
 import TestingUtil
 import TestKontra as T
 import User.Email
@@ -258,11 +258,9 @@ test_privateUserTakoverWorks = do
     <$> mkContext def
 
   req <- mkRequest POST []
-  (res, ctx') <- runTestKontra req ctx $ handlePostBecomeCompanyAccount (companyid company) >>= sendRedirect
-
-  assertEqual "Response code is 303" 303 (rsCode res)
-  -- XXX assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  -- XXX assertBool "Flash message is of type indicating success" $ $head (ctxflashmessages ctx') `isFlashOfType` OperationDone
+  (res, _) <- runTestKontra req ctx $ handlePostBecomeCompanyAccount (companyid company)
+  assertBool "Response is redirect" (isRedirect LinkAccount res)
+  assertBool "Response has flash message redirect" (hasFlashMessage res)
   Just updateduser <- dbQuery $ GetUserByID (userid user)
   assertEqual "User belongs to the company" (usercompany updateduser)
                                             (companyid company)

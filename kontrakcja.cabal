@@ -280,6 +280,7 @@ Library
                  , HubSpot.Conf
                  , IPAddress
                  , InputValidation
+                 , InternalResponse
                  , InspectXML
                  , InspectXMLInstances
                  , Kontra

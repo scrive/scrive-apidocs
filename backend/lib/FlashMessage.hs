@@ -8,6 +8,8 @@ module FlashMessage (
 
 import Control.Monad.IO.Class
 import Happstack.Server hiding (lookCookieValue)
+import Text.JSON
+import qualified Text.JSON.Gen as J
 
 import Cookies
 import KontraPrelude hiding (optional)
@@ -51,10 +53,9 @@ toFlashMsg :: FlashType -> String -> FlashMessage
 toFlashMsg = FlashMessage
 
 toCookieValue :: FlashMessage -> String
-toCookieValue flash =
-    "{\"type\":\"" <> flashtypestr <> "\", \"content\":\"" <> flashMessage flash <> "\"}"
-  where
-    flashtypestr = flashTypeToStr . flashType $ flash
+toCookieValue fm = encode $ J.runJSONGen $ do
+  J.value "type" $ flashTypeToStr $ flashType fm
+  J.value "content" $ flashMessage fm
 
 flashTypeToStr :: FlashType -> String
 flashTypeToStr OperationDone   = "success"
@@ -63,4 +64,4 @@ flashTypeToStr OperationFailed = "error"
 addFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => String -> m ()
 addFlashCookie flashesdata = do
     ishttps <- isHTTPS
-    addHttpOnlyCookie ishttps (MaxAge $ 60*60*24) $ mkCookie "flashmessage" $ flashesdata
+    Cookies.addCookie ishttps (MaxAge $ 60*60*24) $ mkCookie "flashmessage" $ flashesdata

@@ -80,6 +80,7 @@ import File.Model
 import File.Storage (getFileIDContents)
 import Happstack.Fields
 import InputValidation
+import InternalResponse
 import Kontra
 import KontraLink
 import KontraPrelude
@@ -97,7 +98,7 @@ import Util.Zlib (decompressIfPossible)
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified GuardTime as GuardTime
 
-handleNewDocument :: Kontrakcja m => m (Redir ())
+handleNewDocument :: Kontrakcja m => m InternalKontraResponse
 handleNewDocument = withUser $ \user -> do
   ctx <- getContext
   title <- renderTemplate_ "newDocumentTitle"
@@ -165,6 +166,7 @@ handleNewDocument = withUser $ \user -> do
                                        }
       _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink, othersiglink'] actor
       dbUpdate $ SetDocumentUnsavedDraft True
+      return $ internalResponse $ LinkIssueDoc (documentid doc)
 
 {-
   Document state transitions are described in DocState.
@@ -177,9 +179,9 @@ formatTimeSimpleWithTZ tz t = do
   runQuery_ $ rawSQL "SELECT to_char($1 AT TIME ZONE $2, 'YYYY-MM-DD HH24:MI')" (t, tz)
   fetchOne runIdentity
 
-showCreateFromTemplate :: Kontrakcja m => m (Redir String)
+showCreateFromTemplate :: Kontrakcja m => m InternalKontraResponse
 showCreateFromTemplate = withUser $ \_ -> do
-  pageCreateFromTemplate =<< getContext
+  internalResponse <$> (pageCreateFromTemplate =<< getContext)
 
 {- |
     Call after signing in order to save the document for any user, and
@@ -258,14 +260,13 @@ handleSignShow did slid = logDocumentAndSignatory did slid $ do
 -- |
 --   /ts/[documentid] (doc has to be a draft)
 {-# NOINLINE handleToStartShow #-}
-handleToStartShow :: Kontrakcja m => DocumentID -> m (Redir Response)
+handleToStartShow :: Kontrakcja m => DocumentID -> m InternalKontraResponse
 handleToStartShow documentid = withUserTOS $ \_ -> do
   ctx <- getContext
   document <- getDocByDocIDForAuthor documentid
   ad <- getAnalyticsData
   content <- pageDocumentToStartView ctx document ad
-  simpleHtmlResonseClrFlash content
-
+  internalResponse <$> (simpleHtmlResonseClrFlash content)
 
 -- If is not magic hash in session. It may mean that the
 -- session expired and we deleted the credentials already or it
@@ -340,7 +341,7 @@ handleEvidenceAttachment docid file = do
    URL: /d/{documentid}
    Method: GET
  -}
-handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Redir (Either Response String))
+handleIssueShowGet :: Kontrakcja m => DocumentID -> m InternalKontraResponse
 handleIssueShowGet docid = withUserTOS $ \_ -> do
   document <- getDocByDocID docid
   muser <- ctxmaybeuser <$> getContext
@@ -360,11 +361,11 @@ handleIssueShowGet docid = withUserTOS $ \_ -> do
   case (ispreparation, msiglink) of
     (True,  _)                       -> do
        -- Never cache design view. IE8 hack. Should be fixed in different wasy
-       Left <$> (setHeaderBS "Cache-Control" "no-cache" <$> (simpleHtmlResonseClrFlash =<< pageDocumentDesign ctx document ad))
+       internalResponse <$> (setHeaderBS "Cache-Control" "no-cache" <$> (simpleHtmlResonseClrFlash =<< pageDocumentDesign ctx document ad))
     (False, _) | isauthororincompany -> do
-       Right <$> pageDocumentView ctx document msiglink (isincompany)
+       internalResponse <$> pageDocumentView ctx document msiglink (isincompany)
     (False, Just siglink)            -> do
-       Left  <$> (simpleHtmlResonseClrFlash =<< pageDocumentSignView ctx document siglink ad)
+       internalResponse <$> (simpleHtmlResonseClrFlash =<< pageDocumentSignView ctx document siglink ad)
     _                                -> do
        internalError
 
@@ -438,14 +439,14 @@ handleDownloadClosedFile did sid mh _nameForBrowser = do
     return $ respondWithPDF True content
    else respond404
 
-handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Redir JSValue)
+handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m InternalKontraResponse
 handleResend docid signlinkid = withUser $ \_ -> do
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
     signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
     customMessage <- fmap strip <$> getField "customtext"
     actor <- guardJustM $ fmap mkAuthorActor getContext
     _ <- sendReminderEmail customMessage actor False signlink
-    J.runJSONGenT (return ())
+    internalResponse <$> J.runJSONGenT (return ())
 
 -- This only works for undelivered mails
 handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue

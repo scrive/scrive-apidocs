@@ -1,20 +1,20 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module FlashMessages (flashMessagesTests) where
 
+import Control.Monad.Identity
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck (Arbitrary(..), Property, elements, ioProperty, mapSize, oneof)
-import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.Char8 as BS
+import Text.JSON
+import Text.JSON.FromJSValue
 
-import FlashMessage (FlashMessage(..), FlashType(..), fromCookieValue, toCookieValue)
+import FlashMessage (FlashMessage(..), FlashType(..), toCookieValue)
 import KontraPrelude
 import TestKontra
 
 flashMessagesTests :: TestEnvSt -> Test
-flashMessagesTests _ = testGroup "FlashMessages"
-  [ {-testProperty "Flash decoding can handle arbitrary input." $ flashDecodeAnything
-  , -}testProperty "Flash encoding/decoding is identity." $ flashEncodeDecode
+flashMessagesTests _ = testGroup "FlashMessages" [
+    testProperty "Flash cookie value is json in expected format" $ flashCookieParse
   ]
 
 
@@ -25,15 +25,17 @@ instance Arbitrary FlashMessage where
 instance Arbitrary FlashType where
   arbitrary = elements [OperationDone, OperationFailed]
 
-flashEncodeDecode :: Property
-flashEncodeDecode =
+flashCookieParse :: Property
+flashCookieParse =
   mapSize (`div` 2) $ \f -> ioProperty $ do -- scale back a bit or it takes too long
-    mf <- fromCookieValue (toCookieValue f)
-    return $ Just f == mf
+    case (decode $ toCookieValue f) of
+      (Ok jresp) -> do
+        r <- return $  runIdentity $ withJSValue jresp $ do
+            (t :: Maybe String) <- fromJSValueField "type"
+            (c :: Maybe String) <- fromJSValueField "content"
+            return (t,c)
+        case r of 
+          (Just t, Just c) -> return $ (t `elem` ["success", "error"]) && (c == flashMessage f)
+          _ -> return False                     
+      _ -> return False                     
 
-
--- Currently, this test raises an exception, so we avoid it.  However, it is
--- able to locate a crash in fromCookieValue for empty strings.
-_flashDecodeAnything :: String -> Bool
-_flashDecodeAnything s = fromCookieValue (BS.unpack (B64.encode (BS.pack s'))) `seq` True
-  where s' = take (16 * (length s `div` 16)) s

@@ -27,6 +27,7 @@ import CompanyAccounts.Model
 import DB
 import Happstack.Fields
 import InputValidation
+import InternalResponse
 import Kontra
 import KontraLink
 import KontraPrelude
@@ -264,20 +265,20 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
     the old stuff that was based in UserID.  It checks that the logged in
     user has actually been invited to join the company in the URL.
 -}
-handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Redir String)
-handleGetBecomeCompanyAccount companyid = (join <$>) $ withUser $ \user -> do
+handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m InternalKontraResponse
+handleGetBecomeCompanyAccount companyid = withUser $ \user -> do
   invite <- dbQuery $ GetCompanyInvite companyid (userid user)
   case invite of
     Nothing -> do
       flashmessage <- flashMessageBecomeCompanyLogInDifferentUser
-      return $ Left (Just flashmessage, LinkAccount)
+      return $ internalResponseWithFlash flashmessage LinkAccount
     _ -> do
       ctx <- getContext
       newcompany <- guardJustM $ dbQuery $ GetCompany companyid
-      Right <$> pageDoYouWantToBeCompanyAccount ctx newcompany
+      internalResponse <$> (pageDoYouWantToBeCompanyAccount ctx newcompany)
 
-handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Redir ())
-handlePostBecomeCompanyAccount cid = (join <$>) $ withUser $ \user -> do
+handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m InternalKontraResponse
+handlePostBecomeCompanyAccount cid = withUser $ \user -> do
   _ <- guardJustM $ dbQuery $ GetCompanyInvite cid (userid user)
   newcompany <- guardJustM $ dbQuery $ GetCompany cid
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) False
@@ -286,4 +287,4 @@ handlePostBecomeCompanyAccount cid = (join <$>) $ withUser $ \user -> do
   -- if we are inviting a user with a plan to join the company, we
   -- should delete their personal plan
   flashmessage <- flashMessageUserHasBecomeCompanyAccount newcompany
-  return . Left $ (Just flashmessage, LinkAccount)
+  return $ internalResponseWithFlash flashmessage LinkAccount

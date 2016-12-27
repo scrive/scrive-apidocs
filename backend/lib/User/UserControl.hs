@@ -25,7 +25,6 @@ module User.UserControl(
 
 import Control.Monad.State
 import Data.Functor
-import Happstack.Server hiding (simpleHTTP)
 import Log
 import Text.JSON (JSValue(..))
 import Text.StringTemplates.Templates
@@ -43,9 +42,9 @@ import BrandedDomain.BrandedDomain
 import Company.CompanyUI
 import Company.Model
 import DB hiding (query, update)
-import FlashMessage
 import Happstack.Fields
 import InputValidation
+import InternalResponse
 import Kontra
 import KontraLink
 import KontraPrelude
@@ -62,13 +61,13 @@ import User.Utils
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 
-handleAccountGet :: Kontrakcja m => m (Redir Response)
+handleAccountGet :: Kontrakcja m => m (InternalKontraResponse)
 handleAccountGet = withUserTOS $ \(user, _) -> do
   ctx <- getContext
   pb <- renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
     entryPointFields ctx
-  renderFromBodyWithFields pb (F.value "account" True)
+  internalResponse <$> renderFromBodyWithFields pb (F.value "account" True)
 
 sendChangeToExistingEmailInternalWarningMail :: Kontrakcja m => User -> Email -> m ()
 sendChangeToExistingEmailInternalWarningMail user newemail = do
@@ -91,24 +90,24 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
     , content = content
     }
 
-handleGetChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m (Redir String)
-handleGetChangeEmail uid hash = (join <$>) $ withUser $ \_ -> do
+handleGetChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m InternalKontraResponse
+handleGetChangeEmail uid hash = withUser $ \_ -> do
   ctx <- getContext
   mnewemail <- getEmailChangeRequestNewEmail uid hash
   case mnewemail of
     Just newemail ->
-      Right <$> pageDoYouWantToChangeEmail ctx newemail
+      internalResponse <$> pageDoYouWantToChangeEmail ctx newemail
     Nothing -> do
       flashmessage <- flashMessageProblemWithEmailChange
-      return $ Left (Just flashmessage, LinkAccount)
+      return $ internalResponseWithFlash flashmessage LinkAccount
 
-handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m (Redir ())
-handlePostChangeEmail uid hash = (join <$>) $ withUser $ \user -> do
+handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m (InternalKontraResponse)
+handlePostChangeEmail uid hash =  withUser $ \user -> do
   mnewemail <- getEmailChangeRequestNewEmail uid hash
   Context{ctxipnumber, ctxtime} <- getContext
   mpassword <- getOptionalField asDirtyPassword "password"
-  mflashmessage <- case mpassword of
-    Nothing -> return Nothing
+  case mpassword of
+    Nothing -> return $ internalResponse $ LinkAccount
     Just password | verifyPassword (userpassword user) password -> do
       changed <- maybe (return False)
                       (dbUpdate . SetUserEmail (userid user))
@@ -122,10 +121,10 @@ handlePostChangeEmail uid hash = (join <$>) $ withUser $ \user -> do
         else
             flashMessageProblemWithEmailChange
       _ <- dbUpdate $ DeleteAction emailChangeRequest uid
-      return $ Just flashmessage
+      return $ internalResponseWithFlash flashmessage $ LinkAccount
     Just _password -> do
-      Just <$> flashMessageProblemWithPassword
-  return . Left $ (mflashmessage, LinkAccount)
+      flashmessage <-  flashMessageProblemWithPassword
+      return $ internalResponseWithFlash flashmessage $ LinkAccount
 
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
@@ -236,24 +235,24 @@ createNewUserByAdmin email names companyandrole lg = do
              return muser
          Nothing -> return muser
 
-handleAcceptTOSGet :: Kontrakcja m => m (Redir String)
-handleAcceptTOSGet = withUser $ \_ -> pageAcceptTOS =<< getContext
+handleAcceptTOSGet :: Kontrakcja m => m InternalKontraResponse
+handleAcceptTOSGet = withUser $ \_ -> internalResponse <$> (pageAcceptTOS =<< getContext)
 
-handleAcceptTOSPost :: Kontrakcja m => m (Maybe FlashMessage, ())
+handleAcceptTOSPost :: Kontrakcja m => m InternalKontraResponse 
 handleAcceptTOSPost = do
   Context{ctxmaybeuser,ctxtime, ctxipnumber} <- getContext
   userid <- guardJustM $ return $ userid <$>ctxmaybeuser
   tos <- getDefaultedField False asValidCheckBox "tos"
-  mflashmessage <- case tos of
+  case tos of
     Just True -> do
       _ <- dbUpdate $ AcceptTermsOfService userid ctxtime
       _ <- dbUpdate $ LogHistoryTOSAccept userid ctxipnumber ctxtime (Just userid)
-      Just <$> flashMessageUserDetailsSaved
-    _ ->
-      return Nothing
-  return (mflashmessage, ())
+      flash <- flashMessageUserDetailsSaved
+      return $ internalResponseWithFlash flash ()
+    _ -> return $ internalResponse ()
 
-handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m (Redir (Either KontraLink Response))
+
+handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m InternalKontraResponse
 handleAccountSetupGet uid token sm = withUser $ \_ -> do
   ctx <- getContext
   muser <- getUserAccountRequestUser uid token
@@ -271,11 +270,11 @@ handleAccountSetupGet uid token sm = withUser $ \_ -> do
         F.value "company" $ companyname $ companyinfo $ company
         F.value "companyAdmin" $ useriscompanyadmin user
         F.value "signupmethod" $ show sm
-      Right <$> simpleHtmlResponse content
-    (Just _user, Just _)  -> return $ Left $ LinkDesignView
-    _ -> return $ Left $ LinkSignup $ ctxlang ctx
+      internalResponse <$> (simpleHtmlResponse content)
+    (Just _user, Just _)  -> return $ internalResponse $ LinkDesignView
+    _ -> return $ internalResponse $ LinkSignup $ ctxlang ctx
 
-handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m (Maybe FlashMessage, JSValue)
+handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m InternalKontraResponse
 handleAccountSetupPost uid token sm = do
   user <- guardJustM $ getUserAccountRequestUser uid token
   company <-  getCompanyForUser user
@@ -284,7 +283,7 @@ handleAccountSetupPost uid token sm = do
       jsvalue <- J.runJSONGenT $ do
         J.value "ok" False
         J.value "error" ("already_active" :: String)
-      return (Nothing, jsvalue)
+      return $ internalResponse $ jsvalue
     else do
       mfstname <- getOptionalField asValidName "fstname"
       msndname <- getOptionalField asValidName "sndname"
@@ -298,13 +297,14 @@ handleAccountSetupPost uid token sm = do
         J.value "location" $ show link
         J.value "userid" $ show uid
       flashmessage <- flashMessageUserActivated
-      return (Just flashmessage, jsvalue)
+      return $ internalResponseWithFlash flashmessage jsvalue
 
 {- |
     This is where we get to when the user clicks the link in their new-account
     email.  This will show them a page where they need to set their password.
 -}
-handleAccessNewAccountGet :: Kontrakcja m => UserID -> MagicHash -> m (Redir (Either (Maybe FlashMessage, KontraLink) Response))
+
+handleAccessNewAccountGet :: Kontrakcja m => UserID -> MagicHash -> m InternalKontraResponse
 handleAccessNewAccountGet uid token = withUser $ \currentUser -> do
   museraccount <- getAccessNewAccountUser uid token
   case museraccount of
@@ -317,10 +317,10 @@ handleAccessNewAccountGet uid token = withUser $ \currentUser -> do
       content <- renderTemplate "accessNewAccountPageWithBranding" $ do
                         F.value "linkchangepassword" $ changePassLink
                         standardPageFields ctx Nothing ad
-      Right <$> simpleHtmlResonseClrFlash content
+      internalResponse <$> (simpleHtmlResonseClrFlash content)
     Nothing -> do
       muser <- dbQuery $ GetUserByID uid
-      Left <$> case muser of
+      case muser of
         Just user@User{userpassword = Just _} -> do
           -- user has already set up an account, redirect to the archive
           when (currentUser /= user) $
@@ -328,14 +328,14 @@ handleAccessNewAccountGet uid token = withUser $ \currentUser -> do
                   identifier ("new_" <>) uid
                 , identifier ("logged_" <>) $ userid currentUser
                 ]
-          return (Nothing, LinkArchive)
+          return $ internalResponse $ LinkArchive
         _ -> do
           ctx <- getContext
           flashmessage <- flashMessageAccessNewAccountLinkNotValid
-          return (Just flashmessage, LinkLoginDirect (ctxlang ctx))
+          return $ internalResponseWithFlash flashmessage (LinkLoginDirect (ctxlang ctx))
 
 -- TODO: Too much code duplication around new account access and password reminders
-handleAccessNewAccountPost :: Kontrakcja m => UserID -> MagicHash -> m (Maybe FlashMessage, JSValue)
+handleAccessNewAccountPost :: Kontrakcja m => UserID -> MagicHash -> m InternalKontraResponse
 handleAccessNewAccountPost uid token = do
   muser <- getAccessNewAccountUser uid token
   case muser of
@@ -352,17 +352,17 @@ handleAccessNewAccountPost uid token = do
           J.value "logged" True
           J.value "location" $ show LinkArchive
       flashmessage <- flashMessageUserPasswordChanged
-      return (Just flashmessage, jsvalue)
+      return $ internalResponseWithFlash flashmessage jsvalue
     Nothing -> do
       jsvalue <- J.runJSONGenT $ J.value "logged" False
-      return (Nothing, jsvalue)
-
+      return $ internalResponse jsvalue
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
     email.  This'll show them the usual landing page, but with option to changing their password.
 -}
-handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m (Redir Response)
+
+handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m (InternalKontraResponse)
 handlePasswordReminderGet uid token = do
   muser <- getPasswordReminderUser uid token
   case muser of
@@ -374,14 +374,14 @@ handlePasswordReminderGet uid token = do
       content <- renderTemplate "changePasswordPageWithBranding" $ do
         F.value "linkchangepassword" $ changePassLink
         standardPageFields ctx Nothing ad
-      Right <$> simpleHtmlResonseClrFlash content
+      internalResponse <$> (simpleHtmlResonseClrFlash content)
     Nothing -> do
       ctx <- getContext
       flashmessage <- flashMessagePasswordChangeLinkNotValid
-      return $ Left (Just flashmessage, LinkLoginDirect (ctxlang ctx))
+      return $ internalResponseWithFlash flashmessage $ LinkLoginDirect (ctxlang ctx)
 
 
-handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m (Maybe FlashMessage, JSValue)
+handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m InternalKontraResponse
 handlePasswordReminderPost uid token = do
   muser <- getPasswordReminderUser uid token
   case muser of
@@ -398,10 +398,10 @@ handlePasswordReminderPost uid token = do
           J.value "logged" True
           J.value "location" $ show LinkDesignView
       flashmessage <- flashMessageUserPasswordChanged
-      return (Just flashmessage, jsvalue)
+      return $ internalResponseWithFlash flashmessage jsvalue
     Nothing -> do
       jsvalue <- J.runJSONGenT $ J.value "logged" False
-      return (Nothing, jsvalue)
+      return $ internalResponse jsvalue
 
 -- please treat this function like a public query form, it's not secure
 handleContactUs :: Kontrakcja m => m KontraLink

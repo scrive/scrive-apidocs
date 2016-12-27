@@ -59,6 +59,7 @@ import InputValidation
 import InspectXML
 import InspectXMLInstances ()
 import InspectXMLInstances ()
+import InternalResponse
 import IPAddress ()
 import Kontra
 import KontraLink
@@ -521,13 +522,13 @@ handleBackdoorQuery = onlySalesOrAdmin $ onlyBackdoorOpen $ do
     Nothing -> respond404
     Just email -> renderFromBody $ mailContent email
 
-sendInviteAgain :: Kontrakcja m => m (Redir ())
+sendInviteAgain :: Kontrakcja m => m InternalKontraResponse
 sendInviteAgain = onlySalesOrAdmin $ do
   uid <- guardJustM $ readField "userid"
   user <- guardJustM $ dbQuery $ GetUserByID uid
   sendNewUserMail user
   flashmessage <- flashMessageNewActivationLinkSend
-  return . Left $ (Just flashmessage, LoopBack)
+  return $ internalResponseWithFlash flashmessage LoopBack
 
 -- This method can be used to reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
