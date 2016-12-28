@@ -109,8 +109,8 @@ exports.FlashMessagesCleaner = function () {
 };
 
 var tryUnescapeQuotes = function (s) {
-  if (s.charAt(0) === "\"" && s.charAt(s.length-1) === "\"") {
-    return s.substr(1, s.length-2).replace(/\\"/g, '"');
+  if (s.charAt(0) === "\"" && s.charAt(s.length - 1) === "\"") {
+    return s.substr(1, s.length - 2).replace(/\\"/g, '"');
   } else {
     return s;
   }
@@ -120,7 +120,7 @@ exports.FlashMessageTryFromCookie = function () {
   if (Cookies.get("flashmessage")) {
     try {
       var jsonFlash = JSON.parse(tryUnescapeQuotes(Cookies.get("flashmessage")));
-      jsonFlash["content"] = decodeURI(jsonFlash["content"])
+      jsonFlash["content"] = decodeURI(jsonFlash["content"]);
       new FlashMessage(jsonFlash);
     } finally {
       Cookies.delete("flashmessage");
