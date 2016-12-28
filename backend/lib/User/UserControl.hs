@@ -317,7 +317,7 @@ handleAccessNewAccountGet uid token = withUser $ \currentUser -> do
       content <- renderTemplate "accessNewAccountPageWithBranding" $ do
                         F.value "linkchangepassword" $ changePassLink
                         standardPageFields ctx Nothing ad
-      internalResponse <$> (simpleHtmlResonseClrFlash content)
+      internalResponse <$> (simpleHtmlResponse content)
     Nothing -> do
       muser <- dbQuery $ GetUserByID uid
       case muser of
@@ -374,7 +374,7 @@ handlePasswordReminderGet uid token = do
       content <- renderTemplate "changePasswordPageWithBranding" $ do
         F.value "linkchangepassword" $ changePassLink
         standardPageFields ctx Nothing ad
-      internalResponse <$> (simpleHtmlResonseClrFlash content)
+      internalResponse <$> (simpleHtmlResponse content)
     Nothing -> do
       ctx <- getContext
       flashmessage <- flashMessagePasswordChangeLinkNotValid

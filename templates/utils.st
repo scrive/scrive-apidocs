@@ -19,15 +19,6 @@ nomorethanonelistnormal=
 #### Bellow is a hack for (if(flash)) for String templates syntax
 ####
 flashmessages =
-<script>
-var fromTemplateHasFlash = $if(flash)$true$else$false$endif$;
-$if(flash)$
-var fromTemplateFlash = {
-  "type" : "$flash.type$",
-  "content": "$flash.message:noescape()$"
-};
-$endif$
-</script>
 <script src="$cdnbaseurl$/compiled/all/flashmessage-$versioncode$.js" crossorigin="anonymous"></script>
 ####
 EnglishInEnglish=English

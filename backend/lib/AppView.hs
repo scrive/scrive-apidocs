@@ -11,7 +11,6 @@ module AppView(
               , simpleAesonResponse
               , simpleUnjsonResponse
               , simpleHtmlResponse
-              , simpleHtmlResonseClrFlash
               , respondWithPDF
               , priceplanPage
               , unsupportedBrowserPage
@@ -119,7 +118,7 @@ notFoundPage = pageWhereLanguageCanBeInUrl $ do
                     standardPageFields ctx Nothing ad
    else renderTemplate "notFoundWithoutHeaders" $ do
                     standardPageFields ctx Nothing ad
-  simpleHtmlResonseClrFlash content
+  simpleHtmlResponse content
 
 internalServerErrorPage :: Kontrakcja m => m Response
 internalServerErrorPage =  pageWhereLanguageCanBeInUrl $ do
@@ -130,7 +129,7 @@ internalServerErrorPage =  pageWhereLanguageCanBeInUrl $ do
                     standardPageFields ctx Nothing ad
    else renderTemplate "internalServerErrorWithoutHeaders" $ do
                     standardPageFields ctx Nothing ad
-  simpleHtmlResonseClrFlash content
+  simpleHtmlResponse content
 
 pageWhereLanguageCanBeInUrl :: Kontrakcja m => m Response -> m Response
 pageWhereLanguageCanBeInUrl handler = do
@@ -148,7 +147,7 @@ priceplanPage = do
   then do
     content <- renderTemplate "priceplanPage" $ do
       standardPageFields ctx Nothing ad
-    simpleHtmlResonseClrFlash content
+    simpleHtmlResponse content
   else respond404
 
 unsupportedBrowserPage :: Kontrakcja m => m Response
@@ -191,7 +190,7 @@ enableCookiesPage = do
       content <- if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx)
                     then renderTemplate "sessionTimeOut" fields
                     else renderTemplate "sessionTimeOutWithoutHeaders" fields
-      pageWhereLanguageCanBeInUrl $ simpleHtmlResonseClrFlash content >>= internalServerError
+      pageWhereLanguageCanBeInUrl $ simpleHtmlResponse content >>= internalServerError
   where
     cookieToJson Cookie{..} = object [
         "version"   .= cookieVersion
@@ -214,7 +213,7 @@ handleTermsOfService = withAnonymousContext $ do
                 else do
                   renderTemplate "termsOfServiceWithBranding" $ do
                     standardPageFields ctx Nothing ad
-  simpleHtmlResonseClrFlash content
+  simpleHtmlResponse content
 
 standardPageFields :: (TemplatesMonad m, MonadDB m, MonadThrow m) => Context -> Maybe CompanyUI -> AnalyticsData -> Fields m ()
 standardPageFields ctx mcompanyui ad = do
@@ -263,13 +262,6 @@ simpleUnjsonResponse unjson a = ok $ toResponseBS jsonContentType $ unjsonToByte
 -}
 simpleHtmlResponse :: Kontrakcja m => String -> m Response
 simpleHtmlResponse s = ok $ toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString s
-
-
-{- | Sames as simpleHtmlResponse, but clears also flash messages and modals -}
-simpleHtmlResonseClrFlash :: Kontrakcja m => String -> m Response
-simpleHtmlResonseClrFlash rsp = do
-  res <- simpleHtmlResponse rsp
-  return res
 
 respondWithPDF :: Bool -> BS.ByteString -> Response
 respondWithPDF forceDownload contents =

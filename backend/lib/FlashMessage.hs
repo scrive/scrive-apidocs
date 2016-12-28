@@ -8,6 +8,7 @@ module FlashMessage (
 
 import Control.Monad.IO.Class
 import Happstack.Server hiding (lookCookieValue)
+import Network.HTTP.Base (urlEncode)
 import Text.JSON
 import qualified Text.JSON.Gen as J
 
@@ -55,7 +56,7 @@ toFlashMsg = FlashMessage
 toCookieValue :: FlashMessage -> String
 toCookieValue fm = encode $ J.runJSONGen $ do
   J.value "type" $ flashTypeToStr $ flashType fm
-  J.value "content" $ flashMessage fm
+  J.value "content" $ urlEncode $ flashMessage fm
 
 flashTypeToStr :: FlashType -> String
 flashTypeToStr OperationDone   = "success"

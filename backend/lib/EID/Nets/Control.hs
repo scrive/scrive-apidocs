@@ -147,4 +147,4 @@ handleResolve = do
 ------------------------------------------
 
 handleNetsError  :: Kontrakcja m => m Response
-handleNetsError = simpleHtmlResonseClrFlash =<< renderTemplate_ "netsError"
+handleNetsError = simpleHtmlResponse =<< renderTemplate_ "netsError"

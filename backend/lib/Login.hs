@@ -40,7 +40,7 @@ handleLoginGet = do
           content <- renderTemplate "loginPageWithBranding" $ do
             F.value "referer" $ fromMaybe "/" referer
             standardPageFields ctx Nothing ad
-          Right <$> simpleHtmlResonseClrFlash content
+          Right <$> simpleHtmlResponse content
        Just _ -> return $ Left LinkDesignView
 
 {- |

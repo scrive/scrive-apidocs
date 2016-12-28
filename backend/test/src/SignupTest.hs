@@ -8,7 +8,9 @@ import ActionQueue.Core
 import ActionQueue.UserAccountRequest
 import Context
 import DB hiding (query, update)
+import FlashMessage (flashType, FlashType(..))
 import KontraPrelude
+import InternalResponse (getFlashMessage, hasFlashMessage, InternalKontraResponse)
 import MagicHash (MagicHash)
 import Mails.Model
 import MinutesTime
@@ -38,8 +40,8 @@ testSignupAndActivate = do
   assertActivationPageOK ctx2
 
   -- activate the account using the signup details
-  ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" (Just "123")
-  assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" ctx3
+  (res, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" (Just "123")
+  assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" res ctx3
   Just uuser <- dbQuery $ GetUserByID  uarUserID
   assertEqual "Phone number was saved" "123" (userphone $ userinfo uuser)
   emails <- dbQuery GetEmailsForTest
@@ -54,8 +56,8 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
   UserAccountRequest{..} <- assertSignupSuccessful ctx1
 
   -- activate the account using the signup details
-  ctx3 <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" Nothing
-  assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" ctx3
+  (res, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" Nothing
+  assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" res ctx3
 
 signupForAccount :: Context -> String -> TestEnv Context
 signupForAccount ctx email = do
@@ -78,7 +80,7 @@ assertActivationPageOK :: Context -> TestEnv ()
 assertActivationPageOK ctx = do
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
 
-activateAccount :: Context -> UserID -> MagicHash -> Bool -> String -> String -> String -> String -> Maybe String -> TestEnv Context
+activateAccount :: Context -> UserID -> MagicHash -> Bool -> String -> String -> String -> String -> Maybe String -> TestEnv (InternalKontraResponse, Context)
 activateAccount ctx uid token tos fstname sndname password password2 phone = do
   let tosValue = if tos
                    then "on"
@@ -90,19 +92,18 @@ activateAccount ctx uid token tos fstname sndname password password2 phone = do
                           , ("password2", inText password2)
                           ] ++
                           ([("phone", inText $ $fromJust phone)] <| isJust phone |> [])
-  (_, ctx') <- runTestKontra req ctx $ handleAccountSetupPost uid token AccountRequest
-  return ctx'
+  (res, ctx') <- runTestKontra req ctx $ handleAccountSetupPost uid token AccountRequest
+  return (res, ctx')
 
-assertAccountActivatedFor :: UserID -> String -> String -> Context -> TestEnv ()
-assertAccountActivatedFor uid fstname sndname ctx = do
+assertAccountActivatedFor :: UserID -> String -> String -> InternalKontraResponse -> Context -> TestEnv ()
+assertAccountActivatedFor uid fstname sndname res ctx = do
   assertEqual "User is logged in" (Just uid) (fmap userid $ ctxmaybeuser ctx)
-  assertAccountActivated fstname sndname ctx
+  assertAccountActivated fstname sndname res ctx
 
-assertAccountActivated :: String -> String -> Context -> TestEnv ()
-assertAccountActivated fstname sndname ctx = do
-  -- XXX assertEqual "A flash message" 1 (length $ ctxflashmessages ctx)
-  --shouldn't this flash just indicate success and not that it's signing related?!
-  -- XXX assertBool "Flash message has type indicating signing related" $ any (`isFlashOfType` OperationDone) (ctxflashmessages ctx)
+assertAccountActivated :: String -> String -> InternalKontraResponse -> Context -> TestEnv ()
+assertAccountActivated fstname sndname res ctx = do
+  assertBool "A flash message was added" $ hasFlashMessage res
+  assertBool "Flash message has type success" $ maybe False ((OperationDone ==) . flashType) $ getFlashMessage res
   assertBool "Accepted TOS" $ isJust ((ctxmaybeuser ctx) >>= userhasacceptedtermsofservice)
   assertEqual "First name was set" (Just fstname) (getFirstName <$> ctxmaybeuser ctx)
   assertEqual "Second name was set" (Just sndname) (getLastName <$> ctxmaybeuser ctx)

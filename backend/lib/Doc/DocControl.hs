@@ -247,14 +247,14 @@ handleSignShow did slid = logDocumentAndSignatory did slid $ do
            then do
              addEventForVisitingSigningPageIfNeeded VisitedViewForAuthenticationEvidence invitedlink
              content <- theDocument >>= \d -> pageDocumentIdentifyView ctx d invitedlink ad
-             simpleHtmlResonseClrFlash content
+             simpleHtmlResponse content
            else do
              addEventForVisitingSigningPageIfNeeded VisitedViewForSigningEvidence invitedlink
              unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $ do
                dbUpdate . MarkDocumentSeen slid magichash =<< signatoryActor ctx invitedlink
                triggerAPICallbackIfThereIsOne =<< theDocument
              content <- theDocument >>= \d -> pageDocumentSignView ctx d invitedlink ad
-             simpleHtmlResonseClrFlash content
+             simpleHtmlResponse content
     Nothing -> handleCookieFail slid did
 
 -- |
@@ -266,7 +266,7 @@ handleToStartShow documentid = withUserTOS $ \_ -> do
   document <- getDocByDocIDForAuthor documentid
   ad <- getAnalyticsData
   content <- pageDocumentToStartView ctx document ad
-  internalResponse <$> (simpleHtmlResonseClrFlash content)
+  internalResponse <$> (simpleHtmlResponse content)
 
 -- If is not magic hash in session. It may mean that the
 -- session expired and we deleted the credentials already or it
@@ -287,7 +287,7 @@ handleCookieFail slid did = logDocumentAndSignatory did slid $ do
       content <- if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx)
         then renderTemplate "sessionTimeOut" fields
         else renderTemplate "sessionTimeOutWithoutHeaders" fields
-      simpleHtmlResonseClrFlash content
+      simpleHtmlResponse content
 
 {- |
    Redirect author of document to go to signview
@@ -361,11 +361,11 @@ handleIssueShowGet docid = withUserTOS $ \_ -> do
   case (ispreparation, msiglink) of
     (True,  _)                       -> do
        -- Never cache design view. IE8 hack. Should be fixed in different wasy
-       internalResponse <$> (setHeaderBS "Cache-Control" "no-cache" <$> (simpleHtmlResonseClrFlash =<< pageDocumentDesign ctx document ad))
+       internalResponse <$> (setHeaderBS "Cache-Control" "no-cache" <$> (simpleHtmlResponse =<< pageDocumentDesign ctx document ad))
     (False, _) | isauthororincompany -> do
        internalResponse <$> pageDocumentView ctx document msiglink (isincompany)
     (False, Just siglink)            -> do
-       internalResponse <$> (simpleHtmlResonseClrFlash =<< pageDocumentSignView ctx document siglink ad)
+       internalResponse <$> (simpleHtmlResponse =<< pageDocumentSignView ctx document siglink ad)
     _                                -> do
        internalError
 
@@ -479,16 +479,16 @@ handlePadList = do
   ctx <- getContext
   ad <- getAnalyticsData
   case getContextUser ctx of
-    Just _ -> simpleHtmlResonseClrFlash =<< pageDocumentPadList ctx  ad
-    _ -> simpleHtmlResonseClrFlash =<< pageDocumentPadListLogin ctx  ad
+    Just _ -> simpleHtmlResponse =<< pageDocumentPadList ctx  ad
+    _ -> simpleHtmlResponse =<< pageDocumentPadListLogin ctx  ad
 
 handleToStart :: Kontrakcja m => m Response
 handleToStart = do
   ctx <- getContext
   ad <- getAnalyticsData
   case (ctxmaybeuser ctx) of
-    Just _ -> simpleHtmlResonseClrFlash =<< pageDocumentToStartList ctx  ad
-    _ -> simpleHtmlResonseClrFlash =<< pageDocumentToStartLogin ctx  ad
+    Just _ -> simpleHtmlResponse =<< pageDocumentToStartList ctx  ad
+    _ -> simpleHtmlResponse =<< pageDocumentToStartLogin ctx  ad
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
 checkFileAccess fid = do
