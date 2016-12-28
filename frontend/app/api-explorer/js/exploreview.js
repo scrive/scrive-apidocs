@@ -13,7 +13,7 @@ window.ApiDemoExploreView = Backbone.View.extend({
     var headerContainer = $("<div class='container'/>");
     var headerRightBarList = $("<ul class='navbar-nav list-inline'/>");
     headerRightBarList.append($("<li><a class='active' href='#'><b>API explorer</b></a></li>"))
-                      .append($("<li><a href='/en/api'>API documentation</a> </li>"));
+                      .append($("<li><a href='http://apidocs.scrive.com/'>API documentation</a> </li>"));
 
     if (!model.oauth().isSetUp()) {
       headerRightBarList.append($("<li><a>Authorise</a></li>").click(function () {
