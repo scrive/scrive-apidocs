@@ -14,7 +14,6 @@ import BrandedDomain.BrandedDomain
 import EID.CGI.GRP.Config
 import EID.Nets.Config
 import File.FileID
-import FlashMessage
 import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf
 import IPAddress
@@ -31,7 +30,6 @@ import qualified MemCache
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
-    , ctxflashmessages       :: [FlashMessage] -- ^ The flash messages for the NEXT request.
     , ctxtime                :: UTCTime -- ^ The time of the request.
     , ctxclientname          :: Maybe String -- ^ Client identification from header Client-Name or if that's missing: User-Agent
     , ctxclienttime          :: Maybe UTCTime -- ^ Client-local time when an action was performed (e.g. signing a document)

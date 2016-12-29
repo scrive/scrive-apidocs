@@ -1,6 +1,5 @@
 module KontraLink(
     KontraLink(..)
-  , LoginRedirectReason(..)
   , getHomeOrDesignViewLink
   ) where
 
@@ -23,20 +22,11 @@ import OAuth.Model
 import User.Model
 
 {- |
-   Defines the reason why we are redirected to login page
--}
-data LoginRedirectReason = LoginTry
-                         | NotLogged
-                         | NotLoggedAsSuperUser
-                         | InvalidLoginInfo String -- email
-    deriving (Eq)
-
-{- |
    All the links available for responses
 -}
 data KontraLink
     = LinkHome Lang
-    | LinkLogin Lang LoginRedirectReason
+    | LinkLogin Lang
     | LinkLoginDirect Lang
     | LinkLogout
     | LinkSignup Lang
@@ -80,7 +70,7 @@ langFolder lang = "/" ++ (codeFromLang lang)
 -}
 instance Show KontraLink where
     showsPrec _ (LinkHome lang) = (++) $ langFolder lang ++ "/"
-    showsPrec _ (LinkLogin lang _) = (++) $ langFolder lang ++ "/enter#log-in" -- THIS ONE IS NOT USED. CHECK sendRedirect
+    showsPrec _ (LinkLogin lang) = (++) $ langFolder lang ++ "/enter#log-in" -- THIS ONE IS NOT USED. CHECK sendRedirect
     showsPrec _ (LinkLoginDirect lang) = (++) $ langFolder lang ++ "/enter#log-in"  -- THIS ONE IS NOT USED. CHECK sendRedirect
     showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/enter#sign-up"

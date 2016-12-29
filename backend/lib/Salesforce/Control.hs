@@ -10,6 +10,7 @@ import Text.JSON.Gen
 
 import DB
 import Happstack.Fields
+import InternalResponse
 import Kontra
 import KontraLink
 import KontraPrelude
@@ -20,8 +21,8 @@ import User.Model
 import User.Utils
 
 {- This handlers sets SalesforceScheme for callbacks for give user -}
-handleSalesforceIntegration :: Kontrakcja m => m (Either KontraLink KontraLink)
-handleSalesforceIntegration  = withUserGet $ do
+handleSalesforceIntegration :: Kontrakcja m => m InternalKontraResponse
+handleSalesforceIntegration  = withUser $ \user -> do
   ctx <- getContext
   case ctxsalesforceconf ctx of
     Nothing -> noConfigurationError "Salesforce"
@@ -29,14 +30,14 @@ handleSalesforceIntegration  = withUserGet $ do
       mcode <- getField "code"
       mstate <- getField "state" -- Internall salesforce param. We use it for holding url, where we will redirect user after authorization flow is done.
       case mcode of
-        Nothing   -> LinkExternal <$> (flip runReaderT sc (initAuthorizationWorkflowUrl mstate))
+        Nothing   ->  (internalResponse . LinkExternal) <$> (flip runReaderT sc (initAuthorizationWorkflowUrl mstate))
         Just code -> do
           mtoken <- flip runReaderT sc (getRefreshTokenFromCode code)
           case mtoken of
             Left _      -> internalError
             Right token -> do
-              dbUpdate $ UpdateUserCallbackScheme (userid $ $fromJust $ ctxmaybeuser ctx) (SalesforceScheme token)
-              return $ fromMaybe LinkDesignView (LinkExternal <$> mstate)
+              dbUpdate $ UpdateUserCallbackScheme (userid user) (SalesforceScheme token)
+              return $ internalResponse $ fromMaybe LinkDesignView (LinkExternal <$> mstate)
 
 {- Returns access keys for salesforce user. User by They salesfroce plugin to start propper oauth wokflow. Keys are hardcodded in config file. -}
 getSalesforceKeys :: Kontrakcja m => m JSValue

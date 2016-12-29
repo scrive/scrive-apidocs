@@ -31,7 +31,7 @@ pagePrivilegesConfirm ctx privileges companyname token = do
          F.value "companyname" companyname
          F.value "token" $ show token
          standardPageFields ctx Nothing ad
-     simpleHtmlResonseClrFlash rsp
+     simpleHtmlResponse rsp
 
 privilegeDescription :: TemplatesMonad m => APIPrivilege -> m String
 privilegeDescription APIDocCreate = renderTemplate_ "_apiConfiramtionCreatePersmission"

@@ -7,7 +7,7 @@ flashMessageUserPasswordChanged=
 
 ###
 flashMessagePasswordChangeLinkNotValid=
-	$_flashMessagePasswordChangeLinkNotValid()$
+	$_flashMessagePasswordChangeLinkNotValidForBackend()$
 ###
 flashMessageAccessNewAccountLinkNotValid=
 	$_flashMessageAccessNewAccountLinkNotValid()$
@@ -24,15 +24,7 @@ flashMessageNewActivationLinkSend=
 
 ###
 flashMessageLoginPageRedirectReason=
-$if(notlogged)$
-	$_flashMessageLoginPageRedirectReasonNotLoggedIn()$
-$endif$
-$if(notsu)$
-	$_flashMessageLoginPageRedirectReasonNotAdmin()$
-$endif$
-$if(invloginfo)$
-	$_flashMessageLoginPageRedirectReasonWrongMailOrPassword()$
-$endif$
+  $_flashMessageLoginPageRedirectReasonNotLoggedIn()$
 ###
 flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeCompanyAccount()$
 ###

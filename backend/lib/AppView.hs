@@ -11,7 +11,6 @@ module AppView(
               , simpleAesonResponse
               , simpleUnjsonResponse
               , simpleHtmlResponse
-              , simpleHtmlResonseClrFlash
               , respondWithPDF
               , priceplanPage
               , unsupportedBrowserPage
@@ -25,7 +24,6 @@ module AppView(
 
 import Control.Arrow (second)
 import Control.Monad.Catch
-import Data.Char
 import Data.String.Utils hiding (join)
 import Data.Unjson
 import Happstack.Server.SimpleHTTP
@@ -46,7 +44,6 @@ import Branding.Adler32
 import Company.CompanyUI
 import Company.Model
 import DB
-import FlashMessage
 import Kontra
 import KontraPrelude
 import ThirdPartyStats.Core
@@ -78,7 +75,6 @@ renderFromBodyWithFields content fields = do
   ctx <- getContext
   ad <- getAnalyticsData
   res <- simpleHtmlResponse =<< pageFromBody ctx ad content fields
-  clearFlashMsgs
   return res
 
 
@@ -122,7 +118,7 @@ notFoundPage = pageWhereLanguageCanBeInUrl $ do
                     standardPageFields ctx Nothing ad
    else renderTemplate "notFoundWithoutHeaders" $ do
                     standardPageFields ctx Nothing ad
-  simpleHtmlResonseClrFlash content
+  simpleHtmlResponse content
 
 internalServerErrorPage :: Kontrakcja m => m Response
 internalServerErrorPage =  pageWhereLanguageCanBeInUrl $ do
@@ -133,7 +129,7 @@ internalServerErrorPage =  pageWhereLanguageCanBeInUrl $ do
                     standardPageFields ctx Nothing ad
    else renderTemplate "internalServerErrorWithoutHeaders" $ do
                     standardPageFields ctx Nothing ad
-  simpleHtmlResonseClrFlash content
+  simpleHtmlResponse content
 
 pageWhereLanguageCanBeInUrl :: Kontrakcja m => m Response -> m Response
 pageWhereLanguageCanBeInUrl handler = do
@@ -151,7 +147,7 @@ priceplanPage = do
   then do
     content <- renderTemplate "priceplanPage" $ do
       standardPageFields ctx Nothing ad
-    simpleHtmlResonseClrFlash content
+    simpleHtmlResponse content
   else respond404
 
 unsupportedBrowserPage :: Kontrakcja m => m Response
@@ -194,7 +190,7 @@ enableCookiesPage = do
       content <- if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx)
                     then renderTemplate "sessionTimeOut" fields
                     else renderTemplate "sessionTimeOutWithoutHeaders" fields
-      pageWhereLanguageCanBeInUrl $ simpleHtmlResonseClrFlash content >>= internalServerError
+      pageWhereLanguageCanBeInUrl $ simpleHtmlResponse content >>= internalServerError
   where
     cookieToJson Cookie{..} = object [
         "version"   .= cookieVersion
@@ -217,16 +213,13 @@ handleTermsOfService = withAnonymousContext $ do
                 else do
                   renderTemplate "termsOfServiceWithBranding" $ do
                     standardPageFields ctx Nothing ad
-  simpleHtmlResonseClrFlash content
+  simpleHtmlResponse content
 
 standardPageFields :: (TemplatesMonad m, MonadDB m, MonadThrow m) => Context -> Maybe CompanyUI -> AnalyticsData -> Fields m ()
 standardPageFields ctx mcompanyui ad = do
   F.value "langcode" $ codeFromLang $ ctxlang ctx
   F.value "logged" $ isJust (ctxmaybeuser ctx)
   F.value "padlogged" $ isJust (ctxmaybepaduser ctx)
-  case listToMaybe $ ctxflashmessages ctx of
-    Just f -> F.object "flash" $ flashMessageFields f
-    _ -> return ()
   F.value "hostpart" $ ctxDomainUrl ctx
   F.value "production" (ctxproduction ctx)
   F.value "brandingdomainid" (show . bdid . ctxbrandeddomain $ ctx)
@@ -270,14 +263,6 @@ simpleUnjsonResponse unjson a = ok $ toResponseBS jsonContentType $ unjsonToByte
 simpleHtmlResponse :: Kontrakcja m => String -> m Response
 simpleHtmlResponse s = ok $ toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString s
 
-
-{- | Sames as simpleHtmlResponse, but clears also flash messages and modals -}
-simpleHtmlResonseClrFlash :: Kontrakcja m => String -> m Response
-simpleHtmlResonseClrFlash rsp = do
-  res <- simpleHtmlResponse rsp
-  clearFlashMsgs
-  return res
-
 respondWithPDF :: Bool -> BS.ByteString -> Response
 respondWithPDF forceDownload contents =
   setHeaderBS "Content-Type" "application/pdf" $
@@ -292,11 +277,3 @@ entryPointFields :: TemplatesMonad m => Context -> Fields m ()
 entryPointFields ctx =  do
   F.value "cdnbaseurl" (ctxcdnbaseurl ctx)
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID
-
-
-flashMessageFields :: (Monad m) => FlashMessage -> Fields m ()
-flashMessageFields flash = do
-  F.value "type" $  case flashType flash of
-    OperationDone   -> ("success" :: String)
-    OperationFailed -> ("error" :: String)
-  F.value "message" $ replace "\"" "'" $ filter (not . isControl) $ flashMessage flash

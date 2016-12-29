@@ -27,6 +27,7 @@ import CompanyAccounts.Model
 import DB
 import Happstack.Fields
 import InputValidation
+import InternalResponse
 import Kontra
 import KontraLink
 import KontraPrelude
@@ -38,7 +39,6 @@ import User.Email
 import User.History.Model
 import User.UserControl
 import User.Utils
-import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 
@@ -265,22 +265,20 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
     the old stuff that was based in UserID.  It checks that the logged in
     user has actually been invited to join the company in the URL.
 -}
-handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m (Either KontraLink (Either KontraLink String))
-handleGetBecomeCompanyAccount companyid = withUserGet $ do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
+handleGetBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m InternalKontraResponse
+handleGetBecomeCompanyAccount companyid = withUser $ \user -> do
   invite <- dbQuery $ GetCompanyInvite companyid (userid user)
   case invite of
-       Nothing -> do
-        addFlashM $ flashMessageBecomeCompanyLogInDifferentUser
-        return $ Left LinkAccount
-       _ -> do
-        ctx <- getContext
-        newcompany <- guardJustM $ dbQuery $ GetCompany companyid
-        Right <$> pageDoYouWantToBeCompanyAccount ctx newcompany
+    Nothing -> do
+      flashmessage <- flashMessageBecomeCompanyLogInDifferentUser
+      return $ internalResponseWithFlash flashmessage LinkAccount
+    _ -> do
+      ctx <- getContext
+      newcompany <- guardJustM $ dbQuery $ GetCompany companyid
+      internalResponse <$> (pageDoYouWantToBeCompanyAccount ctx newcompany)
 
-handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m KontraLink
-handlePostBecomeCompanyAccount cid = withUserPost $ do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
+handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m InternalKontraResponse
+handlePostBecomeCompanyAccount cid = withUser $ \user -> do
   _ <- guardJustM $ dbQuery $ GetCompanyInvite cid (userid user)
   newcompany <- guardJustM $ dbQuery $ GetCompany cid
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) False
@@ -288,5 +286,5 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
   _ <- dbUpdate $ RemoveCompanyInvite cid (userid user)
   -- if we are inviting a user with a plan to join the company, we
   -- should delete their personal plan
-  addFlashM $ flashMessageUserHasBecomeCompanyAccount newcompany
-  return $ LinkAccount
+  flashmessage <- flashMessageUserHasBecomeCompanyAccount newcompany
+  return $ internalResponseWithFlash flashmessage LinkAccount

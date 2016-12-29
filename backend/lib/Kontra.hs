@@ -4,7 +4,6 @@ module Kontra
     , module Context
     , Kontra(..)
     , runKontra
-    , clearFlashMsgs
     , logUserToContext
     , logPadUserToContext
     , unsafeSessionTakeover
@@ -126,12 +125,6 @@ onlyBackdoorOpen a = do
   if backdoorOpen
     then a
     else respond404
-
-{- |
-   Clears all the flash messages from the context.
--}
-clearFlashMsgs:: KontraMonad m => m ()
-clearFlashMsgs = modifyContext $ \ctx -> ctx { ctxflashmessages = [] }
 
 {- |
    Sticks the logged in user onto the context

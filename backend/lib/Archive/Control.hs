@@ -16,7 +16,6 @@ import Codec.Archive.Zip
 import Control.Conditional (unlessM)
 import Data.Char
 import Data.Unjson (unjsonDef)
-import Happstack.Server (Response)
 import Log
 import Text.JSON
 import qualified Data.ByteString as BSS
@@ -41,8 +40,8 @@ import Doc.DocumentMonad (DocumentT, theDocument, withDocument)
 import Doc.Model
 import File.Storage as F
 import InputValidation
+import InternalResponse
 import Kontra
-import KontraLink
 import KontraPrelude
 import Log.Identifier
 import User.Model
@@ -151,17 +150,14 @@ handleListCSV= do
                }
 
 -- | Main view of the archive
-showArchive :: Kontrakcja m => m (Either KontraLink Response)
-showArchive = checkUserTOSGet $ do
-    tostime <- guardJustM $ join <$> fmap userhasacceptedtermsofservice <$> ctxmaybeuser <$> getContext
-    user    <- guardJustM $ ctxmaybeuser <$> getContext
+showArchive :: Kontrakcja m => m InternalKontraResponse
+showArchive = withUserTOS $ \(user,tostime) -> do
     mcompany <- dbQuery $ GetCompany (usercompany user)
     ctx <- getContext
     pb <-  pageArchive ctx user mcompany tostime
-    renderFromBodyWithFields pb (F.value "archive" True)
-
+    internalResponse <$> renderFromBodyWithFields pb (F.value "archive" True)
+              
 -- Zip utils
-
 docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
 docToEntry doc = do
       let name = filter ((/= ' ')) $ filter (isAscii) $ (documenttitle doc) ++ "_" ++ (show $ documentid doc) ++".pdf"

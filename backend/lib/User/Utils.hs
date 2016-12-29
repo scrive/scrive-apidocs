@@ -1,22 +1,23 @@
 module User.Utils (
       getCompanyForUser
-    , withUserPost
-    , withUserGet
-    , checkUserTOSGet
-    , withCompanyUser
+    , withUserTOS
+    , withUser
+    , withUserCompany
     , withCompanyAdmin
     , withCompanyAdminOrAdminOnly
-)where
+) where
 
 import Control.Monad.Catch
-import Data.Functor
+import Data.Time.Clock (UTCTime)
 
 import Company.Model
 import DB
+import InternalResponse
 import Kontra
 import KontraLink
 import KontraPrelude
 import User.Model
+import User.UserView
 import Util.MonadUtils
 
 {- |
@@ -27,46 +28,35 @@ getCompanyForUser :: (MonadDB m, MonadThrow m) => User -> m Company
 getCompanyForUser user = dbQuery $ GetCompanyByUserID $ userid user
 
 {- |
-   Guard against a POST with no logged in user.
+   Guard against a GET/POST with no logged in user.
    If they are not logged in, redirect to login page.
 -}
-withUserPost :: Kontrakcja m => m KontraLink -> m KontraLink
-withUserPost action = do
+withUser :: Kontrakcja m => (User -> m InternalKontraResponse) -> m InternalKontraResponse
+withUser action = do
     ctx <- getContext
     case ctxmaybeuser ctx of
-         Just _  -> action
-         Nothing -> return $ LinkLogin (ctxlang ctx) NotLogged
-
-{- |
-   Guard against a GET with no logged in user.
-   If they are not logged in, redirect to login page.
--}
-withUserGet :: Kontrakcja m => m a -> m (Either KontraLink a)
-withUserGet action = do
-  ctx <- getContext
-  case ctxmaybeuser ctx of
-    Just _  -> Right <$> action
-    Nothing -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged
+      Just user -> action user
+      Nothing   -> do
+       flashmessage <- flashMessageLoginRedirect
+       return $ internalResponseWithFlash flashmessage (LinkLogin (ctxlang ctx))
 
 {- |
    Guard against a GET with logged in users who have not signed the TOS agreement.
    If they have not, redirect to their account page.
 -}
-checkUserTOSGet :: Kontrakcja m => m a -> m (Either KontraLink a)
-checkUserTOSGet action = do
-    ctx <- getContext
-    case ctxmaybeuser ctx of
-        Just (User{userhasacceptedtermsofservice = Just _}) -> Right <$> action
-        Just _ -> return $ Left $ LinkAcceptTOS
-        Nothing -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged
+withUserTOS :: Kontrakcja m => ((User, UTCTime) -> m InternalKontraResponse) -> m InternalKontraResponse
+withUserTOS action = withUser $ \user -> do
+  case userhasacceptedtermsofservice user of
+    Just tosaccepttime -> action (user, tosaccepttime)
+    Nothing -> return $ internalResponse (LinkAcceptTOS)
 
 {- |
     Guards that there is a user that is logged in and they
     are in a company.  The user and company are passed as params
     to the given action, to save you having to look them up yourself.
 -}
-withCompanyUser :: Kontrakcja m => ((User, Company) -> m a) -> m a
-withCompanyUser action = do
+withUserCompany :: Kontrakcja m => ((User, Company) -> m a) -> m a
+withUserCompany action = do
   Context{ ctxmaybeuser } <- getContext
   user <- guardJust ctxmaybeuser
   company <- getCompanyForUser user
@@ -76,7 +66,7 @@ withCompanyUser action = do
     Guards that there is a logged in company admin.
 -}
 withCompanyAdmin :: Kontrakcja m => ((User, Company) -> m a) -> m a
-withCompanyAdmin action = withCompanyUser $ \(user, company) ->
+withCompanyAdmin action = withUserCompany $ \(user, company) ->
   if useriscompanyadmin user then action (user, company) else internalError
 
 withCompanyAdminOrAdminOnly :: Kontrakcja m => Maybe CompanyID -> (Company -> m a) -> m a

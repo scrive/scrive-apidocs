@@ -80,6 +80,7 @@ import File.Model
 import File.Storage (getFileIDContents)
 import Happstack.Fields
 import InputValidation
+import InternalResponse
 import Kontra
 import KontraLink
 import KontraPrelude
@@ -97,79 +98,76 @@ import Util.Zlib (decompressIfPossible)
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified GuardTime as GuardTime
 
-handleNewDocument :: Kontrakcja m => m KontraLink
-handleNewDocument = do
+handleNewDocument :: Kontrakcja m => m InternalKontraResponse
+handleNewDocument = withUser $ \user -> do
   ctx <- getContext
-  if (isJust $ ctxmaybeuser ctx)
-     then withUserPost $ do
-        user <- guardJustM $ ctxmaybeuser <$> getContext
-        title <- renderTemplate_ "newDocumentTitle"
-        actor <- guardJustM $ mkAuthorActor <$> getContext
-        mtimezonename <- lookCookieValue "timezone"
-        case mtimezonename of
-          Nothing -> logInfo_ "'timezone' cookie not found"
-          _ -> return ()
-        timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
-        timestamp <- formatTimeSimpleWithTZ timezone (ctxtime ctx)
-        doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ timestamp) Signable timezone 1 actor
-        -- Default document on the frontend has different requirements,
-        -- this sets up the signatories to match those requirements.
-        withDocument doc $ do
-            authorsiglink <- guardJust $ find (\sl -> signatoryisauthor sl) (documentsignatorylinks doc)
-            othersiglink  <- guardJust $ find (\sl -> not $ signatoryisauthor sl)  (documentsignatorylinks doc)
-            let fields  = [
-                    SignatoryNameField $ NameField {
-                        snfID                     = (unsafeSignatoryFieldID 0)
-                      , snfNameOrder              = NameOrder 1
-                      , snfValue                  = ""
-                      , snfObligatory             = False
-                      , snfShouldBeFilledBySender = False
-                      , snfPlacements             = []
-                    }
-                  , SignatoryNameField $ NameField {
-                        snfID                     = (unsafeSignatoryFieldID 0)
-                      , snfNameOrder              = NameOrder 2
-                      , snfValue                  = ""
-                      , snfObligatory             = False
-                      , snfShouldBeFilledBySender = False
-                      , snfPlacements             = []
-                    }
-                  , SignatoryEmailField $ EmailField {
-                        sefID                     = (unsafeSignatoryFieldID 0)
-                      , sefValue                  = ""
-                      , sefObligatory             = True
-                      , sefShouldBeFilledBySender = False
-                      , sefPlacements             = []
-                    }
-                  , SignatoryMobileField $ MobileField {
-                        smfID                     = (unsafeSignatoryFieldID 0)
-                      , smfValue                  = ""
-                      , smfObligatory             = False
-                      , smfShouldBeFilledBySender = False
-                      , smfPlacements             = []
-                    }
-                  , SignatoryCompanyField $ CompanyField {
-                        scfID                     = (unsafeSignatoryFieldID 0)
-                      , scfValue                  = ""
-                      , scfObligatory             = False
-                      , scfShouldBeFilledBySender = False
-                      , scfPlacements             = []
-                    }
-                  , SignatoryCompanyNumberField $ CompanyNumberField {
-                        scnfID                     = (unsafeSignatoryFieldID 0)
-                      , scnfValue                  = ""
-                      , scnfObligatory             = False
-                      , scnfShouldBeFilledBySender = False
-                      , scnfPlacements             = []
-                    }
-                  ]
-                othersiglink' = othersiglink { signatorysignorder = SignOrder 1
-                                             , signatoryfields = fields
-                                             }
-            _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink, othersiglink'] actor
-            dbUpdate $ SetDocumentUnsavedDraft True
-        return $ LinkIssueDoc (documentid doc)
-     else return $ LinkLogin (ctxlang ctx) LoginTry
+  title <- renderTemplate_ "newDocumentTitle"
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  mtimezonename <- lookCookieValue "timezone"
+  case mtimezonename of
+    Nothing -> logInfo_ "'timezone' cookie not found"
+    _ -> return ()
+  timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
+  timestamp <- formatTimeSimpleWithTZ timezone (ctxtime ctx)
+  doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ timestamp) Signable timezone 1 actor
+  -- Default document on the frontend has different requirements,
+  -- this sets up the signatories to match those requirements.
+  withDocument doc $ do
+      authorsiglink <- guardJust $ find (\sl -> signatoryisauthor sl) (documentsignatorylinks doc)
+      othersiglink  <- guardJust $ find (\sl -> not $ signatoryisauthor sl)  (documentsignatorylinks doc)
+      let fields  = [
+              SignatoryNameField $ NameField {
+                  snfID                     = (unsafeSignatoryFieldID 0)
+                , snfNameOrder              = NameOrder 1
+                , snfValue                  = ""
+                , snfObligatory             = False
+                , snfShouldBeFilledBySender = False
+                , snfPlacements             = []
+              }
+            , SignatoryNameField $ NameField {
+                  snfID                     = (unsafeSignatoryFieldID 0)
+                , snfNameOrder              = NameOrder 2
+                , snfValue                  = ""
+                , snfObligatory             = False
+                , snfShouldBeFilledBySender = False
+                , snfPlacements             = []
+              }
+            , SignatoryEmailField $ EmailField {
+                  sefID                     = (unsafeSignatoryFieldID 0)
+                , sefValue                  = ""
+                , sefObligatory             = True
+                , sefShouldBeFilledBySender = False
+                , sefPlacements             = []
+              }
+            , SignatoryMobileField $ MobileField {
+                  smfID                     = (unsafeSignatoryFieldID 0)
+                , smfValue                  = ""
+                , smfObligatory             = False
+                , smfShouldBeFilledBySender = False
+                , smfPlacements             = []
+              }
+            , SignatoryCompanyField $ CompanyField {
+                  scfID                     = (unsafeSignatoryFieldID 0)
+                , scfValue                  = ""
+                , scfObligatory             = False
+                , scfShouldBeFilledBySender = False
+                , scfPlacements             = []
+              }
+            , SignatoryCompanyNumberField $ CompanyNumberField {
+                  scnfID                     = (unsafeSignatoryFieldID 0)
+                , scnfValue                  = ""
+                , scnfObligatory             = False
+                , scnfShouldBeFilledBySender = False
+                , scnfPlacements             = []
+              }
+            ]
+          othersiglink' = othersiglink { signatorysignorder = SignOrder 1
+                                       , signatoryfields = fields
+                                       }
+      _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink, othersiglink'] actor
+      dbUpdate $ SetDocumentUnsavedDraft True
+      return $ internalResponse $ LinkIssueDoc (documentid doc)
+
 {-
   Document state transitions are described in DocState.
 
@@ -181,8 +179,9 @@ formatTimeSimpleWithTZ tz t = do
   runQuery_ $ rawSQL "SELECT to_char($1 AT TIME ZONE $2, 'YYYY-MM-DD HH24:MI')" (t, tz)
   fetchOne runIdentity
 
-showCreateFromTemplate :: Kontrakcja m => m (Either KontraLink String)
-showCreateFromTemplate = withUserGet $ pageCreateFromTemplate =<< getContext
+showCreateFromTemplate :: Kontrakcja m => m InternalKontraResponse
+showCreateFromTemplate = withUser $ \_ -> do
+  internalResponse <$> (pageCreateFromTemplate =<< getContext)
 
 {- |
     Call after signing in order to save the document for any user, and
@@ -248,27 +247,26 @@ handleSignShow did slid = logDocumentAndSignatory did slid $ do
            then do
              addEventForVisitingSigningPageIfNeeded VisitedViewForAuthenticationEvidence invitedlink
              content <- theDocument >>= \d -> pageDocumentIdentifyView ctx d invitedlink ad
-             simpleHtmlResonseClrFlash content
+             simpleHtmlResponse content
            else do
              addEventForVisitingSigningPageIfNeeded VisitedViewForSigningEvidence invitedlink
              unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $ do
                dbUpdate . MarkDocumentSeen slid magichash =<< signatoryActor ctx invitedlink
                triggerAPICallbackIfThereIsOne =<< theDocument
              content <- theDocument >>= \d -> pageDocumentSignView ctx d invitedlink ad
-             simpleHtmlResonseClrFlash content
+             simpleHtmlResponse content
     Nothing -> handleCookieFail slid did
 
 -- |
 --   /ts/[documentid] (doc has to be a draft)
 {-# NOINLINE handleToStartShow #-}
-handleToStartShow :: Kontrakcja m => DocumentID -> m (Either KontraLink Response)
-handleToStartShow documentid = checkUserTOSGet $ do
+handleToStartShow :: Kontrakcja m => DocumentID -> m InternalKontraResponse
+handleToStartShow documentid = withUserTOS $ \_ -> do
   ctx <- getContext
   document <- getDocByDocIDForAuthor documentid
   ad <- getAnalyticsData
   content <- pageDocumentToStartView ctx document ad
-  simpleHtmlResonseClrFlash content
-
+  internalResponse <$> (simpleHtmlResponse content)
 
 -- If is not magic hash in session. It may mean that the
 -- session expired and we deleted the credentials already or it
@@ -289,7 +287,7 @@ handleCookieFail slid did = logDocumentAndSignatory did slid $ do
       content <- if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx)
         then renderTemplate "sessionTimeOut" fields
         else renderTemplate "sessionTimeOutWithoutHeaders" fields
-      simpleHtmlResonseClrFlash content
+      simpleHtmlResponse content
 
 {- |
    Redirect author of document to go to signview
@@ -343,8 +341,8 @@ handleEvidenceAttachment docid file = do
    URL: /d/{documentid}
    Method: GET
  -}
-handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink (Either Response String))
-handleIssueShowGet docid = checkUserTOSGet $ do
+handleIssueShowGet :: Kontrakcja m => DocumentID -> m InternalKontraResponse
+handleIssueShowGet docid = withUserTOS $ \_ -> do
   document <- getDocByDocID docid
   muser <- ctxmaybeuser <$> getContext
 
@@ -363,11 +361,11 @@ handleIssueShowGet docid = checkUserTOSGet $ do
   case (ispreparation, msiglink) of
     (True,  _)                       -> do
        -- Never cache design view. IE8 hack. Should be fixed in different wasy
-       Left <$> (setHeaderBS "Cache-Control" "no-cache" <$> (simpleHtmlResonseClrFlash =<< pageDocumentDesign ctx document ad))
+       internalResponse <$> (setHeaderBS "Cache-Control" "no-cache" <$> (simpleHtmlResponse =<< pageDocumentDesign ctx document ad))
     (False, _) | isauthororincompany -> do
-       Right <$> pageDocumentView ctx document msiglink (isincompany)
+       internalResponse <$> pageDocumentView ctx document msiglink (isincompany)
     (False, Just siglink)            -> do
-       Left  <$> (simpleHtmlResonseClrFlash =<< pageDocumentSignView ctx document siglink ad)
+       internalResponse <$> (simpleHtmlResponse =<< pageDocumentSignView ctx document siglink ad)
     _                                -> do
        internalError
 
@@ -441,18 +439,14 @@ handleDownloadClosedFile did sid mh _nameForBrowser = do
     return $ respondWithPDF True content
    else respond404
 
-handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either KontraLink JSValue)
-handleResend docid signlinkid  = do
-  ctx <- getContext
-  case ctxmaybeuser ctx of
-    Nothing -> return $ Left $ LinkLogin (ctxlang ctx) NotLogged
-    Just _  -> Right <$> do
-      getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
-        signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
-        customMessage <- fmap strip <$> getField "customtext"
-        actor <- guardJustM $ fmap mkAuthorActor getContext
-        _ <- sendReminderEmail customMessage actor False signlink
-        J.runJSONGenT (return ())
+handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m InternalKontraResponse
+handleResend docid signlinkid = withUser $ \_ -> do
+  getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
+    signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
+    customMessage <- fmap strip <$> getField "customtext"
+    actor <- guardJustM $ fmap mkAuthorActor getContext
+    _ <- sendReminderEmail customMessage actor False signlink
+    internalResponse <$> J.runJSONGenT (return ())
 
 -- This only works for undelivered mails
 handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
@@ -485,16 +479,16 @@ handlePadList = do
   ctx <- getContext
   ad <- getAnalyticsData
   case getContextUser ctx of
-    Just _ -> simpleHtmlResonseClrFlash =<< pageDocumentPadList ctx  ad
-    _ -> simpleHtmlResonseClrFlash =<< pageDocumentPadListLogin ctx  ad
+    Just _ -> simpleHtmlResponse =<< pageDocumentPadList ctx  ad
+    _ -> simpleHtmlResponse =<< pageDocumentPadListLogin ctx  ad
 
 handleToStart :: Kontrakcja m => m Response
 handleToStart = do
   ctx <- getContext
   ad <- getAnalyticsData
   case (ctxmaybeuser ctx) of
-    Just _ -> simpleHtmlResonseClrFlash =<< pageDocumentToStartList ctx  ad
-    _ -> simpleHtmlResonseClrFlash =<< pageDocumentToStartLogin ctx  ad
+    Just _ -> simpleHtmlResponse =<< pageDocumentToStartList ctx  ad
+    _ -> simpleHtmlResponse =<< pageDocumentToStartLogin ctx  ad
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
 checkFileAccess fid = do
@@ -608,4 +602,3 @@ addEventForVisitingSigningPageIfNeeded ev sl = do
   doc <- theDocument
   when (isPending doc && isNothing (maybesigninfo sl)) $
     void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg ev  (return ()) (Just sl) Nothing =<< signatoryActor ctx sl
-

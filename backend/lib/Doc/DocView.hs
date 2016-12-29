@@ -27,7 +27,7 @@ import qualified Data.ByteString.Base64.Lazy as B64
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
-import AppView (companyUIForPage, entryPointFields, simpleHtmlResonseClrFlash, standardPageFields)
+import AppView (companyUIForPage, entryPointFields, simpleHtmlResponse, standardPageFields)
 import BrandedDomain.BrandedDomain
 import Company.CompanyUI
 import Company.Model
@@ -212,6 +212,6 @@ gtVerificationPage =  do
   then do
     content <- renderTemplate "gtVerificationPage" $ do
       standardPageFields ctx Nothing ad
-    simpleHtmlResonseClrFlash content
+    simpleHtmlResponse content
   else respond404
 
