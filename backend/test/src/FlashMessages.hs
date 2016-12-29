@@ -2,6 +2,7 @@
 module FlashMessages (flashMessagesTests) where
 
 import Control.Monad.Identity
+import Network.HTTP.Base (urlDecode)
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck (Arbitrary(..), Property, elements, ioProperty, mapSize, oneof)
@@ -35,7 +36,7 @@ flashCookieParse =
             (c :: Maybe String) <- fromJSValueField "content"
             return (t,c)
         case r of 
-          (Just t, Just c) -> return $ (t `elem` ["success", "error"]) && (c == flashMessage f)
+          (Just t, Just c) -> return $ (t `elem` ["success", "error"]) && (urlDecode c == flashMessage f)
           _ -> return False                     
       _ -> return False                     
 

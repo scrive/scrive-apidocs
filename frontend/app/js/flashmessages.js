@@ -120,7 +120,7 @@ exports.FlashMessageTryFromCookie = function () {
   if (Cookies.get("flashmessage")) {
     try {
       var jsonFlash = JSON.parse(tryUnescapeQuotes(Cookies.get("flashmessage")));
-      jsonFlash["content"] = decodeURI(jsonFlash["content"]);
+      jsonFlash["content"] = decodeURIComponent(jsonFlash["content"]);
       new FlashMessage(jsonFlash);
     } finally {
       Cookies.delete("flashmessage");

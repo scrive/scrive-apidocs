@@ -1,5 +1,5 @@
 module InternalResponse (
-      InternalKontraResponse(..)
+      InternalKontraResponse
     , eitherify
     , getFlashMessage
     , internalResponse

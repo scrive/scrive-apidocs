@@ -253,7 +253,7 @@ handleAcceptTOSPost = do
 
 
 handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m InternalKontraResponse
-handleAccountSetupGet uid token sm = withUser $ \_ -> do
+handleAccountSetupGet uid token sm = do
   ctx <- getContext
   muser <- getUserAccountRequestUser uid token
   case (muser, userhasacceptedtermsofservice =<< muser) of
@@ -272,7 +272,7 @@ handleAccountSetupGet uid token sm = withUser $ \_ -> do
         F.value "signupmethod" $ show sm
       internalResponse <$> (simpleHtmlResponse content)
     (Just _user, Just _)  -> return $ internalResponse $ LinkDesignView
-    _ -> return $ internalResponse $ LinkSignup $ ctxlang ctx
+    _ -> return $ internalResponse $ LinkLogin $ ctxlang ctx
 
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m InternalKontraResponse
 handleAccountSetupPost uid token sm = do
@@ -305,7 +305,7 @@ handleAccountSetupPost uid token sm = do
 -}
 
 handleAccessNewAccountGet :: Kontrakcja m => UserID -> MagicHash -> m InternalKontraResponse
-handleAccessNewAccountGet uid token = withUser $ \currentUser -> do
+handleAccessNewAccountGet uid token = do
   museraccount <- getAccessNewAccountUser uid token
   case museraccount of
     Just user -> do
@@ -321,13 +321,8 @@ handleAccessNewAccountGet uid token = withUser $ \currentUser -> do
     Nothing -> do
       muser <- dbQuery $ GetUserByID uid
       case muser of
-        Just user@User{userpassword = Just _} -> do
-          -- user has already set up an account, redirect to the archive
-          when (currentUser /= user) $
-            logInfo "New account email button link clicked by s different logged user" $ object [
-                  identifier ("new_" <>) uid
-                , identifier ("logged_" <>) $ userid currentUser
-                ]
+        Just (User{userpassword = Just _}) -> do
+          logInfo "User already activated" $ object [ identifier_ uid ]
           return $ internalResponse $ LinkArchive
         _ -> do
           ctx <- getContext

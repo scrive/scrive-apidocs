@@ -1,6 +1,5 @@
 module KontraLink(
     KontraLink(..)
-  , LoginRedirectReason(..)
   , getHomeOrDesignViewLink
   ) where
 
@@ -21,15 +20,6 @@ import KontraPrelude
 import MagicHash
 import OAuth.Model
 import User.Model
-
-{- |
-   Defines the reason why we are redirected to login page
--}
-data LoginRedirectReason = LoginTry
-                         | NotLogged
-                         | NotLoggedAsSuperUser
-                         | InvalidLoginInfo String -- email
-    deriving (Eq)
 
 {- |
    All the links available for responses

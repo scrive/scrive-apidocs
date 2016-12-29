@@ -1005,6 +1005,7 @@ Executable kontrakcja-test
                , HStringTemplate
                , HUnit
                , HaXml
+               , HTTP
                , MissingH
                , QuickCheck
                , aeson

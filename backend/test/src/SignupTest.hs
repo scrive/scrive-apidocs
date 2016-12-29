@@ -8,9 +8,9 @@ import ActionQueue.Core
 import ActionQueue.UserAccountRequest
 import Context
 import DB hiding (query, update)
-import FlashMessage (flashType, FlashType(..))
+import FlashMessage (FlashType(..), flashType)
+import InternalResponse (InternalKontraResponse, getFlashMessage, hasFlashMessage)
 import KontraPrelude
-import InternalResponse (getFlashMessage, hasFlashMessage, InternalKontraResponse)
 import MagicHash (MagicHash)
 import Mails.Model
 import MinutesTime

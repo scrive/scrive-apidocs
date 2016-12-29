@@ -168,8 +168,7 @@ pageDoYouWantToChangeEmail ctx newemail =
 
 flashMessageLoginRedirect :: TemplatesMonad m => m FlashMessage
 flashMessageLoginRedirect =
-  toFlashMsg OperationFailed <$>
-      (renderTemplate "flashMessageLoginPageRedirectReason" $ F.value "notlogged" True)
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageLoginPageRedirectReason"
 
 flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
 flashMessageUserDetailsSaved =
