@@ -187,8 +187,11 @@ apiCallSignup = api $ do
   when (isNothing memail) $ do
     throwM . SomeDBExtraException $ serverError "Email not provided or invalid"
   let email = $fromJust memail
-  firstname <- fromMaybe "" <$> getOptionalField asValidName "firstName"
-  lastname <- fromMaybe "" <$> getOptionalField asValidName "lastName"
+  firstname       <- fromMaybe "" <$> getOptionalField asValidName "firstName"
+  lastname        <- fromMaybe "" <$> getOptionalField asValidName "lastName"
+  phone           <- fromMaybe "" <$> getOptionalField asValidPhone "phone"
+  companyName     <- fromMaybe "" <$> getOptionalField asValidCompanyName "companyName"
+  companyPosition <- fromMaybe "" <$> getOptionalField asValidPosition "companyPostion"
   lang <- fromMaybe (ctxlang ctx) <$> langFromCode <$> getField' "lang"
   switchLang lang
   muser <- dbQuery $ GetUserByEmail $ Email email
@@ -196,10 +199,14 @@ apiCallSignup = api $ do
                Just user ->   return $ Nothing <| (isJust (userhasacceptedtermsofservice user)) |> Just user
                Nothing ->  do
                  company <- dbUpdate $ CreateCompany
+                 let newCompanyInfo = (companyinfo company) { companyname = companyName }
+                 _ <- dbUpdate $ SetCompanyInfo (companyid company) newCompanyInfo
                  createUser (Email email) (firstname,lastname) (companyid company,True) lang AccountRequest
   case muser' of
     Nothing -> runJSONGenT $ value "sent" $ False
     Just user -> do
+          _ <- dbUpdate $ SetUserInfo (userid user) $ (userinfo user)
+            { userphone = phone, usercompanyposition = companyPosition }
           sendNewUserMail user
           l <- newUserAccountRequestLink lang (userid user) AccountRequest
           asyncLogEvent "Send account confirmation email" [
