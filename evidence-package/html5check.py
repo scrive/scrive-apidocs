@@ -162,6 +162,7 @@ while (status == 302 or status == 301 or status == 307) and redirectCount < 10:
   connection.putheader("Content-Type", contentType)
   connection.putheader("Content-Encoding", 'gzip')
   connection.putheader("Content-Length", len(gzippeddata))
+  connection.putheader("User-Agent", 'Python')
   connection.endheaders()
   connection.send(gzippeddata)
   response = connection.getresponse()

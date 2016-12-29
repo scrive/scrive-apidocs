@@ -70,7 +70,7 @@ var LanguageSelect = require("./languageselect");
              <header><h4>{localization.footer.explore}</h4></header>
              <div className="content">
                <ul className="tree">
-                 <li className="branch"><a href={this.props.httplink + this.langprefixForStaticPages() + 'api'} id="nav-api"> {localization.footer.api}</a></li>
+                 <li className="branch"><a href="http://apidocs.scrive.com/" id="nav-api"> {localization.footer.api}</a></li>
                  <li className="branch"><a href={"/api-explorer"} id="nav-api-explorer"> {localization.footer.apiExplorer}</a></li>
                  <li className="branch"><a href="http://careers.stackoverflow.com/company/scrive" id="nav-jobs">{localization.footer.jobs}</a></li>
                  <li className="branch"><a href={this.props.langprefix + 'verify'} id="nav-privacy">{localization.footer.verify}</a></li>

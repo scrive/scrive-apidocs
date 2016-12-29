@@ -109,6 +109,8 @@ module.exports = React.createClass({
 
     var signview = this.props.signview;
 
+    this._windowWidth = this.standardWidth();
+
     if (this.props.model.pages().length !== this.state.images.length) {
       this.updateImages();
     } else {
@@ -269,7 +271,13 @@ module.exports = React.createClass({
   },
 
   maybeResetZoom: function () {
-    if (!this.isViewportSize() && this.state.zoom !== 1) {
+    // ratio of width change
+    var delta = Math.abs((this.standardWidth() - this._windowWidth) / this._windowWidth);
+    // if width changed by more than 10% it was probably an orientation change
+    // so let's reset zoom level
+    if (delta > 0.1 && delta < 0.9) {
+      this.setState({zoom: 1, zoomStep: 0});
+    } else if (!this.isViewportSize() && this.state.zoom !== 1) {
       this.setState({zoom: 1, zoomStep: 0});
     } else if (this.state.zoom * this.standardWidth() > MAX_ZOOM_PIXELS) {
       this.setState({zoom: MAX_ZOOM_PIXELS / this.standardWidth()});
