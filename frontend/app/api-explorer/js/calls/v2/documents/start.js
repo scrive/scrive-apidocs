@@ -15,18 +15,6 @@ new APICallV2({
   },
   params: [
           window.APIV2CallParamDocumentID,
-        , new APICallParam({
-            type: "bool",
-            argName: "author_signs_now",
-            name: "author_signs_now",
-            sendAsParam: true,
-            optional: true,
-            description: "Setting to ‘true’ will result in no invitation to\
-                          sign being sent to the author.\
-                          This is useful for when the author signs immediately\
-                          after the ‘start’ call.",
-            defaultValue: false
-          })
         , window.APIV2CallParamObjectVersion
         ]
 });
