@@ -3,10 +3,12 @@ module Partner.JSON (
   , unjsonUserForUpdate
   , userInfoFromUserForUpdate
   , userToUserForUpdate
+  , unjsonUsersForUpdate
   , CompanyForUpdate(..)
   , unjsonCompanyForUpdate
   , updateCompanyInfoWithCompanyForUpdate
   , companyToCompanyForUpdate
+  , unjsonCompaniesForUpdate
   ) where
 
 import Data.Default
@@ -94,6 +96,13 @@ userToUserForUpdate user =
   , ufuHasAcceptedTOS = maybe False (const True) (userhasacceptedtermsofservice user)
   }
 
+unjsonUsersForUpdate :: UnjsonDef [UserForUpdate]
+unjsonUsersForUpdate = objectOf $
+  fieldBy "users"
+  id
+  "List of users"
+  (arrayOf unjsonUserForUpdate)
+
 data CompanyForUpdate = CompanyForUpdate
     {
       cfuCompanyId :: String
@@ -159,6 +168,13 @@ companyToCompanyForUpdate company = CompanyForUpdate {
   , cfuCompanyCountry = companycountry cInfo
   }
   where cInfo = companyinfo company
+
+unjsonCompaniesForUpdate :: UnjsonDef [CompanyForUpdate]
+unjsonCompaniesForUpdate = objectOf $
+  fieldBy "companies"
+  id
+  "List of companies"
+  (arrayOf unjsonCompanyForUpdate)
 
 -------------------------------------------------------------------------------
 -- Utils                                                                    ---

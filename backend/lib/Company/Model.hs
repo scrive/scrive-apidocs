@@ -5,6 +5,7 @@ module Company.Model (
   , minCompanyIdleDocTimeout
   , maxCompanyIdleDocTimeout
   , GetCompanies(..)
+  , GetCompaniesByPartnerID(..)
   , GetCompany(..)
   , GetCompanyByUserID(..)
   , CreateCompany(..)
@@ -128,6 +129,14 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyByUserID Company where
       selectCompaniesSelectors
       sqlWhereEq "users.id" uid
     fetchOne fetchCompany
+
+data GetCompaniesByPartnerID = GetCompaniesByPartnerID PartnerID
+instance (MonadDB m, MonadThrow m) => DBQuery m GetCompaniesByPartnerID [Company] where
+  query (GetCompaniesByPartnerID partnerID) = do
+    runQuery_ $ sqlSelect "companies" $ do
+      selectCompaniesSelectors
+      sqlWhereEq "partner_id" partnerID
+    fetchMany fetchCompany
 
 data CreateCompany = CreateCompany
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateCompany Company where

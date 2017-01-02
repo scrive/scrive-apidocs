@@ -30,10 +30,12 @@ partnerAPITests env = testGroup "PartnerAPI"
   [ testThat "Test Partners API Create Company" env testPartnerCompanyCreate
   , testThat "Test Partners API Update Company" env testPartnerCompanyUpdate
   , testThat "Test Partners API Get Company" env testPartnerCompanyGet
+  , testThat "Test Partners API Get Companies" env testPartnerCompaniesGet
   , testThat "Test Partners API Company New User" env testPartnerCompanyUserNew
   , testThat "Test Partners API User Update" env testPartnerUserUpdate
   , testThat "Test Partners API User Get" env testPartnerUserGet
   , testThat "Test Partners API User Get Personal Tokens" env testPartnersUserGetTokens
+  , testThat "Test Partners API Company Users Get" env testPartnerCompanyUsersGet
   ]
 
 testPartnerCompanyCreate :: TestEnv ()
@@ -121,6 +123,28 @@ testPartnerCompanyGet = do
 
   return ()
 
+testPartnerCompaniesGet :: TestEnv ()
+testPartnerCompaniesGet = do
+  -- create companyA supervised by partnerA
+  (ctxA,pidA,_cidA) <- testHelperPartnerCompanyCreate
+  -- create companyB supervised by partnerB
+  (_ctxB,_pidB,_cidB) <- testHelperPartnerCompanyCreate
+
+  -- partnerA can list companies -> [only companyA]
+  let rq_companiesList_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompaniesList.json"
+  _ <- runApiJSONTest ctxA POST (partnerApiCallV1CompaniesGet pidA) [] 200 rq_companiesList_resp_fp
+
+  -- create randomUser
+  randomUser <- addNewRandomUser
+
+  -- random user is denied listing companies of partnerA
+  randomCtx <- (\c -> c { ctxmaybeuser = Just randomUser }) <$> mkContext def
+  randomReq <- mkRequestWithHeaders POST [] []
+  (randomRes,_) <- runTestKontra randomReq randomCtx $ partnerApiCallV1CompaniesGet pidA
+  assertEqual ("We should get a 403 response") 403 (rsCode randomRes)
+
+  return ()
+
 testPartnerCompanyUserNew :: TestEnv ()
 testPartnerCompanyUserNew = do
 
@@ -166,6 +190,21 @@ testPartnerUserGet = do
   -- Normal get user should work
   let rq_GetUser_resp_fp = inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   _ <- runApiJSONTest ctx GET (partnerApiCallV1UserGet pid uid) [] 200 rq_GetUser_resp_fp
+
+  return ()
+
+testPartnerCompanyUsersGet :: TestEnv ()
+testPartnerCompanyUsersGet = do
+
+  -- create company supervised by partner
+  (ctx,pid,cid) <- testHelperPartnerCompanyCreate
+
+  -- create another company user
+  _uid <- testHelperPartnerCompanyUserCreate ctx pid cid
+
+  -- get users of the company should work
+  let rq_GetUsers_resp_fp = inTestDir "json/partner_api_v1/param-partnerCompanyUsersGet.json"
+  _ <- runApiJSONTest ctx GET (partnerApiCallV1CompanyUsersGet pid cid) [] 200 rq_GetUsers_resp_fp
 
   return ()
 
@@ -218,13 +257,18 @@ testHelperPartnerCompanyCreate = do
 testHelperPartnerUserCreate :: TestEnv (Context, PartnerID, UserID)
 testHelperPartnerUserCreate = do
   (ctx,pid,cid) <- testHelperPartnerCompanyCreate
+  uid <- testHelperPartnerCompanyUserCreate ctx pid cid
+  return (ctx, pid, uid)
+
+testHelperPartnerCompanyUserCreate :: Context -> PartnerID -> CompanyID -> TestEnv(UserID)
+testHelperPartnerCompanyUserCreate ctx pid cid = do
   newUserGoodJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood_params = [ ("json", inTextBS newUserGoodJSON) ]
       rq_newUserGood_resp_fp = inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   respValue <- runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid cid) rq_newUserGood_params 201 rq_newUserGood_resp_fp
   let Object respObject = respValue
       Just (String uid) = H.lookup "id" respObject
-  return (ctx,pid, unsafeUserID $ $read $ T.unpack uid)
+  return $ unsafeUserID $ $read $ T.unpack uid
 
 testJSONCtx :: TestEnv (Context, PartnerID)
 testJSONCtx = do
