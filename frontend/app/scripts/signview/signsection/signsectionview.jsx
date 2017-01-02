@@ -204,11 +204,6 @@ var Task = require("../navigation/task");
       }
 
       var errorCallback = function (xhr) {
-        var data = {};
-        try {
-          data = JSON.parse(xhr.responseText);
-        } catch (e) {}
-
         if (xhr.status == 403) {
           ReloadManager.stopBlocking();
           ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
@@ -283,7 +278,9 @@ var Task = require("../navigation/task");
         var data = {};
         try {
           data = JSON.parse(xhr.responseText);
-        } catch (e) {}
+        } catch (e) {
+          Track.track_timeout("check call response parse error");
+        }
 
         if (xhr.status == 400 &&
             data.error_message === "The parameter 'sms_pin' had the following problems: invalid SMS PIN") {
