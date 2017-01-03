@@ -136,7 +136,6 @@ testPartnerCompaniesGet = do
   (_ctxB,_pidB,_cidB) <- testHelperPartnerCompanyCreate
 
   -- partnerA can list only his companies -> [still only companyA]
-  let rq_companiesList_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompaniesList.json"
   _ <- runApiJSONTest ctxA POST (partnerApiCallV1CompaniesGet pidA) [] 200 rq_companiesList_resp_fp
 
   -- create randomUser
