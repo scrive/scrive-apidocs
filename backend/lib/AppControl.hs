@@ -54,7 +54,6 @@ import Session.Model
 import Templates
 import Text.JSON.Convert
 import User.Model
-import Util.FinishWith
 import Utils.HTTP
 import qualified Amazon as AWS
 import qualified MemCache
@@ -232,9 +231,6 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
               mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
               logAttention "Respond404" . object $ logRequest rq mbody
               notFoundPage >>= notFound
-        , E.Handler $ \(FinishWith res ctx') -> do
-            modifyContext $ const ctx'
-            return $ Right res
         , E.Handler $ \e@DBException{..} -> Left <$> do
             rq <- askRq
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)

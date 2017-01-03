@@ -54,7 +54,6 @@ import KontraPrelude
 import Session.SessionID
 import Templates
 import User.Lang
-import Util.FinishWith
 import qualified Amazon as AWS
 import qualified MemCache
 
@@ -160,14 +159,12 @@ instance RunnableTestKontra a where
   runTestKontra rq ctx tk = do
     cs <- asks teConnSource
     (res, ctx', _) <- runTestKontraHelper cs rq ctx tk
-      `E.catch` (\(FinishWith _ _) -> $unexpectedErrorM "FinishWith thrown in function that doesn't return Response")
     return (res, ctx')
 
 instance RunnableTestKontra Response where
   runTestKontra rq ctx tk = do
     cs <- asks teConnSource
     (res, ctx', f) <- runTestKontraHelper cs rq ctx tk
-      `E.catch` (\(FinishWith res ctx') -> return (res, ctx', id))
     return (f res, ctx')
 
 -- Various helpers for constructing appropriate Context/Request

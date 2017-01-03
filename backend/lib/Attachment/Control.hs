@@ -30,7 +30,6 @@ import InputValidation
 import InternalResponse
 import Kontra
 import KontraPrelude
-import Redirect
 import User.Model
 import User.Utils
 import Util.Actor
@@ -69,8 +68,7 @@ handleDownloadAttachment attid _nameForBrowser = do
        _ -> internalError
 
 handleCreateNew :: Kontrakcja m => m JSValue
-handleCreateNew = do
-  guardLoggedIn
+handleCreateNew = guardLoggedInInternalError $ do
   input <- getDataFnM (lookInput "doc")
   _mdoc <- makeAttachmentFromFile input
   J.runJSONGenT $ return ()
@@ -104,7 +102,6 @@ jsonAttachmentsList = withUser $ \user -> do
 makeAttachmentFromFile :: Kontrakcja m => Input -> m (Maybe Attachment)
 makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
     logInfo_ "makeAttachmentFromFile: beggining"
-    guardLoggedIn
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content

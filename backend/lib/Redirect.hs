@@ -1,7 +1,6 @@
 module Redirect
   ( sendRedirect
   , sendSecureLoopBack
-  , guardLoggedIn
   ) where
 
 import Happstack.Server hiding (finishWith)
@@ -9,14 +8,11 @@ import Network.HTTP.Base (urlEncode)
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS
 
-import FlashMessage (addFlashCookie, toCookieValue)
 import Happstack.Fields
 import Kontra
 import KontraLink
 import KontraPrelude
 import User.Lang
-import User.UserView
-import Util.FinishWith
 import Utils.HTTP
 import Utils.String
 
@@ -60,14 +56,3 @@ sendSecureLoopBack = do
   seeOther link =<< setRsCode 303 (seeOtherXML link)
   where
     getSecureLink = (++) "https://" <$> currentLinkBody
-
-guardLoggedIn :: (Kontrakcja m) => m ()
-guardLoggedIn = do
-  Context{ ctxmaybeuser } <- getContext
-  case ctxmaybeuser of
-    Nothing -> do
-      ctx <- getContext
-      finishWith $ do
-        _ <- (addFlashCookie . toCookieValue) =<< flashMessageLoginRedirect
-        sendRedirect $ LinkLogin (ctxlang ctx)
-    Just _ -> return ()
