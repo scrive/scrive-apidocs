@@ -1,9 +1,11 @@
 module Partner.API
 ( partnerAPI
 -- Exported for tests
+, partnerApiCallV1CompaniesGet
 , partnerApiCallV1CompanyCreate
 , partnerApiCallV1CompanyUpdate
 , partnerApiCallV1CompanyGet
+, partnerApiCallV1CompanyUsersGet
 , partnerApiCallV1UserCreate
 , partnerApiCallV1UserGet
 , partnerApiCallV1UserUpdate
@@ -41,10 +43,12 @@ partnerAPI = dir "api" $ choice
 partnerAPIV1 :: Route (Kontra Response)
 partnerAPIV1 = dir "partner" $ choice
   [
-    param $ dir "company" $ dir "new" $ hPost $ toK1 $ partnerApiCallV1CompanyCreate
+    param $ dir "companies" $ hGet $ toK1 $ partnerApiCallV1CompaniesGet
+  , param $ dir "company" $ dir "new" $ hPost $ toK1 $ partnerApiCallV1CompanyCreate
   , param $ dir "company" $ param $ dir "update" $ hPost $ toK2 $ partnerApiCallV1CompanyUpdate
   , param $ dir "company" $ param $ hGet $ toK2 $ partnerApiCallV1CompanyGet
   , param $ dir "company" $ param $ dir "user" $ dir "new" $ hPost $ toK2 $ partnerApiCallV1UserCreate
+  , param $ dir "company" $ param $ dir "users" $ hGet $ toK2 $ partnerApiCallV1CompanyUsersGet
   , param $ dir "user" $ param $ hGet $ toK2 $ partnerApiCallV1UserGet
   , param $ dir "user" $ param $ dir "update" $ hPost $ toK2 $ partnerApiCallV1UserUpdate
   , param $ dir "user" $ param $ dir "getpersonalcredentials" $ hGet $ toK2 $ partnerApiCallV1UserGetPersonalToken
@@ -101,6 +105,16 @@ partnerApiCallV1CompanyGet partnerID companyID = logPartnerAndCompany partnerID 
   -- Result
   Ok <$> return (unjsonCompanyForUpdate, companyToCompanyForUpdate company)
 
+partnerApiCallV1CompaniesGet :: Kontrakcja m => PartnerID -> m Response
+partnerApiCallV1CompaniesGet partnerID = logPartner partnerID . api $ do
+  -- Permissions
+  (apiuser, _actor) <- getAPIUser APIPersonal
+  -- Guards
+  guardThatUserCanAdministerPartnerID apiuser partnerID
+  companies <- dbQuery $ GetCompaniesByPartnerID partnerID
+  -- Result
+  Ok <$> return (unjsonCompaniesForUpdate, companyToCompanyForUpdate <$> companies)
+
 partnerApiCallV1UserCreate :: Kontrakcja m => PartnerID -> CompanyID -> m Response
 partnerApiCallV1UserCreate partnerID companyID = logPartnerAndCompany partnerID companyID . api $ do
   -- Permissions
@@ -150,6 +164,17 @@ partnerApiCallV1UserGet partnerID userID = logPartnerAndUser partnerID userID . 
   user <- guardThatPartnerIDCanAdministerUserID partnerID userID
   -- Result
   Ok <$> return (unjsonUserForUpdate, userToUserForUpdate user)
+
+partnerApiCallV1CompanyUsersGet :: Kontrakcja m => PartnerID -> CompanyID -> m Response
+partnerApiCallV1CompanyUsersGet partnerID companyID = logPartnerAndCompany partnerID companyID . api $ do
+  -- Permissions
+  (apiuser, _actor) <- getAPIUser APIPersonal
+  -- Guards
+  guardThatUserCanAdministerPartnerID apiuser partnerID
+  company <- guardThatPartnerIDCanAdministerCompanyID partnerID companyID
+  users <- dbQuery $ GetCompanyAccounts (companyid company)
+  -- Result
+  Ok <$> return (unjsonUsersForUpdate, userToUserForUpdate <$> users)
 
 partnerApiCallV1UserUpdate :: Kontrakcja m => PartnerID -> UserID -> m Response
 partnerApiCallV1UserUpdate partnerID userID = logPartnerAndUser partnerID userID . api $ do
