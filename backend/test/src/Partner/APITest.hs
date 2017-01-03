@@ -127,10 +127,15 @@ testPartnerCompaniesGet :: TestEnv ()
 testPartnerCompaniesGet = do
   -- create companyA supervised by partnerA
   (ctxA,pidA,_cidA) <- testHelperPartnerCompanyCreate
+
+  -- partnerA can list companies -> [only companyA]
+  let rq_companiesList_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompaniesList.json"
+  _ <- runApiJSONTest ctxA POST (partnerApiCallV1CompaniesGet pidA) [] 200 rq_companiesList_resp_fp
+
   -- create companyB supervised by partnerB
   (_ctxB,_pidB,_cidB) <- testHelperPartnerCompanyCreate
 
-  -- partnerA can list companies -> [only companyA]
+  -- partnerA can list only his companies -> [still only companyA]
   let rq_companiesList_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompaniesList.json"
   _ <- runApiJSONTest ctxA POST (partnerApiCallV1CompaniesGet pidA) [] 200 rq_companiesList_resp_fp
 
@@ -260,7 +265,7 @@ testHelperPartnerUserCreate = do
   uid <- testHelperPartnerCompanyUserCreate ctx pid cid
   return (ctx, pid, uid)
 
-testHelperPartnerCompanyUserCreate :: Context -> PartnerID -> CompanyID -> TestEnv(UserID)
+testHelperPartnerCompanyUserCreate :: Context -> PartnerID -> CompanyID -> TestEnv UserID
 testHelperPartnerCompanyUserCreate ctx pid cid = do
   newUserGoodJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood_params = [ ("json", inTextBS newUserGoodJSON) ]
