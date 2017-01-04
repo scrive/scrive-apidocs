@@ -445,7 +445,7 @@ handleResend docid signlinkid = withUser $ \_ -> do
 
 -- This only works for undelivered mails
 handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
-handleChangeSignatoryEmail docid slid = guardLoggedInInternalError $ do
+handleChangeSignatoryEmail docid slid = guardLoggedInOrThrowInternalError $ do
   email <- getCriticalField asValidEmail "email"
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
     muser <- dbQuery $ GetUserByEmail (Email email)
@@ -457,7 +457,7 @@ handleChangeSignatoryEmail docid slid = guardLoggedInInternalError $ do
 
 -- This only works for undelivered smses
 handleChangeSignatoryPhone :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
-handleChangeSignatoryPhone docid slid = guardLoggedInInternalError $ do
+handleChangeSignatoryPhone docid slid = guardLoggedInOrThrowInternalError $ do
   phone <- getCriticalField asValidPhone "phone"
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
     actor <- guardJustM $ mkAuthorActor <$> getContext
@@ -523,11 +523,11 @@ checkFileAccessWith fid msid mmh mdid mattid =
             internalError
         indoc <- dbQuery $ FileInDocument did fid
         when (not indoc) $ internalError
-    (_,_,Just did,_) -> guardLoggedInInternalError $ do
+    (_,_,Just did,_) -> guardLoggedInOrThrowInternalError $ do
        _doc <- getDocByDocID did
        indoc <- dbQuery $ FileInDocument did fid
        when (not indoc) $ internalError
-    (_,_,_,Just attid) -> guardLoggedInInternalError $ do
+    (_,_,_,Just attid) -> guardLoggedInOrThrowInternalError $ do
        user <- guardJustM $ ctxmaybeuser <$> getContext
        atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
                                             , AttachmentsOfAuthorDeleteValue (userid user) True
@@ -580,7 +580,7 @@ handleVerify = do
       J.toJSValue <$> GuardTime.verify (ctxgtconf ctx) filepath
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
-handleMarkAsSaved docid = guardLoggedInInternalError $ do
+handleMarkAsSaved docid = guardLoggedInOrThrowInternalError $ do
   getDocByDocID docid `withDocumentM` do
     whenM (isPreparation <$> theDocument) $ dbUpdate $ SetDocumentUnsavedDraft False
     J.runJSONGenT $ return ()

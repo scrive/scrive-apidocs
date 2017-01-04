@@ -1,6 +1,6 @@
 module User.Utils (
       getCompanyForUser
-    , guardLoggedInInternalError
+    , guardLoggedInOrThrowInternalError
     , withUserTOS
     , withUser
     , withUserCompany
@@ -45,8 +45,8 @@ withUser action = do
   Guard against a GET/POST with no logged in user.
   If they are not logged in, return an internal error with proper err code
 -}
-guardLoggedInInternalError :: Kontrakcja m => m a -> m a
-guardLoggedInInternalError action = do
+guardLoggedInOrThrowInternalError :: Kontrakcja m => m a -> m a
+guardLoggedInOrThrowInternalError action = do
    ctx <- getContext
    case ctxmaybeuser ctx of
      Just _user -> action
