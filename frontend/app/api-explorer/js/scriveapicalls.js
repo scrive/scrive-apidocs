@@ -6,6 +6,7 @@ window.AbstractAPICall = Backbone.Model.extend({
     method: "GET",
     needsAuthorization: true,
     category: "other",
+    isInternal: false,
     tryToUseDocumentIDWithCopy: false,
     expectBinaryResponse: false
   },
@@ -23,6 +24,9 @@ window.AbstractAPICall = Backbone.Model.extend({
         },
   apiVersion: function () {
           return this.get("apiVersion");
+        },
+  isInternal: function () {
+          return this.get("isInternal");
         },
   needsAuthorization: function () {
           return this.get("needsAuthorization");
@@ -235,14 +239,22 @@ window.APICalls = new (Backbone.Model.extend({
   authorization: function () {
           this.get("oauth");
         },
-  apiV1Calls: function () {
+  apiV1Calls: function (includeInternal) {
           return _.filter(this.calls(), function (c) {
-            return c.apiVersion() == "v1";
+            if (includeInternal) {
+                return c.apiVersion() == "v1";
+            } else {
+                return c.apiVersion() == "v1" && !c.isInternal();
+            }
           });
         },
-  apiV2Calls: function () {
+  apiV2Calls: function (includeInternal) {
           return _.filter(this.calls(), function (c) {
-            return c.apiVersion() == "v2";
+            if (includeInternal) {
+                return c.apiVersion() == "v2";
+            } else {
+                return c.apiVersion() == "v2" && !c.isInternal();
+            }
           });
         },
   registerNewCall: function (props, constructor) {
@@ -258,6 +270,7 @@ var APICall = function (props) {
     "description",
     "sampleUrl",
     "method",
+    "isInternal",
     "needsAuthorization",
     "params",
     "category",

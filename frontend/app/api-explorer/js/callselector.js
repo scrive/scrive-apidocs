@@ -10,9 +10,9 @@ window.CallSelector = Backbone.View.extend({
     var select = $("<select id='call-selector' class='form-control'>");
     var availableCalls;
     if (model.apiVersion() == "v1") {
-      availableCalls = APICalls.apiV1Calls();
+      availableCalls = APICalls.apiV1Calls(false);
     } else {
-      availableCalls = APICalls.apiV2Calls();
+      availableCalls = APICalls.apiV2Calls(false);
     }
     availableCalls = _.sortBy(availableCalls, function (c) { return c.name(); });
 
@@ -72,7 +72,7 @@ window.CallSelector = Backbone.View.extend({
     var model = this.model;
     var select = $("<select id='version-selector' class='form-control'>");
     select.append($("<option value='v1'>API version 1</option>").attr("selected", model.apiVersion() == "v1"));
-    select.append($("<option value='v2'>API version 2 (beta)</option>").attr("selected", model.apiVersion() == "v2"));
+    select.append($("<option value='v2'>API version 2</option>").attr("selected", model.apiVersion() == "v2"));
     select.change(function () {
       model.changeAPIVersion(select.val());
     });

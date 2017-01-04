@@ -55,7 +55,8 @@ var ApiDemoModel = Backbone.Model.extend({
       self.set("willBeReloaded");
       return;
     }
-    this.set({oauth: oauth, selectedApiCall: APICalls.apiV1Calls()[0].createCall({oauth: oauth})});
+    var v2NewCallIdx = APICalls.apiV2Calls().findIndex(function (c) { return c.name() == "New"; });
+    this.set({oauth: oauth, selectedApiCall: APICalls.apiV2Calls()[v2NewCallIdx].createCall({oauth: oauth})});
     this.listenTo(oauth, "change", function () {
       if (oauth.isSetUp() && self.authorizeMode()) {
         this.setMode("explore");

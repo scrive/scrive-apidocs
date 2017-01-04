@@ -319,6 +319,10 @@ var Document = exports.Document = Backbone.Model.extend({
         var fields = this.fieldsForSigning();
         var acceptedAuthorAttachments = this.acceptedAuthorAttachmentsForSigning();
         extraSignFields = extraSignFields || {};
+        var problemCallback = function (xhr) {
+          Track.track("Check API call failed", {"Reason": xhr.responseText});
+          return errorCallback(xhr);
+        };
         return new Submit({
             url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/check",
             method: "POST",
@@ -328,7 +332,7 @@ var Document = exports.Document = Backbone.Model.extend({
             accepted_author_attachments: JSON.stringify(acceptedAuthorAttachments),
             ajax: true,
             ajaxsuccess : successCallback,
-            ajaxerror : errorCallback
+            ajaxerror : problemCallback
             }).addMany(extraSignFields);
     },
     sign: function(errorCallback, successCallback,extraSignFields) {
