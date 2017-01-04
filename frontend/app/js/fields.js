@@ -104,7 +104,14 @@ var Field = exports.Field = Backbone.Model.extend({
         return this.signatory() && this.signatory().document() && this.signatory().document().pending() && this.get("hadValueWhenCreated");
     },
     hasDataForSigning: function() {
-        return !this.isClosed() && (!this.isSignature() || this.value())
+        if (this.signatory() &&
+            this.signatory().document() &&
+            this.signatory().document().pending() &&
+            this.isOptionalUncheckedCheckbox()) {
+          // if optional, pre-checked checkbox was unchecked by signatory in signview
+          return true;
+        }
+        return !this.isClosed() && (!this.isSignature() || this.value());
     },
     placements : function() {
         return this.get("placements");
@@ -360,6 +367,9 @@ var Field = exports.Field = Backbone.Model.extend({
     },
     isCheckbox : function() {
         return this.type() == "checkbox";
+    },
+    isOptionalUncheckedCheckbox: function () {
+        return this.isCheckbox() && !this.isObligatory() && !this.isChecked();
     },
     isOptional : function() {
         return !this.obligatory();
