@@ -30,7 +30,6 @@ import InputValidation
 import InternalResponse
 import Kontra
 import KontraPrelude
-import Redirect
 import User.Model
 import User.Utils
 import Util.Actor
@@ -69,11 +68,27 @@ handleDownloadAttachment attid _nameForBrowser = do
        _ -> internalError
 
 handleCreateNew :: Kontrakcja m => m JSValue
-handleCreateNew = do
-  guardLoggedIn
+handleCreateNew = guardLoggedInOrThrowInternalError $ do
   input <- getDataFnM (lookInput "doc")
-  _mdoc <- makeAttachmentFromFile input
-  J.runJSONGenT $ return ()
+  case input of
+    (Input contentspec (Just filename) _contentType) -> do
+      logInfo_ "makeAttachmentFromFile: beggining"
+      content <- case contentspec of
+        Left filepath -> liftIO $ BSL.readFile filepath
+        Right content -> return content
+      cres <- preCheckPDF (BSL.toStrict content)
+      case cres of
+        Left _ -> do
+          logInfo_ "Attachment file is not a valid PDF"
+          internalError
+        Right content' -> do
+          logInfo_ "Got the content, creating document"
+          let title = takeBaseName filename
+          actor <- guardJustM $ mkAuthorActor <$> getContext
+          ctx <- getContext
+          _ <- dbUpdate $ NewAttachment (userid $ $fromJust $ ctxmaybeuser ctx) title filename content' actor
+          J.runJSONGenT $ return ()
+    _ -> internalError
 
 jsonAttachmentsList ::  Kontrakcja m => m InternalKontraResponse
 jsonAttachmentsList = withUser $ \user -> do
@@ -100,24 +115,3 @@ jsonAttachmentsList = withUser $ \user -> do
 
   attachments <- dbQuery $ GetAttachments domain filters sorting
   return $ internalResponse $ Response 200 Map.empty nullRsFlags (Unjson.unjsonToByteStringLazy unjsonAttachments attachments) Nothing
-
-makeAttachmentFromFile :: Kontrakcja m => Input -> m (Maybe Attachment)
-makeAttachmentFromFile (Input contentspec (Just filename) _contentType) = do
-    logInfo_ "makeAttachmentFromFile: beggining"
-    guardLoggedIn
-    content <- case contentspec of
-        Left filepath -> liftIO $ BSL.readFile filepath
-        Right content -> return content
-    cres <- preCheckPDF (BSL.toStrict content)
-    case cres of
-      Left _ -> do
-         logInfo_ "Attachment file is not a valid PDF"
-         internalError
-      Right content' -> do
-        logInfo_ "Got the content, creating document"
-        let title = takeBaseName filename
-        actor <- guardJustM $ mkAuthorActor <$> getContext
-        ctx <- getContext
-        att <- dbUpdate $ NewAttachment (userid $ $fromJust $ ctxmaybeuser ctx) title filename content' actor
-        return $ Just att
-makeAttachmentFromFile _ = internalError -- to complete the patterns

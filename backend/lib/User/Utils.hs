@@ -1,5 +1,6 @@
 module User.Utils (
       getCompanyForUser
+    , guardLoggedInOrThrowInternalError
     , withUserTOS
     , withUser
     , withUserCompany
@@ -39,6 +40,17 @@ withUser action = do
       Nothing   -> do
        flashmessage <- flashMessageLoginRedirect
        return $ internalResponseWithFlash flashmessage (LinkLogin (ctxlang ctx))
+
+{- |
+  Guard against a GET/POST with no logged in user.
+  If they are not logged in, return an internal error with proper err code
+-}
+guardLoggedInOrThrowInternalError :: Kontrakcja m => m a -> m a
+guardLoggedInOrThrowInternalError action = do
+   ctx <- getContext
+   case ctxmaybeuser ctx of
+     Just _user -> action
+     Nothing    -> internalError
 
 {- |
    Guard against a GET with logged in users who have not signed the TOS agreement.

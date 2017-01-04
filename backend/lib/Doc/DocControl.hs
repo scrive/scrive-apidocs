@@ -294,17 +294,14 @@ handleCookieFail slid did = logDocumentAndSignatory did slid $ do
    URL: /d/signview/{documentid}
    Method: POST
  -}
-handleIssueGoToSignview :: Kontrakcja m => DocumentID -> m KontraLink
-handleIssueGoToSignview docid = do
-  guardLoggedIn
-  ctx <- getContext
+handleIssueGoToSignview :: Kontrakcja m => DocumentID -> m InternalKontraResponse
+handleIssueGoToSignview docid = withUser $ \user -> do
   doc <- getDocByDocID docid
-  user <-  guardJust (ctxmaybeuser ctx)
   case (getMaybeSignatoryLink (doc,user)) of
     Just sl -> do
       dbUpdate $ AddDocumentSessionToken (signatorylinkid sl) (signatorymagichash sl)
-      return $ LinkSignDocNoMagicHash docid (signatorylinkid sl)
-    _ -> return LoopBack
+      return $ internalResponse $ LinkSignDocNoMagicHash docid (signatorylinkid sl)
+    _ -> return $ internalResponse $ LoopBack
 
 {- |
    Redirect author of document to go to signview for any of the pad signatories
@@ -322,9 +319,8 @@ handleIssueGoToSignviewPad docid slid= do
       return $ LinkSignDocPad docid slid
     _ -> return LoopBack
 
-handleEvidenceAttachment :: Kontrakcja m => DocumentID -> String -> m Response
-handleEvidenceAttachment docid file = do
-  guardLoggedIn
+handleEvidenceAttachment :: Kontrakcja m => DocumentID -> String -> m InternalKontraResponse
+handleEvidenceAttachment docid file = withUser $ \_ -> do
   doc <- getDocByDocID docid
   es <- EvidenceAttachments.fetch doc
   e <- guardJust $ listToMaybe $ filter ((==(BS.fromString file)) . EvidenceAttachments.name) es
@@ -334,7 +330,7 @@ handleEvidenceAttachment docid file = do
   -- decompressIfPossible returns original content if it was not possible to decompress
   -- this is needed to handle attachments from our old version of service
   -- where they were apparently not compressed at all
-  return $ toResponseBS mimetype $ decompressIfPossible $ EvidenceAttachments.content e
+  return $ internalResponse $ toResponseBS mimetype $ decompressIfPossible $ EvidenceAttachments.content e
 
 {- |
    Handles the request to show a document to a logged in user.
@@ -400,18 +396,17 @@ showPage fid pageNo = logFile fid $ do
      internalError
 
 -- | Preview when authorized user is logged in (without magic hash)
-showPreview :: Kontrakcja m => DocumentID -> FileID -> m Response
-showPreview did fid = logDocumentAndFile did fid $ do
-  guardLoggedIn
+showPreview :: Kontrakcja m => DocumentID -> FileID -> m InternalKontraResponse
+showPreview did fid = logDocumentAndFile did fid $ withUser $ \_ -> do
   pixelwidth <- fromMaybe 150 <$> readField "pixelwidth"
   void $ getDocByDocID did
   if fid == unsafeFileID 0
     then do
       emptyPreview <- liftIO $ BS.readFile "frontend/app/img/empty-preview.jpg"
-      return . toResponseBS "image/jpeg" $ BSL.fromStrict emptyPreview
+      return $ internalResponse $ toResponseBS "image/jpeg" $ BSL.fromStrict emptyPreview
     else do
       checkFileAccessWith fid Nothing Nothing (Just did) Nothing
-      previewResponse fid pixelwidth
+      internalResponse <$> previewResponse fid pixelwidth
 
 -- | Preview from mail client with magic hash
 showPreviewForSignatory :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m Response
@@ -450,8 +445,7 @@ handleResend docid signlinkid = withUser $ \_ -> do
 
 -- This only works for undelivered mails
 handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
-handleChangeSignatoryEmail docid slid = do
-  guardLoggedIn
+handleChangeSignatoryEmail docid slid = guardLoggedInOrThrowInternalError $ do
   email <- getCriticalField asValidEmail "email"
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
     muser <- dbQuery $ GetUserByEmail (Email email)
@@ -463,8 +457,7 @@ handleChangeSignatoryEmail docid slid = do
 
 -- This only works for undelivered smses
 handleChangeSignatoryPhone :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
-handleChangeSignatoryPhone docid slid = do
-  guardLoggedIn
+handleChangeSignatoryPhone docid slid = guardLoggedInOrThrowInternalError $ do
   phone <- getCriticalField asValidPhone "phone"
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
     actor <- guardJustM $ mkAuthorActor <$> getContext
@@ -530,13 +523,11 @@ checkFileAccessWith fid msid mmh mdid mattid =
             internalError
         indoc <- dbQuery $ FileInDocument did fid
         when (not indoc) $ internalError
-    (_,_,Just did,_) -> do
-       guardLoggedIn
+    (_,_,Just did,_) -> guardLoggedInOrThrowInternalError $ do
        _doc <- getDocByDocID did
        indoc <- dbQuery $ FileInDocument did fid
        when (not indoc) $ internalError
-    (_,_,_,Just attid) -> do
-       guardLoggedIn
+    (_,_,_,Just attid) -> guardLoggedInOrThrowInternalError $ do
        user <- guardJustM $ ctxmaybeuser <$> getContext
        atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
                                             , AttachmentsOfAuthorDeleteValue (userid user) True
@@ -589,8 +580,7 @@ handleVerify = do
       J.toJSValue <$> GuardTime.verify (ctxgtconf ctx) filepath
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
-handleMarkAsSaved docid = do
-  guardLoggedIn
+handleMarkAsSaved docid = guardLoggedInOrThrowInternalError $ do
   getDocByDocID docid `withDocumentM` do
     whenM (isPreparation <$> theDocument) $ dbUpdate $ SetDocumentUnsavedDraft False
     J.runJSONGenT $ return ()
