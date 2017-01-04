@@ -46,7 +46,7 @@ import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BS hiding (length, take)
+import qualified Data.Text as T
 import qualified Data.Traversable as T
 import qualified Text.JSON.Gen as J
 
@@ -94,7 +94,6 @@ import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.PDFUtil
 import Util.SignatoryLinkUtils
-import Util.Zlib (decompressIfPossible)
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified GuardTime as GuardTime
 
@@ -319,18 +318,11 @@ handleIssueGoToSignviewPad docid slid= do
       return $ LinkSignDocPad docid slid
     _ -> return LoopBack
 
-handleEvidenceAttachment :: Kontrakcja m => DocumentID -> String -> m InternalKontraResponse
-handleEvidenceAttachment docid file = withUser $ \_ -> do
+handleEvidenceAttachment :: Kontrakcja m => DocumentID -> T.Text -> m InternalKontraResponse
+handleEvidenceAttachment docid aname = logDocument docid $ localData ["attachment_name" .= aname] $ withUser $ \_ -> do
   doc <- getDocByDocID docid
-  es <- EvidenceAttachments.fetch doc
-  e <- guardJust $ listToMaybe $ filter ((==(BS.fromString file)) . EvidenceAttachments.name) es
-  let mimetype = fromMaybe "text/html" (EvidenceAttachments.mimetype e)
-  -- Evidence attachments embedded in PDFs are compressed using RFC #1950. This is NOT the same
-  -- as what browsers are supporting (under names gzip and deflate), and we need to decompress server side.
-  -- decompressIfPossible returns original content if it was not possible to decompress
-  -- this is needed to handle attachments from our old version of service
-  -- where they were apparently not compressed at all
-  return $ internalResponse $ toResponseBS mimetype $ decompressIfPossible $ EvidenceAttachments.content e
+  es <- guardJustM $ EvidenceAttachments.extractAttachment doc aname
+  return $ internalResponse $ toResponseBS "text/html"  $ es
 
 {- |
    Handles the request to show a document to a logged in user.

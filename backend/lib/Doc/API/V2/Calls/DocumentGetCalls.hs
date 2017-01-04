@@ -102,7 +102,7 @@ docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ d
   (user,_) <- getAPIUser APIDocCheck
   guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user
   doc <- theDocument
-  eas <- EvidenceAttachments.fetch doc
+  eas <- EvidenceAttachments.extractAttachmentsList doc
   let headers = mkHeaders [("Content-Type","application/json; charset=UTF-8")]
   return $ Ok $ Response 200 headers nullRsFlags (evidenceAttachmentsToJSONBS (documentid doc) eas) Nothing
 

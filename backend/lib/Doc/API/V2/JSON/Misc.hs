@@ -26,6 +26,7 @@ import Data.Time.Format
 import Data.Unjson
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSC
+import qualified Data.ByteString.Lazy.UTF8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 
@@ -36,7 +37,6 @@ import KontraLink
 import KontraPrelude
 import User.Lang
 import qualified Data.ByteString.RFC2397 as RFC2397
-import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 
@@ -154,26 +154,22 @@ unjsonSignatoryScreenshots = objectOf $ pure combineSignatoryScreenshots
       combineSignatoryScreenshots f s _ (Just rs) = SignatoryScreenshots.SignatoryScreenshots f s (Just $ Right rs)
       combineSignatoryScreenshots f s _ _ = SignatoryScreenshots.SignatoryScreenshots f s Nothing
 
-evidenceAttachmentsToJSONBS :: DocumentID -> [EvidenceAttachments.Attachment] -> BSC.ByteString
+evidenceAttachmentsToJSONBS :: DocumentID -> [T.Text] -> BSC.ByteString
 evidenceAttachmentsToJSONBS did eas = toLazyByteString $ "{ \"attachments\": ["  <> (eaList (sortBy eaSorter eas)) <> "]}"
   where
-    eaList :: [EvidenceAttachments.Attachment] -> Builder
+    eaList :: [T.Text] -> Builder
     eaList [] = ""
     eaList [l] = (eaJSON l)
     eaList (l:ls) = (eaJSON l) <> "," <> eaList ls
 
-    eaJSON :: EvidenceAttachments.Attachment -> Builder
-    eaJSON ea = "{\"name\":\"" <> (lazyByteString $ BSC.fromStrict $ EvidenceAttachments.name ea) <> "\"" <>
-                    (case EvidenceAttachments.mimetype ea of
-                          Just mt -> ",\"mimetype\":\"" <> (lazyByteString $ BSC.fromStrict mt) <> "\""
-                          Nothing -> ""
-                    ) <>
-                    ",\"download_url\":\"" <> (lazyByteString $ BSC.pack $ show $ LinkEvidenceAttachment did (EvidenceAttachments.name ea))<>  "\"" <>
-                    "}"
+    eaJSON :: T.Text -> Builder
+    eaJSON name = "{\"name\":\"" <> (lazyByteString $ BSC.fromString $ T.unpack $ name) <> "\"" <>
+                  ",\"download_url\":\"" <> (lazyByteString $ BSC.fromString $ show $ LinkEvidenceAttachment did (T.unpack name))<>  "\"" <>
+                  "}"
 
-    eaSorter :: EvidenceAttachments.Attachment -> EvidenceAttachments.Attachment -> Ordering
-    eaSorter a b | EvidenceAttachments.name a == firstAttachmentName = LT
-                 | EvidenceAttachments.name b == firstAttachmentName = GT
+    eaSorter :: T.Text -> T.Text -> Ordering
+    eaSorter a b | a == firstAttachmentName = LT
+                 | b == firstAttachmentName = GT
                  | otherwise = compare a b
     firstAttachmentName = "Evidence Quality of Scrive E-signed Documents.html"
 
