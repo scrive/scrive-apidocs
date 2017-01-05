@@ -6,7 +6,6 @@ module KontraLink(
 import Data.List.Split
 import Network.HTTP
 import Network.URI
-import qualified Data.ByteString.Char8 as BSC
 
 import Attachment.AttachmentID
 import Company.Model
@@ -40,7 +39,7 @@ data KontraLink
     | LinkMainFile Document SignatoryLink
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
     | LinkIssueDoc DocumentID
-    | LinkEvidenceAttachment DocumentID BSC.ByteString
+    | LinkEvidenceAttachment DocumentID String
     | LinkCompanyAccounts
     | LinkCompanyTakeover CompanyID
     | LinkAcceptTOS
@@ -86,7 +85,7 @@ instance Show KontraLink where
     showsPrec _ LinkUserMailAPI = (++) "/account#mailapi"
     showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
-    showsPrec _ (LinkEvidenceAttachment did filename) =  (++) $ "/d/evidenceattachment/" ++ show did ++ "/" ++ BSC.unpack filename
+    showsPrec _ (LinkEvidenceAttachment did filename) =  (++) $ "/d/evidenceattachment/" ++ show did ++ "/" ++ filename
     showsPrec _ (LinkSignDoc did signatorylink) =
         (++) $ "/s/" ++ show (did) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/"++ show (signatorymagichash signatorylink)

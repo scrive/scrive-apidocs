@@ -318,8 +318,6 @@ Library
                  , OAuth.Tables
                  , OAuth.Util
                  , OAuth.View
-                 , PDF.Matrix
-                 , PDF.Model
                  , PadApplication.API
                  , Partner.API
                  , Partner.JSON
@@ -391,7 +389,6 @@ Library
                  , Util.MonadUtils
                  , Util.SignatoryLinkUtils
                  , Util.ZipUtil
-                 , Util.Zlib
                  , Utils.Color
                  , Utils.Directory
                  , Utils.Either
@@ -502,7 +499,6 @@ Library
                , xml-types
                , yaml
                , zip-archive
-               , zlib
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns
@@ -1285,7 +1281,6 @@ Executable screenshot-review
                , xml-conduit
                , xml-types
                , yaml
-               , zlib
 
 
   Default-Language: Haskell2010

@@ -19,6 +19,7 @@ import Text.JSON.Gen hiding (value)
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Set as Set
+import qualified Data.Text as T
 import qualified Text.JSON.Gen as J
 
 import DB
@@ -26,7 +27,6 @@ import DB.TimeZoneName
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocUtils
-import Doc.EvidenceAttachments
 import File.File
 import File.Model
 import File.Storage
@@ -44,16 +44,16 @@ import qualified Doc.EvidenceAttachments as EvidenceAttachments
 
 evidenceAttachmentsJSONV1 :: (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => Document -> m JSValue
 evidenceAttachmentsJSONV1 doc = do
-    evidenceattachments <- EvidenceAttachments.fetch doc
+    evidenceattachments <- EvidenceAttachments.extractAttachmentsList doc
     let evidenceattachments' = sortBy eaSorter evidenceattachments
     runJSONGenT $ do
-      J.objects "evidenceattachments" $ for evidenceattachments' $ \a -> do
-        J.value "name"     $ BSC.unpack $ EvidenceAttachments.name a
-        J.value "mimetype" $ BSC.unpack <$> EvidenceAttachments.mimetype a
-        J.value "downloadLink" $ show $ LinkEvidenceAttachment (documentid doc) (EvidenceAttachments.name a)
-  where eaSorter :: Attachment -> Attachment -> Ordering
-        eaSorter a b | name a == firstAttachmentName = LT
-                     | name b == firstAttachmentName = GT
+      J.objects "evidenceattachments" $ for evidenceattachments' $ \name -> do
+        J.value "name"     $ (T.unpack name)
+        J.value "mimetype" $ (Nothing :: Maybe String)
+        J.value "downloadLink" $ show $ LinkEvidenceAttachment (documentid doc) (T.unpack name)
+  where eaSorter :: T.Text -> T.Text -> Ordering
+        eaSorter a b | a == firstAttachmentName = LT
+                     | b == firstAttachmentName = GT
                      | otherwise = compare a b
         firstAttachmentName = "Evidence Quality of Scrive E-signed Documents.html"
 
