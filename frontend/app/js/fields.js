@@ -100,18 +100,19 @@ var Field = exports.Field = Backbone.Model.extend({
     setName : function(name) {
         return this.set({"name" : name});
     },
+    isInPendingDocument: function() {
+      return this.signatory() && this.signatory().document() && this.signatory().document().pending();
+    },
     isClosed : function() {
-        return this.signatory() && this.signatory().document() && this.signatory().document().pending() && this.get("hadValueWhenCreated");
+        return this.isInPendingDocument() && this.get("hadValueWhenCreated");
     },
     hasDataForSigning: function() {
-        if (this.signatory() &&
-            this.signatory().document() &&
-            this.signatory().document().pending() &&
-            this.isOptionalUncheckedCheckbox()) {
+        if (this.isInPendingDocument() && this.isOptionalUncheckedCheckbox()) {
           // if optional, pre-checked checkbox was unchecked by signatory in signview
           return true;
+        } else {
+          return !this.isClosed() && (!this.isSignature() || this.value());
         }
-        return !this.isClosed() && (!this.isSignature() || this.value());
     },
     placements : function() {
         return this.get("placements");
