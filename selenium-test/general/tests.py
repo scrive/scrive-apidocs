@@ -218,3 +218,43 @@ def check_signing_settings3(test, drv, api):
 
     # screenshot showing reject modal with a reason field
     drv.screenshot(first_sleep_for=1)
+
+
+def check_many_pages(test, drv, api):
+    doc = test.create_standard_doc(u'many pages')
+    doc = api.update_document(doc)
+    doc = api.ready(api.change_document_file(doc, test.LONG_PDF_PATH))
+
+    # open signview
+    drv.open_url(doc.other_signatory().absolute_sign_url())
+
+    # wait for arrow to load
+    drv.wait_for_element('.scroll-arrow.down')
+
+    err_msg = 'Wrong number of pages displayed(50)'
+    assert len(drv.find_elements('.pagediv')) == 50, err_msg
+
+    # scroll to last page and take a screenshot
+    drv.execute('$(window).scrollTop($(".pagediv").last().offset().top)')
+    drv.screenshot()
+
+    # sign doc
+    drv.scroll_to_bottom()
+    drv.wait_for_element_and_click('.section.sign .button.action')
+    drv.wait_for_element('.above-overlay')
+    test.sleep(1)  # wait for animation to finish
+    drv.wait_for_element_and_click('.section.sign .button.action')
+    test.sleep(1)  # wait for animation to finish
+    drv.wait_for_element_to_disappear('.sign.section')
+
+    test.sleep(30)  # wait for all pages to be displayed
+    err_msg = 'Wrong number of pages displayed(51)'
+    assert len(drv.find_elements('.pagediv')) == 51, err_msg
+
+    # scroll to last doc page and take a screenshot
+    drv.execute('$(window).scrollTop($($(".pagediv")[49]).offset().top)')
+    drv.screenshot()
+
+    # scroll to verification page and take a screenshot
+    drv.execute('$(window).scrollTop($(".pagediv").last().offset().top)')
+    drv.screenshot()

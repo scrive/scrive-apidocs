@@ -17,10 +17,11 @@ class TestHelper(object):
         self._driver = driver
         dir_path = os.path.dirname(os.path.abspath(__file__))
         self._artifact_dir = artifact_dir
-        self.PDF_PATH = \
-            os.path.abspath(os.path.join(dir_path, os.pardir, os.pardir,
-                                         'backend', 'test', 'pdfs',
-                                         'simple.pdf'))
+        pdfs_path = os.path.join(dir_path, os.pardir, os.pardir,
+                                 'backend', 'test', 'pdfs')
+        self.PDF_PATH = os.path.abspath(os.path.join(pdfs_path, 'simple.pdf'))
+        self.LONG_PDF_PATH = \
+            os.path.abspath(os.path.join(pdfs_path, '50page.pdf'))
 
     def sleep(self, seconds):
         time.sleep(seconds)
