@@ -184,13 +184,16 @@ partnerApiCallV1UserUpdate partnerID userID = logPartnerAndUser partnerID userID
   guardThatUserCanAdministerPartnerID apiuser partnerID
   _user <- guardThatPartnerIDCanAdministerUserID partnerID userID
   -- Parameters
-  (userInfo, lang) <- do
+  (userInfo, hasAcceptedTOS, lang) <- do
     userForUpdate <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserForUpdate
     return (userInfoFromUserForUpdate userForUpdate
+           , ufuHasAcceptedTOS userForUpdate
            , ufuLang userForUpdate
            )
   -- More guards
   guardValidEmailAndNoExistingUser (useremail userInfo) (Just userID)
+  when (not hasAcceptedTOS) $
+    apiError $ requestParameterInvalid "has_accepted_tos" "The user must accept the Scrive Terms of Service to use it."
   -- API call actions
   didUpdateInfo     <- dbUpdate $ SetUserInfo userID userInfo
   didUpdateSettings <- dbUpdate $ SetUserSettings userID (UserSettings lang)
