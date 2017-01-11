@@ -184,6 +184,12 @@ testPartnerUserUpdate = do
       rq_UpdateUser_resp_fp = inTestDir "json/partner_api_v1/resp-partnerUserUpdate-good.json"
   _ <- runApiJSONTest ctx POST (partnerApiCallV1UserUpdate pid uid) rq_updateUser_params 200 rq_UpdateUser_resp_fp
 
+  -- Updating has_accepted_tos should not work
+  updateUserNoToSJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerUserUpdate-no-tos.json"
+  rq_tos <- mkRequestWithHeaders POST [ ("json", inTextBS updateUserNoToSJSON) ] []
+  (tosResult,_) <- runTestKontra rq_tos ctx $ partnerApiCallV1UserUpdate pid uid
+  assertEqual ("We should get a 400 response") 400 (rsCode tosResult)
+
   return ()
 
 testPartnerUserGet :: TestEnv ()
