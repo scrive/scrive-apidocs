@@ -129,21 +129,19 @@ handlePostChangeEmail uid hash =  withUser $ \user -> do
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do
     -- a lot doesn't have validation rules defined, but i put in what we do have
-    mfstname          <- getValidField asValidName "fstname"
-    msndname          <- getValidField asValidName "sndname"
+    mfstname          <- getOptionalField asValidName "fstname"
+    msndname          <- getOptionalField asValidName "sndname"
     mpersonalnumber   <- getField "personalnumber"
     mphone            <- getField "phone"
-    mcompanyposition  <- getValidField asValidPosition "companyposition"
+    mcompanyposition  <- getOptionalField asValidPosition "companyposition"
     return $ \ui ->
         ui {
-            userfstname = fromMaybe (userfstname ui) mfstname
-          , usersndname = fromMaybe (usersndname ui) msndname
-          , userpersonalnumber = fromMaybe (userpersonalnumber ui) mpersonalnumber
+            userfstname         = fromMaybe (userfstname         ui) mfstname
+          , usersndname         = fromMaybe (usersndname         ui) msndname
+          , userpersonalnumber  = fromMaybe (userpersonalnumber  ui) mpersonalnumber
           , usercompanyposition = fromMaybe (usercompanyposition ui) mcompanyposition
-          , userphone  = fromMaybe (userphone ui) mphone
+          , userphone           = fromMaybe (userphone           ui) mphone
         }
-    where
-        getValidField = getDefaultedField ""
 
 getCompanyInfoUpdate :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
 getCompanyInfoUpdate = do
