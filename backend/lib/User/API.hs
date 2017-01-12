@@ -191,7 +191,7 @@ apiCallSignup = api $ do
   lastname        <- fromMaybe "" <$> getOptionalField asValidName "lastName"
   phone           <- fromMaybe "" <$> getOptionalField asValidPhone "phone"
   companyName     <- fromMaybe "" <$> getOptionalField asValidCompanyName "companyName"
-  companyPosition <- fromMaybe "" <$> getOptionalField asValidPosition "companyPostion"
+  companyPosition <- fromMaybe "" <$> getOptionalField asValidPosition "companyPosition"
   lang <- fromMaybe (ctxlang ctx) <$> langFromCode <$> getField' "lang"
   switchLang lang
   muser <- dbQuery $ GetUserByEmail $ Email email
