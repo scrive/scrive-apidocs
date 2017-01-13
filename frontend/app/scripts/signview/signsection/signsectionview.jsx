@@ -309,20 +309,14 @@ var Task = require("../navigation/task");
         new FlashMessagesCleaner();
 
         document.takeSigningScreenshot(function () {
-          setTimeout(function () {
-            self.setSignedStatus(1);
+          self.setSignedStatus(1);
 
-            Track.track_timeout("Accept", {"Accept": "sign document"});
+          Track.track_timeout("Accept", {"Accept": "sign document"});
 
-            document.sign(errorCallback, function (newDocument, oldDocument) {
-              setTimeout(function () {
-                self.setSignedStatus(2);
-                setTimeout(function () {
-                  self.handleAfterSignRedirectOrReload();
-                }, 500);
-              }, 2500);
-            }, pinParam).send();
-          }, 2500);
+          document.sign(errorCallback, function (newDocument, oldDocument) {
+            self.setSignedStatus(2);
+            self.handleAfterSignRedirectOrReload();
+          }, pinParam).send();
         });
       }, errorCallback, pinParam).send();
     },
@@ -336,9 +330,7 @@ var Task = require("../navigation/task");
         window.location = redirect;
       } else {
         $(window).scrollTop(0);
-        setTimeout(function () {
-          window.location.reload();
-        }, 100);
+        window.location.reload();
       }
     },
     handlePin: function () {
