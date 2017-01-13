@@ -1201,7 +1201,6 @@ javascriptLocalisation =
       , signinginprogressmodal : {
                action1 : "$_signinginprogressmodalAction1()$"
              , action2 : "$_signinginprogressmodalAction2()$"
-             , youHaveSignedPleaseWait : "$_signinginprogressmodalYouHaveSignedPleaseWait()$"
       }
       , signingInProgressDontCloseWindow : "$_signingInProgressDontCloseWindow()$"
       , signingStartedDontCloseWindow : "$_signingStartedDontCloseWindow()$"

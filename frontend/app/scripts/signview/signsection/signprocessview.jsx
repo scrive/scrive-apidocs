@@ -49,16 +49,13 @@ var classNames = require("classnames");
 
       return (
         <div className={divClass}>
-          <h1>{localization.docsignview.signedNotClosed}</h1>
-          <p>
-            <HtmlTextWithSubstitution
-              secureText={localization.signinginprogressmodal.youHaveSignedPleaseWait}
-              subs={{".put-doctitle": this.props.docTitle}}
-            />
-          </p>
-          <div className="status-box">
+          <div>
             <img className="img-doc" src={this.props.imgUrl} />
+            <div className="img-doc-checkmark check-done" />
+          </div>
+          <div className="status-box">
             <div className="status">
+              <h1>{localization.docsignview.signedNotClosed}: {this.props.docTitle}</h1>
               <div className="vertical">
                 <div className="middle">
                   <table className="list">
@@ -76,8 +73,8 @@ var classNames = require("classnames");
                 </div>
               </div>
             </div>
-            <div className="clearfix" />
           </div>
+          <div className="clearfix" />
         </div>
       );
     }
