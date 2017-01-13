@@ -154,9 +154,9 @@ properties:
     format: uri
 example:
   {
-    "id": "9220293573270366783",
-    "user_id": "9206820953483508074",
-    "is_author": true,
+    "id": "189256",
+    "user_id": null,
+    "is_author": false,
     "is_signatory": true,
     "fields": [
       {
@@ -164,7 +164,7 @@ example:
         "order": 1,
         "value": "Magnus",
         "is_obligatory": true,
-        "should_be_filled_by_sender": true,
+        "should_be_filled_by_sender": false,
         "placements": []
       },
       {
@@ -172,27 +172,60 @@ example:
         "order": 2,
         "value": "Söderholm",
         "is_obligatory": true,
-        "should_be_filled_by_sender": true,
+        "should_be_filled_by_sender": false,
         "placements": []
       },
       {
         "type": "email",
         "value": "noemail@scrive.com",
-        "is_obligatory": true,
-        "should_be_filled_by_sender": true,
+        "is_obligatory": false,
+        "should_be_filled_by_sender": false,
         "placements": []
       },
       {
-        "type": "company",
+        "type": "mobile",
         "value": "",
         "is_obligatory": false,
         "should_be_filled_by_sender": false,
         "placements": []
+      },
+      {
+        "type": "company",
+        "value": "Scrive",
+        "is_obligatory": false,
+        "should_be_filled_by_sender": false,
+        "placements": []
+      },
+      {
+        "type": "company_number",
+        "value": "",
+        "is_obligatory": false,
+        "should_be_filled_by_sender": false,
+        "placements": []
+      },
+      {
+        "type": "signature",
+        "name": "Signature 1",
+        "signature": "195174",
+        "is_obligatory": true,
+        "should_be_filled_by_sender": false,
+        "placements": [
+          {
+            "xrel": 0.07894736842105263,
+            "yrel": 0.09962825278810408,
+            "wrel": 0.2736842105263158,
+            "hrel": 0.0758364312267658,
+            "fsrel": 0.0168,
+            "page": 1,
+            "tip": "right",
+            "anchors": []
+          }
+        ]
       }
     ],
     "sign_order": 1,
-    "sign_time": null,
-    "seen_time": null,
+    "sign_time": "2017-01-13T10:38:49.590815Z",
+    "seen_time": "2017-01-13T10:38:33.1783Z",
     "read_invitation_time": null,
     "rejected_time": null,
     "sign_success_redirect_url": null,
@@ -201,10 +234,17 @@ example:
     "mobile_delivery_status": "unknown",
     "has_authenticated_to_view": false,
     "csv": null,
-    "delivery_method": "email",
+    "delivery_method": "pad",
     "authentication_method_to_view": "standard",
     "authentication_method_to_sign": "standard",
-    "confirmation_delivery_method": "email",
+    "confirmation_delivery_method": "none",
+    "allows_highlighting": true,
     "attachments": [],
+    "highlighted_pages": [
+      {
+        "page": 1,
+        "file_id": "195173"
+      }
+    ],
     "api_delivery_url": null
   }
