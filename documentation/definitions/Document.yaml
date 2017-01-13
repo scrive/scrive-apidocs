@@ -120,6 +120,15 @@ properties:
         description: |
           Whether to show the Scrive footer on the signing page.
         type: boolean
+      document_is_receipt:
+        description: |
+          Whether the document is a receipt to be printed out, and thus should
+          not have the verification footer added.
+
+          _Note:_ This reduces the durability of evidence for a document signed
+          through Scrive eSign, and should only be used when absolutely
+          necessary.
+        type: boolean
   invitation_message:
     description: |
       The invitation message to send to all parties at the start of the signing
@@ -206,41 +215,41 @@ properties:
         type: string
 example:
   {
-    "id": "9179748218119260717",
-    "title": "Untitled 2016-06-21 11:01",
+    "id": "8222115557375075439",
+    "title": "Contract for Magnus",
     "parties": [
       {
-        "id": "9220293573270366783",
-        "user_id": "9206820953483508074",
+        "id": "189255",
+        "user_id": "1404",
         "is_author": true,
-        "is_signatory": true,
+        "is_signatory": false,
         "fields": [
           {
             "type": "name",
             "order": 1,
-            "value": "Magnus",
+            "value": "Gregory",
             "is_obligatory": true,
-            "should_be_filled_by_sender": true,
+            "should_be_filled_by_sender": false,
             "placements": []
           },
           {
             "type": "name",
             "order": 2,
-            "value": "Söderholm",
+            "value": "Davids",
             "is_obligatory": true,
-            "should_be_filled_by_sender": true,
+            "should_be_filled_by_sender": false,
             "placements": []
           },
           {
             "type": "email",
-            "value": "noemail@scrive.com",
-            "is_obligatory": true,
-            "should_be_filled_by_sender": true,
+            "value": "noreply@scrive.com",
+            "is_obligatory": false,
+            "should_be_filled_by_sender": false,
             "placements": []
           },
           {
             "type": "company",
-            "value": "",
+            "value": "Scrive",
             "is_obligatory": false,
             "should_be_filled_by_sender": false,
             "placements": []
@@ -257,15 +266,17 @@ example:
         "mobile_delivery_status": "unknown",
         "has_authenticated_to_view": false,
         "csv": null,
-        "delivery_method": "email",
+        "delivery_method": "pad",
         "authentication_method_to_view": "standard",
         "authentication_method_to_sign": "standard",
-        "confirmation_delivery_method": "email",
+        "confirmation_delivery_method": "none",
+        "allows_highlighting": false,
         "attachments": [],
+        "highlighted_pages": [],
         "api_delivery_url": null
       },
       {
-        "id": "98",
+        "id": "189256",
         "user_id": null,
         "is_author": false,
         "is_signatory": true,
@@ -273,23 +284,23 @@ example:
           {
             "type": "name",
             "order": 1,
-            "value": "",
-            "is_obligatory": false,
+            "value": "Magnus",
+            "is_obligatory": true,
             "should_be_filled_by_sender": false,
             "placements": []
           },
           {
             "type": "name",
             "order": 2,
-            "value": "",
-            "is_obligatory": false,
+            "value": "Söderholm",
+            "is_obligatory": true,
             "should_be_filled_by_sender": false,
             "placements": []
           },
           {
             "type": "email",
-            "value": "",
-            "is_obligatory": true,
+            "value": "noemail@scrive.com",
+            "is_obligatory": false,
             "should_be_filled_by_sender": false,
             "placements": []
           },
@@ -302,7 +313,7 @@ example:
           },
           {
             "type": "company",
-            "value": "",
+            "value": "Scrive",
             "is_obligatory": false,
             "should_be_filled_by_sender": false,
             "placements": []
@@ -313,11 +324,30 @@ example:
             "is_obligatory": false,
             "should_be_filled_by_sender": false,
             "placements": []
+          },
+          {
+            "type": "signature",
+            "name": "Signature 1",
+            "signature": "195174",
+            "is_obligatory": true,
+            "should_be_filled_by_sender": false,
+            "placements": [
+              {
+                "xrel": 0.07894736842105263,
+                "yrel": 0.09962825278810408,
+                "wrel": 0.2736842105263158,
+                "hrel": 0.0758364312267658,
+                "fsrel": 0.0168,
+                "page": 1,
+                "tip": "right",
+                "anchors": []
+              }
+            ]
           }
         ],
         "sign_order": 1,
-        "sign_time": null,
-        "seen_time": null,
+        "sign_time": "2017-01-13T10:38:49.590815Z",
+        "seen_time": "2017-01-13T10:38:33.1783Z",
         "read_invitation_time": null,
         "rejected_time": null,
         "sign_success_redirect_url": null,
@@ -326,24 +356,35 @@ example:
         "mobile_delivery_status": "unknown",
         "has_authenticated_to_view": false,
         "csv": null,
-        "delivery_method": "email",
+        "delivery_method": "pad",
         "authentication_method_to_view": "standard",
         "authentication_method_to_sign": "standard",
-        "confirmation_delivery_method": "email",
-        "allows_highlighting": false,
+        "confirmation_delivery_method": "none",
+        "allows_highlighting": true,
         "attachments": [],
-        "highlighted_pages": [],
+        "highlighted_pages": [
+          {
+            "page": 1,
+            "file_id": "195173"
+          }
+        ],
         "api_delivery_url": null
       }
     ],
-    "file": null,
-    "sealed_file": null,
+    "file": {
+      "name": "contract.pdf",
+      "id": "195124"
+    },
+    "sealed_file": {
+      "name": "contract.pdf",
+      "id": "195172"
+    },
     "author_attachments": [],
-    "ctime": "2016-06-21T11:01:16.505271Z",
-    "mtime": "2016-06-21T11:01:16.505271Z",
-    "timeout_time": null,
+    "ctime": "2017-01-13T10:38:17.916324Z",
+    "mtime": "2017-01-13T10:38:49.590815Z",
+    "timeout_time": "2017-04-13T22:59:59Z",
     "auto_remind_time": null,
-    "status": "preparation",
+    "status": "closed",
     "days_to_sign": 90,
     "days_to_remind": null,
     "display_options": {
@@ -351,23 +392,24 @@ example:
       "show_pdf_download": true,
       "show_reject_option": true,
       "allow_reject_reason": true,
-      "show_footer": true
+      "show_footer": true,
+      "document_is_receipt": false
     },
     "invitation_message": "",
     "confirmation_message": "",
     "lang": "en",
     "api_callback_url": null,
-    "object_version": 0,
-    "access_token": "b5e6bf0eae8bb383",
-    "timezone": "Europe/Stockholm",
+    "object_version": 26,
+    "access_token": "da675b76d876abda",
+    "timezone": "Europe/London",
     "tags": [],
     "is_template": false,
-    "is_saved": false,
+    "is_saved": true,
     "is_shared": false,
     "is_trashed": false,
     "is_deleted": false,
     "viewer": {
-      "signatory_id": "9220293573270366783",
+      "signatory_id": "189255",
       "role": "signatory"
     }
   }
