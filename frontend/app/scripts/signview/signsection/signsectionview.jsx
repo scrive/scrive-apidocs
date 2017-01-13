@@ -21,6 +21,7 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var FlashMessagesCleaner = require("../../../js/flashmessages.js").FlashMessagesCleaner;
 var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 var Track = require("../../common/track");
+var reloadWithScrollReset = require("../../common/reload_utils").reloadWithScrollReset;
 var classNames = require("classnames");
 var Task = require("../navigation/task");
 
@@ -173,12 +174,9 @@ var Task = require("../navigation/task");
           ReloadManager.stopBlocking();
           if (shouldRedirect) {
             window.location = doc.currentSignatory().rejectredirect();
-           } else {
-            $(window).on("beforeunload", function () {
-              $(window).scrollTop(0);
-            });
-            window.location.reload();
-           }
+          } else {
+            reloadWithScrollReset();
+          }
         }, function (xhr) {
           if (xhr.status == 403) {
             ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
@@ -329,8 +327,7 @@ var Task = require("../navigation/task");
       if (redirect) {
         window.location = redirect;
       } else {
-        $(window).scrollTop(0);
-        window.location.reload();
+        reloadWithScrollReset();
       }
     },
     handlePin: function () {
