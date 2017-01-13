@@ -79,9 +79,16 @@ sendSMSHelper GlobalMouthSender{..} sm@ShortMessage{..} = localData [identifier_
 
 sendSMSHelper MbloxSender{..} sm@ShortMessage{..} = localData [identifier_ smID] $ do
   let clearmsisdn = clearMobileNumber smMSISDN
-  logInfoSendSMS "Mblox" sm
+      northAmericanNumber = "+1" `isPrefixOf` clearmsisdn
+      -- Sending SMS to the USA cannot be done with AlphaNumeric sender
+      -- instead you need to use a registered short-code.
+      -- This is the short-code assigned to us via Mblox for the USA
+      -- "+1" is actually for the whole of North America, but we duck-taped it for now...
+      -- See https://scrive.fogbugz.com/f/cases/2488/ for more information!
+      originator = if northAmericanNumber then "18556644314" else smOriginator
+  logInfoSendSMS "Mblox" (sm{smOriginator = originator})
   let smsDataJSON =  encode $ runJSONGen $ do
-        value "from" smOriginator
+        value "from" originator
         value "to" $ [clearmsisdn]
         value "body" smBody
         value "delivery_report" ("per_recipient" :: String)
