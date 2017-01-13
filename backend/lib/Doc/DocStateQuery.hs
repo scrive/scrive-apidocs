@@ -39,7 +39,6 @@ import Log
 import DB
 import Doc.DocStateData
 import Doc.DocumentID
-import Doc.DocumentMonad (DocumentMonad)
 import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Tokens.Model
@@ -129,7 +128,7 @@ getMagicHashForDocumentSignatoryWithUser did sigid user = do
      _ -> return Nothing
 
 signatoryNeedsToIdentifyToView
-  :: (Kontrakcja m, DocumentMonad m)
+  :: (Kontrakcja m)
   => SignatoryLink
   -> m Bool
 signatoryNeedsToIdentifyToView sl = do

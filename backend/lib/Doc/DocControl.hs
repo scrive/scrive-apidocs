@@ -233,27 +233,31 @@ handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignShow did slid = logDocumentAndSignatory did slid $ do
   mmagichash <- dbQuery $ GetDocumentSessionToken slid
   case mmagichash of
-    Just magichash ->
-      dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash) `withDocumentM` do
-        invitedlink <- guardJust . getSigLinkFor slid =<< theDocument
-
-        -- We always switch to document langauge in case of pad signing
-        switchLang . getLang =<< theDocument
-        ctx <- getContext -- Order is important since ctx after switchLang changes
-        ad <- getAnalyticsData
-        needsToIdentify <- signatoryNeedsToIdentifyToView invitedlink
-        if (needsToIdentify)
-           then do
-             addEventForVisitingSigningPageIfNeeded VisitedViewForAuthenticationEvidence invitedlink
-             content <- theDocument >>= \d -> pageDocumentIdentifyView ctx d invitedlink ad
-             simpleHtmlResponse content
-           else do
-             addEventForVisitingSigningPageIfNeeded VisitedViewForSigningEvidence invitedlink
-             unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $ do
-               dbUpdate . MarkDocumentSeen slid magichash =<< signatoryActor ctx invitedlink
-               triggerAPICallbackIfThereIsOne =<< theDocument
-             content <- theDocument >>= \d -> pageDocumentSignView ctx d invitedlink ad
-             simpleHtmlResponse content
+    Just magichash -> do
+      doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash
+      invitedlink <- guardJust $ getSigLinkFor slid doc
+      -- We always switch to document langauge in case of pad signing
+      switchLang $ getLang doc
+      ctx <- getContext -- Order is important since ctx after switchLang changes
+      ad <- getAnalyticsData
+      needsToIdentify <- signatoryNeedsToIdentifyToView invitedlink
+      if needsToIdentify
+        then doc `withDocument` do
+          addEventForVisitingSigningPageIfNeeded VisitedViewForAuthenticationEvidence invitedlink
+          content <- pageDocumentIdentifyView ctx doc invitedlink ad
+          simpleHtmlResponse content
+        else do
+          if isClosed doc
+            then do
+              content <- pageDocumentSignView ctx doc invitedlink ad
+              simpleHtmlResponse content
+            else doc `withDocument` do
+              addEventForVisitingSigningPageIfNeeded VisitedViewForSigningEvidence invitedlink
+              unlessM ((isTemplate || isPreparation) <$> theDocument) $ do
+                dbUpdate . MarkDocumentSeen slid magichash =<< signatoryActor ctx invitedlink
+                triggerAPICallbackIfThereIsOne =<< theDocument
+              content <- theDocument >>= \d -> pageDocumentSignView ctx d invitedlink ad
+              simpleHtmlResponse content
     Nothing -> handleCookieFail slid did
 
 -- |
