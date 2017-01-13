@@ -110,6 +110,25 @@ properties:
       - mobile
       - email_mobile
       - none
+  allows_highlighting:
+    type: boolean
+    default: false
+    description: |
+      Whether the signatory can highlight pages of the PDF when signing.
+  highlighted_pages:
+    type: array
+    default: []
+    readOnly: true
+    description: |
+      A list of highlights performed by the signatory.
+      Only available after the signatory has signed.
+    items:
+      type: object
+      properties:
+        page:
+          type: integer
+        file_id:
+          type: string
   attachments:
     type: array
     default: []
