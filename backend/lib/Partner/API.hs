@@ -12,8 +12,10 @@ module Partner.API
 , partnerApiCallV1UserGetPersonalToken
 ) where
 
+import Data.Unjson as Unjson
 import Happstack.Server.Types
 import Happstack.StaticRouting
+import qualified Data.Text as T
 
 import API.V2
 import API.V2.Errors
@@ -83,10 +85,17 @@ partnerApiCallV1CompanyUpdate partnerID companyID = logPartnerAndCompany partner
   guardThatUserCanAdministerPartnerID apiuser partnerID
   company <- guardThatPartnerIDCanAdministerCompanyID partnerID companyID
   -- Parameters
-  companyForUpdate <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonCompanyForUpdate
+  cfuJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
   -- API call actions
-  let companyInfo = updateCompanyInfoWithCompanyForUpdate (companyinfo company) companyForUpdate
-  didUpdate <- dbUpdate $ SetCompanyInfo (companyid company) companyInfo
+
+  cfu <- case (Unjson.update (companyToCompanyForUpdate company) unjsonCompanyForUpdate cfuJSON) of
+      (Unjson.Result value []) ->
+        return value
+      (Unjson.Result _ errs) ->
+        apiError $ requestParameterParseError "json" $ "Errors while parsing company data:" <+> T.pack (show errs)
+
+  let companyInfo = updateCompanyInfoWithCompanyForUpdate (companyinfo company) cfu
+  didUpdate <- dbUpdate $ SetCompanyInfo companyID companyInfo
   when (not didUpdate) $
     apiError $ serverError "The company details could not be updated."
   updatedCompany <- apiGuardJustM
@@ -125,7 +134,7 @@ partnerApiCallV1UserCreate partnerID companyID = logPartnerAndCompany partnerID 
   -- Parameters
   (userInfo, hasAcceptedTOS, lang) <- do
     userForUpdate <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserForUpdate
-    return (userInfoFromUserForUpdate userForUpdate
+    return ( userInfoFromUserForUpdate userForUpdate
            , ufuHasAcceptedTOS userForUpdate
            , ufuLang userForUpdate
            )
@@ -182,29 +191,31 @@ partnerApiCallV1UserUpdate partnerID userID = logPartnerAndUser partnerID userID
   (apiuser, _actor) <- getAPIUser APIPersonal
   -- Guards
   guardThatUserCanAdministerPartnerID apiuser partnerID
-  _user <- guardThatPartnerIDCanAdministerUserID partnerID userID
+  user <- guardThatPartnerIDCanAdministerUserID partnerID userID
   -- Parameters
-  (userInfo, hasAcceptedTOS, lang) <- do
-    userForUpdate <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserForUpdate
-    return (userInfoFromUserForUpdate userForUpdate
-           , ufuHasAcceptedTOS userForUpdate
-           , ufuLang userForUpdate
-           )
+  ufuJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
+  ufu <- case (Unjson.update (userToUserForUpdate user) unjsonUserForUpdate ufuJSON) of
+      (Result value []) ->
+        return value
+      (Result _ errs) ->
+        apiError $ requestParameterParseError "json" $ "Errors while parsing user data:" <+> T.pack (show errs)
+  let userInfo = userInfoFromUserForUpdate ufu
+
   -- More guards
   guardValidEmailAndNoExistingUser (useremail userInfo) (Just userID)
-  when (not hasAcceptedTOS) $
+  when (not $ ufuHasAcceptedTOS ufu) $
     apiError $ requestParameterInvalid "has_accepted_tos" "The user must accept the Scrive Terms of Service to use it."
   -- API call actions
   didUpdateInfo     <- dbUpdate $ SetUserInfo userID userInfo
-  didUpdateSettings <- dbUpdate $ SetUserSettings userID (UserSettings lang)
+  didUpdateSettings <- dbUpdate $ SetUserSettings userID (UserSettings $ ufuLang ufu)
   when (not $ didUpdateInfo && didUpdateSettings) $
     apiError $ serverError "Could not update user"
   -- re-fetch original to get what's really in the DB.
-  user <- apiGuardJustM
+  userFromDB <- apiGuardJustM
     (serverError "The updated user could not be fetched from the database.")
     (dbQuery $ GetUserByID userID)
   -- Result
-  Ok <$> return (unjsonUserForUpdate, userToUserForUpdate user)
+  Ok <$> return (unjsonUserForUpdate, userToUserForUpdate userFromDB)
 
 partnerApiCallV1UserGetPersonalToken :: Kontrakcja m => PartnerID -> UserID -> m Response
 partnerApiCallV1UserGetPersonalToken partnerID userID = logPartnerAndUser partnerID userID . api $ do

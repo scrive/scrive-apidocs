@@ -29,10 +29,15 @@ partnerAPITests :: TestEnvSt -> Test
 partnerAPITests env = testGroup "PartnerAPI"
   [ testThat "Test Partners API Create Company" env testPartnerCompanyCreate
   , testThat "Test Partners API Update Company" env testPartnerCompanyUpdate
+  , testThat "Test Partners API Update Company Id" env testPartnerCompanyIdUpdate
+  , testThat "Test Partners API Partial Update Company" env testPartnerCompanyPartialUpdate
   , testThat "Test Partners API Get Company" env testPartnerCompanyGet
   , testThat "Test Partners API Get Companies" env testPartnerCompaniesGet
   , testThat "Test Partners API Company New User" env testPartnerCompanyUserNew
   , testThat "Test Partners API User Update" env testPartnerUserUpdate
+  , testThat "Test Partners API User Id Update" env testPartnerUserIdUpdate
+  , testThat "Test Partners API User Partial Update" env testPartnerUserPartialUpdate
+  , testThat "Test Partners API User Existing Email Update" env testPartnerUserUpdateEmailToExisting
   , testThat "Test Partners API User Get" env testPartnerUserGet
   , testThat "Test Partners API User Get Personal Tokens" env testPartnersUserGetTokens
   , testThat "Test Partners API Company Users Get" env testPartnerCompanyUsersGet
@@ -97,6 +102,30 @@ testPartnerCompanyUpdate = do
 
   return ()
 
+testPartnerCompanyPartialUpdate :: TestEnv ()
+testPartnerCompanyPartialUpdate = do
+  companyUpdateJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyPartialUpdate.json"
+  let rq_companyUpdate_params = [ ("json", inTextBS companyUpdateJSON) ]
+      rq_companyUpdate_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyPartialUpdate.json"
+
+  -- Update should work
+  (ctx,pid,cid) <- testHelperPartnerCompanyCreate
+  _ <- runApiJSONTest ctx POST (partnerApiCallV1CompanyUpdate pid cid) rq_companyUpdate_params 200 rq_companyUpdate_resp_fp
+
+  return ()
+
+testPartnerCompanyIdUpdate :: TestEnv ()
+testPartnerCompanyIdUpdate = do
+  companyUpdateJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyIdUpdate.json"
+  let rq_companyUpdate_params = [ ("json", inTextBS companyUpdateJSON) ]
+      rq_companyUpdate_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyIdUpdate.json"
+
+  -- Update should work
+  (ctx,pid,cid) <- testHelperPartnerCompanyCreate
+  _ <- runApiJSONTest ctx POST (partnerApiCallV1CompanyUpdate pid cid) rq_companyUpdate_params 200 rq_companyUpdate_resp_fp
+
+  return ()
+
 testPartnerCompanyGet :: TestEnv ()
 testPartnerCompanyGet = do
   let rq_companyUpdate_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyCreate.json"
@@ -157,19 +186,19 @@ testPartnerCompanyUserNew = do
   -- Normal user creation should work
   newUserGoodJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood_params = [ ("json", inTextBS newUserGoodJSON) ]
-      rq_newUserGood_resp_fp = inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
+      rq_newUserGood_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyUserNew-good.json"
   _ <- runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid cid) rq_newUserGood_params 201 rq_newUserGood_resp_fp
 
   -- If Terms of Service have not been agreed to, then we should not create a user
   newUserBadToSJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-no-tos.json"
   rq_newUserBadToS_params <- mkRequestWithHeaders POST [ ("json", inTextBS newUserBadToSJSON) ] []
   (badToSRes,_) <- runTestKontra rq_newUserBadToS_params ctx $ partnerApiCallV1UserCreate pid cid
-  assertEqual ("We should get a 403 response") 400 (rsCode badToSRes)
+  assertEqual ("We should get a 400 response") 400 (rsCode badToSRes)
 
   -- When user with email already exists, we should not create a user
   rq_newUserAlreadyExists_params <- mkRequestWithHeaders POST [ ("json", inTextBS newUserGoodJSON) ] []
   (alreadyExistsRes,_) <- runTestKontra rq_newUserAlreadyExists_params ctx $ partnerApiCallV1UserCreate pid cid
-  assertEqual ("We should get a 403 response") 400 (rsCode alreadyExistsRes)
+  assertEqual ("We should get a 400 response") 400 (rsCode alreadyExistsRes)
 
   return ()
 
@@ -189,6 +218,60 @@ testPartnerUserUpdate = do
   rq_tos <- mkRequestWithHeaders POST [ ("json", inTextBS updateUserNoToSJSON) ] []
   (tosResult,_) <- runTestKontra rq_tos ctx $ partnerApiCallV1UserUpdate pid uid
   assertEqual ("We should get a 400 response") 400 (rsCode tosResult)
+
+  return ()
+
+testPartnerUserUpdateEmailToExisting :: TestEnv ()
+testPartnerUserUpdateEmailToExisting = do
+
+  (ctx,pid,cid) <- testHelperPartnerCompanyCreate
+
+  -- Normal user creation should work
+  newUserGood1JSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
+  let rq_newUserGood1_params = [ ("json", inTextBS newUserGood1JSON) ]
+      rq_newUserGood1_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyUserNew-good.json"
+  _ <- runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid cid) rq_newUserGood1_params 201 rq_newUserGood1_resp_fp
+
+  -- Normal creation of another user should work
+  newUserGood2JSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good2.json"
+  let rq_newUserGood2_params = [ ("json", inTextBS newUserGood2JSON) ]
+      rq_newUserGood2_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyUserNew-good2.json"
+  respValue <- runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid cid) rq_newUserGood2_params 201 rq_newUserGood2_resp_fp
+  let Object respObject = respValue
+      Just (String uidstr) = H.lookup "id" respObject
+      uid = unsafeUserID $ $read $ T.unpack uidstr
+
+  -- When user with email already exists, we must not modify email
+  updateToExistingEmailJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerUserEmailUpdate.json"
+  rq_updateToExistingEmail_params <- mkRequestWithHeaders POST [ ("json", inTextBS updateToExistingEmailJSON) ] []
+  (alreadyExistsRes,_) <- runTestKontra rq_updateToExistingEmail_params ctx $ partnerApiCallV1UserUpdate pid uid
+  assertEqual ("We should get a 400 response") 400 (rsCode alreadyExistsRes)
+
+  return ()
+
+testPartnerUserPartialUpdate :: TestEnv ()
+testPartnerUserPartialUpdate = do
+
+  (ctx,pid,uid) <- testHelperPartnerUserCreate
+
+  -- Normal user update should work
+  updateUserJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerUserPartialUpdate-good.json"
+  let rq_updateUser_params = [ ("json", inTextBS updateUserJSON) ]
+      rq_UpdateUser_resp_fp = inTestDir "json/partner_api_v1/resp-partnerUserPartialUpdate-good.json"
+  _ <- runApiJSONTest ctx POST (partnerApiCallV1UserUpdate pid uid) rq_updateUser_params 200 rq_UpdateUser_resp_fp
+
+  return ()
+
+testPartnerUserIdUpdate :: TestEnv ()
+testPartnerUserIdUpdate = do
+
+  (ctx,pid,uid) <- testHelperPartnerUserCreate
+
+  -- Normal user update should work
+  updateUserJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerUserIdUpdate.json"
+  let rq_updateUser_params = [ ("json", inTextBS updateUserJSON) ]
+      rq_UpdateUser_resp_fp = inTestDir "json/partner_api_v1/resp-partnerUserIdUpdate.json"
+  _ <- runApiJSONTest ctx POST (partnerApiCallV1UserUpdate pid uid) rq_updateUser_params 200 rq_UpdateUser_resp_fp
 
   return ()
 
@@ -274,7 +357,7 @@ testHelperPartnerCompanyUserCreate :: Context -> PartnerID -> CompanyID -> TestE
 testHelperPartnerCompanyUserCreate ctx pid cid = do
   newUserGoodJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood_params = [ ("json", inTextBS newUserGoodJSON) ]
-      rq_newUserGood_resp_fp = inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
+      rq_newUserGood_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyUserNew-good.json"
   respValue <- runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid cid) rq_newUserGood_params 201 rq_newUserGood_resp_fp
   let Object respObject = respValue
       Just (String uid) = H.lookup "id" respObject
