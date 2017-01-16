@@ -38,6 +38,7 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls" $
   , testThat "API v2 Set file"                              env testDocApiV2SetFile
   , testThat "API v2 Set attachments"                       env testDocApiV2SetAttachments
   , testThat "API v2 Set auto-reminder"                     env testDocApiV2SetAutoReminder
+  , testThat "API v2 Remove page"                           env testDocApiV2RemovePages
   , testThat "API v2 Clone"                                 env testDocApiV2Clone
   , testThat "API v2 Restart"                               env testDocApiV2Restart
   , testThat "API v2 Callback"                              env testDocApiV2Callback
@@ -247,6 +248,22 @@ testDocApiV2Clone = do
 
   mockDocClone <- mockDocTestRequestHelper ctx POST [] (docApiV2Clone did) 201
   assertEqual "Cloned document should have same structure as original" (cleanMockDocForComparison mockDoc) (cleanMockDocForComparison mockDocClone)
+
+testDocApiV2RemovePages :: TestEnv ()
+testDocApiV2RemovePages = do
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  did <- getMockDocId <$> testDocApiV2New' ctx
+
+  do -- File changes and name stays the same when removing pages
+    mocDocWith50PagesFile <- mockDocTestRequestHelper ctx
+      POST [("file", inFile $ inTestDir "pdfs/50page.pdf")]
+      (docApiV2SetFile did) 200
+    mockDocWithoutFewPages  <- mockDocTestRequestHelper ctx
+      POST [("pages", inText "[1,50]")]
+      (docApiV2RemovePages did) 200
+    assertBool "After removing pages file name is not changed" (getMockDocFileName mockDocWithoutFewPages == getMockDocFileName  mocDocWith50PagesFile)
+    assertBool "After removing pages file changes" (getMockDocFileId mockDocWithoutFewPages /= getMockDocFileId mocDocWith50PagesFile)
 
 testDocApiV2Restart :: TestEnv ()
 testDocApiV2Restart = do

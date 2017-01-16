@@ -1,5 +1,6 @@
 module Doc.API.V2.DocumentUpdateUtils (
- applyDraftDataToDocument
+    applyDraftDataToDocument
+  , adjustFieldAndPlacementsAfterRemovingPages
 ) where
 
 import Control.Conditional (unlessM, whenM)
@@ -111,3 +112,45 @@ mergeAuthorDetails sigs nsigs =
 mergeSignatoriesIDs :: [SignatoryLink] ->[SignatoryLink] -> [SignatoryLink]
 mergeSignatoriesIDs (s:ss) (ns:nss) = (ns {signatorylinkid = signatorylinkid s}) : (mergeSignatoriesIDs ss nss)
 mergeSignatoriesIDs _ ns = ns
+
+
+-- Utils for removing pages
+adjustFieldAndPlacementsAfterRemovingPages :: (Kontrakcja m, DocumentMonad m) =>  [Int] -> Actor -> m ()
+adjustFieldAndPlacementsAfterRemovingPages pages actor = do
+  sigs <- documentsignatorylinks <$> theDocument
+  let revSortedPages = reverse $ sort $ pages
+  res <- dbUpdate $ ResetSignatoryDetails (map (adjustFieldAndPlacementsAfterRemovingPagesForSignatory revSortedPages) sigs) actor
+  unless res $
+    apiError $ serverError "adjustFieldAndPlacementsAfterRemovingPages failed"
+
+adjustFieldAndPlacementsAfterRemovingPagesForSignatory :: [Int] -> SignatoryLink -> SignatoryLink
+adjustFieldAndPlacementsAfterRemovingPagesForSignatory [] sl =  sl
+adjustFieldAndPlacementsAfterRemovingPagesForSignatory (highestpageno:otherpages) sl = adjustFieldAndPlacementsAfterRemovingPagesForSignatory otherpages $
+  sl { signatoryfields = mapMaybe (adjustFieldAndPlacementsAfterRemovingPage highestpageno) $ signatoryfields sl}
+
+adjustFieldAndPlacementsAfterRemovingPage :: Int -> SignatoryField -> Maybe SignatoryField
+adjustFieldAndPlacementsAfterRemovingPage page slf = case slf of
+  SignatoryNameField  f -> Just $ SignatoryNameField $ f {snfPlacements = adjustPlacementsAfterRemovingPage page $ snfPlacements f}
+  SignatoryEmailField f -> Just $ SignatoryEmailField $ f {sefPlacements = adjustPlacementsAfterRemovingPage page $ sefPlacements f}
+  SignatoryMobileField f -> Just $ SignatoryMobileField $ f {smfPlacements = adjustPlacementsAfterRemovingPage page $ smfPlacements f}
+  SignatoryCompanyField f -> Just $ SignatoryCompanyField $ f {scfPlacements = adjustPlacementsAfterRemovingPage page $ scfPlacements f}
+  SignatoryPersonalNumberField f -> Just $ SignatoryPersonalNumberField $ f {spnfPlacements = adjustPlacementsAfterRemovingPage page $ spnfPlacements f}
+  SignatoryCompanyNumberField f -> Just $ SignatoryCompanyNumberField $ f {scnfPlacements = adjustPlacementsAfterRemovingPage page $ scnfPlacements f}
+  SignatoryTextField f -> Just $ SignatoryTextField $ f {stfPlacements = adjustPlacementsAfterRemovingPage page $ stfPlacements f}
+  SignatoryCheckboxField f -> case (adjustPlacementsAfterRemovingPage page $ schfPlacements f) of
+    [] -> Nothing
+    notEmptyPlacementsList -> Just $ SignatoryCheckboxField $ f {schfPlacements = notEmptyPlacementsList }
+  SignatorySignatureField f -> case (adjustPlacementsAfterRemovingPage page $ ssfPlacements f) of
+    [] -> Nothing
+    notEmptyPlacementsList -> Just $ SignatorySignatureField $ f {ssfPlacements = notEmptyPlacementsList }
+
+adjustPlacementsAfterRemovingPage :: Int -> [FieldPlacement] -> [FieldPlacement]
+adjustPlacementsAfterRemovingPage page ps = mapMaybe (adjustPlacementAfterRemovingPage page) ps
+
+adjustPlacementAfterRemovingPage :: Int -> FieldPlacement -> Maybe FieldPlacement
+adjustPlacementAfterRemovingPage page placement =
+  if (placementpage placement < fromIntegral page)
+    then Just $ placement
+    else if (placementpage placement > fromIntegral page)
+      then Just $ placement {placementpage = placementpage placement - 1}
+      else Nothing

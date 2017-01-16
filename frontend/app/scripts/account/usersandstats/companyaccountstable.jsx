@@ -327,7 +327,7 @@ module.exports = React.createClass({
             </Modal.Content>
             <Modal.Footer>
               <Modal.CancelButton onClick={self.onRemoveAccountModalClose} />
-              <Modal.AcceptButton onClick={self.onRemoveAccountModalAccept} />
+              <Modal.AcceptButton type="cancel" onClick={self.onRemoveAccountModalAccept} />
             </Modal.Footer>
           </Modal.Container>
 

@@ -23,6 +23,7 @@ module Doc.API.V2.Mock.TestUtils (
 , getMockDocDaysToSign
 , getMockDocHasFile
 , getMockDocFileId
+, getMockDocFileName
 , getMockDocAuthorAttachmentLength
 , getMockDocAuthorAttachmentName
 , getMockDocAuthorAttachmentRequired
@@ -129,6 +130,11 @@ getMockDocDaysToSign = mockDocDaysToSign
 
 getMockDocHasFile :: MockDoc -> Bool
 getMockDocHasFile = isJust . mockDocFile
+
+getMockDocFileName :: MockDoc -> String
+getMockDocFileName md = case (mockMainFileName <$> (mockDocFile md)) of
+  Just n -> n
+  Nothing -> $unexpectedError $ "No mockDocFile for MockDoc:\n" ++ show md
 
 getMockDocFileId :: MockDoc -> FileID
 getMockDocFileId md = case maybeRead (mockMainFileId mockFile) of

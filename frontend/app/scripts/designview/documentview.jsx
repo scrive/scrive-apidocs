@@ -11,6 +11,8 @@ var $ = require("jquery");
 var Submit = require("../../js/submits.js").Submit;
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 var DocumentSaveMixin = require("./document_save_mixin");
+var Modal = require("../common/modal");
+
   module.exports = React.createClass({
     propTypes: {
       document: React.PropTypes.instanceOf(Document).isRequired
@@ -20,6 +22,13 @@ var DocumentSaveMixin = require("./document_save_mixin");
 
     getBackboneModels: function () {
       return [this.props.document];
+    },
+
+    getInitialState: function () {
+      return {
+        hasVisiblePageRemoveModal: false,
+        indexOfPageToRemove: null
+      };
     },
 
     componentDidMount: function () {
@@ -182,6 +191,40 @@ var DocumentSaveMixin = require("./document_save_mixin");
       });
     },
 
+    removePageFunc: function  (index) {
+      this.setState({hasVisiblePageRemoveModal: true, indexOfPageToRemove: index});
+    },
+
+    removePageAndReload: function () {
+      var self = this;
+      var document = self.props.document;
+      document.save();
+      document.afterSave(function () {
+        new Submit({
+          method: "POST",
+          url: "/api/frontend/documents/" + document.documentid() + "/removepages",
+          pages: "[" + (self.state.indexOfPageToRemove + 1) + "]",
+          ajaxsuccess: function () {
+            document.recall();
+            // We want to keep modal and mask around till document view is reloaded and rendered.
+            // This is why we just keep it around for 500 ms
+            setTimeout(function () {
+              self.hidePageRemoveModal();
+            }, 500);
+          },
+          ajaxerror: function (d, a) {
+            Track.track("Error", {Message: "Failed to remove page"});
+            self.hidePageRemoveModal();
+            document.recall();
+          }
+        }).sendAjax();
+      });
+    },
+
+    hidePageRemoveModal: function () {
+      this.setState({hasVisiblePageRemoveModal: false, indexOfPageToRemove: undefined});
+    },
+
     render: function () {
       var self = this;
       var document = this.props.document;
@@ -226,8 +269,34 @@ var DocumentSaveMixin = require("./document_save_mixin");
               ref="fileView"
               model={document.mainfile()}
               pixelWidth={950}
+              removePageFunc={this.removePageFunc}
             />
           }
+
+          <Modal.Container active={self.state.hasVisiblePageRemoveModal} >
+            <Modal.Header
+              title={localization.designview.removePage.modalTitle}
+              showClose={true}
+              onClose={this.hidePageRemoveModal}
+            />
+            <Modal.Content>
+              <div>
+                {localization.designview.removePage.modalBody1}
+                <br/>
+                {localization.designview.removePage.modalBody2}
+              </div>
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.CancelButton onClick={self.hidePageRemoveModal} />
+              <Modal.AcceptButton
+                text={localization.designview.removePage.modalRemoveButton}
+                type="cancel"
+                onClick={this.removePageAndReload}
+              />
+            </Modal.Footer>
+          </Modal.Container>
+
+
         </div>
       );
     }

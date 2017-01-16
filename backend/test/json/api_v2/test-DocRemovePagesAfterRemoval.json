@@ -1,0 +1,307 @@
+{
+  "id": "117756",
+  "title": "50page",
+  "parties": [
+    {
+      "id": "638772",
+      "user_id": "169976",
+      "is_author": true,
+      "is_signatory": false,
+      "fields": [
+        {
+          "type": "email",
+          "value": "test@scrive.com",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "JonesTest",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "name",
+          "order": 1,
+          "value": "BobTest",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        }
+      ],
+      "sign_order": 1,
+      "sign_time": null,
+      "seen_time": null,
+      "read_invitation_time": null,
+      "rejected_time": null,
+      "sign_success_redirect_url": null,
+      "reject_redirect_url": null,
+      "email_delivery_status": "unknown",
+      "mobile_delivery_status": "unknown",
+      "has_authenticated_to_view": false,
+      "csv": null,
+      "delivery_method": "email",
+      "authentication_method_to_view": "standard",
+      "authentication_method_to_sign": "standard",
+      "confirmation_delivery_method": "email",
+      "allows_highlighting": false,
+      "attachments": [],
+      "highlighted_pages": [],
+      "api_delivery_url": null
+    },
+    {
+      "id": "638773",
+      "user_id": null,
+      "is_author": false,
+      "is_signatory": false,
+      "fields": [
+        {
+          "type": "name",
+          "order": 1,
+          "value": "Name",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.999,
+              "yrel": 0.9999,
+              "wrel": 0.0001,
+              "hrel": 0.12,
+              "fsrel": 0,
+              "page": 1,
+              "tip": "right",
+              "anchors": []
+            }
+          ]
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "Snd name",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "email",
+          "value": "abc",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": true,
+          "placements": [
+            {
+              "xrel": 1,
+              "yrel": 0,
+              "wrel": 0.12345679,
+              "hrel": 0.13,
+              "fsrel": 0.13,
+              "page": 4,
+              "tip": "left",
+              "anchors": []
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "T1",
+          "value": "Some text",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.1,
+              "hrel": 0.5,
+              "fsrel": 0.1,
+              "page": 4,
+              "tip": null,
+              "anchors": []
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "T2",
+          "value": "Some text",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "text",
+          "name": "T3",
+          "value": "Some text",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.1,
+              "hrel": 0.5,
+              "fsrel": 0.1,
+              "page": 5,
+              "tip": null,
+              "anchors": []
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "T4",
+          "value": "Some text",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.1,
+              "hrel": 0.5,
+              "fsrel": 0.1,
+              "page": 38,
+              "tip": null,
+              "anchors": []
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "C1",
+          "is_checked": false,
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.011538,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 4,
+              "tip": null,
+              "anchors": []
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "C3",
+          "is_checked": false,
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.011538,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 5,
+              "tip": null,
+              "anchors": []
+            }
+          ]
+        },
+        {
+          "type": "signature",
+          "name": "S1",
+          "signature": null,
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.011538,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 4,
+              "tip": null,
+              "anchors": []
+            }
+          ]
+        },
+        {
+          "type": "signature",
+          "name": "S3",
+          "signature": null,
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.011538,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 5,
+              "tip": null,
+              "anchors": []
+            }
+          ]
+        }
+      ],
+      "sign_order": 1,
+      "sign_time": null,
+      "seen_time": null,
+      "read_invitation_time": null,
+      "rejected_time": null,
+      "sign_success_redirect_url": null,
+      "reject_redirect_url": null,
+      "email_delivery_status": "unknown",
+      "mobile_delivery_status": "unknown",
+      "has_authenticated_to_view": false,
+      "csv": null,
+      "delivery_method": "email",
+      "authentication_method_to_view": "standard",
+      "authentication_method_to_sign": "standard",
+      "confirmation_delivery_method": "email",
+      "allows_highlighting": false,
+      "attachments": [],
+      "highlighted_pages": [],
+      "api_delivery_url": null
+    }
+  ],
+  "file": {
+    "name": "50page.pdf",
+    "id": "155853"
+  },
+  "sealed_file": null,
+  "author_attachments": [],
+  "ctime": "2000-01-01T00:00:00Z",
+  "mtime": "2000-01-01T00:00:00Z",
+  "timeout_time": null,
+  "auto_remind_time": null,
+  "status": "preparation",
+  "days_to_sign": 90,
+  "days_to_remind": null,
+  "display_options": {
+    "show_header": true,
+    "show_pdf_download": true,
+    "show_reject_option": true,
+    "allow_reject_reason": true,
+    "show_footer": true,
+    "document_is_receipt": false
+  },
+  "invitation_message": "",
+  "confirmation_message": "",
+  "lang": "sv",
+  "api_callback_url": null,
+  "object_version": 4,
+  "access_token": "1ef122d5e32565e6",
+  "timezone": "Europe/Stockholm",
+  "tags": [],
+  "is_template": false,
+  "is_saved": true,
+  "is_shared": false,
+  "is_trashed": false,
+  "is_deleted": false,
+  "viewer": {
+    "signatory_id": "638772",
+    "role": "signatory"
+  }
+}

@@ -31,7 +31,8 @@ var ConfirmationModal = React.createClass({
     acceptText: React.PropTypes.string,
     cancelText: React.PropTypes.string,
     onTransitionEnd: React.PropTypes.func,
-    extraButtons: React.PropTypes.object
+    extraButtons: React.PropTypes.object,
+    acceptButtonType: React.PropTypes.string
   },
   getInitialState: function () {
     return {
@@ -43,7 +44,8 @@ var ConfirmationModal = React.createClass({
       showExtraButtons: this.props.showExtraButtons,
       width: this.props.width,
       acceptText: this.props.acceptText,
-      cancelText: this.props.cancelText
+      cancelText: this.props.cancelText,
+      acceptButtonType: this.props.acceptButtonType
     };
   },
   componentWillMount: function () {
@@ -109,6 +111,7 @@ var ConfirmationModal = React.createClass({
         React.createElement(
           Modal.AcceptButton,
           {
+            type: this.state.acceptButtonType,
             text: this.state.acceptText,
             key: 1,
             onClick: this.onAccept
@@ -165,7 +168,8 @@ module.exports = function (config) {
     width: config.width,
     content: config.content,
     onTransitionEnd: onModalTransitionEnd,
-    extraButtons: config.extraButtons
+    extraButtons: config.extraButtons,
+    acceptButtonType: config.acceptButtonType
   };
 
   var modalEl = document.createElement("div");

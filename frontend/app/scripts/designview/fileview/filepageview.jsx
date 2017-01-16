@@ -6,7 +6,10 @@ var SignatureView = require("./signatureview");
 var CheckboxView = require("./checkboxview");
 var TextView = require("./textview");
 var FilePage = require("../../../js/files.js").FilePage;
+var Modal = require("../../common/modal");
 var $ = require("jquery");
+
+var Cross = require("../../icons/cross.svg");
 
   module.exports = React.createClass({
     propTypes: {
@@ -18,7 +21,8 @@ var $ = require("jquery");
       showCoordinateAxes: React.PropTypes.func.isRequired,
       hideCoordinateAxes: React.PropTypes.func.isRequired,
       moveCoordinateAxes: React.PropTypes.func.isRequired,
-      closeAllTypeSetters: React.PropTypes.func.isRequired
+      closeAllTypeSetters: React.PropTypes.func.isRequired,
+      removePageFunc: React.PropTypes.func.isRequired
     },
 
     mixins: [BackboneMixin.BackboneMixin],
@@ -130,6 +134,12 @@ var $ = require("jquery");
 
       return (
         <div id={"page" + page.number()} className="pagediv">
+          {/* if */ this.props.removePageFunc &&
+            <Cross
+              className="remove-page"
+              onClick={this.props.removePageFunc}
+            />
+          }
           <img src={imageSrc} />
           {/* if */ imageComplete &&
             this.renderFields()

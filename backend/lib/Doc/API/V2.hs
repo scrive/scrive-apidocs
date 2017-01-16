@@ -23,6 +23,7 @@ documentAPIV2  = dir "documents" $ choice [
 
   , param $ dir "update"          $ hPost $ toK1 $ docApiV2Update
   , param $ dir "setfile"         $ hPost $ toK1 $ docApiV2SetFile
+  , param $ dir "removepages"     $ hPost $ toK1 $ docApiV2RemovePages
   , param $ dir "start"           $ hPost $ toK1 $ docApiV2Start
   , param $ dir "prolong"         $ hPost $ toK1 $ docApiV2Prolong
   , param $ dir "cancel"          $ hPost $ toK1 $ docApiV2Cancel

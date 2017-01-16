@@ -10,7 +10,8 @@ var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
   module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(File).isRequired,
-      pixelWidth: React.PropTypes.number.isRequired
+      pixelWidth: React.PropTypes.number.isRequired,
+      removePageFunc: React.PropTypes.func.isRequired
     },
 
     mixins: [BackboneMixin.BackboneMixin],
@@ -118,6 +119,17 @@ var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
       }
     },
 
+    removePageFunc: function (index) {
+      var self = this;
+      if (this.props.model.pages().length > 1) {
+        return function () {
+          self.props.removePageFunc(index);
+        };
+      } else {
+        return undefined;
+      }
+    },
+
     renderPage: function (page, index) {
       var image = this.state.images[index];
       if (!image) {
@@ -140,6 +152,7 @@ var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
           hideCoordinateAxes={this.hideCoordinateAxes}
           moveCoordinateAxes={this.moveCoordinateAxes}
           closeAllTypeSetters={this.closeAllTypeSetters}
+          removePageFunc={this.removePageFunc(index)}
         />
       );
     },

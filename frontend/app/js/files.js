@@ -1,6 +1,7 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
 var $ = require("jquery");
+var Submit = require("./submits.js").Submit;
 
 /* Basic modules for daling with a files
  * File model + view of the files on all pages with ajax download of pages
@@ -112,6 +113,7 @@ var File = exports.File = Backbone.Model.extend({
     broken : function(){
         return this.get("broken");
     },
+
     draftData : function() {
       return {id : this.fileid(), name: this.name()};
     },

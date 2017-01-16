@@ -209,6 +209,7 @@ module.exports = React.createClass({
             <Modal.Footer>
               <Modal.CancelButton onClick={this.onRemoveModalClose} />
               <Modal.AcceptButton
+                type="cancel"
                 text={localization.archive.trash.remove.action}
                 onClick={this.onRemoveModalAccept}
               />

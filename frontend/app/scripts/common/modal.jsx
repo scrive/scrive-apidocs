@@ -197,13 +197,14 @@ exports.AcceptButton = React.createClass({
   propTypes: {
     text: React.PropTypes.string,
     oneClick: React.PropTypes.bool,
-    onClick: React.PropTypes.func
+    onClick: React.PropTypes.func,
+    type: React.PropTypes.string
   },
   render: function () {
     return (
       <Button
         className="float-right"
-        type="action"
+        type={(this.props.type) ? this.props.type : "action"}
         text={(this.props.text) ? this.props.text : localization.ok}
         oneClick={this.props.oneClick}
         onClick={this.props.onClick}

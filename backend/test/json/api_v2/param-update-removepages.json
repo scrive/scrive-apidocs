@@ -1,0 +1,214 @@
+{
+  "parties": [
+    {},
+    {
+      "is_signatory": false,
+      "fields": [
+        {
+          "type": "name",
+          "order": 1,
+          "value": "Name",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.999,
+              "yrel": 0.9999,
+              "wrel": 0.0001,
+              "hrel": 0.12,
+              "fsrel": 0,
+              "page": 1,
+              "tip": "right"
+            }
+          ]
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "Snd name",
+          "is_obligatory": false,
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 1,
+              "yrel": 0,
+              "wrel": 0.12345679,
+              "hrel": 0.13,
+              "fsrel": 0.13,
+              "page": 5,
+              "tip": "left"
+            }
+          ]
+        },
+        {
+          "type": "email",
+          "value": "abc",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": true,
+           "placements": [
+            {
+              "xrel": 1,
+              "yrel": 0,
+              "wrel": 0.12345679,
+              "hrel": 0.13,
+              "fsrel": 0.13,
+              "page": 4,
+              "tip": "left"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "T1",
+          "value": "Some text",
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.1,
+              "hrel": 0.5,
+              "fsrel": 0.1,
+              "page": 4
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "T2",
+          "value": "Some text",
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.1,
+              "hrel": 0.5,
+              "fsrel": 0.1,
+              "page": 5
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "T3",
+          "value": "Some text",
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.1,
+              "hrel": 0.5,
+              "fsrel": 0.1,
+              "page": 6
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "T4",
+          "value": "Some text",
+          "should_be_filled_by_sender": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.1,
+              "hrel": 0.5,
+              "fsrel": 0.1,
+              "page": 40
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "C1",
+          "is_checked": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.011538,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 4
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "C2",
+          "is_checked": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.011538,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 5
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "C3",
+          "is_checked": false,
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.011538,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 6
+            }
+          ]
+        },
+        {
+          "type": "signature",
+          "name": "S1",
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.011538,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 4
+            }
+          ]
+        },
+        {
+          "type": "signature",
+          "name": "S2",
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.011538,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 5
+            }
+          ]
+        },
+        {
+          "type": "signature",
+          "name": "S3",
+          "placements": [
+            {
+              "xrel": 0.5,
+              "yrel": 0.5,
+              "wrel": 0.011538,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 6
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

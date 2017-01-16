@@ -11,6 +11,7 @@ module Util.PDFUtil
     , FileError(..)
     , preCheckPDF
     , getNumberOfPDFPages
+    , pickPages
     ) where
 
 import Control.Monad.Base
@@ -221,3 +222,21 @@ getNumberOfPDFPages content = do
                                   _ -> Left $ "Unparsable mutool info output about number of pages"
                     Nothing -> Left $ "Couldn't find number of pdf pages in mutool output"
     ExitFailure code -> Left $ "mutool info failed with return code " ++ show code ++ ", and stderr: " ++ BSL.unpack stderr'
+
+pickPages :: (MonadLog m, MonadBaseControl IO m) => [Int] -> BS.ByteString -> m (Maybe  BS.ByteString)
+pickPages pages content = do
+  withSystemTempDirectory' "remove-pages" $ \tmppath -> do
+    let inputpath = tmppath ++ "/input.pdf"
+    let outputpath = tmppath ++ "/output.pdf"
+    liftBase $ BS.writeFile inputpath content
+    (exitCode, mutoolout, mutoolerr)  <- liftBase $ readProcessWithExitCode "mutool" (["clean", "-g", inputpath, outputpath] ++ (map show pages)) (BSL.empty)
+    case exitCode of
+      ExitSuccess -> Just <$> (liftBase $ BS.readFile outputpath)
+      ExitFailure ec -> do
+        logAttention "pickPages failed" $ object [
+          "exit_code" .= show ec,
+          "stdout" `equalsExternalBSL` mutoolout,
+          "stderr" `equalsExternalBSL` mutoolerr
+          ]
+        return Nothing
+

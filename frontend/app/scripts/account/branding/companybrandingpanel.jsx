@@ -249,6 +249,7 @@ module.exports = React.createClass({
             <Modal.Footer>
               <Modal.CancelButton onClick={this.onThemeDeleteModalClose} />
               <Modal.AcceptButton
+                type="cancel"
                 text={localization.branding.deleteNow}
                 onClick={this.onThemeDeleteModalAccept}
               />

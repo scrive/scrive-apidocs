@@ -14,11 +14,13 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2SetAutoReminder
 , docApiV2Clone
 , docApiV2Restart
+, docApiV2RemovePages
 , docApiV2Callback
 , docApiV2SigSetAuthenticationToView
 , docApiV2SigSetAuthenticationToSign
 ) where
 
+import Control.Monad.Base
 import Data.Unjson
 import Data.Unjson as Unjson
 import Happstack.Server.Types
@@ -53,12 +55,15 @@ import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
 import File.File (File(..))
+import File.Model
+import File.Storage
 import InputValidation (Result(..), asValidEmail)
 import Kontra
 import KontraPrelude
 import MinutesTime
 import OAuth.Model
 import User.Model
+import Util.PDFUtil
 import Util.SignatoryLinkUtils (getAuthorSigLink, getSigLinkFor)
 
 docApiV2New :: Kontrakcja m => m Response
@@ -290,6 +295,59 @@ docApiV2SetFile did = logDocument did . api $ do
           Nothing -> return ()
     -- Result
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
+
+
+docApiV2RemovePages :: Kontrakcja m => DocumentID -> m Response
+docApiV2RemovePages did = logDocument did . api $ do
+  -- Permissions
+  (user, actor) <- getAPIUser APIDocCreate
+  withDocumentID did $ do
+    -- Guards
+    guardThatUserIsAuthor user
+    guardThatObjectVersionMatchesIfProvided did
+    guardDocumentStatus Preparation
+
+    -- Parameters
+    pages <- apiV2ParameterObligatory (ApiV2ParameterAeson "pages")
+
+    when (length pages > 100) $ do
+      apiError $ requestParameterInvalid "pages" "Pages parameter can't have more then 100 positions"
+    when (length pages == 0) $
+      apiError $ requestParameterInvalid "pages" "Pages parameter can't be an empty list"
+    when (length (nub pages) /= length pages ) $
+      apiError $ requestParameterInvalid "pages" "Pages parameter can't contain duplicates"
+
+    -- Generating and replacing PDF
+    mfile <- fileFromMainFile =<< documentfile <$> theDocument
+    case mfile of
+      Nothing -> apiError $ documentStateError "Document does not have a main file"
+      Just file -> do
+        content <- getFileContents file
+        enop <- liftBase $ getNumberOfPDFPages content
+        case enop of
+          Left _ -> apiError $ serverError "Can't extract number of pages from PDF"
+          Right nop -> do
+            when (any (\p -> p > nop || p < 1) pages) $ do
+              apiError $ requestParameterInvalid "pages" "Some page indexes lower then 1 or higher then number of pages"
+
+            let pagesToPick = [1..nop]  \\ pages
+            case pagesToPick of
+              [] -> apiError $ requestParameterInvalid "pages" "Can't remove all pages from PDF"
+              _ -> do
+                mnewcontent <- pickPages pagesToPick content
+                case mnewcontent of
+                  Nothing -> apiError $ serverError "Removing pages from file failed"
+                  Just newcontent -> do
+                    nfileid <- dbUpdate $ NewFile (filename file) newcontent
+                    dbUpdate $ DetachFile actor
+                    dbUpdate $ AttachFile nfileid actor
+
+    -- Changing signatory fiels
+    adjustFieldAndPlacementsAfterRemovingPages pages actor
+
+    -- Result
+    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
+
 
 
 docApiV2SetAttachments :: Kontrakcja m => DocumentID -> m Response

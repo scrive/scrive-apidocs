@@ -438,6 +438,12 @@ javascriptLocalisation =
              , startSigningModalTextWithSendout : "$_designViewStartSigningModalTextWithSendout()$"
              , lastViewerOnlyGetsConfirmation : "$_designViewLastViewerOnlyGetsConfirmation()$"
              , viewerCantHaveAuthorisation : "$_designViewViewerCantHaveAuthorisation()$"
+             , removePage : {
+                 modalTitle : "$_designViewRemovePageModalTitle()$"
+               , modalBody1 : "$_designViewRemovePageModalBody1()$"
+               , modalBody2 : "$_designViewRemovePageModalBody2()$"
+               , modalRemoveButton : "$_designViewRemovePageModalButton()$"
+             }
          }
          , validation : {
                 required: "$_nameRequired()$"

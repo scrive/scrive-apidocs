@@ -258,7 +258,7 @@ module.exports = React.createClass({
             </Modal.Content>
             <Modal.Footer>
               <Modal.CancelButton onClick={self.onRemoveModalClose} />
-              <Modal.AcceptButton onClick={self.onRemoveModalAccept} />
+              <Modal.AcceptButton type="cancel" onClick={self.onRemoveModalAccept} />
             </Modal.Footer>
           </Modal.Container>
         </div>

@@ -430,6 +430,7 @@ var AdminUserDetailsView = Backbone.View.extend({
         title : "Delete",
         acceptText: "Delete",
         content : $("<div style='text-align:center;'>Are you sure that you want to delete this user?</div>"),
+        acceptButtonType: "cancel",
         onAccept : function() {
           model.deleteUser().sendAjax(
             function() {

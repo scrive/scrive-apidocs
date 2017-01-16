@@ -33,6 +33,7 @@ apiV2JSONTests env = testGroup "DocAPIV2JSON"
   , testThat "Test API v2 'update' with new signatory and empty fields" env testDocUpdateNewFields
   , testThat "Test API v2 'setfile'" env testDocSetFile
   , testThat "Test API v2 'list' response structure" env testDocList
+  , testThat "Test API v2 'removepages' with placements on many diffferent pages" env testDocRemovePages
   ]
 
 testJSONCtx :: TestEnv Context
@@ -229,6 +230,22 @@ testDocList = do
   reqAllFilters <- mkRequestWithHeaders GET rq_all_filters_param []
   (resAllFilters,_) <- runTestKontra reqAllFilters ctx $ docApiV2List
   assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resAllFilters)
+
+testDocRemovePages :: TestEnv ()
+testDocRemovePages = do
+  ctx <- testJSONCtx
+  let rq_new_params = [ ("file", inFile $ inTestDir "pdfs/50page.pdf") ]
+  (did,_) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 (inTestDir "json/api_v2/result-new-50page.json")
+
+  update1SigBS <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-update-removepages.json"
+  let rq_update_params = [ ("document", inTextBS update1SigBS) ]
+      rq_update_res_json = inTestDir "json/api_v2/test-DocRemovePagesUpdateResult.json"
+  _ <- runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_res_json
+
+  let rq_remove_pages_params = [ ("pages", inText "[5,33,44,46]") ]
+      rq_remove_pages_res_json = inTestDir "json/api_v2/test-DocRemovePagesAfterRemoval.json"
+  _ <- runApiJSONTest ctx POST (docApiV2RemovePages did) rq_remove_pages_params 200 rq_remove_pages_res_json
+  return ()
 
 -- Compare JSON sesults from API calls
 testJSONWith :: FilePath -> BS.ByteString -> TestEnv ()
