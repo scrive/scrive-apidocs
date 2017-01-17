@@ -43,6 +43,7 @@ info:
     | 2016-10-27  | Small improvements to documentation following internal and customer feedback |
     | 2016-12-17  | New optional `no_attachments` parameter for the `forward` API call           |
     | 2017-01-17  | Add JSON fields related to highlighting                    |
+    | 2017-01-28  | Documentation of `removepages` API call                    |
 
     ## Environments & IP Addresses
 
@@ -765,6 +766,9 @@ paths:
 
   /{document_id}/setattachments:
     $ref: ./api/documents/document_id/setattachments.yaml
+
+  /{document_id}/removepages:
+    $ref: ./api/documents/document_id/removepages.yaml
 
   /{document_id}/start:
     $ref: ./api/documents/document_id/start.yaml
