@@ -493,6 +493,7 @@ javascriptLocalisation =
            , modalNewPasswordViewFooterSave: "$_modalNewPasswordViewFooterSave()$"
            , flashMessagePasswordsDontMatch: "$_flashMessagePasswordsDontMatch()$"
            , flashMessagePasswordChangeLinkNotValid: "$_flashMessagePasswordChangeLinkNotValid()$"
+           , flashMessageUserPasswordChanged : "$_flashMessageUserPasswordChanged()$"
          }
          , signupModal: {
              modalAccountSetupFooter: "$_modalAccountSetupFooter()$"
@@ -508,6 +509,7 @@ javascriptLocalisation =
            , modalAccountSetupMissingName : "$_modalAccountSetupMissingName()$"
            , modalAccountPasswordRequirements : "$_modalAccountPasswordRequirements()$"
            , flashMessageUserAlreadyActivated : "$_flashMessageUserAlreadyActivated()$"
+           , flashMessageUserActivated : "$_flashMessageUserActivated()$"
          }
          , cancel : "$_cancel()$"
          , authorview : {
@@ -1093,6 +1095,7 @@ javascriptLocalisation =
               , newpassword1    : "$_NewPassword()$"
               , newpassword2    : "$_RepeatNewPassword()$"
               , lang            : "$_UserLanguage()$"
+              , flashMessageUserPasswordChanged : "$_flashMessageUserPasswordChanged()$"
             }
           , companySettings : "$_CompanySettings()$"
           , companyAccounts : {

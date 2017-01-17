@@ -3,13 +3,13 @@ module SignupTest (signupTests, getAccountCreatedActions) where
 import Control.Conditional ((<|), (|>))
 import Happstack.Server
 import Test.Framework
+import Text.JSON (JSValue)
+import Text.JSON.FromJSValue (fromJSValueField, withJSValue)
 
 import ActionQueue.Core
 import ActionQueue.UserAccountRequest
 import Context
 import DB hiding (query, update)
-import FlashMessage (FlashType(..), flashType)
-import InternalResponse (InternalKontraResponse, getFlashMessage, hasFlashMessage)
 import KontraPrelude
 import MagicHash (MagicHash)
 import Mails.Model
@@ -80,7 +80,7 @@ assertActivationPageOK :: Context -> TestEnv ()
 assertActivationPageOK ctx = do
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
 
-activateAccount :: Context -> UserID -> MagicHash -> Bool -> String -> String -> String -> String -> Maybe String -> TestEnv (InternalKontraResponse, Context)
+activateAccount :: Context -> UserID -> MagicHash -> Bool -> String -> String -> String -> String -> Maybe String -> TestEnv (JSValue, Context)
 activateAccount ctx uid token tos fstname sndname password password2 phone = do
   let tosValue = if tos
                    then "on"
@@ -95,15 +95,15 @@ activateAccount ctx uid token tos fstname sndname password password2 phone = do
   (res, ctx') <- runTestKontra req ctx $ handleAccountSetupPost uid token AccountRequest
   return (res, ctx')
 
-assertAccountActivatedFor :: UserID -> String -> String -> InternalKontraResponse -> Context -> TestEnv ()
+assertAccountActivatedFor :: UserID -> String -> String -> JSValue -> Context -> TestEnv ()
 assertAccountActivatedFor uid fstname sndname res ctx = do
   assertEqual "User is logged in" (Just uid) (fmap userid $ ctxmaybeuser ctx)
   assertAccountActivated fstname sndname res ctx
 
-assertAccountActivated :: String -> String -> InternalKontraResponse -> Context -> TestEnv ()
+assertAccountActivated :: String -> String -> JSValue -> Context -> TestEnv ()
 assertAccountActivated fstname sndname res ctx = do
-  assertBool "A flash message was added" $ hasFlashMessage res
-  assertBool "Flash message has type success" $ maybe False ((OperationDone ==) . flashType) $ getFlashMessage res
+  ((Just resultOk) :: Maybe Bool) <- withJSValue res $ fromJSValueField "ok"
+  assertEqual "Account activation succeeded" True resultOk
   assertBool "Accepted TOS" $ isJust ((ctxmaybeuser ctx) >>= userhasacceptedtermsofservice)
   assertEqual "First name was set" (Just fstname) (getFirstName <$> ctxmaybeuser ctx)
   assertEqual "Second name was set" (Just sndname) (getLastName <$> ctxmaybeuser ctx)

@@ -1,11 +1,4 @@
 ####
-flashMessageUserDetailsSaved=
-	<div>$_flashMessageUserDetailsSaved()$</div>
-####
-flashMessageUserPasswordChanged=
-	$_flashMessageUserPasswordChanged()$
-
-###
 flashMessagePasswordChangeLinkNotValid=
 	$_flashMessagePasswordChangeLinkNotValidForBackend()$
 ###
@@ -14,10 +7,6 @@ flashMessageAccessNewAccountLinkNotValid=
 ###
 flashMessageUserWithSameEmailExists=
 	$_flashMessageUserWithSameEmailExists()$
-
-###
-flashMessageUserActivated=	$_flashMessageUserActivated()$
-
 ###
 flashMessageNewActivationLinkSend=
 	$_flashMessageNewActivationLinkSend()$

@@ -430,14 +430,14 @@ handleDownloadClosedFile did sid mh _nameForBrowser = do
     return $ respondWithPDF True content
    else respond404
 
-handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m InternalKontraResponse
-handleResend docid signlinkid = withUser $ \_ -> do
+handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
+handleResend docid signlinkid = guardLoggedInOrThrowInternalError $ do
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
     signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
     customMessage <- fmap strip <$> getField "customtext"
     actor <- guardJustM $ fmap mkAuthorActor getContext
     _ <- sendReminderEmail customMessage actor False signlink
-    internalResponse <$> J.runJSONGenT (return ())
+    return ()
 
 -- This only works for undelivered mails
 handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue

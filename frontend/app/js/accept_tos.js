@@ -3,6 +3,7 @@ var Submit = require("./submits.js").Submit;
 var _ = require("underscore");
 var $ = require("jquery");
 var Button = require("./buttons.js").Button;
+var FlashMessageAfterReload = require("./flashmessages.js").FlashMessageAfterReload;
 
 
   var AcceptTOSModel = Backbone.Model.extend({
@@ -23,11 +24,16 @@ var Button = require("./buttons.js").Button;
       }
 
       new Submit({
+        url : "/accepttos",
         method: 'POST',
         ajax: true,
         tos: 'on',
         ajaxsuccess: function(rs) {
-            window.location = "/newdocument";
+          new FlashMessageAfterReload({
+              content: localization.account.accountDetails.detailSaved,
+              type: "success"
+          });
+          window.location = "/newdocument";
         }
       }).send();
       return true;

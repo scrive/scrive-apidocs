@@ -1,5 +1,6 @@
 var Backbone = require("backbone");
 var FlashMessage = require("./flashmessages.js").FlashMessage;
+var FlashMessageAfterReload = require("./flashmessages.js").FlashMessageAfterReload;
 var Submit = require("./submits.js").Submit;
 var $ = require("jquery");
 var InfoTextInput = require("./infotextinputs.js").InfoTextInput;
@@ -62,6 +63,10 @@ var PasswordValidation = require("./validation.js").PasswordValidation;
         password: model.password(),
         ajaxsuccess: function(resp) {
           if (resp.logged === true) {
+            new FlashMessageAfterReload({
+              content: localization.newPasswordModal.flashMessageUserPasswordChanged,
+              type: 'success'
+            })
             window.location = resp.location;
           } else {
             new FlashMessage({content: localization.newPasswordModal.flashMessagePasswordChangeLinkNotValid,

@@ -14,11 +14,8 @@ module User.UserView (
 
     -- flash messages
     flashMessageLoginRedirect,
-    flashMessageUserDetailsSaved,
-    flashMessageUserPasswordChanged,
     flashMessagePasswordChangeLinkNotValid,
     flashMessageAccessNewAccountLinkNotValid,
-    flashMessageUserActivated,
     flashMessageNewActivationLinkSend,
     flashMessageProblemWithEmailChange,
     flashMessageProblemWithPassword,
@@ -170,14 +167,6 @@ flashMessageLoginRedirect :: TemplatesMonad m => m FlashMessage
 flashMessageLoginRedirect =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageLoginPageRedirectReason"
 
-flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
-flashMessageUserDetailsSaved =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserDetailsSaved"
-
-flashMessageUserPasswordChanged :: TemplatesMonad m => m FlashMessage
-flashMessageUserPasswordChanged =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserPasswordChanged"
-
 flashMessagePasswordChangeLinkNotValid :: TemplatesMonad m => m FlashMessage
 flashMessagePasswordChangeLinkNotValid =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessagePasswordChangeLinkNotValid"
@@ -186,14 +175,9 @@ flashMessageAccessNewAccountLinkNotValid :: TemplatesMonad m => m FlashMessage
 flashMessageAccessNewAccountLinkNotValid =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageAccessNewAccountLinkNotValid"
 
-flashMessageUserActivated :: TemplatesMonad m => m FlashMessage
-flashMessageUserActivated =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserActivated"
-
 flashMessageNewActivationLinkSend :: TemplatesMonad m => m FlashMessage
 flashMessageNewActivationLinkSend =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageNewActivationLinkSend"
-
 
 flashMessageProblemWithEmailChange :: TemplatesMonad m => m FlashMessage
 flashMessageProblemWithEmailChange =

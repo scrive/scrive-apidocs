@@ -3,6 +3,7 @@ var Backbone = require("backbone");
 var $ = require("jquery");
 var Submit = require("./submits.js").Submit;
 var FlashMessage = require("./flashmessages.js").FlashMessage;
+var FlashMessageAfterReload = require("./flashmessages.js").FlashMessageAfterReload;
 var _ = require("underscore");
 var InfoTextInput = require("./infotextinputs.js").InfoTextInput;
 var NameValidation = require("./validation.js").NameValidation;
@@ -113,7 +114,9 @@ var Track = require("../scripts/common/track");
         return;
       }
 
+      var dirs = window.location.pathname.split( '/' ).reverse();
       new Submit({
+        url: "/accountsetup/" + dirs[2] + "/" + dirs[1] + "/"  + dirs[0],
         method: 'POST',
         ajax: true,
         tos: 'on',
@@ -127,6 +130,10 @@ var Track = require("../scripts/common/track");
         ajaxsuccess: function(rs) {
           var tosDate = new Date();
           if (rs.ok === true) {
+              new FlashMessageAfterReload({
+                content: localization.accountSetupModal.flashMessageUserActivated,
+                type: "success"
+              })
               mixpanel.alias(rs.userid);
               mixpanel.identify(rs.userid);
               var ps = {'Phone' : model.phone(),
