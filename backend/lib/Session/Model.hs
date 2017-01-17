@@ -87,6 +87,9 @@ updateSession old_ses new_ses_id new_muser new_mpad_user = do
         success <- dbUpdate $ UpdateAction session old_ses { sesUserID = new_muser, sesPadUserID = new_mpad_user}
         when (not success) $
           logInfo_ "UpdateAction didn't update session where it should have to (existing session)"
+        -- We are logging out, remove session cookie
+        when (new_muser == Nothing && new_mpad_user == Nothing) $
+          stopSessionCookie
     -- We got new session - now we need to generate a cookie for it. We also update it with users logged in durring this handler.
     False | sesID old_ses /= new_ses_id -> do
       mses <- dbQuery $ GetAction session new_ses_id

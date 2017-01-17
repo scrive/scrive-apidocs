@@ -1,6 +1,7 @@
 module Session.Cookies (
     SessionCookieInfo(..)
   , startSessionCookie
+  , stopSessionCookie
   , sessionCookieInfoFromSession
   , currentSessionInfoCookies
   ) where
@@ -45,6 +46,16 @@ startSessionCookie s = do
     mkCookie "sessionId" . show $ sessionCookieInfoFromSession s
   addCookie ishttps (MaxAge (60*60*24)) $
     mkCookie "xtoken" $ show $ sesCSRFToken s
+
+-- | Remove session cookie from browser.
+stopSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m)
+                  => m ()
+stopSessionCookie = do
+  ishttps  <- isHTTPS
+  addHttpOnlyCookie ishttps (MaxAge 0) $
+    mkCookie "sessionId" ""
+  addCookie ishttps (MaxAge 0) $
+    mkCookie "xtoken" ""
 
 sessionCookieInfoFromSession :: Session -> SessionCookieInfo
 sessionCookieInfoFromSession s = SessionCookieInfo {
