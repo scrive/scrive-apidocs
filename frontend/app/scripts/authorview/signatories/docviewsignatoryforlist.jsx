@@ -36,6 +36,8 @@ var classNames = require("classnames");
         return localization.signatoryMessage.delivered;
       } else if (signatory.status() == "read") {
         return localization.signatoryMessage.read;
+      } else if (signatory.status() == "deliveryproblem") {
+        return localization.signatoryMessage.deliveryproblem;
       } else {
         return localization.signatoryMessage.other;
       }
