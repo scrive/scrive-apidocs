@@ -78,6 +78,24 @@ describe("designview/buttonbarview", function () {
     assert.equal(imageEl.attr("src"), "http://localhost/idontexist.jpg");
   });
 
+  it("should render the page image and remove icon if removePageFunc is defined", function (done) {
+    var component = renderComponent({
+      imageSrc: "http://localhost/idontexist.jpg",
+      removePageFunc: function() {done();}
+    });
+
+    util.waitUntil(
+      function() {
+       $("img", React.findDOMNode(component)).length > 0;
+      },
+      function() {
+        var crossIcon = $("svg.remove-page", React.findDOMNode(component));
+        assert.lengthOf(crossIcon, 1);
+        crossIcon.click();
+      }
+    }
+  });
+
   it("should not render the fields if the image isn't ready", function () {
     var component = renderComponent({
       imageSrc: "http://localhost/idontexist.jpg",

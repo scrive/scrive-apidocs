@@ -22,7 +22,7 @@ var Cross = require("../../icons/cross.svg");
       hideCoordinateAxes: React.PropTypes.func.isRequired,
       moveCoordinateAxes: React.PropTypes.func.isRequired,
       closeAllTypeSetters: React.PropTypes.func.isRequired,
-      removePageFunc: React.PropTypes.func.isRequired
+      removePageFunc: React.PropTypes.func
     },
 
     mixins: [BackboneMixin.BackboneMixin],

@@ -13,7 +13,7 @@ describe("designview/buttonbarview", function () {
     var component = React.render(
       React.createElement(
         FileView,
-        {model: mainfile, pixelWidth: 200}
+        {model: mainfile, pixelWidth: 200, removePageFunc: function() {}}
       ),
       $("body")[0]
     );
