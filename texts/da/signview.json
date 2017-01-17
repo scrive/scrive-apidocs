@@ -144,7 +144,6 @@
 "_signingStartedDontCloseWindow":"Du har endnu ikke signeret dokumentet. Ønsker du at forlade siden uden at signere?",
 "_signinginprogressmodalAction1":"Gemmer indsamlede beviser",
 "_signinginprogressmodalAction2":"Registrerer din signatur",
-"_signinginprogressmodalYouHaveSignedPleaseWait":"Du har signeret dokumentet <strong class='put-doctitle'></strong>. Vent venligst, mens Scrive E-sign:",
 "_signviewAttachmentUploadedInOtherWindow":"Vi beklager, men vi er ikke i stand til at uploade din fil, fordi dette dokument er åbent i et andet vindue. Genindlæs din side for at fortsætte. ",
 "_signviewSigningFailed":"Beklager, noget gik galt under signeringsprocessen af dette dokument. Prøv venligst igen.",
 "_smsDocumentErrorAuthor":"Scrive kunne ikke håndtere dokumentet $documenttitle:noescape()$, og signeringsprocessen er derfor blevet annulleret. Har du spørgsmål, bedes du kontakte os på support@scrive.com",

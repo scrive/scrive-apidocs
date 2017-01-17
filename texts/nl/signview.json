@@ -144,7 +144,6 @@
 "_signingStartedDontCloseWindow":"U heeft het document nog niet ondertekend. Wilt u de pagina verlaten zonder te ondertekenen?",
 "_signinginprogressmodalAction1":"Het verzamelde bewijs opslaat",
 "_signinginprogressmodalAction2":"Uw handtekening registreert",
-"_signinginprogressmodalYouHaveSignedPleaseWait":"U heeft het document <strong class='put-doctitle'></strong> ondertekend. Wacht a.u.b. terwijl Scrive E-sign:",
 "_signviewAttachmentUploadedInOtherWindow":"Helaas, wij kunnen uw bestand niet uploaden omdat dit document in een andere venster geopend is. Ververs uw pagina om verder te gaan.",
 "_signviewSigningFailed":"Helaas, er is iets misgeggaan terwijl het document werd getekend. Probeer het a.ub. opnieuw.",
 "_smsDocumentErrorAuthor":"Scrive kon het document $documenttitle:noescape()$ niet behandelen, en het ondertekeningsproces is afgebroken. Indien u vragen heeft neem dan contact met ons op via support@scrive.com",

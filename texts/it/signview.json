@@ -144,7 +144,6 @@
 "_signingStartedDontCloseWindow":"Non hai ancora firmato il documento. Vuoi abbandonare senza firmare?",
 "_signinginprogressmodalAction1":"Salva le prove raccolte",
 "_signinginprogressmodalAction2":"Registra la tua firma",
-"_signinginprogressmodalYouHaveSignedPleaseWait":"Hai firmato il documento <strong class='put-doctitle'></strong>. Per favore attendi mentre Scrive firma elettronicamente:",
 "_signviewAttachmentUploadedInOtherWindow":"Siamo spiacenti, non siamo in grado di caricare il tuo file perché questo documento è aperto in un'altra finestra. Ricarica la pagina per continuare.",
 "_signviewSigningFailed":"Siamo spiacenti, qualcosa è andato storto durante la firma del documento. Ti preghiamo di riprovare.",
 "_smsDocumentErrorAuthor":"",

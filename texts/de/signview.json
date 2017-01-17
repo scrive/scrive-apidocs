@@ -144,7 +144,6 @@
 "_signingStartedDontCloseWindow":"Sie haben das Dokument noch nicht signiert. Wollen Sie es unsigniert lassen?",
 "_signinginprogressmodalAction1":"Speichere gesammelte Belege",
 "_signinginprogressmodalAction2":"Registriere Ihre Signatur",
-"_signinginprogressmodalYouHaveSignedPleaseWait":"Sie haben das Dokument <strong class='put-doctitle'></strong> signiert. Bitte warten Sie während Scrive E-Sign:",
 "_signviewAttachmentUploadedInOtherWindow":"Wir konnten die Datei leider nicht hochladen, weil sie in einem anderen Fenster geöffnet ist. Bitte laden Sie die Seite neu.",
 "_signviewSigningFailed":"Der Signierungs-Vorgang hat leider nicht funktioniert. Bitte versuchen Sie es erneut.",
 "_smsDocumentErrorAuthor":"Scrive konnte das Dokument $documenttitle:noescape()$ nicht bearbeiten und der Signierungsprozess wurde abgebrochen. Wenn Sie dazu Fragen haben, kontaktieren Sie uns bitte unter support@scrive.com",
