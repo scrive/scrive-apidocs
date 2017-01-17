@@ -842,6 +842,9 @@ paths:
   /{document_id}/{signatory_id}/setattachment:
     $ref: ./api/documents/document_id/signatory_id/setattachment.yaml
 
+  /{document_id}/{signatory_id}/highlight:
+    $ref: ./api/documents/document_id/signatory_id/highlight.yaml
+
 definitions:
   Document:
     $ref: ./definitions/Document.yaml
