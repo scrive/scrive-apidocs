@@ -114,21 +114,42 @@ properties:
     type: boolean
     default: false
     description: |
-      Whether the signatory can highlight pages of the PDF when signing.
+      Whether the signatory can highlight pages of the PDF when viewing the
+      signing page.
+
+      If any highlights are performed, the evidence log states that they were
+      performed while the signatory was viewing the document.
+
+      The intention of this feature is **not** for the signatory to affect a
+      contract via highlighting, but simply for a point-of-sale situation to
+      assist contract review.
   highlighted_pages:
     type: array
     default: []
     readOnly: true
     description: |
       A list of highlights performed by the signatory.
-      Only available after the signatory has signed.
+
+      While a document is pending, highlights may be added, but will not appear
+      in the document file PDF until after the document is closed.
     items:
       type: object
       properties:
         page:
           type: integer
+          description: |
+            The page number which is highlighted (starts from `1`).
+            Each signatory can only have one highlight per page.
         file_id:
           type: string
+          description: |
+            The `file_id` for an image of the highlights.
+
+            The image dimensions will fit the ratio of the PDF page, and will be
+            of a fixed colour and transparency.
+
+            This will be integrated into the final PDF once the document is
+            closed.
   attachments:
     type: array
     default: []
