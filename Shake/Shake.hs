@@ -63,6 +63,7 @@ usageMsg = unlines
   , "   hlint-refactor            : Run hlint, applying all hints automatically"
   , "   test-hs-import-order      : Run Haskell Import Order checking script"
   , "   fix-hs-import-order       : Sort Haskell imports"
+  , "   test-hs-outdated-deps     : Check for outdated Haskell dependencies"
   , ""
   , "                               Use the --src-subdir=DIR option to limit the"
   , "                               above commands to a part of the tree."
@@ -342,6 +343,12 @@ serverFormatLintRules newBuild hsSourceDirs flags = do
   "fix-hs-import-order" ~> do
     need [componentTargetPath newBuild "sort_imports"]
     hsImportOrderAction False srcSubdirs
+
+  "test-hs-outdated-deps" ~> do
+    cmd "cabal" ["outdated", "--exit-code",
+                 if useNewBuild newBuild
+                 then "--new-freeze-file"
+                 else "--freeze-file"]
 
   "hindent" ~> do
     forM_ srcSubdirs $ \subdir ->
