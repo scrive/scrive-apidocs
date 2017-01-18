@@ -78,12 +78,6 @@ Library
   if flag(server-coverage)
     GHC-Options: -fhpc
 
-  -- Cabal workaround, remove after transition to ghc8.
-  if impl(ghc < 8)
-    Build-depends: unix == 2.7.1.0
-  else
-    Build-depends: unix == 2.7.2.0
-
   Exposed-modules: API.APIVersion
                  , API.Monad.V1
                  , API.V2
@@ -1207,12 +1201,6 @@ Executable screenshot-review
 
   Main-Is: ScreenshotReview.hs
   GHC-options: -main-is ScreenshotReview
-
-  -- Cabal workaround, remove after transition to ghc8.
-  if impl(ghc < 8)
-    Build-depends: unix == 2.7.1.0
-  else
-    Build-depends: unix == 2.7.2.0
 
   Build-depends: AES
                , aeson
