@@ -549,7 +549,6 @@
 "_flashMessageDocumentArchiveDone":"Valitud dokumendid on kustutatud. ",
 "_flashMessageDocumentArchiveInvalid":"Mõningaid valitud dokumente polnud võimalik kustutada.",
 "_flashMessageInvalidEmailFormat":"E-maili aadressi vorming on vale.",
-"_flashMessageLoginPageRedirectReasonNotAdmin":"Teil pole luba selle lehekülje vaatamiseks.",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"Te pole sisse logitud.",
 "_flashMessageLoginPageRedirectReasonWrongIPAddress":"Scrive E-Sign pole selle IP <span class='put-ip-here'></span> alt ligipääsetav. Võtke ühendust administraatoriga <span class='put-adminname-here'></span> kes on Teie ettevõtte administraator Scrive's.",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Vale e-mail või salasõna.",

@@ -549,7 +549,6 @@
 "_flashMessageDocumentArchiveDone":"Völdum skjölum hefur verið eytt.",
 "_flashMessageDocumentArchiveInvalid":"Ekki er hægt að eyða sumum völdum skjölum.",
 "_flashMessageInvalidEmailFormat":"Netfangið er ekki á réttu sniði.",
-"_flashMessageLoginPageRedirectReasonNotAdmin":"Þér er ekki heimilt að skoða þessa síðu.",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"Þú ert ekki skráð/ur inn.",
 "_flashMessageLoginPageRedirectReasonWrongIPAddress":"Þú getur ekki farið inn á Scrive E-sign frá IP <span class='put-ip-here'></span>. Vinsamlegast hafðu samband við <span class='put-adminname-here'></span> sem er stjórnandi fyrirtækis þíns fyrir Scrive.",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Rangt netfang eða lykilorð.",

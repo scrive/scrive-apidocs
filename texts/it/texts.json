@@ -549,7 +549,6 @@
 "_flashMessageDocumentArchiveDone":"I documenti selezionati sono stati eliminati.",
 "_flashMessageDocumentArchiveInvalid":"Alcuni documenti selezionati non possono essere cancellati.",
 "_flashMessageInvalidEmailFormat":"L'indirizzo email non è formattato correttamente.",
-"_flashMessageLoginPageRedirectReasonNotAdmin":"Non sei autorizzato a visualizzare questa pagina.",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"Non hai effettuato l'accesso.",
 "_flashMessageLoginPageRedirectReasonWrongIPAddress":"Non è possibile accedere alla firma elettronica di Scrive dall'IP <span class='put-ip-here'></span>. Si prega di contattare <span class='put-adminname-here'></span> che è l'amministratore aziendale presso Scrive.",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Email o password errata.",

@@ -549,7 +549,6 @@
 "_flashMessageDocumentArchiveDone":"Los documentos seleccionados han sido eliminados.",
 "_flashMessageDocumentArchiveInvalid":"Alguno de los documentos seleccionados no puede ser eliminado.",
 "_flashMessageInvalidEmailFormat":"La dirección de email es formateada incorrectamente.",
-"_flashMessageLoginPageRedirectReasonNotAdmin":"No está autorizado a ver esta página.",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"No ha iniciado sesión.",
 "_flashMessageLoginPageRedirectReasonWrongIPAddress":"Usted no puede acceder al sistema de firma electrónica de Scrive desde IP <span class='put-ip-here'></span>. Por favor contacte <span class='put-adminname-here'></span>; que es el administrador de su compañía en Scrive.",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Incorrecto email o contraseña.",

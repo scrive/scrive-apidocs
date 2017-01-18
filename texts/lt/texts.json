@@ -549,7 +549,6 @@
 "_flashMessageDocumentArchiveDone":"Pasirinkti dokumentai panaikinti.",
 "_flashMessageDocumentArchiveInvalid":"Kai kurių parinktų dokumentų negalima panaikinti.",
 "_flashMessageInvalidEmailFormat":"Netinkamas el. pašto adreso formatas.",
-"_flashMessageLoginPageRedirectReasonNotAdmin":"Jūs neturite teisės matyti šio puslapio.",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"Jūs neprisijungęs.",
 "_flashMessageLoginPageRedirectReasonWrongIPAddress":"Jūs neturite „Scrive E-sign“ prieigos iš <span class='put-ip-here'></span> IP. Susisiekite su <span class='put-adminname-here'></span>, kuris yra Jūsų įmonės valdytojas „Scrive“ programoje.",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Neteisingas el. paštas arba slaptažodis.",

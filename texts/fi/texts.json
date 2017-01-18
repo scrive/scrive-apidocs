@@ -549,7 +549,6 @@
 "_flashMessageDocumentArchiveDone":"Valitut dokumentit on poistettu.",
 "_flashMessageDocumentArchiveInvalid":"Osaa valituista dokumenteista ei voida poistaa.",
 "_flashMessageInvalidEmailFormat":"Sähköpostiosoite on virheellisessä muodossa.",
-"_flashMessageLoginPageRedirectReasonNotAdmin":"Sinulla ei ole valtuuksia tämän sivun näkemiseen.",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"Et ole kirjautuneena sisään.",
 "_flashMessageLoginPageRedirectReasonWrongIPAddress":"Et voi päästä Scrive E-sign -järjestelmään IP:stä <span class='put-ip-here'></span>. Ota yhteyttä <span class='put-adminname-here'></span> yrityksesi hallinnoinnin vastaavaan Scrivellä.",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Virheellinen sähköposti tai salasana.",

@@ -549,7 +549,6 @@
 "_flashMessageDocumentArchiveDone":"Die ausgewählten Dokumente wurden gelöscht.",
 "_flashMessageDocumentArchiveInvalid":"Einige der ausgewählten Dokumente können nicht gelöscht werden.",
 "_flashMessageInvalidEmailFormat":"Das Format der E-Mail-Adresse ist falsch.",
-"_flashMessageLoginPageRedirectReasonNotAdmin":"Sie sind nicht berechtigt, diese Seite zu sehen.",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"Sie sind nicht angemeldet.",
 "_flashMessageLoginPageRedirectReasonWrongIPAddress":"Sie können Scrive E-sign nicht von IP <span class='put-ip-here'></span> aus erreichen. Bitte kontaktieren Sie <span class='put-adminname-here'></span>, den für Scrive zuständigen Administator Ihrer Firma.",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Falsche E-Mail oder Passwort.",

@@ -549,7 +549,6 @@
 "_flashMessageDocumentArchiveDone":"Valda dokument har blivit raderade.",
 "_flashMessageDocumentArchiveInvalid":"Några av de valda dokumenten kan inte raderas.",
 "_flashMessageInvalidEmailFormat":"E-postadressen är inte korrekt formaterad.",
-"_flashMessageLoginPageRedirectReasonNotAdmin":"Du har inte behörighet att se denna sida.",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"Du är inte inloggad.",
 "_flashMessageLoginPageRedirectReasonWrongIPAddress":"Du kan inte använda Scrive från IP <span class='put-ip-here'></span>. Vänligen kontakta <span class='put-adminname-here'></span> som administrerar ditt företagskonto i Scrive.",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Felaktig e-post eller lösenord.",

@@ -549,7 +549,6 @@
 "_flashMessageDocumentArchiveDone":"De gekozen documenten zijn verwijderd.",
 "_flashMessageDocumentArchiveInvalid":"Sommige van de gekozen documenten kunnen niet verwijderd worden",
 "_flashMessageInvalidEmailFormat":"Het e-mailadres is verkeerd geformatteerd. ",
-"_flashMessageLoginPageRedirectReasonNotAdmin":"U heeft geen toestemming om deze pagina te bekijken.",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"U bent niet ingelogd.",
 "_flashMessageLoginPageRedirectReasonWrongIPAddress":"U kunt het Scrive-systeem niet gebruiken vanaf IP-adres <span class='put-ip-here'></span>. Neem a.u.b. contact op met uw system administrator, '<span class='put-adminname-here'></span>.",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Incorrecte e-mail of wachtwoord. ",
