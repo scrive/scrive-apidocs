@@ -18,10 +18,10 @@ listenOn iface port = do
   proto <- getProtocolNumber "tcp"
   E.bracketOnError
     (socket AF_INET Stream proto)
-    sClose
+    close
     (\sock -> do
       setSocketOption sock ReuseAddr 1
-      bindSocket sock (SockAddrInet port iface)
+      bind sock (SockAddrInet port iface)
       listen sock maxListenQueue
       return sock
      )
