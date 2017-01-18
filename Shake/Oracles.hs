@@ -27,8 +27,6 @@ newtype BuildSandbox = BuildSandbox ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype BuildTestConfPath = BuildTestConfPath ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
-newtype BuildGitHub = BuildGitHub ()
-  deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype BuildDev = BuildDev ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype BuildTestCoverage = BuildTestCoverage ()
@@ -58,9 +56,6 @@ addOracles = do
                      fromMaybe "" <$> getEnv "SHAKE_BUILD_SANDBOX"
   _ <- addOracle $ \(BuildTestConfPath _)  ->
                      fromMaybe "" <$> getEnv "SHAKE_BUILD_TEST_CONF_PATH"
-  _ <- addOracle $ \(BuildGitHub _)  ->
-                     not . null . fromMaybe ""
-                     <$> getEnv "SHAKE_BUILD_GITHUB"
   _ <- addOracle $ \(BuildDev _)     ->
                      not . null . fromMaybe ""
                      <$> getEnv "SHAKE_BUILD_DEV"
@@ -90,11 +85,6 @@ oracleHelpRule = do
     explainVar "SHAKE_BUILD_TEST_CONF_PATH"
                "Path to kontrakcja_test.conf file to use"
     showVarVal testconf
-
-    gh <- askOracleWith (BuildGitHub ()) True
-    explainVar "SHAKE_BUILD_GITHUB"
-               "If not empty, will ping GitHub with build status"
-    showVarVal (show gh)
 
     devBuild <- askOracleWith (BuildDev ()) True
     explainVar "SHAKE_BUILD_DEV" "If not empty, will not run clean bulid"

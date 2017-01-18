@@ -8,7 +8,6 @@ import Development.Shake.FilePath
 import Shake.Flags
 import Shake.GetCabalDeps
 import Shake.GetHsDeps
-import Shake.GitHub
 import Shake.NewBuild
 import Shake.Oracles
 import Shake.TeamCity
@@ -338,7 +337,7 @@ serverFormatLintRules newBuild hsSourceDirs flags = do
   "_build/hs-import-order" %>>> do
     needServerHaskellFiles hsSourceDirs
     need [componentTargetPath newBuild "sort_imports"]
-    withGitHub "Haskell import order" $ hsImportOrderAction True srcSubdirs
+    hsImportOrderAction True srcSubdirs
 
   "fix-hs-import-order" ~> do
     need [componentTargetPath newBuild "sort_imports"]
@@ -394,9 +393,8 @@ frontendBuildRules newBuild = do
          , componentTargetPath newBuild "localization"
          ]
     alwaysRerun
-    withGitHub "Grunt Build" $
-      command ([EchoStdout True, Cwd "frontend"] ++ langEnv) "grunt"
-              ["build", gruntNewBuildArg newBuild]
+    command ([EchoStdout True, Cwd "frontend"] ++ langEnv) "grunt"
+      ["build", gruntNewBuildArg newBuild]
 
   "grunt-clean" ~> do
     need ["_build/npm-install"]
@@ -407,8 +405,7 @@ frontendTestRules :: UseNewBuild -> Rules ()
 frontendTestRules newBuild = do
   "grunt-eslint" ~> do
     need ["_build/npm-install"]
-    withGitHub "eslint" $
-      cmd [Cwd "frontend"] "grunt" ["eslint", gruntNewBuildArg newBuild]
+    cmd [Cwd "frontend"] "grunt" ["eslint", gruntNewBuildArg newBuild]
 
   "grunt-coverage" ~> do
     need ["_build/grunt-build"]
@@ -416,15 +413,14 @@ frontendTestRules newBuild = do
 
   "grunt-test" ~> do
     need ["_build/grunt-build"]
-    withGitHub "Grunt Test" $ do
-      testCoverage <- askOracle (BuildTestCoverage ())
-      case testCoverage of
-        False -> cmd [Cwd "frontend"] "grunt" ["test:fast"
-                                              ,gruntNewBuildArg newBuild]
-        True -> do
-          need ["grunt-coverage"]
-          command_ [Shell] "zip -r _build/JS_coverage.zip frontend/coverage/" []
-          removeFilesAfter "frontend/coverage" ["//*"]
+    testCoverage <- askOracle (BuildTestCoverage ())
+    case testCoverage of
+      False -> cmd [Cwd "frontend"] "grunt" ["test:fast"
+                                            ,gruntNewBuildArg newBuild]
+      True -> do
+        need ["grunt-coverage"]
+        command_ [Shell] "zip -r _build/JS_coverage.zip frontend/coverage/" []
+        removeFilesAfter "frontend/coverage" ["//*"]
 
 -- * Create distribution
 distributionRules :: UseNewBuild -> Rules ()
