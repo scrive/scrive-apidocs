@@ -1095,7 +1095,6 @@ javascriptLocalisation =
               , newpassword1    : "$_NewPassword()$"
               , newpassword2    : "$_RepeatNewPassword()$"
               , lang            : "$_UserLanguage()$"
-              , flashMessageUserPasswordChanged : "$_flashMessageUserPasswordChanged()$"
             }
           , companySettings : "$_CompanySettings()$"
           , companyAccounts : {
