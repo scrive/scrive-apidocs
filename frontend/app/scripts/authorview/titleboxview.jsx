@@ -3,7 +3,9 @@ var $ = require("jquery");
 var _ = require("underscore");
 
 var Button = require("../common/button");
-var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
+var FlashMessages = require("../../js/flashmessages.js");
+var FlashMessage = FlashMessages.FlashMessage;
+var FlashMessageAfterReload = FlashMessages.FlashMessageAfterReload;
 var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
 var LoadingDialog = require("../../js/loading.js").LoadingDialog;
 var LocalStorage = require("../../js/storage.js").LocalStorage;
@@ -174,12 +176,11 @@ module.exports = React.createClass({
   onRestartButtonClick: function () {
     Track.track("Click restart button");
     this.props.document.restart().sendAjax(function (resp) {
-       new FlashMessage({
+      new FlashMessageAfterReload({
         type: "success",
-        content: localization.flashDocumentRestarted,
-        withRedirect: true,
-        redirect: "/d/" + resp.id
+        content: localization.flashDocumentRestarted
       });
+      window.location = "/d/" + resp.id;
     });
   },
   onProlongButtonClick: function () {
