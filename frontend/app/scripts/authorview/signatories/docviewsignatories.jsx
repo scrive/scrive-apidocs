@@ -84,6 +84,7 @@ var _ = require("underscore");
             }
             {/* else */ !self.hasList() && !self.isSingleSignatory() &&
               <DocumentViewSignatory
+                key={self.signatories()[0].signatoryid()}
                 signatory={self.signatories()[0]}
                 onAction={this.props.onAction}
               />
@@ -91,6 +92,7 @@ var _ = require("underscore");
           </div>
           <div className="column last">
             <DocumentViewSignatory
+              key={lastSignatory.signatoryid()}
               signatory={lastSignatory}
               onAction={this.props.onAction}
             />
