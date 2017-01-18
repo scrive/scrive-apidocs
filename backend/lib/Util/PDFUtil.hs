@@ -12,6 +12,7 @@ module Util.PDFUtil
     , preCheckPDF
     , getNumberOfPDFPages
     , pickPages
+    , clipHighlightImageFromPage
     ) where
 
 import Control.Monad.Base
@@ -240,3 +241,73 @@ pickPages pages content = do
           ]
         return Nothing
 
+clipHighlightImageFromPage :: (MonadLog m, MonadBaseControl IO m)
+                           => BS.ByteString -> BS.ByteString -> Int -> m (Maybe BS.ByteString)
+clipHighlightImageFromPage pdfFileContent highlightFileContent pageNo = do
+  logInfo_ "clipHighlightImageFromPage: starting..."
+  withSystemTempDirectory' "highlight-mask" $ \tmpPath -> do
+    -- Set all the filepaths that we will use within tmpPath
+    let pdfRenderedPagePath       = tmpPath ++ "/pdf.png"
+        highlightImagePath        = tmpPath ++ "/highlight.png"
+        thresholdOutputPath       = tmpPath ++ "/threshold.png"
+        maskedHighlightOutputPath = tmpPath ++ "/masked_highlight.png"
+    -- Write the highlight image and find its dimensions using 'identify'
+    liftBase $ BS.writeFile highlightImagePath highlightFileContent
+    (identifyCode, identifyStdout, identifyStderr) <- liftBase $
+      readProcessWithExitCode "identify" ["-format", "(%w,%h)", highlightImagePath] ""
+    case identifyCode of
+      ExitFailure code -> do
+        logAttention "clipHighlightImageFromPage: identify failed to get highlight dimensions" $
+          object [ "exit_code" .= code
+                 , "stdout"    .= show identifyStdout
+                 , "stderr"    .= show identifyStderr
+                 ]
+        return Nothing
+      ExitSuccess -> do
+        case maybeRead (BSL.unpack identifyStdout) :: Maybe (Int, Int) of
+          Nothing -> do
+            logAttention_ "clipHighlightImageFromPage: could not read dimensions from identify output"
+            return Nothing
+          Just (highlightWidth, highlightHeight) -> do
+            -- Now get the rendered page with the same width
+            mRenderedPageContents <- renderPage pdfFileContent pageNo highlightWidth
+            case mRenderedPageContents of
+              Nothing -> do
+                logAttention_ "clipHighlightImageFromPage: Did not get rendered page contents"
+                return Nothing
+              Just renderedPageContents -> do
+                      -- Write the rendered page that we have to file
+                      liftBase $ BS.writeFile pdfRenderedPagePath renderedPageContents
+                      -- First force resize the rendered page to match the highlight image
+                      -- then threshold at 50% (arbitrary, seemed to work well) to use as mask
+                      (thresholdCode, thresholdStdout, thresholdStderr) <- liftBase $
+                        readProcessWithExitCode "convert" [pdfRenderedPagePath, "-resize", show highlightWidth ++ "x" ++ show highlightHeight ++ "!", "-threshold", "50%", thresholdOutputPath] ""
+                      case thresholdCode of
+                        ExitFailure code -> do
+                          logAttention "clipHighlightImageFromPage: convert failed to threshold" $
+                            object [ "exit_code" .= code
+                                   , "stdout"    .= show thresholdStdout
+                                   , "stderr"    .= show thresholdStderr
+                                   ]
+                          return Nothing
+                        ExitSuccess -> do
+                          -- Then clip the highlight based on the underlying page...
+                          (clipCode, clipStdOut, clipStderr) <- liftBase $
+                            readProcessWithExitCode "convert" [highlightImagePath, "-clip-mask", thresholdOutputPath, "-alpha", "transparent", "+clip-mask", maskedHighlightOutputPath] ""
+                          case clipCode of
+                            ExitFailure code -> do
+                              logAttention "clipHighlightImageFromPage: convert failed to clip" $
+                                object [ "exit_code" .= code
+                                       , "stdout"    .= show clipStdOut
+                                       , "stderr"    .= show clipStderr
+                                       ]
+                              return Nothing
+                            ExitSuccess -> do
+                              maskedImageContents <- liftBase $ BS.readFile maskedHighlightOutputPath
+                              case BS.length maskedImageContents > 0 of
+                                False -> do
+                                  logAttention_ "clipHighlightImageFromPage: final image had zero length"
+                                  return Nothing
+                                True -> do
+                                  logInfo_ "clipHighlightImageFromPage: done!"
+                                  return $ Just maskedImageContents
