@@ -1,7 +1,11 @@
 import os
 import nose.tools
+import StringIO
 import sys
+import time
 
+from PIL import Image
+import requests
 from selenium import webdriver
 
 from driver_wrapper import SeleniumDriverWrapper
@@ -96,7 +100,7 @@ def make_remote_drivers(lang, test_name, remote_devices, screenshots_enabled):
 
 
 def make_drivers(test_name, local_devices, remote_devices,
-                 screenshots_enabled=None, lang=None):
+                 screenshots_enabled, lang=None):
     if lang is None:
         try:
             lang = os.environ['SELENIUM_TEST_LANG']
@@ -107,13 +111,6 @@ def make_drivers(test_name, local_devices, remote_devices,
         remote = os.environ['SELENIUM_REMOTE_TESTS'] == '1'
     except KeyError:
         remote = False
-
-    if screenshots_enabled is None:
-        try:
-            screenshots_enabled = \
-                os.environ['SELENIUM_TAKE_SCREENSHOTS'] == '1'
-        except KeyError:
-            screenshots_enabled = False
 
     if not remote:
         screenshots_enabled = False
@@ -136,22 +133,54 @@ def find_tests(module):
             yield test_name, getattr(module, test_name)
 
 
+def download_screenshots(screenshot_requests):
+        import config
+        time.sleep(60)  # wait for sauce labs to publish screenshots
+        auth = requests.auth.HTTPBasicAuth(config.selenium_user,
+                                           config.selenium_key)
+        for url, screenshot_name in screenshot_requests:
+            screenshot = requests.get(url, auth=auth).content
+            img = Image.open(StringIO.StringIO(screenshot))
+            file_path = \
+                os.path.join(os.getcwd(), 'screenshots',
+                             screenshot_name + '.png')
+            img.save(file_path)
+
+
 @nose.tools.nottest
 def generate_tests(module, artifact_dir, local_devices=None,
                    remote_devices=None, screenshots_enabled=None,
                    lang=None, selenium=True):
+
+    if screenshots_enabled is None:
+        try:
+            screenshots_enabled = \
+                os.environ['SELENIUM_TAKE_SCREENSHOTS'] == '1'
+        except KeyError:
+            screenshots_enabled = False
+
     import config
     api = Scrive(**config.scrive_api)
     for test_name, test in find_tests(module):
         if selenium:
+            screenshot_requests = []
             drivers = make_drivers(test_name, local_devices,
                                    remote_devices, lang=lang,
                                    screenshots_enabled=screenshots_enabled)
             for driver in drivers:
                 test_helper = TestHelper(api, driver,
                                          artifact_dir=artifact_dir)
-                test.teardown = lambda: driver.quit()
+
+                def teardown(driver=driver):
+                    driver.quit()
+                    screenshot_requests.extend(
+                        driver.extract_screenshot_requests())
+
+                test.teardown = teardown
                 yield test, test_helper, driver, api
+
+            if screenshots_enabled:
+                yield download_screenshots, screenshot_requests
         else:
             test_helper = TestHelper(api, driver=None,
                                      artifact_dir=artifact_dir)
