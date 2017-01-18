@@ -1,10 +1,5 @@
-import StringIO
-import os
-import sys
 import time
 
-import requests
-from PIL import Image
 from selenium import webdriver
 from selenium.common import exceptions as selenium_exceptions
 from selenium.webdriver.common.by import By
@@ -53,23 +48,9 @@ class SeleniumDriverWrapper(object):
     def quit(self):
         if self._driver is not None:
             self._driver.quit()
-        if self._screenshots_enabled:
-            # only download screenshots if it was successfull
-            if sys.exc_info() == (None, None, None):
-                self._download_screenshots()
 
-    def _download_screenshots(self):
-        import config
-        time.sleep(60)  # wait for sauce labs to publish screenshots
-        auth = requests.auth.HTTPBasicAuth(config.selenium_user,
-                                           config.selenium_key)
-        for url, screenshot_name in self._screenshot_requests:
-            screenshot = requests.get(url, auth=auth).content
-            img = Image.open(StringIO.StringIO(screenshot))
-            file_path = \
-                os.path.join(os.getcwd(), 'screenshots',
-                             screenshot_name + '.png')
-            img.save(file_path)
+    def extract_screenshot_requests(self):
+        return self._screenshot_requests
 
     @property
     def title(self):

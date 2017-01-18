@@ -133,6 +133,7 @@ javascriptLocalisation =
                        , signed : "$_signatoryMessageIfSigned()$"
                        , other : "$_signatoryMessageIfElse()$"
                        , waiting : "$_signatoryMessageWaiting()$"
+                       , deliveryproblem : "$_signatoryMessageDeliveryProblem()$"
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , evidenceAttachmentBoxHeader : "$_evidenceAttachmentBoxHeader()$"

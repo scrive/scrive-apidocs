@@ -12,23 +12,12 @@ var ReloadManager = require("../../../../js/reloadmanager.js").ReloadManager;
       model: React.PropTypes.instanceOf(SwedishIdentifyModel).isRequired
     },
     getInitialState: function () {
-      return {iframe: undefined, redirected: false};
-    },
-    componentWillUnmount: function () {
-      if (this.state.iframe != undefined) {
-        this.state.iframe.remove();
-      }
+      return {redirected: false};
     },
     componentDidUpdate: function () {
       var transaction = this.props.model.transaction();
       var canStart = !transaction.isFaultStatus() && !transaction.isWaitingForToken() && transaction.thisDevice();
-      var iframeUncapableBrowser = BrowserInfo.isAndroid() || BrowserInfo.isIOS9();
-      if (!this.state.iframe && canStart && !iframeUncapableBrowser) {
-        var iframe = $("<iframe width='0' height='0' class='bankid-iframe'/>")
-                       .attr("src", transaction.bankIdUrlWithRedirectIfNeeded());
-        this.setState({iframe: iframe});
-        $("body").append(iframe);
-      } else if (!this.state.redirected && canStart && iframeUncapableBrowser) {
+      if (!this.state.redirected && canStart) {
         ReloadManager.stopBlocking();
         setTimeout(function () {
           ReloadManager.startBlocking();

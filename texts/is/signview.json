@@ -144,7 +144,6 @@
 "_signingStartedDontCloseWindow":"Þú hefur enn ekki skrifað undir skjalið. Viltu fara án þess að skrifa undir?",
 "_signinginprogressmodalAction1":"Vistar gögn sem safnað hefur verið saman",
 "_signinginprogressmodalAction2":"Skráir undirskrift þína",
-"_signinginprogressmodalYouHaveSignedPleaseWait":"Þú hefur skrifað undir skjalið <strong class='put-doctitle'></strong>. Vinsamlegast hinkraðu eftir að Scrive E-sign geri eftirfarandi:",
 "_signviewAttachmentUploadedInOtherWindow":"Því miður gátum við ekki hlaðið upp skrá þína því skjalið er opið í öðrum glugga. Þú verður að endurhlaða síðuna þína til að halda áfram.",
 "_signviewSigningFailed":"Því miður misfórst eitthvað við undirskrift skjalsins. Vinsamlegast reyndu aftur.",
 "_smsDocumentErrorAuthor":"",

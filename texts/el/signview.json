@@ -144,7 +144,6 @@
 "_signingStartedDontCloseWindow":"Δεν έχετε υπογράψει ακόμα το έγγραφο. Θα θέλατε να αποχωρήσετε χωρίς να υπογράψετε; ",
 "_signinginprogressmodalAction1":"Αποθηκεύει τα επιλεγμένα στοιχεία ",
 "_signinginprogressmodalAction2":"Εγγράφει την υπογραφή σας",
-"_signinginprogressmodalYouHaveSignedPleaseWait":"Έχετε υπογράψει το έγγραφο <strong class='put-doctitle'></strong>. Παρακαλώ περιμένετε ενώ η υπηρεσία Scrive E-sign:",
 "_signviewAttachmentUploadedInOtherWindow":"Λυπούμαστε, αδυνατούμε να μεταφορτώσουμε το αρχείο σας επειδή το έγγραφο είναι ανοιχτό σε άλλο παράθυρο. Παρακαλώ επαναφορτώστε τη σελίδα σας για να συνεχίσετε. ",
 "_signviewSigningFailed":"Λυπούμαστε, έγινε κάποιο λάθος ενώ υπογράφατε το έγγραφο. Παρακαλώ προσπαθήστε ξανά.  ",
 "_smsDocumentErrorAuthor":"",
