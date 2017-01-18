@@ -6,12 +6,17 @@ post:
     - Prepare
 
   description: |
-    Remove some pages from main PDF file of document in `Preparation`. Checkboxes and signature areas placed on pages
-    to be deleted will be removed as well. For standard and text fields placed on pages to be removed only placements
-    on such this pages will be removed.
+    Remove some pages from main PDF file of a document in `Preparation`.
 
-    After this operation property `file` of document will change. Also note that `page` property of placements placed
-    after pages to be removed will be decreased.
+    Checkboxes and signature areas that are placed on pages to be removed will
+    be removed from their respective signatory.
+    For standard and text fields, only the placements that are on the pages to
+    be removed will be removed, the signatory field will still exist.
+    As a consequence of removing pages, the `page` property of any placements
+    may change to account for any removed pages.
+
+    This operation will update the document’s `file` with a new one, that will
+    have the requested pages removed from its current main file.
 
     *OAuth Privileges required: `DOC_CREATE`*
 
@@ -27,7 +32,8 @@ post:
       description: |
         List of pages to be removed. Pages are indexed from 1.
 
-        To remove first and last page, when main file has 4 pages, set this param to `[1,4]`.
+        To remove the first and last page, when the main file has 4 pages, set
+        this param to `[1,4]`.
     - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
