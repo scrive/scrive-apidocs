@@ -128,6 +128,7 @@
 "_signViewSigAttachmentBoxChooseFile":"Μεταφόρτωση συνημμένου ",
 "_signViewSignatoriesTitle":"Συμβαλλόμενα μέρη ",
 "_signWithSMSPin":"Υπογράψτε με PIN μέσω SMS",
+"_signatoryMessageDeliveryProblem":"",
 "_signatoryMessageIfElse":"Αποστολή ",
 "_signatoryMessageIfSignatoryDeliveredEmail":"Παραδόθηκε ",
 "_signatoryMessageIfSignatoryReaddate":"Το email ανοίχθηκε ",

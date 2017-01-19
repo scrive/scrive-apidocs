@@ -128,6 +128,7 @@
 "_signViewSigAttachmentBoxChooseFile":"Lae manus üles",
 "_signViewSignatoriesTitle":"Pooled",
 "_signWithSMSPin":"Allkirjastage SMSi teel saadetud PIN koodiga",
+"_signatoryMessageDeliveryProblem":"",
 "_signatoryMessageIfElse":"Saadetud",
 "_signatoryMessageIfSignatoryDeliveredEmail":"Kohale toimetatud",
 "_signatoryMessageIfSignatoryReaddate":"E-mail avati",
