@@ -93,9 +93,7 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
           "error" .= msg
         ]
     Nothing -> return ()
-  theDocument >>= \d -> logInfo "Sending invitation emails for document" $ object [
-      "title" .= documenttitle d
-    ]
+  theDocument >>= \d -> logInfo "Sending invitation emails for document" $ logObject d
 
   -- Stat logging
   now <- currentTime
@@ -116,9 +114,7 @@ postDocumentRejectedChange siglinkid customMessage doc@Document{..} = logDocumen
   unless (isRejected doc) $
     stateMismatchError "postDocumentRejectedChange" Rejected doc
   logInfo_ "Pending -> Rejected; send reject emails"
-  logInfo "Sending rejection emails for document" $ object [
-      "title" .= documenttitle
-    ]
+  logInfo "Sending rejection emails for document" $ logObject doc
   ctx <- getContext
   -- Log the fact that the current user rejected a document.
   maybe (return ())
@@ -147,9 +143,7 @@ postDocumentPendingChange olddoc = do
 
   ifM (allSignatoriesSigned <$> theDocument)
   {-then-} (do
-      theDocument >>= \d -> logInfo "All have signed, document closed" $ object [
-          "old_status" .= show (documentstatus d)
-        ]
+      theDocument >>= \d -> logInfo "All have signed, document will be closed" $ logObject d
       time <- mctxtime <$> getMailContext
       dbUpdate $ CloseDocument (systemActor time)
       author <- theDocument >>= getDocAuthor
@@ -160,9 +154,7 @@ postDocumentPendingChange olddoc = do
   {-else-} $ do
       theDocument >>= triggerAPICallbackIfThereIsOne
       whenM ((\d -> documentcurrentsignorder d /= documentcurrentsignorder olddoc) <$> theDocument) $ do
-        theDocument >>= \d -> logInfo "Resending invitation emails" $ object [
-            "title" .= documenttitle d
-          ]
+        theDocument >>= \d -> logInfo "Resending invitation emails" $ logObject d
         sendInvitationEmails False
   where
     allSignatoriesSigned = all (isSignatory --> hasSigned) . documentsignatorylinks
@@ -198,9 +190,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
 
   whenM ((\d -> isDocumentError d && not (isDocumentError doc0)) <$> theDocument) $ do
 
-    logInfo "Sending seal error emails" $ object [
-        "title" .= documenttitle doc0
-      ]
+    logInfo "Sending seal error emails" $ logObject doc0
     theDocument >>= \d -> flip sendDocumentErrorEmail d =<< getDocAuthor d
     theDocument >>= triggerAPICallbackIfThereIsOne
 
@@ -301,12 +291,11 @@ latest_publication_time = localTimeToUTC utc . f . utcToLocalTime utc <$> curren
         (year, month, _) = toGregorian localDay
 
 stateMismatchError :: (MonadBase IO m, MonadLog m) => String -> DocumentStatus -> Document -> m a
-stateMismatchError funame expected Document{documentstatus, documentid} = do
+stateMismatchError funame expected doc = do
   logInfo "State mismatch error" $ object [
       "function" .= funame
-    , identifier_ documentid
-    , "status" .= show documentstatus
     , "expected_status" .= show expected
+    , logPair_ doc
     ]
   internalError
 

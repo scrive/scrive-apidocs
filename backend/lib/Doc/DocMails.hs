@@ -384,7 +384,7 @@ sendNotifications :: (Monad m, MonadLog m) => SignatoryLink -> Bool -> m () -> m
 sendNotifications sl alwaysEmailAuthor domail dosms = do
   logInfo "Delivery method chosen for a signatory" $ object [
       identifier_ $ signatorylinkid sl
-    , "method" .= show (signatorylinkdeliverymethod sl)
+    , "method" .= (show $ signatorylinkdeliverymethod sl)
     , "phone" .= getMobile sl
     , "email" .= getEmail sl
     ]

@@ -270,6 +270,7 @@ Library
                  , HostClock.Model
                  , HostClock.System
                  , HostClock.Tables
+                 , HtmlToTxt
                  , HubSpot.Conf
                  , IPAddress
                  , InputValidation

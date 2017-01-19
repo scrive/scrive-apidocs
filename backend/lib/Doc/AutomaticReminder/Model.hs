@@ -32,6 +32,11 @@ data DocumentAutomaticReminder = DocumentAutomaticReminder {
   , reminderSentTime :: UTCTime
   } deriving (Show,Typeable)
 
+instance LogObject DocumentAutomaticReminder where
+  logObject dar = object [ identifier_ $ reminderDocumentID dar ]
+
+instance LogDefaultLabel DocumentAutomaticReminder where
+  logDefaultLabel _ = "document_automatic_reminder"
 
 documentAutomaticReminder :: Action DocumentID DocumentAutomaticReminder DocumentID Scheduler
 documentAutomaticReminder = Action {
@@ -60,9 +65,7 @@ documentAutomaticReminder = Action {
           void $ dbQuery (GetDocumentByDocumentID (reminderDocumentID dar)) >>= \doc -> runMailTInScheduler doc $
             withDocument doc $ sendAllReminderEmails (systemActor now) True
         else do
-          logInfo "Auto reminder dropped since document does not exists or is purged/reallydeleted" $ object [
-              identifier_ $ reminderDocumentID dar
-            ]
+          logInfo "Auto reminder dropped since document does not exists or is purged/reallydeleted" $ logObject dar
       void $ dbUpdate $ DeleteAction documentAutomaticReminder (reminderDocumentID dar)
 
 scheduleAutoreminderIfThereIsOne :: (MonadDB m, MonadTime m, MonadMask m) => TimeZoneName -> Document -> m ()

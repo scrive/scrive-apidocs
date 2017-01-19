@@ -53,16 +53,12 @@ addDigitalSignature = theDocumentID >>= \did ->
       case vr of
            GT.Valid gsig -> do
                 res <- liftIO $ BS.readFile mainpath
-                logInfo "GuardTime verification result" $ object [
-                    "result" .= show vr
-                  ]
+                logInfo "GuardTime verification result" $ logObject vr
                 logInfo_ "GuardTime signed successfully"
                 return (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
            _ -> do
                 res <- liftIO $ BS.readFile mainpath
-                logAttention "GuardTime verification after signing failed for document" $ object [
-                    "result" .= show vr
-                  ]
+                logAttention "GuardTime verification after signing failed for document" $ logObject vr
                 return (res, Missing)
     ExitFailure c -> do
       res <- liftIO $ BS.readFile mainpath
@@ -118,15 +114,11 @@ digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
       case vr of
            GT.Valid gsig | GT.extended gsig -> do
                 res <- liftIO $ BS.readFile pdfpath
-                logInfo "GuardTime verification result" $ object [
-                    "result" .= show vr
-                  ]
+                logInfo "GuardTime verification result" $ logObject vr
                 logInfo_ "GuardTime extended successfully"
                 return $ Just (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
            _ -> do
-                logInfo "GuardTime verification after extension failed" $ object [
-                    "result" .= show vr
-                  ]
+                logInfo "GuardTime verification after extension failed" $ logObject vr
                 return Nothing
     ExitFailure c -> do
       logAttention "GuardTime failed for document" $ object [

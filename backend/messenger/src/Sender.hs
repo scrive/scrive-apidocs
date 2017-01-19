@@ -231,12 +231,7 @@ toLatin x = case toLatinTransliterate x of
     toLatinDiscard = BSC.unpack . IConv.convertFuzzy IConv.Discard "utf8" "latin1" . BSU.fromString
 
 logInfoSendSMS :: MonadLog m => String -> ShortMessage -> m ()
-logInfoSendSMS sender ShortMessage{..} = logInfo "Sending SMS" $ object [
+logInfoSendSMS sender sm = logInfo "Sending SMS" $ object [
       "sender"     .= sender
-    , "provider"   .= show smProvider
-    , "originator" .= smOriginator
-    , "msisdn"     .= smMSISDN -- original/non-clean format
-    , "body"       .= smBody
-    , "data"       .= smData
-    , "attempts"   .= smAttempts
+    , logPair_ sm
     ]

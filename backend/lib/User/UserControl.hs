@@ -77,8 +77,7 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
         ++ "Maybe they're trying to attempt to merge accounts and need help, "
         ++ "or maybe they're a hacker trying to figure out who is and isn't a user."
   logInfo "User has requested that their email be changed, but new proposed email is already used by another account" $ object [
-      identifier_ $ userid user
-    , "email" .= getEmail user
+      logPair_ user
     , "new_email" .= unEmail newemail
     ]
   scheduleEmailSendout $ emptyMail {

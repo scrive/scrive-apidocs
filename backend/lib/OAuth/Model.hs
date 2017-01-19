@@ -2,12 +2,14 @@ module OAuth.Model where
 
 import Control.Monad.Catch
 import Crypto.RNG
+import Data.Aeson
 import Data.Int
 import Network.URI
 import qualified Control.Exception.Lifted as E
 
 import DB
 import KontraPrelude
+import Log.Identifier
 import MagicHash
 import MinutesTime
 import User.Model
@@ -74,6 +76,17 @@ data OAuthTempCredRequest = OAuthTempCredRequest {
 , tcAPISecret  :: MagicHash
 , tcPrivileges :: [APIPrivilege]
 } deriving Show
+
+instance LogObject OAuthTempCredRequest where
+  logObject OAuthTempCredRequest{..} = object [
+      "callback" .= show tcCallback
+    , "api_token" .= show tcAPIToken
+    , "api_secret" .= show tcAPISecret
+    , "privileges" .= map show tcPrivileges
+    ]
+
+instance LogDefaultLabel OAuthTempCredRequest where
+  logDefaultLabel _ = "temp_cred_request"
 
 data OAuthTokenRequest = OAuthTokenRequest {
   trAPIToken   :: APIToken

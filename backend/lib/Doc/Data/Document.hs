@@ -11,6 +11,7 @@ module Doc.Data.Document (
   ) where
 
 import Control.Monad.Catch
+import Data.Aeson.Types
 import Data.Default
 import Data.Int
 import Database.PostgreSQL.PQTypes
@@ -28,6 +29,7 @@ import Doc.DocumentID
 import Doc.SealStatus (HasGuardtimeSignature(..), SealStatus)
 import IPAddress
 import KontraPrelude
+import Log.Identifier
 import MagicHash
 import MinutesTime
 import User.Lang
@@ -218,6 +220,16 @@ data Document = Document {
 } deriving (Show)
 
 type instance ID Document = DocumentID
+
+instance LogObject Document where
+  logObject Document{..} = object [
+      identifier_ documentid
+    , "title" .= documenttitle
+    , "status" .= show documentstatus
+    ]
+
+instance LogDefaultLabel Document where
+  logDefaultLabel _ = "document"
 
 instance Default Document where
   def = Document {

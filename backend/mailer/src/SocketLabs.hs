@@ -54,7 +54,7 @@ handleSocketLabsEvents conf = localDomain "handleSocketLabsEvents" $ do
       _ -> do
         getField "Type" >>= \case
           Just "Validation" -> logInfo_ "Validation request received"
-          _ -> logInfo "Invalid MessageId received" $ object ["MessageId" .= fmap show messageId ]
+          _ -> logInfo "Invalid MessageId received" $ object ["message_id" .= fmap show messageId ]
 
 readEventType :: Maybe String -> Mailer (Maybe SocketLabsEvent)
 readEventType (Just "Delivered") = return $ Just SL_Delivered
@@ -84,7 +84,7 @@ withCallbackValidation cvks handler = do
     Just sc -> case findValidationKey cvks sc of
       Nothing -> do
         logAttention "SecretKey missing for SocketLabs callback" $ object [
-          "SecretKey" .= show sc
+            "secret_key" .= show sc
           ]
         badRequest $ toResponse "SecretKey invalid"
       Just validationKey -> do

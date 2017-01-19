@@ -16,7 +16,6 @@ import Crypto.RNG
 import Data.Char
 import Data.String.Utils
 import Log
-import qualified Data.Aeson as A
 import qualified Text.StringTemplates.Fields as F
 import qualified Text.StringTemplates.Templates as T
 
@@ -27,6 +26,7 @@ import Doc.DocumentID
 import Doc.Model
 import InputValidation
 import KontraPrelude hiding (join)
+import Log.Identifier
 import Mails.MailsData
 import Mails.Model hiding (Mail)
 import MessageData
@@ -69,7 +69,7 @@ scheduleEmailSendoutHelper authorname  mail@Mail{..} = do
       "originator" .= originator
     ]
   if unsendable to
-    then logAttention "Email is unsendable, discarding" $ A.toJSON mail
+    then logAttention "Email is unsendable, discarding" $ logObject mail
     else do
       fromAddr <- return Address {addrName = authorname, addrEmail = originatorEmail }
       token <- random

@@ -22,6 +22,7 @@ import IPAddress
 import Kontra
 import KontraLink
 import KontraPrelude
+import Log.Identifier
 import Redirect
 import ThirdPartyStats.Core
 import User.Email
@@ -66,9 +67,7 @@ handleLoginPost = do
                 Just user@User{userpassword}
                     | verifyPassword userpassword passwd
                     && ipIsOK -> do
-                        logInfo "User logged in" $ object [
-                            "email" .= email
-                          ]
+                        logInfo "User logged in" $ logObject user
                         muuser <- dbQuery $ GetUserByID (userid user)
 
                         case muuser of
@@ -92,9 +91,7 @@ handleLoginPost = do
                             logUserToContext muuser
                         J.runJSONGenT $ J.value "logged" True
                 Just u@User{userpassword} | not (verifyPassword userpassword passwd) -> do
-                        logInfo "User login failed (invalid password)" $ object [
-                            "email" .= email
-                          ]
+                        logInfo "User login failed (invalid password)" $ logObject u
                         _ <- if padlogin
                           then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
@@ -102,7 +99,7 @@ handleLoginPost = do
 
                 Just u -> do
                         logInfo "User login failed (ip not on allowed list)" $ object [
-                            "email" .= email
+                            logPair_ u
                           , "ip" .= show (ctxipnumber ctx)
                           ]
                         _ <- if padlogin

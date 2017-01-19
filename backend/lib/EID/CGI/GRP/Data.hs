@@ -19,6 +19,7 @@ module EID.CGI.GRP.Data (
   , xpCollectResponse
   ) where
 
+import Data.Aeson
 import Data.ByteString (ByteString)
 import Data.Unjson
 import Network.SOAP.Parsing.Cursor
@@ -27,6 +28,7 @@ import Text.XML.Writer hiding (content, many, node)
 import qualified Data.Text as T
 
 import KontraPrelude
+import Log.Identifier
 import Network.SOAP.Call
 import Session.Cookies
 
@@ -187,6 +189,19 @@ data AuthResponse = AuthResponse {
 , arsAutoStartToken :: !AutoStartToken
 } deriving (Eq, Ord, Show)
 
+instance LogObject AuthResponse where
+  logObject = toJSON
+
+instance LogDefaultLabel AuthResponse where
+  logDefaultLabel _ = "auth_response"
+
+instance ToJSON AuthResponse where
+  toJSON AuthResponse{..} = object [
+      "transaction_id" .= T.unpack arsTransactionID
+    , "order_ref" .= T.unpack arsOrderRef
+    , "auto_start_token" .= show arsAutoStartToken
+    ]
+
 -- | Retrieve 'SignResponse' from SOAP response.
 xpAuthResponse :: XMLParser AuthResponse
 xpAuthResponse = XMLParser $ \c -> listToMaybe $ c
@@ -205,6 +220,13 @@ data SignResponse = SignResponse {
 , srsOrderRef       :: !T.Text
 , srsAutoStartToken :: !AutoStartToken
 } deriving (Eq, Ord, Show)
+
+instance LogObject SignResponse where
+  logObject SignResponse{..} = object [
+      "transaction_id" .= srsTransactionID
+    , "order_ref" .= srsOrderRef
+    , "auto_start_token" .= unAutoStartToken srsAutoStartToken
+    ]
 
 -- | Retrieve 'SignResponse' from SOAP response.
 xpSignResponse :: XMLParser SignResponse

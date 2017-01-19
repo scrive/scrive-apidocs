@@ -23,6 +23,7 @@ import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Kontra
 import KontraPrelude
+import Log.Identifier
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -37,9 +38,7 @@ applyDraftDataToDocument :: (Kontrakcja m, DocumentMonad m) =>  Document -> Acto
 applyDraftDataToDocument draft actor = do
     checkDraftTimeZoneName draft
     unlessM (isPreparation <$> theDocument) $ do
-      theDocument >>= \doc -> logAttention "Document is not in preparation" $ object [
-          "status" .= show (documentstatus doc)
-        ]
+      theDocument >>= \doc -> logAttention "Document is not in preparation" $ logObject doc
       throwM $ SomeDBExtraException $ serverError "applyDraftDataToDocument failed"
     _ <- theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
                                   documenttitle = documenttitle draft

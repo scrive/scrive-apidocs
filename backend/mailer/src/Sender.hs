@@ -59,16 +59,7 @@ createExternalSender (ConnectionSource pool) name program createArgs = Sender {
         ]
       return False
     ExitSuccess -> do
-      let subject = filter (not . (`elem` ("\r\n"::String))) mailTitle
-      logInfo "Email sent correctly" $ object [
-          "subject" .= subject
-        , "to" .= map addrEmail mailTo
-        , "attachments" .= length mailAttachments
-        , "reply-to" .= case mailReplyTo of
-            Just addr -> addrEmail addr
-            Nothing   -> ""
-        , "content" .= htmlToTxt mailContent
-        ]
+      logInfo "Email sent correctly" $ logObject mail
       return True
 }
 

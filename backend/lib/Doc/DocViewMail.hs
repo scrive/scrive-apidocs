@@ -162,6 +162,17 @@ mailDocumentRejected forMail customMessage forAuthor rejector document = do
                    else
                        templateName "mailRejectContractMail"
 
+smartOrUnnamedName :: TemplatesMonad m => SignatoryLink -> Document -> m String
+smartOrUnnamedName sl doc | sn /= "" = return sn
+                         | otherwise = do
+                             prefix <- renderTemplate_ "_contractsignatoryname"
+                             return $ prefix ++ " " ++ show signIndex
+ where sn = getSmartName sl
+       signatories = filter signatoryispartner $ documentsignatorylinks doc
+       signIndex = case findIndex (\s -> signatorylinkid s == signatorylinkid sl) signatories of
+                     Just i -> i + 1
+                     Nothing -> 0
+
 mailDocumentErrorForAuthor :: (HasLang a, MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m) => a -> Document -> m Mail
 mailDocumentErrorForAuthor authorlang document = do
    documentMail authorlang document (templateName "mailDocumentError") $ return ()

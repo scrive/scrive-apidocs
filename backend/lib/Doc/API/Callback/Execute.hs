@@ -51,7 +51,7 @@ import qualified Utils.HTTP as Utils.HTTP
 execute ::
   (AmazonMonad m, MonadDB m, CryptoRNG m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadReader SchedulerData m, MailContextMonad m) =>
   DocumentAPICallback -> m Bool
-execute DocumentAPICallback {..} = logDocument dacDocumentID $ do
+execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
   exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor dacDocumentID
   if not exists then do
     logInfo_ "API callback dropped since document does not exists or is purged/reallydeleted"
@@ -71,27 +71,23 @@ execute DocumentAPICallback {..} = logDocument dacDocumentID $ do
                 return False
               Just sc ->
                 flip runReaderT sc $ executeSalesforceCallback doc rtoken dacURL dacAttempts uid
-          Just (BasicAuthScheme lg pwd)             -> executeStandardCallback (Just (lg, pwd)) doc dacURL dacApiVersion
-          Just (OAuth2Scheme lg pwd tokenUrl scope) -> executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dacURL dacApiVersion
-          _                                         -> executeStandardCallback Nothing doc dacURL dacApiVersion
+          Just (BasicAuthScheme lg pwd)             -> executeStandardCallback (Just (lg, pwd)) doc dac
+          Just (OAuth2Scheme lg pwd tokenUrl scope) -> executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac
+          _                                         -> executeStandardCallback Nothing doc dac
 
 executeStandardCallback ::
   (AmazonMonad m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
-  Maybe (String,String) -> Document -> String -> APIVersion -> m Bool
-executeStandardCallback mBasicAuth doc url apiVersion = logDocument (documentid doc) $ do
-  callbackParams <- callbackParamsWithDocumentJSON apiVersion doc
+  Maybe (String,String) -> Document -> DocumentAPICallback -> m Bool
+executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
+  callbackParams <- callbackParamsWithDocumentJSON (dacApiVersion dac) doc
   (exitcode, _ , stderr) <- readCurl curlParams callbackParams
   case exitcode of
     ExitSuccess -> do
-      logInfo "API callback executeStandardCallback succeeded" $ object [
-          identifier_ apiVersion
-        , "url" .= url
-        ]
+      logInfo "API callback executeStandardCallback succeeded" $ logObject dac
       return True
     ExitFailure ec -> do
       logAttention "API callback executeStandardCallback failed" $ object [
-          identifier_ apiVersion
-        , "url" .= url
+          logPair_ dac
         , "curl_exitcode" .= show ec
         , "stderr" `equalsExternalBSL` stderr
         ]
@@ -108,11 +104,11 @@ executeStandardCallback mBasicAuth doc url apiVersion = logDocument (documentid 
             Just (lg,pwd) -> ["-H", "Authorization: Basic " ++ (BSC8.unpack $ B64.encode $ BSC8.pack $ lg ++ ":" ++  pwd)]
             _ -> []
         ) ++
-        [ url]
+        [dacURL dac]
 
 executeOAuth2Callback :: (AmazonMonad m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
-                         (String,String,String,String) -> Document -> String -> APIVersion -> m Bool
-executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc callbackUrl apiVersion = logDocument (documentid doc) $ do
+                         (String,String,String,String) -> Document -> DocumentAPICallback -> m Bool
+executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid doc) $ do
    (exitcode1, stdout1 , stderr1) <- readCurl [
           "-X", "POST"
         , "-f" -- make curl return exit code (22) if it got anything else but 2XX
@@ -124,7 +120,7 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc callbackUrl apiVersion = logDo
    case exitcode1 of
     ExitFailure ec1 -> do
       logAttention "API callback executeOAuth2Callback failed during authorization phase" $ object [
-          identifier_ apiVersion
+          logPair_ dac
         , "curl_exitcode" .= show ec1
         , "stderr" `equalsExternalBSL` stderr1
         ]
@@ -136,25 +132,21 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc callbackUrl apiVersion = logDo
          ]
        return False
       Just t -> do
-        callbackParams <- callbackParamsWithDocumentJSON apiVersion doc
+        callbackParams <- callbackParamsWithDocumentJSON (dacApiVersion dac) doc
         (exitcode2, _ , stderr2) <- readCurl [
             "-X", "POST"
           , "-f" -- make curl return exit code (22) if it got anything else but 2XX
           , "-L" -- make curl follow redirects
           , "-H", "Authorization: Bearer " ++ t
           , "--data-binary", "@-"          -- take binary data from stdin
-          , callbackUrl ] callbackParams
+          , dacURL dac ] callbackParams
         case exitcode2 of
           ExitSuccess -> do
-            logInfo "API callback executeOAuth2Callback succeeded" $ object [
-                identifier_ apiVersion
-              , "url" .= callbackUrl
-              ]
+            logInfo "API callback executeOAuth2Callback succeeded" $ logObject dac
             return True
           ExitFailure ec2 -> do
             logAttention "API callback executeOAuth2Callback failed" $ object [
-                identifier_ apiVersion
-              , "url" .= callbackUrl
+                logPair_ dac
               , "curl_exitcode" .= show ec2
               , "stderr" `equalsExternalBSL` stderr2
               ]

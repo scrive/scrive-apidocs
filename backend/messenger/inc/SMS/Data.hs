@@ -10,6 +10,7 @@ module SMS.Data (
   ) where
 
 import Control.Monad.Catch
+import Data.Aeson
 import Data.Data
 import Data.Int
 import Database.PostgreSQL.PQTypes
@@ -104,6 +105,23 @@ data ShortMessage = ShortMessage {
 , smData       :: !String
 , smAttempts   :: !Int32
 } deriving (Eq, Ord, Show)
+
+instance ToJSON ShortMessage where
+  toJSON ShortMessage{..} = object [
+      identifier_ smID
+    , "provider"   .= show smProvider
+    , "originator" .= smOriginator
+    , "msisdn"     .= smMSISDN -- original/non-clean format
+    , "body"       .= smBody
+    , "data"       .= smData
+    , "attempts"   .= smAttempts
+    ]
+
+instance LogObject ShortMessage where
+  logObject = toJSON
+
+instance LogDefaultLabel ShortMessage where
+  logDefaultLabel _ = "short_message"
 
 ----------------------------------------
 

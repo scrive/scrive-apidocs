@@ -30,7 +30,9 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import GuardTime.Class
 import KontraPrelude
+import Log.Identifier
 import Log.Utils
+import Text.JSON.Convert
 
 newtype GuardTimeConfT m a = GuardTimeConfT { unGuardTimeConfT :: ReaderT GuardTimeConf m a }
   deriving (Alternative, Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b, MonadThrow, MonadCatch, MonadMask)
@@ -110,6 +112,12 @@ data VerifyResult = Valid GuardtimeSignature |
                     Invalid String           |
                     Problem BSL.ByteString BSL.ByteString String
   deriving Show
+
+instance LogObject VerifyResult where
+  logObject = jsonToAeson . toJSValue
+
+instance LogDefaultLabel VerifyResult where
+  logDefaultLabel _ = "guard_time_verify_result"
 
 data GuardtimeSignature =
   GuardtimeSignature { time :: String

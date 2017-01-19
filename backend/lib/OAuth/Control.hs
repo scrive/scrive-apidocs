@@ -2,7 +2,6 @@
 module OAuth.Control(oauth) where
 
 import Control.Monad.Catch
-import Data.Aeson
 import Data.Map (singleton)
 import Happstack.Server.RqData
 import Happstack.Server.Types
@@ -19,6 +18,7 @@ import Happstack.Fields
 import Kontra
 import KontraLink
 import KontraPrelude
+import Log.Identifier
 import OAuth.Model
 import OAuth.Util
 import OAuth.View
@@ -54,9 +54,7 @@ tempCredRequest = api $ do
   case etcr of
     Left errors -> (throwM . SomeDBExtraException) $ badInput errors
     Right tcr -> do
-      logInfo "TempCredRequest got successfully" $ Log.object [
-          "temp_cred_request" .= show tcr
-        ]
+      logInfo "TempCredRequest got successfully" $ logObject tcr
       (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials tcr time
       return $ setHeader "Content-Type" "application/x-www-form-urlencoded" $
                   Web.toResponse $ urlEncodeVars [

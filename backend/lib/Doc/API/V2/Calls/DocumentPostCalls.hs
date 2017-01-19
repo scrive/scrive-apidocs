@@ -60,6 +60,7 @@ import File.Storage
 import InputValidation (Result(..), asValidEmail)
 import Kontra
 import KontraPrelude
+import Log.Identifier
 import MinutesTime
 import OAuth.Model
 import User.Model
@@ -87,8 +88,7 @@ docApiV2New = api $ do
       Just f -> do
         dbUpdate $ AttachFile (fileid f) actor
   -- Result
-    did <- documentid <$> theDocument
-    logInfo "New document created" $ object [ "new_document_id" .= show did ]
+    theDocument >>= \doc -> logInfo "New document created" $ logObject doc
     Created <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
 
@@ -109,9 +109,9 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
     dbUpdate $ SetDocumentUnsavedDraft False
   -- Result
     newDocid <- documentid <$> theDocument
-    logInfo "New document created from template" $ object
-      [ "new_document_id" .= show newDocid
-      , "template_id"     .= show did
+    logInfo "New document created from template" $ object [
+        identifier ("new_"<>)      newDocid
+      , identifier ("template_"<>) did
       ]
     Created <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 

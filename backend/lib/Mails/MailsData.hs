@@ -70,6 +70,12 @@ instance ToJSON Mail where
           Right fid -> object [identifier_ fid]
         ]
 
+instance LogObject Mail where
+  logObject = toJSON
+
+instance LogDefaultLabel Mail where
+  logDefaultLabel _ = "mail"
+
 emptyMail :: Mail
 emptyMail = Mail {
     to              = []

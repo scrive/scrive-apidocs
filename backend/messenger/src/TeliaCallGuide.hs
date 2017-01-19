@@ -34,14 +34,14 @@ handleTeliaCallGuideEvents = localDomain "handleTeliaCallGuideEvents" . flip E.c
   xStatusText        <- getField' "StatusText"         -- Optional: Placeholder for additional information, such as a clear text description of the status/reason.
 
   logInfo "Telia SMS Callback Logging information" $ object [
-      "MessageId" .= xID
-    , "DestinationAddress" .= xMSISDN
-    , "StatusCode" .= xStatusCode
-    , "Timestamp" .= xTimestamp
-    , "Operator" .= xOperator
-    , "ReasonCode" .= xReasonCode
-    , "OperatorTimestamp" .= xOperatorTimestamp
-    , "StatusText" .= xStatusText
+      "message_id" .= xID
+    , "destination_address" .= xMSISDN
+    , "status_code" .= xStatusCode
+    , "timestamp" .= xTimestamp
+    , "operator" .= xOperator
+    , "reason_code" .= xReasonCode
+    , "operator_timestamp" .= xOperatorTimestamp
+    , "status_text" .= xStatusText
     ]
 
   let mEvent = case xStatusCode of
@@ -67,6 +67,6 @@ handleTeliaCallGuideEvents = localDomain "handleTeliaCallGuideEvents" . flip E.c
       ok $ toResponse "<DeliveryResponse ack=\"true\"/>"
     Nothing -> do
       logInfo "UpdateWithSMSEventForTeliaID not run: could not read StatusCode" $ object [
-          "StatusCode" .= xStatusCode
+          "status_code" .= xStatusCode
         ]
       ok $ toResponse "Could not read StatusCode"

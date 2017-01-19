@@ -594,9 +594,7 @@ presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, MonadLog m, KontraMona
                  -> m (Either String BS.ByteString)
 presealDocumentFile document@Document{documentid} file@File{fileid} =
   withSystemTempDirectory' ("preseal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
-    logInfo "Presealing file" $ object [
-        identifier_ fileid
-      ]
+    logInfo "Presealing file" $ logObject file
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file

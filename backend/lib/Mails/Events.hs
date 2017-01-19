@@ -165,9 +165,10 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
 
 logDeliveryTime :: (DocumentMonad m, MonadLog m, MonadThrow m) => Maybe Int -> m ()
 logDeliveryTime timeDiff = theDocument >>= \d -> do
-  logInfo "Email delivered" $ object [ "author company id" .= show (documentauthorcompanyid d)
-                                     , "delivery time" .= timeDiff
-                                     ]
+  logInfo "Email delivered" $ object [
+      "author_company_id" .= show (documentauthorcompanyid d)
+    , "delivery_time" .= timeDiff
+    ]
 
 handleDeliveredInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m)
                           => BrandedDomain -> SignatoryLinkID -> Maybe Int -> m ()

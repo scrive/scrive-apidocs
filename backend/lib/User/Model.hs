@@ -43,10 +43,12 @@ module User.Model (
 
 import Control.Monad.Catch
 import Control.Monad.State
+import Data.Aeson
 import Data.ByteString (ByteString)
 import Data.Char
 import Data.Default
 import Data.Int
+import Data.String.Utils (strip)
 import Happstack.Server (FromReqURI(..))
 import qualified Control.Exception.Lifted as E
 
@@ -55,6 +57,7 @@ import Company.Model
 import DB
 import Doc.DocStateData (DocumentStatus(..), FieldType(..), NameOrder(..))
 import KontraPrelude
+import Log.Identifier
 import MinutesTime
 import Partner.Model
 import SMS.Data (SMSProvider)
@@ -62,6 +65,7 @@ import User.Email
 import User.Lang
 import User.Password
 import User.UserID
+import Util.HasSomeUserInfo
 
 data StatsPartition = PartitionByDay | PartitionByMonth
 
@@ -138,6 +142,23 @@ data User = User {
   , userassociateddomainid        :: BrandedDomainID
   } deriving (Eq, Ord, Show)
 
+instance HasSomeUserInfo User where
+  getEmail          = strip . unEmail . useremail . userinfo
+  getFirstName      = userfstname         . userinfo
+  getLastName       = usersndname         . userinfo
+  getPersonalNumber = userpersonalnumber  . userinfo
+  getMobile         = userphone          . userinfo
+
+instance LogObject User where
+  logObject User{..} = object [
+      identifier_ userid
+    , "email" .= useremail userinfo
+    , "name" .= (userfstname userinfo <> " " <> usersndname userinfo)
+    ]
+
+instance LogDefaultLabel User where
+  logDefaultLabel _ = "user"
+
 data UserInfo = UserInfo {
     userfstname         :: String
   , usersndname         :: String
@@ -146,6 +167,13 @@ data UserInfo = UserInfo {
   , userphone           :: String
   , useremail           :: Email
   } deriving (Eq, Ord, Show)
+
+instance HasSomeUserInfo UserInfo where
+  getEmail          = strip . unEmail . useremail
+  getFirstName      = userfstname
+  getLastName       = usersndname
+  getPersonalNumber = userpersonalnumber
+  getMobile         = userphone
 
 instance Default User where
     def = User {
@@ -171,7 +199,6 @@ instance Default UserInfo where
   , useremail           = Email ""
   }
 
-
 data UserSettings  = UserSettings {
     lang                :: Lang
   } deriving (Eq, Ord, Show)
@@ -182,10 +209,8 @@ instance HasLang User where
 instance HasLang UserSettings where
   getLang = lang
 
-
 data UserFilter
   = UserFilterByString String             -- ^ Contains the string in name, email or anywhere
-
 
 userFilterToSQL :: UserFilter -> SQL
 userFilterToSQL (UserFilterByString string) =

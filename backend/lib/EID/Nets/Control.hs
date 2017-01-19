@@ -91,8 +91,8 @@ handleResolve = do
                when (dobNETS /= dobSSN) $ do
                   -- FIXME
                   logAttention "Date of birth from NETS does not match date of birth from SSN." $ object [
-                      "DOB" .= dobNETS
-                    , "SSN" .= dobSSN
+                      "dob_nets" .= dobNETS
+                    , "dob_ssn" .= dobSSN
                     ]
                   internalError
 
@@ -140,8 +140,8 @@ handleResolve = do
                return $ LinkExternal $ netsReturnURL nt
         _ -> do
           logAttention "SAML or Target missing for Nets resolve request" $ object [
-              "TARGET" .= show mnt
-            , "SAMLart" .= show mart
+              "target" .= show mnt
+            , "saml_art" .= show mart
             ]
           internalError
 ------------------------------------------

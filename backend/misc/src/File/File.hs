@@ -3,6 +3,7 @@ module File.File
     , FileStorage(..)
     ) where
 
+import Data.Aeson
 import Data.Int (Int32)
 import Data.Typeable
 import qualified Data.ByteString as BS
@@ -10,6 +11,7 @@ import qualified Data.ByteString as BS
 import Crypto
 import File.FileID
 import KontraPrelude
+import Log.Identifier
 
 data FileStorage =
     FileStorageMemory BS.ByteString
@@ -34,3 +36,13 @@ instance Ord File where
                                     (fileid b, filename b)
 instance Show File where
   show = filename
+
+instance LogObject File where
+  logObject File{..} = object [
+      identifier_ fileid
+    , "name" .= filename
+    , "size" .= filesize
+    ]
+
+instance LogDefaultLabel File where
+  logDefaultLabel _ = "file"

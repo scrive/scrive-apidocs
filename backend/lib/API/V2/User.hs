@@ -104,7 +104,7 @@ getAPIUserWith ctxUser privs = do
         Just (user, actor) -> return (user, actor)
         Nothing -> do
           msesid <- lookCookieValues "sessionId"
-          logInfo "Could not find user session" $ object ["session id cookie" .= msesid]
+          logInfo "Could not find user session" $ object ["session_id_cookie" .= msesid]
           apiError $ invalidAuthorization
 
 getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either String (User, Actor)))

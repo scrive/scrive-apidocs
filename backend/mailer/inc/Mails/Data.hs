@@ -17,6 +17,7 @@ module Mails.Data (
   ) where
 
 import Control.Monad.Catch
+import Data.Aeson.Types
 import Data.ByteString (ByteString)
 import Data.Data
 import Data.Int
@@ -26,6 +27,7 @@ import qualified Data.Text as T
 
 import DB.Derive
 import File.FileID
+import HtmlToTxt
 import KontraPrelude
 import Log.Identifier
 import MagicHash (MagicHash)
@@ -168,6 +170,21 @@ data Mail = Mail {
 , mailServiceTest :: !Bool
 , mailAttempts    :: !Int32
 } deriving (Eq, Ord, Show)
+
+instance LogObject Mail where
+  logObject Mail{..} = object [
+      identifier_ mailID
+    , "subject" .= filter (not . (`elem` ("\r\n"::String))) mailTitle
+    , "attachments" .= length mailAttachments
+    , "to" .= map addrEmail mailTo
+    , "reply_to" .= case mailReplyTo of
+        Just addr -> addrEmail addr
+        Nothing   -> ""
+    , "content" .= htmlToTxt mailContent
+    ]
+
+instance LogDefaultLabel Mail where
+  logDefaultLabel _ = "mail"
 
 ----------------------------------------
 
