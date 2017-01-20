@@ -1,11 +1,7 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Shake.Oracles where
 
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative
-#endif
 import Data.Maybe
 import Development.Shake
 import Development.Shake.Classes

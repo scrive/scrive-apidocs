@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 -- | Various new-build related utilities.
 --
 
@@ -8,10 +7,6 @@ module Shake.NewBuild (UseNewBuild(..)
                       ,ifNewBuild
                       ,componentTargetPath
                       ,componentBuildRules) where
-
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative
-#endif
 
 import Control.Monad
 import Extra

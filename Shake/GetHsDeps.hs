@@ -1,10 +1,5 @@
-{-# LANGUAGE CPP #-}
 module Shake.GetHsDeps (getHsDeps)
   where
-
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative
-#endif
 
 import Data.List
 import Development.Shake.Util (parseMakefile)
