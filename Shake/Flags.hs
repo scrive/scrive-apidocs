@@ -19,7 +19,7 @@ shakeFlags =
   , Option "" ["lang"]       (reqArg TransifexLang     "LANG") "Language"
   , Option "" ["src-subdir"] (reqArg SrcSubdir         "DIR")
     "Source subdirectory (for hindent/stylish-haskell/hlint)"
-  , Option "" ["new-build"] (noArg  NewBuild)                 "Use 'new-build'."
+  , Option "" ["new-build"] (noArg  NewBuild)                  "Use 'new-build'."
   ]
   where
     noArg  flagVal     = NoArg  (Right flagVal)
