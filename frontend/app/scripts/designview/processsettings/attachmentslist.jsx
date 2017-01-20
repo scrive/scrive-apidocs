@@ -48,6 +48,7 @@ module.exports = React.createClass({
                             if (a !== att ) {
                               attachments.push({
                                 name : att.name(),
+                                add_to_sealed_file: att.isAddToSealedFile(),
                                 required: att.isRequired(),
                                 file_id: att.fileid()
                               })
