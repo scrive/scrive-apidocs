@@ -828,30 +828,34 @@ apiCallV1ReallyDelete did = logDocument did . api $ do
 
 
 -- TODO test case to make sure apiCallV1Get does not update document version (MarkDocumentSeen case)
+-- This function intentionally does not use withDocument function family for db doc locking.
+-- This handler is purely read-only, so no need for locking.
+-- Because of no locking, this will not have to wait in kontrakcja, while cron is sealing document,
+-- which makes signing process a lot faster in retail pos applications
 apiCallV1Get :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Get did = logDocument did . api $ do
   (msignatorylink :: Maybe SignatoryLinkID) <- readField "signatoryid"
   mmagichashh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msignatorylink
-  withDocumentID did $ case (msignatorylink,mmagichashh) of
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  case (msignatorylink,mmagichashh) of
     (Just slid,Just mh) -> do
-       sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
+       sl <- maybe (throwM $ SomeDBExtraException $ serverError "No document found") return  $ getSigLinkFor slid doc
        when (signatorymagichash sl /= mh) $ throwM . SomeDBExtraException $ serverError "No document found"
-       switchLang . getLang =<< theDocument
+       switchLang $ getLang doc
 
-       Ok <$> (documentJSONV1 Nothing False (signatoryisauthor sl) (Just sl) =<< theDocument)
+       Ok <$> (documentJSONV1 Nothing False (signatoryisauthor sl) (Just sl) doc)
     _ -> do
       (user, _actor, external) <- getAPIUser APIDocCheck
-      msiglink <- getSigLinkFor user <$> theDocument
-      mauser <- theDocument >>= \d -> case (join $ maybesignatory <$> getAuthorSigLink d) of
+      let msiglink = getSigLinkFor user doc
+      mauser <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
                      Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
                      _ -> return Nothing
 
-      haspermission <- theDocument >>= \d -> return $
-                          isJust msiglink
-                       || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared d))
+      haspermission <- return $ isJust msiglink
+                       || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
       if (haspermission)
         then do
-          Ok <$> (documentJSONV1 (Just user) external ((userid <$> mauser) == (Just $ userid user)) msiglink =<< theDocument)
+          Ok <$> (documentJSONV1 (Just user) external ((userid <$> mauser) == (Just $ userid user)) msiglink doc)
         else throwM . SomeDBExtraException $ serverError "You do not have right to access document"
 
 -- Return evidence attachments for document
