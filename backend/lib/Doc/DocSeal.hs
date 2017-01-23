@@ -75,8 +75,8 @@ import qualified Doc.SealSpec as Seal
 import qualified HostClock.Model as HC
 
 personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
-                    => TimeZoneName -> SignatoryIdentifierMap -> CheckboxImagesMapping-> SignatoryLink -> m Seal.Person
-personFromSignatory tz sim checkboxMapping signatory = do
+                    => String -> TimeZoneName -> SignatoryIdentifierMap -> CheckboxImagesMapping-> SignatoryLink -> m Seal.Person
+personFromSignatory inputpath tz sim checkboxMapping signatory = do
     emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
     stime <- case  maybesigninfo signatory of
                   Nothing -> return ""
@@ -93,7 +93,7 @@ personFromSignatory tz sim checkboxMapping signatory = do
                             then renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
                          else return ""
     fields <- fieldsFromSignatory checkboxMapping signatory
-    highlightedImages <- mapM highlightedImageFromHighlightedPage (signatoryhighlightedpages signatory)
+    highlightedImages <- mapM (highlightedImageFromHighlightedPage inputpath) (signatoryhighlightedpages signatory)
     return $ Seal.Person { Seal.fullname           = fromMaybe "" $ signatoryIdentifier sim (signatorylinkid signatory) emptyNamePlaceholder
                          , Seal.company            = getCompanyName signatory
                          , Seal.email              = getEmail signatory
@@ -114,9 +114,9 @@ personFromSignatory tz sim checkboxMapping signatory = do
                          }
 
 personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
-                          =>  TimeZoneName -> SignatoryIdentifierMap -> CheckboxImagesMapping -> SignatoryLink -> m Seal.Person
-personExFromSignatoryLink tz sim checkboxMapping sl@SignatoryLink{..} = do
-  person <- personFromSignatory tz sim checkboxMapping sl
+                          => String -> TimeZoneName -> SignatoryIdentifierMap -> CheckboxImagesMapping -> SignatoryLink -> m Seal.Person
+personExFromSignatoryLink inputpath tz sim checkboxMapping sl@SignatoryLink{..} = do
+  person <- personFromSignatory inputpath tz sim checkboxMapping sl
   return person {
        Seal.emailverified    = signatorylinkdeliverymethod == EmailDelivery
      , Seal.fullnameverified = False
@@ -192,13 +192,18 @@ fieldsFromSignatory checkboxMapping SignatoryLink{signatoryfields} =
                  , Seal.keyColor         = Just (255,255,255) -- white is transparent
                  }
 
-highlightedImageFromHighlightedPage :: forall m. (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => HighlightedPage -> m Seal.HighlightedImage
-highlightedImageFromHighlightedPage hp = do
-  content <- getFileIDContents $ highlightedPageFileID hp
-  return Seal.HighlightedImage {
-      Seal.hiPage =  highlightedPagePage hp
-    , Seal.hiImage = content
-    }
+highlightedImageFromHighlightedPage :: forall m. (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => String -> HighlightedPage -> m Seal.HighlightedImage
+highlightedImageFromHighlightedPage inputpath HighlightedPage{..} = do
+  pdfContent <- liftBase $ BS.readFile inputpath
+  content <- getFileIDContents highlightedPageFileID
+  mMaskedContent <- clipHighlightImageFromPage pdfContent content (fromIntegral highlightedPagePage)
+  case mMaskedContent of
+    Nothing -> internalError
+    Just maskedContent ->
+      return Seal.HighlightedImage {
+          Seal.hiPage  = highlightedPagePage
+        , Seal.hiImage = maskedContent
+        }
 
 listAttachmentsFromDocument :: Document -> [(SignatoryAttachment,SignatoryLink)]
 listAttachmentsFromDocument document =
@@ -394,19 +399,19 @@ sealSpecFromDocument checkboxMapping hostpart document elog offsets eotData cont
                                , Seal.histaddress = maybe "" show $ evIP4 ev
                                }
 
-  persons <- sequence $ [ personExFromSignatoryLink (documenttimezonename document) sim checkboxMapping s
+  persons <- sequence $ [ personExFromSignatoryLink inputpath (documenttimezonename document) sim checkboxMapping s
                     | s <- documentsignatorylinks document
                     , signatoryispartner $ s
                 ]
 
-  secretaries <- sequence $ [ personFromSignatory (documenttimezonename document) sim checkboxMapping $ s
+  secretaries <- sequence $ [ personFromSignatory inputpath (documenttimezonename document) sim checkboxMapping $ s
                     | s <- documentsignatorylinks document
                     , not . signatoryispartner $ s
                 ]
 
   initiator <- if (signatoryispartner authorsiglink)
                 then return Nothing
-                else Just <$> (personFromSignatory (documenttimezonename document) sim checkboxMapping authorsiglink)
+                else Just <$> (personFromSignatory inputpath (documenttimezonename document) sim checkboxMapping authorsiglink)
 
   let initials = intercalate ", " $ catMaybes
                    [ siInitials <$> Map.lookup (signatorylinkid s) sim

@@ -51,7 +51,6 @@ var classNames = require("classnames");
         <div className={divClass}>
           <div>
             <img className="img-doc" src={this.props.imgUrl} />
-            <div className="img-doc-checkmark check-done" />
           </div>
           <div className="status-box">
             <div className="status">

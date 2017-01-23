@@ -128,6 +128,7 @@
 "_signViewSigAttachmentBoxChooseFile":"Lataa liite",
 "_signViewSignatoriesTitle":"Osapuolet",
 "_signWithSMSPin":"Allekirjoita tekstiviestin PIN-koodilla",
+"_signatoryMessageDeliveryProblem":"",
 "_signatoryMessageIfElse":"Lähetetty",
 "_signatoryMessageIfSignatoryDeliveredEmail":"Toimitettu",
 "_signatoryMessageIfSignatoryReaddate":"Sähköposti on avattu",

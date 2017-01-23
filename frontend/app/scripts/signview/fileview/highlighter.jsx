@@ -8,7 +8,7 @@ import Drawing from "../drawing/drawing";
 import vars from "../../../less/signview/vars.less";
 
 const OPACITY_RATE = vars.highlightingCanvasOpacity;
-const DRAWING_COLOR = "#00FFFF";
+const DRAWING_COLOR = "#00DED9";
 const LINE_WIDTH_BASE = 6;
 const CANVAS_WIDTH_BASE = 950;
 

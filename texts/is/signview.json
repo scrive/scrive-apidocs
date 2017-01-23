@@ -128,6 +128,7 @@
 "_signViewSigAttachmentBoxChooseFile":"Hlaða viðhengi upp",
 "_signViewSignatoriesTitle":"Aðilar",
 "_signWithSMSPin":"Skrifa undir með PIN-númeri í textaskilaboðum",
+"_signatoryMessageDeliveryProblem":"",
 "_signatoryMessageIfElse":"Sent",
 "_signatoryMessageIfSignatoryDeliveredEmail":"Afhent",
 "_signatoryMessageIfSignatoryReaddate":"Tölvupóstur opnaður",

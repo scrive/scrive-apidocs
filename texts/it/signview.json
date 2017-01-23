@@ -128,6 +128,7 @@
 "_signViewSigAttachmentBoxChooseFile":"Carica allegato",
 "_signViewSignatoriesTitle":"Parti",
 "_signWithSMSPin":"Accedi con PIN via SMS",
+"_signatoryMessageDeliveryProblem":"",
 "_signatoryMessageIfElse":"Inviato",
 "_signatoryMessageIfSignatoryDeliveredEmail":"Consegnato",
 "_signatoryMessageIfSignatoryReaddate":"Email aperta",

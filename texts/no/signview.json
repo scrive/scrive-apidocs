@@ -128,6 +128,7 @@
 "_signViewSigAttachmentBoxChooseFile":"Last opp vedlegg",
 "_signViewSignatoriesTitle":"Parter",
 "_signWithSMSPin":"Signer med PIN fra SMS",
+"_signatoryMessageDeliveryProblem":"",
 "_signatoryMessageIfElse":"Sendt",
 "_signatoryMessageIfSignatoryDeliveredEmail":"Levert",
 "_signatoryMessageIfSignatoryReaddate":"E-post åpnet",

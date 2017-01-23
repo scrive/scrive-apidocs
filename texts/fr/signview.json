@@ -128,6 +128,7 @@
 "_signViewSigAttachmentBoxChooseFile":"Télécharger la pièce jointe",
 "_signViewSignatoriesTitle":"Parties",
 "_signWithSMSPin":"Connectez-vous à partir du code PIN reçu par SMS",
+"_signatoryMessageDeliveryProblem":"",
 "_signatoryMessageIfElse":"Envoyé",
 "_signatoryMessageIfSignatoryDeliveredEmail":"Transmis",
 "_signatoryMessageIfSignatoryReaddate":"Mail ouvert",
