@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module DB.Derive (
     newtypeDeriveUnderlyingReadShow
   , jsonFromSQL
@@ -31,11 +30,7 @@ newtypeDeriveUnderlyingReadShow :: Name -> Q [Dec]
 newtypeDeriveUnderlyingReadShow t = do
   info <- reify t
   case info of
-#if MIN_VERSION_template_haskell(2,11,0)
     TyConI (NewtypeD _ name _ _ tcon _) -> do
-#else
-    TyConI (NewtypeD _ name _ tcon _) -> do
-#endif
       let con = case tcon of
             RecC c _    -> c
             NormalC c _ -> c
@@ -44,21 +39,13 @@ newtypeDeriveUnderlyingReadShow t = do
       s' <- newName "s"
       v' <- newName "v"
       return [
-#if MIN_VERSION_template_haskell(2,11,0)
         InstanceD Nothing [] (AppT (ConT ''Read) (ConT name)) [
-#else
-        InstanceD [] (AppT (ConT ''Read) (ConT name)) [
-#endif
             FunD 'readsPrec [
               Clause [VarP p', VarP s']
                 (NormalB (InfixE (Just (AppE (VarE 'first) (ConE con))) (VarE 'fmap) (Just (AppE (AppE (VarE 'readsPrec) (VarE p')) (VarE s'))))) []
               ]
             ]
-#if MIN_VERSION_template_haskell(2,11,0)
         , InstanceD Nothing [] (AppT (ConT ''Show) (ConT name)) [
-#else
-        , InstanceD [] (AppT (ConT ''Show) (ConT name)) [
-#endif
             FunD 'showsPrec [
               Clause [VarP p', ConP con [VarP v']]
                 (NormalB (AppE (AppE (VarE 'showsPrec) (VarE p')) (VarE v'))) []
