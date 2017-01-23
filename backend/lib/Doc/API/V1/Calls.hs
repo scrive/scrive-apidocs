@@ -830,27 +830,18 @@ apiCallV1ReallyDelete did = logDocument did . api $ do
 -- TODO test case to make sure apiCallV1Get does not update document version (MarkDocumentSeen case)
 apiCallV1Get :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Get did = logDocument did . api $ do
-  ctx <- getContext
   (msignatorylink :: Maybe SignatoryLinkID) <- readField "signatoryid"
   mmagichashh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msignatorylink
   withDocumentID did $ case (msignatorylink,mmagichashh) of
     (Just slid,Just mh) -> do
        sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
        when (signatorymagichash sl /= mh) $ throwM . SomeDBExtraException $ serverError "No document found"
-       unlessM ((isTemplate || isPreparation || isClosed) <$> theDocument) $
-         dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
-                       =<< signatoryActor ctx sl
        switchLang . getLang =<< theDocument
 
        Ok <$> (documentJSONV1 Nothing False (signatoryisauthor sl) (Just sl) =<< theDocument)
     _ -> do
       (user, _actor, external) <- getAPIUser APIDocCheck
       msiglink <- getSigLinkFor user <$> theDocument
-      unlessM (((const (isNothing msiglink)) || isPreparation || isClosed  || isTemplate) <$> theDocument) $ do
-          let sl = $fromJust msiglink
-          dbUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
-               =<< signatoryActor ctx sl
-
       mauser <- theDocument >>= \d -> case (join $ maybesignatory <$> getAuthorSigLink d) of
                      Just auid -> dbQuery $ GetUserByIDIncludeDeleted auid
                      _ -> return Nothing
