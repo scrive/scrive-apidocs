@@ -17,12 +17,18 @@ module Doc.Data.SignatoryField (
   , SignatoryTextField(..)
   , SignatoryCheckboxField(..)
   , SignatorySignatureField(..)
+  , FieldIdentity(..)
+  , fieldIdentity
+  , getFieldByIdentity
+  , getTextValueOfField
+  , fieldTextValue
   ) where
 
 import Control.Monad.Catch
 import Data.Data
 import Data.Functor.Invariant
 import Data.Int
+import Data.String.Utils
 import Data.Unjson
 import Database.PostgreSQL.PQTypes hiding (def)
 
@@ -30,6 +36,7 @@ import DB.Derive
 import Doc.SignatoryFieldID
 import File.FileID
 import KontraPrelude
+import Util.HasSomeUserInfo
 
 newtype NameOrder = NameOrder Int16
   deriving (Eq, Ord, Show)
@@ -297,6 +304,13 @@ data SignatorySignatureField = SignatureField {
   , ssfPlacements             :: ![FieldPlacement]
 } deriving (Show, Typeable)
 
+instance HasSomeUserInfo [SignatoryField] where
+  getEmail          = strip . getTextValueOfField EmailFI
+  getFirstName      = getTextValueOfField $ NameFI (NameOrder 1)
+  getLastName       = getTextValueOfField $ NameFI (NameOrder 2)
+  getPersonalNumber = getTextValueOfField PersonalNumberFI
+  getMobile         = getTextValueOfField MobileFI
+
 ---------------------------------
 
 signatoryFieldsSelectors :: [SQL]
@@ -394,3 +408,46 @@ instance CompositeFromSQL SignatoryField where
         , ssfShouldBeFilledBySender = should_be_filled_by_sender
         , ssfPlacements             = placements
       }
+
+data FieldIdentity
+  = NameFI NameOrder
+  | CompanyFI
+  | PersonalNumberFI
+  | CompanyNumberFI
+  | EmailFI
+  | MobileFI
+  | TextFI String
+  | SignatureFI String
+  | CheckboxFI String
+    deriving (Eq, Ord, Show)
+
+fieldIdentity :: SignatoryField -> FieldIdentity
+fieldIdentity (SignatoryNameField f)           = NameFI (snfNameOrder f)
+fieldIdentity (SignatoryCompanyField _)        = CompanyFI
+fieldIdentity (SignatoryPersonalNumberField _) = PersonalNumberFI
+fieldIdentity (SignatoryCompanyNumberField _)  = CompanyNumberFI
+fieldIdentity (SignatoryEmailField _)          = EmailFI
+fieldIdentity (SignatoryMobileField _)         = MobileFI
+fieldIdentity (SignatoryTextField f)           = TextFI (stfName f)
+fieldIdentity (SignatoryCheckboxField f)       = CheckboxFI (schfName f)
+fieldIdentity (SignatorySignatureField f)      = SignatureFI (ssfName f)
+
+getFieldByIdentity :: FieldIdentity -> [SignatoryField] -> Maybe SignatoryField
+getFieldByIdentity fi sfs = find (\sf -> fieldIdentity sf == fi) sfs
+
+fieldTextValue :: SignatoryField -> Maybe String
+fieldTextValue (SignatoryNameField f)           = Just $ snfValue f
+fieldTextValue (SignatoryCompanyField f)        = Just $ scfValue f
+fieldTextValue (SignatoryPersonalNumberField f) = Just $ spnfValue f
+fieldTextValue (SignatoryCompanyNumberField f)  = Just $ scnfValue f
+fieldTextValue (SignatoryEmailField f)          = Just $ sefValue f
+fieldTextValue (SignatoryMobileField f)         = Just $ smfValue f
+fieldTextValue (SignatoryTextField f)           = Just $ stfValue f
+fieldTextValue (SignatoryCheckboxField _)       = Nothing
+fieldTextValue (SignatorySignatureField _)      = Nothing
+
+getTextValueOfField ::  FieldIdentity -> [SignatoryField] -> String
+getTextValueOfField fi sfs =
+  case (getFieldByIdentity fi sfs) of
+    Just f  -> fromMaybe "" (fieldTextValue f)
+    Nothing -> ""

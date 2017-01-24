@@ -29,6 +29,7 @@ import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.UserID
+import Util.HasSomeUserInfo
 
 newtype SignOrder = SignOrder { unSignOrder :: Int32 }
   deriving (Eq, Ord, PQFormat)
@@ -302,6 +303,13 @@ instance Default SignatoryLink where
   , signatorylinkallowshighlighting = False
   , signatorylinkidentifiedtoview = False
   }
+
+instance HasSomeUserInfo SignatoryLink where
+  getEmail          = getEmail . signatoryfields
+  getFirstName      = getFirstName . signatoryfields
+  getLastName       = getLastName . signatoryfields
+  getPersonalNumber = getPersonalNumber . signatoryfields
+  getMobile         = getMobile . signatoryfields
 
 ---------------------------------
 

@@ -1,6 +1,5 @@
 module Doc.Data.SignatoryFieldUtils (
       FieldValue(..)
-    , FieldIdentity(..)
     , getTextValueOfField
     , getFieldByIdentity
     , fieldType
@@ -28,18 +27,6 @@ data FieldValue
   | FileFV (Maybe FileID)
     deriving (Eq, Ord, Show)
 
-data FieldIdentity
-  = NameFI NameOrder
-  | CompanyFI
-  | PersonalNumberFI
-  | CompanyNumberFI
-  | EmailFI
-  | MobileFI
-  | TextFI String
-  | SignatureFI String
-  | CheckboxFI String
-    deriving (Eq, Ord, Show)
-
 fieldType :: SignatoryField -> FieldType
 fieldType = fieldTypeFromFieldIdentity . fieldIdentity
 
@@ -54,38 +41,8 @@ fieldTypeFromFieldIdentity (TextFI _)       = TextFT
 fieldTypeFromFieldIdentity (SignatureFI _)  = SignatureFT
 fieldTypeFromFieldIdentity (CheckboxFI _)   = CheckboxFT
 
-fieldIdentity :: SignatoryField -> FieldIdentity
-fieldIdentity (SignatoryNameField f)           = NameFI (snfNameOrder f)
-fieldIdentity (SignatoryCompanyField _)        = CompanyFI
-fieldIdentity (SignatoryPersonalNumberField _) = PersonalNumberFI
-fieldIdentity (SignatoryCompanyNumberField _)  = CompanyNumberFI
-fieldIdentity (SignatoryEmailField _)          = EmailFI
-fieldIdentity (SignatoryMobileField _)         = MobileFI
-fieldIdentity (SignatoryTextField f)           = TextFI (stfName f)
-fieldIdentity (SignatoryCheckboxField f)       = CheckboxFI (schfName f)
-fieldIdentity (SignatorySignatureField f)      = SignatureFI (ssfName f)
-
-getFieldByIdentity :: FieldIdentity -> [SignatoryField] -> Maybe SignatoryField
-getFieldByIdentity fi sfs = find (\sf -> fieldIdentity sf == fi) sfs
-
 
 -- General utils for fields
-getTextValueOfField ::  FieldIdentity -> [SignatoryField] -> String
-getTextValueOfField fi sfs =
-  case (getFieldByIdentity fi sfs) of
-    Just f  -> fromMaybe "" (fieldTextValue f)
-    Nothing -> ""
-
-fieldTextValue :: SignatoryField -> Maybe String
-fieldTextValue (SignatoryNameField f)           = Just $ snfValue f
-fieldTextValue (SignatoryCompanyField f)        = Just $ scfValue f
-fieldTextValue (SignatoryPersonalNumberField f) = Just $ spnfValue f
-fieldTextValue (SignatoryCompanyNumberField f)  = Just $ scnfValue f
-fieldTextValue (SignatoryEmailField f)          = Just $ sefValue f
-fieldTextValue (SignatoryMobileField f)         = Just $ smfValue f
-fieldTextValue (SignatoryTextField f)           = Just $ stfValue f
-fieldTextValue (SignatoryCheckboxField _)       = Nothing
-fieldTextValue (SignatorySignatureField _)      = Nothing
 
 fieldFileValue :: SignatoryField -> Maybe FileID
 fieldFileValue (SignatoryNameField _)           = Nothing

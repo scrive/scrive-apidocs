@@ -19,9 +19,6 @@ module Util.HasSomeUserInfo (
 import Data.String.Utils
 import Text.StringTemplates.Templates
 
-import Doc.Data.SignatoryField
-import Doc.Data.SignatoryFieldUtils
-import Doc.Data.SignatoryLink
 import KontraPrelude
 import Mails.MailsData
 import Utils.String
@@ -55,17 +52,3 @@ getMailAddress a = MailAddress {
     fullname = getFullName a
   , email    = getEmail a
   }
-
-instance HasSomeUserInfo SignatoryLink where
-  getEmail          = getEmail . signatoryfields
-  getFirstName      = getFirstName . signatoryfields
-  getLastName       = getLastName . signatoryfields
-  getPersonalNumber = getPersonalNumber . signatoryfields
-  getMobile         = getMobile . signatoryfields
-
-instance HasSomeUserInfo [SignatoryField] where
-  getEmail          = strip . getTextValueOfField EmailFI
-  getFirstName      = getTextValueOfField $ NameFI (NameOrder 1)
-  getLastName       = getTextValueOfField $ NameFI (NameOrder 2)
-  getPersonalNumber = getTextValueOfField PersonalNumberFI
-  getMobile         = getTextValueOfField MobileFI
