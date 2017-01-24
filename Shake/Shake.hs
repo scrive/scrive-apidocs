@@ -5,8 +5,8 @@ import Data.Maybe
 import Development.Shake
 import Development.Shake.FilePath
 
+import Shake.Cabal
 import Shake.Flags
-import Shake.GetCabalDeps
 import Shake.GetHsDeps
 import Shake.NewBuild
 import Shake.Oracles
@@ -96,7 +96,8 @@ main = do
   hsDeps       <- getHsDeps "Shake/Shake.hs"
   ver          <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
   -- Dependency information needed by our rules.
-  hsSourceDirs <- getHsSourceDirs "kontrakcja.cabal"
+  pkgDesc      <- parseCabalFile "kontrakcja.cabal"
+  hsSourceDirs <- getHsSourceDirs pkgDesc
   shakeArgsWith (opts ver) shakeFlags $ \flags targets -> return . Just $ do
     newBuild <- liftIO $ mkUseNewBuild flags
 

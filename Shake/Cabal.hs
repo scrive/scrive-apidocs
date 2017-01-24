@@ -1,7 +1,8 @@
-module Shake.GetCabalDeps (HsSourceDirsMap
-                          ,getHsSourceDirs
-                          ,allHsSourceDirs
-                          ,componentHsSourceDirs) where
+module Shake.Cabal (parseCabalFile
+                   ,HsSourceDirsMap
+                   ,getHsSourceDirs
+                   ,allHsSourceDirs
+                   ,componentHsSourceDirs) where
 
 import Data.List
 import Data.Maybe
@@ -14,12 +15,15 @@ import Distribution.Verbosity (normal)
 
 type HsSourceDirsMap = M.Map String [FilePath]
 
--- | Given a path to a .cabal file, return a component name -> list of
+-- | Parse a .cabal file.
+parseCabalFile :: FilePath -> IO PackageDescription
+parseCabalFile cabalFile =
+  flattenPackageDescription <$> readPackageDescription normal cabalFile
+
+-- | Given a parsed .cabal file, return a component name -> list of
 -- hs-source-dirs map. Default library has an empty component name.
-getHsSourceDirs :: FilePath -> IO HsSourceDirsMap
-getHsSourceDirs cabalFile = do
-  pkgDesc <- flattenPackageDescription `fmap`
-             readPackageDescription normal cabalFile
+getHsSourceDirs :: PackageDescription -> IO HsSourceDirsMap
+getHsSourceDirs pkgDesc = do
   let buildInfos =  [("", libBuildInfo $ lib)
                     | lib <- maybeToList $ library pkgDesc ]
                  ++ [(exeName exe, buildInfo exe)

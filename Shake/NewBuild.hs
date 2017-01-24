@@ -16,8 +16,8 @@ import System.Info (os, arch)
 import System.Process (readProcess)
 import qualified Data.Map as M
 
+import Shake.Cabal
 import Shake.Flags
-import Shake.GetCabalDeps
 import Shake.Utils
 
 -- | Whether new-build mode should be used, plus some settings data.
