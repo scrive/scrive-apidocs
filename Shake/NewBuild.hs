@@ -9,10 +9,13 @@ module Shake.NewBuild (UseNewBuild(..)
                       ,componentBuildRules) where
 
 import Control.Monad
-import Extra
+import Data.Maybe
 import Development.Shake
 import Development.Shake.FilePath
-import System.Info (os, arch)
+import Distribution.PackageDescription hiding (hsSourceDirs)
+import Distribution.Text
+import Distribution.System
+import Extra
 import System.Process (readProcess)
 import qualified Data.Map as M
 
@@ -30,8 +33,8 @@ useNewBuild (UseNewBuild _) = True
 useNewBuild DontUseNewBuild = False
 
 -- | Make a 'UseNewBuild' object from command-line flags.
-mkUseNewBuild :: [ShakeFlag] -> IO UseNewBuild
-mkUseNewBuild flags =
+mkUseNewBuild :: [ShakeFlag] -> PackageDescription -> IO UseNewBuild
+mkUseNewBuild flags pkgDesc =
   if NewBuild `elem` flags
   then do
     cabalVer <- numericVersion "cabal"
@@ -40,13 +43,21 @@ mkUseNewBuild flags =
       putStrLn "Falling back to old code path."
       return DontUseNewBuild
     else
-      UseNewBuild . newBuildBuildDir <$> numericVersion "ghc"
+      UseNewBuild . newBuildBuildDir <$> readGhcInfo
   else return DontUseNewBuild
 
   where
-    numericVersion   prog   = trim <$> readProcess prog ["--numeric-version"] ""
-    newBuildBuildDir ghcVer = "dist-newstyle" </> "build" </> (arch ++ "-" ++ os)
-                              </> ("ghc-" ++ ghcVer) </> "kontrakcja-1.0"
+    numericVersion   prog    = trim <$> readProcess prog ["--numeric-version"] ""
+    readGhcInfo              = M.fromList . read . trim
+                               <$> readProcess "ghc" ["--info"] ""
+    lookupGhcVersion ghcInfo = M.findWithDefault "???" "Project version" ghcInfo
+    lookupGhcTarget  ghcInfo = fromMaybe "???" . join .
+                               fmap (fmap display . platformFromTriple) $
+                               M.lookup "Target platform" ghcInfo
+    newBuildBuildDir ghcInfo = "dist-newstyle" </> "build"
+                              </> (lookupGhcTarget ghcInfo)
+                              </> ("ghc-" ++ lookupGhcVersion ghcInfo)
+                              </> (display . package $ pkgDesc)
 
 -- | Branch based on whether new-build is enabled.
 ifNewBuild :: UseNewBuild -> (FilePath -> m a) -> m a -> m a

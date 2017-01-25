@@ -99,7 +99,7 @@ main = do
   pkgDesc      <- parseCabalFile "kontrakcja.cabal"
   hsSourceDirs <- getHsSourceDirs pkgDesc
   shakeArgsWith (opts ver) shakeFlags $ \flags targets -> return . Just $ do
-    newBuild <- liftIO $ mkUseNewBuild flags
+    newBuild <- liftIO $ mkUseNewBuild flags pkgDesc
 
     if null targets then want ["help"] else want targets
 
