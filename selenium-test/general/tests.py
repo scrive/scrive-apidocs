@@ -1,14 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions
 
-from scrivepy import _signatory, _field, _document
-
 
 DC = webdriver.DesiredCapabilities
-
-SFT = _field.StandardFieldType
-SigAttachment = _signatory.SignatoryAttachment
-AuthorAttachment = _document.AuthorAttachment
 
 
 def check_basic_sign(test, drv, api):

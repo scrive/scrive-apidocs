@@ -1,9 +1,9 @@
-from scrivepy import _signatory, _field, _document, _field_placement
-
-SigAttachment = _signatory.SignatoryAttachment
-AuthorAttachment = _document.AuthorAttachment
-Signature = _field.SignatureField
-Placement = _field_placement.FieldPlacement
+from scrivepy import (
+    AuthorAttachment,
+    FieldPlacement as Placement,
+    SignatoryAttachment as SigAttachment,
+    SignatureField as Signature
+)
 
 
 def check_language_tst(test, drv, api):

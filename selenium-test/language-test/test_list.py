@@ -2,7 +2,7 @@ import os
 
 import tests
 from make_drivers import generate_tests
-from scrivepy._document import Language
+from scrivepy import Language
 from selenium import webdriver
 
 

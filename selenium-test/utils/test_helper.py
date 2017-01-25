@@ -7,7 +7,7 @@ from selenium import webdriver
 
 import utils
 from driver_wrapper import SeleniumDriverWrapper
-from scrivepy import _signatory, _document
+from scrivepy import Language, Signatory
 
 
 class TestHelper(object):
@@ -42,7 +42,7 @@ class TestHelper(object):
         '''
         Create standard signatory.
         '''
-        signatory = _signatory.Signatory()
+        signatory = Signatory()
         signatory.invitation_delivery_method = 'api'
         signatory.confirmation_delivery_method = 'none'
         signatory.full_name = full_name
@@ -55,7 +55,7 @@ class TestHelper(object):
         doc = self._api.create_document_from_file(self.PDF_PATH)
         doc.title = title
         lang = self._driver._lang if self._driver else 'en'
-        doc.language = _document.Language(lang)
+        doc.language = Language(lang)
 
         doc.author.invitation_delivery_method = 'pad'
         doc.author.confirmation_delivery_method = 'none'
