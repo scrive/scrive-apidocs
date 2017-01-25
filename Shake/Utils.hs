@@ -1,9 +1,11 @@
 module Shake.Utils ((%>>>)
+                   ,langEnv
                    ,needPatternsInDirectories
-                   ,langEnv) where
+                   ,ordNub) where
 
-import Development.Shake
 import Control.Monad
+import qualified Data.Set as Set
+import Development.Shake
 
 -- * Utilities
 
@@ -35,3 +37,10 @@ infix 1 %>>>
 
 langEnv :: [CmdOption]
 langEnv = [AddEnv "LANG" "en_US.UTF-8", AddEnv "LC_ALL" "en_US.UTF-8"]
+
+ordNub :: (Ord a) => [a] -> [a]
+ordNub l = go Set.empty l
+  where
+    go _ [] = []
+    go s (x:xs) = if x `Set.member` s then go s xs
+                                      else x : go (Set.insert x s) xs

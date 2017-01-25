@@ -76,9 +76,9 @@ componentTargetPath (UseNewBuild buildDir) componentName =
 
 -- | For each exe/test-suite/benchmark component in the .cabal file,
 -- add a rule for building the corresponding executable.
-componentBuildRules :: UseNewBuild -> HsSourceDirsMap -> Rules ()
+componentBuildRules :: UseNewBuild -> HsSourceDirs -> Rules ()
 componentBuildRules newBuild hsSourceDirs = do
-  forM_ (M.keys hsSourceDirs) $ \componentName ->
+  forM_ (allComponentNames hsSourceDirs) $ \componentName ->
     if componentName /= ""
     then (componentTargetPath newBuild componentName) %> \_ ->
       -- Assumes that all sources of a component are in its hs-source-dirs.

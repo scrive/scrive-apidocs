@@ -162,7 +162,7 @@ main = do
 -- * Server
 
 -- | Server build rules
-serverBuildRules :: UseNewBuild -> HsSourceDirsMap -> Rules ()
+serverBuildRules :: UseNewBuild -> HsSourceDirs -> Rules ()
 serverBuildRules newBuild hsSourceDirs =
   ifNewBuild newBuild (serverNewBuildRules hsSourceDirs)
                       (serverOldBuildRules hsSourceDirs)
@@ -178,7 +178,7 @@ getCabalConfigureFlags = do
               else flags
   return flags'
 
-serverNewBuildRules :: HsSourceDirsMap -> FilePath -> Rules ()
+serverNewBuildRules :: HsSourceDirs -> FilePath -> Rules ()
 serverNewBuildRules hsSourceDirs buildDir = do
   let cabalFiles = ["cabal.project.freeze", "kontrakcja.cabal"]
 
@@ -217,7 +217,7 @@ serverNewBuildRules hsSourceDirs buildDir = do
   "cabal-clean" ~> cmd "rm -rf dist-newstyle"
 
 
-serverOldBuildRules :: HsSourceDirsMap -> Rules ()
+serverOldBuildRules :: HsSourceDirs -> Rules ()
 serverOldBuildRules hsSourceDirs = do
   let cabalFiles = ["cabal.config", "kontrakcja.cabal"]
 
@@ -325,11 +325,11 @@ serverTestRules newBuild = do
          ++ "coverage-reports kontrakcja-test.tix") []
       removeFilesAfter "coverage-reports" ["//*"]
 
-needServerHaskellFiles :: HsSourceDirsMap -> Action ()
+needServerHaskellFiles :: HsSourceDirs -> Action ()
 needServerHaskellFiles hsSourceDirs =
   needPatternsInDirectories ["//*.hs"] (allHsSourceDirs hsSourceDirs)
 
-serverFormatLintRules :: UseNewBuild -> HsSourceDirsMap -> [ShakeFlag]
+serverFormatLintRules :: UseNewBuild -> HsSourceDirs -> [ShakeFlag]
                           -> Rules ()
 serverFormatLintRules newBuild hsSourceDirs flags = do
   let srcSubdirs = case [subdir | SrcSubdir subdir <- flags]
