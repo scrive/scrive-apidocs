@@ -153,11 +153,9 @@ staticRoutes production = choice
      , allLangDirs $ dir "login" $ hGet $ toK0 $ LinkLoginDirect <$> ctxlang <$> getContext -- Drop this after EE is migrated
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
      , allLangDirs $ dir "signup"      $ hGetAllowHttp $ toK0 $ LinkSignup <$> ctxlang <$> getContext -- Drop this after EE is migrated
-     , allLangDirs $ dir "signup"      $ hPostNoXTokenHttp $ toK0 $ apiCallSignup -- Drop handler after this comment gets to prod, and EE routs gets fixed to use API
      , allLangDirs $ dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
      , allLangDirs $ dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
-     , allLangDirs $ dir "mynewaccount"  $ hGet $ toK2 $ UserControl.handleAccessNewAccountGet
-     , allLangDirs $ dir "mynewaccount"  $ hPostNoXToken $ toK2 $ UserControl.handleAccessNewAccountPost
+     , allLangDirs $ dir "mynewaccount"  $ hGet $ toK2 $ \(_::String) (_::String) -> return LinkArchive
      , allLangDirs $ dir "accountsetup"  $ hGet $ toK3 $ UserControl.handleAccountSetupGet
      , dir "accountsetup"  $ hPostNoXToken $ toK3 $ UserControl.handleAccountSetupPost
 

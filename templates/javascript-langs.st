@@ -484,10 +484,6 @@ javascriptLocalisation =
            , placeholder: "$_changeMobileModalPlaceholder()$"
          }
          , changePhone : "$_changePhone()$"
-         , accessNewAccountModal: {
-             body: "$_accessNewAccountBody()$"
-           , button: "$_accessNewAccountButton()$"
-         }
          , newPasswordModal: {
              modalNewPasswordViewNewPassword: "$_modalNewPasswordViewNewPassword()$"
            , modalNewPasswordViewRepeatPassword: "$_modalNewPasswordViewRepeatPassword()$"

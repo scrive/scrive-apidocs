@@ -145,19 +145,12 @@ var PasswordValidation = require("./validation.js").PasswordValidation;
 
   var NewPassword = exports.NewPassword = function(args) {
     var model = new NewPasswordModel(args);
-    var view;
-    var options = { model: model,
-                    body: null,
-                    button: localization.newPasswordModal.modalNewPasswordViewFooterSave
-                  };
-
-    if (args.accessnewaccount) {
-      options.body = localization.accessNewAccountModal.body;
-      options.button = localization.accessNewAccountModal.button;
-    }
-
-    options.el = $("<div class='new-password-box'style='width:275px;margin:30px auto'/>");
-    view = new NewPasswordView(options);
+    var view = new NewPasswordView({
+      model: model,
+      body: null,
+      el : $("<div class='new-password-box'style='width:275px;margin:30px auto'/>"),
+      button: localization.newPasswordModal.modalNewPasswordViewFooterSave
+    });
     this.el = function() {return $(view.el);};
   };
 

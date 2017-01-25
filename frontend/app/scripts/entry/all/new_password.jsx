@@ -5,16 +5,8 @@ var Track = require("../../common/track");
 
 $(function () {
   var linkchangepassword = fromTemplate.linkchangepassword;
-  var accessnewaccount = fromTemplate.accessnewaccount;
-
-  if (accessnewaccount) {
-    Track.track("View access new account page", {
-      branded: true
-    });
-  }
 
   $(".global-table-cell").append(new NewPassword({
-    linkchangepassword: linkchangepassword,
-    accessnewaccount: accessnewaccount
+    linkchangepassword: linkchangepassword
   }).el());
 });

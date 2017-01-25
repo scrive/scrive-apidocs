@@ -46,7 +46,6 @@ data KontraLink
     | LinkUserAdmin UserID
     | LinkCompanyAdmin CompanyID
     | LinkPasswordReminder UserID MagicHash
-    | LinkAccessNewAccount UserID MagicHash
     | LinkAccountCreated Lang UserID MagicHash SignupMethod -- email
     | LoopBack
     | LinkDaveDocument DocumentID
@@ -99,7 +98,6 @@ instance Show KontraLink where
     showsPrec _ (LinkUserAdmin userId) = (++) $ "/adminonly/useradmin/"++show userId
     showsPrec _ (LinkCompanyAdmin companyid) = (++) $ "/adminonly/companyadmin/" ++ show companyid
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
-    showsPrec _ (LinkAccessNewAccount aid hash) = (++) $ "/mynewaccount/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccountCreated lang uid hash sm) = (++) $ langFolder lang  ++ "/accountsetup/" ++ show uid ++ "/" ++ show hash ++ "/" ++ show sm
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")

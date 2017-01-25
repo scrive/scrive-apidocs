@@ -38,31 +38,7 @@ $htmlopentag()$
   </div>
 <script type="text/javascript">
   var fromTemplate = {
-    linkchangepassword: "$linkchangepassword$",
-    accessnewaccount: false
-  };
-</script>
-  <script src="$cdnbaseurl$/compiled/all/new_password-$versioncode$.js" crossorigin="anonymous"></script>
-  </body>
-$htmlclosingtag()$
-###
-accessNewAccountPageWithBranding=$doctype()$
-$htmlopentag()$
-  <head>
-    <title>$pagetitle()$</title>
-    $IECompatibilityMetaTag()$
-    $standardHeaderContents(nobranding='true')$
-    <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
-  </head>
-  <body>
-  <div class='global-table'>
-      <div class="global-table-cell">
-      </div>
-  </div>
-<script type="text/javascript">
-  var fromTemplate = {
-    linkchangepassword: "$linkchangepassword$",
-    accessnewaccount: true
+    linkchangepassword: "$linkchangepassword$"
   };
 </script>
   <script src="$cdnbaseurl$/compiled/all/new_password-$versioncode$.js" crossorigin="anonymous"></script>

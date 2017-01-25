@@ -100,7 +100,6 @@ kontraTables =
   , tableTempCredential
   , tableTempPrivileges
   , tablePasswordReminders
-  , tableAccessNewAccounts
   , tableEmailChangeRequests
   , tableUserAccountRequests
   , tablePaymentPlans

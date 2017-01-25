@@ -85,7 +85,6 @@ Library
                  , API.V2.Monad
                  , API.V2.Parameters
                  , API.V2.User
-                 , ActionQueue.AccessNewAccount
                  , ActionQueue.Core
                  , ActionQueue.EmailChangeRequest
                  , ActionQueue.Monad

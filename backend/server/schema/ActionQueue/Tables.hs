@@ -3,21 +3,6 @@ module ActionQueue.Tables where
 import DB
 import KontraPrelude
 
-tableAccessNewAccounts :: Table
-tableAccessNewAccounts = tblTable {
-    tblName = "access_new_accounts"
-  , tblVersion = 2
-  , tblColumns = [
-      tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
-    , tblColumn { colName = "expires", colType = TimestampWithZoneT, colNullable = False }
-    , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
-    ]
-  , tblPrimaryKey = pkOnColumn "user_id"
-  , tblForeignKeys = [
-      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
-    ]
-  }
-
 tablePasswordReminders :: Table
 tablePasswordReminders = tblTable {
     tblName = "password_reminders"
