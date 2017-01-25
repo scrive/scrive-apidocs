@@ -5,6 +5,7 @@ module Mails.MailsData (
 ) where
 
 import Data.Aeson
+import Data.Aeson.Types
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 
@@ -48,30 +49,42 @@ instance ToJSON Mail where
     , "attachments" .= map attachmentToJson attachments
     ] ++ jsonizeMailInfo mailInfo
     where
-      jsonizeMailInfo (Invitation did slid) = [
-          "type" .= ("invitation"::T.Text)
-        , identifier_ did
-        , identifier_ slid
-        ]
-      jsonizeMailInfo (DocumentRelatedMail did) = [
-          "type" .= ("document_related_mail"::T.Text)
-        , identifier_ did
-        ]
-      jsonizeMailInfo (SMSPinSendout slid) = [
-          "type" .= ("sms_pin_sendout"::T.Text)
-        , identifier_ slid
-        ]
-      jsonizeMailInfo None = []
 
-      attachmentToJson (name, acontent) = object [
-          "name" .= name
-        , "storage_type" .= case acontent of
-          Left _ -> "direct"
-          Right fid -> object [identifier_ fid]
-        ]
+jsonizeMailInfo :: MessageData -> [Pair]
+jsonizeMailInfo (Invitation did slid) = [
+    "type" .= ("invitation"::T.Text)
+  , identifier_ did
+  , identifier_ slid
+  ]
+jsonizeMailInfo (DocumentRelatedMail did) = [
+    "type" .= ("document_related_mail"::T.Text)
+  , identifier_ did
+  ]
+jsonizeMailInfo (SMSPinSendout slid) = [
+    "type" .= ("sms_pin_sendout"::T.Text)
+  , identifier_ slid
+  ]
+jsonizeMailInfo None = []
+
+attachmentToJson :: (String, Either BS.ByteString FileID) -> Value
+attachmentToJson (name, acontent) = object [
+    "name" .= name
+  , "storage_type" .= case acontent of
+    Left _ -> "direct"
+    Right fid -> object [identifier_ fid]
+  ]
 
 instance LogObject Mail where
-  logObject = toJSON
+  logObject Mail{..} = object $ [
+      "to" .= to
+    , "originator" .= originator
+    , "originator_email" .= originatorEmail
+    , "reply_to" .= replyTo
+    , "subject" .= title
+    , "content" .= content
+    , "attachment_count" .= length attachments
+    , "attachments" .= map attachmentToJson attachments
+    ] ++ jsonizeMailInfo mailInfo
 
 instance LogDefaultLabel Mail where
   logDefaultLabel _ = "mail"

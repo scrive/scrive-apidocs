@@ -175,7 +175,7 @@ instance LogObject Mail where
   logObject Mail{..} = object [
       identifier_ mailID
     , "subject" .= filter (not . (`elem` ("\r\n"::String))) mailTitle
-    , "attachments" .= length mailAttachments
+    , "attachment_count" .= length mailAttachments
     , "to" .= map addrEmail mailTo
     , "reply_to" .= case mailReplyTo of
         Just addr -> addrEmail addr
