@@ -9,7 +9,7 @@ import requests
 from selenium import webdriver
 
 from driver_wrapper import SeleniumDriverWrapper
-from scrivepy._scrive import Scrive
+from scrivepy import Scrive
 from test_helper import TestHelper
 
 

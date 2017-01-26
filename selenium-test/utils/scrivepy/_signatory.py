@@ -115,12 +115,14 @@ class Signatory(_object.ScriveObject):
                             authentication_method=
                             tvu.instance(AM, enum=True),
                             viewer=tvu.instance(bool),
+                            allows_highlighting=tvu.instance(bool),
                             sign_success_redirect_url=MaybeUnicode,
                             rejection_redirect_url=MaybeUnicode)
     def __init__(self, sign_order=1, viewer=False,
                  invitation_delivery_method=IDM.email,
                  confirmation_delivery_method=CDM.email,
                  authentication_method=AM.standard,
+                 allows_highlighting=False,
                  sign_success_redirect_url=None,
                  rejection_redirect_url=None):
         super(Signatory, self).__init__()
@@ -135,6 +137,7 @@ class Signatory(_object.ScriveObject):
         self._invitation_delivery_method = invitation_delivery_method
         self._confirmation_delivery_method = confirmation_delivery_method
         self._viewer = viewer
+        self._allows_highlighting = allows_highlighting
         self._author = False
         self._eleg_mismatch_message = None
         self._sign_time = None
@@ -165,6 +168,7 @@ class Signatory(_object.ScriveObject):
                               json[u'confirmationdelivery']),
                           authentication_method=AM(json[u'authentication']),
                           viewer=not json[u'signs'],
+                          allows_highlighting=json[u'allowshighlighting'],
                           sign_success_redirect_url=
                           json[u'signsuccessredirect'],
                           rejection_redirect_url=json[u'rejectredirect'])
@@ -225,6 +229,7 @@ class Signatory(_object.ScriveObject):
                   self.confirmation_delivery_method.value,
                   u'authentication': self.authentication_method.value,
                   u'signs': not self.viewer,
+                  u'allowshighlighting': self.allows_highlighting,
                   u'author': self.author,
                   u'signsuccessredirect': self.sign_success_redirect_url,
                   u'rejectredirect': self.rejection_redirect_url}
@@ -317,6 +322,15 @@ class Signatory(_object.ScriveObject):
     @tvu.validate_and_unify(viewer=tvu.instance(bool))
     def viewer(self, viewer):
         self._viewer = viewer
+
+    @scrive_property
+    def allows_highlighting(self):
+        return self._allows_highlighting
+
+    @allows_highlighting.setter
+    @tvu.validate_and_unify(allows_highlighting=tvu.instance(bool))
+    def allows_highlighting(self, allows_highlighting):
+        self._allows_highlighting = allows_highlighting
 
     @scrive_property
     def author(self):
