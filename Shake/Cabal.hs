@@ -4,17 +4,20 @@ module Shake.Cabal (parseCabalFile
                    ,libExeComponentNames, testComponentNames, benchComponentNames
                    ,allHsSourceDirs, componentHsSourceDirs
                    ,libExeHsSourceDirs, testHsSourceDirs, benchHsSourceDirs
+                   ,allExtensions
                    ) where
 
 import qualified Data.Map                                      as M
 import           Data.Maybe
 import           Data.Monoid
 import           Distribution.PackageDescription               hiding
-                                                                (hsSourceDirs)
+                                                               (hsSourceDirs
+                                                               ,allExtensions)
 import qualified Distribution.PackageDescription               as PkgDesc
 import           Distribution.PackageDescription.Configuration
 import           Distribution.PackageDescription.Parse
 import           Distribution.Verbosity                        (normal)
+import           Language.Haskell.Extension
 
 import Shake.Utils
 
@@ -113,3 +116,8 @@ allComponentNames :: HsSourceDirs -> [String]
 allComponentNames hsSourceDirs = libExeComponentNames hsSourceDirs
                               ++ testComponentNames   hsSourceDirs
                               ++ benchComponentNames  hsSourceDirs
+
+-- | List all extensions used by this package.
+allExtensions :: PackageDescription -> [Extension]
+allExtensions pkgDesc = ordNub. concatMap PkgDesc.allExtensions . allBuildInfo $
+                        pkgDesc
