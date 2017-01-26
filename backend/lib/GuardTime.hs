@@ -115,8 +115,6 @@ data VerifyResult = Valid GuardtimeSignature |
 
 instance LogObject VerifyResult where
   logObject = jsonToAeson . toJSValue
-
-instance LogDefaultLabel VerifyResult where
   logDefaultLabel _ = "guard_time_verify_result"
 
 data GuardtimeSignature =

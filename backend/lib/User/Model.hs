@@ -155,8 +155,6 @@ instance LogObject User where
     , "email" .= useremail userinfo
     , "name" .= (userfstname userinfo <> " " <> usersndname userinfo)
     ]
-
-instance LogDefaultLabel User where
   logDefaultLabel _ = "user"
 
 data UserInfo = UserInfo {

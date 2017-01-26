@@ -18,6 +18,14 @@ data FileStorage =
   | FileStorageAWS String AESConf -- ^ url inside bucket, aes key/iv
     deriving (Eq, Ord, Show, Typeable)
 
+instance LogObject FileStorage where
+  logObject (FileStorageMemory _)  = object ["type" .= ("in_memory" :: String)]
+  logObject (FileStorageAWS url _) = object [
+      "type" .= ("aws_bucket" :: String)
+    , "url"  .= url
+    ]
+  logDefaultLabel _ = "file_storage"
+
 data File = File {
     fileid       :: FileID
   , filename     :: String
@@ -42,7 +50,6 @@ instance LogObject File where
       identifier_ fileid
     , "name" .= filename
     , "size" .= filesize
+    , logPair_ filestorage
     ]
-
-instance LogDefaultLabel File where
   logDefaultLabel _ = "file"

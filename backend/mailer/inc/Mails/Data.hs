@@ -18,11 +18,11 @@ module Mails.Data (
 
 import Control.Monad.Catch
 import Data.Aeson.Types
-import Data.ByteString (ByteString)
 import Data.Data
 import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
+import qualified Data.ByteString as B
 import qualified Data.Text as T
 
 import DB.Derive
@@ -104,6 +104,9 @@ instance Unjson Address where
        addrEmail
        "Email address"
 
+instance ToJSON Address where
+  toJSON = unjsonToJSON unjsonDef
+
 instance PQFormat Address where
   pqFormat = const $ pqFormat (undefined::String)
 instance FromSQL Address where
@@ -124,10 +127,10 @@ instance ToSQL [Address] where
 
 data Attachment = Attachment {
   attName    :: !String
-, attContent :: !(Either ByteString FileID)
+, attContent :: !(Either B.ByteString FileID)
 } deriving (Eq, Ord, Show)
 
-type instance CompositeRow Attachment = (String, Maybe ByteString, Maybe FileID)
+type instance CompositeRow Attachment = (String, Maybe B.ByteString, Maybe FileID)
 
 instance PQFormat Attachment where
   pqFormat = const "%mail_attachment"
@@ -140,6 +143,20 @@ instance CompositeFromSQL Attachment where
     (Nothing, Just fid) -> Right fid
     _ -> $unexpectedError "impossible due to the check constraint"
   }
+
+instance LogObject Attachment where
+  logObject Attachment{..} = object $
+    ["name" .= attName] ++
+    case attContent of
+      Left bs -> [
+          "type" .= ("string" :: String)
+        , "bytesize" .= (B.length bs)
+        ]
+      Right fid -> [
+          "type" .= ("file_id" :: String)
+        , identifier_ fid
+        ]
+  logDefaultLabel _ = "attachment"
 
 newtype XSMTPAttrs = XSMTPAttrs { fromXSMTPAttrs :: [(String, String)] }
   deriving (Eq, Ord, Show, Data, Typeable)
@@ -174,16 +191,17 @@ data Mail = Mail {
 instance LogObject Mail where
   logObject Mail{..} = object [
       identifier_ mailID
-    , "subject" .= filter (not . (`elem` ("\r\n"::String))) mailTitle
+    , "attachments" .= map logObject mailAttachments
     , "attachment_count" .= length mailAttachments
-    , "to" .= map addrEmail mailTo
-    , "reply_to" .= case mailReplyTo of
-        Just addr -> addrEmail addr
-        Nothing   -> ""
+    , "attempt_count" .= mailAttempts
     , "content" .= htmlToTxt mailContent
+    , "from" .= mailFrom
+    , "reply_to" .= fromMaybe Null (toJSON <$> mailReplyTo)
+    , "service_test" .= mailServiceTest
+    , "subject" .= mailTitle
+    , "to" .= mailTo
+    , "x_smtp_attrs" .= fromXSMTPAttrs mailXSMTPAttrs
     ]
-
-instance LogDefaultLabel Mail where
   logDefaultLabel _ = "mail"
 
 ----------------------------------------

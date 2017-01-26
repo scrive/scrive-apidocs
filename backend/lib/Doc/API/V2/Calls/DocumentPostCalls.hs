@@ -108,13 +108,12 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
     dbUpdate $ DocumentFromTemplate actor
     dbUpdate $ SetDocumentUnsavedDraft False
   -- Result
-    newDocid <- documentid <$> theDocument
+    newDoc <- theDocument
     logInfo "New document created from template" $ object [
-        identifier ("new_"<>)      newDocid
-      , identifier ("template_"<>) did
+        logPair ("new_"<>)      newDoc
+      , logPair ("template_"<>) template
       ]
-    Created <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
-
+    return $ Created (unjsonDocument $ documentAccessForUser user newDoc, newDoc)
 
 docApiV2Update :: Kontrakcja m => DocumentID -> m Response
 docApiV2Update did = logDocument did . api $ do

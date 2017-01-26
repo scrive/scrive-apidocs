@@ -191,8 +191,6 @@ data AuthResponse = AuthResponse {
 
 instance LogObject AuthResponse where
   logObject = toJSON
-
-instance LogDefaultLabel AuthResponse where
   logDefaultLabel _ = "auth_response"
 
 instance ToJSON AuthResponse where
@@ -227,6 +225,7 @@ instance LogObject SignResponse where
     , "order_ref" .= srsOrderRef
     , "auto_start_token" .= unAutoStartToken srsAutoStartToken
     ]
+  logDefaultLabel _ = "sign_response"
 
 -- | Retrieve 'SignResponse' from SOAP response.
 xpSignResponse :: XMLParser SignResponse

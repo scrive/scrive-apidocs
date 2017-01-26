@@ -215,12 +215,12 @@ apiCallV1CreateFromTemplate did = logDocument did . api $ do
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
-    newDocid <- documentid <$> theDocument
+    newDoc <- theDocument
     logInfo "New document created from template" $ object [
-        identifier ("new_"<>)      newDocid
-      , identifier ("template_"<>) did
+        logPair ("new_"<>)      newDoc
+      , logPair ("template_"<>) template
       ]
-    Created <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
+    Created <$> documentJSONV1 (Just user) True True Nothing newDoc
 
 apiCallV1Clone :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Clone did = logDocument did . api $ do

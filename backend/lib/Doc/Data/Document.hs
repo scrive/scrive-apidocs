@@ -227,8 +227,6 @@ instance LogObject Document where
     , "title" .= documenttitle
     , "status" .= show documentstatus
     ]
-
-instance LogDefaultLabel Document where
   logDefaultLabel _ = "document"
 
 instance Default Document where

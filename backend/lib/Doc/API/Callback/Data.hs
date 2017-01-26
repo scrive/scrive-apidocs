@@ -39,7 +39,6 @@ instance LogObject DocumentAPICallback where
       identifier_ dacID
     , identifier_ dacApiVersion
     , "url" .= dacURL
+    , "attempt_count" .= dacAttempts
     ]
-
-instance LogDefaultLabel DocumentAPICallback where
   logDefaultLabel _ = "document_api_callback"

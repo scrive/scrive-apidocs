@@ -81,11 +81,8 @@ instance LogObject OAuthTempCredRequest where
   logObject OAuthTempCredRequest{..} = object [
       "callback" .= show tcCallback
     , "api_token" .= show tcAPIToken
-    , "api_secret" .= show tcAPISecret
     , "privileges" .= map show tcPrivileges
     ]
-
-instance LogDefaultLabel OAuthTempCredRequest where
   logDefaultLabel _ = "temp_cred_request"
 
 data OAuthTokenRequest = OAuthTokenRequest {

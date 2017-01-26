@@ -33,9 +33,10 @@ data DocumentAutomaticReminder = DocumentAutomaticReminder {
   } deriving (Show,Typeable)
 
 instance LogObject DocumentAutomaticReminder where
-  logObject dar = object [ identifier_ $ reminderDocumentID dar ]
-
-instance LogDefaultLabel DocumentAutomaticReminder where
+  logObject dar = object [
+      identifier_ $ reminderDocumentID dar
+    , "sent_time" .= reminderSentTime dar
+    ]
   logDefaultLabel _ = "document_automatic_reminder"
 
 documentAutomaticReminder :: Action DocumentID DocumentAutomaticReminder DocumentID Scheduler

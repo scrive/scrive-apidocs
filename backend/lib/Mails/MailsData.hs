@@ -76,17 +76,15 @@ attachmentToJson (name, acontent) = object [
 
 instance LogObject Mail where
   logObject Mail{..} = object $ [
-      "to" .= to
-    , "originator" .= originator
-    , "originator_email" .= originatorEmail
-    , "reply_to" .= replyTo
-    , "subject" .= title
-    , "content" .= content
-    , "attachment_count" .= length attachments
+      "attachment_count" .= length attachments
     , "attachments" .= map attachmentToJson attachments
+    , "content" .= content
+    , "from" .= originatorEmail
+    , "originator" .= originator
+    , "reply_to" .= fromMaybe Null (toJSON <$> replyTo)
+    , "subject" .= title
+    , "to" .= to
     ] ++ jsonizeMailInfo mailInfo
-
-instance LogDefaultLabel Mail where
   logDefaultLabel _ = "mail"
 
 emptyMail :: Mail

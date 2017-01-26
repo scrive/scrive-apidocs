@@ -119,8 +119,6 @@ instance ToJSON ShortMessage where
 
 instance LogObject ShortMessage where
   logObject = toJSON
-
-instance LogDefaultLabel ShortMessage where
   logDefaultLabel _ = "short_message"
 
 ----------------------------------------
