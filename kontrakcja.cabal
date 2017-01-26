@@ -925,8 +925,8 @@ Executable messenger-server
                     , TypeSynonymInstances
                     , UndecidableInstances
 
-Executable kontrakcja-test
-
+Test-suite kontrakcja-test
+  Type:           exitcode-stdio-1.0
   Hs-source-dirs: backend/cron/schema
                   backend/mailer/schema
                   backend/messenger/schema
