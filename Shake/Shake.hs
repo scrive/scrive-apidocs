@@ -410,7 +410,7 @@ frontendBuildRules newBuild = do
 
   "_build/grunt-build" %>>> do
     need [ "_build/npm-install"
-         , componentTargetPath newBuild "localization"
+         , "localization"
          ]
     alwaysRerun
     command ([EchoStdout True, Cwd "frontend"] ++ langEnv) "grunt"
