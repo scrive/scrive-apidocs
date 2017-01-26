@@ -1,23 +1,21 @@
-module Shake.Cabal (parseCabalFile
-                   ,HsSourceDirs, getHsSourceDirs
+module Shake.Cabal (CabalFile(packageId, allExtensions), parseCabalFile
                    ,allComponentNames
                    ,libExeComponentNames, testComponentNames, benchComponentNames
                    ,allHsSourceDirs, componentHsSourceDirs
                    ,libExeHsSourceDirs, allLibExeHsSourceDirs
                    ,testHsSourceDirs, allTestHsSourceDirs
                    ,benchHsSourceDirs, allBenchSourceDirs
-                   ,allExtensions
                    ) where
 
 import qualified Data.Map                                      as M
 import           Data.Maybe
 import           Data.Monoid
 import           Distribution.PackageDescription               hiding
-                                                               (hsSourceDirs
-                                                               ,allExtensions)
+                                                               (allExtensions)
 import qualified Distribution.PackageDescription               as PkgDesc
 import           Distribution.PackageDescription.Configuration
 import           Distribution.PackageDescription.Parse
+import           Distribution.Text                             (display)
 import           Distribution.Verbosity                        (normal)
 import           Language.Haskell.Extension
 
@@ -26,23 +24,25 @@ import Shake.Utils
 -- | A component name -> list of hs-source-dirs map.
 type HsSourceDirsMap = M.Map String [FilePath]
 
--- | All HsSourceDirsMaps in a package description, grouped by
--- component type. Default library in 'libExeHsSourceDirs' has an
--- empty component name.
-data HsSourceDirs = HsSourceDirs {
+-- | All data that we need from a .cabal file.
+data CabalFile = CabalFile {
+  -- | Package identifier of this package (e.g. 'foo-2.1').
+  packageId             :: String,
+  -- | List all extensions used by this package.
+  allExtensions         :: [Extension],
+  -- | hs-source-dirs of libraries and exes, grouped per
+  -- component. The default library has name "".
   libExeHsSourceDirsMap :: HsSourceDirsMap,
+  -- | hs-source-dirs of test suites.
   testHsSourceDirsMap   :: HsSourceDirsMap,
+  -- | hs-source-dirs of benchmarks.
   benchHsSourceDirsMap  :: HsSourceDirsMap
   }
 
 -- | Parse a .cabal file.
-parseCabalFile :: FilePath -> IO PackageDescription
-parseCabalFile cabalFile =
-  flattenPackageDescription <$> readPackageDescription normal cabalFile
-
--- | Given a parsed .cabal file, return a 'HsSourceDirs' record.
-getHsSourceDirs :: PackageDescription -> IO HsSourceDirs
-getHsSourceDirs pkgDesc = do
+parseCabalFile :: FilePath -> IO CabalFile
+parseCabalFile cabalFile = do
+  pkgDesc <- flattenPackageDescription <$> readPackageDescription normal cabalFile
   let libExeBuildInfos =  [("", libBuildInfo $ lib)
                           | lib <- maybeToList $ library pkgDesc ]
                        ++ [(exeName exe, buildInfo exe)
@@ -51,48 +51,51 @@ getHsSourceDirs pkgDesc = do
                           | test <- testSuites pkgDesc]
       benchBuildInfos  =  [(benchmarkName bench, benchmarkBuildInfo bench)
                           | bench <- benchmarks pkgDesc]
-      srcDirs bis      =  M.fromList [(name, ordNub . PkgDesc.hsSourceDirs $ bi)
+      srcDirs bis      =  M.fromList [(name, ordNub . hsSourceDirs $ bi)
                                      | (name, bi) <- bis]
-  return $! HsSourceDirs (srcDirs libExeBuildInfos) (srcDirs testBuildInfos)
-                         (srcDirs benchBuildInfos)
+      exts             = ordNub . concatMap PkgDesc.allExtensions . allBuildInfo $
+                         pkgDesc
+      pkgid            = display . package $ pkgDesc
+  return $ CabalFile pkgid exts (srcDirs libExeBuildInfos) (srcDirs testBuildInfos)
+                     (srcDirs benchBuildInfos)
 
 componentHsSourceDirs' :: String -> HsSourceDirsMap -> [FilePath]
 componentHsSourceDirs' compName = fromMaybe [] . M.lookup compName
 
 -- | Return the list of hs-source-dirs for a given library or executable.
-libExeHsSourceDirs :: String -> HsSourceDirs -> [FilePath]
-libExeHsSourceDirs compName hsSourceDirs =
-  componentHsSourceDirs' compName (libExeHsSourceDirsMap hsSourceDirs)
+libExeHsSourceDirs :: String -> CabalFile -> [FilePath]
+libExeHsSourceDirs compName cabalFile =
+  componentHsSourceDirs' compName (libExeHsSourceDirsMap cabalFile)
 
 -- | Return the list of hs-source-dirs for all libraries and executables.
-allLibExeHsSourceDirs :: HsSourceDirs -> [FilePath]
+allLibExeHsSourceDirs :: CabalFile -> [FilePath]
 allLibExeHsSourceDirs = allHsSourceDirs' . libExeHsSourceDirsMap
 
 -- | Return the list of hs-source-dirs for a given test suite.
-testHsSourceDirs :: String -> HsSourceDirs -> [FilePath]
-testHsSourceDirs compName hsSourceDirs =
-  componentHsSourceDirs' compName (testHsSourceDirsMap hsSourceDirs)
+testHsSourceDirs :: String -> CabalFile -> [FilePath]
+testHsSourceDirs compName cabalFile =
+  componentHsSourceDirs' compName (testHsSourceDirsMap cabalFile)
 
 -- | Return the list of hs-source-dirs for all test suites.
-allTestHsSourceDirs :: HsSourceDirs -> [FilePath]
+allTestHsSourceDirs :: CabalFile -> [FilePath]
 allTestHsSourceDirs = allHsSourceDirs' . testHsSourceDirsMap
 
 -- | Return the list of hs-source-dirs for a given benchmark.
-benchHsSourceDirs :: String -> HsSourceDirs -> [FilePath]
-benchHsSourceDirs compName hsSourceDirs =
-  componentHsSourceDirs' compName (benchHsSourceDirsMap hsSourceDirs)
+benchHsSourceDirs :: String -> CabalFile -> [FilePath]
+benchHsSourceDirs compName cabalFile =
+  componentHsSourceDirs' compName (benchHsSourceDirsMap cabalFile)
 
 -- | Return the list of hs-source-dirs for all benchmarks.
-allBenchSourceDirs :: HsSourceDirs -> [FilePath]
+allBenchSourceDirs :: CabalFile -> [FilePath]
 allBenchSourceDirs = allHsSourceDirs' . benchHsSourceDirsMap
 
 -- | Return the list of hs-source-dirs for a given component.
-componentHsSourceDirs :: String -> HsSourceDirs -> [FilePath]
-componentHsSourceDirs compName hsSourceDirs =
+componentHsSourceDirs :: String -> CabalFile -> [FilePath]
+componentHsSourceDirs compName cabalFile =
   fromMaybe [] . getFirst . foldMap nonEmpty $
-    [libExeHsSourceDirs compName hsSourceDirs
-    ,testHsSourceDirs   compName hsSourceDirs
-    ,benchHsSourceDirs  compName hsSourceDirs]
+    [libExeHsSourceDirs compName cabalFile
+    ,testHsSourceDirs   compName cabalFile
+    ,benchHsSourceDirs  compName cabalFile]
   where
     -- All components in Cabal must currently have unique names, but we handle
     -- the case of possible duplicates anyway, giving priority to
@@ -104,34 +107,29 @@ allHsSourceDirs' :: HsSourceDirsMap -> [FilePath]
 allHsSourceDirs' = ordNub . concat . M.elems
 
 -- | Return the list of hs-source-dirs for all components.
-allHsSourceDirs :: HsSourceDirs -> [FilePath]
-allHsSourceDirs hsSourceDirs = ordNub . concat $
-  map allHsSourceDirs' [libExeHsSourceDirsMap hsSourceDirs
-                       ,testHsSourceDirsMap   hsSourceDirs
-                       ,benchHsSourceDirsMap  hsSourceDirs]
+allHsSourceDirs :: CabalFile -> [FilePath]
+allHsSourceDirs cabalFile = ordNub . concat $
+  map allHsSourceDirs' [libExeHsSourceDirsMap cabalFile
+                       ,testHsSourceDirsMap   cabalFile
+                       ,benchHsSourceDirsMap  cabalFile]
 
 componentNames :: HsSourceDirsMap -> [String]
 componentNames = M.keys
 
 -- | List all names of library/executable components.
-libExeComponentNames :: HsSourceDirs -> [String]
+libExeComponentNames :: CabalFile -> [String]
 libExeComponentNames = componentNames . libExeHsSourceDirsMap
 
 -- | List all names of test suite components.
-testComponentNames :: HsSourceDirs -> [String]
+testComponentNames :: CabalFile -> [String]
 testComponentNames = componentNames . testHsSourceDirsMap
 
 -- | List all names of benchmark components.
-benchComponentNames :: HsSourceDirs -> [String]
+benchComponentNames :: CabalFile -> [String]
 benchComponentNames = componentNames . benchHsSourceDirsMap
 
 -- | List the names of all components.
-allComponentNames :: HsSourceDirs -> [String]
-allComponentNames hsSourceDirs = libExeComponentNames hsSourceDirs
-                              ++ testComponentNames   hsSourceDirs
-                              ++ benchComponentNames  hsSourceDirs
-
--- | List all extensions used by this package.
-allExtensions :: PackageDescription -> [Extension]
-allExtensions pkgDesc = ordNub. concatMap PkgDesc.allExtensions . allBuildInfo $
-                        pkgDesc
+allComponentNames :: CabalFile -> [String]
+allComponentNames cabalFile = libExeComponentNames cabalFile
+                              ++ testComponentNames   cabalFile
+                              ++ benchComponentNames  cabalFile

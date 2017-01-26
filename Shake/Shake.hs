@@ -4,7 +4,6 @@ import Control.Monad
 import Data.Maybe
 import Development.Shake
 import Development.Shake.FilePath
-import Distribution.PackageDescription (PackageDescription)
 import Distribution.Text (display)
 
 import Shake.Cabal
@@ -98,10 +97,9 @@ main = do
   hsDeps       <- getHsDeps "Shake/Shake.hs"
   ver          <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
   -- Dependency information needed by our rules.
-  pkgDesc      <- parseCabalFile "kontrakcja.cabal"
-  hsSourceDirs <- getHsSourceDirs pkgDesc
+  cabalFile    <- parseCabalFile "kontrakcja.cabal"
   shakeArgsWith (opts ver) shakeFlags $ \flags targets -> return . Just $ do
-    newBuild <- liftIO $ mkUseNewBuild flags pkgDesc
+    newBuild <- liftIO $ mkUseNewBuild flags cabalFile
 
     if null targets then want ["help"] else want targets
 
@@ -152,10 +150,10 @@ main = do
       removeFilesAfter "_shake/" ["//*"]
 
     -- * Rules
-    componentBuildRules   newBuild hsSourceDirs
-    serverBuildRules      newBuild hsSourceDirs
-    serverTestRules       newBuild hsSourceDirs
-    serverFormatLintRules newBuild hsSourceDirs pkgDesc flags
+    componentBuildRules   newBuild cabalFile
+    serverBuildRules      newBuild cabalFile
+    serverTestRules       newBuild cabalFile
+    serverFormatLintRules newBuild cabalFile flags
     frontendBuildRules    newBuild
     frontendTestRules     newBuild
     distributionRules     newBuild
@@ -164,10 +162,10 @@ main = do
 -- * Server
 
 -- | Server build rules
-serverBuildRules :: UseNewBuild -> HsSourceDirs -> Rules ()
-serverBuildRules newBuild hsSourceDirs =
-  ifNewBuild newBuild (serverNewBuildRules hsSourceDirs)
-                      (serverOldBuildRules hsSourceDirs)
+serverBuildRules :: UseNewBuild -> CabalFile -> Rules ()
+serverBuildRules newBuild cabalFile =
+  ifNewBuild newBuild (serverNewBuildRules cabalFile)
+                      (serverOldBuildRules cabalFile)
 
 getCabalConfigureFlags :: Action [String]
 getCabalConfigureFlags = do
@@ -180,8 +178,8 @@ getCabalConfigureFlags = do
               else flags
   return flags'
 
-serverNewBuildRules :: HsSourceDirs -> FilePath -> Rules ()
-serverNewBuildRules hsSourceDirs buildDir = do
+serverNewBuildRules :: CabalFile -> FilePath -> Rules ()
+serverNewBuildRules cabalFile buildDir = do
   let cabalFiles = ["cabal.project.freeze", "kontrakcja.cabal"]
 
   "_build/cabal-update" %>>> do
@@ -203,12 +201,12 @@ serverNewBuildRules hsSourceDirs buildDir = do
       alwaysRerun
       -- Force GHC to rebuild the TH-containing module.
       cmd "touch" ("backend" </> "lib" </> "Version.hs")
-    needServerHaskellFiles hsSourceDirs
+    needServerHaskellFiles cabalFile
     cmd (EchoStdout True) "cabal new-build"
 
   "_build/cabal-haddock.tar.gz" %> \_ -> do
     need ["_build/cabal-build"]
-    needServerHaskellFiles hsSourceDirs
+    needServerHaskellFiles cabalFile
     -- Limit to library from package, due to Cabal bug:
     -- https://github.com/haskell/cabal/issues/1919
     command_ [] "cabal" ["act-as-setup", "--", "haddock", "--internal"
@@ -219,8 +217,8 @@ serverNewBuildRules hsSourceDirs buildDir = do
   "cabal-clean" ~> cmd "rm -rf dist-newstyle"
 
 
-serverOldBuildRules :: HsSourceDirs -> Rules ()
-serverOldBuildRules hsSourceDirs = do
+serverOldBuildRules :: CabalFile -> Rules ()
+serverOldBuildRules cabalFile = do
   let cabalFiles = ["cabal.config", "kontrakcja.cabal"]
 
   "cabal.sandbox.config" %> \_ -> do
@@ -270,12 +268,12 @@ serverOldBuildRules hsSourceDirs = do
 
   "_build/cabal-build" %>>> do
     need ["dist/setup-config"]
-    needServerHaskellFiles hsSourceDirs
+    needServerHaskellFiles cabalFile
     cmd (EchoStdout True) "cabal build"
 
   "_build/cabal-haddock.tar.gz" %> \_ -> do
     need ["_build/cabal-build"]
-    needServerHaskellFiles hsSourceDirs
+    needServerHaskellFiles cabalFile
     -- Limit to library from package, due to Cabal bug:
     -- https://github.com/haskell/cabal/issues/1919
     command_ [] "cabal" ["haddock","--internal"]
@@ -284,8 +282,8 @@ serverOldBuildRules hsSourceDirs = do
   "cabal-clean" ~> cmd "cabal clean"
 
 -- | Server test rules
-serverTestRules :: UseNewBuild -> HsSourceDirs -> Rules ()
-serverTestRules newBuild hsSourceDirs = do
+serverTestRules :: UseNewBuild -> CabalFile -> Rules ()
+serverTestRules newBuild cabalFile = do
   "kontrakcja_test.conf" %> \_ -> do
     tc <- askOracle (TeamCity ())
     when tc $ do
@@ -293,9 +291,9 @@ serverTestRules newBuild hsSourceDirs = do
       copyFile' testConfFile "kontrakcja_test.conf"
 
   "run-server-tests" ~> do
-    let testSuiteNames    = testComponentNames hsSourceDirs
+    let testSuiteNames    = testComponentNames cabalFile
         testSuiteExePaths = map (componentTargetPath newBuild) testSuiteNames
-    needTestSuiteHaskellFiles hsSourceDirs
+    needTestSuiteHaskellFiles cabalFile
     need ["kontrakcja_test.conf"]
     -- removeFilesAfter is only performed on a successfull build, this file
     -- needs to be cleaned regardless otherwise successive builds will fail
@@ -331,24 +329,23 @@ serverTestRules newBuild hsSourceDirs = do
 needHaskellFilesInDirectories :: [FilePath] -> Action ()
 needHaskellFilesInDirectories = needPatternsInDirectories ["//*.hs"]
 
-needAllHaskellFiles :: HsSourceDirs -> Action ()
+needAllHaskellFiles :: CabalFile -> Action ()
 needAllHaskellFiles = needHaskellFilesInDirectories . allHsSourceDirs
 
-needServerHaskellFiles :: HsSourceDirs -> Action ()
+needServerHaskellFiles :: CabalFile -> Action ()
 needServerHaskellFiles = needHaskellFilesInDirectories . allLibExeHsSourceDirs
 
-needTestSuiteHaskellFiles :: HsSourceDirs -> Action ()
+needTestSuiteHaskellFiles :: CabalFile -> Action ()
 needTestSuiteHaskellFiles = needHaskellFilesInDirectories . allTestHsSourceDirs
 
-serverFormatLintRules :: UseNewBuild -> HsSourceDirs -> PackageDescription
-                          -> [ShakeFlag] -> Rules ()
-serverFormatLintRules newBuild hsSourceDirs pkgDesc flags = do
+serverFormatLintRules :: UseNewBuild -> CabalFile -> [ShakeFlag] -> Rules ()
+serverFormatLintRules newBuild cabalFile flags = do
   let srcSubdirs = case [subdir | SrcSubdir subdir <- flags]
-                   of [] -> allHsSourceDirs hsSourceDirs
+                   of [] -> allHsSourceDirs cabalFile
                       ds -> ds
 
   "_build/hs-import-order" %>>> do
-    needAllHaskellFiles hsSourceDirs
+    needAllHaskellFiles cabalFile
     need [componentTargetPath newBuild "sort_imports"]
     hsImportOrderAction True srcSubdirs
 
@@ -367,7 +364,7 @@ serverFormatLintRules newBuild hsSourceDirs pkgDesc flags = do
       onEachHsFile subdir ["hindent", "-XNoPatternSynonyms"]
 
   "list-extensions" ~> do
-    forM_ (allExtensions pkgDesc) $ \ext ->
+    forM_ (allExtensions cabalFile) $ \ext ->
       putNormal . display $ ext
 
   "stylish-haskell" ~> do

@@ -12,7 +12,6 @@ import Control.Monad
 import Data.Maybe
 import Development.Shake
 import Development.Shake.FilePath
-import Distribution.PackageDescription hiding (hsSourceDirs)
 import Distribution.Text
 import Distribution.System
 import Extra
@@ -33,8 +32,8 @@ useNewBuild (UseNewBuild _) = True
 useNewBuild DontUseNewBuild = False
 
 -- | Make a 'UseNewBuild' object from command-line flags.
-mkUseNewBuild :: [ShakeFlag] -> PackageDescription -> IO UseNewBuild
-mkUseNewBuild flags pkgDesc =
+mkUseNewBuild :: [ShakeFlag] -> CabalFile -> IO UseNewBuild
+mkUseNewBuild flags cabalFile =
   if NewBuild `elem` flags
   then do
     cabalVer <- numericVersion "cabal"
@@ -57,7 +56,7 @@ mkUseNewBuild flags pkgDesc =
     newBuildBuildDir ghcInfo = "dist-newstyle" </> "build"
                               </> (lookupGhcTarget ghcInfo)
                               </> ("ghc-" ++ lookupGhcVersion ghcInfo)
-                              </> (display . package $ pkgDesc)
+                              </> (packageId cabalFile)
 
 -- | Branch based on whether new-build is enabled.
 ifNewBuild :: UseNewBuild -> (FilePath -> m a) -> m a -> m a
@@ -76,16 +75,16 @@ componentTargetPath (UseNewBuild buildDir) componentName =
 
 -- | For each exe/test-suite/benchmark component in the .cabal file,
 -- add a rule for building the corresponding executable.
-componentBuildRules :: UseNewBuild -> HsSourceDirs -> Rules ()
-componentBuildRules newBuild hsSourceDirs = do
-  forM_ (allComponentNames hsSourceDirs) $ \componentName ->
+componentBuildRules :: UseNewBuild -> CabalFile -> Rules ()
+componentBuildRules newBuild cabalFile = do
+  forM_ (allComponentNames cabalFile) $ \componentName ->
     if componentName /= ""
     then do
       let targetPath = componentTargetPath newBuild componentName
       componentName ~> need [targetPath]
       targetPath %> \_ ->
         -- Assumes that all sources of a component are in its hs-source-dirs.
-        do let sourceDirs = componentHsSourceDirs componentName hsSourceDirs
+        do let sourceDirs = componentHsSourceDirs componentName cabalFile
            if useNewBuild newBuild
              then need ["cabal.project.local"]
              else need ["dist/setup-config"]
