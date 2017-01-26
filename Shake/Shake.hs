@@ -293,8 +293,7 @@ serverTestRules newBuild cabalFile = do
   "run-server-tests" ~> do
     let testSuiteNames    = testComponentNames cabalFile
         testSuiteExePaths = map (componentTargetPath newBuild) testSuiteNames
-    needTestSuiteHaskellFiles cabalFile
-    need ["kontrakcja_test.conf"]
+    need $ "kontrakcja_test.conf":testSuiteNames
     -- removeFilesAfter is only performed on a successfull build, this file
     -- needs to be cleaned regardless otherwise successive builds will fail
     liftIO $ removeFiles "." ["kontrakcja-test.tix"]
@@ -334,9 +333,6 @@ needAllHaskellFiles = needHaskellFilesInDirectories . allHsSourceDirs
 
 needServerHaskellFiles :: CabalFile -> Action ()
 needServerHaskellFiles = needHaskellFilesInDirectories . allLibExeHsSourceDirs
-
-needTestSuiteHaskellFiles :: CabalFile -> Action ()
-needTestSuiteHaskellFiles = needHaskellFilesInDirectories . allTestHsSourceDirs
 
 serverFormatLintRules :: UseNewBuild -> CabalFile -> [ShakeFlag] -> Rules ()
 serverFormatLintRules newBuild cabalFile flags = do
