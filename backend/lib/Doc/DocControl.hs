@@ -512,13 +512,13 @@ checkFileAccessWith :: Kontrakcja m =>
 checkFileAccessWith fid msid mmh mdid mattid =
   case (msid, mmh, mdid, mattid) of
     (Just sid, Just mh, Just did,_) -> do
-       (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
-        sl <- guardJustM $ getSigLinkFor sid <$> theDocument
-        whenM (signatoryNeedsToIdentifyToView sl) $ do
-          unless (isAuthor sl) $ do
-            internalError
-        indoc <- dbQuery $ FileInDocument did fid
-        when (not indoc) $ internalError
+       doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+       sl <- guardJust $ getSigLinkFor sid doc
+       whenM (signatoryNeedsToIdentifyToView sl) $ do
+         unless (isAuthor sl) $ do
+           internalError
+       indoc <- dbQuery $ FileInDocument did fid
+       when (not indoc) $ internalError
     (_,_,Just did,_) -> guardLoggedInOrThrowInternalError $ do
        _doc <- getDocByDocID did
        indoc <- dbQuery $ FileInDocument did fid
