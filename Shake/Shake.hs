@@ -4,6 +4,8 @@ import Control.Monad
 import Data.Maybe
 import Development.Shake
 import Development.Shake.FilePath
+import Distribution.PackageDescription (PackageDescription)
+import Distribution.Text (display)
 
 import Shake.Cabal
 import Shake.Flags
@@ -153,7 +155,7 @@ main = do
     componentBuildRules   newBuild hsSourceDirs
     serverBuildRules      newBuild hsSourceDirs
     serverTestRules       newBuild
-    serverFormatLintRules newBuild hsSourceDirs flags
+    serverFormatLintRules newBuild hsSourceDirs pkgDesc flags
     frontendBuildRules    newBuild
     frontendTestRules     newBuild
     distributionRules     newBuild
@@ -329,9 +331,9 @@ needServerHaskellFiles :: HsSourceDirs -> Action ()
 needServerHaskellFiles hsSourceDirs =
   needPatternsInDirectories ["//*.hs"] (allHsSourceDirs hsSourceDirs)
 
-serverFormatLintRules :: UseNewBuild -> HsSourceDirs -> [ShakeFlag]
-                          -> Rules ()
-serverFormatLintRules newBuild hsSourceDirs flags = do
+serverFormatLintRules :: UseNewBuild -> HsSourceDirs -> PackageDescription
+                          -> [ShakeFlag] -> Rules ()
+serverFormatLintRules newBuild hsSourceDirs pkgDesc flags = do
   let srcSubdirs = case [subdir | SrcSubdir subdir <- flags]
                    of [] -> allHsSourceDirs hsSourceDirs
                       ds -> ds
@@ -354,6 +356,10 @@ serverFormatLintRules newBuild hsSourceDirs flags = do
   "hindent" ~> do
     forM_ srcSubdirs $ \subdir ->
       onEachHsFile subdir ["hindent", "-XNoPatternSynonyms"]
+
+  "list-extensions" ~> do
+    forM_ (allExtensions pkgDesc) $ \ext ->
+      putNormal . display $ ext
 
   "stylish-haskell" ~> do
     forM_ srcSubdirs $ \subdir ->
