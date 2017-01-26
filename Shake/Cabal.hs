@@ -3,7 +3,9 @@ module Shake.Cabal (parseCabalFile
                    ,allComponentNames
                    ,libExeComponentNames, testComponentNames, benchComponentNames
                    ,allHsSourceDirs, componentHsSourceDirs
-                   ,libExeHsSourceDirs, testHsSourceDirs, benchHsSourceDirs
+                   ,libExeHsSourceDirs, allLibExeHsSourceDirs
+                   ,testHsSourceDirs, allTestHsSourceDirs
+                   ,benchHsSourceDirs, allBenchSourceDirs
                    ,allExtensions
                    ) where
 
@@ -62,15 +64,27 @@ libExeHsSourceDirs :: String -> HsSourceDirs -> [FilePath]
 libExeHsSourceDirs compName hsSourceDirs =
   componentHsSourceDirs' compName (libExeHsSourceDirsMap hsSourceDirs)
 
+-- | Return the list of hs-source-dirs for all libraries and executables.
+allLibExeHsSourceDirs :: HsSourceDirs -> [FilePath]
+allLibExeHsSourceDirs = allHsSourceDirs' . libExeHsSourceDirsMap
+
 -- | Return the list of hs-source-dirs for a given test suite.
 testHsSourceDirs :: String -> HsSourceDirs -> [FilePath]
 testHsSourceDirs compName hsSourceDirs =
   componentHsSourceDirs' compName (testHsSourceDirsMap hsSourceDirs)
 
+-- | Return the list of hs-source-dirs for all test suites.
+allTestHsSourceDirs :: HsSourceDirs -> [FilePath]
+allTestHsSourceDirs = allHsSourceDirs' . testHsSourceDirsMap
+
 -- | Return the list of hs-source-dirs for a given benchmark.
 benchHsSourceDirs :: String -> HsSourceDirs -> [FilePath]
 benchHsSourceDirs compName hsSourceDirs =
   componentHsSourceDirs' compName (benchHsSourceDirsMap hsSourceDirs)
+
+-- | Return the list of hs-source-dirs for all benchmarks.
+allBenchSourceDirs :: HsSourceDirs -> [FilePath]
+allBenchSourceDirs = allHsSourceDirs' . benchHsSourceDirsMap
 
 -- | Return the list of hs-source-dirs for a given component.
 componentHsSourceDirs :: String -> HsSourceDirs -> [FilePath]
@@ -86,15 +100,15 @@ componentHsSourceDirs compName hsSourceDirs =
     nonEmpty [] = First Nothing
     nonEmpty xs = First (Just xs)
 
+allHsSourceDirs' :: HsSourceDirsMap -> [FilePath]
+allHsSourceDirs' = ordNub . concat . M.elems
+
 -- | Return the list of hs-source-dirs for all components.
 allHsSourceDirs :: HsSourceDirs -> [FilePath]
 allHsSourceDirs hsSourceDirs = ordNub . concat $
-  map toDirsList [libExeHsSourceDirsMap hsSourceDirs
-                 ,testHsSourceDirsMap   hsSourceDirs
-                 ,benchHsSourceDirsMap  hsSourceDirs]
-  where
-    toDirsList :: HsSourceDirsMap -> [FilePath]
-    toDirsList hsSrcDirsMap = ordNub . concat . M.elems $ hsSrcDirsMap
+  map allHsSourceDirs' [libExeHsSourceDirsMap hsSourceDirs
+                       ,testHsSourceDirsMap   hsSourceDirs
+                       ,benchHsSourceDirsMap  hsSourceDirs]
 
 componentNames :: HsSourceDirsMap -> [String]
 componentNames = M.keys
