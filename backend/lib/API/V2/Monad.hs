@@ -5,6 +5,7 @@ module API.V2.Monad (
   -- * API Monad runner
   , api
   -- * API Monad utils
+  , apiGuardJust
   , apiGuardJustM
   , apiError
 ) where
@@ -86,6 +87,9 @@ api acc =  (toAPIResponse <$> acc) `catches` [
 
 apiGuardJustM :: (MonadThrow m) => APIError -> m (Maybe a) -> m a
 apiGuardJustM e a = a >>= maybe (apiError e) return
+
+apiGuardJust :: MonadThrow m => APIError -> Maybe a -> m a
+apiGuardJust e = maybe (apiError e) return
 
 apiError :: (MonadThrow m) => APIError -> m a
 apiError e = throwM . SomeDBExtraException $ e

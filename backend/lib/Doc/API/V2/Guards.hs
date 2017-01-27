@@ -20,7 +20,6 @@ module Doc.API.V2.Guards (
 , guardDocumentReadAccess
 ) where
 
-import Control.Conditional (unlessM, whenM)
 import qualified Data.Text as T
 
 import API.V2
@@ -32,7 +31,6 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
-import Doc.DocumentMonad
 import Doc.DocUtils
 import Doc.Model.Query
 import Doc.SignatoryLinkID
@@ -49,47 +47,45 @@ import Util.SignatoryLinkUtils
 -- `documentStateError` when this does not match.
 --
 -- Prefer to use a more specific guard if this satisfies your need.
-guardThatDocumentIs :: (DocumentMonad m, Kontrakcja m) => (Document -> Bool) -> T.Text -> m ()
-guardThatDocumentIs f text = unlessM (f <$> theDocument) $ apiError $ documentStateError text
+guardThatDocumentIs :: Kontrakcja m => (Document -> Bool) -> T.Text -> Document -> m ()
+guardThatDocumentIs f text doc = unless (f doc) $ apiError $ documentStateError text
 
 -- | Guard that the document status matches, otherwise throw a `documentStateError`
-guardDocumentStatus :: (Kontrakcja m, DocumentMonad m) => DocumentStatus -> m ()
-guardDocumentStatus s = unlessM ((\d -> documentstatus d == s) <$> theDocument) $ apiError $ documentStateError errorMsg
+guardDocumentStatus :: Kontrakcja m => DocumentStatus -> Document -> m ()
+guardDocumentStatus s doc = unless (documentstatus doc == s) $ apiError $ documentStateError errorMsg
   where errorMsg = "The document status should be '" <> (T.pack $ show s) <> "'."
 
 -- | Internal function used in all guards on User
 -- Helps code reuse and keep error messages consistent
-guardDocumentAuthorIs :: (Kontrakcja m, DocumentMonad m) => (User -> Bool) -> m ()
-guardDocumentAuthorIs condition = do
+guardDocumentAuthorIs :: Kontrakcja m => (User -> Bool) -> Document -> m ()
+guardDocumentAuthorIs condition doc = do
   let msgNoAuthor = "Document doesn't have author signatory link connected with user account"
-  authorUserId <- apiGuardJustM (serverError msgNoAuthor) $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+  authorUserId <- apiGuardJust (serverError msgNoAuthor) $ (getAuthorSigLink doc >>= maybesignatory)
   let msgNoUser = "Document doesn't have author user account for the author signatory link"
   author <- apiGuardJustM (serverError msgNoUser) $ dbQuery $ GetUserByIDIncludeDeleted authorUserId
   when (not $ condition author) $ do
     apiError documentActionForbidden
 
-guardThatUserIsAuthor :: (DocumentMonad m, Kontrakcja m) => User -> m ()
+guardThatUserIsAuthor :: Kontrakcja m => User -> Document -> m ()
 guardThatUserIsAuthor user = guardDocumentAuthorIs (\a -> userid user == userid a)
 
-guardThatUserIsAuthorOrCompanyAdmin :: (Kontrakcja m, DocumentMonad m) => User -> m ()
+guardThatUserIsAuthorOrCompanyAdmin :: Kontrakcja m => User -> Document -> m ()
 guardThatUserIsAuthorOrCompanyAdmin user = guardDocumentAuthorIs
   (\a -> userid user == userid a
       || (usercompany user == usercompany a && useriscompanyadmin user)
   )
 
-guardThatUserIsAuthorOrDocumentIsShared :: (Kontrakcja m, DocumentMonad m) => User -> m ()
-guardThatUserIsAuthorOrDocumentIsShared user = do
-  doc <- theDocument
+guardThatUserIsAuthorOrDocumentIsShared :: Kontrakcja m => User -> Document -> m ()
+guardThatUserIsAuthorOrDocumentIsShared user doc = do
   guardDocumentAuthorIs (\a -> userid user == userid a
     || (usercompany user == usercompany a && isDocumentShared doc)
-    )
+    ) doc
 
-guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared :: (Kontrakcja m, DocumentMonad m) => User -> m ()
-guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user = do
-  doc <- theDocument
+guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared :: Kontrakcja m => User -> Document -> m ()
+guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc = do
   guardDocumentAuthorIs (\a -> userid user == userid a
     || (usercompany user == usercompany a && (useriscompanyadmin user || isDocumentShared doc))
-    )
+    ) doc
 
 guardThatObjectVersionMatchesIfProvided :: Kontrakcja m => DocumentID -> m ()
 guardThatObjectVersionMatchesIfProvided did = do
@@ -99,21 +95,21 @@ guardThatObjectVersionMatchesIfProvided did = do
     Just ov -> (dbQuery $ CheckDocumentObjectVersionIs did (fromIntegral ov))
       `catchDBExtraException` (\e@DocumentObjectVersionDoesNotMatch {} -> apiError $ documentObjectVersionMismatch e)
 
-guardSignatoryNeedsToIdentifyToView :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
-guardSignatoryNeedsToIdentifyToView slid = do
-  msl <- getSigLinkFor slid <$> theDocument
+guardSignatoryNeedsToIdentifyToView :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
+guardSignatoryNeedsToIdentifyToView slid doc = do
+  let msl = getSigLinkFor slid doc
   identifyToView <- signatoryNeedsToIdentifyToView ($fromJust msl)
   when (identifyToView && (not $ isAuthor msl))
     (apiError $ signatoryStateError "Authorization to view needed before signing")
 
-guardSignatoryHasNotIdentifiedToView :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
-guardSignatoryHasNotIdentifiedToView slid =
-  whenM (signatorylinkidentifiedtoview . $fromJust . getSigLinkFor slid <$> theDocument)
+guardSignatoryHasNotIdentifiedToView :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
+guardSignatoryHasNotIdentifiedToView slid doc =
+  when (signatorylinkidentifiedtoview . $fromJust $ getSigLinkFor slid doc)
     (apiError $ signatoryStateError "The party has already identified to view")
 
-guardCanSetAuthenticationToViewForSignatoryWithValues :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> AuthenticationToViewMethod -> Maybe String -> Maybe String -> m ()
-guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mMobile = do
-  sl <- $fromJust . getSigLinkFor slid <$> theDocument
+guardCanSetAuthenticationToViewForSignatoryWithValues :: Kontrakcja m => SignatoryLinkID -> AuthenticationToViewMethod -> Maybe String -> Maybe String -> Document -> m ()
+guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mMobile doc = do
+  let sl = $fromJust $ getSigLinkFor slid doc
   -- Do not allow mixing of Swedish and Norwegian BankID
   when (authToView == NOBankIDAuthenticationToView && signatorylinkauthenticationtosignmethod sl == SEBankIDAuthenticationToSign)
     (apiError $ signatoryStateError "Can't mix Norwegian and Swedish BankID for the same party")
@@ -140,9 +136,9 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mMobi
     isValidMobileForAuthenticationToView NOBankIDAuthenticationToView mobile = isGood phoneValidation || isEmpty phoneValidation
       where phoneValidation = asValidPhoneForNorwegianBankID mobile
 
-guardCanSetAuthenticationToSignForSignatoryWithValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> AuthenticationToSignMethod -> Maybe String -> Maybe String -> m ()
-guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobile = do
-  sl <- $fromJust . getSigLinkFor slid <$> theDocument
+guardCanSetAuthenticationToSignForSignatoryWithValue :: Kontrakcja m => SignatoryLinkID -> AuthenticationToSignMethod -> Maybe String -> Maybe String -> Document -> m ()
+guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobile doc = do
+  let sl = $fromJust $ getSigLinkFor slid doc
   case authToSign of
     StandardAuthenticationToSign -> return ()
     SEBankIDAuthenticationToSign -> do
@@ -174,25 +170,25 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
             Empty -> return ()
             Good _ -> return ()
 
-guardSignatoryHasNotSigned :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
-guardSignatoryHasNotSigned slid =
-  whenM (hasSigned . $fromJust . getSigLinkFor slid <$> theDocument)
+guardSignatoryHasNotSigned :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
+guardSignatoryHasNotSigned slid doc =
+  when (hasSigned . $fromJust $ getSigLinkFor slid doc)
     (apiError $ signatoryStateError "The signatory has already signed")
 
 -- Checks if document can be strated. Throws matching API exception if it does not
-guardThatDocumentCanBeStarted :: (DocumentMonad m, Kontrakcja m) => m ()
-guardThatDocumentCanBeStarted = do
-    whenM (isTemplate <$> theDocument) $ do
+guardThatDocumentCanBeStarted :: Kontrakcja m => Document -> m ()
+guardThatDocumentCanBeStarted doc = do
+    when (isTemplate doc) $ do
        apiError $ (documentStateError "Document is a template, templates can not be started")
-    unlessM (((all signatoryHasValidDeliverySettings) . documentsignatorylinks) <$> theDocument) $ do
+    unless (all signatoryHasValidDeliverySettings $ documentsignatorylinks doc) $ do
        apiError $ documentStateError "Some parties have invalid email address or mobile number, their invitation 'delivery_method' requires it to be valid and not empty."
-    unlessM (((all signatoryHasValidSSNForIdentifyToView) . documentsignatorylinks) <$> theDocument) $ do
+    unless (all signatoryHasValidSSNForIdentifyToView $ documentsignatorylinks doc) $ do
        apiError $ documentStateError "Some parties have invalid personal numbers, their 'authentication_to_view' requires it to be valid and not empty."
-    unlessM (((all signatoryHasValidAuthSettings) . documentsignatorylinks) <$> theDocument) $ do
+    unless (all signatoryHasValidAuthSettings $ documentsignatorylinks doc) $ do
        apiError $ documentStateError "Some parties have invalid personal numbers, their 'authentication_to_sign' requires it to be valid or empty."
-    unlessM (((all signatoryHasValidMobileForIdentifyToView) . documentsignatorylinks) <$> theDocument) $ do
+    unless (all signatoryHasValidMobileForIdentifyToView $ documentsignatorylinks doc) $ do
        apiError $ documentStateError "Some parties have invalid mobile number and it is required for identification to view document."
-    whenM (isNothing . documentfile <$> theDocument) $ do
+    when (isNothing $ documentfile doc) $ do
        apiError $ documentStateError "Document must have a file before it can be started"
     return ()
  where
@@ -215,10 +211,10 @@ guardThatDocumentCanBeStarted = do
          then isGood resultValidPhone || isEmpty resultValidPhone
          else True
 
-guardThatAllAttachmentsAreAcceptedOrIsAuthor :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [FileID] -> m ()
-guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments = do
-  unlessM (allRequiredAttachmentsAreOnList acceptedAttachments <$> theDocument) $
-    unlessM (isAuthor <$> $fromJust . getSigLinkFor slid <$> theDocument) $ -- Author does not need to accept attachments
+guardThatAllAttachmentsAreAcceptedOrIsAuthor :: Kontrakcja m => SignatoryLinkID -> [FileID] -> Document -> m ()
+guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments doc = do
+  unless (allRequiredAttachmentsAreOnList acceptedAttachments doc) $
+    unless (isAuthor $ $fromJust $ getSigLinkFor slid doc) $ -- Author does not need to accept attachments
       apiError $ (signatoryStateError "Some mandatory author attachments aren't accepted")
 
 -- | For the given DocumentID:
@@ -235,15 +231,14 @@ guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments = do
 -- the API call (e.g. document GET call), but not that this function is focused only
 -- on ability to read document
 
-guardDocumentReadAccess :: Kontrakcja m => DocumentID -> Maybe SignatoryLinkID -> m DocumentAccess
-guardDocumentReadAccess did mslid   = do
-  mSessionSignatory <- maybe (return Nothing) (getDocumentSignatoryMagicHash did) mslid
+guardDocumentReadAccess :: Kontrakcja m => Maybe SignatoryLinkID -> Document -> m DocumentAccess
+guardDocumentReadAccess mslid doc = do
+  mSessionSignatory <- maybe (return Nothing) (getDocumentSignatoryMagicHash $ documentid doc) mslid
   case mSessionSignatory of
-    Just sl -> withDocumentID did (documentAccessForSlid (signatorylinkid sl) <$> theDocument)
-    Nothing -> withDocumentID did $ do
+    Just sl -> return $ documentAccessForSlid (signatorylinkid sl) doc
+    Nothing -> do
       (user,_) <- getAPIUser APIDocCheck
-      doc <- theDocument
       case getSigLinkFor user doc of
         Just _ -> return ()
-        Nothing -> guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user
+        Nothing -> guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
       return $ documentAccessForUser user doc

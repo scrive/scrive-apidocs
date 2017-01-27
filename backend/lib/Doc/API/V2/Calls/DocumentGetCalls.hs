@@ -74,9 +74,9 @@ docApiV2List = api $ do
 docApiV2Get :: Kontrakcja m => DocumentID -> m Response
 docApiV2Get did = logDocument did . api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
-  da <- guardDocumentReadAccess did mslid
-  withDocumentID did $ do
-    Ok <$> (\d -> (unjsonDocument $ da,d)) <$> theDocument
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  da <- guardDocumentReadAccess mslid doc
+  return $ Ok (unjsonDocument da, doc)
 
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History did = logDocument did . api $ do
@@ -100,8 +100,8 @@ docApiV2History did = logDocument did . api $ do
 docApiV2EvidenceAttachments :: Kontrakcja m => DocumentID -> m Response
 docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ do
   (user,_) <- getAPIUser APIDocCheck
-  guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user
   doc <- theDocument
+  guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
   eas <- EvidenceAttachments.extractAttachmentsList doc
   let headers = mkHeaders [("Content-Type","application/json; charset=UTF-8")]
   return $ Ok $ Response 200 headers nullRsFlags (evidenceAttachmentsToJSONBS (documentid doc) eas) Nothing
@@ -110,10 +110,10 @@ docApiV2FilesMain :: Kontrakcja m => DocumentID -> String -> m Response
 docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
   download <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
-  _ <- guardDocumentReadAccess did mslid
-  when (isJust mslid) (withDocumentID did $ guardSignatoryNeedsToIdentifyToView $ $fromJust mslid)
   fileContents <- withDocumentID did $ do
     doc <- theDocument
+    _ <- guardDocumentReadAccess mslid doc
+    when (isJust mslid) $ guardSignatoryNeedsToIdentifyToView ($fromJust mslid) doc
     case documentstatus doc of
       Closed -> do
         mFile <- fileFromMainFile (documentsealedfile doc)
@@ -135,9 +135,9 @@ docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
 docApiV2FilesGet did fid filename = logDocumentAndFile did fid . api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
   download <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
-  _ <- guardDocumentReadAccess did mslid
-  when (isJust mslid) (withDocumentID did $ guardSignatoryNeedsToIdentifyToView $ $fromJust mslid)
   doc <- dbQuery $ GetDocumentByDocumentID did
+  _ <- guardDocumentReadAccess mslid doc
+  when (isJust mslid) $ guardSignatoryNeedsToIdentifyToView ($fromJust mslid) doc
   let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++
                       (authorattachmentfileid <$> documentauthorattachments doc) ++
                       (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc) ++
@@ -164,8 +164,8 @@ docApiV2Texts did fid = logDocumentAndFile did fid . api $ do
   (user,_) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthor user
-    guardDocumentStatus Preparation
+    guardThatUserIsAuthor user =<< theDocument
+    guardDocumentStatus Preparation =<< theDocument
     -- Parameters
     -- We have a "black-box" JSON structure here, see Doc.Texts for details
     -- If you feel motivated you can refactor this to proper data type with

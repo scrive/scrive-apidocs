@@ -98,10 +98,10 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocCreate
   -- Guards
   withDocumentID did $ do
-    guardThatUserIsAuthorOrDocumentIsShared user
+    guardThatUserIsAuthorOrDocumentIsShared user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocumentIs (isTemplate) "The document is not a template."
-    guardThatDocumentIs (not $ flip documentDeletedForUser $ userid user) "The template is in Trash"
+    guardThatDocumentIs (isTemplate) "The document is not a template." =<< theDocument
+    guardThatDocumentIs (not $ flip documentDeletedForUser $ userid user) "The template is in Trash" =<< theDocument
   -- API call actions
   template <- dbQuery $ GetDocumentByDocumentID $ did
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
@@ -122,9 +122,9 @@ docApiV2Update did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthor user
+    guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Preparation
+    guardDocumentStatus Preparation =<< theDocument
     -- Parameters
     documentJSON <- apiV2ParameterObligatory (ApiV2ParameterAeson "document")
     doc <- theDocument
@@ -146,10 +146,10 @@ docApiV2Start did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthor user
+    guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Preparation
-    guardThatDocumentCanBeStarted
+    guardDocumentStatus Preparation =<< theDocument
+    guardThatDocumentCanBeStarted =<< theDocument
     -- Parameters
     authorSignsNow <- apiV2ParameterDefault False (ApiV2ParameterBool "author_signs_now")
     t <- ctxtime <$> getContext
@@ -168,9 +168,10 @@ docApiV2Prolong did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user
+    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocumentIs (isTimedout) "The document has not timed out. Only timed out documents can be prolonged."
+    guardThatDocumentIs (isTimedout)
+        "The document has not timed out. Only timed out documents can be prolonged."  =<< theDocument
     -- Parameters
     days <- fromIntegral <$> apiV2ParameterObligatory (ApiV2ParameterInt "days")
     when (days < 1 || days > 365) $
@@ -189,9 +190,9 @@ docApiV2Cancel did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user
+    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Pending
+    guardDocumentStatus Pending =<< theDocument
     -- API call actions
     dbUpdate $ CancelDocument actor
     postDocumentCanceledChange =<< theDocument
@@ -207,9 +208,9 @@ docApiV2Trash did = logDocument did . api $ do
     -- Guards
     msl <- getSigLinkFor user <$> theDocument
     when (not . isJust $ msl) $ -- This might be a user with an account
-      guardThatUserIsAuthorOrCompanyAdmin user
+      guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocumentIs (not . isPending) "Pending documents can not be trashed or deleted"
+    guardThatDocumentIs (not . isPending) "Pending documents can not be trashed or deleted" =<< theDocument
     -- API call actions
     dbUpdate $ ArchiveDocument (userid user) actor
     -- Result
@@ -224,9 +225,9 @@ docApiV2Delete did = logDocument did . api $ do
     -- Guards
     msl <- getSigLinkFor user <$> theDocument
     when (not . isJust $ msl) $ -- This might be a user with an account
-      guardThatUserIsAuthorOrCompanyAdmin user
+      guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocumentIs (not . isPending) "Pending documents can not be trashed or deleted"
+    guardThatDocumentIs (not . isPending) "Pending documents can not be trashed or deleted" =<< theDocument
     -- API call actions
     dbUpdate $ ReallyDeleteDocument (userid user) actor
     -- Result
@@ -239,9 +240,9 @@ docApiV2Remind did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user
+    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Pending
+    guardDocumentStatus Pending =<< theDocument
     -- API call actions
     _ <- sendAllReminderEmailsExceptAuthor actor False
     -- Result
@@ -254,11 +255,11 @@ docApiV2Forward did = logDocument did . api $ do
   (user,_) <- getAPIUser APIDocCheck
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthor user
+    guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     -- Make sure we only send out the document with the author's signatory link
     -- when it is closed, otherwise the link may be abused
-    guardDocumentStatus Closed
+    guardDocumentStatus Closed =<< theDocument
     -- Parameters
     email <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "email")
     noContent <- apiV2ParameterDefault True (ApiV2ParameterBool "no_content")
@@ -279,9 +280,9 @@ docApiV2SetFile did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthor user
+    guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Preparation
+    guardDocumentStatus Preparation =<< theDocument
     -- Parameters
     mFile <- apiV2ParameterOptional (ApiV2ParameterFilePDF "file")
     -- API call actions
@@ -303,9 +304,9 @@ docApiV2RemovePages did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthor user
+    guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Preparation
+    guardDocumentStatus Preparation =<< theDocument
 
     -- Parameters
     pages <- apiV2ParameterObligatory (ApiV2ParameterAeson "pages")
@@ -356,9 +357,9 @@ docApiV2SetAttachments did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthor user
+    guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Preparation
+    guardDocumentStatus Preparation =<< theDocument
     -- Parameters
     attachmentDetails <- apiV2ParameterObligatory (ApiV2ParameterJSON "attachments" $ arrayOf unjsonAttachmentDetails)
 
@@ -394,9 +395,9 @@ docApiV2SetAutoReminder did = logDocument did . api $ do
   (user,_) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthor user
+    guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Pending
+    guardDocumentStatus Pending =<< theDocument
     -- Parameters
     daysParam <- apiV2ParameterOptional (ApiV2ParameterInt "days")
     days <- case daysParam of
@@ -420,7 +421,7 @@ docApiV2Clone did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthor user
+    guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     -- API call actions
     doc <- theDocument
@@ -438,10 +439,10 @@ docApiV2Restart did = logDocument did . api $ do
   (user, actor) <- getAPIUser APIDocCreate
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthor user
+    guardThatUserIsAuthor user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs (\d -> not $ documentstatus d `elem` [Preparation, Pending, Closed])
-      "Documents that are in Preparation, Pending, or Closed can not be restarted."
+      "Documents that are in Preparation, Pending, or Closed can not be restarted." =<< theDocument
     -- API call actions
     doc <- theDocument
     mNewDoc <- dbUpdate $ RestartDocument doc actor
@@ -456,10 +457,10 @@ docApiV2Callback did = logDocument did . api $ do
   (user, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user
+    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs (\d -> not $ documentstatus d == Preparation)
-      "Can not send callbacks for documents in Preparation."
+      "Can not send callbacks for documents in Preparation." =<< theDocument
     -- API call actions
     triggerAPICallbackIfThereIsOne =<< theDocument
     -- Return
@@ -471,11 +472,11 @@ docApiV2SigSetAuthenticationToView did slid = logDocumentAndSignatory did slid .
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user
+    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Pending
-    guardSignatoryHasNotSigned slid
-    guardSignatoryHasNotIdentifiedToView slid
+    guardDocumentStatus Pending =<< theDocument
+    guardSignatoryHasNotSigned slid =<< theDocument
+    guardSignatoryHasNotIdentifiedToView slid =<< theDocument
     -- Parameters
     authentication_type <- apiV2ParameterObligatory (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToViewMethod)
     (mSSN, mMobile) <- case authentication_type of
@@ -488,7 +489,7 @@ docApiV2SigSetAuthenticationToView did slid = logDocumentAndSignatory did slid .
         mMobile <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
         return (mSSN, mMobile)
     -- Check conditions on parameters and signatory
-    guardCanSetAuthenticationToViewForSignatoryWithValues slid authentication_type mSSN mMobile
+    guardCanSetAuthenticationToViewForSignatoryWithValues slid authentication_type mSSN mMobile =<< theDocument
     -- API call actions
     dbUpdate $ ChangeAuthenticationToViewMethod slid authentication_type mSSN mMobile actor
     -- Return
@@ -500,10 +501,10 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user
+    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Pending
-    guardSignatoryHasNotSigned slid
+    guardDocumentStatus Pending =<< theDocument
+    guardSignatoryHasNotSigned slid =<< theDocument
     -- Parameters
     authentication_type <- apiV2ParameterObligatory (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToSignMethod)
     (mSSN, mMobile) <- case authentication_type of
@@ -515,7 +516,7 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
         mMobile <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
         return (Nothing, mMobile)
     -- Check conditions on parameters and signatory
-    guardCanSetAuthenticationToSignForSignatoryWithValue slid authentication_type mSSN mMobile
+    guardCanSetAuthenticationToSignForSignatoryWithValue slid authentication_type mSSN mMobile =<< theDocument
     -- API call actions
     dbUpdate $ ChangeAuthenticationToSignMethod slid authentication_type mSSN mMobile actor
     -- Return
