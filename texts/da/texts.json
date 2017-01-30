@@ -553,6 +553,7 @@
 "_flashMessageDocumentArchiveDone":"De valgte dokumenter er blevet slettet.",
 "_flashMessageDocumentArchiveInvalid":"Nogle af de valgte dokumenter kan ikke slettes.",
 "_flashMessageInvalidEmailFormat":"Denne e-mail er ikke formateret korrekt. ",
+"_flashMessageLoginPageRedirectReasonNotAdmin":"Du er ikke autoriseret til at se denne side.",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"Du er ikke logget ind.",
 "_flashMessageLoginPageRedirectReasonWrongIPAddress":"Du kan ikke anvende Scrive E-sign fra IP <span class='put-ip-here'></span>. Kontakt venligst '<span class='put-adminname-here'></span>, som er din virksomhedsadministrator i Scrive.",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Forkert adgangskode eller e-mail.",
