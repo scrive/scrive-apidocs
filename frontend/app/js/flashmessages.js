@@ -3,6 +3,7 @@ var _ = require("underscore");
 var $ = require("jquery");
 var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
 var Submit = require("./submits.js").Submit;
+var Track = require("../scripts/common/track");
 
 /* Main and only flash messages module
  * Usage
@@ -122,6 +123,8 @@ exports.FlashMessageTryFromCookie = function () {
       var jsonFlash = JSON.parse(tryUnescapeQuotes(Cookies.get("flashmessage")));
       jsonFlash["content"] = decodeURIComponent(jsonFlash["content"]);
       new FlashMessage(jsonFlash);
+    } catch(err) {
+      Track.track("Failed to parse cookie: " + Cookies.get("flashmessage"));
     } finally {
       Cookies.delete("flashmessage");
     }
