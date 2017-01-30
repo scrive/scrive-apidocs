@@ -4,6 +4,7 @@ module Company.CompanyID (
   , fromCompanyID
   ) where
 
+import Data.Aeson
 import Data.Binary
 import Data.Int
 import Data.Typeable
@@ -48,4 +49,5 @@ instance Unjson CompanyID where
   unjsonDef = unjsonCompanyID
 
 instance Identifier CompanyID Int64 where
-  gidentifier f n = f "company_id" .= fmap (\(CompanyID k) -> k) n
+  idDefaultLabel _ = "company_id"
+  idValue (CompanyID k) = toJSON k

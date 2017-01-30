@@ -166,7 +166,7 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
 logDeliveryTime :: (DocumentMonad m, MonadLog m, MonadThrow m) => Maybe Int -> m ()
 logDeliveryTime timeDiff = theDocument >>= \d -> do
   logInfo "Email delivered" $ object [
-      "author_company_id" .= show (documentauthorcompanyid d)
+      identifier_ $ documentauthorcompanyid d
     , "delivery_time" .= timeDiff
     ]
 

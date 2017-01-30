@@ -3,6 +3,7 @@ module Session.SessionID (
   , tempSessionID
   ) where
 
+import Data.Aeson
 import Data.Int
 
 import DB
@@ -14,7 +15,8 @@ newtype SessionID = SessionID Int64
 $(newtypeDeriveUnderlyingReadShow ''SessionID)
 
 instance Identifier SessionID Int64 where
-  gidentifier f n = f "session_id" .= fmap (\(SessionID k) -> k) n
+  idDefaultLabel _ = "session_id"
+  idValue (SessionID k) = toJSON k
 
 instance FromSQL SessionID where
   type PQBase SessionID = PQBase Int64

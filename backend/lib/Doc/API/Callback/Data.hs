@@ -17,7 +17,8 @@ newtype CallbackID = CallbackID Int64
 $(newtypeDeriveUnderlyingReadShow ''CallbackID)
 
 instance Identifier CallbackID Int64 where
-  gidentifier f n = f "callback_id" .= fmap (\(CallbackID k) -> k) n
+  idDefaultLabel _       = "callback_id"
+  idValue (CallbackID k) = toJSON k
 
 instance FromSQL CallbackID where
   type PQBase CallbackID = PQBase Int64
@@ -34,8 +35,8 @@ data DocumentAPICallback = DocumentAPICallback {
 , dacAttempts   :: !Int32
 } deriving (Eq, Ord, Show)
 
-instance LogObject DocumentAPICallback where
-  logObject DocumentAPICallback{..} = object [
+instance Loggable DocumentAPICallback where
+  logValue DocumentAPICallback{..} = object [
       identifier_ dacID
     , identifier_ dacApiVersion
     , "url" .= dacURL

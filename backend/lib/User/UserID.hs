@@ -4,6 +4,7 @@ module User.UserID (
   , unUserID
   ) where
 
+import Data.Aeson
 import Data.Binary
 import Data.Int
 import Data.Typeable
@@ -27,7 +28,8 @@ instance Binary UserID where
   get = fmap UserID get
 
 instance Identifier UserID Int64 where
-  gidentifier f n = f "user_id" .= fmap (\(UserID k) -> k) n
+  idDefaultLabel _ = "user_id"
+  idValue = toJSON . unUserID
 
 instance Unjson UserID where
   unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserID")  return) . maybeRead) show  unjsonDef

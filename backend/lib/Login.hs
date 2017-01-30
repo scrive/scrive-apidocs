@@ -67,7 +67,7 @@ handleLoginPost = do
                 Just user@User{userpassword}
                     | verifyPassword userpassword passwd
                     && ipIsOK -> do
-                        logInfo "User logged in" $ logObject user
+                        logInfo "User logged in" $ logValue user
                         muuser <- dbQuery $ GetUserByID (userid user)
 
                         case muuser of
@@ -91,7 +91,7 @@ handleLoginPost = do
                             logUserToContext muuser
                         J.runJSONGenT $ J.value "logged" True
                 Just u@User{userpassword} | not (verifyPassword userpassword passwd) -> do
-                        logInfo "User login failed (invalid password)" $ logObject u
+                        logInfo "User login failed (invalid password)" $ logValue u
                         _ <- if padlogin
                           then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)

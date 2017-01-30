@@ -4,6 +4,7 @@ module File.FileID (
   , fromFileID
   ) where
 
+import Data.Aeson
 import Data.Hashable
 import Data.Int
 import Data.Typeable
@@ -20,7 +21,8 @@ newtype FileID = FileID Int64
 $(newtypeDeriveUnderlyingReadShow ''FileID)
 
 instance Identifier FileID Int64 where
-  gidentifier f n = f "file_id" .= fmap (\(FileID k) -> k) n
+  idDefaultLabel _ = "file_id"
+  idValue (FileID k) = toJSON k
 
 instance FromReqURI FileID where
   fromReqURI = maybeRead

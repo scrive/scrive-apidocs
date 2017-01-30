@@ -4,6 +4,7 @@ module Partner.PartnerID (
   , unPartnerID
   ) where
 
+import Data.Aeson
 import Data.Binary
 import Data.Default (Default(..))
 import Data.Int
@@ -51,4 +52,5 @@ instance Unjson PartnerID where
   unjsonDef = unjsonPartnerID
 
 instance Identifier PartnerID Int64 where
-  gidentifier f n = f "partner_id" .= fmap (\(PartnerID k) -> k) n
+  idDefaultLabel _ = "partner_id"
+  idValue = toJSON . unPartnerID

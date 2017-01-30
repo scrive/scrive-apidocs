@@ -58,7 +58,7 @@ handleSendinBlueEvents = localDomain "handleSendinBlueEvents" $ do
                           "event" .= show event
                           ]
                 (mid, token) -> logInfo "Invalid id or token received from SendinBlue" $ object [
-                    gidentifier id mid
+                    identifier_ mid
                   , "token" .= fmap show token
                   ]
               _ -> logInfo "Invliad X-Mailin-custom received from SendinBlue" $ object [

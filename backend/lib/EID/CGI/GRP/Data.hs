@@ -189,8 +189,8 @@ data AuthResponse = AuthResponse {
 , arsAutoStartToken :: !AutoStartToken
 } deriving (Eq, Ord, Show)
 
-instance LogObject AuthResponse where
-  logObject = toJSON
+instance Loggable AuthResponse where
+  logValue = toJSON
   logDefaultLabel _ = "auth_response"
 
 instance ToJSON AuthResponse where
@@ -219,8 +219,8 @@ data SignResponse = SignResponse {
 , srsAutoStartToken :: !AutoStartToken
 } deriving (Eq, Ord, Show)
 
-instance LogObject SignResponse where
-  logObject SignResponse{..} = object [
+instance Loggable SignResponse where
+  logValue SignResponse{..} = object [
       "transaction_id" .= srsTransactionID
     , "order_ref" .= srsOrderRef
     , "auto_start_token" .= unAutoStartToken srsAutoStartToken

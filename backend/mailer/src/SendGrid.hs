@@ -84,7 +84,7 @@ processSendGridEvent js = do
                             ]
       _ -> logAttention "Received event but couldn't determine email and/or token" $ object [
           "event" .= jsonToAeson js
-        , gidentifier id mmid
+        , identifier_ mmid
         , "token" .= fmap show mmtk
         ]
 

@@ -221,8 +221,8 @@ data Document = Document {
 
 type instance ID Document = DocumentID
 
-instance LogObject Document where
-  logObject Document{..} = object [
+instance Loggable Document where
+  logValue Document{..} = object [
       identifier_ documentid
     , "title" .= documenttitle
     , "status" .= show documentstatus

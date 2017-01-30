@@ -113,8 +113,8 @@ data VerifyResult = Valid GuardtimeSignature |
                     Problem BSL.ByteString BSL.ByteString String
   deriving Show
 
-instance LogObject VerifyResult where
-  logObject = jsonToAeson . toJSValue
+instance Loggable VerifyResult where
+  logValue = jsonToAeson . toJSValue
   logDefaultLabel _ = "guard_time_verify_result"
 
 data GuardtimeSignature =

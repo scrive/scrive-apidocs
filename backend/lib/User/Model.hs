@@ -149,8 +149,8 @@ instance HasSomeUserInfo User where
   getPersonalNumber = userpersonalnumber  . userinfo
   getMobile         = userphone          . userinfo
 
-instance LogObject User where
-  logObject User{..} = object [
+instance Loggable User where
+  logValue User{..} = object [
       identifier_ userid
     , "email" .= useremail userinfo
     , "name" .= (userfstname userinfo <> " " <> usersndname userinfo)

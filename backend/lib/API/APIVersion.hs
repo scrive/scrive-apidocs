@@ -2,6 +2,7 @@ module API.APIVersion
  ( APIVersion(..)
  ) where
 
+import Data.Aeson
 import Data.Int
 import Database.PostgreSQL.PQTypes
 import qualified Control.Exception.Lifted as E
@@ -15,11 +16,9 @@ data APIVersion =
   deriving (Eq, Show, Ord)
 
 instance Identifier APIVersion Int where
-  gidentifier f n = f "api_version" .= fmap versionToInt n
-    where
-      versionToInt :: APIVersion -> Int
-      versionToInt V1 = 1
-      versionToInt V2 = 2
+  idDefaultLabel _ = "api_version"
+  idValue V1 = toJSON (1::Int)
+  idValue V2 = toJSON (2::Int)
 
 instance PQFormat APIVersion where
   pqFormat = const $ pqFormat (undefined::Int16)

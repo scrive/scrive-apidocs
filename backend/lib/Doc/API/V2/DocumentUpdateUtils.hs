@@ -32,7 +32,7 @@ applyDraftDataToDocument :: (Kontrakcja m, DocumentMonad m) =>  Document -> Acto
 applyDraftDataToDocument draft actor = do
     checkDraftTimeZoneName draft
     unlessM (isPreparation <$> theDocument) $ do
-      theDocument >>= \doc -> logAttention "API V2 - Document is not in preparation" $ logObject doc
+      theDocument >>= \doc -> logAttention "API V2 - Document is not in preparation" $ logValue doc
       apiError $ serverError "Could not apply draft data to document as document is not in preparation."
     _ <- theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
                                   documenttitle = documenttitle draft

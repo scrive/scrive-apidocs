@@ -166,7 +166,7 @@ insertSignatoryLinks did links = do
     authors -> do
       logAttention "Document doesn't have exactly one author" $ object [
           identifier_ did
-        , identifiers $ map signatorylinkid authors
+        , identifier_ $ map signatorylinkid authors
         ]
       $unexpectedErrorM "Invalid document"
 

@@ -77,8 +77,8 @@ data OAuthTempCredRequest = OAuthTempCredRequest {
 , tcPrivileges :: [APIPrivilege]
 } deriving Show
 
-instance LogObject OAuthTempCredRequest where
-  logObject OAuthTempCredRequest{..} = object [
+instance Loggable OAuthTempCredRequest where
+  logValue OAuthTempCredRequest{..} = object [
       "callback" .= show tcCallback
     , "api_token" .= show tcAPIToken
     , "privileges" .= map show tcPrivileges

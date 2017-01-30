@@ -83,7 +83,7 @@ executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
   (exitcode, _ , stderr) <- readCurl curlParams callbackParams
   case exitcode of
     ExitSuccess -> do
-      logInfo "API callback executeStandardCallback succeeded" $ logObject dac
+      logInfo "API callback executeStandardCallback succeeded" $ logValue dac
       return True
     ExitFailure ec -> do
       logAttention "API callback executeStandardCallback failed" $ object [
@@ -142,7 +142,7 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid 
           , dacURL dac ] callbackParams
         case exitcode2 of
           ExitSuccess -> do
-            logInfo "API callback executeOAuth2Callback succeeded" $ logObject dac
+            logInfo "API callback executeOAuth2Callback succeeded" $ logValue dac
             return True
           ExitFailure ec2 -> do
             logAttention "API callback executeOAuth2Callback failed" $ object [

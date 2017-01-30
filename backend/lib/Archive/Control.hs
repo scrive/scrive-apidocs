@@ -71,7 +71,7 @@ handleArchiveDocumentsAction actionStr docPermission m = do
       logInfo msg $ object [
           "action" .= actionStr
         , identifier_ $ userid user
-        , identifiers ids
+        , identifier_ ids
         ]
       internalError
 

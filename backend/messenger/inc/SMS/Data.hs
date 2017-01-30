@@ -86,7 +86,8 @@ newtype ShortMessageID = ShortMessageID Int64
 $(newtypeDeriveUnderlyingReadShow ''ShortMessageID)
 
 instance Identifier ShortMessageID Int64 where
-  gidentifier f n = f "sms_id" .= fmap (\(ShortMessageID k) -> k) n
+  idDefaultLabel _ = "sms_id"
+  idValue (ShortMessageID k) = toJSON k
 
 instance FromSQL ShortMessageID where
   type PQBase ShortMessageID = PQBase Int64
@@ -117,8 +118,8 @@ instance ToJSON ShortMessage where
     , "attempts"   .= smAttempts
     ]
 
-instance LogObject ShortMessage where
-  logObject = toJSON
+instance Loggable ShortMessage where
+  logValue = toJSON
   logDefaultLabel _ = "short_message"
 
 ----------------------------------------
@@ -128,7 +129,8 @@ newtype SMSEventID = SMSEventID Int64
 $(newtypeDeriveUnderlyingReadShow ''SMSEventID)
 
 instance Identifier SMSEventID Int64 where
-  gidentifier f n = f "sms_event_id" .= fmap (\(SMSEventID k) -> k) n
+  idDefaultLabel _ = "sms_event_id"
+  idValue (SMSEventID k) = toJSON k
 
 instance FromSQL SMSEventID where
   type PQBase SMSEventID = PQBase Int64

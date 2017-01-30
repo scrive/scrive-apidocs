@@ -8,6 +8,7 @@ module Doc.SignatoryLinkID (
   , fromSignatoryLinkID
   ) where
 
+import Data.Aeson
 import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
@@ -27,7 +28,8 @@ instance FromReqURI SignatoryLinkID where
   fromReqURI = maybeRead
 
 instance Identifier SignatoryLinkID Int64 where
-  gidentifier f n = f "signatory_link_id" .= fmap (\(SignatoryLinkID k) -> k) n
+  idDefaultLabel _ = "signatory_link_id"
+  idValue (SignatoryLinkID k) = toJSON k
 
 instance Unjson SignatoryLinkID where
   unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse SignatoryLinkID")  return) . maybeRead) show unjsonDef

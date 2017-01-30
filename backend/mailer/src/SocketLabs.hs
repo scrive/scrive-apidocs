@@ -48,7 +48,7 @@ handleSocketLabsEvents conf = localDomain "handleSocketLabsEvents" $ do
                       "event" .= show event
                       ]
         (mid, token) -> logInfo "Invalid id or token received" $ object [
-            gidentifier id mid
+            identifier_ mid
           , "token" .= fmap show token
           ]
       _ -> do

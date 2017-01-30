@@ -26,7 +26,7 @@ handleGlobalMouthEvents = localDomain "handleGlobalMouthEvents" . flip E.catch (
   xreason     <- getField' "reason"        -- optional text message what went wrong if not delivered
   logInfo "Logging information" $ object [
       "type" .= xtype
-    , gidentifier id xref
+    , identifier_ xref
     , "msisdn" .= xmsisdn
     , "timestamp" .= xtimestamp
     , "delivered" .= xdelivered
@@ -61,6 +61,6 @@ handleGlobalMouthEvents = localDomain "handleGlobalMouthEvents" . flip E.catch (
       ok $ toResponse "Thanks"
     Nothing -> do
       logInfo "UpdateWithSMSEvent not run, invalid id" $ object [
-          gidentifier id xref
+          identifier_ xref
         ]
       ok $ toResponse "Could not read ShortMessageID"

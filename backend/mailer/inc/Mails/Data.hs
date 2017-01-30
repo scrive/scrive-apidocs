@@ -81,7 +81,8 @@ newtype MailID = MailID Int64
 $(newtypeDeriveUnderlyingReadShow ''MailID)
 
 instance Identifier MailID Int64 where
-  gidentifier f n = f "mail_id" .= fmap (\(MailID k) -> k) n
+  idDefaultLabel _ = "mail_id"
+  idValue (MailID k) = toJSON k
 
 instance FromSQL MailID where
   type PQBase MailID = PQBase Int64
@@ -144,8 +145,8 @@ instance CompositeFromSQL Attachment where
     _ -> $unexpectedError "impossible due to the check constraint"
   }
 
-instance LogObject Attachment where
-  logObject Attachment{..} = object $
+instance Loggable Attachment where
+  logValue Attachment{..} = object $
     ["name" .= attName] ++
     case attContent of
       Left bs -> [
@@ -188,10 +189,10 @@ data Mail = Mail {
 , mailAttempts    :: !Int32
 } deriving (Eq, Ord, Show)
 
-instance LogObject Mail where
-  logObject Mail{..} = object [
+instance Loggable Mail where
+  logValue Mail{..} = object [
       identifier_ mailID
-    , "attachments" .= map logObject mailAttachments
+    , "attachments" .= map logValue mailAttachments
     , "attachment_count" .= length mailAttachments
     , "attempt_count" .= mailAttempts
     , "content" .= htmlToTxt mailContent
@@ -211,7 +212,8 @@ newtype EventID = EventID Int64
 $(newtypeDeriveUnderlyingReadShow ''EventID)
 
 instance Identifier EventID Int64 where
-  gidentifier f n = f "mail_event_id" .= fmap (\(EventID k) -> k) n
+  idDefaultLabel _ = "mail_event_id"
+  idValue (EventID k) = toJSON k
 
 instance FromSQL EventID where
   type PQBase EventID = PQBase Int64

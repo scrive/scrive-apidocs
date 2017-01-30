@@ -38,7 +38,7 @@ applyDraftDataToDocument :: (Kontrakcja m, DocumentMonad m) =>  Document -> Acto
 applyDraftDataToDocument draft actor = do
     checkDraftTimeZoneName draft
     unlessM (isPreparation <$> theDocument) $ do
-      theDocument >>= \doc -> logAttention "Document is not in preparation" $ logObject doc
+      theDocument >>= \doc -> logAttention "Document is not in preparation" $ logValue doc
       throwM $ SomeDBExtraException $ serverError "applyDraftDataToDocument failed"
     _ <- theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
                                   documenttitle = documenttitle draft

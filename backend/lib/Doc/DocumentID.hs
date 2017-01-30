@@ -4,6 +4,7 @@ module Doc.DocumentID (
   , fromDocumentID
   ) where
 
+import Data.Aeson
 import Data.Binary
 import Data.Int
 import Data.Unjson
@@ -19,7 +20,8 @@ newtype DocumentID = DocumentID Int64
 $(newtypeDeriveUnderlyingReadShow ''DocumentID)
 
 instance Identifier DocumentID Int64 where
-  gidentifier f n = f "document_id" .= fmap (\(DocumentID k) -> k) n
+  idDefaultLabel _ = "document_id"
+  idValue = toJSON . fromDocumentID
 
 instance FromReqURI DocumentID where
   fromReqURI = maybeRead

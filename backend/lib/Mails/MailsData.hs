@@ -74,8 +74,8 @@ attachmentToJson (name, acontent) = object [
     Right fid -> object [identifier_ fid]
   ]
 
-instance LogObject Mail where
-  logObject Mail{..} = object $ [
+instance Loggable Mail where
+  logValue Mail{..} = object $ [
       "attachment_count" .= length attachments
     , "attachments" .= map attachmentToJson attachments
     , "content" .= content
