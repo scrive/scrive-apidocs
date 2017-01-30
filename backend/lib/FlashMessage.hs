@@ -7,6 +7,8 @@ module FlashMessage (
     ) where
 
 import Control.Monad.IO.Class
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Base64 as B64
 import Happstack.Server hiding (lookCookieValue)
 import Network.HTTP.Base (urlEncode)
 import Text.JSON
@@ -65,4 +67,5 @@ flashTypeToStr OperationFailed = "error"
 addFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => String -> m ()
 addFlashCookie flashesdata = do
     ishttps <- isHTTPS
-    Cookies.addCookie ishttps (MaxAge $ 60*60*24) $ mkCookie "flashmessage" $ flashesdata
+    Cookies.addCookie ishttps (MaxAge $ 60*60*24) $ mkCookie "flashmessage" $ stringB64Encode flashesdata
+  where stringB64Encode = BS.toString . B64.encode . BS.fromString
