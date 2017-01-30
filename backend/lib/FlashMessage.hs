@@ -7,11 +7,11 @@ module FlashMessage (
     ) where
 
 import Control.Monad.IO.Class
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString.Base64 as B64
 import Happstack.Server hiding (lookCookieValue)
 import Network.HTTP.Base (urlEncode)
 import Text.JSON
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.UTF8 as BS
 import qualified Text.JSON.Gen as J
 
 import Cookies
