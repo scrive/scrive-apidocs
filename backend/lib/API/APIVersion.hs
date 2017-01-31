@@ -22,7 +22,7 @@ instance Identifier APIVersion Int where
       versionToInt V2 = 2
 
 instance PQFormat APIVersion where
-  pqFormat = const $ pqFormat ($undefined::Int16)
+  pqFormat = const $ pqFormat (undefined::Int16)
 
 instance FromSQL APIVersion where
   type PQBase APIVersion = PQBase Int16

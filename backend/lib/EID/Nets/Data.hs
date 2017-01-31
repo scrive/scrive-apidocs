@@ -40,7 +40,7 @@ unsafeNetsNOBankIDInternalProviderFromInt16 v = case v of
 
 
 instance PQFormat NetsNOBankIDInternalProvider where
-  pqFormat = const $ pqFormat ($undefined::Int16)
+  pqFormat = const $ pqFormat (undefined::Int16)
 
 instance FromSQL NetsNOBankIDInternalProvider where
   type PQBase NetsNOBankIDInternalProvider = PQBase Int16

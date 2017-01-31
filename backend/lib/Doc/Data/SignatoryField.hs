@@ -56,7 +56,7 @@ instance ToSQL NameOrder where
   toSQL (NameOrder v) = $unexpectedError $ "Name order " ++ show v ++ " is not supported"
 
 instance PQFormat NameOrder where
-  pqFormat = const $ pqFormat ($undefined::Int16)
+  pqFormat = const $ pqFormat (undefined::Int16)
 
 data FieldType
   = NameFT
@@ -71,7 +71,7 @@ data FieldType
     deriving (Eq, Show)
 
 instance PQFormat FieldType where
-  pqFormat = const $ pqFormat ($undefined::Int16)
+  pqFormat = const $ pqFormat (undefined::Int16)
 
 instance FromSQL FieldType where
   type PQBase FieldType = PQBase Int16
@@ -143,7 +143,7 @@ data TipSide = LeftTip | RightTip
   deriving (Eq, Show)
 
 instance PQFormat TipSide where
-  pqFormat = const $ pqFormat ($undefined::Int16)
+  pqFormat = const $ pqFormat (undefined::Int16)
 
 instance FromSQL TipSide where
   type PQBase TipSide = PQBase Int16

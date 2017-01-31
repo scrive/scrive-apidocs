@@ -61,7 +61,7 @@ data DeliveryStatus
     deriving (Eq, Ord, Show)
 
 instance PQFormat DeliveryStatus where
-  pqFormat = const $ pqFormat ($undefined::Int16)
+  pqFormat = const $ pqFormat (undefined::Int16)
 
 instance FromSQL DeliveryStatus where
   type PQBase DeliveryStatus = PQBase Int16
@@ -91,7 +91,7 @@ data CSVUpload = CSVUpload {
 } deriving (Eq, Ord, Show)
 
 instance PQFormat [[String]] where
-  pqFormat = const $ pqFormat ($undefined::String)
+  pqFormat = const $ pqFormat (undefined::String)
 instance FromSQL [[String]] where
   type PQBase [[String]] = PQBase String
   fromSQL = jsonFromSQL
@@ -108,7 +108,7 @@ data AuthenticationToViewMethod
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationToViewMethod where
-  pqFormat = const $ pqFormat ($undefined::Int16)
+  pqFormat = const $ pqFormat (undefined::Int16)
 
 instance FromSQL AuthenticationToViewMethod where
   type PQBase AuthenticationToViewMethod = PQBase Int16
@@ -138,7 +138,7 @@ data AuthenticationToSignMethod
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationToSignMethod where
-  pqFormat = const $ pqFormat ($undefined::Int16)
+  pqFormat = const $ pqFormat (undefined::Int16)
 
 instance FromSQL AuthenticationToSignMethod where
   type PQBase AuthenticationToSignMethod = PQBase Int16
@@ -170,7 +170,7 @@ data DeliveryMethod
     deriving (Eq, Ord, Show)
 
 instance PQFormat DeliveryMethod where
-  pqFormat = const $ pqFormat ($undefined::Int16)
+  pqFormat = const $ pqFormat (undefined::Int16)
 
 instance FromSQL DeliveryMethod where
   type PQBase DeliveryMethod = PQBase Int16
@@ -205,7 +205,7 @@ data ConfirmationDeliveryMethod
     deriving (Eq, Ord, Show)
 
 instance PQFormat ConfirmationDeliveryMethod where
-  pqFormat = const $ pqFormat ($undefined::Int16)
+  pqFormat = const $ pqFormat (undefined::Int16)
 
 instance FromSQL ConfirmationDeliveryMethod where
   type PQBase ConfirmationDeliveryMethod = PQBase Int16

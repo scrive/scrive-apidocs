@@ -60,7 +60,7 @@ data UserHistoryEventType = UserLoginAttempt
   only a request, not successful change.
  -}
 instance PQFormat UserHistoryEventType where
-  pqFormat = const $ pqFormat ($undefined::Int32)
+  pqFormat = const $ pqFormat (undefined::Int32)
 
 instance FromSQL UserHistoryEventType where
   type PQBase UserHistoryEventType = PQBase Int32

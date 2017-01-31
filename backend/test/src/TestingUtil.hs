@@ -933,7 +933,7 @@ assertRaisesKontra correctException action =
     invExc :: (Show a, Typeable a) => a -> m ()
     invExc e = assertString $ "Expected DBExtraException " ++ typeOfE ++ ", instead got exception " ++ show e
 
-    typeOfE = show $ typeOf ($undefined :: e)
+    typeOfE = show $ typeOf (undefined :: e)
 
 -- other helpers
 

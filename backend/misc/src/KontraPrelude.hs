@@ -18,7 +18,6 @@ module KontraPrelude (
   , minimum
   , read
   , tail
-  , undefined
   , fromJust
   , UnexpectedError(..)
   , unexpectedError
@@ -38,7 +37,7 @@ import Data.Monoid.Utils
 import Data.Typeable
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
-import Prelude hiding ((&&), (||), all, and, any, error, head, last, maximum, minimum, not, or, read, tail, undefined)
+import Prelude hiding ((&&), (||), all, and, any, error, head, last, maximum, minimum, not, or, read, tail)
 import qualified Prelude as P
 
 -- | Boolean algebra of functions.
@@ -112,10 +111,6 @@ read = [|
 -- | Replacement for 'P.tail' that provides useful information on failure.
 tail :: Q Exp
 tail = [| emptyList P.tail $(emptyListError "tail") |]
-
--- | Replacement for 'P.undefined' that provides useful information on failure.
-undefined :: Q Exp
-undefined = [| $unexpectedError ("undefined value"::String) |]
 
 -- | Replacement for 'Data.Maybe.fromJust'
 -- that provides useful information on failure.

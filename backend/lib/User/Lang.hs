@@ -42,7 +42,7 @@ instance FromReqURI Lang where
   fromReqURI = maybeRead
 
 instance PQFormat Lang where
-  pqFormat = const $ pqFormat ($undefined::Int16)
+  pqFormat = const $ pqFormat (undefined::Int16)
 
 instance FromSQL Lang where
   type PQBase Lang = PQBase Int16

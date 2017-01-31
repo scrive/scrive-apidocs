@@ -73,7 +73,7 @@ data SignupMethod = AccountRequest | ViralInvitation | BySigning | ByAdmin | Com
   deriving (Eq, Ord, Show, Read)
 
 instance PQFormat SignupMethod where
-  pqFormat = const $ pqFormat ($undefined::Int16)
+  pqFormat = const $ pqFormat (undefined::Int16)
 
 instance FromSQL SignupMethod where
   type PQBase SignupMethod = PQBase Int16

@@ -61,7 +61,7 @@ jobTypeMapper = [
   ]
 
 instance PQFormat JobType where
-  pqFormat = const $ pqFormat ($undefined::T.Text)
+  pqFormat = const $ pqFormat (undefined::T.Text)
 
 instance FromSQL JobType where
   type PQBase JobType = PQBase T.Text
