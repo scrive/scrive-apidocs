@@ -254,7 +254,7 @@ serverOldBuildRules cabalFile = do
     command_ [] "cabal" ["clean"]
 
     flags <- getCabalConfigureFlags
-    command [Shell] "cabal" ("configure":flags)
+    command [Shell] "cabal" ("configure":"--enable-tests":flags)
 
   "dist/setup-config" %> \_ -> do
     need cabalFiles
@@ -264,7 +264,7 @@ serverOldBuildRules cabalFile = do
     cabalFlags <- askOracleWith (BuildCabalConfigureOptions ()) ""
     if tc || testCoverage || (not . null) cabalFlags
       then need ["_build/cabal-configure-with-flags"]
-      else cmd (Shell) $ "cabal configure"
+      else cmd (Shell) $ "cabal configure --enable-tests"
 
   "_build/cabal-build" %>>> do
     need ["dist/setup-config"]
