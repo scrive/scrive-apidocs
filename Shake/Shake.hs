@@ -79,7 +79,7 @@ usageMsg = unlines
   , "   detect-old-localizations   : Detect old localizations"
   , "   detect-old-templates       : Detect old templates"
   , "   take-reference-screenshots : Take reference screenshots"
-  , "   localization               : Update localization files"
+  , "   run-localization           : Update localization files"
   , "   scripts-help               : Help on using utility scripts"
   , ""
   , "# Clean"
@@ -138,7 +138,7 @@ main = do
     "detect-old-localizations"   ~> runDetectOldLocalizationsScript newBuild
     "detect-old-templates"       ~> runDetectOldTemplatesScript newBuild
     "take-reference-screenshots" ~> runTakeReferenceScreenshotsScript
-    "localization"               ~> runLocalization newBuild
+    "run-localization"           ~> runLocalization newBuild
     "scripts-help"               ~> putNormal scriptsUsageMsg
 
     "clean"          ~> need ["clean-server","clean-frontend"]
@@ -536,10 +536,10 @@ scriptsUsageMsg = unlines $
     ++ "files/reference_screenshots/standard.json"
   , "same thing for /tmp/mobile2.png into files/reference_screenshots/mobile.json"
   , ""
-  , "localization"
+  , "run-localization"
   , "--------------------------"
   , "Update the pre-generated localization files in 'frontend/app/localization/'"
-  , "for all languages. To use, run 'shake.sh localization'."
+  , "for all languages. To use, run 'shake.sh run-localization'."
   ]
 
 transifexUsageMsg :: String
