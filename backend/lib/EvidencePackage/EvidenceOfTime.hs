@@ -33,8 +33,8 @@ data EvidenceOfTime = EvidenceOfTime {
 -- Evidence of Time HTML
 evidenceOfTimeHTML :: TemplatesMonad m => String -> [HC.ClockErrorEstimate] -> EvidenceOfTime -> m String
 evidenceOfTimeHTML title clockErrors EvidenceOfTime{..} = do
-  let startTime = $minimum (map HC.time clockErrors)
-      endTime   = $maximum (map HC.time clockErrors)
+  let startTime = minimum (map HC.time clockErrors)
+      endTime   = maximum (map HC.time clockErrors)
       absoluteCDF dist v = cumulative dist v - cumulative dist (-v)
       showCDFInPercent dist v = (++ "%") (show $ realFracToDecimal 3 $ 100 * absoluteCDF dist v)
   renderTemplate "evidenceOfTime" $ do

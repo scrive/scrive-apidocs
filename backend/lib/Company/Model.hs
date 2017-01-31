@@ -212,7 +212,7 @@ fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_l
   , companyzip = zip'
   , companycity = city
   , companycountry = country
-  , companyipaddressmasklist = maybe [] $(read) ip_address_mask_list
+  , companyipaddressmasklist = maybe [] read ip_address_mask_list
   , companyallowsavesafetycopy = allow_save_safety_copy
   , companyidledoctimeout = idle_doc_timeout
   , companycgidisplayname = cgi_display_name

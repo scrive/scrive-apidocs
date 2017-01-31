@@ -53,7 +53,7 @@ testSessionUpdate = do
   msess' <- getSession (sesID sess) (sesToken sess) defaultDomain
   assertBool "modified session successfully taken from the database" (isJust msess')
 
-  let sess' = $fromJust msess'
+  let sess' = fromJust msess'
   assertEqual "session successfully modified" (sesPadUserID sess') (Just uid)
 
   msess'' <- getSession (sesID sess) (sesToken sess) "other.domain.com"

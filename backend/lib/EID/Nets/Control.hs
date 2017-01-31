@@ -119,7 +119,7 @@ handleResolve = do
 
                  -- Updating phone number - mobile workflow only and only if not provided
                  when (isJust mphone) $ do
-                   let phone = T.unpack ($fromJust mphone)
+                   let phone = T.unpack (fromJust mphone)
                    let formattedPhoneFromNets = "+47" ++ phone
                    let signatoryHasFilledInPhone = getMobile sl == ""
                    let formattedPhoneFromSignatory = filter (\c -> not (c `elem` (" -"::String))) $ getMobile sl

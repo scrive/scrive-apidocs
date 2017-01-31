@@ -83,8 +83,8 @@ pageDocumentSignView :: Kontrakcja m
 pageDocumentSignView ctx document siglink ad = do
 
   -- Sign view needs some author details and information if company allows saving a safety copy.
-  let authorid = $fromJust $ getAuthorSigLink document >>= maybesignatory
-  auser <- fmap $fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
+  let authorid = fromJust $ getAuthorSigLink document >>= maybesignatory
+  auser <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
   acompany <- getCompanyForUser auser
   acompanyui <- dbQuery $ GetCompanyUI (companyid acompany)
   let loggedAsSignatory = (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> getContextUser ctx);
@@ -113,8 +113,8 @@ pageDocumentIdentifyView :: Kontrakcja m
                     -> AnalyticsData
                     -> m String
 pageDocumentIdentifyView ctx document siglink ad = do
-  let authorid = $fromJust $ getAuthorSigLink document >>= maybesignatory
-  auser <- fmap $fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
+  let authorid = fromJust $ getAuthorSigLink document >>= maybesignatory
+  auser <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
   acompany <- getCompanyForUser auser
   acompanyui <- dbQuery $ GetCompanyUI (companyid acompany)
 

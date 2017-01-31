@@ -226,7 +226,7 @@ test_removingCompanyAccountWorks = do
 
   companydocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser) [DocumentFilterUnsavedDraft False] [] maxBound
   assertEqual "Company admin sees users docs before user delete" 1 (length companydocs1)
-  assertEqual "Docid matches before user delete" docid (documentid $ $head companydocs1)
+  assertEqual "Docid matches before user delete" docid (documentid $ head companydocs1)
 
   req <- mkRequest POST [ ("remove", inText "True")
                         , ("removeid", inText $ show (userid standarduser))
@@ -243,7 +243,7 @@ test_removingCompanyAccountWorks = do
 
   companydocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser) [DocumentFilterUnsavedDraft False] [] maxBound
   assertEqual "Company admin sees users docs after user delete" 1 (length companydocs)
-  assertEqual "Docid matches after user delete" docid (documentid $ $head companydocs)
+  assertEqual "Docid matches after user delete" docid (documentid $ head companydocs)
 
 test_privateUserTakoverWorks :: TestEnv ()
 test_privateUserTakoverWorks = do
@@ -268,12 +268,12 @@ test_privateUserTakoverWorks = do
 
   companydocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser) [DocumentFilterUnsavedDraft False] [] maxBound
   assertEqual "Company owns users docs" 1 (length companydocs)
-  assertEqual "Docid matches" docid (documentid $ $head companydocs)
+  assertEqual "Docid matches" docid (documentid $ head companydocs)
   docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) [DocumentFilterUnsavedDraft False, DocumentFilterSignable] [] maxBound
   templates <- dbQuery $ GetTemplatesByAuthor $ userid user
   let userdocids = nub (documentid <$> docs ++ templates)
   assertEqual "User is still linked to their docs" 1 (length userdocids)
-  assertEqual "Docid matches" docid ($head userdocids)
+  assertEqual "Docid matches" docid (head userdocids)
 
 test_mustBeInvitedForTakeoverToWork :: TestEnv ()
 test_mustBeInvitedForTakeoverToWork = do

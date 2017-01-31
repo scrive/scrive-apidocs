@@ -113,7 +113,7 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.value "deleted" $ fromMaybe False $ documentDeletedForUser doc <$> userid <$> muser
       J.value "reallydeleted" $ fromMaybe False $ documentReallyDeletedForUser doc <$> userid <$>  muser
       when (isJust muser) $
-        J.value "canperformsigning" $ userCanPerformSigningAction (userid $ $fromJust muser) doc
+        J.value "canperformsigning" $ userCanPerformSigningAction (userid $ fromJust muser) doc
       J.value "objectversion" $ documentobjectversion doc
       J.value "process" $ ("Contract"::String)
       J.value "isviewedbyauthor" $ isSigLinkFor muser (getAuthorSigLink doc)

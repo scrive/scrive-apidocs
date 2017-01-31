@@ -227,11 +227,11 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
           sc <- ask
           when (attempts == 4 && isJust (salesforceErrorEmail sc)) $ do
             logInfo_ "Salesforce API callback failed for 5th time, sending email."
-            user <- fmap $fromJust (dbQuery $ GetUserByID uid)
+            user <- fmap fromJust (dbQuery $ GetUserByID uid)
             company <- dbQuery $ GetCompanyByUserID $ uid
 
             let mail = emptyMail {
-                    to = [ MailAddress { fullname = "Salesforce Admin", email = $fromJust (salesforceErrorEmail sc) } ]
+                    to = [ MailAddress { fullname = "Salesforce Admin", email = fromJust (salesforceErrorEmail sc) } ]
                   , title = "[Salesforce Callback Error] " ++
                             "(user: " ++ getEmail user ++ ") " ++
                             "(company: " ++ companyname (companyinfo company) ++ ") " ++

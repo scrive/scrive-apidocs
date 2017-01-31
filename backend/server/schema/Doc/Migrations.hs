@@ -552,7 +552,7 @@ allowManyCopiesOfAuthorAttachmentForSameDocument = Migration {
     , mgrFrom = 3
     , mgrDo = do
       runQuery_ $ "ALTER TABLE author_attachments " <> sqlDropPK (tblName tableAuthorAttachments)
-      runQuery_ $ "ALTER TABLE author_attachments " <> sqlAddPK (tblName tableAuthorAttachments) ($fromJust $ pkOnColumns ["file_id", "document_id", "name"])
+      runQuery_ $ "ALTER TABLE author_attachments " <> sqlAddPK (tblName tableAuthorAttachments) (fromJust $ pkOnColumns ["file_id", "document_id", "name"])
     }
 
 addAddedToSealedFileToAuthorAttachment :: MonadDB m => Migration m

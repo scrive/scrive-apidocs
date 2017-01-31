@@ -124,7 +124,7 @@ postDocumentRejectedChange siglinkid customMessage doc@Document{..} = logDocumen
   maybe (return ())
         (\user -> logDocEvent "Doc Rejected" user [] doc)
         (ctxmaybeuser ctx)
-  sendRejectEmails customMessage ($(fromJust) $ getSigLinkFor siglinkid doc) doc
+  sendRejectEmails customMessage (fromJust $ getSigLinkFor siglinkid doc) doc
   return ()
 
 postDocumentCanceledChange :: Kontrakcja m => Document -> m ()

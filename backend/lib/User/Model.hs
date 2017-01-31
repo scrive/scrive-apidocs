@@ -626,15 +626,15 @@ fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, 
     , userassociateddomainid = associated_domain_id
     }
     company = Company {
-      companyid = $fromJust cid
+      companyid = fromJust cid
     , companyinfo = CompanyInfo {
-        companyname = $fromJust name
-      , companynumber = $fromJust number
-      , companyaddress = $fromJust address
-      , companyzip = $fromJust zip'
-      , companycity = $fromJust city
-      , companycountry = $fromJust country
-      , companyipaddressmasklist = maybe [] $read ip_address_mask
+        companyname = fromJust name
+      , companynumber = fromJust number
+      , companyaddress = fromJust address
+      , companyzip = fromJust zip'
+      , companycity = fromJust city
+      , companycountry = fromJust country
+      , companyipaddressmasklist = maybe [] read ip_address_mask
       , companyallowsavesafetycopy = allow_save_safety_copy
       , companyidledoctimeout = idle_doc_timeout
       , companycgidisplayname = cgi_display_name

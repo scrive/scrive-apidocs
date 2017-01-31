@@ -69,7 +69,7 @@ assertSignupSuccessful ctx = do
   assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
-  return $ $head actions
+  return $ head actions
 
 followActivationLink :: Context -> UserID -> MagicHash -> TestEnv Context
 followActivationLink ctx uid token = do
@@ -91,7 +91,7 @@ activateAccount ctx uid token tos fstname sndname password password2 phone = do
                           , ("password", inText password)
                           , ("password2", inText password2)
                           ] ++
-                          ([("phone", inText $ $fromJust phone)] <| isJust phone |> [])
+                          ([("phone", inText $ fromJust phone)] <| isJust phone |> [])
   (res, ctx') <- runTestKontra req ctx $ handleAccountSetupPost uid token AccountRequest
   return (res, ctx')
 

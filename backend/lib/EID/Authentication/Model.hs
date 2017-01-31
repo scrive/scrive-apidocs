@@ -153,14 +153,14 @@ fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), ByteString, T.Te
 fetchEAuthentication (provider, internal_provider, signature, signatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response) = case provider of
   CgiGrpBankID -> CGISEBankIDAuthentication_ CGISEBankIDAuthentication {
     cgisebidaSignatoryName = signatory_name
-  , cgisebidaSignatoryPersonalNumber = $fromJust signatory_personal_number
+  , cgisebidaSignatoryPersonalNumber = fromJust signatory_personal_number
   , cgisebidaSignature = signature
-  , cgisebidaOcspResponse = $fromJust ocsp_response
+  , cgisebidaOcspResponse = fromJust ocsp_response
   }
   NetsNOBankID -> NetsNOBankIDAuthentication_ NetsNOBankIDAuthentication {
-    netsNOBankIDInternalProvider = unsafeNetsNOBankIDInternalProviderFromInt16 ($fromJust internal_provider)
+    netsNOBankIDInternalProvider = unsafeNetsNOBankIDInternalProviderFromInt16 (fromJust internal_provider)
   , netsNOBankIDSignatoryName = signatory_name
   , netsNOBankIDPhoneNumber   = signatory_phone_number
-  , netsNOBankIDDateOfBirth   = $fromJust signatory_dob
+  , netsNOBankIDDateOfBirth   = fromJust signatory_dob
   , netsNOBankIDCertificate   = signature
   }

@@ -274,13 +274,13 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         -- First, we look for x-forwarded-for, which a proxy might insert
         -- Then, we look for x-real-ip, which nginx might insert
         let peerhost :: HostName
-            peerhost = $head $ catMaybes $
+            peerhost = head $ catMaybes $
                          [ BS.toString <$> getHeader h rq
                          |  h <- ["x-forwarded-for", "x-real-ip"]
                          ] ++ [Just (fst (rqPeer rq))]
             hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] }
         (do addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
-            return $ case addrAddress $ $head addrs of
+            return $ case addrAddress $ head addrs of
               SockAddrInet _ hostip -> unsafeIPAddress hostip
               _                     -> noIP)
            `E.catch` \ (_ :: E.SomeException) -> return noIP

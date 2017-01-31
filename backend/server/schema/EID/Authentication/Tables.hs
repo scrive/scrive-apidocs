@@ -22,7 +22,7 @@ tableEIDAuthentications = tblTable {
 -- only one authentication per signatory. can be relaxed later if necessary.
 , tblPrimaryKey = pkOnColumn "signatory_link_id"
 , tblChecks = [
-      -- Minimal checks to guarantee that fetch error on $fromJust will not happen
+      -- Minimal checks to guarantee that fetch error on fromJust will not happen
       Check "check_cgi_eid_authentications_have_all_required_fields"
           "provider = 1 AND ocsp_response IS NOT NULL AND signatory_personal_number IS NOT NULL OR provider <> 1"
     , Check "check_nets_eid_authentications_have_all_required_fields"

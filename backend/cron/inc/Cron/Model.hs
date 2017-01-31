@@ -76,7 +76,7 @@ instance FromSQL JobType where
 
 instance ToSQL JobType where
   type PQDest JobType = PQBase T.Text
-  toSQL tt = toSQL . $fromJust $ tt `lookup` jobTypeMapper
+  toSQL tt = toSQL . fromJust $ tt `lookup` jobTypeMapper
 
 ----------------------------------------
 

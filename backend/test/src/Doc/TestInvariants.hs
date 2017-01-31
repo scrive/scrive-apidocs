@@ -163,7 +163,7 @@ maxLengthOnFields _ document =
                                     , case fieldType f of
                                         SignatureFT -> False -- filter our signatures, they might be long
                                         _ -> True ]
-      m = $maximum (0 : lengths) in
+      m = maximum (0 : lengths) in
   assertInvariant ("some fields were too long: " ++ show m ++ ". max is " ++ show maxlength) $ m <= maxlength
 
 {- |
@@ -174,7 +174,7 @@ maxNumberOfPlacements _ document =
   let maxlength = 25 :: Int
       lengths :: [Int]
       lengths = concatMap (map (length . fieldPlacements) . signatoryfields) (documentsignatorylinks document)
-      m = $maximum (0 : lengths) in
+      m = maximum (0 : lengths) in
   assertInvariant ("document had too many placements: " ++ show m ++ ". max is " ++ show maxlength ++ " (25 * number of fields)") $ m <= maxlength
 
 {- |
@@ -202,7 +202,7 @@ maxCustomFields :: UTCTime -> Document -> Maybe String
 maxCustomFields _ document =
   let maxfields = 250 :: Int
       fields = map (length . filter (\f -> fieldType f == TextFT) . signatoryfields) (documentsignatorylinks document)
-      m = $maximum (0 : fields) in
+      m = maximum (0 : fields) in
   assertInvariant ("there are signatories with too many custom fields: " ++ show m ++ ". maximum is " ++ show maxfields) $
     m <= maxfields
 

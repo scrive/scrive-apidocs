@@ -99,7 +99,7 @@ checkXMLForUnecessaryDoubleDivs :: String -> Content Posn -> Assertion
 checkXMLForUnecessaryDoubleDivs templatename e@(CElem (Elem _ _ children) _) =
   let isDiv = isDivElem e
       isSingleChild = length children == 1
-      isSingleChildDiv = isSingleChild && isDivElem ($head children)
+      isSingleChildDiv = isSingleChild && isDivElem (head children)
       isUnecessaryDiv = isDiv && isSingleChildDiv in
   if isUnecessaryDiv
     then assertFailure $ "unecesary double divs in template " ++ templatename ++ ":\n" ++
@@ -136,7 +136,7 @@ clearTemplating = clearTemplating' NotTag NotTemplateCode . removeScripts . remo
 removeDocTypeDeclaration :: String -> String
 removeDocTypeDeclaration s =
   if "<!DOCTYPE" `isPrefixOf` s
-    then $tail $ dropWhile (/= '>') s
+    then tail $ dropWhile (/= '>') s
     else s
 
 removeScripts :: String -> String

@@ -78,4 +78,4 @@ isDocumentShared doc = Shared == documentsharing doc && Template == documenttype
 -}
 getLastSignedTime :: Document -> UTCTime
 getLastSignedTime doc =
-  $maximum $ unixEpoch : [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
+  maximum $ unixEpoch : [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]

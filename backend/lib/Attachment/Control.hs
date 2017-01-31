@@ -86,7 +86,7 @@ handleCreateNew = guardLoggedInOrThrowInternalError $ do
           let title = takeBaseName filename
           actor <- guardJustM $ mkAuthorActor <$> getContext
           ctx <- getContext
-          _ <- dbUpdate $ NewAttachment (userid $ $fromJust $ ctxmaybeuser ctx) title filename content' actor
+          _ <- dbUpdate $ NewAttachment (userid $ fromJust $ ctxmaybeuser ctx) title filename content' actor
           J.runJSONGenT $ return ()
     _ -> internalError
 

@@ -162,7 +162,7 @@ getDocumentAndSignatoryForEID did slid = dbQuery (GetDocumentSessionToken slid) 
     logInfo_ "Document token found"
     doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
     -- this should always succeed as we already got the document
-    let slink = $fromJust $ getSigLinkFor slid doc
+    let slink = fromJust $ getSigLinkFor slid doc
     when (hasSigned slink) $ do
       logInfo_ "Signatory already signed the document"
       respond404

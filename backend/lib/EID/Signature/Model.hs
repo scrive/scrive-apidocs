@@ -131,27 +131,27 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
   LegacyBankID -> LegacyBankIDSignature_ LegacyBankIDSignature {
     lbidsSignedText = sdata
   , lbidsSignature = signature
-  , lbidsCertificate = $fromJust mcertificate
+  , lbidsCertificate = fromJust mcertificate
   }
   LegacyTelia -> LegacyTeliaSignature_ LegacyTeliaSignature {
     ltsSignedText = sdata
   , ltsSignature = signature
-  , ltsCertificate = $fromJust mcertificate
+  , ltsCertificate = fromJust mcertificate
   }
   LegacyNordea -> LegacyNordeaSignature_ LegacyNordeaSignature {
     lnsSignedText = sdata
   , lnsSignature = signature
-  , lnsCertificate = $fromJust mcertificate
+  , lnsCertificate = fromJust mcertificate
   }
   LegacyMobileBankID -> LegacyMobileBankIDSignature_ LegacyMobileBankIDSignature {
     lmbidsSignedText = sdata
   , lmbidsSignature = signature
-  , lmbidsOcspResponse = $fromJust mocsp_response
+  , lmbidsOcspResponse = fromJust mocsp_response
   }
   CgiGrpBankID -> CGISEBankIDSignature_ CGISEBankIDSignature {
-    cgisebidsSignatoryName = $fromJust msignatory_name
-  , cgisebidsSignatoryPersonalNumber = $fromJust msignatory_personal_number
+    cgisebidsSignatoryName = fromJust msignatory_name
+  , cgisebidsSignatoryPersonalNumber = fromJust msignatory_personal_number
   , cgisebidsSignedText = sdata
   , cgisebidsSignature = signature
-  , cgisebidsOcspResponse = $fromJust mocsp_response
+  , cgisebidsOcspResponse = fromJust mocsp_response
   }

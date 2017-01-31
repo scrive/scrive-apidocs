@@ -48,7 +48,7 @@ jsonTestRequestHelper ctx httpMethod params func expectedRsCode = do
                      ++ "Response:\n" ++ show rsp
   let mRspJS = decode rsp
   when (isNothing mRspJS) $ assertFailure $ "Could not parse JSON from ByteString response:\n" ++ showTestDetails
-  return $ $fromJust mRspJS
+  return $ fromJust mRspJS
 
 -- | Given a `Value` that should be an `Object`, lookup a key which should be
 -- an JSON `Array`.

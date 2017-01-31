@@ -58,7 +58,7 @@ testChangeEmailAddress = do
 
   actions <- getRequestChangeEmailActions
   assertEqual "A request change email action was made" 1 (length $ actions)
-  let EmailChangeRequest{..} = $head actions
+  let EmailChangeRequest{..} = head actions
   assertEqual "Inviter id is correct" (userid user) ecrUserID
   assertEqual "Action email is correct" (Email "jim@bob.com") ecrNewEmail
 
@@ -200,7 +200,7 @@ testGetUserInfoWithOAuthTokens = do
   time <- rand 10 arbitrary
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials
     (OAuthTempCredRequest
-      { tcCallback   = $fromJust $ parseURI "http://www.google.com/"
+      { tcCallback   = fromJust $ parseURI "http://www.google.com/"
       , tcAPIToken   = apitoken
       , tcAPISecret  = apisecret
       , tcPrivileges = [APIDocCheck]

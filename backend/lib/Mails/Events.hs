@@ -179,7 +179,7 @@ handleDeliveredInvitation bd slid timeDiff = do
       when (mailinvitationdeliverystatus signlink == Deferred) $ do
         mail <- mailDeliveredInvitation bd signlink =<< theDocument
         theDocument >>= \d -> scheduleEmailSendout $ mail {
-          to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
+          to = [getMailAddress $ fromJust $ getAuthorSigLink d]
         }
       time <- currentTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) slid
@@ -204,7 +204,7 @@ handleDeferredInvitation bd slid email = do
       when success $ do
         mail <- mailDeferredInvitation bd sl =<< theDocument
         theDocument >>= \d -> scheduleEmailSendout $ mail {
-          to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
+          to = [getMailAddress $ fromJust $ getAuthorSigLink d]
         }
     Nothing -> return ()
 
@@ -219,7 +219,7 @@ handleUndeliveredInvitation bd slid = do
       _ <- dbUpdate $ SetEmailInvitationDeliveryStatus slid Undelivered actor
       mail <- mailUndeliveredInvitation bd signlink =<< theDocument
       theDocument >>= \d -> scheduleEmailSendout $ mail {
-        to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
+        to = [getMailAddress $ fromJust $ getAuthorSigLink d]
       }
       triggerAPICallbackIfThereIsOne =<< theDocument
     Nothing -> return ()
@@ -228,7 +228,7 @@ mailDeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => Brande
 mailDeliveredInvitation bd signlink doc =do
   theme <- dbQuery $ GetTheme $ bdMailTheme bd
   kontramail bd theme "invitationMailDeliveredAfterDeferred" $ do
-    F.value "authorname" $ getFullName $ $fromJust $ getAuthorSigLink doc
+    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "email" $ getEmail signlink
     F.value "documenttitle" $ documenttitle doc
     F.value "ctxhostpart" $ bdUrl bd
@@ -239,7 +239,7 @@ mailDeferredInvitation ::(TemplatesMonad m, MonadDB m, MonadThrow m) => BrandedD
 mailDeferredInvitation bd sl doc = do
   theme <- dbQuery $ GetTheme $ bdMailTheme bd
   kontramail bd theme"invitationMailDeferred" $ do
-    F.value "authorname" $ getFullName $ $fromJust $ getAuthorSigLink doc
+    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "counterpartname" $ getFullName sl
     F.value "counterpartemail" $ getEmail sl
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
@@ -251,7 +251,7 @@ mailUndeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => Bran
 mailUndeliveredInvitation bd signlink doc =do
   theme <- dbQuery $ GetTheme $ bdMailTheme bd
   kontramail bd theme "invitationMailUndelivered" $ do
-    F.value "authorname" $ getFullName $ $fromJust $ getAuthorSigLink doc
+    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink
     F.value "name" $ getFullName signlink

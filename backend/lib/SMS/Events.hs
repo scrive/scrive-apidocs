@@ -136,7 +136,7 @@ handleUndeliveredSMSInvitation bd hostpart signlinkid = logSignatory signlinkid 
       _ <- dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Undelivered actor
       mail <- theDocument >>= \d -> smsUndeliveredInvitation bd hostpart d signlink
       theDocument >>= \d -> scheduleEmailSendout $ mail {
-        to = [getMailAddress $ $fromJust $ getAuthorSigLink d]
+        to = [getMailAddress $ fromJust $ getAuthorSigLink d]
       }
       triggerAPICallbackIfThereIsOne =<< theDocument
     Nothing -> return ()
@@ -145,7 +145,7 @@ smsUndeliveredInvitation :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Branded
 smsUndeliveredInvitation bd hostpart doc signlink = do
   theme <- dbQuery $ GetTheme $ bdMailTheme bd
   kontramail bd theme "invitationSMSUndelivered" $ do
-    F.value "authorname" $ getFullName $ $fromJust $ getAuthorSigLink doc
+    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink
     F.value "name" $ getFullName signlink

@@ -165,4 +165,4 @@ httpCodeFromStdoutWithHTTPCode :: BSL.ByteString -> String
 httpCodeFromStdoutWithHTTPCode stdoutWithCode = BSL.unpack $ BSL.drop (lastEOLIndex stdoutWithCode + 1) stdoutWithCode
 
 lastEOLIndex :: BSL.ByteString -> Int64
-lastEOLIndex bs = $last (BSL.elemIndices '\n' bs)
+lastEOLIndex bs = last (BSL.elemIndices '\n' bs)

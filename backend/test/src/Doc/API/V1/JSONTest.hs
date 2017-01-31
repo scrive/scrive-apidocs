@@ -258,12 +258,12 @@ testList = do
   (resDoc3, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc3)
   did3 <- getDocumentID (rsBody resDoc3)
-  did3sig <- $head <$> getSignatoryLinksID (rsBody resDoc3)
+  did3sig <- head <$> getSignatoryLinksID (rsBody resDoc3)
 
   (resDoc4, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc4)
   did4 <- getDocumentID (rsBody resDoc4)
-  did4sig <- $head <$> getSignatoryLinksID (rsBody resDoc4)
+  did4sig <- head <$> getSignatoryLinksID (rsBody resDoc4)
 
   reqList1 <- mkRequestWithHeaders GET [] []
   (resList1, _) <- runTestKontra reqList1 ctx $ apiCallV1List
@@ -337,7 +337,7 @@ testSignWithSignature = do
 
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
   (resDoc2, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
-  didSig <- $head <$> getSignatoryLinksID (rsBody resDoc2)
+  didSig <- head <$> getSignatoryLinksID (rsBody resDoc2)
 
   reqReady <- mkRequestWithHeaders POST [] []
   _ <- runTestKontra reqReady ctx $ apiCallV1Ready did

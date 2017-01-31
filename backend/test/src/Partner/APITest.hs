@@ -239,7 +239,7 @@ testPartnerUserUpdateEmailToExisting = do
   respValue <- runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid cid) rq_newUserGood2_params 201 rq_newUserGood2_resp_fp
   let Object respObject = respValue
       Just (String uidstr) = H.lookup "id" respObject
-      uid = unsafeUserID $ $read $ T.unpack uidstr
+      uid = unsafeUserID $ read $ T.unpack uidstr
 
   -- When user with email already exists, we must not modify email
   updateToExistingEmailJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerUserEmailUpdate.json"
@@ -345,7 +345,7 @@ testHelperPartnerCompanyCreate = do
   respValue <- runApiJSONTest ctx POST (partnerApiCallV1CompanyCreate pid) rq_newCompany_params 201 rq_newCompany_resp_fp
   let Object respObject = respValue
       Just (String cid) = H.lookup "id" respObject
-  return (ctx, pid, unsafeCompanyID $ $read $ T.unpack cid)
+  return (ctx, pid, unsafeCompanyID $ read $ T.unpack cid)
 
 testHelperPartnerUserCreate :: TestEnv (Context, PartnerID, UserID)
 testHelperPartnerUserCreate = do
@@ -361,7 +361,7 @@ testHelperPartnerCompanyUserCreate ctx pid cid = do
   respValue <- runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid cid) rq_newUserGood_params 201 rq_newUserGood_resp_fp
   let Object respObject = respValue
       Just (String uid) = H.lookup "id" respObject
-  return $ unsafeUserID $ $read $ T.unpack uid
+  return $ unsafeUserID $ read $ T.unpack uid
 
 testJSONCtx :: TestEnv (Context, PartnerID)
 testJSONCtx = do

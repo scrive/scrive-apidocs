@@ -69,10 +69,10 @@ instance InspectXML SignatoryField where
     where
       value = case (fieldType field) of
         SignatureFT -> inspectXML (fieldFileValue field)
-        CheckboxFT -> if ($fromJust (fieldBoolValue field))
+        CheckboxFT -> if (fromJust (fieldBoolValue field))
                          then "checked"
                          else "not checked"
-        _ -> inspectXML ($fromJust (fieldTextValue field))
+        _ -> inspectXML (fromJust (fieldTextValue field))
 
 --Link creating types
 instance InspectXML DocumentID where

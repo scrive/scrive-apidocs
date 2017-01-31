@@ -136,16 +136,16 @@ documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
                       dbUpdate $ UpdateDocumentSigning signingSignatoryID False (progressStatusText status)
                       return $ Ok $ RerunAfter $ iseconds secondsToRetry
                     CGISignStatusSuccess ->  do
-                      esig <- $fromJust <$> dbQuery (GetESignature signingSignatoryID) -- collectRequestForBackroundSigning should return true only if there is ESignature in DB
+                      esig <- fromJust <$> dbQuery (GetESignature signingSignatoryID) -- collectRequestForBackroundSigning should return true only if there is ESignature in DB
                       initialDoc <- theDocument
-                      let sl = $fromJust (getSigLinkFor signingSignatoryID initialDoc)
+                      let sl = fromJust (getSigLinkFor signingSignatoryID initialDoc)
                           magicHash = signatorymagichash sl
                       initialActor <- recreatedSignatoryActor signingTime signingClientTime signingClientName signingClientIP4 sl
                       fieldsWithFiles <- fieldsToFieldsWithFiles signingFields
 
                       dbUpdate $ UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) initialActor
 
-                      slWithUpdatedName <- $fromJust <$> getSigLinkFor signingSignatoryID <$> theDocument
+                      slWithUpdatedName <- fromJust <$> getSigLinkFor signingSignatoryID <$> theDocument
                       actorWithUpdatedName <- recreatedSignatoryActor signingTime signingClientTime signingClientName signingClientIP4 slWithUpdatedName
 
                       authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments initialDoc) $ \a -> do

@@ -265,7 +265,7 @@ testRecurlyChangeAccount = do
       case is of
         Right invoices@(_:_) -> do
           let total = sum [inTotalInCents x | x <- invoices]
-          assertBool "currency should be equal" $ inCurrency ($head invoices) == "SEK"
+          assertBool "currency should be equal" $ inCurrency (head invoices) == "SEK"
           assertBool "total should be right" $ total == 100 * 29900
         _ -> assertBool "Should have some invoices" False
 
@@ -306,7 +306,7 @@ testRecurlyChangeAccountDefer = do
       case is of
         Right invoices@(_:_) -> do
           let total = sum [inTotalInCents x | x <- invoices]
-          assertBool "currency should be equal" $ inCurrency ($head invoices) == "SEK"
+          assertBool "currency should be equal" $ inCurrency (head invoices) == "SEK"
           assertBool "total should be right" $ total == 5 * 29900
 
         _ -> assertBool "Should have some invoices" False

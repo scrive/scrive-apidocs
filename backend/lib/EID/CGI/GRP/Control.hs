@@ -168,7 +168,7 @@ data CGISignStatus = CGISignStatusSuccess | CGISignStatusInProgress ProgressStat
 checkCGISignStatus :: (MonadDB m, MonadThrow m, MonadMask m, MonadLog m, MonadBaseControl IO m) => CgiGrpConfig -> DocumentID -> SignatoryLinkID -> m CGISignStatus
 checkCGISignStatus CgiGrpConfig{..}  did slid = do
   doc <- dbQuery $ GetDocumentByDocumentID did
-  if (not (isPending doc) || hasSigned ($(fromJust) (getSigLinkFor slid doc)))
+  if (not (isPending doc) || hasSigned (fromJust $ getSigLinkFor slid doc))
     then return  CGISignStatusAlreadySigned
     else do
       logInfo_ "Fetching signature"
@@ -316,15 +316,15 @@ checkCGIAuthStatus did slid = do
 
 getCompanyDisplayName :: (MonadDB m, MonadThrow m) => Document -> m (Maybe T.Text)
 getCompanyDisplayName doc = fmap T.pack . companycgidisplayname . companyinfo
-  <$> dbQuery (GetCompanyByUserID $ $fromJust $ maybesignatory author)
+  <$> dbQuery (GetCompanyByUserID $ fromJust $ maybesignatory author)
   where
-    author = $fromJust $ getSigLinkFor signatoryisauthor doc
+    author = fromJust $ getSigLinkFor signatoryisauthor doc
 
 getCompanyServiceID :: (MonadDB m, MonadThrow m) => Document -> m (Maybe T.Text)
 getCompanyServiceID doc = fmap T.pack . companycgiserviceid . companyinfo
-  <$> dbQuery (GetCompanyByUserID $ $fromJust $ maybesignatory author)
+  <$> dbQuery (GetCompanyByUserID $ fromJust $ maybesignatory author)
   where
-    author = $fromJust $ getSigLinkFor signatoryisauthor doc
+    author = fromJust $ getSigLinkFor signatoryisauthor doc
 
 -- | Generate text to be signed that represents contents of the document.
 textToBeSigned :: TemplatesMonad m => Document -> m String

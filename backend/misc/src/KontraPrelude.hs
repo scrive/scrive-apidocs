@@ -35,6 +35,7 @@ import Data.Maybe hiding (fromJust)
 import Data.Monoid
 import Data.Monoid.Utils
 import Data.Typeable
+import GHC.Stack (HasCallStack)
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import Prelude hiding ((&&), (||), all, and, any, error, head, last, maximum, minimum, not, or, read, tail)
@@ -84,38 +85,38 @@ maybeRead s = case reads s of
 ----------------------------------------
 
 -- | Replacement for 'P.head' that provides useful information on failure.
-head :: Q Exp
-head = [| emptyList P.head $(emptyListError "head") |]
-
--- | Replacement for 'P.last' that provides useful information on failure.
-last :: Q Exp
-last = [| emptyList P.last $(emptyListError "last") |]
-
--- | Replacement for 'P.maximum' that provides useful information on failure.
-maximum :: Q Exp
-maximum = [| emptyList P.maximum $(emptyListError "maximum") |]
-
--- | Replacement for 'P.minimum' that provides useful information on failure.
-minimum :: Q Exp
-minimum = [| emptyList P.minimum $(emptyListError "minimum") |]
-
--- | Replacement for 'P.read' that provides useful information on failure.
-read :: Q Exp
-read = [|
-  \s -> let parsedS = reads s in
-    fromMaybe ($unexpectedError $ "reading failed (input was '" ++ s ++ "', reads returned '" ++ show parsedS ++ "')") $ do
-      [(v, "")] <- return parsedS
-      return v
-  |]
+head :: HasCallStack => [a] -> a
+head = emptyList P.head $ emptyListError "head"
 
 -- | Replacement for 'P.tail' that provides useful information on failure.
-tail :: Q Exp
-tail = [| emptyList P.tail $(emptyListError "tail") |]
+tail :: HasCallStack => [a] -> [a]
+tail = emptyList P.tail $ emptyListError "tail"
+
+-- | Replacement for 'P.last' that provides useful information on failure.
+last :: HasCallStack => [a] -> a
+last = emptyList P.last $ emptyListError "last"
+
+-- | Replacement for 'P.maximum' that provides useful information on failure.
+maximum :: (HasCallStack, Ord a) => [a] -> a
+maximum = emptyList P.maximum $ emptyListError "maximum"
+
+-- | Replacement for 'P.minimum' that provides useful information on failure.
+minimum :: (HasCallStack, Ord a) => [a] -> a
+minimum = emptyList P.minimum $ emptyListError "minimum"
+
+-- | Replacement for 'P.read' that provides useful information on failure.
+read :: (HasCallStack, Read a, Show a) => String -> a
+read s =
+  let parsedS = reads s
+  in  fromMaybe (P.error $ "reading failed (input was '" ++ s ++ "', reads returned '" ++ show parsedS ++ "')") $ do
+        [(v, "")] <- return parsedS
+        return v
 
 -- | Replacement for 'Data.Maybe.fromJust'
 -- that provides useful information on failure.
-fromJust :: Q Exp
-fromJust = [| fromMaybe $ $unexpectedError ("fromJust received Nothing"::String) |]
+fromJust :: HasCallStack => Maybe a -> a
+fromJust Nothing  = P.error "fromJust received Nothing"
+fromJust (Just x) = x
 
 -- | Throw 'UnexpectedError' exception.
 unexpectedError :: Q Exp
@@ -146,8 +147,8 @@ unexpectedErrorM = [|
 emptyList :: ([a] -> t) -> t -> [a] -> t
 emptyList f err v = if null v then err else f v
 
-emptyListError :: String -> Q Exp
-emptyListError fname = [| $unexpectedError $ fname ++ " received an empty list" |]
+emptyListError :: HasCallStack => String -> a
+emptyListError fname = P.error $ fname ++ " received an empty list"
 
 srcLocation :: Q Exp
 srcLocation = do

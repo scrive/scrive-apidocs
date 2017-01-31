@@ -15,8 +15,8 @@ defaultNtpServers = [ show n ++ ".ubuntu.pool.ntp.org" | n <- [0..3] ]
 getOffset :: [String] -> IO Double
 getOffset ntpservers = do
   a <- readProcess "ntpdate" (words "-q -p 1" ++ ntpservers) ""
-  case take 3 $ reverse $ words $ $last $ lines a of
-    ["sec", offset, "offset"] -> return ($read offset)
+  case take 3 $ reverse $ words $ last $ lines a of
+    ["sec", offset, "offset"] -> return (read offset)
     _                         -> fail $ "HostClock.System.getOffset:  cannot parse " ++ show a
 
 -- | Get the frequency from the kernel phase-lock loop governing the clock.

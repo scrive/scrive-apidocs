@@ -70,7 +70,7 @@ testListDocs = do
                                   fromJSValueCustomMany $
                                      fromJSValueFieldCustom "fields" $
                                        fromJSValueField "author"
-    let (doc1Index, doc2Index) = case $head authors of
+    let (doc1Index, doc2Index) = case head authors of
                                    "Bob Blue" -> (0, 1)
                                    _          -> (1, 0)
 

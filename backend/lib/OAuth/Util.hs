@@ -53,10 +53,10 @@ getTempCredRequest = do
                     ["'privileges' parameter is invalid"]                  <| isNothing mprivileges          |> [] )
       if not $ null errors
         then return $ Left errors
-        else return $ Right $ OAuthTempCredRequest { tcCallback   = $fromJust mcallback
-                                                   , tcAPIToken   = $fromJust mapitoken
-                                                   , tcAPISecret  = $fromJust $ fst $ $fromJust mapisecret
-                                                   , tcPrivileges = $fromJust mprivileges
+        else return $ Right $ OAuthTempCredRequest { tcCallback   = fromJust mcallback
+                                                   , tcAPIToken   = fromJust mapitoken
+                                                   , tcAPISecret  = fromJust $ fst $ fromJust mapisecret
+                                                   , tcPrivileges = fromJust mprivileges
                                                    }
 
 getTokenRequest :: Kontrakcja m => m (Either String OAuthTokenRequest)
@@ -80,11 +80,11 @@ getTokenRequest = do
                     ["oauth_verifier is required"]                             <| isNothing mverifier            |> [])
       if not $ null errors
         then return $ Left errors
-        else return $ Right $ OAuthTokenRequest { trAPIToken   = $fromJust mapitoken
-                                                , trAPISecret  = $fromJust $ fst $ $fromJust mapisecret
-                                                , trTempToken  = $fromJust mtemptoken
-                                                , trTempSecret = $fromJust $ snd $ $fromJust mapisecret
-                                                , trVerifier   = $fromJust mverifier
+        else return $ Right $ OAuthTokenRequest { trAPIToken   = fromJust mapitoken
+                                                , trAPISecret  = fromJust $ fst $ fromJust mapisecret
+                                                , trTempToken  = fromJust mtemptoken
+                                                , trTempSecret = fromJust $ snd $ fromJust mapisecret
+                                                , trVerifier   = fromJust mverifier
                                                 }
 
 -- Read authorization header for oauth. Returns Nothing if 'authorization' header is missing.
@@ -107,8 +107,8 @@ getAuthorization = do
                     ["oauth_token is required"]                                <| isNothing macctoken            |> [])
       if not $ null errors
         then return $ Just $ Left errors
-        else return $ Just $ Right $ OAuthAuthorization { oaAPIToken     = $fromJust mapitoken
-                                                 , oaAPISecret    = $fromJust $ fst $ $fromJust mapisecret
-                                                 , oaAccessToken  = $fromJust macctoken
-                                                 , oaAccessSecret = $fromJust $ snd $ $fromJust mapisecret
+        else return $ Just $ Right $ OAuthAuthorization { oaAPIToken     = fromJust mapitoken
+                                                 , oaAPISecret    = fromJust $ fst $ fromJust mapisecret
+                                                 , oaAccessToken  = fromJust macctoken
+                                                 , oaAccessSecret = fromJust $ snd $ fromJust mapisecret
                                                  }

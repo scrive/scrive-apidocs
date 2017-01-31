@@ -244,7 +244,7 @@ testRestartDocumentEvidenceLog = do
   cdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   mdoc <- randomUpdate $ \t->RestartDocument cdoc (systemActor t)
   assertJust mdoc
-  lg <- dbQuery $ GetEvidenceLog (documentid $ $fromJust mdoc)
+  lg <- dbQuery $ GetEvidenceLog (documentid $ fromJust mdoc)
   assertJust $ find (\e -> evType e == Current RestartDocumentEvidence) lg
   assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg
   lg2 <- dbQuery $ GetEvidenceLog (documentid doc)
@@ -472,7 +472,7 @@ assertGoodNewDocument mcompany doctype title (user, time, doc) = do
     assertBool "Uses email identification only" (all ((==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod) (documentsignatorylinks doc))
     assertEqual "In preparation" Preparation (documentstatus doc)
     assertEqual "1 signatory" 1 (length $ documentsignatorylinks doc)
-    let siglink = $head $ documentsignatorylinks doc
+    let siglink = head $ documentsignatorylinks doc
     assertBool "link is author and possibly signer" $
       (signatoryisauthor $ siglink)
     assertEqual "link first name matches author's" (getFirstName user) (getFirstName siglink)
@@ -908,7 +908,7 @@ testGetTimedOutButPendingDocuments = replicateM_ 1 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (isPending && (isJust . documenttimeouttime))
   _doc2 <- addRandomDocumentWithAuthorAndCondition author (not . isPending)
 
-  let t = $fromJust $ documenttimeouttime doc
+  let t = fromJust $ documenttimeouttime doc
   --execute
   docsA <- dbQuery $ GetTimeoutedButPendingDocumentsChunk ((-10) `minutesAfter` t) 100
   docsB <- dbQuery $ GetTimeoutedButPendingDocumentsChunk (10 `minutesAfter` t) 100
@@ -1216,7 +1216,7 @@ testCreateFromSharedTemplate = do
            dbQuery $ GetDocumentByDocumentID docid
   newuser <- addNewRandomUser
 
-  docid' <- $fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor newuser doc (systemActor mt))
+  docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor newuser doc (systemActor mt))
   _ <- withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (systemActor mt)
 
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
@@ -1241,8 +1241,8 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
          else do
            _ <- withDocumentID docid $ dbUpdate $ TemplateFromDocument (systemActor mt)
            dbQuery $ GetDocumentByDocumentID docid
-  user' <- $fromJust <$> (dbQuery $ GetUserByID (userid user))
-  docid' <- $fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor user' doc (systemActor mt))
+  user' <- fromJust <$> (dbQuery $ GetUserByID (userid user))
+  docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor user' doc (systemActor mt))
   _ <- withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (systemActor mt)
   doc' <- dbQuery $ GetDocumentByDocumentID docid'
   let [author] = filter isAuthor $ documentsignatorylinks doc'

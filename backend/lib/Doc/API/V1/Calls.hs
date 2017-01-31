@@ -231,7 +231,7 @@ apiCallV1Clone did = logDocument did . api $ do
          mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user doc actor
          when (isNothing mndid) $
              throwM . SomeDBExtraException $ serverError "Can't clone given document"
-         newdoc <- dbQuery $ GetDocumentByDocumentID $ $fromJust mndid
+         newdoc <- dbQuery $ GetDocumentByDocumentID $ fromJust mndid
          Created <$> documentJSONV1 (Just $ user) True  True Nothing newdoc
      else throwM . SomeDBExtraException $ serverError "Id did not matched template or you do not have right to access document"
 
@@ -328,7 +328,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
 
           hasAccess ::  Kontrakcja m => Document -> FileID -> m Bool
           hasAccess doc fid = do
-            user <- $fromJust <$> ctxmaybeuser <$> getContext
+            user <- fromJust <$> ctxmaybeuser <$> getContext
             if (fid `elem` (authorattachmentfileid <$> documentauthorattachments doc))
              then return True
              else do
@@ -432,15 +432,15 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
   (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     whenM (not <$> isPending <$> theDocument ) $ do
       (throwM . SomeDBExtraException $ conflictError $ "Document not pending")
-    whenM (hasSigned <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
+    whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwM . SomeDBExtraException $ conflictError $ "Document already signed")
-    whenM (signatoryNeedsToIdentifyToView =<< $fromJust . getSigLinkFor slid <$> theDocument) $ do
+    whenM (signatoryNeedsToIdentifyToView =<< fromJust . getSigLinkFor slid <$> theDocument) $ do
       (throwM . SomeDBExtraException $ forbidden "Authorization to view is needed")
     checkAuthenticationToSignMethodAndValue slid
-    authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
+    authorization <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
     fields <- getFieldForSigning
     unlessM (allRequiredAuthorAttachmentsAreAccepted =<< getAcceptedAuthorAttachments) $ do
-      unlessM (isAuthor <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- Author does not need to accept attachments
+      unlessM (isAuthor <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- Author does not need to accept attachments
         (throwM . SomeDBExtraException $ badInput $ "Some required attachments where not accepted")
 
 
@@ -476,15 +476,15 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
   olddoc `withDocument` ( do
     whenM (not <$> isPending <$> theDocument ) $ do
       (throwM . SomeDBExtraException $ conflictError $ "Document not pending")
-    whenM (hasSigned <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
+    whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwM . SomeDBExtraException $ conflictError $ "Document already signed")
-    whenM (signatoryNeedsToIdentifyToView =<< $fromJust . getSigLinkFor slid <$> theDocument) $ do
+    whenM (signatoryNeedsToIdentifyToView =<< fromJust . getSigLinkFor slid <$> theDocument) $ do
       (throwM . SomeDBExtraException $ forbidden "Authorization to view is needed")
     unlessM (allRequiredAuthorAttachmentsAreAccepted acceptedAuthorAttachments) $ do
-      unlessM (isAuthor <$> $fromJust . getSigLinkFor slid <$> theDocument) $ do -- Author does not need to accept attachments
+      unlessM (isAuthor <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- Author does not need to accept attachments
         (throwM . SomeDBExtraException $ badInput $ "Some required attachments where not accepted")
     checkAuthenticationToSignMethodAndValue slid
-    authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
+    authorization <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
 
     case authorization of
       StandardAuthenticationToSign -> do
@@ -526,7 +526,7 @@ checkAuthenticationToSignMethodAndValue slid = do
            let mAuthMethod = fromJSValue $ J.toJSValue authType
            case mAuthMethod of
                 Just authMethod -> do
-                    siglink <- $fromJust . getSigLinkFor slid <$> theDocument
+                    siglink <- fromJust . getSigLinkFor slid <$> theDocument
                     let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
                     case (authOK, authMethod) of
                          (False, _) -> throwM . SomeDBExtraException $
@@ -566,7 +566,7 @@ signDocument slid mh fields acceptedAuthorAttachments mesig mpin screenshots = d
   fieldsWithFiles <- fieldsToFieldsWithFiles fields
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) =<< signatoryActor ctx sl
   theDocument >>= \doc -> do
-    let sl = $fromJust (getSigLinkFor slid doc)
+    let sl = fromJust (getSigLinkFor slid doc)
     authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments doc) $ \a -> do
       acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
       return (acceptanceText,a)
@@ -625,7 +625,7 @@ apiCallV1SetAutoReminder did = logDocument did . api $ do
       days <- case mdays of
            Nothing -> return Nothing
            Just n -> do tot <- documenttimeouttime <$> theDocument
-                        if n < 1 || (isJust tot && n `daysAfter` (ctxtime ctx) > $fromJust tot)
+                        if n < 1 || (isJust tot && n `daysAfter` (ctxtime ctx) > fromJust tot)
                           then throwM . SomeDBExtraException $ (badInput "Number of days to send autoreminder must be a valid number, between 1 and number of days left till document deadline")
                           else return $ Just (fromIntegral n :: Int32)
       timezone <- documenttimezonename <$> theDocument
@@ -801,7 +801,7 @@ apiCallV1Delete did = logDocument did . api $ do
                          _ -> return Nothing
     msl <- getSigLinkFor user <$> theDocument
     let haspermission = (isJust msl)
-                     || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user))
+                     || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user))
     when (not haspermission) $ do
            throwM . SomeDBExtraException $ serverError "Permission problem. Not connected to document."
     dbUpdate $ ArchiveDocument (userid user) actor
@@ -818,7 +818,7 @@ apiCallV1ReallyDelete did = logDocument did . api $ do
                          _ -> return Nothing
     msl <- getSigLinkFor user <$> theDocument
     let haspermission = (isJust msl)
-                     || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user))
+                     || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user))
     when (not haspermission) $ do
            throwM . SomeDBExtraException $ serverError "Permission problem. Not connected to document."
     dbUpdate $ ReallyDeleteDocument (userid user) actor
@@ -852,7 +852,7 @@ apiCallV1Get did = logDocument did . api $ do
                      _ -> return Nothing
 
       haspermission <- return $ isJust msiglink
-                       || (isJust mauser && usercompany ($fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
+                       || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
       if (haspermission)
         then do
           Ok <$> (documentJSONV1 (Just user) external ((userid <$> mauser) == (Just $ userid user)) msiglink doc)
@@ -1162,7 +1162,7 @@ apiCallV1SendSMSPinCode did slid = logDocumentAndSignatory did slid . api $ do
        throwM . SomeDBExtraException $ serverError "SMS pin code can't be sent to document that is not pending"
     when (SMSPinAuthenticationToSign /= signatorylinkauthenticationtosignmethod sl) $ do
        throwM . SomeDBExtraException $ serverError "SMS pin code can't be sent to this signatory"
-    slidPhone <- getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
+    slidPhone <- getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
     phone <- if not $ null slidPhone
                 then return slidPhone
                 else apiGuardJustM (badInput "Phone number provided is not valid.") $ getOptionalField asValidPhone "phone"
@@ -1263,7 +1263,7 @@ data FieldTmpValue = StringFTV String
 getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, FieldTmpValue)] -> m (Maybe String)
 getValidPin slid fields = do
   pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
-  slidPhone <- getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
+  slidPhone <- getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
   phone <- case (not $ null slidPhone, lookup MobileFI fields) of
                 (True, _) -> return slidPhone
                 (False, Just (StringFTV v)) -> return v

@@ -38,7 +38,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddCompanyInvite CompanyInvite 
     runQuery_ . sqlInsert "companyinvites" $ do
       sqlSet "user_id" inviteduserid
       sqlSet "company_id" invitingcompany
-    $fromJust `liftM` query (GetCompanyInvite invitingcompany inviteduserid)
+    fromJust `liftM` query (GetCompanyInvite invitingcompany inviteduserid)
 
 data RemoveCompanyInvite = RemoveCompanyInvite CompanyID UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveCompanyInvite Bool where

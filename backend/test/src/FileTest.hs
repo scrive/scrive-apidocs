@@ -35,7 +35,7 @@ fileTests env = testGroup "Files" [
 testFileIDReadShow :: TestEnv ()
 testFileIDReadShow = replicateM_ 100 $  do
    (fid :: FileID) <- rand 10 arbitrary
-   assertEqual "read . show == id" fid  (($read . show) fid)
+   assertEqual "read . show == id" fid  ((read . show) fid)
 
 testFileIDUriShow :: TestEnv ()
 testFileIDUriShow = replicateM_ 100 $  do

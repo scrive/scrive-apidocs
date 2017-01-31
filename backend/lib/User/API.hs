@@ -82,9 +82,9 @@ apiCallGetUserPersonalToken = api $ do
         (Just email, Just passwd) -> do
             -- check the user things here
             muser <- dbQuery $ GetUserByEmail (Email email)
-            if (isJust muser && verifyPassword (userpassword $ $fromJust muser) passwd )
+            if (isJust muser && verifyPassword (userpassword $ fromJust muser) passwd )
               then do
-                  let uid = userid $ $fromJust muser
+                  let uid = userid $ fromJust muser
                   _success <- dbUpdate $ CreatePersonalToken uid
                   token <- dbQuery $ GetPersonalToken uid
                   case token of
@@ -136,7 +136,7 @@ apiCallUpdateUserProfile = api $ do
   infoUpdate <- getUserInfoUpdate
 
   mlang <- (join . (fmap langFromCode)) <$> getField "lang"
-  when_ (isJust mlang) $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = $fromJust mlang  }
+  when_ (isJust mlang) $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = fromJust mlang  }
 
   _ <- dbUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
   _ <- dbUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
@@ -186,7 +186,7 @@ apiCallSignup = api $ do
   memail <- getOptionalField asValidEmail "email"
   when (isNothing memail) $ do
     throwM . SomeDBExtraException $ serverError "Email not provided or invalid"
-  let email = $fromJust memail
+  let email = fromJust memail
   firstname       <- fromMaybe "" <$> getOptionalField asValidName "firstName"
   lastname        <- fromMaybe "" <$> getOptionalField asValidName "lastName"
   phone           <- fromMaybe "" <$> getOptionalField asValidPhone "phone"
@@ -319,7 +319,7 @@ apiCallTestSalesforceIntegration = api $ do
   murl <- getField "url"
   when (isNothing murl) $ do
     throwM . SomeDBExtraException $ badInput $ "No 'url' parameter provided"
-  let url = $fromJust murl
+  let url = fromJust murl
   fmap Ok $ case scheme of
       Just (SalesforceScheme token)  -> do
         ctx <- getContext

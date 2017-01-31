@@ -20,7 +20,7 @@ normalizeCompanyInvites = Migration {
       runQuery_ $ "ALTER TABLE companyinvites " <> sqlDropPK (tblName tableCompanyInvites)
       runQuery_ $ sqlDropIndex (tblName tableCompanyInvites) (indexOnColumn "email")
       runQuery_ $ sqlCreateIndex (tblName tableCompanyInvites) (indexOnColumn "user_id")
-      runQuery_ $ "ALTER TABLE companyinvites " <> sqlAddPK (tblName tableCompanyInvites) ($fromJust $ pkOnColumns ["company_id","user_id"])
+      runQuery_ $ "ALTER TABLE companyinvites " <> sqlAddPK (tblName tableCompanyInvites) (fromJust $ pkOnColumns ["company_id","user_id"])
       runQuery_ $ "ALTER TABLE companyinvites " <> sqlAddFK (tblName tableCompanyInvites) (fkOnColumn "user_id" "users" "id")
       runSQL_ "ALTER TABLE companyinvites DROP COLUMN email"
       runSQL_ "ALTER TABLE companyinvites DROP COLUMN first_name"

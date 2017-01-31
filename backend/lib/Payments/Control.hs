@@ -448,7 +448,7 @@ handlePricePageJSON = do
      Nothing -> handlePricePageNoUserJSON
      Just user -> do
        mplan <- dbQuery $ GetPaymentPlan $ usercompany $ user
-       case (mplan, ppPaymentPlanProvider $ $fromJust mplan) of
+       case (mplan, ppPaymentPlanProvider $ fromJust mplan) of
           (Nothing  , _)               -> handlePricePageUserJSON user
           (Just plan, NoProvider)      -> handlePricePageUserPlanNoneJSON user plan
           (Just plan, RecurlyProvider) -> handlePricePageUserPlanRecurlyJSON user plan

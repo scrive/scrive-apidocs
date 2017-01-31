@@ -113,7 +113,7 @@ docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
   fileContents <- withDocumentID did $ do
     doc <- theDocument
     _ <- guardDocumentReadAccess mslid doc
-    when (isJust mslid) $ guardSignatoryNeedsToIdentifyToView ($fromJust mslid) doc
+    when (isJust mslid) $ guardSignatoryNeedsToIdentifyToView (fromJust mslid) doc
     case documentstatus doc of
       Closed -> do
         mFile <- fileFromMainFile (documentsealedfile doc)
@@ -137,7 +137,7 @@ docApiV2FilesGet did fid filename = logDocumentAndFile did fid . api $ do
   download <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
   doc <- dbQuery $ GetDocumentByDocumentID did
   _ <- guardDocumentReadAccess mslid doc
-  when (isJust mslid) $ guardSignatoryNeedsToIdentifyToView ($fromJust mslid) doc
+  when (isJust mslid) $ guardSignatoryNeedsToIdentifyToView (fromJust mslid) doc
   let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++
                       (authorattachmentfileid <$> documentauthorattachments doc) ++
                       (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc) ++

@@ -65,17 +65,17 @@ test_getUserByEmail_returnsTheRightUser = do
   Just user <- addNewUser "Emily" "Green" "emily@green.com"
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isJust queriedUser)
-  assertEqual "For GetUserByEmail result" user ($fromJust queriedUser)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
   queriedUser2 <- dbQuery $ GetUserByEmail (Email "EMILY@green.com")
   assert (isJust queriedUser2)
-  assertEqual "For GetUserByEmail result" user ($fromJust queriedUser2)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
   Just user3 <- addNewUser "Eric" "Normand" "ERIc@Normand.Com"
   queriedUser3 <- dbQuery $ GetUserByEmail (Email "eric@normand.com")
   assert (isJust queriedUser3)
-  assertEqual "For GetUserByEmail result" user3 ($fromJust queriedUser3)
+  assertEqual "For GetUserByEmail result" user3 (fromJust queriedUser3)
   queriedUser4 <- dbQuery $ GetUserByEmail (Email "erIc@normand.com")
   assert (isJust queriedUser4)
-  assertEqual "For GetUserByEmail result" user3 ($fromJust queriedUser4)
+  assertEqual "For GetUserByEmail result" user3 (fromJust queriedUser4)
 
 test_getUserByID_returnsNothing :: TestEnv ()
 test_getUserByID_returnsNothing = do
@@ -87,7 +87,7 @@ test_getUserByID_returnsTheRightUser = do
   Just user <- addNewUser "Emily" "Green" "emiy@green.com"
   queriedUser <- dbQuery $ GetUserByID $ userid user
   assert (isJust queriedUser)
-  assertEqual "For GetUserByUserID result" user ($fromJust queriedUser)
+  assertEqual "For GetUserByUserID result" user (fromJust queriedUser)
 
 test_getAllUsers_returnsAllUsers :: TestEnv ()
 test_getAllUsers_returnsAllUsers = do
@@ -105,10 +105,10 @@ test_setUserEmail_GetByEmail = do
   Just user <- dbQuery $ GetUserByID $ userid user'
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isJust queriedUser)
-  assertEqual "For GetUserByEmail result" user ($fromJust queriedUser)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
   queriedUser2 <- dbQuery $ GetUserByEmail (Email "EMILY@green.com")
   assert (isJust queriedUser2)
-  assertEqual "For GetUserByEmail result" user ($fromJust queriedUser2)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
 
 test_setUserEmail_works :: TestEnv ()
 test_setUserEmail_works = do
@@ -119,7 +119,7 @@ test_setUserEmail_works = do
   assert (isNothing queriedUser)
   queriedUser2 <- dbQuery $ GetUserByEmail (Email "Other@EmAil.com")
   assert (isJust queriedUser2)
-  assertEqual "For GetUserByEmail result" user ($fromJust queriedUser2)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
 
 test_setUserPassword_changesPassword :: TestEnv ()
 test_setUserPassword_changesPassword = do
@@ -127,7 +127,7 @@ test_setUserPassword_changesPassword = do
   passwordhash <- createPassword "Secret Password!"
   _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
-  assert $ verifyPassword (userpassword ($fromJust queriedUser)) "Secret Password!"
+  assert $ verifyPassword (userpassword (fromJust queriedUser)) "Secret Password!"
 
 test_addUser_repeatedEmailReturnsNothing :: TestEnv ()
 test_addUser_repeatedEmailReturnsNothing = do

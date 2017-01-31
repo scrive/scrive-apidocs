@@ -89,7 +89,7 @@ userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus
 companyStatsToJSON :: (UTCTime -> String) -> String -> [UserUsageStats] -> JSValue
 companyStatsToJSON formatTime textName uuss = runJSONGen . objects "stats" . for uussGrouped $ \uusGroup -> do
   let summary = foldMap uusDocumentStats uusGroup
-  value "date" . formatTime . uusTimeWindowStart $ $head uusGroup
+  value "date" . formatTime . uusTimeWindowStart $ head uusGroup
   value "name" textName
   value "sent" $ dsDocumentsSent summary
   value "closed" $ dsDocumentsClosed summary

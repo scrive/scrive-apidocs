@@ -265,7 +265,7 @@ docApiV2Forward did = logDocument did . api $ do
     noContent <- apiV2ParameterDefault True (ApiV2ParameterBool "no_content")
     noAttachments <- apiV2ParameterDefault False (ApiV2ParameterBool "no_attachments")
     -- API call actions
-    asiglink <- $fromJust <$> getAuthorSigLink <$> theDocument
+    asiglink <- fromJust <$> getAuthorSigLink <$> theDocument
     validEmail <- case asValidEmail email of
       Good em -> return em
       _ -> apiError $ requestParameterInvalid "email" "Not a valid email address"
@@ -405,7 +405,7 @@ docApiV2SetAutoReminder did = logDocument did . api $ do
       Just d -> do
         ctx <- getContext
         tot <- documenttimeouttime <$> theDocument
-        if d < 1 || (isJust tot && d `daysAfter` (ctxtime ctx) > $fromJust tot)
+        if d < 1 || (isJust tot && d `daysAfter` (ctxtime ctx) > fromJust tot)
           then apiError $ requestParameterInvalid "days" "Must be a number between 1 and the number of days left to sign"
           else return $ Just d
     -- API call actions
@@ -428,7 +428,7 @@ docApiV2Clone did = logDocument did . api $ do
     mNewDid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user doc actor
     when (isNothing mNewDid) $
       apiError $ serverError "Could not clone document, did not get back valid ID"
-    newdoc <- dbQuery $ GetDocumentByDocumentID $ $fromJust mNewDid
+    newdoc <- dbQuery $ GetDocumentByDocumentID $ fromJust mNewDid
     -- Result
     return $ Created $ (\d -> (unjsonDocument $ documentAccessForUser user d,d)) newdoc
 
@@ -449,7 +449,7 @@ docApiV2Restart did = logDocument did . api $ do
     when (isNothing mNewDoc) $
       apiError $ serverError "Could not restart document"
     -- Result
-    return $ Created $ (\d -> (unjsonDocument $ documentAccessForUser user d,d)) ($fromJust mNewDoc)
+    return $ Created $ (\d -> (unjsonDocument $ documentAccessForUser user d,d)) (fromJust mNewDoc)
 
 docApiV2Callback :: Kontrakcja m => DocumentID -> m Response
 docApiV2Callback did = logDocument did . api $ do

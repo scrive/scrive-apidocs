@@ -234,7 +234,7 @@ mailClosedContent :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, Ma
                       -> Document
                       -> m String
 mailClosedContent ispreview document = do
-     content <$> mailDocumentClosed ispreview ($fromJust $ getAuthorSigLink document) False True document
+     content <$> mailDocumentClosed ispreview (fromJust $ getAuthorSigLink document) False True document
 
 mailDocumentClosed :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m) => Bool -> SignatoryLink -> Bool -> Bool -> Document -> m Mail
 mailDocumentClosed ispreview sl sealFixed documentAttached document = do
@@ -269,8 +269,8 @@ mailDocumentAwaitingForAuthor authorlang document = do
     signatoriesThatSigned <- renderLocalListTemplate authorlang $ map getSmartName $ filter (isSignatory && hasSigned) (documentsignatorylinks document)
     let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document) -- There always should be main file but tests fail without it
     documentMail authorlang document (templateName "mailDocumentAwaitingForAuthor") $ do
-        F.value "authorname" $ getSmartName $ $fromJust $ getAuthorSigLink document
-        F.value "documentlink" $ makeFullLink mctx $ show $ LinkSignDoc (documentid document) $ $fromJust $ getAuthorSigLink document
+        F.value "authorname" $ getSmartName $ fromJust $ getAuthorSigLink document
+        F.value "documentlink" $ makeFullLink mctx $ show $ LinkSignDoc (documentid document) $ fromJust $ getAuthorSigLink document
         F.value "partylist" signatories
         F.value "partylistSigned" signatoriesThatSigned
         F.value "someonesigned" $ not $ null $ filter (isSignatory && hasSigned) (documentsignatorylinks document)
@@ -303,7 +303,7 @@ documentMailFields doc mctx = do
       F.value "ctxhostpart" $ mctxDomainUrl mctx
       F.value "ctxlang" (codeFromLang $ mctxlang mctx)
       F.value "documenttitle" $ documenttitle doc
-      F.value "creatorname" $ getSmartName $ $fromJust $ getAuthorSigLink doc
+      F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
       -- brandingdomainid and brandinguserid are needed only for preview/email logo
       F.value "brandingdomainid" (show . bdid . mctxcurrentBrandedDomain $ mctx)
       F.value "brandinguserid" (show <$> (join $ maybesignatory <$> getAuthorSigLink doc))

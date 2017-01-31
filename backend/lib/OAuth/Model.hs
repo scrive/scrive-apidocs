@@ -22,7 +22,7 @@ instance Show APIToken where
 
 instance Read APIToken where
     readsPrec p s = case break (== '_') s of
-      (ts, '_':is) -> [(APIToken { atID = i, atToken = $read ts }, v)
+      (ts, '_':is) -> [(APIToken { atID = i, atToken = read ts }, v)
                       | (i, v) <- readsPrec p is]
       _ -> []
 

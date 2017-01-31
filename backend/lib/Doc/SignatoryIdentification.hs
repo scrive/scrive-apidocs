@@ -53,7 +53,7 @@ signatoryIdentifierMap includeviewers docs slids =
   esignatorylinkid = either signatorylinkid id
   slmap = Map.fromList [(signatorylinkid s, s) | d <- docs, s <- documentsignatorylinks d]
   names = map (either getFullName (const "")) slsAndMissing
-  initials = uniqueStrings $ enumerateEmpty $ map (map $head . words) names
+  initials = uniqueStrings $ enumerateEmpty $ map (map head . words) names
   sls = filter (\s -> includeviewers || signatoryispartner s
                                      || signatoryisauthor s) $ concatMap documentsignatorylinks docs
   slsAndMissing = sortBy (compare `on` esignatorylinkid) $ (map Left sls) ++ (map Right missing)

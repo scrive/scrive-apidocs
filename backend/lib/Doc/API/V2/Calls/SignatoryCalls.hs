@@ -113,7 +113,7 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     checkAuthenticationToSignMethodAndValue slid
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     -- API call actions + extra conditional parameter
-    authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
+    authorization <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
     case authorization of
       StandardAuthenticationToSign -> return ()
       SMSPinAuthenticationToSign -> do
@@ -145,7 +145,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     -- API call actions + extra conditional parameter
     guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments =<< theDocument
-    authorization <- signatorylinkauthenticationtosignmethod <$> $fromJust . getSigLinkFor slid <$> theDocument
+    authorization <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
     (signNow, mpin) <- case authorization of
       StandardAuthenticationToSign -> return (True, Nothing)
       SMSPinAuthenticationToSign -> do
@@ -178,7 +178,7 @@ docApiV2SigSendSmsPin did slid = logDocumentAndSignatory did slid . api $ do
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
-    sl <- $fromJust . getSigLinkFor slid <$> theDocument
+    sl <- fromJust . getSigLinkFor slid <$> theDocument
     when (signatorylinkauthenticationtosignmethod sl /= SMSPinAuthenticationToSign) $ do
       apiError $ signatoryStateError "Signatory authentication method to sign is not SMS PIN"
     -- Parameters
@@ -216,7 +216,7 @@ docApiV2SigSetAttachment did slid = logDocumentAndSignatory did slid . api $ do
       Nothing -> apiError $ requestParameterInvalid "name" "There is no attachment with that name for the signatory"
       Just sa -> return sa
     -- API call actions
-    sl <- $fromJust . getSigLinkFor slid <$> theDocument
+    sl <- fromJust . getSigLinkFor slid <$> theDocument
     ctx <- getContext
     case mAttachment of
       Nothing -> dbUpdate . DeleteSigAttachment slid sigAttachment =<< signatoryActor ctx sl

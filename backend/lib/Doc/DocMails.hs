@@ -64,7 +64,7 @@ sendDocumentErrorEmail author document = do
                             else sendDocumentErrorEmailToSignatory sl)
   where
     sendDocumentErrorEmailToAuthor = do
-      let authorlink = $(fromJust) $ getAuthorSigLink document
+      let authorlink = fromJust $ getAuthorSigLink document
       sendNotifications authorlink True
         (do
           mail <- mailDocumentErrorForAuthor (getLang author) document
@@ -254,7 +254,7 @@ makeMailAttachments doc withAttachments = map (\(n,f) -> (n, Right $ fileid f)) 
 makeMailAttachmentsForClosedDocument :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(String, File)]
 makeMailAttachmentsForClosedDocument doc withAttachments = do
   mainfile <- do
-    file <- dbQuery $ GetFileByFileID $ mainfileid $ $(fromJust) $ (documentsealedfile doc) `mplus` (documentfile doc)
+    file <- dbQuery $ GetFileByFileID $ mainfileid $ fromJust $ (documentsealedfile doc) `mplus` (documentfile doc)
     return [(documenttitle doc ++ ".pdf", file)]
   aattachments <- case withAttachments of
     False -> return []
@@ -271,7 +271,7 @@ makeMailAttachmentsForClosedDocument doc withAttachments = do
 makeMailAttachmentsForNotClosedDocument :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(String, File)]
 makeMailAttachmentsForNotClosedDocument doc withAttachments = do
   mainfile <- do
-    file <- dbQuery $ GetFileByFileID $ mainfileid $ $(fromJust) (documentfile doc)
+    file <- dbQuery $ GetFileByFileID $ mainfileid $ fromJust (documentfile doc)
     return [(documenttitle doc ++ ".pdf", file)]
   aattachments <- case withAttachments of
     False -> return []

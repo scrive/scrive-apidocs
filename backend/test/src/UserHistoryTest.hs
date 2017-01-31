@@ -187,7 +187,7 @@ testHandlerForTOSAccept = do
     ctx <- mkContext def
     req1 <- mkRequest POST [("email", inText "karol@skrivapa.se")]
     (_, ctx1) <- runTestKontra req1 ctx $ apiCallSignup
-    UserAccountRequest{..} <- $head <$> getAccountCreatedActions
+    UserAccountRequest{..} <- head <$> getAccountCreatedActions
     req2 <- mkRequest POST [ ("tos", inText "on")
                            , ("fstname", inText "Karol")
                            , ("sndname", inText "Samborski")
@@ -230,7 +230,7 @@ compareEventTypeFromList :: UserHistoryEventType -> [UserHistory] -> Bool
 compareEventTypeFromList t l = not . null . filter (\h -> (uheventtype . uhevent $ h) == t) $ l
 
 compareEventDataFromList :: [(String, String, String)] -> [UserHistory] -> Bool
-compareEventDataFromList d l = (uheventdata . uhevent . $head $ l) == (Just $ JSArray $
+compareEventDataFromList d l = (uheventdata . uhevent . head $ l) == (Just $ JSArray $
        for d $ \(field, oldv, newv) -> runJSONGen $ do
           value "field" field
           value "oldval" oldv

@@ -65,7 +65,7 @@ dumpEvidenceTexts now lang doc' = do
                     , actorEmail = Just "author@example.com"
                     , actorSigLinkID = Just (signatorylinkid author_sl)
                     , actorAPIString = Nothing
-                    , actorWho = "the author (" ++ $fromJust (actorEmail actor) ++ ")"
+                    , actorWho = "the author (" ++ fromJust (actorEmail actor) ++ ")"
                     }
   let evidencetypes = [minBound .. maxBound]
   let asl = def

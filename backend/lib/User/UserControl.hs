@@ -112,7 +112,7 @@ handlePostChangeEmail uid hash =  withUser $ \user -> do
       flashmessage <- if changed
         then do
             _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime
-                                                     [("email", unEmail $ useremail $ userinfo user, unEmail $ $fromJust mnewemail)]
+                                                     [("email", unEmail $ useremail $ userinfo user, unEmail $ fromJust mnewemail)]
                                                      (Just $ userid user)
             flashMessageYourEmailHasChanged
         else

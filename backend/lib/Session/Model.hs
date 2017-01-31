@@ -70,7 +70,7 @@ updateSession old_ses new_ses_id new_muser new_mpad_user = do
   case new_ses_id == tempSessionID of
     -- We have no session and we want to log in some user
     True | (isJust new_muser || isJust new_mpad_user) -> do
-      let uid = $fromJust $ (new_muser `mplus` new_mpad_user)
+      let uid = fromJust $ (new_muser `mplus` new_mpad_user)
       n <- deleteSuperfluousUserSessions uid
       logInfo "Superfluous sessions of user removed from the database" $ object [
           identifier_ uid

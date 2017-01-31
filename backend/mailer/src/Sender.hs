@@ -103,7 +103,7 @@ createLocalSender (ConnectionSource pool) config = Sender {
   senderName = "localSender"
 , sendMail = \mail@Mail{..} -> localData [identifier_ mailID] $ do
   content <- runDBT pool ts $ assembleContent mail
-  let filename = localDirectory config ++ "/Email-" ++ addrEmail ($head mailTo) ++ "-" ++ show mailID ++ ".eml"
+  let filename = localDirectory config ++ "/Email-" ++ addrEmail (head mailTo) ++ "-" ++ show mailID ++ ".eml"
   liftBase $ BSL.writeFile filename content
   logInfo "Email saved to file" $ object [
       "file" .= filename

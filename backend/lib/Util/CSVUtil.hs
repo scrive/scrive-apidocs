@@ -30,7 +30,7 @@ parseCSV csvcontents =
     dropTrailingEmptyCells = reverse . dropWhile isEmptyCell . reverse
     isEmptyRow = all isEmptyCell
     isEmptyCell = null . dropWhile isSpace . reverse . dropWhile isSpace
-    fixSize s = fixSize' ($maximum $ map length s) s
+    fixSize s = fixSize' (maximum $ map length s) s
     fixSize' l (s:ss) = (s ++ (replicate (l - length s) "")) : fixSize' l ss
     fixSize' _ _ = []
 {- |

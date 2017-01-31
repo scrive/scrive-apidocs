@@ -98,18 +98,18 @@ guardThatObjectVersionMatchesIfProvided did = do
 guardSignatoryNeedsToIdentifyToView :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
 guardSignatoryNeedsToIdentifyToView slid doc = do
   let msl = getSigLinkFor slid doc
-  identifyToView <- signatoryNeedsToIdentifyToView ($fromJust msl)
+  identifyToView <- signatoryNeedsToIdentifyToView (fromJust msl)
   when (identifyToView && (not $ isAuthor msl))
     (apiError $ signatoryStateError "Authorization to view needed before signing")
 
 guardSignatoryHasNotIdentifiedToView :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
 guardSignatoryHasNotIdentifiedToView slid doc =
-  when (signatorylinkidentifiedtoview . $fromJust $ getSigLinkFor slid doc)
+  when (signatorylinkidentifiedtoview . fromJust $ getSigLinkFor slid doc)
     (apiError $ signatoryStateError "The party has already identified to view")
 
 guardCanSetAuthenticationToViewForSignatoryWithValues :: Kontrakcja m => SignatoryLinkID -> AuthenticationToViewMethod -> Maybe String -> Maybe String -> Document -> m ()
 guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mMobile doc = do
-  let sl = $fromJust $ getSigLinkFor slid doc
+  let sl = fromJust $ getSigLinkFor slid doc
   -- Do not allow mixing of Swedish and Norwegian BankID
   when (authToView == NOBankIDAuthenticationToView && signatorylinkauthenticationtosignmethod sl == SEBankIDAuthenticationToSign)
     (apiError $ signatoryStateError "Can't mix Norwegian and Swedish BankID for the same party")
@@ -138,7 +138,7 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mMobi
 
 guardCanSetAuthenticationToSignForSignatoryWithValue :: Kontrakcja m => SignatoryLinkID -> AuthenticationToSignMethod -> Maybe String -> Maybe String -> Document -> m ()
 guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobile doc = do
-  let sl = $fromJust $ getSigLinkFor slid doc
+  let sl = fromJust $ getSigLinkFor slid doc
   case authToSign of
     StandardAuthenticationToSign -> return ()
     SEBankIDAuthenticationToSign -> do
@@ -172,7 +172,7 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
 
 guardSignatoryHasNotSigned :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
 guardSignatoryHasNotSigned slid doc =
-  when (hasSigned . $fromJust $ getSigLinkFor slid doc)
+  when (hasSigned . fromJust $ getSigLinkFor slid doc)
     (apiError $ signatoryStateError "The signatory has already signed")
 
 -- Checks if document can be strated. Throws matching API exception if it does not
@@ -214,7 +214,7 @@ guardThatDocumentCanBeStarted doc = do
 guardThatAllAttachmentsAreAcceptedOrIsAuthor :: Kontrakcja m => SignatoryLinkID -> [FileID] -> Document -> m ()
 guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments doc = do
   unless (allRequiredAttachmentsAreOnList acceptedAttachments doc) $
-    unless (isAuthor $ $fromJust $ getSigLinkFor slid doc) $ -- Author does not need to accept attachments
+    unless (isAuthor $ fromJust $ getSigLinkFor slid doc) $ -- Author does not need to accept attachments
       apiError $ (signatoryStateError "Some mandatory author attachments aren't accepted")
 
 -- | For the given DocumentID:

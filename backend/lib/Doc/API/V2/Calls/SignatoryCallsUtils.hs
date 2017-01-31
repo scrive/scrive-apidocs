@@ -40,7 +40,7 @@ checkAuthenticationToSignMethodAndValue slid = do
   case mAuthType of
     Nothing -> return ()
     Just authMethod -> do
-      siglink <- $fromJust . getSigLinkFor slid <$> theDocument
+      siglink <- fromJust . getSigLinkFor slid <$> theDocument
       let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
       when (not authOK) $
         apiError $ requestParameterInvalid "authentication_type" "does not match with document"
@@ -81,7 +81,7 @@ signDocument slid mh fields acceptedAuthorAttachments mesig mpin screenshots = d
   fieldsWithFiles <- fieldsToFieldsWithFiles fields
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) =<< signatoryActor ctx sl
   theDocument >>= \doc -> do
-    let sl = $fromJust (getSigLinkFor slid doc)
+    let sl = fromJust (getSigLinkFor slid doc)
     authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments doc) $ \a -> do
       acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
       return (acceptanceText,a)
@@ -106,7 +106,7 @@ fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do
 
 checkSignatoryPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> String -> m Bool
 checkSignatoryPin slid (SignatoryFieldsValuesForSigning fields) pin = do
-  slidMobile <- getMobile <$> $fromJust . getSigLinkFor slid <$> theDocument
+  slidMobile <- getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
   mobile <- case (not $ null slidMobile, lookup MobileFI fields) of
     (True, _) -> return slidMobile
     (False, Just (StringFTV v)) -> return v

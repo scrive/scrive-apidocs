@@ -120,7 +120,7 @@ test_startDocumentCharging = do
 
       True <- withDocument doc $ do
         randomUpdate $ ResetSignatoryDetails ([
-              (def {   signatoryfields = (signatoryfields $ $fromJust $ getAuthorSigLink doc)
+              (def {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink doc)
                               , signatoryisauthor = True
                               , signatoryispartner = False
                               , maybesignatory = Just $ userid user })
