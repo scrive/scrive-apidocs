@@ -51,9 +51,10 @@ importantExecutables :: [(T.Text, [String])]
 importantExecutables =
   [ ("java", ["-version"])
   , ("curl", ["-V"])
-  , ("stdbuf", [])
-  , ("mutool", [])
-  , ("convert", [])
+  , ("stdbuf", ["--version"])
+  , ("mutool", ["-v"])
+  , ("convert", ["--version"])
+  , ("identify", ["--version"])
   , ("lessc", ["-v"])
   , ("gnuplot", ["--version"])
   , ("pdfdetach", ["-v"])
