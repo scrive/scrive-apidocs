@@ -33,7 +33,7 @@ import Util.MonadUtils
 
 handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> (User,Company) -> SignupMethod -> m User
 handleActivate mfstname msndname (actvuser,company) signupmethod = do
-  logInfo "Attempting to activate account for user" $ logValue actvuser
+  logInfo "Attempting to activate account for user" $ logObject_ actvuser
   -- Don't remove - else people will be able to hijack accounts
   when (isJust $ userhasacceptedtermsofservice actvuser) $ do
     internalError
@@ -75,7 +75,7 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
 
   tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
 
-  logInfo "Attempt successful, user logged in" $ logValue actvuser
+  logInfo "Attempt successful, user logged in" $ logObject_ actvuser
 
   whenM (not <$> isFieldSet "stoplogin") $ do
     logUserToContext $ Just tosuser

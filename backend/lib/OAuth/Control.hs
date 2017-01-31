@@ -54,7 +54,7 @@ tempCredRequest = api $ do
   case etcr of
     Left errors -> (throwM . SomeDBExtraException) $ badInput errors
     Right tcr -> do
-      logInfo "TempCredRequest got successfully" $ logValue tcr
+      logInfo "TempCredRequest got successfully" $ logObject_ tcr
       (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials tcr time
       return $ setHeader "Content-Type" "application/x-www-form-urlencoded" $
                   Web.toResponse $ urlEncodeVars [

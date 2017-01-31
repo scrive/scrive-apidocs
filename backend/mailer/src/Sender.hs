@@ -59,7 +59,7 @@ createExternalSender (ConnectionSource pool) name program createArgs = Sender {
         ]
       return False
     ExitSuccess -> do
-      logInfo "Email sent correctly" $ logValue mail
+      logInfo "Email sent correctly" $ logObject_ mail
       return True
 }
 

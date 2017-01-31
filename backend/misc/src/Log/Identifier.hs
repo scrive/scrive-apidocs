@@ -6,6 +6,8 @@ module Log.Identifier (
   , Loggable(..)
   , logPair
   , logPair_
+  , logObject
+  , logObject_
   ) where
 
 import Data.Aeson.Types
@@ -44,6 +46,13 @@ class Loggable a where
   -- | When structuring data for logging, we want to be consistent in naming
   --   data being logged. This way each type can have a default label.
   logDefaultLabel :: a -> Text
+
+-- | Log datatype as a top level log structure
+logObject :: (Loggable a) => (Text -> Text) -> a -> Value
+logObject f a = object [ logPair f a ]
+
+logObject_ :: (Loggable a) => a -> Value
+logObject_ = logObject id
 
 -- | Convert datatype to Aeson Pair for logging purposes. Allows adjusting or
 --   replacing of the default label

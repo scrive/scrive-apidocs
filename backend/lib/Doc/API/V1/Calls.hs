@@ -197,7 +197,7 @@ apiCallV1CreateFromFile = api $ do
       Just fileid' -> do
         dbUpdate $ AttachFile fileid' actor
     theDocument >>= \doc -> do
-      logInfo "New document created" $ logValue doc
+      logInfo "New document created" $ logObject_ doc
       Created <$> (documentJSONV1 (Just user) True True Nothing doc)
 
 apiCallV1CreateFromTemplate :: Kontrakcja m => DocumentID -> m Response
@@ -1246,7 +1246,7 @@ getMagicHashAndUserForSignatoryAction did sid = do
       Just mh'' ->  return (mh'',Nothing)
       Nothing -> do
         (user, _ , _) <- getAPIUser APIPersonal
-        logInfo "Logging user" $ logValue user
+        logInfo "Logging user" $ logObject_ user
         mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
         case mh'' of
           Nothing -> throwM . SomeDBExtraException $ serverError "Can't perform this action. Not authorized."

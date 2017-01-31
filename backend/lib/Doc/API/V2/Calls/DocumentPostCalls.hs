@@ -88,7 +88,7 @@ docApiV2New = api $ do
       Just f -> do
         dbUpdate $ AttachFile (fileid f) actor
   -- Result
-    theDocument >>= \doc -> logInfo "New document created" $ logValue doc
+    theDocument >>= \doc -> logInfo "New document created" $ logObject_ doc
     Created <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
 

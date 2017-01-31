@@ -69,7 +69,7 @@ scheduleEmailSendoutHelper authorname  mail@Mail{..} = do
       "originator" .= originator
     ]
   if unsendable to
-    then logAttention "Email is unsendable, discarding" $ logValue mail
+    then logAttention "Email is unsendable, discarding" $ logObject_ mail
     else do
       fromAddr <- return Address {addrName = authorname, addrEmail = originatorEmail }
       token <- random

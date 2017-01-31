@@ -66,7 +66,7 @@ documentAutomaticReminder = Action {
           void $ dbQuery (GetDocumentByDocumentID (reminderDocumentID dar)) >>= \doc -> runMailTInScheduler doc $
             withDocument doc $ sendAllReminderEmails (systemActor now) True
         else do
-          logInfo "Auto reminder dropped since document does not exists or is purged/reallydeleted" $ logValue dar
+          logInfo "Auto reminder dropped since document does not exists or is purged/reallydeleted" $ logObject_ dar
       void $ dbUpdate $ DeleteAction documentAutomaticReminder (reminderDocumentID dar)
 
 scheduleAutoreminderIfThereIsOne :: (MonadDB m, MonadTime m, MonadMask m) => TimeZoneName -> Document -> m ()

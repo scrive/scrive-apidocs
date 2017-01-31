@@ -93,7 +93,7 @@ handleAuthRequest did slid = do
   case cgiResp of
     Left fault -> return $ unjsonToJSON unjsonDef fault
     Right sr@AuthResponse{..} -> do
-        logInfo "SOAP response returned" $ logValue sr
+        logInfo "SOAP response returned" $ logObject_ sr
         sess <- getCurrentSession
         dbUpdate $ MergeCgiGrpTransaction $ CgiGrpAuthTransaction slid arsTransactionID arsOrderRef (sesID sess)
         return $ unjsonToJSON unjsonDef (arsAutoStartToken, sessionCookieInfoFromSession sess)
@@ -133,7 +133,7 @@ handleSignRequest did slid = do
   case cgiResp of
     Left fault -> return $ unjsonToJSON unjsonDef fault
     Right sr@SignResponse{..} -> do
-      logInfo "SOAP response returned" $ logValue sr
+      logInfo "SOAP response returned" $ logObject_ sr
       sess <- getCurrentSession
       dbUpdate $ MergeCgiGrpTransaction $ CgiGrpSignTransaction slid (T.pack tbs) srsTransactionID srsOrderRef (sesID sess)
       return $ unjsonToJSON unjsonDef (srsAutoStartToken,sessionCookieInfoFromSession sess)
