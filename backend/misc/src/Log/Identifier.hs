@@ -28,11 +28,11 @@ identifier_ :: Identifier t b => t -> Pair
 identifier_ = identifier id
 
 instance Identifier t b => Identifier [t] b where
-  idDefaultLabel _ = idDefaultLabel ($undefined::t) <> "s"
+  idDefaultLabel _ = idDefaultLabel (undefined::t) <> "s"
   idValue ns       = Array $ fromList $ fmap idValue ns
 
 instance Identifier t b => Identifier (Maybe t) b where
-  idDefaultLabel _ = idDefaultLabel ($undefined::t)
+  idDefaultLabel _ = idDefaultLabel (undefined::t)
   idValue Nothing  = Null
   idValue (Just n) = idValue n
 
