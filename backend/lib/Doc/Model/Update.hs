@@ -1781,13 +1781,17 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
     rows <- runQuery . sqlUpdate "documents" $ do
       sqlWith "documents_to_purge" . sqlSelect "documents d" $ do
         sqlResult "d.id"
-          -- Document wasn't purged yet.
+        -- Document wasn't purged yet.
         sqlWhere "d.purged_time IS NULL"
         -- All signatories with an account deleted the document.
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlWhere "sl.document_id = d.id"
           sqlWhere "sl.user_id IS NOT NULL"
           sqlWhere "sl.really_deleted IS NULL"
+        -- Document isn't pending (it's possible that there are 0
+        -- signatories with user set, but the doc is still pending
+        -- purging it would violate db constraints
+        sqlWhere $ "d.status <>" <?> Preparation
         -- Document is not referenced by any session.
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlJoinOn "document_session_tokens dst" "sl.id = dst.signatory_link_id"
