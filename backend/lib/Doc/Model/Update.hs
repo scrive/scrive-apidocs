@@ -1791,7 +1791,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         -- Document isn't pending (it's possible that there are 0
         -- signatories with user set, but the doc is still pending
         -- purging it would violate db constraints
-        sqlWhere $ "d.status <>" <?> Preparation
+        sqlWhere $ "d.status <>" <?> Pending
         -- Document is not referenced by any session.
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlJoinOn "document_session_tokens dst" "sl.id = dst.signatory_link_id"
