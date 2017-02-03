@@ -179,6 +179,28 @@ mailInvitationToSignContract=
         mailp2 = mailInvitationToSignContractIntructions();
         footer = legalparagraph()
     )$
+    $mailInvitationToSignContractGoToActionMarkup()$
+###
+mailInvitationToSignContractGoToActionMarkup=
+    $if(sign)$
+      $gmailGoToActionMarkup(
+          actionurl=link;
+          actionname=_mailInvitationToSignGoToActionName();
+          actiondescription=_mailInvitationToSignGoToActionDescription()
+      )$
+    $elseif(send)$
+      $gmailGoToActionMarkup(
+          actionurl=link;
+          actionname=_mailInvitationToSignGoToActionName();
+          actiondescription=_mailInvitationToSignGoToActionDescription()
+      )$
+    $elseif(view)$
+      $gmailGoToActionMarkup(
+          actionurl=link;
+          actionname=_mailInvitationToViewGoToActionName();
+          actiondescription=_mailInvitationToViewGoToActionDescription()
+      )$
+    $endif$
 ###
 mailInvitationToSignContractIntructions=
     $nicebutton(link=link; text=_mailGoToDocument())$
@@ -258,12 +280,28 @@ remindMailNotSignedContract=
         mailp1=remindMailNotSignedContractBody();
         footer= legalparagraph()
     )$
+    $remindMailNotSignedGoToActionMarkup()$
 #####
 remindMailNotSignedTitleContract=
 $if(sign)$
   $_remindMailNotSignedTitleContract()$
 $else$
   $_remindMailNotSignedTitleContractReview()$
+$endif$
+###
+remindMailNotSignedGoToActionMarkup=
+$if(sign)$
+  $gmailGoToActionMarkup(
+      actionurl=link;
+      actionname=_mailInvitationToSignGoToActionName();
+      actiondescription=_mailInvitationToSignGoToActionDescription()
+  )$
+$else$
+  $gmailGoToActionMarkup(
+      actionurl=link;
+      actionname=_mailInvitationToViewGoToActionName();
+      actiondescription=_mailInvitationToViewGoToActionDescription()
+  )$
 $endif$
 #####
 remindMailNotSignedContractBody=
@@ -540,4 +578,14 @@ accountingmaillink=
 ####
 concat=$a1:noescape()$$a2:noescape()$$a3:noescape()$
 ####
-
+#### GMAIL ACTION MARKUP
+####
+gmailGoToActionMarkup=
+<div itemscope itemtype="http://schema.org/EmailMessage">
+<div itemprop="action" itemscope itemtype="http://schema.org/ViewAction">
+<link itemprop="url" href="$actionurl$"></link>
+<meta itemprop="name" content="$actionname$"></meta>
+</div>
+<meta itemprop="description" content="$actiondescription$"></meta>
+</div>
+####
