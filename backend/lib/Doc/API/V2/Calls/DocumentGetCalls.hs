@@ -93,6 +93,7 @@ docApiV2History did = logDocument did . api $ do
   switchLang $ fromMaybe (lang $ usersettings user) mLang
   evidenceLog <- dbQuery $ GetEvidenceLog did
   doc <- dbQuery $ GetDocumentByDocumentID did
+  guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
   events <- reverse <$> eventsJSListFromEvidenceLog doc evidenceLog
   -- Result
   return $ Ok $ JSObject (J.toJSObject $ [("events", JSArray events)])

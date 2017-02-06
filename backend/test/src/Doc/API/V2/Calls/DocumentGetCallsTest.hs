@@ -28,6 +28,7 @@ apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
   , testThat "API v2 Get by Company Admin"  env testDocApiV2GetByAdmin
   , testThat "API v2 Get for Shared doc"    env testDocApiV2GetShared
   , testThat "API v2 History"               env testDocApiV2History
+  , testThat "API v2 History (permissions)" env testDocApiV2HistoryPermissionCheck
   , testThat "API v2 Evidence attachments"  env testDocApiV2EvidenceAttachments
   , testThat "API v2 Files - Main"          env testDocApiV2FilesMain
   , testThat "API v2 Files - Get"           env testDocApiV2FilesGet
@@ -110,6 +111,20 @@ testDocApiV2History = do
 
   _ <- mockDocTestRequestHelper ctx POST [] (docApiV2Cancel did) 200
   checkHistoryHasNItems 2
+
+testDocApiV2HistoryPermissionCheck :: TestEnv ()
+testDocApiV2HistoryPermissionCheck = do
+  userAuthor <- addNewRandomUser
+  userOther <- addNewRandomUser
+  ctxWithAuthor <- (\c -> c { ctxmaybeuser = Just userAuthor }) <$> mkContext def
+  ctxWithOtherUser <- (\c -> c { ctxmaybeuser = Just userOther }) <$> mkContext def
+
+  did <- getMockDocId <$> testDocApiV2New' ctxWithAuthor
+
+  _ <- jsonTestRequestHelper ctxWithAuthor GET [] (docApiV2History did) 200
+  _ <- jsonTestRequestHelper ctxWithOtherUser GET [] (docApiV2History did) 403
+  return ()
+
 
 testDocApiV2EvidenceAttachments :: TestEnv ()
 testDocApiV2EvidenceAttachments = do
