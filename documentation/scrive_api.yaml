@@ -777,6 +777,9 @@ paths:
   /{document_id}/get:
     $ref: ./api/documents/document_id/get.yaml
 
+  /{short_document_id}/getbyshortid:
+    $ref: ./api/documents/short_document_id/getbyshortid.yaml
+
   /list:
     $ref: ./api/documents/list.yaml
 
