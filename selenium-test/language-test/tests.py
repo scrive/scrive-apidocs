@@ -107,7 +107,7 @@ def check_language_tst(test, drv, api):
 
     # confirm signing
     drv.wait_for_element_and_click('.section.sign .button.action')
-    drv.screenshot(first_sleep_for=1)  # wait for animation to finish
+    drv.screenshot()
 
     # wait for modal to disappear (by page reloading)
     drv.wait_for_element_to_disappear('.sign.section')
