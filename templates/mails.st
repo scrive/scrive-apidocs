@@ -581,8 +581,8 @@ concat=$a1:noescape()$$a2:noescape()$$a3:noescape()$
 #### GMAIL ACTION MARKUP
 ####
 gmailGoToActionMarkup=
-<div itemscope itemtype="http://schema.org/EmailMessage">
-<div itemprop="action" itemscope itemtype="http://schema.org/ViewAction">
+<div itemscope="" itemtype="http://schema.org/EmailMessage">
+<div itemprop="action" itemscope="" itemtype="http://schema.org/ViewAction">
 <link itemprop="url" href="$actionurl$"></link>
 <meta itemprop="name" content="$actionname$"></meta>
 </div>
