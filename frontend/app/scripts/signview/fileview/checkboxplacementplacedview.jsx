@@ -6,7 +6,7 @@ var $ = require("jquery");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 var classNames = require("classnames");
 
-var Checkbox = require("../../icons/checkbox");
+var Checkbox = require("./signviewcheckbox");
 
   module.exports = React.createClass({
     mixins: [PlacementMixin, TaskMixin],
@@ -46,6 +46,11 @@ var Checkbox = require("../../icons/checkbox");
       }
     },
 
+    onMouseDown: function (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    },
+
     render: function () {
       var field = this.props.model.field();
       var doc = field.signatory().document();
@@ -78,7 +83,7 @@ var Checkbox = require("../../icons/checkbox");
       };
 
       return (
-        <div onClick={this.toggleCheck} className={divClass} style={divStyle}>
+        <div onMouseDown={this.onMouseDown} onClick={this.toggleCheck} className={divClass} style={divStyle}>
           <div className="placedcheckbox" style={boxStyle} >
             <div
               className="checkboxClickableArea"

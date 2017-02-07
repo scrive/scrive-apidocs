@@ -6,11 +6,7 @@ var ViewSize = require("../viewsize");
 var classNames = require("classnames");
 
 module.exports = React.createClass({
-    mixins: [BackboneMixin.BackboneMixin],
-
-    getBackboneModels: function () {
-      return [this.props.signatory];
-    },
+    displayName: "DocViewSignatory",
 
     propTypes: {
       signatory: React.PropTypes.object,

@@ -11,7 +11,8 @@ var $ = require("jquery");
 var classNames = require("classnames");
 
   module.exports = React.createClass({
-    mixins: [BackboneMixin.BackboneMixin, TaskMixin],
+    displayName: "SignSignView",
+    mixins: [TaskMixin],
 
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
@@ -22,10 +23,6 @@ var classNames = require("classnames");
 
     contextTypes: {
       blinkArrow: React.PropTypes.func
-    },
-
-    getBackboneModels: function () {
-      return [this.props.model];
     },
 
     createTasks: function () {

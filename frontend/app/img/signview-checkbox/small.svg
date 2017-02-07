@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="12" height="48" viewBox="0 0 12 48" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <rect id="a" width="12" height="12"/>
+    <mask id="c" width="12" height="12" x="0" y="0" fill="white">
+      <use xlink:href="#a"/>
+    </mask>
+    <rect id="b" width="12" height="12"/>
+    <mask id="d" width="12" height="12" x="0" y="0" fill="white">
+      <use xlink:href="#b"/>
+    </mask>
+  </defs>
+  <g fill="none" fill-rule="evenodd">
+    <g transform="translate(0 36)">
+      <use fill="#FFFFFF" stroke="#000000" stroke-width="2" mask="url(#c)" xlink:href="#a"/>
+      <path fill="#000000" d="M2.7,5.73 L4.625,7.645 C4.785,7.5 9.266,3 9.266,3 L10,3.658 L5.285,8.3 L4.585,9 L2,6.427 L2.7,5.73 Z"/>
+    </g>
+    <use fill="#FFFFFF" stroke="#000000" stroke-width="2" mask="url(#d)" xlink:href="#b" transform="translate(0 24)"/>
+    <g transform="translate(0 12)">
+      <rect width="12" height="12"/>
+      <path fill="#FFFFFF" d="M2.7,5.73 L4.62,7.64 C4.78,7.5 9.27,3 9.27,3 L10,3.66 L5.29,8.3 L4.58,9 L2,6.43 L2.7,5.73 Z"/>
+    </g>
+    <rect width="10" height="10" fill="#FFFFFF" fill-opacity=".8" transform="translate(1 1)"/>
+  </g>
+</svg>

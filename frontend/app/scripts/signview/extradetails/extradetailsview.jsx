@@ -69,7 +69,7 @@ var classNames = require("classnames");
   });
 
   module.exports = React.createClass({
-    mixins: [BackboneMixin.BackboneMixin, TaskMixin],
+    mixins: [TaskMixin],
 
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
@@ -95,10 +95,6 @@ var classNames = require("classnames");
         askForSSN: signview.askForSSNIfNotEID(),
         askForPhone: signview.askForPhoneIfNotPin()
       });
-    },
-
-    getBackboneModels: function () {
-      return [this.props.model];
     },
 
     createTaskFromRef: function (ref, isComplete) {

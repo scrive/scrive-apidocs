@@ -21,6 +21,7 @@ var Arrow = require("./navigation/arrow");
 var TaskList = require("./navigation/task_list");
 
   module.exports = React.createClass({
+    displayName: "SignView",
     mixins: [BackboneMixin.BackboneMixin],
 
     propTypes: {

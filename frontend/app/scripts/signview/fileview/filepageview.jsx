@@ -28,12 +28,6 @@ module.exports = React.createClass({
     width: React.PropTypes.number
   },
 
-  mixins: [BackboneMixin.BackboneMixin],
-
-  getBackboneModels: function () {
-    return [this.props.filepage];
-  },
-
   canEditHighlighting: function () {
     var doc = this.props.document;
     return doc.currentSignatoryCanSign() && doc.currentSignatory().allowshighlighting();

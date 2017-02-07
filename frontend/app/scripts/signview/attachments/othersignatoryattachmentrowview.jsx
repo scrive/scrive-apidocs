@@ -10,12 +10,6 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
       model: React.PropTypes.instanceOf(Backbone.Model)
     },
 
-    mixins: [BackboneMixin.BackboneMixin],
-
-    getBackboneModels: function () {
-      return [this.props.model];
-    },
-
     render: function () {
       var self = this;
       var model = self.props.model;

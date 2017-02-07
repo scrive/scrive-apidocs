@@ -4,10 +4,13 @@ var BackboneMixin = require("../common/backbone_mixin");
 var _ = require("underscore");
 var Track = require("../common/track");
 var ReloadManager = require("../../js/reloadmanager.js").ReloadManager;
+var ModelObserverMixin = require("./model_observer_mixin");
 
 import DownloadPdfIcon from "../icons/download_pdf_icon.svg";
 
   module.exports = React.createClass({
+    displayName: "Header",
+    mixins: [ModelObserverMixin],
     propTypes: {
       document: React.PropTypes.instanceOf(Backbone.Model).isRequired,
       documentid: React.PropTypes.string.isRequired,
@@ -15,9 +18,12 @@ import DownloadPdfIcon from "../icons/download_pdf_icon.svg";
       authorFullname: React.PropTypes.string,
       authorPhone: React.PropTypes.string
     },
-    mixins: [BackboneMixin.BackboneMixin],
-    getBackboneModels : function() {
-      return [this.props.document];
+    shouldComponentUpdate: function (nextProps, nextState) {
+      var observedAttrs = [
+        "ready", "showpdfdownload", "status", "sealedfile", "file"
+      ];
+
+      return this.hasChanges(this.props.document, observedAttrs);
     },
     logoLink: function() {
       return window.cdnbaseurl + "/signview_logo/" + window.brandingdomainid + "/" + this.props.documentid + "/" + window.brandinghash;

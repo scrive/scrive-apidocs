@@ -9,6 +9,7 @@ var classNames = require("classnames");
 var isElementInViewport = require("../../common/iselementinviewport");
 var isTouchDevice = require("../../common/is_touch_device");
 var Track = require("../../common/track");
+var ModelObserverMixin = require("../model_observer_mixin");
 
 var ORIGINAL_PAGE_SIZE = 950;
 
@@ -16,7 +17,7 @@ var ORIGINAL_PAGE_SIZE = 950;
     displayName: "TextPlacement",
     _lastWidth: 0,
 
-    mixins: [PlacementMixin, TaskMixin],
+    mixins: [PlacementMixin, TaskMixin, ModelObserverMixin],
 
     contextTypes: {
       zoomToPoint: React.PropTypes.func
@@ -24,6 +25,31 @@ var ORIGINAL_PAGE_SIZE = 950;
 
     getInitialState: function () {
       return {editing: false, active: false};
+    },
+
+    componentWillMount: function () {
+      this._lastValue = "";
+    },
+
+    shouldComponentUpdate: function (nextProps, nextState) {
+      var observedFieldsModel = ["wrel", "hrel", "xrel", "yrel", "fsrel"];
+      var observedFieldsField = ["is_obligatory", "hadValueWhenCreated"];
+      var observedFieldsSignatory = ["current", "is_signatory"];
+      var observedFieldsDocument = ["status"];
+
+      var result = (
+        (nextState.editing != this.state.editing)
+        || (nextState.active != this.state.active)
+        || (nextProps.pageWidth != this.props.pageWidth)
+        || (nextProps.pageHeight != this.props.pageHeight)
+        || (this.canSign() && (this._lastValue != this.props.model.field().value()))
+        || this.hasChanges(this.props.model, observedFieldsModel)
+        || this.hasChanges(this.props.model.field(), observedFieldsField)
+        || this.hasChanges(this.props.model.field().signatory(), observedFieldsSignatory)
+        || this.hasChanges(this.props.model.field().signatory().document(), observedFieldsDocument)
+      );
+
+      return result;
     },
 
     componentWillUpdate: function (prevProps, prevState) {
@@ -130,6 +156,7 @@ var ORIGINAL_PAGE_SIZE = 950;
 
     handleChange: function (value) {
       var field = this.props.model.field();
+      this._lastValue = value;
       field.setValue(value);
     },
 
@@ -145,6 +172,10 @@ var ORIGINAL_PAGE_SIZE = 950;
       var current = signatory == doc.currentSignatory() && doc.currentSignatoryCanSign();
       return signatory.canSign() && !field.isClosed() &&
         field.signatory().current() && self.inlineediting != true;
+    },
+
+    onMouseDown: function (event) {
+      event.stopPropagation();
     },
 
     render: function () {
@@ -226,6 +257,7 @@ var ORIGINAL_PAGE_SIZE = 950;
 
       return (
         <div
+          onMouseDown={this.onMouseDown}
           onClick={this.handleClick}
           className={divClass}
           style={divStyle}

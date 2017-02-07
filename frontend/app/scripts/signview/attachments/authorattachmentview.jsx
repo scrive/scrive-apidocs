@@ -14,11 +14,8 @@ var AuthorAttachmentFileViewer = require("./authorattachmentfileviewer");
 var Document = require("../../../js/documents.js").Document;
 
   module.exports = React.createClass({
-    mixins: [BackboneMixin.BackboneMixin, TaskMixin],
-
-    getBackboneModels: function () {
-      return [this.props.model];
-    },
+    displayName: "AuthorAttachmentView",
+    mixins: [TaskMixin],
 
     propTypes: {
       model: React.PropTypes.instanceOf(AuthorAttachment).isRequired,

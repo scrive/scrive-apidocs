@@ -7,6 +7,8 @@ var Task = require("../navigation/task");
 var TaskList = require("../navigation/task_list");
 var $ = require("jquery");
 var classNames = require("classnames");
+var _ = require("underscore");
+var ModelObserverMixin = require("../model_observer_mixin");
 
 var FONT_SIZE_BASE = 16;
 var SIGNATURE_PLACEMENT_WIDTH_BASE = 284;
@@ -15,12 +17,31 @@ var SIGNATURE_PLACEMENT_WIDTH_BASE = 284;
     _openTry: 0,
     _openModal: false,
 
-    mixins: [PlacementMixin, TaskMixin],
+    displayName: "SignaturePlacementPlacedView",
+    mixins: [PlacementMixin, TaskMixin, ModelObserverMixin],
 
     contextTypes: {
       taskList: React.PropTypes.instanceOf(TaskList),
       hideArrow: React.PropTypes.func,
       showArrow: React.PropTypes.func
+    },
+
+    shouldComponentUpdate: function (nextProps, nextState) {
+      var observedFieldsModel = ["wrel", "hrel", "xrel", "yrel", "fsrel"];
+      var observedFieldsField = ["value", "signature", "is_obligatory"];
+      var observedFieldsSignatory = ["current"];
+      var observedFieldsDocument = ["status"];
+
+      var result = (
+        (nextProps.pageWidth != this.props.pageWidth)
+        || (nextProps.pageHeight != this.props.pageHeight)
+        || this.hasChanges(this.props.model, observedFieldsModel)
+        || this.hasChanges(this.props.model.field(), observedFieldsField)
+        || this.hasChanges(this.props.model.field().signatory(), observedFieldsSignatory)
+        || this.hasChanges(this.props.model.field().signatory().document(), observedFieldsDocument)
+      );
+
+      return result;
     },
 
     createTasks: function () {
@@ -96,6 +117,10 @@ var SIGNATURE_PLACEMENT_WIDTH_BASE = 284;
                "/image.png" + queryPart;
       }
     },
+    onMouseDown: function (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    },
     render: function () {
       var placement = this.props.model;
       var field = placement.field();
@@ -147,7 +172,7 @@ var SIGNATURE_PLACEMENT_WIDTH_BASE = 284;
       };
 
       return (
-          <div className={divClass} style={divStyle}>
+          <div onMouseDown={this.onMouseDown} className={divClass} style={divStyle}>
             {/* if */ (drawing || hasImage) &&
               <div className={boxClass} style={boxStyle} onClick={drawing && this.activateSignatureModal}>
                 {/* if */ drawing && !hasImage &&

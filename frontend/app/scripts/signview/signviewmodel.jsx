@@ -294,12 +294,23 @@ var Track = require("../common/track");
 
     recall: function (f) {
       var self = this;
-      this.document().recall(f, function (response) {
-        if (response.status == 401) {
-          self.trigger("recallfailednotauthorized");
-          return false;
-        }
-        return true;
-      });
+      if (this.document().initialDocumentData()) {
+        // Manually reset document attributes upon the first recall. This way,
+        // document model changes dict will be correctly filled whenever change
+        // event is triggered.
+        this.document().set(
+          this.document().parse(this.document().initialDocumentData()),
+          {silent: true}
+        );
+        this.document().unset("initialdocumentdata");
+      } else {
+        this.document().recall(f, function (response) {
+          if (response.status == 401) {
+            // self.trigger("recallfailednotauthorized");
+            return false;
+          }
+          return true;
+        });
+      }
     }
   });

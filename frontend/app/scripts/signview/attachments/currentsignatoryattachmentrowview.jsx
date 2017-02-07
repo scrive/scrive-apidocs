@@ -17,6 +17,7 @@ var _ = require("underscore");
 var Task = require("../navigation/task");
 
   var UploadArea = React.createClass({
+    displayName: "CurrentSignatoryAttachmentUploadArea",
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model)
     },
@@ -124,11 +125,12 @@ var Task = require("../navigation/task");
   });
 
   module.exports = React.createClass({
+    displayName: "CurrentSignatoryAttachment",
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model)
     },
 
-    mixins: [BackboneMixin.BackboneMixin, TaskMixin],
+    mixins: [TaskMixin],
 
     createTasks: function () {
       var self = this;
@@ -155,10 +157,6 @@ var Task = require("../navigation/task");
           Track.track("Finish attachment task");
         }
       })];
-    },
-
-    getBackboneModels: function () {
-      return [this.props.model];
     },
 
     setAttachmentURL: function () {
