@@ -228,7 +228,7 @@ findAndDoPostDocumentClosedActions = do
     , DocumentFilterBySealStatus [Missing]
       -- Avoid documents that the server is processing in its post-closed thread.
     , DocumentFilterByLatestSignTimeBefore (5 `minutesBefore` now)
-    ] [] 100
+    ] [] 200
   when (not $ null docs) $ do
     logInfo "findAndDoPostDocumentClosedActions: considering documents" $ object [
         "documents" .= length docs
