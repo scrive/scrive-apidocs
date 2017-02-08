@@ -1,5 +1,6 @@
 module DumpEvidenceTexts (dumpAllEvidenceTexts) where
 
+import Control.Exception (evaluate)
 import Control.Monad.Catch
 import Control.Monad.Reader (asks)
 import Control.Monad.Trans (liftIO)
@@ -42,7 +43,7 @@ dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
     t <- runTemplatesT (lang, gts) $ theDocument >>= dumpEvidenceTexts now lang
     case teOutputDirectory env of
       Just d  -> liftIO $ writeFile (d </> "evidence-texts-" ++ codeFromLang lang ++ ".html") t
-      Nothing -> t == t `seq` return ()
+      Nothing -> liftIO $ evaluate t >> return ()
 
 dumpEvidenceTexts :: (MonadDB m, MonadLog m, MonadThrow m, TemplatesMonad m) => UTCTime -> Lang -> Document -> m String
 dumpEvidenceTexts now lang doc' = do
