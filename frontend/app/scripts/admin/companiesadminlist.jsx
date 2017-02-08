@@ -31,7 +31,10 @@ module.exports = React.createClass({
             if (selectfiltering) {
               _.each(selectfiltering.filters(), function(f) {
                 if (f.value === "allCompanies") {
-                  params.allCompanies =  "true";
+                  params.allCompanies = "true";
+                } else if (f.value === "nonFree") {
+                  params.allCompanies = "true";
+                  params.nonFree = "true";
                 }
               });
             }
@@ -47,6 +50,7 @@ module.exports = React.createClass({
             width={200}
             options={[
               {name: "With more than one user", value: ""},
+              {name: "With non-free price plan", value: "nonFree"},
               {name: "All", value: "allCompanies"}
             ]}
           />
