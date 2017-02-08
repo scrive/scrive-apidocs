@@ -4,7 +4,7 @@
     width: @baseSize;
 
     > div {
-      background-image: url(~"@{img-base-url}/signview-checkbox/@{klass}.svg");
+      background-image: url(~"@{img-base-url}/checkbox/@{klass}.svg");
       background-position: 0px 0px;
       background-repeat: no-repeat;
       background-size: @baseSize @baseSize * 4;
@@ -26,24 +26,12 @@
   }
 }
 
-.checkbox-variant(small) {
-  .checkbox(small, 12px);
-}
-
-.checkbox-variant(medium) {
-  .checkbox(medium, 22px);
-}
-
-.checkbox-variant(large) {
-  .checkbox(large, 44px);
-}
-
-.signview-checkbox-wrapper {
+.checkbox-wrapper {
   background-color: white;
 
-  .checkbox-variant(small);
+  .checkbox(small, 12px);
 
-  .checkbox-variant(medium);
+  .checkbox(medium, 22px);
 
-  .checkbox-variant(large);
+  .checkbox(large, 44px);
 }

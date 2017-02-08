@@ -6,7 +6,7 @@ var $ = require("jquery");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 var classNames = require("classnames");
 
-var Checkbox = require("./signviewcheckbox");
+var Checkbox = require("../../icons/checkbox");
 
   module.exports = React.createClass({
     mixins: [PlacementMixin, TaskMixin],

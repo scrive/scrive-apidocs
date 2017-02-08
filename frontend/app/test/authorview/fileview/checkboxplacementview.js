@@ -76,13 +76,17 @@ describe("/authorview/fileview/checkboxplacementview", function () {
     field.setChecked(false, {silent: true});
 
     var component = renderComponent();
-    assert.lengthOf($(".svg-checked-icon", React.findDOMNode(component)), 0);
+    assert.lengthOf(
+      $("div.checkbox-wrapper.checked", React.findDOMNode(component)), 0
+    );
   });
 
   it("should have .svg-checked-icon element inside when checked", function () {
     field.setChecked(true, {silent: true});
 
     var component = renderComponent();
-    assert.lengthOf($(".svg-checked-icon", React.findDOMNode(component)), 1);
+    assert.lengthOf(
+      $("div.checkbox-wrapper.checked", React.findDOMNode(component)), 1
+    );
   });
 });

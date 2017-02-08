@@ -28,3 +28,9 @@ To run tests with coverage:
 To runt test without coverage:
 
 > $ grunt test:fast
+
+## Additional resources
+
+The `resources/` directory contains "sources" (e.g. Sketch files) for some of
+the assets used in frontend. The contents of this directory should not be
+taken into consideration during deployment.

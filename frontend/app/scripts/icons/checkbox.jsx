@@ -1,66 +1,72 @@
+var ClassNames = require("classnames");
 var React = require("react");
 
-var CheckboxLargeActiveCheckedIcon = require("./checkboxes/checkbox_large_active_checked.svg");
-var CheckboxLargeCheckedIcon = require("./checkboxes/checkbox_large_checked.svg");
-var CheckboxLargeNotCheckedIcon = require("./checkboxes/checkbox_large_not_checked.svg");
-var CheckboxMediumActiveCheckedIcon = require("./checkboxes/checkbox_medium_active_checked.svg");
-var CheckboxMediumCheckedIcon = require("./checkboxes/checkbox_medium_checked.svg");
-var CheckboxMediumNotCheckedIcon = require("./checkboxes/checkbox_medium_not_checked.svg");
-var CheckboxSmallActiveCheckedIcon = require("./checkboxes/checkbox_small_active_checked.svg");
-var CheckboxSmallCheckedIcon = require("./checkboxes/checkbox_small_checked.svg");
-var CheckboxSmallNotCheckedIcon = require("./checkboxes/checkbox_small_not_checked.svg");
 var FieldPlacementGlobal = require("../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 
-module.exports =  React.createClass({
+module.exports = React.createClass({
+  displayName: "Checkbox",
+  mixins: [React.addons.PureRenderMixin],
   propTypes: {
     pageWidth: React.PropTypes.number.isRequired,
     wrel: React.PropTypes.number.isRequired,
     active: React.PropTypes.bool.isRequired,
     checked: React.PropTypes.bool.isRequired
   },
-
-  isSmall: function() {
+  isSmall: function () {
     return !this.isMedium() && !this.isLarge();
   },
-
-  isMedium: function() {
+  isMedium: function () {
     return Math.abs(this.props.wrel - FieldPlacementGlobal.mediumCheckboxRatio) < 0.001;
   },
-
-  isLarge: function() {
+  isLarge: function () {
     return Math.abs(this.props.wrel - FieldPlacementGlobal.largeCheckboxRatio) < 0.001;
   },
-
   render: function () {
     var size = Math.round(this.props.wrel * this.props.pageWidth);
-    var style = { width : size, height: size}
 
-    if (this.isLarge()) {
-      if (this.props.checked && this.props.active) {
-        return (<CheckboxLargeActiveCheckedIcon className="svg-checked-active-icon" style={style} />);
-      } else if (this.props.checked && !this.props.active) {
-        return (<CheckboxLargeCheckedIcon className="svg-checked-icon" style={style} />);
+    var inactive = !this.props.active;
+    var wrapperClassName = ClassNames("checkbox-wrapper", {
+      small: this.isSmall(),
+      medium: this.isMedium(),
+      large: this.isLarge(),
+      inactive: inactive,
+      checked: this.props.checked
+    });
+
+    var spriteWidth = size;
+    var spriteHeight = size * 4;
+
+    var spriteX = 0;
+    var spriteY = 0;
+
+    if (this.props.checked) {
+      spriteY = -1 * size;
+    }
+
+    if (inactive) {
+      if (!this.props.checked) {
+        spriteY = -2 * size;
       } else {
-        return (<CheckboxLargeNotCheckedIcon className="svg-not-checked-icon" style={style} />);
+        spriteY = -3 * size;
       }
     }
-    else if (this.isMedium()) {
-      if (this.props.checked && this.props.active) {
-        return (<CheckboxMediumActiveCheckedIcon className="svg-checked-active-icon" style={style} />);
-      } else if (this.props.checked && !this.props.active) {
-        return (<CheckboxMediumCheckedIcon className="svg-checked-icon" style={style} />);
-      } else {
-        return (<CheckboxMediumNotCheckedIcon className="svg-not-checked-icon" style={style} />);
-      }
-    }
-    else if (this.isSmall()) {
-      if (this.props.checked && this.props.active) {
-        return (<CheckboxSmallActiveCheckedIcon className="svg-checked-active-icon" style={style} />);
-      } else if (this.props.checked && !this.props.active) {
-        return (<CheckboxSmallCheckedIcon className="svg-checked-icon" style style={style} />);
-      } else {
-        return (<CheckboxSmallNotCheckedIcon className="svg-not-checked-icon" style={style} />);
-      }
-    }
+
+    var wrapperStyle = {
+      width: size,
+      height: size
+    };
+
+    var checkboxStyle = {
+      backgroundSize: spriteWidth + "px" + " " + spriteHeight + "px",
+      backgroundPosition: spriteX + "px" + " " + spriteY + "px",
+      height: wrapperStyle.height,
+      width: wrapperStyle.width
+    };
+
+    return (
+      <div className={wrapperClassName} style={wrapperStyle}>
+        <div style={checkboxStyle}></div>
+      </div>
+    );
   }
 });
