@@ -23,7 +23,7 @@ instance NFData RsFlags where
 instance NFData Response where
   rnf Response{..} = rnf rsCode
     `seq` rnf rsHeaders
-    `seq `rnf rsFlags
+    `seq` rnf rsFlags
     `seq` rnf rsBody
     `seq` rnf rsValidator
   rnf SendFile{..} = rnf rsCode
