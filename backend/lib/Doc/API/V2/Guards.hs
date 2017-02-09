@@ -181,13 +181,15 @@ guardThatDocumentCanBeStarted doc = do
     when (isTemplate doc) $ do
        apiError $ (documentStateError "Document is a template, templates can not be started")
     unless (all signatoryHasValidDeliverySettings $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Some parties have invalid email address or mobile number, their invitation 'delivery_method' requires it to be valid and not empty."
+       apiError $ documentStateError "Some parties have an invalid email address or mobile number, their invitation 'delivery_method' requires it to be valid and not empty."
+    unless (all signatoryHasValidConfirmationSettings $ documentsignatorylinks doc) $ do
+       apiError $ documentStateError "Some parties have an invalid email address or mobile number, their 'confirmation_delivery_method' requires it to be valid or empty."
     unless (all signatoryHasValidSSNForIdentifyToView $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Some parties have invalid personal numbers, their 'authentication_to_view' requires it to be valid and not empty."
+       apiError $ documentStateError "Some parties have an invalid personal numbers, their 'authentication_to_view' requires it to be valid and not empty."
     unless (all signatoryHasValidAuthSettings $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Some parties have invalid personal numbers, their 'authentication_to_sign' requires it to be valid or empty."
+       apiError $ documentStateError "Some parties have an invalid personal numbers, their 'authentication_to_sign' requires it to be valid or empty."
     unless (all signatoryHasValidMobileForIdentifyToView $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Some parties have invalid mobile number and it is required for identification to view document."
+       apiError $ documentStateError "Some parties have an invalid mobile number and it is required for identification to view document."
     when (isNothing $ documentfile doc) $ do
        apiError $ documentStateError "Document must have a file before it can be started"
     return ()
@@ -197,8 +199,13 @@ guardThatDocumentCanBeStarted doc = do
       MobileDelivery ->  isGood $ asValidPhoneForSMS $ getMobile sl
       EmailAndMobileDelivery -> (isGood $ asValidPhoneForSMS $ getMobile sl) && (isGood $ asValidEmail $ getEmail sl)
       _ -> True
+    signatoryHasValidConfirmationSettings sl = isAuthor sl || case signatorylinkconfirmationdeliverymethod sl of
+      EmailConfirmationDelivery -> null (getEmail sl) || isGood (asValidEmail $ getEmail sl)
+      MobileConfirmationDelivery -> null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl)
+      EmailAndMobileConfirmationDelivery -> (null (getEmail sl) || isGood (asValidEmail $ getEmail sl)) && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
+      NoConfirmationDelivery -> True
     signatoryHasValidAuthSettings sl = authToSignIsValid sl
-    authToSignIsValid sl = getPersonalNumber sl == "" || case signatorylinkauthenticationtosignmethod sl of
+    authToSignIsValid sl = null (getPersonalNumber sl) || case signatorylinkauthenticationtosignmethod sl of
       SEBankIDAuthenticationToSign -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
       _ -> True
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of

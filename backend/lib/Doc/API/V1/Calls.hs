@@ -357,6 +357,13 @@ apiCallV1Ready did = logDocument did . api $ do
             checkObjectVersionIfProvidedAndThrowError did $ (serverError "Document is not a draft")
       unlessM (((all signatoryHasValidDeliverySettings) . documentsignatorylinks) <$> theDocument) $ do
             throwM . SomeDBExtraException $ serverError "Some signatories have invalid email address or phone number, and it is required for invitation delivery."
+
+      -- Clear invalid emails/mobile numbers if confirmation delivery requires it. v1 hack, properly fixed with v2
+      -- Check: https://scrive.fogbugz.com/f/cases/2637/Fwd-FW-RA-email-not-sent
+      mapM_ fixFieldsForConfirmationDeliveryIfNeeded =<< (documentsignatorylinks <$> theDocument)
+
+      unlessM (((all signatoryHasValidConfirmationSettings) . documentsignatorylinks) <$> theDocument) $ do
+            throwM . SomeDBExtraException $ serverError "Some signatories have invalid email address or phone number, and it is required for confirmation delivery."
       unlessM (((all signatoryHasValidAuthSettings) . documentsignatorylinks) <$> theDocument) $ do
             throwM . SomeDBExtraException $ serverError "Some signatories have invalid personal number, and it is required for authentication."
       unlessM (((all signatoryHasValidSSNForIdentifyToView) . documentsignatorylinks) <$> theDocument) $ do
@@ -379,6 +386,24 @@ apiCallV1Ready did = logDocument did . api $ do
       MobileDelivery ->  isGood $ asValidPhoneForSMS $ getMobile sl
       EmailAndMobileDelivery -> (isGood $ asValidPhoneForSMS $ getMobile sl) && (isGood $ asValidEmail $ getEmail sl)
       _ -> True
+    signatoryHasValidConfirmationSettings sl = case signatorylinkconfirmationdeliverymethod sl of
+      EmailConfirmationDelivery -> null (getEmail sl) || isGood (asValidEmail $ getEmail sl)
+      MobileConfirmationDelivery -> null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl)
+      EmailAndMobileConfirmationDelivery -> (null (getEmail sl) || isGood (asValidEmail $ getEmail sl)) && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
+      NoConfirmationDelivery -> True
+    fixFieldsForConfirmationDeliveryIfNeeded sl = case (signatorylinkconfirmationdeliverymethod sl) of
+      EmailConfirmationDelivery -> do
+        when (not (null (getEmail sl)) && isBad (asValidEmail $ getEmail sl)) $ do
+          dbUpdate $ ClearSignatoryEmail $ signatorylinkid sl
+      MobileConfirmationDelivery -> do
+        when (not (null (getMobile sl)) && isBad (asValidPhoneForSMS $ getMobile sl)) $ do
+          dbUpdate $ ClearSignatoryMobile $ signatorylinkid sl
+      EmailAndMobileConfirmationDelivery -> do
+        when (not (null (getEmail sl)) && isBad (asValidEmail $ getEmail sl)) $ do
+          dbUpdate $ ClearSignatoryEmail $ signatorylinkid sl
+        when (not (null (getEmail sl)) && isBad (asValidPhoneForSMS $ getMobile sl)) $ do
+          dbUpdate $ ClearSignatoryMobile $ signatorylinkid sl
+      NoConfirmationDelivery -> return ()
     signatoryHasValidAuthSettings sl = authToSignIsValid sl
     authToSignIsValid sl = getPersonalNumber sl == "" || case signatorylinkauthenticationtosignmethod sl of
       SEBankIDAuthenticationToSign -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl

@@ -62,6 +62,8 @@ module Doc.Model.Update
   , UpdatePhoneAfterIdentificationToView(..)
   , SetSigAttachments(..)
   , UpdateDraft(..)
+  , ClearSignatoryEmail(..)
+  , ClearSignatoryMobile(..)
   , GetDocsSentBetween(..)
   , FixClosedErroredDocument(..)
   , ConnectSignatoriesToUser(..)
@@ -1704,6 +1706,22 @@ instance (DocumentMonad m) => DBUpdate m SetSigAttachments () where
             sqlSet "name" signatoryattachmentname
             sqlSet "description" signatoryattachmentdescription
             sqlSet "signatory_link_id" slid
+
+
+data ClearSignatoryEmail = ClearSignatoryEmail SignatoryLinkID
+instance (DocumentMonad m) => DBUpdate m ClearSignatoryEmail () where
+  update (ClearSignatoryEmail slid) = clearSignatoryFieldText slid EmailFT
+
+data ClearSignatoryMobile = ClearSignatoryMobile SignatoryLinkID
+instance (DocumentMonad m) => DBUpdate m ClearSignatoryMobile () where
+  update (ClearSignatoryMobile slid) = clearSignatoryFieldText slid MobileFT
+
+clearSignatoryFieldText ::  (DocumentMonad m) => SignatoryLinkID -> FieldType -> m ()
+clearSignatoryFieldText slid ft = updateDocumentWithID $ const $ do
+  runQuery_ $ sqlUpdate "signatory_link_fields" $ do
+    sqlSet "value_text" ("" :: T.Text)
+    sqlWhereEq "type" ft
+    sqlWhereEq "signatory_link_id" slid
 
 data UpdateDraft = UpdateDraft Document Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateDraft Bool where
