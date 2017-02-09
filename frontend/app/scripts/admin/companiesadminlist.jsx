@@ -49,8 +49,8 @@ module.exports = React.createClass({
             name="users"
             width={200}
             options={[
-              {name: "With more than one user", value: ""},
               {name: "With non-free price plan", value: "nonFree"},
+              {name: "With more than one user", value: ""},
               {name: "All", value: "allCompanies"}
             ]}
           />
