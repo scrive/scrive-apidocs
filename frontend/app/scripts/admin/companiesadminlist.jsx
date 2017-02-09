@@ -23,7 +23,9 @@ module.exports = React.createClass({
             var params  = {
               // Limit is set to more then amount of companies we are displaing. This way we can get information if there are more pages.
               limit: companyLimit + 1,
-              offset : offset
+              offset: offset,
+              allCompanies: "true",
+              nonFree: "true"
             };
             if (text) {
               params.text = text;
@@ -31,10 +33,10 @@ module.exports = React.createClass({
             if (selectfiltering) {
               _.each(selectfiltering.filters(), function(f) {
                 if (f.value === "allCompanies") {
-                  params.allCompanies = "true";
-                } else if (f.value === "nonFree") {
-                  params.allCompanies = "true";
-                  params.nonFree = "true";
+                  params.nonFree = undefined;
+                } else if (f.value === "moreThanOneUser") {
+                  params.allCompanies = undefined;
+                  params.nonFree = undefined;
                 }
               });
             }
@@ -49,8 +51,8 @@ module.exports = React.createClass({
             name="users"
             width={200}
             options={[
-              {name: "With non-free price plan", value: "nonFree"},
-              {name: "With more than one user", value: ""},
+              {name: "With non-free price plan", value: ""},
+              {name: "With more than one user", value: "moreThanOneUser"},
               {name: "All", value: "allCompanies"}
             ]}
           />
