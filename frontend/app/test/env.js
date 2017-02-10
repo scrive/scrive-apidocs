@@ -16,3 +16,7 @@ window.mixpanel = {
     set: function () { }
   }
 };
+
+window.trackJs = {
+  track: function () {}
+};

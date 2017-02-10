@@ -79,14 +79,22 @@ module.exports = function (grunt) {
     },
 
     karma: {
+      options: {
+        configFile: "karma.conf.js"
+      },
       full: {
+        autoWatch: false,
+        browsers: ["PhantomJS"],
+        reporters: ["teamcity", "coverage"],
         singleRun: true,
-        configFile: "karma.conf.js",
-        autoWatch: false
+        webpackMiddleware: {
+          noInfo: true,
+          stats: "errors-only"
+        }
       },
       fast: {
+        browsers: ["PhantomJS"],
         singleRun: true,
-        configFile: "karma.fast.conf.js",
         autoWatch: false
       }
     },
@@ -357,7 +365,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask("compileStyles", ["less", "autoprefixer"]);
   grunt.registerTask("server:dist", ["build"]);
-  grunt.registerTask("test", ["eslint", "uglify:dev", "karma:full"]);
-  grunt.registerTask("test:fast", ["uglify:dev", "karma:fast"]);
+  grunt.registerTask("test", ["eslint", "karma:full"]);
+  grunt.registerTask("test:fast", ["karma:fast"]);
   grunt.registerTask("default", ["eslint", "build", "test"]);
 };

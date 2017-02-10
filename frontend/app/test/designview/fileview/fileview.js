@@ -6,7 +6,7 @@ var TestUtils = React.addons.TestUtils;
 
 var FileView = require("../../../scripts/designview/fileview/fileview.jsx");
 
-describe("designview/buttonbarview", function () {
+describe("designview/fileview", function () {
   var server, document_, mainfile;
 
   var renderComponent = function() {

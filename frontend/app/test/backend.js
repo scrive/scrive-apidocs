@@ -1,4 +1,4 @@
-var sinon = require("sinon");
+var sinon = require("sinon/pkg/sinon");
 var doc1 = require("./data/document");
 var doc2 = require("./data/document2");
 var profile = require("./data/profile");

@@ -16,7 +16,11 @@ module.exports = function(config) {
 
     files: [
       "./localization/*.en.js",
-      "./compiled/vendor-" + generateVersionId() + ".js",
+      "./bower_components/jquery/dist/jquery.js",
+      "./bower_components/moment/moment.js",
+      "./bower_components/underscore/underscore.js",
+      "./libs/*.js",
+      "./js/global/*.js",
       "./test/env.js",
       "./test/entry.js"
     ],
@@ -25,7 +29,7 @@ module.exports = function(config) {
       "./test/entry.js": ["webpack", "sourcemap"]
     },
 
-    reporters: ["progress", "coverage"],
+    reporters: ["progress"],
 
     port: 9876,
 
@@ -35,7 +39,7 @@ module.exports = function(config) {
 
     autoWatch: false,
 
-    browsers: ["PhantomJS"],
+    browsers: ["ChromeCanary"],
 
     singleRun: false,
 
@@ -44,16 +48,8 @@ module.exports = function(config) {
 
       devtool: "inline-source-map",
 
-      isparta: {
-        embedSource: true,
-        noAutoWrap: true,
-        babel: {
-          presets: ["react", "es2015"]
-        }
-      },
-
       module: {
-        preLoaders: [
+        loaders: [
           {
             test: /\.jsx$/,
             loader: "babel",
@@ -62,18 +58,16 @@ module.exports = function(config) {
             }
           },
           {
-            test: /\.jsx$/,
-            loader: "isparta"
-          }
-        ],
-        loaders: [
-          {
-            test: /.less$/,
+            test: /\.less$/,
             loader: "less-interop",
           },
           {
             test: /\.svg$/,
             loader: "babel?presets[]=stage-2,presets[]=es2015,presets[]=react!svg-react"
+          },
+          {
+            test: /sinon\.js$/,
+            loader: "imports?define=>false,require=>false"
           }
         ],
         noParse: [
@@ -83,28 +77,26 @@ module.exports = function(config) {
 
       externals: {
         "jquery": "jQuery",
-        "backbone": "Backbone",
         "underscore": "_",
-        "react": "React",
-        "react-dom": "React",
-        "react/addons": "React",
-        "tinycolor": "tinycolor",
         "moment": "moment",
-        "sinon": "sinon",
         "base64": "Base64"
       },
 
       resolve: {
         extensions: ["", "min.js", ".js", ".jsx"],
         root: [path.join(__dirname, "./app/bower_components")],
+        alias: {
+          "tinycolor": path.resolve(__dirname) + "/app/libs/tinycolor-min.js",
+          "react": "react/react-with-addons",
+          "react-dom": "react/react-with-addons",
+          "_": "underscore"
+        }
       },
 
-      plugins: [bowerResolver()]
+      plugins: [bowerResolver()],
     },
-
-    coverageReporter: {
-      type : "html",
-      dir : "../coverage/"
+    webpackMiddleware: {
+      stats: "normal"
     }
   });
 };
