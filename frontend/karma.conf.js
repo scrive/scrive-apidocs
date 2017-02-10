@@ -9,7 +9,7 @@ function bowerResolver() {
 }
 
 module.exports = function(config) {
-  config.set({
+  var newConfig = {
     basePath: "./app/",
 
     frameworks: ["mocha", "sinon-chai"],
@@ -98,5 +98,31 @@ module.exports = function(config) {
     webpackMiddleware: {
       stats: "normal"
     }
-  });
+  };
+
+  if (config.reporters.indexOf("coverage") != -1) {
+    newConfig.coverageReporter = {
+      type: "html",
+      dir: "../coverage/"
+    };
+
+    newConfig.webpack.isparta = {
+      embedSource: true,
+      noAutoWrap: true,
+      babel: {
+        presets: ["react", "es2015"]
+      }
+    };
+
+    newConfig.webpack.module.preLoaders = [
+      {
+        test: /\.jsx$/,
+        loader: "isparta"
+      },
+      newConfig.webpack.module.loaders[0]
+    ];
+    newConfig.webpack.module.loaders.shift();
+  }
+
+  config.set(newConfig);
 };
