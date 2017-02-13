@@ -23,7 +23,10 @@ var Document = require("../../../js/documents.js").Document;
     },
 
     getInitialState: function () {
-      return {showPages: false};
+      return {
+        showPages: false,
+        reviewed: false
+      };
     },
 
     createTasks: function () {
@@ -84,6 +87,12 @@ var Document = require("../../../js/documents.js").Document;
         document: this.context.document
       };
     },
+    onShowHideButtonClick: function () {
+      this.setState({
+        showPages: !this.state.showPages,
+        reviewed: true
+      });
+    },
     render: function () {
       var self = this;
       var model = this.props.model;
@@ -93,6 +102,10 @@ var Document = require("../../../js/documents.js").Document;
 
       var buttonClass = classNames({
         "for-signing": canSign
+      });
+
+      var showHideButtonClass = classNames(buttonClass, {
+        "action": !this.state.reviewed
       });
 
       var fullClass = classNames({
@@ -121,11 +134,9 @@ var Document = require("../../../js/documents.js").Document;
             <div className="col-sm-6 right">
               <div className="button-group small-buttons">
                 <Button
-                  className={buttonClass}
+                  className={showHideButtonClass}
                   text={showPages ? localization.signviewHide : localization.reviewPDF}
-                  onClick={function () {
-                    self.setState({showPages: !showPages});
-                  }}
+                  onClick={this.onShowHideButtonClick}
                 />
               </div>
             </div>
@@ -161,9 +172,7 @@ var Document = require("../../../js/documents.js").Document;
                     <Button
                       className={buttonClass}
                       text={localization.signviewHide}
-                      onClick={function () {
-                        self.setState({showPages: !showPages});
-                      }}
+                      onClick={this.onShowHideButtonClick}
                     />
                     {/* if */ model.document().showpdfdownload() &&
                       <Button
