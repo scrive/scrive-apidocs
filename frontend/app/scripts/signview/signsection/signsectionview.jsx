@@ -21,7 +21,6 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var FlashMessagesCleaner = require("../../../js/flashmessages.js").FlashMessagesCleaner;
 var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 var Track = require("../../common/track");
-var reloadWithScrollReset = require("../../common/reload_utils").reloadWithScrollReset;
 var classNames = require("classnames");
 var Task = require("../navigation/task");
 
@@ -175,7 +174,7 @@ var Task = require("../navigation/task");
           if (shouldRedirect) {
             window.location = doc.currentSignatory().rejectredirect();
           } else {
-            reloadWithScrollReset();
+            window.location.reload();
           }
         }, function (xhr) {
           if (xhr.status == 403) {
@@ -327,7 +326,7 @@ var Task = require("../navigation/task");
       if (redirect) {
         window.location = redirect;
       } else {
-        reloadWithScrollReset();
+        window.location.reload();
       }
     },
     handlePin: function () {

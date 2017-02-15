@@ -3,7 +3,6 @@ var Button = require("../common/button");
 var Track = require("../common/track");
 var Submit = require("../../js/submits.js").Submit;
 var ReloadManager = require("../../js/reloadmanager.js").ReloadManager;
-var reloadWithScrollReset = require("../common/reload_utils").reloadWithScrollReset;
 var $ = require("jquery");
 var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
 
@@ -45,7 +44,7 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
     style: {margin: "20px"},
     text: localization.signingErrorReload,
     onClick: function() {
-      reloadWithScrollReset();
+      window.location.reload();
     }
   };
 
