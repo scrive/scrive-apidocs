@@ -548,7 +548,11 @@ var Document = exports.Document = Backbone.Model.extend({
         fetchOptions.error = function(model, response) {
             if (errorCallback === undefined || errorCallback(response) === true) {
               console.error("Failed to fetch document #" + self.documentid() + ", trying again in one sec...");
-              window.setTimeout(fetchFunction, 1000);
+
+              // if user is logged out, there's no point in trying again
+              if (response.status !== 401) {
+                window.setTimeout(fetchFunction, 1000);
+              }
             } else {
               console.error("Failed to fetch document #" + self.documentid() + ", giving up.");
             }
