@@ -9,6 +9,7 @@ import Control.Monad.Trans
 import Crypto.RNG
 import Data.Char
 import Data.Text (pack)
+import Data.Time.Clock
 import Data.Time.Clock.POSIX
 import Data.Typeable
 import Data.Word
@@ -536,6 +537,10 @@ signatoryLinkExample1 = def { signatorylinkid = unsafeSignatoryLinkID 0
 
 testThat :: String -> TestEnvSt -> TestEnv () -> Test
 testThat s env = testCase s . runTestEnv env
+
+compareTime :: UTCTime -> UTCTime -> Bool
+compareTime (UTCTime da ta) (UTCTime db tb) = (da == db)
+  && (ta + picosecondsToDiffTime 1 > tb || ta - picosecondsToDiffTime 1 > tb)
 
 addNewCompany :: TestEnv Company
 addNewCompany = do

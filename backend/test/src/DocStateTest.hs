@@ -465,8 +465,8 @@ assertGoodNewDocument mcompany doctype title (user, time, doc) = do
     assertEqual "Correct title" title (documenttitle doc)
     assertEqual "Correct type" doctype (documenttype doc)
     assertEqual "Doc has user's lang" (getLang user) (getLang doc)
-    assertEqual "Doc creation time" time (documentctime doc)
-    assertEqual "Doc modification time" time (documentmtime doc)
+    assertBool "Doc creation time" $ compareTime time (documentctime doc)
+    assertBool "Doc modification time" $ compareTime time (documentmtime doc)
     assertEqual "No author attachments" [] (documentauthorattachments doc)
     assertEqual "No sig attachments" [] (concatMap signatoryattachments $ documentsignatorylinks doc)
     assertBool "Uses email identification only" (all ((==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod) (documentsignatorylinks doc))
@@ -494,7 +494,7 @@ testCancelDocumentCancelsDocument = replicateM_ 10 $ do
 
     canceleddoc <- theDocument
     assertEqual "In canceled state" Canceled (documentstatus canceleddoc)
-    assertEqual "Updated modification time" (ctxtime ctx) (documentmtime canceleddoc)
+    assertBool "Updated modification time" $ compareTime (ctxtime ctx) (documentmtime canceleddoc)
     assertBool "Siglinks are unchanged"
       (signatoryLinksListsAreAlmoustEqualForTests (documentsignatorylinks doc) (documentsignatorylinks canceleddoc))
     assertEqual "Doc title is unchanged" (documenttitle doc) (documenttitle canceleddoc)
@@ -1514,7 +1514,7 @@ testMarkInvitationRead = replicateM_ 10 $ do
 
     assert success
     Just sl <- getSigLinkFor slid <$> theDocument
-    assertEqual "Invitation read time should be set." (Just time) (maybereadinvite sl)
+    assertEqual "Invitation read time should be set." (Just True) (liftA2 compareTime (Just time) (maybereadinvite sl))
 
 testMarkInvitationReadDocDoesntExist :: TestEnv ()
 testMarkInvitationReadDocDoesntExist = replicateM_ 10 $ do

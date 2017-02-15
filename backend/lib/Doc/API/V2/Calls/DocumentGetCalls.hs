@@ -1,6 +1,7 @@
 module Doc.API.V2.Calls.DocumentGetCalls (
   docApiV2List
 , docApiV2Get
+, docApiV2GetByShortID
 , docApiV2History
 , docApiV2EvidenceAttachments
 , docApiV2FilesMain
@@ -76,6 +77,17 @@ docApiV2Get did = logDocument did . api $ do
   mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
   doc <- dbQuery $ GetDocumentByDocumentID did
   da <- guardDocumentReadAccess mslid doc
+  return $ Ok (unjsonDocument da, doc)
+
+docApiV2GetByShortID :: Kontrakcja m => DocumentID -> m Response
+docApiV2GetByShortID shortDid = api $ do
+  logInfo "docApiV2GetByShortID" $ object $ [ identifier ("short_"<>) shortDid ]
+  when (length (show shortDid) > 6) $
+    apiError $ requestParameterInvalid "short_document_id" "was greater than 6 digits"
+  doc <- dbQuery $ GetDocumentByShortDocumentID shortDid
+  da <- guardDocumentReadAccess Nothing doc
+  logInfo "docApiV2GetByShortID: got a document" $ logObject_ doc
+  guardDocumentStatus Pending doc
   return $ Ok (unjsonDocument da, doc)
 
 docApiV2History :: Kontrakcja m => DocumentID -> m Response

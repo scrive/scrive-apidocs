@@ -144,6 +144,26 @@ sqlWhereDocumentIDIs :: (MonadState v m, SqlWhere v)
 sqlWhereDocumentIDIs did = do
   sqlWhereE (DocumentDoesNotExist did) ("documents.id = " <?> did)
 
+data ShortDocumentIDHasNoMatch = ShortDocumentIDHasNoMatch DocumentID
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue ShortDocumentIDHasNoMatch where
+  toJSValue (ShortDocumentIDHasNoMatch d) = runJSONGen $ do
+      value "message" ("No match for short document ID" :: String)
+      value "short_document_id" (show d)
+
+instance DBExtraException ShortDocumentIDHasNoMatch
+
+sqlWhereShortDocumentIDIs :: (MonadState v m, SqlWhere v, SqlOrderBy v,
+                             SqlOffsetLimit v) => DocumentID -> m ()
+sqlWhereShortDocumentIDIs shortDid = do
+  sqlWhereE (ShortDocumentIDHasNoMatch shortDid)
+    ("documents.id % 1000000 = " <?> shortDid)
+  sqlWhereE (ShortDocumentIDHasNoMatch shortDid)
+    "documents.mtime > now() - interval '24 hour'"
+  sqlOrderBy "documents.id DESC"
+  sqlLimit 1
+
 sqlWhereDocumentIDForSignatoryIs :: (MonadState v m, SqlWhere v)
                      => DocumentID -> m ()
 sqlWhereDocumentIDForSignatoryIs did = do

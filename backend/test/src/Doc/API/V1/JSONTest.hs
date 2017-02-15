@@ -405,7 +405,7 @@ removeDynamicValues :: Value -> Value
 removeDynamicValues (Object m) = Object $ H.map removeDynamicValues $ filterOutDynamicKeys m
   where
     filterOutDynamicKeys hm = H.filterWithKey (\k _ -> not $ k `elem` dynamicKeys) hm
-    dynamicKeys = ["id", "accesstoken", "time", "ctime", "mtime", "userid", "timeouttime", "objectversion", "title", "link", "file"]
+    dynamicKeys = ["id", "accesstoken", "time", "ctime", "mtime", "signdate", "userid", "timeouttime", "objectversion", "title", "link", "file"]
 removeDynamicValues (Array v)  = Array  (V.map removeDynamicValues v)
 removeDynamicValues v = v
 

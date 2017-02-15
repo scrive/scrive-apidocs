@@ -115,10 +115,7 @@ instance MonadDB TestEnv where
   getNotification = TestEnv . getNotification
 
 instance MonadTime TestEnv where
-  currentTime = return UTCTime {
-    utctDay = fromGregorian 2000 1 1
-  , utctDayTime = 0
-  }
+  currentTime = liftIO getCurrentTime
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByLanguage $ codeFromLang def

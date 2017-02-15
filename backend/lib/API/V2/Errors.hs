@@ -157,6 +157,10 @@ documentNotFound :: DocumentID -> APIError
 documentNotFound did = resourceNotFound $ "A document with id" <+> didText <+> "was not found"
   where didText = T.pack (show did)
 
+documentShortIDNotFound :: DocumentID -> APIError
+documentShortIDNotFound sdid = resourceNotFound $ "A document matching short id" <+> sdidText <+> "was not found"
+  where sdidText = T.pack (show sdid)
+
 resourceNotFound :: T.Text -> APIError
 resourceNotFound info = APIError { errorType = ResourceNotFound, errorHttpCode = 404, errorMessage = msg}
   where msg = "The resource was not found." <+>  info
@@ -166,6 +170,7 @@ resourceNotFound info = APIError { errorType = ResourceNotFound, errorHttpCode =
 tryToConvertConditionalExceptionIntoAPIError :: SomeDBExtraException -> SomeDBExtraException
 tryToConvertConditionalExceptionIntoAPIError  =  foldr (.) id [
       convertDocumentDoesNotExist
+    , convertShortDocumentIDHasNoMatch
     , convertDocumentTypeShouldBe
     , convertDocumentStatusShouldBe
     , convertUserShouldBeSelfOrCompanyAdmin
@@ -188,6 +193,12 @@ convertDocumentDoesNotExist :: SomeDBExtraException -> SomeDBExtraException
 convertDocumentDoesNotExist (SomeDBExtraException ex) =
   case cast ex of
     Just (DocumentDoesNotExist did) ->  SomeDBExtraException $ documentNotFound did
+    Nothing -> (SomeDBExtraException ex)
+
+convertShortDocumentIDHasNoMatch :: SomeDBExtraException -> SomeDBExtraException
+convertShortDocumentIDHasNoMatch (SomeDBExtraException ex) =
+  case cast ex of
+    Just (ShortDocumentIDHasNoMatch sdid) -> SomeDBExtraException $ documentShortIDNotFound sdid
     Nothing -> (SomeDBExtraException ex)
 
 convertDocumentTypeShouldBe :: SomeDBExtraException -> SomeDBExtraException

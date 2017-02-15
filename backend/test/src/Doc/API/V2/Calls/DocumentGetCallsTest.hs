@@ -2,6 +2,7 @@ module Doc.API.V2.Calls.DocumentGetCallsTest (apiV2DocumentGetCallsTests) where
 
 import Data.Aeson (Value(String))
 import Data.Default
+import Data.Time (UTCTime(..), fromGregorian)
 import Happstack.Server
 import Test.Framework
 
@@ -15,8 +16,9 @@ import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.API.V2.Mock.TestUtils
 import Doc.Data.DocumentStatus (DocumentStatus(..))
+import Doc.DocumentID (unsafeDocumentID)
 import Doc.DocumentMonad (withDocumentID)
-import Doc.Model.Update (SetDocumentSharing(..))
+import Doc.Model.Update (SetDocumentSharing(..), updateMTimeAndObjectVersion)
 import KontraPrelude
 import TestingUtil
 import TestKontra
@@ -25,6 +27,7 @@ apiV2DocumentGetCallsTests :: TestEnvSt -> Test
 apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
   [ testThat "API v2 List"                  env testDocApiV2List
   , testThat "API v2 Get"                   env testDocApiV2Get
+  , testThat "API v2 Get by shortcode"      env testDocApiV2GetShortCode
   , testThat "API v2 Get by Company Admin"  env testDocApiV2GetByAdmin
   , testThat "API v2 Get for Shared doc"    env testDocApiV2GetShared
   , testThat "API v2 History"               env testDocApiV2History
@@ -60,6 +63,41 @@ testDocApiV2Get = do
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Mock Document from `docApiV2Get` should match from `docApiV2New`" getMockDoc newMockDoc
   assertEqual "Document viewer should be" "signatory" (getMockDocViewerRole getMockDoc)
+
+testDocApiV2GetShortCode :: TestEnv ()
+testDocApiV2GetShortCode = do
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  newMockDoc <- testDocApiV2Start' ctx
+  let mockDocToShortID md = read $ reverse $ take 6 $ reverse $ show (getMockDocId md)
+      shortDid = mockDocToShortID newMockDoc
+
+  -- Test that everything works normally...
+  getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2GetByShortID shortDid) 200
+  assertEqual "Mock Document from `docApiV2Get` should match from `docApiV2New`" getMockDoc newMockDoc
+  assertEqual "Document viewer should be" "signatory" (getMockDocViewerRole getMockDoc)
+
+  -- Now try some failure cases, we reuse getRequest
+  getRequest <- mkRequestWithHeaders GET [] []
+
+  -- A malicious mallory should not be able to get the document
+  mallory <- addNewRandomUser
+  ctxMallory <- (\c -> c { ctxmaybeuser = Just mallory }) <$> mkContext def
+  (resMallory,_) <- runTestKontra getRequest ctxMallory $ docApiV2GetByShortID shortDid
+  assertEqual "We should get a 403 response for someone elses document" 403 (rsCode resMallory)
+
+  -- Short DocID should be <= 6 digits
+  (resLong,_) <- runTestKontra getRequest ctx $ docApiV2GetByShortID (unsafeDocumentID 1234567)
+  assertEqual "We should get a 400 response for a long docid" 400 (rsCode resLong)
+  -- Should not work for documents older than 24h, make the document "old"
+  withDocumentID (getMockDocId newMockDoc) $ do
+    updateMTimeAndObjectVersion $ UTCTime { utctDay = fromGregorian 2000 1 1, utctDayTime = 0 }
+  (resOld,_) <- runTestKontra getRequest ctx $ docApiV2GetByShortID shortDid
+  assertEqual "We should get a 404 response for old documents" 404 (rsCode resOld)
+  -- Should not work for other document status, we only test preparation here...
+  prepDoc <- testDocApiV2New' ctx
+  (resPrep,_) <- runTestKontra getRequest ctx $ docApiV2GetByShortID (mockDocToShortID prepDoc)
+  assertEqual "We should get a 409 response for a document in Preparation" 409 (rsCode resPrep)
 
 testDocApiV2GetByAdmin :: TestEnv ()
 testDocApiV2GetByAdmin = do

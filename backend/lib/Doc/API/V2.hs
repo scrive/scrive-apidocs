@@ -18,6 +18,7 @@ documentAPIV2  = dir "documents" $ choice [
   , dir "list"      $ hGet $ toK0 $ docApiV2List
 
   , param $ dir "get"                 $ hGet $ toK1 $ docApiV2Get
+  , param $ dir "getbyshortid"        $ hGet $ toK1 $ docApiV2GetByShortID
   , param $ dir "history"             $ hGet $ toK1 $ docApiV2History
   , param $ dir "evidenceattachments" $ hGet $ toK1 $ docApiV2EvidenceAttachments
 
