@@ -34,8 +34,8 @@ npm install
 LC_ALL="en_US.UTF-8" grunt build
 cd ../
 
-echo "Running unit tests"
-./build-scripts/runAllUnitTests.sh > test-report.txt
+echo "Running unit tests - ! DISABLED !"
+#./build-scripts/runAllUnitTests.sh > test-report.txt
 
 ZIP="$BUILD_ID.$SRV.tar.gz"
 
