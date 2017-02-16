@@ -273,7 +273,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
   (_link, _ctx') <- runTestKontra req ctx $ handleResend (documentid doc) (signatorylinkid sl)
 
   updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertEqual "Modified date is updated" (ctxtime ctx) (documentmtime updateddoc)
+  assertBool "Modified date is updated" $ compareTime (ctxtime ctx) (documentmtime updateddoc)
   emails <- dbQuery GetEmailsForTest
   assertEqual "Email was sent" 1 (length emails)
 
@@ -316,7 +316,7 @@ testSendReminderEmailByCompanyAdmin = do
 
 
   updateddoc1 <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertEqual "Modified date is not updated" (documentmtime doc) (documentmtime updateddoc1)
+  assertBool "Modified date is not updated" $ compareTime (documentmtime doc) (documentmtime updateddoc1)
   emails1 <- dbQuery GetEmailsForTest
   assertEqual "No emails were sent" 0 (length emails1)
 
@@ -325,7 +325,7 @@ testSendReminderEmailByCompanyAdmin = do
   (_link, _ctx') <- runTestKontra req2 ctxadmin $ handleResend (documentid doc) (signatorylinkid sl)
 
   updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertEqual "Modified date is updated" (ctxtime ctxadmin) (documentmtime updateddoc)
+  assertBool "Modified date is updated" $ compareTime (ctxtime ctxadmin) (documentmtime updateddoc)
   emails <- dbQuery GetEmailsForTest
   assertEqual "Email was sent" 1 (length emails)
 

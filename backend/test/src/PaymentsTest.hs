@@ -78,20 +78,23 @@ testSavePaymentPlan = do
                        , ppDunningDate = Nothing
                        , ppBillingEndDate = time
                        }
+  let eqPP (Just p1) (Just p2) = (p1 {ppBillingEndDate = time} == p2 {ppBillingEndDate = time}) && compareTime (ppBillingEndDate p1) (ppBillingEndDate p2)
+      eqPP _ _ = False
+
   b <- dbUpdate $ SavePaymentPlan pp time
   assert b
   mpp <- dbQuery $ GetPaymentPlan (usercompany user)
-  assert $ Just pp == mpp
+  assert $ eqPP (Just pp) mpp
   mpp' <- dbQuery $ GetPaymentPlanByAccountCode ac
-  assert $ Just pp == mpp'
+  assert $ eqPP (Just pp) mpp'
   -- save it again!
   let pp' = pp { ppQuantity = 5 }
   b' <- dbUpdate $ SavePaymentPlan pp' time
   assert b'
   mpp2 <- dbQuery $ GetPaymentPlan (usercompany user)
-  assert $ Just pp' == mpp2
+  assert $ eqPP (Just pp') mpp2
   mpp2' <- dbQuery $ GetPaymentPlanByAccountCode ac
-  assert $ Just pp' == mpp2'
+  assert $ eqPP (Just pp') mpp2'
 
 testPaymentPlansRequiringSync :: TestEnv ()
 testPaymentPlansRequiringSync = do

@@ -232,8 +232,8 @@ test_acceptTermsOfService = do
   now <- currentTime
   res <- dbUpdate $ AcceptTermsOfService userid now
   assertBool "User updated correctly" res
-  Just User{userhasacceptedtermsofservice = accepted} <- dbQuery $ GetUserByID userid
-  assertBool "Time of acceptance is correct" $ accepted == Just now
+  Just User{userhasacceptedtermsofservice = Just accepted} <- dbQuery $ GetUserByID userid
+  assertBool "Time of acceptance is correct" $ compareTime accepted now
 
 test_setSignupMethod :: TestEnv ()
 test_setSignupMethod = do

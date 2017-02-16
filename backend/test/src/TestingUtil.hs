@@ -540,7 +540,7 @@ testThat s env = testCase s . runTestEnv env
 
 compareTime :: UTCTime -> UTCTime -> Bool
 compareTime (UTCTime da ta) (UTCTime db tb) = (da == db)
-  && (ta + picosecondsToDiffTime 1 > tb || ta - picosecondsToDiffTime 1 > tb)
+  && (((ta + picosecondsToDiffTime (10^9) >= tb) && (ta <= tb)) || ((tb + picosecondsToDiffTime (10^9)) >= ta && (ta >= tb)))
 
 addNewCompany :: TestEnv Company
 addNewCompany = do
