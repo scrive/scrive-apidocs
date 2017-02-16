@@ -16,6 +16,7 @@ import qualified Data.ByteString as BS
 import qualified Data.Text.IO as T
 
 import AccountInfoTest
+import AdministrationTest
 import AppDBMigrations
 import AppDBTables
 import ArchiveTest
@@ -71,6 +72,7 @@ import qualified HostClock.Model as HC
 allTests :: [TestEnvSt -> Test]
 allTests = [
     accountInfoTests
+  , administrationTests
   , apiV1CallsTests
   , apiV1JSONTests
   , apiV2CallsTests

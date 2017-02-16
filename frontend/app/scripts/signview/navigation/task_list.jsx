@@ -6,6 +6,16 @@ function sortByView (tasks) {
   var newList = tasks.slice(0);
 
   newList.sort(function (t1, t2) {
+    // Hack to make sure that 'sign' task will be at the end, even if during
+    // some race condition (while page loads) field tasks will be 'bigger'
+    // according to offset calculations (below the sign task from the top)
+    // See https://scrive.fogbugz.com/f/cases/2656/
+    if (t1.isSignTask()) {
+      return 1;
+    } else if (t2.isSignTask()) {
+      return -1;
+    }
+
     var offset1 = t1.el().offset();
     var offset2 = t2.el().offset();
     var height1 = t1.el().outerHeight();

@@ -77,7 +77,7 @@ maxCompanyIdleDocTimeout = 365
 data CompanyFilter
   =   CompanyFilterByString String             -- ^ Contains the string anywhere
     | CompanyManyUsers             -- ^ Has more users then given number
-
+    | CompanyWithNonFreePricePlan  -- ^ has a non-free price plan attached
 
 companyFilterToWhereClause :: (SqlWhere command) => CompanyFilter -> State command ()
 companyFilterToWhereClause (CompanyFilterByString text) = do
@@ -98,6 +98,9 @@ companyFilterToWhereClause (CompanyManyUsers) = do
     [ sqlWhere $ "((SELECT count(*) FROM users WHERE users.company_id = companies.id AND users.deleted IS NULL) > 1)"
     , sqlWhere $ "((SELECT count(*) FROM companyinvites WHERE companyinvites.company_id = companies.id) > 0)"
     ]
+
+companyFilterToWhereClause (CompanyWithNonFreePricePlan) = do
+  sqlWhere $ "((EXISTS (SELECT 1 FROM payment_plans WHERE company_id = companies.id)))"
 
 data GetCompanies = GetCompanies [CompanyFilter] Integer Integer
 instance MonadDB m => DBQuery m GetCompanies [Company] where

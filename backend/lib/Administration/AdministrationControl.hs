@@ -11,6 +11,8 @@
 module Administration.AdministrationControl(
             adminonlyRoutes
           , daveRoutes
+          , jsonCompanies -- for tests
+          , handleCompanyPaymentsChange -- for tests
           ) where
 
 import Control.Monad.State
@@ -229,7 +231,10 @@ jsonCompanies = onlySalesOrAdmin $ do
     usersFilter <- isFieldSet "allCompanies" >>= \case
                      True ->  return []
                      False -> return [CompanyManyUsers]
-    allCompanies <- dbQuery $ GetCompanies (textFilter ++ usersFilter) offset limit
+    pplanFilter <- isFieldSet "nonFree" >>= \case
+                     True ->  return [CompanyWithNonFreePricePlan]
+                     False -> return []
+    allCompanies <- dbQuery $ GetCompanies (textFilter ++ usersFilter ++ pplanFilter) offset limit
     runJSONGenT $ do
             valueM "companies" $ forM allCompanies $ \company -> runJSONGenT $ do
               value "id"            $ show . companyid $ company

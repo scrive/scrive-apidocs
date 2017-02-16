@@ -1,4 +1,7 @@
-module CompanyAccountsTest (companyAccountsTests) where
+module CompanyAccountsTest ( companyAccountsTests
+                           , addNewAdminUserAndCompany
+                           , addNewCompanyUser
+                           ) where
 
 import Data.Ord
 import Happstack.Server hiding (simpleHTTP)
