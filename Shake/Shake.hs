@@ -237,7 +237,9 @@ serverOldBuildRules cabalFile = do
     need [ "cabal.sandbox.config"
          , "_build/cabal-update"
          ]
-    cmd (EchoStdout True) "cabal install --only-dependencies --force-reinstalls"
+    cmd (EchoStdout True) "cabal" [ "install", "--enable-tests"
+                                  , "--only-dependencies"
+                                  , "--force-reinstalls" ]
 
   -- If this rule was run, then cabal was configured with flags
   -- Using a separate production rule lets us avoid having to run cabal clean
