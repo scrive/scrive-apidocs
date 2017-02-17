@@ -4,6 +4,8 @@ var React = require("react");
 var Button = require("../../../common/button");
 var Checkbox = require("../../../common/checkbox");
 var SwedishIdentifyModel = require("./swedishidentifymodel");
+var MaskedPersonalNumber = require("../masked_personal_number");
+
   module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(SwedishIdentifyModel).isRequired
@@ -22,7 +24,11 @@ var SwedishIdentifyModel = require("./swedishidentifymodel");
 
       return (
         <span>
-          {localization.idNumber} <b>{this.props.model.doc().currentSignatory().personalnumber()}</b>
+          {localization.idNumber} <MaskedPersonalNumber
+            number={this.props.model.doc().currentSignatory().personalnumber()}
+            isNorwegian={false}
+          />
+
           <div className="identify-box-button">
             <Button
               ref="identify-button"

@@ -6,6 +6,7 @@ var InfoTextInput = require("../../../common/infotextinput");
 var NorwegianIdentifyModel = require("./norwegianidentifymodel");
 var FlashMessage = require("../../../../js/flashmessages.js").FlashMessage;
 var classNames = require("classnames");
+var MaskedPersonalNumber = require("../masked_personal_number");
 
   module.exports = React.createClass({
     propTypes: {
@@ -72,7 +73,10 @@ var classNames = require("classnames");
           </div>
           <div className="identify-box-content">
             {/* if */ model.isDesktopMode() && <span>
-              {localization.idNumber} <b>{model.personalnumber()}</b>
+              {localization.idNumber} <MaskedPersonalNumber
+                number={model.personalnumber()}
+                isNorwegian={true}
+              />
             </span>}
             {/* if */ model.isMobileMode() && model.canEditMobile() &&
               <div>

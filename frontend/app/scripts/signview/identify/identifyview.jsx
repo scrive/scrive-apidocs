@@ -6,6 +6,7 @@ var NorwegianIdentifyView = require("./norwegian/norwegianidentifyview");
 var NorwegianIdentifyModel = require("./norwegian/norwegianidentifymodel");
 var Document = require("../../../js/documents.js").Document;
 var $ = require("jquery");
+var MaskedPersonalNumber = require("./masked_personal_number");
 
   module.exports = React.createClass({
 
@@ -99,7 +100,11 @@ var $ = require("jquery");
                   {localization.identifyDocument} <b>{doc.title()}</b>
                 </div>
                 <div>
-                  {localization.yourIdNumber} <b>{personalNumber || "Empty"}</b>
+                  {localization.yourIdNumber} <MaskedPersonalNumber
+                    number={personalNumber}
+                    placeholder="Empty"
+                    isNorwegian={model.isNorwegian()}
+                  />
                 </div>
               </div>
               <div className="identify-box-footer-logo">
