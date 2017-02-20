@@ -32,6 +32,7 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.Logging
 import Doc.Model
+import Doc.SealStatus
 import KontraError
 import KontraPrelude
 import Log.Identifier
@@ -160,7 +161,7 @@ callbackParamsWithDocumentJSON apiVersion doc = case apiVersion of
     dJSON <- documentJSONV1 Nothing False True Nothing doc
     return $ BSLU.fromString $ urlEncodeVars [
         ("documentid", show (documentid doc))
-      , ("signedAndSealed", if isClosed doc && isJust (documentsealedfile doc)
+      , ("signedAndSealed", if isClosed doc && hasGuardtime
           then "true"
           else "false")
       , ("json", encode dJSON)
@@ -169,11 +170,15 @@ callbackParamsWithDocumentJSON apiVersion doc = case apiVersion of
     let json = unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) (unjsonDocument (documentAccessForAuthor doc)) doc
     return $ Utils.HTTP.urlEncodeVars [
         ("document_id", BSLU.fromString $ show (documentid doc))
-      , ("document_signed_and_sealed", if isClosed doc && isJust (documentsealedfile doc)
+      , ("document_signed_and_sealed", if isClosed doc && hasGuardtime
           then "true"
           else "false")
       , ("document_json", json)
       ]
+  where
+    hasGuardtime  = case (documentsealstatus doc) of
+                      Just (Guardtime _ _) -> True
+                      _ -> False
 
 parseAccessToken :: BSLU.ByteString -> Maybe String
 parseAccessToken str = do
