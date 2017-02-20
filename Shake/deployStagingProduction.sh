@@ -1,55 +1,23 @@
-#!/bin/bash -e
+#!/bin/bash -xe
 
+# This script assumes that file _build/kontrakcja.tar.gz exists (i.e. built previously)
 # This script assumes the existence of BUILD_NUMBER from TeamCity
 # This script assumes TMP which is the directory as a temporary workspace
 # This script assumes SRV which is the name of the server (ie, production, staging)
 # This script assumes TRGMH which is ssh string to target server (builds@prod.scrive.lan)
-# This script assumes TRGMH2 which is ssh string to target secondary server (builds@staging.scrive.lan)
-# This script assumes SRV2 which is the name of the secondary server (api-testbed)
-# This script assumes TRGMH3 which is ssh string to target one more server (Needed for load balancer/avis now)
-# This script assumes SRV3 which is the name of this extra server (Needed for load balancer/avis now)
 # This script assumes AMZN which is a boolean whether to upload to Amazon
 
-if [ -z "$1" ]; then
-  echo "Usage: $0 <cabal sandbox directory path>"
-  exit 1
-fi
-
 BUILD_DATE=`date "+%Y-%m-%d-%H-%M-%S"`
-#BUILD_VCS_NUMBER=`git log -1 --pretty=oneline|awk '{print $1;}'`
-
 BUILD_ID=$BUILD_DATE"."$BUILD_NUMBER"."$BUILD_VCS_NUMBER
-
+ZIP="$BUILD_ID.$SRV.tar.gz"
 echo "BUILD ID: "$BUILD_ID
 echo "TMP: "$TMP
+echo "ZIP: "$ZIP
 echo "Server: "$SRV
 echo "Target server: "$TRGMH
 
-echo "Building Clean"
-./build-scripts/runCleanCompile.sh "$1" > build-report.txt
-
-echo "Building Frontend"
-cd frontend/
-npm install
-LC_ALL="en_US.UTF-8" grunt build
-cd ../
-
-echo "Running unit tests"
-./build-scripts/runAllUnitTests.sh > test-report.txt
-
-ZIP="$BUILD_ID.$SRV.tar.gz"
-
-echo "Creating zip file"
-
-tar zcf "$TMP/$ZIP"                              \
-    --exclude=.git*                              \
-    --exclude=_local*                            \
-    --exclude=_darcs*                            \
-    --exclude=log                                \
-    --exclude=dist/build/*/*-tmp                 \
-    *
-ls -lh "$TMP/$ZIP"
-
+cp _build/kontrakcja.tar.gz $TMP/$ZIP
+ls -lh $TMP/$ZIP
 cd $TMP
 
 opensslfile="$BUILD_ID.signature.sha256"
@@ -110,23 +78,5 @@ echo "Verifying and unzipping deployment file"
 ssh $TRGMH  "cd /tmp/"$SRV"_deployment && gtime -S $gtextendingurl -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP ; exit \$?"
 
 echo "Deployed to /tmp/"$SRV"_deployment on $SRV server. Deployment file has been verified."
-
-if [ ! -z "$SRV2" ]; then
-  if [ ! -z "$TRGMH2" ]; then
-
-   echo "Copying deployment file to /tmp on $SRV2 server"
-   ssh $TRGMH2 "rm -rf /tmp/"$SRV2"_deployment && mkdir /tmp/"$SRV2"_deployment"
-   cat "$TMP/$finalfile" | ssh $TRGMH2 "cd /tmp/"$SRV2"_deployment && tar -zx ; exit \$?"
-  fi
-fi
-
-if [ ! -z "$SRV3" ]; then
-  if [ ! -z "$TRGMH3" ]; then
-
-   echo "Copying deployment file to /tmp on $SRV3 server"
-   ssh $TRGMH3 "rm -rf /tmp/"$SRV3"_deployment && mkdir /tmp/"$SRV3"_deployment"
-   cat "$TMP/$finalfile" | ssh $TRGMH3 "cd /tmp/"$SRV3"_deployment && tar -zx ; exit \$?"
-  fi
-fi
 
 exit 0
