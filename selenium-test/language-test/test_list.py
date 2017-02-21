@@ -29,13 +29,13 @@ REMOTE_DEVICES = [{'browserName': "chrome",
                    'platform': 'Windows 8.1',
                    'window-size': (1040, 784),
                    'screenshot-prefix': 'desktop',
-                   'version': 'beta'},
+                   'version': 'latest'},
                   {'browserName': "chrome",
                    'chromeOptions': {'args': ['--disable-extensions']},
                    'window-size': (619, 706),
                    'screenshot-prefix': 'mobile',
                    'platform': 'Windows 8.1',
-                   'version': 'beta'}]
+                   'version': 'latest'}]
 
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
