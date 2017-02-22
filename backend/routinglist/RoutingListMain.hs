@@ -10,6 +10,7 @@ import Unsafe.Coerce (unsafeCoerce)
 import Kontra
 import KontraPrelude
 import RoutingTable (staticRoutes)
+import User.Lang
 
 ------------------------------------------------------------------------------
 -- MyRoute is an exact copy of Route, but since Route's ctors are not exported
@@ -74,12 +75,17 @@ getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map makeAbs
         result = fst $ runState (worker route') 0
 
 -- handle exceptions
+-- 1)
 -- urls like /s are special, they need to both handle "/s" and "/s/1/2/3"
 -- but we can't use "/s" because that would catch all urls starting with letter s (e.g. /something)
 -- so turn those cases (/s, /d, /a) into two rules, one with explicit end of line regex match $,
 -- and one rule that matches longer urls with additional path elems after another slash
+-- 2)
+-- urls like /no /en (where it's a lang code), should not cover anything longer, like /now-hiring
 exceptions :: String -> [String]
-exceptions s@('/':c:[]) | c `elem` ("asd"::String) = ['/':c:'/':[], '/':c:'$':[]]
+exceptions s@('/':c1:c2:[]) | [c1, c2] `elem` map codeFromLang allLangs = [['/', c1, c2, '$']]
+                            | otherwise = [s]
+exceptions s@('/':c:[]) | c `elem` ("asd"::String) = [['/', c, '/'], ['/', c, '$']]
                         | otherwise = [s]
 exceptions s = [s]
 
