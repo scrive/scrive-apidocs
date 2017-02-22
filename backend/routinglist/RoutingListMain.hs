@@ -53,8 +53,12 @@ worker (MyDir segment (MyHandler (Just n, _method') _ _)) = do
     _ -> return [show segment ++ "/"]
 worker (MyDir segment route) = mapM (\s -> return $ show segment ++ "/" ++ s) =<< worker route
 worker (MyHandler (Nothing, _) _ _) = return [] -- ["<SERVING FILES FROM SOME DIRECTORY>"]
-worker (MyHandler (Just 0, _method') _ _) = return [""]
-worker (MyHandler (Just n, _method') _ _) = return [intersperse '/' (replicate n 'X')]
+worker (MyHandler (Just n, _method') _ _) = do
+  nParams <- get
+  let n' = n - nParams
+  case n' of
+    0 -> return [""]
+    _ -> return ["SHOULD NOT HAPPEN"]
 worker (MyChoice routes) = do
   let localState :: State s a -> State s a
       localState f = do
@@ -65,7 +69,7 @@ worker (MyChoice routes) = do
   concat <$> mapM (localState . worker) routes
 worker (MyParam route) = do
   modify (+1)
-  mapM (\s -> return $ "[a-zA-Z0-9_-]+/" ++ s) =<< worker route
+  mapM (\s -> return $ if s == "" then "[a-zA-Z0-9_-]+" else "[a-zA-Z0-9_-]+/" ++ s) =<< worker route
 
 getUrls :: Route (Kontra Response) -> [String]
 getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map makeAbsoluteUrl result
