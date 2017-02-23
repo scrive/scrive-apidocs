@@ -71,6 +71,18 @@ ChangeAuthenticationToViewMethodNOBankIDToStandardEvidenceLog = The user <span c
 ###
 ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Norwegian BankID” to “Swedish BankID”.
 ###
+ChangeAuthenticationToViewMethodDKNemIDToStandardEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Danish NemID” to “no extra authentication”.
+###
+ChangeAuthenticationToViewMethodDKNemIDToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Danish NemID” to “Swedish BankID”.
+###
+ChangeAuthenticationToViewMethodDKNemIDToNOBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Danish NemID” to “Norwegian BankID”.
+###
+ChangeAuthenticationToViewMethodStandardToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “no extra authentication” to “Danish NemID”.
+###
+ChangeAuthenticationToViewMethodSEBankIDToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Swedish BankID” to “Danish NemID”.
+###
+ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Norwegian BankID” to “Danish NemID”.
+###
 ChangeAuthenticationToSignMethodStandardToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “Swedish BankID”.
 ###
 ChangeAuthenticationToSignMethodStandardToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “PIN by SMS”.
@@ -560,28 +572,34 @@ $if(ocsp_response)$
 <p>Online Certificate Status Protocol (OCSP) Response: <div>$ocsp_response$</div></p>
 $endif$
 ###
-provider=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$endif$
+provider=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$endif$
 ###
-AuthenticatedToViewEvidenceArchive=
+AuthenticatedToViewEvidenceArchive=*
 $if(provider_sebankid)$
-$_AuthenticatedToViewEvidenceArchiveSEBankID()$
+  $_AuthenticatedToViewEvidenceArchiveSEBankID()$
 $elseif(provider_nobankid)$
-$_AuthenticatedToViewEvidenceArchiveNOBankID()$
+  $_AuthenticatedToViewEvidenceArchiveNOBankID()$
+$elseif(provider_dknemid)$
+  $_AuthenticatedToViewEvidenceArchiveDKNemID()$
 $endif$
 ###
-AuthenticatedToViewEvidenceVerificationPages=
+AuthenticatedToViewEvidenceVerificationPages=*
 $if(signatory_dob)$
-$if(provider_sebankid)$
-$_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID()$
-$elseif(provider_nobankid)$
-$_AuthenticatedToViewEvidenceVerificationPagesWithDateNOBankID()$
-$endif$
+  $if(provider_sebankid)$
+    $_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID()$
+  $elseif(provider_nobankid)$
+    $_AuthenticatedToViewEvidenceVerificationPagesWithDateNOBankID()$
+  $elseif(provider_dknemid)$
+    $_AuthenticatedToViewEvidenceVerificationPagesWithDateDKNemID()$
+  $endif$
 $else$
-$if(provider_sebankid)$
-$_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID()$
-$elseif(provider_nobankid)$
-$_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID()$
-$endif$
+  $if(provider_sebankid)$
+    $_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID()$
+  $elseif(provider_nobankid)$
+    $_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID()$
+  $elseif(provider_dknemid)$
+    $_AuthenticatedToViewEvidenceVerificationPagesWithoutDateDKNemID()$
+  $endif$
 $endif$
 ###
 UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Phone". Scrive eSign changed it from "$oldphone$" to "$newphone$".

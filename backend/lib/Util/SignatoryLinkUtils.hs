@@ -31,6 +31,8 @@ module Util.SignatoryLinkUtils (
   HasSignatoryLinks,
   filterSigLinksFor,
   hasSigLinkFor,
+  authenticationMethodsCanMix,
+  authViewMatchesAuth,
   authToViewNeedsPersonalNumber,
   authToViewNeedsMobileNumber,
   authToSignNeedsPersonalNumber,
@@ -41,6 +43,7 @@ import Data.Functor
 
 import Doc.DocStateData
 import Doc.SignatoryLinkID
+import EID.Authentication.Model
 import KontraPrelude
 import MagicHash (MagicHash)
 import User.Email
@@ -233,6 +236,17 @@ hasSigLinkFor i sls = isJust $ getSigLinkFor i sls
 getSigLinkFor :: (SignatoryLinkIdentity a, HasSignatoryLinks b) => a -> b -> Maybe SignatoryLink
 getSigLinkFor a d = find (isSigLinkFor a) (getSignatoryLinks d)
 
+authenticationMethodsCanMix :: AuthenticationToViewMethod -> AuthenticationToSignMethod -> Bool
+authenticationMethodsCanMix NOBankIDAuthenticationToView SEBankIDAuthenticationToSign = False
+authenticationMethodsCanMix DKNemIDAuthenticationToView  SEBankIDAuthenticationToSign = False
+authenticationMethodsCanMix _ _ = True
+
+authViewMatchesAuth :: AuthenticationToViewMethod -> EAuthentication -> Bool
+authViewMatchesAuth NOBankIDAuthenticationToView NetsNOBankIDAuthentication_{} = True
+authViewMatchesAuth SEBankIDAuthenticationToView CGISEBankIDAuthentication_{}  = True
+authViewMatchesAuth DKNemIDAuthenticationToView  NetsDKNemIDAuthentication_{}  = True
+authViewMatchesAuth _ _ = False
+
 -- Functions to determine if AuthenticationToViewMethod or
 -- AuthenticationToSignMethod needs Personal Number or Mobile Number
 
@@ -240,11 +254,13 @@ authToViewNeedsPersonalNumber :: AuthenticationToViewMethod -> Bool
 authToViewNeedsPersonalNumber StandardAuthenticationToView = False
 authToViewNeedsPersonalNumber SEBankIDAuthenticationToView = True
 authToViewNeedsPersonalNumber NOBankIDAuthenticationToView = True
+authToViewNeedsPersonalNumber DKNemIDAuthenticationToView  = True
 
 authToViewNeedsMobileNumber :: AuthenticationToViewMethod -> Bool
 authToViewNeedsMobileNumber StandardAuthenticationToView = False
 authToViewNeedsMobileNumber SEBankIDAuthenticationToView = False
 authToViewNeedsMobileNumber NOBankIDAuthenticationToView = True
+authToViewNeedsMobileNumber DKNemIDAuthenticationToView  = False
 
 authToSignNeedsPersonalNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsPersonalNumber StandardAuthenticationToSign = False

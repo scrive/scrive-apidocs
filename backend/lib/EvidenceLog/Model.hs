@@ -14,6 +14,7 @@ module EvidenceLog.Model (
   , copyEvidenceLogToNewDocument
   , copyEvidenceLogToNewDocuments
   , signatoryLinkTemplateFields
+  , authViewChangeToEvidence
   ) where
 
 import Control.Monad.Catch
@@ -28,6 +29,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import DB
 import DB.XML ()
+import Doc.Data.SignatoryLink
 import Doc.DocStateData (AuthenticationToSignMethod(..), DeliveryMethod(..), SignatoryLink(..))
 import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
@@ -336,6 +338,12 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewMethodSEBankIDToNOBankIDEvidence |
   ChangeAuthenticationToViewMethodNOBankIDToStandardEvidence |
   ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidence |
+  ChangeAuthenticationToViewMethodDKNemIDToSEBankIDEvidence |
+  ChangeAuthenticationToViewMethodDKNemIDToNOBankIDEvidence |
+  ChangeAuthenticationToViewMethodDKNemIDToStandardEvidence |
+  ChangeAuthenticationToViewMethodSEBankIDToDKNemIDEvidence |
+  ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidence |
+  ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence |
   AuthorAttachmentHashComputed                       |
   AuthorAttachmentAccepted                           |
   PageHighlightingAdded                              |
@@ -530,6 +538,12 @@ instance ToSQL EvidenceEventType where
   toSQL (Current AuthorAttachmentAccepted) = toSQL (115::Int16)
   toSQL (Current PageHighlightingAdded) = toSQL (116::Int16)
   toSQL (Current PageHighlightingCleared) = toSQL (117::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodDKNemIDToSEBankIDEvidence) = toSQL (118::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodDKNemIDToNOBankIDEvidence) = toSQL (119::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodDKNemIDToStandardEvidence) = toSQL (120::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodSEBankIDToDKNemIDEvidence) = toSQL (121::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidence) = toSQL (122::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence) = toSQL (123::Int16)
 
 
 instance FromSQL EvidenceEventType where
@@ -654,7 +668,32 @@ instance FromSQL EvidenceEventType where
       115 -> return (Current AuthorAttachmentAccepted)
       116 -> return (Current PageHighlightingAdded)
       117 -> return (Current PageHighlightingCleared)
+      118 -> return (Current ChangeAuthenticationToViewMethodDKNemIDToSEBankIDEvidence)
+      119 -> return (Current ChangeAuthenticationToViewMethodDKNemIDToNOBankIDEvidence)
+      120 -> return (Current ChangeAuthenticationToViewMethodDKNemIDToStandardEvidence)
+      121 -> return (Current ChangeAuthenticationToViewMethodSEBankIDToDKNemIDEvidence)
+      122 -> return (Current ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidence)
+      123 -> return (Current ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 117)]
+        reRange = [(1, 123)]
       , reValue = n
       }
+
+
+authViewChangeToEvidence :: (AuthenticationToViewMethod, AuthenticationToViewMethod) -> Maybe CurrentEvidenceEventType
+authViewChangeToEvidence (StandardAuthenticationToView, StandardAuthenticationToView) = Nothing
+authViewChangeToEvidence (StandardAuthenticationToView, SEBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodStandardToSEBankIDEvidence
+authViewChangeToEvidence (StandardAuthenticationToView, NOBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodStandardToNOBankIDEvidence
+authViewChangeToEvidence (StandardAuthenticationToView, DKNemIDAuthenticationToView ) = Just ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence
+authViewChangeToEvidence (SEBankIDAuthenticationToView, StandardAuthenticationToView) = Just ChangeAuthenticationToViewMethodSEBankIDToStandardEvidence
+authViewChangeToEvidence (SEBankIDAuthenticationToView, SEBankIDAuthenticationToView) = Nothing
+authViewChangeToEvidence (SEBankIDAuthenticationToView, NOBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodSEBankIDToNOBankIDEvidence
+authViewChangeToEvidence (SEBankIDAuthenticationToView, DKNemIDAuthenticationToView ) = Just ChangeAuthenticationToViewMethodSEBankIDToDKNemIDEvidence
+authViewChangeToEvidence (NOBankIDAuthenticationToView, StandardAuthenticationToView) = Just ChangeAuthenticationToViewMethodNOBankIDToStandardEvidence
+authViewChangeToEvidence (NOBankIDAuthenticationToView, SEBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidence
+authViewChangeToEvidence (NOBankIDAuthenticationToView, NOBankIDAuthenticationToView) = Nothing
+authViewChangeToEvidence (NOBankIDAuthenticationToView, DKNemIDAuthenticationToView ) = Just ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidence
+authViewChangeToEvidence (DKNemIDAuthenticationToView , StandardAuthenticationToView) = Just ChangeAuthenticationToViewMethodDKNemIDToStandardEvidence
+authViewChangeToEvidence (DKNemIDAuthenticationToView , SEBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodDKNemIDToSEBankIDEvidence
+authViewChangeToEvidence (DKNemIDAuthenticationToView , NOBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodDKNemIDToNOBankIDEvidence
+authViewChangeToEvidence (DKNemIDAuthenticationToView , DKNemIDAuthenticationToView ) = Nothing

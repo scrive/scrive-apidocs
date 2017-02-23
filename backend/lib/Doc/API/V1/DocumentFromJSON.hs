@@ -26,7 +26,8 @@ instance FromJSValue AuthenticationToViewMethod where
       Just "standard"  -> Just StandardAuthenticationToView
       Just "se_bankid" -> Just SEBankIDAuthenticationToView
       Just "no_bankid" -> Just NOBankIDAuthenticationToView
-      _               -> Nothing
+      Just "dk_nemid"  -> Just DKNemIDAuthenticationToView
+      _                -> Nothing
 
 
 instance FromJSValue AuthenticationToSignMethod where

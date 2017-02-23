@@ -5,6 +5,7 @@ var EmailValidation = require("./validation.js").EmailValidation;
 var NotEmptyValidation = require("./validation.js").NotEmptyValidation;
 var SSNForNOBankIDValidation = require("./validation.js").SSNForNOBankIDValidation;
 var SSNForSEBankIDValidation = require("./validation.js").SSNForSEBankIDValidation;
+var SSNForDKNemIDValidation = require("./validation.js").SSNForDKNemIDValidation;
 var PhoneValidation = require("./validation.js").PhoneValidation;
 var Validation = require("./validation.js").Validation;
 var NoValidation = require("./validation.js").NoValidation;
@@ -156,6 +157,9 @@ var Field = exports.Field = Backbone.Model.extend({
         if (this.isSSN() && (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView())) {
             return new SSNForSEBankIDValidation().validateData(this.value());
         }
+        if (this.isSSN() && (this.signatory().dkNemIDAuthenticationToView())) {
+            return new SSNForDKNemIDValidation().validateData(this.value());
+        }
         if (this.isMobile() &&
               (   this.signatory().mobileConfirmationDelivery()
                || this.signatory().emailMobileConfirmationDelivery()
@@ -275,6 +279,8 @@ var Field = exports.Field = Backbone.Model.extend({
         return new EmptyValidation().or(new SSNForSEBankIDValidation());
       } else if (this.signatory().noBankIDAuthenticationToView()) {
         return new EmptyValidation().or(new SSNForNOBankIDValidation());
+      } else if (this.signatory().dkNemIDAuthenticationToView()) {
+        return new EmptyValidation().or(new SSNForDKNemIDValidation());
       } else {
         return new Validation();
       }

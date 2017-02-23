@@ -248,6 +248,10 @@ simplyfiedEventText target mactor d sim dee = do
                   F.value "provider_nobankid" True
                   F.value "signatory_name" $ netsNOBankIDSignatoryName n
                   F.value "signatory_dob" $ netsNOBankIDDateOfBirth n
+                NetsDKNemIDAuthentication_ n -> do
+                  F.value "provider_dknemid" True
+                  F.value "signatory_name" $ netsDKNemIDSignatoryName n
+                  F.value "signatory_dob" $ netsDKNemIDDateOfBirth n
 
         F.value "text" $ String.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "additional_text" $ String.replace "\n" " " <$> evAdditionalMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page

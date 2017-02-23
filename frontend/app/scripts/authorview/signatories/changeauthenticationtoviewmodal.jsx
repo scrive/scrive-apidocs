@@ -5,6 +5,7 @@ var Select = require("../../common/select");
 var InfoTextInput = require("../../common/infotextinput");
 var SSNForSEBankIDValidation = require("../../../js/validation.js").SSNForSEBankIDValidation;
 var SSNForNOBankIDValidation = require("../../../js/validation.js").SSNForNOBankIDValidation;
+var SSNForDKNemIDValidation = require("../../../js/validation.js").SSNForDKNemIDValidation;
 var PhoneValidationNO = require("../../../js/validation.js").PhoneValidationNO;
 var EmptyValidation = require("../../../js/validation.js").EmptyValidation;
 var $ = require("jquery");
@@ -44,6 +45,8 @@ var Modal = require("../../common/modal");
         } else if (this.isAuthenticationNOBankID()) {
           this.setPersonalNumber(signatory.personalnumber());
           this.setMobileNumber(signatory.mobile());
+        } else if (this.isAuthenticationDKNemID()) {
+          this.setPersonalNumber(signatory.personalnumber());
         }
       }
     },
@@ -68,12 +71,20 @@ var Modal = require("../../common/modal");
       return "no_bankid";
     },
 
-    canUseNOBankID: function () {
+    canUseNonSwedishID: function () {
       return this.signatory().authenticationToSign() != "se_bankid";
     },
 
     isAuthenticationNOBankID: function () {
       return this.authenticationMethod() == this.NOBankIDAuthenticationValue();
+    },
+
+    DKNemIDAuthenticationValue: function () {
+      return "dk_nemid";
+    },
+
+    isAuthenticationDKNemID: function () {
+      return this.authenticationMethod() == this.DKNemIDAuthenticationValue();
     },
 
     personalNumber: function () {
@@ -90,6 +101,8 @@ var Modal = require("../../common/modal");
         return new SSNForSEBankIDValidation().validateData(pn);
       } else if (this.isAuthenticationNOBankID()) {
         return new SSNForNOBankIDValidation().validateData(pn);
+      } else if (this.isAuthenticationDKNemID()) {
+        return new SSNForDKNemIDValidation().validateData(pn);
       }
       return true;
     },
@@ -129,6 +142,8 @@ var Modal = require("../../common/modal");
         } else if (!this.isMobileNumberValid()) {
           text = localization.docview.changeAuthenticationToView.flashMessageInvalidNOPhone;
         }
+      } else if (this.isAuthenticationDKNemID() && !this.isPersonalNumberValid()) {
+        text = localization.docview.changeAuthenticationToView.flashMessageInvalidDKSSN;
       }
       return text;
     }
@@ -157,6 +172,8 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToViewSEBankID;
       } else if (model.isAuthenticationNOBankID()) {
         return localization.docview.signatory.authenticationToViewNOBankID;
+      } else if (model.isAuthenticationDKNemID()) {
+        return localization.docview.signatory.authenticationToViewDKNemID;
       }
     },
 
@@ -178,9 +195,14 @@ var Modal = require("../../common/modal");
         selected: model.isAuthenticationNOBankID(),
         value: model.NOBankIDAuthenticationValue()
       };
+      var dkNemid = {
+        name: localization.docview.signatory.authenticationToViewDKNemID,
+        selected: model.isAuthenticationDKNemID(),
+        value: model.DKNemIDAuthenticationValue()
+      };
 
-      if (model.canUseNOBankID()) {
-        return [standard, seBankid, noBankid];
+      if (model.canUseNonSwedishID()) {
+        return [standard, seBankid, noBankid, dkNemid];
       } else {
         return [standard, seBankid];
       }
@@ -198,6 +220,8 @@ var Modal = require("../../common/modal");
         text = localization.docview.changeAuthenticationToView.ssnSEBankIDLabel;
       } else if (model.isAuthenticationNOBankID()) {
         text = localization.docview.changeAuthenticationToView.ssnNOBankIDLabel;
+      } else if (model.isAuthenticationDKNemID()) {
+        text = localization.docview.changeAuthenticationToView.ssnDKNemIDLabel;
       }
       return text;
     },
@@ -209,6 +233,8 @@ var Modal = require("../../common/modal");
         text = localization.docview.changeAuthenticationToView.ssnSEBankIDPlaceholder;
       } else if (model.isAuthenticationNOBankID()) {
         text = localization.docview.changeAuthenticationToView.ssnNOBankIDPlaceholder;
+      } else if (model.isAuthenticationDKNemID()) {
+        text = localization.docview.changeAuthenticationToView.ssnDKNemIDPlaceholder;
       }
       return text;
     },

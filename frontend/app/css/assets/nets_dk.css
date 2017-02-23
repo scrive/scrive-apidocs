@@ -1,0 +1,1412 @@
+/* ============================= */
+/* Basic page artifacts */
+html, body {
+  height: 100%;
+}
+
+body, div, span, form, input, a, .frame {
+  color: rgb(112, 111, 111);
+  font-family: verdana;
+  font-size: 14px;
+  font-weight: normal;
+  margin: 0px;
+  padding: 0px;
+}
+
+a {
+  color: #00f;
+}
+
+/* Main frame defs */
+.frame {
+  background: url(/gfx/top_bkg.gif) repeat-x scroll 0 0 #FFFFFF;
+  margin: 0px;
+  padding: 0px;
+  text-align: center;
+  width: 100%;
+}
+
+.infotext {
+  position: absolute;
+  top: 50px;
+  left: 20px;
+  right: 25px;
+  text-align: left
+}
+
+.infotextnarrow {
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  right: 25px;
+  width: 180px;
+  text-align: left
+}
+
+.page {
+  background: url(/gfx/top_bkg.gif) repeat-x scroll 0 0 #FFFFFF;
+  background-position: -5px -7.6px;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border-bottom: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0px;
+  text-align: left;
+  width: 630px;
+  height: 100%;
+}
+
+.i18n_banner {
+  clear: both;
+  display: block;
+  margin-bottom: 0px;
+  width: 100%;
+}
+
+.i18n_tabs {
+  display: block;
+  float: right;
+  width: 100%;
+  padding: 0px 0px 0px 0px;
+  margin: 0px 0px 0px 0px;
+  background: url(/gfx/top_bkg.gif) repeat-x scroll 0 0 #FFFFFF;
+  list-style: none;
+}
+
+.i18n_tab {
+  border: none;
+  float: right;
+  background: url(/gfx/top_bkg.gif) repeat-x scroll 0 0 #FFFFFF;
+  padding: 3px;
+}
+
+.i18n_a {
+  border: none;
+  float: left;
+  text-align: left;
+  background: url(/gfx/top_bkg.gif) repeat-x scroll 0 0 #FFFFFF;
+  border: none;
+  display: block;
+  padding: 3px;
+  cursor: pointer;
+}
+
+.i18n_a_r {
+  border: none;
+  float: left;
+  text-align: right;
+  color: #706f6f;
+  background: url(/gfx/top_bkg.gif) repeat-x scroll 0 0 #FFFFFF;
+  display: block;
+  padding: 3px;
+}
+
+.i18n_tab_selected {
+  float: right;
+  /*color: green;*/
+  background: url(/gfx/top_bkg.gif) repeat-x scroll 0 0 #FFFFFF;
+  padding: 3px;
+}
+
+.i18n_a_selected {
+  background: url(/gfx/top_bkg.gif) repeat-x scroll 0 0 #FFFFFF;
+  border: none;
+  color: #34943f;
+  font-weight: bold;
+  float: left;
+  display: block;
+  padding: 3px;
+}
+
+.h1_banner {
+  clear: left;
+  font-size: 26px;
+  font-weight: normal;
+  padding: 3px 0px 0px 0px;
+  text-align: left;
+  color: #26547c;
+}
+
+#h2 {
+  color: #26547c;
+}
+
+.separatorLine {
+  background-color: #BFBFBF;
+  border: medium none;
+  color: #BFBFBF;
+  height: 1px;
+  width: 630px;
+}
+
+.merchant_banner {
+  background-color: #ffffff;
+  border-bottom: none;
+  border-left: none;
+  border-right: none;
+  border-top: 0px;
+  clear: both;
+  display: block;
+  height: 88px;
+  margin: 0px;
+  padding: 0px;
+  text-align: left;
+  width: 630px;
+}
+
+.merchant_logo {
+  border: 0px;
+  float: left;
+  margin: 0px;
+  padding: 0px;
+  width: 150px;
+}
+
+.merchant_intro {
+  border: none;
+  float: left;
+  display: inline;
+  margin: 0px;
+  padding: 7px 10px 5px 10px;
+  width: 460px;
+}
+
+.merchant_info {
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  float: right;
+  display: inline;
+  margin: 21px 7px 0px 0px;
+  padding: 7px 10px 5px 10px;
+  width: 37%;
+}
+
+/* Page banner */
+.bbs_banner {
+  background-position: center center;
+  background: url(/gfx/Nets_logo_height32.png) no-repeat right center;
+  border: none;
+  height: 53px;
+  margin: 0px 0px 0px 0px;
+  width: 630px;
+}
+
+.bbs_banner_tabs {
+  display: inline;
+  float: left;
+  list-style: none;
+  margin: 0px 0px 0px 0px;
+  padding: 36px 0px 0px 0px;
+  width: 630px;
+  height: 25px;
+  border: none;
+  position: relative;
+}
+
+@
+-moz-document url-prefix () { .bbs_banner_tabs { display:inline;
+  float: left;
+  list-style: none;
+  margin: 0px 0px 0px 0px;
+  padding: 36px 0px 0px 0px;
+  width: 630px;
+  height: 28px;
+  border: none;
+}
+
+}
+.bbs_banner_tab {
+  float: left;
+  background: url(/gfx/nav-left.gif) no-repeat left top;
+  margin: 0px 0px 0px 0px;
+  padding-left: 11px;
+}
+
+.bbs_banner_tab_selected {
+  float: left;
+  background: url(/gfx/nav-left-on.gif) no-repeat left top;
+  margin: 0px;
+  padding-left: 11px;
+  font-weight: bold;
+}
+
+.bbs_banner_tab_selected a, .bbs_banner_tab_selected input {
+  display: block;
+  background: url(/gfx/nav-right-on.gif) no-repeat right top;
+  margin: 0px;
+  padding: 5px 15px 4px 6px;
+  font-weight: bold;
+}
+
+.bbs_banner_tab_selected li {
+  float: left;
+  background: url(/gfx/nav-left-on.gif) no-repeat left top;
+  margin: 0px;
+  padding-left: 11px;
+  border-bottom: 1px solid #ffffff;
+  font-weight: bold;
+}
+
+.form_a_selected {
+  font-weight: bold;
+  background-color: transparent;
+  border: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+.abbs_banner_tabs_space {
+  display: inline;
+  float: left;
+  list-style: none;
+  margin: 0px 0px 0px 0px;
+  padding: 0px 0px 0px 79px;
+  /* IE
+  width: 390px;
+  height: 30px;*/
+  /* MOZ */
+  width: 443px;
+  height: 27px;
+  /* OPERA
+  width: 455px;
+  height: 25px;*/
+  /* WEBKIT
+  width: 455px;
+  height: 25px; */
+  border-bottom: 1px solid #bfbfbf;
+}
+
+.bbs_banner_tab a, .bbs_banner_tab input {
+  display: block;
+  background: url(/gfx/nav-right.gif) no-repeat right top;
+  margin: 0px;
+  padding: 5px 15px 3px 6px;
+}
+
+/* main iframe window */
+.client_view {
+  border-left: 1px solid #BFBFBF;
+  border-right: 1px solid #BFBFBF;
+  border-top: 1px solid #BFBFBF;
+  border-bottom: 1px solid #BFBFBF;
+  clear: both;
+  margin: 0px;
+  margin-bottom: 10px;
+  padding: 0px 0px 0px 0px;
+  text-align: left;
+  width: 628px;
+  height: 65%;
+  min-height: 400px;
+}
+
+.contain-left {
+  text-align: left;
+}
+
+.contain-right {
+  text-align: right;
+}
+
+.contain-center {
+  text-align: left;
+  margin: 0 auto;
+}
+
+.contain-center-error {
+  text-align: left;
+  margin: 0 auto;
+  padding: 10px;
+  border: 1px solid #FF0000;
+}
+
+.contain-indent {
+  margin: 0 0 0 7px;
+}
+
+/* IFRAME content defs */
+#ident_iframe {
+  position: relative;
+  border: 0px solid #ffffff;
+  margin: 0px;
+  padding-left: 25px;
+  padding-top: 15px;
+  width: 92%;
+  height: 95%;
+}
+
+.iframe {
+  padding: 0px;
+  margin-top: 0px;
+  margin-left: 0px;
+  font-size: 11px;
+  width: 100%;
+  height: 100%;
+}
+
+.ipage * {
+  font-size: 12px;
+}
+
+.ipage {
+  margin: 0px 4px 0px 0px;
+  text-align: left;
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================= */
+/* IDP list */
+#h2.headerPki {
+  font-size: 24px;
+  font-weight: normal;
+}
+
+.idpchoice {
+  background-color: rgb(227, 227, 227);
+  border: none;
+  cursor: pointer;
+  display: block;
+  margin: 5px 0px 0px 0px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  width: 300px;
+  padding: 2%;
+  padding-left: 124px;
+  background-position: 6% 50%;
+  background-repeat: no-repeat;
+  text-align: left;
+  height: 42px;
+  font-size: 11px;
+}
+
+.idpchoice:hover, .idpchoice_hover {
+  background-color: rgb(198, 198, 198);
+  border: none;
+  cursor: pointer;
+  display: block;
+  margin: 5px 0px 0px 0px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  width: 300px;
+  padding: 2%;
+  padding-left: 124px;
+  background-position: 6% 50%;
+  background-repeat: no-repeat;
+  text-align: left;
+  height: 42px;
+  font-size: 11px;
+}
+
+#pki2 {
+  background-image: url(/gfx/logo_BIM.png);
+  background-size: 100px auto;
+}
+
+#pki15, #pki12, #pki1 {
+  background-image: url(/gfx/BankID.png);
+  background-size: 100px auto;
+}
+
+#pki9, #pki13, #pki4, #pki14 {
+  background-image: url("/gfx/bankidse.png");
+  background-size: auto 35px;
+}
+
+#pki5, #pki10 {
+  background-image: url(/gfx/nordea.png);
+  background-size: 100px auto;
+}
+
+#pki3 {
+  background-image: url(/gfx/buypass.png);
+}
+
+#pki6 {
+  background-image: url(/gfx/telia.png);
+}
+
+#pki7 {
+  background-image: url(/gfx/digitalS.png);
+  background-size: 100px auto;
+}
+
+#pki16, #pki11, #pki8 {
+  background-image: url("/gfx/nemid.png");
+  background-size: 67px auto;
+}
+
+#pki30 {
+  background-image: url(/gfx/tupas.png);
+  background-size: contain;
+}
+/* ============================= */
+/* form controls */
+.formcontrols {
+  display: block;
+  margin-right: 5%;
+  margin-top: 23px;
+  padding: 0px;
+  border: none;
+  background-color: #ffffff;
+  text-align: left;
+  vertical-align: top;
+  width: 90%;
+}
+
+.formcontrol {
+  padding: 2px 7px 2px 7px;
+  display: inline;
+  color: rgb(255, 255, 255);
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+  background-color: rgb(0, 81, 145);
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+}
+
+/*.formcontrol:hover {
+  background-color: rgb(0, 81, 145);
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  border-collapse: collapse;
+  display: inline;
+}*/
+
+/* ============================= */
+/* user status and info messages */
+.status, .info {
+  text-align: left;
+  vertical-align: top;
+  width: 90%;
+  font-style: italic;
+}
+
+.info {
+  background-color: #f0f0f0;
+  border-color: #333333;
+}
+
+.alert {
+  display: inline;
+  float: left;
+  padding: 0px 7px 7px 0px;
+  text-align: left;
+  vertical-align: top;
+  width: 40px;
+}
+
+.error {
+  margin-top: 20px;
+  font-style: italic;
+  margin-left: 2px;
+}
+
+.error_logo {
+  background-image: url("../gfx/Advarsel.png");
+  width: 40px;
+  height: 35px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  float: left;
+}
+
+.error_main {
+  border: none;
+  margin-left: 50px;
+}
+
+#error_header {
+  margin-top: 7px;
+  margin-left: 0px;
+  padding-top: 9px
+}
+
+#error_text {
+  padding-top: 7px
+}
+
+#error_btn {
+  clear: both;
+  float: left;
+  display: block;
+}
+
+#idpp_status .formcontrols {
+  clear: both;
+  margin-left: 0px;
+}
+
+/*
+hx - header texts
+tx - text messages
+nx - highlighted texts
+
+Numbers 0 thru 4 control text sizes
+*/
+#h0, #h1, #h2, #h3 {
+  font-weight: bold;
+}
+
+#t0, #t1, #t2, #t3, #w3, #n3 {
+  font-weight: normal;
+}
+
+/* Form buttons rendered as plain text links */
+.form_a {
+  background-color: transparent;
+  border: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+.form_a_inviss {
+  float: left;
+  background-color: transparent;
+  border: none;
+  margin: 0px 0px 0px 0px;
+  padding: 0px;
+  height: 25px;
+  width: 7px;
+}
+
+.form_a_invis {
+  background-color: transparent;
+  border: none;
+  margin: 0px 0px 0px 166px;
+  padding: 0px;
+  height: 25px;
+  width: 449px;
+}
+
+/* Page footer, with copyright */
+.footer {
+  color: rgb(112, 111, 111);
+  margin: 0px auto;
+  padding: 10px 0px 10px 0px;
+  text-align: center;
+}
+
+a:link {
+  color: #26547c;
+}
+
+a:hover {
+  color: #34943f;
+}
+
+/* --- */
+/*---------------------------=============<(  GENERAL STYLE  )>=============----------------------------*/
+label {
+  display: block;
+  float: left;
+  color: rgb(112, 111, 111);
+  margin-bottom: 5px;
+}
+
+input.text {
+  clear: both;
+  display: block;
+  z-index: 1;
+  margin-bottom: 10px;
+  width: 9em;
+  height: auto;
+  -moz-box-sizing: border-box;
+  float: left;
+  border-radius: 6px;
+  padding: 2px;
+  background-color: rgb(227, 227, 227);
+  color: rgb(112, 111, 111);;
+  border: 1px solid rgb(198, 198, 198);
+}
+
+input.formcontrol {
+  color: rgb(255, 255, 255);
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+  background-color: rgb(0, 81, 145);
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+}
+
+.ipageheader {
+  margin-top: 2%;
+  font-size: 24px;
+  font-weight: 500;
+  color: rgb(0, 81, 145);
+}
+
+.body {
+  display: block;
+  margin-bottom: 10px;
+}
+
+div.button_holder {
+  clear: both;
+  float: left;
+}
+
+/* --- */
+/*---------------------------=============<(  NEMID  )>=============----------------------------*/
+input#nemid_next {
+  display: block;
+  float: left;
+  clear: both;
+}
+
+#nemid_cpr .error {
+  margin-bottom: 5px;
+  margin-top: 5px;
+}
+
+/* --- */
+/*---------------------------=============<(  SEBANKID  )>=============----------------------------*/
+#sebankid_ipage_index {
+  max-width: 576px;
+}
+
+.body {
+  display: block;
+  margin-bottom: 10px;
+}
+
+#sebankid_labelssn {
+  display: block;
+  float: left;
+  color: rgb(111, 111, 111);
+  margin-bottom: 5px;
+}
+
+#sebankid_ssn {
+  background-color: #ffffff;
+  display: block;
+}
+
+#sebankid_info_index1, #sebankid_info_index2 {
+  clear: both;
+  display: block;
+  z-index: 1;
+  margin-bottom: 5px;
+  width: 250px;
+  height: auto;
+  -moz-box-sizing: border-box;
+  float: left;
+  border-radius: 6px;
+  padding: 10px;
+  background-color: rgb(227, 227, 227);
+  color: rgb(112, 111, 111);
+}
+
+#sebankid_info_collect {
+  clear: both;
+  display: block;
+  z-index: 1;
+  margin-bottom: 5px;
+  width: 250px;
+  height: auto;
+  -moz-box-sizing: border-box;
+  float: left;
+  border-radius: 6px;
+  padding-top: 10px;
+  color: rgb(112, 111, 111);
+}
+
+#sebankid_error {
+  margin-bottom: 5px;
+}
+
+#sebankid_loader {
+  display: block;
+  margin: 10px auto;
+  height: 32px;
+  width: 32px;
+  background-image: url("/gfx/ajax-loader.gif");
+}
+
+input#sebankid_loginthisdevice, input#sebankid_loginanydevice {
+  color: rgb(255, 255, 255);
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+  background-color: rgb(0, 81, 145);
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+}
+
+/* --- */
+/*---------------------------=============<(  BID_MOB_NO  )>=============----------------------------*/
+#bidmob_content {
+  position: relative;
+  width: 388px;
+  color: #002337; /*  R=0, G=35, B=55 */
+  font-family: "Arial", serif;
+}
+
+#bidmob_content * {
+  margin: 0;
+  padding: 0;
+}
+
+div.bidmobil {
+  position: fixed;
+  text-align: left;
+  width: 388px;
+  height: 240px;
+  color: #666666;
+  font-family: "Arial", serif;
+  font-size: 10px;
+}
+
+div.bidmobil * {
+  position: absolute;
+  font-family: "Arial", serif;
+  font-size: 10px;
+}
+
+div#bidmob_layout1 {
+  background-image:
+    url("../gfx/mobile/2_Bakgrunn_BankID_mobil_388x240.png");
+}
+
+div#bidmob_layout2 {
+  background-image:
+    url("../gfx/mobile/9_Alternativ_bakgrunn_mobil_388x240.png");
+}
+
+div#bidmob_errimg {
+  background-image: url("../gfx/mobile/6_Feilmldskilt_BankID_29x31.png");
+  width: 29px;
+  height: 31px;
+  top: 170px;
+  left: 30px;
+  visibility: visible;
+}
+
+div#bidmob_errtext {
+  margin-left: 5px;
+  width: 250px;
+  height: 55px;
+  left: 65px;
+  top: 170px;
+}
+
+div#bidmob_header {
+  left: 30px;
+  top: 72px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+#bidmob_content label {
+  width: 150px;
+}
+
+label[for="bidmob_mobileno"] {
+  left: 30px;
+  top: 112px;
+}
+
+label[for="bidmob_mobilealias"] {
+  left: 218px;
+  top: 112px;
+}
+
+input.bidtext {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  width: 150px;
+  height: 18px;
+  background-repeat: no-repeat;
+  background-image: url("../gfx/mobile/3_Inputfelt_BankID_150x18.png");
+}
+
+input#bidmob_mobileno {
+  left: 30px;
+  top: 133px;
+}
+
+input#bidmob_mobilealias {
+  left: 218px;
+  top: 133px;
+}
+
+input.bidbutton {
+  width: 40px;
+  height: 18px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background-image: url("../gfx/mobile/4_Knapp_Neste_BankID_40x18.png");
+}
+
+input#bidmob_next {
+  top: 205px;
+  left: 328px;
+}
+
+input#bidmob_cancel {
+  top: 205px;
+  left: 30px;
+}
+
+div#bidmob_reflabel {
+  left: 30px;
+  top: 108px;
+  width: 190px;
+}
+
+div#bidmob_reftext {
+  left: 30px;
+  top: 125px;
+  width: 190px;
+}
+
+div#bidmob_refcode {
+  font-weight: bold;
+  top: 108px;
+  left: 80px;
+}
+
+div#bidmob_instructions {
+  top: 190px;
+  left: 30px;
+  width: 220px;
+}
+
+#bidmob_receipt #bidmob_header {
+  top: 104px;
+  font-size: 24px;
+  left: 30px;
+  font-weight: normal;
+}
+
+/* --- */
+/*---------------------------=============<(  ti2_idp_no_bankid (BankID 2.0)  )>=============----------------------------*/
+#nobankid_index_html {
+  height: 100%;
+  overflow-y: hidden;
+}
+
+#nobankid_index_html .iframe, #nobankid_index_html .iframe .ipage {
+  height: 100%;
+}
+
+#nobankid_index_html .iframe .ipage .main {
+  height: 100%;
+  min-height: 200px;
+}
+
+/* --- */
+/*------------------------=============<( ts_idp_nemidjs (NEMID JS) )>=============-------------------------*/
+
+#nemid_iframe {
+  height: 100%;
+  min-height: 340px;
+  min-width: 450px;
+  width: 100%;
+}
+
+#nemid_index_html {
+  height: 100%;
+}
+
+#nemid_index_html body {
+  height: 100%;
+}
+
+div#nemid_cpr {
+  border: 3px solid #BCCCCB;
+  padding-top:10px;
+  min-height: 330px;
+  width: initial;
+  height: initial;
+  margin: auto;
+}
+
+#nemid_cpr form {
+  max-width: 294px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#nemid_cpr label {
+  color: #323536;
+  font-family: Arial;
+  font-size: 16px;
+  margin-bottom: 10px;
+  margin-top: 0px;
+
+}
+
+#nemid_cpr input {
+  border-radius: 2px;
+  border: 1px solid #A4B3B2;
+  font-family: Arial;
+  float: none;
+  box-sizing: border-box;
+  text-indent: 0px;
+  text-rendering: auto;
+  text-shadow: none;
+  text-transform: none;
+  width: 100%;
+  margin-bottom: 10px;
+  margin-top: 0px;
+  display: block;
+}
+
+#nemid_cpr input#usercpr {
+  background-color: #fff;
+  color: initial;
+  font-size: 16px;
+  height: 40px;
+  letter-spacing: normal;
+  padding-bottom: 4px;
+  padding-left: 10px;
+  padding-right: 0px;
+  padding-top: 1px;
+  text-align: start;
+  user-select: text;
+  width: 100%;
+  word-spacing: normal;
+}
+
+#nemid_cpr input#usercpr:hover {
+  border: 1px solid #095F61;
+}
+
+#nemid_cpr input#nemid_next {
+  ￼background-color: #F6F9F8;
+  ￼line-height: 17px;
+  ￼width: 100%;
+  align-items: flex-start;
+  background-image: linear-gradient(0deg, #F2F2F2 0%, #fff 100%);
+  color: #095F61;
+  cursor: pointer;
+  font-size: 15px;
+  letter-spacing: normal;
+  overflow: hidden;
+  padding: 11px 5px 11px 5px;
+  text-align: center;
+  word-spacing: normal;
+}
+
+input#nemid_next:hover {
+  border: 1px solid rgba(50,53,54,0.8)
+}
+
+/* --- */
+/*---------------------------=============<(  RESPONSIVE GUI  )>=============----------------------------*/
+@media screen and (max-width:768px) {
+  #bankid_app a {
+    font-size: 24px;
+  }
+}
+
+@media screen and (max-width:480px) {
+  .ipage {
+    padding-left: 0px;
+  }
+  div#bidmob_content {
+    margin-top: 0px;
+    margin-left: 0px;
+  }
+  div#bidmob_layout2 {
+    background-image: none;
+    text-align: left;
+    width: 100%;
+  }
+  #bidmob_receipt div#bidmob_layout1 {
+    background-image: none;
+    width: 100%;
+  }
+  #bidmob_wait div#bidmob_header {
+    display: none;
+  }
+  div#bidmob_logo {
+    display: block;
+    top: 4px;
+    left: 65%;
+    background-image: url("../gfx/logo_BIM.jpg");
+    width: 109px;
+    height: 46px;
+  }
+  div#bidmob_refcode {
+    font-family: "Arial", serif;
+    text-align: center;
+    font-size: 30px;
+    background-color: white;
+    border: 1px solid grey;
+    border-radius: 15px;
+    width: 89%;
+    padding-top: 5%;
+    padding-bottom: 5%;
+    left: 5%;
+    top: 70px;
+  }
+  div#bidmob_reflabel {
+    overflow: hidden;
+    top: 56px;
+  }
+  div#bidmob_reftext {
+    font-size: 16px;
+    top: 245px;
+    text-align: center;
+    width: 89%;
+    left: 5%;
+  }
+  div#bidmob_work {
+    display: block;
+    top: 180px;
+    left: 42%;
+    background-image: url("../gfx/ajax-loader.gif");
+    width: 33px;
+    height: 33px;
+  }
+  div#bidmob_instructions {
+    font-size: 16px;
+    top: 320px;
+    text-align: center;
+    width: 89%;
+    left: 5%;
+  }
+}
+
+/*------------------------=============<( ti_idp_fi_tupas  )>=============-------------------------*/
+#fitupas A:link {
+  FONT-WEIGHT: bold;
+  COLOR: #00339f;
+  TEXT-DECORATION: none
+}
+
+#fitupas A:active {
+  FONT-WEIGHT: bold;
+  COLOR: #00339f;
+  TEXT-DECORATION: none
+}
+
+#fitupas A:hover {
+  FONT-WEIGHT: bold;
+  COLOR: #00339f;
+  TEXT-DECORATION: none
+}
+
+#fitupas A:visited {
+  FONT-WEIGHT: bold;
+  COLOR: #c60;
+  TEXT-DECORATION: none
+}
+
+#fitupas font.heading {
+  font-size: 24px;
+  font-family: verdana;
+  color: #005191;
+  font-weight: normal;
+}
+
+#fitupas .hline {
+  clear: both;
+  height: 0;
+  border-top: 1px solid #D0D0D0;
+  margin-top: 10px;
+  width: 100%;
+}
+
+#fitupas .row>.column {
+  padding: 0 8px;
+}
+
+#fitupas .row::after {
+  clear: both;
+  content: "";
+  display: table;
+}
+
+/* --- */
+/*---------------------------=============<(  RESPONSIVE GUI  )>=============----------------------------*/
+@media
+(
+max-device-width
+:600px)
+{
+#fitupas .ti2sbmform {
+  margin: auto;
+  padding: 10px;
+  float: left;
+  padding-top: 32px;
+  padding-left: 92px;
+  padding-right: 0px;
+}
+
+#fitupas .row {
+  clear: both;
+  padding-top: 5px;
+  width: 100%;
+}
+
+#fitupas .column {
+  float: left;
+  width: 45%;
+  padding-top: 30px !important;
+}
+
+#fitupas .formheader {
+  padding-top: 10px;
+  text-align: center;
+}
+
+#fitupas .hline2 {
+  clear: both;
+  height: 0;
+  border-top: 1px solid #D0D0D0;
+  margin-top: 160px;
+  width: 100%;
+}
+
+#fitupas #tupas-tooltip-arrow, #tupas-tooltip, #tupas-tooltip img {
+  display: none;
+}
+
+#fitupas .formcontrols {
+  width: 90%;
+}
+
+#fitupas span.opbank {
+  display: block;
+  background: url("../gfx/opbank.png") no-repeat scroll center center;
+  width: 90px;
+  height: 90px;
+  background-size: contain;
+}
+
+#fitupas span.sbank {
+  display: block;
+  background: url("../gfx/sbank.png") no-repeat scroll center center;
+  width: 90px;
+  height: 90px;
+  background-size: contain;
+}
+
+#fitupas span.popbank {
+  display: block;
+  background: url("../gfx/popbank.png") no-repeat scroll center center;
+  width: 90px;
+  height: 90px;
+  background-size: contain;
+}
+
+#fitupas span.savingsbank {
+  display: block;
+  background: url("../gfx/savingsbank.png") no-repeat scroll center center;
+  width: 90px;
+  height: 90px;
+  background-size: contain;
+}
+
+#fitupas span.aktia {
+  display: block;
+  background: url("../gfx/aktia.png") no-repeat scroll center center;
+  width: 90px;
+  height: 90px;
+  background-size: contain;
+}
+
+#fitupas span.handelsbanken {
+  display: block;
+  background: url("../gfx/handelsbanken.png") no-repeat scroll center
+    center;
+  width: 90px;
+  height: 90px;
+  background-size: contain;
+}
+
+#fitupas span.danske {
+  display: block;
+  background: url("../gfx/danske.png") no-repeat scroll center center;
+  width: 90px;
+  height: 90px;
+  background-size: contain;
+}
+
+#fitupas span.aland {
+  display: block;
+  background: url("../gfx/aland.png") no-repeat scroll center center;
+  width: 90px;
+  height: 90px;
+  background-size: contain;
+}
+
+#fitupas span.nordea {
+  display: block;
+  background: url("../gfx/nordea_logo.png") no-repeat scroll center center;
+  width: 90px;
+  height: 90px;
+  background-size: contain;
+}
+
+#fitupas span.tapiola {
+  display: block;
+  background: url("../gfx/tapiola.png") no-repeat scroll center center;
+  width: 90px;
+  height: 90px;
+  background-size: contain;
+}
+
+}
+@media
+(
+min-device-width
+:601px)
+{
+#fitupas .row {
+  clear: both;
+  padding-top: 10px;
+  width: 100%;
+}
+
+#fitupas .column {
+  width: 21%;
+  padding-top: 40px !important;
+  display: block;
+  float: left;
+}
+
+#fitupas #tupas-tooltip div {
+  color: #0F4C68;
+  font-size: 12px;
+}
+
+#fitupas .ti2sbmform {
+  margin: auto;
+}
+
+#fitupas .formcontrols {
+  width: 95%;
+  margin-top:0px;
+}
+
+#fitupas .formheader {
+  padding-top: 10px;
+  text-align: left;
+}
+
+#fitupas #tupas-tooltip-arrow {
+  display: none;
+  position: absolute;
+  word-wrap: break-word;
+  border: solid;
+  border-color: #0F4C68 transparent;
+  border-width: 8px 8px 0 8px;
+  width: 0;
+  padding: 0;
+  z-index: 999999;
+}
+
+#fitupas #tupas-tooltip {
+  word-wrap: normal;
+  display: none;
+  position: absolute;
+  max-width: 250px;
+  min-height: 30px;
+  padding: 8px;
+  border: 1px solid #0F4C68;
+  background: #D9EDF6;
+  z-index: 99999;
+  font-size: 12px;
+  font-family: verdana;
+  color: #0E3E54;
+  box-shadow: 0 -5px 5px -3px gray, -5px 0 5px -3px gray, 5px 0 5px -4px gray, 0 5px 5px -4px gray;
+}
+
+#fitupas #tupas-tooltip img {
+  float: left;
+  margin: -6px 8px 0 0;
+}
+
+#fitupas #tupas-tooltip div {
+  padding-left: 36px;
+}
+
+#fitupas .hline2 {
+  clear: both;
+  height: 0;
+  border-top: 1px solid #D0D0D0;
+  margin-top: 40px;
+  width: 100%;
+}
+
+#fitupas span.opbank {
+  display: block;
+  background: url("../gfx/opbank.png") no-repeat scroll center center;
+  width: 115px;
+  height: 65px;
+}
+
+#fitupas span.sbank {
+  display: block;
+  background: url("../gfx/sbank.png") no-repeat scroll center center;
+  width: 115px;
+  height: 65px;
+}
+
+#fitupas span.popbank {
+  display: block;
+  background: url("../gfx/popbank.png") no-repeat scroll center center;
+  width: 115px;
+  height: 65px;
+}
+
+#fitupas span.savingsbank {
+  display: block;
+  background: url("../gfx/savingsbank.png") no-repeat scroll center center;
+  width: 115px;
+  height: 65px;
+}
+
+#fitupas span.aktia {
+  display: block;
+  background: url("../gfx/aktia.png") no-repeat scroll center center;
+  width: 115px;
+  height: 65px;
+}
+
+#fitupas span.handelsbanken {
+  display: block;
+  background: url("../gfx/handelsbanken.png") no-repeat scroll center
+    center;
+  width: 115px;
+  height: 65px;
+  background-size: contain;
+}
+
+#fitupas span.danske {
+  display: block;
+  background: url("../gfx/danske.png") no-repeat scroll center center;
+  width: 115px;
+  height: 65px;
+}
+
+#fitupas span.aland {
+  display: block;
+  background: url("../gfx/aland.png") no-repeat scroll center center;
+  width: 115px;
+  height: 65px;
+}
+
+#fitupas span.nordea {
+  display: block;
+  background: url("../gfx/nordea_logo.png") no-repeat scroll center center;
+  width: 115px;
+  height: 65px;
+}
+
+#fitupas span.tapiola {
+  display: block;
+  background: url("../gfx/tapiola.png") no-repeat scroll center center;
+  width: 115px;
+  height: 65px;
+}
+}

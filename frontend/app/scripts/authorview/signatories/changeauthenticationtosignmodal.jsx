@@ -186,7 +186,7 @@ var Modal = require("../../common/modal");
         value: "sms_pin"
       };
 
-      if (sig.authenticationToView() === "no_bankid") {
+      if (sig.authenticationToView() === "no_bankid" || sig.authenticationToView() === "dk_nemid") {
         return [standard, sms];
       }
 

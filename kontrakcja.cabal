@@ -1253,6 +1253,7 @@ Executable screenshot-review
                , resource-pool
                , scientific
                , semigroups
+               , soap
                , split
                , stm
                , template-haskell
@@ -1267,6 +1268,7 @@ Executable screenshot-review
                , utf8-string
                , vector
                , xml-conduit
+               , xml-conduit-writer
                , xml-types
                , yaml
 

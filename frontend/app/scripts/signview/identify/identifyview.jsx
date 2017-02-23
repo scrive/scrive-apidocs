@@ -4,6 +4,8 @@ var SwedishIdentifyView = require("./swedish/swedishidentifyview");
 var SwedishIdentifyModel = require("./swedish/swedishidentifymodel");
 var NorwegianIdentifyView = require("./norwegian/norwegianidentifyview");
 var NorwegianIdentifyModel = require("./norwegian/norwegianidentifymodel");
+var DanishIdentifyView = require("./danish/danishidentifyview");
+var DanishIdentifyModel = require("./danish/danishidentifymodel");
 var Document = require("../../../js/documents.js").Document;
 var $ = require("jquery");
 var MaskedPersonalNumber = require("./masked_personal_number");
@@ -32,6 +34,11 @@ var MaskedPersonalNumber = require("./masked_personal_number");
           doc: this.props.doc,
           siglinkid: this.props.siglinkid
         });
+      } else if (this.props.doc.currentSignatory().dkNemIDAuthenticationToView()) {
+        model = new DanishIdentifyModel({
+          doc: this.props.doc,
+          siglinkid: this.props.siglinkid
+        });
       }
       return {model: model};
     },
@@ -41,9 +48,13 @@ var MaskedPersonalNumber = require("./masked_personal_number");
       var urlparams = window.brandingdomainid + "/" + documentId + "/" + window.brandinghash;
       return window.cdnbaseurl + "/signview_logo/" + urlparams;
     },
-
     bankidLogo: function () {
-      return window.cdnbaseurl + (this.state.model.isSwedish() ? "/img/bankid2.png" : "/img/bankid-no.png");
+      return (window.cdnbaseurl
+             + (this.state.model.isSwedish()
+               ? "/img/bankid2.png"
+               : (this.state.model.isNorwegian()
+                 ? "/img/bankid-no.png"
+                 : "/img/nemid-dk.png")));
     },
     verifyIdentityText: function () {
       var model = this.state.model;
@@ -91,6 +102,12 @@ var MaskedPersonalNumber = require("./masked_personal_number");
                 model={model}
               />
             }
+            { /* else if */ model.isDanish() &&
+              <DanishIdentifyView
+                ref="identify"
+                model={model}
+              />
+            }
             <div className="identify-box-footer">
               <div className="identify-box-footer-text">
                 <div>
@@ -104,6 +121,7 @@ var MaskedPersonalNumber = require("./masked_personal_number");
                     number={personalNumber}
                     placeholder="Empty"
                     isNorwegian={model.isNorwegian()}
+                    isDanish={model.isDanish()}
                   />
                 </div>
               </div>

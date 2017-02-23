@@ -1,9 +1,11 @@
 module EID.Authentication.Model (
     EAuthentication(..)
+  , AuthenticationProvider(..)
   -- from EID.CGI.GRP.Data
   , CGISEBankIDAuthentication(..)
   , MergeCGISEBankIDAuthentication(..)
   , MergeNetsNOBankIDAuthentication(..)
+  , MergeNetsDKNemIDAuthentication(..)
   , GetEAuthentication(..)
   , GetEAuthenticationWithoutSession(..)
   ) where
@@ -31,8 +33,9 @@ import Session.SessionID
 -- ambiguous exports in such case).
 
 data EAuthentication
-  = CGISEBankIDAuthentication_ !CGISEBankIDAuthentication    |
-    NetsNOBankIDAuthentication_ !NetsNOBankIDAuthentication
+  = CGISEBankIDAuthentication_ !CGISEBankIDAuthentication
+  | NetsNOBankIDAuthentication_ !NetsNOBankIDAuthentication
+  | NetsDKNemIDAuthentication_ !NetsDKNemIDAuthentication
 
 ----------------------------------------
 
@@ -41,8 +44,9 @@ data EAuthentication
 -- distinction between various signatures on the outside should
 -- be made with pattern matching on 'EAuthentication' constructors.
 data AuthenticationProvider
-  = CgiGrpBankID |
-    NetsNOBankID
+  = CgiGrpBankID
+  | NetsNOBankID
+  | NetsDKNemID
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationProvider where
@@ -55,15 +59,17 @@ instance FromSQL AuthenticationProvider where
     case n :: Int16 of
       1 -> return CgiGrpBankID
       2 -> return NetsNOBankID
+      3 -> return NetsDKNemID
       _ -> throwM RangeError {
-        reRange = [(1, 2)]
+        reRange = [(1, 3)]
       , reValue = n
       }
 
 instance ToSQL AuthenticationProvider where
   type PQDest AuthenticationProvider = PQDest Int16
-  toSQL CgiGrpBankID       = toSQL (1::Int16)
-  toSQL NetsNOBankID       = toSQL (2::Int16)
+  toSQL CgiGrpBankID = toSQL (1::Int16)
+  toSQL NetsNOBankID = toSQL (2::Int16)
+  toSQL NetsDKNemID  = toSQL (3::Int16)
 
 ----------------------------------------
 
@@ -120,6 +126,16 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDAuthentication 
         sqlSet "signatory_phone_number" netsNOBankIDPhoneNumber
         sqlSet "signatory_date_of_birth" netsNOBankIDDateOfBirth
 
+-- | Insert NemID authentication for a given signatory or replace the existing one.
+data MergeNetsDKNemIDAuthentication = MergeNetsDKNemIDAuthentication SessionID SignatoryLinkID NetsDKNemIDAuthentication
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDAuthentication () where
+  update (MergeNetsDKNemIDAuthentication sid slid NetsDKNemIDAuthentication{..}) = do
+    dbUpdate $ MergeAuthenticationInternal sid slid $ do
+        sqlSet "provider" NetsDKNemID
+        sqlSet "internal_provider" netsDKNemIDInternalProvider
+        sqlSet "signature" netsDKNemIDCertificate
+        sqlSet "signatory_name" netsDKNemIDSignatoryName
+        sqlSet "signatory_date_of_birth" netsDKNemIDDateOfBirth
 
 -- Get authentication - internal - just to unify code
 data GetEAuthenticationInternal = GetEAuthenticationInternal SignatoryLinkID (Maybe SessionID)
@@ -163,4 +179,10 @@ fetchEAuthentication (provider, internal_provider, signature, signatory_name, si
   , netsNOBankIDPhoneNumber   = signatory_phone_number
   , netsNOBankIDDateOfBirth   = fromJust signatory_dob
   , netsNOBankIDCertificate   = signature
+  }
+  NetsDKNemID -> NetsDKNemIDAuthentication_ NetsDKNemIDAuthentication {
+    netsDKNemIDInternalProvider = unsafeNetsDKNemIDInternalProviderFromInt16 (fromJust internal_provider)
+  , netsDKNemIDSignatoryName = signatory_name
+  , netsDKNemIDDateOfBirth   = fromJust signatory_dob
+  , netsDKNemIDCertificate   = signature
   }

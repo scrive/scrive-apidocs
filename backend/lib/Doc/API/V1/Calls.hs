@@ -409,8 +409,9 @@ apiCallV1Ready did = logDocument did . api $ do
       SEBankIDAuthenticationToSign -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
       _ -> True
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
-      SEBankIDAuthenticationToView  ->  isGood $ asValidSwedishSSN $ getPersonalNumber sl
-      NOBankIDAuthenticationToView ->   isGood $ asValidNorwegianSSN $ getPersonalNumber sl
+      SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN $ getPersonalNumber sl
+      NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
+      DKNemIDAuthenticationToView  -> isGood $ asValidDanishSSN $ getPersonalNumber sl
       _ -> True
     signatoryHasValidPhoneForIdentifyToView sl =
       let resultValidPhone = asValidPhoneForNorwegianBankID $ getMobile sl in
@@ -690,37 +691,39 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
     when (isNothing authentication_type) $
       throwM . SomeDBExtraException $ badInput $
         "`authentication_type` must be given. Supported values are: `standard`, `se_bankid`, `no_bankid`."
-    (authenticationMethod, mSSN, mPhone) <- case fromJSValue $ J.toJSValue $ fromMaybe "" authentication_type of
+    (authtoview, mSSN, mPhone) <- case fromJSValue $ J.toJSValue $ fromMaybe "" authentication_type of
       Nothing -> throwM . SomeDBExtraException $ badInput $
         "Invalid authentication method: `" ++ fromMaybe "" authentication_type ++ "` was given. Supported values are: `standard`, `se_bankid`, `no_bankid`."
       Just StandardAuthenticationToView -> return (StandardAuthenticationToView, Nothing, Nothing)
       Just SEBankIDAuthenticationToView -> return (SEBankIDAuthenticationToView, personal_number, Nothing)
       Just NOBankIDAuthenticationToView -> return (NOBankIDAuthenticationToView, personal_number, mobile_number)
+      Just DKNemIDAuthenticationToView  -> return (DKNemIDAuthenticationToView , personal_number, Nothing)
     -- Check conditions on signatory
-    when (authenticationMethod == NOBankIDAuthenticationToView && signatorylinkauthenticationtosignmethod sl == SEBankIDAuthenticationToSign) $
-      throwM . SomeDBExtraException $ badInput "Can't mix Norwegian and Swedish BankID for a signatory"
+    guardAuthenticationMethodsCanMix authtoview $ signatorylinkauthenticationtosignmethod sl
     case mSSN of
       -- Signatory must already have valid SSN set
-      Nothing -> unless (isValidSSNForAuthenticationToView authenticationMethod $ getPersonalNumber sl) $
+      Nothing -> unless (isValidSSNForAuthenticationToView authtoview $ getPersonalNumber sl) $
         throwM . SomeDBExtraException $ badInput "Signatory does not have a valid personal number for the authentication method and you did not provide one"
-      Just ssn -> unless (isValidSSNForAuthenticationToView authenticationMethod ssn) $
+      Just ssn -> unless (isValidSSNForAuthenticationToView authtoview ssn) $
         throwM . SomeDBExtraException $ badInput "The personal number you provided is not valid for the authentication method"
     case mPhone of
-      Nothing -> unless (isValidPhoneForAuthenticationToView authenticationMethod $ getMobile sl) $
+      Nothing -> unless (isValidPhoneForAuthenticationToView authtoview $ getMobile sl) $
         throwM . SomeDBExtraException $ badInput "Signatory does not have a valid phone number set for the authentication method and you did not provide one"
-      Just phone -> unless (isValidPhoneForAuthenticationToView authenticationMethod phone) $
+      Just phone -> unless (isValidPhoneForAuthenticationToView authtoview phone) $
         throwM . SomeDBExtraException $ badInput "The phone number you provided is not valid for the authentication method"
     -- Change authentication method and return Document JSON
-    dbUpdate $ ChangeAuthenticationToViewMethod slid authenticationMethod mSSN mPhone actor
+    dbUpdate $ ChangeAuthenticationToViewMethod slid authtoview mSSN mPhone actor
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
   where
     isValidSSNForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
     isValidSSNForAuthenticationToView StandardAuthenticationToView _ = True
     isValidSSNForAuthenticationToView SEBankIDAuthenticationToView ssn = isGood $ asValidSwedishSSN   ssn
     isValidSSNForAuthenticationToView NOBankIDAuthenticationToView ssn = isGood $ asValidNorwegianSSN ssn
+    isValidSSNForAuthenticationToView DKNemIDAuthenticationToView  ssn = isGood $ asValidDanishSSN    ssn
     isValidPhoneForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
     isValidPhoneForAuthenticationToView StandardAuthenticationToView _ = True
     isValidPhoneForAuthenticationToView SEBankIDAuthenticationToView _ = True
+    isValidPhoneForAuthenticationToView DKNemIDAuthenticationToView  _ = True
     isValidPhoneForAuthenticationToView NOBankIDAuthenticationToView phone =
       let phoneValidation = asValidPhoneForNorwegianBankID phone in isGood phoneValidation || isEmpty phoneValidation
 
@@ -744,19 +747,18 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
       when (isNothing authentication_type) $
         throwM . SomeDBExtraException $ badInput
           "`authentication_type` must be given. Supported values are: `standard`, `eleg`, `sms_pin`."
-      (authenticationMethod, mSSN, mPhone) <- case fromJSValue $ J.toJSValue $ fromMaybe "" authentication_type of
+      (authtosignmethod, mSSN, mPhone) <- case fromJSValue $ J.toJSValue $ fromMaybe "" authentication_type of
         Nothing -> throwM . SomeDBExtraException $ badInput
           "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
         Just StandardAuthenticationToSign -> return (StandardAuthenticationToSign, Nothing, Nothing)
         Just SEBankIDAuthenticationToSign -> return (SEBankIDAuthenticationToSign, authentication_value, Nothing)
         Just SMSPinAuthenticationToSign   -> return (SMSPinAuthenticationToSign, Nothing, authentication_value)
+      let authtoviewmethod = signatorylinkauthenticationtoviewmethod sl
       -- Check conditions for different authentication to sign methods
-      case authenticationMethod of
+      guardAuthenticationMethodsCanMix authtoviewmethod authtosignmethod
+      case authtosignmethod of
         StandardAuthenticationToSign -> return ()
         SEBankIDAuthenticationToSign -> do
-          -- Can't mix SEBankID and NOBankID
-          when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $
-            throwM . SomeDBExtraException $ badInput $ "Can't mix Norwegian and Swedish Bank ID"
           case mSSN of
             Nothing -> return ()
             -- If we are given a Swedish SSN
@@ -765,7 +767,7 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
                 throwM . SomeDBExtraException $ badInput "The signatory has authenticated to view, therefore you can't change the authentication value"
               case asValidSwedishSSN ssn of
                 -- Empty is allowed only if we don't need it for AuthenticationToViewMethod
-                Empty -> when (signatorylinkauthenticationtoviewmethod sl == SEBankIDAuthenticationToView) $
+                Empty -> when (authtoviewmethod == SEBankIDAuthenticationToView) $
                   throwM . SomeDBExtraException $ badInput "You provided an empty authentication value, needs a value for authentication to view"
                 Bad -> throwM . SomeDBExtraException $ badInput "The authentication value provided is not a valid for Swedish BankID"
                 Good _ -> return ()
@@ -773,17 +775,25 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
           Nothing -> return ()
           Just phone -> do
             -- If the signatory has authenticated to view with NOBankIDAuthenticationToView and a valid number, then we can't change the phone number!
-            when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView && signatorylinkidentifiedtoview sl && getMobile sl /= "" && phone /= getMobile sl) $
+            when (   authtoviewmethod == NOBankIDAuthenticationToView
+                  && signatorylinkidentifiedtoview sl
+                  && getMobile sl /= ""
+                  && phone /= getMobile sl) $
               throwM . SomeDBExtraException $ badInput "The signatory has authenticated to view with Norwegian BankID, therefore you can't change the phone number"
             -- If given a phone number we need to make sure it doesn't invalidate NOBankIDAuthenticationToView
-            when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $
+            when (authtoviewmethod == NOBankIDAuthenticationToView) $
               case asValidPhoneForNorwegianBankID phone of
                 Bad -> throwM . SomeDBExtraException $ badInput "Phone number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
                 Empty -> return ()
                 Good _ -> return ()
       -- Change authentication to sign method and return Document JSON
-      dbUpdate $ ChangeAuthenticationToSignMethod slid authenticationMethod mSSN mPhone actor
+      dbUpdate $ ChangeAuthenticationToSignMethod slid authtosignmethod mSSN mPhone actor
       Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
+
+guardAuthenticationMethodsCanMix :: Kontrakcja m => AuthenticationToViewMethod -> AuthenticationToSignMethod -> m ()
+guardAuthenticationMethodsCanMix authtoview authtosign = do
+  when (not $ authenticationMethodsCanMix authtoview authtosign)
+    (throwM . SomeDBExtraException $ badInput $ "Can't mix " <> show authtoview <> " and " <> show authtosign <> ".")
 
 apiCallV1Remind :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Remind did = logDocument did . api $ do

@@ -32,6 +32,9 @@ var ErrorModal = require("../../errormodal");
     isNorwegian: function () {
       return false;
     },
+    isDanish: function () {
+      return false;
+    },
     isIdentify: function () {
       return this.get("step") === "identify";
     },

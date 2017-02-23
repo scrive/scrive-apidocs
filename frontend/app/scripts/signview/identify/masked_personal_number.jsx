@@ -5,7 +5,8 @@ var MaskedPersonalNumber = React.createClass({
   propTypes: {
     number: React.PropTypes.string,
     placeholder: React.PropTypes.string,
-    isNorwegian: React.PropTypes.bool
+    isNorwegian: React.PropTypes.bool,
+    isDanish: React.PropTypes.bool
   },
   maskNumber: function (digits) {
     var result = this.props.number;
@@ -29,6 +30,8 @@ var MaskedPersonalNumber = React.createClass({
     if (this.props.number) {
       if (this.props.isNorwegian) {
         result = this.maskNumber(5);
+      } else if (this.props.isDanish) {
+        result = this.maskNumber(4);
       } else {
         result = this.maskNumber(4);
       }

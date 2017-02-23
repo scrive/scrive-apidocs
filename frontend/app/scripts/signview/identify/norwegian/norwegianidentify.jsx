@@ -76,6 +76,7 @@ var MaskedPersonalNumber = require("../masked_personal_number");
               {localization.idNumber} <MaskedPersonalNumber
                 number={model.personalnumber()}
                 isNorwegian={true}
+                isDanish={false}
               />
             </span>}
             {/* if */ model.isMobileMode() && model.canEditMobile() &&

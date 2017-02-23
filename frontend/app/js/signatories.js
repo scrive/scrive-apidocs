@@ -469,6 +469,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     noBankIDAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "no_bankid" && this.signs();
     },
+    dkNemIDAuthenticationToView: function() {
+          return this.get("authentication_method_to_view") == "dk_nemid" && this.signs();
+    },
     standardAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "standard" && this.signs();
     },
@@ -695,11 +698,23 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     authenticationToView: function() {
         return this.get('authentication_method_to_view');
     },
+    authenticationMethodsCanMix: function(authToView, authToSign) {
+      if (authToView === "no_bankid" && authToSign === "se_bankid") {
+        return false;
+      } else if (authToView === "dk_nemid"  && authToSign === "se_bankid") {
+        return false;
+      } else {
+        return true;
+      }
+    },
     setAuthenticationToView: function(a) {
         this.set({
           "authentication_method_to_view" : a,
           // Don't mix swedish and norwegian bankid
-          "authentication_method_to_sign" : (a == "no_bankid") ? "standard" : this.authenticationToSign()
+          "authentication_method_to_sign" :
+            (this.authenticationMethodsCanMix(a, this.authenticationToSign())
+            ? this.authenticationToSign()
+            : "standard")
         });
     },
     authenticationToSign: function() {
@@ -709,7 +724,10 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         this.set({
           "authentication_method_to_sign":a,
           // Don't mix swedish and norwegian bankid
-          "authentication_method_to_view": (a == "se_bankid" && this.authenticationToView() == "no_bankid") ? "standard" : this.authenticationToView()
+          "authentication_method_to_view":
+            (this.authenticationMethodsCanMix(this.authenticationToView(), a)
+            ? this.authenticationToView()
+            : "standard")
         });
     },
     authenticationToSignFieldValue: function() {
@@ -792,10 +810,10 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         }
     },
     needsPersonalNumber: function() {
-        return this.seBankIDAuthenticationToSign() || this.seBankIDAuthenticationToView() || this.noBankIDAuthenticationToView();
+        return this.seBankIDAuthenticationToSign() || this.seBankIDAuthenticationToView() || this.noBankIDAuthenticationToView() || this.dkNemIDAuthenticationToView();
     },
     needsPersonalNumberFilledByAuthor: function() {
-        return this.seBankIDAuthenticationToView()  || this.noBankIDAuthenticationToView();
+        return this.seBankIDAuthenticationToView()  || this.noBankIDAuthenticationToView() || this.dkNemIDAuthenticationToView();
     },
     ensureMobile: function() {
         var signatory = this;

@@ -110,9 +110,7 @@ guardSignatoryHasNotIdentifiedToView slid doc =
 guardCanSetAuthenticationToViewForSignatoryWithValues :: Kontrakcja m => SignatoryLinkID -> AuthenticationToViewMethod -> Maybe String -> Maybe String -> Document -> m ()
 guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mMobile doc = do
   let sl = fromJust $ getSigLinkFor slid doc
-  -- Do not allow mixing of Swedish and Norwegian BankID
-  when (authToView == NOBankIDAuthenticationToView && signatorylinkauthenticationtosignmethod sl == SEBankIDAuthenticationToSign)
-    (apiError $ signatoryStateError "Can't mix Norwegian and Swedish BankID for the same party")
+  guardAuthenticationMethodsCanMix authToView $ signatorylinkauthenticationtosignmethod sl
   -- Check if either a valid SSN for authToView is set or is provided
   case mSSN of
     Nothing -> unless (isValidSSNForAuthenticationToView authToView $ getPersonalNumber sl) $
@@ -130,21 +128,22 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mMobi
     isValidSSNForAuthenticationToView StandardAuthenticationToView _ = True
     isValidSSNForAuthenticationToView SEBankIDAuthenticationToView ssn = isGood $ asValidSwedishSSN   ssn
     isValidSSNForAuthenticationToView NOBankIDAuthenticationToView ssn = isGood $ asValidNorwegianSSN ssn
+    isValidSSNForAuthenticationToView DKNemIDAuthenticationToView  ssn = isGood $ asValidDanishSSN    ssn
     isValidMobileForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
     isValidMobileForAuthenticationToView StandardAuthenticationToView _ = True
     isValidMobileForAuthenticationToView SEBankIDAuthenticationToView _ = True
+    isValidMobileForAuthenticationToView DKNemIDAuthenticationToView  _ = True
     isValidMobileForAuthenticationToView NOBankIDAuthenticationToView mobile = isGood phoneValidation || isEmpty phoneValidation
       where phoneValidation = asValidPhoneForNorwegianBankID mobile
 
 guardCanSetAuthenticationToSignForSignatoryWithValue :: Kontrakcja m => SignatoryLinkID -> AuthenticationToSignMethod -> Maybe String -> Maybe String -> Document -> m ()
 guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobile doc = do
   let sl = fromJust $ getSigLinkFor slid doc
+      authToView = signatorylinkauthenticationtoviewmethod sl
+  guardAuthenticationMethodsCanMix authToView authToSign
   case authToSign of
     StandardAuthenticationToSign -> return ()
     SEBankIDAuthenticationToSign -> do
-      -- Do not allow mixing of Swedish and Norwegian BankID
-      when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $
-        apiError $ signatoryStateError "Can't mix Norwegian and Swedish BankID for the same party"
       case mSSN of
         Nothing -> return ()
         -- If we are given a Swedish SSN
@@ -161,7 +160,10 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
       Nothing -> return ()
       Just mobile -> do
         -- If the signatory has authenticated to view with NOBankIDAuthenticationToView and a valid number, then we can't change the mobile number!
-        when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView && signatorylinkidentifiedtoview sl && getMobile sl /= "" && mobile /= getMobile sl) $
+        when (   authToView == NOBankIDAuthenticationToView
+              && signatorylinkidentifiedtoview sl
+              && getMobile sl /= ""
+              && mobile /= getMobile sl) $
           apiError $ signatoryStateError "The party has authenticated to view with Norwegian BankID, therefore you can't change the mobile number"
         -- If given a mobile number we need to make sure it doesn't invalidate NOBankIDAuthenticationToView
         when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $
@@ -170,10 +172,15 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
             Empty -> return ()
             Good _ -> return ()
 
+guardAuthenticationMethodsCanMix :: Kontrakcja m => AuthenticationToViewMethod -> AuthenticationToSignMethod -> m ()
+guardAuthenticationMethodsCanMix authtoview authtosign = do
+  when (not $ authenticationMethodsCanMix authtoview authtosign)
+    (apiError $ signatoryStateError $ "Can't mix " <> (T.pack $ show authtoview) <> " and " <> (T.pack $ show authtosign) <> ".")
+
 guardSignatoryHasNotSigned :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
 guardSignatoryHasNotSigned slid doc =
   when (hasSigned . fromJust $ getSigLinkFor slid doc)
-    (apiError $ signatoryStateError "The signatory has already signed")
+    (apiError $ signatoryStateError $ T.pack $ "The signatory has already signed")
 
 -- Checks if document can be strated. Throws matching API exception if it does not
 guardThatDocumentCanBeStarted :: Kontrakcja m => Document -> m ()
@@ -211,6 +218,7 @@ guardThatDocumentCanBeStarted doc = do
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN   $ getPersonalNumber sl
       NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
+      DKNemIDAuthenticationToView  -> isGood $ asValidDanishSSN $ getPersonalNumber sl
       _ -> True
     signatoryHasValidMobileForIdentifyToView sl =
       let resultValidPhone = asValidPhoneForNorwegianBankID $ getMobile sl in

@@ -667,15 +667,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
           insertEvidenceFor sl e = void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg e (return ()) (Just sl) Nothing actor
 
           addChangeAuthenticationToViewEvidenceEvent :: (DocumentMonad m, TemplatesMonad m, MonadThrow m) => SignatoryLink -> (AuthenticationToViewMethod, AuthenticationToViewMethod) -> m ()
-          addChangeAuthenticationToViewEvidenceEvent sl (StandardAuthenticationToView, SEBankIDAuthenticationToView) = insertEvidenceFor sl ChangeAuthenticationToViewMethodStandardToSEBankIDEvidence
-          addChangeAuthenticationToViewEvidenceEvent sl (StandardAuthenticationToView, NOBankIDAuthenticationToView) = insertEvidenceFor sl ChangeAuthenticationToViewMethodStandardToNOBankIDEvidence
-          addChangeAuthenticationToViewEvidenceEvent sl (SEBankIDAuthenticationToView, StandardAuthenticationToView) = insertEvidenceFor sl ChangeAuthenticationToViewMethodSEBankIDToStandardEvidence
-          addChangeAuthenticationToViewEvidenceEvent sl (SEBankIDAuthenticationToView, NOBankIDAuthenticationToView) = insertEvidenceFor sl ChangeAuthenticationToViewMethodSEBankIDToNOBankIDEvidence
-          addChangeAuthenticationToViewEvidenceEvent sl (NOBankIDAuthenticationToView, StandardAuthenticationToView) = insertEvidenceFor sl ChangeAuthenticationToViewMethodNOBankIDToStandardEvidence
-          addChangeAuthenticationToViewEvidenceEvent sl (NOBankIDAuthenticationToView, SEBankIDAuthenticationToView) = insertEvidenceFor sl ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidence
-          addChangeAuthenticationToViewEvidenceEvent _  (StandardAuthenticationToView, StandardAuthenticationToView) = return ()
-          addChangeAuthenticationToViewEvidenceEvent _  (SEBankIDAuthenticationToView, SEBankIDAuthenticationToView) = return ()
-          addChangeAuthenticationToViewEvidenceEvent _  (NOBankIDAuthenticationToView, NOBankIDAuthenticationToView) = return ()
+          addChangeAuthenticationToViewEvidenceEvent sl (authtoviewfrom, authtoviewto) = mapM_ (insertEvidenceFor sl) $ maybeToList $ authViewChangeToEvidence (authtoviewfrom, authtoviewto)
 
 data ChangeAuthenticationToSignMethod = ChangeAuthenticationToSignMethod SignatoryLinkID AuthenticationToSignMethod (Maybe String) (Maybe String) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeAuthenticationToSignMethod () where

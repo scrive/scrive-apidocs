@@ -305,6 +305,16 @@ var SSNForNOBankIDValidation = exports.SSNForNOBankIDValidation = Validation.ext
     }
 });
 
+var SSNForDKNemIDValidation = exports.SSNForDKNemIDValidation = Validation.extend({
+    defaults: {
+        validates: function(t) {
+           var fWithoutHyphens = t.replace(/-/g, "");
+           return /^([0-9]{10})$/i.test(fWithoutHyphens);
+        },
+        message: "Personal number for Danish NemID must contain 10 digits"
+    }
+});
+
 jQuery.fn.validate = function(validationObject){
     var validationObject = validationObject || (new NotEmptyValidation);
     var validates = true;

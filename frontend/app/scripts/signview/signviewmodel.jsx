@@ -5,6 +5,7 @@ var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
 var EmailValidation = require("../../js/validation.js").EmailValidation;
 var NoValidation = require("../../js/validation.js").NoValidation;
 var SSNForNOBankIDValidation = require("../../js/validation.js").SSNForNOBankIDValidation;
+var SSNForDKNemIDValidation = require("../../js/validation.js").SSNForDKNemIDValidation;
 var SSNForSEBankIDValidation = require("../../js/validation.js").SSNForSEBankIDValidation;
 var PhoneValidation = require("../../js/validation.js").PhoneValidation;
 var TaskList = require("./navigation/task_list");
@@ -184,6 +185,8 @@ var Track = require("../common/track");
           return !new SSNForNOBankIDValidation().validateData(field.value());
         } else if (signatory.seBankIDAuthenticationToView() || signatory.seBankIDAuthenticationToSign()) {
           return !new SSNForSEBankIDValidation().validateData(field.value());
+        } else if (signatory.dkNemIDAuthenticationToView()) {
+          return !new SSNForDKNemIDValidation().validateData(field.value());
         } else {
           return !new NoValidation().validateData(field.value());
         }

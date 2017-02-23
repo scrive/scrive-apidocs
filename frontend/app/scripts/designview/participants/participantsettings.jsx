@@ -53,12 +53,19 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToViewSEBankID;
     } else if (t == "no_bankid") {
       return localization.designview.addParties.authenticationToViewNOBankID;
+    } else if (t == "dk_nemid") {
+      return localization.designview.addParties.authenticationToViewDKNemID;
     }
   },
   authenticationToViewOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes =  sig.signs() ? ["standard", "se_bankid", "no_bankid"] : ["standard"];
+    var authTypes = sig.signs() ? ["standard", "se_bankid", "no_bankid", "dk_nemid"] : ["standard"];
+    authTypes = _.filter(authTypes
+                        , function (authToView) {
+                            return sig.authenticationMethodsCanMix(authToView, sig.authenticationToSign());
+                          });
+
     return _.map(authTypes, function (t) {
       return {name: self.authenticationToViewText(t), value: t};
     });
@@ -76,6 +83,11 @@ module.exports = React.createClass({
     var self = this;
     var sig = this.props.model;
     var authTypes = sig.signs() ? ["standard", "se_bankid", "sms_pin"] : ["standard"];
+    authTypes = _.filter(authTypes
+                        , function (authToSign) {
+                            return sig.authenticationMethodsCanMix(sig.authenticationToView(), authToSign);
+                          });
+
     return _.map(authTypes, function (t) {
       return {name: self.authenticationToSignText(t), value: t};
     });

@@ -73,6 +73,8 @@ module.exports = React.createClass({
         return localization.docview.signatory.authenticationToViewSEBankID;
       } else if (signatory.noBankIDAuthenticationToView()) {
         return localization.docview.signatory.authenticationToViewNOBankID;
+      } else if (signatory.dkNemIDAuthenticationToView()) {
+        return localization.docview.signatory.authenticationToViewDKNemID;
       }
     },
 

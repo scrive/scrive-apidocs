@@ -478,15 +478,13 @@ docApiV2SigSetAuthenticationToView did slid = logDocumentAndSignatory did slid .
     guardSignatoryHasNotIdentifiedToView slid =<< theDocument
     -- Parameters
     authentication_type <- apiV2ParameterObligatory (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToViewMethod)
+    mSSN_ <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "personal_number")
+    mMobile_ <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
     (mSSN, mMobile) <- case authentication_type of
       StandardAuthenticationToView -> return (Nothing, Nothing)
-      SEBankIDAuthenticationToView -> do
-        mSSN <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "personal_number")
-        return (mSSN, Nothing)
-      NOBankIDAuthenticationToView -> do
-        mSSN   <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "personal_number")
-        mMobile <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
-        return (mSSN, mMobile)
+      SEBankIDAuthenticationToView -> return (mSSN_, Nothing)
+      NOBankIDAuthenticationToView -> return (mSSN_, mMobile_)
+      DKNemIDAuthenticationToView  -> return (mSSN_, Nothing)
     -- Check conditions on parameters and signatory
     guardCanSetAuthenticationToViewForSignatoryWithValues slid authentication_type mSSN mMobile =<< theDocument
     -- API call actions

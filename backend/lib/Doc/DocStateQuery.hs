@@ -136,18 +136,13 @@ signatoryNeedsToIdentifyToView sl = do
     then return False
     else case (signatorylinkauthenticationtoviewmethod sl) of
       StandardAuthenticationToView -> return False
-      NOBankIDAuthenticationToView -> do
+      authtoview -> do
         sid <- ctxsessionid <$> getContext
-        auth <- dbQuery (GetEAuthentication sid $ signatorylinkid sl)
-        case auth of
-          Just NetsNOBankIDAuthentication_{} -> return False
-          _ -> return True
-      SEBankIDAuthenticationToView -> do
-        sid <- ctxsessionid <$> getContext
-        auth <- dbQuery (GetEAuthentication sid $ signatorylinkid sl)
-        case auth of
-          Just CGISEBankIDAuthentication_{} -> return False
-          _ -> return True
+        mauthindb <- dbQuery (GetEAuthentication sid $ signatorylinkid sl)
+        return $ case mauthindb of
+          Nothing -> True
+          Just authindb -> not $ authViewMatchesAuth authtoview authindb
+
 
 -- | Fetch the document and signatory for e-signing or e-auth. Checks
 -- that the document is in the correct state and the signatory hasn't

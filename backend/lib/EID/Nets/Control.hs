@@ -6,6 +6,7 @@ import Happstack.Server hiding (dir)
 import Happstack.StaticRouting
 import Log
 import Text.StringTemplates.Templates
+import qualified Data.ByteString as B
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -48,6 +49,37 @@ formatDOB s = case T.splitOn "." s of
                [day, month, year] -> day <> month <> (T.drop 2 year)
                _ -> $unexpectedError "Nets returned date of birth in invalid format"
 
+dobFromDKPersonalNumber :: String -> T.Text
+dobFromDKPersonalNumber personalnumber = case T.chunksOf 2 (T.pack $ take 6 $ personalnumber) of
+  [day, month, year] -> day <> "." <> month <> "." <> year
+  _ -> $unexpectedError $ "This personal number cannot be formatted to date: " <> personalnumber
+
+cnFromDN ::T.Text -> T.Text
+cnFromDN dn =
+  extractCN $ lookup "CN" $ fmap parsePair $ T.splitOn ", " $ dn
+    where
+      parsePair s = case T.splitOn "=" s of
+        (name:values) -> (name, T.intercalate "=" values)
+        _ -> $unexpectedError $ "Cannot parse DN value: " <> show dn
+      extractCN (Just s) = case T.splitOn " + " s of
+        (cn:_) -> cn
+        _      -> s
+      extractCN Nothing = $unexpectedError $ "Cannot parse DN value: " <> show dn
+
+decodeCertificate :: T.Text -> B.ByteString
+decodeCertificate = either ($unexpectedError $ "invalid base64 of nets certificate") id . B64.decode . T.encodeUtf8
+
+attributeFromAssertion :: T.Text -> [(T.Text,T.Text)] -> T.Text
+attributeFromAssertion name = fromMaybe ($unexpectedError $ "missing field in assertion" <+> T.unpack name) . lookup name
+
+decodeProvider :: T.Text -> AuthenticationProvider
+decodeProvider s = case s of
+       "no_bankid"         -> NetsNOBankID
+       "no_bidmob"         -> NetsNOBankID
+       "dk_nemid_js"       -> NetsDKNemID
+       "dk_nemid-opensign" -> NetsDKNemID
+       _ -> $unexpectedError $ "provider not supported"  <+> T.unpack s
+
 handleResolve :: Kontrakcja m => m KontraLink
 handleResolve = do
   ctx <- getContext
@@ -72,65 +104,15 @@ handleResolve = do
           res <- soapCall transport "" () (GetAssertionRequest {  assertionArtifact = T.pack art }) xpGetAssertionResponse
           if ("Success" `T.isInfixOf` assertionStatusCode res)
              then do
-               sessionID <- ctxsessionid <$> getContext
-               let attributeFromAssertion name = fromMaybe ($unexpectedError $ "missing field in assertion" <+> T.unpack name) . lookup name
-               let decodeCertificate = either ($unexpectedError $ "invalid base64 of nets certificate") id . B64.decode . T.encodeUtf8
-               let decodeProvider s = case s of
-                                      "no_bankid" -> NetsNOBankIDStandard
-                                      "no_bidmob" -> NetsNOBankIDMobile
-                                      _ -> $unexpectedError $ "provider not supported"  <+> T.unpack s
+
                let provider = decodeProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes res
-               let signatoryName = attributeFromAssertion "CN" $ assertionAttributes res
-               let dob = attributeFromAssertion "DOB" $ assertionAttributes res
-               let dobSSN = T.pack $ take 6 $ getPersonalNumber sl
-               let dobNETS = formatDOB dob
-               let certificate = decodeCertificate $ attributeFromAssertion "CERTIFICATE" $ assertionAttributes res
-               let mphone = lookup "NO_CEL8" $ assertionAttributes res
-               let mpid = lookup "NO_BID_PID" $ assertionAttributes res
-
-               when (dobNETS /= dobSSN) $ do
-                  -- FIXME
-                  logAttention "Date of birth from NETS does not match date of birth from SSN." $ object [
-                      "dob_nets" .= dobNETS
-                    , "dob_ssn" .= dobSSN
-                    ]
-                  internalError
-
-               -- Put NO BankID transaction in DB
-               dbUpdate $ MergeNetsNOBankIDAuthentication sessionID (netsSignatoryID nt) $ NetsNOBankIDAuthentication {
-                     netsNOBankIDInternalProvider = provider
-                   , netsNOBankIDSignatoryName = signatoryName
-                   , netsNOBankIDPhoneNumber = mphone
-                   , netsNOBankIDDateOfBirth = dob
-                   , netsNOBankIDCertificate = certificate
-                 }
-
-               withDocument doc $ do
-                 --Add evidence
-                 let eventFields = do
-                      F.value "signatory_name" signatoryName
-                      F.value "signatory_mobile" mphone
-                      F.value "signatory_dob" dob
-                      F.value "signatory_pid" mpid
-                      F.value "provider_nobankid" True
-                      F.value "signature" $ B64.encode certificate
-                 void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
-
-
-                 -- Updating phone number - mobile workflow only and only if not provided
-                 when (isJust mphone) $ do
-                   let phone = T.unpack (fromJust mphone)
-                   let formattedPhoneFromNets = "+47" ++ phone
-                   let signatoryHasFilledInPhone = getMobile sl == ""
-                   let formattedPhoneFromSignatory = filter (\c -> not (c `elem` (" -"::String))) $ getMobile sl
-                   when (not signatoryHasFilledInPhone && formattedPhoneFromSignatory /= formattedPhoneFromNets) $ do
-                     logAttention_ "Not matching phone for NO BankID - Nets should have blocked that"
-                     internalError
-                   when (signatoryHasFilledInPhone && Pending == documentstatus doc) $ do
-                     dbUpdate . UpdatePhoneAfterIdentificationToView sl phone formattedPhoneFromNets =<< signatoryActor ctx sl
-
-               dbUpdate $ ChargeCompanyForNOBankIDAuthentication (documentid doc)
-
+               resolve <- case provider of
+                 NetsNOBankID -> return handleResolveNetsNOBankID
+                 NetsDKNemID  -> return handleResolveNetsDKNemID
+                 _ -> do
+                   logAttention_ "Received invalid provider from Nets"
+                   internalError
+               _ <- resolve res doc nt sl ctx
                logInfo_ $ "Successful assertion check with Nets. Signatory redirected back and should see view for signing"
                return $ LinkExternal $ netsReturnURL nt
              else do
@@ -144,6 +126,110 @@ handleResolve = do
             , "saml_art" .= show mart
             ]
           internalError
+
+handleResolveNetsNOBankID :: Kontrakcja m => GetAssertionResponse -> Document -> NetsTarget -> SignatoryLink -> Context -> m ()
+handleResolveNetsNOBankID res doc nt sl ctx = do
+  sessionID <- ctxsessionid <$> getContext
+  let decodeInternalProvider s = case s of
+         "no_bankid"         -> NetsNOBankIDStandard
+         "no_bidmob"         -> NetsNOBankIDMobile
+         _ -> $unexpectedError $ "internal provider not supported"  <+> T.unpack s
+  let internal_provider = decodeInternalProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes res
+  let signatoryName = attributeFromAssertion "CN" $ assertionAttributes res
+  let dob = attributeFromAssertion "DOB" $ assertionAttributes res
+  let dobSSN = T.pack $ take 6 $ getPersonalNumber sl
+  let dobNETS = formatDOB dob
+  let certificate = decodeCertificate $ attributeFromAssertion "CERTIFICATE" $ assertionAttributes res
+  let mphone = lookup "NO_CEL8" $ assertionAttributes res
+  let mpid = lookup "NO_BID_PID" $ assertionAttributes res
+
+  when (dobNETS /= dobSSN) $ do
+     -- FIXME
+     logAttention "Date of birth from NETS does not match date of birth from SSN." $ object [
+         "dob_nets" .= dobNETS
+       , "dob_ssn" .= dobSSN
+       ]
+     internalError
+
+  -- Put NO BankID transaction in DB
+  dbUpdate $ MergeNetsNOBankIDAuthentication sessionID (netsSignatoryID nt) $ NetsNOBankIDAuthentication {
+        netsNOBankIDInternalProvider = internal_provider
+      , netsNOBankIDSignatoryName = signatoryName
+      , netsNOBankIDPhoneNumber = mphone
+      , netsNOBankIDDateOfBirth = dob
+      , netsNOBankIDCertificate = certificate
+    }
+
+  withDocument doc $ do
+    --Add evidence
+    let eventFields = do
+         F.value "signatory_name" signatoryName
+         F.value "signatory_mobile" mphone
+         F.value "signatory_dob" dob
+         -- XXX signatory_pid is saved as evidence, but never used again
+         F.value "signatory_pid" mpid
+         F.value "signature" $ B64.encode certificate
+    void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
+
+    -- Updating phone number - mobile workflow only and only if not provided
+    when (isJust mphone) $ do
+      let phone = T.unpack (fromJust mphone)
+      let formattedPhoneFromNets = "+47" ++ phone
+      let signatoryHasFilledInPhone = getMobile sl == ""
+      let formattedPhoneFromSignatory = filter (\c -> not (c `elem` (" -"::String))) $ getMobile sl
+      when (not signatoryHasFilledInPhone && formattedPhoneFromSignatory /= formattedPhoneFromNets) $ do
+        logAttention_ "Not matching phone for NO BankID - Nets should have blocked that"
+        internalError
+      when (signatoryHasFilledInPhone && Pending == documentstatus doc) $ do
+        dbUpdate . UpdatePhoneAfterIdentificationToView sl phone formattedPhoneFromNets =<< signatoryActor ctx sl
+
+  dbUpdate $ ChargeCompanyForNOBankIDAuthentication (documentid doc)
+
+
+handleResolveNetsDKNemID :: Kontrakcja m => GetAssertionResponse -> Document -> NetsTarget -> SignatoryLink -> Context -> m ()
+handleResolveNetsDKNemID res doc nt sl ctx = do
+  sessionID <- ctxsessionid <$> getContext
+  let decodeInternalProvider s = case s of
+         "dk_nemid_js"       -> NetsDKNemIDKeyCard
+         "dk_nemid-opensign" -> NetsDKNemIDKeyFile
+         _ -> $unexpectedError $ "internal provider not supported"  <+> T.unpack s
+      internal_provider = decodeInternalProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes res
+      signatoryName = cnFromDN $ attributeFromAssertion "DN" $ assertionAttributes res
+      ssn_sl = T.pack $ getPersonalNumber sl
+      ssn_nets = attributeFromAssertion "DK_SSN" $ assertionAttributes res
+      dob = dobFromDKPersonalNumber $ getPersonalNumber sl
+      mpid = lookup "DN_DAN_PID" $ assertionAttributes res
+
+  let normalizeSSN = T.filter (/= '-')
+  when (normalizeSSN ssn_sl /= normalizeSSN ssn_nets) $ do
+     logAttention "SSN from NETS does not match SSN from SignatoryLink." $ object [
+         "ssn_sl"   .= ssn_sl
+       , "ssn_nets" .= ssn_nets
+       ]
+     internalError
+
+  let certificate = decodeCertificate $ attributeFromAssertion "CERTIFICATE" $ assertionAttributes res
+
+  -- Put DK Nem ID transaction in DB
+  dbUpdate $ MergeNetsDKNemIDAuthentication sessionID (netsSignatoryID nt) $ NetsDKNemIDAuthentication {
+        netsDKNemIDInternalProvider = internal_provider
+      , netsDKNemIDSignatoryName = signatoryName
+      , netsDKNemIDDateOfBirth = dob
+      , netsDKNemIDCertificate = certificate
+    }
+
+  withDocument doc $ do
+    --Add evidence
+    let eventFields = do
+         F.value "signatory_name" signatoryName
+         F.value "signatory_dob" dob
+         -- XXX signatory_pid is saved as evidence, but never used again
+         F.value "signatory_pid" mpid
+         F.value "signature" $ B64.encode certificate
+    void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
+
+  dbUpdate $ ChargeCompanyForDKNemIDAuthentication (documentid doc)
+
 ------------------------------------------
 
 handleNetsError  :: Kontrakcja m => m Response

@@ -36,6 +36,7 @@ module InputValidation
     , asValidIPAddressWithMaskList
     , asValidSwedishSSN
     , asValidNorwegianSSN
+    , asValidDanishSSN
 ) where
 
 import Data.Char
@@ -367,15 +368,27 @@ asValidSwedishSSN input =
     >>= checkOnly [isDigit]
 
 {- |
-    Validated swedish personal number.
+    Validated Norwegian personal number.
     White list: Digits only
-    Size: From 10 or 12 chars
+    Size: 11 chars
 -}
 asValidNorwegianSSN :: String -> Result String
 asValidNorwegianSSN input =
     filterOutCharacters [' ', '-'] input
     >>= checkIfEmpty
     >>= checkLengthIs [11]
+    >>= checkOnly [isDigit]
+
+{- |
+    Validated danish CPR personal number.
+    White list: Digits only
+    Size: 10
+-}
+asValidDanishSSN :: String -> Result String
+asValidDanishSSN input =
+    filterOutCharacters [' ', '-'] input
+    >>= checkIfEmpty
+    >>= checkLengthIs [10]
     >>= checkOnly [isDigit]
 
 {- |

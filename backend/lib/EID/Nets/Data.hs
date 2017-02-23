@@ -1,8 +1,11 @@
 module EID.Nets.Data (
       NetsNOBankIDInternalProvider(..)
     , unsafeNetsNOBankIDInternalProviderFromInt16
-
     , NetsNOBankIDAuthentication(..)
+    , NetsDKNemIDInternalProvider(..)
+    , unsafeNetsDKNemIDInternalProviderFromInt16
+    , NetsDKNemIDAuthentication(..)
+
     -- Target passed inside request
     , NetsTarget(..)
     , decodeNetsTarget
@@ -29,7 +32,14 @@ import Doc.SignatoryLinkID
 import KontraPrelude
 import Network.SOAP.Call
 
-data NetsNOBankIDInternalProvider = NetsNOBankIDStandard | NetsNOBankIDMobile
+data NetsNOBankIDInternalProvider
+  = NetsNOBankIDStandard
+  | NetsNOBankIDMobile
+  deriving (Eq, Ord, Show)
+
+data NetsDKNemIDInternalProvider
+  = NetsDKNemIDKeyCard
+  | NetsDKNemIDKeyFile
   deriving (Eq, Ord, Show)
 
 unsafeNetsNOBankIDInternalProviderFromInt16 :: Int16 -> NetsNOBankIDInternalProvider
@@ -38,6 +48,11 @@ unsafeNetsNOBankIDInternalProviderFromInt16 v = case v of
   2 -> NetsNOBankIDMobile
   _ -> $unexpectedError "Range error while fetching NetsNOBankIDInternalProvider from Int16"
 
+unsafeNetsDKNemIDInternalProviderFromInt16 :: Int16 -> NetsDKNemIDInternalProvider
+unsafeNetsDKNemIDInternalProviderFromInt16 v = case v of
+  1 -> NetsDKNemIDKeyCard
+  2 -> NetsDKNemIDKeyFile
+  _ -> $unexpectedError "Range error while fetching NetsDKNemIDInternalProvider from Int16"
 
 instance PQFormat NetsNOBankIDInternalProvider where
   pqFormat = const $ pqFormat (undefined::Int16)
@@ -56,11 +71,29 @@ instance FromSQL NetsNOBankIDInternalProvider where
 
 instance ToSQL NetsNOBankIDInternalProvider where
   type PQDest NetsNOBankIDInternalProvider = PQDest Int16
-  toSQL NetsNOBankIDStandard     = toSQL (1::Int16)
-  toSQL NetsNOBankIDMobile       = toSQL (2::Int16)
+  toSQL NetsNOBankIDStandard = toSQL (1::Int16)
+  toSQL NetsNOBankIDMobile   = toSQL (2::Int16)
 
+instance PQFormat NetsDKNemIDInternalProvider where
+  pqFormat = const $ pqFormat (undefined::Int16)
+
+instance FromSQL NetsDKNemIDInternalProvider where
+  type PQBase NetsDKNemIDInternalProvider = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return NetsDKNemIDKeyCard
+      2 -> return NetsDKNemIDKeyFile
+      _ -> throwM RangeError {
+        reRange = [(1, 2)]
+      , reValue = n
+      }
+
+instance ToSQL NetsDKNemIDInternalProvider where
+  type PQDest NetsDKNemIDInternalProvider = PQDest Int16
+  toSQL NetsDKNemIDKeyCard = toSQL (1::Int16)
+  toSQL NetsDKNemIDKeyFile = toSQL (2::Int16)
 ----------------------------------------
-
 
 data NetsNOBankIDAuthentication = NetsNOBankIDAuthentication {
     netsNOBankIDInternalProvider     :: !NetsNOBankIDInternalProvider
@@ -70,6 +103,12 @@ data NetsNOBankIDAuthentication = NetsNOBankIDAuthentication {
   , netsNOBankIDCertificate          :: !ByteString
 } deriving (Eq, Ord, Show)
 
+data NetsDKNemIDAuthentication = NetsDKNemIDAuthentication {
+    netsDKNemIDInternalProvider     :: !NetsDKNemIDInternalProvider
+  , netsDKNemIDSignatoryName        :: !T.Text
+  , netsDKNemIDDateOfBirth          :: !T.Text
+  , netsDKNemIDCertificate          :: !ByteString
+} deriving (Eq, Ord, Show)
 
 -- | Information for transaction. It is encoded in frontend as (,,,) + Base64 when starting nets iframe.
 --   Backend decodes that within resolve handler.
@@ -86,9 +125,6 @@ decodeNetsTarget t = case (B64.decode $ BS.pack $ t) of
                          Just (dmn,did,sid,rurl) -> Just $ NetsTarget dmn did sid rurl
                          _ -> Nothing
                        _ -> Nothing
-
-
-
 
 -- | GetAssertionRequest request
 data GetAssertionRequest = GetAssertionRequest {
@@ -117,4 +153,3 @@ xpGetAssertionResponse = XMLParser $ \c -> listToMaybe $ c
           \a -> (a $/ laxAttribute "AttributeName" , a $/ laxElement "Attribute" &/ laxElement "AttributeValue"  &/ content)
 
     })
-
