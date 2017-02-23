@@ -11,7 +11,6 @@
 
 module Doc.DocUtils(
     renderListTemplateNormal
-  , renderListTemplate
   , renderLocalListTemplate
   , documentcurrentsignorder
   , documentprevioussignorder
@@ -27,9 +26,8 @@ module Doc.DocUtils(
   , userCanPerformSigningAction
   , fileFromMainFile
   , allRequiredAttachmentsAreOnList
-  , MaybeTemplate(..)
-  , HasFields(..)
-  , MaybeUser(..)
+  , isTemplate
+  , isSignable
 ) where
 
 import Control.Monad.Catch
@@ -66,10 +64,6 @@ renderListTemplateNormalHelper renderFunc list =
      else renderFunc "nomorethanonelistnormal" $ F.value "list" list
 
 
--- where does this go? -EN
-renderListTemplate :: TemplatesMonad m => [String] -> m String
-renderListTemplate = renderListTemplateHelper renderTemplate
-
 renderLocalListTemplate :: (HasLang a, TemplatesMonad m) => a -> [String] -> m String
 renderLocalListTemplate = renderListTemplateHelper .renderLocalTemplate
 
@@ -85,46 +79,11 @@ renderListTemplateHelper renderFunc list =
      else renderFunc "nomorethanonelist" $ F.value "list" list
 
 -- CHECKERS
+isTemplate :: Document -> Bool
+isTemplate d = documenttype d == Template
 
-{- |
-  We introduce some types that basicly describes the user. No we want a unified way of comparring them.
--}
-class MaybeUser u where
-  getUserID:: u -> Maybe UserID
-
-instance MaybeUser SignatoryLink where
-  getUserID  = maybesignatory
-
-instance MaybeUser User where
-  getUserID = Just . userid
-
-instance MaybeUser UserID where
-  getUserID = Just
-
-instance (MaybeUser u) => MaybeUser (Maybe u) where
-  getUserID  = join . fmap getUserID
-
-class MaybeTemplate a where
-   isTemplate :: a -> Bool
-   isSignable :: a -> Bool
-
-instance MaybeTemplate DocumentType where
-   isTemplate t = t == Template
-   isSignable t = t == Signable
-
-instance MaybeTemplate Document where
-   isTemplate = isTemplate . documenttype
-   isSignable = isSignable . documenttype
-
-
-class HasFields a where
-    getAllFields:: a ->  [SignatoryField]
-
-instance HasFields  [SignatoryField] where
-    getAllFields = id
-
-instance HasFields SignatoryLink where
-    getAllFields =  signatoryfields
+isSignable :: Document -> Bool
+isSignable d = documenttype d == Signable
 
 -- OTHER UTILS
 

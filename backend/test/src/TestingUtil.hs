@@ -253,7 +253,7 @@ instance Arbitrary Document where
     -- we can have any document type here
     dtype <- arbitrary
     -- status has meaning only for signables
-    dstatus <- if isSignable dtype
+    dstatus <- if dtype == Signable
                then arbitrary
                else return Preparation
     sls <- arbitrary
