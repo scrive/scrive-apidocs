@@ -210,6 +210,7 @@ if __name__ == '__main__':
         time.sleep(2)  # wait for pages to load
         wait_for_element(driver, '.section.sign .button.action').click()
         time.sleep(1)  # wait for confirm signing modal to be shown
+        driver.execute_script('window.SIGN_TIMEOUT = 5000')
         wait_for_element(driver,
                          '.section.sign.above-overlay .button.action').click()
         time.sleep(1)  # wait for signinginprogress modal to be shown
@@ -221,9 +222,10 @@ if __name__ == '__main__':
         driver.get(URL + mobile_siglink)
         time.sleep(2)  # wait for pages to load
         # scroll down and up to fix arrow position
-        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)');
+        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)')
         wait_for_element(driver, '.section.sign .button.action').click()
         time.sleep(1)  # wait for confirm signing modal to be shown
+        driver.execute_script('window.SIGN_TIMEOUT = 5000')
         wait_for_element(driver,
                          '.section.sign.above-overlay .button.action').click()
         time.sleep(1)  # wait for signinginprogress modal to be shown
@@ -268,7 +270,7 @@ if __name__ == '__main__':
     with quitting(webdriver.Firefox()) as driver:
         driver.get(URL + desktop_siglink)
         time.sleep(2)  # wait for pages to load
-        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)');
+        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)')
         time.sleep(1)  # for arrow to adjust
         save_screenshot(driver, '/tmp/desktop_bankid.png')
 
@@ -277,12 +279,9 @@ if __name__ == '__main__':
         driver.get(URL + mobile_siglink)
         time.sleep(2)  # wait for pages to load
         # scroll down and up to fix arrow position
-        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)');
+        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)')
         time.sleep(1)  # for arrow to adjust
         save_screenshot(driver, '/tmp/mobile_bankid.png')
-
-
-
 
     with open('files/reference_screenshots/author.json', 'wb') as f:
         json.dump(screenshot_json('/tmp/author.png'), f)
