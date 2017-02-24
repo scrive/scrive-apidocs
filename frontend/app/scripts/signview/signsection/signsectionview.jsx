@@ -213,9 +213,12 @@ var Task = require("../navigation/task");
 
       document.checksign(function () {
         new FlashMessagesCleaner();
-        document.sign(errorCallback, function (newDocument, oldDocument) {
+        var timeout = window.SIGN_TIMEOUT || 0;
+        setTimeout(function () {
+          document.sign(errorCallback, function (newDocument, oldDocument) {
             self.handleWaitingForSwedishBankID(bankIDSigning);
-        }, {}).send();
+          }, {}).send();
+        }, timeout);
       }, errorCallback, {}).send();
     },
 
@@ -311,10 +314,13 @@ var Task = require("../navigation/task");
 
           Track.track_timeout("Accept", {"Accept": "sign document"});
 
-          document.sign(errorCallback, function (newDocument, oldDocument) {
-            self.setSignedStatus(2);
-            self.handleAfterSignRedirectOrReload();
-          }, pinParam).send();
+          var timeout = window.SIGN_TIMEOUT || 0;
+          setTimeout(function () {
+            document.sign(errorCallback, function (newDocument, oldDocument) {
+              self.setSignedStatus(2);
+              self.handleAfterSignRedirectOrReload();
+            }, pinParam).send();
+          }, timeout);
         });
       }, errorCallback, pinParam).send();
     },
