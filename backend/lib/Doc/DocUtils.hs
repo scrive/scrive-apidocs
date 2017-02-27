@@ -10,8 +10,7 @@
 -----------------------------------------------------------------------------
 
 module Doc.DocUtils(
-    renderListTemplateNormal
-  , renderLocalListTemplate
+    renderLocalListTemplate
   , documentcurrentsignorder
   , documentprevioussignorder
   , isLastViewer
