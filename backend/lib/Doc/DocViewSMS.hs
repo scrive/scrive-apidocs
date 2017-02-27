@@ -12,7 +12,6 @@ module Doc.DocViewSMS (
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Trans
-import Data.String.Utils (strip)
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
@@ -21,7 +20,6 @@ import Company.CompanyUI
 import Company.Model
 import DB
 import Doc.DocStateData
-import Doc.DocUtils
 import KontraLink
 import KontraPrelude
 import MailContext
@@ -96,9 +94,6 @@ smsPinCodeSendout doc sl phone pin = do
 smsFields :: (MailContextMonad m, TemplatesMonad m) => Document -> SignatoryLink -> Fields m ()
 smsFields document siglink = do
     mctx <- lift $ getMailContext
-    partylist <- lift $ renderListTemplateNormal $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
     F.value "creatorname" $ getSmartName <$> getAuthorSigLink document
-    F.value "personname" $ getSmartName siglink
     F.value "documenttitle" $ documenttitle document
-    F.value "partylist" $ strip partylist
     F.value "link" $ mctxDomainUrl mctx ++ show (LinkSignDoc (documentid document) siglink)

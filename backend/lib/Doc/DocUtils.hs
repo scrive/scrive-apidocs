@@ -49,21 +49,6 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
-renderListTemplateNormal :: TemplatesMonad m => [String] -> m String
-renderListTemplateNormal = renderListTemplateNormalHelper renderTemplate
-
-renderListTemplateNormalHelper :: TemplatesMonad m
-                         => (String -> Fields m () -> m String)
-                         -> [String]
-                         -> m String
-renderListTemplateNormalHelper renderFunc list =
-  if length list > 1
-     then renderFunc "morethenonelistnormal" $ do
-         F.value "list" $ init list
-         F.value "last" $ last list
-     else renderFunc "nomorethanonelistnormal" $ F.value "list" list
-
-
 renderLocalListTemplate :: (HasLang a, TemplatesMonad m) => a -> [String] -> m String
 renderLocalListTemplate = renderListTemplateHelper .renderLocalTemplate
 

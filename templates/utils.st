@@ -10,11 +10,6 @@ morethenonelist=
 ###
 nomorethanonelist=$list:strong()$
 ###
-morethenonelistnormal=$list; separator=", "$ $_listand()$ $last$
-###
-nomorethanonelistnormal=
-    $list$
-###
 #### Puts an invisible box with flash messages. jScripts do all show magic.
 #### Bellow is a hack for (if(flash)) for String templates syntax
 ####

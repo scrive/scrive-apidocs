@@ -212,7 +212,7 @@ sendNewUserMail :: Kontrakcja m => User -> m ()
 sendNewUserMail user = do
   ctx <- getContext
   al <- newUserAccountRequestLink (lang $ usersettings user) (userid user) AccountRequest
-  mail <- newUserMail ctx (getEmail user) (getSmartName user) al
+  mail <- newUserMail ctx (getEmail user) al
   scheduleEmailSendout $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
@@ -224,7 +224,7 @@ createNewUserByAdmin email names companyandrole lg = do
          Just user -> do
              let fullname = composeFullName names
              chpwdlink <- newUserAccountRequestLink (lang $ usersettings user) (userid user) ByAdmin
-             mail <- mailNewAccountCreatedByAdmin ctx (getLang user) fullname email chpwdlink
+             mail <- mailNewAccountCreatedByAdmin ctx (getLang user) email chpwdlink
              scheduleEmailSendout $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser

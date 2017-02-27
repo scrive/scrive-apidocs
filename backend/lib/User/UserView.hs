@@ -115,28 +115,25 @@ resetPasswordMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> Use
 resetPasswordMail ctx user setpasslink = do
   theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
   kontramail (ctxbrandeddomain ctx) theme  "passwordChangeLinkMail" $ do
-    F.value "personname"   $ getFullName user
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ ctxDomainUrl ctx
     brandingMailFields theme
 
-newUserMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> String -> String -> KontraLink -> m Mail
-newUserMail ctx emailaddress personname activatelink = do
+newUserMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> String -> KontraLink -> m Mail
+newUserMail ctx emailaddress activatelink = do
   theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
   kontramail (ctxbrandeddomain ctx) theme  "newUserMail" $ do
-    F.value "personname"   $ personname
     F.value "email"        $ emailaddress
     F.value "activatelink" $ show activatelink
     F.value "ctxhostpart"  $ ctxDomainUrl ctx
     brandingMailFields theme
 
 
-mailNewAccountCreatedByAdmin :: (HasLang a,MonadDB m,MonadThrow m, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> m Mail
-mailNewAccountCreatedByAdmin ctx lang personname email setpasslink = do
+mailNewAccountCreatedByAdmin :: (HasLang a,MonadDB m,MonadThrow m, TemplatesMonad m) => Context -> a -> String -> KontraLink -> m Mail
+mailNewAccountCreatedByAdmin ctx lang email setpasslink = do
   theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
   kontramaillocal (ctxbrandeddomain ctx) theme lang "mailNewAccountCreatedByAdmin" $ do
-    F.value "personname"    $ personname
     F.value "email"         $ email
     F.value "passwordlink"  $ show setpasslink
     F.value "creatorname"   $ maybe "" getSmartName (ctxmaybeuser ctx)

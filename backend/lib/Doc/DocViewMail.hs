@@ -201,13 +201,11 @@ mailInvitation forMail
                msiglink
                document = do
     mctx <- getMailContext
-    let personname = maybe "" getSmartName msiglink
     let mainfile =  fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document) -- There always should be main file but tests fail without it
     documentMailWithDocLang document (templateName "mailInvitationToSignContract") $ do
         fieldsInvitationTo invitationto
         F.value "nojavascriptmagic" $ forMail
         F.value "javascriptmagic" $ not forMail
-        F.value "personname" $ Just personname <| personname /= "" |> Nothing
         F.value "hascustommessage" $ not $ null $ documentinvitetext document
         F.value "custommessage" $ asCustomMessage $ documentinvitetext document
         F.value "link" $ case msiglink of
