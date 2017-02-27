@@ -233,7 +233,7 @@ module.exports = React.createClass({
       if (BrowserInfo.isIE() && $.browser.version >= 10.0) {
         isTouchDevice = window.navigator.msMaxTouchPoints;
       }
-      var src = isTouchDevice ? "/img/sign-preview-hand.gif" : "/img/sign-preview-mouse.gif";
+      var src = window.cdnbaseurl + (isTouchDevice ? "/img/sign-preview-hand.gif" : "/img/sign-preview-mouse.gif");
       return src + "?" + nonce;
     },
     saveImage: function (callback) {
