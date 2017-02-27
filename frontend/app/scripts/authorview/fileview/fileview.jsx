@@ -23,17 +23,24 @@ module.exports = React.createClass({
   componentWillMount: function () {
     this._pageRefs = [];
 
-    if (!this.props.model.mainfile().ready()) {
-      this.props.model.mainfile().fetch({
-        data: {signatoryid: this.props.model.mainfile().signatoryid()},
-        processData: true,
-        cache: false
-      });
+    if (this.props.model.mainfile()) {
+      if (!this.props.model.mainfile().ready()) {
+        this.props.model.mainfile().fetch({
+          data: {signatoryid: this.props.model.mainfile().signatoryid()},
+          processData: true,
+          cache: false
+        });
+      }
     }
   },
   componentDidUpdate: function () {
     if (this.ready()) {
       this.props.onReady();
+    } else if (this.props.model.closed() && this.props.model.mainfile() && !this.props.model.mainfile().ready()) {
+      // For some reason, if the document is closed, sealed file isn't
+      // properly reloaded when refreshing the author view. This should do
+      // the trick.
+      this.props.model.mainfile().fetch();
     }
   },
   ready: function () {
@@ -63,12 +70,13 @@ module.exports = React.createClass({
   render: function () {
     var self = this;
     var doc = self.props.model;
+
     return (
       <div className="document-pages">
-        { /* if */ (!this.props.model.mainfile().ready()) &&
+        { /* if */ (!this.props.model.mainfile() || !this.props.model.mainfile().ready()) &&
           <div className="waiting4page"></div>
         }
-        { /* else */ (this.props.model.mainfile().ready()) &&
+        { /* else */ (this.props.model.mainfile() && this.props.model.mainfile().ready()) &&
           _.map(this.props.model.mainfile().pages(), function (page, index) {
             return (
               <FilePageView

@@ -243,7 +243,6 @@ module.exports = React.createClass({
   },
   render: function () {
     var document_ = this.props.document;
-    var downloadLink = document_.mainfile().downloadLinkForMainFile(document_.title(), true);
 
     return (
       <div className="titlebox">
@@ -295,12 +294,14 @@ module.exports = React.createClass({
               onClick={this.onGiveToNextSignatoryPadButtonClick}
             />
           }
-          <Button
-            size="big"
-            className="s-download-button"
-            text={localization.authorview.downloadPdf}
-            href={downloadLink}
-          />
+          { /* if */ (document_.mainfile() !== null) &&
+            <Button
+              size="big"
+              className="s-download-button"
+              text={localization.authorview.downloadPdf}
+              href={document_.mainfile().downloadLinkForMainFile(document_.title(), true)}
+            />
+          }
         </div>
 
         <Modal.Container
