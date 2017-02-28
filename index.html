@@ -511,14 +511,13 @@ following <code class="prettyprint">POST</code> parameters:</p>
 <li><code class="prettyprint">document_id</code>: As the name implies, the unique Document ID</li>
 <li><code class="prettyprint">document_json</code>: The Document JSON, see <a href="#definitions">Definitions</a></li>
 <li><code class="prettyprint">document_signed_and_sealed</code>: A boolean <code class="prettyprint">true</code> or <code class="prettyprint">false</code>, which indicates
-whether the document has been signed and sealed with an electronic
-signature</li>
+whether the document has been signed and sealed with a digital signature</li>
 </ul>
 
 <p>There will generally be two callbacks executed with
 <code class="prettyprint">document_signed_and_sealed</code> set to <code class="prettyprint">true</code>.
 The first will be shortly after all signing parties have signed the document
-and Scrive has applied an electronic signature, and the second will be
+and Scrive has applied a digital signature, and the second will be
 issued when a keyless signature has been applied to the document.
 This usually happens between 15-30 days after the original signing date.</p>
 
