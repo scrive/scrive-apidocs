@@ -2,31 +2,25 @@ var path = require("path");
 var webpack = require("webpack");
 var generateVersionId = require("./custom_grunt_tasks/utils/version_id_generator");
 
-function bowerResolver() {
-  return new webpack.ResolverPlugin(
-    new webpack.ResolverPlugin.DirectoryDescriptionFilePlugin("./bower.json", ["main"])
-  );
-}
-
 module.exports = function(config) {
   var newConfig = {
-    basePath: "./app/",
+    basePath: ".",
 
     frameworks: ["mocha", "sinon-chai"],
 
     files: [
-      "./localization/*.en.js",
-      "./bower_components/jquery/dist/jquery.js",
-      "./bower_components/moment/moment.js",
-      "./bower_components/underscore/underscore.js",
-      "./libs/*.js",
-      "./js/global/*.js",
-      "./test/env.js",
-      "./test/entry.js"
+      "./app/localization/*.en.js",
+      "./app/bower_components/jquery/dist/jquery.js",
+      "./app/bower_components/moment/moment.js",
+      "./app/bower_components/underscore/underscore.js",
+      "./app/libs/*.js",
+      "./app/js/global/*.js",
+      "./app/test/env.js",
+      "./app/test/entry.js"
     ],
 
     preprocessors: {
-      "./test/entry.js": ["webpack", "sourcemap"]
+      "./app/test/entry.js": ["webpack", "sourcemap"]
     },
 
     reporters: ["progress"],
@@ -44,31 +38,43 @@ module.exports = function(config) {
     singleRun: false,
 
     webpack: {
-      context: "./app",
-
       devtool: "inline-source-map",
 
       module: {
-        loaders: [
+        rules: [
           {
             test: /\.jsx$/,
-            loader: "babel",
-            query: {
+            loader: "babel-loader",
+            options: {
               presets: ["react", "es2015", "stage-2"]
             }
           },
           {
             test: /\.less$/,
-            loader: "less-interop",
+            use: [
+              {
+                loader: "less-interop-loader"
+              }
+            ]
           },
           {
             test: /\.svg$/,
-            loader: "babel?presets[]=stage-2,presets[]=es2015,presets[]=react!svg-react"
+            use: [
+              {
+                loader: "babel-loader",
+                options: {
+                  presets: ["react", "es2015", "stage-2"]
+                }
+              },
+              {
+                loader: "svg-react-loader"
+              }
+            ]
           },
           {
             test: /sinon\.js$/,
-            loader: "imports?define=>false,require=>false"
-          }
+            loader: "imports-loader?define=>false,require=>false"
+          },
         ],
         noParse: [
           /html2canvas/
@@ -83,45 +89,38 @@ module.exports = function(config) {
       },
 
       resolve: {
-        extensions: ["", "min.js", ".js", ".jsx"],
-        root: [path.join(__dirname, "./app/bower_components")],
+        extensions: ["min.js", ".js", ".jsx"],
         alias: {
+          "backbone": "backbone/backbone.js",
+          "jquery.documentsize": "jquery.documentsize/dist/jquery.documentsize.js",
           "tinycolor": path.resolve(__dirname) + "/app/libs/tinycolor-min.js",
           "react": "react/react-with-addons",
           "react-dom": "react/react-with-addons",
+          "spin.js": "spin.js/spin.js",
           "_": "underscore"
-        }
-      },
-
-      plugins: [bowerResolver()],
+        },
+        modules: [
+          path.join(__dirname, "./app/bower_components"),
+          "node_modules"
+        ]
+      }
     },
     webpackMiddleware: {
       stats: "normal"
     }
   };
 
-  if (config.reporters.indexOf("coverage") != -1) {
-    newConfig.coverageReporter = {
-      type: "html",
-      dir: "../coverage/"
+  if (config.reporters.indexOf("coverage-istanbul") != -1) {
+    newConfig.coverageIstanbulReporter = {
+      reports: ["html"],
+      dir: "./coverage/",
+      fixWebpackSourcePaths: true
     };
 
-    newConfig.webpack.isparta = {
-      embedSource: true,
-      noAutoWrap: true,
-      babel: {
-        presets: ["react", "es2015"]
-      }
-    };
-
-    newConfig.webpack.module.preLoaders = [
-      {
-        test: /\.jsx$/,
-        loader: "isparta"
-      },
-      newConfig.webpack.module.loaders[0]
-    ];
-    newConfig.webpack.module.loaders.shift();
+    newConfig.webpack.module.rules.unshift({
+      test: /\.jsx$/,
+      loader: "istanbul-instrumenter-loader"
+    });
   }
 
   config.set(newConfig);

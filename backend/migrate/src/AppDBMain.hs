@@ -26,7 +26,7 @@ cmdConf progName = CmdConf {
   config = configFile
         &= help ("Configuration file (default: " ++ configFile ++ ")")
         &= typ "FILE",
-  force =  False &= help ("Force commit after each migrationg - DB will be permanently changed even if migrations will fail")
+  force =  False &= help ("Force commit after each migration - DB will be permanently changed even if migrations will fail")
 } &= program progName
   where
     configFile = "kontrakcja.conf"

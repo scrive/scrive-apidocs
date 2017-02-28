@@ -5,12 +5,6 @@ var glob = require("glob");
 var generateVersionId = require("./custom_grunt_tasks/utils/version_id_generator");
 var merge = require("webpack-merge");
 
-function mainResolver (filename) {
-  return new webpack.ResolverPlugin(
-    new webpack.ResolverPlugin.DirectoryDescriptionFilePlugin("./" + filename, ["main"])
-  );
-}
-
 var context = path.join(__dirname, "/app");
 
 function allEntryPoints (m) {
@@ -27,21 +21,35 @@ function defaultConfig (obj) {
     devtool: "source-map",
 
     module: {
-      loaders: [
+      rules: [
         {
           test: /\.jsx$/,
-          loader: "babel",
-          query: {
+          loader: "babel-loader",
+          options: {
             presets: ["react", "es2015", "stage-2"]
           }
         },
         {
           test: /\.less$/,
-          loader: "less-interop"
+          use: [
+            {
+              loader: "less-interop-loader"
+            }
+          ]
         },
         {
           test: /\.svg$/,
-          loader: "babel?presets[]=stage-2,presets[]=es2015,presets[]=react!svg-react"
+          use: [
+            {
+              loader: "babel-loader",
+              options: {
+                presets: ["react", "es2015", "stage-2"]
+              }
+            },
+            {
+              loader: "svg-react-loader"
+            }
+          ]
         }
       ],
       noParse: [
@@ -62,11 +70,15 @@ function defaultConfig (obj) {
     },
 
     resolve: {
-      extensions: ["", "min.js", ".js", ".jsx"],
-      root: [path.join(__dirname, "./app/bower_components")],
+      extensions: ["min.js", ".js", ".jsx"],
       alias: {
-        app: path.join(__dirname, "/app")
-      }
+        "spin.js": "spin.js/spin.js",
+        "jquery.documentsize": "jquery.documentsize/dist/jquery.documentsize.js"
+      },
+      modules: [
+        path.join(__dirname, "./app/bower_components"),
+        "node_modules"
+      ]
     }
   }, obj);
 }
@@ -76,17 +88,16 @@ var versionId = generateVersionId();
 var signviewConfig = defaultConfig({
   name: "signview",
   output: {
-    path: __dirname, filename: "./app/compiled/signview/[name]-" + versionId + ".js", sourceMapFilename: "[file].map"
+    path: __dirname,
+    filename: "./app/compiled/signview/[name]-" + versionId + ".js",
+    sourceMapFilename: "[file].map"
   },
   entry: allEntryPoints("./app/scripts/entry/signview/*.jsx"),
   plugins: [
-    mainResolver("package.json"),
-    mainResolver("bower.json"),
     new webpack.optimize.UglifyJsPlugin({
       minimize: true,
       compress: {warnings: false}
     }),
-    new webpack.optimize.DedupePlugin(),
     new webpack.DefinePlugin({
       "process.env": {"NODE_ENV": JSON.stringify("production")}
     })
@@ -97,9 +108,10 @@ var allConfig = defaultConfig({
   name: "all",
   entry: allEntryPoints("./app/scripts/entry/all/*.jsx"),
   output: {
-    path: __dirname, filename: "./app/compiled/all/[name]-" + versionId + ".js", sourceMapFilename: "[file].map"
-  },
-  plugins: [mainResolver("package.json"), mainResolver("bower.json")]
+    path: __dirname,
+    filename: "./app/compiled/all/[name]-" + versionId + ".js",
+    sourceMapFilename: "[file].map"
+  }
 });
 
 module.exports = [allConfig, signviewConfig];
