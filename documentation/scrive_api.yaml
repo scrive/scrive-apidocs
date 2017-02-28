@@ -282,13 +282,12 @@ info:
     * `document_id`: As the name implies, the unique Document ID
     * `document_json`: The Document JSON, see [Definitions](#definitions)
     * `document_signed_and_sealed`: A boolean `true` or `false`, which indicates
-      whether the document has been signed and sealed with an electronic
-      signature
+      whether the document has been signed and sealed with a digital signature
 
     There will generally be two callbacks executed with
     `document_signed_and_sealed` set to `true`.
     The first will be shortly after all signing parties have signed the document
-    and Scrive has applied an electronic signature, and the second will be
+    and Scrive has applied a digital signature, and the second will be
     issued when a keyless signature has been applied to the document.
     This usually happens between 15-30 days after the original signing date.
 
