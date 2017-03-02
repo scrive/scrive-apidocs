@@ -5,6 +5,7 @@ module Chargeable.Model (
   , ChargeCompanyForNOBankIDAuthentication(..)
   , ChargeCompanyForDKNemIDAuthentication(..)
   , ChargeCompanyForStartingDocument(..)
+  , ChargeCompanyForClosingDocument(..)
   ) where
 
 import Control.Monad.Catch
@@ -21,6 +22,7 @@ import User.UserID
 
 data ChargeableItem =
   StartingDocument |
+  ClosingDocument  |
   SMS |
   SMSTelia |
   SEBankIDSignature |
@@ -44,8 +46,9 @@ instance FromSQL ChargeableItem where
       5 -> return SMSTelia
       6 -> return StartingDocument
       7 -> return DKNemIDAuthentication
+      8 -> return ClosingDocument
       _ -> throwM RangeError {
-        reRange = [(1, 7)]
+        reRange = [(1, 8)]
       , reValue = n
       }
 
@@ -58,6 +61,7 @@ instance ToSQL ChargeableItem where
   toSQL SMSTelia               = toSQL (5::Int16)
   toSQL StartingDocument       = toSQL (6::Int16)
   toSQL DKNemIDAuthentication  = toSQL (7::Int16)
+  toSQL ClosingDocument        = toSQL (8::Int16)
 
 ----------------------------------------
 
@@ -96,6 +100,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForDK
 data ChargeCompanyForStartingDocument = ChargeCompanyForStartingDocument DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForStartingDocument () where
   update (ChargeCompanyForStartingDocument document_id) = update (ChargeCompanyFor StartingDocument 1 document_id)
+
+-- | Charge company of the author of the document for closing of the document
+data ChargeCompanyForClosingDocument = ChargeCompanyForClosingDocument DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForClosingDocument () where
+  update (ChargeCompanyForClosingDocument document_id) = update (ChargeCompanyFor ClosingDocument 1 document_id)
 
 data ChargeCompanyFor = ChargeCompanyFor ChargeableItem Int32 DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyFor () where

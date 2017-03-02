@@ -23,6 +23,7 @@ import ActionQueue.Scheduler
 import Amazon (AmazonMonad)
 import AppConf (guardTimeConf)
 import BrandedDomain.BrandedDomain
+import Chargeable.Model
 import DB
 import DB.TimeZoneName
 import Doc.API.Callback.Model
@@ -146,6 +147,7 @@ postDocumentPendingChange olddoc = do
       theDocument >>= \d -> logInfo "All have signed, document will be closed" $ logObject_ d
       time <- mctxtime <$> getMailContext
       dbUpdate $ CloseDocument (systemActor time)
+      dbUpdate $ ChargeCompanyForClosingDocument $ documentid olddoc
       author <- theDocument >>= getDocAuthor
       theDocument >>= logDocEvent "Doc Closed" author []
       asyncLogEvent SetUserProps [UserIDProp (userid author),
