@@ -40,9 +40,8 @@ buildDBDocs tgt = do
   where
     getSchemaCrawlerPath :: Action FilePath
     getSchemaCrawlerPath = do
-      userHomeDir <- liftIO $ getHomeDirectory
-      return $ userHomeDir </>
-        "bin/schemacrawler/_schemacrawler/schemacrawler.sh"
+      Stdout stdout <- cmd ("which schemacrawler.sh" :: String)
+      return stdout
 
     getSchemaCrawlerDir :: Action FilePath
     getSchemaCrawlerDir = takeDirectory <$> getSchemaCrawlerPath
@@ -77,6 +76,6 @@ buildDBDocs tgt = do
     parserPostgresConnectionStr = keyValue `sepBy` skipSpace
       where
         key             = many1 letter
-        value           = many1 $ letter <|> digit <|> satisfy (inClass "._-")
+        value           = many' $ letter <|> digit <|> satisfy (inClass "._-")
         keyValue        = (,) <$> key <*> (char '=' *> maybeInQuotes value)
-        maybeInQuotes p = p <|> (char '\'' *> p <* char '\'')
+        maybeInQuotes p = (char '\'' *> p <* char '\'') <|> p
