@@ -1,9 +1,11 @@
 module Shake.Utils ((%>>>)
                    ,langEnv
+                   ,findWithDefault
                    ,needPatternsInDirectories
                    ,ordNub) where
 
 import Control.Monad
+import Data.Maybe
 import qualified Data.Set as Set
 import Development.Shake
 
@@ -44,3 +46,6 @@ ordNub l = go Set.empty l
     go _ [] = []
     go s (x:xs) = if x `Set.member` s then go s xs
                                       else x : go (Set.insert x s) xs
+
+findWithDefault :: Eq key => val -> key -> [(key,val)] -> val
+findWithDefault def k = fromMaybe def . lookup k

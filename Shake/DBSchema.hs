@@ -6,11 +6,13 @@ import Control.Applicative ((<|>))
 import Data.Aeson
 import Data.Attoparsec.Text
 import Data.Maybe
-import Development.Shake
+import Development.Shake hiding ((*>))
 import Development.Shake.FilePath
 import System.Directory
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.HashMap.Strict as H
+
+import Shake.Utils
 
 data DBConfig = DBConfig
   { dbcHost     :: String
@@ -60,23 +62,21 @@ buildDBDocs tgt = do
       let dbconf = fromMaybe [] $ do
             Object o <- decode appconfstr :: Maybe Value
             String dbconfstr <- H.lookup "database" o
-            maybeResult . (`feed` "") . parse parserPostgresConnectionStr $ dbconfstr
+            return . either (const []) id
+              . parseOnly (parserPostgresConnectionStr <* endOfInput)
+              $ dbconfstr
       return $ DBConfig
-        { dbcHost     = fromMaybe "localhost" . lookup "host"     $ dbconf
-        , dbcPort     = fromMaybe "5432"      . lookup "port"     $ dbconf
-        , dbcDatabase = fromMaybe "kontra"    . lookup "dbname"   $ dbconf
-        , dbcUser     = fromMaybe "kontra"    . lookup "user"     $ dbconf
-        , dbcPassword = fromMaybe "kontra"    . lookup "password" $ dbconf
+        { dbcHost     = findWithDefault "localhost" "host"     $ dbconf
+        , dbcPort     = findWithDefault "5432"      "port"     $ dbconf
+        , dbcDatabase = findWithDefault "kontra"    "dbname"   $ dbconf
+        , dbcUser     = findWithDefault "kontra"    "user"     $ dbconf
+        , dbcPassword = findWithDefault "kontra"    "password" $ dbconf
         }
 
     parserPostgresConnectionStr :: Parser [(String,String)]
-    parserPostgresConnectionStr = (`sepBy` (char ' ')) $ do
-      key   <- many1 (notChar '=')
-      _     <- char '='
-      value <-     (many1 $ notChar '\'')
-               <|> (do
-                      _ <- char '\''
-                      v <- many1 (notChar '\'')
-                      _ <- char '\''
-                      return v)
-      return (key,value)
+    parserPostgresConnectionStr = keyValue `sepBy` skipSpace
+      where
+        key             = many1 letter
+        value           = many1 $ letter <|> digit <|> satisfy (inClass "._-")
+        keyValue        = (,) <$> key <*> (char '=' *> maybeInQuotes value)
+        maybeInQuotes p = p <|> (char '\'' *> p <* char '\'')
