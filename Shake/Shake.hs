@@ -7,6 +7,7 @@ import Development.Shake.FilePath
 import Distribution.Text (display)
 
 import Shake.Cabal
+import Shake.DBSchema (buildDBDocs)
 import Shake.Flags
 import Shake.GetHsDeps
 import Shake.NewBuild
@@ -43,6 +44,11 @@ usageMsg = unlines
   , "   frontend        : Build all frontend resources"
   , ""
   , "   haddock         : Build Haddock Documentation"
+  , "   db-docs         : Build database schema docs"
+  , ""
+  , "                     SchemaCrawler must be installed in ~/bin. GraphViz"
+  , "                     must be in PATH. Also the DB must be alredy created"
+  , "                     and running."
   , ""
   , "# Test targets"
   , ""
@@ -109,12 +115,12 @@ main = do
     -- * The "help" phony task that is the default target
     "help" ~> putNormal usageMsg
     -- * Main targets
-    "all"       ~> need ["server", "frontend"]
-    "server"    ~> need ["_build/cabal-build"]
-    "frontend"  ~> need ["_build/grunt-build"]
+    "all"                  ~> need ["server", "frontend"]
+    "server"               ~> need ["_build/cabal-build"]
+    "frontend"             ~> need ["_build/grunt-build"]
 
-    "haddock"   ~> need ["_build/cabal-haddock.tar.gz"]
-
+    "haddock"              ~> need ["_build/cabal-haddock.tar.gz"]
+    "db-docs"              ~> need ["db-docs" </> "kontra.html"]
     "test"                 ~> need ["test-server","test-frontend"
                                    ,"test-hs-import-order"]
     "test-server"          ~> need ["run-server-tests"]
@@ -163,9 +169,10 @@ main = do
 
 -- | Server build rules
 serverBuildRules :: UseNewBuild -> CabalFile -> Rules ()
-serverBuildRules newBuild cabalFile =
+serverBuildRules newBuild cabalFile = do
   ifNewBuild newBuild (serverNewBuildRules cabalFile)
                       (serverOldBuildRules cabalFile)
+  "db-docs" </> "kontra.html" %> buildDBDocs
 
 getCabalConfigureFlags :: Action [String]
 getCabalConfigureFlags = do
@@ -215,7 +222,6 @@ serverNewBuildRules cabalFile buildDir = do
                            ,buildDir </> "doc"]
 
   "cabal-clean" ~> cmd "rm -rf dist-newstyle"
-
 
 serverOldBuildRules :: CabalFile -> Rules ()
 serverOldBuildRules cabalFile = do
