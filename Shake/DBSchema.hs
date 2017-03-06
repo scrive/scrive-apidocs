@@ -9,6 +9,7 @@ import Data.Maybe
 import Development.Shake hiding ((*>))
 import Development.Shake.FilePath
 import System.Directory
+import System.Exit (ExitCode(..))
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.HashMap.Strict as H
 
@@ -40,8 +41,12 @@ buildDBDocs tgt = do
   where
     getSchemaCrawlerPath :: Action FilePath
     getSchemaCrawlerPath = do
-      Stdout stdout <- cmd ("which schemacrawler.sh" :: String)
-      return stdout
+      (Exit code, Stdout stdout) <- cmd ("which schemacrawler.sh" :: String)
+      case code of
+        ExitSuccess -> return stdout
+        _           -> do
+          userHomeDir <- liftIO $ getHomeDirectory
+          return $ userHomeDir </> "bin/schemacrawler/_schemacrawler/schemacrawler.sh"
 
     getSchemaCrawlerDir :: Action FilePath
     getSchemaCrawlerDir = takeDirectory <$> getSchemaCrawlerPath
