@@ -2,13 +2,14 @@
 
 module Shake.DBSchema (buildDBDocs) where
 
-import Control.Applicative ((<|>))
+import Control.Applicative ((<|>), many)
 import Data.Aeson
 import Data.Attoparsec.Text
 import Data.Maybe
 import Development.Shake hiding ((*>))
 import Development.Shake.FilePath
 import System.Directory
+import System.Exit (ExitCode(..))
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.HashMap.Strict as H
 
@@ -40,9 +41,12 @@ buildDBDocs tgt = do
   where
     getSchemaCrawlerPath :: Action FilePath
     getSchemaCrawlerPath = do
-      userHomeDir <- liftIO $ getHomeDirectory
-      return $ userHomeDir </>
-        "bin/schemacrawler/_schemacrawler/schemacrawler.sh"
+      (Exit code, Stdout stdout) <- cmd ("which schemacrawler.sh" :: String)
+      case code of
+        ExitSuccess -> return stdout
+        _           -> do
+          userHomeDir <- liftIO $ getHomeDirectory
+          return $ userHomeDir </> "bin/schemacrawler/_schemacrawler/schemacrawler.sh"
 
     getSchemaCrawlerDir :: Action FilePath
     getSchemaCrawlerDir = takeDirectory <$> getSchemaCrawlerPath
@@ -77,6 +81,6 @@ buildDBDocs tgt = do
     parserPostgresConnectionStr = keyValue `sepBy` skipSpace
       where
         key             = many1 letter
-        value           = many1 $ letter <|> digit <|> satisfy (inClass "._-")
+        value           = many $ letter <|> digit <|> satisfy (inClass "._-")
         keyValue        = (,) <$> key <*> (char '=' *> maybeInQuotes value)
-        maybeInQuotes p = p <|> (char '\'' *> p <* char '\'')
+        maybeInQuotes p = (char '\'' *> p <* char '\'') <|> p

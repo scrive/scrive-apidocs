@@ -46,9 +46,9 @@ usageMsg = unlines
   , "   haddock         : Build Haddock Documentation"
   , "   db-docs         : Build database schema docs"
   , ""
-  , "                     SchemaCrawler must be installed in ~/bin. GraphViz"
-  , "                     must be in PATH. Also the DB must be alredy created"
-  , "                     and running."
+  , "                     SchemaCrawler must be installed, schemacrawler.sh must"
+  , "                     be in PATH. GraphViz must be in PATH. Also the DB must"
+  , "                     be alredy created and running."
   , ""
   , "# Test targets"
   , ""
@@ -120,7 +120,7 @@ main = do
     "frontend"             ~> need ["_build/grunt-build"]
 
     "haddock"              ~> need ["_build/cabal-haddock.tar.gz"]
-    "db-docs"              ~> need ["db-docs" </> "kontra.html"]
+    "db-docs"              ~> need ["_build" </> "db-docs" </> "kontra.html"]
     "test"                 ~> need ["test-server","test-frontend"
                                    ,"test-hs-import-order"]
     "test-server"          ~> need ["run-server-tests"]
@@ -172,7 +172,7 @@ serverBuildRules :: UseNewBuild -> CabalFile -> Rules ()
 serverBuildRules newBuild cabalFile = do
   ifNewBuild newBuild (serverNewBuildRules cabalFile)
                       (serverOldBuildRules cabalFile)
-  "db-docs" </> "kontra.html" %> buildDBDocs
+  "_build" </> "db-docs" </> "kontra.html" %> buildDBDocs
 
 getCabalConfigureFlags :: Action [String]
 getCabalConfigureFlags = do
