@@ -1,33 +1,38 @@
-screenshotReviewElem=
-<tr>
-  <td>
-    <img src="$image:noescape()$"></img>
-  </td>
-  <td>
-    $userAgent$
-  </td>
-  <td>
-    $if(first)$
-      First
-    $else$
-      Signing
-    $endif$
-  </td>
-</tr>
 ########
 screenshotReview=<!DOCTYPE html>
 <html>
   <body>
     <table>
       <thead>
-        <tr>
-          <th>Screenshot</th>
-          <th>User-Agent</th>
-          <th>Screenshot type</th>
-        </tr>
       </thead>
       <tbody>
-        $content:noescape()$
+        $if(firstimage)$
+        <tr>
+          <td>
+            <img src="$firstimage:noescape()$"></img>
+          </td>
+          <td>
+            $userAgent$
+          </td>
+          <td>
+            First for signatory $signatoryid$
+          </td>
+        </tr>
+        $endif$
+
+        $if(signingimage)$
+        <tr>
+          <td>
+            <img src="$signingimage:noescape()$"></img>
+          </td>
+          <td>
+            $userAgent$
+          </td>
+          <td>
+            Signing for signatory $signatoryid$
+          </td>
+        </tr>
+        $endif$
       </tbody>
     </table>
   </body>

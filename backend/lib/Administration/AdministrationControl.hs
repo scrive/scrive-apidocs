@@ -30,13 +30,14 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import qualified Data.Unjson as Unjson
 import qualified Text.StringTemplates.Fields as F
 
 import Administration.AddPaymentPlan
 import Administration.AdministrationView
-import AppView (renderFromBody)
+import AppView (renderFromBody, simpleHtmlResponse)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.Model
@@ -51,7 +52,9 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model
+import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryLinkID
+import Doc.SignatoryScreenshots (SignatoryScreenshots(..))
 import EvidenceLog.Model
 import File.File
 import File.Model
@@ -86,6 +89,7 @@ import Util.SignatoryLinkUtils
 import Utils.Monoid
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
+import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Payments.Stats
 
 adminonlyRoutes :: Route (Kontra Response)
@@ -151,6 +155,7 @@ daveRoutes =
      , dir "reseal" $ hPost $ toK1 $ resealFile
      , dir "file"   $ hGet  $ toK2 $ daveFile
      , dir "backdoor" $ hGet $ handleBackdoorQuery
+     , dir "randomscreenshot" $ hGet $ toK0 $ randomScreenshotForTest
     ]
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -617,6 +622,26 @@ daveFile fileid' _title = onlyAdmin $ do
       else
         return $ setHeader "Content-Disposition" ("attachment;filename=" ++ filename file)
                  $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+
+randomScreenshotForTest :: Kontrakcja m => m Response
+randomScreenshotForTest = do
+  now <- currentTime
+  let lastWeek = 7 `daysBefore` now
+  slid <- guardJustM $ dbQuery $ GetRandomSignatoryLinkIDThatSignedRecently lastWeek
+  screenshots <- map snd <$> dbQuery (GetSignatoryScreenshots [slid])
+  doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
+  elogEvents <- dbQuery $ GetEvidenceLog $ documentid doc
+  let sigElogEvents = filter ((== Just slid) . evSigLink) elogEvents
+  content <- renderTemplate "screenshotReview" $ do
+    F.value "userAgent" $ evClientName <$> find (isJust . evClientName) sigElogEvents
+    F.value "signatoryid" $ show slid
+    case screenshots of
+      ((SignatoryScreenshots mfirst msigning _):_) -> do
+        let screenShowImageString (Screenshot _ img) = BS.toString $ RFC2397.encode "image/jpeg" img
+        F.value "firstimage" $ screenShowImageString <$> mfirst
+        F.value "signingimage" $ screenShowImageString <$> msigning
+      _ -> return ()
+  simpleHtmlResponse content
 
 handleAdminUserUsageStatsDays :: Kontrakcja m => UserID -> m JSValue
 handleAdminUserUsageStatsDays uid = onlySalesOrAdmin $ do
