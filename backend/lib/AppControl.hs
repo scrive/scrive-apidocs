@@ -239,7 +239,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                 "dbe_query_context" .= show dbeQueryContext
               , case cast dbeError of
                   Nothing -> "dbe_error" .= show dbeError
-                  Just (SomeDBExtraException ee) -> "exception" .= jsonToAeson (toJSValue ee)
+                  Just (SomeDBExtraException ee) -> "extra_exception" .= jsonToAeson (toJSValue ee)
               , "stacktrace" .= reverse stack
               ] ++ logRequest rq mbody
             internalServerErrorPage >>= internalServerError
@@ -248,7 +248,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
             stack <- liftIO $ whoCreated e
             logAttention "SomeDBExtraException" . object $ [
-                "exception" .= jsonToAeson (toJSValue ee)
+                "extra_exception" .= jsonToAeson (toJSValue ee)
               , "stacktrace" .= reverse stack
               ] ++ logRequest rq mbody
             internalServerErrorPage >>= internalServerError

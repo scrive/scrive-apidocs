@@ -94,7 +94,7 @@ brandImage file color = do
     case procResult of
       ExitFailure msg -> do
         logInfo "Problem branding signview image" $ object [
-            "error" .= msg
+            "error_code" .= msg
           ]
         internalError
       ExitSuccess -> return out

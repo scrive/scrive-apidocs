@@ -76,7 +76,7 @@ api acc =  (toAPIResponse <$> acc) `catches` [
       let ex' = tryToConvertConditionalExceptionIntoAPIError ex
 
       logAttention "API v2 Error:" $ object [
-        "error" .= jsonToAeson (toJSValue e),
+        "extra_exception" .= jsonToAeson (toJSValue e),
         "response_json" .= jsonToAeson (jsonFromSomeDBExtraException ex')
         ]
 

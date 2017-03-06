@@ -168,7 +168,7 @@ main = do
             now <- currentTime
             archived <- dbUpdate $ ArchiveIdleDocuments now
             logInfo "Archived documents for signatories" $ object [
-                "signatories" .= archived
+                "signatory_count" .= archived
               ]
           return . RerunAfter $ ihours 24
         EmailChangeRequestsEvaluation -> do
