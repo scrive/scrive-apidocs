@@ -20,9 +20,7 @@ import Transifex.Utils
 whiteList :: S.Set String
 whiteList = S.fromList [ "newTemplateTitle"
                        , "morethenonelist"
-                       , "morethenonelistnormal"
                        , "nomorethanonelist"
-                       , "nomorethanonelistnormal"
                        , "dumpAllEvidenceTexts"
                        , "javascriptLocalisation"
                        -- Old evidence events. Calls for rendering are
