@@ -56,7 +56,11 @@ standardHeaderContents=
         $endif$
         $endif$
 
+        $if(signview)$
+        <script src="$cdnbaseurl$/compiled/signview-vendor-$versioncode$.js" crossorigin="anonymous"></script>
+        $else$
         <script src="$cdnbaseurl$/compiled/vendor-$versioncode$.js" crossorigin="anonymous"></script>
+        $endif$
         <link href='$cdnbaseurl$/domain_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
 
         $if(nobranding)$

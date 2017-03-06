@@ -1,3 +1,5 @@
+var _ = require("underscore");
+
 var ModelObserverMixin = {
   hasChanges: function (model, fields) {
     if (model.changedAttributes()) {

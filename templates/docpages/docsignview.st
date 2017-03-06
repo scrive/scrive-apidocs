@@ -42,7 +42,6 @@ $htmlopentag()$
   </head>
 
   <body>
-    $flashmessages()$
     <div class="place-for-signview"></div>
     <script>
         function getLink(target) {

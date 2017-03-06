@@ -279,6 +279,26 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/js/global/timezone.js"
         ],
         dest: "<%= yeoman.app %>/compiled/vendor-" + generateVersionId() + ".js"
+      },
+      signview: {
+        src: [
+          "<%= yeoman.app %>/bower_components/trackjs/tracker.js",
+          "<%= yeoman.app %>/bower_components/jquery/dist/jquery.min.js",
+          "<%= yeoman.app %>/bower_components/jquery-migrate/jquery-migrate.min.js",
+          "<%= yeoman.app %>/bower_components/underscore/underscore-min.js",
+          "<%= yeoman.app %>/bower_components/moment/min/moment.min.js",
+          util.format("<%= yeoman.app %>/bower_components/moment/locale/{%s}.js", langFromTexts.join(",")),
+          "<%= yeoman.app %>/libs/base64.js",
+          "<%= yeoman.app %>/libs/tinycolor-min.js",
+          "<%= yeoman.app %>/libs/jstz.min.js",
+          "<%= yeoman.app %>/js/global/cookie.js",
+          "<%= yeoman.app %>/js/global/time.js",
+          "<%= yeoman.app %>/js/global/shims.js",
+          "<%= yeoman.app %>/js/global/errors.js",
+          "<%= yeoman.app %>/js/global/csrf.js",
+          "<%= yeoman.app %>/js/global/timezone.js"
+        ],
+        dest: "<%= yeoman.app %>/compiled/signview-vendor-" + generateVersionId() + ".js"
       }
     },
 
@@ -331,6 +351,7 @@ module.exports = function (grunt) {
   grunt.registerTask("buildJs", function (target) {
     var tasks = [
       "uglify:prod",
+      "uglify:signview",
       "webpack:all",
       "webpack:signview"
     ];

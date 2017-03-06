@@ -93,6 +93,14 @@ var signviewConfig = defaultConfig({
     sourceMapFilename: "[file].map"
   },
   entry: allEntryPoints("./app/scripts/entry/signview/*.jsx"),
+  resolve: {
+    alias: {
+      "backbone": "backbone/backbone-min.js",
+      "react": "react/react-with-addons.min.js",
+      "react-dom": "react",
+      "react/addons": "react"
+    }
+  },
   plugins: [
     new webpack.optimize.UglifyJsPlugin({
       minimize: true,
@@ -103,6 +111,14 @@ var signviewConfig = defaultConfig({
     })
   ]
 });
+
+signviewConfig.externals = {
+  "jquery": "jQuery",
+  "tinycolor": "tinycolor",
+  "moment": "moment",
+  "base64": "Base64",
+  "underscore": "_"
+};
 
 var allConfig = defaultConfig({
   name: "all",
