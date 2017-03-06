@@ -2,7 +2,7 @@
 
 module Shake.DBSchema (buildDBDocs) where
 
-import Control.Applicative ((<|>))
+import Control.Applicative ((<|>), many)
 import Data.Aeson
 import Data.Attoparsec.Text
 import Data.Maybe
@@ -76,6 +76,6 @@ buildDBDocs tgt = do
     parserPostgresConnectionStr = keyValue `sepBy` skipSpace
       where
         key             = many1 letter
-        value           = many' $ letter <|> digit <|> satisfy (inClass "._-")
+        value           = many $ letter <|> digit <|> satisfy (inClass "._-")
         keyValue        = (,) <$> key <*> (char '=' *> maybeInQuotes value)
         maybeInQuotes p = (char '\'' *> p <* char '\'') <|> p
