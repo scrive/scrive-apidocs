@@ -89,10 +89,6 @@ module.exports = React.createClass({
     const node = this.refs.pages.getDOMNode();
 
     node.style.webkitOverflowScrolling = "touch";
-
-    // NOTE: WE OVERWRITE DEFAULT GESTURES - TO DISABLE NATIVE ZOOMING
-    node.addEventListener("gestureend", (e) => {}, false);
-    node.addEventListener("touchstart", (e) => {}, false);
   },
 
   componentWillUpdate: function (nextProps, nextState) {

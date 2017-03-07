@@ -106,6 +106,9 @@ var TaskList = require("./navigation/task_list");
       $(window).on("orientationchange", this.handleOrientationChange);
       model.recall();
       ReloadManager.pushBlock(model.blockReload);
+
+      document.addEventListener('touchstart', this.onTouchStart);
+      document.addEventListener('touchmove', this.onTouchMove);
     },
 
     componentDidUpdate: function () {
@@ -114,6 +117,11 @@ var TaskList = require("./navigation/task_list");
         model.sendTrackingData();
         model.takeFirstScreenshotWithDelay();
       }
+    },
+
+    componentWillUnmount: function () {
+      document.removeEventListener('touchstart', this.onTouchStart);
+      document.removeEventListener('touchmove', this.onTouchMove);
     },
 
     getBackboneModels: function () {
@@ -144,6 +152,28 @@ var TaskList = require("./navigation/task_list");
 
     handleResize: function () {
       this.forceUpdate();
+    },
+
+    eventIsMultiTouch: function (event) {
+      return (event.touches && event.touches.length > 1);
+    },
+
+    eventLooksLikePanToZoom: function (event) {
+      return (!isNaN(event.scale) && event.scale != 1);
+    },
+
+    onTouchStart: function (event) {
+      if (this.eventIsMultiTouch(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    },
+
+    onTouchMove: function (event) {
+      if (this.eventIsMultiTouch(event) || this.eventLooksLikePanToZoom(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
     },
 
     render: function () {
