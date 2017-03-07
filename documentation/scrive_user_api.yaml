@@ -90,6 +90,63 @@ paths:
 #    # hGet $ toK0 $ apiCallUserGetCallbackScheme,
 #  /testsalesforceintegration:
 #    # hGet $ toK0 $ apiCallTestSalesforceIntegration
+#  /loginandgetsession:
+#    # hPost $ toK0 $ apiCallLoginUserAndGetSession
+
+  /loginandgetsession:
+    # hPost $ toK0 $ apiCallLoginUserAndGetSession
+    post:
+      summary: Login User And Get Session
+      tags:
+        - User
+      description: |
+        This call allows creation of a link, which leads user directly to
+        any page on scrive.com without going through the login page. This
+        creates better user experience.
+
+        Login user using his OAuth tokens. The tokens have to be acquired
+        by /api/v2/getpersonaltoken.
+
+        The call the returns a session id, which can be used to create a link like
+        `https://scrive.com/loginwithredirect?session_id=SESSION_ID&url=PATH_INSIDE_SCRIVE_COM`.
+
+      parameters:
+        - name: json
+          in: formData
+          type: object
+          format: application/json
+          required: true
+          description: |
+            For example:
+
+            ```json
+            {
+              "apitoken" : "987dfsd312sd76sh_123"
+            , "apisecret" : "c47b87126dsacbhb"
+            , "accesstoken" : "2d1287dassg22jke_114"
+            , "accesssecret" : "12876adsdhght665"
+            }
+            ```
+
+      responses:
+        200:
+          description: |
+            For example:
+
+            ```json
+            {
+              "status" : "ok"
+            , "session_id" : "45468-a2510867954321d0"
+            }
+            ```
+
+            In case of error:
+
+            ```json
+            {
+              "status" : "error"
+            , "error_message" .= "some error message for humans"
+            }
 
 definitions:
   Lang:
