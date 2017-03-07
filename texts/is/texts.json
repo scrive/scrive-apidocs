@@ -48,7 +48,7 @@
 "_IdentifyBankIdNO":"BankID",
 "_IdentifyBankIdNOAuth":"Innskráning með norsku BankID tókst ekki.",
 "_IdentifyBankIdNOBlocked":"Lokað er fyrir norska BankID þitt. Hafðu samband við bankann þinn.",
-"_IdentifyBankIdNOCanceled":"Hætt var við auðkenningu með norsku BankID.",
+"_IdentifyBankIdNOCanceled":"",
 "_IdentifyBankIdNOExpired":"Norska BankID þitt er útrunnið. Hafðu samband við bankann þinn.",
 "_IdentifyBankIdNOFailed":"Auðkenning með norsku BankID tókst ekki.",
 "_IdentifyBankIdNOMobile":"BankID í farsíma",

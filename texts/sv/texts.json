@@ -48,7 +48,7 @@
 "_IdentifyBankIdNO":"BankID",
 "_IdentifyBankIdNOAuth":"Det gick inte att logga in med norskt BankID.",
 "_IdentifyBankIdNOBlocked":"Ditt norska BankID är blockerat. Kontakta din bank.",
-"_IdentifyBankIdNOCanceled":"Identifiering med norskt BankID avbröts.",
+"_IdentifyBankIdNOCanceled":"",
 "_IdentifyBankIdNOExpired":"Ditt norska BankID har gått ut. Kontakta din bank.",
 "_IdentifyBankIdNOFailed":"Identifiering med norskt BankID misslyckades.",
 "_IdentifyBankIdNOMobile":"BankID på mobil",

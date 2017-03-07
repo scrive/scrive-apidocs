@@ -48,7 +48,7 @@
 "_IdentifyBankIdNO":"Identificación bancaria",
 "_IdentifyBankIdNOAuth":"El acceso a través de la identificación bancaria de Noruega no se ha podido realizar.",
 "_IdentifyBankIdNOBlocked":"Su cuenta bancaria de Noruega está bloqueada. Contacte con su banco. ",
-"_IdentifyBankIdNOCanceled":"Su identificación en el banco noruego ha sido cancelada.",
+"_IdentifyBankIdNOCanceled":"",
 "_IdentifyBankIdNOExpired":"Su identificación del banco noruego ha caducado. Contacte con su banco.",
 "_IdentifyBankIdNOFailed":"Error en la dentificación bancaria con número noruego.",
 "_IdentifyBankIdNOMobile":"Identificación bancaria en el móvil",

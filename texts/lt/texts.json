@@ -48,7 +48,7 @@
 "_IdentifyBankIdNO":"„BankID“",
 "_IdentifyBankIdNOAuth":"Nepavyko prisijungti per Norvegijos „BankID“.",
 "_IdentifyBankIdNOBlocked":"Jūsų Norvegijos „BankID“ neprieinamas. Susisiekite su savo banku.",
-"_IdentifyBankIdNOCanceled":"Identifikavimas per Norvegijos „BankID“ nutrauktas.",
+"_IdentifyBankIdNOCanceled":"",
 "_IdentifyBankIdNOExpired":"Jūsų Norvegijos „BankID“ nebegalioja. Susisiekite su savo banku.",
 "_IdentifyBankIdNOFailed":"Nepavyko identifikuoti per Norvegijos „BankID“.",
 "_IdentifyBankIdNOMobile":"„BankID“ mobiliajame įrenginyje",

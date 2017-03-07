@@ -48,7 +48,7 @@
 "_IdentifyBankIdNO":"BankID",
 "_IdentifyBankIdNOAuth":"Norra BankID abil sisse logimine nurjus.",
 "_IdentifyBankIdNOBlocked":"Teie Norra BankID on blokeeritud. Võtke ühendust enda pangaga.",
-"_IdentifyBankIdNOCanceled":"Norra BankID abil tuvastamine tühistati.",
+"_IdentifyBankIdNOCanceled":"",
 "_IdentifyBankIdNOExpired":"Teie Norra BankID on aegunud. Võtke ühendust enda pangaga.",
 "_IdentifyBankIdNOFailed":"Norra BankID abil tuvastamine nurjus.",
 "_IdentifyBankIdNOMobile":"Mobiili BankID",
