@@ -107,8 +107,8 @@ var TaskList = require("./navigation/task_list");
       model.recall();
       ReloadManager.pushBlock(model.blockReload);
 
-      document.addEventListener('touchstart', this.onTouchStart);
-      document.addEventListener('touchmove', this.onTouchMove);
+      document.addEventListener("touchstart", this.onTouchStart);
+      document.addEventListener("touchmove", this.onTouchMove);
     },
 
     componentDidUpdate: function () {
@@ -120,8 +120,8 @@ var TaskList = require("./navigation/task_list");
     },
 
     componentWillUnmount: function () {
-      document.removeEventListener('touchstart', this.onTouchStart);
-      document.removeEventListener('touchmove', this.onTouchMove);
+      document.removeEventListener("touchstart", this.onTouchStart);
+      document.removeEventListener("touchmove", this.onTouchMove);
     },
 
     getBackboneModels: function () {
