@@ -19,8 +19,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
                  {type: "name",   order : 2},
                  {type: "email",  should_be_filled_by_sender : true, is_obligatory : true}, // We need to set it since default delivery is email
                  {type: "mobile", should_be_filled_by_sender : false, is_obligatory : false},
-                 {type: "company"},
-                 {type: "company_number"}
+                 {type: "company"}
         ],
         current: false,
         attachments: [],

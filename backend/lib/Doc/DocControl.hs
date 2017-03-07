@@ -152,13 +152,6 @@ handleNewDocument = withUser $ \user -> do
                 , scfShouldBeFilledBySender = False
                 , scfPlacements             = []
               }
-            , SignatoryCompanyNumberField $ CompanyNumberField {
-                  scnfID                     = (unsafeSignatoryFieldID 0)
-                , scnfValue                  = ""
-                , scnfObligatory             = False
-                , scnfShouldBeFilledBySender = False
-                , scnfPlacements             = []
-              }
             ]
           othersiglink' = othersiglink { signatorysignorder = SignOrder 1
                                        , signatoryfields = fields

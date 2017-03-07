@@ -57,7 +57,7 @@ CancelDocumentEvidenceVerificationPages=$_CancelDocumentEvidenceTextSimpleNotArc
 ###
 ChangeSignatoryEmailWhenUndeliveredEvidenceLog=The user <span class="actor"/> changed the email address for the party from $oldemail$ to $newemail$.
 ###
-ChangeSignatoryPhoneWhenUndeliveredEvidenceLog=The user <span class="actor"/> changed the phone number for the party from $oldphone$ to $newphone$.
+ChangeSignatoryPhoneWhenUndeliveredEvidenceLog=The user <span class="actor"/> changed the mobile number for the party from $oldphone$ to $newphone$.
 ###
 ChangeAuthenticationToViewMethodStandardToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “no extra authentication” to “Swedish BankID”.
 ###
@@ -483,7 +483,7 @@ UpdateFieldEmailEvidenceLog=The signatory <span class="actor"/> changed the text
 ###
 UpdateFieldCustomEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “$fieldname$” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldMobileEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “Phone” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldMobileEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “Mobile” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
 UpdateFieldNameEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “Name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
@@ -555,7 +555,7 @@ elegVerificationAuth=
   <br/>ID number: $signatory_personal_number$
   $endif$
   $if(signatory_mobile)$
-  <br/>Phone: $signatory_mobile$
+  <br/>Mobile: $signatory_mobile$
   $endif$
   $if(signatory_dob)$
   <br/>Date of birth: $signatory_dob$
@@ -602,7 +602,7 @@ $else$
   $endif$
 $endif$
 ###
-UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Phone". Scrive eSign changed it from "$oldphone$" to "$newphone$".
+UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Mobile". Scrive eSign changed it from "$oldphone$" to "$newphone$".
 ###
 AuthorAttachmentHashComputedLog=The attachment "$attachment_name$" will not be merged with the main document. To be able to confirm the integrity of "$attachment_name$" it was hashed using the SHA-256 method.
 <br/>
