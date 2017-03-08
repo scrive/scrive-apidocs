@@ -81,8 +81,8 @@ filesSelectors = [
   , "size"
   ]
 
-fetchFile :: (FileID, String, Maybe BS.ByteString, Maybe String, Maybe BS.ByteString, Maybe BS.ByteString, Maybe BS.ByteString, Int32) -> File
-fetchFile (fid, fname, content, amazon_url, checksum, maes_key, maes_iv, size) = File {
+fetchFile :: (FileID, String, Maybe BS.ByteString, Maybe String, BS.ByteString, Maybe BS.ByteString, Maybe BS.ByteString, Int32) -> File
+fetchFile (fid, fname, content, mamazon_url, checksum, maes_key, maes_iv, size) = File {
         fileid = fid
       , filename = fname
       , filestorage =
@@ -104,7 +104,7 @@ fetchFile (fid, fname, content, amazon_url, checksum, maes_key, maes_iv, size) =
             Nothing          -> FileStorageMemory mem
             Just (Right aes) -> FileStorageMemory (aesDecrypt aes mem)
             Just (Left msg)  -> err msg
-          Nothing -> case (amazon_url, eaes) of
+          Nothing -> case (mamazon_url, eaes) of
             (Just url, Just (Right aes)) -> FileStorageAWS url aes
             (Just _,   Just (Left msg))  -> err msg
             d                                  -> $unexpectedError $ "invalid AWS data for file with id =" <+> show fid <> ":" <+> show d

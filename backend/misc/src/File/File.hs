@@ -31,7 +31,7 @@ data File = File {
   , filename     :: String
   -- if there is conversion error from sql, detect it immediately
   , filestorage  :: !FileStorage
-  , filechecksum :: Maybe BS.ByteString
+  , filechecksum :: BS.ByteString
   , filesize     :: Int32
   } deriving (Typeable)
 

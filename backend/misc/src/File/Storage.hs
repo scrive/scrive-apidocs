@@ -33,7 +33,7 @@ getFileContents file = do
    rkey = mkRedisKey [
        "files"
      , BS.pack . show $ fileid file
-     , fromMaybe BS.empty $ filechecksum file
+     , filechecksum file
      ]
 
 getFileIDContents :: (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => FileID -> m BS.ByteString

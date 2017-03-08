@@ -98,20 +98,23 @@ uploadSomeFilesToAmazon n = do
 
 -- | Convert a file to Amazon URL. We use the following format:
 --
--- > "file" </> fileid </> filename
+-- > "file" </> fileid </> checksum </> filename
 --
--- where filename will be urlencoded (percent encoded in UTF-8). File
--- name is preserved fully, that means you should supply file
+-- where filename and checksum will be urlencoded (percent encoded in UTF-8).
+-- File name is preserved fully, that means you should supply file
 -- extension already in place.
 --
 -- Note: Someday we might decide to publish temporarily externally
 -- available links to files on Amazon. File names are already in
 -- place, but Content-type is not, this will need to be fixed.
 urlFromFile :: File -> String
-urlFromFile File{filename, fileid} =
+urlFromFile File{filename, fileid, filechecksum} =
   -- here we use BSC.unpack, as HTTP.urlEncode
   -- does only %-escaping for 8bit values
-  "file" </> show fileid </> (HTTP.urlEncode . BSC.unpack . BS.fromString $ filename)
+  "file"
+    </> show fileid
+    </> (HTTP.urlEncode . BSC.unpack $ filechecksum)
+    </> (HTTP.urlEncode . BSC.unpack . BS.fromString $ filename)
 
 -- | Upload a document file. This means one of:
 --
@@ -243,7 +246,7 @@ getFileContents s3action File{..} mredis = localData fileData $ do
              else throwM $ AmazonException $ show err
 
     verifyContent :: BS.ByteString -> m BS.ByteString
-    verifyContent content = if isJust filechecksum && Just (SHA1.hash content) /= filechecksum
+    verifyContent content = if SHA1.hash content /= filechecksum
       then do
         logAttention_ "SHA1 checksum of file doesn't match the one in the database"
         throwM $ AmazonException $ "SHA1 checksum of file doesn't match the one in the database"
