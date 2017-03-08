@@ -381,6 +381,7 @@ module.exports = function (grunt) {
       "compileStyles",
       "compileGenerateLocalization",
       "uglify:dev",
+      "uglify:signview",
       "concurrent:watch"
     ]);
   });
