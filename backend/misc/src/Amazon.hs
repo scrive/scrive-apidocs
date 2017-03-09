@@ -25,6 +25,7 @@ import Network.AWS.Authentication
 import System.FilePath ((</>))
 import System.Timeout.Lifted
 import qualified Crypto.Hash.SHA1 as SHA1
+import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
@@ -113,7 +114,7 @@ urlFromFile File{filename, fileid, filechecksum} =
   -- does only %-escaping for 8bit values
   "file"
     </> show fileid
-    </> (HTTP.urlEncode . BSC.unpack $ filechecksum)
+    </> (BSC.unpack . Base16.encode $ filechecksum)
     </> (HTTP.urlEncode . BSC.unpack . BS.fromString $ filename)
 
 -- | Upload a document file. This means one of:

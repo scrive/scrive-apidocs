@@ -6,6 +6,7 @@ module File.Storage (
 import Control.Monad.Catch
 import Control.Monad.Trans.Control
 import Log
+import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Char8 as BS
 
 import Database.Redis.Helpers
@@ -33,7 +34,7 @@ getFileContents file = do
    rkey = mkRedisKey [
        "files"
      , BS.pack . show $ fileid file
-     , filechecksum file
+     , Base16.encode $ filechecksum file
      ]
 
 getFileIDContents :: (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => FileID -> m BS.ByteString
