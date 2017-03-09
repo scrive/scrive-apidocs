@@ -362,7 +362,7 @@ asValidCompanyNumber input =
 -}
 asValidSwedishSSN :: String -> Result String
 asValidSwedishSSN input =
-    filterOutCharacters [' ', '-'] input
+    filterOutCharacters [' ', '-', '+'] input
     >>= checkIfEmpty
     >>= checkLengthIs [10,12]
     >>= checkOnly [isDigit]
@@ -399,7 +399,7 @@ asValidDanishSSN input =
 asValidSEBankIdPersonalNumber :: String -> Result String
 asValidSEBankIdPersonalNumber input =
     stripAllWhitespace input
-    >>= filterOutCharacters "-"
+    >>= filterOutCharacters "-+"
     >>= checkOnly [isDigit]
     >>= (\xs -> if
              | length xs `elem` [10, 12] -> return xs

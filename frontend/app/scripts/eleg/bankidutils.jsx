@@ -86,10 +86,23 @@ module.exports = {
   },
 
   normalizedPersonalNumber: function (signatory) {
-    var pp = signatory.personalnumber();
-    pp = pp.replace(/-/g, "");
+    var pp = signatory.personalnumber().replace(/\+|-/g, "");
     if (pp.length <= 10) {
-      return "19" + pp;
+      var yy = pp.substr(0, 2);
+      if (signatory.personalnumber().indexOf("+") >= 0) {
+        // person has more than 100 years
+        return "19" + pp;
+      } else {
+        var birthYear = "19" + yy;
+        var currentYear = (new Date()).getFullYear();
+        if (currentYear - 100 >= birthYear) {
+          // short pp has to be for someone born in 2000s
+          // if he's older then 100, he should use id with + symbol
+          return "20" + pp;
+        } else {
+          return "19" + pp;
+        }
+      }
     } else {
       return pp;
     }

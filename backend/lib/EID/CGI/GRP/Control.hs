@@ -337,10 +337,11 @@ guardThatPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
         ]
       respond404
     Just sl -> do
-      let withoutDashes = filter (not . (== '-'))
+      let withoutDashes = filter (not . (`elem` ['-', '+']))
           slPersonalNumber = withoutDashes $ getPersonalNumber sl
           pn' = withoutDashes pn
-      if (slPersonalNumber /= "" && slPersonalNumber /= pn' && "19" ++ slPersonalNumber /= pn'  && slPersonalNumber /= "19" ++ pn')
+      if (slPersonalNumber /= "" && slPersonalNumber /= pn' && "19" ++ slPersonalNumber /= pn'  && slPersonalNumber /= "19" ++ pn'
+                               && slPersonalNumber /= "20" ++ pn' && "20" ++ slPersonalNumber /= pn')
         then do
           logInfo "Personal number for eleg operation does not match and signatory personal number can't be changed" $ object [
               identifier_ $ documentid doc

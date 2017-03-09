@@ -288,7 +288,7 @@ var PasswordEqValidation = exports.PasswordEqValidation = Validation.extend({
 var SSNForSEBankIDValidation = exports.SSNForSEBankIDValidation = Validation.extend({
     defaults: {
         validates: function(t) {
-           var fWithoutHyphens = t.replace(/-/g, "");
+           var fWithoutHyphens = t.replace(/\+|-/g, "");
            return /^([0-9]{10}|[0-9]{12})$/i.test(fWithoutHyphens);
         },
         message: "Personal number for Swedish BankID must contain 10 or 12 digits"
