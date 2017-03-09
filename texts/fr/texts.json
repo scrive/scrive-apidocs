@@ -48,7 +48,7 @@
 "_IdentifyBankIdNO":"ID banque",
 "_IdentifyBankIdNOAuth":"Impossible de se connecter à partir des identifiants bancaires norvégiens.",
 "_IdentifyBankIdNOBlocked":"Vos identifiants bancaires norvégiens sont bloqués. Contactez votre banque.",
-"_IdentifyBankIdNOCanceled":"L'identification à partir des identifiants bancaires norvégiens a été annulée.",
+"_IdentifyBankIdNOCanceled":"",
 "_IdentifyBankIdNOExpired":"Vos identifiants bancaires norvégiens ont expiré. Contactez votre banque",
 "_IdentifyBankIdNOFailed":"Échec d'identification à partir des identifiants bancaires norvégiens.",
 "_IdentifyBankIdNOMobile":"iD bancaire sur portable",

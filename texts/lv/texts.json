@@ -48,7 +48,7 @@
 "_IdentifyBankIdNO":"BankID",
 "_IdentifyBankIdNOAuth":"Pierakstīšanās ar Norvēģijas BankID neizdevās.",
 "_IdentifyBankIdNOBlocked":"Jūsu Norvēģijas BankID ir bloķēts. Lūdzu, sazinieties ar banku!",
-"_IdentifyBankIdNOCanceled":"Identifikācija ar Norvēģijas BankID tika atcelta.",
+"_IdentifyBankIdNOCanceled":"",
 "_IdentifyBankIdNOExpired":"Jūsu Norvēģijas BankID ir beidzies termiņš. Lūdzu, sazinieties ar banku!",
 "_IdentifyBankIdNOFailed":"Identifikācija ar Norvēģijas BankID neizdevās.",
 "_IdentifyBankIdNOMobile":"BankID mobilajā ierīcē",

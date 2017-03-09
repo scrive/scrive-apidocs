@@ -173,7 +173,9 @@ var TaskList = require("./navigation/task_list");
             <div className="main">
               <div className="section loading">
                 <div className="col-xs-12 center">
-                  <div className="waiting4data" />
+                  <div className="waiting4data-signview">
+                    <img crossOrigin="anonymous" src={window.cdnbaseurl + "/img/wait30trans.gif"} />
+                  </div>
                 </div>
               </div>
             </div>

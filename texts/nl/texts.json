@@ -48,7 +48,7 @@
 "_IdentifyBankIdNO":"BankID",
 "_IdentifyBankIdNOAuth":"inloggen met Norwegian BankID is niet gelukt.",
 "_IdentifyBankIdNOBlocked":"Uw Norwegian BankID is geblokkeerd. Neem contact op met uw bank.",
-"_IdentifyBankIdNOCanceled":"Identificatie met Norwegina BankID is afgebroken.",
+"_IdentifyBankIdNOCanceled":"",
 "_IdentifyBankIdNOExpired":"Uw Norwegian BankID is verlopen. Neem contact op met uw bank.",
 "_IdentifyBankIdNOFailed":"Identificatie met Norwegian BankID is mislukt.",
 "_IdentifyBankIdNOMobile":"BankID mobiel",

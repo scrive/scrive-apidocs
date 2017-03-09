@@ -48,7 +48,7 @@
 "_IdentifyBankIdNO":"BankID ",
 "_IdentifyBankIdNOAuth":"Η σύνδεση με το Νορβηγικό BankID δεν ήταν επιτυχής. ",
 "_IdentifyBankIdNOBlocked":"Το Νορβηγικό σας BankID είναι μπλοκαρισμένο. Επικοινωνήστε με την τράπεζά σας. ",
-"_IdentifyBankIdNOCanceled":"Η ταυτοποίηση με το Νορβηγικό σας BankID ακυρώθηκε. ",
+"_IdentifyBankIdNOCanceled":"",
 "_IdentifyBankIdNOExpired":"Το Νορβηγικό σας BankID έχει λήξει. Επικοινωνήστε με την τράπεζά σας. ",
 "_IdentifyBankIdNOFailed":"Η ταυτοποίηση με το Νορβηγικό BankID απέτυχε. ",
 "_IdentifyBankIdNOMobile":"Το BankID στο κινητό ",

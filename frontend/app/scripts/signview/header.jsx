@@ -56,7 +56,7 @@ import DownloadPdfIcon from "../icons/download_pdf_icon.svg";
               <div className="col-xs-6 left">
                 <div className="vertical left">
                   <div className="middle">
-                    <img className="logo" src={this.logoLink()} />
+                    <img crossOrigin="anonymous" className="logo" src={this.logoLink()} />
                   </div>
                 </div>
               </div>

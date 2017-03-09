@@ -48,7 +48,7 @@
 "_IdentifyBankIdNO":"BankID",
 "_IdentifyBankIdNOAuth":"L'autenticazione del BankID norvegese non è riuscita.",
 "_IdentifyBankIdNOBlocked":"Il tuo BankID norvegese è bloccato. Contatta la tua banca.",
-"_IdentifyBankIdNOCanceled":"L'identificazione con il BankID norvegese è stata annullata.",
+"_IdentifyBankIdNOCanceled":"",
 "_IdentifyBankIdNOExpired":"Il tuo BankID norvegese è scaduto. Contatta la tua banca.",
 "_IdentifyBankIdNOFailed":"L'identificazione con il BankID norvegese non è riuscita.",
 "_IdentifyBankIdNOMobile":"BankID su cellulare",

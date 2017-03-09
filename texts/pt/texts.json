@@ -48,7 +48,7 @@
 "_IdentifyBankIdNO":"BankID",
 "_IdentifyBankIdNOAuth":"O início de sessão com o BankID norueguês não foi bem sucedido.",
 "_IdentifyBankIdNOBlocked":"O seu BankID norueguês está bloqueado. Contacte o seu banco.",
-"_IdentifyBankIdNOCanceled":"A identificação com o BankID norueguês foi cancelada.",
+"_IdentifyBankIdNOCanceled":"",
 "_IdentifyBankIdNOExpired":"O seu BankID norueguês expirou. Contacte o seu banco.",
 "_IdentifyBankIdNOFailed":"A identificação com o BankID norueguês falhou.",
 "_IdentifyBankIdNOMobile":"BankID no telemóvel",
