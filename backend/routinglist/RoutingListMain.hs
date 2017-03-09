@@ -97,7 +97,9 @@ main :: IO ()
 main = do
   [include] <- getArgs
   withFile "urls.txt" WriteMode $ \h -> do
-    forM_ (getUrls $ staticRoutes True) $ \url -> do
+    let urls = getUrls $ staticRoutes True
+        urls' = ["/api/", "/adminonly"] ++ urls
+    forM_ urls' $ \url -> do
       hPutStrLn h $ "location ~ ^" ++ url ++ " {"
       hPutStrLn h $ "    include " ++ include ++ ";"
       hPutStrLn h "}"
