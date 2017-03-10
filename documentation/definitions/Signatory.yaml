@@ -95,6 +95,7 @@ properties:
       - standard
       - se_bankid
       - no_bankid
+      - dk_nemid
   authentication_method_to_sign:
     type: string
     default: standard
