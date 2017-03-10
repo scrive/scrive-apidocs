@@ -2,7 +2,7 @@ var _ = require("underscore");
 var React = require("react");
 var Button = require("../../common/button");
 var Select = require("../../common/select");
-var EditableText = require("../../common/editabletext");
+var EditableText = require("./editabletext");
 var Backbone = require("backbone");
 var $ = require("jquery");
 var Field = require("../../../js/fields.js").Field;
@@ -12,13 +12,15 @@ var Field = require("../../../js/fields.js").Field;
   module.exports = React.createClass({
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      onSave: React.PropTypes.func.isRequired
+      onSave: React.PropTypes.func.isRequired,
+      onNameChange: React.PropTypes.func
     },
 
     getInitialState: function () {
       return {
         edit: false,
-        buttonSize: 0
+        buttonSize: 0,
+        newName: ""
       };
     },
 
@@ -123,6 +125,12 @@ var Field = require("../../../js/fields.js").Field;
       this.setState({edit: false});
     },
 
+    onNameChange: function (newName) {
+      if (this.props.onNameChange) {
+        this.props.onNameChange(newName);
+      }
+    },
+
     render: function () {
       var model = this.props.model;
       var field = model.field();
@@ -134,7 +142,9 @@ var Field = require("../../../js/fields.js").Field;
         <div className="subtitle">
           {localization.designview.selectField}
           <div className="fieldTypeSetter-subtitle-select fieldTypeSetter-field-select">
-            {this.state.edit && <EditableText edit={true} text={field.name()} onSave={this.props.onSave} />}
+            {this.state.edit &&
+              <EditableText edit={true} text={field.name()} onChange={this.onNameChange} />
+            }
             {!this.state.edit &&
               <span>
                 <div className="fieldTypeSetter-field-select-container">

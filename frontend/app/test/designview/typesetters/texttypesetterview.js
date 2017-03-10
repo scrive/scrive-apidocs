@@ -238,15 +238,16 @@ var TextTypeSetterView = require("../../../scripts/designview/typesetters/textty
 
       TestUtils.Simulate.click(editButton.getDOMNode());
 
+      var input = TestUtils.findRenderedDOMComponentWithTag(typesetter, "input");
+      TestUtils.Simulate.change(input, {target: {value: "spam"}});
+
       var buttons2 = TestUtils.findAllInRenderedTree(typesetter, function (comp) {
         return TestUtils.isCompositeComponentWithType(comp, Button);
       });
 
-      var saveButton = buttons2[0];
+      var closeButton = buttons2[0];
 
-      assert.equal(saveButton.props.text, "Save", "button should have text Save");
-
-      TestUtils.Simulate.click(saveButton.getDOMNode());
+      TestUtils.Simulate.click(closeButton.getDOMNode());
 
       // test with conflicting name
       typesetter.handleSave("fstname");

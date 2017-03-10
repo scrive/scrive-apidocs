@@ -4,11 +4,11 @@ var Backbone = require("backbone");
 var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
 var SelfUnmountMixin = require("../../common/selfunmountmixin");
-var EditableText = require("../../common/editabletext");
+var EditableText = require("./editabletext");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
   var Mixin = {
-    mixins: [SelfUnmountMixin, BackboneMixin.BackboneMixin],
+    mixins: [SelfUnmountMixin],
 
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
@@ -16,22 +16,34 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
       hideFunc: React.PropTypes.func.isRequired
     },
 
-    getBackboneModels: function () {
-      // All changes to placement propagate up to document. This is why we only need to listen on document changes
-      return [this.props.model.field().signatory().document()];
-    },
-
     componentDidUpdate: function () {
     },
 
     componentWillMount: function () {
+      this._newName = "";
+      this._isDone = false;
+
+      this.props.model.field().signatory().document().on(
+        "change", this.onDocumentChange
+      );
+
       $(window).bind("scroll", this.place);
       $(window).bind("resize", this.place);
     },
 
     componentWillUnmount: function () {
+      this.props.model.field().signatory().document().off(
+        "change", this.onDocumentChange
+      );
+
       $(window).unbind("scroll", this.place);
       $(window).unbind("resize", this.place);
+    },
+
+    onDocumentChange: function () {
+      if (!this._isDone) {
+        this.forceUpdate();
+      }
     },
 
     place: function () {
@@ -45,9 +57,14 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
     },
 
     done: function () {
-      var field = this.props.model.field();
-      field.makeReady();
-      this.props.hideFunc();
+      this._isDone = true;
+      if (!this._newName || this.rename(this._newName)) {
+        var field = this.props.model.field();
+        field.makeReady();
+        this.props.hideFunc();
+      } else {
+        this._isDone = false;
+      }
     },
 
     rename: function (name) {
@@ -66,6 +83,7 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
         });
       });
 
+
       if (name === "") {
         return true;
       }
@@ -76,6 +94,11 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
       }
 
       new FlashMessage({type: "error", content: localization.designview.fieldWithSameNameExists});
+      return false;
+    },
+
+    onNameChange: function (newName) {
+      this._newName = newName;
     },
 
     render: function () {
@@ -101,7 +124,7 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
           <div className="fieldTypeSetter-arrow" />
           <div className="fieldTypeSetter-body">
             <div className="title">
-              {renderTitle ? renderTitle() : <EditableText onSave={this.rename} text={field.name()} />}
+              {renderTitle ? renderTitle() : <EditableText text={field.name()} onChange={this.onNameChange} />}
             </div>
             {renderBody()}
           </div>

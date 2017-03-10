@@ -1,6 +1,6 @@
 var React = require("react");
-var Button = require("./button");
-var InfoTextInput = require("./infotextinput");
+var Button = require("../../common/button");
+var InfoTextInput = require("../../common/infotextinput");
 
 /**
  * An editable text component. Click on a text and a input box appears.
@@ -9,8 +9,8 @@ var InfoTextInput = require("./infotextinput");
       text        : string, the text that can be edited.
       edit        : mount the component in the editing state.
       disabled    : disable editing.
-      onSave      : function, callback with text as argument when save button is clicked,
-                    return true if it is valid input.
+      onChange    : function, callback with text as argument when input is
+                    changed
  *
  */
 
@@ -19,9 +19,9 @@ var InfoTextInput = require("./infotextinput");
 
     propTypes: {
       text: React.PropTypes.string.isRequired,
-      onSave: React.PropTypes.func.isRequired,
       edit: React.PropTypes.bool,
-      disabled: React.PropTypes.bool
+      disabled: React.PropTypes.bool,
+      onChange: React.PropTypes.func.isRequired
     },
 
     getInitialState: function () {
@@ -67,23 +67,16 @@ var InfoTextInput = require("./infotextinput");
       });
     },
 
-    save: function () {
-      var text = this.refs.input.value().trim();
-      var valid = this.props.onSave(text);
-
-      if (valid) {
-        return this.text();
-      }
-
-      this.refs.input.focus();
-    },
-
     handleClick: function () {
       if (this.state.edit || this.props.disabled) {
         return;
       }
 
       this.edit();
+    },
+
+    onInputChange: function (newName) {
+      this.props.onChange(newName.trim());
     },
 
     render: function () {
@@ -108,15 +101,9 @@ var InfoTextInput = require("./infotextinput");
                   className="editable-text-input"
                   value={this.props.text}
                   ref="input"
+                  onChange={this.onInputChange}
                 />
               </span>
-              <Button
-                size="tiny"
-                className="editable-text-save"
-                text={localization.save}
-                type="action"
-                onClick={this.save}
-              />
             </span>
           }
           {/* else */ !this.state.edit &&

@@ -14,6 +14,7 @@ var Anchor = require("./anchor");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
 
   module.exports = React.createClass({
+    displayName: "TextTypesetterView",
     mixins: [TypeSetterMixin],
 
     verticalOffset: FieldPlacementGlobal.textTypeSetterVerticalOffset,
@@ -76,6 +77,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
       var field = model.field();
       var existingField = sig.field(field.name(), field.type(), field.order());
 
+      this.onNameChange("");
       this.refs.fieldSelector.selector();
 
       if (existingField) {
@@ -103,7 +105,12 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
       return (
         <span>
           <SignatorySelector field={field} useDefaultBehavior={false} onSelect={this.handleSelectSig} />
-          <FieldSelector ref="fieldSelector" model={model} onSave={this.handleSave} />
+          <FieldSelector
+            ref="fieldSelector"
+            model={model}
+            onSave={this.handleSave}
+            onNameChange={this.onNameChange}
+          />
           <div className="subtitle">
             {localization.designview.optionalMandatory}
             <div className="fieldTypeSetter-subtitle-select">

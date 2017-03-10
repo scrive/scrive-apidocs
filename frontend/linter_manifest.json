@@ -38,7 +38,6 @@
   "./app/scripts/signview/signviewmodel.jsx",
   "./app/scripts/signview/drawing/*.jsx",
   "./app/scripts/eleg/*.jsx",
-  "./app/scripts/common/editabletext.jsx",
   "./app/scripts/common/blink_mixin.jsx",
   "./app/scripts/common/scrolltoelement.jsx",
   "./app/scripts/common/select.jsx",
