@@ -59,11 +59,7 @@ unjsonMessengerServerConf = objectOf $ MessengerServerConf
 instance Unjson MessengerServerConf where
   unjsonDef = unjsonMessengerServerConf
 
-data SenderConfig = GlobalMouthSender {
-gmSenderUser       :: !String
-, gmSenderPassword :: !String
-, gmURL            :: !String -- "https://gw3.mcm.globalmouth.com:8443/api/mcm"
-} | MbloxSender {
+data SenderConfig = MbloxSender {
   mbToken          :: !String
 , mbURL            :: !String -- "https://api.mblox.com/xms/v1/{username}/batches"
 } | TeliaCallGuideSender {
@@ -77,18 +73,7 @@ gmSenderUser       :: !String
 
 instance Unjson SenderConfig where
   unjsonDef = disjointUnionOf "type" [
-      ("global_mouth", $(isConstr 'GlobalMouthSender), GlobalMouthSender
-        <$> field "username"
-            gmSenderUser
-            "Username for GlobalMouth service"
-        <*> field "password"
-            gmSenderPassword
-            "Password for GlobalMouth service"
-        <*> field "url"
-            gmURL
-            "GlobalMouth address to contact"
-      )
-    , ("mblox", $(isConstr 'MbloxSender), MbloxSender
+      ("mblox", $(isConstr 'MbloxSender), MbloxSender
         <$> field "token"
             mbToken
             "Mblox api token"

@@ -7,9 +7,7 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Crypto.RNG (CryptoRNG)
-import Data.Hash.MD5
 import Log
-import Network.HTTP.Base (urlEncode)
 import System.Exit
 import System.Process
 import Text.HTML.TagSoup
@@ -48,35 +46,6 @@ clearMobileNumber :: String -> String
 clearMobileNumber = filter (\c -> not (c `elem` (" -()."::String)))
 
 sendSMSHelper :: (MonadDB m, MonadThrow m, CryptoRNG m, MonadBase IO m, MonadIO m, MonadLog m) => SenderConfig -> ShortMessage -> m Bool
-sendSMSHelper GlobalMouthSender{..} sm@ShortMessage{..} = localData [identifier_ smID] $ do
-  let clearmsisdn = clearMobileNumber smMSISDN
-  logInfoSendSMS "GlobalMouth" sm
-  let latin_user = toLatin gmSenderUser
-      latin_password = toLatin gmSenderPassword
-      latin_originator = toLatin smOriginator
-      latin_msisdn = toLatin clearmsisdn
-      latin_body = toLatin smBody
-      hash = md5s . Str $ concat [
-          latin_user
-        , latin_body
-        , latin_originator
-        , latin_msisdn
-        , md5s . Str $ latin_user ++ ":" ++ latin_password
-        ]
-      url = concat [
-          gmURL
-        , "?"
-        , "username=", urlEncode latin_user, "&"
-        , "body=", urlEncode latin_body, "&"
-        , "msisdn=", urlEncode latin_msisdn, "&"
-        , "originator=", urlEncode latin_originator, "&"
-        , "hash=", hash, "&"
-        , "dlr=true", "&"
-        , "ref=", show smID
-        ]
-  (success, _) <- curlSMSSender [url] clearmsisdn
-  return success
-
 sendSMSHelper MbloxSender{..} sm@ShortMessage{..} = localData [identifier_ smID] $ do
   let clearmsisdn = clearMobileNumber smMSISDN
       northAmericanNumber = "+1" `isPrefixOf` clearmsisdn

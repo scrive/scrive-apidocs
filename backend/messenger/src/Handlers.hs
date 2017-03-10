@@ -13,7 +13,6 @@ import System.Directory
 
 import DB
 import DB.PostgreSQL
-import GlobalMouth
 import Happstack.Server.ReqHandler
 import KontraPrelude
 import Mblox
@@ -31,7 +30,6 @@ router rng (ConnectionSource pool) routes = withPostgreSQL pool $ do
 handlers :: Route (Messenger Response)
 handlers = choice [
     hGet showHelloMessage
-  , dir "sms" $ dir "globalmouth" $ hGet  $ withDecodedBody_ handleGlobalMouthEvents
   , dir "sms" $ dir "telia"       $ hPost $ withDecodedBody_ handleTeliaCallGuideEvents
   , dir "sms" $ dir "mblox"       $ hPost handleMbloxEvents
   ]
