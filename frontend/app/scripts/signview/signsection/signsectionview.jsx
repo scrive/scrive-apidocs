@@ -332,6 +332,10 @@ var Task = require("../navigation/task");
       if (redirect) {
         window.location = redirect;
       } else {
+        if (BrowserInfo.isSafari()) {
+          // ios safari has really unpredictable scrolling reset after reloading
+          window.scrollTo(0, 0);
+        }
         window.location.reload();
       }
     },
