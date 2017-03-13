@@ -54,7 +54,7 @@ window.FileParamView  = Backbone.View.extend({
     if (slavesWithFiles.length  > 0) {
       var tbody =  $("<tbody/>");
       $(this.el).append($("<table class='table table-striped table-bordered'>").append(tbody));
-      var remover = function(i) {
+      var remover = function (i) {
         return function () {
           multifile.slaves[i] = null;
           self.render();
