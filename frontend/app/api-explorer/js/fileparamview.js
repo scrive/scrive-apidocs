@@ -54,19 +54,19 @@ window.FileParamView  = Backbone.View.extend({
     if (slavesWithFiles.length  > 0) {
       var tbody =  $("<tbody/>");
       $(this.el).append($("<table class='table table-striped table-bordered'>").append(tbody));
+      var remover = function(i) {
+        return function () {
+          multifile.slaves[i] = null;
+          self.render();
+        };
+      };
       for (var i = 0; i < multifile.slaves.length; i++) {
         if (multifile.slaves[i] != undefined && multifile.slaves[i] != multifile.current) {
-          var id = i;
           var row = $("<tr/>");
           row.append($("<td/>").text(param.argName(i)));
           row.append($("<td/>").text((multifile.slaves[i].value || "").match(/[^\/\\]+$/gi)[0]));
           row.append($("<td class='text-right'/>")
-             .append($("<button class='btn btn-xs btn-default' type='button'>Remove</button>")
-                  .click(function () {
-                    multifile.slaves[id] = null;
-                    self.render();
-                  })
-               )
+             .append($("<button class='btn btn-xs btn-default' type='button'>Remove</button>").click(remover(i)))
             );
           tbody.append(row);
         }
