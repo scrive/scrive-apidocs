@@ -203,7 +203,8 @@ apiCallSignup = api $ do
                  _ <- dbUpdate $ SetCompanyInfo (companyid company) newCompanyInfo
                  createUser (Email email) (firstname,lastname) (companyid company,True) lang AccountRequest
   case muser' of
-    Nothing -> runJSONGenT $ value "sent" $ False
+    -- return ambiguous response in both cases to prevent a security issue
+    Nothing -> runJSONGenT $ value "maybe_sent" True
     Just user -> do
           _ <- dbUpdate $ SetUserInfo (userid user) $ (userinfo user)
             { userphone = phone, usercompanyposition = companyPosition }
@@ -223,33 +224,34 @@ apiCallSignup = api $ do
                 LastNameProp lastname,
                 someProp "Confirmation link" $ show l
                 ]
-          runJSONGenT $ value "sent" $ True
-
+          runJSONGenT $ value "maybe_sent" True
 
 apiCallSendPasswordReminder :: Kontrakcja m => m Response
 apiCallSendPasswordReminder = api $ do
   ctx <- getContext
   memail <- getOptionalField asValidEmail "email"
   case memail of
-    Nothing -> runJSONGenT $ value "send" False >> value "badformat" True
+    Nothing -> runJSONGenT $ value "maybe_sent" False >> value "badformat" True
     Just email -> do
+      -- Password reset could be abused to find out, whether an email is registered
+      -- with Scrive. Se we return ambiguous response in all cases to prevent a security issue.
       muser <- dbQuery $ GetUserByEmail $ Email email
       case muser of
         Nothing -> do
-          runJSONGenT $ value "send" False >> value "nouser" True
+          runJSONGenT $ value "maybe_sent" True
         Just user -> do
           minv <- dbQuery $ GetAction passwordReminder $ userid user
           case minv of
             Just pr@PasswordReminder{..} -> case prRemainedEmails of
-              0 -> runJSONGenT $ value "send" False >> value "toomuch" True
+              0 -> runJSONGenT $ value "maybe_sent" True
               n -> do
                 _ <- dbUpdate $ UpdateAction passwordReminder $ pr { prRemainedEmails = n - 1 }
                 sendResetPasswordMail ctx (LinkPasswordReminder prUserID prToken) user
-                runJSONGenT $ value "send" True
+                runJSONGenT $ value "maybe_sent" True
             _ -> do
               link <- newPasswordReminderLink $ userid user
               sendResetPasswordMail ctx link user
-              runJSONGenT $ value "send" True
+              runJSONGenT $ value "maybe_sent" True
  where
   sendResetPasswordMail ctx link user = do
     mail <- resetPasswordMail ctx user link

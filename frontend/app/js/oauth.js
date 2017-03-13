@@ -82,20 +82,13 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
           email : email,
           ajax: true,
           ajaxsuccess: function(rs) {
-            if (rs.sent === true) {
-              Track.track('Create new account from API permissions');
-              mixpanel.people.set({
-                  '$email'      :  email,
-                  'Signup Method' : 'API'
-              });
-              var content = localization.payments.outside.confirmAccountCreatedUserHeader;
-              new FlashMessage({content: content, type: 'success'});
-            } else if (rs.sent === false) {
-              Track.track('Error',
-                            {Message : 'signup failed'});
-              new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, type: 'error'});
-            }
-         }
+            if (resp.maybe_sent === true) {
+              // Even if account was not created, we do not want to tell the user.
+              // The reason is this could be abused to find out whether email is registered
+              // with Scrive or not.
+              var content = localization.payments.outside.confirmAccountMaybeCreatedUser;
+               new FlashMessage({content: content, type: 'success'});
+          }}
         }).sendAjax();
   }
 });

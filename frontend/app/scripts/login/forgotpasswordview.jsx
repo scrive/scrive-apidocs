@@ -16,17 +16,16 @@ module.exports = React.createClass({
       model: React.PropTypes.object
     },
     sendPasswordReminderCallback : function(resp) {
-      if (resp.send == true) {
-        Track.track('Password reminder sent');
-        new FlashMessage({ content: localization.loginModal.passwordReminderSend, type : "success"});
+      if (resp.maybe_sent == true) {
+        // We do not want to tell the user with certainty, whether the email was sent or not.
+        // The reason is this could be abused to find out whether an email is registered
+        // with Scrive or not.
+        new FlashMessage({ content: localization.loginModal.passwordReminderMaybeSend, type : "success"});
       } else {
         var text = "";
-        if (resp.badformat == true)
+        if (resp.badformat == true) {
           text = localization.loginModal.invalidEmail;
-        else if (resp.nouser == true)
-          text = localization.loginModal.noUser;
-        else if (resp.toomuch == true)
-          text = localization.loginModal.tooMuch;
+        }
         Track.track('Error',{Message: 'password reminder failed: ' + text});
         new FlashMessage({ content: text, type : "error"});
       }
