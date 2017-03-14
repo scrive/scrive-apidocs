@@ -21,7 +21,7 @@ module.exports = React.createClass({
     },
     signupCallback : function(resp) {
       var model = this.props.model;
-      if (resp.maybe_sent === true) {
+      if (resp.sent === true) {
         // Even if account was not created, we do not want to tell the user.
         // The reason is this could be abused to find out whether email is registered
         // with Scrive or not.

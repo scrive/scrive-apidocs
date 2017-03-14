@@ -82,7 +82,7 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
           email : email,
           ajax: true,
           ajaxsuccess: function(rs) {
-            if (resp.maybe_sent === true) {
+            if (resp.sent === true) {
               // Even if account was not created, we do not want to tell the user.
               // The reason is this could be abused to find out whether email is registered
               // with Scrive or not.
@@ -238,5 +238,3 @@ var OAuthConfirmation = exports.OAuthConfirmation = function(args){
             , deny     : function()    { model.deny();}
          };
 };
-
-

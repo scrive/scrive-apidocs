@@ -16,7 +16,7 @@ module.exports = React.createClass({
       model: React.PropTypes.object
     },
     sendPasswordReminderCallback : function(resp) {
-      if (resp.maybe_sent == true) {
+      if (resp.send == true) {
         // We do not want to tell the user with certainty, whether the email was sent or not.
         // The reason is this could be abused to find out whether an email is registered
         // with Scrive or not.
