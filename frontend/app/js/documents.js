@@ -521,10 +521,19 @@ var Document = exports.Document = Backbone.Model.extend({
         return this.get("file");
     },
     signorder: function() {
-      var res = this.maxPossibleSignOrder();
-      _.each(this.signatories(), function(s) {
+      // do not use this.maxPossibleSignOrder() because it's possible
+      // doc was set up through api with signorder 'holes'
+      // (e.g. signorders: 1, 2, 4)
+      var max = 1;
+      _.each(this.signatories(), function (s) {
+        if (s.signs()) {
+          max = Math.max(max, s.signorder());
+        }
+      });
+      var res = max;
+      _.each(this.signatories(), function (s) {
         if (s.signs() && !s.hasSigned()) {
-          res = Math.min(res,s.signorder());
+          res = Math.min(res, s.signorder());
         }
       });
       return res;
