@@ -794,6 +794,7 @@ javascriptLocalisation =
               , outside: {
                   confirmAccountCreatedUser       : "$_confirmAccountCreatedUser()$",
                   confirmAccountCreatedUserHeader : "$_modalUserSignupDoneHeader()$",
+                  confirmAccountMaybeCreatedUser  : "$_confirmAccountMaybeCreatedUser()$",
                   confirmAccountExistingUser      : "$_confirmAccountExistingUser()$",
                   confirmAccountExistingUserHeader: "$_confirmAccountExistingUserHeader()$",
                   sorryExistingUser               : "$_flashMessageUserWithSameEmailExists()$",
@@ -950,9 +951,7 @@ javascriptLocalisation =
            , loginFailed : "$_flashMessageLoginPageRedirectReasonWrongMailOrPassword()$"
            , loginFailedBadIP : "$_flashMessageLoginPageRedirectReasonWrongIPAddress()$"
            , invalidEmail : "$_flashEmailIncorectlyFormed()$"
-           , noUser : "$_cantSendReminderNoUser()$"
-           , tooMuch : "$_cantSendReminderTooMuch()$"
-           , passwordReminderSend : "$_flashMessageChangePasswordEmailSend()$"
+           , passwordReminderMaybeSend : "$_flashMessageChangePasswordEmailMaybeSent()$"
            , dontHaveAccount : "$_dontHaveAccount()$"
       }
       , blocking : {

@@ -3,7 +3,6 @@ var BackboneMixin = require("../common/backbone_mixin");
 var Button = require("../common/button");
 var InfoTextInput = require("../common/infotextinput");
 var HubSpot = require("../common/hubspot_service");
-var AdwordsConversionService = require("../common/adwords_conversion_service");
 var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
 var Track = require("../common/track");
 var Language = require("../../js/utils/language.js").Language;
@@ -20,22 +19,13 @@ module.exports = React.createClass({
       model: React.PropTypes.object
     },
     signupCallback : function(resp) {
-    var model = this.props.model;
+      var model = this.props.model;
       if (resp.sent === true) {
-        AdwordsConversionService.markAsSignupConversion();
-        Track.track('Create new account', {'Email' : model.email()});
-        mixpanel.people.set({'$email' : model.email() });
-        HubSpot.track(HubSpot.FORM_SIGNUP, {
-          email :  model.email(),
-          language : Language.current(),
-          scrive_domain : location.hostname,
-          signup_method : "AccountRequest"
-        });
-        var content = localization.payments.outside.confirmAccountCreatedUserHeader;
+        // Even if account was not created, we do not want to tell the user.
+        // The reason is this could be abused to find out whether email is registered
+        // with Scrive or not.
+        var content = localization.payments.outside.confirmAccountMaybeCreatedUser;
         new FlashMessage({content: content, type: 'success'});
-      } else if (resp.sent === false) {
-        Track.track('Error', {Message : 'signup failed'});
-        new FlashMessage({content: localization.accountSetupModal.flashMessageUserAlreadyActivated, type: 'error'});
       }
     },
     trySignup: function() {
