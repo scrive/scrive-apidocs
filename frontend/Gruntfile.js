@@ -288,6 +288,7 @@ module.exports = function (grunt) {
           "<%= yeoman.app %>/bower_components/underscore/underscore-min.js",
           "<%= yeoman.app %>/bower_components/moment/min/moment.min.js",
           util.format("<%= yeoman.app %>/bower_components/moment/locale/{%s}.js", langFromTexts.join(",")),
+          "<%= yeoman.app %>/bower_components/es6-promise/promise.min.js",
           "<%= yeoman.app %>/libs/base64.js",
           "<%= yeoman.app %>/libs/jquery.form.js",
           "<%= yeoman.app %>/libs/tinycolor-min.js",

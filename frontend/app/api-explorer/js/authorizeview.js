@@ -93,7 +93,7 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
     var model = this.model;
     var oauth = model.oauth();
     var container = $("<div class='container'/>");
-    self.appendCenteredRow(container, "<img src='img/logo.png/'/>");
+    self.appendCenteredRow(container, "<img src='img/logo.png'/>");
     self.appendCenteredRow(container, "<div class='divider-line'/>");
     self.appendCenteredRow(container, "<p>E-signing powered by Scrive</p>");
     self.appendLeftRow(container, self.authorizationSelect());
