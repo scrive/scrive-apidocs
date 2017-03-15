@@ -378,5 +378,14 @@ companiesAddPartnerID = Migration {
                                       { fkOnDelete = ForeignKeySetNull } ]
     runSQL_ "UPDATE companies SET partner_id = (SELECT partners.id FROM partners WHERE partners.default_partner) WHERE partner_id IS NULL"
     runSQL_ "ALTER TABLE companies ALTER partner_id SET NOT NULL"
+}
 
+companiesAddPadAppModeAndEArchiveEnabled :: MonadDB m => Migration m
+companiesAddPadAppModeAndEArchiveEnabled = Migration {
+  mgrTable = tableCompanies
+, mgrFrom = 21
+, mgrDo = runQuery_ $ sqlAlterTable (tblName tableCompanies) [
+    sqlAddColumn $ tblColumn { colName = "pad_app_mode", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
+  , sqlAddColumn $ tblColumn { colName = "pad_earchive_enabled", colType = BoolT, colNullable = False, colDefault = Just "true" }
+  ]
 }

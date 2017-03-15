@@ -52,6 +52,7 @@ import KontraPrelude
 import MagicHash (MagicHash, unsafeMagicHash)
 import MailContext
 import MinutesTime
+import PadApplication.Data
 import Partner.PartnerID
 import Session.SessionID
 import SMS.Data (SMSProvider(..))
@@ -127,6 +128,11 @@ instance Arbitrary SMSProvider where
                        , SMSTeliaCallGuide
                        ]
 
+instance Arbitrary PadAppMode where
+  arbitrary = elements [ ListView
+                       , PinCode
+                       ]
+
 instance Arbitrary CompanyInfo where
   arbitrary = do
     a <- arbitrary
@@ -140,6 +146,8 @@ instance Arbitrary CompanyInfo where
     j <- arbitrary
     k <- arbitrary
     l <- arbitrary
+    m <- arbitrary
+    n <- arbitrary
     return $ CompanyInfo { companyname       = a
                          , companynumber     = b
                          , companyaddress    = c
@@ -153,6 +161,8 @@ instance Arbitrary CompanyInfo where
                          , companysmsprovider = j
                          , companycgiserviceid = k
                          , companypartnerid = l
+                         , companypadappmode = m
+                         , companypadearchiveenabled = n
                          }
 
 instance Arbitrary MagicHash where
@@ -565,6 +575,8 @@ addNewCompany = do
          , companysmsprovider = SMSDefault
          , companycgiserviceid = Nothing
          , companypartnerid = companypartnerid . companyinfo $ cc
+         , companypadappmode = ListView
+         , companypadearchiveenabled = True
          }
     Just company <- dbQuery $ GetCompany cid
     return company

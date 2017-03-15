@@ -77,6 +77,8 @@ companyJSON company = runJSONGenT $ do
     value "allowsavesafetycopy" $ companyallowsavesafetycopy (companyinfo company)
     value "idledoctimeout" $ companyidledoctimeout $ companyinfo company
     value "smsprovider" $ show . companysmsprovider . companyinfo $ company
+    value "padappmode" . show . companypadappmode $ companyinfo company
+    value "padearchiveenabled" . companypadearchiveenabled $ companyinfo company
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do

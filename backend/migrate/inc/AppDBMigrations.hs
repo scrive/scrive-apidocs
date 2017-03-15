@@ -103,6 +103,7 @@ kontraMigrations = [
   , createHighlightedPagesTable
   , normalizeCheckboxesSize
   , normalizeCheckboxesFSRel
+  , companiesAddPadAppModeAndEArchiveEnabled
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

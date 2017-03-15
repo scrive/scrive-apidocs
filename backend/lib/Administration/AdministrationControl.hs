@@ -445,6 +445,8 @@ getCompanyInfoChange = do
                                                          guard $ t <= maxCompanyIdleDocTimeout
                                                          return t)) <$> getField "companyidledoctimeout"
   mcompanysmsprovider <- fmap maybeRead <$> getField' $ "companysmsprovider"
+  mcompanypadappmode <- fmap maybeRead <$> getField' $ "companypadappmode"
+  mcompanypadearchiveenabled <- getField "companypadearchiveenabled"
   return $ \CompanyInfo{..} -> CompanyInfo {
         companyname        = fromMaybe companyname mcompanyname
       , companynumber      = fromMaybe companynumber mcompanynumber
@@ -459,6 +461,8 @@ getCompanyInfoChange = do
       , companycgiserviceid = fromMaybe companycgiserviceid mcompanycgiserviceid
       , companysmsprovider = fromMaybe companysmsprovider mcompanysmsprovider
       , companypartnerid = companypartnerid
+      , companypadappmode = fromMaybe companypadappmode mcompanypadappmode
+      , companypadearchiveenabled = maybe companypadearchiveenabled (=="true") mcompanypadearchiveenabled
     }
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}

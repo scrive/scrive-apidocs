@@ -313,6 +313,7 @@ Library
                  , OAuth.Util
                  , OAuth.View
                  , PadApplication.API
+                 , PadApplication.Data
                  , Partner.API
                  , Partner.JSON
                  , Partner.Logging
@@ -977,6 +978,7 @@ Test-suite kontrakcja-test
                  LoginTest,
                  MailModelTest,
                  MailsTest,
+                 PadApplication.APITest
                  Partner.APITest,
                  PaymentsTest,
                  ReferenceScreenshotsTest,
@@ -1022,6 +1024,7 @@ Test-suite kontrakcja-test
                , network-uri
                , recurly
                , regex-tdfa
+               , scientific
                , semigroups
                , stm
                , tagsoup

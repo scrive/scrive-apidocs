@@ -17,6 +17,7 @@ import Happstack.Server.Types
 import Log as Log
 import Text.JSON hiding (Ok)
 import Text.JSON.Gen hiding (object)
+import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Happstack.Server.Response as Web
 
@@ -44,6 +45,10 @@ instance ToAPIResponse BSL.ByteString where
 instance ToAPIResponse JSValue where
   toAPIResponse jv =
     setHeader "Content-Type" "application/json; charset=UTF-8" $ Web.toResponse $ encode jv
+
+instance ToAPIResponse A.Value where
+  toAPIResponse aesonvalue =
+    setHeader "Content-Type" "application/json; charset=UTF-8" $ Web.toResponse $ A.encode aesonvalue
 
 instance ToAPIResponse (UnjsonDef a,a) where
   toAPIResponse (unjson,a) =

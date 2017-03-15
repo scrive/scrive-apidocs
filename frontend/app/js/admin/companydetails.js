@@ -114,6 +114,18 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
   setNewcompanyid : function(v) {
     this.set({"newcompanyid" : v});
   },
+  companypadappmode: function() {
+    return this.get("companypadappmode");
+  },
+  setCompanypadappmode: function(v) {
+    this.set({"companypadappmode" : v});
+  },
+  companypadearchiveenabled: function() {
+    return this.get("companypadearchiveenabled");
+  },
+  setCompanypadearchiveenabled: function(v) {
+    this.set({"companypadearchiveenabled" : v});
+  },
   reset : function() {
     if (!this.ready()) return;
     this.set({
@@ -129,6 +141,8 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
       , companyidledoctimeout : this.company().idledoctimeout()
       , companyallowsavesafetycopy : this.company().allowsavesafetycopy()
       , companysmsprovider : this.company().smsprovider()
+      , companypadappmode : this.company().padappmode()
+      , companypadearchiveenabled : this.company().padearchiveenabled()
     }, {silent : true});
     this.trigger("reset");
   },
@@ -147,7 +161,9 @@ var AdminCompanyDetailsModel = Backbone.Model.extend({
         companycgiserviceid : this.companycgiserviceid(),
         companyidledoctimeout : this.companyidledoctimeout(),
         companyallowsavesafetycopy : this.companyallowsavesafetycopy(),
-        companysmsprovider : this.companysmsprovider()
+        companysmsprovider : this.companysmsprovider(),
+        companypadappmode : this.companypadappmode(),
+        companypadearchiveenabled : this.companypadearchiveenabled()
     });
   },
   mergeToDifferentCompany : function() {
@@ -170,6 +186,7 @@ var AdminCompanyDetailsView = Backbone.View.extend({
         _.bindAll(this, 'render');
         this.model.bind('reset', this.render);
         this.model.bind('change:companysmsprovider', this.render);
+        this.model.bind('change:companypadappmode', this.render);
         this.render();
     },
     smsProviderSelect: function() {
@@ -189,6 +206,28 @@ var AdminCompanyDetailsView = Backbone.View.extend({
         },
         onSelect : function(v) {model.setCompanysmsprovider(v); return true;},
         options: smsProviders,
+        textWidth : 240
+      }), $select[0]);
+
+      return $select;
+    },
+    padAppModeSelect: function() {
+      var self = this;
+      var model = this.model;
+
+      var padAppModes = [
+          {name: "ListView", value: "ListView"}
+        , {name: "PinCode", value: "PinCode"}
+      ];
+
+      var $select = $("<span>");
+
+      React.render(React.createElement(Select, {
+        isOptionSelected : function(o) {
+          return o.value ==  model.companypadappmode();
+        },
+        onSelect : function(v) {model.setCompanypadappmode(v); return true;},
+        options: padAppModes,
         textWidth : 240
       }), $select[0]);
 
@@ -272,6 +311,14 @@ var AdminCompanyDetailsView = Backbone.View.extend({
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Allow to save document"))).append($("<td/>").append(companyallowsavesafetycopyinput)).append($("<td/>").text("Signing parties might be offered to save documents or get questionnaire after they have signed.")));
 
       table.append($("<tr/>").append($("<td/>").append($("<label/>").text("SMS provider"))).append($("<td/>").append(this.smsProviderSelect())));
+
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Pad application mode"))).append($("<td/>").append(this.padAppModeSelect())));
+
+      var companypadearchiveenabledinput = $("<input type='checkbox'/>").attr("checked",model.companypadearchiveenabled());
+      companypadearchiveenabledinput.change(function() {
+              model.setCompanypadearchiveenabled(companypadearchiveenabledinput.is(":checked"));
+      });
+      table.append($("<tr/>").append($("<td/>").append($("<label/>").text("Enable E-archive in Pad application"))).append($("<td/>").append(companypadearchiveenabledinput)).append($("<td/>").text("Enable using E-archive in Pad applications.")));
 
       return box;
     },

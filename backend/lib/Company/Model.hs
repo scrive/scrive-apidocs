@@ -25,6 +25,7 @@ import Company.CompanyID
 import DB
 import IPAddress
 import KontraPrelude
+import PadApplication.Data
 import Partner.Model
 import SMS.Data (SMSProvider(..))
 import User.UserID
@@ -48,6 +49,8 @@ data CompanyInfo = CompanyInfo {
   , companysmsprovider    :: SMSProvider
   , companycgiserviceid   :: Maybe String
   , companypartnerid      :: PartnerID
+  , companypadappmode     :: PadAppMode
+  , companypadearchiveenabled :: Bool
   } deriving (Eq, Ord, Show)
 
 -- @devnote will be no partner ID '0' so we'll remove this in the API endpoints when we
@@ -67,6 +70,8 @@ instance Default CompanyInfo where
           , companysmsprovider         = SMSDefault
           , companycgiserviceid        = Nothing
           , companypartnerid           = unsafePartnerID 0
+          , companypadappmode          = ListView
+          , companypadearchiveenabled  = True
           }
 
 -- Synchronize these definitions with frontend/app/js/account/company.js
@@ -184,6 +189,8 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyInfo Bool where
       sqlSet "sms_provider" companysmsprovider
       sqlSet "cgi_service_id" companycgiserviceid
       sqlSet "partner_id" companypartnerid
+      sqlSet "pad_app_mode" companypadappmode
+      sqlSet "pad_earchive_enabled" companypadearchiveenabled
       sqlWhereEq "id" cid
 
 -- helpers
@@ -204,9 +211,11 @@ selectCompaniesSelectors = do
   sqlResult "companies.sms_provider"
   sqlResult "companies.cgi_service_id"
   sqlResult "companies.partner_id"
+  sqlResult "companies.pad_app_mode"
+  sqlResult "companies.pad_earchive_enabled"
 
-fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String, PartnerID) -> Company
-fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, partner_id) = Company {
+fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String, PartnerID, PadAppMode, Bool) -> Company
+fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, partner_id, pad_app_mode, pad_earchive_enabled) = Company {
   companyid = cid
 , companyinfo = CompanyInfo {
     companyname = name
@@ -222,5 +231,7 @@ fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_l
   , companysmsprovider = sms_provider
   , companycgiserviceid = cgi_service_id
   , companypartnerid = partner_id
+  , companypadappmode = pad_app_mode
+  , companypadearchiveenabled = pad_earchive_enabled
   }
 }

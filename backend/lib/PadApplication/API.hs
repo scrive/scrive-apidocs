@@ -1,13 +1,15 @@
 module PadApplication.API (
     padApplicationAPI
+  , apiCallGetPadInfo
   ) where
 
 import Control.Monad.Catch
+import Data.Aeson
 import Data.Unjson as Unjson
 import Database.PostgreSQL.PQTypes.SQL.Builder
 import Happstack.Server.Types
 import Happstack.StaticRouting
-import Text.JSON.Gen
+import Text.JSON.Gen hiding (object)
 import Text.JSON.Types (JSValue(JSNull))
 
 import API.Monad.V1
@@ -19,25 +21,32 @@ import DB.Query
 import Happstack.Fields
 import Kontra
 import KontraPrelude
+import Log.Identifier
 import Routing
 import Theme.Model
 import Theme.View
 import User.Utils
+import qualified API.V2 as V2
 
 padApplicationAPI :: Route (Kontra Response)
 padApplicationAPI = dir "api" $ choice
-  [ dir "frontend" $ padApplicationAPI'
-  , padApplicationAPI' -- Temporary backwards compatibility for clients accessing version-less API
-  , dir "v1" $ padApplicationAPI'
-  , dir "v2" $ padApplicationAPI'
+  [ dir "frontend" $ padApplicationAPIV1
+  , padApplicationAPIV1 -- Temporary backwards compatibility for clients accessing version-less API
+  , dir "v1" $ padApplicationAPIV1
+  , dir "v2" $ padApplicationAPIV2
   ]
 
-padApplicationAPI' :: Route (Kontra Response)
-padApplicationAPI' = choice
+padApplicationAPIV1 :: Route (Kontra Response)
+padApplicationAPIV1 = choice
   [ dir "checkclient"     $ hPostNoXTokenHttp $ toK0 $ apiCallCheckClient
-  , dir "padclienttheme"     $ hGet $ toK0 $ apiCallGetPadClientTheme
+  , dir "padclienttheme"  $ hGet $ toK0 $ apiCallGetPadClientTheme
   ]
 
+padApplicationAPIV2 ::Route (Kontra Response)
+padApplicationAPIV2 = choice [
+    dir "info" $ hGet $ toK0 $ apiCallGetPadInfo
+  , padApplicationAPIV1
+  ]
 
 apiCallCheckClient :: Kontrakcja m => m Response
 apiCallCheckClient = api $ do
@@ -59,3 +68,13 @@ apiCallGetPadClientTheme = api $ do
   companyui <- dbQuery $ GetCompanyUI (companyid company)
   theme <- dbQuery $ GetTheme $ fromMaybe (bdSignviewTheme $ ctxbrandeddomain ctx) (companySignviewTheme $ companyui)
   simpleAesonResponse $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme theme
+
+apiCallGetPadInfo :: Kontrakcja m => m Response
+apiCallGetPadInfo = V2.api $ do
+  (user, _ , _) <- getAPIUserWithAnyPrivileges
+  company <- getCompanyForUser user
+  return $ V2.Ok $ object [
+      identifier_ $ companyid company
+    , "app_mode" .= (show . companypadappmode . companyinfo $ company)
+    , "e_archive_enabled" .= (companypadearchiveenabled . companyinfo $ company)
+    ]
