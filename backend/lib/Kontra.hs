@@ -37,8 +37,8 @@ import Happstack.Server.ReqHandler
 import KontraError
 import KontraMonad
 import KontraPrelude
-import MagicHash
 import MailContext (MailContextMonad(..))
+import Session.Cookies
 import Session.Data
 import Session.Model
 import Templates
@@ -137,16 +137,17 @@ logPadUserToContext :: Kontrakcja m => Maybe User -> m ()
 logPadUserToContext user =
     modifyContext $ \ctx -> ctx { ctxmaybepaduser = user}
 
-unsafeSessionTakeover :: Kontrakcja m => SessionID -> MagicHash -> m ()
-unsafeSessionTakeover sid stoken = do
+unsafeSessionTakeover :: Kontrakcja m => SessionCookieInfo -> m (Maybe Session)
+unsafeSessionTakeover SessionCookieInfo{..} = do
   domain <- currentDomain
-  msession <- getSession sid stoken domain
+  msession <- getSession cookieSessionID cookieSessionToken domain
   case msession of
-   Nothing -> internalError
+   Nothing -> return Nothing
    Just s -> do
     mUser <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesUserID s
     mPadUser <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesPadUserID s
     modifyContext $ \ctx -> ctx { ctxsessionid = sesID s, ctxmaybeuser = mUser, ctxmaybepaduser = mPadUser}
+    return $ Just s
 
 switchLang :: Kontrakcja m => Lang -> m ()
 switchLang lang =

@@ -4,6 +4,8 @@ module Session.Cookies (
   , stopSessionCookie
   , sessionCookieInfoFromSession
   , currentSessionInfoCookies
+  , cookieNameSessionID
+  , cookieNameXToken
   ) where
 
 import Control.Arrow
@@ -37,15 +39,21 @@ instance Read SessionCookieInfo where
 instance FromReqURI SessionCookieInfo where
   fromReqURI = maybeRead
 
+cookieNameXToken :: String
+cookieNameXToken = "xtoken"
+
+cookieNameSessionID :: String
+cookieNameSessionID = "sessionId"
+
 -- | Add a session cookie to browser.
 startSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m)
                    => Session -> m ()
 startSessionCookie s = do
   ishttps  <- isHTTPS
   addHttpOnlyCookie ishttps (MaxAge (60*60*24)) $
-    mkCookie "sessionId" . show $ sessionCookieInfoFromSession s
+    mkCookie cookieNameSessionID . show $ sessionCookieInfoFromSession s
   addCookie ishttps (MaxAge (60*60*24)) $
-    mkCookie "xtoken" $ show $ sesCSRFToken s
+    mkCookie cookieNameXToken $ show $ sesCSRFToken s
 
 -- | Remove session cookie from browser.
 stopSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m)
@@ -53,9 +61,9 @@ stopSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m)
 stopSessionCookie = do
   ishttps  <- isHTTPS
   addHttpOnlyCookie ishttps (MaxAge 0) $
-    mkCookie "sessionId" ""
+    mkCookie cookieNameSessionID ""
   addCookie ishttps (MaxAge 0) $
-    mkCookie "xtoken" ""
+    mkCookie cookieNameXToken ""
 
 sessionCookieInfoFromSession :: Session -> SessionCookieInfo
 sessionCookieInfoFromSession s = SessionCookieInfo {
@@ -65,4 +73,5 @@ sessionCookieInfoFromSession s = SessionCookieInfo {
 
 -- | Read current session cookie from request.
 currentSessionInfoCookies :: ServerMonad m => m [SessionCookieInfo]
-currentSessionInfoCookies = readCookiesValues "sessionId"
+currentSessionInfoCookies =
+  (catMaybes . fmap maybeRead . lookCookieValues cookieNameSessionID . rqHeaders) <$> askRq

@@ -3,6 +3,7 @@ module Login (
   , handleLoginPost
   , handleLogout
   , handleLogoutAJAX
+  , handleLoginWithRedirectGet
   ) where
 
 import Happstack.Server hiding (dir, host, path, simpleHTTP)
@@ -18,6 +19,7 @@ import Company.Model
 import DB
 import Happstack.Fields
 import InputValidation hiding (Result)
+import InternalResponse
 import IPAddress
 import Kontra
 import KontraLink
@@ -29,6 +31,7 @@ import User.Email
 import User.History.Model
 import User.Model
 import Util.HasSomeUserInfo
+import Util.MonadUtils
 import Utils.HTTP
 
 handleLoginGet :: Kontrakcja m => m (Either KontraLink Response)
@@ -139,3 +142,15 @@ handleLogoutAJAX = do
     logUserToContext Nothing
     logPadUserToContext Nothing
     J.runJSONGenT $ J.value "success" True
+
+handleLoginWithRedirectGet :: Kontrakcja m => m InternalKontraResponse
+handleLoginWithRedirectGet = do
+  sci <- guardJustM $ readField "session_id"
+  url <- guardJustM $ getField "url"
+  -- It may seems strange, that we do the same thing regardless whether the user
+  -- session exists. The reason is, that session from link may become invalid, when
+  -- user logs out from the original login link session. We want the original link
+  -- to keep redirecting as intended. User may need to login again using his email and
+  -- password depending on the redirect destination.
+  _ <- unsafeSessionTakeover sci
+  return $ internalResponse $ LinkExternal url

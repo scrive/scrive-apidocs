@@ -75,9 +75,9 @@ data AppGlobals = AppGlobals {
 getStandardLang :: (HasLang a, ServerMonad m, FilterMonad Response m, MonadIO m, Functor m, MonadLog m, MonadCatch m) => Maybe a -> m Lang
 getStandardLang muser = do
   rq <- askRq
-  langcookie <- lookCookieValue "lang"
-  let mcookielang = join $ langFromCode <$> langcookie
-  let browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+  let mlangcookie = lookCookieValue "lang" $ rqHeaders rq
+      mcookielang = join $ langFromCode <$> mlangcookie
+      browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
       newlang = fromMaybe browserlang $ msum [(getLang <$> muser), mcookielang]
       newlangcookie = mkCookie "lang" (codeFromLang newlang)
   addCookie (MaxAge (60*60*24*366)) newlangcookie

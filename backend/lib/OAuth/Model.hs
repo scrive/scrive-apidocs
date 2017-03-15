@@ -4,6 +4,7 @@ import Control.Monad.Catch
 import Crypto.RNG
 import Data.Aeson
 import Data.Int
+import Data.Unjson
 import Network.URI
 import qualified Control.Exception.Lifted as E
 
@@ -27,6 +28,15 @@ instance Read APIToken where
       (ts, '_':is) -> [(APIToken { atID = i, atToken = read ts }, v)
                       | (i, v) <- readsPrec p is]
       _ -> []
+
+unjsonAPIToken :: UnjsonDef APIToken
+unjsonAPIToken = unjsonInvmapR
+  (\s -> case reads s of
+    [(apitoken,[])] -> pure apitoken
+    _               -> fail "cannot parse APIToken"
+  )
+  show
+  unjsonDef
 
 data APIPrivilege = APIDocCreate
                   | APIDocCheck
@@ -98,7 +108,24 @@ data OAuthAuthorization = OAuthAuthorization {
 , oaAPISecret    :: MagicHash
 , oaAccessToken  :: APIToken
 , oaAccessSecret :: MagicHash
-} deriving Show
+} deriving (Show, Eq)
+
+unjsonOAuthAuthorization :: UnjsonDef OAuthAuthorization
+unjsonOAuthAuthorization = objectOf $ pure OAuthAuthorization
+  <*> fieldBy "apitoken"
+      oaAPIToken
+      "OAuth API token"
+      unjsonAPIToken
+  <*> field "apisecret"
+      oaAPISecret
+      "OAuth API secret"
+  <*> fieldBy "accesstoken"
+      oaAccessToken
+      "OAuth access token"
+      unjsonAPIToken
+  <*> field "accesssecret"
+      oaAccessSecret
+      "OAuth access secret"
 
 -- APIToken Management
 
@@ -405,14 +432,20 @@ instance MonadDB m => DBUpdate m DeletePrivilege Bool where
    Each user has a single personal token used to access the api for their own account.
  -}
 data GetPersonalToken = GetPersonalToken UserID
-instance (MonadDB m, MonadThrow m) => DBQuery m GetPersonalToken (Maybe (APIToken, MagicHash, APIToken, MagicHash)) where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetPersonalToken (Maybe OAuthAuthorization) where
   query (GetPersonalToken userid) = do
     runQuery_ $ rawSQL ("SELECT t.id, t.api_token, t.api_secret, a.id, a.access_token, a.access_secret "
              <> "FROM oauth_access_token a "
              <> "JOIN oauth_api_token t on a.api_token_id = t.id "
              <> "WHERE a.user_id = $1 AND t.user_id = $2 AND a.id IN (SELECT access_token_id FROM oauth_privilege WHERE access_token_id = a.id AND privilege = $3)")
             (userid, userid, APIPersonal)
-    fetchMaybe $ \(ti, tt, ts, i, t, s) -> (APIToken ti tt, ts, APIToken i t, s)
+    fetchMaybe $ \(ti, tt, ts, i, t, s) ->
+      OAuthAuthorization
+        { oaAPIToken     = APIToken ti tt
+        , oaAPISecret    = ts
+        , oaAccessToken  = APIToken i t
+        , oaAccessSecret = s
+        }
 
 {- |
    Create a personal token. Each User can have only one, so we should fail

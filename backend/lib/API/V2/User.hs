@@ -5,8 +5,10 @@ module API.V2.User (
   , getAPIUserWithPad
   , getMagicHashForSignatoryAction
   , getDocumentSignatoryMagicHash
+  , getUserFromOAuthWithAnyPrivileges
 ) where
 
+import Happstack.Server
 import Log
 import qualified Data.Text as T
 
@@ -25,6 +27,7 @@ import KontraPrelude
 import MagicHash (MagicHash)
 import OAuth.Model
 import OAuth.Util
+import Session.Cookies
 import User.Model
 import Util.Actor
 import Util.SignatoryLinkUtils
@@ -92,7 +95,7 @@ getAPIUserWith :: Kontrakcja m => (Context -> Maybe User) -> [APIPrivilege] -> m
 getAPIUserWith ctxUser privs = do
   moauthuser <- getOAuthUser privs
   case moauthuser of
-    Just (Left msg) -> apiError $ invalidAuthorizationWithMsg (T.pack msg)
+    Just (Left msg) -> apiError $ invalidAuthorizationWithMsg msg
     Just (Right (user, actor)) -> return (user, actor)
     Nothing -> do
       msessionuser <- do
@@ -103,25 +106,31 @@ getAPIUserWith ctxUser privs = do
       case msessionuser of
         Just (user, actor) -> return (user, actor)
         Nothing -> do
-          msesid <- lookCookieValues "sessionId"
-          logInfo "Could not find user session" $ object ["session_id_cookie" .= msesid]
+          sesids <- (lookCookieValues cookieNameSessionID . rqHeaders) <$> askRq
+          logInfo "Could not find user session" $ object ["session_id_cookies" .= sesids]
           apiError $ invalidAuthorization
 
-getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either String (User, Actor)))
+getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either T.Text (User, Actor)))
 getOAuthUser privs = do
-  ctx <- getContext
   eauth <- getAuthorization
   case eauth of
     Nothing       -> return Nothing
-    Just (Left l) -> return $ Just $ Left $ "OAuth headers could not be parsed: " ++ l
-    Just (Right auth) -> do
-      uap <- dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) privs
-      case uap of
-        Nothing -> return $ Just $ Left "OAuth credentials are invalid or they may not have sufficient privileges"
-        Just (userid, apistring) -> do
-          mUser <- dbQuery $ GetUserByID userid
-          case mUser of
-            Nothing -> apiError $ serverError "OAuth credentials are valid but the user account for those credentials does not exist"
-            Just user -> do
-              let actor = apiActor ctx user apistring
-              return $ Just $ Right (user, actor)
+    Just (Left l) -> return $ Just $ Left $ "OAuth headers could not be parsed: " `T.append` (T.pack l)
+    Just (Right auth) -> Just <$> getUserFromOAuth auth privs
+
+getUserFromOAuth :: Kontrakcja m => OAuthAuthorization -> [APIPrivilege] -> m (Either T.Text (User, Actor))
+getUserFromOAuth OAuthAuthorization{..} privs = do
+  uap <- dbQuery $ GetUserIDForAPIWithPrivilege oaAPIToken oaAPISecret oaAccessToken oaAccessSecret privs
+  case uap of
+    Nothing -> return $ Left "OAuth credentials are invalid or they may not have sufficient privileges"
+    Just (userid, apistring) -> do
+      mUser <- dbQuery $ GetUserByID userid
+      case mUser of
+        Nothing -> apiError $ serverError "OAuth credentials are valid but the user account for those credentials does not exist"
+        Just user -> do
+          ctx <- getContext
+          let actor = apiActor ctx user apistring
+          return $ Right (user, actor)
+
+getUserFromOAuthWithAnyPrivileges :: Kontrakcja m => OAuthAuthorization -> m (Either T.Text (User, Actor))
+getUserFromOAuthWithAnyPrivileges oauth = getUserFromOAuth oauth [APIPersonal, APIDocCheck, APIDocSend, APIDocCreate]

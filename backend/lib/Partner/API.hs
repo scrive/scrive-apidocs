@@ -27,7 +27,6 @@ import Kontra
 import KontraPrelude
 import MinutesTime
 import OAuth.Model
-import OAuth.View (jsonFromPersonalToken)
 import Partner.JSON
 import Partner.Logging
 import Partner.Model
@@ -231,7 +230,7 @@ partnerApiCallV1UserGetPersonalToken partnerID userID = logPartnerAndUser partne
     (dbQuery $ GetPersonalToken (userid user))
   -- Result
   --return $ Ok $ J.JSObject (J.toJSObject token)
-  return $ Ok $ jsonFromPersonalToken token
+  return $ Ok (unjsonOAuthAuthorization, token)
 
 ----------------------------------------------------------------------------------------------------
 --                                   Unexported local helpers                                     --

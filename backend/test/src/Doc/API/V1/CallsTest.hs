@@ -161,12 +161,12 @@ testPersonalAccessCredentialsCreateDoc = do
   let uid = userid user
   _ <- dbUpdate $ DeletePersonalToken uid
   _ <- dbUpdate $ CreatePersonalToken uid
-  Just (apitoken, apisecret, t, s) <- dbQuery $ GetPersonalToken uid
+  Just (OAuthAuthorization{..}) <- dbQuery $ GetPersonalToken uid
 
   let authStr = "oauth_signature_method=\"PLAINTEXT\""
-             ++ ",oauth_consumer_key=\"" ++ show apitoken ++ "\""
-             ++ ",oauth_token=\"" ++ show t ++"\""
-             ++ ",oauth_signature=\"" ++ show apisecret ++ "&" ++ show s ++ "\""
+             ++ ",oauth_consumer_key=\"" ++ show oaAPIToken ++ "\""
+             ++ ",oauth_token=\"" ++ show oaAccessToken ++"\""
+             ++ ",oauth_signature=\"" ++ show oaAPISecret ++ "&" ++ show oaAccessSecret ++ "\""
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                       , ("file", inFile $ inTestDir "pdfs/simple.pdf")
                                       ]
@@ -200,11 +200,12 @@ testUpdateDocToSaved useOAuth = do
   authStr <- if useOAuth then do
     _ <- dbUpdate $ DeletePersonalToken (userid user)
     _ <- dbUpdate $ CreatePersonalToken (userid user)
-    Just (apitoken, apisecret, t, s) <- dbQuery $ GetPersonalToken (userid user)
+    Just (OAuthAuthorization{..}) <- dbQuery $ GetPersonalToken (userid user)
+
     return $ Just $ "oauth_signature_method=\"PLAINTEXT\""
-                 ++ ",oauth_consumer_key=\"" ++ show apitoken ++ "\""
-                 ++ ",oauth_token=\"" ++ show t ++"\""
-                 ++ ",oauth_signature=\"" ++ show apisecret ++ "&" ++ show s ++ "\""
+               ++ ",oauth_consumer_key=\"" ++ show oaAPIToken ++ "\""
+               ++ ",oauth_token=\"" ++ show oaAccessToken ++"\""
+               ++ ",oauth_signature=\"" ++ show oaAPISecret ++ "&" ++ show oaAccessSecret ++ "\""
   else return Nothing
 
   reqDocJSON <- mkRequest GET []

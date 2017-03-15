@@ -1,20 +1,28 @@
 module LoginTest (loginTests) where
 
+import Data.Aeson
+import Data.Text
 import Happstack.Server
+import Log
 import Test.Framework
-import Text.JSON
+import Text.JSON hiding (decode)
 import Text.JSON.Gen as J
+import qualified Data.HashMap.Strict as H
 
 import ActionQueue.PasswordReminder
 import BrandedDomain.Model
 import Company.Model
 import Context
 import DB
+import InternalResponse
+import KontraLink
 import KontraPrelude
 import Login
+import Routing
 import TestingUtil
 import TestKontra as T
 import User.API
+import User.Email
 import User.Model
 import User.UserControl
 
@@ -27,6 +35,7 @@ loginTests env = testGroup "Login" [
     , testThat "logging in records a user login stat event" env testSuccessfulLoginSavesAStatEvent
     , testThat "you get logged in after you reset a password" env assertResettingPasswordLogsIn
     , testThat "when you're logged in after resetting a password a user login stat event is recorded" env assertResettingPasswordRecordsALoginEvent
+    , testThat "can use login link" env testCanLoginWithRedirect
     ]
 
 testSuccessfulLogin :: TestEnv ()
@@ -72,6 +81,59 @@ testSuccessfulLoginSavesAStatEvent = do
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
+
+testCanLoginWithRedirect :: TestEnv ()
+testCanLoginWithRedirect = do
+  -- create a user
+  password <- rand 10 $ arbString 1 64
+  logInfo_ $ "Generated password: " <> pack password
+  randomUser <- addNewRandomUserWithPassword password
+  -- get access tokens using an email and password
+  ctx <- mkContext def
+  req1 <- mkRequest GET
+    [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+    , ("password", inText password)
+    ]
+  (res1, _) <- runTestKontra req1 ctx $ apiCallGetUserPersonalToken
+  -- use access tokens to log in and get cookie-like session id
+  req2 <- mkRequest GET [ ("personal_token", inTextBS $ rsBody res1) ]
+  (res2, _) <- runTestKontra req2 ctx $ apiCallLoginUserAndGetSession
+  let Just (Object respObject2) = decode (rsBody res2) :: Maybe Value
+      Just (String sessionid) = H.lookup "session_id" respObject2
+  -- get cookie and redirect
+  let redirecturl1 = "/arbitrary/url/path"
+  req3 <- mkRequest GET
+    [ ("session_id", inText . unpack $ sessionid)
+    , ("url"       , inText redirecturl1)
+    ]
+  (res3, ctx3) <- runTestKontra req3 ctx $ handleLoginWithRedirectGet
+  assertBool "Session was set" $ ctxsessionid ctx /= ctxsessionid ctx3
+  assertBool "Redirect was set to provided url" (isRedirect (LinkExternal redirecturl1) res3)
+
+    -- Test that call with fail if "url" for redirection is not provided
+  req4 <- mkRequest GET [("session_id", inText . unpack $ sessionid)]
+  assertRaisesInternalError $ do
+    _ <- runTestKontra req4 ctx $ handleLoginWithRedirectGet >>= toResp
+    return ()
+
+  -- Test that session_id is valid for more then one redirect
+  let redirecturl2 = "/otherarbitrary/url/path"
+  req5 <- mkRequest GET
+    [ ("session_id", inText . unpack $ sessionid)
+    , ("url"       , inText redirecturl2)
+    ]
+  (res5, ctx5) <- runTestKontra req5 ctx $ handleLoginWithRedirectGet
+  assertBool "Session was set again" $ ctxsessionid ctx /= ctxsessionid ctx5
+  assertBool "Redirect was set to other url" (isRedirect (LinkExternal redirecturl2) res5)
+
+  -- Test that usage of invalid session_id will work
+  req6 <- mkRequest GET
+    [ ("session_id", inText "1-100000")
+    , ("url"       , inText redirecturl2)
+    ]
+  (res6, ctx6) <- runTestKontra req6 ctx $ handleLoginWithRedirectGet
+  assertBool "ctxsessionid will not be changed if session_id is invalid" $ ctxsessionid ctx == ctxsessionid ctx6
+  assertBool "Redirect was still set to other url" (isRedirect (LinkExternal redirecturl2) res6)
 
 assertResettingPasswordLogsIn :: TestEnv ()
 assertResettingPasswordLogsIn = do

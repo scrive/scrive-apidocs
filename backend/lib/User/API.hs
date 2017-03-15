@@ -1,11 +1,13 @@
 module User.API (
     userAPI,
+    apiCallGetUserPersonalToken,
     apiCallGetUserProfile,
     apiCallLoginUser,
     apiCallChangeUserPassword,
     apiCallUpdateUserProfile,
     apiCallChangeEmail,
-    apiCallSignup
+    apiCallSignup,
+    apiCallLoginUserAndGetSession
   ) where
 
 import Control.Conditional ((<|), (|>))
@@ -13,7 +15,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Happstack.Server.Types
 import Happstack.StaticRouting
-import Text.JSON.Gen
+import Text.JSON.Gen hiding (object)
 
 import ActionQueue.Core
 import ActionQueue.EmailChangeRequest
@@ -32,12 +34,14 @@ import KontraPrelude
 import Mails.SendMail
 import MinutesTime
 import OAuth.Model
-import OAuth.View
 import Payments.Action
 import Payments.Model
 import Redirect
 import Routing
 import Salesforce.AuthorizationWorkflow
+import Session.Cookies
+import Session.Data
+import Session.Model
 import ThirdPartyStats.Core
 import User.Action
 import User.CallbackScheme.Model
@@ -49,17 +53,20 @@ import User.UserView
 import User.Utils
 import Util.HasSomeUserInfo
 import Utils.Monad
+import qualified API.V2 as V2
+import qualified API.V2.Errors as V2
+import qualified API.V2.Parameters as V2
 
 userAPI :: Route (Kontra Response)
 userAPI = dir "api" $ choice
-  [ dir "frontend" $ userAPI'
-  , userAPI' -- Temporary backwards compatibility for clients accessing version-less API
-  , dir "v1" $ userAPI'
-  , dir "v2" $ userAPI' -- V2 does not introduce any changes to user API
+  [ dir "frontend" $ userAPIV2
+  , userAPIV1 -- Temporary backwards compatibility for clients accessing version-less API
+  , dir "v1" $ userAPIV1
+  , dir "v2" $ userAPIV2
   ]
 
-userAPI' :: Route (Kontra Response)
-userAPI' = choice [
+userAPIV1 :: Route (Kontra Response)
+userAPIV1 = choice [
   dir "getpersonaltoken"     $ hPost $ toK0 $ apiCallGetUserPersonalToken,
   dir "signup"          $ hPost $ toK0 $ apiCallSignup,
   dir "login"          $ hPostNoXToken $ toK0 $ apiCallLoginUser,
@@ -73,6 +80,11 @@ userAPI' = choice [
   dir "testsalesforceintegration" $ hGet $ toK0 $ apiCallTestSalesforceIntegration
   ]
 
+userAPIV2 :: Route (Kontra Response)
+userAPIV2 = choice [
+  dir "loginandgetsession" $ hPost $ toK0 $ apiCallLoginUserAndGetSession,
+  userAPIV1
+  ]
 
 apiCallGetUserPersonalToken :: Kontrakcja m => m Response
 apiCallGetUserPersonalToken = api $ do
@@ -88,8 +100,8 @@ apiCallGetUserPersonalToken = api $ do
                   _success <- dbUpdate $ CreatePersonalToken uid
                   token <- dbQuery $ GetPersonalToken uid
                   case token of
-                       Nothing ->  throwM . SomeDBExtraException $ serverError "No token found, this should not happend"
-                       Just t ->  return $ Ok $ jsonFromPersonalToken t
+                       Nothing -> throwM . SomeDBExtraException $ serverError "No token found, this should not happend"
+                       Just t  -> return $ Ok (unjsonOAuthAuthorization, t)
               else throwM . SomeDBExtraException $ serverError "Email and password don't match"
         _ -> throwM . SomeDBExtraException $ serverError "Email or password is missing"
 
@@ -340,3 +352,26 @@ apiCallTestSalesforceIntegration = api $ do
                 value "curl_stdout" stdout
                 value "curl_stderr" stderr
       _ -> throwM . SomeDBExtraException $ conflictError "Salesforce callback scheme is not set for this user"
+
+apiCallLoginUserAndGetSession :: Kontrakcja m => m Response
+apiCallLoginUserAndGetSession = V2.api $ do
+  -- parse oauth from json
+  oauth <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterJSON "personal_token" unjsonOAuthAuthorization
+  euser <- V2.getUserFromOAuthWithAnyPrivileges oauth
+  case euser of
+    Left err -> V2.apiError $ V2.invalidAuthorizationWithMsg err
+    Right (User{userid}, _actor) -> do
+      ctx <- getContext
+      asyncLogEvent "Login"
+        [ UserIDProp userid
+        , IPProp $ ctxipnumber ctx
+        , TimeProp $ ctxtime ctx
+        ]
+      asyncLogEvent SetUserProps
+        [ UserIDProp userid
+        , someProp "Last login" $ ctxtime ctx
+        ]
+      emptysession <- emptySession
+      ses <- startNewSession emptysession (Just userid) Nothing
+      return $ V2.Ok $ runJSONGen $ do
+        value "session_id" (show $ sessionCookieInfoFromSession ses)

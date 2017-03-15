@@ -619,6 +619,15 @@ addNewRandomUser = do
       logInfo_ "Could not create user, trying again."
       addNewRandomUser
 
+addNewRandomUserWithPassword :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => String -> m User
+addNewRandomUserWithPassword password = do
+  -- create random user
+  randomUser <- addNewRandomUser
+  -- set his password
+  passwordhash <- createPassword password
+  _ <- dbUpdate $ SetUserPassword (userid randomUser) passwordhash
+  return randomUser
+
 addNewRandomCompanyUser :: CompanyID -> Bool -> TestEnv User
 addNewRandomCompanyUser cid isadmin = do
   User{userid} <- addNewRandomUser

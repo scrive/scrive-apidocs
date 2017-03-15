@@ -983,6 +983,7 @@ Test-suite kontrakcja-test
                  SessionsTest,
                  SignupTest,
                  TestKontra,
+                 User.APITest
                  UserHistoryTest,
                  UserStateTest
 

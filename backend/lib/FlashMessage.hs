@@ -7,7 +7,7 @@ module FlashMessage (
     ) where
 
 import Control.Monad.IO.Class
-import Happstack.Server hiding (lookCookieValue)
+import Happstack.Server
 import Network.HTTP.Base (urlEncode)
 import Text.JSON
 import qualified Data.ByteString.Base64 as B64

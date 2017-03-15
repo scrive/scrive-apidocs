@@ -39,15 +39,6 @@ privilegeDescription APIDocCheck  = renderTemplate_ "_apiConfiramtionReadPermiss
 privilegeDescription APIDocSend   = renderTemplate_ "_apiConfiramtionSendPermission"
 privilegeDescription APIPersonal  = return "Personal access token."
 
-
-jsonFromPersonalToken :: (APIToken, MagicHash, APIToken, MagicHash) -> JSValue
-jsonFromPersonalToken (apitoken, apisecret, tok, mh) =
-  runJSONGen $ do
-    J.value "apitoken"     $ show apitoken
-    J.value "apisecret"    $ show apisecret
-    J.value "accesstoken"  $ show tok
-    J.value "accesssecret" $ show mh
-
 jsonFromAPIToken :: (APIToken, MagicHash) -> JSValue
 jsonFromAPIToken (apitoken, apisecret) =
   runJSONGen $ do

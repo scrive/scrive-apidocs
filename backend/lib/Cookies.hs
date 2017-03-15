@@ -2,7 +2,6 @@ module Cookies ( addCookie
                , addHttpOnlyCookie
                , lookCookieValue
                , lookCookieValues
-               , readCookiesValues
                ) where
 
 import Control.Monad.IO.Class
@@ -25,16 +24,6 @@ addCookie issecure life cookie =
 addHttpOnlyCookie :: (MonadIO m, FilterMonad Response m) => Bool -> CookieLife -> Cookie -> m ()
 addHttpOnlyCookie issecure life cookie = do
   HS.addCookie life $ cookie { secure = issecure, httpOnly = True }
-
-{- IE 10 is sending cookies for both domain and subdomain (scrive.com & nj.scrive.com)
-   We need to read them both, since we have no idea which is the right one.
-
-   To protect against overload attack, we limit number of session cookies supported to 10.
--}
-readCookiesValues :: (Monad m, ServerMonad m,Read a) => String -> m [a]
-readCookiesValues name = do
-  cookies <- lookCookieValues name
-  return $ catMaybes $ maybeRead <$> cookies
 
 {-
   This parses cookies from `cookie-string` (see RFC 6265).
@@ -76,18 +65,14 @@ parseCookieHeader = catMaybes . map cookieFromPair . cookiePairs
         unquote ('\\':c:rest) = c : unquote rest
         unquote (c:rest) = c : unquote rest
 
-lookCookieValues :: ServerMonad m => String -> m [String]
-lookCookieValues name = do
-  rq <- askRq
-  let mCookieHeader = M.lookup "cookie" $ rqHeaders rq
+-- To protect against overload attack, we limit number of session cookies supported to 10.
+lookCookieValues :: String -> Headers -> [String]
+lookCookieValues name headers =
+  let mCookieHeader = M.lookup "cookie" headers
       cookieHeaderValues = map BS.unpack $ maybe [] hValue mCookieHeader
       cookiesWithNames = concatMap parseCookieHeader cookieHeaderValues
       cookies = take 10 $ map snd $ filter (\c -> (fst c) == (map toLower name)) cookiesWithNames
-  return cookies
+  in  cookies
 
-lookCookieValue :: ServerMonad m => String -> m (Maybe String)
-lookCookieValue name = do
-  cookies <- lookCookieValues name
-  case cookies of
-    (c:_) -> return $ Just c
-    [] -> return Nothing
+lookCookieValue :: String -> Headers -> Maybe String
+lookCookieValue name = listToMaybe . lookCookieValues name

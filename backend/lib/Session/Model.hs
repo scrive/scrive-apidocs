@@ -5,8 +5,10 @@ module Session.Model (
   , getUserFromSession
   , getPadUserFromSession
   , getSession
+  , startNewSession
   ) where
 
+import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
@@ -17,6 +19,7 @@ import Log
 import ActionQueue.Core
 import Context
 import DB
+import KontraError
 import KontraMonad
 import KontraPrelude
 import Log.Identifier
@@ -54,6 +57,9 @@ getNonTempSessionID = do
 
 -- | Get current session based on cookies set.
 -- If no session is available, return new, empty session.
+
+-- IE 10 is sending cookies for both domain and subdomain (scrive.com & nj.scrive.com)
+-- We need to read them both, since we have no idea which is the right one.
 getCurrentSession :: (CryptoRNG m, MonadDB m, MonadThrow m, ServerMonad m, MonadLog m) => m Session
 getCurrentSession = currentSessionInfoCookies >>= getSessionFromCookies
   where
@@ -65,20 +71,24 @@ getCurrentSession = currentSessionInfoCookies >>= getSessionFromCookies
         Nothing  -> getSessionFromCookies css
     getSessionFromCookies [] = emptySession
 
-updateSession :: (FilterMonad Response m, MonadLog m, MonadDB m, MonadThrow m, ServerMonad m, MonadIO m) => Session -> SessionID -> (Maybe UserID) -> (Maybe UserID) -> m ()
+startNewSession :: (FilterMonad Response m, MonadLog m, MonadDB m, MonadThrow m, ServerMonad m, MonadIO m, MonadBase IO m) => Session -> Maybe UserID -> Maybe UserID -> m Session
+startNewSession _           Nothing Nothing    = internalError
+startNewSession Session{..} mnewuid mnewpaduid = do
+  let uid = fromJust $ (mnewuid `mplus` mnewpaduid)
+  n <- deleteSuperfluousUserSessions uid
+  logInfo "Superfluous sessions of user removed from the database" $ object [
+      identifier_ uid
+    , "sessions" .= n
+    ]
+  expires <- sessionNowModifier <$> currentTime
+  dbUpdate (NewAction session expires (mnewuid, mnewpaduid, sesToken, sesCSRFToken, sesDomain))
+
+updateSession :: (FilterMonad Response m, MonadLog m, MonadDB m, MonadThrow m, ServerMonad m, MonadIO m, MonadBase IO m) => Session -> SessionID -> (Maybe UserID) -> (Maybe UserID) -> m ()
 updateSession old_ses new_ses_id new_muser new_mpad_user = do
   case new_ses_id == tempSessionID of
     -- We have no session and we want to log in some user
     True | (isJust new_muser || isJust new_mpad_user) -> do
-      let uid = fromJust $ (new_muser `mplus` new_mpad_user)
-      n <- deleteSuperfluousUserSessions uid
-      logInfo "Superfluous sessions of user removed from the database" $ object [
-          identifier_ uid
-        , "sessions" .= n
-        ]
-      expires <- sessionNowModifier `liftM` currentTime
-      dbUpdate (NewAction session expires (new_muser, new_mpad_user, sesToken old_ses, sesCSRFToken old_ses, sesDomain old_ses))
-        >>= startSessionCookie
+      startNewSession old_ses new_muser new_mpad_user >>= startSessionCookie
     -- We have no session and we don't want to log in some user
     True -> return ()
     -- We are updating existing session

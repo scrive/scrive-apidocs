@@ -2,7 +2,9 @@
 module OAuth.Control(oauth) where
 
 import Control.Monad.Catch
+import Data.Aeson (Value)
 import Data.Map (singleton)
+import Data.Unjson
 import Happstack.Server.RqData
 import Happstack.Server.Types
 import Happstack.StaticRouting (Route, choice, dir)
@@ -120,13 +122,12 @@ tokenCredRequest = api $ do
                     ("oauth_token_secret", show accesssecret)
                   ]
 
-apiDashboardPersonalTokens :: Kontrakcja m => m JSValue
+apiDashboardPersonalTokens :: Kontrakcja m => m Value
 apiDashboardPersonalTokens = do
   Context{..} <- getContext
   user <- guardJust ctxmaybeuser
-  ls <- map jsonFromPersonalToken <$> maybeToList <$> (dbQuery $ GetPersonalToken (userid user))
-  return $ J.runJSONGen $ do
-    J.value "personal_tokens" $ ls
+  ls <- map (unjsonToJSON unjsonOAuthAuthorization) <$> maybeToList <$> (dbQuery $ GetPersonalToken (userid user))
+  return $ object [ "personal_tokens" .= ls ]
 
 apiDashboardAPITokens :: Kontrakcja m => m JSValue
 apiDashboardAPITokens = do

@@ -147,10 +147,12 @@ handleCheckCGIAuthStatus did slid = do
 
 handleCheckCGIAuthStatusWithRedirect :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleCheckCGIAuthStatusWithRedirect did slid = do
-  (msession :: Maybe SessionCookieInfo) <- readField "session_id"
-  case msession of
+  (msci :: Maybe SessionCookieInfo) <- readField "session_id"
+  case msci of
     Nothing -> internalError -- This should never happend
-    Just sci -> unsafeSessionTakeover (cookieSessionID sci) (cookieSessionToken sci)
+    Just sci -> do
+      _ <- guardJustM $ unsafeSessionTakeover sci
+      return ()
   _ <- checkCGIAuthStatus did slid -- There is no reason to process results of collect. We will redirect to link from param anyway
   murl <- getField "url"
   case murl of

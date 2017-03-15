@@ -234,12 +234,12 @@ testLoginUsingAPI = do
   let uid = userid user
   _ <- dbUpdate $ DeletePersonalToken uid
   _ <- dbUpdate $ CreatePersonalToken uid
-  Just (apitoken, apisecret, t, s) <- dbQuery $ GetPersonalToken uid
+  Just (OAuthAuthorization{..}) <- dbQuery $ GetPersonalToken uid
 
   let authStr = "oauth_signature_method=\"PLAINTEXT\""
-             ++ ",oauth_consumer_key=\"" ++ show apitoken ++ "\""
-             ++ ",oauth_token=\"" ++ show t ++"\""
-             ++ ",oauth_signature=\"" ++ show apisecret ++ "&" ++ show s ++ "\""
+             ++ ",oauth_consumer_key=\"" ++ show oaAPIToken ++ "\""
+             ++ ",oauth_token=\"" ++ show oaAccessToken ++"\""
+             ++ ",oauth_signature=\"" ++ show oaAPISecret ++ "&" ++ show oaAccessSecret ++ "\""
 
   reqLogin <- mkRequestWithHeaders POST [("redirect", inText "/newdocument")]
                                       [("authorization", [authStr])]

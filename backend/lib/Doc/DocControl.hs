@@ -102,7 +102,7 @@ handleNewDocument = withUser $ \user -> do
   ctx <- getContext
   title <- renderTemplate_ "newDocumentTitle"
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  mtimezonename <- lookCookieValue "timezone"
+  mtimezonename <- (lookCookieValue "timezone" . rqHeaders) <$> askRq
   case mtimezonename of
     Nothing -> logInfo_ "'timezone' cookie not found"
     _ -> return ()

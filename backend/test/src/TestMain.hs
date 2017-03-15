@@ -65,6 +65,7 @@ import SignupTest
 import Templates (readGlobalTemplates)
 import TestKontra
 import ThirdPartyStats
+import User.APITest
 import UserHistoryTest
 import UserStateTest
 import qualified HostClock.Model as HC
@@ -110,6 +111,7 @@ allTests = [
   , sessionsTests
   , signupTests
   , thirdPartyStatsTests
+  , userAPITests
   , userHistoryTests
   , userStateTests
   ]

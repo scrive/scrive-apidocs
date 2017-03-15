@@ -38,6 +38,7 @@ import Kontra
 import KontraLink
 import KontraPrelude
 import Redirect
+import Session.Cookies
 import Util.CSVUtil
 import Util.ZipUtil
 import Utils.HTTP
@@ -168,7 +169,7 @@ guardXToken action = do
   ctx <- getContext
   let unQuote = filter (not . (== '"'))
       tokensFromString = catMaybes . map (maybeRead . unQuote) . splitOn ";"
-  mxtokenString <- getField "xtoken"
+  mxtokenString <- getField cookieNameXToken
   case mxtokenString of
     Just xtokenString | ctxxtoken ctx `elem` tokensFromString xtokenString -> action
     _ -> do -- Requests authorized by something else then xtoken, can't access session data or change context stuff.
