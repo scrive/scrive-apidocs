@@ -60,18 +60,20 @@ window.FileParamView  = Backbone.View.extend({
           self.render();
         };
       };
-      for (var i = 0, row_count = 0; i < multifile.slaves.length; i++, row_count++) {
+      var rowCount = 0;
+      for (var i = 0; i < multifile.slaves.length; i++) {
         if (multifile.slaves[i] != undefined && multifile.slaves[i] != multifile.current) {
           var row = $("<tr/>");
-          row.append($("<td/>").text(param.argName(row_count)));
+          row.append($("<td/>").text(param.argName(rowCount)));
           row.append($("<td/>").text((multifile.slaves[i].value || "").match(/[^\/\\]+$/gi)[0]));
           row.append($("<td class='text-right'/>")
              .append($("<button class='btn btn-xs btn-default' type='button'>Remove</button>").click(remover(i)))
             );
           tbody.append(row);
         } else {
-          row_count--;
+          rowCount--;
         }
+        rowCount++;
       }
     }
     return this;
