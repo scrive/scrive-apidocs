@@ -25,7 +25,7 @@ window.ApiDemoExploreView = Backbone.View.extend({
         model.oauth().clear();
       }));
     }
-    headerContainer.append("<div class='navbar-header'><img src='img/logo.png/'/><div>");
+    headerContainer.append("<div class='navbar-header'><img src='img/logo.png'/><div>");
     headerContainer.append($("<div class='navbar-right'/>").append(headerRightBarList));
     header.append(headerContainer);
     return header;
