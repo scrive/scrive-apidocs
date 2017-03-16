@@ -89,10 +89,10 @@ var classNames = require("classnames");
         // it throws Cross-Origin Policy errors for pending AJAX requests
         // so we have to wait for them to finish
         setTimeout(function () {
-          window.location = bankID.bankIdUrl();
+          window.top.location = bankID.bankIdUrl();
         }, 2000);
       } else {
-        window.location = bankID.bankIdUrl();
+        window.top.location = bankID.bankIdUrl();
       }
     },
 

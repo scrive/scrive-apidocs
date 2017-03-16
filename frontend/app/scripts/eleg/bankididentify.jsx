@@ -102,7 +102,7 @@ module.exports = Backbone.Model.extend({
           // but it"s not working 100% of the time). On other platform BankID app can close itself
           var returnUrl =  LocationUtils.origin() + "/s/eid/cgi/grp/checkcgiauthstatuswithredirect/" +
             this.document().documentid() + "/" + this.signatory().signatoryid() +
-            "?session_id=" + this.sessionID() + "&url=" + encodeURIComponent(window.location) +
+            "?session_id=" + this.sessionID() + "&url=" + encodeURIComponent(window.top.location) +
             "&_=" + Math.random();
           return "bankid:///?autostarttoken=" + this.autoStartToken() + "&redirect=" + encodeURIComponent(returnUrl);
         } else {
