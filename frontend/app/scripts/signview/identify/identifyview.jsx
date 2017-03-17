@@ -56,6 +56,9 @@ var MaskedPersonalNumber = require("./masked_personal_number");
                  ? "/img/bankid-no.png"
                  : "/img/nemid-dk.png")));
     },
+    swedishMobileBankidLogo: function () {
+      return (window.cdnbaseurl + "/img/mobilebankid.png");
+    },
     verifyIdentityText: function () {
       var model = this.state.model;
       var doc = this.props.doc;
@@ -126,6 +129,9 @@ var MaskedPersonalNumber = require("./masked_personal_number");
                 </div>
               </div>
               <div className="identify-box-footer-logo">
+                { /* if */ model.isSwedish() &&
+                <img src={this.swedishMobileBankidLogo()} className="identify-box-footer-first-logo"/>
+                }
                 <img src={this.bankidLogo()} />
               </div>
             </div>

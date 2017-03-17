@@ -280,18 +280,44 @@ textarea {
   }
 }
 
+.bankid-logo-wrapper {
+  display: inline;
+
+  .on-small-view({
+    display: block;
+    margin-bottom: 10px;
+  });
+}
+
 .bankid-logo {
-  background-image: url(/img/bankid3.png);
-  background-size: cover;
   display: inline-block;
-  height: 38px;
   margin-right: @signview-half-gutter;
   vertical-align: middle;
+}
+
+.regular-bankid-logo {
+  background-image: url(/img/bankid3.png);
+  background-size: cover;
+  height: 38px;
   width: 42px;
 
   .on-small-view({
     height: 25px;
     width: 28px;
+  });
+}
+
+.mobile-bankid-logo {
+  background-image: url(/img/mobilebankid.png);
+  background-size: cover;
+  height: 67px;
+  width: 37px;
+
+  .on-small-view({
+    background-repeat: no-repeat;
+    background-size: auto 100%;
+    height: 44px;
+    width: 24px;
   });
 }
 

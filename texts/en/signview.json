@@ -43,7 +43,7 @@
 "_elegBankIDFaultModalTitle":"Problem signing with BankID",
 "_elegBankIDRFA1":"Start your BankID App.",
 "_elegBankIDRFA12":"Internal error. Update your BankID App and try again.",
-"_elegBankIDRFA13":"Trying to start your BankID App.",
+"_elegBankIDRFA13":"Trying to start your BankID App. You can also start your app manually on your mobile or on another device.",
 "_elegBankIDRFA14":"You do not have a BankID that can be used for this signature on this device. If you don’t have a BankID you can order one from your bank. If you have a BankID on another device you can start the BankID App on that device.",
 "_elegBankIDRFA16":"The BankID you are trying to use is revoked or too old. Please use another BankID or order a new one from your bank.",
 "_elegBankIDRFA17":"The BankID App couldn’t be found on your device. Please install it and order a BankID from your bank. Install the app from <a target='_blank' href='http://install.bankid.com'>install.bankid.com</a>.",
