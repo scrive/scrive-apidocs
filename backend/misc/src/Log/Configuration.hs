@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Log.Configuration (
     module Log.Data
   , LogConfig(..)
@@ -9,6 +10,7 @@ module Log.Configuration (
 
 import Crypto.RNG
 import Data.Default
+import Data.Functor.Invariant (invmap)
 import Data.List.NonEmpty (fromList)
 import Data.Semigroup
 import Data.Text (Text)
@@ -16,6 +18,7 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Checks
 import Log.Backend.ElasticSearch
+import Log.Backend.ElasticSearch.Internal
 import Log.Backend.PostgreSQL
 import Log.Backend.StandardOutput
 import Log.Data
@@ -81,6 +84,21 @@ instance Unjson LoggerDef where
         <*> field "mapping"
             esMapping
             "Mapping"
+        <*> fieldOptBy "login"
+            esLogin
+            "Login info, optional, default: empty"
+            (objectOf $ pure (,)
+             <*> field "username" fst "User name"
+             <*> field "password" snd "Password")
+        <*> fieldDef "loginInsecure"
+            False esLoginInsecure
+            "Allow basic authentication over non-TLS connections."
+
+instance Unjson EsUsername where
+  unjsonDef = invmap EsUsername esUsername unjsonAeson
+
+instance Unjson EsPassword where
+  unjsonDef = invmap EsPassword esPassword unjsonAeson
 
 ----------------------------------------
 

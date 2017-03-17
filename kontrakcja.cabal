@@ -454,7 +454,7 @@ Library
                , lifted-async
                , lifted-base
                , lifted-threads
-               , log >= 0.5.4
+               , log >= 0.8
                , mixpanel
                , mmap
                , monad-control
@@ -552,7 +552,7 @@ Executable kontrakcja-server
                , happstack-static-routing
                , hedis
                , lifted-base
-               , log >= 0.5.4
+               , log >= 0.8
                , text
                , transformers-base
                , utf8-string
@@ -606,7 +606,7 @@ Executable cron
                , crypto-rng
                , hpqtypes-extras
                , hedis
-               , log >= 0.5.4
+               , log >= 0.8
                , text
                , transformers-base
 
@@ -682,9 +682,10 @@ Executable kontrakcja-migrate
                , exceptions
                , fields-json
                , hpqtypes
+               , invariant
                , json
                , lifted-base
-               , log >= 0.5.4
+               , log >= 0.8
                , monad-control
                , monad-time
                , mtl
@@ -776,10 +777,11 @@ Executable mailing-server
                , hashable
                , hedis
                , hpqtypes
+               , invariant
                , json
                , lifted-async
                , lifted-base
-               , log >= 0.5.4
+               , log >= 0.8
                , monad-control
                , monad-time
                , mtl
@@ -876,9 +878,10 @@ Executable messenger-server
                , hpqtypes
                , HTTP
                , iconv
+               , invariant
                , json
                , lifted-base
-               , log >= 0.5.4
+               , log >= 0.8
                , monad-control
                , monad-time
                , mtl
@@ -1020,7 +1023,7 @@ Test-suite kontrakcja-test
                , json
                , kontrakcja-templates
                , lifted-base
-               , log >= 0.5.5
+               , log >= 0.8
                , monad-control
                , mtl
                , network-uri
