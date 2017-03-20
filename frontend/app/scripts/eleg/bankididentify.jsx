@@ -102,7 +102,7 @@ module.exports = Backbone.Model.extend({
           // but it"s not working 100% of the time). On other platform BankID app can close itself
 
           var documentUrl = "null";
-          if (BrowserInfo.isIFrame()) {
+          if (window.parent != window) {
             documentUrl = document.referrer;
           } else {
             documentUrl = window.location;
