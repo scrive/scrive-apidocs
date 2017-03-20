@@ -104,6 +104,7 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
       rejectText: localization.cancel,
       editText : "Edit",
       acceptType : "action",
+      allowReject: true,
       onEdit: function() {}
   },
   initialize : function() {
@@ -122,6 +123,9 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
   },
   rejectText: function() {
        return this.get("rejectText");
+  },
+  allowReject: function() {
+       return this.get("allowReject");
   },
   editText: function() {
        return this.get("editText");
@@ -186,8 +190,11 @@ var ConfirmationWithEmailView = Backbone.View.extend({
 
 	   //Modal footer
        var footer = $("<div class='modal-footer'>");
-       var cancelOption = $("<label class='clickable cancel close float-left' s/>");
-       cancelOption.text(this.model.rejectText());
+       if (this.model.allowReject()) {
+           var cancelOption = $("<label class='clickable cancel close float-left' s/>");
+           cancelOption.text(this.model.rejectText());
+           footer.append(cancelOption);
+       }
        this.editOption = new Button({
                                     style: 'margin-left: 15px',
                                     cssClass: 'float-left',
@@ -196,8 +203,6 @@ var ConfirmationWithEmailView = Backbone.View.extend({
                                         view.edit();
                                     }
        });
-
-       footer.append(cancelOption);
 
        if (!BrowserInfo.isSmallScreen()) { // We skip editing message on small screens
          this.editOption = this.editOption.el(); // make it hideable from other places.
