@@ -100,9 +100,17 @@ module.exports = Backbone.Model.extend({
           || BrowserInfo.isAndroid()) {
           // We set redirect only for selected devices (and Android, as Android is advertised to close itself
           // but it"s not working 100% of the time). On other platform BankID app can close itself
+
+          var documentUrl = "null";
+          if (BrowserInfo.isIFrame()) {
+            documentUrl = document.referrer;
+          } else {
+            documentUrl = window.location;
+          }
+
           var returnUrl =  LocationUtils.origin() + "/s/eid/cgi/grp/checkcgiauthstatuswithredirect/" +
             this.document().documentid() + "/" + this.signatory().signatoryid() +
-            "?session_id=" + this.sessionID() + "&url=" + encodeURIComponent(window.top.location) +
+            "?session_id=" + this.sessionID() + "&url=" + encodeURIComponent(documentUrl) +
             "&_=" + Math.random();
           return "bankid:///?autostarttoken=" + this.autoStartToken() + "&redirect=" + encodeURIComponent(returnUrl);
         } else {
