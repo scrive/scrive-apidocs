@@ -129,6 +129,7 @@ $htmlopentag()$
     <meta property="og:title" content="$documenttitle$" />
   </head>
   <body>
+    $flashmessages()$
     <div class='global-table'>
       <div class="global-table-cell">
       </div>

@@ -22,3 +22,5 @@ flashMessageProblemWithPassword=$_flashMessageProblemWithPassword()$
 ###
 flashMessageBecomeCompanyLogInDifferentUser=$_flashMessageBecomeCompanyLogInDifferentUser()$
 ####
+flashMessageUserHasIdentifiedWithDifferentSSN=$_flashMessageUserHasIdentifiedWithDifferentSSN()$
+###
