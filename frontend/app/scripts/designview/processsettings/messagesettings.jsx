@@ -42,6 +42,7 @@ module.exports = React.createClass({
                 doc.afterSave(function() {
                 var popup = ConfirmationWithEmail.popup({
                               editText: '',
+                              allowReject: false,
                               title: localization.designview.customMessage.invitation,
                               mail: doc.inviteMail(),
                               onAccept: function() {
