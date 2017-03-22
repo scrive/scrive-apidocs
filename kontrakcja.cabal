@@ -1024,7 +1024,6 @@ Test-suite kontrakcja-test
                , network-uri
                , recurly
                , regex-tdfa
-               , scientific
                , semigroups
                , stm
                , tagsoup

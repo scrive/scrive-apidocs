@@ -21,7 +21,7 @@ import DB.Query
 import Happstack.Fields
 import Kontra
 import KontraPrelude
-import Log.Identifier
+import PadApplication.Data
 import Routing
 import Theme.Model
 import Theme.View
@@ -30,7 +30,7 @@ import qualified API.V2 as V2
 
 padApplicationAPI :: Route (Kontra Response)
 padApplicationAPI = dir "api" $ choice
-  [ dir "frontend" $ padApplicationAPIV1
+  [ dir "frontend" $ padApplicationAPIV2
   , padApplicationAPIV1 -- Temporary backwards compatibility for clients accessing version-less API
   , dir "v1" $ padApplicationAPIV1
   , dir "v2" $ padApplicationAPIV2
@@ -44,7 +44,7 @@ padApplicationAPIV1 = choice
 
 padApplicationAPIV2 ::Route (Kontra Response)
 padApplicationAPIV2 = choice [
-    dir "info" $ hGet $ toK0 $ apiCallGetPadInfo
+    dir "pad" $ dir "info" $ hGet $ toK0 $ apiCallGetPadInfo
   , padApplicationAPIV1
   ]
 
@@ -74,7 +74,6 @@ apiCallGetPadInfo = V2.api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
   company <- getCompanyForUser user
   return $ V2.Ok $ object [
-      identifier_ $ companyid company
-    , "app_mode" .= (show . companypadappmode . companyinfo $ company)
+      "app_mode" .= (padAppModeText . companypadappmode . companyinfo $ company)
     , "e_archive_enabled" .= (companypadearchiveenabled . companyinfo $ company)
     ]

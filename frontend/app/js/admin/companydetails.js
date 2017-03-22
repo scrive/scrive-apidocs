@@ -216,8 +216,8 @@ var AdminCompanyDetailsView = Backbone.View.extend({
       var model = this.model;
 
       var padAppModes = [
-          {name: "ListView", value: "ListView"}
-        , {name: "PinCode", value: "PinCode"}
+          {name: "List view", value: "list_view"}
+        , {name: "Pin code", value: "pin_code"}
       ];
 
       var $select = $("<span>");

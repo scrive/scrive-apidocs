@@ -17,7 +17,7 @@ var Company = exports.Company = Backbone.Model.extend({
       allowsavesafetycopy : false,
       smsprovider : "",
       ready : false,
-      padappmode : "ListView",
+      padappmode : "list_view",
       padearchiveenabled : true
   },
   initialize : function(args) {
@@ -93,9 +93,9 @@ var Company = exports.Company = Backbone.Model.extend({
       idledoctimeout : args.idledoctimeout,
       allowsavesafetycopy : args.allowsavesafetycopy,
       smsprovider : args.smsprovider,
-      ready : true,
       padappmode : args.padappmode,
-      padearchiveenabled : args.padearchiveenabled
+      padearchiveenabled : args.padearchiveenabled,
+      ready : true
     };
   }
 });

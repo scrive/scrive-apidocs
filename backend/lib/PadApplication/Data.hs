@@ -1,10 +1,13 @@
 module PadApplication.Data (
     PadAppMode(..)
+  , padAppModeText
+  , padAppModeFromText
   ) where
 
 import Control.Monad.Catch
 import Data.Int (Int16)
 import Database.PostgreSQL.PQTypes
+import qualified Data.Text as T
 
 import KontraPrelude
 
@@ -39,3 +42,10 @@ instance ToSQL PadAppMode where
   type PQDest PadAppMode = PQDest Int16
   toSQL ListView  = toSQL (1::Int16)
   toSQL PinCode   = toSQL (2::Int16)
+
+padAppModeText :: PadAppMode -> T.Text
+padAppModeText ListView       = "list_view"
+padAppModeText PinCode        = "pin_code"
+
+padAppModeFromText :: T.Text -> Maybe PadAppMode
+padAppModeFromText s = find (\p -> s == padAppModeText p) [ListView, PinCode]
