@@ -304,6 +304,7 @@ Library
                  , MessageData
                  , MessengerServerConf
                  , MinutesTime
+                 , Monitor.API
                  , Network.SOAP.Call
                  , Network.SOAP.Transport.Curl
                  , OAuth.Control
@@ -978,6 +979,7 @@ Test-suite kontrakcja-test
                  LoginTest,
                  MailModelTest,
                  MailsTest,
+                 Monitor.APITest,
                  PadApplication.APITest
                  Partner.APITest,
                  PaymentsTest,

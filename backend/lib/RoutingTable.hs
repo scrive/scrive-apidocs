@@ -17,6 +17,7 @@ import KontraLink
 import KontraPrelude
 import LangRouting
 import Login
+import Monitor.API
 import OAuth.Control
 import PadApplication.API
 import Partner.API
@@ -172,6 +173,7 @@ staticRoutes production = choice
      , allLangDirs $ dir "enable-cookies" $ dir "enable-cookies.html" $ hGetAllowHttp $ toK0 $ enableCookiesPage
      , allLangDirs $ dir "terms" $ hGet $ toK0 $ handleTermsOfService
      , documentAPI
+     , monitorAPI
      , partnerAPI
      , userAPI
      , padApplicationAPI
