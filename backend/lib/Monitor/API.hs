@@ -4,7 +4,6 @@ module Monitor.API (
   ) where
 
 import Data.Aeson
-import Data.Int
 import Database.PostgreSQL.PQTypes.SQL.Builder
 import Happstack.Server.Types
 import Happstack.StaticRouting
@@ -23,8 +22,10 @@ monitorAPI = dir "api" $ dir "v2" $ dir "monitor" $ choice [
 
 apiCallMonitorStatusGet :: Kontrakcja m => m Response
 apiCallMonitorStatusGet  = V2.api $ do
-  -- do something useless to see, whether database works
+  -- Do something useless to see, whether database works.
+  -- Should crash with HTTP 500, when database is not available
   runQuery_ . sqlSelect "table_versions" $ do
-    sqlResult "COUNT(version)"
-  _ :: Int64 <- guardJustM $ fetchMaybe runIdentity
+    sqlResult "name"
+    sqlLimit 1
+  _ :: String <- guardJustM $ fetchMaybe runIdentity
   return $ V2.Ok $ object [ "status" .= ("ok"::String) ]
