@@ -30,6 +30,7 @@ import Text.JSON.Gen
 import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplates.Templates
+import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import AppView
@@ -43,6 +44,7 @@ import KontraLink
 import KontraPrelude
 import Mails.SendMail (Mail, kontramail, kontramaillocal)
 import MinutesTime
+import PadApplication.Data
 import Theme.Model
 import User.Email
 import User.Model
@@ -77,6 +79,8 @@ companyJSON company = runJSONGenT $ do
     value "allowsavesafetycopy" $ companyallowsavesafetycopy (companyinfo company)
     value "idledoctimeout" $ companyidledoctimeout $ companyinfo company
     value "smsprovider" $ show . companysmsprovider . companyinfo $ company
+    value "padappmode" $ T.unpack $ padAppModeText $ companypadappmode $ companyinfo company
+    value "padearchiveenabled" . companypadearchiveenabled $ companyinfo company
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do

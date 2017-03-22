@@ -59,6 +59,7 @@ import Doc.DocStateData (DocumentStatus(..), FieldType(..), NameOrder(..))
 import KontraPrelude
 import Log.Identifier
 import MinutesTime
+import PadApplication.Data
 import Partner.Model
 import SMS.Data (SMSProvider)
 import User.Email
@@ -622,12 +623,14 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> ", c.sms_provider"
   <> ", c.cgi_service_id"
   <> ", c.partner_id as partner_id"
+  <> ", c.pad_app_mode"
+  <> ", c.pad_earchive_enabled"
   <> "  FROM users"
   <> "  LEFT JOIN companies c ON users.company_id = c.id"
   <> "  WHERE users.deleted IS NULL"
 
-fetchUserWithCompany :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String, PartnerID) -> (User, Company)
-fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, cid, name, number, address, zip', city, country, ip_address_mask, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, partner_id) = (user, company)
+fetchUserWithCompany :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String, PartnerID, PadAppMode, Bool) -> (User, Company)
+fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, cid, name, number, address, zip', city, country, ip_address_mask, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, partner_id, pad_app_mode, pad_earchive_enabled) = (user, company)
   where
     user = User {
       userid = uid
@@ -664,6 +667,8 @@ fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, 
       , companysmsprovider = sms_provider
       , companycgiserviceid = cgi_service_id
       , companypartnerid = partner_id
+      , companypadappmode = pad_app_mode
+      , companypadearchiveenabled = pad_earchive_enabled
       }
     }
 

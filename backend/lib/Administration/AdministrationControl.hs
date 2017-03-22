@@ -32,6 +32,7 @@ import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
+import qualified Data.Text as T
 import qualified Data.Unjson as Unjson
 import qualified Text.StringTemplates.Fields as F
 
@@ -71,6 +72,7 @@ import KontraLink
 import KontraPrelude
 import Mails.Model
 import MinutesTime
+import PadApplication.Data (padAppModeFromText)
 import Payments.Action
 import Payments.Config
 import Payments.Model
@@ -445,6 +447,8 @@ getCompanyInfoChange = do
                                                          guard $ t <= maxCompanyIdleDocTimeout
                                                          return t)) <$> getField "companyidledoctimeout"
   mcompanysmsprovider <- fmap maybeRead <$> getField' $ "companysmsprovider"
+  mcompanypadappmode <- fmap (padAppModeFromText . T.pack) <$> getField' $ "companypadappmode"
+  mcompanypadearchiveenabled <- getField "companypadearchiveenabled"
   return $ \CompanyInfo{..} -> CompanyInfo {
         companyname        = fromMaybe companyname mcompanyname
       , companynumber      = fromMaybe companynumber mcompanynumber
@@ -459,6 +463,8 @@ getCompanyInfoChange = do
       , companycgiserviceid = fromMaybe companycgiserviceid mcompanycgiserviceid
       , companysmsprovider = fromMaybe companysmsprovider mcompanysmsprovider
       , companypartnerid = companypartnerid
+      , companypadappmode = fromMaybe companypadappmode mcompanypadappmode
+      , companypadearchiveenabled = maybe companypadearchiveenabled (=="true") mcompanypadearchiveenabled
     }
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}

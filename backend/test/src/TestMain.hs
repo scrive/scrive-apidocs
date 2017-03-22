@@ -57,6 +57,7 @@ import LogTest
 import MailModelTest
 import MailsTest
 import OAuth
+import PadApplication.APITest
 import Partner.APITest
 import PaymentsTest
 import ReferenceScreenshotsTest
@@ -106,6 +107,7 @@ allTests = [
   , mailModelTests
   , mailsTests
   , oauthTest
+  , padAplicationAPITests
   , partnerAPITests
   , paymentsTests
   , sessionsTests

@@ -16,7 +16,9 @@ var Company = exports.Company = Backbone.Model.extend({
       ipaddressmasklist : "",
       allowsavesafetycopy : false,
       smsprovider : "",
-      ready : false
+      ready : false,
+      padappmode : "list_view",
+      padearchiveenabled : true
   },
   initialize : function(args) {
     if (args.forAdmin && args.companyid != undefined)
@@ -69,7 +71,12 @@ var Company = exports.Company = Backbone.Model.extend({
   },
   ready : function() {
      return this.get("ready");
-
+  },
+  padappmode: function(){
+     return this.get("padappmode");
+  },
+  padearchiveenabled: function(){
+     return this.get("padearchiveenabled");
   },
   parse: function(args) {
      return {
@@ -86,8 +93,9 @@ var Company = exports.Company = Backbone.Model.extend({
       idledoctimeout : args.idledoctimeout,
       allowsavesafetycopy : args.allowsavesafetycopy,
       smsprovider : args.smsprovider,
+      padappmode : args.padappmode,
+      padearchiveenabled : args.padearchiveenabled,
       ready : true
     };
   }
 });
-
