@@ -84,7 +84,7 @@ decodeProvider s = case s of
 
 flashMessageUserHasIdentifiedWithDifferentSSN :: TemplatesMonad m => m FlashMessage
 flashMessageUserHasIdentifiedWithDifferentSSN =
-  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserHasIdentifiedWithDifferentSSN"
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserHasIdentifiedWithDifferentSSN"
 
 handleResolve :: Kontrakcja m => m InternalKontraResponse
 handleResolve = do
