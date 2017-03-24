@@ -207,14 +207,14 @@ var capitaliseFirstLetter = require("../common/capitalise_first_letter");
       return "timeouted";
     }  else if (d.field("status") === "rejected") {
       return "rejected";
-    } else if (someSignatoryHasDeliveryProblem) {
-      return "deliveryproblem";
     } else if (everySignatoryOpened) {
       return "opened";
     } else if (everySignatoryReadInvitation) {
       return "read";
     } else if (everySignatoryDelivered) {
       return "delivered";
+    } else if (someSignatoryHasDeliveryProblem) {
+      return "deliveryproblem";
     } else {
       return "sent";
     }

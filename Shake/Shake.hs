@@ -476,6 +476,7 @@ distributionRules newBuild = do
                     , "scrivepdftools"
                     , "GuardTime"
                     , "templates"
+                    , "pure_sql"
                     , "files"
                     , "texts"
                     , "urls.txt"
