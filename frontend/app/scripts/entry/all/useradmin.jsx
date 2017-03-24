@@ -1,6 +1,14 @@
-var UserAdmin = require("../../../js/admin/useradmin").UserAdmin;
+var React = require("react");
 var $ = require("jquery");
 
+var UserAdminView = require("../../admin/useradmin/useradmin.jsx");
+
 $(function () {
-  $(".admin").append(new UserAdmin({userid: fromTemplate.userId}).el());
+  var $container = $("<div></div>");
+  var view = React.render(
+    React.createElement(UserAdminView, {userId: fromTemplate.userId}),
+    $container[0]
+  );
+
+  $(".admin").append($container);
 });

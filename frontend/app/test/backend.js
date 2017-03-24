@@ -75,6 +75,17 @@ var evidence_attachments = require("./data/evidence_attachments");
       xhr.respond(200, { "Content-Type": "application/json" }, JSON.stringify(clone));
     });
 
+    server.respondWith(/\/adminonly\/companyadmin\/details\/(\d+).+?$/, function (xhr, id) {
+      if (id == 0) {
+        xhr.respond(500, {"Content-Type": "text/html"}, "<h1>ERROR</h1>");
+      } else {
+        xhr.respond(
+          200, {"Content-Type": "text/html"},
+          JSON.stringify({companyid: id, companyname: "Test Company"})
+        );
+      }
+    });
+
     return server;
   };
 
