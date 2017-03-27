@@ -107,7 +107,7 @@ instance (MonadDB m,MonadThrow m) => DBUpdate m UpdateThemeForDomain Bool where
           sqlWhereEq "id" $ did
           sqlWhereEq "main_domain" $ True
 
-setThemeData :: Theme -> State SqlUpdate ()
+setThemeData :: (SqlSet a) => Theme -> State a ()
 setThemeData t = do
       sqlSet "name" $ themeName t
       sqlSet "logo" $ themeLogo t
@@ -179,19 +179,7 @@ data UnsafeInsertNewThemeWithoutOwner = UnsafeInsertNewThemeWithoutOwner Theme
 instance (MonadDB m,MonadThrow m) => DBUpdate m UnsafeInsertNewThemeWithoutOwner Theme where
   update (UnsafeInsertNewThemeWithoutOwner t) = do
     runQuery_ . sqlInsert "themes" $ do
-      sqlSet "name" $ themeName t
-      sqlSet "logo" $ themeLogo t
-      sqlSet "brand_color" $ themeBrandColor t
-      sqlSet "brand_text_color" $ themeBrandTextColor t
-      sqlSet "action_color" $ themeActionColor t
-      sqlSet "action_text_color" $ themeActionTextColor t
-      sqlSet "action_secondary_color" $ themeActionSecondaryColor t
-      sqlSet "action_secondary_text_color" $ themeActionSecondaryTextColor t
-      sqlSet "positive_color" $ themePositiveColor t
-      sqlSet "positive_text_color" $ themePositiveTextColor t
-      sqlSet "negative_color" $ themeNegativeColor t
-      sqlSet "negative_text_color" $ themeNegativeTextColor t
-      sqlSet "font" $ themeFont t
+      setThemeData t
       selectThemesSelectors
     fetchOne fetchTheme
 
