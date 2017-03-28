@@ -380,6 +380,25 @@ companiesAddPartnerID = Migration {
     runSQL_ "ALTER TABLE companies ALTER partner_id SET NOT NULL"
 }
 
+companiesAddPaymentPlan :: (MonadThrow m, MonadDB m) => Migration m
+companiesAddPaymentPlan = Migration {
+  mgrTable = tableCompanies
+, mgrFrom = 22
+, mgrDo = do
+    runQuery_ $ sqlAlterTable (tblName tableCompanies)  [ sqlAddColumn $
+        tblColumn { colName = "payment_plan", colType = SmallIntT, colNullable = True, colDefault = Just "0"}
+      ]
+    -- Migrate One plan to One plan
+    runSQL_ "UPDATE companies SET payment_plan = 1 WHERE companies.id IN (SELECT company_id FROM payment_plans WHERE plan = 6)"
+    -- Migrate Team plan to Team plan
+    runSQL_ "UPDATE companies SET payment_plan = 2 WHERE companies.id IN (SELECT company_id FROM payment_plans WHERE plan = 1)"
+    -- Migrate Form, Company and Enterprise plans to Enterprise plan
+    runSQL_ "UPDATE companies SET payment_plan = 3 WHERE companies.id IN (SELECT company_id FROM payment_plans WHERE plan = 2 OR plan = 3 OR plan = 5)"
+    -- Migrate Trial plan to Trial plan
+    runSQL_ "UPDATE companies SET payment_plan = 4 WHERE companies.id IN (SELECT company_id FROM payment_plans WHERE plan = 4)"
+    runSQL_ "ALTER TABLE companies ALTER COLUMN payment_plan SET NOT NULL"
+}
+
 companiesAddPadAppModeAndEArchiveEnabled :: MonadDB m => Migration m
 companiesAddPadAppModeAndEArchiveEnabled = Migration {
   mgrTable = tableCompanies

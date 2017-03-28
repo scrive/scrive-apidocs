@@ -7,13 +7,13 @@ var TestUtils = React.addons.TestUtils;
 var DesignView = require("../../scripts/designview/designview.jsx");
 
 describe("designview/designview", function () {
-  var server, document_;
+  var server, document_, subscription_;
 
   var renderComponent = function() {
     var component = React.render(
       React.createElement(
         DesignView,
-        {model: document_}
+        {model: document_, subscription: subscription_}
       ),
       $("body")[0]
     );
@@ -28,8 +28,13 @@ describe("designview/designview", function () {
   beforeEach(function (done) {
     util.createDocument(function (doc) {
       document_ = doc;
-      done();
+      util.createSubscription(function(sub) {
+          subscription_ = sub;
+          done();
+      });
     });
+
+
   });
 
   after(function () {

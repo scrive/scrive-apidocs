@@ -12,7 +12,6 @@ module AppView(
               , simpleUnjsonResponse
               , simpleHtmlResponse
               , respondWithPDF
-              , priceplanPage
               , unsupportedBrowserPage
               , standardPageFields
               , entryPointFields
@@ -137,18 +136,6 @@ pageWhereLanguageCanBeInUrl handler = do
   case (language) of
        (Just lang:_) -> switchLang lang >> handler
        _ -> handler
-
-
-priceplanPage :: Kontrakcja m => m Response
-priceplanPage = do
-  ctx <- getContext
-  ad <- getAnalyticsData
-  if( bdMainDomain $ ctxbrandeddomain ctx)
-  then do
-    content <- renderTemplate "priceplanPage" $ do
-      standardPageFields ctx Nothing ad
-    simpleHtmlResponse content
-  else respond404
 
 unsupportedBrowserPage :: Kontrakcja m => m Response
 unsupportedBrowserPage = do

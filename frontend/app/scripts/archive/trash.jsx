@@ -85,7 +85,7 @@ module.exports = React.createClass({
         documentids: "[" + this.state.documentsToRestore + "]",
         ajaxsuccess : function() {
           new FlashMessage({
-            color: "green",
+            type: "success",
             content: localization.archive.trash.restore.successMessage
           });
 

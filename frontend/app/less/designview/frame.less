@@ -61,6 +61,41 @@ body.designview .mainContainer {
     }
   }
 
+  .design-view-blocking {
+    width:100%;
+    cursor: pointer;
+
+    &:hover a {
+      text-decoration: underline;
+    }
+
+    .blocking-box {
+
+      .blocking-box-top-shadow {
+        height:4px;
+        width:100%;
+        position:absolute;
+        background: rgba(0,0,0,0.1);
+      }
+
+      .blocking-box-content {
+        margin: auto;
+        width: 1018px;
+        text-align: center;
+        padding: 18px 15px 18px 15px;
+
+        .blocking-box-headline {
+          font-size: 21px;
+
+          .blocking-box-subheadline {
+            font-size: 16px;
+          }
+
+        }
+      }
+    }
+  }
+
   .tab-viewer {
     width: 100%;
 

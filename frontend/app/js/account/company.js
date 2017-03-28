@@ -69,14 +69,14 @@ var Company = exports.Company = Backbone.Model.extend({
   smsprovider: function() {
     return this.get("smsprovider");
   },
-  ready : function() {
-     return this.get("ready");
-  },
   padappmode: function(){
      return this.get("padappmode");
   },
   padearchiveenabled: function(){
      return this.get("padearchiveenabled");
+  },
+  ready : function() {
+     return this.get("ready");
   },
   parse: function(args) {
      return {

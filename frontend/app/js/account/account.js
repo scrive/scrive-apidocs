@@ -4,12 +4,12 @@ var Backbone = require("backbone");
 var CompanyAccountsAndStats = require("./usersandstats/companyaccountsandstats.js").CompanyAccountsAndStats;
 var OauthDashboard = require("./apisettings/oauthdashboard.js").OauthDashboard;
 var Stats = require("./usersandstats/stats.js").Stats;
-var PaymentsDashboard = require("../payments.js").PaymentsDashboard;
 var Tab = require("../tabs.js").Tab;
 var $ = require("jquery");
 var _ = require("underscore");
 var KontraTabs = require("../tabs.js").KontraTabs;
 var AccountSettingsPanel = require("../../scripts/account/settings/accountsettingspanel");
+var SubscriptionPanel = require("../../scripts/account/subscription/subscriptionpanel");
 var Track = require("../../scripts/common/track");
 
 /*
@@ -35,14 +35,26 @@ var AccountModel = Backbone.Model.extend({
         if (this.get("stats") != undefined) return this.get("stats");
         this.set({ "stats" : new Stats({withCompany : this.companyAdmin() }) });
         return this.stats();
-
   },
-  subscription : function() {
-        if (this.get("subscription") != undefined) return this.get("subscription");
-        this.set({ "subscription" : new PaymentsDashboard() });
-        return this.subscription();
-  },
+  subscriptionTab : function() {
+    var self = this;
+    var div = $('<div/>');
 
+    return new Tab({
+      name: localization.account.subscription,
+      elems: [function() { return div; }],
+      pagehash: 'subscriptions',
+      onActivate: function() {
+        if (self.subscriptionSettingsPanel) {
+          self.subscriptionSettingsPanel.reload();
+        } else {
+          self.subscriptionSettingsPanel = React.render(
+            React.createElement(SubscriptionPanel, {}), div[0]
+          );
+        }
+      }
+    });
+  },
   accountDetailsTab : function() {
     var self = this;
     var div = $('<div/>');
@@ -125,25 +137,7 @@ var AccountModel = Backbone.Model.extend({
             Track.track('View Stats Tab');
         }
     });
-  },
-  subscriptionTab : function() {
-    var self = this;
-    return new Tab({
-        name: localization.account.subscription,
-        elems: [function() {return $(self.subscription().el());}],
-        iconClass: 's-subscription',
-        pagehash : "subscription",
-        onActivate : function() {
-            self.subscription().refresh();
-            mixpanel.register({Subcontext : 'Subscription tab'});
-            Track.track('View Subscription Tab');
-            mixpanel.people.set({
-                'View subscription tab' : new Date()
-            });
-        }
-    });
   }
-
 });
 
 var AccountView = Backbone.View.extend({
@@ -162,6 +156,7 @@ var AccountView = Backbone.View.extend({
                 , account.companyAdmin() ? [account.companySettingsTab()] : []
                 , [account.apiTab()]
                 , account.companyAdmin() ? [account.subscriptionTab()] : []
+
               ])
       });
       container.append(tabs.el());

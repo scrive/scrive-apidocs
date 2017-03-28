@@ -1,5 +1,3 @@
-/*global BlockingInfo*/
-
 var React = require("react");
 var classNames = require("classnames");
 var $ = require("jquery");
@@ -13,6 +11,7 @@ var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
 var Submit = require("../../../js/submits.js").Submit;
 var DocumentSaveMixin = require("../document_save_mixin");
 var Modal = require("../../common/modal");
+var Subscription = require("../../account/subscription");
 
 var CantSignModalContent = require("./cantsignmodalcontent");
 var ConfirmationModalAcceptButton = require("./confirmationmodalacceptbutton");
@@ -22,7 +21,9 @@ var SendConfirmationModalContent = require("./sendconfirmationmodalcontent");
 module.exports = React.createClass({
   mixins: [BackboneMixin.BackboneMixin, DocumentSaveMixin],
   propTypes: {
-    document: React.PropTypes.instanceOf(Document).isRequired
+    document: React.PropTypes.instanceOf(Document).isRequired,
+    subscription: React.PropTypes.instanceOf(Subscription).isRequired,
+    onBlocked: React.PropTypes.func.isRequired
   },
   componentWillMount: function () {
     this._confirmationModal = null;
@@ -116,19 +117,12 @@ module.exports = React.createClass({
       });
 
       doc.save();
-      if (BlockingInfo && BlockingInfo.shouldBlockDocs(1)) {
-        Track.track("Open blocking popup");
-        mixpanel.people.set({
-          "Blocking Popup": new Date()
-        });
-
-        BlockingInfo.createPopup();
+      if (this.props.subscription.isOverLimit()) {
+        this.props.onBlocked();
+      } else if (isSigning) {
+        this.showSignConfirmationModal();
       } else {
-        if (isSigning) {
-          this.showSignConfirmationModal();
-        } else {
-          this.showSendConfirmationModal();
-        }
+        this.showSendConfirmationModal();
       }
     }
   },

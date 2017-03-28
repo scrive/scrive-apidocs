@@ -62,14 +62,6 @@ module.exports = React.createClass({
                self.setState({showCreateUserModal: true});
               }}
             />
-           <List.ListAction
-              name="Download list as CSV"
-              type="action"
-              size="tiny"
-              onSelect={function() {
-                window.location.href = '/adminonly/paymentsstats.csv';
-              }}
-            />
 
            <List.Column
              name="Username"

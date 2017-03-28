@@ -4,17 +4,16 @@ var React = require("react");
 
 var TestUtils = React.addons.TestUtils;
 
-var BlockingInfo = require("../../../js/blocking.js").Blocking;
 var ButtonBarView = require("../../../scripts/designview/buttonbar/buttonbarview.jsx");
 
 describe("designview/buttonbarview", function () {
-  var server, document_;
+  var server, document_, subscription_;
 
   var renderComponent = function() {
     var component = React.render(
       React.createElement(
         ButtonBarView,
-        {document: document_}
+        {document: document_, subscription: subscription_, onBlocked: function() {}}
       ),
       $("body")[0]
     );
@@ -24,22 +23,21 @@ describe("designview/buttonbarview", function () {
 
   before(function () {
     server = backend.createServer();
-
-    window.BlockingInfo = new BlockingInfo();
-    sinon.stub(window.BlockingInfo, "shouldBlockDocs").returns(false);
   });
 
   beforeEach(function (done) {
     util.createDocument(function (doc) {
       document_ = doc;
-      done();
+      util.createSubscription(function(sub) {
+          subscription_ = sub;
+          done();
+      });
     });
   });
 
   after(function () {
     server.restore();
 
-    window.BlockingInfo = undefined;
   });
 
   afterEach(function () {

@@ -718,6 +718,10 @@ javascriptLocalisation =
                               EUR: "$TeamPriceEURPerMonth()$"
                             , SEK: "$TeamPriceSEKPerMonth()$"
                         }
+                        , priceWithDiscont : {
+                              EUR: "$TeamPriceWithDiscountEURPerMonth()$"
+                            , SEK: "$TeamPriceWithDiscountSEKPerMonth()$"
+                        }
                         , signeddocs: "$TeamDocumentsPerMonth()$"
                         , branding: "$_paymentPlanTeamBranding()$"
                         , users: "$_paymentPlanTeamUsers()$"
@@ -730,6 +734,10 @@ javascriptLocalisation =
                         , price : {
                               EUR: "$EnterprisePriceEURPerMonth()$"
                             , SEK: "$EnterprisePriceSEKPerMonth()$"
+                        }
+                        , priceWithDiscont : {
+                              EUR: "$EnterprisePriceWithDiscountEURPerMonth()$"
+                            , SEK: "$EnterprisePriceWithDiscountSEKPerMonth()$"
                         }
                         , signeddocs: "$EnterpriseDocumentsPerMonth()$"
                         , branding: "$_paymentPlanEnterpriseBranding()$"
@@ -747,6 +755,10 @@ javascriptLocalisation =
                               EUR: "$CompanyPriceEURPerMonth()$"
                             , SEK: "$CompanyPriceSEKPerMonth()$"
                         }
+                        , priceWithDiscont : {
+                              EUR: "$CompanyPriceWithDiscountEURPerMonth()$"
+                            , SEK: "$CompanyPriceWithDiscountSEKPerMonth()$"
+                        }
                         , signeddocs: "$CompanyDocumentsPerMonth()$"
                         , branding: "$_paymentPlanCompanyBranding()$"
                         , users: "$_paymentPlanCompanyUsers()$"
@@ -760,6 +772,10 @@ javascriptLocalisation =
                         , price : {
                               EUR: "$OnePriceEURPerMonth()$"
                             , SEK: "$OnePriceSEKPerMonth()$"
+                        }
+                        , priceWithDiscont : {
+                              EUR: "$OnePriceWithDiscountEURPerMonth()$"
+                            , SEK: "$OnePriceWithDiscountSEKPerMonth()$"
                         }
                         , signeddocs: "$OneDocumentsPerMonth()$"
                         , users: "$_paymentPlanOneUsers()$"
@@ -779,7 +795,7 @@ javascriptLocalisation =
             , subscribeheader : "$_paymentsSubscribeHeader()$"
             , savechanges : "$_SaveChanges()$"
             , savingsubscription : "$_paymentPlanSavingSubscription()$"
-            , askviktor : "$_paymentPlanAskViktor()$"
+            , contactSales : "$_paymentPlanAskViktor()$"
             , cancelsubscription: "$_paymentPlanCancelSubscription()$"
             , errors: { emptyField: "$_paymentsErrorsEmptyField()$"
                       , missingFullAddress: "$_paymentsErrorsMissingFullAddress()$"
@@ -959,83 +975,19 @@ javascriptLocalisation =
             create : {
               title  : "$_blockingFreeCreateTitle()$"
             },
-            csv : {
-              header : "$_blockingFreeCSVHeader()$"
-            },
-            click: {
-              title : "$_blockingFreeClickTitle()$"
-            },
             has : {
-              headline : "$_blockingFreeHasHeadline()$"
+              headline : "$_blockingFreeHasHeadline()$",
+              subtext1 : "$_blockingFreeHasSubtext1()$"
             },
             hasNot : {
               headline : "$_blockingFreeHasNotHeadline()$",
               subtext1 : "$_blockingFreeHasNotSubtext1()$"
-            },
-            heading : "$_blockingFreeHeading()$"
-          },
-          overdue : {
-            create : {
-              title : "$_blockingOverdueCreateTitle()$",
-              body  : "$_blockingOverdueCreateBody()$"
-            },
-            csv : {
-              body  : "$_blockingOverdueCSVBody()$"
-            },
-            headline : "$_blockingOverdueHeadline()$",
-            subtext1 : "$_blockingOverdueSubtext1()$",
-            subtext2 : "$_blockingOverdueSubtext2()$"
-          },
-          dunning : {
-            headline : "$_blockingDunningHeadline()$",
-            subtext1 : "$_blockingDunningSubtext1()$",
-            subtext2 : "$_blockingDunningSubtext2()$"
-          },
-          canceled : {
-            create : {
-              title : "$_blockingCanceledCreateTitle()$",
-              body  : "$_blockingCanceledCreateBody()$"
-            },
-            csv : {
-              body  : "$_blockingCanceledCSVBody()$"
-            },
-            headline : "$_blockingCanceledHeadline()$",
-            subtext1 : "$_blockingCanceledSubtext1()$",
-            subtext2 : "$_blockingCanceledSubtext2()$"
-          },
-          deactivated : {
-            create : {
-              title : "$_blockingDeactivatedCreateTitle()$",
-              body  : "$_blockingDeactivatedCreateBody()$"
-            },
-            csv : {
-              body  : "$_blockingDeactivatedCSVBody()$"
-            },
-            headline : "$_blockingDeactivatedHeadline()$",
-            subtext1 : "$_blockingDeactivatedSubtext1()$"
-          },
-          willcancel : {
-            headline : "$_blockingWillCancelHeadline()$",
-            subtext1 : "$_blockingWillCancelSubtext1()$"
+            }
           },
           usedall : {
             headline : "$_blockingUsedAllHeadline()$",
             subtext1 : "$_blockingUsedAllSubtext1()$"
-          },
-          paying : {
-            create : {
-              title : "$_blockingPayingCreateTitle()$",
-              body  : "$_blockingPayingCreateBody()$"
-            },
-            csv : {
-              body  : "$_blockingPayingCSVBody()$"
-            }
-          },
-           button : {
-             doublecheck : "$_blockingButtonDoubleCheck()$",
-             reinstate   : "$_blockingButtonReinstate()$",
-             contact     : "$_blockingButtonContact()$"
-           }
+          }
         }
       , apiConfiration : {
              title : "$_apiConfiramtionTitle()$"

@@ -33,7 +33,6 @@ import KontraLink
 import KontraPrelude
 import Mails.SendMail
 import MinutesTime
-import Payments.Model
 import User.Action
 import User.Email
 import User.History.Model
@@ -180,13 +179,13 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
            else do
             -- If user exists we allow takeover only if he is the only user in his company
             users <- dbQuery $ GetCompanyAccounts $ usercompany existinguser
-            mpaymentplan <- dbQuery $ GetPaymentPlan $ usercompany existinguser
-            case (users,fromMaybe NoProvider (ppPaymentPlanProvider <$> mpaymentplan)) of
-              ([_],NoProvider) -> do
-                        _ <- sendTakeoverSingleUserMail user company existinguser
-                        _ <- dbUpdate $ AddCompanyInvite $ CompanyInvite  (userid existinguser) (companyid company)
-                        runJSONGenT $ value "added" True
-              _ -> runJSONGenT $ value "added" False
+            if (length users == 1)
+              then do
+                _ <- sendTakeoverSingleUserMail user company existinguser
+                _ <- dbUpdate $ AddCompanyInvite $ CompanyInvite  (userid existinguser) (companyid company)
+                runJSONGenT $ value "added" True
+              else do
+                runJSONGenT $ value "added" False
 
 {- |
     Handles a resend by checking for the user and invite

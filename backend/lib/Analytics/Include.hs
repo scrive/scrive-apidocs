@@ -18,7 +18,6 @@ import HubSpot.Conf
 import Kontra
 import KontraPrelude
 import MinutesTime
-import Payments.Model
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -29,7 +28,6 @@ data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aCompany        :: Maybe Company
                                    , aToken          :: Maybe String
                                    , aHubSpotConf    :: Maybe HubSpotConf
-                                   , aPaymentPlan    :: Maybe PaymentPlan
                                    , aLanguage       :: Lang
                                    }
 
@@ -41,9 +39,6 @@ getAnalyticsData = do
     _ -> return Nothing
   token <- ctxmixpaneltoken <$> getContext
   hubspotConf <- ctxhubspotconf <$> getContext
-  mplan <- case muser of
-    Just user -> dbQuery $ GetPaymentPlan (usercompany user)
-    Nothing -> return Nothing
   lang <- ctxlang <$> getContext
 
 
@@ -51,7 +46,6 @@ getAnalyticsData = do
                          , aCompany      = mcompany
                          , aToken        = token
                          , aHubSpotConf  = hubspotConf
-                         , aPaymentPlan  = mplan
                          , aLanguage     = lang
                          }
 
@@ -84,7 +78,6 @@ instance ToJSValue AnalyticsData where
 
     mnop (J.value "Signup Method") $ emptyToNothing $ escapeString <$> show <$> usersignupmethod <$> aUser
 
-    J.value "Payment Plan" $ maybe "free" show $ ppPricePlan <$> aPaymentPlan
     J.value "Language" $ codeFromLang aLanguage
 
     -- Set these values so we can A/B/C test within mixpanel,

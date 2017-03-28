@@ -6,6 +6,7 @@ module Chargeable.Model (
   , ChargeCompanyForDKNemIDAuthentication(..)
   , ChargeCompanyForStartingDocument(..)
   , ChargeCompanyForClosingDocument(..)
+  , GetNumberOfDocumentsStartedThisMonth(..)
   ) where
 
 import Control.Monad.Catch
@@ -17,6 +18,7 @@ import Company.CompanyID
 import DB
 import Doc.DocumentID
 import KontraPrelude
+import MinutesTime
 import SMS.Data (SMSProvider(..))
 import User.UserID
 
@@ -119,6 +121,22 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyFor (
       sqlSet "document_id" document_id
       sqlSet "quantity" quantity
 ----------------------------------------
+
+data GetTotalOfChargeableItemFromThisMonth = GetTotalOfChargeableItemFromThisMonth ChargeableItem CompanyID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetTotalOfChargeableItemFromThisMonth Int64 where
+  query (GetTotalOfChargeableItemFromThisMonth charge_type company_id) = do
+    now <- currentTime
+    let firstOfCurrentMonth = formatTime' "%Y-%m-01" now -- IGNORING TIME ZONE - DEFAULT ONE SHOULD BE FINE
+    runQuery_ . sqlSelect "chargeable_items" $ do
+      sqlWhereEq "company_id" company_id
+      sqlWhereEq "type" charge_type
+      sqlWhere $ "time >= cast ("<?> firstOfCurrentMonth <+>" as timestamp)"
+      sqlResult "COALESCE(sum(quantity),0)"
+    fetchOne runIdentity
+
+data GetNumberOfDocumentsStartedThisMonth = GetNumberOfDocumentsStartedThisMonth CompanyID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetNumberOfDocumentsStartedThisMonth Int64 where
+  query (GetNumberOfDocumentsStartedThisMonth company_id) = query $ GetTotalOfChargeableItemFromThisMonth StartingDocument company_id
 
 -- | Fetch id of the author of the document.
 getAuthorAndAuthorsCompanyIDs :: (MonadDB m, MonadThrow m) => DocumentID -> m (UserID, CompanyID)

@@ -20,7 +20,6 @@ import IPAddress
 import KontraPrelude
 import MagicHash (MagicHash)
 import MailContext (MailContext(..))
-import Payments.Config (RecurlyConfig)
 import Salesforce.Conf
 import Session.SessionID
 import Templates
@@ -49,7 +48,6 @@ data Context = Context
     , ctxsalesaccounts       :: [Email] -- ^
     , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
     , ctxusehttps            :: Bool
-    , ctxrecurlyconfig       :: Maybe RecurlyConfig
     , ctxsessionid           :: SessionID
     , ctxtrackjstoken        :: Maybe String
     , ctxmixpaneltoken       :: Maybe String

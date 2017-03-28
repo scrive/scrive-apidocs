@@ -3,7 +3,6 @@
 @import 'runtime/common/utils';
 @import 'runtime/common/table';
 @import 'runtime/common/service-header';
-@import 'runtime/servicebranding/payments';
 @import 'runtime/servicebranding/blocking';
 @import 'runtime/servicebranding/designview';
 
@@ -63,6 +62,17 @@
     &.optional {
       @url :  %('/colored_image?file=attachment-icon.png&color=%D', @actionsecondarycolor);
       background-image: url(@url) ;
+    }
+  }
+}
+
+.subscription {
+  .plan-selection-headers {
+    .plan-selection-header {
+      border-top: 2px solid transparent;
+      &.active,&:hover {
+        border-top: 2px solid @actioncolor;
+      }
     }
   }
 }

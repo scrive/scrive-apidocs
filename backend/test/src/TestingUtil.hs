@@ -133,6 +133,14 @@ instance Arbitrary PadAppMode where
                        , PinCode
                        ]
 
+instance Arbitrary PaymentPlan where
+  arbitrary = elements [ FreePlan
+                       , OnePlan
+                       , TeamPlan
+                       , EnterprisePlan
+                       , TrialPlan
+                       ]
+
 instance Arbitrary CompanyInfo where
   arbitrary = do
     a <- arbitrary
@@ -148,6 +156,7 @@ instance Arbitrary CompanyInfo where
     l <- arbitrary
     m <- arbitrary
     n <- arbitrary
+    p <- arbitrary
     return $ CompanyInfo { companyname       = a
                          , companynumber     = b
                          , companyaddress    = c
@@ -163,6 +172,7 @@ instance Arbitrary CompanyInfo where
                          , companypartnerid = l
                          , companypadappmode = m
                          , companypadearchiveenabled = n
+                         , companypaymentplan = p
                          }
 
 instance Arbitrary MagicHash where
@@ -574,6 +584,7 @@ addNewCompany = do
          , companycgidisplayname = Nothing
          , companysmsprovider = SMSDefault
          , companycgiserviceid = Nothing
+         , companypaymentplan = FreePlan
          , companypartnerid = companypartnerid . companyinfo $ cc
          , companypadappmode = ListView
          , companypadearchiveenabled = True

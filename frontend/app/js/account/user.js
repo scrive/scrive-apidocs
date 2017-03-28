@@ -28,6 +28,10 @@ var User = exports.User = Backbone.Model.extend({
   ready : function() {
      return this.get("ready");
   },
+  reload : function() {
+    this.set({"ready" : false}, {silent: true});
+    this.fetch({cache: false, processData: true});
+  },
   userid : function() {
      return this.get("id");
   },

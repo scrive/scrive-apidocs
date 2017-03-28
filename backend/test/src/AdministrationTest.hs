@@ -24,12 +24,10 @@ test_jsonCompanies = do
   (_adminuser1, _company1) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
   (adminuser2, company2) <- addNewAdminUserAndCompany "Jet" "Li" "jet.li@example.com"
   Just _standarduser2 <- addNewCompanyUser "Bob" "Blue" "jony@blue.com" (companyid company2)
+  _ <- dbUpdate $ SetCompanyPaymentPlan (companyid company2) OnePlan
+
   ctx <- (\c -> c { ctxmaybeuser = Just adminuser2
                 , ctxadminaccounts = [Email "jet.li@example.com"] }) <$> mkContext def
-  req <- mkRequest POST [ ("priceplan", inText "enterprise")
-                       , ("status", inText "active")
-                       ]
-  _ <- runTestKontra req ctx $ handleCompanyPaymentsChange (companyid company2)
 
   req2 <- mkRequest GET [ ("nonFree", inText "true")
                        , ("limit", inText "10")

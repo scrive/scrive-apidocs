@@ -22,20 +22,17 @@ import ActionQueue.EmailChangeRequest
 import ActionQueue.PasswordReminder
 import ActionQueue.UserAccountRequest
 import API.Monad.V1
+import Chargeable.Model
 import Company.Model
 import Context
 import DB
-import Doc.Model
 import Happstack.Fields
 import InputValidation
 import Kontra
 import KontraLink
 import KontraPrelude
 import Mails.SendMail
-import MinutesTime
 import OAuth.Model
-import Payments.Action
-import Payments.Model
 import Redirect
 import Routing
 import Salesforce.AuthorizationWorkflow
@@ -72,10 +69,10 @@ userAPIV1 = choice [
   dir "login"          $ hPostNoXToken $ toK0 $ apiCallLoginUser,
   dir "sendpasswordresetmail" $ hPost $ toK0 $ apiCallSendPasswordReminder,
   dir "getprofile"      $ hGet $ toK0 $ apiCallGetUserProfile,
+  dir "getsubscription"      $ hGet $ toK0 $ apiCallGetSubscription,
   dir "changepassword"  $ hPost $ toK0 $ apiCallChangeUserPassword,
   dir "updateprofile"   $ hPost $ toK0 $ apiCallUpdateUserProfile,
   dir "changeemail"     $ hPost $ toK0 $ apiCallChangeEmail,
-  dir "paymentinfo"     $ hGet $ toK0 $ apiCallPaymentInfo,
   dir "getcallbackscheme" $ hGet $ toK0 $ apiCallUserGetCallbackScheme,
   dir "testsalesforceintegration" $ hGet $ toK0 $ apiCallTestSalesforceIntegration
   ]
@@ -110,6 +107,15 @@ apiCallGetUserProfile =  api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
   company <- getCompanyForUser user
   Ok <$> userJSON user company
+
+
+apiCallGetSubscription :: Kontrakcja m => m Response
+apiCallGetSubscription =  api $ do
+  (user, _ , _) <- getAPIUserWithAnyPrivileges
+  company <- getCompanyForUser user
+  users <- dbQuery $ GetCompanyAccounts $ companyid company
+  docsStartedThisMonth <- fromIntegral <$> (dbQuery $ GetNumberOfDocumentsStartedThisMonth $ companyid company)
+  Ok <$> subscriptionJSON company users docsStartedThisMonth
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do
@@ -269,39 +275,6 @@ apiCallSendPasswordReminder = api $ do
     mail <- resetPasswordMail ctx user link
     scheduleEmailSendout $ mail { to = [getMailAddress user] }
 
-apiCallPaymentInfo :: Kontrakcja m => m Response
-apiCallPaymentInfo = api $ do
-  (user, _ , _) <- getAPIUser APIPersonal
-  admin <- isAdmin <$> getContext
-  time <- ctxtime <$> getContext
-
-  docsusedthismonth <- dbQuery $ GetDocsSentBetween (usercompany user) (beginingOfMonth time) time
-  mpaymentplan <- dbQuery $ GetPaymentPlan $ (usercompany user)
-  quantity <- dbQuery $ GetCompanyQuantity (usercompany user)
-
-  let paymentplan = maybe "free" (getNonTrialPlanName . ppPricePlan) mpaymentplan
-      status      = maybe "active" (show . ppStatus) mpaymentplan
-      dunning     = maybe False (isJust . ppDunningStep) mpaymentplan
-      canceled    = Just CanceledStatus == (ppPendingStatus <$> mpaymentplan)
-      billingEnds = (formatTimeISO . ppBillingEndDate) <$> mpaymentplan
-      docTotal = case (ppStatus <$> mpaymentplan, ppPricePlan <$> mpaymentplan) of
-        (Just DeactivatedStatus, _)   -> 0
-        (Just CanceledStatus, _)      -> 3
-        (_, Just EnterprisePricePlan) -> 5000000
-        (_, Just TrialPricePlan)      -> 10000
-        (_, Just FreePricePlan)       -> 3
-        (_, Nothing)                  -> 3
-        (_, _)                        -> 100
-  fmap Ok $ runJSONGenT $ do
-        value "adminuser" admin
-        value "docsUsed"  docsusedthismonth
-        value "plan"      paymentplan
-        value "status"    status
-        value "dunning"   dunning
-        value "canceled"  canceled
-        value "quantity"  quantity
-        value "billingEnds" billingEnds
-        value "docsTotal" (docTotal::Int)
 
 apiCallUserGetCallbackScheme :: Kontrakcja m => m Response
 apiCallUserGetCallbackScheme = api $ do

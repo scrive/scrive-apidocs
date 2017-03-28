@@ -40,8 +40,6 @@ import Log.Model
 import Log.Utils
 import Mails.Events
 import MinutesTime
-import Payments.Config
-import Payments.Control
 import Purging.Files
 import Session.Data
 import SMS.Events
@@ -110,7 +108,7 @@ main = do
         docSealing = documentSealing appConf templates filecache mrediscache pool
         docSigning = documentSigning  appConf templates filecache mrediscache pool
         apiCallbacks = documentAPICallback runScheduler
-        cron = cronQueue appConf mmixpanel templates runScheduler runDB
+        cron = cronQueue appConf mmixpanel runScheduler runDB
 
     runCryptoRNGT rng
       . finalize (localDomain "document sealing" $ runConsumer docSealing pool)
@@ -121,11 +119,10 @@ main = do
   where
     cronQueue :: AppConf
               -> Maybe (EventProcessor (DBCronM))
-              -> KontrakcjaGlobalTemplates
               -> (forall r. Scheduler r -> CronM r)
               -> (forall r. DBCronM r -> CronM r)
               -> ConsumerConfig CronM JobType CronJob
-    cronQueue appConf mmixpanel templates runScheduler runDB = ConsumerConfig {
+    cronQueue appConf mmixpanel runScheduler runDB = ConsumerConfig {
       ccJobsTable = "cron_jobs"
     , ccConsumersTable = "cron_workers"
     , ccJobSelectors = cronJobSelectors
@@ -225,17 +222,6 @@ main = do
           return . RerunAfter $ if found
                                 then iseconds 1
                                 else iminutes 1
-        RecurlySynchronization -> do
-          time <- runDB $ do
-            time <- currentTime
-            case recurlyConfig appConf of
-              Nothing ->
-                noConfigurationWarning "Recurly"
-              Just rc -> do
-                handleSyncWithRecurly templates (recurlyAPIKey rc) time
-                handleSyncNoProvider time
-            return time
-          return . RerunAt $ nextDayMidnight time
         SessionsEvaluation -> do
           runScheduler $ actionQueue session
           return . RerunAfter $ ihours 1

@@ -34,7 +34,6 @@ import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Doc.DocControl as DocControl
 import qualified EID.CGI.GRP.Control as CGI
 import qualified EID.Nets.Control as NETS
-import qualified Payments.Control as Payments
 import qualified ServerUtils.ServerUtils as ServerUtils
 import qualified User.UserControl as UserControl
 
@@ -56,7 +55,7 @@ import qualified User.UserControl as UserControl
 staticRoutes :: Bool -> Route (Kontra Response)
 staticRoutes production = choice
      [  allLangDirs $                          hGet $ toK0 $ sendRedirect $ LinkDesignView
-     ,  allLangDirs $  dir "pricing"         $ hGet $ toK0 priceplanPage
+     ,  allLangDirs $  dir "pricing"         $ hGet $ toK0 $ sendRedirect $ LinkPermanentRedirect "/services/online/pricing/"
 
      -- Top level handlers - buttons on top bar, when user is logged in
      , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
@@ -138,15 +137,6 @@ staticRoutes production = choice
      , dir "companyaccounts" $ dir "join" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccount
      , dir "companyaccounts" $ dir "join" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccount
 
-     , dir "payments" $ dir "newsubscription" $ hPost $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurly
-     , dir "payments" $ dir "changeplan" $ hPost $ toK0 $ Payments.handleChangePlan
-     , dir "payments" $ dir "postback" $ hPostNoXToken $ toK0 $ Payments.handleRecurlyPostBack
-
-     -- price plan page information
-     , dir "payments" $ dir "pricepageinfo" $ hGetAllowHttp $ toK0 $ Payments.handlePricePageJSON
-     , dir "payments" $ dir "userexists" $ hGetAllowHttp $ toK0 $ Payments.handleUserExists
-     , dir "payments" $ dir "newsubscriptionoutside" $ hPostAllowHttp $ toK0 $ Payments.handleSyncNewSubscriptionWithRecurlyOutside
-
      -- account stuff
      , allLangDirs $ dir "enter" $ hGet $ toK0 $ handleLoginGet
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
@@ -159,9 +149,9 @@ staticRoutes production = choice
      , allLangDirs $ dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
      , allLangDirs $ dir "mynewaccount"  $ hGet $ toK2 $ \(_::String) (_::String) -> return LinkArchive
      , allLangDirs $ dir "accountsetup"  $ hGet $ toK3 $ UserControl.handleAccountSetupGet
-     , dir "accountsetup"  $ hPostNoXToken $ toK3 $ UserControl.handleAccountSetupPost
+     , dir "contactsales"  $ hPostAllowHttp $ toK0 $ UserControl.handleContactSales
 
-     , dir "payments" $ dir "contact" $ hPostAllowHttp $ toK0 $ UserControl.handleContactUs
+     , dir "accountsetup"  $ hPostNoXToken $ toK3 $ UserControl.handleAccountSetupPost
 
      , dir "salesforce" $ dir "integration" $ hGet $ toK0 $ Salesforce.handleSalesforceIntegration
      , dir "salesforce" $ dir "keys"        $ hGet $ toK0 $ Salesforce.getSalesforceKeys

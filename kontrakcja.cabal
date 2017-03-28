@@ -92,7 +92,6 @@ Library
                  , ActionQueue.Scheduler
                  , ActionQueue.Tables
                  , ActionQueue.UserAccountRequest
-                 , Administration.AddPaymentPlan
                  , Administration.AdministrationControl
                  , Administration.AdministrationView
                  , Amazon
@@ -322,15 +321,6 @@ Library
                  , Partner.Partner
                  , Partner.PartnerID
                  , Partner.Tables
-                 , Payments.Action
-                 , Payments.Config
-                 , Payments.Control
-                 , Payments.JSON
-                 , Payments.Model
-                 , Payments.Rules
-                 , Payments.Stats
-                 , Payments.Tables
-                 , Payments.View
                  , Purging.Files
                  , Redirect
                  , Routing
@@ -466,7 +456,6 @@ Library
                , process-extras
                , psqueues
                , random
-               , recurly
                , regex-tdfa
                , resource-pool
                , scientific
@@ -985,7 +974,6 @@ Test-suite kontrakcja-test
                  Monitor.APITest,
                  PadApplication.APITest
                  Partner.APITest,
-                 PaymentsTest,
                  ReferenceScreenshotsTest,
                  SessionsTest,
                  SignupTest,
@@ -1027,7 +1015,6 @@ Test-suite kontrakcja-test
                , monad-control
                , mtl
                , network-uri
-               , recurly
                , regex-tdfa
                , semigroups
                , stm

@@ -1,5 +1,6 @@
 module Company.Model (
     module Company.CompanyID
+  , PaymentPlan(..)
   , Company(..)
   , CompanyInfo(..)
   , minCompanyIdleDocTimeout
@@ -11,6 +12,7 @@ module Company.Model (
   , CreateCompany(..)
   , SetCompanyInfo(..)
   , SetCompanyIPAddressMaskList(..)
+  , SetCompanyPaymentPlan(..)
 
   , CompanyFilter(..)
   ) where
@@ -30,6 +32,40 @@ import Partner.Model
 import SMS.Data (SMSProvider(..))
 import User.UserID
 
+data PaymentPlan =
+    FreePlan
+  | OnePlan
+  | TeamPlan
+  | EnterprisePlan
+  | TrialPlan
+  deriving (Eq, Ord, Show)
+
+instance PQFormat PaymentPlan where
+  pqFormat = const $ pqFormat (undefined::Int16)
+
+instance FromSQL PaymentPlan where
+  type PQBase PaymentPlan = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      0 -> return FreePlan
+      1 -> return OnePlan
+      2 -> return TeamPlan
+      3 -> return EnterprisePlan
+      4 -> return TrialPlan
+      _ -> throwM RangeError {
+        reRange = [(0, 4)]
+      , reValue = n
+      }
+
+instance ToSQL PaymentPlan where
+  type PQDest PaymentPlan = PQDest Int16
+  toSQL FreePlan        = toSQL (0::Int16)
+  toSQL OnePlan         = toSQL (1::Int16)
+  toSQL TeamPlan        = toSQL (2::Int16)
+  toSQL EnterprisePlan  = toSQL (3::Int16)
+  toSQL TrialPlan       = toSQL (4::Int16)
+
 data Company = Company {
     companyid         :: CompanyID
   , companyinfo       :: CompanyInfo
@@ -48,6 +84,7 @@ data CompanyInfo = CompanyInfo {
   , companycgidisplayname :: Maybe String
   , companysmsprovider    :: SMSProvider
   , companycgiserviceid   :: Maybe String
+  , companypaymentplan    :: PaymentPlan
   , companypartnerid      :: PartnerID
   , companypadappmode     :: PadAppMode
   , companypadearchiveenabled :: Bool
@@ -69,6 +106,7 @@ instance Default CompanyInfo where
           , companycgidisplayname      = Nothing
           , companysmsprovider         = SMSDefault
           , companycgiserviceid        = Nothing
+          , companypaymentplan         = FreePlan
           , companypartnerid           = unsafePartnerID 0
           , companypadappmode          = ListView
           , companypadearchiveenabled  = True
@@ -105,7 +143,7 @@ companyFilterToWhereClause (CompanyManyUsers) = do
     ]
 
 companyFilterToWhereClause (CompanyWithNonFreePricePlan) = do
-  sqlWhere $ "((EXISTS (SELECT 1 FROM payment_plans WHERE company_id = companies.id)))"
+  sqlWhere $ "(payment_plan != "<?> FreePlan <> ")"
 
 data GetCompanies = GetCompanies [CompanyFilter] Integer Integer
 instance MonadDB m => DBQuery m GetCompanies [Company] where
@@ -170,6 +208,13 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyIPAddressMaskList Boo
       sqlSet "ip_address_mask" $ show ads
       sqlWhereEq "id" cid
 
+data SetCompanyPaymentPlan = SetCompanyPaymentPlan CompanyID PaymentPlan
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyPaymentPlan Bool where
+  update (SetCompanyPaymentPlan cid pp) =
+    runQuery01 . sqlUpdate "companies" $ do
+      sqlSet "payment_plan" $ pp
+      sqlWhereEq "id" cid
+
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyInfo Bool where
   update (SetCompanyInfo cid CompanyInfo{..}) =
@@ -188,6 +233,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyInfo Bool where
       sqlSet "cgi_display_name" companycgidisplayname
       sqlSet "sms_provider" companysmsprovider
       sqlSet "cgi_service_id" companycgiserviceid
+      -- !We don't update payment plan here - there is other function for that
       sqlSet "partner_id" companypartnerid
       sqlSet "pad_app_mode" companypadappmode
       sqlSet "pad_earchive_enabled" companypadearchiveenabled
@@ -210,12 +256,17 @@ selectCompaniesSelectors = do
   sqlResult "companies.cgi_display_name"
   sqlResult "companies.sms_provider"
   sqlResult "companies.cgi_service_id"
+  sqlResult "companies.payment_plan"
   sqlResult "companies.partner_id"
   sqlResult "companies.pad_app_mode"
   sqlResult "companies.pad_earchive_enabled"
 
-fetchCompany :: (CompanyID, String, String, String, String, String, String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String, PartnerID, PadAppMode, Bool) -> Company
-fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_list, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, partner_id, pad_app_mode, pad_earchive_enabled) = Company {
+fetchCompany :: (CompanyID, String, String, String, String, String, String,
+                 Maybe String, Bool, Maybe Int16, Maybe String,
+                 SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode, Bool) -> Company
+fetchCompany (cid, name, number, address, zip', city, country,
+              ip_address_mask_list, allow_save_safety_copy, idle_doc_timeout, cgi_display_name,
+              sms_provider, cgi_service_id, payment_plan,  partner_id, pad_app_mode, pad_earchive_enabled) = Company {
   companyid = cid
 , companyinfo = CompanyInfo {
     companyname = name
@@ -230,6 +281,7 @@ fetchCompany (cid, name, number, address, zip', city, country, ip_address_mask_l
   , companycgidisplayname = cgi_display_name
   , companysmsprovider = sms_provider
   , companycgiserviceid = cgi_service_id
+  , companypaymentplan = payment_plan
   , companypartnerid = partner_id
   , companypadappmode = pad_app_mode
   , companypadearchiveenabled = pad_earchive_enabled

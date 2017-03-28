@@ -2,6 +2,7 @@ var React = require("react");
 var Document = require("../js/documents").Document;
 var Field = require("../js/fields").Field;
 var FieldPlacement = require("../js/placements").FieldPlacement;
+var Subscription = require("../scripts/account/subscription");
 
   var exports = {};
 
@@ -42,6 +43,19 @@ var FieldPlacement = require("../js/placements").FieldPlacement;
       });
     });
   };
+
+  var createSubscription = exports.createSubscription = function (cb) {
+    var sub = new Subscription({});
+    var triggered = false;
+    sub.fetch({ processData: true, cache: false });
+    sub.on("change:ready", function () {
+      if (!triggered) {
+        triggered = true
+        cb(sub);
+      }
+    });
+  };
+
 
   var waitUntil = exports.waitUntil = function (fn, cb) {
     if (fn()) {

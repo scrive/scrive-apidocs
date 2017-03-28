@@ -1,11 +1,9 @@
 var React = require("react");
 var $ = require("jquery");
-var Blocking = require("../../../js/blocking").Blocking;
 var DesignView = require("../../../js/designview/docdesignview").DesignView;
 var Track = require("../../common/track");
 
 $(function () {
-  window.BlockingInfo = Blocking();
 
   var dv = new DesignView({
     id: fromTemplate.documentId
@@ -14,11 +12,7 @@ $(function () {
   mixpanel.register({DocumentID: fromTemplate.documentId, Context: "design view"});
   Track.track("View Design View");
 
-  $(".body-container").replaceWith(
-    $("<div />").append(window.BlockingInfo.el())
-    .append(dv.el())
-    .children()
-  );
+  $(".body-container").replaceWith(dv.el());
 
   $(window).resize();
 });

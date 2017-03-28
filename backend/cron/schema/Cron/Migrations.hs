@@ -16,7 +16,19 @@ cronMigrations = [
   , addOldLogsRemovalToCronJobs
   , addMarkFilesForPurge
   , removeFindAndDoPostDocumentClosedActionsNew
+  , removeRecurlySynchronizationFromCronJobs
   ]
+
+removeRecurlySynchronizationFromCronJobs :: (MonadDB m, MonadThrow m) => Migration m
+removeRecurlySynchronizationFromCronJobs = Migration {
+    mgrTable = tableCronJobs
+  , mgrFrom = 4
+  , mgrDo = do
+      n <- runSQL "DELETE FROM cron_jobs WHERE id = 'recurly_synchronization'"
+      when (n /= 1) $ do
+        $unexpectedErrorM "Wrong amount of rows deleted"
+  }
+
 
 removeFindAndDoPostDocumentClosedActionsNew :: (MonadDB m, MonadThrow m) => Migration m
 removeFindAndDoPostDocumentClosedActionsNew = Migration {

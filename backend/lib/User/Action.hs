@@ -11,7 +11,6 @@ import Log
 import Text.StringTemplates.Templates
 import qualified Data.Foldable as F
 
-import Administration.AddPaymentPlan
 import BrandedDomain.BrandedDomain
 import Company.CompanyID
 import Company.Model
@@ -23,7 +22,6 @@ import Kontra
 import KontraPrelude
 import Log.Identifier
 import MinutesTime
-import Payments.Model
 import User.Email
 import User.History.Model
 import User.Model
@@ -79,8 +77,6 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
 
   whenM (not <$> isFieldSet "stoplogin") $ do
     logUserToContext $ Just tosuser
-  whenM (isFieldSet "promo") $ do
-    addCompanyPlanManual (companyid company) TrialPricePlan ActiveStatus
 
   return tosuser
 

@@ -33,7 +33,6 @@ import KontraPrelude
 import Mails.Tables
 import OAuth.Tables
 import Partner.Tables
-import Payments.Tables
 import Session.Tables
 import SMS.Tables
 import Theme.Tables
@@ -102,9 +101,7 @@ kontraTables =
   , tablePasswordReminders
   , tableEmailChangeRequests
   , tableUserAccountRequests
-  , tablePaymentPlans
   , tableAttachments
-  , tablePaymentStats
   , tableDocumentApiCallbackConsumers
   , tableDocumentApiCallbacks
   , tableDocumentSealingConsumers

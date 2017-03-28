@@ -52,21 +52,37 @@ PoweredByScrive=E-signing powered by Scrive
 ###
 ### All the prices below are when paying yearly.
 ###
-OnePriceSEKPerMonth=240
+OnePriceSEKPerMonth=300
 ###
-OnePriceEURPerMonth=24
+OnePriceEURPerMonth=30
 ###
-TeamPriceSEKPerMonth=3600
+OnePriceWithDiscountSEKPerMonth=240
 ###
-TeamPriceEURPerMonth=360
+OnePriceWithDiscountEURPerMonth=24
 ###
-EnterprisePriceSEKPerMonth=36000
+TeamPriceSEKPerMonth=4500
 ###
-EnterprisePriceEURPerMonth=3600
+TeamPriceEURPerMonth=450
 ###
-CompanyPriceSEKPerMonth=12000
+TeamPriceWithDiscountSEKPerMonth=3600
 ###
-CompanyPriceEURPerMonth=1200
+TeamPriceWithDiscountEURPerMonth=360
+###
+EnterprisePriceSEKPerMonth=45000
+###
+EnterprisePriceEURPerMonth=4500
+###
+EnterprisePriceWithDiscountSEKPerMonth=36000
+###
+EnterprisePriceWithDiscountEURPerMonth=3600
+###
+CompanyPriceSEKPerMonth=15000
+###
+CompanyPriceEURPerMonth=1500
+###
+CompanyPriceWithDiscountSEKPerMonth=12000
+###
+CompanyPriceWithDiscountEURPerMonth=1200
 ###
 CompanyDocumentsPerMonth=2 500
 ###
@@ -74,6 +90,7 @@ EnterpriseDocumentsPerMonth=10 000
 ###
 TeamDocumentsPerMonth=500
 ###
+
 OneDocumentsPerMonth=25
 ####
 OnePlanName=One
@@ -84,6 +101,11 @@ CompanyPlanName=Company
 ####
 EnterprisePlanName=Enterprise
 ###
+PaymentCurrencyEUR=€
+###
+PaymentCurrencySEK=kr
+###
+PaymentYearlyDiscountAmount=20%
 ###
 ### Texts for integration settings - they are not translated, since this only affect very specyfic users
 ###

@@ -10,10 +10,13 @@ var ParticipantsTabView = require("./participants/participants");
 var ProcessSettingsTabView = require("./processsettings/processsettings");
 var TabBarView = require("./tabbar").TabBarView;
 var TabView = require("./tabbar").TabView;
+var Blocking = require("./blocking/blocking");
+var Subscription = require("../account/subscription");
 
 module.exports = React.createClass({
   propTypes: {
-    model: React.PropTypes.instanceOf(Document).isRequired
+    model: React.PropTypes.instanceOf(Document).isRequired,
+    subscription: React.PropTypes.instanceOf(Subscription).isRequired
   },
   getInitialState: function () {
     return {
@@ -102,19 +105,13 @@ module.exports = React.createClass({
     });
   },
   affix: function () {
-    var documentViewEl = $(React.findDOMNode(this.refs.documentView));
     var frameEl = $(React.findDOMNode(this.refs.frame));
-    var topBarEl = $(React.findDOMNode(this.refs.topBar));
+    var blockingEl = $(React.findDOMNode(this.refs.blocking));
 
     var st = $(window).scrollTop();
-    var docTop = documentViewEl.offset().top + this.topBarHeight;
-    var top = frameEl.offset().top;
-    var barHeight = topBarEl.outerHeight();
-    var barTop = topBarEl.offset().top;
+    var top = frameEl.offset().top + blockingEl.height();
 
-    if (st > top && st + barHeight < docTop) {
-      this.unfix();
-    } if (st > top) {
+    if (st > top) {
       this.fix();
     } else {
       this.unfix();
@@ -123,11 +120,21 @@ module.exports = React.createClass({
   onWindowResizeScroll: function () {
     this.affix();
   },
+  onBlocked: function () {
+    this.refs.blockingComponent.openContactUsModal();
+  },
   render: function () {
     var self = this;
 
     return (
       <div className="design-view-frame" ref="frame" style={this.state.frameStyle}>
+        <div
+          className="design-view-blocking"
+          style={{opacity: this.state.topBarStyle.position == "fixed" ? "0" : ""}}
+          ref="blocking"
+        >
+          <Blocking subscription={this.props.subscription} ref="blockingComponent"/>
+        </div>
         <div className="design-view-frame-top-bar" ref="topBar" style={this.state.topBarStyle}>
           <TabBarView document={this.props.model}>
             <TabView
@@ -163,7 +170,7 @@ module.exports = React.createClass({
           ref="documentView"
         />
 
-        <ButtonBarView document={this.props.model} />
+        <ButtonBarView document={this.props.model}  subscription={this.props.subscription} onBlocked={this.onBlocked}/>
       </div>
     );
   }

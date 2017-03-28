@@ -125,9 +125,6 @@ var CsvProblem = Backbone.Model.extend({
            if (resp.parseError)
               problems.push(new CsvProblem({description: localization.csv.formatError,
                                             header: true}));
-           if(BlockingInfo && resp.rows && BlockingInfo.shouldBlockDocs(resp.rows.length)) {
-               problems.push(new CsvProblem({description:BlockingInfo.csvMessage(resp.rows.length)}));
-           }
            if (resp.header == undefined || resp.header.length < 3) {
               problems.push(new CsvProblem({description: localization.csv.atLeast3Columns}));
            }

@@ -16,7 +16,7 @@ module User.UserControl(
   , handleAccountSetupPost
   , handlePasswordReminderGet
   , handlePasswordReminderPost
-  , handleContactUs
+  , handleContactSales
   , getDaysStats   -- Exported for admin section
   , getMonthsStats -- Exported for admin section
 ) where
@@ -331,11 +331,11 @@ handlePasswordReminderPost uid token = do
     Nothing -> J.runJSONGenT $ J.value "logged" False
 
 -- please treat this function like a public query form, it's not secure
-handleContactUs :: Kontrakcja m => m KontraLink
-handleContactUs = do
+handleContactSales :: Kontrakcja m => m ()
+handleContactSales = do
   ctx <- getContext
-  fname   <- getField' "firstname"
-  lname   <- getField' "lastname"
+  fname   <- getField' "fstname"
+  lname   <- getField' "sndname"
   email   <- getField' "email"
   message <- getField' "message"
   plan    <- getField' "plan"
@@ -359,4 +359,4 @@ handleContactUs = do
                                  , content = content
                                  }
   sendEmailTo contactEmail
-  return $ LoopBack
+  return ()

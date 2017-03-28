@@ -12,7 +12,6 @@ module Administration.AdministrationControl(
             adminonlyRoutes
           , daveRoutes
           , jsonCompanies -- for tests
-          , handleCompanyPaymentsChange -- for tests
           ) where
 
 import Control.Monad.State
@@ -36,11 +35,11 @@ import qualified Data.Text as T
 import qualified Data.Unjson as Unjson
 import qualified Text.StringTemplates.Fields as F
 
-import Administration.AddPaymentPlan
 import Administration.AdministrationView
 import AppView (renderFromBody, simpleHtmlResponse)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
+import Chargeable.Model
 import Company.Model
 import CompanyAccounts.Model
 import DB
@@ -73,9 +72,6 @@ import KontraPrelude
 import Mails.Model
 import MinutesTime
 import PadApplication.Data (padAppModeFromText)
-import Payments.Action
-import Payments.Config
-import Payments.Model
 import Routing
 import Theme.Control
 import User.Email
@@ -92,7 +88,6 @@ import Utils.Monoid
 import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Data.ByteString.RFC2397 as RFC2397
-import qualified Payments.Stats
 
 adminonlyRoutes :: Route (Kontra Response)
 adminonlyRoutes =
@@ -115,24 +110,21 @@ adminonlyRoutes =
 
         , dir "companyadmin" $ hGet $ toK1 $ showAdminCompany
         , dir "companyadmin" $ dir "details" $ hGet $ toK1 $ handleCompanyGetProfile
+
         , dir "companyadmin" $ hPost $ toK1 $ handleCompanyChange
         , dir "companyadmin" $ dir "merge" $ hPost $ toK1 $ handleMergeToOtherCompany
 
         , dir "companyadmin" $ dir "branding" $ Company.adminRoutes
         , dir "companyadmin" $ dir "users" $ hPost $ toK1 $ handlePostAdminCompanyUsers
 
-        , dir "companyadmin" $ dir "payments" $ hGet $ toK1 $ companyPaymentsJSON
-        , dir "companyadmin" $ dir "payments" $ dir "change" $ hPost $ toK1 $ handleCompanyPaymentsChange
-        , dir "companyadmin" $ dir "payments" $ dir "migrate" $ hPost $ toK1 $ handleCompanyPaymentsMigrate
-        , dir "companyadmin" $ dir "payments" $ dir "delete" $ hPost $ toK1 $ handleCompanyPaymentsDelete
-
         , dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
         , dir "companyadmin" $ dir "usagestats" $ dir "days" $ hGet $ toK1 handleAdminCompanyUsageStatsDays
         , dir "companyadmin" $ dir "usagestats" $ dir "months" $ hGet $ toK1 handleAdminCompanyUsageStatsMonths
 
-        , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
+        , dir "companyadmin" $ dir "getsubscription" $ hGet $ toK1 $ handleCompanyGetSubscription
+        , dir "companyadmin" $ dir "updatesubscription" $ hPost $ toK1 $ handleCompanyUpdateSubscription
 
-        , dir "paymentsstats.csv" $ hGet $ toK0 $ Payments.Stats.handlePaymentsStatsCSV
+        , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
 
         , dir "companies" $ hGet $ toK0 $ jsonCompanies
 
@@ -187,46 +179,6 @@ showAdminCompany :: Kontrakcja m => CompanyID -> m String
 showAdminCompany companyid = onlySalesOrAdmin $ do
   ctx <- getContext
   adminCompanyPage ctx companyid
-
-companyPaymentsJSON :: Kontrakcja m => CompanyID -> m JSValue
-companyPaymentsJSON cid = onlySalesOrAdmin $ do
-  RecurlyConfig {..} <- do
-    ctx <- getContext
-    case ctxrecurlyconfig ctx of
-      Nothing -> noConfigurationError "Recurly"
-      Just rc -> return rc
-  mpaymentplan <- dbQuery $ GetPaymentPlan cid
-  quantity <- dbQuery $ GetCompanyQuantity cid
-  paymentPlanJSON mpaymentplan (Just (cid,quantity)) recurlySubdomain
-
-paymentPlanJSON :: (Monad m) => Maybe PaymentPlan -> Maybe (CompanyID,Int) -> String -> m JSValue
-paymentPlanJSON mpaymentplan mci recurlysubdomain =  runJSONGenT $ do
-    value "recurlysubdomain" recurlysubdomain
-    value "companyid" $ show .fst <$> mci
-    value "quantity"  $ snd <$> mci
-
-    case mpaymentplan of
-      Nothing -> do
-        value "haspaymentplan" False
-        value "priceplan" ("free" :: String)
-        value "status" ("active" :: String)
-      Just paymentplan -> do
-        value "haspaymentplan" True
-        value "recurlyplan" $ ppPaymentPlanProvider paymentplan == RecurlyProvider
-        value "accountcode" $ show $ ppAccountCode paymentplan
-        value "priceplan" $ case ppPricePlan paymentplan of
-          FreePricePlan       -> ("free"       :: String)
-          OnePricePlan        -> ("one"        :: String)
-          FormPricePlan       -> ("form"       :: String)
-          TeamPricePlan       -> ("team"       :: String)
-          EnterprisePricePlan -> ("enterprise" :: String)
-          CompanyPricePlan    -> ("company"    :: String)
-          TrialPricePlan      -> ("trial"      :: String)
-        value "status" $ case ppStatus paymentplan of
-          ActiveStatus        -> ("active"     :: String)
-          OverdueStatus       -> ("overdue"    :: String)
-          CanceledStatus      -> ("canceled"   :: String)
-          DeactivatedStatus   -> ("deactivated":: String)
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
@@ -359,9 +311,6 @@ handleMergeToOtherCompany scid = onlySalesOrAdmin $ do
       _ <- dbUpdate $ RemoveCompanyInvite scid (inviteduserid i)
       return ()
 
-
-
-
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => CompanyID -> m ()
 handleCompanyChange companyid = onlySalesOrAdmin $ do
@@ -369,31 +318,6 @@ handleCompanyChange companyid = onlySalesOrAdmin $ do
   companyInfoChange <- getCompanyInfoChange
   _ <- dbUpdate $ SetCompanyInfo companyid (companyInfoChange $ companyinfo company)
   return $ ()
-
-
-handleCompanyPaymentsChange :: Kontrakcja m => CompanyID -> m ()
-handleCompanyPaymentsChange companyid = onlySalesOrAdmin $ do
-  plan <- guardJustM $ readField "priceplan"
-  status <- guardJustM $ readField "status"
-  addCompanyPlanManual companyid plan status
-
-handleCompanyPaymentsMigrate :: Kontrakcja m => CompanyID -> m ()
-handleCompanyPaymentsMigrate companyid = onlySalesOrAdmin $ migratePlan companyid
-
-handleCompanyPaymentsDelete :: Kontrakcja m => CompanyID -> m ()
-handleCompanyPaymentsDelete companyid = onlySalesOrAdmin $ dbUpdate $ DeletePaymentPlan companyid
-
-
-
-
-migratePlan :: Kontrakcja m => CompanyID -> m ()
-migratePlan cid = do
-  mcompanyid <- readField "companyid"
-  case mcompanyid of
-        Just dest -> do
-          migrated <- changePaymentPlanOwner cid dest
-          when (not migrated) internalError
-        _ -> internalError
 
 handleCreateUser :: Kontrakcja m => m JSValue
 handleCreateUser = onlySalesOrAdmin $ do
@@ -462,6 +386,7 @@ getCompanyInfoChange = do
       , companycgidisplayname = fromMaybe companycgidisplayname mcompanycgidisplayname
       , companycgiserviceid = fromMaybe companycgiserviceid mcompanycgiserviceid
       , companysmsprovider = fromMaybe companysmsprovider mcompanysmsprovider
+      , companypaymentplan = companypaymentplan
       , companypartnerid = companypartnerid
       , companypadappmode = fromMaybe companypadappmode mcompanypadappmode
       , companypadearchiveenabled = maybe companypadearchiveenabled (=="true") mcompanypadearchiveenabled
@@ -673,6 +598,20 @@ handleAdminCompanyUsageStatsDays cid = onlySalesOrAdmin $ do
 handleAdminCompanyUsageStatsMonths :: Kontrakcja m => CompanyID -> m JSValue
 handleAdminCompanyUsageStatsMonths cid = onlySalesOrAdmin $ do
   getMonthsStats (Right $ cid)
+
+handleCompanyGetSubscription :: Kontrakcja m => CompanyID -> m JSValue
+handleCompanyGetSubscription cid = onlySalesOrAdmin $ do
+  company <- guardJustM $ dbQuery $ GetCompany cid
+  users <- dbQuery $ GetCompanyAccounts $ cid
+  docsStartedThisMonth <- fromIntegral <$> (dbQuery $ GetNumberOfDocumentsStartedThisMonth $ cid)
+  subscriptionJSON company users docsStartedThisMonth
+
+handleCompanyUpdateSubscription :: Kontrakcja m => CompanyID -> m ()
+handleCompanyUpdateSubscription cid = onlySalesOrAdmin $ do
+  paymentPlan <- guardJustM $ join <$> fmap paymentPlanFromText <$> getField "payment_plan"
+  _ <- dbUpdate $ SetCompanyPaymentPlan cid paymentPlan
+  return ()
+
 
 jsonBrandedDomainsList ::Kontrakcja m => m Aeson.Value
 jsonBrandedDomainsList = onlySalesOrAdmin $ do

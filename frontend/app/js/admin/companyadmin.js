@@ -3,9 +3,9 @@ var CompanieUsersAdminList = require("../../scripts/admin/companyusersadminlist"
 var DocumentsList = require("../../scripts/admin/documentslist");
 var TemplatesList = require("../../scripts/admin/templateslist");
 var CompanyBrandingPanel = require("../../scripts/account/branding/companybrandingpanel");
+var PaymentsPanel = require("../../scripts/admin/paymentspanel");
 var Backbone = require("backbone");
 var AdminCompanyDetails = require("./companydetails.js").AdminCompanyDetails;
-var AdminPayments = require("./payments.js").AdminPayments;
 var Stats = require("../account/usersandstats/stats.js").Stats;
 var Tab = require("../tabs.js").Tab;
 var $ = require("jquery");
@@ -24,11 +24,6 @@ var CompanyAdminModel = Backbone.Model.extend({
         if (this.get("companydetails") != undefined) return this.get("companydetails");
         this.set({ "companydetails" :new AdminCompanyDetails({ companyid: this.companyid() })});
         return this.companydetails();
-  },
-  companypayments: function() {
-        if (this.get("companypayments") != undefined) return this.get("companypayments");
-        this.set({ "companypayments" : new AdminPayments({ companyid: this.companyid() }) });
-        return this.companypayments();
   },
   companystatistics: function() {
         if (this.get("companystatistics") != undefined) return this.get("companystatistics");
@@ -85,15 +80,20 @@ var CompanyAdminModel = Backbone.Model.extend({
   },
   companypaymentsTab : function() {
                     var self = this;
+                    var div = $('<div/>');
+                    var paymentsPanel = React.render(React.createElement(PaymentsPanel,{
+                      companyid : this.companyid()
+                    }),div[0]);
                     return new Tab({
                         name: "Payments",
-                        elems: [function() { return $(self.companypayments().el()); }],
+                        elems: [function() { return div; }],
                         pagehash : "payments",
                         onActivate : function() {
-                            self.companypayments().refresh();
+                          paymentsPanel.reload();
                         }
                     });
   },
+
   companystatisticsTab : function() {
                     var self = this;
                     return new Tab({

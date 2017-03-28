@@ -293,7 +293,6 @@ mkContext lang = do
                                     , guardTimeExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
                                     , guardTimeControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
                                     }
-        , ctxrecurlyconfig = Nothing
         , ctxsessionid = tempSessionID
         , ctxtrackjstoken = Nothing
         , ctxmixpaneltoken = Nothing
@@ -317,8 +316,6 @@ clearTables :: TestEnv ()
 clearTables = do
   runSQL_ "DELETE FROM evidence_log"
   runSQL_ "DELETE FROM companyinvites"
-  runSQL_ "DELETE FROM payment_plans"
-  runSQL_ "DELETE FROM payment_stats"
   runSQL_ "DELETE FROM chargeable_items"
 
   runSQL_ "DELETE FROM email_change_requests"

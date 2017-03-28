@@ -54,7 +54,6 @@ var _ = require("underscore");
       suppressSpace : React.PropTypes.bool,
       autocomplete  : React.PropTypes.bool,
       readonly      : React.PropTypes.bool,
-      disabled      : React.PropTypes.bool,
       focus         : React.PropTypes.bool,
       autoGrowth    : React.PropTypes.bool,
       restrictInput : React.PropTypes.func,
@@ -87,7 +86,6 @@ var _ = require("underscore");
           "inputStyle" : {},
           "autocomplete" : false,
           "readonly" : false,
-          "disabled" : false,
           "restrictInput": function () { return true; }
         };
       },

@@ -47,6 +47,9 @@ sendRedirect (LinkLoginDirect lang) = do
        Nothing ->  "/" ++ (codeFromLang lang) ++  "/enter"
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
 
+sendRedirect link@(LinkPermanentRedirect _) = do
+  seeOther (show link) =<< setRsCode 301 (seeOtherXML $ show link)
+
 sendRedirect link = do
   seeOther (show link) =<< setRsCode 303 (seeOtherXML $ show link)
 

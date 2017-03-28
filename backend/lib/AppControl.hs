@@ -321,7 +321,6 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , ctxsalesaccounts = sales appConf
         , ctxmaybepaduser = mpaduser
         , ctxusehttps = useHttps appConf
-        , ctxrecurlyconfig = recurlyConfig appConf
         , ctxsessionid = sesID session
         , ctxtrackjstoken = trackjsToken appConf
         , ctxmixpaneltoken = mixpanelToken appConf

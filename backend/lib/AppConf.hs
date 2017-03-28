@@ -16,7 +16,6 @@ import HostClock.System (defaultNtpServers)
 import HubSpot.Conf (HubSpotConf(..))
 import KontraPrelude
 import Log.Configuration
-import Payments.Config (RecurlyConfig(..))
 import Salesforce.Conf
 import User.Email
 
@@ -42,7 +41,6 @@ data AppConf = AppConf {
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
   , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
-  , recurlyConfig      :: Maybe RecurlyConfig          -- ^ for payments (api key + private key)
   , mixpanelToken      :: Maybe String                 -- ^ for mixpanel integration
   , trackjsToken       :: Maybe String                 -- ^ for Track.js integration
   , hubspotConf        :: Maybe HubSpotConf            -- ^ for hubspot integration
@@ -113,9 +111,6 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "initial_users"
       initialUsers
       "email and passwords for initial users"
-  <*> fieldOpt "recurly"
-      recurlyConfig
-      "Recurly configuration for payments"
   <*> fieldOpt "mixpanel"
       mixpanelToken
       "Token for Mixpanel"
@@ -159,7 +154,6 @@ instance Default AppConf where
     , admins             = []
     , sales              = []
     , initialUsers       = []
-    , recurlyConfig      = Nothing
     , mixpanelToken      = Nothing
     , trackjsToken       = Nothing
     , hubspotConf        = Nothing

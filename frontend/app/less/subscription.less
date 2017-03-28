@@ -1,0 +1,205 @@
+@import 'branding/variables.less';
+
+.subscription {
+
+   .subscription-plan {
+     margin-top: 38px;
+
+     .account-header {
+       margin-botton:10px;
+     }
+
+     .plan-information {
+       margin-top: 20px;
+       margin-bottom:10px;
+       padding:20px;
+       text-align: center;
+       width: 320px;
+       background: @white;
+       border: 1px solid @gray-25-percent;
+
+       .plan-name {
+         margin-bottom: 30px;
+         font-size: 24px;
+       }
+    }
+
+    .contact-sales {
+      a.put-link-to-mail-sales-here {
+        color: @brand-primary-darker;
+        font-weight: 400;
+      }
+    }
+   }
+
+   .plan-selection-headers {
+
+    margin-top: 35px;
+    margin-bottom: 20px;
+    margin-left: 1px;
+    margin-right:1px;
+
+    .plan-selection-header {
+      padding-top:35px;
+      padding-bottom:35px;
+      width: 50%;
+      display:inline-block;
+      text-align: center;
+      cursor: pointer;
+
+      .text {
+        font-weight: 600;
+        font-size: 22px;
+        color: @gray-70-percent;
+      }
+
+
+      &.left {
+        margin-right:-2px;
+        border-left: 1px solid transparent;
+        border-right: 1px solid transparent;
+        border-bottom: 1px solid @gray-25-percent;
+
+      }
+      &.right {
+        margin-right:-2px;
+        border-left: 1px solid transparent;
+        border-right: 1px solid transparent;
+        border-bottom: 1px solid @gray-25-percent;
+      }
+
+
+
+      &.active {
+        border-left: 1px solid @gray-25-percent;
+        border-right: 1px solid @gray-25-percent;
+        border-bottom: 1px solid transparent;
+      }
+
+    }
+   }
+
+  .plan-options-table {
+    width: 100%;
+
+    tr.plan-options-tr {
+      td.plan-option-td {
+        width: 25%;
+        border: 1px solid @gray-25-percent;
+        background: @white;
+
+        .plan-option {
+          text-align: center;
+          height: 100%;
+          padding-top:55px;
+          padding-bottom:55px;
+
+          .plan-option-header {
+            font-size: 42px;
+            font-weight: lighter;
+            padding-bottom: 20px;
+            color: @black;
+          }
+
+          .plan-option-price {
+
+            .price {
+              color: @gray-85-percent;
+              font-size: 52px;
+              font-weight: 400;
+              line-height: 1.5em;
+              letter-spacing: 0;
+            }
+
+            .unit {
+              display: inline-block;
+              font-size: 20px;
+              padding-left: 10px;
+              font-weight: 700;
+              color: @black;
+            }
+
+          }
+
+          .plan-option-descriptions {
+
+            padding-top: 30px;
+            min-height: 110px;
+
+            .plan-option-description-item {
+               font-size: 19px;
+               line-height: 19px;
+               padding-bottom: 10px;
+               color: @black;
+
+              .desc-em {
+                text-decoration: underline;
+              }
+            }
+          }
+
+          .plan-option-features {
+
+            min-height: 190px;
+
+            .plan-option-feature-item {
+               font-size: 19px;
+               line-height: 19px;
+               padding-bottom: 10px;
+               color: @black;
+
+            }
+          }
+
+          .plan-option-action {
+            padding-top:25px;
+
+            .button {
+              width: 120px
+            }
+          }
+
+        }
+      }
+
+      td.plan-contact-td {
+        width: 75%;
+        background: @white;
+        border: 1px solid @gray-25-percent;
+        vertical-align: top;
+
+        .plan-contact {
+          margin-top:35px;
+          text-align: center;
+
+          .plan-contact-input {
+            display: inline-block;
+            width: 320px;
+            margin:10px;
+
+            &.readonly, &.readonly input {
+              background: @gray-5-percent;
+            }
+
+            &.textarea {
+              font-weight: 300;
+              font-size: 16px;
+              text-align: left;
+              height:175px;
+            }
+          }
+          .button {
+            margin-top:10px;
+          }
+        }
+      }
+    }
+  }
+
+  .tax-info {
+    font-size: 19px;
+    font-weight: 300;
+    color: @black;
+    margin-top: 20px;
+  }
+}

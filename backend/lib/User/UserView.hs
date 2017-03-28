@@ -3,6 +3,7 @@ module User.UserView (
     -- pages
     userJSON,
     companyJSON,
+    subscriptionJSON,
     pageAcceptTOS,
     pageDoYouWantToChangeEmail,
 
@@ -22,6 +23,7 @@ module User.UserView (
 
     userStatsToJSON,
     companyStatsToJSON,
+    paymentPlanFromText
     ) where
 
 import Control.Monad.Catch
@@ -81,6 +83,24 @@ companyJSON company = runJSONGenT $ do
     value "smsprovider" $ show . companysmsprovider . companyinfo $ company
     value "padappmode" $ T.unpack $ padAppModeText $ companypadappmode $ companyinfo company
     value "padearchiveenabled" . companypadearchiveenabled $ companyinfo company
+
+paymentPlanText :: PaymentPlan -> String
+paymentPlanText FreePlan       = "free"
+paymentPlanText OnePlan        = "one"
+paymentPlanText TeamPlan       = "team"
+paymentPlanText EnterprisePlan = "enterprise"
+paymentPlanText TrialPlan      = "trial"
+
+paymentPlanFromText :: String -> Maybe PaymentPlan
+paymentPlanFromText s = find (\p -> s == paymentPlanText p) allAvailablePlans
+  where
+    allAvailablePlans = [FreePlan, OnePlan, TeamPlan, EnterprisePlan, TrialPlan]
+
+subscriptionJSON  :: Monad m => Company -> [User] -> Int -> m JSValue
+subscriptionJSON company users startedLastMonth= runJSONGenT $ do
+  value "payment_plan" $ paymentPlanText $ companypaymentplan $ companyinfo company
+  value "number_of_users" $ length users
+  value "started_last_month" $ startedLastMonth
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do

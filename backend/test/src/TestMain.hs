@@ -60,7 +60,6 @@ import Monitor.APITest
 import OAuth
 import PadApplication.APITest
 import Partner.APITest
-import PaymentsTest
 import ReferenceScreenshotsTest
 import SessionsTest
 import SignupTest
@@ -111,7 +110,6 @@ allTests = [
   , oauthTest
   , padAplicationAPITests
   , partnerAPITests
-  , paymentsTests
   , sessionsTests
   , signupTests
   , thirdPartyStatsTests
