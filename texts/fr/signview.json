@@ -43,7 +43,7 @@
 "_elegBankIDFaultModalTitle":"Problème de signature avec BankID",
 "_elegBankIDRFA1":"Démarrez votre application BankID.",
 "_elegBankIDRFA12":"Erreur interne. Mettez votre application BankID à jour et réessayez.",
-"_elegBankIDRFA13":"Essayez de démarrer votre application BankID.",
+"_elegBankIDRFA13":"",
 "_elegBankIDRFA14":"Vous ne disposez pas d'une application BankID pouvant être utilisée pour cette signature sur cet appareil. Si vous ne disposez pas d'une application BankID, vous pouvez en commander auprès de votre banque. Si vous disposez d'une application BankID sur un autre appareil, vous pouvez la démarrer sur cet appareil.",
 "_elegBankIDRFA16":"L'application BankID you are trying to use isque vous essayez d'utiliser est révoquée ou très obsolète. Veuillez utiliser une autre application BankID ou en commander une nouvelle auprès de votre banque.",
 "_elegBankIDRFA17":"Impossible de trouver l'application BankID sur votre appareil. Veuillez l'installer et en commander une autre auprès de votre banque. Installez l'application à partir de <a target='_blank' href='http://install.bankid.com'>install.bankid.com</a>.",

@@ -43,7 +43,7 @@
 "_elegBankIDFaultModalTitle":"Problema nella firma con BankID",
 "_elegBankIDRFA1":"Avvia la tua app BankID",
 "_elegBankIDRFA12":"Errore interno. Aggiorna la tua app BankID e riprova.",
-"_elegBankIDRFA13":"Stiamo cercando di avviare la tua app BankID.",
+"_elegBankIDRFA13":"",
 "_elegBankIDRFA14":"Non hai un BankID che può essere utilizzato per la firma su questo dispositivo. Se non disponi di un BankID puoi richiederne uno alla tua banca. Se disponi di un BankID su un altro dispositivo è possibile avviare l'app BankID su quel dispositivo.",
 "_elegBankIDRFA16":"Il BankID che si sta tentando di utilizzare è revocato o troppo vecchio. Si prega di utilizzare un altro BankID o richiederne uno nuovo alla propria banca.",
 "_elegBankIDRFA17":"L'app BankID non è stata trovata sul dispositivo. Installare e richiedere un BankID alla propria banca. Installare l'applicazione su <a target='_blank' href='http://install.bankid.com'> install.bankid.com </a>.",

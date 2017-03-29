@@ -43,7 +43,7 @@
 "_elegBankIDFaultModalTitle":"Probleem met het ondertekenen via BankID",
 "_elegBankIDRFA1":"Start uw BankID app.",
 "_elegBankIDRFA12":"Interne fout. Update uw BankID app en probeer opnieuw.",
-"_elegBankIDRFA13":"Bezig met het proberen van het starten van uw BankID app.",
+"_elegBankIDRFA13":"",
 "_elegBankIDRFA14":"U heeft geen BankID dat gebruikt kan worden voor deze handtekening op dit apparaat. Als u geen BankID heeft kunt u er een aanvragen bij uw bank. Als u een BankID heeft op een ander apparaat kunt u de BankID app op dat apparaat starten.",
 "_elegBankIDRFA16":"De BankID dat u probeert te gebruiken is ingetrokken of te oud. Gebruik a.u.b. een andere BankID of vraag een nieuwe aan bij uw bank.",
 "_elegBankIDRFA17":"De BankID app kon niet gevonden worden op uw apparaat. Installeer de app en vraag een BankID aan bij uw bank. Installeer de app via <a target='_blank' href='http://install.bankid.com'>install.bankid.com</a>.",

@@ -43,7 +43,7 @@
 "_elegBankIDFaultModalTitle":"Ocorreu um problema ao assinar com o BankID",
 "_elegBankIDRFA1":"Inicie a sua Aplicação BankID.",
 "_elegBankIDRFA12":"Erro interno. Actualize a sua Aplicação BankID e tente novamente.",
-"_elegBankIDRFA13":"A tentar iniciar a sua Aplicação BankID.",
+"_elegBankIDRFA13":"",
 "_elegBankIDRFA14":"Não dispõe de um BankID que possa ser utilizado para esta assinatura neste dispositivo. Se não dispõe de um BankID, pode solicitá-lo no seu banco. Se dispõe de um BankID noutro dispositivo, pode iniciar a Aplicação BankID nesse dispositivo.",
 "_elegBankIDRFA16":"O BankID que está a tentar utilizar foi cancelado ou é demasiado antigo. Utilize outro BankID ou solicite um novo no seu banco.",
 "_elegBankIDRFA17":"Não foi possível encontrar a Aplicação BankID no seu dispositivo. Proceda à respectiva instalação e solicite um BankID no seu banco. Instale a aplicação a partir de <a target='_blank' href='http://install.bankid.com'>install.bankid.com</a>.",

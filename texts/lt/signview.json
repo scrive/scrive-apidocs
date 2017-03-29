@@ -43,7 +43,7 @@
 "_elegBankIDFaultModalTitle":"Pasirašymo per „BankID“ klaida",
 "_elegBankIDRFA1":"Įjunkite savo „BankID“ programėlę",
 "_elegBankIDRFA12":"Vidinė klaida. Atnaujinkite savo „BankID“ programėlę ir pabandykite iš naujo.",
-"_elegBankIDRFA13":"Bandome įjungti Jūsų „BankID“ programėlę",
+"_elegBankIDRFA13":"",
 "_elegBankIDRFA14":"Jūs neturite „BankID“ per kurį galėtumėte pasirašyti šiuo įrenginiu. Jei neturite „BankID“, jį galima užsisakyti iš savo banko. Jei turite „BankID“ kitame įrenginyje, tuomet „BankID“ programėle galite naudotis tame įrenginyje.",
 "_elegBankIDRFA16":"„BankID“, kuriuo bandote pasinaudoti, atšauktas arba pasenęs. Naudokite kitą „BankID“ arba iš savo banko užsisakykite naują.",
 "_elegBankIDRFA17":"Jūsų įrenginyje nėra „BankID“ programėlės. Įdiekite ją ir iš savo banko užsisakykite „BankID“. Programėlę galima įdiegti iš čia <a target='_blank' href='http://install.bankid.com'>install.bankid.com</a>.",

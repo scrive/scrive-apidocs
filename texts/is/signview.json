@@ -43,7 +43,7 @@
 "_elegBankIDFaultModalTitle":"Vandamál varðandi undirskrift með BankID",
 "_elegBankIDRFA1":"Opnaðu BankID appið þitt.",
 "_elegBankIDRFA12":"Innri villa. Uppfærðu BankID appið þitt og reyndu aftur.",
-"_elegBankIDRFA13":"Reyni að opna BankID appið þitt.",
+"_elegBankIDRFA13":"",
 "_elegBankIDRFA14":"Þú ert ekki með BankID sem má nota fyrir þessa undirskrift í þessu tæki. Ef þú ert ekki með  BankID geturðu pantað slíkt frá bankanum þínum. Ef þú ert með BankID í öðru tæki getur þú opnað BankID appið í því tæki.",
 "_elegBankIDRFA16":"BankID sem þú ert að reyna að nota var numið úr gildi eða er of gamalt. Vinsamlegast notaðu annað BankID eða pantaðu nýtt frá bankanum þínum.",
 "_elegBankIDRFA17":"BankID forritið fannst ekki í tækinu þínu. Vinsamlegast settu það upp og pantaðu BankID frá bankanum þínum. Settu upp forritið í <a target='_blank' href='http://install.bankid.com'>install.bankid.com</a>.",

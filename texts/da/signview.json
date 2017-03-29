@@ -43,7 +43,7 @@
 "_elegBankIDFaultModalTitle":"Problem med at signere med BankID",
 "_elegBankIDRFA1":"Start din BankID app. ",
 "_elegBankIDRFA12":"Teknisk fejl. Opdatér din BankID app og forsøg igen.",
-"_elegBankIDRFA13":"Forsøger at starte din BankID app.",
+"_elegBankIDRFA13":"",
 "_elegBankIDRFA14":"Du har ikke et BankID, der kan anvendes som signatur på denne enhed. Har du endnu ikke modtaget et BankID, kan du bestille det via din bank. Hvis du har et BankID på en anden enhed, kan du køre BankID app'en via denne enhed.",
 "_elegBankIDRFA16":"Det BankID, du forsøger at anvende, er enten annulleret eller for gammelt. Anvend venligst et andet BankID eller bestil et nyt fra din bank. ",
 "_elegBankIDRFA17":"BankID app'en kunne ikke findes på din enhed. Installér den venligst og bestil et nyt BankID fra din bank. Installér app'en fra <a target='_blank' href='http://install.bankid.com'>install.bankid.com</a>.",

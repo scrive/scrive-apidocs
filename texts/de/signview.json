@@ -43,7 +43,7 @@
 "_elegBankIDFaultModalTitle":"Probleme beim Signieren mit der BankID",
 "_elegBankIDRFA1":"Starten Sie Ihre BankID-App.",
 "_elegBankIDRFA12":"Interner Fehler. Aktualisieren Sie Ihre BankID und versuchen Sie es erneut.",
-"_elegBankIDRFA13":"Versuchen Sie Ihre BankID-App zu starten.",
+"_elegBankIDRFA13":"",
 "_elegBankIDRFA14":"Sie haben keine BankID, die Sie für diese Signatur auf Ihrem Gerät verwenden können. Falls Sie keine BankID haben, erhalten Sie eine bei Ihrer Bank. Wenn Sie auf einem anderen Gerät eine BankID haben, können Sie auf diesem Gerät die BankID-App benutzen.",
 "_elegBankIDRFA16":"Die BankID, die Sie gerade anwenden, wurde annulliert oder ist zu alt. Verwenden Sie bitte eine andere BankID oder beantragen Sie bei Ihrer Bank eine neue.",
 "_elegBankIDRFA17":"Die BankID-App befindet sich nicht auf Ihrem Gerät. Bitte installieren Sie diese und beantragen Sie bei Ihrer Bank eine BankID. Installieren Sie die App von <a target='_blank' href='http://install.bankid.com'>install.bankid.com</a>.",

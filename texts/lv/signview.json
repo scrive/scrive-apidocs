@@ -43,7 +43,7 @@
 "_elegBankIDFaultModalTitle":"Problēma, parakstoties ar Bank ID",
 "_elegBankIDRFA1":"Atveriet savu BankID lietotni.",
 "_elegBankIDRFA12":"Sistēmas kļūda. Atjauniniet BankID lietotni un mēģiniet vēlreiz.",
-"_elegBankIDRFA13":"Mēģina atvērt Jūsu BankID lietotni.",
+"_elegBankIDRFA13":"",
 "_elegBankIDRFA14":"Jums nav BankID, ko izmantot, lai parakstītos šajā ierīcē. Ja Jums nav BankID, to varat pasūtīt bankā. Ja Jums ir BankID citā ierīcē, varat atvērt BankID lietotni tajā.",
 "_elegBankIDRFA16":"BankID, ko mēģināt lietot, ir atsaukts vai pārāk vecs. Lūdzu, izmantojiet citu BankID vai savā bankā pasūtiet jaunu.",
 "_elegBankIDRFA17":"Jūsu ierīcē nevarēja atrast BankID lietotni. Lūdzu, instalējiet lietotni un pasūtiet BankID savā bankā. Instalējiet lietotni no vietnes <a target='_blank' href='http://install.bankid.com'>install.bankid.com</a>.",

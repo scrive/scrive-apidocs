@@ -43,7 +43,7 @@
 "_elegBankIDFaultModalTitle":"Probleem BankID kasutamisel allkirjastamiseks.",
 "_elegBankIDRFA1":"Käivitage enda BankID rakendus.",
 "_elegBankIDRFA12":"Süsteemi viga. Uuendage enda BankID rakendust ja proovige uuesti.",
-"_elegBankIDRFA13":"Püüame BankID rakendust käivitada.",
+"_elegBankIDRFA13":"",
 "_elegBankIDRFA14":"Teil puudub BankID, mida oleks võimalik käesoleval seadmel selle allkirja andmiseks kasutada. Kui Teil puudub BankID, saate selle enda pangast tellida. Kui Teil on BankID teisel seadmel, võite käivitada enda seadmel BankID rakenduse.",
 "_elegBankIDRFA16":"BankID mida püüate kasutada on tagasi kutsutud või liiga vana. Palun kasutage teist BankID või tellige enda pangalt uus.",
 "_elegBankIDRFA17":"BankID rakendust ei leitud. Paigaldage see ja tellige enda pangalt BankID. Paigaldage rakendus lingilt <a target='_blank' href='http://install.bankid.com'>install.bankid.com</a>.",
