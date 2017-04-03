@@ -90,7 +90,6 @@ EnterpriseDocumentsPerMonth=10 000
 ###
 TeamDocumentsPerMonth=500
 ###
-
 OneDocumentsPerMonth=25
 ####
 OnePlanName=One
