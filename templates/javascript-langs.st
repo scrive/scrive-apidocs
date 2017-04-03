@@ -684,15 +684,8 @@ javascriptLocalisation =
 
           }
         , payments: {
-             users: "$_paymentsUsers()$"
-           , user: "$_paymentsUser()$"
-           , vat: "$_paymentsVat()$"
-           , vat25: "$_paymentsVat25()$"
-           , expires: "$_paymentsExpires()$"
-           , creditcardnumber: "$_paymentsCreditCardNumber()$"
+             vat: "$_paymentsVat()$"
            , contact: "$_paymentPlanContact()$"
-           , already: "$_paymentPlanAlreadySubscribed()$"
-           , alreadyGo: "$_paymentPlanAlreadySubscribedGo()$"
            , placeholder : "$_paymentPlanPlaceholder()$"
            , sendmsg : "$_paymentPlanSendMessage()$"
            , numberOfUsers: "$_paymentNumberOfUsers()$"
@@ -701,15 +694,10 @@ javascriptLocalisation =
                 , SEK: "$_paymentPriceUnitSEK()$"
             }
            , allFeaturesIncluded: "$_paymentAllFeaturesIncluded()$"
-           , payMonthly: "$_paymentPayMonthly()$"
            , payYearly: "$_paymentPayYearly()$"
            , payBiYearly: "$_paymentPayBiYearly()$"
            , plans: {
-                    // Legacy plans only need the name
-                    form : {
-                          name: "$OnePlanName()$"
-                    }
-                    , trial : {
+                    trial : {
                           name : "$_paymentPlanTrial()$"
                     }
                     , team : {
@@ -722,7 +710,6 @@ javascriptLocalisation =
                               EUR: "$TeamPriceWithDiscountEURPerMonth()$"
                             , SEK: "$TeamPriceWithDiscountSEKPerMonth()$"
                         }
-                        , signeddocs: "$TeamDocumentsPerMonth()$"
                         , branding: "$_paymentPlanTeamBranding()$"
                         , users: "$_paymentPlanTeamUsers()$"
                         , stores: "$_paymentPlanTeamStores()$"
@@ -739,7 +726,6 @@ javascriptLocalisation =
                               EUR: "$EnterprisePriceWithDiscountEURPerMonth()$"
                             , SEK: "$EnterprisePriceWithDiscountSEKPerMonth()$"
                         }
-                        , signeddocs: "$EnterpriseDocumentsPerMonth()$"
                         , branding: "$_paymentPlanEnterpriseBranding()$"
                         , users: "$_paymentPlanEnterpriseUsers()$"
                         , stores: "$_paymentPlanEnterpriseStores()$"
@@ -759,7 +745,6 @@ javascriptLocalisation =
                               EUR: "$CompanyPriceWithDiscountEURPerMonth()$"
                             , SEK: "$CompanyPriceWithDiscountSEKPerMonth()$"
                         }
-                        , signeddocs: "$CompanyDocumentsPerMonth()$"
                         , branding: "$_paymentPlanCompanyBranding()$"
                         , users: "$_paymentPlanCompanyUsers()$"
                         , stores: "$_paymentPlanCompanyStores()$"
@@ -777,56 +762,17 @@ javascriptLocalisation =
                               EUR: "$OnePriceWithDiscountEURPerMonth()$"
                             , SEK: "$OnePriceWithDiscountSEKPerMonth()$"
                         }
-                        , signeddocs: "$OneDocumentsPerMonth()$"
                         , users: "$_paymentPlanOneUsers()$"
                         , support: "$_paymentPlanOneSupport()$"
                     }
-            }
-           , table: { currentplan : "$_paymentPlanCurrentPlan()$"
-                    , totalpermonth: "$_paymentPlanTotalPerMonth()$"
-                    , payments    : "$_paymentPlanPayments()$"
-                    , nextpayment : "$_paymentPlanNextPayment()$"
-                    , previouspayments : "$_paymentPlanPreviousPayments()$"
-                    , changebilling: "$_paymentPlanChangeBilling()$"
-                    , none: "$_paymentPlanNone()$"
-                    }
-            , subscribe: "$_paymentPlanSubscribe()$"
-            , purchase: "$_paymentPlanPurchase()$"
-            , subscribeheader : "$_paymentsSubscribeHeader()$"
-            , savechanges : "$_SaveChanges()$"
-            , savingsubscription : "$_paymentPlanSavingSubscription()$"
-            , contactSales : "$_paymentPlanAskViktor()$"
-            , cancelsubscription: "$_paymentPlanCancelSubscription()$"
-            , errors: { emptyField: "$_paymentsErrorsEmptyField()$"
-                      , missingFullAddress: "$_paymentsErrorsMissingFullAddress()$"
-                      , invalidEmail: "$_paymentsErrorsInvalid()$"
-                      , invalidCC: "$_paymentsErrorsInvalid()$"
-                      , invalidCVV: "$_paymentsErrorsInvalid()$"
-                      , invalidCoupon: "$_paymentsErrorsInvalid()$"
-                      , cardDeclined: "$_paymentsErrorsCardDeclined()$"
-                      , acceptTOS: "$_paymentsErrorsAcceptTOS()$"
-                      , invalidQuantity: "$_paymentsErrorsInvalidQuantity()$"
-                      }
-              , outside: {
-                  confirmAccountCreatedUser       : "$_confirmAccountCreatedUser()$",
-                  confirmAccountCreatedUserHeader : "$_modalUserSignupDoneHeader()$",
-                  confirmAccountMaybeCreatedUser  : "$_confirmAccountMaybeCreatedUser()$",
-                  confirmAccountExistingUser      : "$_confirmAccountExistingUser()$",
-                  confirmAccountExistingUserHeader: "$_confirmAccountExistingUserHeader()$",
-                  sorryExistingUser               : "$_flashMessageUserWithSameEmailExists()$",
-                  sorryExistingUserHeader         : "$_mailDocumentErrorContentBodyFourth()$"
-              }
-              , cancelDialog : "$_paymentsCancelDialog()$"
-              , cancelingSubscription : "$_paymentsCancelingSubscription()$"
-              , renewingSubscription : "$_paymentsRenewingSubscription()$"
-              , renewSubscription : "$_paymentsRenewSubscription()$"
-              , renewDialog : "$_paymentsRenewDialog()$"
-              , billingInfoSaved : "$_paymentsBillingInfoSaved()$"
-              , wasCanceled : "$_paymentsWasCanceled()$"
-              , canceledDate : "$_paymentsCanceledDate()$"
-              , contactAdmin : "$_paymentsContactAdmin()$"
-              , mustBeAdmin : "$_paymentsMustBeAdmin()$"
-              , subscriptionRenewed : "$_paymentsSubscriptionRenewed()$"
+           }
+           , table: {
+              currentplan : "$_paymentPlanCurrentPlan()$"
+           }
+           , contactSales : "$_paymentPlanAskViktor()$"
+           , outside: {
+                confirmAccountMaybeCreatedUser  : "$_confirmAccountMaybeCreatedUser()$"
+           }
         }
       , documents : "$_docListTabsDocs()$"
       , templates : "$_docListTabsTemplates()$"

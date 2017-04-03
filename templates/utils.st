@@ -84,14 +84,6 @@ CompanyPriceWithDiscountSEKPerMonth=12000
 ###
 CompanyPriceWithDiscountEURPerMonth=1200
 ###
-CompanyDocumentsPerMonth=2 500
-###
-EnterpriseDocumentsPerMonth=10 000
-###
-TeamDocumentsPerMonth=500
-###
-OneDocumentsPerMonth=25
-####
 OnePlanName=One
 ####
 TeamPlanName=Team

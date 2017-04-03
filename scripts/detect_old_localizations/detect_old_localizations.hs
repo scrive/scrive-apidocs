@@ -19,11 +19,6 @@ import qualified Data.Map as Map
 import ScriptsPrelude
 
 ------------------------------
--- WHITELIST
-whitelist :: [String]
-whitelist = ["payments"]
-
-------------------------------
 -- utils
 splitEithers :: [Either a b] -> ([a], [b])
 splitEithers [] = ([], [])
@@ -115,23 +110,6 @@ intersectLocalizations (Object m1) (Object m2) = Object $ Map.fromList items'
         in Just (k, intersectLocalizations m m')
 
 intersectLocalizations _ _ = undefined
-
--- | Remove stuff that is whitelisted from localization.
---
--- Must be called on localizations with Object ctor.
-filterWhitelist :: Localization -> Localization
-filterWhitelist (Object m)  = Object $ Map.fromList $ catMaybes $
-                              map aux $ Map.toList m
-  where
-    aux x@(k, Value _) =
-      if k `elem` whitelist then Nothing
-      else Just x
-
-    aux (k, m'@(Object _)) =
-      if  k `elem` whitelist then Nothing
-      else Just (k, filterWhitelist m')
-
-filterWhitelist v = v
 
 ------------------------------
 -- | Parsing Localization from JavaScript.
@@ -261,7 +239,6 @@ removeLocalizationCallFromLocalization
         Just (Object _) ->
           myError $ "Detected dict access (" ++ dictName
           ++ "), probably using dynamic keys. "
-          ++ "Please add needed manually keys to the whitelist"
         Just (Value "<function>") ->
           myError $ "Detected dict/array like access to a function '"
           ++ dictName ++ "'"
@@ -276,7 +253,6 @@ removeLocalizationCallFromLocalization
           myError $ "Detected access to non-existing key '" ++ attr ++ "'"
         Just (Object _) ->
           myError $ "Detected access to a whole sub-dict '" ++ attr
-          ++ "'. Please add needed keys to the whitelist manuall."
         Just (Value "<function>") ->
           myError $ "Detected attribute access to a function '" ++ attr ++ "'"
         Just (Value "<array>") ->
@@ -328,29 +304,28 @@ removeLocalizationCallFromLocalization
         DictAccess dictName  -> auxFinalElemDictAccess m dictName
         Attribute attr       -> auxFinalElemAttribute m attr
 
-    aux (node:children) (Object m)
-      | node `elem` whitelist = return $ Object m
-      | otherwise = case Map.lookup node m of
-          Nothing -> myError $
-            "Detected access to non-existing key '" ++ node ++ "'"
-          Just (Value v) -> -- "foo....QUUX" "{foo: v}"
-            case children of
-              [] -> -- "foo.QUUX" "{foo: v}"
-                case finalElem of
-                  FunCall _ -> -- "foo.quux(" "{foo: v}"
-                    auxEmptyChildrenFunCall m v node
-                  DictAccess _ -> -- "foo.quux[" "{foo: v}"
-                    auxEmptyChildrenDictAccess v
-                  Attribute _ -> -- "foo.quux" "{foo: v}"
-                    auxEmptyChildrenAttribute v
-              (_:_) -> -- "foo....QUUX" "{foo: v}"
-                let badPrefix = take (length path - length children) path
-                in myError $ "Detected dict-like acces ('"
-                             ++ format path ++ "'), but '"
-                             ++ format badPrefix ++ "' is a simple value'"
-          Just l@(Object _) -> do
-            y <- aux children l
-            return $ Object $ Map.alter (const $ Just y) node m
+    aux (node:children) (Object m) =
+      case Map.lookup node m of
+        Nothing -> myError $
+          "Detected access to non-existing key '" ++ node ++ "'"
+        Just (Value v) -> -- "foo....QUUX" "{foo: v}"
+          case children of
+            [] -> -- "foo.QUUX" "{foo: v}"
+              case finalElem of
+                FunCall _ -> -- "foo.quux(" "{foo: v}"
+                  auxEmptyChildrenFunCall m v node
+                DictAccess _ -> -- "foo.quux[" "{foo: v}"
+                  auxEmptyChildrenDictAccess v
+                Attribute _ -> -- "foo.quux" "{foo: v}"
+                  auxEmptyChildrenAttribute v
+            (_:_) -> -- "foo....QUUX" "{foo: v}"
+              let badPrefix = take (length path - length children) path
+              in myError $ "Detected dict-like acces ('"
+                            ++ format path ++ "'), but '"
+                            ++ format badPrefix ++ "' is a simple value'"
+        Just l@(Object _) -> do
+          y <- aux children l
+          return $ Object $ Map.alter (const $ Just y) node m
 
 -- | Parse localization calls from a list of files.
 readLocalizations :: [FilePath] -> IO [LocalizationCall]
@@ -382,7 +357,7 @@ main = do
                 localizationCalls
       (logs, cleanedLocalizations) = splitEithers results
       unusedLocalization = foldl intersectLocalizations
-                           (filterWhitelist mainLocalization) cleanedLocalizations
+                             mainLocalization cleanedLocalizations
   hPutStrLn stderr "Warnings:"
   _ <- forM logs $ hPutStrLn stderr
   putStrLn "******************************"
