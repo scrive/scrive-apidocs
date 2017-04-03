@@ -84,16 +84,37 @@ instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
 instance Monad m => AmazonMonad (AmazonMonadT m) where
   getAmazonConfig = AmazonMonadT ask
 
-uploadSomeFilesToAmazon :: (AmazonMonad m, MonadIO m, MonadLog m, MonadDB m, MonadThrow m, CryptoRNG m) => Int -> m Bool
+uploadSomeFilesToAmazon :: (AmazonMonad m, MonadBase IO m, MonadIO m,
+                            MonadLog m, MonadDB m, MonadThrow m, CryptoRNG m)
+                            => Int -> m Bool
 uploadSomeFilesToAmazon n = do
+  logInfo "Getting files to upload to AWS" $ object [
+      "number_of_files" .= n
+    ]
+  startTime <- liftBase getCurrentTime
+  let getDiffTime :: UTCTime -> Double
+      getDiffTime ft = realToFrac $ diffUTCTime ft startTime
   files <- dbQuery $ GetFilesThatShouldBeMovedToAmazon n
   case files of
-    [] -> return False
+    [] -> do
+      logInfo_ "No files to upload to AWS"
+      return False
     _ -> do
       conf <- getAmazonConfig
       forM_ files $ \file -> do
         success <- exportFile (mkAWSAction $ awsConfig conf) file
-        when (not success) $ $unexpectedErrorM $ "Moving file " <+> show (fileid file) <+> " to Amazon failed."
+        when (not success) $ do
+          finishTime <- liftBase getCurrentTime
+          logAttention "A file failed to upload to AWS" $ object [
+              identifier_ (fileid file)
+            , "elapsed_time" .= getDiffTime finishTime
+            ]
+          $unexpectedErrorM $ "Moving file " <+> show (fileid file) <+> " to Amazon failed."
+      finishTime <- liftBase getCurrentTime
+      logInfo "Finished uploading some files to AWS" $ object [
+          "number_of_files" .= n
+        , "elapsed_time" .= getDiffTime finishTime
+        ]
       return True
 
 
@@ -121,12 +142,12 @@ urlFromFile File{filename, fileid, filechecksum} =
 --
 -- - upload a file to Amazon storage
 -- - do nothing and keep it in memory database
-exportFile :: (MonadIO m, MonadDB m, MonadLog m, CryptoRNG m) => S3Action -> File -> m Bool
+exportFile :: (MonadBase IO m, MonadIO m, MonadDB m, MonadLog m, CryptoRNG m) => S3Action -> File -> m Bool
 exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
            file@File{fileid, filestorage = FileStorageMemory plainContent} = localData [identifier_ fileid] $ do
   Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
   let encryptedContent = aesEncrypt aes plainContent
-  let action = ctxs3action {
+      action = ctxs3action {
         AWS.s3object = url
       , AWS.s3operation = HTTP.PUT
       , AWS.s3body = BSL.fromChunks [encryptedContent]
@@ -134,18 +155,27 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
       }
       url = urlFromFile file
       bucket = AWS.s3bucket ctxs3action
-  result <- liftIO $ AWS.runAction action
+  (result, timeDiff) <- do
+    startTime <- liftBase getCurrentTime
+    result <- liftIO $ AWS.runAction action
+    finishTime <- liftBase getCurrentTime
+    return (result, realToFrac $ diffUTCTime finishTime startTime :: Double)
   case result of
     Right _ -> do
+      _ <- dbUpdate $ FileMovedToAWS fileid url aes
+      commit
       logInfo "AWS uploaded" $ object [
           "url" .= (bucket </> url)
+        , "elapsed_time" .= timeDiff
+        , identifier_ fileid
         ]
-      _ <- dbUpdate $ FileMovedToAWS fileid url aes
       return True
     Left err -> do
       logAttention "AWS failed to upload" $ object [
           "url" .= (bucket </> url)
         , "error" .= show err
+        , "elapsed_time" .= timeDiff
+        , identifier_ fileid
         ]
       return False
 
