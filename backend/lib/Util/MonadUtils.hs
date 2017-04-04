@@ -16,10 +16,6 @@ import KontraPrelude
 
 -- TODO: remove these functions.
 
--- | Temporary solution for the sillyness of guardJustM.
-onNothing :: Monad m => m (Maybe a) -> m a -> m a
-onNothing action handleNothing = maybe handleNothing return =<< action
-
 {- |
    Get the value from a Just or fail if it is Nothing
  -}

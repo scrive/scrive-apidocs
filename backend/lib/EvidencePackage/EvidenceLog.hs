@@ -15,7 +15,6 @@ import KontraPrelude
 import MinutesTime
 import Text.XML.Content (cdata)
 import Text.XML.DirtyContent (XMLContent, renderXMLContent, substitute)
-import Util.SignatoryLinkUtils
 import qualified HostClock.Model as HC
 
 -- | Generating text of Evidence log that is attached to PDF. It should be complete
@@ -44,4 +43,4 @@ finalizeEvidenceText sim event emptyNamePlaceholder =
                                            , ("signatory", (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) =<< evAffectedSigLink event)
                                            , ("author", (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) =<< authorSigLinkID) ] ]) (evText event)
   where
-    authorSigLinkID = signatorylinkid <$> getAuthorSigLink (catMaybes (map siLink (Map.elems sim)))
+    authorSigLinkID = signatorylinkid <$> find (signatoryisauthor) (catMaybes (map siLink (Map.elems sim)))

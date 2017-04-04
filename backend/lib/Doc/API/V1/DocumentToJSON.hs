@@ -339,10 +339,10 @@ docFieldsListForJSON userid doc = do
     J.value "title" $ documenttitle doc
     J.value "status" $ show $ documentstatusclass doc
     J.value "state"  $ show $ documentstatus doc
-    signingParties <- lift $ mapM getSmartNameOrPlaceholder $ getSignatoryPartnerLinks doc
+    signingParties <- lift $ mapM getSmartNameOrPlaceholder $ filter isSignatory (documentsignatorylinks doc)
     J.value "party" $ intercalate ", " signingParties
-    J.value "partner" $ intercalate ", " $ map getSmartName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
-    J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
+    J.value "partner" $ intercalate ", " $ map getSmartName $ filter (\sl -> isSignatory sl && not (isAuthor sl)) (documentsignatorylinks doc)
+    J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (\sl -> isSignatory sl && not (isAuthor sl)) (documentsignatorylinks doc)
     J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
     J.value "time" $ formatTimeISO (documentmtime doc)
     J.value "ctime" $ formatTimeISO (documentctime doc)

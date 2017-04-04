@@ -1,12 +1,11 @@
 module Util.Actor (
-  Actor(..)
+    Actor(..)
   , authorActor
   , signatoryActor
   , recreatedSignatoryActor
   , systemActor
   , mailSystemActor
   , userActor
-  , adminActor
   , mkAuthorActor
   , mkAdminActor
   , apiActor

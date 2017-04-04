@@ -68,7 +68,7 @@ noDeletedSigLinksForSigning :: UTCTime -> Document -> Maybe String
 noDeletedSigLinksForSigning _ document =
   assertInvariant "document has a deleted siglink when it is due to be signed" $
     (isPending document) -->
-    none isDeletedFor (documentsignatorylinks document)
+    none (isJust . signatorylinkdeleted) (documentsignatorylinks document)
 
 {- |
   Preparation implies that no one has seen or signed the document
@@ -97,7 +97,7 @@ connectedSigLinkOnTemplateOrPreparation :: UTCTime -> Document -> Maybe String
 connectedSigLinkOnTemplateOrPreparation _ document =
   assertInvariant "document has siglinks (besides author) with User or Company when in Preparation or it's a Template" $
     (isTemplate document || isPreparation document) -->
-    (none hasUser (filter (not . isAuthor) (documentsignatorylinks document)))
+    (none (isJust . maybesignatory) (filter (not . isAuthor) (documentsignatorylinks document)))
 
 {- |
    Author must have a user
@@ -105,7 +105,7 @@ connectedSigLinkOnTemplateOrPreparation _ document =
 authorHasUser :: UTCTime -> Document -> Maybe String
 authorHasUser _ document =
   assertInvariant "author does not have a user connected." $
-    hasUser (getAuthorSigLink document)
+    isJust $ join $ maybesignatory <$> (getAuthorSigLink document)
 
 {- |
   Assert an upper bound on number of signatories.

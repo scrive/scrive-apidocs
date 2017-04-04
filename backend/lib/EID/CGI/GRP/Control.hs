@@ -71,9 +71,11 @@ handleAuthRequest did slid = do
   (doc,_) <- getDocumentAndSignatoryForEID did slid
   mcompany_display_name <- getCompanyDisplayName doc
   mcompany_service_id   <- getCompanyServiceID doc
-  pn <- getField "personal_number" `onNothing` do
-    logInfo_ "No personal number"
-    respond404
+  pn <- getField "personal_number" >>= \case
+    (Just pn) -> return pn
+    _ -> do
+      logInfo_ "No personal number"
+      respond404
   guardThatPersonalNumberMatches slid pn doc
   certErrorHandler <- mkCertErrorHandler
   debugFunction <- mkDebugFunction
@@ -110,9 +112,11 @@ handleSignRequest did slid = do
   mcompany_display_name <- getCompanyDisplayName doc
   mcompany_service_id   <- getCompanyServiceID doc
   tbs <- textToBeSigned doc
-  pn <- getField "personal_number" `onNothing` do
-    logInfo_ "No personal number"
-    respond404
+  pn <- getField "personal_number" >>= \case
+    (Just pn) -> return pn
+    _ -> do
+      logInfo_ "No personal number"
+      respond404
   guardThatPersonalNumberMatches slid pn doc
   certErrorHandler <- mkCertErrorHandler
   debugFunction <- mkDebugFunction

@@ -1,5 +1,4 @@
 module Util.CSVUtil ( parseCSV
-                    , renderCSV
                     , CSV(..)
                     ) where
 
