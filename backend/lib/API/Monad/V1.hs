@@ -166,7 +166,7 @@ instance ToAPIResponse (UnjsonDef a,a) where
 
 instance ToAPIResponse CSV where
   toAPIResponse v = let r1 = Web.toResponse $ v in
-    setHeader "Content-Type" "text/csv" r1
+    setHeader "Content-Type" "text/csv; charset=UTF-16" r1
 
 instance ToAPIResponse ZipArchive where
   toAPIResponse v = let r1 = Web.toResponse $ v in

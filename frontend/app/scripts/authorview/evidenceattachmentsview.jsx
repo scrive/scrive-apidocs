@@ -41,7 +41,6 @@ var AttachmentsTableRowView = React.createClass({
       <tr>
         <td className="desc">
           <div className="item">
-            <div className="icon"></div>
             <div className="label">
               <div className="name">{this.props.attachment.name}</div>
             </div>

@@ -511,7 +511,7 @@
 "_evidenceAttachmentBoxHeader":"Pièces jointes tenant lieu de preuves",
 "_february":"février",
 "_fieldWithSameNameExists":"Vous disposez déjà d'un champ portant ce nom. Chaque champ doit comporter un nom unique.",
-"_fileTooLarge":"Le fichier que vous avez sélectionné dépasse notre limite maximale autorisée de 4 MB. Veuillez sélectionner un fichier moins volumineux.",
+"_fileTooLarge":"",
 "_filterBySent":"En attente de signature",
 "_flashCantChangeEmail":"Nous sommes désolés, l'adresse mail que vous avez sélectionnée est déjà utilisée.",
 "_flashCompanyAccountInviteNotSent":"Désolé, nous ne pouvons pas envoyer une invitation à cet utilisateur parce qu'il est enregistré dans une autre entreprise. Veuillez contacter Scrive si vous souhaitez fusionner les comptes.",

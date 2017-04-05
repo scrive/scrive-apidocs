@@ -511,7 +511,7 @@
 "_evidenceAttachmentBoxHeader":"Prove in allegato",
 "_february":"Febbraio",
 "_fieldWithSameNameExists":"Hai già un campo con questo nome. Ogni campo deve avere un proprio specifico nome.",
-"_fileTooLarge":"Il file selezionato supera il nostro limite massimo di 4 MB. Prova con un file più piccolo.",
+"_fileTooLarge":"",
 "_filterBySent":"In attesa di firma",
 "_flashCantChangeEmail":"Siamo spiacenti, l'email selezionata è già in uso.",
 "_flashCompanyAccountInviteNotSent":"Siamo spiacenti, non puoi mandare un invito a questo utente perché è registrato a un'altra azienda. Ti preghiamo di contattare Scrive se vuoi unire gli account.",

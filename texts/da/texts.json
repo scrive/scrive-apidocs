@@ -511,7 +511,7 @@
 "_evidenceAttachmentBoxHeader":"Bevisbilag",
 "_february":"Februar",
 "_fieldWithSameNameExists":"Du har allerede et felt med dette navn. Hvert felt skal have et unikt navn.",
-"_fileTooLarge":"Den fil, du har valgt, er større end vores max. grænse på 4 MB. Prøv venligst en mindre fil. ",
+"_fileTooLarge":"",
 "_filterBySent":"Afventer signatur",
 "_flashCantChangeEmail":"Vi beklager, den valgte e-mail er taget.",
 "_flashCompanyAccountInviteNotSent":"Beklager, men du er ikke i stand til at sende en invitation til denne bruger, fordi vedkommende er registreret til en anden virksomhed. Kontakt venligst Scrive hvis du vil flette disse konti.",
