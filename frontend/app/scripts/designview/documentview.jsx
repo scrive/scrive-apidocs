@@ -168,7 +168,7 @@ var Modal = require("../common/modal");
           });
         },
         ajaxerror: function (d, a) {
-          if (a === "parsererror") { // file too large
+          if (d.status === 413) { // file too large
             new FlashMessage({content: localization.fileTooLarge, type: "error"});
             document.markAsNotReady();
             Track.track("Error", {Message: "main file too large"});
