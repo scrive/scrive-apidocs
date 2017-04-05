@@ -159,6 +159,11 @@ instance ToXML SignRequest where
       element "personalNumber" srqPersonalNumber
       element "userVisibleData" srqUserVisibleData
       element "provider" srqProvider
+      element "requirementAlternatives" $ do
+        element "requirement" $ do
+          element "condition" $ do
+            element "key" ("AllowFingerprint" :: T.Text)
+            element "value" ("yes" :: T.Text)
 
 ----------------------------------------
 
