@@ -6929,11 +6929,15 @@ be changed.</p>
 
 <p></div></p>
 
-<h3>By author</h3>
+<h3>Filter by author</h3>
 
 <p><code>(object)</code></p>
 
 <div class="json-schema">
+
+<p>Only include documents where the person making the API call is the
+document author.</p>
+
 
 <p>This object has the following properties:</p>
 
@@ -6959,6 +6963,9 @@ be changed.</p>
 <p><code>(object)</code></p>
 
 <div class="json-schema">
+
+<p>This implicitly adds an <code>is_author</code> filter.</p>
+
 
 <p>This object has the following properties:</p>
 
@@ -7079,7 +7086,7 @@ be changed.</p>
 
 <p></div></p>
 
-<h3>Filter by author</h3>
+<h3>Filter by author id</h3>
 
 <p><code>(object)</code></p>
 
