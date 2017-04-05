@@ -511,7 +511,7 @@
 "_evidenceAttachmentBoxHeader":"Beleg-Anhänge",
 "_february":"Februar",
 "_fieldWithSameNameExists":"Es gibt bereits ein Feld mit diesem Namen. Jedes Feld muss einen eindeutigen Namen haben.",
-"_fileTooLarge":"Die von Ihnen gewählte Datei überschreitet unsere maximale Grenze von 4 MB. Bitte versuchen Sie es erneut mit einer kleineren Datei.",
+"_fileTooLarge":"",
 "_filterBySent":"Warten auf Signierung",
 "_flashCantChangeEmail":"Leider ist die ausgewählte E-Mail schon vergeben.",
 "_flashCompanyAccountInviteNotSent":"Leider können Sie diesen Benutzern keine Einladung senden, weil diese bei einer anderen Firma registriert sind. Kontaktieren Sie Scrive, wenn Sie die Konten zusammenführen möchten.",

@@ -511,7 +511,7 @@
 "_evidenceAttachmentBoxHeader":"Įrodymų priedai",
 "_february":"Vasaris",
 "_fieldWithSameNameExists":"Jau yra laukelis tokiu pavadinimu. Kiekvienas laukelis turi turėti unikalų pavadinimą.",
-"_fileTooLarge":"Failo, kurį pasirinkote, dydis viršija mūsų didžiausią 4 MB talpą. Parinkite mažesnį failą.",
+"_fileTooLarge":"",
 "_filterBySent":"Laukiama parašo",
 "_flashCantChangeEmail":"Atsiprašome, pasirinktas el. paštas jau užimtas.",
 "_flashCompanyAccountInviteNotSent":"Atsiprašome, bet Jūs negalite šiam naudotojui siųsti ir jo kviesti, nes jis registruotas kitos įmonės. Jei norite apjungti šias paskyras, susisiekite su „Scrive“.",

@@ -511,7 +511,7 @@
 "_evidenceAttachmentBoxHeader":"Manustatud tõendid",
 "_february":"Veebruar",
 "_fieldWithSameNameExists":"Selle nimega väli on juba olemas. Iga väli peab olema unikaalse nimega.",
-"_fileTooLarge":"Valitud väli ületab meie maksimaalse 4 MB mahupiiri. Palun kasutage väiksemat faili.",
+"_fileTooLarge":"",
 "_filterBySent":"Ootan allkirjastamist",
 "_flashCantChangeEmail":"Vabandame, valitud e-mail on juba kasutusel.",
 "_flashCompanyAccountInviteNotSent":"Vabandame, sellele kasutajale pole võimalik kutset saata, kuna olete registreeritud erineva ettevõttega. Võtke kontode liitmiseks ühendust Scrive'ga.",

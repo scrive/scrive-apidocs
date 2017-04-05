@@ -511,7 +511,7 @@
 "_evidenceAttachmentBoxHeader":"Anexos de pruebas",
 "_february":"Febrero",
 "_fieldWithSameNameExists":"Usted ya ha rellenado este campo con otro nombre. Cada campo debe tener escrito solamente un nombre.",
-"_fileTooLarge":"El archivo que ha elegido supera el límite máximo de 4 MB. Por favor seleccione un archivo más pequeño.",
+"_fileTooLarge":"",
 "_filterBySent":"A la espera de la firma",
 "_flashCantChangeEmail":"Lo sentimos, el email elegido ha sido ya seleccionado.",
 "_flashCompanyAccountInviteNotSent":"Lo sentimos, no le está permitido enviar una invitación a este usuario porque está registrado en una empresa diferente. Por favor contacte con Scrive si quiere unir las cuentas.",

@@ -511,7 +511,7 @@
 "_evidenceAttachmentBoxHeader":"Pamatojuma dokumenti pielikumos",
 "_february":"februāris",
 "_fieldWithSameNameExists":"Lauks ar šādu nosaukumu jau pastāv. Katra lauka nosaukumam jābūt unikālam.",
-"_fileTooLarge":"Izvēlētais faila apjoms pārsniedz 4 MB. Lūdzu, izvēlieties mazāku failu!",
+"_fileTooLarge":"",
 "_filterBySent":"Gaida parakstu",
 "_flashCantChangeEmail":"Diemžēl izvēlētā e-pasta adrese jau ir aizņemta.",
 "_flashCompanyAccountInviteNotSent":"Jūs diemžēl nevarat nosūtīt uzaicinājumu šim lietotājam, jo tas attiecas uz citu uzņēmumu. Lūdzu, sazinieties ar Scrive, ja vēlaties apvienot kontus.",

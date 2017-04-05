@@ -511,7 +511,7 @@
 "_evidenceAttachmentBoxHeader":"Todisteliitteet",
 "_february":"Helmikuu",
 "_fieldWithSameNameExists":"Sinulla on jo kenttä tällä nimellä. Jokaisella kentällä tulee olla ainutlaatuinen nimi.",
-"_fileTooLarge":"Valitsemasi tiedosto ylittää 4 MB:n enimmäiskoon. Ole hyvä ja yritä pienemmällä tiedostolla. ",
+"_fileTooLarge":"",
 "_filterBySent":"Odottava allekirjoitus",
 "_flashCantChangeEmail":"Olemme pahoillamme, valittu sähköposti on käytössä. ",
 "_flashCompanyAccountInviteNotSent":"Olemme pahoillamme, et voi lähettää kutsua tälle käyttäjälle koska heidät on rekisteröity eri yritykselle. Ota yhteyttä Sriveen jos haluat liittyä tileihin. ",

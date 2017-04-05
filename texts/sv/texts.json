@@ -511,7 +511,7 @@
 "_evidenceAttachmentBoxHeader":"Bevisbilagor",
 "_february":"februari",
 "_fieldWithSameNameExists":"Du har redan ett fält med detta namn. Varje fält måste ha ett unikt namn.",
-"_fileTooLarge":"Filen du valt överstiger vår maxgräns på 4 MB. Vänligen försök med en mindre fil.",
+"_fileTooLarge":"",
 "_filterBySent":"Inväntar signatur",
 "_flashCantChangeEmail":"Vi beklagar, vald e-postadress är tagen.",
 "_flashCompanyAccountInviteNotSent":"Tyvärr kan du inte skicka en inbjudan till denna användare eftersom den redan finns registrerad i ett annat företag. Kontakta Scrive om du vill slå ihop konton för två företag.",
