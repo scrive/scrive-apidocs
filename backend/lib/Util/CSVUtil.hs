@@ -11,15 +11,18 @@ import Data.Either
 import Data.Ord
 import Data.Spreadsheet as SS
 import Happstack.Server (ToMessage(..), setHeader, setHeaderBS)
-import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL8
 import qualified Data.ByteString.UTF8 as BS hiding (length)
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
 
 import KontraPrelude
 
 {- |
     Parses a csv file's contents.  It tries to guess the char encoding and the delimiters.
 -}
-parseCSV :: BSL.ByteString -> Either String [[String]]
+parseCSV :: BSL8.ByteString -> Either String [[String]]
 parseCSV csvcontents =
   let parseresult = splitCSVContents $ decodeByteString csvcontents in
   case (exception parseresult, result parseresult) of
@@ -51,7 +54,7 @@ splitCSVContents x = SS.fromString guessedQuoteMark guessedSeparator (x ++ "\n")
     which "works better" because they will normally all decode without an error,
     it's just it'll be a load of rubbish for a human.
 -}
-decodeByteString :: BSL.ByteString -> String
+decodeByteString :: BSL8.ByteString -> String
 decodeByteString bs =
   guessBest . map  (BS.toString . toStrict) . lefts $ (Left bs) : map (\enc -> convertStrictly enc "UTF-8" bs) alternativeEncodings
   where
@@ -75,10 +78,11 @@ decodeByteString bs =
     nordicCharCount = length . filter (\c -> c `elem` ("äÄöÖåÅ"::String))
 
 
--- | Render a BSL.ByteString representation of CSV. Uses \';\' as
+-- | Render a BSL8.ByteString representation of CSV. Uses \',\' as
 -- spearator and \'\"\' as quote.
 renderCSV :: [[String]] -> BSL.ByteString
-renderCSV content = BSL.fromString $ SS.toString '"' ';' content
+renderCSV content = bom `BSL.append` (BSL.fromStrict $ Text.encodeUtf16LE $ Text.pack $ SS.toString '"' ',' content)
+  where bom = BSL.pack [255, 254]
 
 
 data CSV = CSV
@@ -89,7 +93,7 @@ data CSV = CSV
 
 instance ToMessage CSV where
   toMessage csv = renderCSV (csvHeader csv : csvContent csv)
-  toContentType _ = BS.fromString "text/csv"
+  toContentType _ = BS.fromString "text/csv; charset=UTF-16"
   toResponse csv = (if not (null (csvFilename csv))
                     then setHeader "Content-Disposition" ("attachment;filename=" ++ csvFilename csv)
                     else id)

@@ -4,6 +4,7 @@
 module Doc.API.V1.DocumentToJSON (
       evidenceAttachmentsJSONV1
     , documentJSONV1
+    , allCustomTextOrCheckboxFields
     , docForListJSONV1
     , docForListCSVV1
     , docForListCSVHeaderV1
@@ -423,12 +424,30 @@ signatoryStatusClass doc sl =
     _ -> SCSent
 
 -- Converting document into entries in CSV
-docForListCSVV1 :: Document -> [[String]]
-docForListCSVV1 doc = map (signatoryForListCSV doc) $ documentsignatorylinks doc
+allCustomTextOrCheckboxFields :: [Document] -> [FieldIdentity]
+allCustomTextOrCheckboxFields = sortBy fieldNameSort
+                  . nub
+                  . map fieldIdentity
+                  . filter isCustomOrCheckbox
+                  . concatMap signatoryfields
+                  . concatMap documentsignatorylinks
+  where fieldNameSort fi1 fi2 = case (fi1, fi2) of
+                                  (TextFI n1 , TextFI n2 ) -> compare n1 n2
+                                  (TextFI _ ,_) -> GT
+                                  (SignatureFI n1, SignatureFI n2) -> compare n1 n2
+                                  (CheckboxFI n1, CheckboxFI n2) -> compare n1 n2
+                                  _ -> EQ
+        isCustomOrCheckbox sf = case fieldType sf of
+                                  TextFT -> True
+                                  CheckboxFT -> True
+                                  _ -> False
 
-signatoryForListCSV :: Document -> SignatoryLink -> [String]
-signatoryForListCSV doc sl = [
-              ("'" ++ show (documentid doc) ++ "'") -- Exel trick
+docForListCSVV1 :: [FieldIdentity] -> Document -> [[String]]
+docForListCSVV1 customFields doc = map (signatoryForListCSV customFields doc) $ documentsignatorylinks doc
+
+signatoryForListCSV :: [FieldIdentity] -> Document -> SignatoryLink -> [String]
+signatoryForListCSV customFields doc sl = [
+              ("'" ++ show (documentid doc) ++ "'") -- Excel trick
             , documenttitle doc
             , show $ documentstatusclass doc
             , getAuthorName $ doc
@@ -445,43 +464,40 @@ signatoryForListCSV doc sl = [
             , getCompanyName sl
             , getCompanyNumber sl
             , getMobile sl
-            ] ++ (map fieldValue $ sortBy fieldNameSort customFieldsOrCheckbox)
+            ] ++ map (\fi -> maybe "" fieldValue $ getFieldByIdentity fi $ signatoryfields sl) customFields
     where
-        customFieldsOrCheckbox = filter isCustomOrCheckbox $ signatoryfields sl
-        fieldNameSort sf1 sf2 = case (fieldIdentity sf1, fieldIdentity sf2) of
-                                  (TextFI n1 , TextFI n2 ) -> compare n1 n2
-                                  (TextFI _ ,_) -> GT
-                                  (SignatureFI n1, SignatureFI n2) -> compare n1 n2
-                                  (CheckboxFI n1, CheckboxFI n2) -> compare n1 n2
-                                  _ -> EQ
         fieldValue sf = case sf of
                           SignatoryTextField tf -> stfValue tf
                           SignatoryCheckboxField chf ->  if (schfValue chf)
                                                              then schfName chf ++ " : checked"
                                                              else schfName chf ++ " : not checked"
                           _ -> ""
-        isCustomOrCheckbox sf = case fieldType sf of
-                                 (TextFT) -> True
-                                 (CheckboxFT) -> True
-                                 _ -> False
 
-docForListCSVHeaderV1 :: [String]
-docForListCSVHeaderV1 = [
-                          "Id"
-                        , "Title"
-                        , "Status"
-                        , "Author"
-                        , "Creation"
-                        , "Started"
-                        , "Signing deadline"
-                        , "Party read invitation"
-                        , "Party seen document"
-                        , "Party signed document"
-                        , "Party role"
-                        , "Party name"
-                        , "Party mail"
-                        , "Party personal number"
-                        , "Party company name"
-                        , "Party company number"
-                        , "Party mobile number"
-                        ]
+docForListCSVHeaderV1 :: [FieldIdentity] -> [String]
+docForListCSVHeaderV1 customFields = [ "Id"
+                                     , "Title"
+                                     , "Status"
+                                     , "Author"
+                                     , "Creation"
+                                     , "Started"
+                                     , "Signing deadline"
+                                     , "Party read invitation"
+                                     , "Party seen document"
+                                     , "Party signed document"
+                                     , "Party role"
+                                     , "Party name"
+                                     , "Party mail"
+                                     , "Party personal number"
+                                     , "Party company name"
+                                     , "Party company number"
+                                     , "Party mobile number"
+                                     ] ++ map fieldName customFields
+  where fieldName (NameFI _) = ""
+        fieldName CompanyFI = ""
+        fieldName PersonalNumberFI = ""
+        fieldName CompanyNumberFI = ""
+        fieldName EmailFI = ""
+        fieldName MobileFI = ""
+        fieldName (TextFI n) = n
+        fieldName (SignatureFI n) = n
+        fieldName (CheckboxFI n) = n

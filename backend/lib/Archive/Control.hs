@@ -30,7 +30,7 @@ import Archive.View
 import Company.Model (GetCompany(..))
 import DB
 import Doc.Action
-import Doc.API.V1.DocumentToJSON (docForListCSVHeaderV1, docForListCSVV1)
+import Doc.API.V1.DocumentToJSON (allCustomTextOrCheckboxFields, docForListCSVHeaderV1, docForListCSVV1)
 import Doc.API.V2.JSON.List
 import Doc.DocInfo (isPending)
 import Doc.DocMails
@@ -141,11 +141,12 @@ handleListCSV= do
   filters <- apiV2ParameterDefault []  (ApiV2ParameterJSON "filter" unjsonDef)
   sorting <- apiV2ParameterDefault []  (ApiV2ParameterJSON "sorting" unjsonDef)
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
-  let documentSorting = (toDocumentSorting <$> sorting)
+      documentSorting = (toDocumentSorting <$> sorting)
   allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) documentFilters documentSorting 1000
-  let docsCSVs = concatMap docForListCSVV1 allDocs
+  let allDocsCustomFields = allCustomTextOrCheckboxFields allDocs
+      docsCSVs = concatMap (docForListCSVV1 allDocsCustomFields) allDocs
   return $ CSV { csvFilename = "documents.csv"
-               , csvHeader = docForListCSVHeaderV1
+               , csvHeader = docForListCSVHeaderV1 allDocsCustomFields
                , csvContent = docsCSVs
                }
 
@@ -156,7 +157,7 @@ showArchive = withUserTOS $ \(user,tostime) -> do
     ctx <- getContext
     pb <-  pageArchive ctx user mcompany tostime
     internalResponse <$> renderFromBodyWithFields pb (F.value "archive" True)
-              
+
 -- Zip utils
 docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
 docToEntry doc = do
