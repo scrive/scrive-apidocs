@@ -32,6 +32,7 @@ import KontraPrelude
 import Network.SOAP.Call
 import Network.SOAP.Transport.Curl
 import Routing
+import User.Lang
 import Util.Actor
 import Util.HasSomeUserInfo
 import Utils.HTTP
@@ -117,14 +118,16 @@ handleResolve = do
                  _ -> do
                    logAttention_ "Received invalid provider from Nets"
                    internalError
-               identifyssnerror <- resolve res doc nt sl ctx
-               if identifyssnerror
+               resolvesucceeded <- resolve res doc nt sl ctx
+               if resolvesucceeded
                  then do
-                   flashmessage <- flashMessageUserHasIdentifiedWithDifferentSSN
-                   return $ internalResponseWithFlash flashmessage $ LinkExternal $ netsReturnURL nt
-                 else do
                    logInfo_ $ "Successful assertion check with Nets. Signatory redirected back and should see view for signing"
                    return $ internalResponse $ LinkExternal $ netsReturnURL nt
+                 else do
+                   -- we have to switch lang here to get proper template for flash message
+                   switchLang $ getLang doc
+                   flashmessage <- flashMessageUserHasIdentifiedWithDifferentSSN
+                   return $ internalResponseWithFlash flashmessage $ LinkExternal $ netsReturnURL nt
              else do
                logInfo "Checking assertion with Nets failed. Signatory redirected back and should see identify view." $ object [
                   "assertion_code" .= assertionStatusCode res
@@ -160,7 +163,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
           "dob_nets" .= dobNETS
         , "dob_ssn" .= dobSSN
         ]
-      return True
+      return False
     else do
       -- Put NO BankID transaction in DB
       dbUpdate $ MergeNetsNOBankIDAuthentication sessionID (netsSignatoryID nt) $ NetsNOBankIDAuthentication {
@@ -195,7 +198,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
             dbUpdate . UpdatePhoneAfterIdentificationToView sl phone formattedPhoneFromNets =<< signatoryActor ctx sl
 
       dbUpdate $ ChargeCompanyForNOBankIDAuthentication (documentid doc)
-      return False
+      return True
 
 
 handleResolveNetsDKNemID :: Kontrakcja m => GetAssertionResponse -> Document -> NetsTarget -> SignatoryLink -> Context -> m Bool
@@ -219,7 +222,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
           "ssn_sl"   .= ssn_sl
         , "ssn_nets" .= ssn_nets
         ]
-      return True
+      return False
     else do
       let certificate = decodeCertificate $ attributeFromAssertion "CERTIFICATE" $ assertionAttributes res
 
@@ -242,7 +245,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
         void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
 
       dbUpdate $ ChargeCompanyForDKNemIDAuthentication (documentid doc)
-      return False
+      return True
 
 ------------------------------------------
 
