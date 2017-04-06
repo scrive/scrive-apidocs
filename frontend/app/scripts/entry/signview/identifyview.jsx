@@ -2,6 +2,7 @@ var React = require("react");
 var IdentifyView = require("../../signview/identify/identifyview");
 var Document = require("../../../js/documents").Document;
 var $ = require("jquery");
+var FlashMessages = require("../../../js/flashmessages");
 
 $(function () {
   var doc = new Document({
@@ -15,5 +16,7 @@ $(function () {
       doc: doc,
       siglinkid: fromTemplate.sigLinkId
     }), $(".global-table-cell")[0]);
+
+    FlashMessages.FlashMessageTryFromCookie();
   });
 });
