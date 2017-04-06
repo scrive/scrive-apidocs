@@ -1,0 +1,62 @@
+.design-view-dnd-uploader {
+  background: rgba(255, 255, 255, 0.75);
+  bottom: 0px;
+  display: none;
+  left: 0px;
+  position: fixed;
+  right: 0px;
+  top: 0px;
+  z-index: 2000;
+
+  &.visible {
+    display: block;
+  }
+
+  p {
+    background: transparent url(~"@{img-base-url}/dragndropicon.svg") no-repeat center top;
+    color: rgb(104, 107, 114);
+    font-size: 24px;
+    left: 50%;
+    line-height: 24px;
+    margin-left: -200px;
+    margin-top: -83px;
+    padding-top: 142px;
+    position: absolute;
+    top: 50%;
+    text-align: center;
+    width: 400px;
+  }
+
+  .overlay {
+    bottom: 0px;
+    left: 0px;
+    position: absolute;;
+    right: 0px;
+    top: 0px;
+
+    .gradient {
+      position: absolute;
+
+      &.gradient-top {
+        height: 150px;
+        left: 0px;
+        right: 0px;
+        top: 0px;
+      }
+
+      &.gradient-left {
+        bottom: 0px;
+        left: 0px;
+        top: 0px;
+        width: 150px;
+      }
+
+      &.gradient-right {
+        bottom: 0px;
+        right: 0px;
+        top: 0px;
+        width: 150px;
+      }
+    }
+  }
+}

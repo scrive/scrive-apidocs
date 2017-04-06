@@ -58,6 +58,13 @@ var BrowserInfo = exports.BrowserInfo = {
         // iPad returns this as ~768, but we add a bit of margin.
         return window.outerWidth < 730 || screen.width < 730;
       }
+    },
+    hasDragAndDrop: function () {
+        var div = document.createElement("div");
+        return (typeof div.ondrop !== "undefined");
+    },
+    hasFormData: function () {
+        return window.hasOwnProperty("FormData");
     }
 };
 

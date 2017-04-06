@@ -115,7 +115,6 @@
   width: 18px;
 }
 
-
 .designview .design-view-blocking .blocking-box {
   background-color: @actioncolor;
   color: @actiontextcolor;
@@ -123,5 +122,25 @@
   &.over-limit {
     background-color: @negativecolor;
     color: @negativetextcolor;
+  }
+}
+
+.design-view-dnd-uploader {
+  @gradientendcolor: fade(@actioncolor, 8%);
+
+  .overlay {
+    .gradient {
+      &.gradient-top {
+        background: linear-gradient(180deg, @gradientendcolor, transparent);
+      }
+
+      &.gradient-left {
+        background: linear-gradient(90deg, @gradientendcolor, transparent);
+      }
+
+      &.gradient-right {
+        background: linear-gradient(270deg, @gradientendcolor, transparent);
+      }
+    }
   }
 }

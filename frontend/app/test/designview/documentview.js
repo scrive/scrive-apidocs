@@ -1,6 +1,7 @@
 var backend = require("../backend");
 var util = require("../util");
 var React = require("react");
+var underscore = require("underscore");
 
 var TestUtils = React.addons.TestUtils;
 
@@ -9,11 +10,19 @@ var DocumentView = require("../../scripts/designview/documentview.jsx");
 describe("designview/documentview", function () {
   var server, document_;
 
-  var renderComponent = function() {
+  var renderComponent = function(props) {
+    var actualProps = underscore.extendOwn(
+      {
+        document: document_,
+        isDnDUploaderVisible: false
+      },
+      props || {}
+    );
+
     var component = React.render(
       React.createElement(
         DocumentView,
-        {document: document_}
+        actualProps
       ),
       $("body")[0]
     );
@@ -130,6 +139,14 @@ describe("designview/documentview", function () {
 
     var component = renderComponent();
     assert.lengthOf($(".upload-button"), 1);
+  });
+
+  it("should not render the upload button if drag and drop uploader is visible", function () {
+    sinon.stub(document_, "ready").returns(true);
+    sinon.stub(document_, "mainfile").returns(undefined);
+
+    var component = renderComponent({isDnDUploaderVisible: true});
+    assert.lengthOf($(".upload-button"), 0);
   });
 
   it("should render the file view", function () {

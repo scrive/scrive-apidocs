@@ -89,8 +89,8 @@ var evidence_attachments = require("./data/evidence_attachments");
     server.respondWith(/\/api\/frontend\/getsubscription/, function (xhr, id) {
       var clone = getDocumentById(id);
       var subscriptionJSON = {
-          "payment_plan" : "free",
-          "number_of_users" : 0,
+          "payment_plan" : "enterprise",
+          "number_of_users" : 1,
           "started_last_month" : 0
       };
       xhr.respond(200, { "Content-Type": "application/json" }, JSON.stringify(subscriptionJSON));

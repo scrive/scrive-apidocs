@@ -14,6 +14,7 @@
   "./app/scripts/designview/designview.jsx",
   "./app/scripts/designview/document_save_mixin.jsx",
   "./app/scripts/designview/blocking/*.jsx",
+  "./app/scripts/designview/draganddropuploaderview.jsx",
   "./app/scripts/authorview/fileview/*.jsx",
   "./app/scripts/authorview/signatories/*.jsx",
   "./app/scripts/authorview/titleboxview.jsx",

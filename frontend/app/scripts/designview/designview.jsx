@@ -2,6 +2,8 @@ var React = require("react");
 var _ = require("underscore");
 var $ = require("jquery");
 
+var BackboneMixin = require("../common/backbone_mixin");
+var BrowserInfo = require("../../js/utils/browserinfo").BrowserInfo;
 var ButtonBarView = require("./buttonbar/buttonbarview");
 var Document = require("../../js/documents.js").Document;
 var DocumentView = require("./documentview");
@@ -12,16 +14,22 @@ var TabBarView = require("./tabbar").TabBarView;
 var TabView = require("./tabbar").TabView;
 var Blocking = require("./blocking/blocking");
 var Subscription = require("../account/subscription");
+var DragAndDropUploaderView = require("./draganddropuploaderview");
 
 module.exports = React.createClass({
+  mixins: [BackboneMixin.BackboneMixin],
   propTypes: {
     model: React.PropTypes.instanceOf(Document).isRequired,
     subscription: React.PropTypes.instanceOf(Subscription).isRequired
   },
+  getBackboneModels: function (argument) {
+    return [this.props.model];
+  },
   getInitialState: function () {
     return {
       topBarStyle: {},
-      frameStyle: {}
+      frameStyle: {},
+      isDnDUploaderVisible: false
     };
   },
   componentWillMount: function () {
@@ -123,6 +131,12 @@ module.exports = React.createClass({
   onBlocked: function () {
     this.refs.blockingComponent.openContactUsModal();
   },
+  onDnDUploaderStart: function () {
+    this.setState({isDnDUploaderVisible: true});
+  },
+  onDnDUploaderEnd: function () {
+    this.setState({isDnDUploaderVisible: false});
+  },
   render: function () {
     var self = this;
 
@@ -168,9 +182,18 @@ module.exports = React.createClass({
         <DocumentView
           document={this.props.model}
           ref="documentView"
+          isDnDUploaderVisible={this.state.isDnDUploaderVisible}
         />
 
         <ButtonBarView document={this.props.model}  subscription={this.props.subscription} onBlocked={this.onBlocked}/>
+
+        {(this.props.model.mainfile() == undefined && BrowserInfo.hasDragAndDrop() && BrowserInfo.hasFormData()) &&
+          <DragAndDropUploaderView
+            document={this.props.model}
+            onStart={this.onDnDUploaderStart}
+            onEnd={this.onDnDUploaderEnd}
+          />
+        }
       </div>
     );
   }

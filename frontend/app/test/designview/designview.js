@@ -4,6 +4,7 @@ var React = require("react");
 
 var TestUtils = React.addons.TestUtils;
 
+var BrowserInfo = require("../../js/utils/browserinfo").BrowserInfo;
 var DesignView = require("../../scripts/designview/designview.jsx");
 
 describe("designview/designview", function () {
@@ -77,6 +78,21 @@ describe("designview/designview", function () {
     assert.isTrue(component.affix.called);
   });
 
+  it("should update drag and drop visibility state when it becomes visible", function () {
+    var component = renderComponent();
+    component.onDnDUploaderStart();
+
+    assert.isTrue(component.state.isDnDUploaderVisible);
+  });
+
+  it("should update drag and drop visibility state when it becomes hidden", function () {
+    var component = renderComponent();
+    component.setState({isDnDUploaderVisible: true});
+
+    component.onDnDUploaderEnd();
+    assert.isFalse(component.state.isDnDUploaderVisible);
+  });
+
   it("should render the tabs view", function () {
     var component = renderComponent();
     assert.lengthOf($(".tab-viewer"), 1);
@@ -90,5 +106,37 @@ describe("designview/designview", function () {
   it("should render the button bar", function () {
     var component = renderComponent();
     assert.lengthOf($(".design-view-button-bar"), 1);
+  });
+
+  it("should not render the drag and drop uploader if the document has file", function () {
+    var component = renderComponent();
+    assert.lengthOf($(".design-view-dnd-uploader"), 0);
+  });
+
+  it("should not render the drag and drop uploader if the browser doesn't support DnD", function () {
+    sinon.stub(document_, "mainfile").returns(undefined);
+    sinon.stub(BrowserInfo, "hasDragAndDrop").returns(false);
+
+    var component = renderComponent();
+    assert.lengthOf($(".design-view-dnd-uploader"), 0);
+
+    BrowserInfo.hasDragAndDrop.restore();
+  });
+
+  it("should not render the drag and drop uploader if the browser doesn't support FormData", function () {
+    sinon.stub(document_, "mainfile").returns(undefined);
+    sinon.stub(BrowserInfo, "hasFormData").returns(false);
+
+    var component = renderComponent();
+    assert.lengthOf($(".design-view-dnd-uploader"), 0);
+
+    BrowserInfo.hasFormData.restore();
+  });
+
+  it("should render the drag and drop uploader", function () {
+    sinon.stub(document_, "mainfile").returns(undefined);
+
+    var component = renderComponent();
+    assert.lengthOf($(".design-view-dnd-uploader"), 1);
   });
 });
