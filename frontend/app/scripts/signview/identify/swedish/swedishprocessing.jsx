@@ -23,7 +23,7 @@ var ReloadManager = require("../../../../js/reloadmanager.js").ReloadManager;
           ReloadManager.startBlocking();
         }, 5000);
         this.setState({redirected: true});
-        window.location = transaction.bankIdUrlWithRedirectIfNeeded();
+        window.top.location = transaction.bankIdUrlWithRedirectIfNeeded();
       }
     },
     handleCancel: function () {
@@ -45,7 +45,7 @@ var ReloadManager = require("../../../../js/reloadmanager.js").ReloadManager;
                 style={{marginBottom: "38px"}}
                 text={localization.docsignview.eleg.bankid.rfa18}
                 onClick={function () {
-                  window.location = self.props.model.transaction().bankIdUrlWithRedirectIfNeeded();
+                  window.top.location = self.props.model.transaction().bankIdUrlWithRedirectIfNeeded();
                 }}
               />
             </div>
