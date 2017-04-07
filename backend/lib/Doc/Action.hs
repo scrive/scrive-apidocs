@@ -139,6 +139,8 @@ postDocumentPendingChange olddoc = do
   unlessM (isPending <$> theDocument) $
     theDocument >>= stateMismatchError "postDocumentPendingChange" Pending
 
+  dbUpdate $ ChargeCompanyForClosingSignature (documentid olddoc)
+
   ifM (allSignatoriesSigned <$> theDocument)
   {-then-} (do
       theDocument >>= \d -> logInfo "All have signed, document will be closed" $ logObject_ d

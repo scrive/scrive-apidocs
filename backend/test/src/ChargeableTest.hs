@@ -11,7 +11,10 @@ import CompanyAccounts.Model
 import Context
 import DB hiding (query, update)
 import Doc.API.V1.Calls
+import Doc.API.V2.AesonTestUtils (testRequestHelperNoAssert_)
 import Doc.API.V2.Calls
+import Doc.API.V2.Calls.CallsTestUtils
+import Doc.API.V2.Mock.TestUtils
 import Doc.DocStateData
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
@@ -29,6 +32,8 @@ chargeableTest env = testGroup "Chargeable Items" [
     testThat "SMSes for default provider are counted properly" env test_smsCounting_default
   , testThat "SMSes for Telia CallGuide are counted properly" env test_smsCounting_telia
   , testThat "Starting a document with V1/V2 adds a chargeable item" env test_startDocumentCharging
+  , testThat ("Closing a document with V1/V2 adds chargeable items" <>
+             " (closed signatures and documents)") env test_closeDocAndSigCharging
   ]
 
 test_smsCounting_default :: TestEnv ()
@@ -134,3 +139,47 @@ test_startDocumentCharging = do
                                 ]})
           ]) (systemActor $ documentctime doc)
       return $ documentid doc
+
+test_closeDocAndSigCharging :: TestEnv ()
+test_closeDocAndSigCharging = do
+  (user, companyId) <- addNewRandomUserWithCompany
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  let queryChargeableSigClose =
+          "SELECT count(*) FROM chargeable_items WHERE type = 9 " <>
+          "AND quantity = 1 AND company_id = " <?> companyId
+  let queryChargeableDocClose =
+          "SELECT count(*) FROM chargeable_items WHERE type = 8 " <>
+          "AND quantity = 1 AND company_id = " <?> companyId
+
+  -- Test that closing document in V1 adds a chargeable item
+  mockDocV1 <- testDocApiV2Start' ctx
+  let didV1 = getMockDocId mockDocV1
+  let slidV1 = getMockDocSigLinkId 1 mockDocV1
+
+  testRequestHelperNoAssert_ ctx POST [("fields", inText "[]")] $ apiCallV1Ready didV1
+  testRequestHelperNoAssert_ ctx POST [("fields", inText "[]")] $ apiCallV1Sign didV1 slidV1
+
+  runSQL_ queryChargeableSigClose
+  fetchOne runIdentity >>=
+    assertEqual "Company was charged for closing one signature" (1 :: Int64)
+
+  runSQL_ queryChargeableDocClose
+  fetchOne runIdentity >>=
+    assertEqual "Company was charged for closing one document" (1 :: Int64)
+
+  -- Test that closing document in V2 adds a chargeable item
+  mockDocV2 <- testDocApiV2Start' ctx
+  let didV2 = getMockDocId mockDocV2
+  let slidV2 = getMockDocSigLinkId 1 mockDocV2
+
+  _mockDocSigned <- mockDocTestRequestHelper ctx
+    POST [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
+    (docApiV2SigSign didV2 slidV2) 200
+
+  runSQL_ queryChargeableSigClose
+  fetchOne runIdentity >>=
+    assertEqual "Company was charged for closing another signature" (2 :: Int64)
+
+  runSQL_ queryChargeableDocClose
+  fetchOne runIdentity >>=
+    assertEqual "Company was charged for closing another document" (2 :: Int64)

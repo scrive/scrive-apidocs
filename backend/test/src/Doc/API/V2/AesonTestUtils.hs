@@ -1,11 +1,13 @@
 module Doc.API.V2.AesonTestUtils (
   testRequestHelper
+, testRequestHelperNoAssert_
 , jsonTestRequestHelper
 -- * Aeson Value deconstructors
 , lookupObjectArray
 , lookupObjectString
 ) where
 
+import Control.Monad.Trans (liftIO)
 import Data.Aeson
 import Happstack.Server
 import qualified Data.ByteString.Lazy as BSL
@@ -29,6 +31,23 @@ testRequestHelper ctx httpMethod params func expectedRsCode = do
                      ++ "Response:\n" ++ show (rsBody rsp)
   assertEqual ("Response code should match for:\n" ++ showTestDetails) expectedRsCode (rsCode rsp)
   return (rsBody rsp)
+
+-- | Used to succinctly construct an API request without assertions
+testRequestHelperNoAssert_ :: Context
+                           -> Method
+                           -> [(String, Input)]
+                           -> Kontra Response
+                           -> TestEnv ()
+testRequestHelperNoAssert_ ctx httpMethod params func = do
+  req <- mkRequest httpMethod params
+  (rsp,_) <- runTestKontra req ctx func
+  let showRequestDetails = "Request details:\n" ++
+                           "Method: " ++ show httpMethod ++ "\n"
+                        ++ "Params: " ++ showParams params ++ "\n"
+                        ++ "Response:\n" ++ show (rsBody rsp)
+      showParams = concatMap (\(s,i) -> "\n\t" ++ s ++ ": " ++ show i)
+  liftIO $ putStrLn showRequestDetails
+  return ()
 
 -- | Used to succinctly construct a API requests, test response code, and parse
 -- the response body into a JSON Value.
