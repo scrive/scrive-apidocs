@@ -1,4 +1,5 @@
 User-agent: *
+Sitemap: https://scrive.com/sitemap.xml
 Disallow: /s/
 Disallow: /preview/
 Disallow: /amnesia/
