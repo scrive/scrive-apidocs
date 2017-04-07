@@ -386,6 +386,10 @@ module.exports = React.createClass({
     this.setState({removingHighlighting: false});
   },
 
+  blinkControls: function () {
+    this.refs.controls.blink();
+  },
+
   render: function () {
     const self = this;
     const viewportWidth = $.windowWidth();

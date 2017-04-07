@@ -6,6 +6,7 @@ import {BrowserInfo} from "../../../js/utils/browserinfo.js";
 import {Document} from "../../../js/documents";
 import viewSize from "../viewsize";
 import HtmlTextWithSubstitution from "../../common/htmltextwithsubstitution";
+import BlinkMixin from "../../common/blink_mixin";
 
 const defaultErd = require("element-resize-detector")();
 
@@ -19,7 +20,7 @@ import vars from "../../../less/signview/vars.less";
 module.exports = React.createClass({
   displayName: "SignviewControls",
 
-  mixins: [React.addons.PureRenderMixin],
+  mixins: [React.addons.PureRenderMixin, BlinkMixin],
 
   propTypes: {
     highlightingMode: React.PropTypes.bool.isRequired,
@@ -192,6 +193,10 @@ module.exports = React.createClass({
       width: width
     };
 
+    const buttonsClass = classNames({
+      "hidden": this.isHiddenByBlink(),
+      "buttons": true});
+
     return (
       <div style={divStyle} className={classNames("controls", className)}>
         <div className="status">
@@ -203,7 +208,7 @@ module.exports = React.createClass({
               }}
             />
         </div>
-        <div className="buttons">
+        <div className={buttonsClass}>
           {/* if */ !highlightingMode && !removingHighlightingMode &&
             <span>
               {/* if */ canRemoveHighlighting &&

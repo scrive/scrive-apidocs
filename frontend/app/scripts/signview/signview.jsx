@@ -164,6 +164,7 @@ var TaskList = require("./navigation/task_list");
 
     onTouchStart: function (event) {
       if (this.eventIsMultiTouch(event)) {
+        this.refs.fileView.blinkControls();
         event.preventDefault();
         event.stopPropagation();
       }
