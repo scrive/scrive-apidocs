@@ -17,22 +17,17 @@
   }
 }
 
-.design-view-action-participant-new-field-name-input {
-
-  &.redborder {
-    border: 1px solid @actioncolor;
-    &.conflict {
-      border: 1px solid @actioncolor;
-    }
-  }
-}
-
-.redborder {
-  border:1px solid @actioncolor;
+.redborder,
+.redborder:hover,
+.design-view-action-participant-new-field-name-input.conflict
+.design-view-action-participant-new-field-name-input.conflict:hover {
+  border: 1px solid @negativecolor !important;
+  background: fade(@negativecolor, 10%);
 }
 
 .redborder input {
-  border-color: @actioncolor;
+  background: transparent;
+  border-color: @negativecolor;
 }
 
 .designview .placedfield.invalid {
@@ -53,9 +48,6 @@
 
 .design-view-action-participant-details-information-field {
 
-  &.redborder {
-    border:1px solid @actioncolor;
-  }
 }
 
 .select.design-view-action-participant-new-field-select {
