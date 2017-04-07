@@ -415,7 +415,7 @@ Library
                , cond
                , conduit
                , consumers
-               , containers
+               , containers >= 0.5 && < 0.6
                , crypto-api
                , crypto-rng
                , cryptohash
