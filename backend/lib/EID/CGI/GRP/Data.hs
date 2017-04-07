@@ -175,7 +175,7 @@ unAutoStartToken (AutoStartToken t) = t
 
 
 -- With autostart token we always return session id - so bankid app can bag user back to service
-instance Unjson (AutoStartToken,SessionCookieInfo) where
+instance {-# OVERLAPPING #-} Unjson (AutoStartToken,SessionCookieInfo) where
   unjsonDef = objectOf $ (pure $ \at si -> (AutoStartToken at, si))
     <*> field "auto_start_token"
         (unAutoStartToken . fst)
