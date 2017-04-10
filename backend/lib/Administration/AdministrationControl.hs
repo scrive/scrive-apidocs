@@ -550,8 +550,9 @@ daveFile fileid' _title = onlyAdmin $ do
    contents <- getFileContents file
    if BS.null contents
       then internalError
-      else
-        return $ setHeader "Content-Disposition" ("attachment;filename=" ++ filename file)
+      else do
+        let fname = filter (/=',') $ filename file -- Chrome does not like commas in this header
+        return $ setHeader "Content-Disposition" ("attachment;filename=" ++ fname)
                  $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 randomScreenshotForTest :: Kontrakcja m => m Response
