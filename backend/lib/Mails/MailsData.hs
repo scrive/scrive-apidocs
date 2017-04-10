@@ -5,8 +5,9 @@ module Mails.MailsData (
 ) where
 
 import Data.Aeson
-import Data.Aeson.Types
+import Data.Aeson.Types as Aeson
 import qualified Data.ByteString as BS
+import qualified Data.Monoid as Monoid
 import qualified Data.Text as T
 
 import File.FileID
@@ -21,6 +22,10 @@ data MailAddress = MailAddress {
 
 instance ToJSON MailAddress where
   toJSON MailAddress{..} = object [
+      "name" .= fullname
+    , "email" .= email
+    ]
+  toEncoding MailAddress{..} = pairs $ Monoid.mconcat [
       "name" .= fullname
     , "email" .= email
     ]
@@ -40,17 +45,26 @@ data Mail = Mail {
 
 instance ToJSON Mail where
   toJSON Mail{..} = object $ [
-      "to" .= to
-    , "originator" .= originator
+      "to"               .= to
+    , "originator"       .= originator
     , "originator_email" .= originatorEmail
-    , "reply_to" .= replyTo
-    , "title" .= title
-    , "content" .= content
-    , "attachments" .= map attachmentToJson attachments
+    , "reply_to"         .= replyTo
+    , "title"            .= title
+    , "content"          .= content
+    , "attachments"      .= map attachmentToJson attachments
     ] ++ jsonizeMailInfo mailInfo
-    where
 
-jsonizeMailInfo :: MessageData -> [Pair]
+  toEncoding Mail{..} = pairs . Monoid.mconcat $ [
+      "to"               .= to
+    , "originator"       .= originator
+    , "originator_email" .= originatorEmail
+    , "reply_to"         .= replyTo
+    , "title"            .= title
+    , "content"          .= content
+    , "attachments"      .= map attachmentToJson attachments
+    ] ++ jsonizeMailInfo mailInfo
+
+jsonizeMailInfo :: Aeson.KeyValue kv => MessageData -> [kv]
 jsonizeMailInfo (Invitation did slid) = [
     "type" .= ("invitation"::T.Text)
   , identifier_ did

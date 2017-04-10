@@ -21,6 +21,7 @@ module EID.CGI.GRP.Data (
 
 import Data.Aeson
 import Data.ByteString (ByteString)
+import Data.Monoid as Monoid
 import Data.Unjson
 import Network.SOAP.Parsing.Cursor
 import Text.XML.Cursor hiding (element)
@@ -200,6 +201,11 @@ instance Loggable AuthResponse where
 
 instance ToJSON AuthResponse where
   toJSON AuthResponse{..} = object [
+      "transaction_id" .= T.unpack arsTransactionID
+    , "order_ref" .= T.unpack arsOrderRef
+    , "auto_start_token" .= show arsAutoStartToken
+    ]
+  toEncoding AuthResponse{..} = pairs $ Monoid.mconcat [
       "transaction_id" .= T.unpack arsTransactionID
     , "order_ref" .= T.unpack arsOrderRef
     , "auto_start_token" .= show arsAutoStartToken

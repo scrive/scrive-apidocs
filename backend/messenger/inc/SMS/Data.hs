@@ -13,6 +13,7 @@ import Control.Monad.Catch
 import Data.Aeson
 import Data.Data
 import Data.Int
+import Data.Monoid as Monoid
 import Database.PostgreSQL.PQTypes
 import qualified Data.Text as T
 
@@ -109,6 +110,16 @@ data ShortMessage = ShortMessage {
 
 instance ToJSON ShortMessage where
   toJSON ShortMessage{..} = object [
+      identifier_ smID
+    , "provider"   .= show smProvider
+    , "originator" .= smOriginator
+    , "msisdn"     .= smMSISDN -- original/non-clean format
+    , "body"       .= smBody
+    , "data"       .= smData
+    , "attempts"   .= smAttempts
+    ]
+
+  toEncoding ShortMessage{..} = pairs $ Monoid.mconcat [
       identifier_ smID
     , "provider"   .= show smProvider
     , "originator" .= smOriginator

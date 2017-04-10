@@ -22,6 +22,7 @@ import Data.Data
 import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
+import qualified Data.Aeson.Encoding.Internal as Aeson
 import qualified Data.ByteString as B
 import qualified Data.Text as T
 
@@ -107,6 +108,7 @@ instance Unjson Address where
 
 instance ToJSON Address where
   toJSON = unjsonToJSON unjsonDef
+  toEncoding = Aeson.unsafeToEncoding . unjsonToByteStringBuilder unjsonDef
 
 instance PQFormat Address where
   pqFormat = const $ pqFormat (undefined::String)

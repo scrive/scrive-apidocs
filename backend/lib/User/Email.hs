@@ -26,7 +26,8 @@ instance FromJSON Email where
   parseJSON = fmap Email . parseJSON
 
 instance ToJSON Email where
-  toJSON = toJSON . unEmail
+  toJSON     = toJSON . unEmail
+  toEncoding = toEncoding . unEmail
 
 instance Unjson Email where
   unjsonDef = invmap Email unEmail unjsonDef
