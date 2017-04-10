@@ -11,8 +11,8 @@ var UserStatsView = require(
   "../../../scripts/admin/useradmin/userstats"
 );
 
-var DaysStatsTableView = require(
-  "../../../scripts/account/usersandstats/daysstatstable"
+var StatsTableView = require(
+  "../../../scripts/account/usersandstats/statstable"
 );
 
 describe("admin/useradmin/userstats", function () {
@@ -59,7 +59,7 @@ describe("admin/useradmin/userstats", function () {
     var component = renderComponent();
 
     var statsViews = TestUtils.scryRenderedComponentsWithType(
-      component, DaysStatsTableView
+      component, StatsTableView
     );
 
     assert.lengthOf(statsViews, 2);
@@ -76,7 +76,7 @@ describe("admin/useradmin/userstats", function () {
     var component = renderComponent();
 
     var statsViews = TestUtils.scryRenderedComponentsWithType(
-      component, DaysStatsTableView
+      component, StatsTableView
     );
 
     assert.lengthOf(statsViews, 2);

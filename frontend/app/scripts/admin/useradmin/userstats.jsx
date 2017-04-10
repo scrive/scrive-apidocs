@@ -1,6 +1,6 @@
 var React = require("react");
 
-var DaysStatsTableView = require("../../account/usersandstats/daysstatstable");
+var StatsTableView = require("../../account/usersandstats/statstable");
 
 var StatsView = React.createClass({
   propTypes: {
@@ -17,7 +17,7 @@ var StatsView = React.createClass({
     );
 
     return (
-      <DaysStatsTableView ref="table" withCompany={false} url={url} />
+      <StatsTableView ref="table" withCompany={false} url={url} />
     );
   }
 });

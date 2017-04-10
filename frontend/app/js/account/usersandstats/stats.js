@@ -1,5 +1,5 @@
 var React = require("react");
-var DaysStatsTable = require("../../../scripts/account/usersandstats/daysstatstable");
+var StatsTable = require("../../../scripts/account/usersandstats/statstable");
 var Backbone = require("backbone");
 var _ = require("underscore");
 var $ = require("jquery");
@@ -25,7 +25,7 @@ var StatsModel = Backbone.Model.extend({
        return  "/account/usagestats/days/json" ;
   },
   dayTableDef : function() {
-    return React.createElement(DaysStatsTable,{
+    return React.createElement(StatsTable,{
       withCompany: this.withCompany(),
       url : this.dayTableUrl() + (this.withCompany() ? "?withCompany=true" : "")
    });
@@ -39,7 +39,7 @@ var StatsModel = Backbone.Model.extend({
        return  "/account/usagestats/months/json" ;
   },
   monthTableDef : function() {
-    return React.createElement(DaysStatsTable,{
+    return React.createElement(StatsTable,{
       withCompany: this.withCompany(),
       url : this.monthTableUrl() + (this.withCompany() ? "?withCompany=true" : "")
     });
