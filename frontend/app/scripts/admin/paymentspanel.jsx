@@ -10,8 +10,16 @@ var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 
 module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
+    propTypes: {
+      loadLater: React.PropTypes.bool
+    },
     getBackboneModels: function () {
       return [this.state.subscription];
+    },
+    componentDidMount: function () {
+      if (this.props.loadLater === false) {
+        this.reload();
+      }
     },
     reload: function() {
       this.state.subscription.reload();

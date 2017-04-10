@@ -1,5 +1,6 @@
 [
   "./app/js/react_confirmations.js",
+  "./app/scripts/admin/companyadmin/**/*.jsx",
   "./app/scripts/admin/useradmin/**/*.jsx",
   "./app/scripts/admin/templateslist.jsx",
   "./app/scripts/designview/typesetters/*.jsx",

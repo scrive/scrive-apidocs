@@ -57,7 +57,8 @@ var ChangeModeModalContent = React.createClass({
 
 module.exports = React.createClass({
     propTypes: {
-      companyid: React.PropTypes.string
+      companyid: React.PropTypes.string,
+      loadLater: React.PropTypes.bool
     },
     getInitialState: function() {
       var state = this.stateFromProps(this.props)
@@ -78,6 +79,11 @@ module.exports = React.createClass({
 
       self._onChangeModalSave = null;
       self._onChangeModalDiscard = null;
+    },
+    componentDidMount: function () {
+      if (this.props.loadLater === false) {
+        this.reload();
+      }
     },
     componentWillReceiveProps: function(props) {
       this.setState(this.stateFromProps(props));
