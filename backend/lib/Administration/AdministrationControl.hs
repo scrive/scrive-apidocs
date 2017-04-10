@@ -321,7 +321,7 @@ handleCompanyChange companyid = onlySalesOrAdmin $ do
 
 handleCreateUser :: Kontrakcja m => m JSValue
 handleCreateUser = onlySalesOrAdmin $ do
-    email <- map toLower <$> (guardJustM $ getField "email")
+    email <- filter (/=' ') <$> map toLower <$> (guardJustM $ getField "email")
     fstname <- guardJustM $ getField "fstname"
     sndname <- guardJustM $ getField "sndname"
     lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
