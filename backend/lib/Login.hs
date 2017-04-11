@@ -67,37 +67,44 @@ handleLoginPost = do
                                                (any (ipAddressIsInNetwork (ctxipnumber ctx)) (companyipaddressmasklist (companyinfo company)))
                         Nothing -> return True
             case maybeuser of
-                Just user@User{userpassword}
+                Just user@User{userpassword,userid}
                     | verifyPassword userpassword passwd
                     && ipIsOK -> do
-                        logInfo "User logged in" $ logObject_ user
-                        muuser <- dbQuery $ GetUserByID (userid user)
-
-                        case muuser of
-                          Just User{userid = uid} -> do
-                            asyncLogEvent "Login" [
-                              UserIDProp uid,
-                              IPProp $ ctxipnumber ctx,
-                              TimeProp $ ctxtime ctx
-                              ]
-                            asyncLogEvent SetUserProps [
-                              UserIDProp uid,
-                              someProp "Last login" $ ctxtime ctx
-                              ]
-                          _ -> return ()
-                        if padlogin
+                        failedAttemptCount <- dbQuery $ GetUserRecentAuthFailureCount userid
+                        if failedAttemptCount <= 5
                           then do
-                            _ <- dbUpdate $ LogHistoryPadLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
-                            logPadUserToContext muuser
+                            logInfo "User logged in" $ logObject_ user
+                            muuser <- dbQuery $ GetUserByID userid
+
+                            case muuser of
+                              Just User{userid = uid} -> do
+                                asyncLogEvent "Login" [
+                                  UserIDProp uid,
+                                  IPProp $ ctxipnumber ctx,
+                                  TimeProp $ ctxtime ctx
+                                  ]
+                                asyncLogEvent SetUserProps [
+                                  UserIDProp uid,
+                                  someProp "Last login" $ ctxtime ctx
+                                  ]
+                              _ -> return ()
+                            if padlogin
+                              then do
+                                _ <- dbUpdate $ LogHistoryPadLoginSuccess userid (ctxipnumber ctx) (ctxtime ctx)
+                                logPadUserToContext muuser
+                              else do
+                                _ <- dbUpdate $ LogHistoryLoginSuccess userid (ctxipnumber ctx) (ctxtime ctx)
+                                logUserToContext muuser
+                            J.runJSONGenT $ J.value "logged" True
                           else do
-                            _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
-                            logUserToContext muuser
-                        J.runJSONGenT $ J.value "logged" True
+                            logInfo "User login failed (too many attempts)" $ logObject_ user
+                            J.runJSONGenT $ J.value "logged" False
+
                 Just u@User{userpassword} | not (verifyPassword userpassword passwd) -> do
                         logInfo "User login failed (invalid password)" $ logObject_ u
                         _ <- if padlogin
-                          then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
-                          else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                          then dbUpdate $ LogHistoryPadLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                          else dbUpdate $ LogHistoryLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
                         J.runJSONGenT $ J.value "logged" False
 
                 Just u -> do
@@ -106,8 +113,8 @@ handleLoginPost = do
                           , "ip" .= show (ctxipnumber ctx)
                           ]
                         _ <- if padlogin
-                          then dbUpdate $ LogHistoryPadLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
-                          else dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                          then dbUpdate $ LogHistoryPadLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                          else dbUpdate $ LogHistoryLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
 
                         company <- dbQuery $ GetCompanyByUserID (userid u)
                         admins <-  dbQuery $ GetCompanyAdmins (companyid company)

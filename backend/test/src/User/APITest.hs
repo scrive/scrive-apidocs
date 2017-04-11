@@ -18,6 +18,7 @@ import User.Model
 userAPITests :: TestEnvSt -> Test
 userAPITests env = testGroup "UserAPI"
   [ testThat "Test User API Create Login Link" env testUserLoginAndGetSession
+  , testThat "Test User API Too Many Attempts To Get Tokens" env testUserTooManyGetTokens
   ]
 
 testUserLoginAndGetSession :: TestEnv ()
@@ -57,3 +58,35 @@ testUserLoginAndGetSession = do
   let Just (Object respObject3) = decode (rsBody res3) :: Maybe Value
       Just (String errorType) = H.lookup "error_type" respObject3
   assertEqual ("We should get an error status in JSON") "invalid_authorisation" errorType
+
+testUserTooManyGetTokens :: TestEnv ()
+testUserTooManyGetTokens = do
+  -- create a user
+  let password = "Secret Password!"
+  let wrongpassword = "Hello World!"
+  randomUser <- addNewRandomUserWithPassword password
+  ctx <- mkContext def
+  -- getting personap token works with correct password
+  req1 <- mkRequest GET
+    [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+    , ("password", inText password)
+    ]
+  (res1,_) <- runTestKontra req1 ctx $ apiCallGetUserPersonalToken
+  assertEqual "We should get a 200 response" 200 (rsCode res1)
+
+  -- now we fail to get access tokens 6 times
+  req2 <- mkRequest GET
+    [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+    , ("password", inText wrongpassword)
+    ]
+  forM_ [1..6] $ \_ -> do
+    (res2,_) <- runTestKontra req2 ctx $ apiCallGetUserPersonalToken
+    assertEqual "We should get a 500 error response" 500 (rsCode res2)
+
+  -- after 6 failed requests, trying valid password also fails
+  req3 <- mkRequest GET
+    [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+    , ("password", inText password)
+    ]
+  (res3,_) <- runTestKontra req3 ctx $ apiCallGetUserPersonalToken
+  assertEqual "We should get a 500 error response" 500 (rsCode res3)

@@ -53,8 +53,8 @@ testLoginAttempt :: TestEnv ()
 testLoginAttempt = do
     User{userid} <- createTestUser
     now <- currentTime
-    success <- dbUpdate $ LogHistoryLoginAttempt userid noIP now
-    assertBool "LogHistoryLoginAttempt inserted correctly" success
+    success <- dbUpdate $ LogHistoryLoginFailure userid noIP now
+    assertBool "LogHistoryLoginFailure inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
 
@@ -125,7 +125,7 @@ testHandlerForLoginAttempt = do
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
     assertBool "History log contains login attempt event"
-                $ compareEventTypeFromList UserLoginAttempt history
+                $ compareEventTypeFromList UserLoginFailure history
 
 testHandlerForLoginSuccess :: TestEnv ()
 testHandlerForLoginSuccess = do

@@ -2,7 +2,7 @@ module User.History.Model (
     UserHistory(..)
   , UserHistoryEvent(..)
   , UserHistoryEventType(..)
-  , LogHistoryLoginAttempt(..)
+  , LogHistoryLoginFailure(..)
   , LogHistoryLoginSuccess(..)
   , LogHistoryPasswordSetup(..)
   , LogHistoryPasswordSetupReq(..)
@@ -10,20 +10,23 @@ module User.History.Model (
   , LogHistoryTOSAccept(..)
   , LogHistoryDetailsChanged(..)
   , LogHistoryUserInfoChanged(..)
-  , LogHistoryPadLoginAttempt(..)
+  , LogHistoryPadLoginFailure(..)
   , LogHistoryPadLoginSuccess(..)
+  , LogHistoryAPIGetPersonalTokenFailure(..)
+  , LogHistoryAPIGetPersonalTokenSuccess(..)
   , GetUserHistoryByUserID(..)
+  , GetUserRecentAuthFailureCount(..)
   ) where
 
 import Control.Monad.Catch
 import Data.Int
+import Data.Time.Clock
 import Text.JSON
 import Text.JSON.Gen
 
 import DB
 import IPAddress
 import KontraPrelude
-import MinutesTime
 import User.Email
 import User.Model
 import qualified VersionTH
@@ -44,15 +47,17 @@ data UserHistoryEvent = UserHistoryEvent {
   }
   deriving (Eq, Show)
 
-data UserHistoryEventType = UserLoginAttempt
+data UserHistoryEventType = UserLoginFailure
                           | UserLoginSuccess
                           | UserPasswordSetup
                           | UserPasswordSetupReq
                           | UserAccountCreated
                           | UserDetailsChange
                           | UserTOSAccept
-                          | UserPadLoginAttempt
+                          | UserPadLoginFailure
                           | UserPadLoginSuccess
+                          | UserAPIGetPersonalTokenFailure
+                          | UserAPIGetPersonalTokenSuccess
   deriving (Eq, Show)
 
 {- |
@@ -67,31 +72,35 @@ instance FromSQL UserHistoryEventType where
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int32 of
-      1 -> return UserLoginAttempt
+      1 -> return UserLoginFailure
       2 -> return UserLoginSuccess
       3 -> return UserPasswordSetup
       4 -> return UserPasswordSetupReq
       5 -> return UserAccountCreated
       6 -> return UserDetailsChange
       7 -> return UserTOSAccept
-      8 -> return UserPadLoginAttempt
+      8 -> return UserPadLoginFailure
       9 -> return UserPadLoginSuccess
+      10 -> return UserAPIGetPersonalTokenFailure
+      11 -> return UserAPIGetPersonalTokenSuccess
       _ -> throwM RangeError {
-        reRange = [(1, 9)]
+        reRange = [(1, 11)]
       , reValue = n
       }
 
 instance ToSQL UserHistoryEventType where
   type PQDest UserHistoryEventType = PQDest Int32
-  toSQL UserLoginAttempt     = toSQL (1::Int32)
+  toSQL UserLoginFailure     = toSQL (1::Int32)
   toSQL UserLoginSuccess     = toSQL (2::Int32)
   toSQL UserPasswordSetup    = toSQL (3::Int32)
   toSQL UserPasswordSetupReq = toSQL (4::Int32)
   toSQL UserAccountCreated   = toSQL (5::Int32)
   toSQL UserDetailsChange    = toSQL (6::Int32)
   toSQL UserTOSAccept        = toSQL (7::Int32)
-  toSQL UserPadLoginAttempt  = toSQL (8::Int32)
+  toSQL UserPadLoginFailure  = toSQL (8::Int32)
   toSQL UserPadLoginSuccess  = toSQL (9::Int32)
+  toSQL UserAPIGetPersonalTokenFailure  = toSQL (10::Int32)
+  toSQL UserAPIGetPersonalTokenSuccess  = toSQL (11::Int32)
 
 data GetUserHistoryByUserID = GetUserHistoryByUserID UserID
 instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
@@ -100,11 +109,21 @@ instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
       <+> "WHERE user_id =" <?> uid <+> "ORDER BY time"
     fetchMany fetchUserHistory
 
-data LogHistoryLoginAttempt = LogHistoryLoginAttempt UserID IPAddress UTCTime
-instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginAttempt Bool where
-  update (LogHistoryLoginAttempt userid ip time) = addUserHistory
+data GetUserRecentAuthFailureCount = GetUserRecentAuthFailureCount UserID
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUserRecentAuthFailureCount Int64 where
+  query (GetUserRecentAuthFailureCount uid) = do
+    runQuery_ $ sqlSelect "users_history" $ do
+      sqlWhereEq "user_id" uid
+      sqlWhereIn "event_type" [UserLoginFailure, UserPadLoginFailure, UserAPIGetPersonalTokenFailure]
+      sqlWhere "time >= cast ((NOW() - interval '10 minutes') as timestamp)"
+      sqlResult "COUNT(*)"
+    fetchOne runIdentity
+
+data LogHistoryLoginFailure = LogHistoryLoginFailure UserID IPAddress UTCTime
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginFailure Bool where
+  update (LogHistoryLoginFailure userid ip time) = addUserHistory
     userid
-    UserHistoryEvent {uheventtype = UserLoginAttempt, uheventdata = Nothing}
+    UserHistoryEvent {uheventtype = UserLoginFailure, uheventdata = Nothing}
     ip
     time
     Nothing
@@ -118,11 +137,11 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginSuccess Bool whe
     time
     (Just userid)
 
-data LogHistoryPadLoginAttempt = LogHistoryPadLoginAttempt UserID IPAddress UTCTime
-instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPadLoginAttempt Bool where
-  update (LogHistoryPadLoginAttempt userid ip time) = addUserHistory
+data LogHistoryPadLoginFailure = LogHistoryPadLoginFailure UserID IPAddress UTCTime
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPadLoginFailure Bool where
+  update (LogHistoryPadLoginFailure userid ip time) = addUserHistory
     userid
-    UserHistoryEvent {uheventtype = UserPadLoginAttempt, uheventdata = Nothing}
+    UserHistoryEvent {uheventtype = UserPadLoginFailure, uheventdata = Nothing}
     ip
     time
     Nothing
@@ -132,6 +151,24 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPadLoginSuccess Bool 
   update (LogHistoryPadLoginSuccess userid ip time) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserPadLoginSuccess, uheventdata = Nothing}
+    ip
+    time
+    (Just userid)
+
+data LogHistoryAPIGetPersonalTokenFailure = LogHistoryAPIGetPersonalTokenFailure UserID IPAddress UTCTime
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAPIGetPersonalTokenFailure Bool where
+  update (LogHistoryAPIGetPersonalTokenFailure userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserAPIGetPersonalTokenFailure, uheventdata = Nothing}
+    ip
+    time
+    Nothing
+
+data LogHistoryAPIGetPersonalTokenSuccess = LogHistoryAPIGetPersonalTokenSuccess UserID IPAddress UTCTime
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAPIGetPersonalTokenSuccess Bool where
+  update (LogHistoryAPIGetPersonalTokenSuccess userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserAPIGetPersonalTokenSuccess, uheventdata = Nothing}
     ip
     time
     (Just userid)

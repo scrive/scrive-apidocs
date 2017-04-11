@@ -172,6 +172,12 @@ instance ToAPIResponse ZipArchive where
   toAPIResponse v = let r1 = Web.toResponse $ v in
     setHeader "Content-Type" "text/zip" r1
 
+instance ToAPIResponse APIError where
+  toAPIResponse e =
+    let resp = Web.toResponse $ encode $ toJSValue e
+    -- must be text/plain because some browsers complain about JSON type
+    in  setHeader "Content-Type" "text/plain; charset=UTF-8" $ resp { rsCode = httpCodeFromAPIError e }
+
 instance (ToAPIResponse a, ToAPIResponse b) => ToAPIResponse (Either a b) where
   toAPIResponse = either toAPIResponse toAPIResponse
 

@@ -15,6 +15,7 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Happstack.Server.Types
 import Happstack.StaticRouting
+import Log
 import Text.JSON.Gen hiding (object)
 
 import ActionQueue.Core
@@ -31,6 +32,7 @@ import InputValidation
 import Kontra
 import KontraLink
 import KontraPrelude
+import Log.Identifier
 import Mails.SendMail
 import OAuth.Model
 import Redirect
@@ -85,21 +87,42 @@ userAPIV2 = choice [
 
 apiCallGetUserPersonalToken :: Kontrakcja m => m Response
 apiCallGetUserPersonalToken = api $ do
+    let wrongPassMsg = "Email and password don't match"
     memail  <- getField "email"
     mpasswd <- getField "password"
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
             muser <- dbQuery $ GetUserByEmail (Email email)
-            if (isJust muser && verifyPassword (userpassword $ fromJust muser) passwd )
-              then do
-                  let uid = userid $ fromJust muser
-                  _success <- dbUpdate $ CreatePersonalToken uid
-                  token <- dbQuery $ GetPersonalToken uid
-                  case token of
-                       Nothing -> throwM . SomeDBExtraException $ serverError "No token found, this should not happend"
-                       Just t  -> return $ Ok (unjsonOAuthAuthorization, t)
-              else throwM . SomeDBExtraException $ serverError "Email and password don't match"
+            case muser of
+              Nothing ->
+                -- use an ambiguous message, so that this cannot be used to determine
+                -- whether a user has an account with Scrive
+                throwM . SomeDBExtraException $ serverError wrongPassMsg
+              Just user -> do
+                ctx <- getContext
+                if verifyPassword (userpassword user) passwd
+                  then do
+                    let uid = userid user
+                    _success <- dbUpdate $ CreatePersonalToken uid
+                    token <- dbQuery $ GetPersonalToken uid
+                    case token of
+                         Nothing -> throwM . SomeDBExtraException $ serverError "No token found, this should not happend"
+                         Just t  -> do
+                           attemptCount <- dbQuery $ GetUserRecentAuthFailureCount (userid user)
+                           if attemptCount <= 5
+                             then do
+                               _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenSuccess uid (ctxipnumber ctx) (ctxtime ctx)
+                               return $ Right $ Ok (unjsonOAuthAuthorization, t)
+                             else
+                               -- use an ambiguous message, so that this cannot be used to determine
+                               -- whether a user has an account with Scrive
+                               throwM . SomeDBExtraException $ serverError wrongPassMsg
+                  else do
+                    _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user) (ctxipnumber ctx) (ctxtime ctx)
+                    logInfo "getpersonaltoken failed (invalid password)" $ logObject_ user
+                    -- we do not want rollback here, so we don't raise exception
+                    return $ Left $ serverError wrongPassMsg
         _ -> throwM . SomeDBExtraException $ serverError "Email or password is missing"
 
 apiCallGetUserProfile :: Kontrakcja m => m Response

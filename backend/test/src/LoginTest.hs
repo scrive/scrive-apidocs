@@ -36,6 +36,7 @@ loginTests env = testGroup "Login" [
     , testThat "you get logged in after you reset a password" env assertResettingPasswordLogsIn
     , testThat "when you're logged in after resetting a password a user login stat event is recorded" env assertResettingPasswordRecordsALoginEvent
     , testThat "can use login link" env testCanLoginWithRedirect
+    , testThat "can't login after many failed attempts" env testCantLoginAfterFailedAttempts
     ]
 
 testSuccessfulLogin :: TestEnv ()
@@ -134,6 +135,21 @@ testCanLoginWithRedirect = do
   (res6, ctx6) <- runTestKontra req6 ctx $ handleLoginWithRedirectGet
   assertBool "ctxsessionid will not be changed if session_id is invalid" $ ctxsessionid ctx == ctxsessionid ctx6
   assertBool "Redirect was still set to other url" (isRedirect (LinkExternal redirecturl2) res6)
+
+testCantLoginAfterFailedAttempts :: TestEnv ()
+testCantLoginAfterFailedAttempts = do
+  _ <- createTestUser
+  ctx <- mkContext def
+  -- we fail to login 6 times
+  req1 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid"), ("loginType", inText "RegularLogin")]
+  forM_ [1..6] $ \_ -> do
+    (res1, ctx1) <- runTestKontra req1 ctx $ handleLoginPost
+    loginFailureChecks res1 ctx1
+
+  -- now even correct password does not work
+  req2 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
+  (res2, ctx2) <- runTestKontra req2 ctx $ handleLoginPost
+  loginFailureChecks res2 ctx2
 
 assertResettingPasswordLogsIn :: TestEnv ()
 assertResettingPasswordLogsIn = do
