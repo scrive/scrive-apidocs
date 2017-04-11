@@ -174,6 +174,9 @@ var Task = require("../navigation/task");
           if (shouldRedirect) {
             window.location = doc.currentSignatory().rejectredirect();
           } else {
+            $(window).on("beforeunload", function () {
+              $(window).scrollTop(0);
+            });
             window.location.reload();
           }
         }, function (xhr) {
@@ -332,10 +335,9 @@ var Task = require("../navigation/task");
       if (redirect) {
         window.location = redirect;
       } else {
-        if (BrowserInfo.isSafari()) {
-          // ios safari has really unpredictable scrolling reset after reloading
-          window.scrollTo(0, 0);
-        }
+        $(window).on("beforeunload", function () {
+          $(window).scrollTop(0);
+        });
         window.location.reload();
       }
     },

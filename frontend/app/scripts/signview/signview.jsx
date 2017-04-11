@@ -103,9 +103,6 @@ var TaskList = require("./navigation/task_list");
       var self = this;
       var model = self.state.model;
       $(window).resize(this.handleResize);
-      setTimeout(function () {
-        window.scrollTo(0, 0);
-      }, 10);
       $(window).on("orientationchange", this.handleOrientationChange);
       model.recall();
       ReloadManager.pushBlock(model.blockReload);
