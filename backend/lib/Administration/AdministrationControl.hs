@@ -321,7 +321,7 @@ handleCompanyChange companyid = onlySalesOrAdmin $ do
 
 handleCreateUser :: Kontrakcja m => m JSValue
 handleCreateUser = onlySalesOrAdmin $ do
-    email <- map toLower <$> (guardJustM $ getField "email")
+    email <- filter (/=' ') <$> map toLower <$> (guardJustM $ getField "email")
     fstname <- guardJustM $ getField "fstname"
     sndname <- guardJustM $ getField "sndname"
     lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
@@ -550,8 +550,9 @@ daveFile fileid' _title = onlyAdmin $ do
    contents <- getFileContents file
    if BS.null contents
       then internalError
-      else
-        return $ setHeader "Content-Disposition" ("attachment;filename=" ++ filename file)
+      else do
+        let fname = filter (/=',') $ filename file -- Chrome does not like commas in this header
+        return $ setHeader "Content-Disposition" ("attachment;filename=" ++ fname)
                  $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 randomScreenshotForTest :: Kontrakcja m => m Response

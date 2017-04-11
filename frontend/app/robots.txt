@@ -1,2 +1,7 @@
 User-agent: *
-Disallow:
+Sitemap: https://scrive.com/sitemap.xml
+Disallow: /s/
+Disallow: /preview/
+Disallow: /amnesia/
+Disallow: */accountsetup/
+Disallow: /invoice.php
