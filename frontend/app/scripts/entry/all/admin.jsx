@@ -1,6 +1,14 @@
-var Admin = require("../../../js/admin/admin").Admin;
+var React = require("react");
 var $ = require("jquery");
 
+var AdminView = require("../../admin/admin.jsx");
+
 $(function () {
-  $(".admin").append(new Admin({isAdmin: fromTemplate.isAdmin}).el());
+  var $container = $("<div></div>");
+  var view = React.render(
+    React.createElement(AdminView, {isAdmin: fromTemplate.isAdmin}),
+    $container[0]
+  );
+
+  $(".admin").append($container);
 });

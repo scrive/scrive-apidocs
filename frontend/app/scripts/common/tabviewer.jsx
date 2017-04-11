@@ -5,6 +5,7 @@ var _ = require("underscore");
 var TabViewerTabView = React.createClass({
   propTypes: {
     active: React.PropTypes.bool,
+    hidden: React.PropTypes.bool,
     index: React.PropTypes.number.isRequired,
     initial: React.PropTypes.bool,
     last: React.PropTypes.bool,
@@ -19,6 +20,10 @@ var TabViewerTabView = React.createClass({
       "active": this.props.active,
       "last-tab": this.props.last
     });
+
+    if (this.props.hidden) {
+      return null;
+    }
 
     return (
       <li onClick={this.onClick} className={className}>
@@ -36,6 +41,10 @@ var TabViewer = React.createClass({
 
         if (tab.props.hash == hash) {
           return i;
+        } if (_.isRegExp(tab.props.hash)) {
+          if (tab.props.hash.exec(hash)) {
+            return i;
+          }
         } else if (_.isArray(tab.props.aliases)) {
           if (_.contains(tab.props.aliases, hash)) {
             return i;
@@ -111,6 +120,7 @@ var TabViewer = React.createClass({
                 <TabViewerTabView
                   key={"tab-" + index}
                   active={index === self.state.currentTabIndex}
+                  hidden={item.props.hidden}
                   index={index}
                   last={index == self.props.children.length - 1}
                   title={item.props.title}
@@ -130,7 +140,10 @@ var TabViewer = React.createClass({
 var TabViewerTab = React.createClass({
   propTypes: {
     aliases: React.PropTypes.array,
-    hash: React.PropTypes.string,
+    hash: React.PropTypes.oneOfType([
+      React.PropTypes.string,
+      React.PropTypes.instanceOf(RegExp)
+    ]).isRequired,
     title: React.PropTypes.string.isRequired,
     url: React.PropTypes.string
   },
