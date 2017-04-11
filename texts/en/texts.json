@@ -873,7 +873,6 @@
 "_updateAttachmentsDialogUpLoadChooseAttachment":"Select attachment",
 "_updateAttachmentsDialogUpLoadChooseFile":"Select PDF",
 "_usageStatsDate":"Date",
-"_usageStatsMonth":"Month",
 "_verificationDescription":"By uploading a document here you can check the authenticity of the document to make sure it hasn’t been compromised.",
 "_verificationError":"Error",
 "_verificationErrorMessage":"An error occured while trying to verify the document's authenticity. Please try again.",

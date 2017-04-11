@@ -1037,7 +1037,6 @@ javascriptLocalisation =
               , last30days : "$_last30Days()$"
               , last6months : "$_last6Months()$"
               , columnDate: "$_usageStatsDate()$"
-              , columnMonth : "$_usageStatsMonth()$"
               , columnSender : "$_statsSender()$"
               , columnClosedDocuments : "$_closedDocuments()$"
               , columnSendDocuments :"$_sentDocuments()$"
