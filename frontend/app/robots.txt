@@ -5,3 +5,4 @@ Disallow: /preview/
 Disallow: /amnesia/
 Disallow: */accountsetup/
 Disallow: /invoice.php
+Disallow: /author/
