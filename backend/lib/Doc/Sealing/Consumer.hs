@@ -7,6 +7,7 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 import Crypto.RNG
+import Data.Aeson
 import Data.ByteString (ByteString)
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
@@ -24,6 +25,7 @@ import Doc.Sealing.Model
 import File.FileID
 import GuardTime
 import KontraPrelude
+import Log.Identifier
 import MailContext
 import MemCache (MemCache)
 import Templates
@@ -57,7 +59,7 @@ documentSealing appConf templates localCache globalCache pool = ConsumerConfig {
   , ccNotificationChannel = Just documentSealingNotificationChannel
   , ccNotificationTimeout = 60 * 1000000 -- 1 minute
   , ccMaxRunningJobs = 2
-  , ccProcessJob = \DocumentSealing{..} -> withPostgreSQL pool . withDocumentID dsDocumentID $ do
+  , ccProcessJob = \docsealing@DocumentSealing{..} -> withPostgreSQL pool . withDocumentID dsDocumentID $ do
       now <- currentTime
       bd <- dbQuery $ GetBrandedDomainByID dsBrandedDomainID
       doc <- theDocument
@@ -72,22 +74,31 @@ documentSealing appConf templates localCache globalCache pool = ConsumerConfig {
             , mctxcurrentBrandedDomain = bd
             , mctxtime = now
             }
-      runGuardTimeConfT (guardTimeConf appConf)
+      resultisok <- runGuardTimeConfT (guardTimeConf appConf)
         . runTemplatesT (lang, templates)
         . A.runAmazonMonadT ac
         . runMailContextT mc
         $ postDocumentClosedActions True False
-      return $ Ok Remove
+      case resultisok of
+        True  -> return $ Ok Remove
+        False -> Failed <$> onFailure docsealing
   , ccOnException = const onFailure
   }
   where
-    onFailure DocumentSealing{..} = case dsAttempts of
-      1 -> return . RerunAfter $ iminutes 5
-      2 -> return . RerunAfter $ iminutes 10
-      3 -> return . RerunAfter $ iminutes 30
-      4 -> return . RerunAfter $ ihours 1
-      5 -> return . RerunAfter $ ihours 2
-      6 -> return . RerunAfter $ ihours 4
-      7 -> return . RerunAfter $ ihours 8
-      8 -> return . RerunAfter $ ihours 16
-      _ -> return . RerunAfter $ idays 1
+    onFailure DocumentSealing{..} = do
+      when (dsAttempts > 1) $ do
+        logAttention "Document sealing failed more than 1 time" $ object [
+            identifier_ dsDocumentID
+          , "attempt_count" .= dsAttempts
+          ]
+      return . RerunAfter . attemptToDelay $ dsAttempts
+
+    attemptToDelay 1 = iminutes 5
+    attemptToDelay 2 = iminutes 10
+    attemptToDelay 3 = iminutes 30
+    attemptToDelay 4 = ihours 1
+    attemptToDelay 5 = ihours 2
+    attemptToDelay 6 = ihours 4
+    attemptToDelay 7 = ihours 8
+    attemptToDelay 8 = ihours 16
+    attemptToDelay _ = idays 1

@@ -785,12 +785,13 @@ addRandomDocumentWithFile fileid rda = do
 -- | Synchronously seal a document.
 sealTestDocument :: Context -> DocumentID -> TestEnv ()
 sealTestDocument ctx@Context{..} did
-  = withDocumentID did
+  = void
+  . withDocumentID did
   . runGuardTimeConfT ctxgtconf
   . runTemplatesT (ctxlang, ctxglobaltemplates)
   . A.runAmazonMonadT (A.AmazonConfig Nothing ctxfilecache Nothing)
   . runMailContextT (contextToMailContext ctx)
-  $ postDocumentClosedActions False False
+  $ (postDocumentClosedActions True False) `catch` (\(_::KE.KontraError) -> return False)
 
 rand :: CryptoRNG m => Int -> Gen a -> m a
 rand i a = do

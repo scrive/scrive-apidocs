@@ -4,7 +4,6 @@ module Doc.Action (
   , postDocumentCanceledChange
   , postDocumentPendingChange
   , postDocumentClosedActions
-  , findAndDoPostDocumentClosedActions
   , findAndExtendDigitalSignatures
   , findAndTimeoutDocuments
   ) where
@@ -21,7 +20,6 @@ import Text.StringTemplates.Templates (TemplatesMonad)
 
 import ActionQueue.Scheduler
 import Amazon (AmazonMonad)
-import AppConf (guardTimeConf)
 import BrandedDomain.BrandedDomain
 import Chargeable.Model
 import DB
@@ -30,7 +28,7 @@ import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.DigitalSignature (addDigitalSignature, extendDigitalSignature)
 import Doc.DocInfo
-import Doc.DocMails (runMailTInScheduler, sendClosedEmails, sendDocumentErrorEmail, sendInvitationEmails, sendRejectEmails)
+import Doc.DocMails (sendClosedEmails, sendDocumentErrorEmail, sendInvitationEmails, sendRejectEmails)
 import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
 import Doc.DocumentMonad
@@ -41,12 +39,11 @@ import Doc.Sealing.Model
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryLinkID
 import Doc.Signing.Model ()
-import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
+import GuardTime (GuardTimeConfMonad)
 import Kontra
 import KontraPrelude
 import Log.Identifier
 import MailContext
-import MinutesTime
 import Templates (runTemplatesT)
 import ThirdPartyStats.Core
 import User.Email
@@ -167,7 +164,7 @@ postDocumentPendingChange olddoc = do
 postDocumentClosedActions :: (TemplatesMonad m, MailContextMonad m, CryptoRNG m, MonadIO m, MonadLog m, AmazonMonad m, MonadBaseControl IO m, MonadMask m, DocumentMonad m, GuardTimeConfMonad m)
   => Bool -- ^ Commit to DB after we have sealed the document
   -> Bool -- ^ Prepare final PDF even if it has already been prepared
-  -> m ()
+  -> m Bool
 postDocumentClosedActions commitAfterSealing forceSealDocument = do
   mcxt <- getMailContext
   doc0 <- theDocument
@@ -199,7 +196,9 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
   unlessM (isDocumentError <$> theDocument) $ do
 
     unlessM (hasGuardtimeSignature <$> theDocument) $ do
-      addDigitalSignature
+      unlessM addDigitalSignature $ do
+        internalError
+
 
     whenM ((\d -> documentsealstatus doc0 /= documentsealstatus d) <$> theDocument) $ do
 
@@ -217,28 +216,10 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
       theDocument >>= sendClosedEmails sealFixed
       theDocument >>= triggerAPICallbackIfThereIsOne
 
--- | Post-process documents that lack final PDF or digital signature
-findAndDoPostDocumentClosedActions :: (MonadReader SchedulerData m, MonadBaseControl IO m, CryptoRNG m, MonadDB m, MonadMask m, MonadIO m, MonadLog m, AmazonMonad m) => m ()
-findAndDoPostDocumentClosedActions = do
-  now <- currentTime
+  -- Sealing or signing of document could have failed. We need to tell the caller,
+  -- so that the action can be re-scheduled
+  (\d -> documentsealstatus d /= Just Missing && documentstatus d == Closed) <$> theDocument
 
-  docs <- dbQuery $ GetDocuments DocumentsOfWholeUniverse [
-      -- Here we could include DocumentError as well to get automatic
-      -- resealing attempted periodically.
-      DocumentFilterStatuses [Closed]
-      -- Sealed file lacks digital signature, or no sealed file at all.
-    , DocumentFilterBySealStatus [Missing]
-      -- Avoid documents that the server is processing in its post-closed thread.
-    , DocumentFilterByLatestSignTimeBefore (5 `minutesBefore` now)
-    ] [] 200
-  when (not $ null docs) $ do
-    logInfo "findAndDoPostDocumentClosedActions: considering documents" $ object [
-        "documents" .= length docs
-      ]
-  gtConf <- asks (guardTimeConf . sdAppConf)
-  forM_ docs $ \doc -> do
-    void $ runMailTInScheduler doc $ runGuardTimeConfT gtConf $ withDocument doc $ postDocumentClosedActions False False
-    commit
 
 -- | Extend (replace with keyless) signatures of documents older than latest publication code (if they are not already extended)
 findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadMask m, MonadIO m, MonadLog m) => m ()

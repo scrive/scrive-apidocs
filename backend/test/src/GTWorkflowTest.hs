@@ -11,13 +11,13 @@ import ActionQueue.Monad (ActionQueueT)
 import ActionQueue.Scheduler (SchedulerData(..))
 import AppConf (AppConf(dbConfig))
 import DB
-import Doc.Action (findAndDoPostDocumentClosedActions, findAndExtendDigitalSignatures)
+import Doc.Action (findAndExtendDigitalSignatures)
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentMonad (theDocument, withDocumentID)
 import Doc.DocUtils
 import Doc.Model
-import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
+import Doc.SealStatus (SealStatus(..))
 import KontraPrelude
 import MinutesTime
 import Templates
@@ -30,21 +30,9 @@ import qualified MemCache
 
 gtWorkflowTests :: TestEnvSt -> Test
 gtWorkflowTests env = testGroup "GTWorkflowTest" [
-  testThat "Document with seal status Missing gets sealed" env testSealMissingSignatures,
   testThat "Document with extensible digital signature can be extended" env testExtendDigitalSignatures
   ]
 
-testSealMissingSignatures :: TestEnv ()
-testSealMissingSignatures = do
-  author <- addNewRandomUser
-  let filename = inTestDir "pdfs/simple.pdf"
-  filecontent <- liftIO $ BS.readFile filename
-  file <- addNewFile filename filecontent
-  doc <- addRandomDocumentWithAuthorAndConditionAndFile author isClosed file
-  runScheduler findAndDoPostDocumentClosedActions
-  doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  unless (hasGuardtimeSignature doc') $ do
-    assertFailure $ "Unexpected seal status: " ++ show (documentsealstatus doc')
 
 testExtendDigitalSignatures :: TestEnv ()
 testExtendDigitalSignatures = do

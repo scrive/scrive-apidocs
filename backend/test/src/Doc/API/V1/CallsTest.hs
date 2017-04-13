@@ -8,6 +8,7 @@ import Test.QuickCheck
 import Text.JSON
 import Text.JSON.FromJSValue
 import Text.JSON.Gen
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import Context
@@ -23,6 +24,7 @@ import Doc.Model
 import Doc.SignatoryScreenshots
 import EID.Authentication.Model
 import EID.CGI.GRP.Data ()
+import KontraError
 import KontraPrelude
 import OAuth.Model
 import Session.Model
@@ -670,7 +672,7 @@ testCloseEvidenceAttachments = do
 
   _ <- runTestKontra req ctx $ withDocument doc $ do
       randomUpdate $ \t -> CloseDocument (systemActor t)
-      postDocumentClosedActions True False
+      postDocumentClosedActions True False  `E.catch` (\(_::KontraError) -> return False)
 
   (rsp, _) <- runTestKontra req ctx $ apiCallV1GetEvidenceAttachments (documentid doc)
   let rspString = BS.toString $ rsBody rsp
