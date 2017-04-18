@@ -15,7 +15,7 @@ import {BrowserInfo} from "../../../js/utils/browserinfo.js";
 
 var expose = {};
 
-var MOUSE__METHOD = expose.MOUSE__METHOD = "mouse";
+var MOUSE_METHOD = expose.MOUSE_METHOD = "mouse";
 var MS_METHOD = expose.MS_METHOD = "ms";
 var TOUCH_METHOD = expose.TOUCH_METHOD = "touch";
 
@@ -83,7 +83,7 @@ expose.getEventPointerId = function (e) {
 
 /* Some events should not start drawing - right now it's only about clicks with right mouse button */
 expose.isStartDrawingEvent = function (method, e) {
-  if (method !== MOUSE__METHOD && method !== MS_METHOD) {
+  if (method !== MOUSE_METHOD && method !== MS_METHOD) {
     // other drawing methods don't have buttons
     return true;
   } else if (!BrowserInfo.isIE9orLower() && e.buttons !== undefined) {
