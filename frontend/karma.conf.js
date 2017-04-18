@@ -44,10 +44,7 @@ module.exports = function(config) {
         rules: [
           {
             test: /\.jsx$/,
-            loader: "babel-loader",
-            options: {
-              presets: ["react", "es2015", "stage-2"]
-            }
+            loader: "babel-loader"
           },
           {
             test: /\.less$/,
@@ -61,10 +58,7 @@ module.exports = function(config) {
             test: /\.svg$/,
             use: [
               {
-                loader: "babel-loader",
-                options: {
-                  presets: ["react", "es2015", "stage-2"]
-                }
+                loader: "babel-loader"
               },
               {
                 loader: "svg-react-loader"

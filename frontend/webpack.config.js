@@ -24,10 +24,7 @@ function defaultConfig (obj) {
       rules: [
         {
           test: /\.jsx$/,
-          loader: "babel-loader",
-          options: {
-            presets: ["react", "es2015", "stage-2"]
-          }
+          loader: "babel-loader"
         },
         {
           test: /\.less$/,
@@ -41,10 +38,7 @@ function defaultConfig (obj) {
           test: /\.svg$/,
           use: [
             {
-              loader: "babel-loader",
-              options: {
-                presets: ["react", "es2015", "stage-2"]
-              }
+              loader: "babel-loader"
             },
             {
               loader: "svg-react-loader"
