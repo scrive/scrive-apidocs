@@ -549,7 +549,7 @@
 "_flashMessageUserAlreadyActivated":"You have already activated this account.",
 "_flashMessageUserDetailsSaved":"Your account settings have been saved.",
 "_flashMessageUserHasBecomeCompanyAccount":"Your account is now a part of $companyname$ and the rights to your documents have been transferred to $companyname$.",
-"_flashMessageUserHasIdentifiedWithDifferentSSN":"You are using a different identity than is required in the contract.",
+"_flashMessageUserHasIdentifiedWithDifferentSSN":"The ID number you used does not match the ID number required to view the document.",
 "_flashMessageUserHasLiveDocs":"Unable to remove the account as the user has documents that have not yet been finalised or cancelled.",
 "_flashMessageUserPasswordChanged":"Your password has been set.",
 "_flashMessageUserWithSameEmailExists":"A user with the same email already exists.",
