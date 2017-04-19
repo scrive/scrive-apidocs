@@ -267,7 +267,9 @@ var ORIGINAL_PAGE_SIZE = 950;
               className={boxClass}
               style={boxStyle}
             >
-              {field.nicetext()}
+              <pre className="placedfield-placement-pre-wrapper">
+                {field.nicetext()}
+              </pre>
             </div>
           </div>
           <InfoTextInput
