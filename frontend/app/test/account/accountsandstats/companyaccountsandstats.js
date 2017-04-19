@@ -7,29 +7,25 @@ var util = require("../../util");
 
 var TestUtils = React.addons.TestUtils;
 
-var UserAdminView = require(
-  "../../../scripts/admin/useradmin/useradmin"
+var CompanyAccountsAndStatsView = require(
+  "../../../scripts/account/usersandstats/companyaccountsandstats"
 );
-
-var UserDetailsView = require(
-  "../../../scripts/admin/useradmin/userdetails/userdetails"
-).UserDetailsView;
-
+var CompanyAccountsTable = require(
+  "../../../scripts/account/usersandstats/companyaccountstable"
+);
 var StatsView = require("../../../scripts/stats/stats");
 
-var DocumentsList = require("../../../scripts/admin/documentslist");
-
-describe("admin/useradmin/useradmin", function () {
+describe("account/usersandstats/companyaccountsandstats", function () {
   var container = null;
   var server = null;
 
   var renderComponent = function (props, componentClass) {
     container = document.createElement('div');
-    componentClass = componentClass || UserAdminView;
+    componentClass = componentClass || CompanyAccountsAndStatsView;
 
     var actualProps = underscore.extendOwn(
       {
-        userId: "1"
+        companyAdmin: false
       },
       props || {}
     );
@@ -67,21 +63,28 @@ describe("admin/useradmin/useradmin", function () {
     var tabs = $(".tabs", component.getDOMNode());
     assert.lengthOf(tabs, 1);
 
-    assert.equal($("li:nth-child(1)", tabs).text(), "<");
-    assert.equal($("li:nth-child(2)", tabs).text(), "User details");
-    assert.equal($("li:nth-child(3)", tabs).text(), "Statistics");
-    assert.equal($("li:nth-child(4)", tabs).text(), "Documents");
+    assert.equal(
+      $("li:nth-child(1)", tabs).text(),
+      localization.account.companyAccounts.name
+    );
+    assert.equal(
+      $("li:nth-child(2)", tabs).text(),
+      localization.account.companyAccounts.name
+    );
+    assert.equal(
+      $("li:nth-child(3)", tabs).text(),localization.account.stats.name
+    );
   });
 
-  it("should activate the details tab by default", function () {
+  it("should activate the accounts tab by default", function () {
     var component = renderComponent();
 
     var tab = $(".tabs li:nth-child(2)", component.getDOMNode());
     assert.isTrue(tab.hasClass("active"));
-    assert.equal(window.location.hash, "#details");
+    assert.equal(window.location.hash, "#company-accounts");
   });
 
-  it("should activate the statistics tab by clicking on it", function (done) {
+  it("should activate the company  stats tab by clicking on it", function (done) {
     var component = renderComponent();
 
     var tab = $(".tabs li:nth-child(3)", component.getDOMNode());
@@ -92,30 +95,13 @@ describe("admin/useradmin/useradmin", function () {
         return tab.hasClass("active");
       },
       function () {
-        assert.equal(window.location.hash, "#stats");
+        assert.equal(window.location.hash, "#company-stats");
         done(); 
       }
     );
   });
 
-  it("should activate the documents tab by clicking on it", function (done) {
-    var component = renderComponent();
-
-    var tab = $(".tabs li:nth-child(4)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
-
-    util.waitUntil(
-      function () {
-        return tab.hasClass("active");
-      },
-      function () {
-        assert.equal(window.location.hash, "#documents");
-        done(); 
-      }
-    );
-  });
-
-  it("should configure and render the details view when its tab is active", function (done) {
+  it("should configure and render the accounts view when its tab is active", function (done) {
     var component = renderComponent();
 
     var tab = $(".tabs li:nth-child(2)", component.getDOMNode());
@@ -127,10 +113,10 @@ describe("admin/useradmin/useradmin", function () {
       },
       function () {
         var detailsView = TestUtils.findRenderedComponentWithType(
-          component, UserDetailsView
+          component, CompanyAccountsTable
         );
 
-        assert.equal(detailsView.props.userId, "1");
+        assert.isFalse(detailsView.props.loadLater);
 
         done();
       }
@@ -152,31 +138,7 @@ describe("admin/useradmin/useradmin", function () {
           component, StatsView
         );
 
-        assert.equal(statsView.props.userId, "1");
-
-        done();
-      }
-    );
-  });
-
-  it("should configure and render the documents view when its tab is active", function (done) {
-    var component = renderComponent();
-
-    var tab = $(".tabs li:nth-child(4)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
-
-    util.waitUntil(
-      function () {
-        return tab.hasClass("active");
-      },
-      function () {
-        var documentsView = TestUtils.findRenderedComponentWithType(
-          component, DocumentsList
-        );
-
-        assert.isTrue(documentsView.props.forAdmin);
-        assert.isFalse(documentsView.props.loadLater);
-        assert.equal(documentsView.props.userid, "1");
+        assert.isTrue(statsView.props.withCompany);
 
         done();
       }

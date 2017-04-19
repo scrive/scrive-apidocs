@@ -66,12 +66,20 @@ var ResendInvitationModalContent = React.createClass({
 
 module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
+    propTypes : {
+      loadLater: React.PropTypes.bool
+    },
     getInitialState: function () {
       return {
         showCreateAccountModal: false,
         accountToRemove: null,
         accountToReinvite: null
       };
+    },
+    componentDidMount: function () {
+      if (this.props.loadLater === false) {
+        this.reload();
+      }
     },
     changeRole : function(d) {
       var self = this;

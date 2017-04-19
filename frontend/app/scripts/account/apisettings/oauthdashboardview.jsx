@@ -10,6 +10,14 @@ var Submit = require("../../../js/submits.js").Submit;
 
 module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
+    propTypes : {
+      loadLater: React.PropTypes.bool
+    },
+    componentDidMount: function () {
+      if (this.props.loadLater === false) {
+        this.reload();
+      }
+    },
     deleteApiToken : function(apitoken) {
       var self = this;
       new Submit({

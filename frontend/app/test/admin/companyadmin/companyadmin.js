@@ -19,10 +19,6 @@ var CompanyDetailsView = require(
   "../../../scripts/admin/companyadmin/companydetails/companydetails"
 ).CompanyDetailsView;
 
-var CompanyStatsView = require(
-  "../../../scripts/admin/companyadmin/companystats"
-);
-
 var CompanyUsersAdminList = require(
   "../../../scripts/admin/companyusersadminlist"
 );
@@ -32,6 +28,8 @@ var DocumentsList = require("../../../scripts/admin/documentslist");
 var PaymentsPanel = require(
   "../../../scripts/admin/paymentspanel"
 );
+
+var StatsView = require("../../../scripts/stats/stats");
 
 var TemplatesList = require("../../../scripts/admin/templateslist");
 
@@ -306,7 +304,7 @@ describe("admin/companyadmin/companyadmin", function () {
       },
       function () {
         var statisticsView = TestUtils.findRenderedComponentWithType(
-          component, CompanyStatsView
+          component, StatsView
         );
 
         assert.equal(statisticsView.props.companyId, "1");

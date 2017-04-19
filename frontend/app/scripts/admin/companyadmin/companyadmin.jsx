@@ -6,10 +6,10 @@ var CompanyBrandingPanel = require(
 var CompanyDetailsViewFactory = require(
   "./companydetails/companydetails"
 ).CompanyDetailsViewFactory;
-var CompanyStatsView = require("./companystats");
 var CompanyUsersAdminList = require("../companyusersadminlist");
 var DocumentsList = require("../documentslist");
 var PaymentsPanel = require("../paymentspanel");
+var StatsView = require("../../stats/stats");
 var TabViewer = require("../../common/tabviewer");
 var TemplatesList = require("../templateslist");
 
@@ -54,7 +54,7 @@ var CompanyAdminView = React.createClass({
           />
         </TabViewer.TabViewerTab>
         <TabViewer.TabViewerTab hash="stats" title="Statistics">
-          <CompanyStatsView companyId={this.props.companyId} />
+          <StatsView companyId={this.props.companyId} withCompany={true} />
         </TabViewer.TabViewerTab>
         <TabViewer.TabViewerTab hash="templates" title="Templates">
           <TemplatesList

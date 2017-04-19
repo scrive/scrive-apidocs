@@ -2,6 +2,8 @@ var ClassNames = require("classnames");
 var React = require("react");
 var _ = require("underscore");
 
+var GRAY_ARROW_URL = "" + window.cdnbaseurl + "/img/gray-arrow.png";
+
 var TabViewerTabView = React.createClass({
   propTypes: {
     active: React.PropTypes.bool,
@@ -34,10 +36,17 @@ var TabViewerTabView = React.createClass({
 });
 
 var TabViewer = React.createClass({
+  propTypes: {
+    inner: React.PropTypes.bool
+  },
   _tabIndexForLocationHash: function (hash) {
     if (hash) {
       for (var i = 0; i < this.props.children.length; i++) {
         var tab = this.props.children[i];
+
+        if (!tab) {
+          continue;
+        }
 
         if (tab.props.hash == hash) {
           return i;
@@ -110,15 +119,28 @@ var TabViewer = React.createClass({
   },
   render: function () {
     var self = this;
+    var className = ClassNames("tab-viewer", {
+      inner: this.props.inner
+    });
 
     return (
-      <div className="tab-viewer">
+      <div className={className}>
         <div className="tab-viewer-header">
           <ul className="tabs">
             {_.map(this.props.children, function (item, index) {
+              if (!item) {
+                return null;
+              }
+
+              var tabKey = "tab-" + index;
+
+              if (item.type === TabViewerInnerTab) {
+                return React.cloneElement(item, {key: tabKey});
+              }
+
               return (
                 <TabViewerTabView
-                  key={"tab-" + index}
+                  key={tabKey}
                   active={index === self.state.currentTabIndex}
                   hidden={item.props.hidden}
                   index={index}
@@ -152,7 +174,23 @@ var TabViewerTab = React.createClass({
   }
 });
 
+var TabViewerInnerTab = React.createClass({
+  propTypes: {
+    text: React.PropTypes.string.isRequired
+  },
+  render: function () {
+    return (
+      <li className="inner-tab float-left">
+        <h4>{this.props.text}
+          <img className="tab-arrow" src={GRAY_ARROW_URL} />
+        </h4>
+      </li>
+    );
+  }
+});
+
 module.exports = {
   TabViewer: TabViewer,
-  TabViewerTab: TabViewerTab
+  TabViewerTab: TabViewerTab,
+  TabViewerInnerTab: TabViewerInnerTab
 };

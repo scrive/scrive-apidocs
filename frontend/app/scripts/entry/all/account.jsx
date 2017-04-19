@@ -1,13 +1,16 @@
 var React = require("react");
-var Account = require("../../../js/account/account").Account;
 var $ = require("jquery");
-var Track = require("../../common/track");
+
+var AccountView = require("../../account/account");
 
 $(function () {
-  var account = new Account(fromTemplate);
+  var $container = $("<div class='account'></div>");
+  var view = React.render(
+    React.createElement(
+      AccountView, {companyAdmin: fromTemplate.companyAdmin}
+    ),
+    $container[0]
+  );
 
-  $(".body-container").append(account.el());
-
-  mixpanel.register({Context : "Account Page"});
-  Track.track("View Account Page");
+  $(".body-container").append($container);
 });
