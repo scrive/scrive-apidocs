@@ -63,8 +63,13 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, m
     processEvent (eid, smsid, eventType, smsType, smsOrigMsisdn)
   )
   where
-    processEvent (eid, _, eventType, Invitation _did slid, smsOrigMsisdn) = do
-      dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
+    processEvent (eid, _, eventType, Invitation did slid, smsOrigMsisdn) = do
+      exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor did
+      if not exists then do
+        logInfo "SMS event for purged/non-existing document" $ object [identifier_ did]
+        _ <- dbUpdate $ MarkSMSEventAsRead eid
+        return ()
+       else dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
         _ <- dbUpdate $ MarkSMSEventAsRead eid
         msl <- getSigLinkFor slid <$> theDocument
         let signphone = maybe "" getMobile msl
@@ -91,6 +96,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, m
         handleEv eventType
 
     processEvent (eid, _, eventType, SMSPinSendout slid, smsOrigMsisdn) = do
+      -- TODO: add docid to SMSPinSendout and check here if doc is not purged
       dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
         _ <- dbUpdate $ MarkSMSEventAsRead eid
         templates <- getGlobalTemplates
