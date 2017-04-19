@@ -6,3 +6,4 @@ Disallow: /amnesia/
 Disallow: */accountsetup/
 Disallow: /invoice.php
 Disallow: /author/
+Disallow: /api/
