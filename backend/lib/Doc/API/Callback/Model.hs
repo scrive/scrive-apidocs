@@ -99,7 +99,11 @@ triggerAPICallbackIfThereIsOne doc@Document{..} = logDocument documentid $ case 
           Just (ConstantUrlScheme url) -> addAPICallback url V1
           Just (ConstantUrlSchemeV2 url) -> addAPICallback url V2
           _ -> return () -- No callback defined for document nor user.
-      Nothing -> $unexpectedErrorM $ "Document" <+> show documentid <+> "has no author"
+      Nothing -> do
+        logAttention "Cant trigger user API callback for doc wihout author" $ object [
+            identifier_ documentid
+          ]
+        return () -- skipping
 
   where
     addAPICallback url apiVersion = do
