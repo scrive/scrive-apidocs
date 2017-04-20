@@ -30,7 +30,7 @@ test_brandedDomainCreateUpdate = do
 
   xbd <- dbQuery $ GetBrandedDomainByID bdid
 
-  assertEqual "Braded domain round trips to database" nbd xbd
+  assertEqual "Branded domain round trips to database" nbd xbd
 
   wbd <- dbQuery $ GetBrandedDomainByURL (bdUrl nbd)
 
