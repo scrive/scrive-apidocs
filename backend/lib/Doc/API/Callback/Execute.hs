@@ -87,7 +87,7 @@ executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
       logInfo "API callback executeStandardCallback succeeded" $ logObject_ dac
       return True
     ExitFailure ec -> do
-      logAttention "API callback executeStandardCallback failed" $ object [
+      logInfo "API callback executeStandardCallback failed" $ object [
           logPair_ dac
         , "curl_exitcode" .= show ec
         , "stderr" `equalsExternalBSL` stderr
@@ -120,7 +120,7 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid 
         , tokenUrl ] BSL.empty
    case exitcode1 of
     ExitFailure ec1 -> do
-      logAttention "API callback executeOAuth2Callback failed during authorization phase" $ object [
+      logInfo "API callback executeOAuth2Callback failed during authorization phase" $ object [
           logPair_ dac
         , "curl_exitcode" .= show ec1
         , "stderr" `equalsExternalBSL` stderr1
@@ -128,7 +128,7 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid 
       return False
     ExitSuccess -> case parseAccessToken stdout1 of
       Nothing -> do
-       logAttention "API callback executeOAuth2Callback failed for token parsing" $ object [
+       logInfo "API callback executeOAuth2Callback failed for token parsing" $ object [
          "stdout" .= show stdout1
          ]
        return False
@@ -146,7 +146,7 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid 
             logInfo "API callback executeOAuth2Callback succeeded" $ logObject_ dac
             return True
           ExitFailure ec2 -> do
-            logAttention "API callback executeOAuth2Callback failed" $ object [
+            logInfo "API callback executeOAuth2Callback failed" $ object [
                 logPair_ dac
               , "curl_exitcode" .= show ec2
               , "stderr" `equalsExternalBSL` stderr2

@@ -210,7 +210,7 @@ api acc = (toAPIResponse <$> acc) `catches` [
     Handler $ \ex@(SomeDBExtraException e) -> do
       -- API handler always returns a valid response. Due to that appHandler will not rollback - and we need to do it here
       rollback
-      logAttention "API error" $ object [
+      logInfo "API error" $ object [
           "extra_exception" .= jsonToAeson (toJSValue e)
         ]
       return $ (toAPIResponse $ toJSValue e) {
