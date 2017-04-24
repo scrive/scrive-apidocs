@@ -10,6 +10,9 @@ var Track = require("../common/track");
 var TrackingView = require("../common/trackingview");
 var TrashList = require("./trash");
 
+const SCROLL_TOP_LIMIT = 213; // FIXME: Magic number, ~ $(".subbox").offset()
+
+
 var ArchiveView = React.createClass({
   mixins: [React.addons.PureRenderMixin],
   propTypes: {
@@ -26,11 +29,6 @@ var ArchiveView = React.createClass({
   componentWillMount: function () {
     mixpanel.register({Context: "Archive"});
     Track.track("View Archive");
-
-    this.scrollTopLimit = 213; // Where does this magic number come from?
-    if ($(".blocking-info").length > 0) {
-      this.scrollTopLimit += $(".blocking-info").outerHeight();
-    }
   },
   componentDidMount: function () {
     $(window).on("scroll", this.onWindowScroll);
@@ -42,9 +40,9 @@ var ArchiveView = React.createClass({
     var scrollTop = $(window).scrollTop();
     var viewHeight = $(".wrapper-position-footer").height();
 
-    if (scrollTop >= this.scrollTopLimit && viewHeight >= 1200) {
+    if (scrollTop >= SCROLL_TOP_LIMIT && viewHeight >= 1200) {
       this.setState({scrolled: true});
-    } else if (this.state.scrolled && scrollTop <= this.scrollTopLimit) {
+    } else if (this.state.scrolled && scrollTop <= SCROLL_TOP_LIMIT) {
       this.setState({scrolled: false});
     }
   },
