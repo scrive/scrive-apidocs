@@ -33,8 +33,6 @@ module.exports = function(args) {
   var self = args.list;
   var fromToFilterOptions = args.fromToFilterOptions;
 
-  console.log('DocumentFilters()', fromToFilterOptions);
-
   return [
     <List.SelectFilter
       key="status"

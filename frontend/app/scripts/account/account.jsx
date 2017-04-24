@@ -10,20 +10,7 @@ var StatsView = require("../stats/stats");
 var SubscriptionPanel = require("./subscription/subscriptionpanel");
 var TabViewer = require("../common/tabviewer");
 var Track = require("../common/track");
-
-var TrackingView = React.createClass({
-  propTypes: {
-    mixpanelSubcontext: React.PropTypes.string.isRequired,
-    trackEvent: React.PropTypes.string.isRequired
-  },
-  componentDidMount: function () {
-    mixpanel.register({Subcontext: this.props.mixpanelSubcontext});
-    Track.track(this.props.trackEvent);
-  },
-  render: function () {
-    return this.props.children;
-  }
-});
+var TrackingView = require("../common/trackingview");
 
 var AccountView = React.createClass({
   propTypes: {
