@@ -43,7 +43,7 @@
 "_elegBankIDFaultModalTitle":"BankID sisäänkirjautumisessa on ongelmia.",
 "_elegBankIDRFA1":"Käynnistä BankID-sovellus.",
 "_elegBankIDRFA12":"Sisäinen virhe. Päivitä BankID-sovelluksesi ja yritä uudelleen.",
-"_elegBankIDRFA13":"",
+"_elegBankIDRFA13":"BankID-sovellustasi yritetään käynnistää. Voit myös käynnistää sovelluksesi manuaalisesti matkapuhelimessasi tai jossain muussa laitteessa.",
 "_elegBankIDRFA14":"Sinulla ei ole BankID:ta, jota voi käyttää tämän laitteen sisäänkirjautumiseen. Jos sinulla ei ole BankID:ta, voit tilata sen pankiltasi. Jos sinulla on BankID toisella laitteella, voit käynnistää BankID-sovelluksen kyseisessä laitteessa.",
 "_elegBankIDRFA16":"BankID, jota yrität käyttää, on peruttu tai liian vanha. Käytä toista BankID:ta tai tilaa uusi pankiltasi.",
 "_elegBankIDRFA17":"BankID-sovellusta ei löytynyt laitteeltasi. Asenna se ja tilaa BankID pankiltasi. Asenna sovellus täältä: <a target='_blank' href='http://install.bankid.com'>install.bankid.com</a>.",
