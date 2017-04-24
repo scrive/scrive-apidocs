@@ -12,7 +12,6 @@ $htmlopentag()$
   </head>
 <body>
 <div class="wrapper-position-footer">
-  $header()$
   <div class="mainContainer" >
     <div class="body-container">
       <div class='box smaller white verificationBox'>
@@ -28,7 +27,6 @@ $htmlopentag()$
       <script src="$cdnbaseurl$/compiled/all/verification-$versioncode$.js" crossorigin="anonymous"></script>
     </div>
   </div>
-  $pageFooter()$
 </div>
 </body>
 $htmlclosingtag()$

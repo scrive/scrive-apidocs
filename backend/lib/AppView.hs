@@ -112,23 +112,13 @@ notFoundPage :: Kontrakcja m => m Response
 notFoundPage = pageWhereLanguageCanBeInUrl $ do
   ctx <- getContext
   ad <- getAnalyticsData
-  content <- if (bdMainDomain (ctxbrandeddomain ctx)||  isJust (ctxmaybeuser ctx))
-   then renderTemplate "notFound" $ do
-                    standardPageFields ctx Nothing ad
-   else renderTemplate "notFoundWithoutHeaders" $ do
-                    standardPageFields ctx Nothing ad
-  simpleHtmlResponse content
+  simpleHtmlResponse =<< renderTemplate "notFound" (standardPageFields ctx Nothing ad)
 
 internalServerErrorPage :: Kontrakcja m => m Response
 internalServerErrorPage =  pageWhereLanguageCanBeInUrl $ do
   ctx <- getContext
   ad <- getAnalyticsData
-  content <- if (bdMainDomain (ctxbrandeddomain ctx)||  isJust (ctxmaybeuser ctx))
-   then renderTemplate "internalServerError" $ do
-                    standardPageFields ctx Nothing ad
-   else renderTemplate "internalServerErrorWithoutHeaders" $ do
-                    standardPageFields ctx Nothing ad
-  simpleHtmlResponse content
+  simpleHtmlResponse =<< renderTemplate "internalServerError" (standardPageFields ctx Nothing ad)
 
 pageWhereLanguageCanBeInUrl :: Kontrakcja m => m Response -> m Response
 pageWhereLanguageCanBeInUrl handler = do
@@ -174,10 +164,7 @@ enableCookiesPage = do
       -- internalServerError is a happstack function, it's not our internalError
       -- this will not rollback the transaction
       let fields = standardPageFields ctx Nothing ad
-      content <- if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx)
-                    then renderTemplate "sessionTimeOut" fields
-                    else renderTemplate "sessionTimeOutWithoutHeaders" fields
-      pageWhereLanguageCanBeInUrl $ simpleHtmlResponse content >>= internalServerError
+      internalServerError =<< pageWhereLanguageCanBeInUrl (simpleHtmlResponse =<< renderTemplate "sessionTimeOut" fields)
   where
     cookieToJson Cookie{..} = object [
         "version"   .= cookieVersion
@@ -193,14 +180,7 @@ handleTermsOfService :: Kontrakcja m => m Response
 handleTermsOfService = withAnonymousContext $ do
   ctx <- getContext
   ad <- getAnalyticsData
-  content <- if (bdMainDomain $ ctxbrandeddomain ctx)
-                then do
-                  renderTemplate "termsOfService" $ do
-                    standardPageFields ctx Nothing ad
-                else do
-                  renderTemplate "termsOfServiceWithBranding" $ do
-                    standardPageFields ctx Nothing ad
-  simpleHtmlResponse content
+  simpleHtmlResponse =<< renderTemplate "termsOfService" (standardPageFields ctx Nothing ad)
 
 standardPageFields :: (TemplatesMonad m, MonadDB m, MonadThrow m) => Context -> Maybe CompanyUI -> AnalyticsData -> Fields m ()
 standardPageFields ctx mcompanyui ad = do

@@ -54,7 +54,6 @@ import Analytics.Include
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import Attachment.Model
-import BrandedDomain.BrandedDomain
 import Cookies
 import DB
 import DB.TimeZoneName
@@ -279,11 +278,7 @@ handleCookieFail slid did = logDocumentAndSignatory did slid $ do
       logInfo "Signview load after session timedout" $ object ["cookies" .= show cookies]
       ctx <- getContext
       ad <- getAnalyticsData
-      let fields = standardPageFields ctx Nothing ad
-      content <- if bdMainDomain (ctxbrandeddomain ctx) || isJust (ctxmaybeuser ctx)
-        then renderTemplate "sessionTimeOut" fields
-        else renderTemplate "sessionTimeOutWithoutHeaders" fields
-      simpleHtmlResponse content
+      simpleHtmlResponse =<< renderTemplate "sessionTimeOut" (standardPageFields ctx Nothing ad)
 
 {- |
    Redirect author of document to go to signview

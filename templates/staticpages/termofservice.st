@@ -8,31 +8,6 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
-    <link href='$cdnbaseurl$/scrive_branding/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
-  </head>
-<body>
-  $header()$
-  <div class="mainContainer" >
-    <div class="body-container">
-
-      <div class="js-terms-of-service terms-of-service">$termsOfServiceContent()$</div>
-      <script>
-        mixpanel.track('View Terms Of Service Page');
-      </script>
-    </div>
-  </div>
-  <div class="terms-footer">
-    $pageFooter()$
-  </div>
-</body>
-$htmlclosingtag()$
-###
-termsOfServiceWithBranding=$doctype()$
-$htmlopentag()$
-  <head>
-    <title>$pagetitle()$</title>
-    $IECompatibilityMetaTag()$
-    $standardHeaderContents(nobranding='true')$
     <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
@@ -49,7 +24,7 @@ $htmlopentag()$
     $termsOfServiceContent()$
     </div>
     <script>
-      mixpanel.track('View Terms Of Service Page | Branded');
+      mixpanel.track('View Terms Of Service Page');
     </script>
 
   </body>

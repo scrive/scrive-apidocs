@@ -5,51 +5,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
-    $if(logged)$
-      <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
-    $else$
-      <link href='$cdnbaseurl$/scrive_branding/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
-    $endif$
-  </head>
-<body>
-<div class="wrapper-position-footer">
-  $header()$
-  <div class='mainContainer big error-page'>
-    <div class='error-page-info'>
-      <div class='error-page-description'>
-        $_notFound()$
-      </div>
-      <div class='error-page-instruction'>
-        $_afterErrorGoToInstruction()$
-      </div>
-
-     <div class='error-page-buttons-box'>
-       <a class='button float-left' href='/'>
-         $_afterErrorGoHomepage()$
-       </a>
-       <a href='#' class='button float-right' onClick='history.go(-1);return false;'>
-         $_afterErrorGoBack()$
-       </a>
-     </div>
-   </div>
-  </div>
-    <script>
-    mixpanel.track('Error', {
-      Message : '404',
-      URL : window.location.href
-    });
-    </script>
-  $pageFooter()$
-</div>
-</body>
-$htmlclosingtag()$
-###
-notFoundWithoutHeaders=$doctype()$
-$htmlopentag()$
-  <head>
-    <title>$pagetitle()$</title>
-    $IECompatibilityMetaTag()$
-    $standardHeaderContents()$
+    <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
   </head>
 <body>
 <div class="wrapper-position-footer">
@@ -97,51 +53,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
-    $if(logged)$
-      <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
-    $else$
-      <link href='$cdnbaseurl$/scrive_branding/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
-    $endif$
-  </head>
-<body>
-<div class="wrapper-position-footer">
-  $header()$
-  <div class='mainContainer big error-page'>
-    <div class='error-page-info'>
-      <div class='error-page-description'>
-        $_internalServerError()$
-      </div>
-      <div class='error-page-instruction'>
-        $_afterErrorGoToInstruction()$
-      </div>
-
-     <div class='error-page-buttons-box'>
-       <a class='button float-left' href='/'>
-         $_afterErrorGoHomepage()$
-       </a>
-       <a href='#' class='button float-right' onClick='history.go(-1);return false;'>
-         $_afterErrorGoBack()$
-       </a>
-     </div>
-   </div>
-  </div>
-    <script>
-      mixpanel.track('Error', {
-        Message : '500',
-        URL : window.location.href
-      });
-    </script>
-  $pageFooter()$
-</div>
-</body>
-$htmlclosingtag()$
-###
-internalServerErrorWithoutHeaders=$doctype()$
-$htmlopentag()$
-  <head>
-    <title>$pagetitle()$</title>
-    $IECompatibilityMetaTag()$
-    $standardHeaderContents()$
+    <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
   </head>
 <body>
 <div class="wrapper-position-footer">
@@ -189,37 +101,7 @@ $htmlopentag()$
     <title>$pagetitle()$</title>
     $IECompatibilityMetaTag()$
     $standardHeaderContents(nobranding='true')$
-    $if(logged)$
-      <link href='$cdnbaseurl$/service_branding/$brandingdomainid$/$if(brandinguserid)$$brandinguserid$$else$_$endif$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
-    $else$
-      <link href='$cdnbaseurl$/scrive_branding/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
-    $endif$
-  </head>
-  <body>
-    <div class="wrapper-position-footer">
-      $header()$
-      <div class='mainContainer big error-page'>
-        <div class='error-page-info'>
-          <div class='error-page-description'>
-            <h1>$_sessionTimeOutHeader()$</h1>
-          </div>
-          <div class='error-page-instruction'>
-            <h4>$_sessionTimeOutContent1()$</h4>
-            <h4>$_sessionTimeOutContent2()$</h4>
-          </div>
-        </div>
-      </div>
-      $pageFooter()$
-    </div>
-  </body>
-$htmlclosingtag()$
-###
-sessionTimeOutWithoutHeaders=$doctype()$
-$htmlopentag()$
-  <head>
-    <title>$pagetitle()$</title>
-    $IECompatibilityMetaTag()$
-    $standardHeaderContents()$
+    <link href='$cdnbaseurl$/login_branding/$brandingdomainid$/$brandinghash$-styles.css' rel='stylesheet' type='text/css'/>
   </head>
   <body>
     <div class="wrapper-position-footer">
