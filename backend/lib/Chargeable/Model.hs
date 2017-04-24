@@ -41,6 +41,8 @@ instance FromSQL ChargeableItem where
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
+      -- Note:
+      -- If changing this, please also update `pure_sql/invoice_stats.sql`
       1 -> return SMS
       2 -> return SEBankIDSignature
       3 -> return SEBankIDAuthentication

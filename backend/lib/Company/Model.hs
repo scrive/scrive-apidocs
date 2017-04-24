@@ -48,6 +48,8 @@ instance FromSQL PaymentPlan where
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
+      -- Note:
+      -- If changing this, please also update `pure_sql/invoice_stat.sql`
       0 -> return FreePlan
       1 -> return OnePlan
       2 -> return TeamPlan
