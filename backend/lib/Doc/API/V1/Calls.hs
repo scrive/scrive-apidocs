@@ -91,6 +91,7 @@ import File.File
 import File.Model
 import File.Storage
 import Happstack.Fields
+import Happstack.Server.RqDataExtra
 import InputValidation
 import Kontra
 import KontraPrelude
@@ -244,7 +245,7 @@ apiCallV1Update did = logDocument did . api $ do
           checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
     when (not $ (auid == userid user)) $ do
           throwM . SomeDBExtraException $ serverError "Permission problem. Not an author."
-    jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
+    jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFnWithDecode' (lookBSWithCharset "json")
     json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                  J.Ok js -> Just js
                                                                                  _ -> Nothing
@@ -1129,7 +1130,7 @@ apiCallV1ExtractTexts did fileid = logDocumentAndFile did fileid . api $ do
       throwM . SomeDBExtraException $ serverError "Permission problem. Not an author."
 
 
-    jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
+    jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFnWithDecode' (lookBSWithCharset "json")
     json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                  J.Ok js -> Just js
                                                                                  _ -> Nothing

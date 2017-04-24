@@ -265,6 +265,7 @@ Library
                  , Happstack.Fields
                  , Happstack.Server.Instances
                  , Happstack.Server.ReqHandler
+                 , Happstack.Server.RqDataExtra
                  , HostClock.Collector
                  , HostClock.Model
                  , HostClock.System
