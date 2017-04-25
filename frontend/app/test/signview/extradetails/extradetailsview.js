@@ -6,7 +6,7 @@ var Field = require("../../../js/fields.js").Field;
 
 var TestUtils = React.addons.TestUtils;
 
-describe("signview/extradetails/extradetailsview", function () {
+xdescribe("signview/extradetails/extradetailsview", function () {
   var server, doc, model;
 
   var SignView = Backbone.Model.extend({
