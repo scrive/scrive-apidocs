@@ -69,7 +69,16 @@ var DragAndDropUploaderView = React.createClass({
     this.props.document.killAllPlacements();
     this.props.document.recall();
   },
+  getContentOffsetTop: function () {
+    var buttonsEl = $(".design-view-document-buttons");
+    if (buttonsEl.length > 0) {
+      return buttonsEl.offset().top;
+    }
+
+    return 0;
+  },
   componentWillMount: function () {
+    this._contentOffsetTop = 0;
     this._file = null;
   },
   componentDidMount: function () {
@@ -85,6 +94,8 @@ var DragAndDropUploaderView = React.createClass({
 
     document.addEventListener("visibilitychange", this.onVisibilityChange);
     window.addEventListener("blur", this.onWindowBlur);
+
+    window.addEventListener("resize", this.onWindowResize);
   },
   componentDidUpdate: function (prevProps, prevState) {
     if (prevState.visible != this.state.visible) {
@@ -108,6 +119,8 @@ var DragAndDropUploaderView = React.createClass({
 
     document.removeEventListener("visibilitychange", this.onVisibilityChange);
     window.removeEventListener("blur", this.onWindowBlur);
+
+    window.removeEventListener("resize", this.onWindowResize);
   },
   onUploadSuccess: function () {
     Track.track("Upload main file");
@@ -173,14 +186,30 @@ var DragAndDropUploaderView = React.createClass({
   onWindowBlur: function (event) {
     this.setState({visible: false});
   },
+  onWindowResize: function () {
+    if (this.isMounted()) {
+      this._contentOffsetTop = this.getContentOffsetTop();
+      this.forceUpdate();
+    }
+  },
   render: function () {
+    if (this._contentOffsetTop == 0) {
+      this._contentOffsetTop = this.getContentOffsetTop();
+    }
+
     var className = ClassNames("design-view-dnd-uploader", {
+      positioned: (this._contentOffsetTop != 0),
       visible: this.state.visible
     });
 
+    var pStyle = {};
+    if (this._contentOffsetTop != 0) {
+      pStyle.top = "" + this._contentOffsetTop + "px";
+    }
+
     return (
       <div className={className}>
-        <p>{localization.designview.dropToUpload}</p>
+        <p style={pStyle}>{localization.designview.dropToUpload}</p>
         <div className="overlay">
           <div className="gradient gradient-top"></div>
           <div className="gradient gradient-left"></div>

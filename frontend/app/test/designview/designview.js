@@ -9,16 +9,20 @@ var DesignView = require("../../scripts/designview/designview.jsx");
 
 describe("designview/designview", function () {
   var server, document_, subscription_;
+  var container = null;
 
   var renderComponent = function() {
+    container = $("<div></div>");
+
     var component = React.render(
       React.createElement(
         DesignView,
         {model: document_, subscription: subscription_}
       ),
-      $("body")[0]
+      container[0]
     );
 
+    $("body").append(container);
     return component;
   }
 
@@ -43,6 +47,12 @@ describe("designview/designview", function () {
   });
 
   afterEach(function () {
+    if (container) {
+      React.unmountComponentAtNode(container[0]);
+      container.remove();
+      container = null;
+    }
+
     util.cleanTimeoutsAndBody();
   });
 

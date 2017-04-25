@@ -14,6 +14,7 @@ describe("designview/documentview", function () {
     var actualProps = underscore.extendOwn(
       {
         document: document_,
+        dragAndDropEnabled: true,
         isDnDUploaderVisible: false
       },
       props || {}
@@ -147,6 +148,33 @@ describe("designview/documentview", function () {
 
     var component = renderComponent({isDnDUploaderVisible: true});
     assert.lengthOf($(".upload-button"), 0);
+  });
+
+  it("should render the drag and drop upload info", function () {
+    sinon.stub(document_, "ready").returns(true);
+    sinon.stub(document_, "mainfile").returns(undefined);
+
+    var component = renderComponent();
+    assert.lengthOf($(".design-view-document-buttons-upload-dnd-icon"), 1);
+    assert.lengthOf($(".design-view-document-buttons-upload-dnd-message"), 1);
+  });
+
+  it("should not render the drag and drop upload info if drag and drop uploader is visible", function () {
+    sinon.stub(document_, "ready").returns(true);
+    sinon.stub(document_, "mainfile").returns(undefined);
+
+    var component = renderComponent({isDnDUploaderVisible: true});
+    assert.lengthOf($(".design-view-document-buttons-upload-dnd-icon"), 0);
+    assert.lengthOf($(".design-view-document-buttons-upload-dnd-message"), 0);
+  });
+
+  it("should not render the drag and drop upload info if drag and drop is not available", function () {
+    sinon.stub(document_, "ready").returns(true);
+    sinon.stub(document_, "mainfile").returns(undefined);
+
+    var component = renderComponent({dragAndDropEnabled: false});
+    assert.lengthOf($(".design-view-document-buttons-upload-dnd-icon"), 0);
+    assert.lengthOf($(".design-view-document-buttons-upload-dnd-message"), 0);
   });
 
   it("should render the file view", function () {

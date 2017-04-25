@@ -33,6 +33,9 @@ module.exports = React.createClass({
     };
   },
   componentWillMount: function () {
+    this.dragAndDropEnabled = (
+      BrowserInfo.hasDragAndDrop() && BrowserInfo.hasFormData()
+    );
     this.fixed = undefined;
     this.topBarHeight = 0;
 
@@ -182,12 +185,13 @@ module.exports = React.createClass({
         <DocumentView
           document={this.props.model}
           ref="documentView"
+          dragAndDropEnabled={this.dragAndDropEnabled}
           isDnDUploaderVisible={this.state.isDnDUploaderVisible}
         />
 
         <ButtonBarView document={this.props.model}  subscription={this.props.subscription} onBlocked={this.onBlocked}/>
 
-        {(this.props.model.mainfile() == undefined && BrowserInfo.hasDragAndDrop() && BrowserInfo.hasFormData()) &&
+        {this.props.model.mainfile() == undefined && this.dragAndDropEnabled &&
           <DragAndDropUploaderView
             document={this.props.model}
             onStart={this.onDnDUploaderStart}

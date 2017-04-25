@@ -456,6 +456,7 @@ javascriptLocalisation =
                , modalRemoveButton : "$_designViewRemovePageModalButton()$"
              }
              , dropToUpload: "$_designViewDropToUpload()$"
+             , dropPDFHere: "$_designViewDropPDFHere()$"
          }
          , validation : {
                 required: "$_nameRequired()$"

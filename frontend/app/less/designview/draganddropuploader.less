@@ -14,17 +14,23 @@
 
   p {
     background: transparent url(~"@{img-base-url}/dragndropicon.svg") no-repeat center top;
+    background-size: 118px 102px;
     color: rgb(104, 107, 114);
     font-size: 24px;
     left: 50%;
     line-height: 24px;
     margin-left: -200px;
-    margin-top: -83px;
-    padding-top: 142px;
+    padding-top: 135px;
     position: absolute;
-    top: 50%;
     text-align: center;
     width: 400px;
+  }
+
+  &:not([class~=positioned]) {
+    p {
+      margin-top: -83px;
+      top: 50%;
+    }
   }
 
   .overlay {

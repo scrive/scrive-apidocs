@@ -16,6 +16,7 @@ var Modal = require("../common/modal");
   module.exports = React.createClass({
     propTypes: {
       document: React.PropTypes.instanceOf(Document).isRequired,
+      dragAndDropEnabled: React.PropTypes.bool.isRequired,
       isDnDUploaderVisible: React.PropTypes.bool.isRequired
     },
 
@@ -250,15 +251,27 @@ var Modal = require("../common/modal");
                     <div className="design-view-document-buttons-buttons">
                       <div className="design-view-document-buttons-upload-button">
                         {/* if */ !this.props.isDnDUploaderVisible &&
-                          <UploadButton
-                            type="action"
-                            size="big"
-                            text={localization.uploadButton}
-                            width={250}
-                            name="file"
-                            maxlength={2}
-                            onUploadComplete={self.onUpload}
-                          />
+                          <div>
+                            {/* if */this.props.dragAndDropEnabled &&
+                              <div className="design-view-document-buttons-upload-dnd-icon"></div>
+                            }
+
+                            <UploadButton
+                              type="action"
+                              size="big"
+                              text={localization.uploadButton}
+                              width={250}
+                              name="file"
+                              maxlength={2}
+                              onUploadComplete={self.onUpload}
+                            />
+
+                            {/* if */this.props.dragAndDropEnabled &&
+                              <p className="design-view-document-buttons-upload-dnd-message">
+                                {localization.designview.dropPDFHere}
+                              </p>
+                            }
+                          </div>
                         }
                       </div>
                     </div>
