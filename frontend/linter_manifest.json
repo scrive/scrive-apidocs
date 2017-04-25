@@ -49,6 +49,7 @@
   "./app/scripts/common/select.jsx",
   "./app/scripts/common/location.jsx",
   "./app/scripts/common/iselementinviewport.jsx",
+  "./app/scripts/common/tabviewer.jsx",
   "./app/scripts/common/trackingview.jsx",
   "./app/scripts/common/transporter.jsx",
   "./app/scripts/common/modal.jsx",

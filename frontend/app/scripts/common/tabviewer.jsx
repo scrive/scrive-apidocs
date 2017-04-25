@@ -39,10 +39,17 @@ var TabViewer = React.createClass({
   propTypes: {
     inner: React.PropTypes.bool
   },
+  _tabAtIndex: function (index) {
+    if (React.Children.count(this.props.children) <= 1) {
+      return this.props.children;
+    }
+
+    return this.props.children[index];
+  },
   _tabIndexForLocationHash: function (hash) {
     if (hash) {
-      for (var i = 0; i < this.props.children.length; i++) {
-        var tab = this.props.children[i];
+      for (var i = 0; i < React.Children.count(this.props.children); i++) {
+        var tab = this._tabAtIndex(i);
 
         if (!tab) {
           continue;
@@ -50,7 +57,7 @@ var TabViewer = React.createClass({
 
         if (tab.props.hash == hash) {
           return i;
-        } if (_.isRegExp(tab.props.hash)) {
+        } else if (_.isRegExp(tab.props.hash)) {
           if (tab.props.hash.exec(hash)) {
             return i;
           }
@@ -79,9 +86,10 @@ var TabViewer = React.createClass({
     }
 
     if (_.isUndefined(initialTabIndex)) {
-      for (var i = 0; i < this.props.children.length; i++) {
-        if (this.props.children[i].props.initial === true) {
-          window.location.hash = this.props.children[i].props.hash || "";
+      for (var i = 0; i < React.Children.count(this.props.children); i++) {
+        var tab = this._tabAtIndex(i);
+        if (tab.props.initial === true) {
+          window.location.hash = tab.props.hash || "";
           initialTabIndex = i;
           break;
         }
@@ -108,12 +116,14 @@ var TabViewer = React.createClass({
     }
   },
   onTabClick: function (newTabIndex) {
-    var newTab = this.props.children[newTabIndex];
+    var newTab = this._tabAtIndex(newTabIndex);
+
     if (newTab.props.url) {
       window.location = newTab.props.url;
     } else if (newTab.props.hash) {
       window.location.hash = newTab.props.hash;
     } else {
+      window.location.hash = "";
       this.setState({currentTabIndex: newTabIndex});
     }
   },
@@ -127,7 +137,7 @@ var TabViewer = React.createClass({
       <div className={className}>
         <div className="tab-viewer-header">
           <ul className="tabs">
-            {_.map(this.props.children, function (item, index) {
+            {React.Children.map(this.props.children, function (item, index) {
               if (!item) {
                 return null;
               }
@@ -144,7 +154,7 @@ var TabViewer = React.createClass({
                   active={index === self.state.currentTabIndex}
                   hidden={item.props.hidden}
                   index={index}
-                  last={index == self.props.children.length - 1}
+                  last={index == React.Children.count(self.props.children) - 1}
                   title={item.props.title}
                   onClick={self.onTabClick}
                 />
@@ -153,7 +163,7 @@ var TabViewer = React.createClass({
           </ul>
         </div>
 
-        <div>{this.props.children[this.state.currentTabIndex]}</div>
+        <div>{this._tabAtIndex(this.state.currentTabIndex)}</div>
       </div>
     );
   }
@@ -165,7 +175,8 @@ var TabViewerTab = React.createClass({
     hash: React.PropTypes.oneOfType([
       React.PropTypes.string,
       React.PropTypes.instanceOf(RegExp)
-    ]).isRequired,
+    ]),
+    hidden: React.PropTypes.bool,
     title: React.PropTypes.string.isRequired,
     url: React.PropTypes.string
   },
@@ -192,5 +203,6 @@ var TabViewerInnerTab = React.createClass({
 module.exports = {
   TabViewer: TabViewer,
   TabViewerTab: TabViewerTab,
-  TabViewerInnerTab: TabViewerInnerTab
+  TabViewerInnerTab: TabViewerInnerTab,
+  _TabViewerTabView: TabViewerTabView
 };
