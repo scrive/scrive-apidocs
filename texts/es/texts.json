@@ -377,6 +377,7 @@
 "_designViewCustomMessagePreview":"Vista preliminar",
 "_designViewDNDDisabled":"Usted tiene que añadir al menos una parte firmante más antes de rellenar este campo. ",
 "_designViewDocumentName":"Nombre del documento",
+"_designViewDropPDFHere":"",
 "_designViewDropToUpload":"",
 "_designViewEditConfirmation":"Editar mensaje de confirmación",
 "_designViewEditDocument":"Insertar campos",

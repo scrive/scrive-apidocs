@@ -377,6 +377,7 @@
 "_designViewCustomMessagePreview":"Förhandsgranska",
 "_designViewDNDDisabled":"Du behöver minst en signerande part för att kunna placera ett signeringsfält.",
 "_designViewDocumentName":"Dokumentnamn",
+"_designViewDropPDFHere":"",
 "_designViewDropToUpload":"",
 "_designViewEditConfirmation":"Ändra bekräftelsemeddelande",
 "_designViewEditDocument":"Placera fält",
