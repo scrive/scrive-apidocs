@@ -574,5 +574,6 @@ addEventForVisitingSigningPageIfNeeded :: (Kontrakcja m, DocumentMonad m) => Cur
 addEventForVisitingSigningPageIfNeeded ev sl = do
   ctx <- getContext
   doc <- theDocument
-  when (isPending doc && isNothing (maybesigninfo sl)) $
+  when (isPending doc && isNothing (maybesigninfo sl)) $ do
+    updateMTimeAndObjectVersion $ ctxtime ctx
     void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg ev  (return ()) (Just sl) Nothing =<< signatoryActor ctx sl
