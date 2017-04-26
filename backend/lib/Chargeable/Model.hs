@@ -7,6 +7,7 @@ module Chargeable.Model (
   , ChargeCompanyForStartingDocument(..)
   , ChargeCompanyForClosingDocument(..)
   , GetNumberOfDocumentsStartedThisMonth(..)
+  , ChargeCompanyForClosingSignature(..)
   ) where
 
 import Control.Monad.Catch
@@ -30,7 +31,8 @@ data ChargeableItem =
   SEBankIDSignature |
   SEBankIDAuthentication |
   NOBankIDAuthentication |
-  DKNemIDAuthentication
+  DKNemIDAuthentication |
+  ClosingSignature
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -51,8 +53,9 @@ instance FromSQL ChargeableItem where
       6 -> return StartingDocument
       7 -> return DKNemIDAuthentication
       8 -> return ClosingDocument
+      9 -> return ClosingSignature
       _ -> throwM RangeError {
-        reRange = [(1, 8)]
+        reRange = [(1, 9)]
       , reValue = n
       }
 
@@ -66,6 +69,7 @@ instance ToSQL ChargeableItem where
   toSQL StartingDocument       = toSQL (6::Int16)
   toSQL DKNemIDAuthentication  = toSQL (7::Int16)
   toSQL ClosingDocument        = toSQL (8::Int16)
+  toSQL ClosingSignature       = toSQL (9::Int16)
 
 ----------------------------------------
 
@@ -109,6 +113,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForSt
 data ChargeCompanyForClosingDocument = ChargeCompanyForClosingDocument DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForClosingDocument () where
   update (ChargeCompanyForClosingDocument document_id) = update (ChargeCompanyFor ClosingDocument 1 document_id)
+
+-- | Charge company of the author of the document for closing a signature
+data ChargeCompanyForClosingSignature = ChargeCompanyForClosingSignature DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForClosingSignature () where
+  update (ChargeCompanyForClosingSignature document_id) = update (ChargeCompanyFor ClosingSignature 1 document_id)
 
 data ChargeCompanyFor = ChargeCompanyFor ChargeableItem Int32 DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyFor () where

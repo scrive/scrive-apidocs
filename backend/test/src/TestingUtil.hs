@@ -611,6 +611,19 @@ addNewUser firstname secondname email = do
   company <- dbUpdate $ CreateCompany
   dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) def (bdid bd) AccountRequest
 
+addNewUserWithCompany :: (MonadDB m, MonadThrow m, MonadLog m)
+                      => String
+                      -> String
+                      -> String
+                      -> m (Maybe (User, CompanyID))
+addNewUserWithCompany firstname secondname email = do
+  bd <- dbQuery $ GetMainBrandedDomain
+  companyId <- companyid <$> (dbUpdate $ CreateCompany)
+  mUser <- dbUpdate $ AddUser (firstname, secondname) email Nothing (companyId, True) def (bdid bd) AccountRequest
+  case mUser of
+    Nothing -> return Nothing
+    Just user -> return $ Just (user, companyId)
+
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid = do
   bd <- dbQuery $ GetMainBrandedDomain
@@ -621,26 +634,43 @@ addNewRandomUser = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
   em <- rand 10 arbEmail
-  muser <- addNewUser fn ln em
-  case muser of
-    Just user -> do
-      -- change the user to have some distinct personal information
-      personal_number <- rand 10 $ arbString 3 30
-      company_position <- rand 10 $ arbString 3 30
-      phone <- rand 10 $ arbString 3 30
-      let userinfo = UserInfo
-                     { userfstname = fn
-                     , usersndname = ln
-                     , userpersonalnumber = personal_number
-                     , usercompanyposition = company_position
-                     , userphone = phone
-                     , useremail = Email em
-                     }
-      _ <- dbUpdate $ SetUserInfo (userid user) userinfo
-      return user
-    Nothing -> do
-      logInfo_ "Could not create user, trying again."
-      addNewRandomUser
+  Just user <- addNewUser fn ln em
+  -- change the user to have some distinct personal information
+  personal_number <- rand 10 $ arbString 3 30
+  company_position <- rand 10 $ arbString 3 30
+  phone <- rand 10 $ arbString 3 30
+  let userinfo = UserInfo
+                 { userfstname = fn
+                 , usersndname = ln
+                 , userpersonalnumber = personal_number
+                 , usercompanyposition = company_position
+                 , userphone = phone
+                 , useremail = Email em
+                 }
+  _ <- dbUpdate $ SetUserInfo (userid user) userinfo
+  return user
+
+addNewRandomUserWithCompany :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m)
+                            => m (User, CompanyID)
+addNewRandomUserWithCompany = do
+  fn <- rand 10 $ arbString 3 30
+  ln <- rand 10 $ arbString 3 30
+  em <- rand 10 arbEmail
+  Just (user, companyId) <- addNewUserWithCompany fn ln em
+  -- change the user to have some distinct personal information
+  personal_number <- rand 10 $ arbString 3 30
+  company_position <- rand 10 $ arbString 3 30
+  phone <- rand 10 $ arbString 3 30
+  let userinfo = UserInfo
+                 { userfstname = fn
+                 , usersndname = ln
+                 , userpersonalnumber = personal_number
+                 , usercompanyposition = company_position
+                 , userphone = phone
+                 , useremail = Email em
+                 }
+  _ <- dbUpdate $ SetUserInfo (userid user) userinfo
+  return (user, companyId)
 
 addNewRandomUserWithPassword :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => String -> m User
 addNewRandomUserWithPassword password = do
