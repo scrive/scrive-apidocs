@@ -201,7 +201,7 @@ preCheckPDF content =
     res <- liftBase (preCheckPDFHelper content tmppath)
       `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
     case res of
-      Left x -> logAttention "preCheckPDF failed" $ object [
+      Left x -> logInfo "preCheckPDF failed" $ object [
           "error" .= show x
         ]
       Right _ -> return ()
