@@ -8,7 +8,7 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var fstnameField = sig.fstnameField();
     var sndnameField = sig.sndnameField();
-    var nameFieldsValid = fstnameField.isValid() && sndnameField.isValid();
+    var nameFieldsValid = fstnameField.isValid() && ((sndnameField === undefined) || sndnameField.isValid());
     var csvfield = fstnameField.isCsvField();
     var csvname = localization.designview.fullName + " (" + localization.designview.fromCSV + ")";
 
