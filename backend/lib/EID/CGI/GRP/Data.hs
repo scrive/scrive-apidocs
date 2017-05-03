@@ -21,6 +21,7 @@ module EID.CGI.GRP.Data (
 
 import Data.Aeson
 import Data.ByteString (ByteString)
+import Data.Monoid as Monoid
 import Data.Unjson
 import Network.SOAP.Parsing.Cursor
 import Text.XML.Cursor hiding (element)
@@ -175,7 +176,7 @@ unAutoStartToken (AutoStartToken t) = t
 
 
 -- With autostart token we always return session id - so bankid app can bag user back to service
-instance Unjson (AutoStartToken,SessionCookieInfo) where
+instance {-# OVERLAPPING #-} Unjson (AutoStartToken,SessionCookieInfo) where
   unjsonDef = objectOf $ (pure $ \at si -> (AutoStartToken at, si))
     <*> field "auto_start_token"
         (unAutoStartToken . fst)
@@ -200,6 +201,11 @@ instance Loggable AuthResponse where
 
 instance ToJSON AuthResponse where
   toJSON AuthResponse{..} = object [
+      "transaction_id" .= T.unpack arsTransactionID
+    , "order_ref" .= T.unpack arsOrderRef
+    , "auto_start_token" .= show arsAutoStartToken
+    ]
+  toEncoding AuthResponse{..} = pairs $ Monoid.mconcat [
       "transaction_id" .= T.unpack arsTransactionID
     , "order_ref" .= T.unpack arsOrderRef
     , "auto_start_token" .= show arsAutoStartToken

@@ -169,7 +169,7 @@ unsonFieldPlacement =  objectOf $ pure (FieldPlacement tempPlacementID)
   <*> field "wrel" placementwrel "Relative width"
   <*> field "hrel" placementhrel "Relative height"
   <*> field "fsrel" placementfsrel "Relative font size"
-  <*> field "page" placementpage "Page of palcement"
+  <*> field "page" placementpage "Page of placement"
   <*> fieldOptBy "tip" placementtipside "Should arrow point on field from left or right" unsonTipSide
   <*> fieldDefBy "anchors" [] placementanchors "Field placement anchors" (arrayOf unsonPlacementAnchor)
 

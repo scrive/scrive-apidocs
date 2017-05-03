@@ -10,7 +10,7 @@ module Log.Identifier (
   , logObject_
   ) where
 
-import Data.Aeson.Types
+import Data.Aeson.Types as Aeson
 import Data.Monoid
 import Data.Text (Text)
 import GHC.Exts (fromList)
@@ -21,10 +21,10 @@ class Identifier t b | t -> b where
   idDefaultLabel :: t -> Text
   idValue        :: t -> Value
 
-identifier :: Identifier t b => (Text -> Text) -> t -> Pair
+identifier :: (Aeson.KeyValue kv, Identifier t b) => (Text -> Text) -> t -> kv
 identifier f n = f (idDefaultLabel n) .= idValue n
 
-identifier_ :: Identifier t b => t -> Pair
+identifier_ :: Aeson.KeyValue kv => Identifier t b => t -> kv
 identifier_ = identifier id
 
 instance Identifier t b => Identifier [t] b where
