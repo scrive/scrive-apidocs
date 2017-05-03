@@ -138,7 +138,10 @@ instance FromJSValue VerifyResult where
                       gname <- fromJSValueField "gateway_name"
                       extended <- fromJSValueField "extended"
                       extensible <- fromJSValueField "extensible"
-                      return $ Valid <$> (GuardtimeSignature <$> time <*> gid <*> gname <*> extended <*> extensible)
+                      lastRev <- fromJSValueField "last_revision"
+                      return $ case lastRev of
+                        Just ("true" :: String) -> Valid <$> (GuardtimeSignature <$> time <*> gid <*> gname <*> extended <*> extensible)
+                        _ -> Just $ Invalid "not last revision"
         minvalid <- fromJSValueFieldCustom "invalid" $ do
                       liftM (fmap Invalid) $ fromJSValueField "reason"
         mproblem <- fromJSValueFieldCustom "error" $ do
