@@ -444,7 +444,7 @@ Library
                , lifted-async
                , lifted-base
                , lifted-threads
-               , log >= 0.8
+               , log >= 0.9
                , mixpanel
                , mmap
                , monad-control
@@ -541,7 +541,7 @@ Executable kontrakcja-server
                , happstack-static-routing
                , hedis
                , lifted-base
-               , log >= 0.8
+               , log >= 0.9
                , text
                , transformers-base
                , utf8-string
@@ -595,7 +595,7 @@ Executable cron
                , crypto-rng
                , hpqtypes-extras
                , hedis
-               , log >= 0.8
+               , log >= 0.9
                , text
                , transformers-base
 
@@ -674,7 +674,7 @@ Executable kontrakcja-migrate
                , invariant
                , json
                , lifted-base
-               , log >= 0.8
+               , log >= 0.9
                , monad-control
                , monad-time
                , mtl
@@ -770,7 +770,7 @@ Executable mailing-server
                , json
                , lifted-async
                , lifted-base
-               , log >= 0.8
+               , log >= 0.9
                , monad-control
                , monad-time
                , mtl
@@ -870,7 +870,7 @@ Executable messenger-server
                , invariant
                , json
                , lifted-base
-               , log >= 0.8
+               , log >= 0.9
                , monad-control
                , monad-time
                , mtl
@@ -1011,7 +1011,7 @@ Test-suite kontrakcja-test
                , json
                , kontrakcja-templates
                , lifted-base
-               , log >= 0.8
+               , log >= 0.9
                , monad-control
                , mtl
                , network-uri
