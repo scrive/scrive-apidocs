@@ -17,8 +17,8 @@ import Data.Text (Text)
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Checks
-import Log.Backend.ElasticSearch
-import Log.Backend.ElasticSearch.Internal
+import Log.Backend.ElasticSearch.V5
+import Log.Backend.ElasticSearch.V5.Internal
 import Log.Backend.PostgreSQL
 import Log.Backend.StandardOutput
 import Log.Data
