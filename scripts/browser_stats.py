@@ -10,8 +10,8 @@ import woothee
 #
 # select client_name, count(*) as cnt
 # from evidence_log
-# where time >= '2017-02-01 00:00:00.000000+00'
-#   and time < '2017-03-01 00:00:00.000000+00'
+# where time >= date_trunc('month', (current_date - interval '1 month'))
+#   and time < date_trunc('month', current_date)
 #   and event_type = 10
 # group by client_name
 # order by cnt desc;
@@ -28,7 +28,7 @@ DESKTOP_WINDOWSES = ['Windows 10',
 
 if __name__ == '__main__':
     result = {}
-    for line in list(fileinput.input())[2:]:
+    for line in list(fileinput.input())[2:-2]:  # skip first and last 2 lines
         ua, ua_count = map(lambda s: s.strip(), line.split('|'))
         wt = woothee.parse(ua)
         if wt['os'] in DESKTOP_WINDOWSES:
