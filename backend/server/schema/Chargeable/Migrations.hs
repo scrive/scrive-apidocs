@@ -35,3 +35,12 @@ createChargeableItemsTable = Migration {
     ]
   }
 }
+
+createIndexOnTimeField :: MonadDB m => Migration m
+createIndexOnTimeField = Migration {
+    mgrTable = tableChargeableItems
+  , mgrFrom = 1
+  , mgrDo = do
+      let tname = tblName tableChargeableItems
+      runQuery_ . sqlCreateIndex tname $ (indexOnColumn "\"time\"")
+  }

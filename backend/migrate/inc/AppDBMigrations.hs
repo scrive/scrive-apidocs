@@ -105,6 +105,7 @@ kontraMigrations = [
   , normalizeCheckboxesFSRel
   , companiesAddPadAppModeAndEArchiveEnabled
   , companiesAddPaymentPlan
+  , createIndexOnTimeField
   ] ++ cronMigrations
     ++ mailerMigrations
     ++ messengerMigrations

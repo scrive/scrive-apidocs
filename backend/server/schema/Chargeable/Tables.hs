@@ -6,7 +6,7 @@ import KontraPrelude
 tableChargeableItems :: Table
 tableChargeableItems = tblTable {
   tblName = "chargeable_items"
-, tblVersion = 1
+, tblVersion = 2
 , tblColumns = [
     tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
   , tblColumn { colName = "time", colType = TimestampWithZoneT, colNullable = False }
@@ -26,5 +26,6 @@ tableChargeableItems = tblTable {
     indexOnColumn "company_id"
   , indexOnColumn "user_id"
   , indexOnColumn "document_id"
+  , indexOnColumn "\"time\""
   ]
 }
