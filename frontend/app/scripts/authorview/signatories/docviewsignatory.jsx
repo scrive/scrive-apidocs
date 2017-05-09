@@ -350,7 +350,9 @@ var Modal = require("../../common/modal");
 
     getDeliveryMethod: function () {
       var signatory = this.props.signatory;
-      if (signatory.emailDelivery()) {
+      if (signatory.isLastViewer()) {
+        return localization.docview.signatory.invitationNone;
+      } else if (signatory.emailDelivery()) {
         return localization.docview.signatory.invitationEmail;
       } else if (signatory.padDelivery()) {
         return localization.docview.signatory.invitationPad;
