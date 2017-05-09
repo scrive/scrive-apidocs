@@ -10,6 +10,7 @@ module KontraPrelude (
   , module Data.Monoid
   , module Data.Monoid.Utils
   , module Prelude
+  , (!!)
   , for
   , maybeRead
   , head
@@ -30,7 +31,7 @@ import Control.Monad
 import Control.Monad.Catch
 import Data.Algebra.Boolean
 import Data.Foldable (foldMap)
-import Data.List hiding (all, and, any, head, last, maximum, minimum, or, tail)
+import Data.List hiding ((!!), all, and, any, head, last, maximum, minimum, or, tail)
 import Data.Maybe hiding (fromJust)
 import Data.Monoid
 import Data.Monoid.Utils
@@ -38,7 +39,7 @@ import Data.Typeable
 import GHC.Stack (HasCallStack)
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
-import Prelude hiding ((&&), (||), all, and, any, error, head, last, maximum, minimum, not, or, read, tail)
+import Prelude hiding ((!!), (&&), (||), all, and, any, error, head, last, maximum, minimum, not, or, read, tail)
 import qualified Prelude as P
 
 -- | Boolean algebra of functions.
@@ -83,6 +84,14 @@ maybeRead s = case reads s of
   _         -> Nothing
 
 ----------------------------------------
+
+-- | Replacement for 'P.!!' that provides useful information on failure.
+(!!) :: HasCallStack => [a] -> Int -> a
+xs !! n
+  | n < 0     = negativeIndexError "!!"
+  | otherwise = foldr (\x r k -> case k of
+                                   0 -> x
+                                   _ -> r (k-1)) (indexOutOfBoundsError "!!") xs n
 
 -- | Replacement for 'P.head' that provides useful information on failure.
 head :: HasCallStack => [a] -> a
@@ -149,6 +158,12 @@ emptyList f err v = if null v then err else f v
 
 emptyListError :: HasCallStack => String -> a
 emptyListError fname = P.error $ fname ++ " received an empty list"
+
+indexOutOfBoundsError :: HasCallStack => String -> a
+indexOutOfBoundsError fname = P.error $ fname ++ " received an out-of-bounds index"
+
+negativeIndexError :: HasCallStack => String -> a
+negativeIndexError fname = P.error $ fname ++ " received a negative index"
 
 srcLocation :: Q Exp
 srcLocation = do
