@@ -67,8 +67,6 @@ module Doc.Model.Update
   , GetDocsSentBetween(..)
   , FixClosedErroredDocument(..)
   , ConnectSignatoriesToUser(..)
-
-   -- only for use in tests
   , updateMTimeAndObjectVersion
   ) where
 

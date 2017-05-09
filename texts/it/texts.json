@@ -377,6 +377,7 @@
 "_designViewCustomMessagePreview":"Anteprima",
 "_designViewDNDDisabled":"È necessario almeno una parte firmataria per inserire una casella di firma.",
 "_designViewDocumentName":"Nome documento",
+"_designViewDropPDFHere":"",
 "_designViewDropToUpload":"",
 "_designViewEditConfirmation":"Modifica messaggio di conferma",
 "_designViewEditDocument":"Inserisci campi",

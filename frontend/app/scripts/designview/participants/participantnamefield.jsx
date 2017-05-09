@@ -8,6 +8,7 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var fstnameField = sig.fstnameField();
     var sndnameField = sig.sndnameField();
+    var nameFieldsValid = fstnameField.isValid() && ((sndnameField === undefined) || sndnameField.isValid());
     var csvfield = fstnameField.isCsvField();
     var csvname = localization.designview.fullName + " (" + localization.designview.fromCSV + ")";
 
@@ -17,7 +18,8 @@ module.exports = React.createClass({
           ref="input"
           className={
             "design-view-action-participant-details-information-field s-input-fullname" +
-            (csvfield || sig.author() ? " transparent" : "")
+            (csvfield || sig.author() ? " transparent" : "") +
+            (!nameFieldsValid ? " redborder" : "")
           }
           infotext={csvfield ? csvname : localization.designview.fullName}
           readonly={csvfield || sig.author()}
