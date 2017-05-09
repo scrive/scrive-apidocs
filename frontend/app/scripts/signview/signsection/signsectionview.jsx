@@ -174,7 +174,7 @@ var Task = require("../navigation/task");
           if (shouldRedirect) {
             window.location = doc.currentSignatory().rejectredirect();
           } else {
-            $(window).on("beforeunload", function () {
+            $(window).on("beforeunload pagehide", function () {
               $(window).scrollTop(0);
             });
             window.location.reload();
@@ -335,7 +335,7 @@ var Task = require("../navigation/task");
       if (redirect) {
         window.location = redirect;
       } else {
-        $(window).on("beforeunload", function () {
+        $(window).on("beforeunload pagehide", function () {
           $(window).scrollTop(0);
         });
         window.location.reload();
