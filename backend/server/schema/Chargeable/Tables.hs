@@ -27,5 +27,6 @@ tableChargeableItems = tblTable {
   , indexOnColumn "user_id"
   , indexOnColumn "document_id"
   , indexOnColumn "\"time\""
+  , indexOnColumn "type"
   ]
 }
