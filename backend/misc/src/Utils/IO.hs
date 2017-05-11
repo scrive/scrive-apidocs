@@ -14,6 +14,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import qualified Data.Text as T
 
 import KontraPrelude
+import SFTPConfig
 
 -- | Wait for a signal (sigINT or sigTERM).
 waitForTermination :: IO ()
@@ -35,6 +36,22 @@ readCurl :: MonadBase IO m
          -> BSL.ByteString           -- ^ standard input
          -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
 readCurl args input = liftBase $ readProcessWithExitCode curl_exe (["--max-time", "20", "-s", "-S"] ++ args) input
+
+sftpTransfer :: (MonadBase IO m)
+             => SFTPConfig
+             -> FilePath
+             -> m (ExitCode, BSL.ByteString, BSL.ByteString)
+sftpTransfer SFTPConfig{..} filePath = do
+      -- sshd is annoyingly picky about directory referals - we fix it here
+      let sftpRemoteDir' = sftpRemoteDir <> if (last sftpRemoteDir /= '/')
+                                            then "/" else ""
+      readCurl (concat [
+                         ["--key", sftpKeyPath]
+                       , ["-T", filePath]
+                       , ["sftp://" <> sftpUser <> "@" <> sftpHost <> sftpRemoteDir']
+                       ])
+               BSL.empty
+
 
 checkPathToExecutable :: FilePath -> IO FilePath
 checkPathToExecutable filepath = do

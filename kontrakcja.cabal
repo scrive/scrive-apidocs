@@ -94,6 +94,7 @@ Library
                  , ActionQueue.UserAccountRequest
                  , Administration.AdministrationControl
                  , Administration.AdministrationView
+                 , Administration.Invoicing
                  , Amazon
                  , Amazon.Class
                  , Analytics.Include
@@ -339,6 +340,7 @@ Library
                  , Session.Model
                  , Session.SessionID
                  , Session.Tables
+                 , SFTPConfig
                  , System.Random.CryptoRNG
                  , Templates
                  , Text.JSON.Convert
@@ -593,9 +595,12 @@ Executable cron
                , cmdargs
                , consumers
                , crypto-rng
+               , filepath
                , hpqtypes-extras
                , hedis
                , log >= 0.9
+               , monad-control
+               , mtl
                , text
                , transformers-base
 

@@ -22,7 +22,10 @@ module MinutesTime (
   , daysBefore
   , monthsBefore
   , beginingOfMonth
+  , beginingOfMonthUTC
+  , beginningOfDay
   , nextDayMidnight
+  , nextDayOneInTheMorning
   ) where
 
 import Control.Monad.Time
@@ -128,8 +131,26 @@ beginingOfMonth = localTimeToUTC utc . f . utcToLocalTime utc
       where
         (year, month, _) = toGregorian localDay
 
+-- | Transform the time to the beginning of the current month with respect to
+-- UTC only.
+beginingOfMonthUTC :: UTCTime -> UTCTime
+beginingOfMonthUTC t =
+  let (year, month, _date) = toGregorian $ utctDay t
+      monthFirstDay = fromGregorian year month 1
+  in UTCTime { utctDay = monthFirstDay
+             , utctDayTime = 0 }
+
+beginningOfDay :: UTCTime -> UTCTime
+beginningOfDay t = t { utctDayTime = 0 }
+
 nextDayMidnight :: UTCTime -> UTCTime
 nextDayMidnight time = UTCTime {
   utctDay = 1 `addDays` utctDay time
 , utctDayTime = 0
+}
+
+nextDayOneInTheMorning :: UTCTime -> UTCTime
+nextDayOneInTheMorning time = UTCTime {
+  utctDay = 1 `addDays` utctDay time
+, utctDayTime = 3600
 }

@@ -23,6 +23,7 @@ data JobType
   | EmailChangeRequestsEvaluation
   | FindAndExtendDigitalSignatures
   | FindAndTimeoutDocuments
+  | InvoicingUpload
   | MailEventsProcessing
   | MarkOrphanFilesForPurge
   | OldDraftsRemoval
@@ -45,6 +46,7 @@ jobTypeMapper = [
   , (EmailChangeRequestsEvaluation, "email_change_requests_evaluation")
   , (FindAndExtendDigitalSignatures, "find_and_extend_digital_signatures")
   , (FindAndTimeoutDocuments, "find_and_timeout_documents")
+  , (InvoicingUpload, "invoice_upload")
   , (MailEventsProcessing, "mail_events_processing")
   , (MarkOrphanFilesForPurge, "mark_orphan_files_for_purge")
   , (OldDraftsRemoval, "old_drafts_removal")

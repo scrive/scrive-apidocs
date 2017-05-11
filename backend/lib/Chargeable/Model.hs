@@ -1,5 +1,6 @@
 module Chargeable.Model (
-    ChargeCompanyForSMS(..)
+    ChargeableItem(..)
+  , ChargeCompanyForSMS(..)
   , ChargeCompanyForSEBankIDSignature(..)
   , ChargeCompanyForSEBankIDAuthentication(..)
   , ChargeCompanyForNOBankIDAuthentication(..)
@@ -24,15 +25,15 @@ import SMS.Data (SMSProvider(..))
 import User.UserID
 
 data ChargeableItem =
-  StartingDocument |
-  ClosingDocument  |
-  SMS |
-  SMSTelia |
-  SEBankIDSignature |
-  SEBankIDAuthentication |
-  NOBankIDAuthentication |
-  DKNemIDAuthentication |
-  ClosingSignature
+  CIStartingDocument |
+  CIClosingDocument  |
+  CISMS |
+  CISMSTelia |
+  CISEBankIDSignature |
+  CISEBankIDAuthentication |
+  CINOBankIDAuthentication |
+  CIDKNemIDAuthentication |
+  CIClosingSignature
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -45,15 +46,15 @@ instance FromSQL ChargeableItem where
     case n :: Int16 of
       -- Note:
       -- If changing this, please also update `pure_sql/invoice_stats.sql`
-      1 -> return SMS
-      2 -> return SEBankIDSignature
-      3 -> return SEBankIDAuthentication
-      4 -> return NOBankIDAuthentication
-      5 -> return SMSTelia
-      6 -> return StartingDocument
-      7 -> return DKNemIDAuthentication
-      8 -> return ClosingDocument
-      9 -> return ClosingSignature
+      1 -> return CISMS
+      2 -> return CISEBankIDSignature
+      3 -> return CISEBankIDAuthentication
+      4 -> return CINOBankIDAuthentication
+      5 -> return CISMSTelia
+      6 -> return CIStartingDocument
+      7 -> return CIDKNemIDAuthentication
+      8 -> return CIClosingDocument
+      9 -> return CIClosingSignature
       _ -> throwM RangeError {
         reRange = [(1, 9)]
       , reValue = n
@@ -61,15 +62,15 @@ instance FromSQL ChargeableItem where
 
 instance ToSQL ChargeableItem where
   type PQDest ChargeableItem = PQDest Int16
-  toSQL SMS                    = toSQL (1::Int16)
-  toSQL SEBankIDSignature      = toSQL (2::Int16)
-  toSQL SEBankIDAuthentication = toSQL (3::Int16)
-  toSQL NOBankIDAuthentication = toSQL (4::Int16)
-  toSQL SMSTelia               = toSQL (5::Int16)
-  toSQL StartingDocument       = toSQL (6::Int16)
-  toSQL DKNemIDAuthentication  = toSQL (7::Int16)
-  toSQL ClosingDocument        = toSQL (8::Int16)
-  toSQL ClosingSignature       = toSQL (9::Int16)
+  toSQL CISMS                    = toSQL (1::Int16)
+  toSQL CISEBankIDSignature      = toSQL (2::Int16)
+  toSQL CISEBankIDAuthentication = toSQL (3::Int16)
+  toSQL CINOBankIDAuthentication = toSQL (4::Int16)
+  toSQL CISMSTelia               = toSQL (5::Int16)
+  toSQL CIStartingDocument       = toSQL (6::Int16)
+  toSQL CIDKNemIDAuthentication  = toSQL (7::Int16)
+  toSQL CIClosingDocument        = toSQL (8::Int16)
+  toSQL CIClosingSignature       = toSQL (9::Int16)
 
 ----------------------------------------
 
@@ -81,43 +82,43 @@ instance ToSQL ChargeableItem where
 -- | Charge company of the author of the document for SMSes.
 data ChargeCompanyForSMS = ChargeCompanyForSMS DocumentID SMSProvider Int32
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForSMS () where
-  update (ChargeCompanyForSMS document_id SMSDefault sms_count)        = update (ChargeCompanyFor SMS sms_count document_id)
-  update (ChargeCompanyForSMS document_id SMSTeliaCallGuide sms_count) = update (ChargeCompanyFor SMSTelia sms_count document_id)
+  update (ChargeCompanyForSMS document_id SMSDefault sms_count)        = update (ChargeCompanyFor CISMS sms_count document_id)
+  update (ChargeCompanyForSMS document_id SMSTeliaCallGuide sms_count) = update (ChargeCompanyFor CISMSTelia sms_count document_id)
 
 -- | Charge company of the author of the document for swedish bankid signature while signing.
 data ChargeCompanyForSEBankIDSignature = ChargeCompanyForSEBankIDSignature DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForSEBankIDSignature () where
-  update (ChargeCompanyForSEBankIDSignature document_id) = update (ChargeCompanyFor SEBankIDSignature 1 document_id)
+  update (ChargeCompanyForSEBankIDSignature document_id) = update (ChargeCompanyFor CISEBankIDSignature 1 document_id)
 
 -- | Charge company of the author of the document for swedish authorization
 data ChargeCompanyForSEBankIDAuthentication = ChargeCompanyForSEBankIDAuthentication DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForSEBankIDAuthentication () where
-  update (ChargeCompanyForSEBankIDAuthentication document_id) = update (ChargeCompanyFor SEBankIDAuthentication 1 document_id)
+  update (ChargeCompanyForSEBankIDAuthentication document_id) = update (ChargeCompanyFor CISEBankIDAuthentication 1 document_id)
 
 -- | Charge company of the author of the document for norwegian authorization
 data ChargeCompanyForNOBankIDAuthentication = ChargeCompanyForNOBankIDAuthentication DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForNOBankIDAuthentication () where
-  update (ChargeCompanyForNOBankIDAuthentication document_id) = update (ChargeCompanyFor NOBankIDAuthentication 1 document_id)
+  update (ChargeCompanyForNOBankIDAuthentication document_id) = update (ChargeCompanyFor CINOBankIDAuthentication 1 document_id)
 
 -- | Charge company of the author of the document for danish authentication
 data ChargeCompanyForDKNemIDAuthentication = ChargeCompanyForDKNemIDAuthentication DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForDKNemIDAuthentication () where
-  update (ChargeCompanyForDKNemIDAuthentication document_id) = update (ChargeCompanyFor DKNemIDAuthentication 1 document_id)
+  update (ChargeCompanyForDKNemIDAuthentication document_id) = update (ChargeCompanyFor CIDKNemIDAuthentication 1 document_id)
 
 -- | Charge company of the author of the document for creation of the document
 data ChargeCompanyForStartingDocument = ChargeCompanyForStartingDocument DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForStartingDocument () where
-  update (ChargeCompanyForStartingDocument document_id) = update (ChargeCompanyFor StartingDocument 1 document_id)
+  update (ChargeCompanyForStartingDocument document_id) = update (ChargeCompanyFor CIStartingDocument 1 document_id)
 
 -- | Charge company of the author of the document for closing of the document
 data ChargeCompanyForClosingDocument = ChargeCompanyForClosingDocument DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForClosingDocument () where
-  update (ChargeCompanyForClosingDocument document_id) = update (ChargeCompanyFor ClosingDocument 1 document_id)
+  update (ChargeCompanyForClosingDocument document_id) = update (ChargeCompanyFor CIClosingDocument 1 document_id)
 
 -- | Charge company of the author of the document for closing a signature
 data ChargeCompanyForClosingSignature = ChargeCompanyForClosingSignature DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForClosingSignature () where
-  update (ChargeCompanyForClosingSignature document_id) = update (ChargeCompanyFor ClosingSignature 1 document_id)
+  update (ChargeCompanyForClosingSignature document_id) = update (ChargeCompanyFor CIClosingSignature 1 document_id)
 
 data ChargeCompanyFor = ChargeCompanyFor ChargeableItem Int32 DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyFor () where
@@ -147,7 +148,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetTotalOfChargeabl
 
 data GetNumberOfDocumentsStartedThisMonth = GetNumberOfDocumentsStartedThisMonth CompanyID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetNumberOfDocumentsStartedThisMonth Int64 where
-  query (GetNumberOfDocumentsStartedThisMonth company_id) = query $ GetTotalOfChargeableItemFromThisMonth StartingDocument company_id
+  query (GetNumberOfDocumentsStartedThisMonth company_id) = query $ GetTotalOfChargeableItemFromThisMonth CIStartingDocument company_id
 
 -- | Fetch id of the author of the document.
 getAuthorAndAuthorsCompanyIDs :: (MonadDB m, MonadThrow m) => DocumentID -> m (UserID, CompanyID)

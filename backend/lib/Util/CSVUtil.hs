@@ -1,5 +1,6 @@
 module Util.CSVUtil ( parseCSV
                     , CSV(..)
+                    , renderCSV
                     ) where
 
 import Codec.Text.IConv
