@@ -40,10 +40,8 @@ var classNames = require("classnames");
         },
         el: $(self.refs.signButton.getDOMNode()),
         onActivate: function () {
-          Track.track("Begin signature task");
         },
         onDeactivate: function () {
-          Track.track("Finish signature task");
         }
       });
     },
