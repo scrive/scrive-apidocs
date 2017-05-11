@@ -213,7 +213,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
       ssn_sl = T.pack $ getPersonalNumber sl
       ssn_nets = attributeFromAssertion "DK_SSN" $ assertionAttributes res
       dob = dobFromDKPersonalNumber $ getPersonalNumber sl
-      mpid = lookup "DN_DAN_PID" $ assertionAttributes res
+      mpid = lookup "DK_DAN_PID" $ assertionAttributes res
 
   let normalizeSSN = T.filter (/= '-')
   if (normalizeSSN ssn_sl /= normalizeSSN ssn_nets)
