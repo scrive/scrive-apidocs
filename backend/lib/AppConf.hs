@@ -17,6 +17,7 @@ import HubSpot.Conf (HubSpotConf(..))
 import KontraPrelude
 import Log.Configuration
 import Salesforce.Conf
+import SFTPConfig
 import User.Email
 
 -- | Defines the application's configuration.  This includes amongst
@@ -47,6 +48,7 @@ data AppConf = AppConf {
   , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
   , salesforceConf     :: Maybe SalesforceConf         -- ^ Configuration of salesforce
   , netsConfig         :: Maybe NetsConfig             -- ^ Configuration of Nets - NO BankID provider
+  , invoicingSFTPConf  :: Maybe SFTPConfig             -- ^ SFTP server for invoicing uploads
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -129,6 +131,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldOpt "nets"
       netsConfig
       "Configuration of Nets - NO BankID provider"
+  <*> fieldOpt "invoicing_sftp_for_salesforce"
+      invoicingSFTPConf
+      "Configuration for SFTP:ing invoicing reports"
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf
@@ -160,4 +165,5 @@ instance Default AppConf where
     , ntpServers         = defaultNtpServers
     , salesforceConf     = Nothing
     , netsConfig         = Nothing
+    , invoicingSFTPConf  = Nothing
     }

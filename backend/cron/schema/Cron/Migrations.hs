@@ -18,7 +18,15 @@ cronMigrations = [
   , removeFindAndDoPostDocumentClosedActionsNew
   , removeRecurlySynchronizationFromCronJobs
   , removeFindAndDoPostDocumentClosedActions
+  , addInvoicingJob
   ]
+
+addInvoicingJob :: (MonadDB m, MonadThrow m) => Migration m
+addInvoicingJob = Migration {
+    mgrTable = tableCronJobs
+  , mgrFrom = 6
+  , mgrDo = runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('invoice_upload', to_timestamp(0))"
+  }
 
 removeFindAndDoPostDocumentClosedActions :: (MonadDB m, MonadThrow m) => Migration m
 removeFindAndDoPostDocumentClosedActions = Migration {

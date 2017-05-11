@@ -18,6 +18,7 @@ import ActionQueue.Monad
 import ActionQueue.PasswordReminder
 import ActionQueue.Scheduler
 import ActionQueue.UserAccountRequest
+import Administration.Invoicing
 import AppConf
 import AppDBTables
 import Configuration
@@ -177,6 +178,12 @@ main = do
         FindAndTimeoutDocuments -> do
           runScheduler findAndTimeoutDocuments
           return . RerunAfter $ iminutes 10
+        InvoicingUpload -> do
+          case invoicingSFTPConf appConf of
+            Nothing -> do
+              logInfo "SFTP config missing; skipping" $ object []
+            Just sftpConfig -> runScheduler $ uploadInvoicing sftpConfig
+          RerunAt . nextDayOneInTheMorning <$> currentTime
         MailEventsProcessing -> do
           runScheduler Mails.Events.processEvents
           return . RerunAfter $ iseconds 5
