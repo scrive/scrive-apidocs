@@ -58,7 +58,6 @@ var Track = require("../scripts/common/track");
             var errorInfo = {"Browser": $.browser.name,
                              "Browser version": $.browser.version,
                              "Platform": $.browser.platform};
-            Track.track("Take screenshot success", _.extend(errorInfo, extraErrorLogParams));
             success(newCanvas);
           }
         })["catch"](function (err) { // use catch as key, because IE8 cannot handle catch attribute
