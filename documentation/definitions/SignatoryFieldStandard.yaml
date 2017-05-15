@@ -14,6 +14,7 @@ allOf:
       type:
         type: string
         enum:
+          - company
           - company_number
           - email
           - mobile
