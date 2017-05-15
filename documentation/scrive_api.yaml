@@ -45,6 +45,7 @@ info:
     | 2017-01-17  | Add JSON fields related to highlighting                    |
     | 2017-01-28  | Documentation of `removepages` API call                    |
     | 2017-03-11  | Add `dk_nemid` (Danish NemID) to `authentication_to_view`  |
+    | 2017-05-15  | Add missing `company` standard signatory field             |
 
     ## Environments & IP Addresses
 
