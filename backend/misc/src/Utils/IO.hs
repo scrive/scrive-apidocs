@@ -42,13 +42,13 @@ sftpTransfer :: (MonadBase IO m)
              -> FilePath
              -> m (ExitCode, BSL.ByteString, BSL.ByteString)
 sftpTransfer SFTPConfig{..} filePath = do
-      -- sshd is annoyingly picky about directory referals - we fix it here
+      -- we want the directory specified to actually be interpreted as a
+      -- directory and not as a file
       let sftpRemoteDir' = sftpRemoteDir <> if (last sftpRemoteDir /= '/')
                                             then "/" else ""
-      readCurl (concat [
-                         ["--key", sftpKeyPath]
-                       , ["-T", filePath]
-                       , ["sftp://" <> sftpUser <> "@" <> sftpHost <> sftpRemoteDir']
+      readCurl (concat [ ["-T", filePath]
+                       , ["sftp://" <> sftpUser <> ":" <> sftpPassword <> "@" <>
+                          sftpHost <> sftpRemoteDir']
                        ])
                BSL.empty
 
