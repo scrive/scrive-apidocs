@@ -104,7 +104,7 @@ module.exports = React.createClass({
                               </div>
                               {/*if*/ (self.props.showFooter) &&
                                 <div className="section footer">
-                                  <img className="logo" src="/img/poweredby.png" />
+                                  <img className="logo" src="/img/poweredby.svg" />
                                 </div>
                               }
                       </div>
