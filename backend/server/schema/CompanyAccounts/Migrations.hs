@@ -11,7 +11,7 @@ normalizeCompanyInvites :: MonadDB m => Migration m
 normalizeCompanyInvites = Migration {
     mgrTable = tableCompanyInvites
   , mgrFrom = 1
-  , mgrDo = do
+  , mgrAction = StandardMigration $ do
       runQuery_ $ sqlSelect "companyinvites as ci LEFT JOIN users as u ON (ci.email = u.email AND u.deleted IS NULL)" $ do
                   sqlResult "u.id, u.company_id,  ci.company_id, ci.email,ci.first_name, ci.last_name"
       values <- fetchMany id

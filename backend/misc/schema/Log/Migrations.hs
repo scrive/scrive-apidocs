@@ -15,9 +15,9 @@ logsMigrations = [
 
 addObjectIndexes :: MonadDB m => Migration m
 addObjectIndexes = Migration {
-  mgrTable = tableLogs
+  mgrTableName = tblName tableLogs
 , mgrFrom = 2
-, mgrDo = do
+, mgrAction = StandardMigration $ do
   runSQL_ "ALTER INDEX idx__logs__time RENAME TO idx__logs__$time$"
   mapM_ (runQuery_ . sqlCreateIndex (tblName tableLogs) . indexOnColumn) [
       "(data ->> 'document_id'::text)"
@@ -29,9 +29,9 @@ addObjectIndexes = Migration {
 
 addColumnDomain :: MonadDB m => Migration m
 addColumnDomain = Migration {
-  mgrTable = tableLogs
+  mgrTableName = tblName tableLogs
 , mgrFrom = 1
-, mgrDo = do
+, mgrAction = StandardMigration $ do
   let tname = tblName tableLogs
   runQuery_ $ sqlCreateIndex tname $ indexOnColumn "component"
   runQuery_ $ sqlAlterTable tname [sqlAddColumn tblColumn {
@@ -45,9 +45,9 @@ addColumnDomain = Migration {
 
 createLogsTable :: MonadDB m => Migration m
 createLogsTable = Migration {
-  mgrTable = tableLogs
+  mgrTableName = tblName tableLogs
 , mgrFrom = 0
-, mgrDo = createTable True tblTable {
+, mgrAction = StandardMigration $ createTable True tblTable {
     tblName = "logs"
   , tblVersion = 1
   , tblColumns = [

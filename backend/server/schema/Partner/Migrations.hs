@@ -11,9 +11,9 @@ import Partner.Tables
 
 createTablePartners :: MonadDB m => Migration m
 createTablePartners = Migration {
-    mgrTable = tablePartners
+    mgrTableName = tblName tablePartners
   , mgrFrom = 0
-  , mgrDo = do
+  , mgrAction = StandardMigration $ do
       createTable True tblTable {
           tblName = "partners"
         , tblVersion = 1
@@ -34,9 +34,9 @@ createTablePartners = Migration {
 
 createTablePartnerAdmins :: MonadDB m => Migration m
 createTablePartnerAdmins = Migration {
-    mgrTable = tablePartnerAdmins
+    mgrTableName = tblName tablePartnerAdmins
   , mgrFrom = 0
-  , mgrDo = do
+  , mgrAction = StandardMigration $ do
       createTable True tblTable {
            tblName = "partner_admins"
         , tblVersion = 1
