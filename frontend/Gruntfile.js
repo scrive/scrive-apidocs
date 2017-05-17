@@ -93,9 +93,14 @@ module.exports = function (grunt) {
         }
       },
       fast: {
+        autoWatch: false,
         browsers: ["PhantomJS"],
+        reporters: ["teamcity"],
         singleRun: true,
-        autoWatch: false
+        webpackMiddleware: {
+          noInfo: true,
+          stats: "errors-only"
+        }
       }
     },
 

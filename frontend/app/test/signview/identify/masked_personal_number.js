@@ -29,7 +29,6 @@ describe("MaskedPersonalNumber", function () {
   });
 
   it("should not render any text if neither number nor placeholder are specified", function () {
-    debugger;
     var component = renderComponent({});
     assert.equal(React.findDOMNode(component).innerText, "");
   });
