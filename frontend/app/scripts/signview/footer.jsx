@@ -7,7 +7,7 @@ var React = require("react");
       return (
         <div className="section footer">
           <div className="col-xs-12">
-            <img crossOrigin="anonymous" className="logo" src={window.cdnbaseurl + "/img/poweredby.png"} />
+            <img crossOrigin="anonymous" className="logo" src={window.cdnbaseurl + "/img/poweredby.svg"} />
           </div>
         </div>
       );

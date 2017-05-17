@@ -44,5 +44,7 @@ var SignView = require("../../scripts/signview/signview");
     after(function () {
       window.Image = oldImage;
       server.restore();
+
+      util.cleanTimeoutsAndBody();
     });
   });
