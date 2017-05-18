@@ -1,3 +1,4 @@
+
 [
   "./app/js/react_confirmations.js",
   "./app/scripts/admin/companyadmin/**/*.jsx",
@@ -59,6 +60,8 @@
   "./app/scripts/account/account.jsx",
   "./app/scripts/account/usersandstats/account.jsx",
   "./app/scripts/stats/*.jsx",
+  "./app/scripts/pages/footer.jsx",
+  "./app/scripts/pages/header.jsx",
   "./app/js/anchors.js",
   "./app/js/flashmessages.js",
   "./app/js/authorattachment.js",

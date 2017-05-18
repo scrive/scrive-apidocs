@@ -154,12 +154,6 @@ pageFooter=
 </div>
 <script>
   var fromTemplateFooter = {
-    logged: $if(logged)$ true $else$ false $endif$,
-    httplink : "$httplink$",
-    langprefix : "$langprefix()$",
-    color :  "$custombarscolour$",
-    textcolor :  "$custombarstextcolour$",
-    highlightcolor : "$custombarshighlightcolour$"
   };
 </script>
 <script src="$cdnbaseurl$/compiled/all/footer-$versioncode$.js" crossorigin="anonymous"></script>
@@ -201,9 +195,6 @@ header=
 </div>
 <script>
 var fromTemplateHeader = {
-  logged: $if(logged)$ true $else$ false $endif$,
-  httplink : "$httplink$",
-  langprefix : "$langprefix()$",
   archive : $if(archive)$true$else$false$endif$,
   account : $if(account)$true$else$false$endif$
 };
