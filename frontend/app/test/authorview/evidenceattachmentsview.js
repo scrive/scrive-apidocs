@@ -84,7 +84,7 @@ describe("authorview/evidenceattachmentsview", function () {
     );
   });
 
-  it("should open the attachment file in a new window", function () {
+  it("should open the attachment file in a new window", function (done) {
     var component = renderComponent();
 
     util.waitUntil(
