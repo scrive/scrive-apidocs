@@ -1355,7 +1355,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
             F.value "signatory_name" cgisebidsSignatoryName
             F.value "signatory_personal_number" cgisebidsSignatoryPersonalNumber
             F.value "signed_text" cgisebidsSignedText
-            F.value "provider" ("Swedish BankID" :: String)
+            F.value "provider_sebankid" True
             F.value "signature" $ B64.encode cgisebidsSignature
             F.value "ocsp_response" $ B64.encode cgisebidsOcspResponse
           (Nothing, Just _) -> do

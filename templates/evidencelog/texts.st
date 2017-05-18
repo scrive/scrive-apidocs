@@ -404,7 +404,7 @@ SetDocumentInviteTimeEvidenceLog=The signing process was started by <span class=
 ###
 SignDocumentEvidenceLogSMSPin=The signatory <span class="actor"/> signed the document using PIN by SMS as authentication method. $pinWasSent()$
 ###
-SignDocumentEvidenceLogEleg=The document was signed by <span class="actor"/> using $provider$ as authentication method. $elegVerificationSign()$
+SignDocumentEvidenceLogEleg=The document was signed by <span class="actor"/> using $providerType()$ through $provider()$ as the authentication method. $elegVerificationSign()$
 ###
 SignDocumentEvidenceLogStandard=The signatory <span class="actor"/> signed the document.
 ###
@@ -498,10 +498,10 @@ pinWasSent=The PIN was sent to $phone$.
 elegVerificationSign=
 <br/>
 <br/>
-<p>The text signed in the $provider$ client was:</p>
+<p>The text signed in the $providerType$ client was:</p>
 <pre style='white-space:normal'>$signed_text$</pre>
 <br/>
-<p>Data returned from the  $provider$:
+<p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
   <br/>ID number: $signatory_personal_number$
 </p>
@@ -544,12 +544,12 @@ VisitedViewForAuthenticationEvidenceArchive=$_VisitedViewForAuthenticationEviden
 ###
 VisitedViewForAuthenticationEvidenceVerificationPages=$_VisitedViewForAuthenticationEvidenceVerificationPages()$
 ###
-AuthenticatedToViewEvidenceLog=<span class="actor"/> verified their identity with $provider()$ to access the document. $elegVerificationAuth()$
+AuthenticatedToViewEvidenceLog=<span class="actor"/> verified their $providerType()$ identity through $provider()$ to access the document. $elegVerificationAuth()$
 ###
 elegVerificationAuth=
 <br/>
 <br/>
-<p>Data returned from the $provider()$:
+<p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
   $if(signatory_personal_number)$
   <br/>ID number: $signatory_personal_number$
@@ -572,7 +572,9 @@ $if(ocsp_response)$
 <p>Online Certificate Status Protocol (OCSP) Response: <div>$ocsp_response$</div></p>
 $endif$
 ###
-provider=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$endif$
+provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_dknemid)$Nets$endif$
+###
+providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$endif$
 ###
 AuthenticatedToViewEvidenceArchive=*
 $if(provider_sebankid)$
