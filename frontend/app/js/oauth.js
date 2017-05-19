@@ -73,23 +73,6 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
             }
           }
         }).send();
-  },
-  createAccount : function(email) {
-    new Submit({
-          method: "POST",
-          url: "/api/frontend/signup",
-          lang : Language.current(),
-          email : email,
-          ajax: true,
-          ajaxsuccess: function(rs) {
-            if (resp.sent === true) {
-              // Even if account was not created, we do not want to tell the user.
-              // The reason is this could be abused to find out whether email is registered
-              // with Scrive or not.
-              var content = localization.payments.outside.confirmAccountMaybeCreatedUser;
-               new FlashMessage({content: content, type: 'success'});
-          }}
-        }).sendAjax();
   }
 });
 
@@ -180,40 +163,13 @@ var OAuthConfirationView = Backbone.View.extend({
       box.append(button);
       return box;
     },
-    createAccountBox : function() {
-      var model = this.model;
-      var box = $("<div class='create-account-box'/>");
-      box.append($("<div/>").append($("<h2/>").text(localization.apiConfiration.createAccount)));
-      var emailinput = new InfoTextInput({
-              infotext: localization.apiConfiration.enterEmailAdress,
-              value : "",
-              cssClass : "big-input",
-              inputtype : "text",
-              name : "email"
-      });
-      box.append(emailinput.el());
-      var button = new Button({
-                  size  : "small",
-                  type : 'action',
-                  cssClass : "create-account-button",
-                  text  : localization.apiConfiration.createAccount,
-                  onClick : function() {
-                        if (new EmailValidation().validateData(emailinput.value()))
-                          model.createAccount(emailinput.value());
-                        else
-                          new FlashMessage({type: 'error', content: localization.loginModal.invalidEmail});
-                    }
-                }).el();
-      box.append(button);
-      return box;
-    },
     body : function() {
       var mainContainer = $("<div class='mainContainer'/>");
       var bodyContainer = $("<div class='body-container'/>");
 
       mainContainer.append(bodyContainer.append(this.header()).append(this.textBox()));
       if (!this.model.logged())
-           mainContainer.append(this.loginBox()).append(this.createAccountBox());
+           mainContainer.append(this.loginBox());
       else
            mainContainer.append(this.acceptButton());
       return mainContainer;
