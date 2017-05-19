@@ -24,7 +24,7 @@ $(document).ajaxError(function(event, jqxhr, settings, exception) {
         'Error Message' : exception.toString()
     });
 
-    if (trackJs) {
+    if (window.trackJs !== undefined && trackJs) {
       // This will be visible and searchable in the track.js telemetry timeline
       console.log(exception);
       console.log(jqxhr.getAllResponseHeaders())
