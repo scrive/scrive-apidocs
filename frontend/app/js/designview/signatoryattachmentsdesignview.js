@@ -16,7 +16,8 @@ var SignatoryAttachment = require("../signatoryattachment.js").SignatoryAttachme
   defaults : {
       name : "",
       description : "",
-      signatory : undefined
+      signatory : undefined,
+      isRequired : false
   },
   name: function() {
        return this.get("name");
@@ -27,6 +28,9 @@ var SignatoryAttachment = require("../signatoryattachment.js").SignatoryAttachme
   signatory : function(){
        return this.get("signatory");
   },
+  isRequired : function(){
+       return this.get("isRequired");
+  },
   setSignatory: function(signatory) {
       this.set({signatory : signatory});
   },
@@ -35,6 +39,9 @@ var SignatoryAttachment = require("../signatoryattachment.js").SignatoryAttachme
   },
   setDescription : function(description) {
       this.set({description : description});
+  },
+  setIsRequired : function(isrequired) {
+      this.set({isRequired : isrequired});
   },
   ready : function() {
      return this.signatory() != undefined && this.name() != "" && this.description() != "";
@@ -55,10 +62,14 @@ var SignatoryAttachment = require("../signatoryattachment.js").SignatoryAttachme
               var attachment = new DesignSignatoryAttachment({
                 name: attachment.name(),
                 description : attachment.description(),
-                signatory:  signatory
+                signatory:  signatory,
+                isRequired: attachment.isRequired()
               });
               attachments.push(attachment);
               self.listenTo(attachment, "change:signatory", function () {
+                self.trigger("change:attachments");
+              });
+              self.listenTo(attachment, "change:isRequired", function () {
                 self.trigger("change:attachments");
               });
           });
@@ -73,6 +84,9 @@ var SignatoryAttachment = require("../signatoryattachment.js").SignatoryAttachme
         var attachment = new DesignSignatoryAttachment();
         this.attachments().push(attachment);
         this.listenTo(attachment, "change:signatory", function () {
+          self.trigger("change:attachments");
+        });
+        this.listenTo(attachment, "change:isRequired", function () {
           self.trigger("change:attachments");
         });
         this.trigger("change:attachments");
@@ -133,7 +147,37 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
         });
         td2.append(editDesc);
 
-        var td3 = $("<td class='editSignatoryAttachmentTDSelect'>");
+        var td3 = $("<td class='editSignatoryAttachmentTDIcon'>");
+        var paperclipIcon = $("<div class='signatory-required-attachment-icon'></div>");
+        if (!attachment.isRequired()) {
+          paperclipIcon = $("<div class='signatory-optional-attachment-icon'></div>");
+        }
+        td3.append(paperclipIcon);
+
+        var td4 = $("<td class='editSignatoryAttachmentTDSelect'>");
+        var options =
+          [ { name: localization.signatoryAttachments.required
+            , value: true
+            }
+          , { name: localization.signatoryAttachments.optional
+            , value: false
+            }
+          ];
+        isrequired = attachment.isRequired();
+        React.render(React.createElement(Select, {
+          isOptionSelected:  function(o) {
+            return o.value == isrequired;
+          },
+          width: 110,
+          options: options,
+          onSelect: function(isrequired) {
+            attachment.setIsRequired(isrequired);
+            Track.track('Set isrequired (in signatory attachment)');
+            return true;
+          }
+        }), td4[0]);
+
+        var td5 = $("<td class='editSignatoryAttachmentTDSelect'>");
         var nameFromSignatory = function(sig) {
           var text = sig.nameOrEmail();
           if (sig.isCsv())
@@ -158,24 +202,24 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
           isOptionSelected:  function(o) {
             return o.value == sig;
           },
-          width: 190,
+          width: 150,
           options: options,
           onSelect: function(sig) {
             attachment.setSignatory(sig);
             Track.track('Set signatory (in attachment)');
             return true;
           }
-        }), td3[0]);
+        }), td5[0]);
 
-        var td4 = $("<td class='editSignatoryAttachmentTDRemove'>");
+        var td6 = $("<td class='editSignatoryAttachmentTDIcon'>");
         var removeIcon = $("<div class='removeSignatoryAttachmentIcon'>X</div>");
         removeIcon.click(function() {
             attachments.removeAttachment(attachment);
             Track.track('Remove sig attachment');
         });
-        td4.append(removeIcon);
+        td6.append(removeIcon);
 
-        row.append(td1).append(td2).append(td3).append(td4);
+        row.append(td1).append(td2).append(td3).append(td4).append(td5).append(td6);
         return row;
     },
     render: function () {
@@ -189,16 +233,18 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
             var table= $("<table class='editSignatoryAttachmentTable'/>");
             var th1 = $("<th class='editSignatoryAttachmentTDName'>").text(localization.signatoryAttachments.attachment);
             var th2 = $("<th class='editSignatoryAttachmentTDDescription'>").text(localization.signatoryAttachments.description);
-            var th3 = $("<th class='editSignatoryAttachmentTDSelect'>").text(localization.signatoryAttachments.from);
-            var th4 = $("<th class='editSignatoryAttachmentTDRemove'>");
-            var thead = $("<thead/>").append(th1).append(th2).append(th3).append(th4);
+            var th3 = $("<th class='editSignatoryAttachmentTDIcon'>");
+            var th4 = $("<th class='editSignatoryAttachmentTDSelect'>").text(localization.signatoryAttachments.typeOfAttachment);
+            var th5 = $("<th class='editSignatoryAttachmentTDSelect'>").text(localization.signatoryAttachments.from);
+            var th6 = $("<th class='editSignatoryAttachmentTDIcon'>");
+            var thead = $("<thead/>").append(th1).append(th2).append(th3).append(th4).append(th5).append(th6);
 
             var tbody = $("<tbody/>");
             _.each(attachments.attachments(), function(a) { tbody.append(view.attachmentRow(a));});
 
             div.append(table.append(thead).append(tbody));
         }
-        this.container.append(div).append(this.addAttachmentButton());
+        this.container.append(div).append($("<div class='modal-buttons centered'>").append(this.addAttachmentButton()));
         return this;
     }
 });
@@ -214,7 +260,7 @@ var DesignSignatoryAttachmentsPopup = exports.DesignSignatoryAttachmentsPopup = 
               title  : localization.signatoryAttachments.requestAttachments,
               content: $("<div>").append($("<div class='modal-subtitle centered'>").html(localization.signatoryAttachments.defineRequests)).append($(view.el)),
               acceptText: localization.save,
-              width: 800,
+              width: 850,
               onAccept : function() {
                   if (_.any(model.attachments(), function(a) {return  !a.ready() })) {
                       new FlashMessage({ type: 'error'
@@ -235,7 +281,8 @@ var DesignSignatoryAttachmentsPopup = exports.DesignSignatoryAttachmentsPopup = 
                   _.each(model.attachments(), function(att) {
                       att.signatory().addAttachment(new SignatoryAttachment({
                           name : att.name(),
-                          description: att.description()
+                          description: att.description(),
+                          required: att.isRequired()
                         }));
                   });
                   document.save();

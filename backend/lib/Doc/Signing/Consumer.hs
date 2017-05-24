@@ -11,7 +11,7 @@ import Data.ByteString (ByteString)
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
-import Text.StringTemplates.Templates (renderTemplate)
+import Text.StringTemplates.Templates (renderTemplate, renderTemplate_)
 import qualified Database.Redis as R
 import qualified Text.StringTemplates.Fields as F
 
@@ -63,6 +63,7 @@ data DocumentSigning = DocumentSigning {
   , signingLastCheckStatus      :: !(Maybe String)
   , signingCancelled            :: !Bool
   , signingAttempts             :: !Int32
+  , signingNotUploadedSigAttachments :: ![String]
   }
 
 documentSigning
@@ -76,8 +77,23 @@ documentSigning
 documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
     ccJobsTable = "document_signing_jobs"
   , ccConsumersTable = "document_signing_consumers"
-  , ccJobSelectors = ["id", "branded_domain_id", "time", "client_ip_v4", "client_time", "client_name", "lang", "fields", "accepted_attachments", "screenshots", "last_check_status", "cancelled", "attempts"]
-  , ccJobFetcher = \(sid, bdid, st, cip, mct, mcn, sl, sf, Array1 saas, ss, mlcs, sc, attempts) -> DocumentSigning {
+  , ccJobSelectors =
+    [ "id"
+    , "branded_domain_id"
+    , "time"
+    , "client_ip_v4"
+    , "client_time"
+    , "client_name"
+    , "lang"
+    , "fields"
+    , "accepted_attachments"
+    , "screenshots"
+    , "last_check_status"
+    , "cancelled"
+    , "attempts"
+    , "not_uploaded_sig_attachments"
+    ]
+  , ccJobFetcher = \(sid, bdid, st, cip, mct, mcn, sl, sf, Array1 saas, ss, mlcs, sc, attempts, Array1 nusa) -> DocumentSigning {
       signingSignatoryID = sid
     , signingBrandedDomainID = bdid
     , signingTime = st
@@ -91,6 +107,7 @@ documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
     , signingLastCheckStatus = mlcs
     , signingCancelled = sc
     , signingAttempts = attempts
+    , signingNotUploadedSigAttachments = nusa
     }
   , ccJobIndex = signingSignatoryID
   , ccNotificationChannel = Nothing
@@ -151,8 +168,11 @@ documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
                       authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments initialDoc) $ \a -> do
                         acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
                         return (acceptanceText,a)
-
                       dbUpdate $ AddAcceptedAuthorAttachmentsEvents slWithUpdatedName signingAcceptedAttachments authorAttachmetsWithAcceptanceText actorWithUpdatedName
+
+                      notUploadedSigAttachmentsText <- renderTemplate_ "_pageDocumentForAuthorHelpersLocalDialogsAttachmentmarkasnotuploaded"
+                      let notUploadedSigAttachmentsWithText = zip signingNotUploadedSigAttachments (repeat notUploadedSigAttachmentsText)
+                      dbUpdate $ AddNotUploadedSignatoryAttachmentsEvents sl notUploadedSigAttachmentsWithText actorWithUpdatedName
 
                       actorWithUpdatedNameAndCurrentTime <- recreatedSignatoryActor now signingClientTime signingClientName signingClientIP4 slWithUpdatedName
                       dbUpdate $ SignDocument signingSignatoryID magicHash (Just esig) Nothing signingScreenshots actorWithUpdatedNameAndCurrentTime

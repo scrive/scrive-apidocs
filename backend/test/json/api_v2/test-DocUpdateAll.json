@@ -143,11 +143,27 @@
       "highlighted_pages": [],
       "attachments": [
         {
+          "name": "Other Att Def",
+          "description": "Some other description",
+          "file_id": null,
+          "file_name" : null,
+          "required" : true
+        },
+        {
+          "name": "Other Att Opt",
+          "description": "Some decription",
+          "file_id": null,
+          "file_name" : null,
+          "required" : false
+        },
+        {
           "name": "#☭ҖATT",
           "description": "#☭ҖATT_DESC",
           "file_id": null,
-          "file_name" : null
+          "file_name" : null,
+          "required" : true
         }
+
       ],
       "api_delivery_url": null,
       "has_authenticated_to_view":false

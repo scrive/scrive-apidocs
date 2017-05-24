@@ -32,4 +32,6 @@ kontraMigrations = [
   , removeFindAndDoPostDocumentClosedActions
   , createIndexesForChargeableItems
   , addInvoicingJob
+  , addRequiredFlagToSignatoryAttachment
+  , documentSigningJobsAddSignatoryAttachments
   ]

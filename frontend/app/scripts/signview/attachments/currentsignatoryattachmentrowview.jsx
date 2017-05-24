@@ -15,6 +15,7 @@ var Document = require("../../../js/documents.js").Document;
 var File = require("../../../js/files.js").File;
 var _ = require("underscore");
 var Task = require("../navigation/task");
+var Checkbox = require("../../common/checkbox");
 
   var UploadArea = React.createClass({
     displayName: "CurrentSignatoryAttachmentUploadArea",
@@ -102,23 +103,46 @@ var Task = require("../navigation/task");
 
       return (
         <div>
-          <UploadButton
-            ref="uploadButton"
-            size="small"
-            name="attachment"
-            type="action"
+          {/* if */ model.isMarkedAsNotUploaded() &&
+            <Button
             text={localization.signatoryAttachmentUploadButton}
-            onError={function () {
-              model.notLoading();
-              model.trigger("change");
+            type="action"
+            className="inactive"
+            size="small"
+            style={{overflow: "hidden"}}
+            onClick={function () {
+              // do nothing. This is an inactive button
             }}
-            onUploadComplete={function (input) {
-              var submit = self.createFileSubmit();
-              submit.addInputs(input);
-              submit.send();
-            }}
-          />
+            />
+          }
+          {/* if */ !model.isMarkedAsNotUploaded() &&
+            <UploadButton
+              ref="uploadButton"
+              size="small"
+              name="attachment"
+              type="action"
+              text={localization.signatoryAttachmentUploadButton}
+              onError={function () {
+                model.notLoading();
+                model.trigger("change");
+              }}
+              onUploadComplete={function (input) {
+                var submit = self.createFileSubmit();
+                submit.addInputs(input);
+                submit.send();
+              }}
+            />
+          }
           <p className="help">{localization.signviewPdfOrPhoto}</p>
+          {/* if */ !model.isRequired() &&
+            <Checkbox
+              ref="checkbox"
+              className="large-checkbox branded-optional-checkbox"
+              checked={model.isMarkedAsNotUploaded()}
+              label={localization.signatoryAttachments.markAsNotUploaded}
+              onChange={function (v) { model.setMarkedAsNotUploaded(v); }}
+            />
+          }
         </div>
       );
     }
@@ -140,7 +164,8 @@ var Task = require("../navigation/task");
       return [new Task({
         type: "signatory-attachment",
         isComplete: function () {
-          return !model.get("loading") && model.hasFile();
+          return    (!model.get("loading") && model.hasFile())
+                 || (!model.isRequired() && model.isMarkedAsNotUploaded());
         },
         pointSelector: ".loader,.button",
         el: $(self.refs["upload-or-load-area"].getDOMNode()),
@@ -238,6 +263,9 @@ var Task = require("../navigation/task");
                   <p className="file-name">{model.file().name()}</p>
                 }
               </span>
+            }
+            {/* if */ !hasFile && !canUpload &&
+              <span>{localization.signatoryAttachments.wasNotUploaded}</span>
             }
             <span style={uploadStyle}>
               <UploadArea ref="uploadArea" model={model} />

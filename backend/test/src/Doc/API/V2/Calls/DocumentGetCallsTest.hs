@@ -173,7 +173,10 @@ testDocApiV2EvidenceAttachments = do
   let slid = getMockDocSigLinkId 1 mockDoc
 
   _ <- mockDocTestRequestHelper ctx
-    POST [("fields", inText "[]"),("accepted_author_attachments", inText "[]")]
+    POST
+      [ ("fields", inText "[]")
+      , ("accepted_author_attachments", inText "[]")
+      ]
     (docApiV2SigSign did slid) 200
   sealTestDocument ctx did
 

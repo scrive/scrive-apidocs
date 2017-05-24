@@ -9,6 +9,8 @@ var SignatoryAttachment = exports.SignatoryAttachment = Backbone.Model.extend({
     defaults: {
         name: "",
         description: "",
+        isRequired: false,
+        isMarkedAsNotUploaded: false,
         loading: false,
         hasChanged: false
     },
@@ -22,6 +24,7 @@ var SignatoryAttachment = exports.SignatoryAttachment = Backbone.Model.extend({
             documentid: document.documentid()
           })});
         }
+        this.set({"isRequired": args.required});
         return this;
     },
     file: function() {
@@ -55,14 +58,24 @@ var SignatoryAttachment = exports.SignatoryAttachment = Backbone.Model.extend({
     isLoading: function() {
         return this.get('loading');
     },
+    isRequired: function() {
+        return this.get("isRequired");
+    },
+    isMarkedAsNotUploaded: function() {
+        return this.get("isMarkedAsNotUploaded");
+    },
+    setMarkedAsNotUploaded: function(marked) {
+        this.set({ hasChanged: true}, {silent:true});
+        this.set({"isMarkedAsNotUploaded":marked});
+    },
     document: function() {
         return this.signatory().document();
     },
     draftData: function() {
         return {
               name: this.name(),
-              description: this.description()
+              description: this.description(),
+              required: this.isRequired()
         };
     }
 });
-

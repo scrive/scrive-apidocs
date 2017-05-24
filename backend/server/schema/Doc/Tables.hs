@@ -178,12 +178,13 @@ ctAuthorAttachment = CompositeType {
 tableSignatoryAttachments :: Table
 tableSignatoryAttachments = tblTable {
     tblName = "signatory_attachments"
-  , tblVersion = 8
+  , tblVersion = 9
   , tblColumns = [
       tblColumn { colName = "file_id", colType = BigIntT }
     , tblColumn { colName = "description", colType = TextT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False }
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False, colDefault = Just "0" }
+    , tblColumn { colName = "required", colType = BoolT, colNullable = False, colDefault = Just "true"}
     ]
   , tblPrimaryKey = pkOnColumns ["signatory_link_id", "name"]
   , tblForeignKeys = [
@@ -204,6 +205,7 @@ ctSignatoryAttachment = CompositeType {
   , CompositeColumn { ccName = "filename", ccType = TextT }
   , CompositeColumn { ccName = "description", ccType = TextT }
   , CompositeColumn { ccName = "name", ccType = TextT }
+  , CompositeColumn { ccName = "required", ccType = BoolT }
   ]
 }
 

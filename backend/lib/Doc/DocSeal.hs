@@ -217,7 +217,7 @@ findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadMask m, MonadLog m, Templat
 findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $ do
   a <- mapM findAttachmentsForAuthorAttachment authorAttsNumbered
   b <- mapM findAttachmentsForSignatoryAttachment attAndSigsNumbered
-  return (a ++ b)
+  return (a ++ catMaybes b)
   where
       attAndSigs = listAttachmentsFromDocument document
       authorAtts = documentauthorattachments document
@@ -229,8 +229,12 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
       findAttachmentsForAuthorAttachment (num, authorattach) =
         findAttachments (Just (authorattachmentfileid authorattach)) num asl (authorattachmentname authorattach) (authorattachmentaddtosealedfile authorattach)
 
-      findAttachmentsForSignatoryAttachment (num, sigattach, sl) =
-        findAttachments (signatoryattachmentfile sigattach) num sl (signatoryattachmentname sigattach) True
+      findAttachmentsForSignatoryAttachment (num, sigattach, sl) = do
+        case (signatoryattachmentrequired sigattach, signatoryattachmentfile sigattach) of
+          (False, Nothing) ->
+            return Nothing
+          _                ->
+            Just <$> findAttachments (signatoryattachmentfile sigattach) num sl (signatoryattachmentname sigattach) True
 
       findAttachments mfileid num sl title addContent = do
         (contents,numberOfPages,name) <- case mfileid of

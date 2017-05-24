@@ -67,6 +67,7 @@ module Doc.Model.Update
   , GetDocsSentBetween(..)
   , FixClosedErroredDocument(..)
   , ConnectSignatoriesToUser(..)
+  , AddNotUploadedSignatoryAttachmentsEvents(..)
   , updateMTimeAndObjectVersion
   ) where
 
@@ -183,6 +184,7 @@ insertSignatoryAttachments atts = runQuery_ . sqlInsert "signatory_attachments" 
   sqlSetList "file_id" $ map (signatoryattachmentfile . snd) atts
   sqlSetList "name" $ map (signatoryattachmentname . snd) atts
   sqlSetList "description" $ map (signatoryattachmentdescription . snd) atts
+  sqlSetList "required" $ map (signatoryattachmentrequired . snd) atts
 
 insertSignatoryLinkFields :: MonadDB m => [(SignatoryLinkID, SignatoryField)] -> m ()
 insertSignatoryLinkFields [] = return ()
@@ -1319,6 +1321,20 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
             actor
         generateEvents atts
 
+data AddNotUploadedSignatoryAttachmentsEvents = AddNotUploadedSignatoryAttachmentsEvents SignatoryLink [(String, String)] Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpdate m AddNotUploadedSignatoryAttachmentsEvents () where
+  update (AddNotUploadedSignatoryAttachmentsEvents sl notUploadedSignatoryAttachmentsWithText actor) =
+    forM_ notUploadedSignatoryAttachmentsWithText $ \(saName,saNothingToUploadText) ->
+      update $ InsertEvidenceEventWithAffectedSignatoryAndMsgs
+        SignatoryAttachmentNotUploaded
+        (do
+          F.value "attachment_name" saName
+          F.value "attachment_nothing_to_upload_text" saNothingToUploadText
+        )
+        (Just sl)
+        (Just saName)
+        (Just saNothingToUploadText)
+        actor
 
 data SignDocument = SignDocument SignatoryLinkID MagicHash (Maybe ESignature) (Maybe String) SignatoryScreenshots Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpdate m SignDocument () where
@@ -1696,6 +1712,7 @@ instance (DocumentMonad m) => DBUpdate m SetSigAttachments () where
             sqlSet "name" signatoryattachmentname
             sqlSet "description" signatoryattachmentdescription
             sqlSet "signatory_link_id" slid
+            sqlSet "required" signatoryattachmentrequired
 
 
 data ClearSignatoryEmail = ClearSignatoryEmail SignatoryLinkID

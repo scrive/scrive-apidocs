@@ -16,6 +16,7 @@ module Doc.API.V2.Guards (
 , guardCanSetAuthenticationToSignForSignatoryWithValue
 , guardSignatoryHasNotSigned
 , guardThatAllAttachmentsAreAcceptedOrIsAuthor
+, guardThatAllSignatoryAttachmentsAreUploadedOrMarked
 -- * Joined guard for read-only functions
 , guardDocumentReadAccess
 ) where
@@ -231,6 +232,28 @@ guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments doc = do
   unless (allRequiredAttachmentsAreOnList acceptedAttachments doc) $
     unless (isAuthor $ fromJust $ getSigLinkFor slid doc) $ -- Author does not need to accept attachments
       apiError $ (signatoryStateError "Some mandatory author attachments aren't accepted")
+
+guardThatAllSignatoryAttachmentsAreUploadedOrMarked :: Kontrakcja m => SignatoryLinkID -> [String] -> Document -> m ()
+guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAttachments doc = do
+  let sigAttachments = signatoryattachments $ fromJust $ getSigLinkFor slid doc
+      requiredSigAttachments = filter signatoryattachmentrequired sigAttachments
+      optionalSigAttachments = filter (not . signatoryattachmentrequired) sigAttachments
+      optionalSigAttachmentsNames = map signatoryattachmentname optionalSigAttachments
+  -- all not uploaded signatory attachment names must exist
+  when (any (`notElem` optionalSigAttachmentsNames) notUploadedSignatoryAttachments) $
+    apiError $ signatoryStateError "Optional signatory attachment name does not exist"
+  -- all required signatory attachments must be uploaded
+  when (any (isNothing . signatoryattachmentfile) requiredSigAttachments) $
+    apiError $ signatoryStateError "Some mandatory signatory attachments aren't uploaded"
+  -- all optional signatory attachments must be uploaded XOR marked as not uploaded
+  when (any (\sa ->    isJust (signatoryattachmentfile sa)
+                    && signatoryattachmentname sa `elem` notUploadedSignatoryAttachments
+              ) optionalSigAttachments) $
+    apiError $ signatoryStateError "Some optional signatory attachments are uploaded but are marked as not uploaded"
+  when (any (\sa ->    isNothing (signatoryattachmentfile sa)
+                    && signatoryattachmentname sa `notElem` notUploadedSignatoryAttachments
+              ) optionalSigAttachments) $
+    apiError $ signatoryStateError "Some optional signatory attachments are not uploaded and are not marked as such"
 
 -- | For the given DocumentID:
 --

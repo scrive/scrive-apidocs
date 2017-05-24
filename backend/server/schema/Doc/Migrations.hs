@@ -1,4 +1,11 @@
-module Doc.Migrations (addIsReceiptToDocument,addAllowsHighlightingToSignatories,createHighlightedPagesTable,normalizeCheckboxesSize,normalizeCheckboxesFSRel) where
+module Doc.Migrations (
+    addIsReceiptToDocument
+  , addAllowsHighlightingToSignatories
+  , createHighlightedPagesTable
+  , normalizeCheckboxesSize
+  , normalizeCheckboxesFSRel
+  , addRequiredFlagToSignatoryAttachment
+) where
 
 import Data.Int
 import Database.PostgreSQL.PQTypes.Checks
@@ -81,5 +88,12 @@ normalizeCheckboxesFSRel = Migration {
             sqlResult "id"
   }
 
-
-
+addRequiredFlagToSignatoryAttachment :: MonadDB m  => Migration m
+addRequiredFlagToSignatoryAttachment = Migration {
+      mgrTableName = tblName tableSignatoryAttachments
+    , mgrFrom = 8
+    , mgrAction = StandardMigration $ do
+        runQuery_ $ sqlAlterTable "signatory_attachments" [
+          sqlAddColumn tblColumn { colName = "required", colType = BoolT, colNullable = False, colDefault = Just "true"}
+          ]
+    }

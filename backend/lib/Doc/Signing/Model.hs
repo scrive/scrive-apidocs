@@ -63,9 +63,9 @@ instance ToSQL SignatoryScreenshots where
   type PQDest SignatoryScreenshots = PQDest (JSON BS.ByteString)
   toSQL s = toSQL (unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) unjsonSignatoryScreenshots s)
 
-data ScheduleDocumentSigning = ScheduleDocumentSigning SignatoryLinkID BrandedDomainID UTCTime IPAddress (Maybe UTCTime) (Maybe String) Lang SignatoryFieldsValuesForSigning [FileID] SignatoryScreenshots
+data ScheduleDocumentSigning = ScheduleDocumentSigning SignatoryLinkID BrandedDomainID UTCTime IPAddress (Maybe UTCTime) (Maybe String) Lang SignatoryFieldsValuesForSigning [FileID] SignatoryScreenshots [String]
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m ScheduleDocumentSigning () where
-  update (ScheduleDocumentSigning slid bdid st cip mct mcn sl sf saas ss) = do
+  update (ScheduleDocumentSigning slid bdid st cip mct mcn sl sf saas ss nusa) = do
     runQuery_ . sqlInsert "document_signing_jobs" $ do
       sqlSet "id" slid
       sqlSet "branded_domain_id" bdid
@@ -77,6 +77,7 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m Sch
       sqlSet "fields" sf
       sqlSet "accepted_attachments" $ Array1 saas
       sqlSet "screenshots" ss
+      sqlSet "not_uploaded_sig_attachments" $ Array1 nusa
       sqlSetCmd "run_at" "now()"
       sqlSet "attempts" (0::Int32)
 

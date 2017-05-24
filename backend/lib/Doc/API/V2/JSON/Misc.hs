@@ -112,6 +112,7 @@ unjsonSignatoryAttachment :: UnjsonDef SignatoryAttachment
 unjsonSignatoryAttachment = objectOf $ pure (SignatoryAttachment Nothing Nothing)
     <*> field "name"  signatoryattachmentname  "Name of attachment"
     <*> field "description" signatoryattachmentdescription "Description of attachment"
+    <*> fieldDef "required" True signatoryattachmentrequired "Uploading attachment is mandatory"
     <* fieldReadOnlyOpt "file_id" signatoryattachmentfile "Uploaded file id"
     <* fieldReadOnlyOpt "file_name" signatoryattachmentfilename "Uploaded filename"
 

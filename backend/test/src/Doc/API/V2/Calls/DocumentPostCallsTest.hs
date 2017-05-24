@@ -169,7 +169,10 @@ testDocApiV2Forward = do
   let slid = getMockDocSigLinkId 1 mockDoc
 
   _ <- mockDocTestRequestHelper ctx
-    POST [("fields", inText "[]"),("accepted_author_attachments", inText "[]")]
+    POST
+      [ ("fields", inText "[]")
+      , ("accepted_author_attachments", inText "[]")
+      ]
     (docApiV2SigSign did slid) 200
 
   _ <- testRequestHelper ctx POST [("email", inText "2.a2@22.e.aa")]

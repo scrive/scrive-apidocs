@@ -95,9 +95,6 @@ var Document = exports.Document = Backbone.Model.extend({
     signatoryattachments: function() {
         return _.flatten(_.map(this.signatories(), function(sig) { return sig.attachments(); }));
     },
-    hasAnyAttachments: function() {
-        return this.authorattachments().length > 0 || this.signatoryattachments().length > 0;
-    },
     ready: function() {
         return this.get("ready");
     },
@@ -272,6 +269,12 @@ var Document = exports.Document = Backbone.Model.extend({
         return a.fileid();
       });
     },
+    notUploadedSignatoryAttachments : function() {
+      var notUploadedAtts = _.filter(this.currentSignatory().attachments(), function(a) { return a.isMarkedAsNotUploaded() });
+      return _.map(notUploadedAtts, function(a) {
+        return a.name();
+      });
+    },
     requestPin : function(successCallback,errorCallback) {
         var document = this;
         return new Submit({
@@ -330,6 +333,7 @@ var Document = exports.Document = Backbone.Model.extend({
             authentication_type: signatory.authenticationToSign(),
             authentication_value: signatory.authenticationToSignFieldValue(),
             accepted_author_attachments: JSON.stringify(acceptedAuthorAttachments),
+            not_uploaded_signatory_attachments: JSON.stringify(this.notUploadedSignatoryAttachments()),
             ajax: true,
             ajaxsuccess : successCallback,
             ajaxerror : problemCallback
@@ -349,6 +353,7 @@ var Document = exports.Document = Backbone.Model.extend({
             authentication_type: signatory.authenticationToSign(),
             authentication_value: signatory.authenticationToSignFieldValue(),
             accepted_author_attachments: JSON.stringify(acceptedAuthorAttachments),
+            not_uploaded_signatory_attachments: JSON.stringify(this.notUploadedSignatoryAttachments()),
             ajax: true,
             ajaxsuccess : function(newDocumentRaw) {
               newDocument = new Document(new Document({}).parse(newDocumentRaw)),

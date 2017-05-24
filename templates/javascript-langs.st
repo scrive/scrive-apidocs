@@ -256,6 +256,11 @@ javascriptLocalisation =
               , defineRequests :     "$_pageDocumentForAuthorHelpersLocalDialogsDefineRequests()$"
               , uniqueAttachmentNamesError : "$_pageDocumentForAuthorHelpersLocalDialogsUniqueAttachmentNamesError()$"
               , errorFlashMessage : "$_pageDocumentForAuthorHelpersLocalDialogsErrorFlashMessage()$"
+              , typeOfAttachment:   "$_pageDocumentForAuthorHelpersLocalDialogsAttachmenttype()$"
+              , required:           "$_pageDocumentForAuthorHelpersLocalDialogsAttachmentrequired()$"
+              , optional:           "$_pageDocumentForAuthorHelpersLocalDialogsAttachmentoptional()$"
+              , markAsNotUploaded:  "$_pageDocumentForAuthorHelpersLocalDialogsAttachmentmarkasnotuploaded()$"
+              , wasNotUploaded:     "$_pageDocumentForAuthorHelpersLocalDialogsAttachmentwasnotuploaded()$"
             }
           , save : "$_save()$"
           , languages : {
@@ -536,6 +541,8 @@ javascriptLocalisation =
              , pending  : "$_authorviewPending()$"
              , goToSignView : "$_authorviewGoToSignview()$"
              , downloadPdf : "$_DownloadPDF()$"
+             , optionallyRequestedFrom : "$_authorviewOptionallyRequestedFrom()$"
+             , notUploaded : "$_authorviewNotUploaded()$"
          }
          , history : {
                time  : "$_historyTime()$"

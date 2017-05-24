@@ -347,7 +347,8 @@ data CurrentEvidenceEventType =
   AuthorAttachmentHashComputed                       |
   AuthorAttachmentAccepted                           |
   PageHighlightingAdded                              |
-  PageHighlightingCleared
+  PageHighlightingCleared                            |
+  SignatoryAttachmentNotUploaded
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -544,6 +545,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewMethodSEBankIDToDKNemIDEvidence) = toSQL (121::Int16)
   toSQL (Current ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidence) = toSQL (122::Int16)
   toSQL (Current ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence) = toSQL (123::Int16)
+  toSQL (Current SignatoryAttachmentNotUploaded) = toSQL (124::Int16)
 
 
 instance FromSQL EvidenceEventType where
@@ -674,8 +676,9 @@ instance FromSQL EvidenceEventType where
       121 -> return (Current ChangeAuthenticationToViewMethodSEBankIDToDKNemIDEvidence)
       122 -> return (Current ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidence)
       123 -> return (Current ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence)
+      124 -> return (Current SignatoryAttachmentNotUploaded)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 123)]
+        reRange = [(1, 124)]
       , reValue = n
       }
 

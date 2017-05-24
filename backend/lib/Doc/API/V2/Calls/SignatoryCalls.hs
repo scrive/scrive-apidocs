@@ -109,7 +109,9 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     guardDocumentStatus Pending =<< theDocument
     -- Parameters
     acceptedAuthorAttachments <- apiV2ParameterObligatory $ ApiV2ParameterJSON "accepted_author_attachments" unjsonDef
+    notUploadedSignatoryAttachments <- apiV2ParameterDefault [] (ApiV2ParameterJSON "not_uploaded_signatory_attachments" unjsonDef)
     guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAuthorAttachments =<< theDocument
+    guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAttachments =<< theDocument
     checkAuthenticationToSignMethodAndValue slid
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     -- API call actions + extra conditional parameter
@@ -126,7 +128,6 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     -- Return
     return $ Ok ()
 
-
 docApiV2SigSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
@@ -142,9 +143,11 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     checkAuthenticationToSignMethodAndValue slid
     screenshots <- getScreenshots
     acceptedAttachments <- apiV2ParameterObligatory (ApiV2ParameterJSON "accepted_author_attachments" unjsonDef)
+    notUploadedSignatoryAttachments <- apiV2ParameterDefault [] (ApiV2ParameterJSON "not_uploaded_signatory_attachments" unjsonDef)
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     -- API call actions + extra conditional parameter
     guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments =<< theDocument
+    guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAttachments =<< theDocument
     authorization <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
     (signNow, mpin) <- case authorization of
       StandardAuthenticationToSign -> return (True, Nothing)
@@ -157,7 +160,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
       SEBankIDAuthenticationToSign -> return (False, Nothing)
     if (signNow)
        then do
-        signDocument slid mh fields acceptedAttachments Nothing mpin screenshots
+        signDocument slid mh fields acceptedAttachments notUploadedSignatoryAttachments Nothing mpin screenshots
         postDocumentPendingChange olddoc
         handleAfterSigning slid
         -- Return
@@ -165,7 +168,18 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         ctx <- getContext
         doclang <- getLang <$> theDocument
         dbUpdate $ CleanAllScheduledDocumentSigning slid
-        dbUpdate $ ScheduleDocumentSigning slid (bdid $ ctxbrandeddomain ctx) (ctxtime ctx) (ctxipnumber ctx) (ctxclienttime ctx) (ctxclientname ctx) doclang fields acceptedAttachments screenshots
+        dbUpdate $ ScheduleDocumentSigning
+          slid
+          (bdid $ ctxbrandeddomain ctx)
+          (ctxtime ctx)
+          (ctxipnumber ctx)
+          (ctxclienttime ctx)
+          (ctxclientname ctx)
+          doclang
+          fields
+          acceptedAttachments
+          screenshots
+          notUploadedSignatoryAttachments
     doc <- theDocument
     return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
 
@@ -251,4 +265,3 @@ docApiV2SetHighlightForPage did slid = logDocumentAndSignatory did slid . api $ 
     -- Result
     doc <- theDocument
     return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
-

@@ -173,7 +173,10 @@ test_closeDocAndSigCharging = do
   let slidV2 = getMockDocSigLinkId 1 mockDocV2
 
   _mockDocSigned <- mockDocTestRequestHelper ctx
-    POST [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
+    POST
+      [ ("fields", inText "[]")
+      , ("accepted_author_attachments", inText "[]")
+      ]
     (docApiV2SigSign didV2 slidV2) 200
 
   runSQL_ queryChargeableSigClose

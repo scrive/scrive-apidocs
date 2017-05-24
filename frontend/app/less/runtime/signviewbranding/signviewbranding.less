@@ -58,6 +58,21 @@
       background: @actioncolor;
     }
   }
+  .branded-optional-checkbox {
+    .checkbox {
+      .background_with_ie_support(fade(@actionsecondarycolor, 20%));
+      border: 2px solid @actionsecondarycolor;
+    }
+
+    .checkmark {
+      @url: %("/colored_image?file=valid-input-checkbox.png&color=%D", @actiontextcolor);
+      background-image: url(@url);
+    }
+
+    .checkbox.checked {
+      background: @actionsecondarycolor;
+    }
+  }
 }
 
 .signview .sign {

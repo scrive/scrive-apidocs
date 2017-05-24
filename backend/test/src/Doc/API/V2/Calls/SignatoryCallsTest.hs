@@ -46,7 +46,10 @@ testDocApiV2SigCheck = do
   let slid = getMockDocSigLinkId 1 mockDoc
 
   _ <- testRequestHelper ctx
-    POST [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
+    POST
+      [ ("fields", inText "[]")
+      , ("accepted_author_attachments", inText "[]")
+      ]
     (docApiV2SigCheck did slid) 200
   return ()
 
@@ -59,7 +62,10 @@ testDocApiV2SigSign = do
   let slid = getMockDocSigLinkId 1 mockDoc
 
   mockDocSigned <- mockDocTestRequestHelper ctx
-    POST [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
+    POST
+      [ ("fields", inText "[]")
+      , ("accepted_author_attachments", inText "[]")
+      ]
     (docApiV2SigSign did slid) 200
   assertEqual "Document status after signing should match" Closed (getMockDocStatus mockDocSigned)
   assertBool "Signatory should have signed" (getMockDocSigLinkHasSigned 1 mockDocSigned)

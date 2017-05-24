@@ -74,7 +74,7 @@ module.exports = React.createClass({
                     return (
                       <tr key={i}>
                         <td className='icon-td'>
-                          <div className='signatory-attachment-icon'/>
+                          <div className={a.isRequired() ? "signatory-required-attachment-icon" : "signatory-optional-attachment-icon"}/>
                         </td>
                         <td className='name-td'>
                           <HtmlTextWithSubstitution

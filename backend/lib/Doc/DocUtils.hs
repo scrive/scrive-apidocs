@@ -233,7 +233,7 @@ isActivatedSignatory signorder siglink =
 getSignatoryAttachment :: SignatoryLinkID -> String -> Document -> Maybe SignatoryAttachment
 getSignatoryAttachment slid name doc = join $ find (\a -> name == signatoryattachmentname a)
                                        <$> signatoryattachments
-                                       <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
+                                       <$> getSigLinkFor slid doc
 
 -- Changes MainFile into file. Works on maybe since this is main case in our system
 fileFromMainFile :: (MonadDB m, MonadThrow m) => Maybe MainFile -> m (Maybe File)
@@ -254,7 +254,6 @@ userCanPerformSigningAction uid doc =
   where
     msl = getSigLinkFor uid doc
     sl  = fromJust msl
-
 
 allRequiredAttachmentsAreOnList :: [FileID] -> Document -> Bool
 allRequiredAttachmentsAreOnList acceptedAttachments doc =

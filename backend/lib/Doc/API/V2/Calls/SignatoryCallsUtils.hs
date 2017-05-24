@@ -70,8 +70,8 @@ getScreenshots = do
 
 
 signDocument :: (Kontrakcja m, DocumentMonad m) =>
-  SignatoryLinkID -> MagicHash -> SignatoryFieldsValuesForSigning -> [FileID] -> Maybe ESignature -> Maybe String -> SignatoryScreenshots -> m ()
-signDocument slid mh fields acceptedAuthorAttachments mesig mpin screenshots = do
+  SignatoryLinkID -> MagicHash -> SignatoryFieldsValuesForSigning -> [FileID] -> [String] -> Maybe ESignature -> Maybe String -> SignatoryScreenshots -> m ()
+signDocument slid mh fields acceptedAuthorAttachments notUploadedSignatoryAttachments mesig mpin screenshots = do
   switchLang =<< getLang <$> theDocument
   ctx <- getContext
   -- Note that the second 'getSigLinkFor' call below may return a
@@ -85,7 +85,10 @@ signDocument slid mh fields acceptedAuthorAttachments mesig mpin screenshots = d
     authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments doc) $ \a -> do
       acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
       return (acceptanceText,a)
+    notUploadedSignatoryAttachmentsText <- renderTemplate_ "_pageDocumentForAuthorHelpersLocalDialogsAttachmentmarkasnotuploaded"
+    let notUploadedSignatoryAttachmentsWithText = zip notUploadedSignatoryAttachments (repeat notUploadedSignatoryAttachmentsText)
     dbUpdate . AddAcceptedAuthorAttachmentsEvents sl acceptedAuthorAttachments authorAttachmetsWithAcceptanceText =<< signatoryActor ctx sl
+    dbUpdate . AddNotUploadedSignatoryAttachmentsEvents sl notUploadedSignatoryAttachmentsWithText =<< signatoryActor ctx sl
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 

@@ -56,9 +56,6 @@ input.daystosign {
 }
 
 .designSignatoryAttachmentsPopupContent {
-  margin-left: -20px;
-  margin-right: -30px; // damn tables and their non-conformity.
-  max-height: 200px;
   overflow-x: hidden;
   overflow-y: auto;
   padding-bottom: 30px;
@@ -141,56 +138,50 @@ input.daystosign {
   cursor: pointer;
   display: block;
   font-size: 20px;
-  height: 14px;
-  margin-top: 10px;
   width: 14px;
 }
 
 .editSignatoryAttachmentTable {
   border-collapse: separate;
-  border-spacing: 20px 1px;
   margin-bottom: 5px;
   margin-top : 5px;
 
   input {
-    height: 32px;
+    height: 29px;
     width: 145px;
+    font-weight: 300;
   }
 
   textarea {
-    height: 32px;
+    height: 29px;
+    font-weight: 300;
   }
 
   th,
   td {
     padding: 5px;
     text-align: left;
-    vertical-align: top;
+    vertical-align: middle;
   }
 
   th {
-    border-bottom: 1px solid #999;
     font-weight: 300;
   }
 }
 
 .editSignatoryAttachmentName {
   line-height: 10px;
-  margin-right: 20px;
   width: 130px;
 }
 
 .editSignatoryAttachmentDescription {
   line-height: 18px;
-  margin-right: 20px;
   overflow: hidden;
   width: 240px;
 }
 
 .editSignatoryAttachmentSelect {
   height: 42px;
-  margin-right: 20px;
-  width: 130px;
 }
 
 .editSignatoryAttachmentTDName {
@@ -202,12 +193,10 @@ input.daystosign {
 }
 
 .editSignatoryAttachmentTDSelect {
-  width: 150px;
 }
 
-th.editSignatoryAttachmentTDRemove {
+th.editSignatoryAttachmentTDIcon {
   border-bottom: none;
-  width: 30px;
 }
 
 .csvDataTable {

@@ -353,11 +353,7 @@ testSaveSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (isPreparation && isSignable) `withDocumentM` do
     file <- addNewRandomFile
-    let sa = SignatoryAttachment { signatoryattachmentfile        = Nothing
-                                 , signatoryattachmentfilename    = Nothing
-                                 , signatoryattachmentname        = "attachment"
-                                 , signatoryattachmentdescription = "gimme!"
-                                 }
+    let sa = def
     theDocument >>= \d -> randomUpdate $ \t->SetSigAttachments (signatorylinkid $ (documentsignatorylinks d) !! 0)
                           [sa] (systemActor t)
     tz <- mkTimeZoneName "Europe/Stockholm"
@@ -377,11 +373,7 @@ testDeleteSigAttachmentAlreadySigned = do
                                                   && (((==) 2) . length .documentsignatorylinks)) `withDocumentM` do
     file <- addNewRandomFile
     sl <- (\d -> (documentsignatorylinks d) !! 1) <$> theDocument
-    let sa = SignatoryAttachment { signatoryattachmentfile        = Nothing
-                                 , signatoryattachmentfilename    = Nothing
-                                 , signatoryattachmentname        = "attachment"
-                                 , signatoryattachmentdescription = "gimme!"
-                                 }
+    let sa = def
     _<-randomUpdate $ \t->SetSigAttachments (signatorylinkid $ sl)
                           [sa] (systemActor t)
     tz <- mkTimeZoneName "Europe/Stockholm"
@@ -400,11 +392,10 @@ testDeleteSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
     file <- addNewRandomFile
-    let sa = SignatoryAttachment { signatoryattachmentfile        = Just file
-                                 , signatoryattachmentfilename    = Just "afile.ran"
-                                               , signatoryattachmentname        = "attachment"
-                                               , signatoryattachmentdescription = "gimme!"
-                                               }
+    let sa = def
+          { signatoryattachmentfile        = Just file
+          , signatoryattachmentfilename    = Just "afile.ran"
+          }
     theDocument >>= \d -> randomUpdate $ \t->SetSigAttachments (signatorylinkid $ (documentsignatorylinks d) !! 0) [sa] (systemActor t)
     theDocument >>= \d -> randomUpdate $ \t->DeleteSigAttachment (signatorylinkid $ (documentsignatorylinks d) !! 0) sa (systemActor t)
 
@@ -856,11 +847,11 @@ testSealDocument = replicateM_ 1 $ do
     atts <- replicateM 2 $ do
              file <- addNewRandomFile
 
-             let att = SignatoryAttachment { signatoryattachmentfile = Just file
-                                           , signatoryattachmentfilename = Just "afile.ran"
-                                           , signatoryattachmentname = show file
-                                           , signatoryattachmentdescription = "att description"
-                                           }
+             let att = def
+                   { signatoryattachmentfile = Just file
+                   , signatoryattachmentfilename = Just "afile.ran"
+                   , signatoryattachmentname = show file
+                   }
              return att
     (time, sl) <- rand 10 arbitrary
     sa <- signatoryActor ctx { ctxtime = time } sl
@@ -1302,16 +1293,16 @@ testUpdateSigAttachmentsAttachmentsOk = replicateM_ 10 $ do
     file1 <- addNewRandomFile
     file2 <- addNewRandomFile
     --execute
-    let att1 = SignatoryAttachment { signatoryattachmentfile = Just file1
-                                   , signatoryattachmentfilename = Just "afile1.ran"
-                                   , signatoryattachmentname = "att1"
-                                   , signatoryattachmentdescription = "att1 description"
-                                   }
-    let att2 = SignatoryAttachment { signatoryattachmentfile = Nothing
-                                   , signatoryattachmentfilename = Nothing
-                                   , signatoryattachmentname = "att2"
-                                   , signatoryattachmentdescription = "att2 description"
-                                   }
+    let att1 = def
+          { signatoryattachmentfile = Just file1
+          , signatoryattachmentfilename = Just "afile1.ran"
+          , signatoryattachmentname = "att1"
+          , signatoryattachmentdescription = "att1 description"
+          }
+    let att2 = def
+          { signatoryattachmentname = "att2"
+          , signatoryattachmentdescription = "att2 description"
+          }
     (time, sl) <- rand 10 arbitrary
     let sa = signatoryActor ctx{ ctxtime = time } sl
     sls <- documentsignatorylinks <$> theDocument

@@ -94,8 +94,18 @@
       "highlighted_pages": [],
       "attachments": [
         {
+          "name": "Other Att Def",
+          "description": "Some other description"
+        },
+        {
+          "name": "Other Att Opt",
+          "description": "Some decription",
+          "required" : false
+        },
+        {
           "name": "#☭ҖATT",
-          "description": "#☭ҖATT_DESC"
+          "description": "#☭ҖATT_DESC",
+          "required" : true
         }
       ]
     }
