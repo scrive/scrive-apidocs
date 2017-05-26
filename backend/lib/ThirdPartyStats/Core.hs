@@ -23,10 +23,9 @@ import Data.Int
 import Data.String
 import Data.Time.Clock.POSIX
 import Log
-import Test.QuickCheck (Arbitrary(..), Gen, frequency, oneof, suchThat)
+import Test.QuickCheck (Arbitrary(..), frequency, oneof, suchThat)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
-import qualified Text.JSON as J
 
 import Company.CompanyID (CompanyID, unsafeCompanyID)
 import DB
@@ -34,6 +33,7 @@ import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import IPAddress
 import KontraPrelude
 import MinutesTime ()
+import Text.JSON.Orphans ()
 import User.Email
 import User.UserID (UserID, unsafeUserID)
 
@@ -59,34 +59,6 @@ instance Binary PropValue where
       2 -> PVBool        <$> get
       3 -> PVUTCTime <$> get
       n -> fail $ "Couldn't parse PropValue constructor tag: " ++ show n
-
-instance Binary J.JSString where
-  get = J.toJSString <$> get
-  put = put . J.fromJSString
-
-instance Binary a => Binary (J.JSObject a) where
-  get = J.toJSObject <$> get
-  put = put . J.fromJSObject
-
-instance Binary J.JSValue where
-  put (J.JSNull)         = putWord8 0
-  put (J.JSBool b)       = putWord8 1 >> put b
-  put (J.JSRational b r) = putWord8 2 >> put b >> put r
-  put (J.JSString s)     = putWord8 3 >> put s
-  put (J.JSArray arr)    = putWord8 4 >> put arr
-  put (J.JSObject obj)   = putWord8 5 >> put obj
-
-  get = do
-    tag <- getWord8
-    case tag of
-      0 -> return J.JSNull
-      1 -> J.JSBool <$> get
-      2 -> J.JSRational <$> get <*> get
-      3 -> J.JSString <$> get
-      4 -> J.JSArray <$> get
-      5 -> J.JSObject <$> get
-      _ -> fail $ "Unable to parse JSValue because of bad tag: " ++ show tag
-
 
 -- | Type class to keep the user from having to wrap stuff in annoying data
 --   constructors.
@@ -123,7 +95,6 @@ stringProp = someProp
 data EventName
   = SetUserProps
   | NamedEvent String
-  | UploadDocInfo J.JSValue -- This should be removed since it is not used anymore
     deriving (Show, Eq)
 type PropName = String
 
@@ -132,14 +103,12 @@ instance IsString EventName where
 
 instance Binary EventName where
   put (SetUserProps)          = putWord8 0
-  put (UploadDocInfo docjson) = putWord8 1 >> put docjson
   put (NamedEvent name)       = putWord8 255 >> put name
 
   get = do
       tag <- getWord8
       case tag of
         0   -> return SetUserProps
-        1   -> UploadDocInfo <$> get
         255 -> NamedEvent <$> get
         t   -> fail $ "Unable to parse EventName constructor tag: " ++ show t
 
@@ -300,46 +269,9 @@ asyncLogEvent name props = do
   where
     mkBinary = B.concat . BL.toChunks . encode
 
-
--- Arbitrary instances for testing
-jsobj :: Int -> Gen (J.JSObject J.JSValue)
-jsobj sz = do
-  vals <- jslist sz
-  names <- map unStr <$> arbitrary
-  return $ J.toJSObject $ zip (zipWith (:) ['a'..] names) vals
-
-jslist :: Int -> Gen [J.JSValue]
-jslist sz = do
-  n <- oneof $ map return [0..10]
-  sequence $ replicate n (jsval sz)
-
-jsval :: Int -> Gen J.JSValue
-jsval sz = frequency [
-  (1,  return J.JSNull),
-  (1,  J.JSBool <$> arbitrary),
-  (1,  J.JSRational <$> arbitrary <*> arbitrary),
-  (1,  J.JSString . J.toJSString . unStr <$> arbitrary),
-  (sz, J.JSArray <$> jslist (sz `div` 2)),
-  (sz, J.JSObject <$> jsobj (sz `div` 2))]
-
-instance Arbitrary (J.JSObject J.JSValue) where
-  arbitrary = jsobj 10
-
-instance Arbitrary J.JSValue where
-  arbitrary = jsval 10
-
-newtype JSStr = JSStr {unStr :: String}
-
--- This is a _really_ crappy instance, but I'm sick of writing generators!
-instance Arbitrary JSStr where
-  arbitrary = do
-    n <- oneof $ map return [1..100]
-    JSStr <$> sequence (replicate n (oneof (map return ['a' .. 'z'])))
-
 instance Arbitrary EventName where
   arbitrary = frequency [
       (1, return SetUserProps),
-      (1, UploadDocInfo <$> arbitrary),
       (8, NamedEvent <$> arbitrary)]
 
 instance Arbitrary PropValue where

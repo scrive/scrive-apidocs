@@ -39,10 +39,6 @@ processMixpanelEvent token (NamedEvent name) props = do
       HTTPError reason     -> return (Failed reason)
       MixpanelError reason -> return (Failed reason)
       Success              -> return OK
-processMixpanelEvent _ (UploadDocInfo _) _ =
-  -- We only do this for Precog
-  return OK
-
 
 -- | Convert a generic async event property to a Mixpanel property.
 mixpanelProperty :: EventProperty -> Mixpanel.Property

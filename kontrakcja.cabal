@@ -344,6 +344,7 @@ Library
                  , System.Random.CryptoRNG
                  , Templates
                  , Text.JSON.Convert
+                 , Text.JSON.Orphans
                  , Text.XML.Content
                  , Text.XML.DirtyContent
                  , Theme.Control

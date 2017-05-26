@@ -6,7 +6,8 @@ import Test.Framework.Providers.QuickCheck2
 
 import KontraPrelude
 import TestKontra
-import ThirdPartyStats.Core
+import Text.JSON.Orphans ()
+import ThirdPartyStats.Core (AsyncEvent())
 
 thirdPartyStatsTests :: TestEnvSt -> Test
 thirdPartyStatsTests _ = testGroup "Third party stats tests" [
