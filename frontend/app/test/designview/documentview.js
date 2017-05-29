@@ -8,9 +8,11 @@ var TestUtils = React.addons.TestUtils;
 var DocumentView = require("../../scripts/designview/documentview.jsx");
 
 describe("designview/documentview", function () {
-  var server, document_;
+  var server, document_, container;
 
   var renderComponent = function(props) {
+    container = $("<div></div>");
+
     var actualProps = underscore.extendOwn(
       {
         document: document_,
@@ -25,9 +27,10 @@ describe("designview/documentview", function () {
         DocumentView,
         actualProps
       ),
-      $("body")[0]
+      container[0]
     );
 
+    $("body").append(container);
     return component;
   }
 
@@ -47,6 +50,12 @@ describe("designview/documentview", function () {
   });
 
   afterEach(function () {
+    if (container) {
+      React.unmountComponentAtNode(container[0]);
+      container.remove();
+      container = null;
+    }
+
     util.cleanTimeoutsAndBody();
   });
 

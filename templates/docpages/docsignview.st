@@ -98,7 +98,7 @@ $htmlopentag()$
           authorPhone: "$authorPhone$"
         };
 
-      if (trackJs) {
+      if (window.trackJs !== undefined && trackJs) {
         trackJs.configure({userId: "$siglinkid$"});
       }
 
@@ -134,7 +134,7 @@ $htmlopentag()$
       </div>
     </div>
     <script>
-    if (trackJs) {
+    if (window.trackJs !== undefined && trackJs) {
       trackJs.configure({userId: "$siglinkid$"});
     }
 
