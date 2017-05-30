@@ -11,7 +11,9 @@ import Cron.Migrations
 import DB
 import Doc.Migrations
 import Doc.Signing.Migrations
+import Mails.FromKontra.Migrations
 import Partner.Migrations
+import SMS.FromKontra.Migrations
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- Current version has migrations created after VII.2016.
@@ -34,4 +36,6 @@ kontraMigrations = [
   , addInvoicingJob
   , addRequiredFlagToSignatoryAttachment
   , documentSigningJobsAddSignatoryAttachments
+  , createKontraInfoForMailsTable
+  , createKontraInfoForSMSesTable
   ]

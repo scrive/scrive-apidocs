@@ -30,10 +30,12 @@ import EvidenceLog.Tables
 import File.Tables
 import HostClock.Tables
 import KontraPrelude
+import Mails.FromKontra.Tables
 import Mails.Tables
 import OAuth.Tables
 import Partner.Tables
 import Session.Tables
+import SMS.FromKontra.Tables
 import SMS.Tables
 import Theme.Tables
 import ThirdPartyStats.Tables
@@ -125,3 +127,7 @@ kontraTables =
   ] ++ cronTables
     ++ mailerTables
     ++ messengerTables
+    ++ [
+    tableKontraInfoForMails
+  , tableKontraInfoForSMSes
+  ]

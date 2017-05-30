@@ -1,5 +1,8 @@
 module SMS.SMS (
     SMS(..)
+  , KontraInfoForSMS(..)
+  , AddKontraInfoForSMS(..)
+  , GetKontraInfoForSMS(..)
   , scheduleSMS
   ) where
 
@@ -13,13 +16,13 @@ import DB
 import Doc.DocStateData
 import KontraPrelude
 import Log.Identifier
-import MessageData
-import SMS.Data
+import SMS.Data (SMSProvider(..))
+import SMS.KontraInfoForSMS
 import SMS.Model
 
 data SMS = SMS {
     smsMSISDN     :: String -- ^ Number of recipient in international form (+NNXXYYYYYYY)
-  , smsData       :: MessageData -- ^ Message body
+  , kontraInfoForSMS :: Maybe KontraInfoForSMS -- ^ Connection between this message and and some entity in kontrakcja
   , smsBody       :: String -- ^ Message body
   , smsOriginator :: String -- ^ SMS originator/sender name
   , smsProvider   :: SMSProvider -- ^ SMS provider type
@@ -34,14 +37,17 @@ scheduleSMS :: (MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
 scheduleSMS doc SMS{..} = do
   when (null smsMSISDN) $ do
     $unexpectedErrorM "no mobile phone number defined"
-  sid <- dbUpdate $ CreateSMS smsProvider (fixOriginator smsOriginator) smsMSISDN smsBody (show smsData)
+  sid <- dbUpdate $ CreateSMS smsProvider (fixOriginator smsOriginator) smsMSISDN smsBody
   -- charge company of the author of the document for the smses
   dbUpdate $ ChargeCompanyForSMS (documentid doc) smsProvider sms_count
+  case kontraInfoForSMS of
+    Nothing -> return ()
+    Just kifs -> void $ dbUpdate $ AddKontraInfoForSMS sid kifs
   logInfo "SMS scheduled for sendout" $ object [
       identifier_ $ documentid doc
     , identifier_ sid
     , "sms_msisdn" .= smsMSISDN
-    , "sms_data" .= show smsData
+    , "sms_info" .= (logObject_ <$> kontraInfoForSMS)
     , "sms_body" .= smsBody
     , "sms_originator" .= smsOriginator
     , "sms_provider" .= show smsProvider

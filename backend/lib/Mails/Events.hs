@@ -22,6 +22,7 @@ import Data.Functor
 import Data.Time
 import Log
 import Text.StringTemplates.Templates hiding (runTemplatesT)
+import Text.StringTemplates.TemplatesLoader
 import qualified Text.StringTemplates.Fields as F
 
 import ActionQueue.Scheduler
@@ -31,6 +32,7 @@ import Control.Monad.Trans.Instances ()
 import DB
 import Doc.API.Callback.Model
 import Doc.DocStateData
+import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
 import Doc.DocViewMail
 import Doc.Logging
@@ -41,13 +43,14 @@ import KontraPrelude
 import Log.Identifier
 import Mails.MailsData
 import Mails.Model hiding (Mail)
-import Mails.SendMail
+import Mails.SendMail hiding (MessageData(..))
 import Templates
 import Theme.Model
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import qualified MessageData as MD
 
 processEvents :: Scheduler ()
 processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mid, _, _) -> do
@@ -56,112 +59,137 @@ processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mi
     processEvent event
   )
   where
-    processEvent (eid, mid, XSMTPAttrs [("mailinfo", mi)], eventType) = do
+    processEvent :: (EventID, MailID, XSMTPAttrs, Event) -> Scheduler ()
+    processEvent (eid, mid, xsmtpattrs, eventType) = do
       now <- currentTime
       mmailSendTimeStamp <- dbQuery $ GetEmailSendoutTime mid
       let timeDiff = case mmailSendTimeStamp of
                        Nothing -> Nothing
                        Just mailSendTimeStamp -> Just $ floor $ toRational $ mailSendTimeStamp `diffUTCTime` now
       templates <- getGlobalTemplates
-      case maybeRead mi of
-        Just (Invitation docid slid) -> logDocumentAndSignatory docid slid $ do
-          exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor docid
-          if not exists
-            then do
-              logInfo_ "Email event for purged/non-existing document"
-              markEventAsRead eid
-          else do
-            logInfo_ "Processing invitation event"
-            withDocumentID docid $ do
-                markEventAsRead eid
-                bd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
-                            Nothing -> dbQuery $ GetMainBrandedDomain
-                            Just uid -> do
-                              dbQuery $ GetBrandedDomainByUserID uid
-                msl <- getSigLinkFor slid <$> theDocument
-                let muid = maybe Nothing maybesignatory msl
-                let signemail = maybe "" getEmail msl
-                let logEmails email = logInfo "Comparing emails" $ object [
-                          "signatory_email" .= signemail
-                        , "event_email" .= email
-                        ]
-                    -- since when email is reported deferred author has a possibility to
-                    -- change email address, we don't want to send him emails reporting
-                    -- success/failure for old signatory address, so we need to compare
-                    -- addresses here (for dropped/bounce events)
-                    handleEv (SendGridEvent email ev _) = do
-                      logEmails email
-                      case ev of
-                        SG_Opened -> handleOpenedInvitation slid email muid
-                        SG_Delivered _ -> handleDeliveredInvitation bd slid timeDiff
-                        -- we send notification that email is reported deferred after
-                        -- fifth attempt has failed - this happens after ~10 minutes
-                        -- from sendout
-                        SG_Deferred _ 5 -> handleDeferredInvitation bd slid email
-                        SG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                        SG_Bounce _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                        _ -> return ()
-                    handleEv (MailGunEvent email ev) = do
-                      logEmails email
-                      case ev of
-                        MG_Opened -> handleOpenedInvitation slid email muid
-                        MG_Delivered -> handleDeliveredInvitation bd slid timeDiff
-                        MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                        MG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                        _ -> return ()
-                    handleEv (SocketLabsEvent email ev) = do
-                      logEmails email
-                      case ev of
-                        SL_Opened -> handleOpenedInvitation slid email muid
-                        SL_Delivered -> handleDeliveredInvitation bd slid timeDiff
-                        SL_Failed 0 5001 -> handleDeliveredInvitation bd slid timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
-                        SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                        _ -> return ()
-                    handleEv (SendinBlueEvent email ev) = do
-                      logEmails email
-                      case ev of
-                        SiB_Delivered -> handleDeliveredInvitation bd slid timeDiff
-                        SiB_Opened -> handleOpenedInvitation slid email muid
-                        SiB_Deferred _ -> when (signemail == email) $ handleDeferredInvitation bd slid email
-                        SiB_HardBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                        SiB_SoftBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                        SiB_Blocked      _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                        SiB_InvalidEmail _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                        _ -> return ()
+      case xsmtpattrs of
+        (XSMTPAttrs [("mailinfo", messagedata)]) -> case (maybeRead messagedata) of
+          Just (MD.Invitation docid slid) -> handleEventInvitation docid slid eid timeDiff templates eventType
+          Just (MD.DocumentRelatedMail docid) -> handleEventOtherMail docid eid timeDiff templates eventType
+          _ -> markEventAsRead eid
+        _ -> do
+          -- this is used as part of transition from MessageData (FB case#2420)
+          -- after all mails created from MessageData expire, this will become the core of processEvent
+          -- and x_smtp_attrs column will be removed
+          mkontraInfoForMail <- dbQuery $ GetKontraInfoForMail mid
+          case mkontraInfoForMail of
+            Nothing -> markEventAsRead eid
+            Just (DocumentInvitationMail docid slid) -> do
+              handleEventInvitation docid slid eid timeDiff templates eventType
+            Just (OtherDocumentMail docid) -> do
+              handleEventOtherMail docid eid timeDiff templates eventType
 
-                theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
-        Just (DocumentRelatedMail docid) -> logDocument docid $ do
-          exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor docid
-          if not exists
-            then do
-              logInfo_ "Email event for purged/non-existing document"
-              markEventAsRead eid
-          else do
-            logInfo_ "Processing related mail event"
-            withDocumentID docid $ do
-              let handleEv (SendGridEvent _ ev _) = case ev of
-                                                      SG_Delivered _ -> logDeliveryTime timeDiff
-                                                      _ -> return ()
-                  handleEv (MailGunEvent _ ev) = case ev of
-                                                   MG_Delivered -> logDeliveryTime timeDiff
-                                                   _ -> return ()
-                  handleEv (SocketLabsEvent _ ev) = case ev of
-                                                      SL_Delivered -> logDeliveryTime timeDiff
-                                                      SL_Failed 0 5001 -> logDeliveryTime timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
-                                                      _ -> return ()
-                  handleEv (SendinBlueEvent _ ev) = case ev of
-                                                      SiB_Delivered -> logDeliveryTime timeDiff
-                                                      _ -> return ()
-              theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
-              markEventAsRead eid
-        _ -> markEventAsRead eid
-    processEvent (eid, _ , _, _) = markEventAsRead eid
+markEventAsRead :: (MonadLog m, MonadThrow m, MonadDB m) => EventID -> m ()
+markEventAsRead eid = do
+  now <- currentTime
+  success <- dbUpdate $ MarkEventAsRead eid now
+  when (not success) $
+    logAttention_ "Couldn't mark event as read"
 
-    markEventAsRead eid = do
-      now <- currentTime
-      success <- dbUpdate $ MarkEventAsRead eid now
-      when (not success) $
-        logAttention_ "Couldn't mark event as read"
+handleEventInvitation
+  :: (MonadLog m, CryptoRNG m, MonadCatch m, MonadDB m)
+  => DocumentID -> SignatoryLinkID -> EventID -> Maybe Int -> GlobalTemplates -> Event -> m ()
+handleEventInvitation docid slid eid timeDiff templates eventType =
+  logDocumentAndSignatory docid slid $ do
+    exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor docid
+    if not exists
+      then do
+        logInfo_ "Email event for purged/non-existing document"
+        markEventAsRead eid
+    else do
+      logInfo_ "Processing invitation event"
+      withDocumentID docid $ do
+        markEventAsRead eid
+        bd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
+                    Nothing -> dbQuery $ GetMainBrandedDomain
+                    Just uid -> do
+                      dbQuery $ GetBrandedDomainByUserID uid
+        msl <- getSigLinkFor slid <$> theDocument
+        let muid = maybe Nothing maybesignatory msl
+        let signemail = maybe "" getEmail msl
+        let logEmails email = logInfo "Comparing emails" $ object [
+                  "signatory_email" .= signemail
+                , "event_email" .= email
+                ]
+            -- since when email is reported deferred author has a possibility to
+            -- change email address, we don't want to send him emails reporting
+            -- success/failure for old signatory address, so we need to compare
+            -- addresses here (for dropped/bounce events)
+            handleEv (SendGridEvent email ev _) = do
+              logEmails email
+              case ev of
+                SG_Opened -> handleOpenedInvitation slid email muid
+                SG_Delivered _ -> handleDeliveredInvitation bd slid timeDiff
+                -- we send notification that email is reported deferred after
+                -- fifth attempt has failed - this happens after ~10 minutes
+                -- from sendout
+                SG_Deferred _ 5 -> handleDeferredInvitation bd slid email
+                SG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                SG_Bounce _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                _ -> return ()
+            handleEv (MailGunEvent email ev) = do
+              logEmails email
+              case ev of
+                MG_Opened -> handleOpenedInvitation slid email muid
+                MG_Delivered -> handleDeliveredInvitation bd slid timeDiff
+                MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                MG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                _ -> return ()
+            handleEv (SocketLabsEvent email ev) = do
+              logEmails email
+              case ev of
+                SL_Opened -> handleOpenedInvitation slid email muid
+                SL_Delivered -> handleDeliveredInvitation bd slid timeDiff
+                SL_Failed 0 5001 -> handleDeliveredInvitation bd slid timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
+                SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                _ -> return ()
+            handleEv (SendinBlueEvent email ev) = do
+              logEmails email
+              case ev of
+                SiB_Delivered -> handleDeliveredInvitation bd slid timeDiff
+                SiB_Opened -> handleOpenedInvitation slid email muid
+                SiB_Deferred _ -> when (signemail == email) $ handleDeferredInvitation bd slid email
+                SiB_HardBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                SiB_SoftBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                SiB_Blocked      _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                SiB_InvalidEmail _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
+                _ -> return ()
+
+        theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
+
+handleEventOtherMail
+  :: (MonadLog m, MonadThrow m, MonadDB m)
+  => DocumentID -> EventID -> Maybe Int -> GlobalTemplates -> Event -> m ()
+handleEventOtherMail docid eid timeDiff templates eventType = logDocument docid $ do
+  exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor docid
+  if not exists
+    then do
+      logInfo_ "Email event for purged/non-existing document"
+      markEventAsRead eid
+  else do
+    logInfo_ "Processing related mail event"
+    withDocumentID docid $ do
+      let handleEv (SendGridEvent _ ev _) = case ev of
+                                              SG_Delivered _ -> logDeliveryTime timeDiff
+                                              _ -> return ()
+          handleEv (MailGunEvent _ ev) = case ev of
+                                           MG_Delivered -> logDeliveryTime timeDiff
+                                           _ -> return ()
+          handleEv (SocketLabsEvent _ ev) = case ev of
+                                              SL_Delivered -> logDeliveryTime timeDiff
+                                              SL_Failed 0 5001 -> logDeliveryTime timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
+                                              _ -> return ()
+          handleEv (SendinBlueEvent _ ev) = case ev of
+                                              SiB_Delivered -> logDeliveryTime timeDiff
+                                              _ -> return ()
+      -- no templates are used here, so runTemplatesT is not necessary, right? XXX
+      theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
+      markEventAsRead eid
 
 logDeliveryTime :: (DocumentMonad m, MonadLog m, MonadThrow m) => Maybe Int -> m ()
 logDeliveryTime timeDiff = theDocument >>= \d -> do

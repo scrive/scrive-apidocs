@@ -19,7 +19,6 @@ import Doc.DocStateData
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
 import KontraPrelude
-import MessageData
 import SMS.Data (SMSProvider(..))
 import SMS.SMS
 import TestingUtil
@@ -44,7 +43,7 @@ test_smsCounting_default = do
   doc <- addRandomDocument (randomDocumentAllowsDefault user)
   let sms = SMS {
         smsMSISDN = "+48666666666"
-      , smsData = None
+      , kontraInfoForSMS = Nothing
       , smsBody = ""
       , smsOriginator = "Scrive"
       , smsProvider = SMSDefault
@@ -71,7 +70,7 @@ test_smsCounting_telia = do
   doc <- addRandomDocument (randomDocumentAllowsDefault user)
   let sms = SMS {
         smsMSISDN = "+48666666666"
-      , smsData = None
+      , kontraInfoForSMS = Nothing
       , smsBody = ""
       , smsOriginator = "Scrive"
       , smsProvider = SMSTeliaCallGuide

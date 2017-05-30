@@ -61,16 +61,19 @@ smsFetcher (smsid, provider, originator, msisdn, body, sdata, attempts) = ShortM
 
 ----------------------------------------
 
-data CreateSMS = CreateSMS SMSProvider String String String String
+data CreateSMS = CreateSMS SMSProvider String String String
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSMS ShortMessageID where
-  update (CreateSMS provider originator msisdn body sdata) = do
+  update (CreateSMS provider originator msisdn body) = do
     runQuery_ . sqlInsert "smses" $ do
       sqlSet "provider" provider
       sqlSet "originator" originator
       sqlSet "msisdn" msisdn
       sqlSet "body" body
       sqlSet "run_at" unixEpoch
-      sqlSet "data" sdata
+      -- this is temporary, for first phase of migration FB case#2420
+      -- column smses.data will be remove in 2nd phase of migration
+      -- column data is not nullable, but failing to read from it is handled well
+      sqlSet "data" (""::String)
       sqlResult "id"
     mid <- fetchOne runIdentity
     notify smsNotificationChannel ""

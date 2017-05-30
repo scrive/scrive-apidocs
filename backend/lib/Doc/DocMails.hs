@@ -27,7 +27,7 @@ import BrandedDomain.Model
 import DB
 import Doc.API.Callback.Model
 import Doc.DocInfo
-import Doc.DocStateData
+import Doc.DocStateData hiding (DocumentStatus(..))
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.DocUtils
 import Doc.DocView
@@ -43,13 +43,16 @@ import Kontra
 import KontraPrelude
 import Log.Identifier
 import MailContext (MailContext(..), MailContextMonad, MailContextT, getMailContext, runMailContextT)
-import Mails.SendMail
+import Mails.MailsData
+import Mails.SendMail hiding (MessageData(..))
 import SMS.SMS (scheduleSMS)
 import Templates (runTemplatesT)
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import qualified Doc.DocStateData as DS
+import qualified SMS.SMS as SMS
 
 {- |
    Send emails to all of the invited parties saying that we fucked up the process.
@@ -79,11 +82,17 @@ sendDocumentErrorEmail author document = do
       sendNotifications signatorylink False
         (do
           mail <- mailDocumentErrorForSignatory document
-          scheduleEmailSendoutWithAuthorSenderThroughService (documentid document) $ mail {
-                                   to = [getMailAddress signatorylink]
-                                 , mailInfo = Invitation (documentid document) (signatorylinkid signatorylink)
-                                 })
-         (smsDocumentErrorSignatory document signatorylink >>= scheduleSMS document)
+          scheduleEmailSendoutWithAuthorSenderThroughService
+            (documentid document)
+            (mail {
+                to = [getMailAddress signatorylink]
+              , kontraInfoForMail = (Just $ OtherDocumentMail $ documentid document)
+              })
+        )
+        (do
+          sms <- smsDocumentErrorSignatory document signatorylink
+          scheduleSMS document $ sms { SMS.kontraInfoForSMS = Just (SMS.OtherDocumentSMS $ documentid document) }
+        )
 
 {- |
    Send emails to all of the invited parties, respecting the sign order.
@@ -120,11 +129,17 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
       mail <- theDocument >>= mailInvitation True (Sign <| isSignatory signatorylink |> View) (Just signatorylink)
       -- ?? Do we need to read in the contents? -EN
       -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
-      scheduleEmailSendoutWithAuthorSenderThroughService did $
-                           mail { to = [getMailAddress signatorylink]
-                                , mailInfo = Invitation did (signatorylinkid signatorylink)
-                                })
-     (theDocument >>= \doc -> smsInvitation signatorylink doc >>= scheduleSMS doc)
+      scheduleEmailSendoutWithAuthorSenderThroughService
+        did
+        (mail {
+            to = [getMailAddress signatorylink]
+          , kontraInfoForMail = (Just $ DocumentInvitationMail did $ signatorylinkid signatorylink)
+          })
+    )
+    (do
+      sms <- smsInvitation signatorylink =<< theDocument
+      theDocument >>= \doc -> scheduleSMS doc $ sms { SMS.kontraInfoForSMS = Just $ SMS.DocumentInvitationSMS (documentid doc) (signatorylinkid signatorylink)}
+    )
 
   when sent $ do
     documentinvitetext <$> theDocument >>= \text ->
@@ -137,14 +152,21 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
 
 sendInvitationEmail1 authorsiglink = do
   when (isSignatory authorsiglink) $ do
-       did <- theDocumentID
+       did <- documentid <$> theDocument
        void $ sendNotifications authorsiglink False
           (do
             -- send invitation to sign to author when it is his turn to sign
             mail <- theDocument >>= \d -> mailDocumentAwaitingForAuthor (getLang d) d
-            scheduleEmailSendout $ mail { to = [getMailAddress authorsiglink]
-                                        , mailInfo = Invitation did (signatorylinkid authorsiglink)})
-          (theDocument >>= \doc -> smsInvitationToAuthor doc authorsiglink >>= scheduleSMS doc)
+            scheduleEmailSendout
+              (mail {
+                  to = [getMailAddress authorsiglink]
+                , kontraInfoForMail = Just $ DocumentInvitationMail did $ signatorylinkid authorsiglink
+                })
+          )
+          (do
+            sms <- (\doc -> smsInvitationToAuthor doc authorsiglink) =<< theDocument
+            theDocument >>= \doc -> scheduleSMS doc $ sms { SMS.kontraInfoForSMS = Just $ SMS.DocumentInvitationSMS (documentid doc) (signatorylinkid authorsiglink)}
+          )
 
 {- |
     Send a reminder email (and update the modification time on the document)
@@ -160,11 +182,11 @@ sendReminderEmail custommessage actor automatic siglink = logSignatory (signator
        scheduleEmailSendoutWithAuthorSenderThroughService docid $ mail {
            to = [getMailAddress siglink]
          -- We only collect delivery information, if signatory had not signed yet
-         , mailInfo = if (isNothing $ maybesigninfo siglink)
-           then Invitation docid (signatorylinkid siglink)
-           else DocumentRelatedMail docid
+         , kontraInfoForMail = if (isNothing $ maybesigninfo siglink)
+            then Just $ DocumentInvitationMail (documentid doc) (signatorylinkid siglink)
+            else Just $ OtherDocumentMail $ documentid doc
          -- We only add attachment after document is signed
-         , attachments = attachments mail ++ (if documentstatus doc == Closed
+         , attachments = attachments mail ++ (if documentstatus doc == DS.Closed
           then mailattachments
           else [])
        }
@@ -179,10 +201,10 @@ sendReminderEmail custommessage actor automatic siglink = logSignatory (signator
                                                                                -- fallback to invitation method
                               (_, Just _, True, _) -> False -- partner that signed should use confirmation method
                               (_, Nothing, True, _) -> True -- partner that didn't sign should use invitation method
-                              (Closed, _, False, NoConfirmationDelivery) -> True -- viewer of signed document with no
+                              (DS.Closed, _, False, NoConfirmationDelivery) -> True -- viewer of signed document with no
                                                                                 -- confirmation method, should
                                                                                 -- fallback to invitation method
-                              (Closed, _, False, _) -> False -- viewer of signed document should use confirmation method
+                              (DS.Closed, _, False, _) -> False -- viewer of signed document should use confirmation method
                               (_, _, False, _)  -> True  -- viewer of pending document should use invitation method
       invMethod = signatorylinkdeliverymethod siglink
       confMethod = signatorylinkconfirmationdeliverymethod siglink
@@ -226,7 +248,7 @@ sendClosedEmails sealFixed document = do
                   | otherwise            = scheduleEmailSendoutWithAuthorSender (documentid document)
             scheduleEmailFunc $ mail { to = [getMailAddress sl]
                                      , attachments = attachments mail ++ mailattachments
-                                     , mailInfo = DocumentRelatedMail $ documentid document
+                                     , kontraInfoForMail = (Just $ OtherDocumentMail $ documentid document)
                                      , replyTo =
                                           let maybeAuthor = find signatoryisauthor signatorylinks
                                           in if signatoryisauthor sl && isJust maybeAuthor
@@ -357,7 +379,7 @@ sendForwardEmail email noContent noAttachments asiglink = do
                                              then ""
                                              else content mail
                              , attachments = attachments mail ++ mailattachments
-                             , mailInfo = DocumentRelatedMail did
+                             , kontraInfoForMail = Just $ OtherDocumentMail $ documentid doc
                              }
   return ()
 

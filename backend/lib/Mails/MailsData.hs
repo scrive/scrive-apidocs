@@ -2,18 +2,19 @@ module Mails.MailsData (
     MailAddress(..)
   , Mail(..)
   , emptyMail
+  , KontraInfoForMail(..)
+  , AddKontraInfoForMail(..)
+  , GetKontraInfoForMail(..)
 ) where
 
 import Data.Aeson
-import Data.Aeson.Types as Aeson
 import qualified Data.ByteString as BS
 import qualified Data.Monoid as Monoid
-import qualified Data.Text as T
 
 import File.FileID
 import KontraPrelude
 import Log.Identifier
-import MessageData
+import Mails.KontraInfoForMail
 
 data MailAddress = MailAddress {
     fullname    :: String
@@ -40,45 +41,9 @@ data Mail = Mail {
   , title       :: String
   , content     :: String
   , attachments :: [(String, Either BS.ByteString FileID)] -- list of attachments (name,content)
-  , mailInfo    :: MessageData
+  , kontraInfoForMail :: Maybe KontraInfoForMail -- Connection between this message and some entity in kontrakcja
   } deriving (Eq, Ord, Show)
 
-instance ToJSON Mail where
-  toJSON Mail{..} = object $ [
-      "to"               .= to
-    , "originator"       .= originator
-    , "originator_email" .= originatorEmail
-    , "reply_to"         .= replyTo
-    , "title"            .= title
-    , "content"          .= content
-    , "attachments"      .= map attachmentToJson attachments
-    ] ++ jsonizeMailInfo mailInfo
-
-  toEncoding Mail{..} = pairs . Monoid.mconcat $ [
-      "to"               .= to
-    , "originator"       .= originator
-    , "originator_email" .= originatorEmail
-    , "reply_to"         .= replyTo
-    , "title"            .= title
-    , "content"          .= content
-    , "attachments"      .= map attachmentToJson attachments
-    ] ++ jsonizeMailInfo mailInfo
-
-jsonizeMailInfo :: Aeson.KeyValue kv => MessageData -> [kv]
-jsonizeMailInfo (Invitation did slid) = [
-    "type" .= ("invitation"::T.Text)
-  , identifier_ did
-  , identifier_ slid
-  ]
-jsonizeMailInfo (DocumentRelatedMail did) = [
-    "type" .= ("document_related_mail"::T.Text)
-  , identifier_ did
-  ]
-jsonizeMailInfo (SMSPinSendout slid) = [
-    "type" .= ("sms_pin_sendout"::T.Text)
-  , identifier_ slid
-  ]
-jsonizeMailInfo None = []
 
 attachmentToJson :: (String, Either BS.ByteString FileID) -> Value
 attachmentToJson (name, acontent) = object [
@@ -98,17 +63,19 @@ instance Loggable Mail where
     , "reply_to" .= fromMaybe Null (toJSON <$> replyTo)
     , "subject" .= title
     , "to" .= to
-    ] ++ jsonizeMailInfo mailInfo
+    ] ++
+    maybeToList (logPair_ <$> kontraInfoForMail)
+
   logDefaultLabel _ = "mail"
 
 emptyMail :: Mail
 emptyMail = Mail {
-    to              = []
-  , originator      = "Scrive"
-  , originatorEmail = "noreply@scrive.com"
-  , replyTo         = Nothing
-  , title           = []
-  , content         = []
-  , attachments     = []
-  , mailInfo        = None
+    to                = []
+  , originator        = "Scrive"
+  , originatorEmail   = "noreply@scrive.com"
+  , replyTo           = Nothing
+  , title             = []
+  , content           = []
+  , attachments       = []
+  , kontraInfoForMail = Nothing
 }

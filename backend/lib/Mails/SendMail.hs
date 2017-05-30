@@ -73,8 +73,14 @@ scheduleEmailSendoutHelper authorname  mail@Mail{..} = do
     else do
       fromAddr <- return Address {addrName = authorname, addrEmail = originatorEmail }
       token <- random
-      let xsmtpapi = XSMTPAttrs [("mailinfo", show mailInfo)]
-      void . dbUpdate $ CreateEmail (token, fromAddr, map toAddress to, fmap toAddress replyTo, title, wrapHTML content, map toAttachment attachments, xsmtpapi)
+      -- do not save XSMTPAttrs with MessageData anymore, FB case#2420
+      -- make this go away completely after removing x_smtp_attrs column
+      let xsmtpapi = XSMTPAttrs []
+      mailid <- dbUpdate $ CreateEmail (token, fromAddr, map toAddress to, fmap toAddress replyTo, title, wrapHTML content, map toAttachment attachments, xsmtpapi)
+      case kontraInfoForMail of
+        Just kifm ->
+          void $ dbUpdate $ AddKontraInfoForMail mailid kifm
+        Nothing -> return ()
   where
     toAddress MailAddress{..} = Address {
         addrName  = fullname

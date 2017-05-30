@@ -510,5 +510,3 @@ ctHighlightedPage = CompositeType {
     , CompositeColumn { ccName = "file_id", ccType = BigIntT }
     ]
   }
-
----------------------------------

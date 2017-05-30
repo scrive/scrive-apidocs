@@ -36,67 +36,82 @@ import EvidenceLog.Model
 import KontraLink
 import KontraPrelude
 import Log.Identifier
-import Mails.SendMail
+import Mails.SendMail hiding (MessageData(..))
 import SMS.Data
 import SMS.Model
+import SMS.SMS
 import Templates
 import Theme.Model
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import qualified MessageData as MD
 
 processEvents :: Scheduler ()
 processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, msmsType, smsOrigMsisdn) -> do
-  let smsType = fromMaybe None $ maybeRead msmsType
-      ids = case smsType of
-          Invitation did slid -> [identifier_ slid, identifier_ did]
-          DocumentRelatedMail did -> [identifier_ did]
-          SMSPinSendout slid  -> [identifier_ slid]
-          None                -> []
-  localData ids $ do
+    mkontraInfoForSMS0 <- dbQuery $ GetKontraInfoForSMS smsid
+    mkontraInfoForSMS <- case maybeRead msmsType of
+      Just (MD.Invitation did slid) -> return $ Just (DocumentInvitationSMS did slid)
+      Just (MD.DocumentRelatedMail did) -> return $ Just (OtherDocumentSMS did)
+      Just (MD.SMSPinSendout slid) -> do
+        docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs [slid]
+        case (docs) of
+          (d:_) -> return $ Just (DocumentPinSendoutSMS (documentid d) slid)
+          _ -> do
+            logInfo "SMS event for purged/non-existing document" $ object [identifier_ slid]
+            return Nothing
+      Just MD.None -> return Nothing
+      -- this is used as part of transition from MessageData (FB case#2420)
+      -- after all smses created from MessageData expire, this will become the core of processEvent
+      -- and smses.data column will be removed
+      Nothing -> return mkontraInfoForSMS0
     logInfo "Messages.procesEvent: logging info" . object $ [
             identifier_ eid
           , identifier_ smsid
           , "event_type" .= show eventType
           ]
-    processEvent (eid, smsid, eventType, smsType, smsOrigMsisdn)
+    processEvent (eid, smsid, eventType, mkontraInfoForSMS, smsOrigMsisdn)
   )
   where
-    processEvent (eid, _, eventType, Invitation did slid, smsOrigMsisdn) = do
-      exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor did
-      if not exists then do
-        logInfo "SMS event for purged/non-existing document" $ object [identifier_ did]
-        _ <- dbUpdate $ MarkSMSEventAsRead eid
-        return ()
-       else dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
-        _ <- dbUpdate $ MarkSMSEventAsRead eid
-        msl <- getSigLinkFor slid <$> theDocument
-        let signphone = maybe "" getMobile msl
-        templates <- getGlobalTemplates
-        bd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
-          Nothing -> dbQuery $ GetMainBrandedDomain
-          Just uid -> dbQuery $ GetBrandedDomainByUserID uid
-        let host = bdUrl bd
-            -- since when email is reported deferred author has a possibility to
-            -- change email address, we don't want to send him emails reporting
-            -- success/failure for old signatory address, so we need to compare
-            -- addresses here (for dropped/bounce events)
-            handleEv (SMSEvent phone ev) = do
-              logInfo "Comparing phone numbers" $ object [
-                  identifier_ slid
-                , "signatory_phone" .= signphone
-                , "event_phone" .= phone
-                , "sms_original_phone" .= smsOrigMsisdn
-                ]
-              theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case ev of
-                SMSDelivered -> handleDeliveredInvitation slid
-                SMSUndelivered _ -> when (signphone == smsOrigMsisdn) $ do
-                  handleUndeliveredSMSInvitation bd host slid
-        handleEv eventType
+    processEvent (eid, _, eventType, Just (DocumentInvitationSMS _did slid), smsOrigMsisdn) = do
+      docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs [slid]
+      case docs of
+        [] -> do
+          logInfo "SMS event for purged/non-existing document" $ object [identifier_ slid]
+          void $ dbUpdate $ MarkSMSEventAsRead eid
+        (doc':_) -> do
+          exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor (documentid doc')
+          if not exists then do
+            logInfo "SMS event for purged/non-existing document" $ object [identifier_ slid, logPair_ doc']
+            void $ dbUpdate $ MarkSMSEventAsRead eid
+          else withDocument doc' $ do
+            _ <- dbUpdate $ MarkSMSEventAsRead eid
+            msl <- getSigLinkFor slid <$> theDocument
+            let signphone = maybe "" getMobile msl
+            templates <- getGlobalTemplates
+            bd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
+              Nothing -> dbQuery $ GetMainBrandedDomain
+              Just uid -> dbQuery $ GetBrandedDomainByUserID uid
+            let host = bdUrl bd
+                -- since when email is reported deferred author has a possibility to
+                -- change email address, we don't want to send him emails reporting
+                -- success/failure for old signatory address, so we need to compare
+                -- addresses here (for dropped/bounce events)
+                handleEv (SMSEvent phone ev) = do
+                  logInfo "Comparing phone numbers" $ object [
+                      identifier_ slid
+                    , "signatory_phone" .= signphone
+                    , "event_phone" .= phone
+                    , "sms_original_phone" .= smsOrigMsisdn
+                    ]
+                  theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case ev of
+                    SMSDelivered -> handleDeliveredInvitation slid
+                    SMSUndelivered _ -> when (signphone == smsOrigMsisdn) $ do
+                      handleUndeliveredSMSInvitation bd host slid
+            handleEv eventType
 
-    processEvent (eid, _, eventType, SMSPinSendout slid, smsOrigMsisdn) = do
-      -- TODO: add docid to SMSPinSendout and check here if doc is not purged
+    processEvent (eid, _, eventType, Just (DocumentPinSendoutSMS _did slid), smsOrigMsisdn) =
       dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
         _ <- dbUpdate $ MarkSMSEventAsRead eid
         templates <- getGlobalTemplates
@@ -116,7 +131,17 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, m
               (Just smsOrigMsisdn)
               (actor)
           _ -> return ()
-
+    processEvent (eid, _ , eventType, Just (OtherDocumentSMS did), smsOrigMsisdn) =
+      withDocumentID did $ do
+        void $ dbUpdate $ MarkSMSEventAsRead eid
+        case eventType of
+          SMSEvent phone SMSDelivered ->
+            logInfo "SMS delivered" $ object [
+                identifier_ did
+              , "recipient" .= phone
+              , "sms_original_phone" .= smsOrigMsisdn
+              ]
+          _ -> return ()
     processEvent (eid, _ , _, _, _) = do
       _ <- dbUpdate $ MarkSMSEventAsRead eid
       return ()

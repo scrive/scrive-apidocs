@@ -296,6 +296,8 @@ Library
                  , MailingServerConf
                  , Mails.Data
                  , Mails.Events
+                 , Mails.FromKontra.Tables
+                 , Mails.KontraInfoForMail
                  , Mails.MailsData
                  , Mails.Model
                  , Mails.SendMail
@@ -328,6 +330,8 @@ Library
                  , RoutingTable
                  , SMS.Data
                  , SMS.Events
+                 , SMS.FromKontra.Tables
+                 , SMS.KontraInfoForSMS
                  , SMS.Model
                  , SMS.SMS
                  , SMS.Tables

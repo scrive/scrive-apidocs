@@ -60,7 +60,6 @@ createHighlightedPagesTable = Migration {
     }
   }
 
-
 normalizeCheckboxesSize :: MonadDB m => Migration m
 normalizeCheckboxesSize = Migration {
     mgrTableName = tblName tableFieldPlacements
