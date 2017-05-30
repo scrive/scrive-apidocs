@@ -256,9 +256,9 @@ instance MonadDB m => DBQuery m GetDocuments [Document] where
 data GetDocument = GetDocument DocumentDomain [DocumentFilter]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocument Document where
   query (GetDocument domain filters) = do
-    -- Set limit to 2 so it can throw if more than 1 row is returned.
-    kRunAndFetch1OrThrowWhyNot toComposite . selectDocuments domain filters [] 2 $ do
+    runQuery_ . selectDocuments domain filters [] 1 $ do
       mapM_ sqlResult documentsSelectors
+    fetchOne toComposite
 
 data GetDocumentsWithSoftLimit = GetDocumentsWithSoftLimit DocumentDomain [DocumentFilter] [AscDesc DocumentOrderBy] (Int, Int, Int)
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, [Document]) where
