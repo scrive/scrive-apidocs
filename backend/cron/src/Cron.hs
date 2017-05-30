@@ -7,6 +7,8 @@ import Data.Maybe
 import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
 import Log
+import Network.HTTP.Client (Manager)
+import Network.HTTP.Client.TLS (newTlsManager)
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Data.ByteString as BS
@@ -42,12 +44,14 @@ import Log.Model
 import Log.Utils
 import Mails.Events
 import MinutesTime
+import Planhat
 import Purging.Files
 import Session.Data
 import SMS.Events
 import Templates
 import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
+import ThirdPartyStats.Planhat
 import Utils.IO
 import qualified Amazon as AWS
 import qualified CronEnv
@@ -76,7 +80,10 @@ main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   cronConf <- readConfig putStrLn config
   rng <- newCryptoRNGState
+
   logRunner <- mkLogRunner "cron" (logConfig cronConf) rng
+  reqManager <- newTlsManager
+
   runWithLogRunner logRunner $ do
     checkExecutables
 
@@ -101,6 +108,13 @@ main = do
       Just mt ->
         return $ Just $ processMixpanelEvent mt
 
+    mplanhat <- case planhatConf cronConf of
+      Nothing -> do
+        noConfigurationWarning "Planhat"
+        return Nothing
+      Just phConf ->
+        return . Just $ processPlanhatEvent reqManager phConf
+
     let runDB :: DBCronM r -> CronM r
         runDB = withPostgreSQL pool
 
@@ -117,7 +131,7 @@ main = do
           (guardTimeConf cronConf) templates filecache mrediscache pool
 
         apiCallbacks = documentAPICallback runScheduler
-        cron         = cronQueue cronConf mmixpanel runScheduler runDB
+        cron = cronQueue cronConf reqManager mmixpanel mplanhat runScheduler runDB
 
     runCryptoRNGT rng
       . finalize (localDomain "document sealing" $ runConsumer docSealing pool)
@@ -128,11 +142,13 @@ main = do
       liftBase waitForTermination
   where
     cronQueue :: CronConf
+              -> Manager
+              -> Maybe (EventProcessor (DBCronM))
               -> Maybe (EventProcessor (DBCronM))
               -> (forall r. Scheduler r -> CronM r)
               -> (forall r. DBCronM r -> CronM r)
               -> ConsumerConfig CronM JobType CronJob
-    cronQueue cronConf mmixpanel runScheduler runDB = ConsumerConfig {
+    cronQueue cronConf mgr mmixpanel mplanhat runScheduler runDB = ConsumerConfig {
       ccJobsTable = "cron_jobs"
     , ccConsumersTable = "cron_workers"
     , ccJobSelectors = cronJobSelectors
@@ -155,7 +171,9 @@ main = do
               logInfo_ "No valid AWS config, skipping"
               return . RerunAfter $ iminutes 1
         AsyncEventsProcessing -> do
-          runDB $ asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel]) All
+          runDB $ do
+            let processMaximum = 200
+            asyncProcessEvents getEventProcessor (NoMoreThan processMaximum)
           return . RerunAfter $ iseconds 10
         ClockErrorCollection -> do
           runDB $ collectClockError (ntpServers cronConf)
@@ -235,6 +253,12 @@ main = do
           return . RerunAfter $ if found
                                 then iseconds 1
                                 else iminutes 1
+        PushPlanhatStats -> do
+          case planhatConf cronConf of
+            Nothing -> do
+              logInfo "Planhat config missing; skipping" $ object []
+            Just phConf -> do runScheduler $ doDailyPlanhatStats phConf mgr
+          RerunAt . nextDayAtHour 2 <$> currentTime
         SessionsEvaluation -> do
           runScheduler $ actionQueue session
           return . RerunAfter $ ihours 1
@@ -256,3 +280,7 @@ main = do
     }
       where
         logHandlerInfo jobType action = localRandomID "job_id" $ localData ["job_type" .= show jobType] action
+
+        getEventProcessor :: EventType -> Maybe (EventProcessor DBCronM)
+        getEventProcessor EventMixpanel = mmixpanel
+        getEventProcessor EventPlanhat  = mplanhat

@@ -1,5 +1,8 @@
 module User.Model.Query (
     GetCompanyAccounts(..)
+  , GetCompanyAccountsCountActive(..)
+  , GetCompanyAccountsCountMainDomainBranding(..)
+  , GetCompanyAccountsCountTotal(..)
   , GetCompanyAdmins(..)
   , GetUsageStats(..)
   , GetUserByID(..)
@@ -11,9 +14,11 @@ module User.Model.Query (
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.State (MonadState)
 import Data.Char
 import Data.Int
 
+import Chargeable.Model
 import Company.Model
 import DB
 import Doc.DocStateData (DocumentStatus(..))
@@ -22,6 +27,7 @@ import MinutesTime
 import User.Data.Stats
 import User.Data.User
 import User.Email
+import User.History.Model
 import User.Model.Filter
 import User.Model.OrderBy
 import User.UserID
@@ -55,6 +61,81 @@ instance MonadDB m => DBQuery m GetCompanyAccounts [User] where
   query (GetCompanyAccounts cid) = do
     runQuery_ $ selectUsersSQL <+> "WHERE company_id =" <?> cid <+> "AND deleted IS NULL ORDER BY email"
     fetchMany fetchUser
+
+data GetCompanyAccountsCountTotal = GetCompanyAccountsCountTotal
+instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyAccountsCountTotal [(CompanyID, Int64)] where
+  query GetCompanyAccountsCountTotal = do
+    runQuery_ $ sqlSelect "users u" $ do
+      sqlJoinOn "companies c" "u.company_id = c.id"
+      sqlResult "u.company_id"
+      sqlResult "count(u.id)"
+      sqlWhereIsNotScriveEmail "u.email"
+      sqlWhereIsNULL "u.deleted"
+      sqlWhereNotEq "c.payment_plan" FreePlan
+      sqlGroupBy "u.company_id"
+    fetchMany id
+
+data GetCompanyAccountsCountMainDomainBranding = GetCompanyAccountsCountMainDomainBranding
+instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyAccountsCountMainDomainBranding [(CompanyID, Int64)] where
+  query GetCompanyAccountsCountMainDomainBranding = do
+    runQuery_ $ sqlSelect "users u" $ do
+      sqlJoinOn "companies c" "u.company_id = c.id"
+      sqlResult "u.company_id"
+      sqlResult "count(u.id)"
+      sqlWhereIsNotScriveEmail "u.email"
+      sqlWhereIsNULL "u.deleted"
+      sqlWhereNotEq "c.payment_plan" FreePlan
+      sqlWhere ("u.associated_domain_id = (SELECT b.id FROM branded_domains b " <>
+                "WHERE b.main_domain=TRUE LIMIT 1)")
+      sqlGroupBy "u.company_id"
+    fetchMany id
+
+data GetCompanyAccountsCountActive = GetCompanyAccountsCountActive
+instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyAccountsCountActive [(CompanyID, Int64)] where
+  query GetCompanyAccountsCountActive = do
+    runQuery_ activeUsersQuery
+    fetchMany id
+
+      where
+
+        activeUsersQuery :: SQL
+        activeUsersQuery = ("SELECT company_id, count(user_id) FROM") <+>
+                           (
+                            "(" <+>
+                            loggedInRecently <+>
+                            "UNION" <+>
+                            docSentRecently <+>
+                            ")"
+                           ) <+>
+                           "as active_users GROUP BY company_id;"
+
+        loggedInRecently :: SQL
+        loggedInRecently = toSQLCommand $
+          sqlSelect "users u" $ do
+            sqlJoinOn "users_history h" "u.id = h.user_id"
+            sqlJoinOn "companies c" "c.id = u.company_id"
+            sqlResult "u.company_id AS company_id"
+            sqlResult "u.id AS user_id"
+            sqlWhereEq "h.event_type" UserLoginSuccess
+            sqlWhereNotEq "c.payment_plan" FreePlan
+            sqlWhereIsNotScriveEmail "u.email"
+            sqlGroupBy "u.id"
+            sqlGroupBy "c.id"
+            sqlHaving "max(h.time) > (now() - interval '4 weeks')"
+
+        docSentRecently :: SQL
+        docSentRecently = toSQLCommand $
+          sqlSelect "chargeable_items i" $ do
+            sqlJoinOn "companies c" "c.id = i.company_id"
+            sqlJoinOn "users u" "u.id = i.user_id"
+            sqlResult "i.company_id AS company_id"
+            sqlResult "i.user_id AS user_id"
+            sqlWhereEq "i.\"type\"" CIStartingDocument
+            sqlWhereNotEq "c.payment_plan" FreePlan
+            sqlWhereIsNotScriveEmail "u.email"
+            sqlGroupBy "i.user_id"
+            sqlGroupBy "i.company_id"
+            sqlHaving "max(i.time) > (now() - interval '4 weeks')"
 
 data GetCompanyAdmins = GetCompanyAdmins CompanyID
 instance MonadDB m => DBQuery m GetCompanyAdmins [User] where
@@ -192,3 +273,9 @@ instance MonadDB m => DBQuery m GetUsersWithCompanies [(User, Company)] where
       , " OFFSET" <?> (fromIntegral offset :: Int32) <+> "LIMIT" <?> (fromIntegral limit :: Int32)
       ]
     fetchMany fetchUserWithCompany
+
+-- helpers
+sqlWhereIsNotScriveEmail :: (MonadState v m, SqlWhere v) => SQL -> m ()
+sqlWhereIsNotScriveEmail field = do
+  sqlWhere $ field <+> "NOT LIKE '%@scrive.%'"
+  sqlWhere $ field <+> "NOT LIKE '%@skrivapa.%'"

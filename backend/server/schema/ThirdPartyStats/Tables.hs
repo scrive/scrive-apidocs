@@ -13,7 +13,7 @@ import KontraPrelude
 tableAsyncEventQueue :: Table
 tableAsyncEventQueue = tblTable {
   tblName = "async_event_queue"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "sequence_number", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "event", colType = TextT, colNullable = False }

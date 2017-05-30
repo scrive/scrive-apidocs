@@ -17,6 +17,7 @@ import Mails.Migrations
 import Partner.Migrations
 import SMS.FromKontra.Migrations
 import SMS.Migrations
+import ThirdPartyStats.Migrations
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- Current version has migrations created after VII.2016.
@@ -46,4 +47,6 @@ kontraMigrations = [
   , createDocumentExtendingConsumers
   , createDocumentExtendingJobs
   , signatoryLinkFieldsAddRadioGroupValues
+  , voidTableAsyncEventQueue
+  , addPlanhatJob
   ]

@@ -7,6 +7,7 @@ import qualified Control.Exception.Lifted as E
 import DB
 import KontraPrelude
 
+{-# DEPRECATED BySigning "BySigning is not used anymore" #-}
 {- BySigning is not used anymore. We can't drop it right away, but it doesn't need to be supported -}
 data SignupMethod = AccountRequest | ViralInvitation | BySigning | ByAdmin | CompanyInvitation | PartnerInvitation
   deriving (Eq, Ord, Show, Read)

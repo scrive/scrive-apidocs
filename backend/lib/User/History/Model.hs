@@ -27,8 +27,9 @@ import Text.JSON.Gen
 import DB
 import IPAddress
 import KontraPrelude
+import User.Data.User
 import User.Email
-import User.Model
+import User.UserID
 import qualified VersionTH
 
 data UserHistory = UserHistory {

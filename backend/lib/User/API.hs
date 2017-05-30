@@ -251,20 +251,20 @@ apiCallSignup = api $ do
             { userphone = phone, usercompanyposition = companyPosition }
           sendNewUserMail user
           l <- newUserAccountRequestLink lang (userid user) AccountRequest
-          asyncLogEvent "Send account confirmation email" [
-                UserIDProp $ userid user,
-                IPProp $ ctxipnumber ctx,
-                TimeProp $ ctxtime ctx,
-                someProp "Context" ("Acount request" :: String)
-                ]
-          asyncLogEvent SetUserProps [
-                UserIDProp $ userid user,
-                someProp "Account confirmation email" $ ctxtime ctx,
-                NameProp (firstname ++ " " ++ lastname),
-                FirstNameProp firstname,
-                LastNameProp lastname,
-                someProp "Confirmation link" $ show l
-                ]
+          asyncLogEvent "Send account confirmation email"
+                        [ UserIDProp $ userid user
+                        , IPProp $ ctxipnumber ctx
+                        , TimeProp $ ctxtime ctx
+                        , someProp "Context" ("Acount request" :: String) ]
+                        EventMixpanel
+          asyncLogEvent SetUserProps
+                        [ UserIDProp $ userid user
+                        , someProp "Account confirmation email" $ ctxtime ctx
+                        , NameProp (firstname ++ " " ++ lastname)
+                        , FirstNameProp firstname
+                        , LastNameProp lastname
+                        , someProp "Confirmation link" $ show l ]
+                        EventMixpanel
           runJSONGenT $ value "sent" True
 
 apiCallSendPasswordReminder :: Kontrakcja m => m Response
@@ -361,14 +361,14 @@ apiCallLoginUserAndGetSession = V2.api $ do
     Right (User{userid}, _actor) -> do
       ctx <- getContext
       asyncLogEvent "Login"
-        [ UserIDProp userid
-        , IPProp $ ctxipnumber ctx
-        , TimeProp $ ctxtime ctx
-        ]
+                    [ UserIDProp userid
+                    , IPProp $ ctxipnumber ctx
+                    , TimeProp $ ctxtime ctx ]
+                    EventMixpanel
       asyncLogEvent SetUserProps
-        [ UserIDProp userid
-        , someProp "Last login" $ ctxtime ctx
-        ]
+                    [ UserIDProp userid
+                    , someProp "Last login" $ ctxtime ctx ]
+                    EventMixpanel
       emptysession <- emptySession
       ses <- startNewSession emptysession (Just userid) Nothing
       return $ V2.Ok $ runJSONGen $ do

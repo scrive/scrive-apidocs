@@ -14,6 +14,7 @@ import GuardTime (GuardTimeConf(..))
 import HostClock.System (defaultNtpServers)
 import KontraPrelude
 import Log.Configuration
+import Planhat
 import Salesforce.Conf
 import SFTPConfig
 
@@ -35,6 +36,9 @@ data CronConf = CronConf {
   , salesforceConf     :: Maybe SalesforceConf -- ^ Salesforce configuration.
   , invoicingSFTPConf  :: Maybe SFTPConfig
     -- ^ SFTP server for invoicing uploads.
+  , planhatConf        :: Maybe PlanhatConf
+    -- ^ To enable data push to Planhat
+
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
@@ -85,6 +89,9 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> fieldOpt "invoicing_sftp_for_salesforce"
       invoicingSFTPConf
       "Configuration for SFTP:ing invoicing reports"
+  <*> fieldOpt "planhat"
+      planhatConf
+      "Configuration for pushing data to Planhat"
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
@@ -104,4 +111,5 @@ instance Default CronConf where
     , ntpServers         = defaultNtpServers
     , salesforceConf     = Nothing
     , invoicingSFTPConf  = Nothing
+    , planhatConf        = Nothing
     }

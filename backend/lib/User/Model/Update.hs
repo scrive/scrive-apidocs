@@ -20,8 +20,8 @@ import Data.Char
 import BrandedDomain.BrandedDomainID
 import Company.Model
 import DB
-import Doc.DocStateData (DocumentStatus(..))
 import Doc.Data.SignatoryField
+import Doc.DocStateData (DocumentStatus(..))
 import KontraPrelude
 import MinutesTime
 import Partner.Model

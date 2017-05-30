@@ -47,6 +47,7 @@ import Log.Identifier
 import MailContext
 import Templates (runTemplatesT)
 import ThirdPartyStats.Core
+import ThirdPartyStats.Planhat
 import User.Email
 import User.Model
 import User.Utils
@@ -65,7 +66,7 @@ logDocEvent name user extraProps doc = do
       email = Email $ getEmail user
       fullname = getFullName user
       deliverymethod = fromMaybe "undefined" $ show . signatorylinkdeliverymethod <$> getSigLinkFor uid doc
-  asyncLogEvent name $ extraProps ++ [
+  asyncLogEvent name (extraProps ++ [
     UserIDProp uid,
     DocIDProp  (documentid doc),
     TimeProp   now,
@@ -77,7 +78,8 @@ logDocEvent name user extraProps doc = do
     stringProp "Language" (show $ documentlang doc),
     numProp "Days to sign" (fromIntegral $ documentdaystosign doc),
     numProp "Signatories" (fromIntegral $ length $ documentsignatorylinks doc),
-    stringProp "Signup Method" (show $ usersignupmethod user)]
+    stringProp "Signup Method" (show $ usersignupmethod user)])
+    EventMixpanel
 
 postDocumentPreparationChange :: (Kontrakcja m, DocumentMonad m) => Bool -> TimeZoneName -> m ()
 postDocumentPreparationChange authorsignsimmediately tzn = do
@@ -97,15 +99,21 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   -- Stat logging
   now <- currentTime
   author <- getDocAuthor =<< theDocument
-  -- Log the current time as the last doc sent time
-  asyncLogEvent SetUserProps [ UserIDProp (userid author)
-                             , someProp "Last Doc Sent" now
-                             ]
+  asyncLogEvent SetUserProps
+                (simplePlanhatAction "Document started" author now)
+                EventPlanhat
+  asyncLogEvent SetUserProps
+                (userMixpanelData author now)
+                EventMixpanel
   theDocument >>= logDocEvent "Doc Sent" author []
 
   sendInvitationEmails authorsignsimmediately
   scheduleAutoreminderIfThereIsOne tzn =<< theDocument
   return ()
+  where
+    userMixpanelData author time =
+        [ UserIDProp (userid author)
+        , someProp "Last Doc Sent" time ]
 
 postDocumentRejectedChange :: Kontrakcja m => SignatoryLinkID -> Maybe String -> Document -> m ()
 postDocumentRejectedChange siglinkid customMessage doc@Document{..} = logDocument documentid $ do
@@ -150,8 +158,14 @@ postDocumentPendingChange olddoc = do
       dbUpdate $ ChargeCompanyForClosingDocument $ documentid olddoc
       author <- theDocument >>= getDocAuthor
       theDocument >>= logDocEvent "Doc Closed" author []
-      asyncLogEvent SetUserProps [UserIDProp (userid author),
-                                  someProp "Last Doc Closed" time]
+      -- report
+      now <- currentTime
+      asyncLogEvent SetUserProps
+                    (simplePlanhatAction "Document closed" author now)
+                    EventPlanhat
+      asyncLogEvent SetUserProps
+                    (userMixpanelData author now)
+                    EventMixpanel
       dbUpdate . ScheduleDocumentSealing . bdid . mctxcurrentBrandedDomain =<< getMailContext)
   {-else-} $ do
       theDocument >>= triggerAPICallbackIfThereIsOne
@@ -160,6 +174,9 @@ postDocumentPendingChange olddoc = do
         sendInvitationEmails False
   where
     allSignatoriesSigned = all (isSignatory --> hasSigned) . documentsignatorylinks
+    userMixpanelData author time =
+        [ UserIDProp (userid author)
+        , someProp "Last Doc Closed" time ]
 
 -- | Prepare final PDF if needed, apply digital signature, and send
 -- out confirmation emails if there has been a change in the seal status.  Precondition: document must be

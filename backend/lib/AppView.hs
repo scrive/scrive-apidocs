@@ -146,6 +146,7 @@ enableCookiesPage = do
                                                         , SomeProp "browser" $ PVString ua
                                                         , SomeProp "host" $ PVString hostname
                                                         ]
+                                     EventMixpanel
   logInfo "Current cookies" $ object [
       "cookies" .= map (second cookieToJson) cookies
     ]
