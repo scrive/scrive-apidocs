@@ -33,6 +33,7 @@ var AttachmentsTableRowView = React.createClass({
       "optional": !this.props.attachment.isRequired(),
       "required": this.props.attachment.isRequired()
     });
+    var sig = attachment.signatory();
 
     return (
       <tr>
@@ -44,7 +45,7 @@ var AttachmentsTableRowView = React.createClass({
                 secureText={this.attachmentText()}
                 subs={{
                   ".put-attachment-name-here": attachment.name(),
-                  ".put-signatory-name-here": attachment.signatory().nameOrEmail()
+                  ".put-signatory-name-here": sig.nameOrEmail() || localization.notNamedParty
                 }}
               />
               <div className="description">"{this.props.attachment.description()}"</div>
