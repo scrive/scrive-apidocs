@@ -956,8 +956,6 @@ javascriptLocalisation =
            , accept : "$_apiConfiramtionAccept()$"
            , loginAndAcceptTitle : "$_apiConfiramtionLoginAndAcceptTitle()$"
            , loginAndAccept : "$_apiConfiramtionLoginAndAccept()$"
-           , createAccount : "$_apiConfiramtionCreateAccount()$"
-           , enterEmailAdress : "$_apiConfiramtionEnterEmailAdress()$"
       }
       , apiDashboard : {
             reveal : "$_apiOauthReveal()$"
