@@ -711,7 +711,7 @@
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmentrequired":"Mandatory",
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs":"Request from",
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmenttype":"Required?",
-"_pageDocumentForAuthorHelpersLocalDialogsAttachmentwasnotuploaded":"Attachment was not uploaded.",
+"_pageDocumentForAuthorHelpersLocalDialogsAttachmentwasnotuploaded":"Attachment was not uploaded",
 "_pageDocumentForAuthorHelpersLocalDialogsDefineRequests":"Define the requested attachments",
 "_pageDocumentForAuthorHelpersLocalDialogsErrorFlashMessage":"All fields are required. Please fill in the empty fields.",
 "_pageDocumentForAuthorHelpersLocalDialogsHead":"Request attachments",
