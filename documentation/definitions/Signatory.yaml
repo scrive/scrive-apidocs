@@ -156,15 +156,36 @@ properties:
     default: []
     items:
       type: object
+      description: |
+        An attachment requested from the signing party.
+        Attachments requested from viewing only parties have no effect.
       properties:
         name:
           type: string
+          description: |
+            A name for the requested attachment.
+            Will be visible to the signatory when signing the document.
         description:
           type: string
+          description: |
+            A description for the requested attachment.
+            Will be visible to the signatory when signing the document alongside
+            the attachment name.
+        required:
+          type: boolean
+          default: true
+          description: |
+            Whether the signatory must upload this attachment.
+            If `false`, the signatory may choose not to upload this attachment
+            when signing.
         file_id:
           type: string
+          description: |
+            Will be present if and when the party uploads this attachment.
         file_name:
           type: string
+          description: |
+            Will be present if and when the party uploads this attachment.
   api_delivery_url:
     description: |
       If the `delivery_method` is set to `api`, then this field will hold the
