@@ -15,6 +15,18 @@ $htmlopentag()$
       var browser = navigator.userAgent;
     </script>
 
+    <!--[if lte IE 10]>
+      <script type="text/javascript">
+        browser = 'Internet Explorer 10';
+      </script>
+    <![endif]-->
+
+    <!--[if lte IE 9]>
+      <script type="text/javascript">
+        browser = 'Internet Explorer 9';
+      </script>
+    <![endif]-->
+
     <!--[if lte IE 8]>
       <script type="text/javascript">
         browser = 'Internet Explorer 8';
