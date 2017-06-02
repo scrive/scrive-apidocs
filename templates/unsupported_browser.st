@@ -13,13 +13,10 @@ $htmlopentag()$
 
     <script type="text/javascript">
       var browser = navigator.userAgent;
-    </script>
-
-    <!--[if lte IE 10]>
-      <script type="text/javascript">
+      if (navigator.appVersion.indexOf('MSIE 10') !== -1) {
         browser = 'Internet Explorer 10';
-      </script>
-    <![endif]-->
+      }
+    </script>
 
     <!--[if lte IE 9]>
       <script type="text/javascript">
