@@ -31,6 +31,7 @@ import File.Storage (getFileContents)
 import GuardTime (GuardTimeConf, GuardTimeConfMonad, getGuardTimeConf)
 import KontraPrelude
 import Log.Identifier
+import Log.Utils
 import Templates (runTemplatesT)
 import Util.Actor (systemActor)
 import Utils.Directory (withSystemTempDirectory')
@@ -46,7 +47,7 @@ addDigitalSignature = theDocumentID >>= \did ->
   now <- currentTime
   gtconf <- getGuardTimeConf
   -- GuardTime signs in place
-  code <- GT.digitallySign gtconf mainpath
+  (code, stdout, stderr) <- GT.digitallySign gtconf mainpath
   case code of
     ExitSuccess -> do
       vr <- GT.verify gtconf mainpath
@@ -63,7 +64,11 @@ addDigitalSignature = theDocumentID >>= \did ->
                 dbUpdate $ AppendSealedFile sealedfileid (Guardtime (GT.extended gsig) (GT.privateGateway gsig)) $ systemActor now
                 return True
            _ -> do
-                logAttention "GuardTime verification after signing failed for document" $ logObject_ vr
+                logAttention "GuardTime verification after signing failed for document" $ object [
+                    logPair_ vr
+                  , "signing_stdout" `equalsExternalBSL` stdout
+                  , "signing_stderr" `equalsExternalBSL` stderr
+                  ]
                 return False
     ExitFailure c -> do
       logAttention "GuardTime failed" $ object [
@@ -101,10 +106,10 @@ extendDigitalSignature = do
     -- /verify service can detect and provide an extended version if
     -- the verified document was extensible.
 
-digitallyExtendFile :: (TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadLog m, MonadIO m, DocumentMonad m)
+digitallyExtendFile :: (TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadLog m, MonadIO m, MonadMask m, DocumentMonad m)
                     => UTCTime -> GuardTimeConf -> FilePath -> String -> m Bool
 digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
-  code <- GT.digitallyExtend ctxgtconf pdfpath
+  (code, stdout, stderr) <- GT.digitallyExtend ctxgtconf pdfpath
   mr <- case code of
     ExitSuccess -> do
       vr <- GT.verify ctxgtconf pdfpath
@@ -115,7 +120,11 @@ digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
                 logInfo_ "GuardTime extended successfully"
                 return $ Just (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
            _ -> do
-                logInfo "GuardTime verification after extension failed" $ logObject_ vr
+                logInfo "GuardTime verification after extension failed" $ object [
+                    logPair_ vr
+                  , "extending_stdout" `equalsExternalBSL` stdout
+                  , "extending_stderr" `equalsExternalBSL` stderr
+                  ]
                 return Nothing
     ExitFailure c -> do
       logAttention "GuardTime failed for document" $ object [

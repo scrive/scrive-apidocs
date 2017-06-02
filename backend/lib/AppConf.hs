@@ -150,10 +150,18 @@ instance Default AppConf where
     , logConfig          = def
     , production         = True
     , cdnBaseUrl         = Nothing
-    , guardTimeConf      = GuardTimeConf { guardTimeURL="http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
-                                         , guardTimeExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
-                                         , guardTimeControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
-                                         }
+    , guardTimeConf      = GuardTimeConf {
+        guardTimeSigningServiceURL = "http://internal-gt-signer-848430379.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
+      , guardTimeExtendingServiceURL ="http://internal-gt-extender-2081608339.eu-west-1.elb.amazonaws.com:8081/gt-extendingservice"
+      , guardTimeControlPublicationsURL = "http://verify.guardtime.com/ksi-publications.bin"
+      , guardTimeSigningLoginUser ="anon"
+      , guardTimeSigningLoginKey = "anon"
+      , guardTimeExtendingLoginUser ="anon"
+      , guardTimeExtendingLoginKey = "1234"
+      , guardTimeOldURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
+      , guardTimeOldExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
+      , guardTimeOldControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
+      }
     , isMailBackdoorOpen = False
     , cgiGrpConfig       = Nothing
     , admins             = []
