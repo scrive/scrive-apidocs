@@ -17,7 +17,7 @@ var SignatoryAttachment = require("../signatoryattachment.js").SignatoryAttachme
       name : "",
       description : "",
       signatory : undefined,
-      isRequired : false
+      isRequired : true
   },
   name: function() {
        return this.get("name");

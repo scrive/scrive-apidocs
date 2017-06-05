@@ -78,11 +78,17 @@ module.exports = React.createClass({
   componentWillUnmount: function () {
     this.props.model.view = null;
     $(window).off("resize", this.handleResize);
+    clearTimeout(self.resizeTimeout);
   },
 
   handleResize: function () {
-    this.maybeResetZoom();
-    this.forceUpdate();
+    var self = this;
+    clearTimeout(self.resizeTimeout);
+    self.resizeTimeout = setTimeout(function () {
+      // wait a bit, so window width is updated after orientation change in wkwebview
+      self.maybeResetZoom();
+      self.forceUpdate();
+    }, 100);
   },
 
   componentDidMount: function () {

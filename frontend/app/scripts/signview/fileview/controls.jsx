@@ -51,12 +51,21 @@ module.exports = React.createClass({
     const $parent = $el.parent();
     const $scroller = $el.closest(".scroller");
     $(window).on("scroll", this.update);
-    $(window).on("resize", this.update);
+    $(window).on("resize", this.handleResize);
     if ($scroller.length > 0) {
       defaultErd.listenTo($scroller[0], this.update);
     }
     $scroller.on("scroll", this.update);
     this.update();
+  },
+
+  handleResize: function () {
+    var self = this;
+    clearTimeout(self.resizeTimeout);
+    self.resizeTimeout = setTimeout(function () {
+      // wait a bit, so window width is updated after orientation change in wkwebview
+      self.update();
+    }, 100);
   },
 
   componentWillUnmount: function () {
@@ -69,6 +78,7 @@ module.exports = React.createClass({
       defaultErd.removeListener($scroller[0], this.update);
     }
     $scroller.off("scroll", this.update);
+    clearTimeout(self.resizeTimeout);
   },
 
   update: function () {
