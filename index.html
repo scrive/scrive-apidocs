@@ -207,6 +207,10 @@ API calls, or new API calls.
 <td>2017-05-15</td>
 <td>Add missing <code class="prettyprint">company</code> standard signatory field</td>
 </tr>
+<tr>
+<td>2017-06-08</td>
+<td>Add <code class="prettyprint">required</code> field to signatory attachments, optional attachments are now possible</td>
+</tr>
 </tbody></table>
 
 <h2 id="environments-amp-ip-addresses">Environments &amp; IP Addresses</h2>
@@ -3110,6 +3114,10 @@ closed.</p>
 
 <div class="json-schema">
 
+<p>An attachment requested from the signing party.
+Attachments requested from viewing only parties have no effect.</p>
+
+
 <p>This object has the following properties:</p>
 
 <h6><code>name</code> (string)</h6>
@@ -3117,11 +3125,33 @@ closed.</p>
 
 <div class="json-schema">
 
+<p>A name for the requested attachment.
+Will be visible to the signatory when signing the document.</p>
+
+
 </div>
 
 <h6><code>description</code> (string)</h6>
 
 <div class="json-schema">
+
+<p>A description for the requested attachment.
+Will be visible to the signatory when signing the document alongside
+the attachment name.</p>
+
+
+</div>
+
+<h6><code>required</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Whether the signatory must upload this attachment.
+If <code>false</code>, the signatory may choose not to upload this attachment
+when signing.</p>
+
+
+<p>Default: <code>true</code></p>
 
 </div>
 
@@ -3129,11 +3159,17 @@ closed.</p>
 
 <div class="json-schema">
 
+<p>Will be present if and when the party uploads this attachment.</p>
+
+
 </div>
 
 <h6><code>file_name</code> (string)</h6>
 
 <div class="json-schema">
+
+<p>Will be present if and when the party uploads this attachment.</p>
+
 
 </div>
 
@@ -4416,6 +4452,10 @@ closed.</p>
 
 <div class="json-schema">
 
+<p>An attachment requested from the signing party.
+Attachments requested from viewing only parties have no effect.</p>
+
+
 <p>This object has the following properties:</p>
 
 <h6><code>name</code> (string)</h6>
@@ -4423,11 +4463,33 @@ closed.</p>
 
 <div class="json-schema">
 
+<p>A name for the requested attachment.
+Will be visible to the signatory when signing the document.</p>
+
+
 </div>
 
 <h6><code>description</code> (string)</h6>
 
 <div class="json-schema">
+
+<p>A description for the requested attachment.
+Will be visible to the signatory when signing the document alongside
+the attachment name.</p>
+
+
+</div>
+
+<h6><code>required</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Whether the signatory must upload this attachment.
+If <code>false</code>, the signatory may choose not to upload this attachment
+when signing.</p>
+
+
+<p>Default: <code>true</code></p>
 
 </div>
 
@@ -4435,11 +4497,17 @@ closed.</p>
 
 <div class="json-schema">
 
+<p>Will be present if and when the party uploads this attachment.</p>
+
+
 </div>
 
 <h6><code>file_name</code> (string)</h6>
 
 <div class="json-schema">
+
+<p>Will be present if and when the party uploads this attachment.</p>
+
 
 </div>
 
@@ -5520,6 +5588,10 @@ closed.</p>
 
 <div class="json-schema">
 
+<p>An attachment requested from the signing party.
+Attachments requested from viewing only parties have no effect.</p>
+
+
 <p>This object has the following properties:</p>
 
 <h5><code>name</code> (string)</h5>
@@ -5527,11 +5599,33 @@ closed.</p>
 
 <div class="json-schema">
 
+<p>A name for the requested attachment.
+Will be visible to the signatory when signing the document.</p>
+
+
 </div>
 
 <h5><code>description</code> (string)</h5>
 
 <div class="json-schema">
+
+<p>A description for the requested attachment.
+Will be visible to the signatory when signing the document alongside
+the attachment name.</p>
+
+
+</div>
+
+<h5><code>required</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Whether the signatory must upload this attachment.
+If <code>false</code>, the signatory may choose not to upload this attachment
+when signing.</p>
+
+
+<p>Default: <code>true</code></p>
 
 </div>
 
@@ -5539,11 +5633,17 @@ closed.</p>
 
 <div class="json-schema">
 
+<p>Will be present if and when the party uploads this attachment.</p>
+
+
 </div>
 
 <h5><code>file_name</code> (string)</h5>
 
 <div class="json-schema">
+
+<p>Will be present if and when the party uploads this attachment.</p>
+
 
 </div>
 
