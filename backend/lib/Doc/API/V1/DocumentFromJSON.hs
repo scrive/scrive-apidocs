@@ -120,7 +120,7 @@ instance FromJSValueWithUpdate SignatoryLink where
                   , signatoryisauthor      = updateWithDefaultAndField False signatoryisauthor author
                   , signatoryispartner     = updateWithDefaultAndField False signatoryispartner signs
                   , signatorylinkcsvupload       = updateWithDefaultAndField Nothing signatorylinkcsvupload csv
-                  , signatoryattachments         = updateWithDefaultAndField [] signatoryattachments attachments
+                  , signatoryattachments         = updateSignatoryAttachmentList (fmap signatoryattachments ms) attachments
                   , signatorylinksignredirecturl = updateWithDefaultAndField Nothing signatorylinksignredirecturl sredirecturl
                   , signatorylinkrejectredirecturl = updateWithDefaultAndField Nothing signatorylinkrejectredirecturl rredirecturl
                   , signatorylinkauthenticationtoviewmethod = updateWithDefaultAndField StandardAuthenticationToView signatorylinkauthenticationtoviewmethod authenticationToView'
@@ -133,6 +133,15 @@ instance FromJSValueWithUpdate SignatoryLink where
       where
        updateWithDefaultAndField :: a -> (SignatoryLink -> a) -> Maybe a -> a
        updateWithDefaultAndField df uf mv = fromMaybe df (mv `mplus` (fmap uf ms))
+       updateSignatoryAttachmentList :: Maybe [SignatoryAttachment] -> Maybe [SignatoryAttachment] -> [SignatoryAttachment]
+       updateSignatoryAttachmentList existingAtts        Nothing        = fromMaybe [] existingAtts
+       updateSignatoryAttachmentList Nothing             (Just newAtts) = newAtts
+       updateSignatoryAttachmentList (Just existingAtts) (Just newAtts) = map (requiredFromExisting existingAtts) newAtts
+          where requiredFromExisting :: [SignatoryAttachment] -> SignatoryAttachment -> SignatoryAttachment
+                requiredFromExisting existing new =
+                    case find (\e -> signatoryattachmentname e == signatoryattachmentname new) existing of
+                         Nothing -> new
+                         Just e  -> new { signatoryattachmentrequired = signatoryattachmentrequired e}
 
 instance FromJSValue SignatoryField where
     fromJSValue = fromJSValueWithUpdate Nothing
