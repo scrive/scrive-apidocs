@@ -172,27 +172,12 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
                  AND chi.type = 8
                  AND chi.time >= period.from
                  AND chi.time < period.to) as "Docs closed"
-           , (SELECT count(*)
-                FROM documents JOIN signatory_links
-                  ON signatory_links.document_id = documents.id
-                 AND signatory_links.sign_time IS NOT NULL
-                 AND EXISTS (SELECT TRUE
-                               FROM signatory_links
-                               JOIN users ON users.id = signatory_links.user_id
-                              WHERE documents.author_id = signatory_links.id
-                                AND users.company_id = companies.id
-                                AND documents.status = 3 -- Closed
-                                -- count only those that are finished within the period
-                                -- FIXME, possibly: The select clauses are the
-                                -- same. Found no way of fixing this.
-                                AND (SELECT max(signatory_links.sign_time)
-                                       FROM signatory_links
-                                      WHERE signatory_links.is_partner
-                                        AND signatory_links.document_id = documents.id) >= period.from
-                                AND (SELECT max(signatory_links.sign_time)
-                                       FROM signatory_links
-                                      WHERE signatory_links.is_partner
-                                        AND signatory_links.document_id = documents.id) < period.to)) AS "Sigs closed"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.company_id = companies.id
+                 AND chi.type = 9
+                 AND chi.time >= period.from
+                 AND chi.time < period.to) as "Sigs closed"
            , (SELECT count(*)
                 FROM chargeable_items chi
                WHERE chi.company_id = companies.id
