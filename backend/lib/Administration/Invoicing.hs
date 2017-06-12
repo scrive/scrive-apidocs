@@ -149,24 +149,12 @@ invoicingQry fromDate toDate =
             "AND chi.type = " <?> CIClosingDocument <+>
             "AND chi.time >= " <?> fromDate <+>
             "AND chi.time < " <?> toDate <+> ") AS DocsClosed" <+>
-      ", (SELECT count(*)" <+>
-          "FROM documents JOIN signatory_links" <+>
-            "ON signatory_links.document_id = documents.id" <+>
-            "AND signatory_links.sign_time IS NOT NULL" <+>
-            "AND EXISTS (SELECT TRUE" <+>
-                          "FROM signatory_links" <+>
-                          "JOIN users ON users.id = signatory_links.user_id" <+>
-                        "WHERE documents.author_id = signatory_links.id" <+>
-                          "AND users.company_id = companies.id" <+>
-                          "AND documents.status = " <?> Closed <+>
-                          "AND (SELECT max(signatory_links.sign_time)" <+>
-                                  "FROM signatory_links" <+>
-                                "WHERE signatory_links.is_partner" <+>
-                                  "AND signatory_links.document_id = documents.id) >= " <?> fromDate <+>
-                          "AND (SELECT max(signatory_links.sign_time)" <+>
-                                  "FROM signatory_links" <+>
-                                "WHERE signatory_links.is_partner" <+>
-                                  "AND signatory_links.document_id = documents.id) < " <?> toDate <+> ")) AS SigsClosed" <+>
+       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
+            "FROM chargeable_items chi" <+>
+           "WHERE chi.company_id = companies.id" <+>
+             "AND chi.type = " <?> CIClosingSignature <+>
+             "AND chi.time >= " <?> fromDate <+>
+             "AND chi.time < " <?> toDate <+> ") AS SigsClosed" <+>
       ", (SELECT count(*)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
