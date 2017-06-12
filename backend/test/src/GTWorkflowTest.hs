@@ -33,7 +33,6 @@ gtWorkflowTests env = testGroup "GTWorkflowTest" [
   testThat "Document with extensible digital signature can be extended" env testExtendDigitalSignatures
   ]
 
-
 testExtendDigitalSignatures :: TestEnv ()
 testExtendDigitalSignatures = do
   author <- addNewRandomUser

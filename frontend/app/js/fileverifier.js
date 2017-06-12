@@ -31,8 +31,6 @@ var FileVerifierView = Backbone.View.extend({
               bleft.append("<div class='verificationSuccessIcon'>");
               title = localization.verification.success;
               bright.append($("<div/>").text(localization.verification.time + ": " + res.time));
-              bright.append("<BR/>");
-              bright.append($("<div/>").text(localization.verification.gateway + ": " + res.gateway));
           }
           else if (res.error)  {
               bleft.append("<div class='verificationErrorIcon' style='margin-top: 25px;'>");
