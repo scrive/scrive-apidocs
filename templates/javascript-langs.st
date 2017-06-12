@@ -689,8 +689,6 @@ javascriptLocalisation =
              ,  error : "$_verificationError()$"
              ,  errorMessage : "$_verificationErrorMessage()$"
              ,  time: "$_verificationTime()$"
-             ,  gateway : "$_verificationGateway()$"
-
           }
         , payments: {
              vat: "$_paymentsVat()$"
