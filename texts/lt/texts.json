@@ -861,7 +861,6 @@
 "_verificationFailed":"Nepavyko patikrinti",
 "_verificationFailedMessage":"Šis dokumentas nebuvo pasirašytas per „Scrive“ arba kas nors pakeitė pirminį dokumentą.",
 "_verificationFooter":"Šį patikrinimą atliko „Scrive“. Pasviruoju šriftu pateiktus duomenis saugiai patvirtino „Scrive“. Skaitmeninis parašas užtikrina galimybę matematiškai įrodyti šio dokumento tikrumą nepriklausomai nuo „Scrive“. Išsamesnių duomenų apie šį dokumentą galima rasti įslaptintuose prieduose (įslaptintus priedus galima atsiversti PDF formato failus atidarančiomis programomis, kuriomis galima skaityti slaptus priedus, pvz.: „Adobe Reader\"). Jūsų patogumui „Scrive“ taip pat suteikia galimybę automatiškai pasitikrinti dokumento tikrumą čia: $verifyurl$",
-"_verificationGateway":"Šliuzas",
 "_verificationMethod":"Pasiūlymo būdas",
 "_verificationSuccess":"Galiojantis parašas",
 "_verificationTime":"Laikas",

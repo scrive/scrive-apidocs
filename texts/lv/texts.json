@@ -861,7 +861,6 @@
 "_verificationFailed":"Pārbaude neizdevās",
 "_verificationFailedMessage":"Dokuments netika parakstīts ar Scrive, vai arī tā oriģinālo versiju kāds ir izmainījis.",
 "_verificationFooter":"Šo pārbaudes lapu ir izdevis Scrive. Informāciju slīprakstā Scrive ir sekmīgi pārbaudījis. Elektroniskais paraksts nodrošina, ka šī dokumenta īstenum var pierādīt matemātiski un neatkarīgi no Scrive. Vairāk informācijas par dokumentu skatīt slēptajos pielikumos (izmantojiet PDF lasītāju, kas uzrāda slēptos pielikumus, piemēram, Adobe Reader). Jūsu ērtībai Scrive piedāvā arī pakalpojumu, kas ļauj automātiski pārbaudīt dokumenta īstenumu: $verifyurl$",
-"_verificationGateway":"Vārti",
 "_verificationMethod":"Uzaicināšanas veids",
 "_verificationSuccess":"Derīgs paraksts",
 "_verificationTime":"Laiks",

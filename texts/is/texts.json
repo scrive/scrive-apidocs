@@ -861,7 +861,6 @@
 "_verificationFailed":"Staðfesting tókst ekki",
 "_verificationFailedMessage":"Ekki hefur verið skrifað undir þetta skjal með Scrive eða upprunalegri útgáfu þess hefur verið breytt af einhverjum.",
 "_verificationFooter":"Þessi staðfesting var gefin út af Scrive.  Skáletraðar upplýsingar hafa verið staðfestar á öruggan máta af Scrive. Stafræna undirskriftin tryggir að upprunaleika þessa skjals er hægt að sanna stærðfræðilega og óháð Scrive. Frekari upplýsingar um þetta skjal má nálgast með því að skoða falin fylgiskjöl (notaðu PDF-lesara á borð við Adobe Reader sem getur sýnt falin fylgiskjöl). Þér til hægðarauka býður Scrive einnig upp á þjónustu sem gerir þér kleift að staðfesta sjálfkrafa upprunaleika skjalsins á: $verifyurl$",
-"_verificationGateway":"Gátt",
 "_verificationMethod":"Boðmáti",
 "_verificationSuccess":"Gild undirskrift",
 "_verificationTime":"Tími",

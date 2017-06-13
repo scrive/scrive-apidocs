@@ -861,7 +861,6 @@
 "_verificationFailed":"Tõendamine nurjus",
 "_verificationFailedMessage":"See dokument pole Scrive keskkonnas allkirjastatud või keegi on originaali muutnud.",
 "_verificationFooter":"Antud tõendus anti Scrive poolt. Kursiivis toodud informatsioon on Scrive poolt turvaliselt tõendatud. Digitaalne allkiri tagab, et dokumendi puutumatust on võimalik matemaatiliselt ja Scrive'st sõltumatult tõendada. Käesolevat dokumenti puudutavat täiendavat informatsiooni leiate varjatud manustest (kasutage varjatud manuste kuvamiseks PDF-lugerit, nagu Adobe Reader). Teie mugavuse nimel pakub Scrive ka teenust, mis võimaldab dokumendi tõepärasust automaatselt tuvastada: $verifyurl$",
-"_verificationGateway":"Võrguvärav",
 "_verificationMethod":"Kutseviis",
 "_verificationSuccess":"Kehtiv allkiri",
 "_verificationTime":"Kellaaeg",
