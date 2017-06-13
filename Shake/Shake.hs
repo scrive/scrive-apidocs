@@ -475,6 +475,7 @@ distributionRules newBuild = do
                     , "frontend/dist"
                     , "scrivepdftools"
                     , "GuardTime"
+                    , "GuardTime_old"
                     , "templates"
                     , "pure_sql"
                     , "files"
