@@ -148,17 +148,6 @@ handleEventInvitation docid slid eid timeDiff templates eventType =
                 SL_Failed 0 5001 -> handleDeliveredInvitation bd slid timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
                 SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation bd slid
                 _ -> return ()
-            handleEv (SendinBlueEvent email ev) = do
-              logEmails email
-              case ev of
-                SiB_Delivered -> handleDeliveredInvitation bd slid timeDiff
-                SiB_Opened -> handleOpenedInvitation slid email muid
-                SiB_Deferred _ -> when (signemail == email) $ handleDeferredInvitation bd slid email
-                SiB_HardBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                SiB_SoftBounce   _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                SiB_Blocked      _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                SiB_InvalidEmail _ -> when (signemail == email) $ handleUndeliveredInvitation bd slid
-                _ -> return ()
 
         theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
 
@@ -183,9 +172,6 @@ handleEventOtherMail docid eid timeDiff templates eventType = logDocument docid 
           handleEv (SocketLabsEvent _ ev) = case ev of
                                               SL_Delivered -> logDeliveryTime timeDiff
                                               SL_Failed 0 5001 -> logDeliveryTime timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
-                                              _ -> return ()
-          handleEv (SendinBlueEvent _ ev) = case ev of
-                                              SiB_Delivered -> logDeliveryTime timeDiff
                                               _ -> return ()
       -- no templates are used here, so runTemplatesT is not necessary, right? XXX
       theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
