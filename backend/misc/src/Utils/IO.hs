@@ -68,7 +68,6 @@ importantExecutables :: [(T.Text, [String])]
 importantExecutables =
   [ ("java", ["-version"])
   , ("curl", ["-V"])
-  , ("stdbuf", ["--version"])
   , ("mutool", ["-v"])
   , ("convert", ["--version"])
   , ("identify", ["--version"])

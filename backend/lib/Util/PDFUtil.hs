@@ -57,10 +57,6 @@ renderPage fileContent pageNo widthInPixels = do
     let sourcePath = tmpPath ++ "/source.pdf"
     liftBase $ BS.writeFile sourcePath fileContent
     let pagePath = tmpPath ++ "/output-" ++ show pageNo ++ ".png"
-        -- Run mutool through stdbuf and set its output buffering to
-        -- line buffering as communication via pipes uses block
-        -- buffering by default and we would not be able to get page
-        -- info immediately.
     (mudrawcode,mudrawout,mudrawerr) <- liftBase $ readProcessWithExitCode "mutool" (concat [
             ["draw"]
           , ["-o", tmpPath ++ "/output-%d.png"]
