@@ -32,7 +32,9 @@ data AppConf = AppConf {
   , useHttps           :: Bool                         -- ^ should we redirect to https?
   , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
   , dbConfig           :: T.Text                       -- ^ postgresql configuration
+  , maxDBConnections   :: Int                          -- ^ limit of db connections
   , redisCacheConfig   :: Maybe RedisConfig            -- ^ redis configuration
+  , localFileCacheSize :: Int                          -- ^ size of local cache for files
   , logConfig          :: LogConfig                    -- ^ logging configuration
   , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
   , cdnBaseUrl         :: Maybe String                 -- ^ for CDN content in prod mode
@@ -83,9 +85,15 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "database"
       dbConfig
       "Database connection string"
+  <*> field "max_db_connections"
+      maxDBConnections
+      "Database connections limit"
   <*> fieldOpt "redis_cache"
       redisCacheConfig
       "Redis cache configuration"
+  <*> field "local_file_cache_size"
+      localFileCacheSize
+      "Local file cache size in bytes"
   <*> field "logging"
       logConfig
       "Logging configuration"
@@ -146,7 +154,9 @@ instance Default AppConf where
     , useHttps           = True
     , amazonConfig       = Nothing
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
+    , maxDBConnections   = 100
     , redisCacheConfig   = Just def
+    , localFileCacheSize = 200000000
     , logConfig          = def
     , production         = True
     , cdnBaseUrl         = Nothing

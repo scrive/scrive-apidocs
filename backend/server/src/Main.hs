@@ -61,7 +61,7 @@ main = withCurlDo $ do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   appConf <- readConfig putStrLn config
   let connSettings = pgConnSettings $ dbConfig appConf
-  pool <- liftBase . createPoolSource $ connSettings kontraComposites
+  pool <- liftBase $ createPoolSource (connSettings kontraComposites) (maxDBConnections appConf)
   rng <- newCryptoRNGState
   lr <- mkLogRunner "kontrakcja" (logConfig appConf) rng
   withLogger lr $ \runLogger -> runLogger $ do
@@ -77,7 +77,7 @@ main = withCurlDo $ do
     appGlobals <- do
       templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
       mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
-      filecache <- MemCache.new BS.length 200000000
+      filecache <- MemCache.new BS.length (localFileCacheSize appConf)
       return AppGlobals {
           templates          = templates
         , mrediscache        = mrediscache
@@ -113,7 +113,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
         (runlogger appGlobals) $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
-      withPostgreSQL (unConnectionSource $ connsource appGlobals maxConnectionTracker) . runCryptoRNGT (cryptorng appGlobals) $ do
+      withPostgreSQL (unConnectionSource $ connsource appGlobals (maxConnectionTracker $ maxDBConnections appConf)) . runCryptoRNGT (cryptorng appGlobals) $ do
         initDatabaseEntries appConf
       liftBase $ waitForTermination
       logInfo_ "Termination request received"

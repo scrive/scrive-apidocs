@@ -23,8 +23,8 @@ newtype ConnectionTracker = ConnectionTracker {
     unConnectionTracker :: forall m. MonadLog m => Int -> Int -> m ()
   }
 
-maxConnectionTracker :: ConnectionTracker
-maxConnectionTracker = ConnectionTracker $ \allocatedNow availableNow -> do
+maxConnectionTracker :: Int -> ConnectionTracker
+maxConnectionTracker maxConnections = ConnectionTracker $ \allocatedNow availableNow -> do
   when (allocatedNow == maxConnections && availableNow == 0) $ do
     logAttention "Limit of available database connections reached" $ object [
         "allocated" .= allocatedNow
@@ -39,9 +39,6 @@ detailedConnectionTracker = ConnectionTracker $ \allocatedNow availableNow -> do
 
 ----------------------------------------
 
-maxConnections :: Int
-maxConnections = 100
-
 pgConnSettings :: Text -> [CompositeType] -> ConnectionSettings
 pgConnSettings dbconf ctypes = def {
   csConnInfo = dbconf
@@ -49,8 +46,9 @@ pgConnSettings dbconf ctypes = def {
 }
 
 createPoolSource :: ConnectionSettings
+                 -> Int
                  -> IO (ConnectionTracker -> TrackedConnectionSource)
-createPoolSource cs = do
+createPoolSource cs maxConnections = do
   pool <- createPool (connect cs) disconnect
     1  -- number of subpools, we do not need that functionality
     10 -- connection linger time after returned to pool

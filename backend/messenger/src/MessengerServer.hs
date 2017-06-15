@@ -59,8 +59,8 @@ main = do
     let pgSettings = pgConnSettings (mscDBConfig conf) []
     withPostgreSQL (unConnectionSource $ simpleSource pgSettings) $
       checkDatabaseAllowUnknownTables [] messengerTables
-    cs@(ConnectionSource pool) <- ($ maxConnectionTracker)
-      <$> liftBase (createPoolSource pgSettings)
+    cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ mscMaxDBConnections conf))
+      <$> liftBase (createPoolSource pgSettings (mscMaxDBConnections conf))
 
     let cron = jobsWorker cs
         sender = smsConsumer rng cs $ createSender $ sendersConfigFromMessengerConf conf
