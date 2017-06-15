@@ -68,15 +68,15 @@ main = do
     withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
       checkDatabaseAllowUnknownTables [] mailerTables
     awsconf <- do
-      localCache <- MemCache.new BS.length 52428800
+      localCache <- MemCache.new BS.length (mscLocalFileCacheSize conf)
       globalCache <- F.forM (mscRedisCacheConfig conf) mkRedisConnection
       return $ AWS.AmazonConfig {
           awsConfig = mscAmazonConfig conf
         , awsLocalCache = localCache
         , awsGlobalCache = globalCache
         }
-    cs@(ConnectionSource pool) <- ($ maxConnectionTracker)
-      <$> liftBase (createPoolSource $ pgSettings mailerComposites)
+    cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ mscMaxDBConnections conf))
+      <$> liftBase (createPoolSource (pgSettings mailerComposites)  (mscMaxDBConnections conf))
 
     E.bracket (startServer runLogger conf cs rng) (liftBase . killThread) . const $ do
       let master = createSender cs $ mscMasterSender conf
@@ -234,7 +234,6 @@ main = do
         isDelivered (_, _, _, SendGridEvent _ SG_Delivered{} _) = True
         isDelivered (_, _, _, MailGunEvent _ MG_Delivered) = True
         isDelivered (_, _, _, SocketLabsEvent _ SL_Delivered) = True
-        isDelivered (_, _, _, SendinBlueEvent _ SiB_Delivered) = True
         isDelivered _ = False
 
         testSender = Address {

@@ -17,11 +17,12 @@ import SMS.Data
 import Utils.TH
 
 data MessengerServerConf = MessengerServerConf {
-  mscHttpBindAddress :: !(Word32, Word16)
-, mscDBConfig        :: !Text
-, mscLogConfig       :: !LogConfig
-, mscSenderDefault   :: !SenderConfig
-, mscSenderTelia     :: !SenderConfig
+  mscHttpBindAddress  :: !(Word32, Word16)
+, mscDBConfig         :: !Text
+, mscMaxDBConnections :: !Int
+, mscLogConfig        :: !LogConfig
+, mscSenderDefault    :: !SenderConfig
+, mscSenderTelia      :: !SenderConfig
 } deriving (Eq, Show)
 
 newtype SendersConfig = SendersConfig (SMSProvider -> SenderConfig)
@@ -46,6 +47,9 @@ unjsonMessengerServerConf = objectOf $ MessengerServerConf
   <*> field "database"
       mscDBConfig
       "Database connection string"
+  <*> field "max_db_connections"
+      mscMaxDBConnections
+      "Database connections limit"
   <*> field "logging"
       mscLogConfig
       "Logging configuration"
@@ -106,7 +110,8 @@ instance Default MessengerServerConf where
   def = MessengerServerConf {
       mscHttpBindAddress = (0x7f000001, 6668)
     , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
-    , mscLogConfig = def
+    , mscMaxDBConnections = 100
+     , mscLogConfig = def
     , mscSenderDefault = LocalSender {
         localDirectory = "/tmp/default"
       , localOpenCommand = Nothing

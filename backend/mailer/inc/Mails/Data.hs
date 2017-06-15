@@ -10,7 +10,6 @@ module Mails.Data (
   , SendGridEvent(..)
   , MailGunEvent(..)
   , SocketLabsEvent(..)
-  , SendinBlueEvent(..)
   , Event(..)
   , Mail(..)
   --, unjsonAddress
@@ -254,24 +253,10 @@ data SocketLabsEvent
   | SL_Complained
     deriving (Eq, Ord, Show, Data, Typeable)
 
-data SendinBlueEvent
-  = SiB_Request
-  | SiB_Delivered
-  | SiB_Opened
-  | SiB_Click
-  | SiB_HardBounce    !String
-  | SiB_SoftBounce    !String
-  | SiB_Blocked       !String
-  | SiB_Spam          !String
-  | SiB_InvalidEmail  !String
-  | SiB_Deferred      !String
-    deriving (Eq, Ord, Show, Data, Typeable)
-
 data Event
   = SendGridEvent !String !SendGridEvent !String   -- ^ email, event, category
   | MailGunEvent !String !MailGunEvent             -- ^ email, event
   | SocketLabsEvent !String !SocketLabsEvent       -- ^ email, event
-  | SendinBlueEvent !String !SendinBlueEvent
   deriving (Eq, Ord, Show, Data, Typeable)
 
 instance PQFormat Event where

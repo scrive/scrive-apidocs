@@ -83,11 +83,11 @@ main = do
     withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $
       checkDatabase kontraDomains kontraTables
 
-    ConnectionSource pool <- ($ maxConnectionTracker)
-      <$> liftBase (createPoolSource $ connSettings kontraComposites)
+    ConnectionSource pool <- ($ (maxConnectionTracker $ maxDBConnections appConf))
+      <$> liftBase (createPoolSource (connSettings kontraComposites) (maxDBConnections appConf))
     templates <- liftBase readGlobalTemplates
     mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
-    filecache <- MemCache.new BS.length 52428800
+    filecache <- MemCache.new BS.length (localFileCacheSize appConf)
 
     -- Asynchronous event dispatcher; if you want to add a consumer to the event
     -- dispatcher, please combine the two into one dispatcher function rather

@@ -19,14 +19,16 @@ import Mails.Data
 import Utils.TH
 
 data MailingServerConf = MailingServerConf {
-  mscHttpBindAddress  :: !(Word32, Word16)
-, mscDBConfig         :: !Text
-, mscRedisCacheConfig :: !(Maybe RedisConfig)
-, mscLogConfig        :: !LogConfig
-, mscMasterSender     :: !SenderConfig
-, mscSlaveSender      :: !(Maybe SenderConfig)
-, mscAmazonConfig     :: !(Maybe (String, String, String))
-, testReceivers       :: ![Address]
+  mscHttpBindAddress    :: !(Word32, Word16)
+, mscDBConfig           :: !Text
+, mscMaxDBConnections   :: !Int
+, mscRedisCacheConfig   :: !(Maybe RedisConfig)
+, mscLocalFileCacheSize :: !Int
+, mscLogConfig          :: !LogConfig
+, mscMasterSender       :: !SenderConfig
+, mscSlaveSender        :: !(Maybe SenderConfig)
+, mscAmazonConfig       :: !(Maybe (String, String, String))
+, testReceivers         :: ![Address]
 } deriving (Eq, Show)
 
 -- | SMTP callback key authentication will be used to receive callbacks
@@ -96,9 +98,15 @@ unjsonMailingServerConf = objectOf $ MailingServerConf
   <*> field "database"
       mscDBConfig
       "Database connection string"
+  <*> field "max_db_connections"
+      mscMaxDBConnections
+      "Database connections limit"
   <*> fieldOpt "redis_cache"
       mscRedisCacheConfig
       "Redis cache configuration"
+  <*> field "local_file_cache_size"
+      mscLocalFileCacheSize
+      "Local file cache size in bytes"
   <*> field "logging"
       mscLogConfig
       "Logging configuration"
@@ -178,7 +186,9 @@ instance Default MailingServerConf where
   def = MailingServerConf {
       mscHttpBindAddress = (0x7f000001, 6666)
     , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
+    , mscMaxDBConnections = 100
     , mscRedisCacheConfig = Just def
+    , mscLocalFileCacheSize = 52428800
     , mscLogConfig = def
     , mscMasterSender = LocalSender {
         localDirectory = "/tmp"
