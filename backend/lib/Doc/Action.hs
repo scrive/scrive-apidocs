@@ -237,7 +237,7 @@ findAndExtendDigitalSignatures = do
               [ Guardtime{ extended = False, private = True }
               , Guardtime{ extended = False, private = False }
               ]
-            ] [] 50
+            ] [] 100
   when (not (null docs)) $ do
     logInfo "findAndExtendDigitalSignatures: considering documents" $ object [
         "documents" .= length docs
