@@ -288,8 +288,8 @@ docApiV2SetFile did = logDocument did . api $ do
     case mFile of
       Nothing -> dbUpdate $ DetachFile actor
       Just file -> do
-        dbUpdate $ AttachFile (fileid file) actor
         moldfileid <- fmap mainfileid <$> documentfile <$> theDocument
+        dbUpdate $ AttachFile (fileid file) actor
         case moldfileid of
           Just oldfileid -> recalcuateAnchoredFieldPlacements oldfileid (fileid file)
           Nothing -> return ()
