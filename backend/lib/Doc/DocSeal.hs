@@ -74,7 +74,7 @@ import qualified Amazon as AWS
 import qualified Doc.SealSpec as Seal
 import qualified HostClock.Model as HC
 
-personFromSignatory :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
+personFromSignatory :: (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
                     => String -> TimeZoneName -> SignatoryIdentifierMap -> CheckboxImagesMapping-> SignatoryLink -> m Seal.Person
 personFromSignatory inputpath tz sim checkboxMapping signatory = do
     emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
@@ -113,7 +113,7 @@ personFromSignatory inputpath tz sim checkboxMapping signatory = do
                          , Seal.highlightedImages  = highlightedImages
                          }
 
-personExFromSignatoryLink :: (MonadDB m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
+personExFromSignatoryLink :: (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
                           => String -> TimeZoneName -> SignatoryIdentifierMap -> CheckboxImagesMapping -> SignatoryLink -> m Seal.Person
 personExFromSignatoryLink inputpath tz sim checkboxMapping sl@SignatoryLink{..} = do
   person <- personFromSignatory inputpath tz sim checkboxMapping sl
@@ -125,7 +125,7 @@ personExFromSignatoryLink inputpath tz sim checkboxMapping sl@SignatoryLink{..} 
      , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationtosignmethod == SMSPinAuthenticationToSign)
      }
 
-fieldsFromSignatory :: forall m. (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => CheckboxImagesMapping -> SignatoryLink -> m [Seal.Field]
+fieldsFromSignatory :: forall m. (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => CheckboxImagesMapping -> SignatoryLink -> m [Seal.Field]
 fieldsFromSignatory checkboxMapping SignatoryLink{signatoryfields} =
   silenceJPEGFieldsFromFirstSignature <$> concat <$> mapM makeSealField signatoryfields
   where
@@ -192,7 +192,7 @@ fieldsFromSignatory checkboxMapping SignatoryLink{signatoryfields} =
                  , Seal.keyColor         = Just (255,255,255) -- white is transparent
                  }
 
-highlightedImageFromHighlightedPage :: forall m. (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => String -> HighlightedPage -> m Seal.HighlightedImage
+highlightedImageFromHighlightedPage :: forall m. (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => String -> HighlightedPage -> m Seal.HighlightedImage
 highlightedImageFromHighlightedPage inputpath HighlightedPage{..} = do
   pdfContent <- liftBase $ BS.readFile inputpath
   content <- getFileIDContents highlightedPageFileID
@@ -283,7 +283,7 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
                  }
 
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m)
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m)
                            => SignatoryIdentifierMap -> Document -> m Seal.SealAttachment
 evidenceOfIntentAttachment sim doc = do
   let title = documenttitle doc

@@ -4,6 +4,7 @@ module Assembler (
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.IO.Class
 import Control.Monad.Time
 import Control.Monad.Trans.Control
 import Crypto.RNG
@@ -28,7 +29,7 @@ import Mails.Data
 import MinutesTime
 import qualified Amazon as AWS
 
-assembleContent :: (CryptoRNG m, MonadDB m, MonadMask m, MonadBaseControl IO m, MonadLog m, AWS.AmazonMonad m, MonadTime m) => Mail -> m BSL.ByteString
+assembleContent :: (CryptoRNG m, MonadDB m, MonadIO m, MonadMask m, MonadBaseControl IO m, MonadLog m, AWS.AmazonMonad m, MonadTime m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
   time <- currentTime
   (boundaryMixed, boundaryAlternative,boundaryRelated) <- createBoundaries
