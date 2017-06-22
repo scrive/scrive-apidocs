@@ -91,7 +91,7 @@ def check_language_tst(test, drv, api):
     drv.scroll_to_bottom()
 
     # open rejection modal and take a screenshot
-    drv.wait_for_element_and_click('.section.sign .transparent-button')
+    drv.wait_for_element_and_click('.section.sign .button.action')
     drv.wait_for_element('.above-overlay')
     drv.screenshot(first_sleep_for=1)  # wait for animation to finish
 
