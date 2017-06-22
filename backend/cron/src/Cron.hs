@@ -168,7 +168,7 @@ main = do
             logInfo "Archived documents for signatories" $ object [
                 "signatory_count" .= archived
               ]
-          return . RerunAfter $ ihours 24
+          RerunAt . nextDayAtHour 19 <$> currentTime
         EmailChangeRequestsEvaluation -> do
           runScheduler $ actionQueue emailChangeRequest
           return . RerunAfter $ ihours 1
@@ -183,7 +183,7 @@ main = do
             Nothing -> do
               logInfo "SFTP config missing; skipping" $ object []
             Just sftpConfig -> runScheduler $ uploadInvoicing sftpConfig
-          RerunAt . nextDayOneInTheMorning <$> currentTime
+          RerunAt . nextDayAtHour 1 <$> currentTime
         MailEventsProcessing -> do
           runScheduler Mails.Events.processEvents
           return . RerunAfter $ iseconds 5
