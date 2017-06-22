@@ -69,7 +69,7 @@ def check_regular_rejection(test, drv, api):
     drv.screenshot(first_sleep_for=1)
 
     # click reject button and wait for confirmation modal to show up
-    drv.wait_for_element_and_click('.section.sign .transparent-button')
+    drv.wait_for_element_and_click('.section.sign .button:not(.action)')
     drv.wait_for_element('.above-overlay')
     drv.screenshot(first_sleep_for=1)
 
@@ -92,7 +92,7 @@ def check_custom_rejection(test, drv, api):
     test.arrow_scroll(skip_scroll_to_top=True)
 
     # click reject button and wait for confirmation modal to show up
-    drv.wait_for_element_and_click('.section.sign .transparent-button')
+    drv.wait_for_element_and_click('.section.sign .button:not(.action)')
     drv.wait_for_element('.above-overlay')
 
     # fill text input
@@ -106,7 +106,7 @@ def check_custom_rejection(test, drv, api):
     test.sleep(.5)  # there's a 0.2s transition on z-index
 
     # click reject button again
-    drv.wait_for_element_and_click('.section.sign .transparent-button')
+    drv.wait_for_element_and_click('.section.sign .button:not(.action)')
     drv.wait_for_element('.above-overlay')
 
     textarea = drv.get_element('.reject-textarea textarea', number=1)
@@ -180,7 +180,7 @@ def check_signing_settings2(test, drv, api):
     drv.screenshot(first_sleep_for=1)
 
     # click reject button and wait for confirmation modal to show up
-    drv.wait_for_element_and_click('.section.sign .transparent-button')
+    drv.wait_for_element_and_click('.section.sign .button:not(.action)')
     drv.wait_for_element('.above-overlay')
 
     # screenshot showing reject modal without a reason
@@ -207,7 +207,7 @@ def check_signing_settings3(test, drv, api):
     drv.screenshot(first_sleep_for=1)
 
     # click reject button and wait for confirmation modal to show up
-    drv.wait_for_element_and_click('.section.sign .transparent-button')
+    drv.wait_for_element_and_click('.section.sign .button:not(.action)')
     drv.wait_for_element('.above-overlay')
 
     # screenshot showing reject modal with a reason field
