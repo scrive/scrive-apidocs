@@ -27,7 +27,7 @@ var Obligatory = require("../../../scripts/designview/typesetters/obligatory");
 
         var checkbox = TestUtils.findRenderedDOMComponentWithClass(obligatory, "checkbox");
 
-        var label = TestUtils.findRenderedDOMComponentWithClass(obligatory, "label");
+        var label = TestUtils.findRenderedDOMComponentWithClass(obligatory, "checkbox-label");
 
         // make the checkbox unchecked.
         if (/checked/.test(checkbox.props.className)) {

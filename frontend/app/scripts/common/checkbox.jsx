@@ -48,7 +48,7 @@ var Track = require("./track");
             </div>
           </div>
           { this.props.label &&
-            <div>{this.props.label}</div>
+            <div className="checkbox-label">{this.props.label}</div>
           }
         </div>
       );
