@@ -562,6 +562,7 @@ javascriptLocalisation =
              , companyNumberLabel: "$_companyNumberLabel()$"
              , personalNumberLabel: "$_personalNumberLabel()$"
              , authorAttachmentsUnderstoodContent : "$_authorAttachmentsUnderstoodContent()$"
+             , initiatorTitle: "$_signViewInitiatorTitle()$"
              , signatoriesTitle: "$_signViewSignatoriesTitle()$"
              , notEntered: "$_notEntered()$"
              , filladitionfieldslabel: "$_filladitionfieldslabel()$"

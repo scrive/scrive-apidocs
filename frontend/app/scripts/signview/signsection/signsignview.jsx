@@ -85,7 +85,7 @@ var classNames = require("classnames");
           {/* if */ canHaveRejectButton &&
             <Button
               ref="rejectButton"
-              className="transparent-button button-block"
+              className="button-block small-button-block"
               text={
                 doc.allowrejectreason() ?
                   localization.process.rejectbuttontext :

@@ -143,19 +143,23 @@ textarea {
 .button-block {
   display: block;
   font-size: @signview-font-size-large;
+  font-weight: 400;
+  line-height: normal;
+  margin-top: @signview-gutter;
+  width: auto;
+
+  &.small-button-block{
+    .font-normal();
+    font-weight: 300;
+  }
 
   .on-small-view({
     font-size: @signview-small-font-size-large;
-  });
-
-  font-weight: 400;
-  line-height: normal;
-  width: auto;
-  margin-top: @signview-gutter;
-
-  .on-small-view({
     margin-top: @signview-half-gutter;
 
+    &.small-button-block {
+      padding: (@signview-button-padding-tb-small - 4px) @signview-button-padding-lr-small;
+    }
     &.transparent-button {
       padding: (@signview-button-padding-tb-small - 4px) @signview-button-padding-lr-small;
     }

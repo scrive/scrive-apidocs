@@ -28,7 +28,7 @@
   }
 
   .title {
-    margin-bottom: @signview-section-padding;
+    margin-bottom: @signview-parties-section-padding;
 
     .on-small-view({
       margin-bottom: @signview-gutter;
@@ -38,6 +38,10 @@
   .name {
     margin-bottom: @signview-gutter;
     font-weight: 300;
+
+    &.title-margin-top {
+      margin-top: @signview-parties-section-padding + @signview-font-size-large;
+    }
 
     .on-small-view({
       margin-bottom: @signview-gutter;

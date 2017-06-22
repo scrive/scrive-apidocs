@@ -13,17 +13,24 @@ var _ = require("underscore");
     signatories: function () {
       var signatories = this.props.model.signatories();
       var current = _.find(signatories, function (s) { return s.current(); });
-      var others  = _.filter(signatories, function (s) { return !s.current(); });
-      var sigs = _.compact([current].concat(others));
-      return _.filter(sigs, function (s) { return s.signs(); });
+      if (this.authorIsViewer()) {
+        var author  = _.find(signatories, function (s) { return s.author(); });
+        var others1 = _.filter(signatories, function (s) { return !s.author() && !s.current() && s.signs(); });
+        return _.compact([author, current].concat(others1));
+      } else {
+        var others2 = _.filter(signatories, function (s) { return !s.current() && s.signs(); });
+        return _.compact([current].concat(others2));
+      }
+    },
+    authorIsViewer: function () {
+      var signatories = this.props.model.signatories();
+      var author = _.find(signatories, function (s) { return s.author(); });
+      return !author.signs();
     },
 
     render: function () {
       var sigs = this.signatories();
-
-      if (!ViewSize.isSmall()) {
-        sigs = [{type: "title"}].concat(sigs);
-      }
+      var authorIsViewer = this.authorIsViewer();
 
       var numGroups = ViewSize.isMedium() ? 2 : 3;
 
@@ -35,19 +42,22 @@ var _ = require("underscore");
         <span>
           {/* if */ !ViewSize.isSmall() &&
             <span>
-              {_.map(groups, function (group, index) {
+              {_.map(groups, function (group, gIndex) {
                 return (
-                  <div key={index} className="section parties">
-                    {_.map(group, function (s) {
-                      if (s.type === "title") {
-                        return (
-                          <div key="title" className={ViewSize.isMedium() ? "col-xs-6" : "col-xs-4"}>
-                            <h1 className="title">{localization.docsignview.signatoriesTitle}</h1>
-                          </div>
-                        );
-                      } else {
-                        return <DocumentViewSignatory key={s.signatoryid()} signatory={s} />;
-                      }
+                  <div key={gIndex} className="section parties">
+                    {_.map(group, function (s, sIndex) {
+                      var authorTitle = authorIsViewer && sIndex == 0 && gIndex == 0;
+                      var firstPartyTitle = gIndex == 0 &&
+                            ((authorIsViewer && sIndex == 1) || (!authorIsViewer && sIndex == 0));
+                      var titleRow = gIndex == 0 && !authorTitle && !firstPartyTitle;
+                      return (
+                        <DocumentViewSignatory
+                            isViewingAuthor={authorTitle}
+                            firstParty={firstPartyTitle}
+                            titleRow={titleRow}
+                            key={s.signatoryid()} signatory={s}
+                        />
+                      );
                     })}
                   </div>
                 );
@@ -57,7 +67,12 @@ var _ = require("underscore");
           {/* else */ ViewSize.isSmall() &&
             <span>
               {_.map(sigs, function (s, index) {
-                return <DocumentViewSignatory first={index == 0} key={s.signatoryid()} signatory={s} />;
+                var authorTitle = authorIsViewer && index == 0;
+                var firstPartyTitle = ((authorIsViewer && index == 1) || (!authorIsViewer && index == 0));
+                return <DocumentViewSignatory
+                            isViewingAuthor={authorTitle}
+                            firstParty={firstPartyTitle}
+                            key={s.signatoryid()} signatory={s} />;
               })}
             </span>
           }

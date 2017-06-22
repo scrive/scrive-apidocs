@@ -10,7 +10,9 @@ module.exports = React.createClass({
 
     propTypes: {
       signatory: React.PropTypes.object,
-      first: React.PropTypes.bool
+      isViewingAuthor: React.PropTypes.bool,
+      firstParty: React.PropTypes.bool,
+      titleRow: React.PropTypes.bool
     },
 
     signatorySummary: function () {
@@ -86,10 +88,15 @@ module.exports = React.createClass({
       return (
         <div className={divClass}>
           <div className={smallView ? "col-xs-12" : ""}>
-            {this.props.first && smallView &&
+            {this.props.isViewingAuthor &&
+              <h1 className="title">{localization.docsignview.initiatorTitle}</h1>
+            }
+            {this.props.firstParty &&
               <h1 className="title">{localization.docsignview.signatoriesTitle}</h1>
             }
-            <h1 className="name">{signatory.nameOrEmailOrMobile() || localization.pad.notNamedParty}</h1>
+            <h1 className={this.props.titleRow ? "name title-margin-top" : "name"}>
+              {signatory.nameOrEmailOrMobile() || localization.pad.notNamedParty}
+            </h1>
             {/* if */ infoList.length < 4 &&
               <ul>
                 {infoList.map(renderInfo)}

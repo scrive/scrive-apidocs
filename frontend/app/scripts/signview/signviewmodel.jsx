@@ -128,8 +128,7 @@ var Track = require("../common/track");
     },
 
     hasSignatoriesSection: function () {
-      return !this.document().closed()
-        && _.filter(this.document().signatories(), function (sig) { return sig.signs(); }).length > 1;
+      return !this.document().closed();
     },
 
     hasAuthorAttachmentsSection: function () {
