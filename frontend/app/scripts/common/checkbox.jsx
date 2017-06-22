@@ -42,11 +42,13 @@ var Track = require("./track");
 
       return (
         <div className={classNames("checkbox-box",this.props.className)} onClick={this.handleClick}>
-          <div className={checkboxClasses} style={this.props.style} tabIndex="0" onKeyDown={this.handleKeyDn}>
-            <div className="checkmark" />
+          <div className="checkbox-box-wrapper">
+            <div className={checkboxClasses} style={this.props.style} tabIndex="0" onKeyDown={this.handleKeyDn}>
+              <div className="checkmark" />
+            </div>
           </div>
           { this.props.label &&
-            <label>{this.props.label}</label>
+            <div>{this.props.label}</div>
           }
         </div>
       );

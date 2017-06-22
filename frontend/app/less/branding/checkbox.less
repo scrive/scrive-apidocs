@@ -27,17 +27,20 @@
 
 .checkbox-box {
   cursor: pointer;
+  display: table;
 
   .checkbox{
     margin: 0;
   }
 
-  .checkbox,label {
-    display: inline-block;
+  .checkbox-box-wrapper {
+    display: table-cell;
+    width: 10px;
   }
 
   label {
     cursor: pointer; // Due to React issue https://github.com/facebook/react/issues/134
+    display: table-cell;
     margin-bottom: 13px;
     margin-left: 10px;
     margin-top: 0;
