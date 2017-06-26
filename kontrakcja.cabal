@@ -451,7 +451,9 @@ Library
                , lifted-async
                , lifted-base
                , lifted-threads
-               , log >= 0.9
+               , log-base
+               , log-elasticsearch
+               , log-postgres
                , mixpanel
                , mmap
                , monad-control
@@ -548,7 +550,7 @@ Executable kontrakcja-server
                , happstack-static-routing
                , hedis
                , lifted-base
-               , log >= 0.9
+               , log-base
                , text
                , transformers-base
                , utf8-string
@@ -603,7 +605,7 @@ Executable cron
                , filepath
                , hpqtypes-extras
                , hedis
-               , log >= 0.9
+               , log-base
                , monad-control
                , mtl
                , text
@@ -684,7 +686,9 @@ Executable kontrakcja-migrate
                , invariant
                , json
                , lifted-base
-               , log >= 0.9
+               , log-base
+               , log-elasticsearch
+               , log-postgres
                , monad-control
                , monad-time
                , mtl
@@ -780,7 +784,9 @@ Executable mailing-server
                , json
                , lifted-async
                , lifted-base
-               , log >= 0.9
+               , log-base
+               , log-elasticsearch
+               , log-postgres
                , monad-control
                , monad-time
                , mtl
@@ -880,7 +886,9 @@ Executable messenger-server
                , invariant
                , json
                , lifted-base
-               , log >= 0.9
+               , log-base
+               , log-elasticsearch
+               , log-postgres
                , monad-control
                , monad-time
                , mtl
