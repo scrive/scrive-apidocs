@@ -962,6 +962,7 @@ Test-suite kontrakcja-test
                  CompanyStateTest,
                  ConfigTests,
                  Doc.API.V1.CallsTest,
+                 Doc.API.V1.ForwardsCompatibilityTest,
                  Doc.API.V1.JSONTest,
                  Doc.API.V2.CallsTest,
                  Doc.API.V2.JSONTest,

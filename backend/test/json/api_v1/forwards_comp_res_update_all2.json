@@ -17,16 +17,16 @@
         },
         {
           "type": "name",
-          "order": 2,
-          "value": "JonesTest",
+          "order": 1,
+          "value": "BobTest",
           "is_obligatory": true,
           "should_be_filled_by_sender": false,
           "placements": []
         },
         {
           "type": "name",
-          "order": 1,
-          "value": "BobTest",
+          "order": 2,
+          "value": "JonesTest",
           "is_obligatory": true,
           "should_be_filled_by_sender": false,
           "placements": []

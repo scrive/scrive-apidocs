@@ -1,5 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Doc.API.V2.JSONTest (apiV2JSONTests) where
+module Doc.API.V2.JSONTest (
+  apiV2JSONTests
+-- Only used for V1 ForwardsCompatibilityTest
+, runApiJSONTest
+, testJSONCtx
+) where
 
 import Control.Monad.IO.Class
 import Data.Aeson
