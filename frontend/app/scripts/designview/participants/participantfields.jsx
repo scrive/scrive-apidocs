@@ -21,10 +21,12 @@ module.exports = React.createClass({
 
     return (
       <div className="design-view-action-participant-details-information">
-        <ParticipantNameField
-           last={lastTextField.isFstName() || lastTextField.isSndName()}
-           model={sig}
-        />
+        {/* if */ (sig.fstnameField() != undefined || sig.sndnameField() != undefined) &&
+          <ParticipantNameField
+            last={lastTextField.isFstName() || lastTextField.isSndName()}
+            model={sig}
+          />
+        }
         {/* if */ sig.emailField() != undefined &&
           <ParticipantField last={lastTextField.isEmail()} model={sig.emailField()}/>
         }

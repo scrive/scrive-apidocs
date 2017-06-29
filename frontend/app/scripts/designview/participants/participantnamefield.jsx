@@ -8,8 +8,10 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var fstnameField = sig.fstnameField();
     var sndnameField = sig.sndnameField();
-    var nameFieldsValid = fstnameField.isValid() && ((sndnameField === undefined) || sndnameField.isValid());
-    var csvfield = fstnameField.isCsvField();
+    var fstnameFieldValid = (fstnameField === undefined) || fstnameField.isValid();
+    var sndnameFieldValid = (sndnameField === undefined) || sndnameField.isValid();
+    var nameFieldsValid = fstnameFieldValid && sndnameFieldValid;
+    var csvfield = (fstnameField !== undefined) && fstnameField.isCsvField();
     var csvname = localization.designview.fullName + " (" + localization.designview.fromCSV + ")";
 
     return (
@@ -38,11 +40,13 @@ module.exports = React.createClass({
               f = str.trim();
               s = "";
             }
-            if (sndnameField != undefined) {
+            if (fstnameField === undefined && sndnameField !== undefined) {
+              sndnameField.setValue(str);
+            } else if (fstnameField !== undefined && sndnameField === undefined) {
+              fstnameField.setValue(str);
+            } else if (fstnameField !== undefined && sndnameField !== undefined) {
               fstnameField.setValue(f);
               sndnameField.setValue(s);
-            } else {
-              fstnameField.setValue(str);
             }
           }}
         />

@@ -6,8 +6,7 @@ var _ = require("underscore");
 module.exports = React.createClass({
   basicFields: function () {
     return [
-       {type: "name", order: 1},
-       {type: "name", order: 2},
+       // Name field can't be added here
        {type: "email"},
        {type: "company"},
        {type: "personal_number"},
@@ -33,11 +32,7 @@ module.exports = React.createClass({
     return res;
   },
   niceFieldName: function (type, order, name) {
-    if (type == "name" && order == 1) {
-      return localization.fstname;
-    } else if (type == "name" && order == 2) {
-      return localization.sndname;
-    } else if (type == "email") {
+    if (type == "email") {
       return localization.email;
     } else if (type == "company_number") {
       return localization.companyNumber;

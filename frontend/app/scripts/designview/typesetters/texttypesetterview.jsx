@@ -82,9 +82,11 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
 
       if (existingField) {
         return model.changeField(existingField);
+      } else if (sig.fstnameField()) {
+        model.changeField(sig.fstnameField());
+      } else if (sig.fields().length > 0) {
+        model.changeField(sig.fields()[0]);
       }
-
-      model.changeField(sig.fstnameField());
     },
 
     handleSave: function (text) {
