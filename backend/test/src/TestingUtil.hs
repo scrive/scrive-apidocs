@@ -878,46 +878,6 @@ instance (Arbitrary a, RandomCallable c b) => RandomCallable (a -> c) b where
     a <- rand 10 arbitrary
     randomCall $ f a
 
-
-instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g)
-         => Arbitrary (a, b, c, d, e, f, g) where
-  arbitrary = do
-    a <- arbitrary
-    b <- arbitrary
-    c <- arbitrary
-    d <- arbitrary
-    e <- arbitrary
-    f <- arbitrary
-    g <- arbitrary
-    return (a, b, c, d, e, f, g)
-
-instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h)
-         => Arbitrary (a, b, c, d, e, f, g, h) where
-  arbitrary = do
-    a <- arbitrary
-    b <- arbitrary
-    c <- arbitrary
-    d <- arbitrary
-    e <- arbitrary
-    f <- arbitrary
-    g <- arbitrary
-    h <- arbitrary
-    return (a, b, c, d, e, f, g, h)
-
-instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h, Arbitrary i, Arbitrary j)
-         => Arbitrary (a, b, c, d, e, f, g, h, i, j) where
-  arbitrary = do
-    (a, b, c, d, e, f, g, h) <- arbitrary
-    (i, j) <- arbitrary
-    return (a, b, c, d, e, f, g, h, i, j)
-
-instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h, Arbitrary i)
-         => Arbitrary (a, b, c, d, e, f, g, h, i) where
-  arbitrary = do
-    (a, b, c, d, e, f, g, h) <- arbitrary
-    i <- arbitrary
-    return (a, b, c, d, e, f, g, h, i)
-
 instance Arbitrary FileID where
   arbitrary = unsafeFileID . abs <$> arbitrary
 
