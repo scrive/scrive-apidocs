@@ -1183,7 +1183,11 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
         dbUpdate $ AttachFile fileid actor
         apiGuardL' $ dbUpdate $ SetDocumentTitle filename actor
         case moldfileid of
-          Just oldfileid -> recalcuateAnchoredFieldPlacements oldfileid fileid
+          Just oldfileid -> do
+            start <- liftIO getCurrentTime
+            recalcuateAnchoredFieldPlacements oldfileid fileid
+            stop <- liftIO getCurrentTime
+            logInfo "recalcuateAnchoredFieldPlacements timing" $ object ["duration" .= show (diffUTCTime stop start)]
           Nothing -> return ()
       Nothing -> dbUpdate $ DetachFile actor
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
