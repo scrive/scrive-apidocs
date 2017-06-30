@@ -11,7 +11,7 @@ import Text.JSON
 import Transifex.Utils
 
 apiURL :: String
-apiURL = "http://www.transifex.com/api/2/"
+apiURL = "https://www.transifex.com/api/2/"
 
 project :: String
 project = "kontrakcja"
