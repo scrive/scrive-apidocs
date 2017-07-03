@@ -86,11 +86,13 @@ getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map makeAbs
 -- and one rule that matches longer urls with additional path elems after another slash
 -- 2)
 -- urls like /no /en (where it's a lang code), should not cover anything longer, like /now-hiring
+-- 3)
+-- /pricing and /en/pricing (or /sv/pricing) should disappear for some reason because IT said so
 exceptions :: String -> [String]
-exceptions s@('/':c1:c2:[]) | [c1, c2] `elem` map codeFromLang allLangs = [['/', c1, c2, '$']]
-                            | otherwise = [s]
-exceptions s@('/':c:[]) | c `elem` ("asd"::String) = [['/', c, '/'], ['/', c, '$']]
-                        | otherwise = [s]
+exceptions ('/':c1:c2:[]) | [c1, c2] `elem` map codeFromLang allLangs = [['/', c1, c2, '$']]
+exceptions ('/':c:[]) | c `elem` ("asd"::String) = [['/', c, '/'], ['/', c, '$']]
+exceptions "/pricing" = []
+exceptions ('/':c1:c2:"/pricing") | [c1, c2] `elem` map codeFromLang allLangs = []
 exceptions s = [s]
 
 main :: IO ()
