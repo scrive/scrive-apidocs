@@ -4,7 +4,9 @@ module File.Storage (
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
+import Data.Time
 import Log
 import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Char8 as BS
@@ -37,7 +39,11 @@ getFileContents file = do
      , Base16.encode $ filechecksum file
      ]
 
-getFileIDContents :: (MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => FileID -> m BS.ByteString
+getFileIDContents :: (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => FileID -> m BS.ByteString
 getFileIDContents fid = do
+  start <- liftIO getCurrentTime
   file <- dbQuery $ GetFileByFileID fid
-  getFileContents file
+  result <- getFileContents file
+  stop <- liftIO getCurrentTime
+  logInfo "getFileIDContents timing" $ object ["duration" .= show (diffUTCTime stop start)]
+  return result

@@ -5,6 +5,7 @@ module Sender (
 
 import Control.Monad.Base
 import Control.Monad.Catch
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 import Crypto.RNG (CryptoRNG)
 import Data.List hiding (head)
@@ -27,7 +28,7 @@ import qualified Amazon as AWS
 
 data Sender = Sender {
   senderName :: String
-, sendMail   :: forall m. (CryptoRNG m, MonadMask m, MonadBaseControl IO m, MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
+, sendMail   :: forall m. (CryptoRNG m, MonadIO m, MonadMask m, MonadBaseControl IO m, MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
 }
 
 instance Show Sender where

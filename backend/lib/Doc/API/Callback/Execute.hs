@@ -50,7 +50,7 @@ import Utils.String
 import qualified Utils.HTTP as Utils.HTTP
 
 execute ::
-  (AmazonMonad m, MonadDB m, CryptoRNG m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadReader SchedulerData m, MailContextMonad m) =>
+  (AmazonMonad m, MonadDB m, MonadIO m, CryptoRNG m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadReader SchedulerData m, MailContextMonad m) =>
   DocumentAPICallback -> m Bool
 execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
   exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor dacDocumentID
@@ -77,7 +77,7 @@ execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
           _                                         -> executeStandardCallback Nothing doc dac
 
 executeStandardCallback ::
-  (AmazonMonad m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
+  (AmazonMonad m, MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
   Maybe (String,String) -> Document -> DocumentAPICallback -> m Bool
 executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
   callbackParams <- callbackParamsWithDocumentJSON (dacApiVersion dac) doc
@@ -107,7 +107,7 @@ executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
         ) ++
         [dacURL dac]
 
-executeOAuth2Callback :: (AmazonMonad m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
+executeOAuth2Callback :: (AmazonMonad m, MonadIO m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
                          (String,String,String,String) -> Document -> DocumentAPICallback -> m Bool
 executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid doc) $ do
    (exitcode1, stdout1 , stderr1) <- readCurl [
@@ -154,7 +154,7 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid 
             return False
 
 
-callbackParamsWithDocumentJSON :: (AmazonMonad m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
+callbackParamsWithDocumentJSON :: (AmazonMonad m, MonadIO m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
                                   APIVersion -> Document -> m BSLU.ByteString
 callbackParamsWithDocumentJSON apiVersion doc = case apiVersion of
   V1 -> do

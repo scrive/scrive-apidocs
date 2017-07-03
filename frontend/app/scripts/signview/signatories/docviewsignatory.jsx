@@ -40,7 +40,32 @@ module.exports = React.createClass({
         return localization.signatoryMessage.other;
       }
     },
-
+    statusImage: function () {
+      var sigStatus = this.props.signatory.status();
+      if (sigStatus === "problem") {
+        return "sprite-signview-problem.png";
+      } else if (sigStatus === "draft") {
+        return "sprite-signview-draft.png";
+      } else if (sigStatus === "signed") {
+        return "sprite-signview-signed.png";
+      } else if (sigStatus === "cancelled") {
+        return "sprite-signview-cancelled.png";
+      } else if (sigStatus === "timeouted") {
+        return "sprite-signview-timeouted.png";
+      } else if (sigStatus === "rejected") {
+        return "sprite-signview-rejected.png";
+      } else if (sigStatus === "opened") {
+        return "sprite-signview-opened.png";
+      } else if (sigStatus === "read") {
+        return "sprite-signview-read.png";
+      } else if (sigStatus === "deliveryproblem") {
+        return "sprite-signview-deliveryproblem.png";
+      } else if (sigStatus === "delivered") {
+        return "sprite-signview-delivered.png";
+      } else if (sigStatus === "sent") {
+        return "sprite-signview-sent.png";
+      }
+    },
     render: function () {
       var signatory = this.props.signatory;
       var smallView = ViewSize.isSmall();
@@ -122,7 +147,11 @@ module.exports = React.createClass({
                 </ul>
               </span>
             }
-            <span className={"icon status " + signatory.status()}></span>
+            <img
+              className={"icon " + signatory.status()}
+              crossOrigin="anonymous"
+              src={window.cdnbaseurl + "/img/" + this.statusImage()}
+            />
             <span className={"status statustext " + signatory.status()}>
               {this.signatorySummary()}
             </span>

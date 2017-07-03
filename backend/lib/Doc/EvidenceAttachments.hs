@@ -7,6 +7,7 @@ module Doc.EvidenceAttachments
 
 import Control.Monad.Base
 import Control.Monad.Catch
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 import Log
 import System.Exit
@@ -25,7 +26,7 @@ import Log.Utils
 import Utils.Directory
 import qualified Amazon as AWS
 
-extractAttachmentsList :: (MonadLog m, MonadDB m, MonadMask m, MonadBaseControl IO m, AWS.AmazonMonad m) => Document -> m [T.Text]
+extractAttachmentsList :: (MonadLog m, MonadDB m, MonadIO m, MonadMask m, MonadBaseControl IO m, AWS.AmazonMonad m) => Document -> m [T.Text]
 extractAttachmentsList doc = do
   case mainfileid <$> documentsealedfile doc of
     Nothing -> do
@@ -35,7 +36,7 @@ extractAttachmentsList doc = do
       content <- getFileIDContents fid
       extractAttachmentsListFromFileContent content
 
-extractAttachment :: (MonadLog m, MonadDB m, MonadMask m, MonadBaseControl IO m, AWS.AmazonMonad m) => Document -> T.Text -> m (Maybe BSL.ByteString)
+extractAttachment :: (MonadLog m, MonadIO m, MonadDB m, MonadMask m, MonadBaseControl IO m, AWS.AmazonMonad m) => Document -> T.Text -> m (Maybe BSL.ByteString)
 extractAttachment doc aname = do
   case mainfileid <$> documentsealedfile doc of
     Nothing -> do
