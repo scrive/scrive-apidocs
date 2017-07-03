@@ -113,28 +113,18 @@ documentFilterToSQL (DocumentFilterByTags tags) = do
       sqlWhereEq "document_tags.value" (tagvalue tag)
 
 documentFilterToSQL (DocumentFilterByString filterString) =
-  sqlWhere $ parenthesize $ ("documents.title ~*" <?> matchFilter filterString) `sqlOR` matchSLFields
+  sqlWhere $ parenthesize $ ("documents.title ILIKE " <?> matchFilter filterString) `sqlOR` matchSLFields
   where
     matchFilter = \case
-      Quoted   str -> "(^|\\W)" <> escape False str <> "($|\\W)"
-      Unquoted str -> escape True str
-      where
-        escape unquoted = T.concatMap $ \case
-          ' ' -> if unquoted
-                 then $unexpectedError "Unexpected space in unquoted string"
-                 else "[\\s]+"
-          x   -> let regexEscape = ".^$*+?()[{\\|"
-                 in case T.find (== x) regexEscape of
-                      Just _  -> "\\" <> T.singleton x
-                      Nothing -> T.singleton x
-
+      Quoted   str -> "%" <> str <> "%"
+      Unquoted str -> "%" <> str <> "%"
     matchSLFields = smconcat [
         "EXISTS ("
       , "SELECT TRUE"
       , " FROM signatory_links AS sl JOIN signatory_link_fields slf"
       , "   ON sl.id = slf.signatory_link_id"
       , "WHERE sl.document_id = documents.id"
-      , "  AND (slf.value_text ~*" <?> matchFilter filterString <> ")"
+      , "  AND (slf.value_text ILIKE " <?> matchFilter filterString <> ")"
       , ")"
       ]
 
