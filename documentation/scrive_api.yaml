@@ -47,6 +47,7 @@ info:
     | 2017-03-11  | Add `dk_nemid` (Danish NemID) to `authentication_to_view`  |
     | 2017-05-15  | Add missing `company` standard signatory field             |
     | 2017-06-08  | Add `required` field to signatory attachments, optional attachments are now possible |
+    | 2017-07-04  | Remove a comment about anchoring that was due to a bug, which has now been fixed |
 
     ## Environments & IP Addresses
 
@@ -146,11 +147,6 @@ info:
     | `/downloadfile/$documentid$/$fileid$/$any_name$.pdf`         | `/{document_id}/files/{file_id}/{filename}`                 |
     | `/changeauthenticationtoview/$documentid$/$signatorylinkid$` | `/{document_id}/{signatory_id}/setauthenticationtoview`     |
     | `/changeauthentication/$documentid$/$signatorylinkid$`       | `/{document_id}/{signatory_id}/setauthenticationtosign`     |
-
-    As an additional note, in API Version 1 the `changemainfile` call would
-    auto-update field placements that had matching anchors.
-    This is not supported in API Version 2.
-    Please contact us if you are interested in using such a feature.
 
     # Quick Start
     To get started using our API it is recommended to first read the
