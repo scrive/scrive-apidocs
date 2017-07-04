@@ -3,7 +3,6 @@ module MailGun (
     handleMailGunEvents
   ) where
 
-import Control.Arrow (second)
 import Happstack.Server
 import Log
 import qualified Control.Exception.Lifted as E
@@ -33,33 +32,23 @@ handleMailGunEvents = localDomain "handleMailGunEvents" $ do
             "token" .= show token
           ]
         Just Mail{..} -> localData [identifier_ mailID] $ do
-          let attrs = fromXSMTPAttrs mailXSMTPAttrs
-          fields <- forM attrs $ \(name,_) -> do
-            fvalue <- getField name
-            return (name, fvalue)
-          if fields /= map (second Just) attrs
-            then logInfo "Expected X-SMTP data doesn't match delivered one" $ object [
-                "expected" .= attrs
-              , "delivered" .= fields
-              ]
-            else do
-              mevent <- readEventType =<< getField "event"
-              case mevent of
-                Nothing -> logInfo_ "No event object received"
-                Just event -> do
-                  email <- fromMaybe "" <$> getField "recipient"
-                  let ev = MailGunEvent email event
-                  res <- dbUpdate (UpdateWithEvent mailID ev) `E.catch` \(e::DBException) -> do
-                    logInfo "DBException thrown while executing UpdateWithEvent" $ object [
-                        "exception" .= show e
-                      ]
-                    rollback
-                    return False
-                  if not res
-                    then logInfo_ "UpdateWithEvent didn't update anything"
-                    else logInfo "Event received" $ object [
-                        "event" .= show event
-                      ]
+          mevent <- readEventType =<< getField "event"
+          case mevent of
+            Nothing -> logInfo_ "No event object received"
+            Just event -> do
+              email <- fromMaybe "" <$> getField "recipient"
+              let ev = MailGunEvent email event
+              res <- dbUpdate (UpdateWithEvent mailID ev) `E.catch` \(e::DBException) -> do
+                logInfo "DBException thrown while executing UpdateWithEvent" $ object [
+                    "exception" .= show e
+                  ]
+                rollback
+                return False
+              if not res
+                then logInfo_ "UpdateWithEvent didn't update anything"
+                else logInfo "Event received" $ object [
+                    "event" .= show event
+                  ]
     (mid, token) -> logInfo "Invalid id or token received" $ object [
         identifier_ mid
       , "token" .= fmap show token

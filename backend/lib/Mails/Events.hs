@@ -43,46 +43,36 @@ import KontraPrelude
 import Log.Identifier
 import Mails.MailsData
 import Mails.Model hiding (Mail)
-import Mails.SendMail hiding (MessageData(..))
+import Mails.SendMail
 import Templates
 import Theme.Model
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import qualified MessageData as MD
 
 processEvents :: Scheduler ()
-processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mid, _, _) -> do
+processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mid, _) -> do
   -- We limit processing to 50 events not to have issues with large number of documents locked.
   localData [identifier_ eid, identifier_ mid] $ do
     processEvent event
   )
   where
-    processEvent :: (EventID, MailID, XSMTPAttrs, Event) -> Scheduler ()
-    processEvent (eid, mid, xsmtpattrs, eventType) = do
+    processEvent :: (EventID, MailID, Event) -> Scheduler ()
+    processEvent (eid, mid, eventType) = do
       now <- currentTime
       mmailSendTimeStamp <- dbQuery $ GetEmailSendoutTime mid
       let timeDiff = case mmailSendTimeStamp of
                        Nothing -> Nothing
                        Just mailSendTimeStamp -> Just $ floor $ toRational $ mailSendTimeStamp `diffUTCTime` now
       templates <- getGlobalTemplates
-      case xsmtpattrs of
-        (XSMTPAttrs [("mailinfo", messagedata)]) -> case (maybeRead messagedata) of
-          Just (MD.Invitation docid slid) -> handleEventInvitation docid slid eid timeDiff templates eventType
-          Just (MD.DocumentRelatedMail docid) -> handleEventOtherMail docid eid timeDiff templates eventType
-          _ -> markEventAsRead eid
-        _ -> do
-          -- this is used as part of transition from MessageData (FB case#2420)
-          -- after all mails created from MessageData expire, this will become the core of processEvent
-          -- and x_smtp_attrs column will be removed
-          mkontraInfoForMail <- dbQuery $ GetKontraInfoForMail mid
-          case mkontraInfoForMail of
-            Nothing -> markEventAsRead eid
-            Just (DocumentInvitationMail docid slid) -> do
-              handleEventInvitation docid slid eid timeDiff templates eventType
-            Just (OtherDocumentMail docid) -> do
-              handleEventOtherMail docid eid timeDiff templates eventType
+      mkontraInfoForMail <- dbQuery $ GetKontraInfoForMail mid
+      case mkontraInfoForMail of
+        Nothing -> markEventAsRead eid
+        Just (DocumentInvitationMail docid slid) -> do
+          handleEventInvitation docid slid eid timeDiff templates eventType
+        Just (OtherDocumentMail docid) -> do
+          handleEventOtherMail docid eid timeDiff templates eventType
 
 markEventAsRead :: (MonadLog m, MonadThrow m, MonadDB m) => EventID -> m ()
 markEventAsRead eid = do

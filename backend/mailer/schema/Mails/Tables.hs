@@ -77,7 +77,7 @@ tableMailerJobs = tblTable {
 tableMails :: Table
 tableMails = tblTable {
     tblName = "mails"
-  , tblVersion = 6
+  , tblVersion = 7
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
@@ -85,7 +85,6 @@ tableMails = tblTable {
     , tblColumn { colName = "receivers", colType = TextT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
     , tblColumn { colName = "content", colType = TextT, colNullable = False }
-    , tblColumn { colName = "x_smtp_attrs", colType = TextT, colNullable = False }
     , tblColumn { colName = "run_at", colType = TimestampWithZoneT }
     , tblColumn { colName = "finished_at", colType = TimestampWithZoneT }
     , tblColumn { colName = "service_test", colType = BoolT, colNullable = False }

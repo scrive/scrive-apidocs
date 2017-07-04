@@ -303,7 +303,6 @@ Library
                  , Mails.SendMail
                  , Mails.Tables
                  , MemCache
-                 , MessageData
                  , MessengerServerConf
                  , MinutesTime
                  , Monitor.API

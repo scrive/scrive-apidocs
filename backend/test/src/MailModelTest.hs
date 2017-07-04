@@ -24,11 +24,10 @@ testMailAttachments = do
                     , Attachment "name2" (Left "contenty 314124")
                     , Attachment "name3" (Left "contenty 314124 sffadsfa")
                     ]
-      xsmtpapi = XSMTPAttrs [("arg1","val1"),("arg2","val2"),("arg3","val3"),("arg4","val4")]
       title = "The thing"
       content = "important"
 
-  mid <- dbUpdate $ CreateEmail (token, sender, to, reply_to, title, content, attachments, xsmtpapi)
+  mid <- dbUpdate $ CreateEmail (token, sender, to, reply_to, title, content, attachments)
   mmail <- dbQuery $ GetEmail mid token
   assertJust mmail
   case mmail of
@@ -39,5 +38,4 @@ testMailAttachments = do
       assertEqual "Reply-To must match" (reply_to) (mailReplyTo mail)
       assertEqual "To must match" (to) (mailTo mail)
       assertEqual "Attachments must match" (attachments) (mailAttachments mail)
-      assertEqual "XSMTPAttrs must match" (xsmtpapi) (mailXSMTPAttrs mail)
       assertEqual "Content must match" (content) (mailContent mail)

@@ -44,7 +44,7 @@ import KontraPrelude
 import Log.Identifier
 import MailContext (MailContext(..), MailContextMonad, MailContextT, getMailContext, runMailContextT)
 import Mails.MailsData
-import Mails.SendMail hiding (MessageData(..))
+import Mails.SendMail
 import SMS.SMS (scheduleSMS)
 import Templates (runTemplatesT)
 import User.Model

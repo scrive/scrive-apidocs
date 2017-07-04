@@ -1,6 +1,4 @@
-module SMS.FromKontra.Migrations (
-  createKontraInfoForSMSesTable
-) where
+module SMS.FromKontra.Migrations (createKontraInfoForSMSesTable) where
 
 import Database.PostgreSQL.PQTypes.Checks
 
@@ -33,4 +31,3 @@ createKontraInfoForSMSesTable = Migration {
       ]
     }
   }
-

@@ -1,6 +1,5 @@
 module SendGrid (handleSendGridEvents) where
 
-import Control.Arrow (second)
 import Control.Concurrent.MVar
 import Control.Monad.Trans
 import Control.Monad.Trans.Reader
@@ -49,39 +48,28 @@ processSendGridEvent js = do
               "token" .= show token
             ]
           Just Mail{..} -> do
-              let attrs = fromXSMTPAttrs mailXSMTPAttrs
-              fields <- forM attrs $ \(name,_) -> do
-                fvalue <- fromJSValueField name
-                return (name, fvalue)
-              if fields /= map (second Just) attrs
-                then logAttention "Expected X-SMTP data doesn't match delivered one" $ object [
-                    "expected" .= attrs
-                  , "delivered" .= fields
-                  , "event" .= jsonToAeson js
-                  ]
-                else do
-                  mevent <- sendgridEventFromJSValueM
-                  case mevent of
-                    Nothing -> logAttention "Couldn't parse event type" $ object [
-                        "event" .= jsonToAeson js
+            mevent <- sendgridEventFromJSValueM
+            case mevent of
+              Nothing -> logAttention "Couldn't parse event type" $ object [
+                  "event" .= jsonToAeson js
+                ]
+              Just event -> do
+                  logInfo "Even parsed successfully" $ object [
+                      "token" .= show token
+                    , "event" .= show event
+                    ]
+                  email <- fromMaybe "" <$> fromJSValueField "email"
+                  category <- fromMaybe "" <$> fromJSValueField "category"
+                  let ev = SendGridEvent email event category
+                  logInfo_ "Updating database"
+                  res <- dbUpdate (UpdateWithEvent mailID ev)
+                  if not res
+                    then logAttention "UpdateWithEvent didn't update anything" $ object [
+                        "event" .= show ev
                       ]
-                    Just event -> do
-                        logInfo "Even parsed successfully" $ object [
-                            "token" .= show token
-                          , "event" .= show event
-                          ]
-                        email <- fromMaybe "" <$> fromJSValueField "email"
-                        category <- fromMaybe "" <$> fromJSValueField "category"
-                        let ev = SendGridEvent email event category
-                        logInfo_ "Updating database"
-                        res <- dbUpdate (UpdateWithEvent mailID ev)
-                        if not res
-                          then logAttention "UpdateWithEvent didn't update anything" $ object [
-                              "event" .= show ev
-                            ]
-                          else logInfo "Event recorded" $ object [
-                              "event" .= show ev
-                            ]
+                    else logInfo "Event recorded" $ object [
+                        "event" .= show ev
+                      ]
       _ -> logAttention "Received event but couldn't determine email and/or token" $ object [
           "event" .= jsonToAeson js
         , identifier_ mmid

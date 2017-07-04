@@ -36,7 +36,6 @@ assembleContent Mail{..} = do
   let datafields = do
         J.value "email_id" $ show mailID
         J.value "email_token" $ show mailToken
-        forM_ (fromXSMTPAttrs mailXSMTPAttrs) $ uncurry J.value
       mailgundata = runJSONGen datafields
       xsmtpapi = runJSONGen $ J.object "unique_args" datafields
       lineReplyTo = case mailReplyTo of

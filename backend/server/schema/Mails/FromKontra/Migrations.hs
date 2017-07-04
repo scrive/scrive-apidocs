@@ -1,4 +1,4 @@
-module Mails.FromKontra.Migrations ( createKontraInfoForMailsTable ) where
+module Mails.FromKontra.Migrations (createKontraInfoForMailsTable) where
 
 import Database.PostgreSQL.PQTypes.Checks
 
@@ -31,5 +31,3 @@ createKontraInfoForMailsTable = Migration {
       ]
     }
   }
-
-

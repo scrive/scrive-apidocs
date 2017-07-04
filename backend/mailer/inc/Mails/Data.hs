@@ -4,7 +4,6 @@ module Mails.Data (
   , MailerJob(..)
   , MailID
   , EventID
-  , XSMTPAttrs(..)
   , Attachment(..)
   , Address(..)
   , SendGridEvent(..)
@@ -160,22 +159,6 @@ instance Loggable Attachment where
         ]
   logDefaultLabel _ = "attachment"
 
-newtype XSMTPAttrs = XSMTPAttrs { fromXSMTPAttrs :: [(String, String)] }
-  deriving (Eq, Ord, Show, Data, Typeable)
-
-instance PQFormat XSMTPAttrs where
-  pqFormat = const $ pqFormat (undefined::String)
-instance FromSQL XSMTPAttrs where
-  type PQBase XSMTPAttrs = PQBase String
-  fromSQL = jsonFromSQL
-instance ToSQL XSMTPAttrs where
-  type PQDest XSMTPAttrs = PQDest String
-  toSQL = jsonToSQL
-
-instance Monoid XSMTPAttrs where
-  mempty = XSMTPAttrs []
-  XSMTPAttrs a `mappend` XSMTPAttrs b = XSMTPAttrs (a ++ b)
-
 data Mail = Mail {
   mailID          :: !MailID
 , mailToken       :: !MagicHash
@@ -185,7 +168,6 @@ data Mail = Mail {
 , mailTitle       :: !String
 , mailContent     :: !String
 , mailAttachments :: ![Attachment]
-, mailXSMTPAttrs  :: !XSMTPAttrs
 , mailServiceTest :: !Bool
 , mailAttempts    :: !Int32
 } deriving (Eq, Ord, Show)
@@ -202,7 +184,6 @@ instance Loggable Mail where
     , "service_test" .= mailServiceTest
     , "subject" .= mailTitle
     , "to" .= mailTo
-    , "x_smtp_attrs" .= fromXSMTPAttrs mailXSMTPAttrs
     ]
   logDefaultLabel _ = "mail"
 

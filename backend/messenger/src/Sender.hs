@@ -134,7 +134,6 @@ sendSMSHelper LocalSender{..} ShortMessage{..} = localData [identifier_ smID] $ 
   let withClickableLinks = mrBefore matchResult ++ "<a href=\"" ++ mrMatch matchResult ++ "\">" ++ mrMatch matchResult ++ "</a>" ++ mrAfter matchResult
   let content = "<html><head><title>SMS - " ++ show smID ++ " to " ++ clearmsisdn ++ "</title></head><body>" ++
                 "ID: " ++ show smID ++ "<br>" ++
-                "Data: " ++ show smData ++ "<br>" ++
                 "Provider: " ++ show smProvider ++ "<br>" ++
                 "<br>" ++
                 "Originator: " ++ smOriginator ++ "<br>" ++

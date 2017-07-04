@@ -65,7 +65,7 @@ tableMessengerJobs = tblTable {
 tableSMSes :: Table
 tableSMSes = tblTable {
     tblName = "smses"
-  , tblVersion = 5
+  , tblVersion = 6
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "originator", colType = TextT, colNullable = False }
@@ -73,7 +73,6 @@ tableSMSes = tblTable {
     , tblColumn { colName = "body", colType = TextT, colNullable = False }
     , tblColumn { colName = "run_at", colType = TimestampWithZoneT }
     , tblColumn { colName = "finished_at", colType = TimestampWithZoneT }
-    , tblColumn { colName = "data", colType = TextT, colNullable = False }
     , tblColumn { colName = "attempts", colType = IntegerT, colNullable = False, colDefault = Just "0"}
     , tblColumn { colName = "reserved_by", colType = BigIntT }
     , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False, colDefault = Just "1"}

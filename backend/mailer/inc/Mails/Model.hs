@@ -109,13 +109,12 @@ mailSelectors = [
   , "mails.title"
   , "mails.content"
   , "ARRAY(SELECT (name, content, file_id)::mail_attachment FROM mail_attachments a WHERE a.mail_id = mails.id ORDER BY a.id)"
-  , "mails.x_smtp_attrs"
   , "mails.service_test"
   , "mails.attempts"
   ]
 
-mailFetcher :: (MailID, MagicHash, Address, [Address], Maybe Address, String, String, CompositeArray1 Attachment, XSMTPAttrs, Bool, Int32) -> Mail
-mailFetcher (mid, token, from, to, reply_to, title, content, CompositeArray1 attachments, x_smtp_attrs, service_test, attempts) = Mail {
+mailFetcher :: (MailID, MagicHash, Address, [Address], Maybe Address, String, String, CompositeArray1 Attachment, Bool, Int32) -> Mail
+mailFetcher (mid, token, from, to, reply_to, title, content, CompositeArray1 attachments, service_test, attempts) = Mail {
   mailID = mid
 , mailToken = token
 , mailFrom = from
@@ -124,14 +123,13 @@ mailFetcher (mid, token, from, to, reply_to, title, content, CompositeArray1 att
 , mailTitle = title
 , mailContent = content
 , mailAttachments = attachments
-, mailXSMTPAttrs = x_smtp_attrs
 , mailServiceTest = service_test
 , mailAttempts = attempts
 }
 
 ----------------------------------------
 
-type EmailData = (MagicHash, Address, [Address], Maybe Address, String, String, [Attachment], XSMTPAttrs)
+type EmailData = (MagicHash, Address, [Address], Maybe Address, String, String, [Attachment])
 
 data CreateEmail = CreateEmail EmailData
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateEmail MailID where
@@ -208,11 +206,11 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithEvent Bool where
       sqlSet "event" ev
 
 data GetUnreadEvents = GetUnreadEvents
-instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
+instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, Event)] where
   query GetUnreadEvents = getUnreadEvents False
 
 data GetServiceTestEvents = GetServiceTestEvents
-instance MonadDB m => DBQuery m GetServiceTestEvents [(EventID, MailID, XSMTPAttrs, Event)] where
+instance MonadDB m => DBQuery m GetServiceTestEvents [(EventID, MailID, Event)] where
   query GetServiceTestEvents = getUnreadEvents True
 
 data MarkEventAsRead = MarkEventAsRead EventID UTCTime
@@ -225,7 +223,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m MarkEventAsRead Bool where
 ----------------------------------------
 
 insertEmail :: (MonadDB m, MonadThrow m) => Bool -> EmailData -> m MailID
-insertEmail service_test (token, sender, to, reply_to, title, content, attachments, xsmtpapi) = do
+insertEmail service_test (token, sender, to, reply_to, title, content, attachments) = do
   runQuery_ . sqlInsert "mails" $ do
     sqlSet "token" token
     sqlSet "sender" sender
@@ -233,7 +231,6 @@ insertEmail service_test (token, sender, to, reply_to, title, content, attachmen
     sqlSet "reply_to" reply_to
     sqlSet "title" $ strip title
     sqlSet "content" content
-    sqlSet "x_smtp_attrs" xsmtpapi
     sqlSet "run_at" unixEpoch
     sqlSet "service_test" service_test
     sqlResult "id"
@@ -250,12 +247,11 @@ insertEmail service_test (token, sender, to, reply_to, title, content, attachmen
     names = map attName attachments
     contents = map attContent attachments
 
-getUnreadEvents :: MonadDB m => Bool -> m [(EventID, MailID, XSMTPAttrs, Event)]
+getUnreadEvents :: MonadDB m => Bool -> m [(EventID, MailID, Event)]
 getUnreadEvents service_test = do
   runQuery_ . sqlSelect "mails m" $ do
     sqlResult "e.id"
     sqlResult "e.mail_id"
-    sqlResult "m.x_smtp_attrs"
     sqlResult "e.event"
     sqlJoinOn "mail_events e" "m.id = e.mail_id"
     sqlWhereEq "m.service_test" service_test

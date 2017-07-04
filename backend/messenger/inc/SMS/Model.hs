@@ -44,18 +44,16 @@ smsSelectors = [
   , "originator"
   , "msisdn"
   , "body"
-  , "data"
   , "attempts"
   ]
 
-smsFetcher :: (ShortMessageID, SMSProvider, String, String, String, String, Int32) -> ShortMessage
-smsFetcher (smsid, provider, originator, msisdn, body, sdata, attempts) = ShortMessage {
+smsFetcher :: (ShortMessageID, SMSProvider, String, String, String, Int32) -> ShortMessage
+smsFetcher (smsid, provider, originator, msisdn, body, attempts) = ShortMessage {
   smID         = smsid
 , smProvider   = provider
 , smOriginator = originator
 , smMSISDN     = msisdn
 , smBody       = body
-, smData       = sdata
 , smAttempts   = attempts
 }
 
@@ -70,10 +68,6 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSMS ShortMessageID where
       sqlSet "msisdn" msisdn
       sqlSet "body" body
       sqlSet "run_at" unixEpoch
-      -- this is temporary, for first phase of migration FB case#2420
-      -- column smses.data will be remove in 2nd phase of migration
-      -- column data is not nullable, but failing to read from it is handled well
-      sqlSet "data" (""::String)
       sqlResult "id"
     mid <- fetchOne runIdentity
     notify smsNotificationChannel ""
@@ -130,7 +124,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEventForMbloxID Bo
       sqlSet "event" ev
 
 data GetUnreadSMSEvents = GetUnreadSMSEvents
-instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID, SMSEvent, String, String)] where
+instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID, SMSEvent, String)] where
   query GetUnreadSMSEvents = do
     runQuery_ . sqlSelect "sms_events" $ do
       sqlJoinOn "smses" "smses.id = sms_events.sms_id"
@@ -138,7 +132,6 @@ instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID,
       sqlResult "sms_events.id"
       sqlResult "sms_events.sms_id"
       sqlResult "sms_events.event"
-      sqlResult "smses.data"
       sqlResult "smses.msisdn"
 
       sqlWhere "sms_events.event_read IS NULL"

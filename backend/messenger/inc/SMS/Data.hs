@@ -104,7 +104,6 @@ data ShortMessage = ShortMessage {
 , smOriginator :: !String
 , smMSISDN     :: !String
 , smBody       :: !String
-, smData       :: !String
 , smAttempts   :: !Int32
 } deriving (Eq, Ord, Show)
 
@@ -115,7 +114,6 @@ instance ToJSON ShortMessage where
     , "originator" .= smOriginator
     , "msisdn"     .= smMSISDN -- original/non-clean format
     , "body"       .= smBody
-    , "data"       .= smData
     , "attempts"   .= smAttempts
     ]
 
@@ -125,7 +123,6 @@ instance ToJSON ShortMessage where
     , "originator" .= smOriginator
     , "msisdn"     .= smMSISDN -- original/non-clean format
     , "body"       .= smBody
-    , "data"       .= smData
     , "attempts"   .= smAttempts
     ]
 

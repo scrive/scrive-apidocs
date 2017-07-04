@@ -4,7 +4,6 @@ import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Crypto.RNG
 import Data.Aeson
-import Data.Monoid
 import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
 import Happstack.Server hiding (result, waitForTermination)
@@ -196,7 +195,7 @@ main = do
           -- be able to start the process if the configuration changes.
           logInfo_ "Running service checker"
           token <- random
-          mid <- dbUpdate $ CreateServiceTest (token, testSender, testReceivers conf, Just testSender, "test", "test", [], mempty)
+          mid <- dbUpdate $ CreateServiceTest (token, testSender, testReceivers conf, Just testSender, "test", "test", [])
           logInfo "Service testing email created" $ object [identifier_ mid]
           dbUpdate $ CollectServiceTestResultIn $ iminutes 10
           return $ Ok MarkProcessed
@@ -231,9 +230,9 @@ main = do
       where
         logHandlerInfo jobType action = localRandomID "job_id" $ localData ["job_type" .= show jobType] action
 
-        isDelivered (_, _, _, SendGridEvent _ SG_Delivered{} _) = True
-        isDelivered (_, _, _, MailGunEvent _ MG_Delivered) = True
-        isDelivered (_, _, _, SocketLabsEvent _ SL_Delivered) = True
+        isDelivered (_, _, SendGridEvent _ SG_Delivered{} _) = True
+        isDelivered (_, _, MailGunEvent _ MG_Delivered) = True
+        isDelivered (_, _, SocketLabsEvent _ SL_Delivered) = True
         isDelivered _ = False
 
         testSender = Address {

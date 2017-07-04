@@ -3,7 +3,6 @@ module Mails.SendMail
     ( Mail(..)
     , emptyMail
     , MailAddress(..)
-    , MessageData(..)
     , scheduleEmailSendout
     , scheduleEmailSendoutWithAuthorSender
     , scheduleEmailSendoutWithAuthorSenderThroughService
@@ -29,7 +28,6 @@ import KontraPrelude hiding (join)
 import Log.Identifier
 import Mails.MailsData
 import Mails.Model hiding (Mail)
-import MessageData
 import Templates
 import Theme.Model
 import User.Lang
@@ -73,10 +71,7 @@ scheduleEmailSendoutHelper authorname  mail@Mail{..} = do
     else do
       fromAddr <- return Address {addrName = authorname, addrEmail = originatorEmail }
       token <- random
-      -- do not save XSMTPAttrs with MessageData anymore, FB case#2420
-      -- make this go away completely after removing x_smtp_attrs column
-      let xsmtpapi = XSMTPAttrs []
-      mailid <- dbUpdate $ CreateEmail (token, fromAddr, map toAddress to, fmap toAddress replyTo, title, wrapHTML content, map toAttachment attachments, xsmtpapi)
+      mailid <- dbUpdate $ CreateEmail (token, fromAddr, map toAddress to, fmap toAddress replyTo, title, wrapHTML content, map toAttachment attachments)
       case kontraInfoForMail of
         Just kifm ->
           void $ dbUpdate $ AddKontraInfoForMail mailid kifm

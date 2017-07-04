@@ -36,7 +36,7 @@ import EvidenceLog.Model
 import KontraLink
 import KontraPrelude
 import Log.Identifier
-import Mails.SendMail hiding (MessageData(..))
+import Mails.SendMail
 import SMS.Data
 import SMS.Model
 import SMS.SMS
@@ -46,26 +46,10 @@ import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import qualified MessageData as MD
 
 processEvents :: Scheduler ()
-processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, msmsType, smsOrigMsisdn) -> do
-    mkontraInfoForSMS0 <- dbQuery $ GetKontraInfoForSMS smsid
-    mkontraInfoForSMS <- case maybeRead msmsType of
-      Just (MD.Invitation did slid) -> return $ Just (DocumentInvitationSMS did slid)
-      Just (MD.DocumentRelatedMail did) -> return $ Just (OtherDocumentSMS did)
-      Just (MD.SMSPinSendout slid) -> do
-        docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs [slid]
-        case (docs) of
-          (d:_) -> return $ Just (DocumentPinSendoutSMS (documentid d) slid)
-          _ -> do
-            logInfo "SMS event for purged/non-existing document" $ object [identifier_ slid]
-            return Nothing
-      Just MD.None -> return Nothing
-      -- this is used as part of transition from MessageData (FB case#2420)
-      -- after all smses created from MessageData expire, this will become the core of processEvent
-      -- and smses.data column will be removed
-      Nothing -> return mkontraInfoForSMS0
+processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, smsOrigMsisdn) -> do
+    mkontraInfoForSMS <- dbQuery $ GetKontraInfoForSMS smsid
     logInfo "Messages.procesEvent: logging info" . object $ [
             identifier_ eid
           , identifier_ smsid
