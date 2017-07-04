@@ -10,7 +10,7 @@ var capitaliseFirstLetter = require("../common/capitalise_first_letter");
   e.dataFetcher=function(d) {return d.documents;};
   e.idFetcher=function(d) {return d.field("id");};
   e.totalCountFunction=function(data){ return data.total_matching;};
-  e.maxPageSize=100;
+  e.maxPageSize=25;
   e.paramsFunctionWithFilter = function(f) {
     return function(text,selectfiltering,sorting, offset, maxPageSize) {
       var filters = _.clone(f || []);
