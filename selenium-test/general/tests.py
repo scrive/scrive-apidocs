@@ -136,7 +136,7 @@ def check_sign_and_cancel(test, drv, api):
 
     # open signview
     drv.open_url(sign_url)
-    drv.wait_for_element('span.icon.status.cancelled')
+    drv.wait_for_element('span.status.cancelled')
     drv.screenshot()
 
 
