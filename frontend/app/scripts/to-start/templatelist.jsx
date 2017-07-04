@@ -20,7 +20,11 @@ module.exports = React.createClass({
         onSend: function() {
           LoadingDialog.open();
         },
-        ajaxerror: function(d,a){
+        ajaxerror: function (d, a){
+          if (d.status === 401) {
+            // session died, relogin
+            window.location = "/enter?referer=" + window.location.pathname;
+          }
           LoadingDialog.close();
         },
         ajaxsuccess: function(d) {
