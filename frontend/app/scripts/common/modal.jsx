@@ -196,7 +196,6 @@ exports.AcceptButton = React.createClass({
   mixins: [React.addons.PureRenderMixin],
   propTypes: {
     text: React.PropTypes.string,
-    oneClick: React.PropTypes.bool,
     onClick: React.PropTypes.func,
     type: React.PropTypes.string
   },
@@ -206,7 +205,6 @@ exports.AcceptButton = React.createClass({
         className="float-right"
         type={(this.props.type) ? this.props.type : "action"}
         text={(this.props.text) ? this.props.text : localization.ok}
-        oneClick={this.props.oneClick}
         onClick={this.props.onClick}
       />
     );
