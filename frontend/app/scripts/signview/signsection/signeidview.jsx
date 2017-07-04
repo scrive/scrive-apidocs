@@ -158,7 +158,7 @@ var classNames = require("classnames");
           {/* if */ canHaveRejectButton &&
             <Button
               ref="rejectButton"
-              className="transparent-button button-block"
+              className="button-block small-button-block"
               text={localization.process.rejectbuttontext}
               onClick={this.props.onReject}
             />
