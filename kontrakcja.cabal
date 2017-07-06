@@ -365,6 +365,9 @@ Library
                  , ThirdPartyStats.Utils
                  , User.API
                  , User.Action
+                 , User.Data.SignupMethod
+                 , User.Data.Stats
+                 , User.Data.User
                  , User.CallbackScheme.Model
                  , User.CallbackScheme.Tables
                  , User.Email
@@ -372,6 +375,10 @@ Library
                  , User.History.Tables
                  , User.Lang
                  , User.Model
+                 , User.Model.Filter
+                 , User.Model.OrderBy
+                 , User.Model.Query
+                 , User.Model.Update
                  , User.Password
                  , User.Tables
                  , User.UserControl
