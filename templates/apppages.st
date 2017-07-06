@@ -215,11 +215,11 @@ contactUs=
       </a>
     </li>
     <li class="email">
-      <a class="" href="mailto:info@scrive.com">
+      <a class="" href="mailto:support@scrive.com">
         <div class="icon"><img src="$cdnbaseurl$/img/mail-us.png" width="32" height="32" alt="Email"/></div>
         <div class="hover">
           <p>$_vivochaSendEmail()$</p>
-          <small>info@scrive.com</small>
+          <small>support@scrive.com</small>
         </div>
       </a>
     </li>
