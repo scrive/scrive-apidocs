@@ -42,6 +42,8 @@ if [ -z "$1" ]; then
     echo $! > _grunt_pid
     echo "started server with pid $(cat _grunt_pid)"
     cd ../
+else
+    shift
 fi
 
 

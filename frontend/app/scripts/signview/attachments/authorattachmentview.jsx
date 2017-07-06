@@ -183,7 +183,6 @@ var Document = require("../../../js/documents.js").Document;
                     }
                   </div>
                 </div>
-                <div className="clearfix" />
               </div>
             </div>
           }
