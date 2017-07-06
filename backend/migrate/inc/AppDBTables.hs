@@ -18,6 +18,7 @@ import Cron.Tables
 import DB.SQLFunction
 import Doc.API.Callback.Tables
 import Doc.AutomaticReminder.Tables
+import Doc.Extending.Tables
 import Doc.Sealing.Tables
 import Doc.Signing.Tables
 import Doc.SMSPin.Tables
@@ -106,6 +107,8 @@ kontraTables =
   , tableAttachments
   , tableDocumentApiCallbackConsumers
   , tableDocumentApiCallbacks
+  , tableDocumentExtendingConsumers
+  , tableDocumentExtendingJobs
   , tableDocumentSealingConsumers
   , tableDocumentSealingJobs
   , tableDocumentSigningConsumers

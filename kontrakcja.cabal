@@ -208,6 +208,9 @@ Library
                  , Doc.DocumentID
                  , Doc.DocumentMonad
                  , Doc.EvidenceAttachments
+                 , Doc.Extending.Consumer
+                 , Doc.Extending.Model
+                 , Doc.Extending.Tables
                  , Doc.Logging
                  , Doc.Model
                  , Doc.Model.Domain

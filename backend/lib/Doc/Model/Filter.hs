@@ -52,6 +52,7 @@ data DocumentFilter
   | DocumentFilterByModificationTimeAfter UTCTime -- ^ That were modified after given time
   | DocumentFilterByLatestSignTimeBefore UTCTime  -- ^ With latest sign time before given time
   | DocumentFilterByLatestSignTimeAfter UTCTime   -- ^ With latest sign time after given time
+  | DocumentFilterNoExtentionTaskScheduled   -- ^ If no extention has been scheduled for given document (before 04.VII.2017)
   deriving Show
 
 documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m ()
@@ -183,6 +184,10 @@ documentFilterToSQL (DocumentFilterDeleted flag1) = do
   if flag1
      then sqlWhere "signatory_links.deleted IS NOT NULL"
      else sqlWhere "signatory_links.deleted IS NULL"
+
+documentFilterToSQL (DocumentFilterNoExtentionTaskScheduled) = do
+  sqlWhereNotExists $ sqlSelect "document_extending_jobs AS dej" $ do
+                        sqlWhere "dej.id = documents.id"
 
 data FilterString = Quoted T.Text | Unquoted T.Text
   deriving (Show, Eq)

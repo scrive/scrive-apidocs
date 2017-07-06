@@ -19,6 +19,7 @@ data GuardTimeConf = GuardTimeConf {
 , guardTimeOldURL :: String
 , guardTimeOldExtendingServiceURL :: String
 , guardTimeOldControlPublicationsURL :: String
+
 } deriving (Eq, Ord, Show)
 
 instance Unjson GuardTimeConf where

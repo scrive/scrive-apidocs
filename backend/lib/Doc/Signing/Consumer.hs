@@ -128,10 +128,10 @@ documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
             , mctxcurrentBrandedDomain = bd
             , mctxtime = now
             }
-      runGuardTimeConfT (guardTimeConf appConf)
-        . runTemplatesT (signingLang, templates)
+      runTemplatesT (signingLang, templates)
         . A.runAmazonMonadT ac
         . runMailContextT mc
+        . runGuardTimeConfT (guardTimeConf appConf)
         $ if (signingCancelled)
             then if (minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now)
               then return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction

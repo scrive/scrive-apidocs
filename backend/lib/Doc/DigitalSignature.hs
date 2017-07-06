@@ -4,20 +4,16 @@ module Doc.DigitalSignature
   ) where
 
 import Control.Monad.Catch
-import Control.Monad.Reader (MonadReader, asks)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG (CryptoRNG)
-import Data.Default (def)
 import Log
 import System.Exit (ExitCode(..))
 import System.FilePath ((</>))
 import Text.StringTemplates.Templates (TemplatesMonad)
 import qualified Data.ByteString as BS
 
-import ActionQueue.Scheduler (SchedulerData, getGlobalTemplates, sdAppConf)
 import Amazon (AmazonMonad)
-import AppConf (guardTimeConf)
 import DB (dbUpdate)
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.Data.Document (documentsealedfile)
@@ -28,11 +24,10 @@ import Doc.SealStatus (SealStatus(..))
 import File.File (filename)
 import File.Model (NewFile(..))
 import File.Storage (getFileContents)
-import GuardTime (GuardTimeConf, GuardTimeConfMonad, getGuardTimeConf)
+import GuardTime (GuardTimeConfMonad, getGuardTimeConf)
 import KontraPrelude
 import Log.Identifier
 import Log.Utils
-import Templates (runTemplatesT)
 import Util.Actor (systemActor)
 import Utils.Directory (withSystemTempDirectory')
 import qualified GuardTime as GT
@@ -77,7 +72,7 @@ addDigitalSignature = theDocumentID >>= \did ->
       return False
 
 -- | Extend a document: replace the digital signature with a keyless one.  Trigger callbacks.
-extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadMask m, MonadLog m, MonadReader SchedulerData m, CryptoRNG m, DocumentMonad m, AmazonMonad m) => m Bool
+extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadMask m, MonadLog m, CryptoRNG m, DocumentMonad m, AmazonMonad m, GuardTimeConfMonad m, TemplatesMonad m) => m Bool
 extendDigitalSignature = do
   Just file <- fileFromMainFile =<< (documentsealedfile <$>theDocument)
   did <- theDocumentID
@@ -86,9 +81,7 @@ extendDigitalSignature = do
     let sealedpath = tmppath </> "sealed.pdf"
     liftIO $ BS.writeFile sealedpath content
     now <- currentTime
-    gtconf <- asks (guardTimeConf . sdAppConf)
-    templates <- getGlobalTemplates
-    res <- runTemplatesT (def, templates) $ digitallyExtendFile now gtconf sealedpath (filename file)
+    res <- digitallyExtendFile now sealedpath (filename file)
     when res $ triggerAPICallbackIfThereIsOne =<< theDocument -- Users that get API callback on document change, also get information about sealed file being extended.
     return res
 
@@ -106,13 +99,14 @@ extendDigitalSignature = do
     -- /verify service can detect and provide an extended version if
     -- the verified document was extensible.
 
-digitallyExtendFile :: (TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadLog m, MonadIO m, MonadMask m, DocumentMonad m)
-                    => UTCTime -> GuardTimeConf -> FilePath -> String -> m Bool
-digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
-  (code, stdout, stderr) <- GT.digitallyExtend ctxgtconf pdfpath
+digitallyExtendFile :: (TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadLog m, MonadIO m, MonadMask m, DocumentMonad m, GuardTimeConfMonad m)
+                    => UTCTime -> FilePath -> String -> m Bool
+digitallyExtendFile ctxtime pdfpath pdfname = do
+  gtconf <- getGuardTimeConf
+  (code, stdout, stderr) <- GT.digitallyExtend gtconf pdfpath
   mr <- case code of
     ExitSuccess -> do
-      vr <- GT.verify ctxgtconf pdfpath
+      vr <- GT.verify gtconf pdfpath
       case vr of
            GT.Valid gsig | GT.extended gsig -> do
                 res <- liftIO $ BS.readFile pdfpath
@@ -120,7 +114,7 @@ digitallyExtendFile ctxtime ctxgtconf pdfpath pdfname = do
                 logInfo_ "GuardTime extended successfully"
                 return $ Just (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
            _ -> do
-                logInfo "GuardTime verification after extension failed" $ object [
+                logAttention "GuardTime verification after extension failed" $ object [
                     logPair_ vr
                   , "extending_stdout" `equalsExternalBSL` stdout
                   , "extending_stderr" `equalsExternalBSL` stderr

@@ -60,7 +60,7 @@ documentSealing appConf templates localCache globalCache pool = ConsumerConfig {
   , ccNotificationTimeout = 60 * 1000000 -- 1 minute
   , ccMaxRunningJobs = 2
   , ccProcessJob = \docsealing@DocumentSealing{..} -> withPostgreSQL pool . withDocumentID dsDocumentID $ do
-      now <- currentTime
+      now0 <- currentTime
       bd <- dbQuery $ GetBrandedDomainByID dsBrandedDomainID
       doc <- theDocument
       let lang = getLang doc
@@ -72,7 +72,7 @@ documentSealing appConf templates localCache globalCache pool = ConsumerConfig {
           mc = MailContext {
               mctxlang = lang
             , mctxcurrentBrandedDomain = bd
-            , mctxtime = now
+            , mctxtime = now0
             }
       resultisok <- runGuardTimeConfT (guardTimeConf appConf)
         . runTemplatesT (lang, templates)

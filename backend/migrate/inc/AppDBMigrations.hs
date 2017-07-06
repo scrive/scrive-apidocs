@@ -9,6 +9,7 @@ import Chargeable.Migrations
 import Company.Migrations
 import Cron.Migrations
 import DB
+import Doc.Extending.Migrations
 import Doc.Migrations
 import Doc.Signing.Migrations
 import Mails.FromKontra.Migrations
@@ -40,6 +41,8 @@ kontraMigrations = [
   , documentSigningJobsAddSignatoryAttachments
   , createKontraInfoForMailsTable
   , createKontraInfoForSMSesTable
+  , createDocumentExtendingConsumers
+  , createDocumentExtendingJobs
   , removeXSMTPAttrsFromMailEvents
   , removeDataFromSmses
   ]

@@ -20,6 +20,7 @@ import Text.StringTemplates.Templates (TemplatesMonad)
 
 import ActionQueue.Scheduler
 import Amazon (AmazonMonad)
+import AppConf
 import BrandedDomain.BrandedDomain
 import Chargeable.Model
 import DB
@@ -33,13 +34,14 @@ import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
 import Doc.DocumentMonad
 import Doc.DocUtils
+import Doc.Extending.Model
 import Doc.Logging
 import Doc.Model
 import Doc.Sealing.Model
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryLinkID
 import Doc.Signing.Model ()
-import GuardTime (GuardTimeConfMonad)
+import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
 import Kontra
 import KontraPrelude
 import Log.Identifier
@@ -218,21 +220,28 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
       theDocument >>= sendClosedEmails sealFixed
       theDocument >>= triggerAPICallbackIfThereIsOne
 
+  resultisok <- (\d -> documentsealstatus d /= Just Missing && documentstatus d == Closed) <$> theDocument
+
+  when resultisok $ do
+    now <- currentTime
+    theDocument >>= \d -> dbUpdate $ ScheduleDocumentExtending (documentid d) now
+
   -- Sealing or signing of document could have failed. We need to tell the caller,
   -- so that the action can be re-scheduled
-  (\d -> documentsealstatus d /= Just Missing && documentstatus d == Closed) <$> theDocument
+  return resultisok
 
 
 -- | Extend (replace with keyless) signatures of documents older than latest publication code (if they are not already extended)
 findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadMask m, MonadIO m, MonadLog m) => m ()
 findAndExtendDigitalSignatures = do
   lpt <- latest_publication_time
+  gtconf <- asks (guardTimeConf . sdAppConf)
   logInfo "findAndExtendDigitalSignatures: logging latest publication time" $ object [
       "latest_publication_time" .= lpt
     ]
   docs <- dbQuery $ GetDocuments DocumentsOfWholeUniverse
             [ DocumentFilterStatuses [Closed]
-            , DocumentFilterByLatestSignTimeBefore lpt
+            , DocumentFilterNoExtentionTaskScheduled
             , DocumentFilterBySealStatus
               [ Guardtime{ extended = False, private = True }
               , Guardtime{ extended = False, private = False }
@@ -243,10 +252,11 @@ findAndExtendDigitalSignatures = do
         "documents" .= length docs
       ]
   startTime <- liftBase getCurrentTime
+  templates <- getGlobalTemplates
   (alreadyExtended, failedExtend, success) <- foldM (\(ext,f,s) d ->
     case documentsealstatus d of
       Just (Guardtime{ extended = False }) -> do
-        r <- withDocument d extendDigitalSignature
+        r <- withDocument d . runGuardTimeConfT gtconf . runTemplatesT (def, templates) $ extendDigitalSignature
         commit
         if r then return (ext,f,s+1)
              else return (ext,f+1,s)

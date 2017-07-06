@@ -29,6 +29,7 @@ import DB.PostgreSQL
 import Doc.Action
 import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
+import Doc.Extending.Consumer
 import Doc.Model
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
@@ -108,12 +109,14 @@ main = do
 
         docSealing = documentSealing appConf templates filecache mrediscache pool
         docSigning = documentSigning  appConf templates filecache mrediscache pool
+        docExtending = documentExtendingConsumer appConf templates filecache mrediscache pool
         apiCallbacks = documentAPICallback runScheduler
         cron = cronQueue appConf mmixpanel runScheduler runDB
 
     runCryptoRNGT rng
       . finalize (localDomain "document sealing" $ runConsumer docSealing pool)
       . finalize (localDomain "document signing" $ runConsumer docSigning pool)
+      . finalize (localDomain "document extending" $ runConsumer docExtending pool)
       . finalize (localDomain "api callbacks" $ runConsumer apiCallbacks pool)
       . finalize (localDomain "cron" $ runConsumer cron pool) $ do
       liftBase waitForTermination
