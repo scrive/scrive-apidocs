@@ -9,7 +9,7 @@ import qualified Data.ByteString as BS
 
 import ActionQueue.Monad (ActionQueueT)
 import ActionQueue.Scheduler (SchedulerData(..))
-import AppConf (AppConf(dbConfig))
+import CronConf (CronConf(dbConfig))
 import DB
 import Doc.Action (findAndExtendDigitalSignatures)
 import Doc.DocInfo
@@ -56,7 +56,7 @@ testExtendDigitalSignatures = do
 
 runScheduler :: MonadBase IO m => ActionQueueT (AWS.AmazonMonadT m) SchedulerData a -> m a
 runScheduler m = do
-  let appConf = def { dbConfig = "" }
+  let cronConf = def { dbConfig = "" }
   templates <- liftBase readGlobalTemplates
   filecache <- MemCache.new BS.length 52428800
-  CronEnv.runScheduler appConf filecache Nothing templates m
+  CronEnv.runScheduler cronConf filecache Nothing templates m

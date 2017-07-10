@@ -20,7 +20,6 @@ import Text.StringTemplates.Templates (TemplatesMonad)
 
 import ActionQueue.Scheduler
 import Amazon (AmazonMonad)
-import AppConf
 import BrandedDomain.BrandedDomain
 import Chargeable.Model
 import DB
@@ -235,7 +234,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
 findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadMask m, MonadIO m, MonadLog m) => m ()
 findAndExtendDigitalSignatures = do
   lpt <- latest_publication_time
-  gtconf <- asks (guardTimeConf . sdAppConf)
+  gtconf <- asks sdGuardTimeConf
   logInfo "findAndExtendDigitalSignatures: logging latest publication time" $ object [
       "latest_publication_time" .= lpt
     ]

@@ -1,6 +1,7 @@
 module AppConf (
-      AppConf(..)
-      , unjsonAppConf
+    AppConf(..)
+  , AmazonConfig
+  , unjsonAppConf
   ) where
 
 import Data.Default
@@ -8,49 +9,55 @@ import Data.Unjson
 import Data.Word
 import qualified Data.Text as T
 
+import Amazon.Config
 import Database.Redis.Configuration
 import EID.CGI.GRP.Config
 import EID.Nets.Config
 import GuardTime (GuardTimeConf(..))
-import HostClock.System (defaultNtpServers)
 import HubSpot.Conf (HubSpotConf(..))
 import KontraPrelude
 import Log.Configuration
 import Salesforce.Conf
-import SFTPConfig
 import User.Email
 
--- | Defines the application's configuration.  This includes amongst
--- other things the http port number, amazon, trust weaver and email
+-- | Main application configuration.  This includes amongst other
+-- things the http port number, AWS, GuardTime, E-ID and email
 -- configuraton, as well as a handy boolean indicating whether this is
 -- a production or development instance.
 data AppConf = AppConf {
-    httpBindAddress    :: (Word32, Word16)             -- ^ tcp address to bind to and port to listen on
-                                                       -- (0x7f000001, 8000) localhost:8000 (default)
-                                                       -- (0, 80)   all interfaces port 80
-  , mainDomainUrl      :: String                       -- ^ base url of the main domain
-  , useHttps           :: Bool                         -- ^ should we redirect to https?
-  , amazonConfig       :: Maybe (String,String,String) -- ^ bucket, access key, secret key
-  , dbConfig           :: T.Text                       -- ^ postgresql configuration
-  , maxDBConnections   :: Int                          -- ^ limit of db connections
-  , redisCacheConfig   :: Maybe RedisConfig            -- ^ redis configuration
-  , localFileCacheSize :: Int                          -- ^ size of local cache for files
-  , logConfig          :: LogConfig                    -- ^ logging configuration
-  , production         :: Bool                         -- ^ production flag, enables some production stuff, disables some development
-  , cdnBaseUrl         :: Maybe String                 -- ^ for CDN content in prod mode
+    httpBindAddress    :: (Word32, Word16)
+    -- ^ TCP address to bind to and port to listen on (0x7f000001,
+    -- 8000) localhost:8000 (default) (0, 80) all interfaces port 80.
+  , mainDomainUrl      :: String               -- ^ base url of the main domain
+  , useHttps           :: Bool                 -- ^ should we redirect to https?
+  , amazonConfig       :: Maybe AmazonConfig
+  -- ^ AWS configuration (bucket, access key, secret key).
+  , dbConfig           :: T.Text               -- ^ postgresql configuration
+  , maxDBConnections   :: Int                  -- ^ limit of db connections
+  , redisCacheConfig   :: Maybe RedisConfig    -- ^ redis configuration
+  , localFileCacheSize :: Int                  -- ^ size of local cache for files
+  , logConfig          :: LogConfig            -- ^ logging configuration
+  , production         :: Bool
+    -- ^ production flag, enables some production stuff, disables some
+    -- development stuff
+  , cdnBaseUrl         :: Maybe String         -- ^ for CDN content in prod mode
   , guardTimeConf      :: GuardTimeConf
-  , isMailBackdoorOpen :: Bool                         -- ^ If true allows admins to access last mail send. Used by selenium
-  , cgiGrpConfig       :: Maybe CgiGrpConfig           -- ^ CGI GRP (E-ID) configuration
-  , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
-  , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
-  , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
-  , mixpanelToken      :: Maybe String                 -- ^ for mixpanel integration
-  , trackjsToken       :: Maybe String                 -- ^ for Track.js integration
-  , hubspotConf        :: Maybe HubSpotConf            -- ^ for hubspot integration
-  , ntpServers         :: [String]                     -- ^ List of NTP servers to contact to get estimate of host clock error
-  , salesforceConf     :: Maybe SalesforceConf         -- ^ Configuration of salesforce
-  , netsConfig         :: Maybe NetsConfig             -- ^ Configuration of Nets - NO BankID provider
-  , invoicingSFTPConf  :: Maybe SFTPConfig             -- ^ SFTP server for invoicing uploads
+  , isMailBackdoorOpen :: Bool
+    -- ^ If true allows admins to access last mail send. Used by
+    -- selenium.
+  , cgiGrpConfig       :: Maybe CgiGrpConfig   -- ^ CGI GRP (E-ID) configuration
+  , admins             :: [Email]
+    -- ^ E-mail addresses of people regarded as admins.
+  , sales              :: [Email]
+    -- ^ E-mail addresses of people regarded as sales admins.
+  , initialUsers       :: [(Email,String)]
+    -- ^ E-mail and passwords for initial users.
+  , mixpanelToken      :: Maybe String         -- ^ For mixpanel integration.
+  , trackjsToken       :: Maybe String         -- ^ For Track.js integration.
+  , hubspotConf        :: Maybe HubSpotConf    -- ^ For Hubspot integration.
+  , salesforceConf     :: Maybe SalesforceConf -- ^ Configuration of Salesforce.
+  , netsConfig         :: Maybe NetsConfig
+    -- ^ Configuration of Nets - .DK/.NO BankID provider.
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -130,18 +137,12 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldOpt "hubspot"
       hubspotConf
       "Configuration of HubSpot"
-  <*> field "ntp_servers"
-      ntpServers
-      "List of NTP servers to contact to get estimate of host clock error"
   <*> fieldOpt "salesforce"
       salesforceConf
       "Configuration of salesforce"
   <*> fieldOpt "nets"
       netsConfig
       "Configuration of Nets - NO BankID provider"
-  <*> fieldOpt "invoicing_sftp_for_salesforce"
-      invoicingSFTPConf
-      "Configuration for SFTP:ing invoicing reports"
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf
@@ -151,27 +152,16 @@ instance Default AppConf where
   def = AppConf {
       httpBindAddress    = (0x7f000001, 8000)
     , mainDomainUrl      = "http://localhost:8000"
-    , useHttps           = True
+    , useHttps           = False
     , amazonConfig       = Nothing
     , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
     , maxDBConnections   = 100
-    , redisCacheConfig   = Just def
+    , redisCacheConfig   = Nothing
     , localFileCacheSize = 200000000
     , logConfig          = def
-    , production         = True
+    , production         = False
     , cdnBaseUrl         = Nothing
-    , guardTimeConf      = GuardTimeConf {
-        guardTimeSigningServiceURL = "http://internal-gt-signer-848430379.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
-      , guardTimeExtendingServiceURL ="http://internal-gt-extender-2081608339.eu-west-1.elb.amazonaws.com:8081/gt-extendingservice"
-      , guardTimeControlPublicationsURL = "http://verify.guardtime.com/ksi-publications.bin"
-      , guardTimeSigningLoginUser ="anon"
-      , guardTimeSigningLoginKey = "anon"
-      , guardTimeExtendingLoginUser ="anon"
-      , guardTimeExtendingLoginKey = "1234"
-      , guardTimeOldURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
-      , guardTimeOldExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
-      , guardTimeOldControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
-      }
+    , guardTimeConf      = def
     , isMailBackdoorOpen = False
     , cgiGrpConfig       = Nothing
     , admins             = []
@@ -180,8 +170,6 @@ instance Default AppConf where
     , mixpanelToken      = Nothing
     , trackjsToken       = Nothing
     , hubspotConf        = Nothing
-    , ntpServers         = defaultNtpServers
     , salesforceConf     = Nothing
     , netsConfig         = Nothing
-    , invoicingSFTPConf  = Nothing
     }

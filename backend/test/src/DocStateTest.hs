@@ -14,9 +14,9 @@ import qualified Data.Set as S
 import ActionQueue.Monad (ActionQueueT)
 import ActionQueue.Scheduler (SchedulerData(..))
 import Amazon
-import AppConf (AppConf(dbConfig))
 import Company.Model
 import Context (ctxtime)
+import CronConf (CronConf(dbConfig))
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 import Doc.Conditions
@@ -1900,10 +1900,10 @@ testStatusClassSignedWhenAllSigned = replicateM_ 10 $ do
 
 runScheduler :: MonadBase IO m => ActionQueueT (AWS.AmazonMonadT m) SchedulerData a -> m a
 runScheduler m = do
-  let appConf = def { dbConfig = "" }
+  let cronConf = def { dbConfig = "" }
   templates <- liftBase readGlobalTemplates
   filecache <- MemCache.new BS.length 52428800
-  CronEnv.runScheduler appConf filecache Nothing templates m
+  CronEnv.runScheduler cronConf filecache Nothing templates m
 
 -- Moved from Eq instance of SignatoryLink. Instance got dropped as it is not usefull in main server - but it's good to have way to compare SignatoryLinks in tests.
 signatoryLinksAreAlmoustEqualForTests :: SignatoryLink -> SignatoryLink -> Bool

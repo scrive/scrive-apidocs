@@ -24,6 +24,7 @@ regular-css-compiled.css
 .cabal-sandbox/
 cabal.sandbox.config
 cabal.project.local
+*.bak
 
 frontend/app/localization/*.js
 

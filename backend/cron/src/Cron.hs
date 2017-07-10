@@ -19,10 +19,10 @@ import ActionQueue.PasswordReminder
 import ActionQueue.Scheduler
 import ActionQueue.UserAccountRequest
 import Administration.Invoicing
-import AppConf
 import AppDBTables
 import Configuration
 import Cron.Model
+import CronConf
 import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
@@ -64,7 +64,7 @@ cmdConf progName = CmdConf {
         &= typ "FILE"
 } &= program progName
   where
-    configFile = "kontrakcja.conf"
+    configFile = "cron.conf"
 
 ----------------------------------------
 
@@ -74,27 +74,27 @@ type DBCronM = DBT CronM
 main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
-  appConf <- readConfig putStrLn config
+  cronConf <- readConfig putStrLn config
   rng <- newCryptoRNGState
-  logRunner <- mkLogRunner "cron" (logConfig appConf) rng
+  logRunner <- mkLogRunner "cron" (logConfig cronConf) rng
   runWithLogRunner logRunner $ do
     checkExecutables
 
-    let connSettings = pgConnSettings $ dbConfig appConf
+    let connSettings = pgConnSettings $ dbConfig cronConf
     withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $
       checkDatabase kontraDomains kontraTables
 
-    ConnectionSource pool <- ($ (maxConnectionTracker $ maxDBConnections appConf))
-      <$> liftBase (createPoolSource (connSettings kontraComposites) (maxDBConnections appConf))
+    ConnectionSource pool <- ($ (maxConnectionTracker $ maxDBConnections cronConf))
+      <$> liftBase (createPoolSource (connSettings kontraComposites) (maxDBConnections cronConf))
     templates <- liftBase readGlobalTemplates
-    mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
-    filecache <- MemCache.new BS.length (localFileCacheSize appConf)
+    mrediscache <- F.forM (redisCacheConfig cronConf) mkRedisConnection
+    filecache <- MemCache.new BS.length (localFileCacheSize cronConf)
 
     -- Asynchronous event dispatcher; if you want to add a consumer to the event
     -- dispatcher, please combine the two into one dispatcher function rather
     -- than creating a new thread or something like that, since
     -- asyncProcessEvents removes events after processing.
-    mmixpanel <- case mixpanelToken appConf of
+    mmixpanel <- case mixpanelToken cronConf of
       Nothing -> do
         noConfigurationWarning "Mixpanel"
         return Nothing
@@ -105,13 +105,19 @@ main = do
         runDB = withPostgreSQL pool
 
         runScheduler :: Scheduler r -> CronM r
-        runScheduler = runDB . CronEnv.runScheduler appConf filecache mrediscache templates
+        runScheduler = runDB . CronEnv.runScheduler cronConf
+          filecache mrediscache templates
 
-        docSealing = documentSealing appConf templates filecache mrediscache pool
-        docSigning = documentSigning  appConf templates filecache mrediscache pool
-        docExtending = documentExtendingConsumer appConf templates filecache mrediscache pool
+        docSealing   = documentSealing (amazonConfig cronConf)
+          (guardTimeConf cronConf) templates filecache mrediscache pool
+        docSigning   = documentSigning (amazonConfig cronConf)
+          (guardTimeConf cronConf) (cgiGrpConfig cronConf)
+          templates filecache mrediscache pool
+        docExtending = documentExtendingConsumer (amazonConfig cronConf)
+          (guardTimeConf cronConf) templates filecache mrediscache pool
+
         apiCallbacks = documentAPICallback runScheduler
-        cron = cronQueue appConf mmixpanel runScheduler runDB
+        cron         = cronQueue cronConf mmixpanel runScheduler runDB
 
     runCryptoRNGT rng
       . finalize (localDomain "document sealing" $ runConsumer docSealing pool)
@@ -121,12 +127,12 @@ main = do
       . finalize (localDomain "cron" $ runConsumer cron pool) $ do
       liftBase waitForTermination
   where
-    cronQueue :: AppConf
+    cronQueue :: CronConf
               -> Maybe (EventProcessor (DBCronM))
               -> (forall r. Scheduler r -> CronM r)
               -> (forall r. DBCronM r -> CronM r)
               -> ConsumerConfig CronM JobType CronJob
-    cronQueue appConf mmixpanel runScheduler runDB = ConsumerConfig {
+    cronQueue cronConf mmixpanel runScheduler runDB = ConsumerConfig {
       ccJobsTable = "cron_jobs"
     , ccConsumersTable = "cron_workers"
     , ccJobSelectors = cronJobSelectors
@@ -139,7 +145,7 @@ main = do
       logInfo_ "Processing job"
       action <- case cjType of
         AmazonUpload -> do
-          if AWS.isAWSConfigOk $ amazonConfig appConf
+          if AWS.isAWSConfigOk $ amazonConfig cronConf
             then do
               moved <- runScheduler (AWS.uploadSomeFilesToAmazon 10)
               if moved
@@ -152,7 +158,7 @@ main = do
           runDB $ asyncProcessEvents (catEventProcs $ catMaybes [mmixpanel]) All
           return . RerunAfter $ iseconds 10
         ClockErrorCollection -> do
-          runDB $ collectClockError (ntpServers appConf)
+          runDB $ collectClockError (ntpServers cronConf)
           return . RerunAfter $ ihours 1
         DocumentAutomaticRemindersEvaluation -> do
           runScheduler $ actionQueue documentAutomaticReminder
@@ -182,7 +188,7 @@ main = do
           runScheduler findAndTimeoutDocuments
           return . RerunAfter $ iminutes 10
         InvoicingUpload -> do
-          case invoicingSFTPConf appConf of
+          case invoicingSFTPConf cronConf of
             Nothing -> do
               logInfo "SFTP config missing; skipping" $ object []
             Just sftpConfig -> runScheduler $ uploadInvoicing sftpConfig
@@ -209,7 +215,7 @@ main = do
           return . RerunAfter $ ihours 1
         OldLogsRemoval -> do
           let connSource ci = simpleSource def { csConnInfo = ci }
-              logDBs = catMaybes . for (lcLoggers $ logConfig appConf) $ \case
+              logDBs = catMaybes . for (lcLoggers $ logConfig cronConf) $ \case
                 PostgreSQL ci -> Just ci
                 _             -> Nothing
           forM_ logDBs $ \ci -> runDBT (unConnectionSource $ connSource ci) def $ do

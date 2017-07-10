@@ -15,7 +15,7 @@ import Text.StringTemplates.Templates (renderTemplate, renderTemplate_)
 import qualified Database.Redis as R
 import qualified Text.StringTemplates.Fields as F
 
-import AppConf
+import AppConf (AmazonConfig)
 import BrandedDomain.Model
 import DB
 import DB.PostgreSQL
@@ -32,6 +32,7 @@ import Doc.Model.Update
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
 import Doc.Signing.Model
+import EID.CGI.GRP.Config
 import EID.CGI.GRP.Control
 import EID.CGI.GRP.Data
 import EID.Signature.Model
@@ -68,13 +69,16 @@ data DocumentSigning = DocumentSigning {
 
 documentSigning
   :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-  => AppConf
+  => Maybe AmazonConfig
+  -> GuardTimeConf
+  -> Maybe CgiGrpConfig
   -> KontrakcjaGlobalTemplates
   -> MemCache FileID ByteString
   -> Maybe R.Connection
   -> ConnectionSourceM m
   -> ConsumerConfig m SignatoryLinkID DocumentSigning
-documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
+documentSigning amazonConf guardTimeConf cgiGrpConf
+  templates localCache globalCache pool = ConsumerConfig {
     ccJobsTable = "document_signing_jobs"
   , ccConsumersTable = "document_signing_consumers"
   , ccJobSelectors =
@@ -119,8 +123,8 @@ documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
       now <- currentTime
       bd <- dbQuery $ GetBrandedDomainByID signingBrandedDomainID
       let ac = A.AmazonConfig {
-              A.awsConfig = amazonConfig appConf
-            , A.awsLocalCache = localCache
+              A.awsConfig      = amazonConf
+            , A.awsLocalCache  = localCache
             , A.awsGlobalCache = globalCache
             }
           mc = MailContext {
@@ -131,14 +135,14 @@ documentSigning appConf templates localCache globalCache pool = ConsumerConfig {
       runTemplatesT (signingLang, templates)
         . A.runAmazonMonadT ac
         . runMailContextT mc
-        . runGuardTimeConfT (guardTimeConf appConf)
+        . runGuardTimeConfT guardTimeConf
         $ if (signingCancelled)
             then if (minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now)
               then return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction
               else return $ Ok Remove
             else do
               logInfo_ "Collecting operation"
-              case cgiGrpConfig appConf of
+              case cgiGrpConf of
                 Nothing -> do
                   noConfigurationWarning "CGI Group" -- log a warning rather than raising an error as documentSigning is called from cron
                   return $ Failed Remove
