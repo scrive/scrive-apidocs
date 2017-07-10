@@ -36,13 +36,14 @@ data DocumentExtendingConsumer = DocumentExtendingConsumer {
 
 documentExtendingConsumer
   :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-  => AppConf
+  => Maybe AmazonConfig
+  -> GuardTimeConf
   -> KontrakcjaGlobalTemplates
   -> MemCache FileID ByteString
   -> Maybe R.Connection
   -> ConnectionSourceM m
   -> ConsumerConfig m DocumentID DocumentExtendingConsumer
-documentExtendingConsumer appConf templates localCache globalCache pool = ConsumerConfig {
+documentExtendingConsumer mbAmazonConf guardTimeConf templates localCache globalCache pool = ConsumerConfig {
     ccJobsTable = "document_extending_jobs"
   , ccConsumersTable = "document_extending_consumers"
   , ccJobSelectors =
@@ -59,14 +60,14 @@ documentExtendingConsumer appConf templates localCache globalCache pool = Consum
   , ccMaxRunningJobs = 5
   , ccProcessJob = \dec@DocumentExtendingConsumer{..} -> do
       let ac = A.AmazonConfig {
-              A.awsConfig = amazonConfig appConf
+              A.awsConfig = mbAmazonConf
             , A.awsLocalCache = localCache
             , A.awsGlobalCache = globalCache
             }
       resultisok <- withPostgreSQL pool
         . withDocumentM (dbQuery $ GetDocumentByDocumentID decDocumentID)
         . runTemplatesT (def, templates)
-        . runGuardTimeConfT (guardTimeConf appConf)
+        . runGuardTimeConfT guardTimeConf
         . A.runAmazonMonadT ac
         $ extendDigitalSignature
       case resultisok of

@@ -21,7 +21,6 @@ import qualified Text.JSON as J
 import ActionQueue.Scheduler
 import Amazon
 import API.APIVersion
-import AppConf
 import Company.Model
 import DB
 import Doc.API.Callback.Data
@@ -66,7 +65,7 @@ execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
         case mcallbackschema of
           Just (SalesforceScheme rtoken)            -> do
             sd <- ask
-            case salesforceConf (sdAppConf sd) of
+            case (sdSalesforceConf sd) of
               Nothing -> do
                 noConfigurationWarning "Salesforce" -- log a warning rather than raising an error not to disturb cron
                 return False

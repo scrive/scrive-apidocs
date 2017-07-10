@@ -46,7 +46,6 @@ import qualified Text.StringTemplates.TemplatesLoader as TL
 import BrandedDomain.Model
 import DB
 import DB.PostgreSQL
-import GuardTime
 import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
@@ -289,18 +288,7 @@ mkContext lang = do
         , ctxsalesaccounts = []
         , ctxmaybepaduser = Nothing
         , ctxusehttps = False
-        , ctxgtconf = GuardTimeConf {
-            guardTimeSigningServiceURL = "http://internal-gt-signer-848430379.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
-          , guardTimeExtendingServiceURL ="http://internal-gt-extender-2081608339.eu-west-1.elb.amazonaws.com:8081/gt-extendingservice"
-          , guardTimeControlPublicationsURL = "http://verify.guardtime.com/ksi-publications.bin"
-          , guardTimeSigningLoginUser ="anon"
-          , guardTimeSigningLoginKey = "anon"
-          , guardTimeExtendingLoginUser ="anon"
-          , guardTimeExtendingLoginKey = "1234"
-          , guardTimeOldURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
-          , guardTimeOldExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
-          , guardTimeOldControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
-          }
+        , ctxgtconf = def
         , ctxsessionid = tempSessionID
         , ctxtrackjstoken = Nothing
         , ctxmixpaneltoken = Nothing

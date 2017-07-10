@@ -22,7 +22,9 @@ import KontraPrelude
 -- 3. When does not look like json and does not readIO: full docs
 -- 4. When unjson has issue, then just info about specific problems
 
-readConfig :: forall a m . (Unjson a, Default a, Monad m, MonadBaseControl IO m) => (String -> m ()) -> FilePath -> m a
+readConfig :: forall a m .
+              (Unjson a, Default a, Monad m, MonadBaseControl IO m) =>
+              (String -> m ()) -> FilePath -> m a
 readConfig logger path = do
   logger $ "Reading configuration " ++ path ++ "..."
   bsl' <- either logExceptionAndPrintFullDocs return =<<
@@ -49,13 +51,14 @@ readConfig logger path = do
       fail ex
     logYamlParseExceptionAndBlameJsonParser :: Yaml.ParseException -> m g
     logYamlParseExceptionAndBlameJsonParser ex = do
-      -- sadly parsing issues in aeson as reported as badly as anything else
+      -- sadly parsing issues in aeson are reported as badly as anything else
       logStringAndBlameJsonParser $ showNiceYamlParseException path ex
     logStringAndBlameJsonParser :: String -> m g
     logStringAndBlameJsonParser ex = do
-      -- sadly parsing issues in aeson as reported as badly as anything else
+      -- sadly parsing issues in aeson are reported as badly as anything else
       logger $ ex
-      logStringAndFail $ "Configuration file '" ++ path ++ "' has syntax errors and is not a valid json"
+      logStringAndFail $ "Configuration file '" ++ path
+        ++ "' has syntax errors and is not valid JSON"
     logExceptionAndPrintFullDocs :: E.SomeException -> m g
     logExceptionAndPrintFullDocs ex = logStringAndPrintFullDocs (show ex)
     logStringAndPrintFullDocs :: String -> m g
@@ -73,7 +76,9 @@ readConfig logger path = do
       mapM_ logProblem problems
       fail $ "There were issues with the content of configuration " ++ path
     configAsJsonString :: a -> String
-    configAsJsonString a = BSL.toString $ unjsonToByteStringLazy' (Options { pretty = True, indent = 4, nulls = False }) ud a
+    configAsJsonString a = BSL.toString $
+      unjsonToByteStringLazy'
+      (Options { pretty = True, indent = 4, nulls = False }) ud a
 
 showNiceYamlParseException :: FilePath -> Yaml.ParseException -> String
 showNiceYamlParseException filepath parseException =

@@ -5,14 +5,17 @@ module ActionQueue.Scheduler (
   ) where
 
 import Control.Monad.Reader
+import Data.Maybe
 
 import ActionQueue.Monad
-import AppConf
+import GuardTime.Class
+import Salesforce.Conf
 import Templates
 
 data SchedulerData = SchedulerData {
-    sdAppConf   :: AppConf
-  , sdTemplates :: KontrakcjaGlobalTemplates
+    sdGuardTimeConf  :: GuardTimeConf
+  , sdSalesforceConf :: Maybe SalesforceConf
+  , sdTemplates      :: KontrakcjaGlobalTemplates
   }
 
 type Scheduler = ActionQueue SchedulerData

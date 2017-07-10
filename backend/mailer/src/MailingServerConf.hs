@@ -187,7 +187,7 @@ instance Default MailingServerConf where
       mscHttpBindAddress = (0x7f000001, 6666)
     , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
     , mscMaxDBConnections = 100
-    , mscRedisCacheConfig = Just def
+    , mscRedisCacheConfig = Nothing
     , mscLocalFileCacheSize = 52428800
     , mscLogConfig = def
     , mscMasterSender = LocalSender {

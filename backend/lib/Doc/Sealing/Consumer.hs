@@ -14,7 +14,7 @@ import Database.PostgreSQL.Consumers.Config
 import Log.Class
 import qualified Database.Redis as R
 
-import AppConf
+import AppConf (AmazonConfig)
 import BrandedDomain.Model
 import DB
 import DB.PostgreSQL
@@ -40,13 +40,15 @@ data DocumentSealing = DocumentSealing {
 
 documentSealing
   :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-  => AppConf
+  => Maybe AmazonConfig
+  -> GuardTimeConf
   -> KontrakcjaGlobalTemplates
   -> MemCache FileID ByteString
   -> Maybe R.Connection
   -> ConnectionSourceM m
   -> ConsumerConfig m DocumentID DocumentSealing
-documentSealing appConf templates localCache globalCache pool = ConsumerConfig {
+documentSealing mbAmazonConf guardTimeConf templates
+  localCache globalCache pool = ConsumerConfig {
     ccJobsTable = "document_sealing_jobs"
   , ccConsumersTable = "document_sealing_consumers"
   , ccJobSelectors = ["id", "branded_domain_id", "attempts"]
@@ -65,16 +67,17 @@ documentSealing appConf templates localCache globalCache pool = ConsumerConfig {
       doc <- theDocument
       let lang = getLang doc
           ac = A.AmazonConfig {
-              A.awsConfig = amazonConfig appConf
-            , A.awsLocalCache = localCache
+              A.awsConfig      = mbAmazonConf
+            , A.awsLocalCache  = localCache
             , A.awsGlobalCache = globalCache
             }
           mc = MailContext {
-              mctxlang = lang
+              mctxlang                 = lang
             , mctxcurrentBrandedDomain = bd
-            , mctxtime = now0
+            , mctxtime                 = now0
+
             }
-      resultisok <- runGuardTimeConfT (guardTimeConf appConf)
+      resultisok <- runGuardTimeConfT guardTimeConf
         . runTemplatesT (lang, templates)
         . A.runAmazonMonadT ac
         . runMailContextT mc

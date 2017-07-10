@@ -97,6 +97,7 @@ Library
                  , Administration.Invoicing
                  , Amazon
                  , Amazon.Class
+                 , Amazon.Config
                  , Analytics.Include
                  , AppConf
                  , AppControl
@@ -134,7 +135,6 @@ Library
                  , Cookies
                  , Cron.Model
                  , Cron.Tables
-                 , CronEnv
                  , Crypto
                  , Database.Redis.Cache
                  , Database.Redis.Configuration
@@ -588,6 +588,7 @@ Executable kontrakcja-server
 Executable cron
 
   Hs-source-dirs: backend/cron/src
+                  backend/cron/inc
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts
@@ -604,7 +605,10 @@ Executable cron
                , cmdargs
                , consumers
                , crypto-rng
+               , data-default
+               , exceptions
                , filepath
+               , hpqtypes
                , hpqtypes-extras
                , hedis
                , log-base
@@ -612,9 +616,12 @@ Executable cron
                , mtl
                , text
                , transformers-base
+               , unjson
 
-  Main-is: Cron.hs
-  GHC-options: -main-is Cron
+  Main-is:       Cron.hs
+  Other-Modules: CronConf
+                 CronEnv
+  GHC-options:   -main-is Cron
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns
@@ -943,6 +950,7 @@ Executable messenger-server
 Test-suite kontrakcja-test
   Type:           exitcode-stdio-1.0
   Hs-source-dirs: backend/cron/schema
+                  backend/cron/inc
                   backend/mailer/schema
                   backend/messenger/schema
                   backend/migrate/inc
@@ -1028,6 +1036,7 @@ Test-suite kontrakcja-test
                , fields-json
                , filepath
                , happstack-server
+               , hedis
                , hpqtypes
                , json
                , kontrakcja-templates

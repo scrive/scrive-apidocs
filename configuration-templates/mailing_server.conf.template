@@ -1,0 +1,25 @@
+{
+    "bind_ip": "127.0.0.1",
+    "bind_port": 6666,
+    "database": "user='kontra' password='kontra' dbname='kontrakcja'",
+    "max_db_connections": 100,
+    "local_file_cache_size": 52428800,
+    "logging": {
+        "suffix": "dev",
+        "loggers": [
+            {
+                "logger": "stdout"
+            }
+        ]
+    },
+    "master_sender": {
+        "type": "local",
+        "dir": "/tmp"
+    },
+    "test_receivers": [
+        {
+            "name": "test",
+            "email": "your@email.scrive.com"
+        }
+    ]
+}

@@ -2,6 +2,7 @@
 module GuardTime.Class where
 
 import Control.Monad.Trans
+import Data.Default
 import Data.Unjson
 
 import KontraPrelude
@@ -55,6 +56,20 @@ instance Unjson GuardTimeConf where
     <*> field "old_control_publications_url"
         guardTimeOldControlPublicationsURL
         "Old GuardTime Control Publications URL"
+
+instance Default GuardTimeConf where
+  def = GuardTimeConf {
+        guardTimeSigningServiceURL = "http://internal-gt-signer-848430379.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
+      , guardTimeExtendingServiceURL ="http://internal-gt-extender-2081608339.eu-west-1.elb.amazonaws.com:8081/gt-extendingservice"
+      , guardTimeControlPublicationsURL = "http://verify.guardtime.com/ksi-publications.bin"
+      , guardTimeSigningLoginUser ="anon"
+      , guardTimeSigningLoginKey = "anon"
+      , guardTimeExtendingLoginUser ="anon"
+      , guardTimeExtendingLoginKey = "1234"
+      , guardTimeOldURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
+      , guardTimeOldExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
+      , guardTimeOldControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
+      }
 
 class Monad m => GuardTimeConfMonad m where
   getGuardTimeConf :: m GuardTimeConf
