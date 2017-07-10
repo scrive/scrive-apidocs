@@ -41,8 +41,8 @@ kontraMigrations = [
   , documentSigningJobsAddSignatoryAttachments
   , createKontraInfoForMailsTable
   , createKontraInfoForSMSesTable
-  , createDocumentExtendingConsumers
-  , createDocumentExtendingJobs
   , removeXSMTPAttrsFromMailEvents
   , removeDataFromSmses
+  , createDocumentExtendingConsumers
+  , createDocumentExtendingJobs
   ]
