@@ -3,6 +3,10 @@
     "bind_port": 6666,
     "database": "user='kontra' password='kontra' dbname='kontrakcja'",
     "max_db_connections": 100,
+    "_redis_cache" : { "host"     : "foo"
+                     , "port"     : 1234
+                     , "password" : "bar"
+                     , "database" : 0     },
     "local_file_cache_size": 52428800,
     "logging": {
         "suffix": "dev",
@@ -16,6 +20,13 @@
         "type": "local",
         "dir": "/tmp"
     },
+    "_slave_sender": {
+        "type": "local",
+        "dir": "/tmp"
+    },
+    "_amazon" : { "bucket"     : "foo"
+                , "access_key" : "bar"
+                , "secret_key" : "baz" },
     "test_receivers": [
         {
             "name": "test",

@@ -1,6 +1,13 @@
 {
+    "_amazon" : { "bucket"     : "foo"
+                , "access_key" : "bar"
+                , "secret_key" : "baz" },
     "database": "user='kontra' password='kontra' dbname='kontrakcja'",
     "max_db_connections": 100,
+    "_redis_cache" : { "host"     : "foo"
+                     , "port"     : 1234
+                     , "password" : "bar"
+                     , "database" : 0     },
     "local_file_cache_size": 200000000,
     "logging": {
         "suffix": "dev",
@@ -22,10 +29,28 @@
         "old_extending_service_url": "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice",
         "old_control_publications_url": "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
     },
+    "_cgi_grp": { "gateway"      : "https://grpt.funktionstjanster.se:18898/grp/v1"
+                , "cert_file"    : "certs/steria3.pem"
+                , "service_id"   : "logtest004"
+                , "display_name" : "Funktionstjänster Test" },
+    "_mixpanel" : "token",
     "ntp_servers": [
         "0.ubuntu.pool.ntp.org",
         "1.ubuntu.pool.ntp.org",
         "2.ubuntu.pool.ntp.org",
         "3.ubuntu.pool.ntp.org"
-    ]
+    ],
+    "_salesforce" : { "authentication_url" : "https://foo.bar"
+                    , "token_url"          : "https://foo.bar"
+                    , "consumer_key"       : "OAuth key"
+                    , "consumer_secret"    : "OAuth secret"
+                    , "redirect_url"       : "https://foo.bar"
+                    , "api_token"          : "OAuth API token"
+                    , "api_secret"         : "OAuth API secret"
+                    , "error_email"        : "foo@bar.baz"      },
+    "_invoicing_sftp_for_salesforce" :
+         { "user"     : "foo"
+         , "password" : "bar"
+         , "dir"      : "/remote/directory/to/use"
+         , "host"     : "foo.bar"                  }
 }

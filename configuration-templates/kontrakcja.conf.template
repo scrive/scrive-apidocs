@@ -3,6 +3,13 @@
     "bind_port": 8000,
     "main_domain_url": "http://localhost:8000",
     "https": false,
+    "_amazon" : { "bucket"     : "foo"
+                , "access_key" : "bar"
+                , "secret_key" : "baz" },
+    "_redis_cache" : { "host"     : "foo"
+                     , "port"     : 1234
+                     , "password" : "bar"
+                     , "database" : 0     },
     "database": "user='kontra' password='kontra' dbname='kontrakcja'",
     "max_db_connections": 100,
     "local_file_cache_size": 200000000,
@@ -15,6 +22,7 @@
         ]
     },
     "production": false,
+    "_cdn_base_url" : "https://foo.bar",
     "guardtime": {
         "signing_service_url": "http://internal-gt-signer-848430379.eu-west-1.elb.amazonaws.com:8080/gt-signingservice",
         "extending_service_url": "http://internal-gt-extender-2081608339.eu-west-1.elb.amazonaws.com:8081/gt-extendingservice",
@@ -28,7 +36,28 @@
         "old_control_publications_url": "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
     },
     "mail_backdoor_open": false,
+    "_cgi_grp": { "gateway"      : "https://grpt.funktionstjanster.se:18898/grp/v1"
+                , "cert_file"    : "certs/steria3.pem"
+                , "service_id"   : "logtest004"
+                , "display_name" : "Funktionstjänster Test" },
     "admins": [],
     "sales": [],
-    "initial_users": []
+    "initial_users": [],
+    "_mixpanel" : "token",
+    "_trackjs"  : "trackjs token",
+    "_hubspot"  : { "hub_id" : "hubspot_hub_id"
+                  , "forms"  : { "form" : "id" } },
+    "_salesforce" : { "authentication_url" : "https://foo.bar"
+                    , "token_url"          : "https://foo.bar"
+                    , "consumer_key"       : "OAuth key"
+                    , "consumer_secret"    : "OAuth secret"
+                    , "redirect_url"       : "https://foo.bar"
+                    , "api_token"          : "OAuth API token"
+                    , "api_secret"         : "OAuth API secret"
+                    , "error_email"        : "foo@bar.baz"      },
+    "_nets"       : { "mid"                : "Nets merchant identifier"
+                    , "password"           : "foobar"
+                    , "identifyUrl"        : "https://foo.bar"
+                    , "assertionUrl"       : "https://baz.quux"
+                    , "trustedDomain"      : "foobar" }
 }
