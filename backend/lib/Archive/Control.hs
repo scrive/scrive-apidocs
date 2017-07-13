@@ -142,7 +142,7 @@ handleListCSV= do
   sorting <- apiV2ParameterDefault []  (ApiV2ParameterJSON "sorting" unjsonDef)
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
       documentSorting = (toDocumentSorting <$> sorting)
-  allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) documentFilters documentSorting 1000
+  allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) documentFilters documentSorting 10000
   let allDocsCustomFields = allCustomTextOrCheckboxFields allDocs
       docsCSVs = concatMap (docForListCSVV1 allDocsCustomFields) allDocs
   return $ CSV { csvFilename = "documents.csv"
