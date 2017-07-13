@@ -6,7 +6,7 @@ import qualified Text.JSON.Gen as J
 
 import KontraPrelude
 
--- ^ A datatype for HubSpot configuration data.
+-- | A datatype for HubSpot configuration data.
 data HubSpotConf = HubSpotConf {
       hubspotHubId :: String
     , hubspotFormIds  :: Map.Map String String
@@ -25,8 +25,8 @@ unjsonHubSpotConf = objectOf $ pure HubSpotConf
 
 instance Unjson HubSpotConf where
   unjsonDef = unjsonHubSpotConf
-              
+
 instance J.ToJSValue HubSpotConf where
   toJSValue HubSpotConf{..} = J.runJSONGen $ do
-    J.value "hub_id" $ hubspotHubId 
+    J.value "hub_id" $ hubspotHubId
     J.value "forms" $ J.toJSValue hubspotFormIds

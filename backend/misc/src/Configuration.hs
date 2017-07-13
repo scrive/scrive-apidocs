@@ -37,7 +37,8 @@ instance Default ReadConfigOptions where
 --
 -- Error handling here:
 -- 1. When no file: please create file and full docs
--- 2. When looks like json but not parse as json: info where it did not parse, no other info
+-- 2. When looks like json but not parse as json: info where it did
+-- not parse, no other info
 -- 3. When does not look like json and does not readIO: full docs
 -- 4. When unjson has issue, then just info about specific problems
 
@@ -115,14 +116,27 @@ readConfigEx logger path ReadConfigOptions{..} = do
 showNiceYamlParseException :: FilePath -> Yaml.ParseException -> String
 showNiceYamlParseException filepath parseException =
   case parseException of
-    Yaml.NonScalarKey -> filepath ++ ": non scalar key"
-    Yaml.UnknownAlias anchorName -> filepath ++ ": unknown alias " ++ anchorName
-    Yaml.UnexpectedEvent received expected -> filepath ++ ": unknown event received " ++ show received ++ " when expected " ++ show expected
-    Yaml.InvalidYaml Nothing -> filepath ++ ": invalid yaml (no further info available)"
-    Yaml.InvalidYaml (Just (Yaml.YamlException ex)) -> filepath ++ ": invalid yaml: " ++ ex
-    Yaml.InvalidYaml (Just (Yaml.YamlParseException problem context (Yaml.YamlMark _index line column))) ->
-      filepath ++ ":" ++ show (line+1) ++ ":" ++ show (column+1) ++ ": " ++ problem ++ " " ++ context
-    Yaml.AesonException ex -> filepath ++ ": " ++ ex
-    Yaml.OtherParseException ex -> filepath ++ ": " ++ show ex
-    Yaml.NonStringKeyAlias anchorName value -> filepath ++ ": unknown non-string key alias " ++ show anchorName ++ ", " ++ show value
-    Yaml.CyclicIncludes -> filepath ++ ": cyclic includes"
+    Yaml.NonScalarKey
+      -> filepath ++ ": non scalar key"
+    Yaml.UnknownAlias anchorName
+      -> filepath ++ ": unknown alias " ++ anchorName
+    Yaml.UnexpectedEvent received expected
+      -> filepath ++ ": unknown event received " ++ show received
+         ++ " when expected " ++ show expected
+    Yaml.InvalidYaml Nothing
+      -> filepath ++ ": invalid yaml (no further info available)"
+    Yaml.InvalidYaml (Just (Yaml.YamlException ex))
+      -> filepath ++ ": invalid yaml: " ++ ex
+    Yaml.InvalidYaml (Just (Yaml.YamlParseException problem context
+                            (Yaml.YamlMark _index line column)))
+      -> filepath ++ ":" ++ show (line+1) ++ ":" ++ show (column+1) ++ ": "
+         ++ problem ++ " " ++ context
+    Yaml.AesonException ex
+      -> filepath ++ ": " ++ ex
+    Yaml.OtherParseException ex
+      -> filepath ++ ": " ++ show ex
+    Yaml.NonStringKeyAlias anchorName value
+      -> filepath ++ ": unknown non-string key alias " ++ show anchorName
+         ++ ", " ++ show value
+    Yaml.CyclicIncludes
+      -> filepath ++ ": cyclic includes"
