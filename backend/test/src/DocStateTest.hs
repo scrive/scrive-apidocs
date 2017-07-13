@@ -487,7 +487,7 @@ testCancelDocumentCancelsDocument = replicateM_ 10 $ do
     assertEqual "In canceled state" Canceled (documentstatus canceleddoc)
     assertBool "Updated modification time" $ compareTime (ctxtime ctx) (documentmtime canceleddoc)
     assertBool "Siglinks are unchanged"
-      (signatoryLinksListsAreAlmoustEqualForTests (documentsignatorylinks doc) (documentsignatorylinks canceleddoc))
+      (signatoryLinksListsAreAlmostEqualForTests (documentsignatorylinks doc) (documentsignatorylinks canceleddoc))
     assertEqual "Doc title is unchanged" (documenttitle doc) (documenttitle canceleddoc)
 
 testCancelDocumentReturnsLeftIfDocInWrongState :: TestEnv ()
@@ -1906,10 +1906,10 @@ runScheduler m = do
   CronEnv.runScheduler cronConf filecache Nothing templates m
 
 -- Moved from Eq instance of SignatoryLink. Instance got dropped as it is not usefull in main server - but it's good to have way to compare SignatoryLinks in tests.
-signatoryLinksAreAlmoustEqualForTests :: SignatoryLink -> SignatoryLink -> Bool
-signatoryLinksAreAlmoustEqualForTests a b = and [
+signatoryLinksAreAlmostEqualForTests :: SignatoryLink -> SignatoryLink -> Bool
+signatoryLinksAreAlmostEqualForTests a b = and [
       signatorylinkid a == signatorylinkid b
-    , fieldsListsAreAlmoustEqual (sortFields (signatoryfields a)) (sortFields (signatoryfields b))
+    , fieldsListsAreAlmostEqual (sortFields (signatoryfields a)) (sortFields (signatoryfields b))
     , signatoryisauthor a == signatoryisauthor b
     , signatoryispartner a == signatoryispartner b
     , signatorysignorder a == signatorysignorder b
@@ -1935,7 +1935,7 @@ signatoryLinksAreAlmoustEqualForTests a b = and [
     where
       sortFields = sortBy (\f1 f2  -> compare (fieldIdentity f1) (fieldIdentity f2))
 
-signatoryLinksListsAreAlmoustEqualForTests :: [SignatoryLink] -> [SignatoryLink] -> Bool
-signatoryLinksListsAreAlmoustEqualForTests (s:ss) (s':ss') = signatoryLinksAreAlmoustEqualForTests s s' && signatoryLinksListsAreAlmoustEqualForTests ss ss'
-signatoryLinksListsAreAlmoustEqualForTests [] [] = True
-signatoryLinksListsAreAlmoustEqualForTests _ _  = False
+signatoryLinksListsAreAlmostEqualForTests :: [SignatoryLink] -> [SignatoryLink] -> Bool
+signatoryLinksListsAreAlmostEqualForTests (s:ss) (s':ss') = signatoryLinksAreAlmostEqualForTests s s' && signatoryLinksListsAreAlmostEqualForTests ss ss'
+signatoryLinksListsAreAlmostEqualForTests [] [] = True
+signatoryLinksListsAreAlmostEqualForTests _ _  = False

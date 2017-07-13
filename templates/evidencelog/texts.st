@@ -469,6 +469,8 @@ SignatoryAttachmentNotUploadedLog=The signatory <span class="actor"/> checked th
 ###
 UpdateFieldCheckboxEvidenceLog=The signatory <span class="actor"/> $if(checked)$checked$else$unchecked$endif$ the checkbox “$fieldname$”.$if(placements)$ The checkbox’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
+UpdateFieldRadioGroupEvidenceLog=The signatory <span class="actor"/> selected radio button "$value$" in radio group "$fieldname$". Possible options were: $fieldvalues$. $if(placements)$ The radio buttons placement in the Main Document:$updateFieldPlacements()$$endif$
+###
 UpdateFieldSignatureEvidenceLog=The signatory <span class="actor"/> signed in the signature box “$fieldname$”.<br/><img alt="signature" src="$value$" width="100" height="50"></img><br/>$if(placements)$The box’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
 UpdateFieldFirstNameEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “First name” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$

@@ -34,6 +34,7 @@ describe("/authorview/fileview/filepageview", function () {
       util.addPlacement(doc, null, 1, {type: "checkbox"});
       util.addPlacement(doc, null, 1, {type: "signature"});
       util.addPlacement(doc, null, 1, {type: "text"});
+      util.addPlacement(doc, null, 1, {type: "radiogroup"});
 
       done();
     });
@@ -180,5 +181,10 @@ describe("/authorview/fileview/filepageview", function () {
   it("should render the text placement", function () {
     var compontent = renderComponent();
     assert.lengthOf($(".placedfield-placement-wrapper", React.findDOMNode(compontent)), 1);
+  });
+
+  it("should render the radiobutton placement", function () {
+    var compontent = renderComponent();
+    assert.lengthOf($(".placedradiobutton", React.findDOMNode(compontent)), 1);
   });
 });

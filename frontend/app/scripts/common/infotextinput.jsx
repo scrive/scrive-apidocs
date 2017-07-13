@@ -68,6 +68,8 @@ var _ = require("underscore");
       onClick       : React.PropTypes.func,
       onButtonClick : React.PropTypes.func,
       onAutoGrowth  : React.PropTypes.func,
+      onMouseEnter  : React.PropTypes.func,
+      onMouseLeave  : React.PropTypes.func,
 
       // More
       buttonTitle     : React.PropTypes.string,
@@ -152,6 +154,9 @@ var _ = require("underscore");
         this.refs.input.getDOMNode().setSelectionRange(length, length);
       }
     },
+    hasFocus : function () {
+      return this.state.focus;
+    },
     selectText : function() {
       this.refs.input.getDOMNode().setSelectionRange(0, $(this.refs.input.getDOMNode()).val().length);
     },
@@ -194,6 +199,16 @@ var _ = require("underscore");
         this.props.onTab(e);
       }
     },
+    onMouseEnter : function(e) {
+      if (_.isFunction(this.props.onMouseEnter)) {
+        this.props.onMouseEnter(e);
+      }
+    },
+    onMouseLeave : function(e) {
+      if (_.isFunction(this.props.onMouseLeave)) {
+        this.props.onMouseLeave(e);
+      }
+    },
     blurInput: function() {
       if (this.isMounted() && this.refs.input) {
         $(this.refs.input.getDOMNode()).blur();
@@ -230,6 +245,8 @@ var _ = require("underscore");
             onBlur={this.onBlur}
             onChange={this.onChange}
             onKeyDown={this.onKeyDown}
+            onMouseEnter={this.onMouseEnter}
+            onMouseLeave={this.onMouseLeave}
             ref="input"
           />
 

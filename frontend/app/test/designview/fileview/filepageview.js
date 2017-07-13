@@ -47,6 +47,7 @@ describe("designview/fileview/filepageview", function () {
       util.addPlacement(doc, null, 1, {type: "checkbox"});
       util.addPlacement(doc, null, 1, {type: "signature"});
       util.addPlacement(doc, null, 1, {type: "text"});
+      util.addPlacement(doc, null, 1, {type: "radiogroup"});
 
       page = doc.mainfile().pages()[0];
       done();
@@ -135,10 +136,11 @@ describe("designview/fileview/filepageview", function () {
   it("should render the fields", function () {
     var component = renderComponent();
 
-    assert.lengthOf($(".placedfield"), 3);
+    assert.lengthOf($(".placedfield"), 4);
     assert.lengthOf($(".js-checkbox"), 1);
     assert.lengthOf($(".js-signature"), 1);
     assert.lengthOf($(".js-text"), 1);
+    assert.lengthOf($(".js-radiogroup"), 1);
   });
 
   it("should open type setter for a placement", function () {
@@ -158,6 +160,11 @@ describe("designview/fileview/filepageview", function () {
     var textPlacementView = component.refs["placement-" + textPlacement.cid];
     sinon.stub(textPlacementView, "closeTypeSetter");
     sinon.stub(textPlacementView, "openTypeSetter");
+
+    var radiogroupPlacement = document_.allPlacements()[3];
+    var radiogroupPlacementView = component.refs["placement-" + radiogroupPlacement.cid];
+    sinon.stub(radiogroupPlacementView, "closeTypeSetter");
+    sinon.stub(radiogroupPlacementView, "openTypeSetter");
 
     component.openTypeSetterOnThisPageFor(checkboxPlacement);
 

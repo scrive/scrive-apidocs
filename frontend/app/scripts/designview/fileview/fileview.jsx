@@ -172,14 +172,14 @@ var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
             {/* if */ self.state.visibleCoordinates &&
               <div>
                 <div
-                  className="vline"
+                  className="coordinate-line vline"
                   style={{
                     left: this.state.left + "px",
                     height: this.state.height + "px"
                   }}
                 />
                 <div
-                  className="hline"
+                  className="coordinate-line hline"
                   style={{
                     top: this.state.top + "px",
                     width: this.state.width + "px"

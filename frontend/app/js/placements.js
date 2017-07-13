@@ -13,7 +13,8 @@ var FieldPlacement = exports.FieldPlacement = Backbone.Model.extend({
       hrel: 0,
       fsrel: 0.0168,
       alive: true,
-      anchors: []
+      anchors: [],
+      highlighted: false
     },
     initialize : function(args){
         var placement = this;
@@ -65,7 +66,7 @@ var FieldPlacement = exports.FieldPlacement = Backbone.Model.extend({
         return this.get("hrel");
     },
     fsrel : function() {
-      if (this.get("fsrel") != 0 || this.field().isCheckbox())
+      if (this.get("fsrel") != 0 || this.field().isCheckbox() || this.field().isRadioGroup())
         return this.get("fsrel");
       else
         return 0.0168;
@@ -171,6 +172,12 @@ var FieldPlacement = exports.FieldPlacement = Backbone.Model.extend({
             placement.field().trigger('change');
           }
         });
+    },
+    highlighted: function () {
+      return this.get("highlighted");
+    },
+    setHighlighted: function (newHighlighted) {
+      this.set("highlighted", newHighlighted);
     }
 });
 

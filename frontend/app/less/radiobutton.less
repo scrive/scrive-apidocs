@@ -1,0 +1,39 @@
+.radiobutton-variant(@klass, @baseSize) {
+  &.@{klass} {
+    .radiobutton {
+      background-image: url(~"@{img-base-url}/radiobuttons/@{klass}.svg");
+      background-position: 0px 0px;
+      background-size: @baseSize @baseSize * 4;
+      height: @baseSize;
+      width: @baseSize;
+    }
+
+    &.selected .radiobutton {
+      background-position: 0px -1 * @baseSize * 1;
+    }
+
+    &.inactive .radiobutton {
+      background-position: 0px -2 * @baseSize * 1;
+    }
+
+    &.inactive.checked .radiobutton {
+      background-position: 0px -2 * @baseSize * 1;
+    }
+  }
+}
+
+.radiobutton-wrapper {
+  display: block;
+  position: relative;
+
+  .radiobutton {
+    background-repeat: no-repeat;
+    border-radius: 100%;
+    display: block;
+    position: relative;
+  }
+
+  .radiobutton-variant(small, 14px);
+  .radiobutton-variant(medium, 20px);
+  .radiobutton-variant(large, 24px);
+}

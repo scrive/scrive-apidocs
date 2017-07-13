@@ -141,6 +141,10 @@ adjustFieldAndPlacementsAfterRemovingPage page slf = case slf of
   SignatorySignatureField f -> case (adjustPlacementsAfterRemovingPage page $ ssfPlacements f) of
     [] -> Nothing
     notEmptyPlacementsList -> Just $ SignatorySignatureField $ f {ssfPlacements = notEmptyPlacementsList }
+  SignatoryRadioGroupField f -> case (adjustPlacementsAfterRemovingPage page $ srgfPlacements f) of
+    [] -> Nothing
+    notEmptyPlacementsList -> Just $ SignatoryRadioGroupField $ f {srgfPlacements = notEmptyPlacementsList }
+
 
 adjustPlacementsAfterRemovingPage :: Int -> [FieldPlacement] -> [FieldPlacement]
 adjustPlacementsAfterRemovingPage page ps = mapMaybe (adjustPlacementAfterRemovingPage page) ps

@@ -459,6 +459,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
             return signature.hasPlacements();
         });
     },
+    hasPlacedRadioGroups: function() {
+        return (this.fieldsByType("radiogroup").length > 0);
+    },
     standardAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "standard" && this.signs();
     },

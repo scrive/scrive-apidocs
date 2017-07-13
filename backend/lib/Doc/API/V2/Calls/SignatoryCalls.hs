@@ -114,6 +114,7 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAttachments =<< theDocument
     checkAuthenticationToSignMethodAndValue slid
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
+    guardThatRadioButtonValuesAreValid slid fields =<< theDocument
     -- API call actions + extra conditional parameter
     authorization <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
     case authorization of
@@ -145,6 +146,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     acceptedAttachments <- apiV2ParameterObligatory (ApiV2ParameterJSON "accepted_author_attachments" unjsonDef)
     notUploadedSignatoryAttachments <- apiV2ParameterDefault [] (ApiV2ParameterJSON "not_uploaded_signatory_attachments" unjsonDef)
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
+    guardThatRadioButtonValuesAreValid slid fields =<< theDocument
     -- API call actions + extra conditional parameter
     guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments =<< theDocument
     guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAttachments =<< theDocument

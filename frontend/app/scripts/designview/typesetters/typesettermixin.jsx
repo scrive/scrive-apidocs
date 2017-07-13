@@ -6,6 +6,7 @@ var BackboneMixin = require("../../common/backbone_mixin");
 var SelfUnmountMixin = require("../../common/selfunmountmixin");
 var EditableText = require("./editabletext");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var classNames = require("classnames");
 
   var Mixin = {
     mixins: [SelfUnmountMixin],
@@ -101,6 +102,15 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
       this._newName = newName;
     },
 
+    _getContainerClassNames: function () {
+      var result = ["fieldTypeSetter-container"];
+      if (_.isFunction(this.getContainerClassName)) {
+        result.push(this.getContainerClassName());
+      }
+
+      return result;
+    },
+
     render: function () {
       var field = this.props.model.field();
 
@@ -119,8 +129,10 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
         left: offset.left + $el.width() + this.horizontalOffset
       };
 
+      var containerClassName = classNames(this._getContainerClassNames());
+
       return (
-        <div className="fieldTypeSetter-container" style={containerStyle}>
+        <div className={containerClassName} style={containerStyle}>
           <div className="fieldTypeSetter-arrow" />
           <div className="fieldTypeSetter-body">
             <div className="title">

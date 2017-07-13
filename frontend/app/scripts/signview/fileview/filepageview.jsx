@@ -9,6 +9,7 @@ import  SignaturePlacementPlacedView from "./signatureplacementplacedview";
 import  CheckboxPlacementPlacedView from "./checkboxplacementplacedview";
 import  TextPlacementPlacedView from "./textplacementplacedview";
 import  Highlight from "./highlight";
+import  RadioButtonPlacementPlacedView from "./radiobuttonplacementplacedview";
 
 const DEFAULT_PIXEL_WIDTH = 1040;
 
@@ -106,6 +107,10 @@ module.exports = React.createClass({
 
         if (field.isText()) {
           return <TextPlacementPlacedView key={index} {...args} />;
+        }
+
+        if (field.isRadioGroup()) {
+          return <RadioButtonPlacementPlacedView key={index} {...args} />;
         }
 
         throw new Error("unknown field type");

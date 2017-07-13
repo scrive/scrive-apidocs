@@ -189,6 +189,7 @@ Library
                  , Doc.Data.DocumentTag
                  , Doc.Data.MainFile
                  , Doc.Data.HighlightedPage
+                 , Doc.Data.RadiobuttonPlacementsUtils
                  , Doc.Data.SignatoryAttachment
                  , Doc.Data.SignatoryField
                  , Doc.Data.SignatoryFieldUtils

@@ -19,6 +19,7 @@ var ReloadManager = require("../../js/reloadmanager.js").ReloadManager;
 var PadSigningView = require("./padsigningview");
 var Arrow = require("./navigation/arrow");
 var TaskList = require("./navigation/task_list");
+var _ = require("underscore");
 
   module.exports = React.createClass({
     displayName: "SignView",
@@ -76,9 +77,11 @@ var TaskList = require("./navigation/task_list");
         },
 
         blinkArrow: function () {
-          if (self.refs.arrow) {
-            self.refs.arrow.blink();
-          }
+          _.forEach(self.arrowRefs, function (item) {
+            if (item && item.isMounted()) {
+              item.blink();
+            }
+          });
         },
 
         zoomToPoint: function (zoomPoint, zoom) {
@@ -86,7 +89,9 @@ var TaskList = require("./navigation/task_list");
         },
 
         goToCurrentTask: function () {
-          var arrow = self.refs.arrow;
+          var arrow = _.first(_.filter(self.arrowRefs, function (item) {
+            return item && item.isMounted();
+          }));
 
           if (arrow) {
             arrow.goto();
@@ -106,6 +111,8 @@ var TaskList = require("./navigation/task_list");
       $(window).on("orientationchange", this.handleOrientationChange);
       model.recall();
       ReloadManager.pushBlock(model.blockReload);
+
+      this.arrowRefs = [];
 
       document.addEventListener("touchstart", this.onTouchStart);
       document.addEventListener("touchmove", this.onTouchMove);
@@ -177,6 +184,34 @@ var TaskList = require("./navigation/task_list");
       }
     },
 
+    addArrowRef: function (arrowComponent) {
+      this.arrowRefs.push(arrowComponent);
+    },
+
+    renderArrows: function () {
+      var self = this;
+      var model = this.state.model;
+
+      var tasks = model.tasks().active();
+
+      return _.map(tasks, function (task, index) {
+        var first = true;
+        if (task.isFieldTask() && task.field().isRadioGroup()) {
+          first = (index == 0);
+        }
+
+        return (
+          <Arrow
+            key={index}
+            ref={self.addArrowRef}
+            show={self.state.showArrow}
+            task={task}
+            first={first}
+          />
+        );
+      });
+    },
+
     render: function () {
       var self = this;
       var model = this.state.model;
@@ -195,7 +230,7 @@ var TaskList = require("./navigation/task_list");
           }
           <div id="default-place-for-arrows" />
           {/* if */ model.hasArrows() && model.tasks().active() &&
-            <Arrow ref="arrow" show={this.state.showArrow} task={model.tasks().active()} />
+            this.renderArrows()
           }
           {/* if */ !model.isReady() &&
             <div className="main">

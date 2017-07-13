@@ -12,8 +12,9 @@ module Doc.Data.SignatoryFieldUtils (
     , fieldShouldBeFilledBySender
     , fieldPlacements
     , fieldID
-    , fieldsAreAlmoustEqual
-    , fieldsListsAreAlmoustEqual
+    , fieldRadioGroupValues
+    , fieldsAreAlmostEqual
+    , fieldsListsAreAlmostEqual
   ) where
 
 import Doc.Data.SignatoryField
@@ -40,6 +41,7 @@ fieldTypeFromFieldIdentity MobileFI         = MobileFT
 fieldTypeFromFieldIdentity (TextFI _)       = TextFT
 fieldTypeFromFieldIdentity (SignatureFI _)  = SignatureFT
 fieldTypeFromFieldIdentity (CheckboxFI _)   = CheckboxFT
+fieldTypeFromFieldIdentity (RadioGroupFI _) = RadioGroupFT
 
 
 -- General utils for fields
@@ -54,17 +56,19 @@ fieldFileValue (SignatoryMobileField _)         = Nothing
 fieldFileValue (SignatoryTextField _)           = Nothing
 fieldFileValue (SignatoryCheckboxField _)       = Nothing
 fieldFileValue (SignatorySignatureField f)      = ssfValue f
+fieldFileValue (SignatoryRadioGroupField _)     = Nothing
 
 fieldBoolValue :: SignatoryField -> Maybe Bool
-fieldBoolValue (SignatoryNameField _)           = Nothing
-fieldBoolValue (SignatoryCompanyField _)        = Nothing
-fieldBoolValue (SignatoryPersonalNumberField _) = Nothing
-fieldBoolValue (SignatoryCompanyNumberField _)  = Nothing
-fieldBoolValue (SignatoryEmailField _)          = Nothing
-fieldBoolValue (SignatoryMobileField _)         = Nothing
-fieldBoolValue (SignatoryTextField _)           = Nothing
-fieldBoolValue (SignatoryCheckboxField f)       = Just $ schfValue f
-fieldBoolValue (SignatorySignatureField _)      = Nothing
+fieldBoolValue (SignatoryNameField _)          = Nothing
+fieldBoolValue (SignatoryCompanyField _)       = Nothing
+fieldBoolValue (SignatoryPersonalNumberField _)= Nothing
+fieldBoolValue (SignatoryCompanyNumberField _) = Nothing
+fieldBoolValue (SignatoryEmailField _)         = Nothing
+fieldBoolValue (SignatoryMobileField _)        = Nothing
+fieldBoolValue (SignatoryTextField _)          = Nothing
+fieldBoolValue (SignatoryCheckboxField f)      = Just $ schfValue f
+fieldBoolValue (SignatorySignatureField _)     = Nothing
+fieldBoolValue (SignatoryRadioGroupField _)    = Nothing
 
 
 fieldIsObligatory :: SignatoryField -> Bool
@@ -77,6 +81,7 @@ fieldIsObligatory (SignatoryMobileField f)         = smfObligatory f
 fieldIsObligatory (SignatoryTextField f)           = stfObligatory f
 fieldIsObligatory (SignatoryCheckboxField f)       = schfObligatory f
 fieldIsObligatory (SignatorySignatureField f)      = ssfObligatory f
+fieldIsObligatory (SignatoryRadioGroupField _)     = True
 
 fieldShouldBeFilledBySender :: SignatoryField -> Bool
 fieldShouldBeFilledBySender (SignatoryNameField f)           = snfShouldBeFilledBySender f
@@ -88,6 +93,7 @@ fieldShouldBeFilledBySender (SignatoryMobileField f)         = smfShouldBeFilled
 fieldShouldBeFilledBySender (SignatoryTextField f)           = stfShouldBeFilledBySender f
 fieldShouldBeFilledBySender (SignatoryCheckboxField f)       = schfShouldBeFilledBySender f
 fieldShouldBeFilledBySender (SignatorySignatureField f)      = ssfShouldBeFilledBySender f
+fieldShouldBeFilledBySender (SignatoryRadioGroupField _)     = False
 
 fieldPlacements :: SignatoryField -> [FieldPlacement]
 fieldPlacements (SignatoryNameField f)           = snfPlacements f
@@ -99,6 +105,7 @@ fieldPlacements (SignatoryMobileField f)         = smfPlacements f
 fieldPlacements (SignatoryTextField f)           = stfPlacements f
 fieldPlacements (SignatoryCheckboxField f)       = schfPlacements f
 fieldPlacements (SignatorySignatureField f)      = ssfPlacements f
+fieldPlacements (SignatoryRadioGroupField f)     = srgfPlacements f
 
 fieldID :: SignatoryField -> SignatoryFieldID
 fieldID (SignatoryNameField f)           = snfID f
@@ -110,11 +117,24 @@ fieldID (SignatoryMobileField f)         = smfID f
 fieldID (SignatoryTextField f)           = stfID f
 fieldID (SignatoryCheckboxField f)       = schfID f
 fieldID (SignatorySignatureField f)      = ssfID f
+fieldID (SignatoryRadioGroupField f)     = srgfID f
 
--- fieldsAreAlmoustEqual compares properties of fields that can be changed by user of scrive system.
+fieldRadioGroupValues :: SignatoryField -> Maybe [String]
+fieldRadioGroupValues (SignatoryNameField _)           = Nothing
+fieldRadioGroupValues (SignatoryCompanyField _)        = Nothing
+fieldRadioGroupValues (SignatoryPersonalNumberField _) = Nothing
+fieldRadioGroupValues (SignatoryCompanyNumberField _)  = Nothing
+fieldRadioGroupValues (SignatoryEmailField _)          = Nothing
+fieldRadioGroupValues (SignatoryMobileField _)         = Nothing
+fieldRadioGroupValues (SignatoryTextField _)           = Nothing
+fieldRadioGroupValues (SignatoryCheckboxField _)       = Nothing
+fieldRadioGroupValues (SignatorySignatureField _)      = Nothing
+fieldRadioGroupValues (SignatoryRadioGroupField f)     = Just $ srgfValues f
+
+-- fieldsAreAlmostEqual compares properties of fields that can be changed by user of scrive system.
 -- It ignores fieldID and filledByAuthor properties - since they are set automatically and are not controled by user.
-fieldsAreAlmoustEqual :: SignatoryField -> SignatoryField -> Bool
-fieldsAreAlmoustEqual a b = and [
+fieldsAreAlmostEqual :: SignatoryField -> SignatoryField -> Bool
+fieldsAreAlmostEqual a b = and [
       fieldIdentity a == fieldIdentity b
     , fieldTextValue a == fieldTextValue b
     , fieldFileValue a == fieldFileValue b
@@ -122,11 +142,10 @@ fieldsAreAlmoustEqual a b = and [
     , fieldIsObligatory a == fieldIsObligatory b
     , fieldShouldBeFilledBySender a == fieldShouldBeFilledBySender b
     , fieldPlacements a == fieldPlacements b
+    , fieldRadioGroupValues a == fieldRadioGroupValues b
     ]
 
 
---  fieldsAreAlmoustEqual for Lists. It will work only for lists that are ordered
-fieldsListsAreAlmoustEqual :: [SignatoryField] -> [SignatoryField] -> Bool
-fieldsListsAreAlmoustEqual (f:fs) (f':fs') = fieldsAreAlmoustEqual f f' && fieldsListsAreAlmoustEqual fs fs'
-fieldsListsAreAlmoustEqual [] [] = True
-fieldsListsAreAlmoustEqual _ _  = False
+--  fieldsAreAlmostEqual for Lists. It will work only for lists that are ordered
+fieldsListsAreAlmostEqual :: [SignatoryField] -> [SignatoryField] -> Bool
+fieldsListsAreAlmostEqual fs fs' = all id $ zipWith fieldsAreAlmostEqual fs fs'

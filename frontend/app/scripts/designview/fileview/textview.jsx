@@ -35,7 +35,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
     },
 
     // Ugly hack for P2E middlewares. wrel and hrel is not used by our frontend, but is used by this middlewares.
-    // Computation of this value is also hard - since it's almoust impossible to compute it in backend.
+    // Computation of this value is also hard - since it's almost impossible to compute it in backend.
 
     fixWHRel: function () {
       if (this.isMounted()) {

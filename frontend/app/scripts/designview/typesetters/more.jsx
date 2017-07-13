@@ -3,6 +3,10 @@ var Backbone = require("backbone");
 var React = require("react");
 
   module.exports = React.createClass({
+    propTypes: {
+      text: React.PropTypes.string
+    },
+
     getInitialState: function () {
       return {
         open: false
@@ -20,7 +24,7 @@ var React = require("react");
         <div {...this.props}>
           {/* if */ !this.state.open &&
             <a className="fieldTypeSetter-more" onClick={this.open}>
-              {localization.designview.moreSettings}
+              {this.props.text || localization.designview.moreSettings}
             </a>
           }
           {/* else */ this.state.open &&

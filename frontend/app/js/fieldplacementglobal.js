@@ -73,4 +73,14 @@ FieldPlacementGlobal.checkboxClickableAreaHeight = 44;
 FieldPlacementGlobal.defaultCheckboxWRel = FieldPlacementGlobal.smallCheckboxRatio;
 FieldPlacementGlobal.designviewPageWidth = 950;
 
-
+/* Radiobutton constants */
+FieldPlacementGlobal.smallRadiobuttonRatio = 0.014736;
+FieldPlacementGlobal.mediumRadiobuttonRatio = 0.021052;
+FieldPlacementGlobal.largeRadiobuttonRatio = 0.025263;
+FieldPlacementGlobal.defaultRadiobuttonWRel = FieldPlacementGlobal.mediumRadiobuttonRatio;
+FieldPlacementGlobal.radioGroupPlacementDDTopOffset  = 0;
+FieldPlacementGlobal.radioGroupPlacementDDLeftOffset = 0;
+FieldPlacementGlobal.radioGroupBorderWidth = 1;
+FieldPlacementGlobal.radioButtonWrapperPadding = 3;
+FieldPlacementGlobal.radioButtonClickableAreaWidth = 44;
+FieldPlacementGlobal.radioButtonClickableAreaHeight = 44;

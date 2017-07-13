@@ -596,6 +596,11 @@ var Document = exports.Document = Backbone.Model.extend({
             // We don't support drawing signature in design view
             return false;
         }
+        if (this.author().hasPlacedRadioGroups()) {
+          // If the author has any radiogroups we have to direct them to
+          // the sign view.
+          return false;
+        }
         if (this.author().seBankIDAuthenticationToSign() || this.author().seBankIDAuthenticationToView()) {
             // We don't support eleg authorization in design view
             return false;
@@ -774,6 +779,9 @@ var Document = exports.Document = Backbone.Model.extend({
     },
     newCustomName: function() {
         return this.newNameWithIndex(localization.designview.customField);
+    },
+    newRadioGroupName: function() {
+        return this.newNameWithIndex(localization.designview.radiogroup);
     },
     allPlacements: function() {
         var document = this;

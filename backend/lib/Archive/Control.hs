@@ -30,7 +30,7 @@ import Archive.View
 import Company.Model (GetCompany(..))
 import DB
 import Doc.Action
-import Doc.API.V1.DocumentToJSON (allCustomTextOrCheckboxFields, docForListCSVHeaderV1, docForListCSVV1)
+import Doc.API.V1.DocumentToJSON (allCustomTextOrCheckboxOrRadioGroupFields, docForListCSVHeaderV1, docForListCSVV1)
 import Doc.API.V2.JSON.List
 import Doc.DocInfo (isPending)
 import Doc.DocMails
@@ -143,7 +143,7 @@ handleListCSV= do
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
       documentSorting = (toDocumentSorting <$> sorting)
   allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) documentFilters documentSorting 1000
-  let allDocsCustomFields = allCustomTextOrCheckboxFields allDocs
+  let allDocsCustomFields = allCustomTextOrCheckboxOrRadioGroupFields allDocs
       docsCSVs = concatMap (docForListCSVV1 allDocsCustomFields) allDocs
   return $ CSV { csvFilename = "documents.csv"
                , csvHeader = docForListCSVHeaderV1 allDocsCustomFields

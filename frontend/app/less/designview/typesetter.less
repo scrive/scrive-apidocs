@@ -18,6 +18,12 @@
     font-size: 15px;
     font-weight: 500;
     padding: 11px 0 5px 0;
+
+    .editable-text {
+      .editable-text-icon {
+        display: inline;
+      }
+    }
   }
 
   .subtitle {
@@ -153,6 +159,28 @@
       color: #000;
       font-size: small;
       margin-left: 6px;
+    }
+  }
+
+  &.radiogroup-typesetter {
+    display: none;
+
+    &.placed {
+      display: block;
+    }
+
+    .radiobutton-editor {
+      position: relative;
+
+      a.remove-radiobutton {
+        background: transparent url(~"@{img-base-url}/radiobuttons/radiogroup-editor-remove-radiobutton.png") no-repeat center center;
+        display: block;
+        height: 42px;
+        position: absolute;
+        right: 0px;
+        top: 0px;
+        width: 36px;
+      }
     }
   }
 }

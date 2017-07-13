@@ -123,7 +123,7 @@ module.exports = function (args) {
 
       showArrow();
       setTimeout(function () {
-        scrollToElement(args.signview.tasks().active().el());
+        scrollToElement(_.first(args.signview.tasks().active()).el());
       }, 5);
 
       modal.removeClass("active");

@@ -21,10 +21,15 @@ var PlacementAnchor = require("../../../js/anchors").PlacementAnchor;
       it('should test component', function () {
         var anchor = new PlacementAnchor();
 
-        var anchorRow = TestUtils.renderIntoDocument(React.createElement(AnchorRow, {
-          anchor: anchor,
-          onRemove: function () { }
-        }));
+        var container = $("<table><tbody></tbody></table>");
+
+        var anchorRow = React.render(
+          React.createElement(AnchorRow, {
+            anchor: anchor,
+            onRemove: function () { }
+          }),
+          $("tbody", container)[0]
+        );
 
         var inputs = TestUtils.scryRenderedDOMComponentsWithTag(anchorRow, "input");
 

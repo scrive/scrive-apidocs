@@ -31,7 +31,7 @@ function sortByView (tasks) {
 module.exports = Backbone.Model.extend({
   defaults: {
     list: [],
-    active: null
+    active: []
   },
 
   active: function () {
@@ -64,34 +64,54 @@ module.exports = Backbone.Model.extend({
 
   setActive: function () {
     var active = this.active();
-    var wasTask = active !== null;
+    var wasTask = active.length > 0;
     var incomplete = this.incomplete();
+
+    var triggerOnDeactivate = function () {
+      _.forEach(active, function (item) {
+        item.onDeactivate();
+      });
+    };
 
     if (incomplete.length === 0) {
       if (wasTask) {
-        active.onDeactivate();
+        triggerOnDeactivate();
       }
 
-      this.set({active: null});
+      this.set({active: []});
     } else {
-      var newActive = incomplete[0];
-      if (newActive !== active) {
-        if (wasTask) {
-          active.onDeactivate();
-        }
+      var nextTask = incomplete[0];
+      var newActive = [];
 
-        newActive.onActivate();
-
-        this.set({active: newActive});
+      if (nextTask.isFieldTask() && nextTask.field().isRadioGroup()) {
+        _.forEach(incomplete, function (item) {
+          if (item.field() == nextTask.field()) {
+            newActive.push(item);
+          }
+        });
+      } else {
+        newActive.push(nextTask);
       }
+
+      if (wasTask) {
+        triggerOnDeactivate();
+      }
+
+      _.forEach(newActive, function (item) {
+        item.onActivate();
+      });
+
+      this.set({active: newActive});
     }
   },
 
   triggerOnActivate: function () {
     var active = this.active();
 
-    if (active) {
-      active.forceOnActivate();
+    if (active.length > 0) {
+      _.forEach(active, function (item) {
+        item.forceOnActivate();
+      });
     }
   }
 });

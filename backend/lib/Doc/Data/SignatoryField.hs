@@ -17,6 +17,7 @@ module Doc.Data.SignatoryField (
   , SignatoryTextField(..)
   , SignatoryCheckboxField(..)
   , SignatorySignatureField(..)
+  , SignatoryRadioGroupField(..)
   , FieldIdentity(..)
   , fieldIdentity
   , getFieldByIdentity
@@ -75,6 +76,7 @@ data FieldType
   | SignatureFT
   | CheckboxFT
   | MobileFT
+  | RadioGroupFT
     deriving (Eq, Show)
 
 instance PQFormat FieldType where
@@ -95,22 +97,24 @@ instance FromSQL FieldType where
       8  -> return SignatureFT
       9  -> return CheckboxFT
       10 -> return MobileFT
+      11 -> return RadioGroupFT
       _  -> throwM RangeError {
-        reRange = [(1,1),(3,10)]
+        reRange = [(1,1),(3,11)]
       , reValue = n
       }
 
 instance ToSQL FieldType where
   type PQDest FieldType = PQDest Int16
-  toSQL NameFT           = toSQL (1::Int16)
-  toSQL CompanyFT        = toSQL (3::Int16)
-  toSQL PersonalNumberFT = toSQL (4::Int16)
-  toSQL CompanyNumberFT  = toSQL (5::Int16)
-  toSQL EmailFT          = toSQL (6::Int16)
-  toSQL TextFT           = toSQL (7::Int16)
-  toSQL SignatureFT      = toSQL (8::Int16)
-  toSQL CheckboxFT       = toSQL (9::Int16)
-  toSQL MobileFT         = toSQL (10::Int16)
+  toSQL NameFT             = toSQL (1::Int16)
+  toSQL CompanyFT          = toSQL (3::Int16)
+  toSQL PersonalNumberFT   = toSQL (4::Int16)
+  toSQL CompanyNumberFT    = toSQL (5::Int16)
+  toSQL EmailFT            = toSQL (6::Int16)
+  toSQL TextFT             = toSQL (7::Int16)
+  toSQL SignatureFT        = toSQL (8::Int16)
+  toSQL CheckboxFT         = toSQL (9::Int16)
+  toSQL MobileFT           = toSQL (10::Int16)
+  toSQL RadioGroupFT       = toSQL (11::Int16)
 
 ---------------------------------
 
@@ -224,6 +228,7 @@ data SignatoryField = SignatoryNameField SignatoryNameField
                     | SignatoryTextField SignatoryTextField
                     | SignatoryCheckboxField SignatoryCheckboxField
                     | SignatorySignatureField SignatorySignatureField
+                    | SignatoryRadioGroupField SignatoryRadioGroupField
   deriving (Show, Typeable)
 
 data SignatoryNameField = NameField {
@@ -304,6 +309,15 @@ data SignatorySignatureField = SignatureField {
   , ssfPlacements             :: ![FieldPlacement]
 } deriving (Show, Typeable)
 
+
+data SignatoryRadioGroupField = RadioGroupField {
+    srgfID                     :: !SignatoryFieldID
+  , srgfName                   :: !String
+  , srgfSelectedValue          :: !(Maybe String)
+  , srgfPlacements             :: ![FieldPlacement]
+  , srgfValues                 :: ![String]
+} deriving (Show, Typeable)
+
 instance HasSomeUserInfo [SignatoryField] where
   getEmail          = strip . getTextValueOfField EmailFI
   getFirstName      = getTextValueOfField $ NameFI (NameOrder 1)
@@ -326,19 +340,20 @@ signatoryFieldsSelectors = [
   , "signatory_link_fields.obligatory"
   , "signatory_link_fields.should_be_filled_by_author"
   , "ARRAY(" <> placements <> ")"
+  , "signatory_link_fields.radio_button_group_values"
   ]
   where
     placements = "SELECT (id, xrel, yrel, wrel, hrel, fsrel, page, tip, ARRAY(" <> anchors <> "))::field_placement FROM field_placements WHERE field_placements.signatory_field_id = signatory_link_fields.id ORDER BY field_placements.id"
 
     anchors = "SELECT (text, index)::placement_anchor FROM placement_anchors WHERE placement_anchors.field_placement_id = field_placements.id ORDER BY placement_anchors.id"
 
-type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe Bool, Maybe FileID, Bool, Bool, CompositeArray1 FieldPlacement)
+type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe Bool, Maybe FileID, Bool, Bool, CompositeArray1 FieldPlacement, Maybe (Array1 String))
 
 instance PQFormat SignatoryField where
   pqFormat = const "%signatory_field"
 
 instance CompositeFromSQL SignatoryField where
-  toComposite (sfid, ftype, mname_order, custom_name, is_author_filled, mvalue_text, mvalue_bool, mvalue_file, obligatory, should_be_filled_by_sender, CompositeArray1 placements) =
+  toComposite (sfid, ftype, mname_order, custom_name, is_author_filled, mvalue_text, mvalue_bool, mvalue_file, obligatory, should_be_filled_by_sender, CompositeArray1 placements, mradio_button_group_values) =
     case ftype of
       NameFT -> SignatoryNameField $ NameField {
           snfID                     = sfid
@@ -408,6 +423,13 @@ instance CompositeFromSQL SignatoryField where
         , ssfShouldBeFilledBySender = should_be_filled_by_sender
         , ssfPlacements             = placements
       }
+      RadioGroupFT -> SignatoryRadioGroupField $ RadioGroupField {
+          srgfID                     = sfid
+        , srgfName                   = custom_name
+        , srgfSelectedValue          = mvalue_text
+        , srgfPlacements             = placements
+        , srgfValues                 = (\(Array1 values) -> values) . fromMaybe ($unexpectedError "RadioGroup field has NULL as radio_button_group_values") $ mradio_button_group_values
+      }
 
 data FieldIdentity
   = NameFI NameOrder
@@ -419,32 +441,35 @@ data FieldIdentity
   | TextFI String
   | SignatureFI String
   | CheckboxFI String
+  | RadioGroupFI String
     deriving (Eq, Ord, Show)
 
 fieldIdentity :: SignatoryField -> FieldIdentity
-fieldIdentity (SignatoryNameField f)           = NameFI (snfNameOrder f)
-fieldIdentity (SignatoryCompanyField _)        = CompanyFI
-fieldIdentity (SignatoryPersonalNumberField _) = PersonalNumberFI
-fieldIdentity (SignatoryCompanyNumberField _)  = CompanyNumberFI
-fieldIdentity (SignatoryEmailField _)          = EmailFI
-fieldIdentity (SignatoryMobileField _)         = MobileFI
-fieldIdentity (SignatoryTextField f)           = TextFI (stfName f)
-fieldIdentity (SignatoryCheckboxField f)       = CheckboxFI (schfName f)
-fieldIdentity (SignatorySignatureField f)      = SignatureFI (ssfName f)
+fieldIdentity (SignatoryNameField f)             = NameFI (snfNameOrder f)
+fieldIdentity (SignatoryCompanyField _)          = CompanyFI
+fieldIdentity (SignatoryPersonalNumberField _)   = PersonalNumberFI
+fieldIdentity (SignatoryCompanyNumberField _)    = CompanyNumberFI
+fieldIdentity (SignatoryEmailField _)            = EmailFI
+fieldIdentity (SignatoryMobileField _)           = MobileFI
+fieldIdentity (SignatoryTextField f)             = TextFI (stfName f)
+fieldIdentity (SignatoryCheckboxField f)         = CheckboxFI (schfName f)
+fieldIdentity (SignatorySignatureField f)        = SignatureFI (ssfName f)
+fieldIdentity (SignatoryRadioGroupField f)       = RadioGroupFI (srgfName f)
 
 getFieldByIdentity :: FieldIdentity -> [SignatoryField] -> Maybe SignatoryField
 getFieldByIdentity fi sfs = find (\sf -> fieldIdentity sf == fi) sfs
 
 fieldTextValue :: SignatoryField -> Maybe String
-fieldTextValue (SignatoryNameField f)           = Just $ snfValue f
-fieldTextValue (SignatoryCompanyField f)        = Just $ scfValue f
-fieldTextValue (SignatoryPersonalNumberField f) = Just $ spnfValue f
-fieldTextValue (SignatoryCompanyNumberField f)  = Just $ scnfValue f
-fieldTextValue (SignatoryEmailField f)          = Just $ sefValue f
-fieldTextValue (SignatoryMobileField f)         = Just $ smfValue f
-fieldTextValue (SignatoryTextField f)           = Just $ stfValue f
-fieldTextValue (SignatoryCheckboxField _)       = Nothing
-fieldTextValue (SignatorySignatureField _)      = Nothing
+fieldTextValue (SignatoryNameField f)             = Just $ snfValue f
+fieldTextValue (SignatoryCompanyField f)          = Just $ scfValue f
+fieldTextValue (SignatoryPersonalNumberField f)   = Just $ spnfValue f
+fieldTextValue (SignatoryCompanyNumberField f)    = Just $ scnfValue f
+fieldTextValue (SignatoryEmailField f)            = Just $ sefValue f
+fieldTextValue (SignatoryMobileField f)           = Just $ smfValue f
+fieldTextValue (SignatoryTextField f)             = Just $ stfValue f
+fieldTextValue (SignatoryCheckboxField _)         = Nothing
+fieldTextValue (SignatorySignatureField _)        = Nothing
+fieldTextValue (SignatoryRadioGroupField f)       = srgfSelectedValue f
 
 getTextValueOfField ::  FieldIdentity -> [SignatoryField] -> String
 getTextValueOfField fi sfs =

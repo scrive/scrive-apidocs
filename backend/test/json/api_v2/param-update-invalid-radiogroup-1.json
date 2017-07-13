@@ -1,0 +1,29 @@
+{
+  "title": "Number of options doesn't match number of placements",
+  "parties": [{
+    "fields": [{
+      "type": "radiogroup",
+      "name": "RG",
+      "values": ["btn1", "btn2", "btn3"],
+      "selected_value": null,
+      "placements": [
+        {
+          "xrel": 0.5,
+          "yrel": 0,
+          "wrel": 0.021052,
+          "hrel": 0,
+          "fsrel": 0,
+          "page": 1
+        },
+        {
+          "xrel": 1,
+          "yrel": 0,
+          "wrel": 0.021052,
+          "hrel": 0,
+          "fsrel": 0,
+          "page": 1
+        }
+      ]
+    }]
+  }]
+}

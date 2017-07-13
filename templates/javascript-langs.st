@@ -424,7 +424,6 @@ javascriptLocalisation =
              , attached : "$_designViewAttached()$"
              , attachmentRequestedFrom : "$_designViewAttachmentRequestedFrom()$"
              , draggablehelp1 : "$_designviewdraggablehelp1()$"
-             , draggablehelp2 : "$_designviewdraggablehelp2()$"
              , days :"$_designviewdays()$"
              , saveAsDraftButton : "$_designViewSaveAsDraftButton()$"
              , saveAsTemplateButton : "$_designViewSaveAsTemplateButton()$"
@@ -462,6 +461,10 @@ javascriptLocalisation =
              }
              , dropToUpload: "$_designViewDropToUpload()$"
              , dropPDFHere: "$_designViewDropPDFHere()$"
+             , radiogroup: "$_radioGroupFieldName()$"
+             , radiobutton: "$_radioButtonPlacementName()$"
+             , radioButtonNames: "$_radioButtonNames()$"
+             , radioButtonNamesNotUnique: "$_radioButtonNamesNotUnique()$"
          }
          , validation : {
                 required: "$_nameRequired()$"

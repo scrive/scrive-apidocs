@@ -289,6 +289,22 @@
     .checkbox-wrapper {
       background-color: @actionsecondarycolor;
     }
+
+    &.js-radiobutton {
+      .underlay {
+        border-color: @actioncolor;
+
+        > span {
+          background-color: fadeout(@actioncolor, 80%);
+        }
+      }
+
+      .radiobutton-wrapper {
+        .radiobutton {
+          background-color: @actioncolor;
+        }
+      }
+    }
   }
 
   .signatureBox.forDrawing {

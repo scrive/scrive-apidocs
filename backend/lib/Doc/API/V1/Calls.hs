@@ -950,7 +950,7 @@ apiCallV1List = api $ do
   case format of
        Just "csv" -> do
           allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting 1000
-          let allDocsCustomFields = allCustomTextOrCheckboxFields allDocs
+          let allDocsCustomFields = allCustomTextOrCheckboxOrRadioGroupFields allDocs
               docsCSVs = concatMap (docForListCSVV1 allDocsCustomFields) allDocs
           return $ Left $ CSV { csvFilename = "documents.csv"
                               , csvHeader = docForListCSVHeaderV1 allDocsCustomFields

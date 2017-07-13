@@ -169,7 +169,7 @@ draftIsChangingDocumentSignatories _ _ = True
 newSignatorySignatoryLinkIsChangingSignatoryLink :: SignatoryLink -> SignatoryLink -> Bool
 newSignatorySignatoryLinkIsChangingSignatoryLink newsl sl =
         (signatorylinkid newsl /= signatorylinkid sl)
-     || (not $ fieldsListsAreAlmoustEqual (signatoryfields newsl) (signatoryfields sl))
+     || (not $ fieldsListsAreAlmostEqual (signatoryfields newsl) (signatoryfields sl))
      || (signatoryisauthor newsl /= signatoryisauthor sl)
      || (signatoryispartner newsl /= signatoryispartner sl)
      || (signatorysignorder newsl /= signatorysignorder sl)

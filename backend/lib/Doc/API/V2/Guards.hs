@@ -17,6 +17,7 @@ module Doc.API.V2.Guards (
 , guardSignatoryHasNotSigned
 , guardThatAllAttachmentsAreAcceptedOrIsAuthor
 , guardThatAllSignatoryAttachmentsAreUploadedOrMarked
+, guardThatRadioButtonValuesAreValid
 -- * Joined guard for read-only functions
 , guardDocumentReadAccess
 ) where
@@ -27,6 +28,7 @@ import API.V2
 import API.V2.Parameters
 import DB
 import Doc.API.V2.DocumentAccess
+import Doc.API.V2.JSON.Fields
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocStateData
@@ -226,6 +228,16 @@ guardThatDocumentCanBeStarted doc = do
       if (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView)
          then isGood resultValidPhone || isEmpty resultValidPhone
          else True
+
+guardThatRadioButtonValuesAreValid :: Kontrakcja m => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> Document -> m ()
+guardThatRadioButtonValuesAreValid slid (SignatoryFieldsValuesForSigning signfields) doc = do
+  let sl = fromJust $ getSigLinkFor slid doc
+      radioValIsValid (fi@(RadioGroupFI _), StringFTV signval) = fromMaybe False $ do
+        SignatoryRadioGroupField srgf <- getFieldByIdentity fi $ signatoryfields sl
+        return $ signval `elem` srgfValues srgf
+      radioValIsValid _ = True -- non radio group fields are skipped
+  when (not $ all radioValIsValid signfields) $
+    apiError $ signatoryStateError "RadioGroup selected value is not in allowed values."
 
 guardThatAllAttachmentsAreAcceptedOrIsAuthor :: Kontrakcja m => SignatoryLinkID -> [FileID] -> Document -> m ()
 guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments doc = do

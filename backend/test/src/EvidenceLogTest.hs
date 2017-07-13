@@ -52,6 +52,7 @@ evidenceLogTemplateVariables = Set.fromList
   , "description"     -- Attachment request description
   , "email"           -- Bool
   , "fieldname"       -- Field updates
+  , "fieldvalues"     -- List of radiogroup selectable options
   , "lang"            -- Pending :: Lang
   , "mobile"          -- Flag
   , "name"            -- Attachment name

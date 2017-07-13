@@ -123,7 +123,44 @@
           "is_obligatory": true,
           "should_be_filled_by_sender": false,
           "placements": []
-        }
+        },
+        {
+          "type": "radiogroup",
+          "name": "#☭ҖRADIO_GROUP",
+          "values": ["btn1", "btn2", "btn3"],
+          "selected_value":null,
+          "placements": [
+            {
+              "xrel": 0.25,
+              "yrel": 0,
+              "wrel": 0.021052,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 1,
+              "tip": null,
+              "anchors": []
+            },
+            {
+              "xrel": 0.5,
+              "yrel": 0,
+              "wrel": 0.021052,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 1,
+              "tip": null,
+              "anchors": []
+            },
+            {
+              "xrel": 1,
+              "yrel": 0,
+              "wrel": 0.021052,
+              "hrel": 0,
+              "fsrel": 0,
+              "page": 1,
+              "tip": null,
+              "anchors": []
+            }
+          ]        }
       ],
       "sign_order": 5000,
       "sign_time": null,

@@ -35,6 +35,7 @@ apiV2JSONTests env = testGroup "DocAPIV2JSON"
   , testThat "Test API v2 'update' with single empty signatory object" env testDocUpdateEmptySignatory
   , testThat "Test API v2 'update' with new empty signatory object" env testDocUpdateNewSignatory
   , testThat "Test API v2 'update' changing all non read-only fields" env testDocUpdateAll
+  , testThat "Test API v2 'update' with invalid radiogroup definition in json fails" env testDocUpdateInvalidRadioGroup
   , testThat "Test API v2 'update' with new signatory and empty fields" env testDocUpdateNewFields
   , testThat "Test API v2 'setfile'" env testDocSetFile
   , testThat "Test API v2 'list' response structure" env testDocList
@@ -63,6 +64,17 @@ runApiJSONTest ctx httpMethod apiCall httpHeaders expectedRsCode jsonFile = do
       Just (String didS) = H.lookup "id" docObj
       Just did = maybeRead $ unpack didS
   return (did, docJSON)
+
+runApiTest :: Context          -- ^ Context to run the test in
+               -> Method           -- ^ HTTP Method to use for API Call
+               -> Kontra Response  -- ^ The API call to use
+               -> [(String,Input)] -- ^ List of API call parameters
+               -> Int              -- ^ Expected response code
+               -> TestEnv ()
+runApiTest ctx httpMethod apiCall httpHeaders expectedRsCode = do
+  req <- mkRequestWithHeaders httpMethod httpHeaders []
+  (res,_) <- runTestKontra req ctx $ apiCall
+  assertEqual ("We should get a " ++ show expectedRsCode ++ " response") expectedRsCode (rsCode res)
 
 -- FilePath for  common JSONs re-used over and over in these tests
 jsonFP_new_file :: FilePath
@@ -171,6 +183,23 @@ testDocUpdateAll = do
   _ <- runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_json
 
   return ()
+
+testDocUpdateInvalidRadioGroup :: TestEnv ()
+testDocUpdateInvalidRadioGroup = do
+  ctx <- testJSONCtx
+  let rq_new_params = [ ("file", inFile $ inTestDir "pdfs/simple.pdf") ]
+  (did,_) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
+
+  updateAllBS1 <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-update-invalid-radiogroup-1.json"
+  let rq_update_params1 = [ ("document", inTextBS updateAllBS1) ]
+  runApiTest ctx POST (docApiV2Update did) rq_update_params1 400
+
+  updateAllBS2 <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-update-invalid-radiogroup-2.json"
+  let rq_update_params2 = [ ("document", inTextBS updateAllBS2) ]
+  runApiTest ctx POST (docApiV2Update did) rq_update_params2 400
+
+  return ()
+
 
 testDocUpdateNewFields :: TestEnv ()
 testDocUpdateNewFields = do

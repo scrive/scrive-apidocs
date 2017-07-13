@@ -200,6 +200,7 @@ insertSignatoryLinkFields xs = do
     sqlSetList "value_bool" $ map fieldBoolValue fields
     sqlSetList "obligatory" $ map fieldIsObligatory fields
     sqlSetList "should_be_filled_by_author" $ map fieldShouldBeFilledBySender fields
+    sqlSetList "radio_button_group_values" $ map (fmap Array1 . fieldRadioGroupValues) fields
     sqlResult "id"
   insertFieldPlacements
     . concat
@@ -216,6 +217,7 @@ insertSignatoryLinkFields xs = do
       SignatoryTextField (TextField{stfName})-> stfName
       SignatorySignatureField (SignatureField{ssfName})-> ssfName
       SignatoryCheckboxField (CheckboxField{schfName})-> schfName
+      SignatoryRadioGroupField (RadioGroupField{srgfName}) -> srgfName
       _ -> ""
     author_filled field = case field of
       SignatoryTextField (TextField{stfFilledByAuthor})-> stfFilledByAuthor
@@ -823,7 +825,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m Preparat
               lang :: Lang <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "documents" $ do
                 sqlSet "status" Pending
                 sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
-                            <+> "+ ((interval '1 day') * documents.days_to_sign) + (interval '23 hours 59 minutes 59 seconds')" -- This interval add almoust one they from description above.
+                            <+> "+ ((interval '1 day') * documents.days_to_sign) + (interval '23 hours 59 minutes 59 seconds')" -- This interval add almost one they from description above.
                 sqlResult "lang"
                 sqlWhereDocumentIDIs docid
                 sqlWhereDocumentTypeIs Signable
@@ -1555,6 +1557,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                               TextFI xname   -> xname
                               CheckboxFI xname -> xname
                               SignatureFI xname -> xname
+                              RadioGroupFI xname -> xname
                               _ -> ""
               oldField = getFieldByIdentity fieldIdent (signatoryfields sl)
           updated <- runQuery . sqlUpdate "signatory_link_fields" $ do
@@ -1577,7 +1580,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                        [ do
                            sqlWhereEq "value_text" (""::String) -- Note: if we allow values to be overwritten, the evidence events need to be adjusted to reflect the old value.
                            sqlWhereIn "type" [TextFT, NameFT ,EmailFT,CompanyFT,PersonalNumberFT,PersonalNumberFT,CompanyNumberFT, MobileFT]
-                       , sqlWhereIn "type" [CheckboxFT, SignatureFT]
+                       , sqlWhereIn "type" [CheckboxFT, SignatureFT, RadioGroupFT]
                        ]
                    sqlWhereExists $ sqlSelect "documents" $ do
                      sqlWhere "signatory_links.id = signatory_link_id"
@@ -1630,6 +1633,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                             F.value "checked" $ schfName f
                         Just (SignatorySignatureField f) -> do
                           F.value "fieldname" $ ssfName f
+                        Just (SignatoryRadioGroupField f) -> do
+                          F.value "fieldname" $ srgfName f
+                          F.value "fieldvalues" $ intercalate ", " $ map (\v -> "\"" ++ v ++ "\"") $ srgfValues f
                         _ -> return ()
                    case oldField of
                      Just f | not (null ps) -> do
@@ -1897,14 +1903,15 @@ getEvidenceTextForUpdateField sig (NameFI (NameOrder 1))
                             | otherwise                = UpdateFieldFirstNameEvidence
 getEvidenceTextForUpdateField _ (NameFI (NameOrder 2)) = UpdateFieldLastNameEvidence
 getEvidenceTextForUpdateField _ (NameFI (NameOrder _)) = $unexpectedError "NameFT with nameorder different than 1 and 2"
-getEvidenceTextForUpdateField _ CompanyFI        = UpdateFieldCompanyEvidence
-getEvidenceTextForUpdateField _ PersonalNumberFI = UpdateFieldPersonalNumberEvidence
-getEvidenceTextForUpdateField _ CompanyNumberFI  = UpdateFieldCompanyNumberEvidence
-getEvidenceTextForUpdateField _ EmailFI          = UpdateFieldEmailEvidence
-getEvidenceTextForUpdateField _ (TextFI _)      = UpdateFieldCustomEvidence
-getEvidenceTextForUpdateField _ MobileFI         = UpdateFieldMobileEvidence
-getEvidenceTextForUpdateField _ (SignatureFI _)  = UpdateFieldSignatureEvidence
-getEvidenceTextForUpdateField _ (CheckboxFI _)   = UpdateFieldCheckboxEvidence
+getEvidenceTextForUpdateField _ CompanyFI              = UpdateFieldCompanyEvidence
+getEvidenceTextForUpdateField _ PersonalNumberFI       = UpdateFieldPersonalNumberEvidence
+getEvidenceTextForUpdateField _ CompanyNumberFI        = UpdateFieldCompanyNumberEvidence
+getEvidenceTextForUpdateField _ EmailFI                = UpdateFieldEmailEvidence
+getEvidenceTextForUpdateField _ (TextFI _)             = UpdateFieldCustomEvidence
+getEvidenceTextForUpdateField _ MobileFI               = UpdateFieldMobileEvidence
+getEvidenceTextForUpdateField _ (SignatureFI _)        = UpdateFieldSignatureEvidence
+getEvidenceTextForUpdateField _ (CheckboxFI _)         = UpdateFieldCheckboxEvidence
+getEvidenceTextForUpdateField _ (RadioGroupFI _)       = UpdateFieldRadioGroupEvidence
 
 hasOneNameField :: SignatoryLink -> Bool
 hasOneNameField sig = 1 == (length $ filter (\f -> NameFT == fieldType f) $ signatoryfields sig)
@@ -1926,7 +1933,7 @@ checkEqualBy equals name f obj1 obj2
   | otherwise              = Just (name, show (f obj1), show (f obj2))
 
 checkEqualSignatoryFields  :: String ->[SignatoryField] -> [SignatoryField] -> Maybe (String, String, String)
-checkEqualSignatoryFields name (f:fs) (f':fs') = if fieldsAreAlmoustEqual f f'
+checkEqualSignatoryFields name (f:fs) (f':fs') = if fieldsAreAlmostEqual f f'
                                                    then checkEqualSignatoryFields name fs fs'
                                                    else Just (name, show f, show f')
 checkEqualSignatoryFields name (f:_) [] = Just (name, show f, "No field")

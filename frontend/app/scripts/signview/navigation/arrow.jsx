@@ -3,11 +3,12 @@ import React from "react";
 import Task from "./task";
 import isElementInViewport from "../../common/iselementinviewport";
 import scrollToElement from "../../common/scrolltoelement";
-import BlinkMixin from "../../common/blink_mixin";
 import classNames from "classnames";
+import _ from "underscore";
 
 import ArrowDown from "../../icons/arrow-down.svg";
 import ArrowRight from "../../icons/arrow-right.svg";
+import BlinkGroupModel from "./blinkgroupmodel";
 
 import arrowVars from "../../../less/signview/arrows.less";
 
@@ -16,6 +17,8 @@ const defaultErd = require("element-resize-detector")({"strategy": "scroll"});
 import Transporter from "../../common/transporter";
 
 const ARROW = {NONE: -1, UP: 0, DOWN: 1, LEFT: 2, RIGHT: 3};
+
+const BLINK_GROUPS = [];
 
 function transformWithPrefixes (style, value) {
   const oldValue = style.transform;
@@ -40,14 +43,22 @@ module.exports = React.createClass({
 
   displayName: "Arrow",
 
-  mixins: [React.addons.PureRenderMixin, BlinkMixin],
+  mixins: [React.addons.PureRenderMixin],
 
   propTypes: {
     task: React.PropTypes.instanceOf(Task).isRequired,
-    show: React.PropTypes.bool.isRequired
+    show: React.PropTypes.bool.isRequired,
+    first: React.PropTypes.bool
+  },
+
+  getInitialState: function () {
+    return {
+      isHiddenByBlink: false
+    };
   },
 
   componentWillMount: function () {
+    this.registerBlinkGroup();
     this.computeMountNode(this.props.task);
     this.update();
   },
@@ -70,10 +81,12 @@ module.exports = React.createClass({
       defaultErd.removeListener($signview[0], this.update);
     }
     this.stopListenToTask(this.props.task);
+    this.deregisterBlinkGroup();
   },
 
   componentWillUpdate: function (nextProps) {
     if (this.props.task !== nextProps.task) {
+      this.deregisterBlinkGroup();
       this.computeMountNode(nextProps.task);
       this.stopListenToTask(this.props.task);
       this.listenToTask(nextProps.task);
@@ -98,6 +111,7 @@ module.exports = React.createClass({
 
   componentDidUpdate: function (prevProps, prevState) {
     if (this.props.task !== prevProps.task) {
+      this.registerBlinkGroup();
       this.update();
       this.blink();
     }
@@ -180,8 +194,12 @@ module.exports = React.createClass({
     let offset = $el.offset();
 
     if (relative && $(this._mountNode).offset() != undefined) {
-      offset.left = offset.left - $(this._mountNode).offset().left;
       offset.top = offset.top - $(this._mountNode).offset().top;
+      offset.left = offset.left - $(this._mountNode).offset().left;
+
+      if (this.props.task.field().isRadioGroup()) {
+        offset.left = offset.left + this.props.task.margin();
+      }
     }
 
     return {
@@ -262,12 +280,85 @@ module.exports = React.createClass({
     }
   },
 
+  blinkGroup: function () {
+    return _.first(_.filter(BLINK_GROUPS, (item) => {
+      return item.get("groupId") == this.blinkGroupId();
+    }));
+  },
+
+  registerBlinkGroup: function () {
+    let blinkGroup = this.blinkGroup();
+    if (!blinkGroup) {
+      blinkGroup = new BlinkGroupModel({groupId: this.blinkGroupId()});
+      BLINK_GROUPS.push(blinkGroup);
+    }
+
+    blinkGroup.on("change:counter", this.onBlinkGroupCounterChange);
+  },
+
+  deregisterBlinkGroup: function () {
+    let blinkGroup = this.blinkGroup();
+    if (blinkGroup) {
+      blinkGroup.on("change:counter", this.onBlinkGroupCounterChange);
+    }
+  },
+
+  shouldBlink: function () {
+    const type = this.state.type;
+    const first = this.props.first;
+    let result = true;
+
+    if (!_.isUndefined(first) && (type === ARROW.DOWN || type === ARROW.UP)) {
+      result = first;
+    }
+
+    return result;
+  },
+
+  blinkGroupId: function () {
+    let field = this.props.task.field();
+
+    if (field) {
+      return this.props.task.field().cid;
+    }
+
+    return this.props.task.cid;
+  },
+
+  onBlinkGroupCounterChange: function () {
+    var blinkGroup = this.blinkGroup();
+
+    if (blinkGroup) {
+      this.setState({
+        isHiddenByBlink: (
+          this.shouldBlink() && blinkGroup &&
+          blinkGroup.get("counter") % 2 !== 0
+        )
+      });
+    }
+  },
+
+  blink: function () {
+    let blinkGroup = this.blinkGroup();
+    if (blinkGroup) {
+      blinkGroup.blink();
+    }
+  },
+
+  cancelBlink: function () {
+    let blinkGroup = this.blinkGroup();
+    if (blinkGroup) {
+      blinkGroup.cancelBlink();
+    }
+  },
+
   render: function () {
-    const {task, show} = this.props;
+    const task = this.props.task;
+    let show = this.props.show;
     const {type, left, right, top, height, angle, scale} = this.state;
 
     const arrowClass = classNames({
-      "hidden": this.isHiddenByBlink(),
+      "hidden": this.state.isHiddenByBlink,
       "scroll-arrow": type === ARROW.UP || type === ARROW.DOWN,
       "action-arrow": type === ARROW.LEFT || type === ARROW.RIGHT,
       "up": type === ARROW.UP,
@@ -306,6 +397,11 @@ module.exports = React.createClass({
 
     if (type === ARROW.LEFT) {
       transformWithPrefixes(arrowStyle, "rotate(180deg)");
+    }
+
+    let first = (_.isUndefined(this.props.first) ? true : this.props.first);
+    if ((type === ARROW.DOWN || type === ARROW.UP) && !first) {
+      show = false;
     }
 
     return (

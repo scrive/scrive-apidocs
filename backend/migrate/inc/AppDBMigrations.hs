@@ -45,4 +45,5 @@ kontraMigrations = [
   , removeDataFromSmses
   , createDocumentExtendingConsumers
   , createDocumentExtendingJobs
+  , signatoryLinkFieldsAddRadioGroupValues
   ]

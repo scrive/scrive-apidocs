@@ -25,7 +25,9 @@ var Field = exports.Field = Backbone.Model.extend({
         placements : [],
         is_obligatory : true,
         should_be_filled_by_sender : false,
-        hasChanged: false
+        hasChanged: false,
+        radio_button_values: [],
+        next_radio_button_values: []
     },
     initialize : function(args){
         var field = this;
@@ -40,6 +42,16 @@ var Field = exports.Field = Backbone.Model.extend({
         this.set({"placements": placements, "hadValueWhenCreated": this.hadValueWhenCreated(args)});
         if(args.signatory)
             args.signatory.bind("removed", field.remove);
+
+        if (args.type == "radiogroup") {
+          var values = args.values || [];
+          this.set({
+            value: args.selected_value || "",
+            radio_button_values: values,
+            next_radio_button_values: _.rest(values, 0)
+          });
+        }
+
         field.bindBubble();
     },
     hadValueWhenCreated: function(args) {
@@ -47,7 +59,9 @@ var Field = exports.Field = Backbone.Model.extend({
         return true;
       } else if (args.type === "signature" && args.signature) {
         return true;
-      } else if (args.type !== "checkbox" && args.type !== "signature" && args.value != "") { // ~ this.isText
+      } else if (args.type === "radiogroup" && _.isString(args.selected_value) && args.selected_value != "") {
+        return true;
+      } else if (args.type !== "checkbox" && args.type !== "signature" && args.type !== "radiogroup" && args.value != "") { // ~ this.isText
         return true;
       } else {
         return false;
@@ -177,6 +191,8 @@ var Field = exports.Field = Backbone.Model.extend({
             return true;
         } else if (this.isCheckbox() && this.isObligatory() && this.isChecked()) {
             return true;
+        } else if (this.isRadioGroup()) {
+            return (this.radioButtonValues().indexOf(this.value()) != -1);
         }
         return false;
     },
@@ -387,6 +403,9 @@ var Field = exports.Field = Backbone.Model.extend({
     isCsvField : function() {
         return this.isText() && this.signatory().isCsv() && this.signatory().hasCsvField(this.csvname());
     },
+    isRadioGroup : function() {
+        return this.type() == "radiogroup";
+    },
     csvname : function() {
       if (this.isFstName()) {
         return "fstname";
@@ -467,16 +486,25 @@ var Field = exports.Field = Backbone.Model.extend({
         this.trigger("removed");
     },
     draftData : function() {
-      return {
-            type : this.type()
-          , order : this.order()
-          , name : this.name()
-          , value : this.isText() ? this.value() : undefined
-          , is_checked :  this.isCheckbox() ? this.isChecked() : undefined
-          , placements : _.invoke(this.placements(), 'draftData')
-          , is_obligatory : this.obligatory()
-          , should_be_filled_by_sender : this.shouldbefilledbysender()
+      var result = {
+        type : this.type()
+        , order : this.order()
+        , name : this.name()
+        , value : this.isText() ? this.value() : undefined
+        , is_checked :  this.isCheckbox() ? this.isChecked() : undefined
+        , placements : _.invoke(this.placements(), 'draftData')
+        , is_obligatory : this.obligatory()
+        , should_be_filled_by_sender : this.shouldbefilledbysender()
       };
+
+      if (this.isRadioGroup()) {
+        result["values"] = (
+          this.areRadioButtonValuesUnique() ? this.radioButtonValues() : this.get("radio_button_values")
+        );
+        result["selected_value"] = (this.value() == "" ? null : this.value());
+      }
+
+      return result;
     },
    dataForSigning: function() {
      if (this.isName()) {
@@ -489,6 +517,8 @@ var Field = exports.Field = Backbone.Model.extend({
        return {type: this.type(), name: this.name(), is_checked: this.isChecked()};
      } else if (this.isSignature()) {
        return {type: this.type(), name: this.name(), signature: this.value()};
+     } else if (this.isRadioGroup()) {
+       return {type: this.type(), name: this.name(), selected_value: this.value() || null};
      }
    },
    hasPlacements : function() {
@@ -501,13 +531,27 @@ var Field = exports.Field = Backbone.Model.extend({
         }
     },
    removePlacement : function(placement) {
-       var newplacements = _.without(this.placements(), placement);
-       this.set({placements : newplacements});
-       if (newplacements.length == 0 && (this.isCheckbox() || this.isSignature()))
-           this.signatory().deleteField(this);
-       else if ((this.isFstName() || this.isSndName()) && newplacements.length == 0){
-           this.signatory().trigger('change'); // Signatory will fallback to defaults obligatoriness if names don't have placements
-       }
+      var placementIndex = this.placements().indexOf(placement);
+      if (placementIndex == -1) {
+        // This should not happen.
+        return;
+      }
+
+      var newplacements = _.without(this.placements(), placement);
+      this.set({placements: newplacements});
+
+      if (newplacements.length == 0 && (this.isCheckbox() || this.isSignature())) {
+        this.signatory().deleteField(this);
+      } else if (this.isRadioGroup()) {
+        if (newplacements.length < 2) {
+          this.signatory().deleteField(this);
+        } else {
+          this.removeRadioButtonValue(placementIndex);
+        }
+      } else if ((this.isFstName() || this.isSndName()) && newplacements.length == 0) {
+        // Signatory will fallback to defaults obligatoriness if names don't have placements
+        this.signatory().trigger('change');
+      }
     },
     removeAllPlacements : function() {
         _.each(this.placements(), function(p) {p.remove();});
@@ -558,6 +602,80 @@ var Field = exports.Field = Backbone.Model.extend({
             field.signatory().trigger('change');
           }
         });
+    },
+    newRadioButtonValue: function () {
+      var numbers = _.map(this.radioButtonValues(), function (value, index) {
+        var match = /(\d+)$/.exec(value);
+        if (!match) {
+          return null;
+        }
+
+        return parseInt(match[1], 10);
+      });
+
+      var maxNumber = _.max(numbers);
+      var nextNumber = 1;
+      if (!isNaN(maxNumber) && maxNumber > 0) {
+        nextNumber = maxNumber + 1;
+      }
+
+      return localization.designview.radiobutton + " " + nextNumber;
+    },
+    radioButtonValues: function () {
+      return this.get("next_radio_button_values");
+    },
+    addRadioButtonValue: function (newValue, options) {
+      var currentValues = this.radioButtonValues();
+      currentValues.push(newValue);
+
+      this.set({"next_radio_button_values": currentValues}, options);
+    },
+    getRadioButtonValue: function (index) {
+      return this.radioButtonValues()[index];
+    },
+    setRadioButtonValue: function (index, newValue) {
+      var currentValues = this.radioButtonValues();
+      currentValues.splice(index, 1, newValue);
+
+      this.set({"next_radio_button_values": currentValues});
+    },
+    removeRadioButtonValue: function (index) {
+      var currentValues = this.radioButtonValues();
+      currentValues.splice(index, 1);
+
+      this.set({"next_radio_button_values": currentValues});
+    },
+    isRadioButtonSelected: function (radioButtonPlacement) {
+      var placementIndex = this.placements().indexOf(radioButtonPlacement);
+      if (placementIndex == -1) {
+        return false;
+      }
+
+      return (this.value() == this.radioButtonValues()[placementIndex]);
+    },
+    setSelectedRadioButton: function (radioButtonPlacement) {
+      var placementIndex = this.placements().indexOf(radioButtonPlacement);
+      if (placementIndex == -1) {
+        return false;
+      }
+
+      this.setValue(this.radioButtonValues()[placementIndex]);
+    },
+    areRadioButtonValuesUnique: function () {
+      var counts = _.reduce(
+        this.radioButtonValues(),
+        function (memo, value) {
+          memo[value] = (memo[value] || 0) + 1;
+          return memo;
+        },
+        {}
+      );
+
+      var allUnique = _.all(_.keys(counts), function (item) {
+        return counts[item] == 1;
+      });
+
+      return allUnique;
     }
 });
 

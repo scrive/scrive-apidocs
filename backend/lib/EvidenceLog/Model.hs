@@ -311,6 +311,7 @@ data CurrentEvidenceEventType =
   AutomaticReminderSent                            |
   UpdateFieldCheckboxEvidence                      |
   UpdateFieldSignatureEvidence                     |
+  UpdateFieldRadioGroupEvidence                    |
   SMSPinSendEvidence                               |
   SMSPinDeliveredEvidence                          |
   ChangeAuthenticationToSignMethodStandardToSEBankIDEvidence  |
@@ -546,6 +547,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidence) = toSQL (122::Int16)
   toSQL (Current ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence) = toSQL (123::Int16)
   toSQL (Current SignatoryAttachmentNotUploaded) = toSQL (124::Int16)
+  toSQL (Current UpdateFieldRadioGroupEvidence) = toSQL (125::Int16)
 
 
 instance FromSQL EvidenceEventType where
@@ -677,8 +679,9 @@ instance FromSQL EvidenceEventType where
       122 -> return (Current ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidence)
       123 -> return (Current ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence)
       124 -> return (Current SignatoryAttachmentNotUploaded)
+      125 -> return (Current UpdateFieldRadioGroupEvidence)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 124)]
+        reRange = [(1, 125)]
       , reValue = n
       }
 

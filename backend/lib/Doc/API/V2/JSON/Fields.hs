@@ -18,6 +18,7 @@ import qualified Data.Text as T
 import Doc.API.V2.JSON.Misc ()
 import Doc.API.V2.JSON.Utils
 import Doc.Data.CheckboxPlacementsUtils
+import Doc.Data.RadiobuttonPlacementsUtils
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import KontraPrelude
@@ -28,16 +29,17 @@ unjsonSignatoryFields :: UnjsonDef [SignatoryField]
 unjsonSignatoryFields = arrayOf unjsonSignatoryField
 
 unjsonSignatoryField :: UnjsonDef SignatoryField
-unjsonSignatoryField = disjointUnionOf "type" [
-    (fieldTypeToText NameFT, (\f -> fieldType f == NameFT), (SignatoryNameField <$> unjsonNameField))
-  , (fieldTypeToText CompanyFT, (\f -> fieldType f == CompanyFT), (SignatoryCompanyField <$> unjsonCompanyField))
-  , (fieldTypeToText PersonalNumberFT, (\f -> fieldType f == PersonalNumberFT), (SignatoryPersonalNumberField <$> unjsonPersonalNumberField))
-  , (fieldTypeToText CompanyNumberFT, (\f -> fieldType f == CompanyNumberFT), (SignatoryCompanyNumberField <$> unjsonCompanyNumberField))
-  , (fieldTypeToText EmailFT, (\f -> fieldType f == EmailFT), (SignatoryEmailField <$> unjsonEmailField))
-  , (fieldTypeToText MobileFT, (\f -> fieldType f == MobileFT), (SignatoryMobileField <$> unjsonMobileField))
-  , (fieldTypeToText TextFT, (\f -> fieldType f == TextFT), (SignatoryTextField <$> unjsonTextField))
-  , (fieldTypeToText CheckboxFT, (\f -> fieldType f == CheckboxFT), (SignatoryCheckboxField <$> unjsonCheckboxField))
-  , (fieldTypeToText SignatureFT, (\f -> fieldType f == SignatureFT), (SignatorySignatureField <$> unjsonSignatureField))
+unjsonSignatoryField = DisjointUnjsonDef "type" [
+    (fieldTypeToText NameFT, (\f -> fieldType f == NameFT), (return . SignatoryNameField <$> unjsonNameField))
+  , (fieldTypeToText CompanyFT, (\f -> fieldType f == CompanyFT), (return . SignatoryCompanyField <$> unjsonCompanyField))
+  , (fieldTypeToText PersonalNumberFT, (\f -> fieldType f == PersonalNumberFT), (return . SignatoryPersonalNumberField <$> unjsonPersonalNumberField))
+  , (fieldTypeToText CompanyNumberFT, (\f -> fieldType f == CompanyNumberFT), (return . SignatoryCompanyNumberField <$> unjsonCompanyNumberField))
+  , (fieldTypeToText EmailFT, (\f -> fieldType f == EmailFT), (return . SignatoryEmailField <$> unjsonEmailField))
+  , (fieldTypeToText MobileFT, (\f -> fieldType f == MobileFT), (return . SignatoryMobileField <$> unjsonMobileField))
+  , (fieldTypeToText TextFT, (\f -> fieldType f == TextFT), (return . SignatoryTextField <$> unjsonTextField))
+  , (fieldTypeToText CheckboxFT, (\f -> fieldType f == CheckboxFT), (return . SignatoryCheckboxField <$> unjsonCheckboxField))
+  , (fieldTypeToText SignatureFT, (\f -> fieldType f == SignatureFT), (return . SignatorySignatureField <$> unjsonSignatureField))
+  , (fieldTypeToText RadioGroupFT, (\f -> fieldType f == RadioGroupFT), (fmap SignatoryRadioGroupField <$> unjsonRadioGroupField))
   ]
 
 
@@ -144,11 +146,41 @@ unjsonSignatureField  = pure (\n ob sfbs ps -> SignatureField  (unsafeSignatoryF
   <*  fieldReadOnlyOpt "signature" (unsafeFromSignatureField  ssfValue) "Uploaded file"
   <*> fieldDef "is_obligatory" True (unsafeFromSignatureField ssfObligatory) "If is oligatory"
   <*> fieldDef "should_be_filled_by_sender" False (unsafeFromSignatureField ssfShouldBeFilledBySender) "If should be filled by sender"
-  <*> fieldDefBy "placements" [] (unsafeFromSignatureField ssfPlacements) "Placements" (arrayOf unsonFieldPlacement)
+  <*> fieldDefBy "placements" [] (unsafeFromSignatureField ssfPlacements) "Placements" (arrayOf (unjsonInvmapR return id unsonFieldPlacement))
   where
     unsafeFromSignatureField  :: (SignatorySignatureField  -> a) -> SignatoryField -> a
     unsafeFromSignatureField  f (SignatorySignatureField  a) = f a
     unsafeFromSignatureField  _ _ = $unexpectedError "unsafeFromSignatureField "
+
+unjsonRadioGroupField :: Ap (FieldDef SignatoryField) (Result SignatoryRadioGroupField)
+unjsonRadioGroupField = pure (\n sv ps vs -> validateRadioGroup $ RadioGroupField (unsafeSignatoryFieldID 0) n sv ps vs)
+  <*> field "name"  (unsafeFromRadioGroupField srgfName)  "Name of the field"
+  <*> fieldOpt "selected_value" (unsafeFromRadioGroupField srgfSelectedValue) "Value of the selected radio button"
+  <*> fieldDefBy "placements" [] (unsafeFromRadioGroupField srgfPlacements) "Placements" (arrayOf (unjsonInvmapR validRadiobuttonPlacement id unsonFieldPlacement))
+  <*> field "values" (unsafeFromRadioGroupField srgfValues) "Possible values of radio buttons"
+  where
+    unsafeFromRadioGroupField :: (SignatoryRadioGroupField -> a) -> SignatoryField -> a
+    unsafeFromRadioGroupField f (SignatoryRadioGroupField a) = f a
+    unsafeFromRadioGroupField _ _ = $unexpectedError "unsafeFromRadioGroupField "
+    validRadiobuttonPlacement fp = if radiobuttonPlacementHasValidRadiobuttonRatio fp
+      then return fp
+      else fail "Radiobutton placement has invalid wrel, hrel or fsrel"
+    validateRadioGroup rg | hasDuplicates (srgfValues rg) = fail "Can't validate RadioGroup. Duplicate values."
+                          | selectedValueIsNotInValues rg = fail "Can't validate RadioGroup. Selected value is not in values."
+                          | anyValueEmpty rg = fail "Can't validate RadioGroup. Some values are empty."
+                          | not (twoOrMoreValues rg) = fail "Can't validate RadioGroup. It has to have at least 2 possible values"
+                          | not (eachValueHasMatchingPlacement rg) = fail "Can't validate RadioGroup. Different number of values and placements."
+                          | not (allPlacementsOnSamePage rg) = fail "Can't validate RadioGroup. Placements are on different pages."
+                          | otherwise = return rg
+    hasDuplicates [] = False
+    hasDuplicates (a:as) = a `elem` as || hasDuplicates as
+    selectedValueIsNotInValues rg = case srgfSelectedValue rg of
+      Nothing  -> False
+      Just val -> val `notElem` srgfValues rg
+    anyValueEmpty rg = any null $ srgfValues $ rg
+    eachValueHasMatchingPlacement rg = (length $ srgfValues $ rg) == (length $ srgfPlacements rg)
+    allPlacementsOnSamePage rg = 1 == length (nub $ placementpage <$> srgfPlacements rg)
+    twoOrMoreValues rg = (length $ srgfValues $ rg) >= 2
 
 fieldTypeToText :: FieldType -> T.Text
 fieldTypeToText NameFT = "name"
@@ -160,6 +192,7 @@ fieldTypeToText MobileFT = "mobile"
 fieldTypeToText TextFT = "text"
 fieldTypeToText SignatureFT = "signature"
 fieldTypeToText CheckboxFT = "checkbox"
+fieldTypeToText RadioGroupFT = "radiogroup"
 
 
 unsonFieldPlacement :: UnjsonDef FieldPlacement
@@ -224,6 +257,7 @@ unjsonSignatoryFieldValue = disjointUnionOf "type" [
   , (fieldTypeToText TextFT,(\(fi,_) -> fieldTypeFromFieldIdentity fi == TextFT),  (\(n,v) -> (TextFI n, StringFTV v)) <$> unjsonTextFieldFieldValue)
   , (fieldTypeToText CheckboxFT,(\(fi,_) -> fieldTypeFromFieldIdentity fi == CheckboxFT),  (\(n,v) -> (CheckboxFI n, BoolFTV v)) <$> unjsonCheckboxFieldFieldValue)
   , (fieldTypeToText SignatureFT,(\(fi,_) -> fieldTypeFromFieldIdentity fi == SignatureFT),  (\(n,v) -> (SignatureFI n, FileFTV v)) <$> unjsonSignatureFieldFieldValue)
+  , (fieldTypeToText RadioGroupFT,(\(fi,_) -> fieldTypeFromFieldIdentity fi == RadioGroupFT),  (\(n,v) -> (RadioGroupFI n, StringFTV v)) <$> unjsonRadioGroupFieldFieldValue)
   ]
 
 unjsonNameFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (NameOrder,String)
@@ -267,6 +301,15 @@ unjsonCheckboxFieldFieldValue = pure (\no v ->(no,v))
     unsafeCheckboxName:: FieldIdentity -> String
     unsafeCheckboxName (CheckboxFI n) = n
     unsafeCheckboxName _ = $unexpectedError "unsafeCheckboxName"
+
+unjsonRadioGroupFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (String,String)
+unjsonRadioGroupFieldFieldValue = pure (\no v ->(no,v))
+  <*> field "name" (unsafeRadioGroupName . fst) "Name of radio button group field"
+  <*> field "selected_value" (unsafeStringFromSignatoryFieldTMPValue . snd) "Value of the field"
+  where
+    unsafeRadioGroupName:: FieldIdentity -> String
+    unsafeRadioGroupName (RadioGroupFI n) = n
+    unsafeRadioGroupName _ = $unexpectedError "unsafeRadioGroupName"
 
 unjsonSignatureFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (String,BS.ByteString)
 unjsonSignatureFieldFieldValue = pure (\no v ->(no,v))

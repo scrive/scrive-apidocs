@@ -5,7 +5,7 @@
 -- Stability   :  develpment
 -- Portability :  portable
 --
--- Almoust all the stuff that is visible under /adminsonly path
+-- Almost all the stuff that is visible under /adminsonly path
 --
 -----------------------------------------------------------------------------
 module Administration.AdministrationView(

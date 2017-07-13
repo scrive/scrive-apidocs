@@ -5,9 +5,11 @@ var BackboneMixin = require("../../common/backbone_mixin");
 var SignatureView = require("./signatureview");
 var CheckboxView = require("./checkboxview");
 var TextView = require("./textview");
+var RadioGroupView = require("./radiogroupview");
 var FilePage = require("../../../js/files.js").FilePage;
 var Modal = require("../../common/modal");
 var $ = require("jquery");
+var Field = require("../../../js/fields.js").Field;
 
 var Cross = require("../../icons/cross.svg");
 
@@ -65,9 +67,14 @@ var Cross = require("../../icons/cross.svg");
     openTypeSetterOnThisPageFor: function (placement) {
       if (this.isMounted()) {
         _.each(this.refs, function (v) {
-          if (v.closeTypeSetter && v.props.model !== placement) {
+          var viewPlacement = v.props.model;
+          if (_.isFunction(v.getPlacement)) {
+            viewPlacement = v.getPlacement();
+          }
+
+          if (v.closeTypeSetter && viewPlacement !== placement) {
             v.closeTypeSetter();
-          } else if (v.openTypeSetter && v.props.model === placement) {
+          } else if (v.openTypeSetter && viewPlacement === placement) {
             v.openTypeSetter();
           }
         });
@@ -91,6 +98,8 @@ var Cross = require("../../icons/cross.svg");
       var imageWidth = self.props.imageWidth;
       var imageHeight = self.props.imageHeight;
       var doc = file.document();
+      var renderedRadioGroups = [];
+
       return _.map(doc.allPlacements(), function (placement, index) {
         if (placement.page() === page.number()) {
           var field = placement.field();
@@ -112,6 +121,16 @@ var Cross = require("../../icons/cross.svg");
             return <CheckboxView {...args} />;
           } if (field.isText()) {
             return <TextView {...args} />;
+          } if (field.isRadioGroup()) {
+            // Radio group fields contain multiple placements (one for every
+            // radio button). We should render the radio group view once per
+            // unique radio group.
+            if (renderedRadioGroups.indexOf(field.cid) == -1) {
+              renderedRadioGroups.push(field.cid);
+              args.key = field.cid;
+              args.model = field;
+              return <RadioGroupView {...args} />;
+            }
           } else {
             throw new Error("unknown field type");
           }

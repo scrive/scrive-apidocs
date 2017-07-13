@@ -4,6 +4,7 @@ var _ = require("underscore");
 var DocumentPagesLess = require("../../../less/document-pages.less");
 
 var CheckboxPlacementView = require("./checkboxplacementview");
+var RadioButtonPlacementView = require("./radiobuttonplacementview");
 var SignaturePlacementView = require("./signatureplacementview");
 var TextPlacementView = require("./textplacementview");
 
@@ -46,6 +47,8 @@ var PlacementsContainerView = React.createClass({
               return <CheckboxPlacementView {...viewArgs} />;
             } else if (item.field().isText()) {
               return <TextPlacementView {...viewArgs} />;
+            } else if (item.field().isRadioGroup()) {
+              return <RadioButtonPlacementView {...viewArgs} />;
             } else {
               throw new Error("unknown field type: " + item.field().type());
             }

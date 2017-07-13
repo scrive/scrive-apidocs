@@ -254,6 +254,7 @@ var TextTypeSetterView = require("../../../scripts/designview/typesetters/textty
     });
 
     after(function () {
+      util.cleanTimeoutsAndBody();
       server.restore();
     });
   });

@@ -131,6 +131,42 @@
     }
   }
 
+  &.radiogroup {
+    .background {
+      border-color: @color;
+    }
+
+    .control {
+      .radiobutton {
+        background-color: @color;
+      }
+
+      &.highlighted,
+      &:hover,
+      &.ui-draggable-dragging {
+        .radiobutton-wrapper {
+          .radiobutton {
+            box-shadow: 0px 0px 10px 0px fade(@color, 40%);
+          }
+        }
+      }
+
+      &.add-button {
+        > svg.icon {
+          box-shadow: 0px 0px 10px 0px fade(@color, 40%);
+
+          #border {
+            stroke: @color;
+          }
+
+          #plus {
+            fill: @color;
+          }
+        }
+      }
+    }
+  }
+
   &.text-field-placement-setter-field-editor {
     border: 2px solid @color;
     

@@ -76,11 +76,6 @@
     width: 100%;
   }
 
-  .hline {
-    height: 1px;
-    left: 0;
-  }
-
   .nofilediv {
     margin: 10px auto;
     min-height: 600px;
@@ -122,18 +117,22 @@
     width: 100%;
   }
 
-  .hline {
-    background: #dedede;
-    height: 1px;
-    left: 0;
-    position: absolute;
-  }
+  .coordinate-line {
+    z-index: 1009;
 
-  .vline {
-    background: #dedede;
-    top: 0;
-    position: absolute;
-    width: 1px;
+    &.hline {
+      background: #dedede;
+      height: 1px;
+      left: 0;
+      position: absolute;
+    }
+
+    &.vline {
+      background: #dedede;
+      top: 0;
+      position: absolute;
+      width: 1px;
+    }
   }
 
   .placedfield {
@@ -215,5 +214,66 @@
     text-overflow: ellipsis;
     width: 100%;
     white-space: nowrap;
+  }
+}
+
+
+.radiogroup {
+  cursor: default;
+
+  &.dummy {
+    position: relative;
+  }
+
+  &.has-typesetter {
+    z-index: 1005;
+
+    > .background {
+      z-index: 1006;
+    }
+
+    > .control {
+      z-index: 1007;
+
+      &.ui-draggable-dragging {
+        z-index: 1008;
+      }
+
+      &.add-button {
+        z-index: 1009;
+      }
+    }
+  }
+
+  .js-radiogroup {
+    display: none;
+  }
+
+  .background {
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px dashed blue;
+    position: absolute;
+  }
+
+  .control {
+    cursor: pointer;
+    display: block;
+    left: 0px;
+    position: absolute !important;
+
+    &.add-button {
+      bottom: 0px;
+
+      > svg.icon {
+        border-radius: 100%;
+        box-sizing: border-box;
+        display: block;
+        height: calc(~"100% - 6px");
+        left: 3px;
+        position: relative;
+        top: 3px;
+        width: calc(~"100% - 6px");
+      }
+    }
   }
 }

@@ -4,7 +4,7 @@
 module Doc.API.V1.DocumentToJSON (
       evidenceAttachmentsJSONV1
     , documentJSONV1
-    , allCustomTextOrCheckboxFields
+    , allCustomTextOrCheckboxOrRadioGroupFields
     , docForListJSONV1
     , docForListCSVV1
     , docForListCSVHeaderV1
@@ -189,52 +189,53 @@ signatoryAttachmentJSON sa = do
   J.value "file" $ fileJSON <$> mfile
 
 signatoryFieldsJSON :: (MonadDB m, MonadIO m, MonadMask m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m) => Document -> SignatoryLink -> m JSValue
-signatoryFieldsJSON doc sl = fmap JSArray $ forM orderedFields $ \sf -> do
+signatoryFieldsJSON doc sl = fmap (JSArray . catMaybes) $ forM orderedFields $ \sf -> do
     case sf of
       SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 1}) ->
-        return $ fieldJSON "standard" "fstname" (Left (snfValue nf))
+        return $ Just $ fieldJSON "standard" "fstname" (Left (snfValue nf))
           ((not $ null $ snfValue nf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 2}) ->
-        return $ fieldJSON "standard" "sndname" (Left (snfValue nf))
+        return $ Just $ fieldJSON "standard" "sndname" (Left (snfValue nf))
           ((not $ null $ snfValue nf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryNameField _ -> $unexpectedError "Name field with order different then 1 or 2"
       SignatoryCompanyField cf ->
-        return $ fieldJSON "standard" "sigco"  (Left (scfValue cf))
+        return $ Just $ fieldJSON "standard" "sigco"  (Left (scfValue cf))
           ((not $ null $ scfValue $ cf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryPersonalNumberField pnf ->
-        return $ fieldJSON "standard" "sigpersnr"  (Left (spnfValue pnf))
+        return $ Just $ fieldJSON "standard" "sigpersnr"  (Left (spnfValue pnf))
           ((not $ null $ spnfValue $ pnf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryCompanyNumberField cnf ->
-        return $ fieldJSON "standard" "sigcompnr"  (Left (scnfValue cnf))
+        return $ Just $ fieldJSON "standard" "sigcompnr"  (Left (scnfValue cnf))
           ((not $ null $ scnfValue $ cnf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryEmailField ef ->
-        return $ fieldJSON "standard" "email"  (Left (sefValue ef))
+        return $ Just $ fieldJSON "standard" "email"  (Left (sefValue ef))
           ((not $ null $ sefValue $ ef)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryMobileField mf ->
-        return $ fieldJSON "standard" "mobile"  (Left (smfValue mf))
+        return $ Just $ fieldJSON "standard" "mobile"  (Left (smfValue mf))
           ((not $ null $ smfValue $ mf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryTextField tf ->
-        return $ fieldJSON "custom" (stfName tf)  (Left (stfValue tf))
+        return $ Just $ fieldJSON "custom" (stfName tf)  (Left (stfValue tf))
           ((stfFilledByAuthor tf  && (not $ isPreparation doc)))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryCheckboxField chf ->
-        return $ fieldJSON "checkbox" (schfName chf)  (Left (if (schfValue chf) then "checked" else ""))
+        return $ Just $ fieldJSON "checkbox" (schfName chf)  (Left (if (schfValue chf) then "checked" else ""))
           False
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatorySignatureField ssf -> do
         bs <- case (ssfValue ssf) of
                 Nothing -> return BSC.empty
                 Just fi -> getFileIDContents fi
-        return $ fieldJSON "signature" (ssfName ssf)  (Right $ bs)
+        return $ Just $ fieldJSON "signature" (ssfName ssf)  (Right $ bs)
           (closedSignatureF ssf && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
+      SignatoryRadioGroupField _ -> return Nothing -- Radio button group is doesn't have v1 representation
   where
     closedSignatureF ssf = ((not $ isNothing $ ssfValue ssf) && (null $ ssfPlacements ssf) && ((PadDelivery /= signatorylinkdeliverymethod sl)))
     orderedFields = sortBy (\f1 f2 -> ftOrder (fieldIdentity f1) (fieldIdentity f2)) (signatoryfields sl)
@@ -424,22 +425,26 @@ signatoryStatusClass doc sl =
     _ -> SCSent
 
 -- Converting document into entries in CSV
-allCustomTextOrCheckboxFields :: [Document] -> [FieldIdentity]
-allCustomTextOrCheckboxFields = sortBy fieldNameSort
+allCustomTextOrCheckboxOrRadioGroupFields :: [Document] -> [FieldIdentity]
+allCustomTextOrCheckboxOrRadioGroupFields = sortBy fieldNameSort
                   . nub
                   . map fieldIdentity
-                  . filter isCustomOrCheckbox
+                  . filter isCustomOrCheckboxOrRadioGroup
                   . concatMap signatoryfields
                   . concatMap documentsignatorylinks
   where fieldNameSort fi1 fi2 = case (fi1, fi2) of
                                   (TextFI n1 , TextFI n2 ) -> compare n1 n2
                                   (TextFI _ ,_) -> GT
                                   (SignatureFI n1, SignatureFI n2) -> compare n1 n2
+                                  (SignatureFI _, _) -> GT
                                   (CheckboxFI n1, CheckboxFI n2) -> compare n1 n2
+                                  (CheckboxFI _, _) -> GT
+                                  (RadioGroupFI n1, RadioGroupFI n2) -> compare n1 n2
                                   _ -> EQ
-        isCustomOrCheckbox sf = case fieldType sf of
+        isCustomOrCheckboxOrRadioGroup sf = case fieldType sf of
                                   TextFT -> True
                                   CheckboxFT -> True
+                                  RadioGroupFT -> True
                                   _ -> False
 
 docForListCSVV1 :: [FieldIdentity] -> Document -> [[String]]
@@ -471,6 +476,7 @@ signatoryForListCSV customFields doc sl = [
                           SignatoryCheckboxField chf ->  if (schfValue chf)
                                                              then schfName chf ++ " : checked"
                                                              else schfName chf ++ " : not checked"
+                          SignatoryRadioGroupField rgf ->  fromMaybe "" (srgfSelectedValue rgf)
                           _ -> ""
 
 docForListCSVHeaderV1 :: [FieldIdentity] -> [String]
@@ -501,3 +507,4 @@ docForListCSVHeaderV1 customFields = [ "Id"
         fieldName (TextFI n) = n
         fieldName (SignatureFI n) = n
         fieldName (CheckboxFI n) = n
+        fieldName (RadioGroupFI n) = n

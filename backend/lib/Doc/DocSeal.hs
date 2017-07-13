@@ -42,6 +42,7 @@ import qualified Text.StringTemplates.Fields as F
 import DB
 import DB.TimeZoneName
 import Doc.Data.CheckboxPlacementsUtils (CheckboxImagesMapping, getCheckboxImage, readCheckboxImagesMapping)
+import Doc.Data.RadiobuttonPlacementsUtils (RadiobuttonImagesMapping, getRadiobuttonImage, readRadiobuttonImagesMapping)
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.DocUtils
@@ -75,8 +76,14 @@ import qualified Doc.SealSpec as Seal
 import qualified HostClock.Model as HC
 
 personFromSignatory :: (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
-                    => String -> TimeZoneName -> SignatoryIdentifierMap -> CheckboxImagesMapping-> SignatoryLink -> m Seal.Person
-personFromSignatory inputpath tz sim checkboxMapping signatory = do
+                    => String
+                    -> TimeZoneName
+                    -> SignatoryIdentifierMap
+                    -> CheckboxImagesMapping
+                    -> RadiobuttonImagesMapping
+                    -> SignatoryLink
+                    -> m Seal.Person
+personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signatory = do
     emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
     stime <- case  maybesigninfo signatory of
                   Nothing -> return ""
@@ -92,7 +99,7 @@ personFromSignatory inputpath tz sim checkboxMapping signatory = do
     personalNumberText <- if (not (null personalnumber))
                             then renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
                          else return ""
-    fields <- fieldsFromSignatory checkboxMapping signatory
+    fields <- fieldsFromSignatory checkboxMapping radiobuttonMapping signatory
     highlightedImages <- mapM (highlightedImageFromHighlightedPage inputpath) (signatoryhighlightedpages signatory)
     return $ Seal.Person { Seal.fullname           = fromMaybe "" $ signatoryIdentifier sim (signatorylinkid signatory) emptyNamePlaceholder
                          , Seal.company            = getCompanyName signatory
@@ -114,9 +121,15 @@ personFromSignatory inputpath tz sim checkboxMapping signatory = do
                          }
 
 personExFromSignatoryLink :: (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
-                          => String -> TimeZoneName -> SignatoryIdentifierMap -> CheckboxImagesMapping -> SignatoryLink -> m Seal.Person
-personExFromSignatoryLink inputpath tz sim checkboxMapping sl@SignatoryLink{..} = do
-  person <- personFromSignatory inputpath tz sim checkboxMapping sl
+                          => String
+                          -> TimeZoneName
+                          -> SignatoryIdentifierMap
+                          -> CheckboxImagesMapping
+                          -> RadiobuttonImagesMapping
+                          -> SignatoryLink
+                          -> m Seal.Person
+personExFromSignatoryLink inputpath tz sim checkboxMapping radiobuttonMapping sl@SignatoryLink{..} = do
+  person <- personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping sl
   return person {
        Seal.emailverified    = signatorylinkdeliverymethod == EmailDelivery
      , Seal.fullnameverified = False
@@ -125,8 +138,12 @@ personExFromSignatoryLink inputpath tz sim checkboxMapping sl@SignatoryLink{..} 
      , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationtosignmethod == SMSPinAuthenticationToSign)
      }
 
-fieldsFromSignatory :: forall m. (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => CheckboxImagesMapping -> SignatoryLink -> m [Seal.Field]
-fieldsFromSignatory checkboxMapping SignatoryLink{signatoryfields} =
+fieldsFromSignatory :: forall m. (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m)
+                    => CheckboxImagesMapping
+                    -> RadiobuttonImagesMapping
+                    -> SignatoryLink
+                    -> m [Seal.Field]
+fieldsFromSignatory checkboxMapping radiobuttonMapping SignatoryLink{signatoryfields} =
   silenceJPEGFieldsFromFirstSignature <$> concat <$> mapM makeSealField signatoryfields
   where
     silenceJPEGFieldsToTheEnd [] = []
@@ -144,6 +161,8 @@ fieldsFromSignatory checkboxMapping SignatoryLink{signatoryfields} =
                            ([],Just f) -> (\x -> [x]) <$> fieldJPEGFromSignatureField f
                            (_, Just f) -> mapM (fieldJPEGFromPlacement f) (fieldPlacements  sf)
        SignatoryCheckboxField schf -> return $ map (checkboxJPEG $ schfValue schf) (fieldPlacements  sf)
+       SignatoryRadioGroupField srgf -> return $ zipWith (radiobuttonJPEG $ srgfSelectedValue srgf) (srgfValues srgf) (fieldPlacements sf)
+
        _ -> return $ for (fieldPlacements sf) $ fieldFromPlacement False sf
     fieldFromPlacement greyed sf placement =
       Seal.Field { Seal.value            = fromMaybe "" $ fieldTextValue sf
@@ -161,6 +180,17 @@ fieldsFromSignatory checkboxMapping SignatoryLink{signatoryfields} =
                  , Seal.page             = placementpage placement
                  , Seal.image_w          = placementwrel placement
                  , Seal.image_h          = 0 -- hrel for checkboxes should be set to 0 anyway
+                 , Seal.includeInSummary = False
+                 , Seal.onlyForSummary   = False
+                 , Seal.keyColor         = Nothing
+                 }
+    radiobuttonJPEG selected_value value placement = Seal.FieldJPG
+                 { valueBinary           = getRadiobuttonImage radiobuttonMapping (placementwrel placement) (selected_value == Just value)
+                 , Seal.x                = placementxrel placement
+                 , Seal.y                = placementyrel placement
+                 , Seal.page             = placementpage placement
+                 , Seal.image_w          = placementwrel placement
+                 , Seal.image_h          = 0 -- hrel for radiobuttons should be set to 0 anyway
                  , Seal.includeInSummary = False
                  , Seal.onlyForSummary   = False
                  , Seal.keyColor         = Nothing
@@ -358,6 +388,7 @@ createSealingTextsForDocument document hostpart = do
 
 sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, AWS.AmazonMonad m, MonadBaseControl IO m)
                      => CheckboxImagesMapping
+                     -> RadiobuttonImagesMapping
                      -> String
                      -> Document
                      -> [DocumentEvidenceEvent]
@@ -368,7 +399,7 @@ sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Mo
                      -> String
                      -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument checkboxMapping hostpart document elog offsets eotData content tmppath inputpath outputpath = do
+sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog offsets eotData content tmppath inputpath outputpath = do
   -- Keep only simple events and remove events induced by resealing
   let velog = filter (eventForVerificationPage . evType) $ eventsForLog elog
   -- Form initials from signing parties
@@ -403,19 +434,19 @@ sealSpecFromDocument checkboxMapping hostpart document elog offsets eotData cont
                                , Seal.histaddress = maybe "" show $ evIP4 ev
                                }
 
-  persons <- sequence $ [ personExFromSignatoryLink inputpath (documenttimezonename document) sim checkboxMapping s
+  persons <- sequence $ [ personExFromSignatoryLink inputpath (documenttimezonename document) sim checkboxMapping radiobuttonMapping s
                     | s <- documentsignatorylinks document
                     , signatoryispartner $ s
                 ]
 
-  secretaries <- sequence $ [ personFromSignatory inputpath (documenttimezonename document) sim checkboxMapping $ s
+  secretaries <- sequence $ [ personFromSignatory inputpath (documenttimezonename document) sim checkboxMapping radiobuttonMapping $ s
                     | s <- documentsignatorylinks document
                     , not . signatoryispartner $ s
                 ]
 
   initiator <- if (signatoryispartner authorsiglink)
                 then return Nothing
-                else Just <$> (personFromSignatory inputpath (documenttimezonename document) sim checkboxMapping authorsiglink)
+                else Just <$> (personFromSignatory inputpath (documenttimezonename document) sim checkboxMapping radiobuttonMapping authorsiglink)
 
   let initials = intercalate ", " $ catMaybes
                    [ siInitials <$> Map.lookup (signatorylinkid s) sim
@@ -505,20 +536,22 @@ sealSpecFromDocument checkboxMapping hostpart document elog offsets eotData cont
         }
 
 presealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, AWS.AmazonMonad m, MonadBaseControl IO m)
-                           => CheckboxImagesMapping
-                           -> Document
-                           -> String
-                           -> String
-                           -> m Seal.PreSealSpec
-presealSpecFromDocument checkboxMapping document inputpath outputpath = do
-       fields <- concat <$> mapM (fieldsFromSignatory checkboxMapping) (documentsignatorylinks document)
+                        => CheckboxImagesMapping
+                        -> RadiobuttonImagesMapping
+                        -> Document
+                        -> String
+                        -> String
+                        -> m Seal.PreSealSpec
+presealSpecFromDocument checkboxMapping radiobuttonMapping document inputpath outputpath = do
+       fields <- concat <$> mapM (fieldsFromSignatory checkboxMapping radiobuttonMapping) (documentsignatorylinks document)
        return $ Seal.PreSealSpec
             { Seal.pssInput          = inputpath
             , Seal.pssOutput         = outputpath
             , Seal.pssFields         = fields
             }
 
-sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, AWS.AmazonMonad m) => String -> m ()
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, AWS.AmazonMonad m)
+             => String -> m ()
 sealDocument hostpart = do
   mfile <- fileFromMainFile =<< documentfile <$> theDocument
   case mfile of
@@ -545,6 +578,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     content <- getFileContents file
     liftIO $ BS.writeFile tmpin content
     checkboxMapping <- liftIO $ readCheckboxImagesMapping
+    radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
     elog <- dbQuery $ GetEvidenceLog documentid
     -- Evidence of Time documentation says we collect last 1000 samples
     offsets <- dbQuery $ HC.GetNClockErrorEstimates 1000
@@ -554,7 +588,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
         (return ())
         (systemActor now)
     eotData <- liftBase $ generateEvidenceOfTimeData 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
-    config <- theDocument >>= \d -> sealSpecFromDocument checkboxMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
+    config <- theDocument >>= \d -> sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
 
     let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonSealSpec config
     (code,_stdout,stderr) <- liftIO $ do
@@ -604,7 +638,8 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     content <- getFileContents file
     liftIO $ BS.writeFile tmpin content
     checkboxMapping <- liftIO $ readCheckboxImagesMapping
-    config <- presealSpecFromDocument checkboxMapping document tmpin tmpout
+    radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
+    config <- presealSpecFromDocument checkboxMapping radiobuttonMapping document tmpin tmpout
 
     let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonPreSealSpec config
     (code,_stdout,stderr) <- liftIO $ do
