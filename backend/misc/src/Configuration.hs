@@ -1,5 +1,7 @@
 module Configuration (
-    readConfig
+    ReadConfigOptions(..),
+    readConfig,
+    readConfigEx
   ) where
 
 import Control.Monad.Base
@@ -10,10 +12,27 @@ import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
+import qualified Data.HashMap.Lazy as H
 import qualified Data.Text as Text
 import qualified Data.Yaml as Yaml
 
 import KontraPrelude
+
+readConfig :: forall a m .
+              (Unjson a, Default a, Monad m, MonadBaseControl IO m) =>
+              (String -> m ()) -> FilePath -> m a
+readConfig logger path = readConfigEx logger path def
+
+data ReadConfigOptions = ReadConfigOptions {
+  optReadConfigUncommentKeys :: Bool
+  -- ^ Remove initial underscores from "commented out" keys (useful
+  -- for testing).
+  }
+
+instance Default ReadConfigOptions where
+  def = ReadConfigOptions {
+    optReadConfigUncommentKeys = False
+    }
 
 --
 -- Error handling here:
@@ -22,10 +41,10 @@ import KontraPrelude
 -- 3. When does not look like json and does not readIO: full docs
 -- 4. When unjson has issue, then just info about specific problems
 
-readConfig :: forall a m .
+readConfigEx :: forall a m .
               (Unjson a, Default a, Monad m, MonadBaseControl IO m) =>
-              (String -> m ()) -> FilePath -> m a
-readConfig logger path = do
+              (String -> m ()) -> FilePath -> ReadConfigOptions -> m a
+readConfigEx logger path ReadConfigOptions{..} = do
   logger $ "Reading configuration " ++ path ++ "..."
   bsl' <- either logExceptionAndPrintFullDocs return =<<
           E.try (liftBase (BSL.readFile path))
@@ -34,8 +53,11 @@ readConfig logger path = do
 
 
   res <- do
-      js <- either logYamlParseExceptionAndBlameJsonParser return $
-            Yaml.decodeEither' (BS.concat (BSL.toChunks bsl))
+      js' <- either logYamlParseExceptionAndBlameJsonParser return $
+             Yaml.decodeEither' (BS.concat (BSL.toChunks bsl))
+      let js = if optReadConfigUncommentKeys
+               then removeTopLevelUnderscores js'
+               else js'
       case parse ud js of
         Result value [] -> return value
         Result _ problems -> logProblems problems
@@ -45,6 +67,16 @@ readConfig logger path = do
   where
     ud :: UnjsonDef a
     ud = unjsonDef
+
+    removeTopLevelUnderscores :: Yaml.Value -> Yaml.Value
+    removeTopLevelUnderscores (Yaml.Object hm) = (Yaml.Object hm')
+      where
+        hm' = H.foldlWithKey'
+              (\m k v -> if "_" `Text.isPrefixOf` k
+                         then H.insert (Text.tail k) v m
+                         else H.insert k             v m) H.empty hm
+    removeTopLevelUnderscores v           = v
+
     logStringAndFail :: String -> m g
     logStringAndFail ex = do
       logger $ ex
