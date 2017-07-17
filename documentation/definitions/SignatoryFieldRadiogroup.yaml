@@ -1,0 +1,120 @@
+---
+$schema: "http://json-schema.org/draft-04/schema#"
+title: SignatoryFieldRadiogroup
+description: |
+  A special kind of `SignatoryField` for placing radio button groups on the
+  document.
+
+  **Note:** this field type does not have some of the common `SignatoryField`
+  properties that other fields have.
+type: object
+properties:
+  type:
+    type: string
+    enum:
+      - radiogroup
+  name:
+    type: string
+    description: The name of the radio button group.
+  selected_value:
+    type: string
+    readOnly: true
+    description: |
+      Only available after the signatory has signed.
+      It represents the radio button chosen from `values`.
+  values:
+    type: array
+    items:
+      type: string
+    description: |
+      Each string represents a radio button option.
+
+      The length of `values` should match that of `placements`,
+      each radio button option is matched in-order one-to-one with the
+      placements list.
+  placements:
+    description: |
+      The length of this array should match that of the `values` array, each
+      radio button option is matched in-order one-to-one with the `values` list.
+    type: array
+    items:
+      type: object
+      description: |
+        Please refer to the `SignatoryField` documentation of `placements`
+        these are identical.
+      properties:
+        xrel:
+          type: number
+        yrel:
+          type: number
+        wrel:
+          type: number
+        hrel:
+          type: number
+        fsrel:
+          type: number
+        page:
+          description: The page number for this placement.
+          type: integer
+        tip:
+          type: string
+          enum:
+            - left
+            - right
+        anchors:
+          type: array
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+              index:
+                type: integer
+required:
+  - type
+  - name
+  - values
+  - placements
+example:
+  {
+    "type": "radiogroup",
+    "name": "Radio buttons 1",
+    "selected_value": null,
+    "placements": [
+      {
+        "xrel": 0.07263157894736842,
+        "yrel": 0.12797619047619047,
+        "wrel": 0.014736,
+        "hrel": 0,
+        "fsrel": 0,
+        "page": 1,
+        "tip": "right",
+        "anchors": []
+      },
+      {
+        "xrel": 0.07263157894736842,
+        "yrel": 0.14211309523809523,
+        "wrel": 0.014736,
+        "hrel": 0,
+        "fsrel": 0,
+        "page": 1,
+        "tip": "right",
+        "anchors": []
+      },
+      {
+        "xrel": 0.07157894736842105,
+        "yrel": 0.15773809523809523,
+        "wrel": 0.014736,
+        "hrel": 0,
+        "fsrel": 0,
+        "page": 1,
+        "tip": "right",
+        "anchors": []
+      }
+    ],
+    "values": [
+      "Radio button 1",
+      "Radio button 2",
+      "Radio button 3"
+    ]
+  }
