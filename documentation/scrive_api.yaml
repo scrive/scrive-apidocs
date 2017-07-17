@@ -48,6 +48,7 @@ info:
     | 2017-05-15  | Add missing `company` standard signatory field             |
     | 2017-06-08  | Add `required` field to signatory attachments, optional attachments are now possible |
     | 2017-07-04  | Remove a comment about anchoring that was due to a bug, which has now been fixed |
+    | 2017-07-31  | Add `SignatoryFieldRadiogroup` to the Definitions for the new radio buttons feature |
 
     ## Environments & IP Addresses
 
@@ -870,6 +871,8 @@ definitions:
     $ref: ./definitions/SignatoryFieldSignature.yaml
   SignatoryFieldCheckbox:
     $ref: ./definitions/SignatoryFieldCheckbox.yaml
+  SignatoryFieldRadiogroup:
+    $ref: ./definitions/SignatoryFieldRadiogroup.yaml
   ListFilter:
     $ref: ./definitions/ListFilter.yaml
   ListSorting:
