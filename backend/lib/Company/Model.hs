@@ -13,7 +13,6 @@ module Company.Model (
   , SetCompanyInfo(..)
   , SetCompanyIPAddressMaskList(..)
   , SetCompanyPaymentPlan(..)
-
   , CompanyFilter(..)
   ) where
 

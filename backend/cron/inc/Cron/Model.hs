@@ -30,6 +30,7 @@ data JobType
   | OldLogsRemoval
   | PasswordRemindersEvaluation
   | PurgeOrphanFile
+  | PushPlanhatStats
   | SessionsEvaluation
   | SMSEventsProcessing
   | UserAccountRequestEvaluation
@@ -53,6 +54,7 @@ jobTypeMapper = [
   , (OldLogsRemoval, "old_logs_removal")
   , (PasswordRemindersEvaluation, "password_reminders_evaluation")
   , (PurgeOrphanFile, "purge_orphan_file")
+  , (PushPlanhatStats, "push_planhat_stats")
   , (SessionsEvaluation, "sessions_evaluation")
   , (SMSEventsProcessing, "sms_events_processing")
   , (UserAccountRequestEvaluation, "user_account_request_evaluation")

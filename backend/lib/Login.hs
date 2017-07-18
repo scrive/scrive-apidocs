@@ -27,6 +27,7 @@ import KontraPrelude
 import Log.Identifier
 import Redirect
 import ThirdPartyStats.Core
+import ThirdPartyStats.Planhat
 import User.Email
 import User.History.Model
 import User.Model
@@ -78,15 +79,22 @@ handleLoginPost = do
 
                             case muuser of
                               Just User{userid = uid} -> do
-                                asyncLogEvent "Login" [
-                                  UserIDProp uid,
-                                  IPProp $ ctxipnumber ctx,
-                                  TimeProp $ ctxtime ctx
-                                  ]
-                                asyncLogEvent SetUserProps [
-                                  UserIDProp uid,
-                                  someProp "Last login" $ ctxtime ctx
-                                  ]
+                                now <- currentTime
+                                asyncLogEvent
+                                  SetUserProps
+                                  (simplePlanhatAction "Login" user now)
+                                  EventPlanhat
+                                asyncLogEvent
+                                  "Login"
+                                  [ UserIDProp uid
+                                  , IPProp $ ctxipnumber ctx
+                                  , TimeProp $ ctxtime ctx ]
+                                  EventMixpanel
+                                asyncLogEvent
+                                  SetUserProps
+                                  [ UserIDProp uid
+                                  , someProp "Last login" $ ctxtime ctx ]
+                                  EventMixpanel
                               _ -> return ()
                             if padlogin
                               then do

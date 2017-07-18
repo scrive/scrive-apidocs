@@ -7,6 +7,7 @@ module ThirdPartyStats.Core (
     EventProcessor,
     NumEvents (..),
     EventName (..),
+    EventType (..),
     AsyncEvent,
     someProp,
     numProp,
@@ -90,11 +91,28 @@ numProp = someProp
 stringProp :: PropName -> String -> EventProperty
 stringProp = someProp
 
+-- | Distinguish between the event processor functions to use.
+data EventType
+  = EventMixpanel
+  | EventPlanhat
+  deriving (Eq, Show)
+
+instance Binary EventType where
+  put EventMixpanel = putWord8 0
+  put EventPlanhat  = putWord8 1
+
+  get = do
+    tag <- getWord8
+    case tag of
+      0 -> return EventMixpanel
+      1 -> return EventPlanhat
+      n -> fail $ "Couldn't parse EventType constructor tag: " ++ show n
 
 -- | Makes type signatures on functions involving event names look nicer.
 data EventName
   = SetUserProps
   | NamedEvent String
+  | SetCompanyProps
     deriving (Show, Eq)
 type PropName = String
 
@@ -102,13 +120,15 @@ instance IsString EventName where
   fromString = NamedEvent
 
 instance Binary EventName where
-  put (SetUserProps)          = putWord8 0
-  put (NamedEvent name)       = putWord8 255 >> put name
+  put SetUserProps      = putWord8 0
+  put SetCompanyProps   = putWord8 1
+  put (NamedEvent name) = putWord8 255 >> put name
 
   get = do
       tag <- getWord8
       case tag of
         0   -> return SetUserProps
+        1   -> return SetCompanyProps
         255 -> NamedEvent <$> get
         t   -> fail $ "Unable to parse EventName constructor tag: " ++ show t
 
@@ -159,11 +179,11 @@ instance Binary EventProperty where
 
 
 -- | Data type representing an asynchronous event.
-data AsyncEvent = AsyncEvent EventName [EventProperty] deriving (Show, Eq)
+data AsyncEvent = AsyncEvent EventName [EventProperty] EventType deriving (Show, Eq)
 
 instance Binary AsyncEvent where
-  put (AsyncEvent name props) = put name >> put props
-  get = AsyncEvent <$> get <*> get
+  put (AsyncEvent ename eprops etype) = put ename >> put eprops >> put etype
+  get = AsyncEvent <$> get <*> get <*> get
 
 
 -- | Denotes how many events should be processed.
@@ -172,10 +192,11 @@ data NumEvents = All | NoMoreThan Integer
 
 -- | Indicates how the processing of an event fared.
 data ProcRes
-  = OK            -- ^ Processing succeeded, we're done with this event.
-  | PutBack       -- ^ Processing failed, but may succeed if retried later.
-  | Failed String -- ^ Processing failed permanently, discard event and
-                  --   log the failure.
+  = OK             -- ^ Processing succeeded, we're done with this event.
+  | PutBack        -- ^ Processing failed, but may succeed if retried later.
+  | Failed String  -- ^ Processing failed permanently, discard event and
+                   --   log the failure.
+  | Ignored String -- ^ Processing ignored and regarded as done after logging
 
 type EventProcessor m = (EventName -> [EventProperty] -> m ProcRes)
 
@@ -213,25 +234,31 @@ instance Monad m => Monoid (EventProcessor m) where
 
 -- | Remove a number of events from the queue and process them.
 asyncProcessEvents :: (MonadIO m, MonadLog m, MonadDB m)
-                   => (EventName -> [EventProperty] -> m ProcRes)
-                      -- ^ Event processing function.
+                   => (EventType -> Maybe (EventProcessor m))
+                      -- ^ Event processing function mapper.
                    -> NumEvents
                       -- ^ Max events to process.
                    -> m ()
-asyncProcessEvents process numEvts = do
+asyncProcessEvents getEventProcessor numEvts = do
     (evts, lastEvt) <- fetchEvents
     mapM_ processEvent evts
     deleteEvents lastEvt
   where
-    processEvent (AsyncEvent name props) = do
-        result <- process name props
+    processEvent (AsyncEvent ename eprops etype) = do
+        result <- case (getEventProcessor etype) of
+          Nothing -> return . Ignored $ "No event processor defined"
+          Just process -> process ename eprops
         case result of
-          PutBack -> asyncLogEvent name props
-          Failed msg -> logAttention "Event processing failed" $ object [
-              "event_name" .= show name
-            , "reason" .= msg
-            ]
-          _  | otherwise -> return ()
+          PutBack     -> asyncLogEvent ename eprops etype
+          Failed msg  -> logAttention "Event processing failed" $
+                           object [ "event_name" .= show ename
+                                  , "event_type" .= show etype
+                                  , "reason"     .= msg ]
+          Ignored msg -> logInfo "Event processing ignored " $
+                           object [ "event_name" .= show ename
+                                  , "event_type" .= show etype
+                                  , "reason"     .= msg ]
+          _           -> return ()
 
     decoder (evts, max_seq) (seqnum, evt) = return
         (decode (BL.fromChunks [evt]) : evts, max seqnum max_seq)
@@ -262,17 +289,22 @@ asyncProcessEvents process numEvts = do
 --
 --   "Special" properties should be identified using the proper `EventProperty`
 --   constructor, whereas others may be arbitrarily named using `someProp`.
-asyncLogEvent :: (MonadDB m) => EventName -> [EventProperty] -> m ()
-asyncLogEvent name props = do
+asyncLogEvent :: (MonadDB m) => EventName -> [EventProperty] -> EventType -> m ()
+asyncLogEvent ename eprops etype = do
   runQuery_ $ sqlInsert "async_event_queue" $ do
-    sqlSet "event" $ mkBinary $ AsyncEvent name props
+    sqlSet "event" $ mkBinary $ AsyncEvent ename eprops etype
   where
     mkBinary = B.concat . BL.toChunks . encode
 
 instance Arbitrary EventName where
   arbitrary = frequency [
       (1, return SetUserProps),
+      (2, return SetCompanyProps),
       (8, NamedEvent <$> arbitrary)]
+
+instance Arbitrary EventType where
+  arbitrary = oneof [ return EventMixpanel, return EventPlanhat ]
+
 
 instance Arbitrary PropValue where
   arbitrary = oneof [
@@ -302,4 +334,4 @@ instance Arbitrary EventProperty where
         return $! Email $! concat [acct, "@", domain, ".", toplevel]
 
 instance Arbitrary AsyncEvent where
-  arbitrary = AsyncEvent <$> arbitrary <*> arbitrary
+  arbitrary = AsyncEvent <$> arbitrary <*> arbitrary <*> arbitrary

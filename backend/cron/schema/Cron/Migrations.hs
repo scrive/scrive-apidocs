@@ -2,6 +2,7 @@ module Cron.Migrations (
     removeRecurlySynchronizationFromCronJobs
   , removeFindAndDoPostDocumentClosedActions
   , addInvoicingJob
+  , addPlanhatJob
 ) where
 
 import Control.Monad.Catch
@@ -9,6 +10,13 @@ import Control.Monad.Catch
 import Cron.Tables
 import DB
 import KontraPrelude
+
+addPlanhatJob :: (MonadDB m, MonadThrow m) => Migration m
+addPlanhatJob = Migration {
+    mgrTableName = tblName tableCronJobs
+  , mgrFrom = 7
+  , mgrAction = StandardMigration $ runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('push_planhat_stats', to_timestamp(0))"
+  }
 
 addInvoicingJob :: (MonadDB m, MonadThrow m) => Migration m
 addInvoicingJob = Migration {

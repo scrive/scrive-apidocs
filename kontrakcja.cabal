@@ -327,6 +327,10 @@ Library
                  , Partner.Partner
                  , Partner.PartnerID
                  , Partner.Tables
+                 , Planhat
+                 , Planhat.Communication
+                 , Planhat.Config
+                 , Planhat.Reporting
                  , Purging.Files
                  , Redirect
                  , Routing
@@ -361,10 +365,14 @@ Library
                  , Theme.View
                  , ThirdPartyStats.Core
                  , ThirdPartyStats.Mixpanel
+                 , ThirdPartyStats.Planhat
                  , ThirdPartyStats.Tables
                  , ThirdPartyStats.Utils
                  , User.API
                  , User.Action
+                 , User.Data.SignupMethod
+                 , User.Data.Stats
+                 , User.Data.User
                  , User.CallbackScheme.Model
                  , User.CallbackScheme.Tables
                  , User.Email
@@ -372,6 +380,10 @@ Library
                  , User.History.Tables
                  , User.Lang
                  , User.Model
+                 , User.Model.Filter
+                 , User.Model.OrderBy
+                 , User.Model.Query
+                 , User.Model.Update
                  , User.Password
                  , User.Tables
                  , User.UserControl
@@ -422,6 +434,7 @@ Library
                , base64-bytestring
                , binary
                , bytestring
+               , case-insensitive
                , cond
                , conduit
                , consumers
@@ -446,6 +459,9 @@ Library
                , hashable
                , hedis
                , hpqtypes
+               , http-client
+               , http-conduit
+               , http-client-tls
                , http-types
                , iconv
                , invariant
@@ -613,6 +629,9 @@ Executable cron
                , hpqtypes-extras
                , hedis
                , log-base
+               , http-client
+               , http-client-tls
+               , http-conduit
                , monad-control
                , mtl
                , text

@@ -39,6 +39,8 @@ processMixpanelEvent token (NamedEvent name) props = do
       HTTPError reason     -> return (Failed reason)
       MixpanelError reason -> return (Failed reason)
       Success              -> return OK
+processMixpanelEvent _token SetCompanyProps _props = do
+  return . Ignored $ "no handler registered"
 
 -- | Convert a generic async event property to a Mixpanel property.
 mixpanelProperty :: EventProperty -> Mixpanel.Property
