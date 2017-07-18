@@ -5,6 +5,7 @@ var BackboneMixin = require("../../common/backbone_mixin");
 var Button = require("../../common/button");
 var TransitionMixin = require("./transition_mixin");
 var TaskMixin = require("../navigation/task_mixin");
+var SignFinish = require("./signfinishview");
 var SignSign = require("./signsignview");
 var SignReject = require("./signrejectview");
 var SignSigning = require("./signsigningview");
@@ -87,11 +88,19 @@ var Task = require("../navigation/task");
         return "eid";
       }
 
+      if (signatory.hasPlacedObligatorySignatures()) {
+        return "finish";
+      }
+
       return "sign";
     },
 
     isValidStep: function (step) {
-      var steps = ["sign", "signing", "process", "eid", "eid-process", "pin", "input-pin", "reject"];
+      var steps = [
+        "sign", "finish", "signing", "process", "eid", "eid-process", "pin",
+        "input-pin", "reject"
+      ];
+
       var valid = steps.indexOf(step) > -1;
 
       if (!valid) {
@@ -151,15 +160,12 @@ var Task = require("../navigation/task");
 
     shouldHaveOverlay: function (step) {
       step = step || this.state.step;
-      var noOverlayStep = ["sign", "pin", "eid"];
+      var noOverlayStep = ["sign", "finish", "pin", "eid"];
       return !(noOverlayStep.indexOf(step) > -1);
     },
 
     canSignDocument: function () {
-      var model = this.props.model;
-      var signatoryHasPlacedSignatures = model.document().currentSignatory().hasPlacedSignatures();
-
-      return this.shouldHaveOverlay() || model.canSignDocument();
+      return this.shouldHaveOverlay() || this.props.model.canSignDocument();
     },
 
     handleReject: function (text) {
@@ -414,6 +420,16 @@ var Task = require("../navigation/task");
               model={this.props.model}
               canSign={this.canSignDocument()}
               onSign={this.handleNext}
+              onReject={this.handleSetStep("reject")}
+            />
+          }
+          {/* if */ this.isOnStep("finish") &&
+            <SignFinish
+              model={this.props.model}
+              title={doc.title()}
+              name={sig.name()}
+              canSign={this.canSignDocument()}
+              onSign={this.handleSign}
               onReject={this.handleSetStep("reject")}
             />
           }

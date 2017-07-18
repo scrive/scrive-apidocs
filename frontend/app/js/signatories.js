@@ -459,6 +459,11 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
             return signature.hasPlacements();
         });
     },
+    hasPlacedObligatorySignatures: function() {
+        return _.any(this.signatures(), function(signature) {
+            return signature.obligatory() && signature.hasPlacements();
+        });
+    },
     hasPlacedRadioGroups: function() {
         return (this.fieldsByType("radiogroup").length > 0);
     },

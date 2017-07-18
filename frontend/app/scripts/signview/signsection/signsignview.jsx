@@ -58,7 +58,6 @@ var classNames = require("classnames");
       var model = this.props.model;
       var doc = model.document();
       var sig = doc.currentSignatory();
-      var hasPlacedSigs = sig.hasPlacedSignatures();
 
       var canHaveRejectButton = model.hasRejectOption();
 
