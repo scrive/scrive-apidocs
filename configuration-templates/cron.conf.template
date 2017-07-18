@@ -52,7 +52,7 @@
          { "user"     : "foo"
          , "password" : "bar"
          , "dir"      : "/remote/directory/to/use"
-         , "host"     : "foo.bar"                  }
+         , "host"     : "foo.bar"                  },
      "_planhat":
           { "base_url" : "Base Planhat URL for API calls"
           , "tenant_id": "TenantID Token"}
