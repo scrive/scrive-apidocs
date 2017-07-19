@@ -269,6 +269,7 @@ data SignatoryEmailField = EmailField {
   , sefValue                  :: !String
   , sefObligatory             :: !Bool
   , sefShouldBeFilledBySender :: !Bool
+  , sefEditableBySignatory    :: !Bool
   , sefPlacements             :: ![FieldPlacement]
 } deriving (Show, Typeable)
 
@@ -277,6 +278,7 @@ data SignatoryMobileField = MobileField {
   , smfValue                  :: !String
   , smfObligatory             :: !Bool
   , smfShouldBeFilledBySender :: !Bool
+  , smfEditableBySignatory    :: !Bool
   , smfPlacements             :: ![FieldPlacement]
 } deriving (Show, Typeable)
 
@@ -339,6 +341,7 @@ signatoryFieldsSelectors = [
   , "signatory_link_fields.value_file_id"
   , "signatory_link_fields.obligatory"
   , "signatory_link_fields.should_be_filled_by_author"
+  , "signatory_link_fields.editable_by_signatory"
   , "ARRAY(" <> placements <> ")"
   , "signatory_link_fields.radio_button_group_values"
   ]
@@ -347,13 +350,14 @@ signatoryFieldsSelectors = [
 
     anchors = "SELECT (text, index)::placement_anchor FROM placement_anchors WHERE placement_anchors.field_placement_id = field_placements.id ORDER BY placement_anchors.id"
 
-type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe Bool, Maybe FileID, Bool, Bool, CompositeArray1 FieldPlacement, Maybe (Array1 String))
+
+type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe Bool, Maybe FileID, Bool, Bool, Maybe Bool, CompositeArray1 FieldPlacement, Maybe (Array1 String))
 
 instance PQFormat SignatoryField where
   pqFormat = const "%signatory_field"
 
 instance CompositeFromSQL SignatoryField where
-  toComposite (sfid, ftype, mname_order, custom_name, is_author_filled, mvalue_text, mvalue_bool, mvalue_file, obligatory, should_be_filled_by_sender, CompositeArray1 placements, mradio_button_group_values) =
+  toComposite (sfid, ftype, mname_order, custom_name, is_author_filled, mvalue_text, mvalue_bool, mvalue_file, obligatory, should_be_filled_by_sender, meditable_by_signatory, CompositeArray1 placements, mradio_button_group_values) =
     case ftype of
       NameFT -> SignatoryNameField $ NameField {
           snfID                     = sfid
@@ -389,6 +393,7 @@ instance CompositeFromSQL SignatoryField where
         , sefValue                  = fromMaybe ($unexpectedError "Email field has NULL as value_text") mvalue_text
         , sefObligatory             = obligatory
         , sefShouldBeFilledBySender = should_be_filled_by_sender
+        , sefEditableBySignatory    = fromMaybe ($unexpectedError "Email field has NULL as editable_by_signatory") meditable_by_signatory
         , sefPlacements             = placements
       }
       MobileFT -> SignatoryMobileField $ MobileField {
@@ -396,6 +401,7 @@ instance CompositeFromSQL SignatoryField where
         , smfValue                  = fromMaybe ($unexpectedError "Mobile field has NULL as value_text") mvalue_text
         , smfObligatory             = obligatory
         , smfShouldBeFilledBySender = should_be_filled_by_sender
+        , smfEditableBySignatory    = fromMaybe ($unexpectedError "Mobile field has NULL as editable_by_signatory") meditable_by_signatory
         , smfPlacements             = placements
       }
       TextFT -> SignatoryTextField $ TextField {

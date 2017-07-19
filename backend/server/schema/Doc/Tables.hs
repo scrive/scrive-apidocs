@@ -395,7 +395,7 @@ ctPlacementAnchor = CompositeType {
 tableSignatoryLinkFields :: Table
 tableSignatoryLinkFields = tblTable {
     tblName = "signatory_link_fields"
-  , tblVersion = 13
+  , tblVersion = 14
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
@@ -409,6 +409,7 @@ tableSignatoryLinkFields = tblTable {
     , tblColumn { colName = "value_bool", colType = BoolT }
     , tblColumn { colName = "value_file_id", colType = BigIntT }
     , tblColumn { colName = "radio_button_group_values", colType = ArrayT TextT }
+   ,  tblColumn { colName = "editable_by_signatory", colType = BoolT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [
@@ -427,6 +428,9 @@ tableSignatoryLinkFields = tblTable {
         , Check "check_signatory_link_fields_radio_buttons_are_well_defined" $
             "type = 11 AND name_order IS NULL AND value_bool IS NULL AND value_file_id IS NULL AND radio_button_group_values IS NOT NULL"
             <+> "OR type <> 11"
+        , Check "check_signatory_link_fields_editable_by_signatory__well_defined" $
+            "(type = ANY (ARRAY[6, 10])) AND editable_by_signatory IS NOT NULL"
+            <+> "OR (type <> ALL (ARRAY[6, 10])) AND editable_by_signatory IS NULL"
     ]
   , tblForeignKeys = [
         (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
@@ -455,6 +459,7 @@ ctSignatoryField = CompositeType {
   , CompositeColumn { ccName = "value_file_id", ccType = BigIntT }
   , CompositeColumn { ccName = "obligatory", ccType = BoolT }
   , CompositeColumn { ccName = "should_be_filled_by_author", ccType = BoolT }
+  , CompositeColumn { ccName = "editable_by_signatory", ccType = BoolT }
   , CompositeColumn { ccName = "placements", ccType = ArrayT $ CustomT "field_placement" }
   , CompositeColumn { ccName = "radio_button_group_values", ccType = ArrayT TextT }
   ]

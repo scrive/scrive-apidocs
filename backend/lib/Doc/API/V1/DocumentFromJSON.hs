@@ -267,6 +267,7 @@ instance FromJSValueWithUpdate SignatoryEmailField where
                 , sefValue = strip v
                 , sefObligatory = obligatory
                 , sefShouldBeFilledBySender = filledbysender
+                , sefEditableBySignatory = False
                 , sefPlacements = placements
               }
           _ -> return Nothing
@@ -287,6 +288,7 @@ instance FromJSValueWithUpdate SignatoryMobileField where
                 , smfValue = v
                 , smfObligatory = obligatory
                 , smfShouldBeFilledBySender = filledbysender
+                , smfEditableBySignatory = False
                 , smfPlacements = placements
               }
           _ -> return Nothing

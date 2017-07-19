@@ -198,8 +198,9 @@ docApiV2SigSendSmsPin did slid = logDocumentAndSignatory did slid . api $ do
     when (signatorylinkauthenticationtosignmethod sl /= SMSPinAuthenticationToSign) $ do
       apiError $ signatoryStateError "Signatory authentication method to sign is not SMS PIN"
     -- Parameters
+    let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
     let slidMobile = getMobile sl
-    mobile <- if not $ null slidMobile
+    mobile <- if (not (null slidMobile) && not mobileEditableBySignatory)
                 then case asValidPhoneForSMS slidMobile of
                           Good v -> return v
                           _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"

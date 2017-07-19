@@ -135,6 +135,7 @@ handleNewDocument = withUser $ \user -> do
                 , sefValue                  = ""
                 , sefObligatory             = True
                 , sefShouldBeFilledBySender = False
+                , sefEditableBySignatory    = False
                 , sefPlacements             = []
               }
             , SignatoryMobileField $ MobileField {
@@ -142,6 +143,7 @@ handleNewDocument = withUser $ \user -> do
                 , smfValue                  = ""
                 , smfObligatory             = False
                 , smfShouldBeFilledBySender = False
+                , smfEditableBySignatory    = False
                 , smfPlacements             = []
               }
             , SignatoryCompanyField $ CompanyField {

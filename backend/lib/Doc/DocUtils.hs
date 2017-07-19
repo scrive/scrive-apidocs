@@ -128,6 +128,7 @@ signatoryFieldsFromUser user = do
             , sefValue                  = getEmail user
             , sefObligatory             = True
             , sefShouldBeFilledBySender = True
+            , sefEditableBySignatory    = False
             , sefPlacements             = []
           }
          , SignatoryCompanyField $ CompanyField {
@@ -157,6 +158,7 @@ signatoryFieldsFromUser user = do
                 , smfValue                  = getMobile user
                 , smfObligatory             = False
                 , smfShouldBeFilledBySender = False
+                , smfEditableBySignatory    = False
                 , smfPlacements             = []
               }
              ]

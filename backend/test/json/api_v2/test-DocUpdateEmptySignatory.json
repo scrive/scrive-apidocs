@@ -13,6 +13,7 @@
           "value": "test@scrive.com",
           "is_obligatory": true,
           "should_be_filled_by_sender": false,
+          "editable_by_signatory": false,
           "placements": []
         },
         {

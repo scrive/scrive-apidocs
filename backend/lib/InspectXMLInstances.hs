@@ -65,6 +65,7 @@ instance InspectXML SignatoryField where
     show (fieldIdentity field) ++ " " ++ value ++ ", " ++
     (if fieldIsObligatory field then "obligatory, " else "optional, ") ++
     (if fieldShouldBeFilledBySender field then "filled by sender, " else "") ++
+    (if (fieldEditableBySignatory field == Just True) then "editable by signatory, " else "") ++
     "<br/>placements: " ++ inspectXML (fieldPlacements field)
     where
       value = case (fieldType field) of

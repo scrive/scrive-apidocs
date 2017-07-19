@@ -72,6 +72,11 @@
           "should_be_filled_by_sender": true
         },
         {
+          "type": "mobile",
+          "value": "+444",
+          "editable_by_signatory": true
+        },
+        {
           "type": "text",
           "name": "#☭ҖTEXT_FIELD",
           "value": "#☭ҖEMAIL",

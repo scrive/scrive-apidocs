@@ -90,10 +90,11 @@ unjsonCompanyNumberField = pure (\v  ob sfbs ps -> CompanyNumberField (unsafeSig
 
 
 unjsonEmailField :: Ap (FieldDef SignatoryField) SignatoryEmailField
-unjsonEmailField = pure (\v  ob sfbs ps -> EmailField (unsafeSignatoryFieldID 0) v ob sfbs ps)
+unjsonEmailField = pure (\v  ob sfbs ebs ps -> EmailField (unsafeSignatoryFieldID 0) v ob sfbs ebs ps)
   <*> fieldDef "value" "" (unsafeFromEmailField sefValue) "Value of the field"
   <*> fieldDef "is_obligatory" True (unsafeFromEmailField sefObligatory) "If is oligatory"
   <*> fieldDef "should_be_filled_by_sender" False (unsafeFromEmailField sefShouldBeFilledBySender) "If should be filled by sender"
+  <*> fieldDef "editable_by_signatory" False (unsafeFromEmailField sefEditableBySignatory) "If is editable by signatory even if filled in"
   <*> fieldDefBy "placements" [] (unsafeFromEmailField sefPlacements) "Placements" (arrayOf unsonFieldPlacement)
   where
     unsafeFromEmailField :: (SignatoryEmailField -> a) -> SignatoryField -> a
@@ -101,11 +102,13 @@ unjsonEmailField = pure (\v  ob sfbs ps -> EmailField (unsafeSignatoryFieldID 0)
     unsafeFromEmailField _ _ = $unexpectedError "unsafeFromEmailField"
 
 unjsonMobileField :: Ap (FieldDef SignatoryField) SignatoryMobileField
-unjsonMobileField = pure (\v ob sfbs ps -> MobileField (unsafeSignatoryFieldID 0) v ob sfbs ps)
+unjsonMobileField = pure (\v ob sfbs ebs  ps -> MobileField (unsafeSignatoryFieldID 0) v ob sfbs ebs ps)
   <*> fieldDef "value" "" (unsafeFromMobileField smfValue) "Value of the field"
   <*> fieldDef "is_obligatory" True (unsafeFromMobileField smfObligatory) "If is oligatory"
   <*> fieldDef "should_be_filled_by_sender" False (unsafeFromMobileField smfShouldBeFilledBySender) "If should be filled by sender"
+  <*> fieldDef "editable_by_signatory" False (unsafeFromMobileField smfEditableBySignatory) "If is editable by signatory even if filled in"
   <*> fieldDefBy "placements" [] (unsafeFromMobileField smfPlacements) "Placements" (arrayOf unsonFieldPlacement)
+
 
   where
     unsafeFromMobileField :: (SignatoryMobileField -> a) -> SignatoryField -> a

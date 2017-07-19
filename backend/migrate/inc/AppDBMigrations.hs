@@ -49,4 +49,5 @@ kontraMigrations = [
   , signatoryLinkFieldsAddRadioGroupValues
   , voidTableAsyncEventQueue
   , addPlanhatJob
+  , addEditableBySignatoryFlag
   ]

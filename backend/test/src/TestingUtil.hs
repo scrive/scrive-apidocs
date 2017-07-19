@@ -383,6 +383,7 @@ instance Arbitrary SignatoryEmailField where
        , sefValue = v
        , sefObligatory = True
        , sefShouldBeFilledBySender = False
+       , sefEditableBySignatory    = False
        , sefPlacements = p
     }
 instance Arbitrary SignatoryCompanyField where
@@ -1021,6 +1022,7 @@ fieldForTests EmailFI v =  SignatoryEmailField $ EmailField {
     , sefValue                  = v
     , sefObligatory             = True
     , sefShouldBeFilledBySender = False
+    , sefEditableBySignatory    = False
     , sefPlacements             = []
   }
 fieldForTests MobileFI v =  SignatoryMobileField $ MobileField {
@@ -1028,6 +1030,7 @@ fieldForTests MobileFI v =  SignatoryMobileField $ MobileField {
     , smfValue                  = v
     , smfObligatory             = True
     , smfShouldBeFilledBySender = False
+    , smfEditableBySignatory    = False
     , smfPlacements             = []
   }
 fieldForTests (TextFI l) v = SignatoryTextField $ TextField {

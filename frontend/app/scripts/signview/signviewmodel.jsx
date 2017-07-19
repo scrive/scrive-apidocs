@@ -155,7 +155,21 @@ var Track = require("../common/track");
       return this.askForName()
           || this.askForEmail()
           || this.askForSSNIfNotEID()
-          || this.askForPhoneIfNotPin();
+          || this.askForPhoneIfNotPin()
+          || this.hasExtraEmailInput()
+          || this.hasExtraMobileInput();
+    },
+
+    hasExtraEmailInput: function () {
+      var signatory = this.document().currentSignatory();
+      var field = signatory.emailField();
+      return field != undefined && !field.hasPlacements() && field.editablebysignatory();
+    },
+
+    hasExtraMobileInput: function () {
+      var signatory = this.document().currentSignatory();
+      var field = signatory.mobileField();
+      return field != undefined && !field.hasPlacements() && field.editablebysignatory();
     },
 
     askForName: function () {

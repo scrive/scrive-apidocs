@@ -76,6 +76,7 @@ emptySignatoryFields = [
       , sefValue                  = ""
       , sefObligatory             = True
       , sefShouldBeFilledBySender = True
+      , sefEditableBySignatory    = False
       , sefPlacements             = []
     }
   ]

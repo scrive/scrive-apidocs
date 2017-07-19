@@ -130,6 +130,7 @@ mergeAuthorDetails sigs nsigs =
               sefValue = a,
               sefPlacements =[],
               sefObligatory = True,
+              sefEditableBySignatory = False,
               sefShouldBeFilledBySender = False
             }]
             replaceEmail a ((SignatoryEmailField ef):fs) = ((SignatoryEmailField $ ef {sefValue = a}):fs)

@@ -6,6 +6,7 @@ module Doc.Migrations (
   , normalizeCheckboxesFSRel
   , addRequiredFlagToSignatoryAttachment
   , signatoryLinkFieldsAddRadioGroupValues
+  , addEditableBySignatoryFlag
 ) where
 
 import Data.Int
@@ -130,3 +131,24 @@ signatoryLinkFieldsAddRadioGroupValues = Migration {
             <+> "OR type <> 11"
         ]
   }
+
+addEditableBySignatoryFlag :: MonadDB m  => Migration m
+addEditableBySignatoryFlag = Migration {
+      mgrTableName = tblName tableSignatoryLinkFields
+    , mgrFrom = 13
+    , mgrAction = StandardMigration $ do
+        runQuery_ $ sqlAlterTable "signatory_link_fields" [
+          sqlAddColumn tblColumn { colName = "editable_by_signatory", colType = BoolT}
+          ]
+
+        runQuery_ . sqlUpdate "signatory_link_fields" $ do
+          sqlSet "editable_by_signatory" False
+          sqlWhere "type = 6 OR type = 10"
+
+        runQuery_ $ sqlAlterTable "signatory_link_fields"  $ [ sqlAddCheck $
+          Check "check_signatory_link_fields_editable_by_signatory__well_defined" $
+            "(type = ANY (ARRAY[6, 10])) AND editable_by_signatory IS NOT NULL"
+            <+> "OR (type <> ALL (ARRAY[6, 10])) AND editable_by_signatory IS NULL"
+          ]
+
+    }

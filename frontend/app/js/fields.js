@@ -25,6 +25,7 @@ var Field = exports.Field = Backbone.Model.extend({
         placements : [],
         is_obligatory : true,
         should_be_filled_by_sender : false,
+        editable_by_signatory: false,
         hasChanged: false,
         radio_button_values: [],
         next_radio_button_values: []
@@ -101,6 +102,9 @@ var Field = exports.Field = Backbone.Model.extend({
     setObligatoryAndShouldBeFilledBySender : function(obl,sbs) {
       this.set({"is_obligatory" : obl, "should_be_filled_by_sender": sbs});
     },
+    editablebysignatory : function() {
+        return this.get("editable_by_signatory");
+    },
     setValue : function(value, options) {
         this.set({ hasChanged: true }, { silent: true });
         this.set({"value" : value}, options);
@@ -119,7 +123,7 @@ var Field = exports.Field = Backbone.Model.extend({
       return this.signatory() && this.signatory().document() && this.signatory().document().pending();
     },
     isClosed : function() {
-        return this.isInPendingDocument() && this.get("hadValueWhenCreated");
+        return this.isInPendingDocument() && (this.get("hadValueWhenCreated") && !this.editablebysignatory());
     },
     hasDataForSigning: function() {
         if (this.isInPendingDocument() && this.isOptionalUncheckedCheckbox()) {
@@ -497,6 +501,9 @@ var Field = exports.Field = Backbone.Model.extend({
         , should_be_filled_by_sender : this.shouldbefilledbysender()
       };
 
+      if (this.isEmail() || this.isMobile) {
+        result["editable_by_signatory"] = this.editablebysignatory();
+      }
       if (this.isRadioGroup()) {
         result["values"] = (
           this.areRadioButtonValuesUnique() ? this.radioButtonValues() : this.get("radio_button_values")

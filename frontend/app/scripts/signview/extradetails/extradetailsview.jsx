@@ -91,9 +91,9 @@ var classNames = require("classnames");
 
       this.setState({
         askForName: signview.askForName(),
-        askForEmail: signview.askForEmail(),
+        askForEmail: signview.askForEmail() || signview.hasExtraEmailInput(),
         askForSSN: signview.askForSSNIfNotEID(),
-        askForPhone: signview.askForPhoneIfNotPin()
+        askForPhone: signview.askForPhoneIfNotPin() || signview.hasExtraMobileInput()
       });
     },
 

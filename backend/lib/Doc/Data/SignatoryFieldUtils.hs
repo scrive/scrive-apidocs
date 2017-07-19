@@ -10,6 +10,7 @@ module Doc.Data.SignatoryFieldUtils (
     , fieldBoolValue
     , fieldIsObligatory
     , fieldShouldBeFilledBySender
+    , fieldEditableBySignatory
     , fieldPlacements
     , fieldID
     , fieldRadioGroupValues
@@ -94,6 +95,11 @@ fieldShouldBeFilledBySender (SignatoryTextField f)           = stfShouldBeFilled
 fieldShouldBeFilledBySender (SignatoryCheckboxField f)       = schfShouldBeFilledBySender f
 fieldShouldBeFilledBySender (SignatorySignatureField f)      = ssfShouldBeFilledBySender f
 fieldShouldBeFilledBySender (SignatoryRadioGroupField _)     = False
+
+fieldEditableBySignatory :: SignatoryField -> Maybe Bool
+fieldEditableBySignatory (SignatoryEmailField f)    = Just $ sefEditableBySignatory f
+fieldEditableBySignatory (SignatoryMobileField f)   = Just $ smfEditableBySignatory f
+fieldEditableBySignatory _                          = Nothing
 
 fieldPlacements :: SignatoryField -> [FieldPlacement]
 fieldPlacements (SignatoryNameField f)           = snfPlacements f

@@ -201,6 +201,7 @@ insertSignatoryLinkFields xs = do
     sqlSetList "obligatory" $ map fieldIsObligatory fields
     sqlSetList "should_be_filled_by_author" $ map fieldShouldBeFilledBySender fields
     sqlSetList "radio_button_group_values" $ map (fmap Array1 . fieldRadioGroupValues) fields
+    sqlSetList "editable_by_signatory" $ map fieldEditableBySignatory fields
     sqlResult "id"
   insertFieldPlacements
     . concat
@@ -643,6 +644,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
             sqlSet "obligatory" False
             sqlSet "value_text" newPhone
             sqlSet "type" MobileFT
+            sqlSet "editable_by_signatory" $ False
           Just _ -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
             sqlSet "value_text" $ fromMaybe oldPhone mPhone
             sqlWhereEq "signatory_link_id" slid
@@ -769,6 +771,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
                sqlSet "signatory_link_id" slid
                sqlSet "value_text" $ fromMaybe "" mPhone
                sqlSet "type" MobileFT
+               sqlSet "editable_by_signatory" $ False
         -- Add an EvidenceLog event if the value changed
         when (newPhone /= oldPhone) $ do
           sl' <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid Nothing
@@ -1578,9 +1581,12 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                    sqlWhereEq "type" $ fieldTypeFromFieldIdentity fieldIdent
                    sqlWhereAny
                        [ do
-                           sqlWhereEq "value_text" (""::String) -- Note: if we allow values to be overwritten, the evidence events need to be adjusted to reflect the old value.
+                           sqlWhereEq "value_text" (""::String)
                            sqlWhereIn "type" [TextFT, NameFT ,EmailFT,CompanyFT,PersonalNumberFT,PersonalNumberFT,CompanyNumberFT, MobileFT]
                        , sqlWhereIn "type" [CheckboxFT, SignatureFT, RadioGroupFT]
+                       , do
+                           sqlWhereIn "type" [EmailFT, MobileFT]
+                           sqlWhereEq "editable_by_signatory" True
                        ]
                    sqlWhereExists $ sqlSelect "documents" $ do
                      sqlWhere "signatory_links.id = signatory_link_id"

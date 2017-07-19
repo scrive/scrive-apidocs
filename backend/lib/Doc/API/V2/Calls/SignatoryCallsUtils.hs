@@ -54,7 +54,8 @@ checkAuthenticationToSignMethodAndValue slid = do
               requestParameterInvalid "authentication_value" "value for personal number does not match"
         SMSPinAuthenticationToSign -> do
           authValue <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
-          if (authValue == getMobile siglink || null (getMobile siglink))
+          let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields siglink))
+          if (authValue == getMobile siglink || null (getMobile siglink) || mobileEditableBySignatory)
             then return ()
             else apiError $
               requestParameterInvalid "authentication_value" "value for mobile number does not match"
@@ -109,8 +110,10 @@ fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do
 
 checkSignatoryPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> String -> m Bool
 checkSignatoryPin slid (SignatoryFieldsValuesForSigning fields) pin = do
-  slidMobile <- getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
-  mobile <- case (not $ null slidMobile, lookup MobileFI fields) of
+  sl <- fromJust . getSigLinkFor slid <$> theDocument
+  let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
+  let slidMobile = getMobile sl
+  mobile <- case (not (null slidMobile) && not mobileEditableBySignatory , lookup MobileFI fields) of
     (True, _) -> return slidMobile
     (False, Just (StringFTV v)) -> return v
     (False, _) -> apiError $ requestParameterInvalid "fields"
