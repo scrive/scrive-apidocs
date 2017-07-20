@@ -1,3 +1,9 @@
+{-# LANGUAGE CPP #-}
+
+#ifndef MIN_VERSION_Cabal
+#define MIN_VERSION_Cabal(x,y,z) 0
+#endif
+
 module Shake.Cabal (CabalFile(packageId, allExtensions), parseCabalFile
                    ,allComponentNames
                    ,libExeComponentNames, testComponentNames, benchComponentNames
@@ -15,11 +21,23 @@ import           Distribution.PackageDescription               hiding
 import qualified Distribution.PackageDescription               as PkgDesc
 import           Distribution.PackageDescription.Configuration
 import           Distribution.PackageDescription.Parse
+#if MIN_VERSION_Cabal(2,0,0)
+import           Distribution.Types.UnqualComponentName
+#endif
 import           Distribution.Text                             (display)
-import           Distribution.Verbosity                        (normal)
+import           Distribution.Verbosity
 import           Language.Haskell.Extension
 
 import Shake.Utils
+
+#if !MIN_VERSION_Cabal(2,0,0)
+
+unUnqualComponentName :: String -> String
+unUnqualComponentName = id
+
+readGenericPackageDescription :: Verbosity -> FilePath -> IO GenericPackageDescription
+readGenericPackageDescription = readPackageDescription
+#endif
 
 -- | A component name -> list of hs-source-dirs map.
 type HsSourceDirsMap = M.Map String [FilePath]
@@ -42,14 +60,17 @@ data CabalFile = CabalFile {
 -- | Parse a .cabal file.
 parseCabalFile :: FilePath -> IO CabalFile
 parseCabalFile cabalFile = do
-  pkgDesc <- flattenPackageDescription <$> readPackageDescription normal cabalFile
+  pkgDesc <- flattenPackageDescription <$>
+             readGenericPackageDescription normal cabalFile
   let libExeBuildInfos =  [("", libBuildInfo $ lib)
                           | lib <- maybeToList $ library pkgDesc ]
-                       ++ [(exeName exe, buildInfo exe)
+                       ++ [(unUnqualComponentName $ exeName exe, buildInfo exe)
                           | exe <- executables pkgDesc ]
-      testBuildInfos   =  [(testName test, testBuildInfo test)
+      testBuildInfos   =  [(unUnqualComponentName $ testName test
+                           , testBuildInfo test)
                           | test <- testSuites pkgDesc]
-      benchBuildInfos  =  [(benchmarkName bench, benchmarkBuildInfo bench)
+      benchBuildInfos  =  [(unUnqualComponentName $ benchmarkName bench
+                           , benchmarkBuildInfo bench)
                           | bench <- benchmarks pkgDesc]
       srcDirs bis      =  M.fromList [(name, ordNub . hsSourceDirs $ bi)
                                      | (name, bi) <- bis]
