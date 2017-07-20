@@ -44,6 +44,7 @@ import Log.Model
 import Log.Utils
 import Mails.Events
 import MinutesTime
+import Monitoring
 import Planhat
 import Purging.Files
 import Session.Data
@@ -79,6 +80,9 @@ main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   cronConf <- readConfig putStrLn config
+  case monitoringConf cronConf of
+    Just conf -> void $ startMonitoringServer conf
+    Nothing   -> return ()
   rng <- newCryptoRNGState
 
   logRunner <- mkLogRunner "cron" (logConfig cronConf) rng

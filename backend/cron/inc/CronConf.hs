@@ -14,31 +14,32 @@ import GuardTime (GuardTimeConf(..))
 import HostClock.System (defaultNtpServers)
 import KontraPrelude
 import Log.Configuration
+import Monitoring
 import Planhat
 import Salesforce.Conf
 import SFTPConfig
 
 -- | Cron configuration: things like AWS, Postgres and Redis, NTP servers, etc.
 data CronConf = CronConf {
-    amazonConfig       :: Maybe AmazonConfig
+    amazonConfig       :: !(Maybe AmazonConfig)
     -- ^ AWS configuration (bucket, access key, secret key).
-  , dbConfig           :: T.Text               -- ^ Postgresql configuration.
-  , maxDBConnections   :: Int                  -- ^ Limit of db connections.
-  , redisCacheConfig   :: Maybe RedisConfig    -- ^ Redis configuration.
-  , localFileCacheSize :: Int                  -- ^ Size of local cache for files.
-  , logConfig          :: LogConfig            -- ^ Logging configuration.
-  , guardTimeConf      :: GuardTimeConf        -- ^ GuardTime configuration.
-  , cgiGrpConfig       :: Maybe CgiGrpConfig   -- ^ CGI GRP (E-ID) configuration.
-  , mixpanelToken      :: Maybe String         -- ^ For Mixpanel integration.
-  , ntpServers         :: [String]
+  , dbConfig           :: !T.Text               -- ^ Postgresql configuration.
+  , maxDBConnections   :: !Int                  -- ^ Limit of db connections.
+  , redisCacheConfig   :: !(Maybe RedisConfig)  -- ^ Redis configuration.
+  , localFileCacheSize :: !Int                  -- ^ Size of local cache for files.
+  , logConfig          :: !LogConfig            -- ^ Logging configuration.
+  , guardTimeConf      :: !GuardTimeConf        -- ^ GuardTime configuration.
+  , cgiGrpConfig       :: !(Maybe CgiGrpConfig) -- ^ CGI GRP (E-ID) configuration.
+  , mixpanelToken      :: !(Maybe String)       -- ^ For Mixpanel integration.
+  , ntpServers         :: ![String]
     -- ^ List of NTP servers to contact to get an estimate of host clock
     -- error.
-  , salesforceConf     :: Maybe SalesforceConf -- ^ Salesforce configuration.
-  , invoicingSFTPConf  :: Maybe SFTPConfig
+  , salesforceConf     :: !(Maybe SalesforceConf) -- ^ Salesforce configuration.
+  , invoicingSFTPConf  :: !(Maybe SFTPConfig)
     -- ^ SFTP server for invoicing uploads.
-  , planhatConf        :: Maybe PlanhatConf
+  , planhatConf        :: !(Maybe PlanhatConf)
     -- ^ To enable data push to Planhat
-
+  , monitoringConf     :: !(Maybe MonitoringConf)
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
@@ -92,6 +93,9 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> fieldOpt "planhat"
       planhatConf
       "Configuration for pushing data to Planhat"
+  <*> fieldOpt "monitoring"
+      monitoringConf
+      "Configuration of the ekg-statsd-based monitoring."
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
@@ -112,4 +116,5 @@ instance Default CronConf where
     , salesforceConf     = Nothing
     , invoicingSFTPConf  = Nothing
     , planhatConf        = Nothing
+    , monitoringConf     = Nothing
     }

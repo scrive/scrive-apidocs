@@ -16,6 +16,7 @@ import Database.Redis.Configuration
 import KontraPrelude
 import Log.Configuration
 import Mails.Data
+import Monitoring
 import Utils.TH
 
 data MailingServerConf = MailingServerConf {
@@ -29,6 +30,7 @@ data MailingServerConf = MailingServerConf {
 , mscSlaveSender        :: !(Maybe SenderConfig)
 , mscAmazonConfig       :: !(Maybe (String, String, String))
 , testReceivers         :: ![Address]
+, mscMonitoringConfig   :: !(Maybe MonitoringConf)
 } deriving (Eq, Show)
 
 -- | SMTP callback key authentication will be used to receive callbacks
@@ -132,6 +134,9 @@ unjsonMailingServerConf = objectOf $ MailingServerConf
   <*> field "test_receivers"
       testReceivers
       "Email addresses for testing services"
+  <*> fieldOpt "monitoring"
+      mscMonitoringConfig
+      "Configuration of the ekg-statsd-based monitoring."
 
 instance Unjson MailingServerConf where
   unjsonDef = unjsonMailingServerConf
@@ -202,4 +207,5 @@ instance Default MailingServerConf where
         , addrEmail = "your@email.scrive.com"
       }
     ]
+    , mscMonitoringConfig = Nothing
   }

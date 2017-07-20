@@ -55,5 +55,13 @@
          , "host"     : "foo.bar"                  },
      "_planhat":
           { "base_url" : "Base Planhat URL for API calls"
-          , "tenant_id": "TenantID Token"}
+          , "tenant_id": "TenantID Token"},
+     "_monitoring":
+         { "host"           : "localhost"
+         , "port"           : 8125
+         , "flush_interval" : 1000
+         , "debug"          : false
+         , "prefix"         : "app_cron."
+         , "suffix"         : ""
+         }
 }

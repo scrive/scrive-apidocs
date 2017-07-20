@@ -1,1 +1,1 @@
-host='localhost' user='jonathan' password='jonathanPasswd' dbname='kontrakcja'
+host='localhost' user='kontra' password='kontrapwd' dbname='kontrakcja'

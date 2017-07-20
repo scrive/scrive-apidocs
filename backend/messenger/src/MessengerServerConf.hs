@@ -13,6 +13,7 @@ import Data.Word
 
 import KontraPrelude
 import Log.Configuration
+import Monitoring
 import SMS.Data
 import Utils.TH
 
@@ -23,6 +24,7 @@ data MessengerServerConf = MessengerServerConf {
 , mscLogConfig        :: !LogConfig
 , mscSenderDefault    :: !SenderConfig
 , mscSenderTelia      :: !SenderConfig
+, mscMonitoringConfig :: !(Maybe MonitoringConf)
 } deriving (Eq, Show)
 
 newtype SendersConfig = SendersConfig (SMSProvider -> SenderConfig)
@@ -59,6 +61,9 @@ unjsonMessengerServerConf = objectOf $ MessengerServerConf
   <*> field "sender_telia"
       mscSenderTelia
       "Telia Sender configuration"
+  <*> fieldOpt "monitoring"
+      mscMonitoringConfig
+      "Configuration of the ekg-statsd-based monitoring."
 
 instance Unjson MessengerServerConf where
   unjsonDef = unjsonMessengerServerConf
@@ -120,4 +125,5 @@ instance Default MessengerServerConf where
         localDirectory = "/tmp/telia"
       , localOpenCommand = Nothing
     }
+    , mscMonitoringConfig = Nothing
   }
