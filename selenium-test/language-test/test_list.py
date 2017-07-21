@@ -44,8 +44,12 @@ artifact_dir = os.path.join(dir_path, 'artifacts')
 
 # this function is autocalled by nosetests, so it's like main()
 def make_tests():
+    try:
+        remote = os.environ['SELENIUM_REMOTE_TESTS'] == '1'
+    except KeyError:
+        remote = False
     for lang in Language:
         for x in generate_tests(tests, artifact_dir,
                                 LOCAL_DEVICES, REMOTE_DEVICES,
-                                lang=lang.value, screenshots_enabled=True):
+                                lang=lang.value, screenshots_enabled=remote):
             yield x
