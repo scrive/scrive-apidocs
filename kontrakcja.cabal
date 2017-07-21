@@ -639,9 +639,10 @@ Executable cron
                , unjson
 
   Main-is:       Cron.hs
+  GHC-options:   -main-is Cron
   Other-Modules: CronConf
                  CronEnv
-  GHC-options:   -main-is Cron
+                 Cron.Model
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns
@@ -691,6 +692,67 @@ Executable kontrakcja-migrate
 
   Main-is: AppDBMain.hs
   GHC-options: -main-is AppDBMain
+  Other-Modules: ActionQueue.Tables
+                 AppDBConfig
+                 AppDBMigrations
+                 AppDBTables
+                 Attachment.Tables
+                 BrandedDomain.Tables
+                 Chargeable.Migrations
+                 Chargeable.Tables
+                 Company.Migrations
+                 Company.Tables
+                 CompanyAccounts.Tables
+                 Configuration
+                 Cron.Migrations
+                 Cron.Tables
+                 DB
+                 DB.Derive
+                 DB.PostgreSQL
+                 DB.Query
+                 DB.SQLFunction
+                 DB.Utils
+                 Doc.API.Callback.Tables
+                 Doc.AutomaticReminder.Tables
+                 Doc.Extending.Migrations
+                 Doc.Extending.Tables
+                 Doc.Migrations
+                 Doc.SMSPin.Tables
+                 Doc.Sealing.Tables
+                 Doc.Signing.Migrations
+                 Doc.Signing.Tables
+                 Doc.Tables
+                 Doc.Tokens.Tables
+                 EID.Authentication.Tables
+                 EID.CGI.GRP.Transaction.Tables
+                 EID.Signature.Tables
+                 EvidenceLog.Tables
+                 File.Tables
+                 HostClock.Tables
+                 KontraPrelude
+                 Log.Configuration
+                 Log.Migrations
+                 Log.Tables
+                 Mails.FromKontra.Migrations
+                 Mails.FromKontra.Tables
+                 Mails.Migrations
+                 Mails.Tables
+                 MinutesTime
+                 OAuth.Tables
+                 Partner.Migrations
+                 Partner.Tables
+                 SMS.FromKontra.Migrations
+                 SMS.FromKontra.Tables
+                 SMS.Migrations
+                 SMS.Tables
+                 Session.Tables
+                 Theme.Tables
+                 ThirdPartyStats.Migrations
+                 ThirdPartyStats.Tables
+                 User.CallbackScheme.Tables
+                 User.History.Tables
+                 User.Tables
+                 Utils.TH
 
   Build-depends: base
                , DRBG
@@ -779,6 +841,58 @@ Executable mailing-server
 
   Main-is: MailingServer.hs
   GHC-options: -main-is MailingServer
+  Other-Modules: Amazon
+                 Amazon.Class
+                 Assembler
+                 Configuration
+                 Control.Monad.Trans.Control.Util
+                 Control.Monad.Trans.Instances
+                 Crypto
+                 DB
+                 DB.Derive
+                 DB.PostgreSQL
+                 DB.Query
+                 DB.Utils
+                 Data.ByteString.Utils
+                 Database.Redis.Cache
+                 Database.Redis.Configuration
+                 Database.Redis.Helpers
+                 File.Conditions
+                 File.File
+                 File.FileID
+                 File.Model
+                 File.Storage
+                 Handlers
+                 Happstack.Fields
+                 Happstack.Server.Instances
+                 Happstack.Server.ReqHandler
+                 HtmlToTxt
+                 KontraPrelude
+                 Log.Configuration
+                 Log.Identifier
+                 Log.Migrations
+                 Log.Tables
+                 Log.Utils
+                 MagicHash
+                 MailGun
+                 Mailer
+                 MailingServerConf
+                 Mails.Data
+                 Mails.Model
+                 Mails.Tables
+                 MemCache
+                 MinutesTime
+                 SFTPConfig
+                 SendGrid
+                 Sender
+                 SocketLabs
+                 Text.JSON.Convert
+                 Utils.Exception
+                 Utils.IO
+                 Utils.List
+                 Utils.Network
+                 Utils.Read
+                 Utils.TH
 
   Build-depends: base
                , AES
@@ -886,6 +1000,38 @@ Executable messenger-server
 
   Main-is: MessengerServer.hs
   GHC-options: -main-is MessengerServer
+  Other-Modules: Configuration
+                 Control.Monad.Trans.Control.Util
+                 Control.Monad.Trans.Instances
+                 DB
+                 DB.Derive
+                 DB.PostgreSQL
+                 DB.Query
+                 DB.Utils
+                 Handlers
+                 Happstack.Fields
+                 Happstack.Server.Instances
+                 Happstack.Server.ReqHandler
+                 KontraPrelude
+                 Log.Configuration
+                 Log.Identifier
+                 Log.Migrations
+                 Log.Tables
+                 Log.Utils
+                 Mblox
+                 Messenger
+                 MessengerServerConf
+                 MinutesTime
+                 SFTPConfig
+                 SMS.Data
+                 SMS.Model
+                 SMS.Tables
+                 Sender
+                 TeliaCallGuide
+                 Utils.IO
+                 Utils.List
+                 Utils.Network
+                 Utils.TH
 
   Build-depends: base
                , DRBG
@@ -990,50 +1136,112 @@ Test-suite kontrakcja-test
     GHC-Options: -fhpc
 
   Main-is:       TestMain.hs
-  Other-Modules: AccountInfoTest,
-                 ArchiveTest,
-                 BrandedDomainTest,
-                 CSSGenerationTest,
-                 CSVUtilTest,
-                 ChargeableTest,
-                 CompanyAccountsTest,
-                 CompanyBrandingTest,
-                 CompanyControlTest,
-                 CompanyStateTest,
-                 ConfigTests,
-                 Doc.API.V1.CallsTest,
-                 Doc.API.V1.ForwardsCompatibilityTest,
-                 Doc.API.V1.JSONTest,
-                 Doc.API.V2.CallsTest,
-                 Doc.API.V2.JSONTest,
-                 DocControlTest,
-                 DocStateTest,
-                 ESignatureTest,
-                 EvidenceAttachmentsTest,
-                 EvidenceLogTest,
-                 FileTest,
-                 GTWorkflowTest,
-                 HtmlTest,
-                 InputValidationTest,
-                 JSONUtilTest,
-                 LangTest,
-                 LocalizationTest,
-                 LogTest,
-                 LoginTest,
-                 MailModelTest,
-                 MailsTest,
-                 Monitor.APITest,
-                 PadApplication.APITest
-                 Partner.APITest,
-                 ReferenceScreenshotsTest,
-                 SessionsTest,
-                 SignupTest,
-                 TestKontra,
-                 User.APITest
-                 UserHistoryTest,
-                 UserStateTest
-
   GHC-options: -main-is TestMain
+  Other-Modules: AccountInfoTest
+                 ActionQueue.Tables
+                 AdministrationTest
+                 AppDBMigrations
+                 AppDBTables
+                 ArchiveTest
+                 Attachment.Tables
+                 BrandedDomain.Tables
+                 BrandedDomainTest
+                 CSSGenerationTest
+                 CSVUtilTest
+                 Chargeable.Migrations
+                 Chargeable.Tables
+                 ChargeableTest
+                 Company.Migrations
+                 Company.Tables
+                 CompanyAccounts.Tables
+                 CompanyAccountsTest
+                 CompanyBrandingTest
+                 CompanyControlTest
+                 CompanyStateTest
+                 ConfigTests
+                 Cron.Migrations
+                 Cron.Tables
+                 CronConf
+                 CronEnv
+                 Doc.API.Callback.Tables
+                 Doc.API.V1.CallsTest
+                 Doc.API.V1.ForwardsCompatibilityTest
+                 Doc.API.V1.JSONTest
+                 Doc.API.V2.AesonTestUtils
+                 Doc.API.V2.Calls.CallsTestUtils
+                 Doc.API.V2.Calls.DocumentGetCallsTest
+                 Doc.API.V2.Calls.DocumentPostCallsTest
+                 Doc.API.V2.Calls.SignatoryCallsTest
+                 Doc.API.V2.CallsTest
+                 Doc.API.V2.JSONTest
+                 Doc.API.V2.Mock.MockDocInternal
+                 Doc.API.V2.Mock.TestUtils
+                 Doc.AutomaticReminder.Tables
+                 Doc.Extending.Migrations
+                 Doc.Extending.Tables
+                 Doc.Migrations
+                 Doc.SMSPin.Tables
+                 Doc.Sealing.Tables
+                 Doc.Signing.Migrations
+                 Doc.Signing.Tables
+                 Doc.Tables
+                 Doc.TestInvariants
+                 Doc.Tokens.Tables
+                 DocControlTest
+                 DocStateTest
+                 DumpEvidenceTexts
+                 EID.Authentication.Tables
+                 EID.CGI.GRP.Transaction.Tables
+                 EID.Signature.Tables
+                 ESignatureTest
+                 EvidenceAttachmentsTest
+                 EvidenceLog.Tables
+                 EvidenceLogTest
+                 File.Tables
+                 FileTest
+                 FlashMessages
+                 GTWorkflowTest
+                 HostClock.Tables
+                 HtmlTest
+                 InputValidationTest
+                 JSONUtilTest
+                 LangTest
+                 LocalizationTest
+                 LogTest
+                 LoginTest
+                 MailModelTest
+                 Mails.FromKontra.Migrations
+                 Mails.FromKontra.Tables
+                 Mails.Migrations
+                 Mails.Tables
+                 MailsTest
+                 Monitor.APITest
+                 OAuth
+                 OAuth.Tables
+                 PadApplication.APITest
+                 Partner.APITest
+                 Partner.Migrations
+                 Partner.Tables
+                 ReferenceScreenshotsTest
+                 SMS.FromKontra.Migrations
+                 SMS.FromKontra.Tables
+                 SMS.Migrations
+                 SMS.Tables
+                 Session.Tables
+                 SessionsTest
+                 SignupTest
+                 TestKontra
+                 TestingUtil
+                 Theme.Tables
+                 ThirdPartyStats
+                 ThirdPartyStats.Migrations
+                 ThirdPartyStats.Tables
+                 User.APITest
+                 User.CallbackScheme.Tables
+                 User.History.Tables
+                 User.Tables
+                 UserHistoryTest
+                 UserStateTest
 
   Build-depends: kontrakcja
                , base
@@ -1063,7 +1271,7 @@ Test-suite kontrakcja-test
                , json
                , kontrakcja-templates
                , lifted-base
-               , log >= 0.9
+               , log-base >= 0.7
                , monad-control
                , mtl
                , network-uri
@@ -1127,6 +1335,11 @@ Executable localization
 
   Main-Is: LocalizationMain.hs
   GHC-options: -main-is LocalizationMain
+  Other-Modules: KontraPrelude
+                 Templates
+                 User.Lang
+                 Utils.Enum
+                 Version
 
   Build-depends: base
                , base16-bytestring
@@ -1245,6 +1458,7 @@ Executable detect_old_localizations
   Hs-source-dirs:   scripts/detect_old_localizations,
                     scripts/scripts-prelude
   Main-is:          detect_old_localizations.hs
+  Other-Modules:    ScriptsPrelude
   GHC-Options:      -Wall -Werror
   Build-Depends:    base,
                     containers,
@@ -1259,6 +1473,9 @@ Executable detect_old_templates
                     scripts/scripts-prelude
                     transifex
   Main-is:          detect_old_templates.hs
+  Other-Modules:    ScriptsPrelude
+                    Transifex.Synch
+                    Transifex.Utils
   GHC-Options:      -Wall -Werror
   Build-Depends:    base,
                     containers,
