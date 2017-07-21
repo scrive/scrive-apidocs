@@ -91,7 +91,7 @@ def check_language_tst(test, drv, api):
     drv.scroll_to_bottom()
 
     # open rejection modal and take a screenshot
-    drv.wait_for_element_and_click('.section.sign .button.action')
+    drv.wait_for_element_and_click('.section.sign .small-button-block')
     drv.wait_for_element('.above-overlay')
     drv.screenshot(first_sleep_for=1)  # wait for animation to finish
 
@@ -100,14 +100,9 @@ def check_language_tst(test, drv, api):
     drv.wait_for_element_to_disappear('.above-overlay')
     test.sleep(.5)  # there's a 0.2s transition on z-index
 
-    # click final sign button and wait for confirmation modal to show up
+    # click final sign button
     drv.wait_for_element_and_click('.section.sign .button.action')
-    drv.wait_for_element('.above-overlay')
-    drv.screenshot(first_sleep_for=1)  # wait for animation to finish
-
-    # confirm signing
-    drv.wait_for_element_and_click('.section.sign .button.action')
-    drv.screenshot()
+    drv.screenshot(first_sleep_for=1)  # wait for animation to start
 
     # wait for modal to disappear (by page reloading)
     drv.wait_for_element_to_disappear('.sign.section')
