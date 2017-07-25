@@ -289,7 +289,14 @@ clipHighlightImageFromPage pdfFileContent highlightFileContent pageNo = do
                         ExitSuccess -> do
                           -- Then clip the highlight based on the underlying page...
                           (clipCode, clipStdOut, clipStderr) <- liftBase $
-                            readProcessWithExitCode "convert" [highlightImagePath, "-clip-mask", thresholdOutputPath, "-alpha", "transparent", "+clip-mask", maskedHighlightOutputPath] ""
+                            readProcessWithExitCode "convert" [
+                              "-channel", "Alpha",
+                              "-compose", "src-out",
+                              "-composite",
+                                "-transparent","white", "-fuzz", "10%", thresholdOutputPath,
+                                highlightImagePath,
+                                maskedHighlightOutputPath
+                              ] ""
                           case clipCode of
                             ExitFailure code -> do
                               logAttention "clipHighlightImageFromPage: convert failed to clip" $

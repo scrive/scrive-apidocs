@@ -89,6 +89,7 @@ brandImage file color = do
     fpath <- guardJust $ secureAbsNormPath imgDir file
     (procResult, out, _) <- liftIO $ readProcessWithExitCode "convert" [fpath
                                                   , "-colorspace", "Gray"
+                                                  , "-channel", "RGB"
                                                   , "+level-colors", color ++ ",white"
                                                   , "-"] ""
     case procResult of
