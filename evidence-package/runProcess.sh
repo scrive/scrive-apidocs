@@ -4,7 +4,7 @@ tmp_dir="tmp"
 dest="files"
 cssfile="style.css"
 
-timestamp="$(TZ=UTC date)"
+timestamp="$(TZ=UTC date +'%a %d %b %Y %T %Z')"
 
 # Make directories
 if [ -d "$dest" ]; then
