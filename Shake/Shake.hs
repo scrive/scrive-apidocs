@@ -245,6 +245,7 @@ serverOldBuildRules cabalFile = do
          ]
     cmd (EchoStdout True) "cabal" [ "install", "--enable-tests"
                                   , "--only-dependencies"
+                                  , "--reorder-goals"
                                   , "--force-reinstalls" ]
 
   -- If this rule was run, then cabal was configured with flags
