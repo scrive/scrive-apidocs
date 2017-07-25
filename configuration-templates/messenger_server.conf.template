@@ -18,5 +18,13 @@
     "sender_telia": {
         "type": "local",
         "dir": "/tmp/telia"
-    }
+    },
+     "_monitoring":
+        { "host"           : "localhost"
+        , "port"           : 8125
+        , "flush_interval" : 1000
+        , "debug"          : false
+        , "prefix"         : "app_messenger_server."
+        , "suffix"         : ""
+        }
 }

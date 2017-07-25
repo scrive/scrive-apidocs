@@ -59,5 +59,13 @@
                     , "password"           : "foobar"
                     , "identifyUrl"        : "https://foo.bar"
                     , "assertionUrl"       : "https://baz.quux"
-                    , "trustedDomain"      : "foobar" }
+                    , "trustedDomain"      : "foobar" },
+     "_monitoring":
+         { "host"           : "localhost"
+         , "port"           : 8125
+         , "flush_interval" : 1000
+         , "debug"          : false
+         , "prefix"         : "app_kontrakcja."
+         , "suffix"         : ""
+         }
 }

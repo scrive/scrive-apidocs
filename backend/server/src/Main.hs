@@ -29,6 +29,7 @@ import DB.PostgreSQL
 import Happstack.Server.ReqHandler
 import KontraPrelude
 import Log.Configuration
+import Monitoring
 import RoutingTable
 import Templates
 import User.Email
@@ -60,6 +61,9 @@ main :: IO ()
 main = withCurlDo $ do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   appConf <- readConfig putStrLn config
+  case monitoringConfig appConf of
+    Just conf -> void $ startMonitoringServer conf
+    Nothing   -> return ()
   let connSettings = pgConnSettings $ dbConfig appConf
   pool <- liftBase $ createPoolSource (connSettings kontraComposites) (maxDBConnections appConf)
   rng <- newCryptoRNGState

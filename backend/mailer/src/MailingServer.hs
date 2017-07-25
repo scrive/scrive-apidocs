@@ -30,6 +30,7 @@ import MailingServerConf
 import Mails.Model
 import Mails.Tables
 import MinutesTime
+import Monitoring
 import Sender
 import Utils.IO
 import Utils.Network
@@ -58,6 +59,9 @@ main = do
   -- All running instances need to have the same configuration.
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   conf <- readConfig putStrLn config
+  case mscMonitoringConfig conf of
+    Just mconf -> void $ startMonitoringServer mconf
+    Nothing   -> return ()
   rng  <- newCryptoRNGState
   lr   <- mkLogRunner "mailer" (mscLogConfig conf) rng
   withLogger lr $ \runLogger -> runLogger $ do

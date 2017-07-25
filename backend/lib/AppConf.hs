@@ -17,6 +17,7 @@ import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf (HubSpotConf(..))
 import KontraPrelude
 import Log.Configuration
+import Monitoring (MonitoringConf(..))
 import Salesforce.Conf
 import User.Email
 
@@ -58,6 +59,8 @@ data AppConf = AppConf {
   , salesforceConf     :: Maybe SalesforceConf -- ^ Configuration of Salesforce.
   , netsConfig         :: Maybe NetsConfig
     -- ^ Configuration of Nets - .DK/.NO BankID provider.
+  , monitoringConfig   :: Maybe MonitoringConf
+    -- ^ Configuration of the ekg-statsd-based monitoring.
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -143,6 +146,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldOpt "nets"
       netsConfig
       "Configuration of Nets - NO BankID provider"
+  <*> fieldOpt "monitoring"
+      monitoringConfig
+      "Configuration of the ekg-statsd-based monitoring."
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf
@@ -172,4 +178,5 @@ instance Default AppConf where
     , hubspotConf        = Nothing
     , salesforceConf     = Nothing
     , netsConfig         = Nothing
+    , monitoringConfig   = Nothing
     }

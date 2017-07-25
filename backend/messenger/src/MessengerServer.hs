@@ -23,6 +23,7 @@ import Log.Configuration
 import Log.Identifier
 import MessengerServerConf
 import MinutesTime
+import Monitoring
 import Sender
 import SMS.Data
 import SMS.Model
@@ -51,6 +52,9 @@ main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   conf <- readConfig putStrLn config
+  case mscMonitoringConfig conf of --
+    Just mconf -> void $ startMonitoringServer mconf
+    Nothing    -> return ()
   rng <- newCryptoRNGState
   lr <- mkLogRunner "messenger" (mscLogConfig conf) rng
   withLogger lr $ \runLogger -> runLogger $ do
