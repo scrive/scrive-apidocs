@@ -560,7 +560,8 @@ var Document = exports.Document = Backbone.Model.extend({
 
               // if user is logged out, there's no point in trying again
               // or if status is 0, whatever that means it will not fix itself
-              if (response.status !== 401 && response.status !== 0) {
+              // or if this tab was loaded for so long that we have deleted the draft
+              if (response.status !== 401 && response.status !== 0 && response.status !== 404) {
                 window.setTimeout(fetchFunction, 1000);
               }
             } else {
