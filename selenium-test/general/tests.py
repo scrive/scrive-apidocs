@@ -106,7 +106,7 @@ def check_custom_rejection(test, drv, api):
     test.sleep(.5)  # there's a 0.2s transition on z-index
 
     # click reject button again
-    drv.wait_for_element_and_click('.section.sign .button:not(.action)')
+    drv.wait_for_element_and_click('.section.sign .small-button-block')
     drv.wait_for_element('.above-overlay')
 
     textarea = drv.get_element('.reject-textarea textarea', number=1)

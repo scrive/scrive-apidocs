@@ -559,7 +559,9 @@ var Document = exports.Document = Backbone.Model.extend({
               console.error("Failed to fetch document #" + self.documentid() + ", trying again in one sec...");
 
               // if user is logged out, there's no point in trying again
-              if (response.status !== 401) {
+              // or if status is 0, whatever that means it will not fix itself
+              // or if this tab was loaded for so long that we have deleted the draft
+              if (response.status !== 401 && response.status !== 0 && response.status !== 404) {
                 window.setTimeout(fetchFunction, 1000);
               }
             } else {

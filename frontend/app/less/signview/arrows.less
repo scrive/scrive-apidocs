@@ -7,7 +7,7 @@
 @action-arrow-width: 20px;
 @action-arrow-height: 37px;
 @action-arrow-left-margin: -16px;
-@action-arrow-right-margin: -10px;
+@action-arrow-right-margin: 16px;
 
 .arrows {
   .scroll-arrow {
@@ -42,10 +42,18 @@
   .action-arrow.right {
     float: left;
     margin-left: @action-arrow-right-margin;
+    transform-origin-x: 0;
+    -webkit-transform-origin-x: 0;
+    -ms-transform-origin-x: 0;
+    -moz-transform-origin-x: 0;
   }
 
   .action-arrow.left {
     float: right;
     margin-left: @action-arrow-left-margin;
+    transform-origin-x: 0;
+    -webkit-transform-origin-x: 0;
+    -ms-transform-origin-x: 0;
+    -moz-transform-origin-x: 0;
   }
 }

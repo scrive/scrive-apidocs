@@ -388,7 +388,7 @@ module.exports = React.createClass({
     }
 
     if (type === ARROW.RIGHT && task.isFieldTask()) {
-      arrowStyle.marginLeft = Math.min(1, scale) * arrowVars.actionArrowRightMargin;
+      arrowStyle.marginLeft = Math.max(1, scale) * arrowVars.actionArrowRightMargin;
     }
 
     if (type === ARROW.LEFT && task.isFieldTask()) {
