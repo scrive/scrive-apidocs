@@ -371,8 +371,9 @@ showPage fid pageNo = logFile fid $ do
   logInfo_ "Checking file access"
   checkFileAccess fid
   pixelwidth <- guardJustM $ readField "pixelwidth"
+  let clampedPixelWidth = min 2000 (max 100 pixelwidth)
   fileData <- getFileIDContents fid
-  rp <- renderPage fileData pageNo pixelwidth
+  rp <- renderPage fileData pageNo clampedPixelWidth
   case rp of
    Just pageData -> return $ setHeaderBS "Cache-Control" "max-age=604800" $ toResponseBS "image/png" $ BSL.fromStrict pageData
    Nothing -> do
