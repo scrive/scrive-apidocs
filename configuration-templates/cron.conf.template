@@ -64,5 +64,5 @@
          , "prefix"         : "app_cron."
          , "suffix"         : ""
          },
-    "_mail_noreply_address" : "noreply@scrive.com"
+    "mail_noreply_address" : "noreply@scrive.com"
 }

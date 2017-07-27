@@ -97,7 +97,7 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> fieldOpt "monitoring"
       monitoringConf
       "Configuration of the ekg-statsd-based monitoring."
-  <*> fieldDef "mail_noreply_address" (mailNoreplyAddress def)
+  <*> field "mail_noreply_address"
       mailNoreplyAddress
       "Noreply address used when sending email"
 

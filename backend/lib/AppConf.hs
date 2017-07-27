@@ -120,7 +120,7 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldDef "mail_backdoor_open" False
       isMailBackdoorOpen
       "Enabling mails backdoor for test"
-  <*> fieldDef "mail_noreply_address" (mailNoreplyAddress def)
+  <*> field "mail_noreply_address"
       mailNoreplyAddress
       "Noreply address used when sending email"
   <*> fieldOpt "cgi_grp"
