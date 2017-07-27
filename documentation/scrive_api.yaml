@@ -48,6 +48,7 @@ info:
     | 2017-05-15  | Add missing `company` standard signatory field             |
     | 2017-06-08  | Add `required` field to signatory attachments, optional attachments are now possible |
     | 2017-07-04  | Remove a comment about anchoring that was due to a bug, which has now been fixed |
+    | 2017-08-02  | Revamped definitions of signatory fields, it should now be much clearer |
 
     ## Environments & IP Addresses
 
@@ -858,18 +859,16 @@ definitions:
     $ref: ./definitions/DocumentStatus.yaml
   Signatory:
     $ref: ./definitions/Signatory.yaml
-  SignatoryField:
-    $ref: ./definitions/SignatoryField.yaml
   SignatoryFieldName:
     $ref: ./definitions/SignatoryFieldName.yaml
-  SignatoryFieldStandard:
-    $ref: ./definitions/SignatoryFieldStandard.yaml
-  SignatoryFieldText:
-    $ref: ./definitions/SignatoryFieldText.yaml
   SignatoryFieldSignature:
     $ref: ./definitions/SignatoryFieldSignature.yaml
+  SignatoryFieldStandard:
+    $ref: ./definitions/SignatoryFieldStandard.yaml
   SignatoryFieldCheckbox:
     $ref: ./definitions/SignatoryFieldCheckbox.yaml
+  SignatoryFieldCustomText:
+    $ref: ./definitions/SignatoryFieldCustomText.yaml
   ListFilter:
     $ref: ./definitions/ListFilter.yaml
   ListSorting:
