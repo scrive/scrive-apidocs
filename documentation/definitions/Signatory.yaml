@@ -31,15 +31,38 @@ properties:
     type: boolean
   fields:
     description: |
-      The object properties for Signatory `fields` in this definition are only
-      the ones common to all signatory fields.
+      The signatory fields represent information requested from, or information
+      about, the signatory.
+      There are different types of fields, and the array can contain multiple
+      instances of the same type.
 
-      **Note:**
-      A valid definition must be one of the concrete types (e.g.
-      `SignatoryFieldCheckbox`).
+      Currently, Scrive supports the following field types:
+      * `SignatoryFieldName`: First and last name of the signatory.
+      * `SignatoryFieldSignature`: A signature box placed on the document, for
+        the signatory to draw their signature.
+      * `SignatoryFieldStandard`: Company name and number, email, mobile
+        number, and personal number (AKA social security number).
+      * `SignatoryFieldCheckbox`: Checkboxes of varying sizes.
+      * `SignatoryFieldCustomText`: A text field for any other information
+        about, or requested, from the signatory.
+
+      Please read the detailed definition of each field type for more
+      information.
+      New field types may be added at any point to extend Scrive eSign features.
+
+      Fields can have `placements`, which define where on the document they
+      will appear.
+      Similarly, a single field can have multiple placements on the document.
+
+      **Note:** Some field types have _no effect_ without at least one placement.
     type: array
     items:
-      $ref: ./SignatoryField.yaml
+      anyOf:
+        - $ref: ./SignatoryFieldName.yaml
+        - $ref: ./SignatoryFieldSignature.yaml
+        - $ref: ./SignatoryFieldStandard.yaml
+        - $ref: ./SignatoryFieldCheckbox.yaml
+        - $ref: ./SignatoryFieldCustomText.yaml
   sign_order:
     type: integer
     default: 1
