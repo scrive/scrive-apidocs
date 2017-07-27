@@ -75,6 +75,8 @@ accountSetupPage=$doctype()$
           company : _.unescape("$company$"),// -,,-
           userid : "$userid$",
           signupmethod : "$signupmethod$",
+          companyPosition: _.unescape("$companyPosition$"),
+          mobile: "$mobile$",
           companyAdmin : $if(companyAdmin)$true$else$false$endif$
         };
         </script>
