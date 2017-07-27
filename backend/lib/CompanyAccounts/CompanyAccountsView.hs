@@ -39,7 +39,7 @@ mailNewCompanyUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSomeUs
                                Context -> a -> b -> Company -> CompanyUI -> KontraLink -> UTCTime -> m Mail
 mailNewCompanyUserInvite ctx invited inviter company companyui link expires = do
   theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme (ctxbrandeddomain ctx)) (companyMailTheme companyui)
-  kontramail (ctxbrandeddomain ctx) theme "mailNewCompanyUserInvite" $ do
+  kontramail (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) theme "mailNewCompanyUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxDomainUrl ctx) link
     brandingMailFields theme
@@ -52,10 +52,10 @@ mailTakeoverSingleUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSo
 mailTakeoverSingleUserInvite ctx invited inviter company companyui link = do
   theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme (ctxbrandeddomain ctx)) (companyMailTheme companyui)
   --invite in the language of the existing user rather than in the inviter's language
-  kontramaillocal (ctxbrandeddomain ctx) theme invited  "mailTakeoverSingleUserInvite" $ do
+  kontramaillocal (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) theme invited  "mailTakeoverSingleUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxDomainUrl ctx) link
-    brandingMailFields theme 
+    brandingMailFields theme
 
 basicCompanyInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b, HasSomeCompanyInfo c) => a -> b -> c -> Fields m ()
 basicCompanyInviteFields invited inviter company = do

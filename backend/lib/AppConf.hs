@@ -46,6 +46,7 @@ data AppConf = AppConf {
   , isMailBackdoorOpen :: Bool
     -- ^ If true allows admins to access last mail send. Used by
     -- selenium.
+  , mailNoreplyAddress   :: String             -- ^ Noreply address used when sending email
   , cgiGrpConfig       :: Maybe CgiGrpConfig   -- ^ CGI GRP (E-ID) configuration
   , admins             :: [Email]
     -- ^ E-mail addresses of people regarded as admins.
@@ -119,6 +120,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldDef "mail_backdoor_open" False
       isMailBackdoorOpen
       "Enabling mails backdoor for test"
+  <*> field "mail_noreply_address"
+      mailNoreplyAddress
+      "Noreply address used when sending email"
   <*> fieldOpt "cgi_grp"
       cgiGrpConfig
       "CGI GRP (E-ID) configuration"
@@ -169,6 +173,7 @@ instance Default AppConf where
     , cdnBaseUrl         = Nothing
     , guardTimeConf      = def
     , isMailBackdoorOpen = False
+    , mailNoreplyAddress = "noreply@scrive.com"
     , cgiGrpConfig       = Nothing
     , admins             = []
     , sales              = []

@@ -22,7 +22,7 @@ import Log
 import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
 import qualified Data.ByteString as BS
 
-import ActionQueue.Scheduler (SchedulerData, getGlobalTemplates)
+import ActionQueue.Scheduler (SchedulerData(..), getGlobalTemplates)
 import BrandedDomain.Model
 import DB
 import Doc.API.Callback.Model
@@ -428,10 +428,12 @@ runMailTInScheduler doc m = do
   now <- currentTime
   mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) $ join $ maybesignatory <$> getAuthorSigLink doc
   bd <- maybe (dbQuery GetMainBrandedDomain) (dbQuery . GetBrandedDomainByUserID) (userid <$> mauthor)
+  mailNoreplyAddress <- asks sdMailNoreplyAddress
   let mctx = MailContext {
           mctxlang = documentlang doc
         , mctxcurrentBrandedDomain = bd
         , mctxtime = now
+        , mctxmailNoreplyAddress = mailNoreplyAddress
         }
   templates <- getGlobalTemplates
   runMailT (getLang doc, templates) mctx m

@@ -77,6 +77,8 @@ testConfTemplate confPath _proxy = do
   -- configuration kontrakcja.conf.template)
 
   let suppressLog = const $ return () -- replace with putStrLn for debugging
-  (_p :: a) <- readConfigEx suppressLog confPath
+  (_ :: a) <- readConfigEx suppressLog confPath
                (def { optReadConfigUncommentKeys = True })
+  (_ :: a) <- readConfigEx suppressLog confPath
+               (def { optReadConfigUncommentKeys = False })
   return ()

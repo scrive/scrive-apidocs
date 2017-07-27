@@ -53,7 +53,7 @@
          , "password" : "bar"
          , "dir"      : "/remote/directory/to/use"
          , "host"     : "foo.bar"                  },
-     "_planhat":
+    "_planhat":
           { "base_url" : "Base Planhat URL for API calls"
           , "tenant_id": "TenantID Token"},
      "_monitoring":
@@ -63,5 +63,6 @@
          , "debug"          : false
          , "prefix"         : "app_cron."
          , "suffix"         : ""
-         }
+         },
+    "mail_noreply_address" : "noreply@scrive.com"
 }

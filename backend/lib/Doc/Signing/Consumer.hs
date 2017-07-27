@@ -76,9 +76,10 @@ documentSigning
   -> MemCache FileID ByteString
   -> Maybe R.Connection
   -> ConnectionSourceM m
+  -> String
   -> ConsumerConfig m SignatoryLinkID DocumentSigning
 documentSigning amazonConf guardTimeConf cgiGrpConf
-  templates localCache globalCache pool = ConsumerConfig {
+  templates localCache globalCache pool mailNoreplyAddress = ConsumerConfig {
     ccJobsTable = "document_signing_jobs"
   , ccConsumersTable = "document_signing_consumers"
   , ccJobSelectors =
@@ -131,6 +132,7 @@ documentSigning amazonConf guardTimeConf cgiGrpConf
               mctxlang = signingLang
             , mctxcurrentBrandedDomain = bd
             , mctxtime = now
+            , mctxmailNoreplyAddress = mailNoreplyAddress
             }
       runTemplatesT (signingLang, templates)
         . A.runAmazonMonadT ac

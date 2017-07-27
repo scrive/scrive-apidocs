@@ -31,8 +31,9 @@ import Util.SignatoryLinkUtils
 
 documentAPICallback :: (MonadIO m, MonadBase IO m, MonadLog m, MonadMask m)
   => (forall r. Scheduler r -> m r)
+  -> String
   -> ConsumerConfig m CallbackID DocumentAPICallback
-documentAPICallback runExecute =
+documentAPICallback runExecute mailNoreplyAddress =
   ConsumerConfig {
       ccJobsTable = "document_api_callbacks"
     , ccConsumersTable = "document_api_callback_consumers"
@@ -57,6 +58,7 @@ documentAPICallback runExecute =
               mctxlang = LANG_EN
             , mctxcurrentBrandedDomain = bd
             , mctxtime = now
+            , mctxmailNoreplyAddress = mailNoreplyAddress
             }
         runMailContextT mc $ execute dac >>= \ case
           True  -> return $ Ok Remove

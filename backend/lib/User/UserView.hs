@@ -138,7 +138,7 @@ pageAcceptTOS ctx = renderTemplate "pageAcceptTOS" $ entryPointFields ctx
 resetPasswordMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> User -> KontraLink -> m Mail
 resetPasswordMail ctx user setpasslink = do
   theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
-  kontramail (ctxbrandeddomain ctx) theme  "passwordChangeLinkMail" $ do
+  kontramail (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) theme  "passwordChangeLinkMail" $ do
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
     F.value "ctxhostpart"  $ ctxDomainUrl ctx
@@ -147,7 +147,7 @@ resetPasswordMail ctx user setpasslink = do
 newUserMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> String -> KontraLink -> m Mail
 newUserMail ctx emailaddress activatelink = do
   theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
-  kontramail (ctxbrandeddomain ctx) theme  "newUserMail" $ do
+  kontramail (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) theme "newUserMail" $ do
     F.value "email"        $ emailaddress
     F.value "activatelink" $ show activatelink
     F.value "ctxhostpart"  $ ctxDomainUrl ctx
@@ -157,7 +157,7 @@ newUserMail ctx emailaddress activatelink = do
 mailNewAccountCreatedByAdmin :: (HasLang a,MonadDB m,MonadThrow m, TemplatesMonad m) => Context -> a -> String -> KontraLink -> m Mail
 mailNewAccountCreatedByAdmin ctx lang email setpasslink = do
   theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
-  kontramaillocal (ctxbrandeddomain ctx) theme lang "mailNewAccountCreatedByAdmin" $ do
+  kontramaillocal (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) theme lang "mailNewAccountCreatedByAdmin" $ do
     F.value "email"         $ email
     F.value "passwordlink"  $ show setpasslink
     F.value "creatorname"   $ maybe "" getSmartName (ctxmaybeuser ctx)
@@ -168,7 +168,7 @@ mailNewAccountCreatedByAdmin ctx lang email setpasslink = do
 mailEmailChangeRequest :: (TemplatesMonad m, HasSomeUserInfo a,MonadDB m,MonadThrow m) => Context -> a -> Email -> KontraLink -> m Mail
 mailEmailChangeRequest ctx user newemail link = do
   theme <- dbQuery $ GetTheme $ bdMailTheme (ctxbrandeddomain ctx)
-  kontramail (ctxbrandeddomain ctx) theme "mailRequestChangeEmail" $ do
+  kontramail (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) theme "mailRequestChangeEmail" $ do
     F.value "fullname" $ getFullName user
     F.value "newemail" $ unEmail newemail
     F.value "ctxhostpart" $ ctxDomainUrl ctx

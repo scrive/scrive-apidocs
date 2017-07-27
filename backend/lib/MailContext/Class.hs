@@ -16,6 +16,7 @@ data MailContext = MailContext {
   mctxlang                 :: !Lang
 , mctxcurrentBrandedDomain :: !BrandedDomain
 , mctxtime                 :: !UTCTime
+, mctxmailNoreplyAddress   :: !String
 } deriving Show
 
 mctxDomainUrl :: MailContext -> String

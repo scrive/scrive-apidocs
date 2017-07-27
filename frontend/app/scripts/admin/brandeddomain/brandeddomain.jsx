@@ -37,12 +37,6 @@ module.exports = Backbone.Model.extend({
   setEmailOriginator: function(s) {
     this.set({"emailOriginator":s, "dirty" : true});
   },
-  noreplyEmail : function() {
-    return this.get("noreplyEmail");
-  },
-  setNoreplyEmail: function(s) {
-    this.set({"noreplyEmail":s, "dirty" : true});
-  },
   mailTheme : function() {
     return this.get("mailTheme");
   },

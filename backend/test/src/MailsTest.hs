@@ -94,9 +94,9 @@ sendDocumentMails author = do
                               validMail s m
         checkMail "Invitation" $ mailInvitation True Sign (Just sl) =<< theDocument
         -- DELIVERY MAILS
-        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxbrandeddomain ctx) sl =<< theDocument
-        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxbrandeddomain ctx) sl =<< theDocument
-        checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxbrandeddomain ctx) sl =<< theDocument
+        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) sl =<< theDocument
+        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) sl =<< theDocument
+        checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) sl =<< theDocument
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind False Nothing sl True =<< theDocument
         checkMail "Reminder notsigned" $ mailDocumentRemind True Nothing sl True =<< theDocument

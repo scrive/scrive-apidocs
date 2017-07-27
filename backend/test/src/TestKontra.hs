@@ -280,6 +280,7 @@ mkContext lang = do
         , ctxglobaltemplates = globaltemplates
         , ctxlang = lang
         , ctxismailbackdooropen = False
+        , ctxmailnoreplyaddress = "noreply@scrive.com"
         , ctxcgigrpconfig = Nothing
         , ctxmrediscache = Nothing
         , ctxfilecache = filecache

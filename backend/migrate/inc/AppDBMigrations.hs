@@ -5,6 +5,7 @@ module AppDBMigrations (
 import Control.Monad.Catch
 import Log
 
+import BrandedDomain.Migrations
 import Chargeable.Migrations
 import Company.Migrations
 import Cron.Migrations
@@ -50,4 +51,5 @@ kontraMigrations = [
   , voidTableAsyncEventQueue
   , addPlanhatJob
   , addEditableBySignatoryFlag
+  , brandedDomainDropNoreplyEmail
   ]
