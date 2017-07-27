@@ -330,7 +330,7 @@ documentMail haslang doc mailname otherfields = do
   let themeid = fromMaybe (bdMailTheme $ mctxcurrentBrandedDomain mctx) (join $ companyMailTheme <$> mcompanyui)
   theme <- dbQuery $ GetTheme themeid
   allfields <- documentMailFields doc mctx
-  kontramaillocal (mctxcurrentBrandedDomain mctx) theme haslang mailname $ allfields >> otherfields
+  kontramaillocal (mctxmailNoreplyAddress mctx) (mctxcurrentBrandedDomain mctx) theme haslang mailname $ allfields >> otherfields
 
 brandingMailFields :: Monad m => Theme -> Fields m ()
 brandingMailFields theme = do

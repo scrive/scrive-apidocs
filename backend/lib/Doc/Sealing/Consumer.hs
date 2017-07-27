@@ -46,9 +46,10 @@ documentSealing
   -> MemCache FileID ByteString
   -> Maybe R.Connection
   -> ConnectionSourceM m
+  -> String
   -> ConsumerConfig m DocumentID DocumentSealing
 documentSealing mbAmazonConf guardTimeConf templates
-  localCache globalCache pool = ConsumerConfig {
+  localCache globalCache pool mailNoreplyAddress = ConsumerConfig {
     ccJobsTable = "document_sealing_jobs"
   , ccConsumersTable = "document_sealing_consumers"
   , ccJobSelectors = ["id", "branded_domain_id", "attempts"]
@@ -75,7 +76,7 @@ documentSealing mbAmazonConf guardTimeConf templates
               mctxlang                 = lang
             , mctxcurrentBrandedDomain = bd
             , mctxtime                 = now0
-
+            , mctxmailNoreplyAddress   = mailNoreplyAddress
             }
       resultisok <- runGuardTimeConfT guardTimeConf
         . runTemplatesT (lang, templates)

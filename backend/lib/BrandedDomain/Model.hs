@@ -21,8 +21,8 @@ import KontraPrelude
 import Theme.Model
 import User.UserID
 
-fetchBrandedDomain :: (BrandedDomainID,Bool, String, String, String, String, ThemeID,ThemeID,ThemeID,ThemeID, String, BS.ByteString,String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
-fetchBrandedDomain (xid, maindomain, url, smsoriginator, emailoriginator, noreplyemail, mail_theme, signview_theme,service_theme,login_theme, browser_title,
+fetchBrandedDomain :: (BrandedDomainID,Bool, String, String, String, ThemeID,ThemeID,ThemeID,ThemeID, String, BS.ByteString,String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
+fetchBrandedDomain (xid, maindomain, url, smsoriginator, emailoriginator, mail_theme, signview_theme,service_theme,login_theme, browser_title,
                     favicon, participant_color_1, participant_color_2, participant_color_3, participant_color_4, participant_color_5, participant_color_6, draft_color, cancelled_color,
                     initiated_color, sent_color, delivered_color, opened_color, reviewed_color, signed_color)
        = BrandedDomain
@@ -31,7 +31,6 @@ fetchBrandedDomain (xid, maindomain, url, smsoriginator, emailoriginator, norepl
          , bdUrl                         = url
          , bdSmsOriginator               = smsoriginator
          , bdEmailOriginator             = emailoriginator
-         , bdNoreplyEmail                = noreplyemail
          , bdMailTheme                   = mail_theme
          , bdSignviewTheme               = signview_theme
          , bdServiceTheme                = service_theme
@@ -61,7 +60,6 @@ brandedDomainSelector = [
   , "url"
   , "sms_originator"
   , "email_originator"
-  , "noreply_email"
   , "mail_theme"
   , "signview_theme"
   , "service_theme"
@@ -143,7 +141,6 @@ instance (MonadDB m) => DBUpdate m UpdateBrandedDomain () where
       sqlSet "url" $ bdUrl bd
       sqlSet "sms_originator" $ bdSmsOriginator bd
       sqlSet "email_originator" $ bdEmailOriginator bd
-      sqlSet "noreply_email" $ bdNoreplyEmail bd
       sqlSet "mail_theme" $ bdMailTheme bd
       sqlSet "signview_theme" $ bdSignviewTheme bd
       sqlSet "service_theme" $ bdServiceTheme bd
@@ -180,7 +177,6 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m NewBrandedDomain Br
       sqlSet "main_domain" False -- One can not create new main domain
       sqlSet "sms_originator" $ bdSmsOriginator mbd
       sqlSet "email_originator" $ bdEmailOriginator mbd
-      sqlSet "noreply_email" $ bdNoreplyEmail mbd
       sqlSet "mail_theme" $ themeID newmailtheme
       sqlSet "signview_theme" $ themeID newsignviewtheme
       sqlSet "service_theme" $ themeID newservicetheme

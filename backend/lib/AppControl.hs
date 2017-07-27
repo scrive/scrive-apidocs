@@ -312,6 +312,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , ctxglobaltemplates    = templates2
         , ctxlang               = userlang
         , ctxismailbackdooropen = isMailBackdoorOpen appConf
+        , ctxmailnoreplyaddress = mailNoreplyAddress appConf
         , ctxgtconf             = guardTimeConf appConf
         , ctxcgigrpconfig       = cgiGrpConfig appConf
         , ctxmrediscache        = mrediscache appGlobals

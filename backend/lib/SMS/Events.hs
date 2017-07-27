@@ -47,8 +47,8 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
-processEvents :: Scheduler ()
-processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, smsOrigMsisdn) -> do
+processEvents :: String -> Scheduler ()
+processEvents mailNoreplyAddress = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, smsOrigMsisdn) -> do
     mkontraInfoForSMS <- dbQuery $ GetKontraInfoForSMS smsid
     logInfo "Messages.procesEvent: logging info" . object $ [
             identifier_ eid
@@ -92,7 +92,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, s
                   theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case ev of
                     SMSDelivered -> handleDeliveredInvitation slid
                     SMSUndelivered _ -> when (signphone == smsOrigMsisdn) $ do
-                      handleUndeliveredSMSInvitation bd host slid
+                      handleUndeliveredSMSInvitation mailNoreplyAddress bd host slid
             handleEv eventType
 
     processEvent (eid, _, eventType, Just (DocumentPinSendoutSMS _did slid), smsOrigMsisdn) =
@@ -141,25 +141,25 @@ handleDeliveredInvitation signlinkid = logSignatory signlinkid $ do
       return ()
     Nothing -> return ()
 
-handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => BrandedDomain -> String -> SignatoryLinkID -> m ()
-handleUndeliveredSMSInvitation bd hostpart signlinkid = logSignatory signlinkid $ do
+handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => String -> BrandedDomain -> String -> SignatoryLinkID -> m ()
+handleUndeliveredSMSInvitation mailNoreplyAddress bd hostpart signlinkid = logSignatory signlinkid $ do
   logInfo_ "handleUndeliveredSMSInvitation: logging info"
   getSigLinkFor signlinkid <$> theDocument >>= \case
     Just signlink -> do
       time <- currentTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
       _ <- dbUpdate $ SetSMSInvitationDeliveryStatus signlinkid Undelivered actor
-      mail <- theDocument >>= \d -> smsUndeliveredInvitation bd hostpart d signlink
+      mail <- theDocument >>= \d -> smsUndeliveredInvitation mailNoreplyAddress bd hostpart d signlink
       theDocument >>= \d -> scheduleEmailSendout $ mail {
         to = [getMailAddress $ fromJust $ getAuthorSigLink d]
       }
       triggerAPICallbackIfThereIsOne =<< theDocument
     Nothing -> return ()
 
-smsUndeliveredInvitation :: (TemplatesMonad m,MonadDB m,MonadThrow m) => BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
-smsUndeliveredInvitation bd hostpart doc signlink = do
+smsUndeliveredInvitation :: (TemplatesMonad m,MonadDB m,MonadThrow m) => String -> BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
+smsUndeliveredInvitation mailNoreplyAddress bd hostpart doc signlink = do
   theme <- dbQuery $ GetTheme $ bdMailTheme bd
-  kontramail bd theme "invitationSMSUndelivered" $ do
+  kontramail mailNoreplyAddress bd theme "invitationSMSUndelivered" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink

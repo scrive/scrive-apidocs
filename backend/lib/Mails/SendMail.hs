@@ -106,24 +106,19 @@ wrapHTML body = concat [
   , "</html>"
   ]
 
-kontramaillocal :: (HasLang a, T.TemplatesMonad m) => BrandedDomain -> Theme -> a -> String -> F.Fields m () -> m Mail
-kontramaillocal bd theme = kontramailHelper  bd theme . renderLocalTemplate
+kontramaillocal :: (HasLang a, T.TemplatesMonad m) => String -> BrandedDomain -> Theme -> a -> String -> F.Fields m () -> m Mail
+kontramaillocal noreplyAddress bd theme = kontramailHelper noreplyAddress bd theme . renderLocalTemplate
 
-kontramail :: T.TemplatesMonad m  => BrandedDomain -> Theme -> String -> F.Fields m () -> m Mail
-kontramail bd theme = kontramailHelper bd theme T.renderTemplate
+kontramail :: T.TemplatesMonad m  => String -> BrandedDomain -> Theme -> String -> F.Fields m () -> m Mail
+kontramail noreplyAddress bd theme = kontramailHelper noreplyAddress bd theme T.renderTemplate
 
-kontramailHelper :: T.TemplatesMonad m => BrandedDomain -> Theme ->  (String -> F.Fields m () -> m String) -> String -> F.Fields m () -> m Mail
-kontramailHelper bd theme renderFunc tname fields = do
+kontramailHelper :: T.TemplatesMonad m => String -> BrandedDomain -> Theme ->  (String -> F.Fields m () -> m String) -> String -> F.Fields m () -> m Mail
+kontramailHelper noreplyAddress bd theme renderFunc tname fields = do
 
     wholemail <- renderFunc tname fields
     let (title, content) = case split "\r\n" $ dropWhile (isControl || isSpace) wholemail of
                              [] -> $unexpectedError "Couldnt separate email content from title"
                              (title':contentChunks) -> (unescapeHTML title', join "\r\n" contentChunks)
-        noreplyAddress = case strip $ bdNoreplyEmail bd of
-                           -- add a fallback noreply address if it's not set in bd settings
-                           -- otherwise emails will not be sent
-                           "" -> "noreply@scrive.com"
-                           x  -> x
     return $ emptyMail {
                          originator = bdEmailOriginator bd
                        , originatorEmail = noreplyAddress

@@ -70,12 +70,6 @@ module.exports = React.createClass({
                 getValue={function() {return model.emailOriginator()}}
                 setValue={function(v) {return model.setEmailOriginator(v)}}
               />
-              <DomainTextEditor
-                title="No reply email."
-                description="This email address will be used as the no-reply address. Setting this address may cause email delivery issues."
-                getValue={function() {return model.noreplyEmail()}}
-                setValue={function(v) {return model.setNoreplyEmail(v)}}
-              />
             </div>
             <div className='domain-settings-edit-panel-column right'>
               <DomainImageEditor

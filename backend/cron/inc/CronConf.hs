@@ -40,6 +40,7 @@ data CronConf = CronConf {
   , planhatConf        :: !(Maybe PlanhatConf)
     -- ^ To enable data push to Planhat
   , monitoringConf     :: !(Maybe MonitoringConf)
+  , mailNoreplyAddress :: String               -- ^ Noreply address used when sending email
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
@@ -96,6 +97,9 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> fieldOpt "monitoring"
       monitoringConf
       "Configuration of the ekg-statsd-based monitoring."
+  <*> fieldDef "mail_noreply_address" (mailNoreplyAddress def)
+      mailNoreplyAddress
+      "Noreply address used when sending email"
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
@@ -117,4 +121,5 @@ instance Default CronConf where
     , invoicingSFTPConf  = Nothing
     , planhatConf        = Nothing
     , monitoringConf     = Nothing
+    , mailNoreplyAddress = "noreply@scrive.com"
     }

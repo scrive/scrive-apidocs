@@ -127,14 +127,14 @@ main = do
           filecache mrediscache templates
 
         docSealing   = documentSealing (amazonConfig cronConf)
-          (guardTimeConf cronConf) templates filecache mrediscache pool
+          (guardTimeConf cronConf) templates filecache mrediscache pool (mailNoreplyAddress cronConf)
         docSigning   = documentSigning (amazonConfig cronConf)
           (guardTimeConf cronConf) (cgiGrpConfig cronConf)
-          templates filecache mrediscache pool
+          templates filecache mrediscache pool (mailNoreplyAddress cronConf)
         docExtending = documentExtendingConsumer (amazonConfig cronConf)
           (guardTimeConf cronConf) templates filecache mrediscache pool
 
-        apiCallbacks = documentAPICallback runScheduler
+        apiCallbacks = documentAPICallback runScheduler (mailNoreplyAddress cronConf)
         cron = cronQueue cronConf reqManager mmixpanel mplanhat runScheduler runDB
 
     runCryptoRNGT rng
@@ -216,7 +216,7 @@ main = do
             Just sftpConfig -> runScheduler $ uploadInvoicing sftpConfig
           RerunAt . nextDayAtHour 1 <$> currentTime
         MailEventsProcessing -> do
-          runScheduler Mails.Events.processEvents
+          runScheduler $ Mails.Events.processEvents (mailNoreplyAddress cronConf)
           return . RerunAfter $ iseconds 5
         MarkOrphanFilesForPurge -> do
           let maxMarked = 100000
@@ -267,7 +267,7 @@ main = do
           runScheduler $ actionQueue session
           return . RerunAfter $ ihours 1
         SMSEventsProcessing -> do
-          runScheduler SMS.Events.processEvents
+          runScheduler $ SMS.Events.processEvents (mailNoreplyAddress cronConf)
           return . RerunAfter $ iseconds 5
         UserAccountRequestEvaluation -> do
           runScheduler $ actionQueue userAccountRequest

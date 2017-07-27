@@ -39,6 +39,7 @@ data Context = Context
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid langs
     , ctxlang                :: Lang -- ^ The current context lang
     , ctxismailbackdooropen  :: Bool
+    , ctxmailnoreplyaddress  :: String -- ^ The "noreply" address used when sending email
     , ctxcgigrpconfig        :: Maybe CgiGrpConfig
     , ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
     , ctxmrediscache         :: Maybe R.Connection
@@ -74,4 +75,5 @@ contextToMailContext ctx = MailContext {
     mctxlang = ctxlang ctx
   , mctxcurrentBrandedDomain = ctxbrandeddomain ctx
   , mctxtime = ctxtime ctx
+  , mctxmailNoreplyAddress = ctxmailnoreplyaddress ctx
   }
