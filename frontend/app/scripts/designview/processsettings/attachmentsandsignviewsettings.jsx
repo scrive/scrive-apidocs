@@ -5,10 +5,12 @@ var Button = require("../../common/button");
 var Track = require("../../common/track");
 var DesignAuthorAttachmentsPopup = require("../../../js/designview/authoraattachmentsdesign.js").DesignAuthorAttachmentsPopup;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
-var DesignSignatoryAttachmentsPopup = require("../../../js/designview/signatoryattachmentsdesignview.js").DesignSignatoryAttachmentsPopup;
 var DocumentSaveMixin = require("../document_save_mixin");
 var Document = require("../../../js/documents.js").Document;
 var Modal = require("../../common/modal");
+var SignatoryAttachmentsModal = require(
+  "../signatoryattachments/signatoryattachmentsmodal"
+);
 
 
 module.exports = React.createClass({
@@ -17,10 +19,16 @@ module.exports = React.createClass({
   },
   mixins: [DocumentSaveMixin],
   getInitialState: function() {
-    return {settingsModalOpened: false};
+    return {
+      settingsModalOpened: false,
+      signatoryAttachmentsModalOpened: false
+    };
   },
   onSignviewSettingsModalCancel: function () {
     this.setState({settingsModalOpened: false});
+  },
+  onSignatoryAttachmentsModalCancel: function () {
+    this.setState({signatoryAttachmentsModalOpened: false});
   },
   render: function() {
     var self = this;
@@ -62,10 +70,7 @@ module.exports = React.createClass({
               } else {
                 Track.track('Open signatory attachments');
                 document.save();
-                new DesignSignatoryAttachmentsPopup({
-                  document: document,
-                  saveAndFlashMessageIfAlreadySaved: self.saveAndFlashMessageIfAlreadySaved
-                });
+                self.setState({signatoryAttachmentsModalOpened: true});
               }
             }}
           />
@@ -77,6 +82,13 @@ module.exports = React.createClass({
             active={self.state.settingsModalOpened}
             document={document}
             onClose={self.onSignviewSettingsModalCancel}
+          />
+
+          <SignatoryAttachmentsModal
+            active={self.state.signatoryAttachmentsModalOpened}
+            document={document}
+            saveAndFlashMessageIfAlreadySaved={self.saveAndFlashMessageIfAlreadySaved}
+            onClose={self.onSignatoryAttachmentsModalCancel}
           />
         </div>
       </div>
