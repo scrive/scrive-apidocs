@@ -134,7 +134,7 @@ main = do
         docExtending = documentExtendingConsumer (amazonConfig cronConf)
           (guardTimeConf cronConf) templates filecache mrediscache pool
 
-        apiCallbacks = documentAPICallback runScheduler (mailNoreplyAddress cronConf)
+        apiCallbacks = documentAPICallback runScheduler
         cron = cronQueue cronConf reqManager mmixpanel mplanhat runScheduler runDB
 
     runCryptoRNGT rng

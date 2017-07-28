@@ -14,7 +14,6 @@ import Log
 
 import ActionQueue.Scheduler
 import API.APIVersion
-import BrandedDomain.Model
 import DB
 import Doc.API.Callback.Data
 import Doc.API.Callback.Execute
@@ -23,17 +22,14 @@ import Doc.DocumentID
 import Doc.Logging
 import KontraPrelude
 import Log.Identifier
-import MailContext (MailContext(..), runMailContextT)
 import MinutesTime
 import User.CallbackScheme.Model
-import User.Lang (Lang(..))
 import Util.SignatoryLinkUtils
 
 documentAPICallback :: (MonadIO m, MonadBase IO m, MonadLog m, MonadMask m)
   => (forall r. Scheduler r -> m r)
-  -> String
   -> ConsumerConfig m CallbackID DocumentAPICallback
-documentAPICallback runExecute mailNoreplyAddress =
+documentAPICallback runExecute =
   ConsumerConfig {
       ccJobsTable = "document_api_callbacks"
     , ccConsumersTable = "document_api_callback_consumers"
@@ -51,16 +47,7 @@ documentAPICallback runExecute mailNoreplyAddress =
     , ccNotificationTimeout = 60 * 1000000 -- 1 minute
     , ccMaxRunningJobs = 32
     , ccProcessJob = \ dac@DocumentAPICallback {..} -> logDocument dacDocumentID . runExecute $ do
-        now <- currentTime
-        bd <- dbQuery GetMainBrandedDomain
-        -- Dummy MailContext
-        let mc = MailContext {
-              mctxlang = LANG_EN
-            , mctxcurrentBrandedDomain = bd
-            , mctxtime = now
-            , mctxmailNoreplyAddress = mailNoreplyAddress
-            }
-        runMailContextT mc $ execute dac >>= \ case
+        execute dac >>= \ case
           True  -> return $ Ok Remove
           False -> dbQuery (CheckQueuedCallbacksFor dacDocumentID) >>= \ case
             True  -> do

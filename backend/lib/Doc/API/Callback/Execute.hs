@@ -36,7 +36,6 @@ import KontraError
 import KontraPrelude
 import Log.Identifier
 import Log.Utils
-import MailContext.Class
 import Mails.SendMail
 import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
@@ -49,7 +48,7 @@ import Utils.String
 import qualified Utils.HTTP as Utils.HTTP
 
 execute ::
-  (AmazonMonad m, MonadDB m, MonadIO m, CryptoRNG m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadReader SchedulerData m, MailContextMonad m) =>
+  (AmazonMonad m, MonadDB m, MonadIO m, CryptoRNG m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadReader SchedulerData m) =>
   DocumentAPICallback -> m Bool
 execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
   exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor dacDocumentID
