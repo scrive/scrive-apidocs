@@ -392,11 +392,17 @@ module.exports = React.createClass({
       if (task.field().isCheckbox() && task.field().placements()[0].wrel() < 0.02) {
         arrowStyle.marginLeft = Math.max(1, scale) * arrowVars.actionArrowSmallRightMargin;
       }
+      if (task.field().isRadioGroup()) {
+        arrowStyle.marginLeft = Math.max(1, scale) * arrowVars.actionArrowSmallRightMargin;
+      }
     }
 
     if (type === ARROW.LEFT && task.isFieldTask()) {
       arrowStyle.marginLeft = Math.max(1, scale) * arrowVars.actionArrowLeftMargin;
       if (task.field().isCheckbox() && task.field().placements()[0].wrel() < 0.02) {
+        arrowStyle.marginLeft = Math.max(1, scale) * arrowVars.actionArrowSmallRightMargin;
+      }
+      if (task.field().isRadioGroup()) {
         arrowStyle.marginLeft = Math.max(1, scale) * arrowVars.actionArrowSmallRightMargin;
       }
     }
