@@ -10,6 +10,8 @@ $(function () {
     company : fromTemplate.company,
     userid : fromTemplate.userid,
     signupmethod : fromTemplate.signupmethod,
+    position : fromTemplate.companyPosition,
+    phone : fromTemplate.mobile,
     companyAdmin : fromTemplate.companyAdmin
   }).el());
 

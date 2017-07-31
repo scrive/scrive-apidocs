@@ -240,7 +240,7 @@ var Track = require("../scripts/common/track");
 
       var positionInput = new InfoTextInput({
         infotext: localization.accountSetupModal.modalAccountSetupPosition,
-        value: "",
+        value: model.position(),
         onChange: function(v) {model.setPosition(v);},
         inputtype: 'text',
         name: 'position',
@@ -253,7 +253,7 @@ var Track = require("../scripts/common/track");
 
       var phoneInput = new InfoTextInput({
         infotext: localization.accountSetupModal.modalAccountSetupPhone,
-        value: "",
+        value: model.phone(),
         onChange: function(v) {model.setPhone(v);},
         inputtype: 'text',
         name: 'phone',

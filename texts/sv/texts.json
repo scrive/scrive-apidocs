@@ -761,7 +761,7 @@
 "_prolongModalText":"Förläng förfallodatum med:",
 "_prolongModalTitle":"Förläng förfallodatum",
 "_radioButtonNames":"",
-"_radioButtonNamesNotUnique":"",
+"_radioButtonNamesNotUnique":"Du har redan en radioknapp med detta namn. Varje radioknapp måste ha ett unikt namn.",
 "_radioButtonPlacementName":"",
 "_radioGroupFieldName":"",
 "_reminderByEmailMobileQuestion":"Vill du skicka en påminnelse via e-post och SMS?",

@@ -262,6 +262,8 @@ handleAccountSetupGet uid token sm = do
         F.value "userid"  $ show uid
         F.value "company" $ companyname $ companyinfo $ company
         F.value "companyAdmin" $ useriscompanyadmin user
+        F.value "companyPosition" $ usercompanyposition $ userinfo user
+        F.value "mobile" $ getMobile user
         F.value "signupmethod" $ show sm
       internalResponse <$> (simpleHtmlResponse content)
     (Just _user, Just _)  -> return $ internalResponse $ LinkDesignView
