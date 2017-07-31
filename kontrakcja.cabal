@@ -1155,6 +1155,7 @@ Test-suite kontrakcja-test
                  ArchiveTest
                  Attachment.Tables
                  BrandedDomain.Tables
+                 BrandedDomain.Migrations
                  BrandedDomainTest
                  CSSGenerationTest
                  CSVUtilTest
