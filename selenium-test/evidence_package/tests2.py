@@ -42,7 +42,7 @@ def check_service_description(test, api):
 
     timestamp_string = PyQuery(contents)('.update-time').text()
     update_timestamp = time.strptime(timestamp_string[14:],
-                                     '%a %b %d %H:%M:%S %Z %Y')
+                                     '%a %d %b %Y %H:%M:%S %Z')
     diff = (datetime.now() -
             datetime.fromtimestamp(time.mktime(update_timestamp)))
     err_msg = 'Service description has not been updated in two weeks'
