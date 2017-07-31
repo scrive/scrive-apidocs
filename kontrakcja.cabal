@@ -886,6 +886,7 @@ Executable mailing-server
                  Mails.Tables
                  MemCache
                  MinutesTime
+                 Monitoring
                  SFTPConfig
                  SendGrid
                  Sender
@@ -1028,6 +1029,7 @@ Executable messenger-server
                  Messenger
                  MessengerServerConf
                  MinutesTime
+                 Monitoring
                  SFTPConfig
                  SMS.Data
                  SMS.Model
