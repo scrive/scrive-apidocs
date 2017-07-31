@@ -701,6 +701,7 @@ Executable kontrakcja-migrate
                  AppDBTables
                  Attachment.Tables
                  BrandedDomain.Tables
+                 BrandedDomain.Migrations
                  Chargeable.Migrations
                  Chargeable.Tables
                  Company.Migrations
