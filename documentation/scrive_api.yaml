@@ -50,6 +50,7 @@ info:
     | 2017-07-04  | Remove a comment about anchoring that was due to a bug, which has now been fixed |
     | 2017-08-03  | Revamped definitions of signatory fields, it should now be much clearer |
     |             | Added `SignatoryFieldRadiogroup`, Scrive now supports radio button fields |
+    |             | Factor out `SignatoryFieldStandard` into `SignatoryFieldEmailMobile` to allow for `editable_by_signatory` property |
 
     ## Environments & IP Addresses
 
@@ -862,6 +863,8 @@ definitions:
     $ref: ./definitions/Signatory.yaml
   SignatoryFieldName:
     $ref: ./definitions/SignatoryFieldName.yaml
+  SignatoryFieldEmailMobile:
+    $ref: ./definitions/SignatoryFieldEmailMobile.yaml
   SignatoryFieldSignature:
     $ref: ./definitions/SignatoryFieldSignature.yaml
   SignatoryFieldStandard:
