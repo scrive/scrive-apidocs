@@ -177,7 +177,7 @@ var DetailsEditorView = React.createClass({
             <td>
               <input
                 name="cgidisplayname"
-                maxLength={30}
+                maxLength={40}
                 type="text"
                 value={this.props.cgidisplayname}
                 onChange={this.onCgidisplaynameChange}
