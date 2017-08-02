@@ -38,10 +38,11 @@ properties:
 
       Currently, Scrive supports the following field types:
       * `SignatoryFieldName`: First and last name of the signatory.
+      * `SignatoryFieldEmailMobile`: Email and mobile of the signatory.
       * `SignatoryFieldSignature`: A signature box placed on the document, for
         the signatory to draw their signature.
-      * `SignatoryFieldStandard`: Company name and number, email, mobile
-        number, and personal number (AKA social security number).
+      * `SignatoryFieldStandard`: Company name and number, and personal number
+        (AKA social security number).
       * `SignatoryFieldCheckbox`: Checkboxes of varying sizes.
       * `SignatoryFieldRadiogroup`: Radio buttons of varying sizes.
       * `SignatoryFieldCustomText`: A text field for any other information
@@ -60,6 +61,7 @@ properties:
     items:
       anyOf:
         - $ref: ./SignatoryFieldName.yaml
+        - $ref: ./SignatoryFieldEmailMobile.yaml
         - $ref: ./SignatoryFieldSignature.yaml
         - $ref: ./SignatoryFieldStandard.yaml
         - $ref: ./SignatoryFieldCheckbox.yaml
@@ -248,6 +250,7 @@ example:
         "value": "noemail@scrive.com",
         "is_obligatory": false,
         "should_be_filled_by_sender": false,
+        "editable_by_signatory": false,
         "placements": []
       },
       {

@@ -1,12 +1,8 @@
 ---
 $schema: "http://json-schema.org/draft-04/schema#"
-title: SignatoryFieldStandard
+title: SignatoryFieldEmailMobile
 description: |
-  A signatory field for placing a number of standard text fields on the
-  document:
-  * Company name
-  * Company number
-  * Personal number (AKA social security number)
+  A signatory field for email addresses and mobile numbers.
 type: object
 properties:
   type:
@@ -14,9 +10,8 @@ properties:
     description: |
       Used to specify what type of field this is.
     enum:
-      - company
-      - company_number
-      - personal_number
+      - email
+      - mobile
   value:
     type: string
     description: |
@@ -32,16 +27,29 @@ properties:
   should_be_filled_by_sender:
     type: boolean
     default: false
+  editable_by_signatory:
+    type: boolean
+    default: false
+    description: |
+      Whether the signatory can edit a pre-filled value for this field.
+      This is useful when you have signatory details on file, but you want them
+      to be able to modify their email or mobile if it has changed.
+
+      **Note:** Setting this to `true` means a signatory will _always_ be able
+      to change the value on the signing page.
+      If you want a signatory to authenticate with SMS PIN, please be aware
+      that this may affect your desired workflow.
   placements:
     $ref: ./SignatoryFieldStandardPlacements.yaml
 required:
   - type
 example:
   {
-    "type": "company",
-    "value": "Scrive AB",
+    "type": "mobile",
+    "value": "+461234567890",
     "is_obligatory": false,
     "should_be_filled_by_sender": false,
+    "editable_by_signatory": false,
     "placements": [
       {
         "xrel": 0.09052631578947369,
