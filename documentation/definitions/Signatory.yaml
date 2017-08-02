@@ -43,6 +43,7 @@ properties:
       * `SignatoryFieldStandard`: Company name and number, email, mobile
         number, and personal number (AKA social security number).
       * `SignatoryFieldCheckbox`: Checkboxes of varying sizes.
+      * `SignatoryFieldRadiogroup`: Radio buttons of varying sizes.
       * `SignatoryFieldCustomText`: A text field for any other information
         about, or requested, from the signatory.
 
@@ -62,6 +63,7 @@ properties:
         - $ref: ./SignatoryFieldSignature.yaml
         - $ref: ./SignatoryFieldStandard.yaml
         - $ref: ./SignatoryFieldCheckbox.yaml
+        - $ref: ./SignatoryFieldRadiogroup.yaml
         - $ref: ./SignatoryFieldCustomText.yaml
   sign_order:
     type: integer
