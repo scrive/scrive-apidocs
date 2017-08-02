@@ -94,6 +94,13 @@ properties:
           $ref: ./SignatoryFieldPlacementTip.yaml
         anchors:
           $ref: ./SignatoryFieldPlacementAnchor.yaml
+      required:
+        - xrel
+        - yrel
+        - wrel
+        - hrel
+        - fsrel
+        - page
 required:
   - type
   - name
