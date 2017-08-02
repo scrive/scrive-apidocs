@@ -48,7 +48,8 @@ info:
     | 2017-05-15  | Add missing `company` standard signatory field             |
     | 2017-06-08  | Add `required` field to signatory attachments, optional attachments are now possible |
     | 2017-07-04  | Remove a comment about anchoring that was due to a bug, which has now been fixed |
-    | 2017-08-02  | Revamped definitions of signatory fields, it should now be much clearer |
+    | 2017-08-03  | Revamped definitions of signatory fields, it should now be much clearer |
+    |             | Added `SignatoryFieldRadiogroup`, Scrive now supports radio button fields |
 
     ## Environments & IP Addresses
 
@@ -867,6 +868,8 @@ definitions:
     $ref: ./definitions/SignatoryFieldStandard.yaml
   SignatoryFieldCheckbox:
     $ref: ./definitions/SignatoryFieldCheckbox.yaml
+  SignatoryFieldRadiogroup:
+    $ref: ./definitions/SignatoryFieldRadiogroup.yaml
   SignatoryFieldCustomText:
     $ref: ./definitions/SignatoryFieldCustomText.yaml
   ListFilter:
