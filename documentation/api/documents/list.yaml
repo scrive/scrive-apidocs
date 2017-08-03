@@ -68,7 +68,7 @@ get:
       type: string
       format: application/json
       required: false
-      default: '[ { "sort_by":"mtime", "order":"ascending" } ]'
+      default: '[ { "sort_by":"mtime", "order":"descending" } ]'
       description: |
         **List of sorting options.**
 
@@ -76,7 +76,7 @@ get:
         of documents in the order you provided.
 
         If not supplied, the default is
-        `[ { "sort_by":"mtime", "order":"ascending" } ]`,
+        `[ { "sort_by":"mtime", "order":"descending" } ]`,
         *i.e.*, sort by modification time, newest first.
 
         Must of of type [List Sorting](#list-sorting).
