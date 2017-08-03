@@ -59,31 +59,31 @@ main = do
   -- All running instances need to have the same configuration.
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   conf <- readConfig putStrLn config
-  case mscMonitoringConfig conf of
+  case mailerMonitoringConfig conf of
     Just mconf -> void $ startMonitoringServer mconf
     Nothing   -> return ()
   rng  <- newCryptoRNGState
-  lr   <- mkLogRunner "mailer" (mscLogConfig conf) rng
+  lr   <- mkLogRunner "mailer" (mailerLogConfig conf) rng
   withLogger lr $ \runLogger -> runLogger $ do
     checkExecutables
 
-    let pgSettings = pgConnSettings $ mscDBConfig conf
+    let pgSettings = pgConnSettings $ mailerDBConfig conf
     withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
       checkDatabaseAllowUnknownTables [] mailerTables
     awsconf <- do
-      localCache <- MemCache.new BS.length (mscLocalFileCacheSize conf)
-      globalCache <- F.forM (mscRedisCacheConfig conf) mkRedisConnection
+      localCache <- MemCache.new BS.length (mailerLocalFileCacheSize conf)
+      globalCache <- F.forM (mailerRedisCacheConfig conf) mkRedisConnection
       return $ AWS.AmazonConfig {
-          awsConfig = mscAmazonConfig conf
+          awsConfig = mailerAmazonConfig conf
         , awsLocalCache = localCache
         , awsGlobalCache = globalCache
         }
-    cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ mscMaxDBConnections conf))
-      <$> liftBase (createPoolSource (pgSettings mailerComposites)  (mscMaxDBConnections conf))
+    cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ mailerMaxDBConnections conf))
+      <$> liftBase (createPoolSource (pgSettings mailerComposites)  (mailerMaxDBConnections conf))
 
     E.bracket (startServer runLogger conf cs rng) (liftBase . killThread) . const $ do
-      let master = createSender cs $ mscMasterSender conf
-          mslave = createSender cs <$> mscSlaveSender conf
+      let master = createSender cs $ mailerMasterSender conf
+          mslave = createSender cs <$> mailerSlaveSender conf
           cron   = jobsWorker conf cs rng
           sender = mailsConsumer awsconf master mslave cs rng
 
@@ -98,7 +98,7 @@ main = do
       -> CryptoRNGState
       -> MainM ThreadId
     startServer runLogger conf cs rng = do
-      let (iface, port) = mscHttpBindAddress conf
+      let (iface, port) = mailerHttpBindAddress conf
           handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
       routes <- case R.compile (handlers conf) of
         Left e -> do
@@ -110,8 +110,8 @@ main = do
       socket <- liftBase . listenOn (htonl iface) $ fromIntegral port
       fork . liftBase . runReqHandlerT socket handlerConf . runLogger $ router rng cs routes
 
-    hasFailoverTests conf = case mscSlaveSender conf of
-      Just _ -> not $ null $ testReceivers conf
+    hasFailoverTests conf = case mailerSlaveSender conf of
+      Just _ -> not $ null $ mailerTestReceivers conf
       Nothing -> False
 
     mailsConsumer
@@ -199,7 +199,7 @@ main = do
           -- be able to start the process if the configuration changes.
           logInfo_ "Running service checker"
           token <- random
-          mid <- dbUpdate $ CreateServiceTest (token, testSender, testReceivers conf, Just testSender, "test", "test", [])
+          mid <- dbUpdate $ CreateServiceTest (token, testSender, mailerTestReceivers conf, Just testSender, "test", "test", [])
           logInfo "Service testing email created" $ object [identifier_ mid]
           dbUpdate $ CollectServiceTestResultIn $ iminutes 10
           return $ Ok MarkProcessed

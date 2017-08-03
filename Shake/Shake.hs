@@ -470,6 +470,7 @@ distributionRules newBuild = do
                     , componentTargetPath newBuild "kontrakcja-migrate"
                     , componentTargetPath newBuild "mailing-server"
                     , componentTargetPath newBuild "messenger-server"
+                    , componentTargetPath newBuild "config-checker"
                     , "evidence-package/samples.p"
                     , "frontend/app/img"
                     , "frontend/app/less"

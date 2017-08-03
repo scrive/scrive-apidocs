@@ -18,51 +18,51 @@ import SMS.Data
 import Utils.TH
 
 data MessengerServerConf = MessengerServerConf {
-  mscHttpBindAddress  :: !(Word32, Word16)
-, mscDBConfig         :: !Text
-, mscMaxDBConnections :: !Int
-, mscLogConfig        :: !LogConfig
-, mscSenderDefault    :: !SenderConfig
-, mscSenderTelia      :: !SenderConfig
-, mscMonitoringConfig :: !(Maybe MonitoringConf)
-} deriving (Eq, Show)
+    messengerHttpBindAddress  :: !(Word32, Word16)
+  , messengerDBConfig         :: !Text
+  , messengerMaxDBConnections :: !Int
+  , messengerLogConfig        :: !LogConfig
+  , messengerSenderDefault    :: !SenderConfig
+  , messengerSenderTelia      :: !SenderConfig
+  , messengerMonitoringConfig :: !(Maybe MonitoringConf)
+  } deriving (Eq, Show)
 
 newtype SendersConfig = SendersConfig (SMSProvider -> SenderConfig)
 
 sendersConfigFromMessengerConf :: MessengerServerConf -> SendersConfig
 sendersConfigFromMessengerConf MessengerServerConf{..} = SendersConfig
   (\p -> case p of
-    SMSDefault -> mscSenderDefault
-    SMSTeliaCallGuide -> mscSenderTelia
+    SMSDefault -> messengerSenderDefault
+    SMSTeliaCallGuide -> messengerSenderTelia
   )
 
 unjsonMessengerServerConf :: UnjsonDef MessengerServerConf
 unjsonMessengerServerConf = objectOf $ MessengerServerConf
   <$> ((,)
     <$> fieldBy "bind_ip"
-        (fst . mscHttpBindAddress)
+        (fst . messengerHttpBindAddress)
         "IP to listen on, defaults to 0.0.0.0"
         unjsonIPv4AsWord32
     <*> field "bind_port"
-        (snd . mscHttpBindAddress)
+        (snd . messengerHttpBindAddress)
         "Port to listen on")
   <*> field "database"
-      mscDBConfig
+      messengerDBConfig
       "Database connection string"
   <*> field "max_db_connections"
-      mscMaxDBConnections
+      messengerMaxDBConnections
       "Database connections limit"
   <*> field "logging"
-      mscLogConfig
+      messengerLogConfig
       "Logging configuration"
   <*> field "sender_default"
-      mscSenderDefault
+      messengerSenderDefault
       "Default Sender configuration"
   <*> field "sender_telia"
-      mscSenderTelia
+      messengerSenderTelia
       "Telia Sender configuration"
   <*> fieldOpt "monitoring"
-      mscMonitoringConfig
+      messengerMonitoringConfig
       "Configuration of the ekg-statsd-based monitoring."
 
 instance Unjson MessengerServerConf where
@@ -113,17 +113,17 @@ instance Unjson SenderConfig where
 
 instance Default MessengerServerConf where
   def = MessengerServerConf {
-      mscHttpBindAddress = (0x7f000001, 6668)
-    , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
-    , mscMaxDBConnections = 100
-     , mscLogConfig = def
-    , mscSenderDefault = LocalSender {
+      messengerHttpBindAddress = (0x7f000001, 6668)
+    , messengerDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
+    , messengerMaxDBConnections = 100
+    , messengerLogConfig = def
+    , messengerSenderDefault = LocalSender {
         localDirectory = "/tmp/default"
       , localOpenCommand = Nothing
     }
-    , mscSenderTelia = LocalSender {
+    , messengerSenderTelia = LocalSender {
         localDirectory = "/tmp/telia"
       , localOpenCommand = Nothing
     }
-    , mscMonitoringConfig = Nothing
+    , messengerMonitoringConfig = Nothing
   }

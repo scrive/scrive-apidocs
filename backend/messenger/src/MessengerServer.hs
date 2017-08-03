@@ -52,19 +52,19 @@ main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   conf <- readConfig putStrLn config
-  case mscMonitoringConfig conf of --
+  case messengerMonitoringConfig conf of --
     Just mconf -> void $ startMonitoringServer mconf
     Nothing    -> return ()
   rng <- newCryptoRNGState
-  lr <- mkLogRunner "messenger" (mscLogConfig conf) rng
+  lr <- mkLogRunner "messenger" (messengerLogConfig conf) rng
   withLogger lr $ \runLogger -> runLogger $ do
     checkExecutables
 
-    let pgSettings = pgConnSettings (mscDBConfig conf) []
+    let pgSettings = pgConnSettings (messengerDBConfig conf) []
     withPostgreSQL (unConnectionSource $ simpleSource pgSettings) $
       checkDatabaseAllowUnknownTables [] messengerTables
-    cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ mscMaxDBConnections conf))
-      <$> liftBase (createPoolSource pgSettings (mscMaxDBConnections conf))
+    cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ messengerMaxDBConnections conf))
+      <$> liftBase (createPoolSource pgSettings (messengerMaxDBConnections conf))
 
     let cron = jobsWorker cs
         sender = smsConsumer rng cs $ createSender $ sendersConfigFromMessengerConf conf
@@ -80,7 +80,7 @@ main = do
       -> MessengerServerConf
       -> MainM ThreadId
     startServer runLogger cs rng conf = do
-      let (iface, port) = mscHttpBindAddress conf
+      let (iface, port) = messengerHttpBindAddress conf
           handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
       routes <- case R.compile handlers of
         Left e -> do

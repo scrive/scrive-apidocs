@@ -1,13 +1,16 @@
 module Configuration (
     ReadConfigOptions(..),
     readConfig,
-    readConfigEx
+    readConfigEx,
+    writeDefaultConfig
   ) where
 
 import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Data.Default
+import Data.Proxy
 import Data.Unjson
+import System.Directory
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -17,6 +20,19 @@ import qualified Data.Text as Text
 import qualified Data.Yaml as Yaml
 
 import KontraPrelude
+
+writeDefaultConfig :: forall a m .
+              (Unjson a, Default a, Monad m, MonadBaseControl IO m) =>
+              (String -> m ()) -> FilePath -> Proxy a -> m ()
+writeDefaultConfig logger path _proxy = do
+  configExists <- liftBase $ doesFileExist path
+
+  if configExists
+    then logger $ "Config file '" <> path <> "' already exists, skipping..."
+    else do logger $ "Writing a default configuration file to '" ++ path
+              ++ "'..."
+            liftBase $
+              BSL.writeFile path (configAsJsonLazyByteString (def :: a))
 
 readConfig :: forall a m .
               (Unjson a, Default a, Monad m, MonadBaseControl IO m) =>
@@ -96,7 +112,7 @@ readConfigEx logger path ReadConfigOptions{..} = do
     logExceptionAndPrintFullDocs ex = logStringAndPrintFullDocs (show ex)
     logStringAndPrintFullDocs :: String -> m g
     logStringAndPrintFullDocs ex = do
-      logger $ ex ++ "\n" ++ render ud ++ "\n" ++ configAsJsonString def
+      logger $ ex ++ "\n" ++ render ud ++ "\n" ++ configAsJsonString (def :: a)
       fail (show ex)
     logProblem (Anchored xpath msg) = do
         case renderForPath xpath ud of
@@ -108,10 +124,15 @@ readConfigEx logger path ReadConfigOptions{..} = do
       logger $ "There were issues with the content of configuration " ++ path
       mapM_ logProblem problems
       fail $ "There were issues with the content of configuration " ++ path
-    configAsJsonString :: a -> String
-    configAsJsonString a = BSL.toString $
-      unjsonToByteStringLazy'
-      (Options { pretty = True, indent = 4, nulls = False }) ud a
+
+configAsJsonString :: Unjson a => a -> String
+configAsJsonString = BSL.toString . configAsJsonLazyByteString
+
+configAsJsonLazyByteString :: forall a . Unjson a => a -> BSL.ByteString
+configAsJsonLazyByteString a =
+  unjsonToByteStringLazy'
+      (Options { pretty = True, indent = 4, nulls = False })
+      (unjsonDef :: UnjsonDef a) a
 
 showNiceYamlParseException :: FilePath -> Yaml.ParseException -> String
 showNiceYamlParseException filepath parseException =

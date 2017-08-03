@@ -49,6 +49,10 @@ configTests _ = testGroup "Configurations"
       testConfTemplate "vagrant/kontrakcja.conf"
       (Proxy :: Proxy AppConf)
 
+    , testCase "cron vagrant config template parses"              $
+      testConfTemplate "vagrant/cron.conf"
+      (Proxy :: Proxy CronConf)
+
     , testCase "mailing-server vagrant config template parses"    $
       testConfTemplate "vagrant/mailing_server.conf"
       (Proxy :: Proxy MailingServerConf)

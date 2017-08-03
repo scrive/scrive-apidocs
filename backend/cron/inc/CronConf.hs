@@ -21,32 +21,32 @@ import SFTPConfig
 
 -- | Cron configuration: things like AWS, Postgres and Redis, NTP servers, etc.
 data CronConf = CronConf {
-    amazonConfig       :: !(Maybe AmazonConfig)
+    cronAmazonConfig       :: !(Maybe AmazonConfig)
     -- ^ AWS configuration (bucket, access key, secret key).
-  , dbConfig           :: !T.Text               -- ^ Postgresql configuration.
-  , maxDBConnections   :: !Int                  -- ^ Limit of db connections.
-  , redisCacheConfig   :: !(Maybe RedisConfig)  -- ^ Redis configuration.
-  , localFileCacheSize :: !Int                  -- ^ Size of local cache for files.
-  , logConfig          :: !LogConfig            -- ^ Logging configuration.
-  , guardTimeConf      :: !GuardTimeConf        -- ^ GuardTime configuration.
-  , cgiGrpConfig       :: !(Maybe CgiGrpConfig) -- ^ CGI GRP (E-ID) configuration.
-  , mixpanelToken      :: !(Maybe String)       -- ^ For Mixpanel integration.
-  , ntpServers         :: ![String]
+  , cronDBConfig           :: !T.Text               -- ^ Postgresql configuration.
+  , cronMaxDBConnections   :: !Int                  -- ^ Limit of db connections.
+  , cronRedisCacheConfig   :: !(Maybe RedisConfig)  -- ^ Redis configuration.
+  , cronLocalFileCacheSize :: !Int                  -- ^ Size of local cache for files.
+  , cronLogConfig          :: !LogConfig            -- ^ Logging configuration.
+  , cronGuardTimeConf      :: !GuardTimeConf        -- ^ GuardTime configuration.
+  , cronCgiGrpConfig       :: !(Maybe CgiGrpConfig) -- ^ CGI GRP (E-ID) configuration.
+  , cronMixpanelToken      :: !(Maybe String)       -- ^ For Mixpanel integration.
+  , cronNtpServers         :: ![String]
     -- ^ List of NTP servers to contact to get an estimate of host clock
     -- error.
-  , salesforceConf     :: !(Maybe SalesforceConf) -- ^ Salesforce configuration.
-  , invoicingSFTPConf  :: !(Maybe SFTPConfig)
+  , cronSalesforceConf     :: !(Maybe SalesforceConf) -- ^ Salesforce configuration.
+  , cronInvoicingSFTPConf  :: !(Maybe SFTPConfig)
     -- ^ SFTP server for invoicing uploads.
-  , planhatConf        :: !(Maybe PlanhatConf)
+  , cronPlanhatConf        :: !(Maybe PlanhatConf)
     -- ^ To enable data push to Planhat
-  , monitoringConf     :: !(Maybe MonitoringConf)
-  , mailNoreplyAddress :: String               -- ^ Noreply address used when sending email
+  , cronMonitoringConf     :: !(Maybe MonitoringConf)
+  , cronMailNoreplyAddress :: String               -- ^ Noreply address used when sending email
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
 unjsonCronConf = objectOf $ pure CronConf
  <*> fieldOptBy "amazon"
-      amazonConfig
+      cronAmazonConfig
       "Amazon configuration"
       (objectOf $ pure (,,)
        <*> field "bucket"
@@ -59,46 +59,46 @@ unjsonCronConf = objectOf $ pure CronConf
          (\(_,_,x) -> x)
          "Amazon secret key")
   <*> field "database"
-      dbConfig
+      cronDBConfig
       "Database connection string"
   <*> field "max_db_connections"
-      maxDBConnections
+      cronMaxDBConnections
       "Database connections limit"
   <*> fieldOpt "redis_cache"
-      redisCacheConfig
+      cronRedisCacheConfig
       "Redis cache configuration"
   <*> field "local_file_cache_size"
-      localFileCacheSize
+      cronLocalFileCacheSize
       "Local file cache size in bytes"
   <*> field "logging"
-      logConfig
+      cronLogConfig
       "Logging configuration"
   <*> field "guardtime"
-      guardTimeConf
+      cronGuardTimeConf
       "GuardTime configuration"
   <*> fieldOpt "cgi_grp"
-      cgiGrpConfig
+      cronCgiGrpConfig
       "CGI GRP (E-ID) configuration"
   <*> fieldOpt "mixpanel"
-      mixpanelToken
+      cronMixpanelToken
       "Token for Mixpanel"
   <*> field "ntp_servers"
-      ntpServers
+      cronNtpServers
       "List of NTP servers to contact to get estimate of host clock error"
   <*> fieldOpt "salesforce"
-      salesforceConf
+      cronSalesforceConf
       "Configuration of salesforce"
   <*> fieldOpt "invoicing_sftp_for_salesforce"
-      invoicingSFTPConf
+      cronInvoicingSFTPConf
       "Configuration for SFTP:ing invoicing reports"
   <*> fieldOpt "planhat"
-      planhatConf
+      cronPlanhatConf
       "Configuration for pushing data to Planhat"
   <*> fieldOpt "monitoring"
-      monitoringConf
+      cronMonitoringConf
       "Configuration of the ekg-statsd-based monitoring."
   <*> field "mail_noreply_address"
-      mailNoreplyAddress
+      cronMailNoreplyAddress
       "Noreply address used when sending email"
 
 instance Unjson CronConf where
@@ -107,19 +107,20 @@ instance Unjson CronConf where
 -- | Default cron configuration that does nothing.
 instance Default CronConf where
   def = CronConf {
-      amazonConfig       = Nothing
-    , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
-    , maxDBConnections   = 100
-    , redisCacheConfig   = Nothing
-    , localFileCacheSize = 200000000
-    , logConfig          = def
-    , guardTimeConf      = def
-    , cgiGrpConfig       = Nothing
-    , mixpanelToken      = Nothing
-    , ntpServers         = defaultNtpServers
-    , salesforceConf     = Nothing
-    , invoicingSFTPConf  = Nothing
-    , planhatConf        = Nothing
-    , monitoringConf     = Nothing
-    , mailNoreplyAddress = "noreply@scrive.com"
+      cronAmazonConfig       = Nothing
+    , cronDBConfig           =
+        "user='kontra' password='kontra' dbname='kontrakcja'"
+    , cronMaxDBConnections   = 100
+    , cronRedisCacheConfig   = Nothing
+    , cronLocalFileCacheSize = 200000000
+    , cronLogConfig          = def
+    , cronGuardTimeConf      = def
+    , cronCgiGrpConfig       = Nothing
+    , cronMixpanelToken      = Nothing
+    , cronNtpServers         = defaultNtpServers
+    , cronSalesforceConf     = Nothing
+    , cronInvoicingSFTPConf  = Nothing
+    , cronPlanhatConf        = Nothing
+    , cronMonitoringConf     = Nothing
+    , cronMailNoreplyAddress = "noreply@scrive.com"
     }

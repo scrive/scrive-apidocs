@@ -95,7 +95,7 @@ withCallbackValidation cvks handler = do
 -- We need to get all possible validation keys, and then find a one that matches secret key of current request
 callbackValidationsFromConfig :: MailingServerConf -> [CallbackValidationKeys]
 callbackValidationsFromConfig conf =
-  (cvFromSender (mscMasterSender conf)) ++ (concat $ maybeToList (cvFromSender <$> mscSlaveSender conf))
+  (cvFromSender (mailerMasterSender conf)) ++ (concat $ maybeToList (cvFromSender <$> mailerSlaveSender conf))
   where
     cvFromSender (SMTPSender{smtpUser,smtpDedicatedUsers}) =
       catMaybes ((callbackValidationKeys smtpUser) :  (callbackValidationKeys <$> smtpDedicatedUser <$> smtpDedicatedUsers))

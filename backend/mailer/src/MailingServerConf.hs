@@ -20,18 +20,18 @@ import Monitoring
 import Utils.TH
 
 data MailingServerConf = MailingServerConf {
-  mscHttpBindAddress    :: !(Word32, Word16)
-, mscDBConfig           :: !Text
-, mscMaxDBConnections   :: !Int
-, mscRedisCacheConfig   :: !(Maybe RedisConfig)
-, mscLocalFileCacheSize :: !Int
-, mscLogConfig          :: !LogConfig
-, mscMasterSender       :: !SenderConfig
-, mscSlaveSender        :: !(Maybe SenderConfig)
-, mscAmazonConfig       :: !(Maybe (String, String, String))
-, testReceivers         :: ![Address]
-, mscMonitoringConfig   :: !(Maybe MonitoringConf)
-} deriving (Eq, Show)
+    mailerHttpBindAddress    :: !(Word32, Word16)
+  , mailerDBConfig           :: !Text
+  , mailerMaxDBConnections   :: !Int
+  , mailerRedisCacheConfig   :: !(Maybe RedisConfig)
+  , mailerLocalFileCacheSize :: !Int
+  , mailerLogConfig          :: !LogConfig
+  , mailerMasterSender       :: !SenderConfig
+  , mailerSlaveSender        :: !(Maybe SenderConfig)
+  , mailerAmazonConfig       :: !(Maybe (String, String, String))
+  , mailerTestReceivers      :: ![Address]
+  , mailerMonitoringConfig   :: !(Maybe MonitoringConf)
+  } deriving (Eq, Show)
 
 -- | SMTP callback key authentication will be used to receive callbacks
 -- Right now it's used only for SocketLabs
@@ -91,35 +91,35 @@ unjsonMailingServerConf :: UnjsonDef MailingServerConf
 unjsonMailingServerConf = objectOf $ MailingServerConf
   <$> ((,)
     <$> fieldBy "bind_ip"
-        (fst . mscHttpBindAddress)
+        (fst . mailerHttpBindAddress)
         "IP to listen on, defaults to 0.0.0.0"
         unjsonIPv4AsWord32
     <*> field "bind_port"
-        (snd . mscHttpBindAddress)
+        (snd . mailerHttpBindAddress)
         "Port to listen on")
   <*> field "database"
-      mscDBConfig
+      mailerDBConfig
       "Database connection string"
   <*> field "max_db_connections"
-      mscMaxDBConnections
+      mailerMaxDBConnections
       "Database connections limit"
   <*> fieldOpt "redis_cache"
-      mscRedisCacheConfig
+      mailerRedisCacheConfig
       "Redis cache configuration"
   <*> field "local_file_cache_size"
-      mscLocalFileCacheSize
+      mailerLocalFileCacheSize
       "Local file cache size in bytes"
   <*> field "logging"
-      mscLogConfig
+      mailerLogConfig
       "Logging configuration"
   <*> field "master_sender"
-      mscMasterSender
+      mailerMasterSender
       "Master sender"
   <*> fieldOpt "slave_sender"
-      mscSlaveSender
+      mailerSlaveSender
       "Slave sender"
   <*> fieldOptBy "amazon"
-      mscAmazonConfig
+      mailerAmazonConfig
       "Amazon configuration"
       (objectOf $ (,,)
         <$> field "bucket"
@@ -132,10 +132,10 @@ unjsonMailingServerConf = objectOf $ MailingServerConf
             (\(_,_,x) -> x)
             "Amazon secret key")
   <*> field "test_receivers"
-      testReceivers
+      mailerTestReceivers
       "Email addresses for testing services"
   <*> fieldOpt "monitoring"
-      mscMonitoringConfig
+      mailerMonitoringConfig
       "Configuration of the ekg-statsd-based monitoring."
 
 instance Unjson MailingServerConf where
@@ -189,23 +189,23 @@ instance Unjson SenderConfig where
 
 instance Default MailingServerConf where
   def = MailingServerConf {
-      mscHttpBindAddress = (0x7f000001, 6666)
-    , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
-    , mscMaxDBConnections = 100
-    , mscRedisCacheConfig = Nothing
-    , mscLocalFileCacheSize = 52428800
-    , mscLogConfig = def
-    , mscMasterSender = LocalSender {
+      mailerHttpBindAddress = (0x7f000001, 6666)
+    , mailerDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
+    , mailerMaxDBConnections = 100
+    , mailerRedisCacheConfig = Nothing
+    , mailerLocalFileCacheSize = 52428800
+    , mailerLogConfig = def
+    , mailerMasterSender = LocalSender {
         localDirectory = "/tmp"
       , localOpenCommand = Nothing
     }
-    , mscSlaveSender = Nothing
-    , mscAmazonConfig = Nothing
-    , testReceivers = [
+    , mailerSlaveSender = Nothing
+    , mailerAmazonConfig = Nothing
+    , mailerTestReceivers = [
         Address {
           addrName = "test"
         , addrEmail = "your@email.scrive.com"
       }
     ]
-    , mscMonitoringConfig = Nothing
+    , mailerMonitoringConfig = Nothing
   }

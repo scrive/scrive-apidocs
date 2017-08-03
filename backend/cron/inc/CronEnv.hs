@@ -6,7 +6,7 @@ import qualified Database.Redis as R
 
 import ActionQueue.Monad (ActionQueueT, runQueue)
 import ActionQueue.Scheduler (SchedulerData(..))
-import CronConf (CronConf, amazonConfig, guardTimeConf, mailNoreplyAddress, salesforceConf)
+import CronConf (CronConf, cronAmazonConfig, cronGuardTimeConf, cronMailNoreplyAddress, cronSalesforceConf)
 import File.FileID (FileID)
 import KontraPrelude
 import Templates (KontrakcjaGlobalTemplates)
@@ -21,8 +21,9 @@ runScheduler :: MonadBase IO m
              -> ActionQueueT (AWS.AmazonMonadT m) SchedulerData a
              -> m a
 runScheduler cronConf localCache globalCache templates x = do
-  let amazoncfg     = AWS.AmazonConfig (amazonConfig cronConf)
+  let amazoncfg     = AWS.AmazonConfig (cronAmazonConfig cronConf)
                       localCache globalCache
-      schedulerData = SchedulerData (guardTimeConf cronConf)
-                      (salesforceConf cronConf) templates (mailNoreplyAddress cronConf)
+      schedulerData = SchedulerData (cronGuardTimeConf cronConf)
+                      (cronSalesforceConf cronConf) templates
+                      (cronMailNoreplyAddress cronConf)
   AWS.runAmazonMonadT amazoncfg $ runQueue schedulerData x

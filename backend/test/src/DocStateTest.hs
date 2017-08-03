@@ -16,7 +16,7 @@ import ActionQueue.Scheduler (SchedulerData(..))
 import Amazon
 import Company.Model
 import Context (ctxtime)
-import CronConf (CronConf(dbConfig))
+import CronConf (CronConf(cronDBConfig))
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 import Doc.Conditions
@@ -1900,7 +1900,7 @@ testStatusClassSignedWhenAllSigned = replicateM_ 10 $ do
 
 runScheduler :: MonadBase IO m => ActionQueueT (AWS.AmazonMonadT m) SchedulerData a -> m a
 runScheduler m = do
-  let cronConf = def { dbConfig = "" }
+  let cronConf = def { cronDBConfig = "" }
   templates <- liftBase readGlobalTemplates
   filecache <- MemCache.new BS.length 52428800
   CronEnv.runScheduler cronConf filecache Nothing templates m

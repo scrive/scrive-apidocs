@@ -80,39 +80,39 @@ main :: IO ()
 main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   cronConf <- readConfig putStrLn config
-  case monitoringConf cronConf of
+  case cronMonitoringConf cronConf of
     Just conf -> void $ startMonitoringServer conf
     Nothing   -> return ()
   rng <- newCryptoRNGState
 
-  logRunner <- mkLogRunner "cron" (logConfig cronConf) rng
+  logRunner <- mkLogRunner "cron" (cronLogConfig cronConf) rng
   reqManager <- newTlsManager
 
   runWithLogRunner logRunner $ do
     checkExecutables
 
-    let connSettings = pgConnSettings $ dbConfig cronConf
+    let connSettings = pgConnSettings $ cronDBConfig cronConf
     withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $
       checkDatabase kontraDomains kontraTables
 
-    ConnectionSource pool <- ($ (maxConnectionTracker $ maxDBConnections cronConf))
-      <$> liftBase (createPoolSource (connSettings kontraComposites) (maxDBConnections cronConf))
+    ConnectionSource pool <- ($ (maxConnectionTracker $ cronMaxDBConnections cronConf))
+      <$> liftBase (createPoolSource (connSettings kontraComposites) (cronMaxDBConnections cronConf))
     templates <- liftBase readGlobalTemplates
-    mrediscache <- F.forM (redisCacheConfig cronConf) mkRedisConnection
-    filecache <- MemCache.new BS.length (localFileCacheSize cronConf)
+    mrediscache <- F.forM (cronRedisCacheConfig cronConf) mkRedisConnection
+    filecache <- MemCache.new BS.length (cronLocalFileCacheSize cronConf)
 
     -- Asynchronous event dispatcher; if you want to add a consumer to the event
     -- dispatcher, please combine the two into one dispatcher function rather
     -- than creating a new thread or something like that, since
     -- asyncProcessEvents removes events after processing.
-    mmixpanel <- case mixpanelToken cronConf of
+    mmixpanel <- case cronMixpanelToken cronConf of
       Nothing -> do
         noConfigurationWarning "Mixpanel"
         return Nothing
       Just mt ->
         return $ Just $ processMixpanelEvent mt
 
-    mplanhat <- case planhatConf cronConf of
+    mplanhat <- case cronPlanhatConf cronConf of
       Nothing -> do
         noConfigurationWarning "Planhat"
         return Nothing
@@ -126,13 +126,13 @@ main = do
         runScheduler = runDB . CronEnv.runScheduler cronConf
           filecache mrediscache templates
 
-        docSealing   = documentSealing (amazonConfig cronConf)
-          (guardTimeConf cronConf) templates filecache mrediscache pool (mailNoreplyAddress cronConf)
-        docSigning   = documentSigning (amazonConfig cronConf)
-          (guardTimeConf cronConf) (cgiGrpConfig cronConf)
-          templates filecache mrediscache pool (mailNoreplyAddress cronConf)
-        docExtending = documentExtendingConsumer (amazonConfig cronConf)
-          (guardTimeConf cronConf) templates filecache mrediscache pool
+        docSealing   = documentSealing (cronAmazonConfig cronConf)
+          (cronGuardTimeConf cronConf) templates filecache mrediscache pool (cronMailNoreplyAddress cronConf)
+        docSigning   = documentSigning (cronAmazonConfig cronConf)
+          (cronGuardTimeConf cronConf) (cronCgiGrpConfig cronConf)
+          templates filecache mrediscache pool (cronMailNoreplyAddress cronConf)
+        docExtending = documentExtendingConsumer (cronAmazonConfig cronConf)
+          (cronGuardTimeConf cronConf) templates filecache mrediscache pool
 
         apiCallbacks = documentAPICallback runScheduler
         cron = cronQueue cronConf reqManager mmixpanel mplanhat runScheduler runDB
@@ -165,7 +165,7 @@ main = do
       logInfo_ "Processing job"
       action <- case cjType of
         AmazonUpload -> do
-          if AWS.isAWSConfigOk $ amazonConfig cronConf
+          if AWS.isAWSConfigOk $ cronAmazonConfig cronConf
             then do
               moved <- runScheduler (AWS.uploadSomeFilesToAmazon 10)
               if moved
@@ -180,7 +180,7 @@ main = do
             asyncProcessEvents getEventProcessor (NoMoreThan processMaximum)
           return . RerunAfter $ iseconds 10
         ClockErrorCollection -> do
-          runDB $ collectClockError (ntpServers cronConf)
+          runDB $ collectClockError (cronNtpServers cronConf)
           return . RerunAfter $ ihours 1
         DocumentAutomaticRemindersEvaluation -> do
           runScheduler $ actionQueue documentAutomaticReminder
@@ -210,13 +210,13 @@ main = do
           runScheduler findAndTimeoutDocuments
           return . RerunAfter $ iminutes 10
         InvoicingUpload -> do
-          case invoicingSFTPConf cronConf of
+          case cronInvoicingSFTPConf cronConf of
             Nothing -> do
               logInfo "SFTP config missing; skipping" $ object []
             Just sftpConfig -> runScheduler $ uploadInvoicing sftpConfig
           RerunAt . nextDayAtHour 1 <$> currentTime
         MailEventsProcessing -> do
-          runScheduler $ Mails.Events.processEvents (mailNoreplyAddress cronConf)
+          runScheduler $ Mails.Events.processEvents (cronMailNoreplyAddress cronConf)
           return . RerunAfter $ iseconds 5
         MarkOrphanFilesForPurge -> do
           let maxMarked = 100000
@@ -237,7 +237,7 @@ main = do
           return . RerunAfter $ ihours 1
         OldLogsRemoval -> do
           let connSource ci = simpleSource def { csConnInfo = ci }
-              logDBs = catMaybes . for (lcLoggers $ logConfig cronConf) $ \case
+              logDBs = catMaybes . for (lcLoggers $ cronLogConfig cronConf) $ \case
                 PostgreSQL ci -> Just ci
                 _             -> Nothing
           forM_ logDBs $ \ci -> runDBT (unConnectionSource $ connSource ci) def $ do
@@ -258,7 +258,7 @@ main = do
                                 then iseconds 1
                                 else iminutes 1
         PushPlanhatStats -> do
-          case planhatConf cronConf of
+          case cronPlanhatConf cronConf of
             Nothing -> do
               logInfo "Planhat config missing; skipping" $ object []
             Just phConf -> do runScheduler $ doDailyPlanhatStats phConf mgr
@@ -267,7 +267,7 @@ main = do
           runScheduler $ actionQueue session
           return . RerunAfter $ ihours 1
         SMSEventsProcessing -> do
-          runScheduler $ SMS.Events.processEvents (mailNoreplyAddress cronConf)
+          runScheduler $ SMS.Events.processEvents (cronMailNoreplyAddress cronConf)
           return . RerunAfter $ iseconds 5
         UserAccountRequestEvaluation -> do
           runScheduler $ actionQueue userAccountRequest

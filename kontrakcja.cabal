@@ -1,13 +1,13 @@
-Name: kontrakcja
-Version: 1.0
-Author: Scrive
-Copyright: 2010-2016
-Stability: Experimental
-Category: Web
-Synopsis: Ultimate signing solution
-Description: Sign documents online
+Name:          kontrakcja
+Version:       1.0
+Author:        Scrive AB
+Copyright:     2010-2017
+Stability:     Experimental
+Category:      Web
+Synopsis:      Ultimate signing solution
+Description:   Sign documents online
 Cabal-version: >= 1.18
-Build-type: Simple
+Build-type:    Simple
 
 -- Note:
 --
@@ -445,7 +445,6 @@ Library
                , cryptohash
                , curl
                , data-default
-               , hpqtypes-extras
                , deepseq
                , digest
                , directory
@@ -462,6 +461,7 @@ Library
                , hashable
                , hedis
                , hpqtypes
+               , hpqtypes-extras
                , http-client
                , http-conduit
                , http-client-tls
@@ -774,10 +774,11 @@ Executable kontrakcja-migrate
                , crypto-rng
                , cryptohash
                , data-default
-               , hpqtypes-extras
+               , directory
                , exceptions
                , fields-json
                , hpqtypes
+               , hpqtypes-extras
                , invariant
                , json
                , lifted-base
@@ -1330,6 +1331,25 @@ Test-suite kontrakcja-test
                     , TypeOperators
                     , TypeSynonymInstances
                     , UndecidableInstances
+
+Executable config-checker
+  Hs-source-dirs: backend/config-checker,
+                  backend/cron/inc,
+                  backend/mailer/src,
+                  backend/messenger/src
+  GHC-options: -Werror -Wall -fno-warn-deprecated-flags
+  Main-is: ConfigChecker.hs
+  Other-modules: CronConf
+                 MailingServerConf
+                 MessengerServerConf
+  Build-Depends: base, data-default, either
+               , lifted-base, kontrakcja, text
+               , unjson
+  Default-Language: Haskell2010
+  Default-Extensions: NoImplicitPrelude
+                    , OverloadedStrings
+                    , RecordWildCards
+                    , TemplateHaskell
 
 Executable localization
 
