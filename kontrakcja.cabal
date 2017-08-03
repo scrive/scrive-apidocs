@@ -638,6 +638,7 @@ Executable cron
                , monad-control
                , mtl
                , text
+               , time
                , transformers-base
                , unjson
 
