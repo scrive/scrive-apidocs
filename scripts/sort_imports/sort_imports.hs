@@ -74,6 +74,7 @@ data Import = Import {
   , imModule         :: !T.Text
   , imCaselessModule :: !T.Text
   , imAlias          :: !(Maybe T.Text)
+  , imPackage        :: !(Maybe T.Text)
   , imSymbols        :: !Symbols
   } deriving (Eq, Show)
 
@@ -82,6 +83,7 @@ compareImport ignore_qualified a b = mconcat [
     if ignore_qualified
     then mempty
     else imQualified a `compare` imQualified b
+  , imPackage a        `compare` imPackage b
   , imCaselessModule a `compare` imCaselessModule b
   , imAlias a          `compare` imAlias b
   , imSymbols a        `compare` imSymbols b
@@ -92,6 +94,9 @@ parseImport = do
   _ <- P.string "import"
   P.skipSpace
   is_qualified <- P.option False (P.string "qualified" *> P.skipSpace $> True)
+  package      <- P.option Nothing
+                  (Just <$> (P.char '"' *> parsePkgId <* P.char '"')
+                    <* P.skipSpace)
   module_ <- P.takeWhile1 $ (not . isSpace) <&&> (/= '(')
   P.skipSpace
   alias <- P.option Nothing (Just <$> parseAlias)
@@ -102,9 +107,13 @@ parseImport = do
     , imModule         = module_
     , imCaselessModule = T.toCaseFold module_
     , imAlias          = alias
+    , imPackage        = package
     , imSymbols        = symbols
     }
   where
+    parsePkgId :: P.Parser T.Text
+    parsePkgId = P.takeWhile1 $ (not . isSpace) <&&> (/= '"')
+
     parseAlias :: P.Parser T.Text
     parseAlias = do
       _ <- P.string "as"
@@ -134,6 +143,9 @@ showImport Style{..} Import{..} = T.concat [
              then T.replicate (T.length qualified_) " "
              else ""
       , " "
+      , case imPackage of
+          Nothing  -> ""
+          Just pkg -> "\"" <> pkg <> "\" "
       , imModule
       ]
 
