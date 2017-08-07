@@ -56,7 +56,7 @@ var StatsView = React.createClass({
           />
         </div>
 
-        <h2>{localization.account.stats.last6months}</h2>
+        <h2>{localization.account.stats.last12months}</h2>
         <div className="jsmonthtable">
           <StatsTableView
             ref="tableMonths"

@@ -182,7 +182,7 @@ getDaysStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
 getDaysStats = getStats PartitionByDay (idays 30)
 
 getMonthsStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
-getMonthsStats = getStats PartitionByMonth (imonths 6)
+getMonthsStats = getStats PartitionByMonth (imonths 12)
 
 getStats :: Kontrakcja m => StatsPartition -> Interval -> Either UserID CompanyID -> m JSValue
 getStats statsPartition interval = \case
