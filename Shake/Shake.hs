@@ -5,6 +5,7 @@ import Data.Maybe
 import Development.Shake
 import Development.Shake.FilePath
 import Distribution.Text (display)
+import System.Directory (createDirectoryIfMissing)
 
 import Shake.Cabal
 import Shake.DBSchema (buildDBDocs)
@@ -463,15 +464,20 @@ distributionRules newBuild = do
     command_ [] routingListPath [nginxconfpath]
     removeFilesAfter "." ["urls.txt"]
 
+  let binaryNames = [ "kontrakcja-server"
+                    , "cron"
+                    , "kontrakcja-migrate"
+                    , "mailing-server"
+                    , "messenger-server"
+                    , "config-checker" ]
+
+  copyBinariesRules binaryNames
+
   "_build/kontrakcja.tar.gz" %> \_ -> do
-    need ["all", "urls.txt"]
-    let distFiles = [ componentTargetPath newBuild "kontrakcja-server"
-                    , componentTargetPath newBuild "cron"
-                    , componentTargetPath newBuild "kontrakcja-migrate"
-                    , componentTargetPath newBuild "mailing-server"
-                    , componentTargetPath newBuild "messenger-server"
-                    , componentTargetPath newBuild "config-checker"
-                    , "evidence-package/samples.p"
+    let binaries = map binaryPath binaryNames
+    need $ ["all", "urls.txt"] ++ binaries
+    let distFiles = binaries ++
+                    [ "evidence-package/samples.p"
                     , "frontend/app/img"
                     , "frontend/app/less"
                     , "frontend/dist"
@@ -488,6 +494,22 @@ distributionRules newBuild = do
                     , "certs"
                     ]
     command_ [Shell] "tar" $ ["-czf","_build/kontrakcja.tar.gz"] ++ distFiles
+
+    where
+      binaryPath = componentTargetPath DontUseNewBuild
+
+      -- | For each given exe component, generate a rule for copying
+      -- it to 'dist/build/compname', if needed.
+      copyBinariesRules :: [FilePath] -> Rules ()
+      copyBinariesRules binaryNames = case newBuild of
+        DontUseNewBuild -> return ()
+        UseNewBuild _   ->
+          forM_ binaryNames $ \binaryName -> do
+            let sourcePath = componentTargetPath newBuild binaryName
+                targetPath = binaryPath binaryName
+            targetPath %> \_ -> do
+              liftIO $ createDirectoryIfMissing True (takeDirectory targetPath)
+              copyFileChanged sourcePath targetPath
 
 -- * Utility scripts.
 
