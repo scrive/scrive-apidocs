@@ -11,7 +11,7 @@ while [ true ]; do
     #
     nice dist/build/mailing-server/mailing-server &
     echo $! > _mailer_pid
-    echo "started mailing server with pid" 
+    echo "started mailing server with pid"
     more _mailer_pid
     wait
     echo "Process ended, restarting in 5 sek..."

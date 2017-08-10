@@ -10,4 +10,3 @@ hoogle convert dist/doc/html/kontrakcja/pdfseal/kontrakcja.txt pdfseal.hoo
 hoogle combine *.hoo -o hoogle.hoo
 
 gzip hoogle.hoo
-
