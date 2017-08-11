@@ -76,7 +76,7 @@ componentTargetPath (UseNewBuild buildDir) componentName =
 -- | For each exe/test-suite/benchmark component in the .cabal file,
 -- add a rule for building the corresponding executable.
 componentBuildRules :: UseNewBuild -> CabalFile -> Rules ()
-componentBuildRules newBuild cabalFile = do
+componentBuildRules newBuild cabalFile =
   forM_ (allComponentNames cabalFile) $ \componentName ->
     if componentName /= ""
     then do
