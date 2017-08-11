@@ -6,6 +6,8 @@
 # to the one used by kontrakcja-server so we won't have to
 # compile things twice.
 
+# NB: doesn't work with new-build.
+
 # Note: use only if you are aware what it does, since
 # somewhere in the future it MAY cause some trouble if eg.
 # the same files will be configured differently for each

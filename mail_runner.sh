@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Note: if you're using new-build, this assumes that './shake.sh
+# --new-build dist' is being used to build the project.
+
 export PATH=/home/admin/bin:$PATH
 
 while [ true ]; do
