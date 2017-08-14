@@ -258,6 +258,7 @@ findAndExtendDigitalSignatures = do
   docs <- dbQuery $ GetDocuments DocumentsOfWholeUniverse
             [ DocumentFilterStatuses [Closed]
             , DocumentFilterNoExtentionTaskScheduled
+            , DocumentFilterByLatestSignTimeBefore lpt
             , DocumentFilterBySealStatus
               [ Guardtime{ extended = False, private = True }
               , Guardtime{ extended = False, private = False }

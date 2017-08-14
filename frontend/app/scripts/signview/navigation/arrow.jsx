@@ -411,7 +411,7 @@ module.exports = React.createClass({
       transformWithPrefixes(arrowStyle, "rotate(180deg)");
     }
 
-    if (task.isRequiredAuthorAttachmentTask()) {
+    if ((type === ARROW.LEFT || type === ARROW.RIGHT) && task.isRequiredAuthorAttachmentTask()) {
       arrowStyle.marginLeft = Math.max(1, scale) * arrowVars.actionArrowSmallRightMargin;
     }
 

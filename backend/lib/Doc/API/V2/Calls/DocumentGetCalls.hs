@@ -55,7 +55,7 @@ docApiV2List = api $ do
   offset   <- apiV2ParameterDefault 0   (ApiV2ParameterInt  "offset")
   maxcount <- apiV2ParameterDefault 100 (ApiV2ParameterInt  "max")
   filters  <- apiV2ParameterDefault []  (ApiV2ParameterJSON "filter" unjsonDef)
-  sorting  <- apiV2ParameterDefault []  (ApiV2ParameterJSON "sorting" unjsonDef)
+  sorting  <- apiV2ParameterDefault defaultDocumentAPISort (ApiV2ParameterJSON "sorting" unjsonDef)
   -- API call actions
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
   let documentSorting = (toDocumentSorting <$> sorting)

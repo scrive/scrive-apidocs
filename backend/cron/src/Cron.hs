@@ -4,6 +4,7 @@ import Control.Monad
 import Control.Monad.Base
 import Crypto.RNG
 import Data.Maybe
+import Data.Time (diffUTCTime)
 import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
 import Log
@@ -187,9 +188,12 @@ main = do
           return . RerunAfter $ iminutes 1
         DocumentsPurge -> do
           runScheduler $ do
+            startTime <- currentTime
             purgedCount <- dbUpdate . PurgeDocuments 30 $ fromIntegral unsavedDocumentLingerDays
+            finishTime <- currentTime
             logInfo "Purged documents" $ object [
                 "purged" .= purgedCount
+              , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
               ]
           return . RerunAfter $ iminutes 10
         DocumentsArchiveIdle -> do
