@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+locale-gen
+
+export LANG=en_US
+export LC_ALL=en_US.UTF-8
+
 apt-get update
 apt-get install --yes git
 apt-get install --yes libx11-dev
@@ -14,47 +19,52 @@ apt-get install --yes libcurl4-openssl-dev
 apt-get install --yes gnuplot
 
 cd /tmp/
-wget https://www.haskell.org/ghc/dist/7.8.4/ghc-7.8.4-x86_64-unknown-linux-deb7.tar.xz
-tar xf ghc-7.8.4-x86_64-unknown-linux-deb7.tar.xz
-cd ghc-7.8.4
+wget https://downloads.haskell.org/~ghc/8.0.1/ghc-8.0.1-x86_64-deb8-linux.tar.xz
+tar xf ghc-8.0.1-x86_64-deb8-linux.tar.xz
+cd ghc-8.0.1
 ./configure
 make install
 cd
 ln -s libgmp.so.10 /usr/lib/x86_64-linux-gnu/libgmp.so
 
-cd /tmp/
-wget https://hackage.haskell.org/package/cabal-install-bundle-1.18.0.2.1/cabal-install-bundle-1.18.0.2.1.tar.gz
-tar xf cabal-install-bundle-1.18.0.2.1.tar.gz
-cd cabal-install-bundle-1.18.0.2.1
-runhaskell Setup.hs configure
-runhaskell Setup.hs build
-runhaskell Setup.hs install
-cd
+apt-get install --yes zlib1g-dev
 
 cd /tmp/
-wget http://mupdf.com/downloads/mupdf-1.8-source.tar.gz
+wget https://hackage.haskell.org/package/cabal-install-1.24.0.2/cabal-install-1.24.0.2.tar.gz
+tar xf cabal-install-1.24.0.2.tar.gz
+cd cabal-install-1.24.0.2
+./bootstrap.sh
+cd
+mv ~/.cabal/bin/cabal  /usr/local/bin/
+
+cd /tmp/
+wget http://mupdf.com/downloads/archive/mupdf-1.8-source.tar.gz
 tar xf mupdf-1.8-source.tar.gz
 cd mupdf-1.8-source
 make release
 cp build/release/mutool /usr/local/bin/
 cd
 
-apt-get install --yes zlib1g-dev
 apt-get install --yes libicu-dev
 apt-get install --yes libpq-dev
 apt-get install --yes imagemagick
 apt-get install --yes default-jre
+apt-get install --yes poppler-utils
 apt-get install --yes npm
 ln -s /usr/bin/nodejs /usr/bin/node
 npm install -g yo grunt grunt-cli karma react-tools
 apt-get install --yes postgresql
 apt-get install --yes postgresql-contrib
 apt-get install --yes ntp
-sudo -u postgres --login bash -c 'echo "CREATE USER vagrant superuser;" | psql'
-sudo -u postgres --login bash -c 'echo "ALTER ROLE vagrant WITH PASSWORD NULL;" | psql'
+echo "enable mode7" >> /etc/ntp.conf
+systemctl stop ntp.service
+systemctl start ntp.service
+apt-get install --yes ntpdate
+sudo -u postgres --login bash -c 'echo "CREATE USER ubuntu superuser;" | psql'
+sudo -u postgres --login bash -c 'echo "ALTER ROLE ubuntu WITH PASSWORD NULL;" | psql'
 sudo -u postgres --login bash -c 'echo "CREATE DATABASE kontra;" | psql'
-sudo -u postgres --login bash -c 'echo "GRANT ALL PRIVILEGES ON DATABASE kontra TO vagrant;" | psql'
+sudo -u postgres --login bash -c 'echo "GRANT ALL PRIVILEGES ON DATABASE kontra TO ubuntu;" | psql'
 
 
 SOCKET=$(ls -1 --sort t /tmp/ssh-*/agent.* | head -1)
-sudo -u vagrant --login bash -c "SSH_AUTH_SOCK=\"${SOCKET}\" /vagrant/bootstrap_non_root.sh"
+sudo -u ubuntu --login bash -c "SSH_AUTH_SOCK=\"${SOCKET}\" /vagrant/bootstrap_non_root.sh"
