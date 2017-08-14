@@ -9,6 +9,9 @@ import Control.Exception
 import Control.Monad
 import System.Time
 
+-- Note: if you're using new-build, this script assumes that
+-- './shake.sh --new-build dist' is being used to build the project.
+
 executables :: [String]
 executables =
   [ "dist/build/kontrakcja-server/kontrakcja-server"

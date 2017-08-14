@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Note: if you're using new-build, this assumes that './shake.sh
+# --new-build dist' is being used to build the project.
+
 export PATH=/home/admin/bin:$PATH
 
 while [ true ]; do
@@ -11,7 +14,7 @@ while [ true ]; do
     #
     nice dist/build/kontrakcja-server/kontrakcja-server +RTS -K20M &
     echo $! > _pid
-    echo "started server with pid" 
+    echo "started server with pid"
     more _pid
     wait
     echo "Process ended, restarting in 5 sek..."

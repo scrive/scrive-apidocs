@@ -1,13 +1,44 @@
-cabal install hoogle
-cabal haddock --executables --hoogle
+#! /bin/sh
 
-hoogle data filepath base64-bytestring tagsoup zlib cryptocipher happstack happstack-server happstack-state happstack-ixset happstack-data happstack-util hslogger time utf8-string random extensible-exceptions containers directory process base syb dataenc syb-with-class binary old-locale old-time network HTTP bytestring Crypto HaXml parallel  HStringTemplate template-haskell mtl hS3 hxt mmap array html MissingH temporary regex-tdfa parsec iconv json HPDF test-framework test-framework-hunit test-framework-quickcheck2 HUnit QuickCheck hxt hxt-xpath text transformers unix --datadir=.
+set -euxa
 
-hoogle convert dist/doc/html/kontrakcja/kontrakcja-server/kontrakcja.txt kontrakcja-server.hoo
-hoogle convert dist/doc/html/kontrakcja/kontrakcja-test/kontrakcja.txt kontrakcja-test.hoo
-hoogle convert dist/doc/html/kontrakcja/pdfseal/kontrakcja.txt pdfseal.hoo
+type hoogle >/dev/null 2>&1 || \
+    { echo >&2 "'hoogle' is not installed. \
+Please run 'cabal install hoogle'."; exit 1; }
 
-hoogle combine *.hoo -o hoogle.hoo
 
-gzip hoogle.hoo
+old_build_haddock() {
+    cabal haddock --executables --hoogle
 
+    hoogle data filepath base64-bytestring tagsoup zlib cryptocipher \
+           happstack happstack-server happstack-state happstack-ixset \
+           happstack-data happstack-util hslogger time utf8-string \
+           random extensible-exceptions containers directory process \
+           base syb dataenc syb-with-class binary old-locale old-time \
+           network HTTP bytestring Crypto HaXml parallel HStringTemplate \
+           template-haskell mtl hS3 hxt mmap array html MissingH temporary \
+           regex-tdfa parsec iconv json HPDF test-framework \
+           test-framework-hunit test-framework-quickcheck2 HUnit QuickCheck \
+           hxt hxt-xpath text transformers unix --datadir=.
+
+    hoogle convert dist/doc/html/kontrakcja/kontrakcja-server/kontrakcja.txt \
+           kontrakcja-server.hoo
+    hoogle convert dist/doc/html/kontrakcja/kontrakcja-test/kontrakcja.txt \
+           kontrakcja-test.hoo
+    hoogle convert dist/doc/html/kontrakcja/pdfseal/kontrakcja.txt pdfseal.hoo
+
+    hoogle combine *.hoo -o hoogle.hoo
+
+    gzip hoogle.hoo
+}
+
+new_build_haddock() {
+    echo "hooglescript doesn't work with new-build."
+    exit 1
+}
+
+if [ ! -d "dist-newstyle" ]; then
+    old_build_haddock
+else
+    new_build_haddock
+fi
