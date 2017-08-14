@@ -1738,11 +1738,11 @@ documents.</p>
 <p>Must be of type <a href="#list-filter">List Filter</a>, for example:</p>
 <p><code>[ { &quot;filter_by&quot;:&quot;status&quot;, &quot;statuses&quot;: [&quot;preparation&quot;,&quot;pending&quot;] } ]</code></p>
 </td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
-<tr><td><p><code>sorting</code><br/><em>optional</em></p><p><em>default:</em> <code>[ { "sort_by":"mtime", "order":"ascending" } ]</code></p></td><td><p><strong>List of sorting options.</strong></p>
+<tr><td><p><code>sorting</code><br/><em>optional</em></p><p><em>default:</em> <code>[ { "sort_by":"mtime", "order":"descending" } ]</code></p></td><td><p><strong>List of sorting options.</strong></p>
 <p>You can supply a list of sorting options, which will be applied to list
 of documents in the order you provided.</p>
 <p>If not supplied, the default is
-<code>[ { &quot;sort_by&quot;:&quot;mtime&quot;, &quot;order&quot;:&quot;ascending&quot; } ]</code>,
+<code>[ { &quot;sort_by&quot;:&quot;mtime&quot;, &quot;order&quot;:&quot;descending&quot; } ]</code>,
 <em>i.e.</em>, sort by modification time, newest first.</p>
 <p>Must of of type <a href="#list-sorting">List Sorting</a>.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
