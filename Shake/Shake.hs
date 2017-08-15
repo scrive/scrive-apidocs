@@ -20,10 +20,14 @@ opts :: String -> ShakeOptions
 opts v = shakeOptions { shakeVersion = v
                       , shakeFiles = "_build"
                       , shakeVerbosity = Loud
-                      -- When running on multiple threads, a build failure on one
-                      -- thread did not stop other threads from continuing
-                      -- Maybe this is default Shake behaviour but is annoying as
-                      -- the build error gets lost in output
+                      -- When running on multiple threads, a build
+                      -- failure on one thread does not stop other
+                      -- threads from continuing.
+                      --
+                      -- Maybe this is default Shake behaviour, but it is
+                      -- annoying as the build error gets lost in
+                      -- output.
+                      --
                       -- Run on single thread until we figure this out
                       , shakeThreads = 1
                       }
@@ -47,9 +51,9 @@ usageMsg = unlines
   , "   haddock         : Build Haddock Documentation"
   , "   db-docs         : Build database schema docs"
   , ""
-  , "                     SchemaCrawler must be installed, schemacrawler.sh must"
-  , "                     be in PATH. GraphViz must be in PATH. Also the DB must"
-  , "                     be alredy created and running."
+  , "                     SchemaCrawler must be installed, schemacrawler.sh"
+  , "                     must be in PATH. GraphViz must be in PATH. Also the"
+  , "                     DB must be alredy created and running."
   , ""
   , "# Test targets"
   , ""
@@ -73,12 +77,13 @@ usageMsg = unlines
   , "   fix-hs-import-order       : Sort Haskell imports"
   , "   test-hs-outdated-deps     : Check for outdated Haskell dependencies"
   , ""
-  , "                               Use the --src-subdir=DIR option to limit the"
-  , "                               above commands to a part of the tree."
+  , "                               Use the --src-subdir=DIR option to limit"
+  , "                               the above commands to a part of the tree."
   , ""
   , "# Utility scripts"
   , ""
-  , "   transifex-fix              : Sort local Transifex .json translation files"
+  , "   transifex-fix              : Sort local Transifex .json translation"
+  , "                                files"
   , "   transifex-push             : Push local translation to Transifex"
   , "   transifex-diff             : Diff local translation against the remote"
   , "   transifex-merge            : Merge local translation with the remote"
@@ -560,7 +565,8 @@ scriptsUsageMsg = unlines $
   , "take-reference-screenshots"
   , "--------------------------"
   , "Update reference screenshots."
-  , "After running 'shake.sh take-reference-screenshots', do the following steps:"
+  , "After running 'shake.sh take-reference-screenshots',"
+  , "do the following steps:"
   , ""
   -- TODO: Explain the process better.
   , "x = concatLines base64 /tmp/author.png"
@@ -569,12 +575,14 @@ scriptsUsageMsg = unlines $
   , "writeFile files/reference_screenshots/author.json (dumps(authorJson))"
   , "same thing for /tmp/desktop2.png into "
     ++ "files/reference_screenshots/standard.json"
-  , "same thing for /tmp/mobile2.png into files/reference_screenshots/mobile.json"
+  , "same thing for /tmp/mobile2.png into"
+  , "files/reference_screenshots/mobile.json"
   , ""
   , "run-localization"
   , "--------------------------"
-  , "Update the pre-generated localization files in 'frontend/app/localization/'"
-  , "for all languages. To use, run 'shake.sh run-localization'."
+  , "Update the pre-generated localization files in"
+  , "'frontend/app/localization/ for all languages."
+  , "To use, run 'shake.sh run-localization'."
   ]
 
 transifexUsageMsg :: String
