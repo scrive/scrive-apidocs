@@ -49,7 +49,7 @@ addOracles = do
                      not . null . fromMaybe ""
                      <$> getEnv "TEAMCITY_VERSION"
   _ <- addOracle $ \(TeamCityBuildDBAdminConnString _)  ->
-                     fromMaybe "" <$> getEnv "BUILD_DB_ADMIN_CONN_STRING"
+                     fromMaybe "" <$> getEnv "DB_BUILD_ADMIN_CONN_STRING"
   _ <- addOracle $ \(TeamCityBuildDBConnString _)  ->
                      fromMaybe "" <$> getEnv "DB_CONN_STRING"
   _ <- addOracle $ \(TeamCityBuildDBName _)  ->

@@ -2,10 +2,12 @@
 
 import Control.Monad
 import Data.Maybe
+import Data.Monoid
 import Development.Shake
 import Development.Shake.FilePath
 import Distribution.Text (display)
-import System.Directory (createDirectoryIfMissing)
+import System.Directory  (createDirectoryIfMissing)
+import System.Process    (callProcess)
 
 import Shake.Cabal
 import Shake.DBSchema (buildDBDocs)
@@ -169,7 +171,7 @@ main = do
     -- * Rules
     componentBuildRules   newBuild cabalFile
     serverBuildRules      newBuild cabalFile
-    serverTestRules       newBuild cabalFile
+    serverTestRules       newBuild cabalFile (mkCreateTestDB flags)
     serverFormatLintRules newBuild cabalFile flags
     frontendBuildRules    newBuild
     frontendTestRules     newBuild
@@ -301,14 +303,31 @@ serverOldBuildRules cabalFile = do
 
   "cabal-clean" ~> cmd "cabal clean"
 
+-- | Should a new unique DB be created for this test run?
+data CreateTestDB = CreateTestDB | DontCreateTestDB
+
+mkCreateTestDB :: [ShakeFlag] -> CreateTestDB
+mkCreateTestDB flags =
+  if CreateDB `elem` flags then CreateTestDB else DontCreateTestDB
+
 -- | Server test rules
-serverTestRules :: UseNewBuild -> CabalFile -> Rules ()
-serverTestRules newBuild cabalFile = do
-  "kontrakcja_test.conf" %> \_ -> do
-    tc <- askOracle (TeamCity ())
-    when tc $ do
-      testConfFile <- askOracle (BuildTestConfPath ())
-      copyFile' testConfFile "kontrakcja_test.conf"
+serverTestRules :: UseNewBuild -> CabalFile -> CreateTestDB -> Rules ()
+serverTestRules newBuild cabalFile createDB = do
+  "kontrakcja_test.conf" %> \_ ->
+    case createDB of
+      CreateTestDB -> do
+        tc <- askOracle (TeamCity ())
+        when (not tc) $
+          fail "'--create-db' is only supported when running on TeamCity."
+        connString <- askOracle (TeamCityBuildDBConnString ())
+        dbName     <- askOracle (TeamCityBuildDBName ())
+        let connString' = connString <> " dbname=" <> dbName
+        liftIO $ writeFile "kontrakcja_test.conf" connString'
+      DontCreateTestDB -> do
+        tc <- askOracle (TeamCity ())
+        when tc $ do
+          testConfFile <- askOracle (BuildTestConfPath ())
+          copyFile' testConfFile "kontrakcja_test.conf"
 
   "run-server-tests" ~> do
     let testSuiteNames    = testComponentNames cabalFile
@@ -317,7 +336,7 @@ serverTestRules newBuild cabalFile = do
     -- removeFilesAfter is only performed on a successfull build, this file
     -- needs to be cleaned regardless otherwise successive builds will fail
     liftIO $ removeFiles "." ["kontrakcja-test.tix"]
-    forM_ testSuiteExePaths $ \testSuiteExe -> do
+    withDB createDB $ forM_ testSuiteExePaths $ \testSuiteExe -> do
       tc <- askOracle (TeamCity ())
       if tc
         then do
@@ -345,6 +364,23 @@ serverTestRules newBuild cabalFile = do
         ("zip -r _build/coverage-reports.zip "
          ++ "coverage-reports kontrakcja-test.tix") []
       removeFilesAfter "coverage-reports" ["//*"]
+
+        where
+          withDB DontCreateTestDB act = act
+          withDB CreateTestDB     act = do
+            connString <- askOracle (TeamCityBuildDBAdminConnString ())
+            dbName     <- askOracle (TeamCityBuildDBName ())
+            (mkDB connString dbName >> act)
+              `actionFinally` (rmDB connString dbName)
+            where
+              mkDB connString dbName = do
+                unit $ cmd "psql" [connString <> " dbname=postgres", "-c"
+                                  ,"CREATE DATABASE " <> dbName <> ";"]
+                unit $ cmd "psql" [connString <> " dbname=" <> dbName, "-c"
+                                  ,"CREATE EXTENSION IF NOT EXISTS pgcrypto;"]
+              rmDB connString dbName =
+                callProcess "psql" [connString <> " dbname=postgres", "-c"
+                                   ,"DROP DATABASE IF EXISTS " <> dbName <> ";"]
 
 needHaskellFilesInDirectories :: [FilePath] -> Action ()
 needHaskellFilesInDirectories = needPatternsInDirectories ["//*.hs"]
