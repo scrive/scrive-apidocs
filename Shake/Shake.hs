@@ -101,6 +101,11 @@ usageMsg = unlines
   , "   clean-server   : Clean with 'cabal clean'"
   , "   clean-frontend : Clean with 'grunt clean'"
   , ""
+  , "# Help"
+  , ""
+  , "   help           : This help message"
+  , "   help-env       : Print information about environment variables used"
+  , ""
   ]
 
 main :: IO ()
