@@ -313,7 +313,8 @@ serverTestRules newBuild cabalFile = do
         then do
           target <- askOracle (BuildTarget ())
           let cmdopt = [Shell] ++ langEnv
-              flags = ["--plain","--output-dir _build/kontrakcja-test-artefacts"]
+              flags = ["--plain"
+                      ,"--output-dir _build/kontrakcja-test-artefacts"]
                       ++ case target of
                            "staging" -> ["--staging-tests"]
                            _         -> []
