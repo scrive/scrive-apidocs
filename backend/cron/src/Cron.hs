@@ -185,7 +185,7 @@ main = do
           runCronEnv expireDocumentAutomaticReminders
           return . RerunAfter $ iminutes 1
         DocumentsPurge -> do
-          runCronEnv $ do
+          runDB $ do
             startTime <- currentTime
             purgedCount <- dbUpdate . PurgeDocuments 30 $ fromIntegral unsavedDocumentLingerDays
             finishTime <- currentTime
@@ -195,7 +195,7 @@ main = do
               ]
           return . RerunAfter $ iminutes 10
         DocumentsArchiveIdle -> do
-          runCronEnv $ do
+          runDB $ do
             now <- currentTime
             archived <- dbUpdate $ ArchiveIdleDocuments now
             logInfo "Archived documents for signatories" $ object [
@@ -203,7 +203,7 @@ main = do
               ]
           RerunAt . nextDayAtHour 19 <$> currentTime
         EmailChangeRequestsEvaluation -> do
-          runCronEnv . dbUpdate $ DeleteExpiredEmailChangeRequests
+          runDB . dbUpdate $ DeleteExpiredEmailChangeRequests
           return . RerunAfter $ ihours 1
         FindAndExtendDigitalSignatures -> do
           runCronEnv findAndExtendDigitalSignatures
@@ -215,7 +215,7 @@ main = do
           case cronInvoicingSFTPConf cronConf of
             Nothing -> do
               logInfo "SFTP config missing; skipping" $ object []
-            Just sftpConfig -> runCronEnv $ uploadInvoicing sftpConfig
+            Just sftpConfig -> runDB $ uploadInvoicing sftpConfig
           RerunAt . nextDayAtHour 1 <$> currentTime
         MailEventsProcessing -> do
           runCronEnv Mails.Events.processEvents
@@ -224,14 +224,14 @@ main = do
           let maxMarked = 100000
               -- Share the string between all the log messages.
               orphanFileMarked = "Orphan file marked for purge"
-          fids <- runCronEnv . dbUpdate . MarkOrphanFilesForPurgeAfter maxMarked $ idays 7
+          fids <- runDB . dbUpdate . MarkOrphanFilesForPurgeAfter maxMarked $ idays 7
           forM_ fids $ \fid -> logInfo orphanFileMarked $ object [identifier_ fid]
           -- If maximum amount of files was marked, run it again shortly after.
           if length fids == maxMarked
             then return . RerunAfter $ iseconds 1
             else RerunAt . nextDayMidnight <$> currentTime
         OldDraftsRemoval -> do
-          runCronEnv $ do
+          runDB $ do
             delCount <- dbUpdate $ RemoveOldDrafts 100
             logInfo "Removed old, unsaved draft documents" $ object [
                 "removed" .= delCount
@@ -252,7 +252,7 @@ main = do
               ]
           RerunAt . nextDayMidnight <$> currentTime
         PasswordRemindersEvaluation -> do
-          runCronEnv . dbUpdate $ DeleteExpiredPasswordReminders
+          runDB . dbUpdate $ DeleteExpiredPasswordReminders
           return . RerunAfter $ ihours 1
         PurgeOrphanFile -> do
           found <- runCronEnv purgeOrphanFile
@@ -263,16 +263,16 @@ main = do
           case cronPlanhatConf cronConf of
             Nothing -> do
               logInfo "Planhat config missing; skipping" $ object []
-            Just phConf -> do runCronEnv $ doDailyPlanhatStats phConf mgr
+            Just phConf -> do runDB $ doDailyPlanhatStats phConf mgr
           RerunAt . nextDayAtHour 2 <$> currentTime
         SessionsEvaluation -> do
-          runCronEnv . dbUpdate $ DeleteExpiredSessions
+          runDB . dbUpdate $ DeleteExpiredSessions
           return . RerunAfter $ ihours 1
         SMSEventsProcessing -> do
           runCronEnv $ SMS.Events.processEvents
           return . RerunAfter $ iseconds 5
         UserAccountRequestEvaluation -> do
-          runCronEnv expireUserAccountRequests
+          runDB expireUserAccountRequests
           return . RerunAfter $ ihours 1
       logInfo_ "Job processed successfully"
       return $ Ok action
