@@ -6,6 +6,7 @@ module Session.Model (
   , getPadUserFromSession
   , getSession
   , startNewSession
+  , DeleteExpiredSessions(..)
   ) where
 
 import Control.Monad.Base
@@ -13,10 +14,10 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
 import Crypto.RNG
+import Data.Time.Clock (NominalDiffTime, addUTCTime, diffUTCTime)
 import Happstack.Server hiding (Session)
 import Log
 
-import ActionQueue.Core
 import Context
 import DB
 import KontraError
@@ -52,8 +53,8 @@ getNonTempSessionID = do
       csrf_token <- random
       expires <- sessionNowModifier `liftM` currentTime
       domain <- currentDomain
-      update (NewAction session expires (Nothing, Nothing, token, csrf_token, domain))
-        >>= return . sesID
+      session <- update $ CreateSession $ Session tempSessionID Nothing Nothing expires token csrf_token domain
+      return $ sesID session
 
 -- | Get current session based on cookies set.
 -- If no session is available, return new, empty session.
@@ -72,8 +73,8 @@ getCurrentSession = currentSessionInfoCookies >>= getSessionFromCookies
     getSessionFromCookies [] = emptySession
 
 startNewSession :: (FilterMonad Response m, MonadLog m, MonadDB m, MonadThrow m, ServerMonad m, MonadIO m, MonadBase IO m) => Session -> Maybe UserID -> Maybe UserID -> m Session
-startNewSession _           Nothing Nothing    = internalError
-startNewSession Session{..} mnewuid mnewpaduid = do
+startNewSession _       Nothing Nothing    = internalError
+startNewSession session mnewuid mnewpaduid = do
   let uid = fromJust $ (mnewuid `mplus` mnewpaduid)
   n <- deleteSuperfluousUserSessions uid
   logInfo "Superfluous sessions of user removed from the database" $ object [
@@ -81,7 +82,11 @@ startNewSession Session{..} mnewuid mnewpaduid = do
     , "sessions" .= n
     ]
   expires <- sessionNowModifier <$> currentTime
-  dbUpdate (NewAction session expires (mnewuid, mnewpaduid, sesToken, sesCSRFToken, sesDomain))
+  dbUpdate . CreateSession $ session {
+      sesExpires   = expires
+    , sesUserID    = mnewuid
+    , sesPadUserID = mnewpaduid
+    }
 
 updateSession :: (FilterMonad Response m, MonadLog m, MonadDB m, MonadThrow m, ServerMonad m, MonadIO m, MonadBase IO m) => Session -> SessionID -> (Maybe UserID) -> (Maybe UserID) -> m ()
 updateSession old_ses new_ses_id new_muser new_mpad_user = do
@@ -94,23 +99,23 @@ updateSession old_ses new_ses_id new_muser new_mpad_user = do
     -- We are updating existing session
     False | sesID old_ses == new_ses_id -> do
       when (sesUserID old_ses /= new_muser || sesPadUserID old_ses /= new_mpad_user) $ do
-        success <- dbUpdate $ UpdateAction session old_ses { sesUserID = new_muser, sesPadUserID = new_mpad_user}
+        success <- dbUpdate . UpdateSession $ old_ses { sesUserID = new_muser, sesPadUserID = new_mpad_user}
         when (not success) $
-          logInfo_ "UpdateAction didn't update session where it should have to (existing session)"
+          logInfo_ "UpdateSession didn't update session where it should have to (existing session)"
         -- We are logging out, remove session cookie
         when (new_muser == Nothing && new_mpad_user == Nothing) $
           stopSessionCookie
     -- We got new session - now we need to generate a cookie for it. We also update it with users logged in durring this handler.
     False | sesID old_ses /= new_ses_id -> do
-      mses <- dbQuery $ GetAction session new_ses_id
+      mses <- dbQuery $ GetSession new_ses_id
       case mses of
         Nothing -> logInfo_ "updateSession failed while trying to switch session"
         Just sess -> do
           let new_sess = sess { sesUserID = new_muser, sesPadUserID = new_mpad_user}
-          success <- dbUpdate $ UpdateAction session new_sess
+          success <- dbUpdate . UpdateSession $ new_sess
           startSessionCookie new_sess
           when (not success) $
-            logInfo_ "UpdateAction didn't update session where it should have to"
+            logInfo_ "UpdateSession didn't update session where it should have to"
     _ -> return ()
 
 getUserFromSession :: (MonadDB m, MonadThrow m) => Session -> m (Maybe User)
@@ -126,12 +131,86 @@ getPadUserFromSession Session{sesPadUserID} = case sesPadUserID of
 sessionNowModifier :: UTCTime -> UTCTime
 sessionNowModifier = (720 `minutesAfter`)
 
+sessionExpirationDelay :: NominalDiffTime
+sessionExpirationDelay = 2 * 60 * 60 -- 2 hours
+
 getSession :: (MonadDB m, MonadThrow m, MonadTime m) => SessionID -> MagicHash -> String -> m (Maybe Session)
 getSession sid token domain = runMaybeT $ do
-  Just ses@Session{sesToken,sesDomain} <- dbQuery $ GetAction session sid
+  Just ses@Session{..} <- dbQuery $ GetSession sid
   guard $ sesToken == token
   guard $ sesDomain == domain
-  return ses
+  now <- currentTime
+  -- Updating 'expires' on every access is costly and results in
+  -- quite a lot of database races for a single row in database, at
+  -- least for user sessions.
+  -- So we decided to update 'expires' only when at least 10% of the
+  -- sessionExpirationDelay is consumed
+  case diffUTCTime sesExpires now < 0.9 * sessionExpirationDelay of
+    True -> do
+      let sesextended = ses { sesExpires = sessionExpirationDelay `addUTCTime` now }
+      void . dbUpdate $ UpdateSession sesextended
+      return sesextended
+    False ->
+      return ses
+
+selectSessionSelectorsList :: [SQL]
+selectSessionSelectorsList = ["id", "user_id", "pad_user_id", "expires", "token", "csrf_token", "domain"]
+
+data DeleteExpiredSessions = DeleteExpiredSessions
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteExpiredSessions () where
+  update DeleteExpiredSessions = do
+    now <- currentTime
+    runQuery_ . sqlDelete "sessions" $
+      sqlWhere $ "expires < " <?> now
+
+data GetSession = GetSession SessionID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetSession (Maybe Session) where
+  query (GetSession sid) = do
+    now <- currentTime
+    runQuery_ $ sqlSelect "sessions" $ do
+      mapM_ sqlResult selectSessionSelectorsList
+      sqlWhereEq "id" sid
+      sqlWhere $ "expires >= " <?> now
+    fetchMaybe fetchSession
+
+data CreateSession = CreateSession Session
+instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSession Session where
+  update (CreateSession Session{..}) = do
+    runQuery_ $ sqlInsert "sessions" $ do
+      sqlSet "user_id" sesUserID
+      sqlSet "pad_user_id" sesPadUserID
+      sqlSet "token" sesToken
+      sqlSet "csrf_token" sesCSRFToken
+      sqlSet "domain" sesDomain
+      sqlSet "expires" sesExpires
+      mapM_ sqlResult selectSessionSelectorsList
+    fetchOne fetchSession
+
+data UpdateSession = UpdateSession Session
+instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSession Bool where
+  update (UpdateSession Session{..}) = do
+    runQuery01 $ sqlUpdate "sessions" $ do
+      sqlSet "user_id" sesUserID
+      sqlSet "pad_user_id" sesPadUserID
+      sqlSet "token" sesToken
+      sqlSet "csrf_token" sesCSRFToken
+      sqlSet "domain" sesDomain
+      sqlSet "expires" sesExpires
+      sqlWhereEq "id" sesID
+
+fetchSession
+  :: (SessionID, Maybe UserID, Maybe UserID, UTCTime, MagicHash, MagicHash, String)
+  -> Session
+fetchSession (sid, m_user_id, m_pad_user_id, expires, token, csrf_token, domain) =
+  Session
+    { sesID = sid
+    , sesUserID = m_user_id
+    , sesPadUserID = m_pad_user_id
+    , sesExpires = expires
+    , sesToken = token
+    , sesCSRFToken = csrf_token
+    , sesDomain = domain
+    }
 
 -- | We allow for at most 5 sessions with the same user_id, so if there
 -- are more, just delete the oldest ones. Note: only 4 sessions are left

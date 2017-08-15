@@ -1,29 +1,61 @@
-module CronEnv (runScheduler) where
+module CronEnv (
+    runCronEnv
+  , CronEnv(..)
+  , CronEnvM
+
+  -- exported for testing only
+  , CronEnvT
+  ) where
 
 import Control.Monad.Base
+import Control.Monad.Catch
+import Control.Monad.Reader
+import Control.Monad.Trans.Control
+import Crypto.RNG
+import Log
 import qualified Data.ByteString as BS
 import qualified Database.Redis as R
 
-import ActionQueue.Monad (ActionQueueT, runQueue)
-import ActionQueue.Scheduler (SchedulerData(..))
+import Amazon
 import CronConf (CronConf, cronAmazonConfig, cronGuardTimeConf, cronMailNoreplyAddress, cronSalesforceConf)
+import DB
 import File.FileID (FileID)
+import GuardTime (GuardTimeConf)
 import KontraPrelude
+import Salesforce.Conf
 import Templates (KontrakcjaGlobalTemplates)
-import qualified Amazon as AWS
 import qualified MemCache
 
-runScheduler :: MonadBase IO m
+data CronEnv = CronEnv {
+    ceGuardTimeConf      :: GuardTimeConf
+  , ceSalesforceConf     :: Maybe SalesforceConf
+  , ceTemplates          :: KontrakcjaGlobalTemplates
+  , ceMailNoreplyAddress :: String
+  }
+
+runCronEnv :: MonadBase IO m
              => CronConf
              -> MemCache.MemCache FileID BS.ByteString
              -> Maybe R.Connection
              -> KontrakcjaGlobalTemplates
-             -> ActionQueueT (AWS.AmazonMonadT m) SchedulerData a
+             -> CronEnvT (AmazonMonadT m) CronEnv a
              -> m a
-runScheduler cronConf localCache globalCache templates x = do
-  let amazoncfg     = AWS.AmazonConfig (cronAmazonConfig cronConf)
+runCronEnv cronConf localCache globalCache templates x = do
+  let amazoncfg     = AmazonConfig (cronAmazonConfig cronConf)
                       localCache globalCache
-      schedulerData = SchedulerData (cronGuardTimeConf cronConf)
-                      (cronSalesforceConf cronConf) templates
-                      (cronMailNoreplyAddress cronConf)
-  AWS.runAmazonMonadT amazoncfg $ runQueue schedulerData x
+      schedulerData = CronEnv (cronGuardTimeConf cronConf)
+                      (cronSalesforceConf cronConf) templates (cronMailNoreplyAddress cronConf)
+  runAmazonMonadT amazoncfg $ runReaderT (unCronEnvT x) schedulerData
+
+type CronEnvM = CronEnvT (AmazonMonadT (DBT (CryptoRNGT (LogT IO)))) CronEnv
+
+-- hiding ReaderT prevents collision with ReaderT in TestEnvSt
+newtype CronEnvT m sd a = CronEnvT { unCronEnvT :: ReaderT sd m a }
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadCatch, MonadDB, MonadIO, MonadMask, MonadReader sd, MonadThrow, MonadTime, AmazonMonad, MonadBase b, MonadLog)
+
+instance (MonadBaseControl IO m, MonadBase IO (CronEnvT m sd)) => MonadBaseControl IO (CronEnvT m sd) where
+  type StM (CronEnvT m sd) a = StM (ReaderT sd m) a
+  liftBaseWith f = CronEnvT $ liftBaseWith $ \run -> f $ run . unCronEnvT
+  restoreM       = CronEnvT . restoreM
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}

@@ -29,10 +29,6 @@ import Text.StringTemplates.Templates
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
-import ActionQueue.Core
-import ActionQueue.EmailChangeRequest
-import ActionQueue.PasswordReminder
-import ActionQueue.UserAccountRequest
 import Analytics.Include
 import AppView
 import BrandedDomain.BrandedDomain
@@ -51,8 +47,11 @@ import Mails.SendMail
 import MinutesTime
 import User.Action
 import User.Email
+import User.EmailChangeRequest
 import User.History.Model
 import User.Model
+import User.PasswordReminder
+import User.UserAccountRequest
 import User.UserView
 import User.Utils
 import Util.HasSomeUserInfo
@@ -116,7 +115,7 @@ handlePostChangeEmail uid hash =  withUser $ \user -> do
             flashMessageYourEmailHasChanged
         else
             flashMessageProblemWithEmailChange
-      _ <- dbUpdate $ DeleteAction emailChangeRequest uid
+      _ <- dbUpdate $ DeleteEmailChangeRequest uid
       return $ internalResponseWithFlash flashmessage $ LinkAccount
     Just _password -> do
       flashmessage <-  flashMessageProblemWithPassword
@@ -282,7 +281,7 @@ handleAccountSetupPost uid token sm = do
       mfstname <- getOptionalField asValidName "fstname"
       msndname <- getOptionalField asValidName "sndname"
       _ <- handleActivate mfstname msndname (user,company) sm
-      _ <- dbUpdate $ DeleteAction userAccountRequest uid
+      _ <- dbUpdate $ DeleteUserAccountRequest uid
       ctx <- getContext
       _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = ctxlang ctx }
       link <- getHomeOrDesignViewLink
@@ -322,7 +321,7 @@ handlePasswordReminderPost uid token = do
       switchLang (getLang user)
       Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
       password <- guardJustM $ getField "password"
-      _ <- dbUpdate $ DeleteAction passwordReminder uid
+      _ <- dbUpdate $ DeletePasswordReminder uid
       passwordhash <- createPassword password
       _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
       _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)

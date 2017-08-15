@@ -18,10 +18,10 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Text.JSON as J
 
-import ActionQueue.Scheduler
 import Amazon
 import API.APIVersion
 import Company.Model
+import CronEnv
 import DB
 import Doc.API.Callback.Data
 import Doc.API.V1.DocumentToJSON
@@ -48,7 +48,7 @@ import Utils.String
 import qualified Utils.HTTP as Utils.HTTP
 
 execute ::
-  (AmazonMonad m, MonadDB m, MonadIO m, CryptoRNG m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadReader SchedulerData m) =>
+  (AmazonMonad m, MonadDB m, MonadIO m, CryptoRNG m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadReader CronEnv m) =>
   DocumentAPICallback -> m Bool
 execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
   exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor dacDocumentID
@@ -64,7 +64,7 @@ execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
         case mcallbackschema of
           Just (SalesforceScheme rtoken)            -> do
             sd <- ask
-            case (sdSalesforceConf sd) of
+            case (ceSalesforceConf sd) of
               Nothing -> do
                 noConfigurationWarning "Salesforce" -- log a warning rather than raising an error not to disturb cron
                 return False

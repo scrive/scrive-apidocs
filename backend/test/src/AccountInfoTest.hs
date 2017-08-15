@@ -5,8 +5,6 @@ import Network.URI
 import Test.Framework
 import Test.QuickCheck
 
-import ActionQueue.Core
-import ActionQueue.EmailChangeRequest
 import Context
 import DB hiding (query, update)
 import InternalResponse
@@ -20,6 +18,7 @@ import TestingUtil
 import TestKontra as T
 import User.API
 import User.Email
+import User.EmailChangeRequest
 import User.Lang ()
 import User.Model
 import User.UserControl
@@ -249,4 +248,4 @@ testLoginUsingAPI = do
 getRequestChangeEmailActions :: TestEnv [EmailChangeRequest]
 getRequestChangeEmailActions = do
   expirytime <- (30 `daysAfter`) <$> currentTime
-  dbQuery $ GetExpiredActions emailChangeRequest expirytime
+  dbQuery $ GetExpiredEmailChangeRequestsForTesting expirytime

@@ -25,10 +25,10 @@ import Text.StringTemplates.Templates hiding (runTemplatesT)
 import Text.StringTemplates.TemplatesLoader
 import qualified Text.StringTemplates.Fields as F
 
-import ActionQueue.Scheduler
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Control.Monad.Trans.Instances ()
+import CronEnv
 import DB
 import Doc.API.Callback.Model
 import Doc.DocStateData
@@ -51,21 +51,21 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
-processEvents :: String -> Scheduler ()
-processEvents mailNoreplyAddress = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mid, _) -> do
+processEvents :: (MonadDB m, MonadReader CronEnv m, MonadLog m, MonadCatch m, CryptoRNG m) => m ()
+processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mid, _) -> do
   -- We limit processing to 50 events not to have issues with large number of documents locked.
   localData [identifier_ eid, identifier_ mid] $ do
     processEvent event
   )
   where
-    processEvent :: (EventID, MailID, Event) -> Scheduler ()
     processEvent (eid, mid, eventType) = do
       now <- currentTime
+      mailNoreplyAddress <- asks ceMailNoreplyAddress
       mmailSendTimeStamp <- dbQuery $ GetEmailSendoutTime mid
       let timeDiff = case mmailSendTimeStamp of
                        Nothing -> Nothing
                        Just mailSendTimeStamp -> Just $ floor $ toRational $ mailSendTimeStamp `diffUTCTime` now
-      templates <- getGlobalTemplates
+      templates <- asks ceTemplates
       mkontraInfoForMail <- dbQuery $ GetKontraInfoForMail mid
       case mkontraInfoForMail of
         Nothing -> markEventAsRead eid

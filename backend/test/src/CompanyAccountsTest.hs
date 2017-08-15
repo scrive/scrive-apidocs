@@ -9,8 +9,6 @@ import Test.Framework
 import Text.JSON.Gen
 import qualified Control.Exception.Lifted as E
 
-import ActionQueue.Core
-import ActionQueue.UserAccountRequest
 import Company.Model
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
@@ -27,6 +25,7 @@ import MinutesTime
 import TestingUtil
 import TestKontra as T
 import User.Email
+import User.UserAccountRequest
 import Util.HasSomeUserInfo
 
 companyAccountsTests :: TestEnvSt -> Test
@@ -324,4 +323,4 @@ mkInvite company user =
 getAccountCreatedActions :: TestEnv [UserAccountRequest]
 getAccountCreatedActions = do
   expirytime <- (30 `daysAfter`) <$> currentTime
-  dbQuery $ GetExpiredActions userAccountRequest expirytime
+  dbQuery $ GetExpiredUserAccountRequestsForTesting expirytime

@@ -12,8 +12,8 @@ import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log
 
-import ActionQueue.Scheduler
 import API.APIVersion
+import CronEnv
 import DB
 import Doc.API.Callback.Data
 import Doc.API.Callback.Execute
@@ -27,7 +27,7 @@ import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
 
 documentAPICallback :: (MonadIO m, MonadBase IO m, MonadLog m, MonadMask m)
-  => (forall r. Scheduler r -> m r)
+  => (forall r. CronEnvM r -> m r)
   -> ConsumerConfig m CallbackID DocumentAPICallback
 documentAPICallback runExecute =
   ConsumerConfig {

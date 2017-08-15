@@ -8,7 +8,6 @@ module AppDBTables (
 
 import Database.PostgreSQL.PQTypes.Model
 
-import ActionQueue.Tables
 import Attachment.Tables
 import BrandedDomain.Tables
 import Chargeable.Tables
@@ -41,8 +40,11 @@ import SMS.Tables
 import Theme.Tables
 import ThirdPartyStats.Tables
 import User.CallbackScheme.Tables
+import User.EmailChangeRequest.Tables
 import User.History.Tables
+import User.PasswordReminder.Tables
 import User.Tables
+import User.UserAccountRequest.Tables
 
 kontraComposites :: [CompositeType]
 kontraComposites = [

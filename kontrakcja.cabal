@@ -85,13 +85,6 @@ Library
                  , API.V2.Monad
                  , API.V2.Parameters
                  , API.V2.User
-                 , ActionQueue.Core
-                 , ActionQueue.EmailChangeRequest
-                 , ActionQueue.Monad
-                 , ActionQueue.PasswordReminder
-                 , ActionQueue.Scheduler
-                 , ActionQueue.Tables
-                 , ActionQueue.UserAccountRequest
                  , Administration.AdministrationControl
                  , Administration.AdministrationView
                  , Administration.Invoicing
@@ -135,6 +128,8 @@ Library
                  , Cookies
                  , Cron.Model
                  , Cron.Tables
+                 , CronConf
+                 , CronEnv
                  , Crypto
                  , Database.Redis.Cache
                  , Database.Redis.Configuration
@@ -377,6 +372,8 @@ Library
                  , User.CallbackScheme.Model
                  , User.CallbackScheme.Tables
                  , User.Email
+                 , User.EmailChangeRequest
+                 , User.EmailChangeRequest.Tables
                  , User.History.Model
                  , User.History.Tables
                  , User.Lang
@@ -386,7 +383,11 @@ Library
                  , User.Model.Query
                  , User.Model.Update
                  , User.Password
+                 , User.PasswordReminder
+                 , User.PasswordReminder.Tables
                  , User.Tables
+                 , User.UserAccountRequest
+                 , User.UserAccountRequest.Tables
                  , User.UserControl
                  , User.UserID
                  , User.UserView
@@ -608,8 +609,6 @@ Executable kontrakcja-server
 Executable cron
 
   Hs-source-dirs: backend/cron/src
-                  backend/cron/inc
-
   GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
@@ -644,9 +643,6 @@ Executable cron
 
   Main-is:       Cron.hs
   GHC-options:   -main-is Cron
-  Other-Modules: CronConf
-                 CronEnv
-                 Cron.Model
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns
@@ -696,8 +692,7 @@ Executable kontrakcja-migrate
 
   Main-is: AppDBMain.hs
   GHC-options: -main-is AppDBMain
-  Other-Modules: ActionQueue.Tables
-                 AppDBConfig
+  Other-Modules: AppDBConfig
                  AppDBMigrations
                  AppDBTables
                  Attachment.Tables
@@ -755,8 +750,11 @@ Executable kontrakcja-migrate
                  ThirdPartyStats.Migrations
                  ThirdPartyStats.Tables
                  User.CallbackScheme.Tables
+                 User.EmailChangeRequest.Tables
                  User.History.Tables
+                 User.PasswordReminder.Tables
                  User.Tables
+                 User.UserAccountRequest.Tables
                  Utils.TH
 
   Build-depends: base
@@ -1130,7 +1128,6 @@ Executable messenger-server
 Test-suite kontrakcja-test
   Type:           exitcode-stdio-1.0
   Hs-source-dirs: backend/cron/schema
-                  backend/cron/inc
                   backend/mailer/schema
                   backend/messenger/schema
                   backend/migrate/inc
@@ -1150,7 +1147,6 @@ Test-suite kontrakcja-test
   Main-is:       TestMain.hs
   GHC-options: -main-is TestMain
   Other-Modules: AccountInfoTest
-                 ActionQueue.Tables
                  AdministrationTest
                  AppDBMigrations
                  AppDBTables
@@ -1174,8 +1170,6 @@ Test-suite kontrakcja-test
                  ConfigTests
                  Cron.Migrations
                  Cron.Tables
-                 CronConf
-                 CronEnv
                  Doc.API.Callback.Tables
                  Doc.API.V1.CallsTest
                  Doc.API.V1.ForwardsCompatibilityTest
@@ -1251,8 +1245,11 @@ Test-suite kontrakcja-test
                  ThirdPartyStats.Tables
                  User.APITest
                  User.CallbackScheme.Tables
+                 User.EmailChangeRequest.Tables
                  User.History.Tables
+                 User.PasswordReminder.Tables
                  User.Tables
+                 User.UserAccountRequest.Tables
                  UserHistoryTest
                  UserStateTest
 

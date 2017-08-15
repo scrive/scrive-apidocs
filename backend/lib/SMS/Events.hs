@@ -21,9 +21,9 @@ import Log
 import Text.StringTemplates.Templates hiding (runTemplatesT)
 import qualified Text.StringTemplates.Fields as F
 
-import ActionQueue.Scheduler
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
+import CronEnv
 import DB
 import Doc.API.Callback.Model
 import Doc.DocStateData
@@ -47,8 +47,8 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
-processEvents :: String -> Scheduler ()
-processEvents mailNoreplyAddress = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, smsOrigMsisdn) -> do
+processEvents :: (MonadDB m, MonadBase IO m, MonadReader CronEnv m, MonadLog m, MonadCatch m, CryptoRNG m) => m ()
+processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, smsOrigMsisdn) -> do
     mkontraInfoForSMS <- dbQuery $ GetKontraInfoForSMS smsid
     logInfo "Messages.procesEvent: logging info" . object $ [
             identifier_ eid
@@ -60,6 +60,7 @@ processEvents mailNoreplyAddress = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, 
   where
     processEvent (eid, _, eventType, Just (DocumentInvitationSMS _did slid), smsOrigMsisdn) = do
       docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs [slid]
+      mailNoreplyAddress <- asks ceMailNoreplyAddress
       case docs of
         [] -> do
           logInfo "SMS event for purged/non-existing document" $ object [identifier_ slid]
@@ -73,7 +74,7 @@ processEvents mailNoreplyAddress = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, 
             _ <- dbUpdate $ MarkSMSEventAsRead eid
             msl <- getSigLinkFor slid <$> theDocument
             let signphone = maybe "" getMobile msl
-            templates <- getGlobalTemplates
+            templates <- asks ceTemplates
             bd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
               Nothing -> dbQuery $ GetMainBrandedDomain
               Just uid -> dbQuery $ GetBrandedDomainByUserID uid
@@ -98,7 +99,7 @@ processEvents mailNoreplyAddress = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, 
     processEvent (eid, _, eventType, Just (DocumentPinSendoutSMS _did slid), smsOrigMsisdn) =
       dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
         _ <- dbUpdate $ MarkSMSEventAsRead eid
-        templates <- getGlobalTemplates
+        templates <- asks ceTemplates
         msl <- getSigLinkFor slid <$> theDocument
         case (eventType,msl) of
           (SMSEvent phone SMSDelivered, Just sl) -> runTemplatesT (def, templates) $ do

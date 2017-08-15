@@ -44,7 +44,7 @@ import Doc.API.V2.Guards
 import Doc.API.V2.JSON.AttachmentDetails
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.Misc
-import Doc.AutomaticReminder.Model (setAutoreminder)
+import Doc.AutomaticReminder.Model (setAutomaticReminder)
 import Doc.DocInfo (isPending, isTimedout)
 import Doc.DocMails (sendAllReminderEmailsExceptAuthor, sendForwardEmail)
 import Doc.DocStateData
@@ -409,7 +409,7 @@ docApiV2SetAutoReminder did = logDocument did . api $ do
           else return $ Just d
     -- API call actions
     timezone <- documenttimezonename <$> theDocument
-    setAutoreminder did (fmap fromIntegral days) timezone
+    setAutomaticReminder did (fmap fromIntegral days) timezone
     -- Result
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 

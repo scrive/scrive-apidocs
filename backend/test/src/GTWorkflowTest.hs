@@ -1,15 +1,14 @@
 {- Tests in this file require access to GT server that can sign/extend/verify PDF's -}
-module GTWorkflowTest where
+module GTWorkflowTest (gtWorkflowTests) where
 
 import Control.Monad.Base
-import Control.Monad.Trans
+import Control.Monad.Reader
 import Data.Functor
 import Test.Framework
 import qualified Data.ByteString as BS
 
-import ActionQueue.Monad (ActionQueueT)
-import ActionQueue.Scheduler (SchedulerData(..))
 import CronConf (CronConf(cronDBConfig))
+import CronEnv
 import DB
 import Doc.Action (findAndExtendDigitalSignatures)
 import Doc.DocInfo
@@ -25,7 +24,6 @@ import TestingUtil
 import TestKontra
 import Util.Actor
 import qualified Amazon as AWS
-import qualified CronEnv
 import qualified MemCache
 
 gtWorkflowTests :: TestEnvSt -> Test
@@ -48,15 +46,15 @@ testExtendDigitalSignatures = do
     -- Append a file to tweak the modification time
     dbUpdate $ AppendSealedFile file1 Guardtime{ extended = False, private = False } actor
     dbUpdate $ AppendExtendedSealedFile file2 Guardtime{ extended = False, private = False } actor
-    runScheduler findAndExtendDigitalSignatures
+    runCronEnv' findAndExtendDigitalSignatures
   withDocumentID did $ do
     documentsealstatus <$> theDocument >>= \case
       Just (Guardtime{ extended = True }) -> assertSuccess
       s -> assertFailure $ "Unexpected extension status: " ++ show s
 
-runScheduler :: MonadBase IO m => ActionQueueT (AWS.AmazonMonadT m) SchedulerData a -> m a
-runScheduler m = do
+runCronEnv' :: MonadBase IO m => CronEnvT (AWS.AmazonMonadT m) CronEnv a -> m a
+runCronEnv' m = do
   let cronConf = def { cronDBConfig = "" }
   templates <- liftBase readGlobalTemplates
   filecache <- MemCache.new BS.length 52428800
-  CronEnv.runScheduler cronConf filecache Nothing templates m
+  runCronEnv cronConf filecache Nothing templates m

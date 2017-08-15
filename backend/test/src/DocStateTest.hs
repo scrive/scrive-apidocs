@@ -1,9 +1,8 @@
-module DocStateTest{- (docStateTests)-} where
+module DocStateTest (docStateTests) where
 
 import Control.Arrow (first)
 import Control.Conditional ((<|), (|>))
-import Control.Monad.Base
-import Control.Monad.Trans
+import Control.Monad.Reader
 import Data.Functor
 import Data.Text (unpack)
 import Test.Framework
@@ -11,12 +10,9 @@ import Test.QuickCheck
 import qualified Data.ByteString as BS
 import qualified Data.Set as S
 
-import ActionQueue.Monad (ActionQueueT)
-import ActionQueue.Scheduler (SchedulerData(..))
 import Amazon
 import Company.Model
 import Context (ctxtime)
-import CronConf (CronConf(cronDBConfig))
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 import Doc.Conditions
@@ -34,7 +30,6 @@ import EvidenceLog.View (getSignatoryIdentifierMap, simplyfiedEventText)
 import File.FileID
 import KontraPrelude
 import MinutesTime
-import Templates
 import TestingUtil
 import TestKontra
 import Text.XML.DirtyContent (renderXMLContent)
@@ -43,8 +38,6 @@ import Util.Actor
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import qualified Amazon as AWS
-import qualified CronEnv
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified MemCache
@@ -1897,13 +1890,6 @@ testStatusClassSignedWhenAllSigned = replicateM_ 10 $ do
   doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
 
   assertEqual "Statusclass for signed documents is signed" SCSigned (documentstatusclass doc')
-
-runScheduler :: MonadBase IO m => ActionQueueT (AWS.AmazonMonadT m) SchedulerData a -> m a
-runScheduler m = do
-  let cronConf = def { cronDBConfig = "" }
-  templates <- liftBase readGlobalTemplates
-  filecache <- MemCache.new BS.length 52428800
-  CronEnv.runScheduler cronConf filecache Nothing templates m
 
 -- Moved from Eq instance of SignatoryLink. Instance got dropped as it is not usefull in main server - but it's good to have way to compare SignatoryLinks in tests.
 signatoryLinksAreAlmostEqualForTests :: SignatoryLink -> SignatoryLink -> Bool

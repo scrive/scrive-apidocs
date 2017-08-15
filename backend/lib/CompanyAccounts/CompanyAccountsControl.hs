@@ -19,7 +19,6 @@ import Data.Ord
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
 
-import ActionQueue.UserAccountRequest
 import Company.CompanyUI
 import Company.Model
 import CompanyAccounts.CompanyAccountsView
@@ -36,6 +35,7 @@ import MinutesTime
 import User.Action
 import User.Email
 import User.History.Model
+import User.UserAccountRequest
 import User.UserControl
 import User.Utils
 import Util.HasSomeUserInfo

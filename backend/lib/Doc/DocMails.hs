@@ -10,7 +10,7 @@ module Doc.DocMails (
   , sendDocumentErrorEmail
   , sendPinCode
   , makeMailAttachments
-  , runMailTInScheduler
+  , runMailT
   , MailT
   ) where
 
@@ -22,7 +22,6 @@ import Log
 import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
 import qualified Data.ByteString as BS
 
-import ActionQueue.Scheduler (SchedulerData(..), getGlobalTemplates)
 import BrandedDomain.Model
 import DB
 import Doc.API.Callback.Model
@@ -46,7 +45,7 @@ import MailContext (MailContext(..), MailContextMonad, MailContextT, getMailCont
 import Mails.MailsData
 import Mails.SendMail
 import SMS.SMS (scheduleSMS)
-import Templates (runTemplatesT)
+import Templates (KontrakcjaGlobalTemplates, runTemplatesT)
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -422,21 +421,16 @@ sendNotifications sl alwaysEmailAuthor domail dosms = do
 type MailT m = MailContextT (TemplatesT m)
 
 -- | Set up mail and template context, with language and branding
--- based on document data, and the rest from SchedulerData
-runMailTInScheduler :: (MonadReader SchedulerData m, MonadThrow m, MonadDB m, MonadIO m, MonadLog m) => Document -> MailT m a -> m a
-runMailTInScheduler doc m = do
+-- based on document data, and the rest from CronEnv
+runMailT :: (MonadThrow m, MonadDB m, MonadIO m, MonadLog m) => KontrakcjaGlobalTemplates -> String -> Document -> MailT m a -> m a
+runMailT templates mailNoreplyAddress doc m = do
   now <- currentTime
   mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) $ join $ maybesignatory <$> getAuthorSigLink doc
   bd <- maybe (dbQuery GetMainBrandedDomain) (dbQuery . GetBrandedDomainByUserID) (userid <$> mauthor)
-  mailNoreplyAddress <- asks sdMailNoreplyAddress
   let mctx = MailContext {
           mctxlang = documentlang doc
         , mctxcurrentBrandedDomain = bd
         , mctxtime = now
         , mctxmailNoreplyAddress = mailNoreplyAddress
         }
-  templates <- getGlobalTemplates
-  runMailT (getLang doc, templates) mctx m
-  where
-   runMailT lt mctx =
-     runTemplatesT lt . runMailContextT mctx
+  runTemplatesT (getLang doc, templates) . runMailContextT mctx $ m

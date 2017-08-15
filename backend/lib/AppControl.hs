@@ -49,7 +49,7 @@ import KontraPrelude
 import Log.Identifier
 import Log.Utils
 import MinutesTime
-import Session.Data hiding (session)
+import Session.Data
 import Session.Model
 import Templates
 import Text.JSON.Convert

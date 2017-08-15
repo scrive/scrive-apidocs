@@ -18,10 +18,10 @@ import Data.Time
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad)
 
-import ActionQueue.Scheduler
 import Amazon (AmazonMonad)
 import BrandedDomain.BrandedDomain
 import Chargeable.Model
+import CronEnv
 import DB
 import DB.TimeZoneName
 import Doc.API.Callback.Model
@@ -108,7 +108,7 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   theDocument >>= logDocEvent "Doc Sent" author []
 
   sendInvitationEmails authorsignsimmediately
-  scheduleAutoreminderIfThereIsOne tzn =<< theDocument
+  theDocument >>= \d -> setAutomaticReminder (documentid d) (documentdaystoremind d) tzn
   return ()
   where
     userMixpanelData author time =
@@ -248,10 +248,10 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
 
 
 -- | Extend (replace with keyless) signatures of documents older than latest publication code (if they are not already extended)
-findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader SchedulerData m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadMask m, MonadIO m, MonadLog m) => m ()
+findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader CronEnv m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadMask m, MonadIO m, MonadLog m) => m ()
 findAndExtendDigitalSignatures = do
   lpt <- latest_publication_time
-  gtconf <- asks sdGuardTimeConf
+  gtconf <- asks ceGuardTimeConf
   logInfo "findAndExtendDigitalSignatures: logging latest publication time" $ object [
       "latest_publication_time" .= lpt
     ]
@@ -269,7 +269,7 @@ findAndExtendDigitalSignatures = do
         "documents" .= length docs
       ]
   startTime <- liftBase getCurrentTime
-  templates <- getGlobalTemplates
+  templates <- asks ceTemplates
   (alreadyExtended, failedExtend, success) <- foldM (\(ext,f,s) d ->
     case documentsealstatus d of
       Just (Guardtime{ extended = False }) -> do
@@ -350,12 +350,12 @@ saveDocumentForSignatories =
 
 -- | Time out documents once per day after midnight.  Do it in chunks
 -- so that we don't choke the server in case there are many documents to time out
-findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader SchedulerData m, MonadIO m, MonadDB m, MonadCatch m, MonadLog m) => m ()
+findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader CronEnv m, MonadIO m, MonadDB m, MonadCatch m, MonadLog m) => m ()
 findAndTimeoutDocuments = do
   now <- currentTime
   docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
   forM_ docs $ flip withDocument $ do
-    gt <- getGlobalTemplates
+    gt <- asks ceTemplates
     runTemplatesT (def, gt) $ dbUpdate $ TimeoutDocument (systemActor now)
     triggerAPICallbackIfThereIsOne =<< theDocument
     logInfo_ "Document timed out"

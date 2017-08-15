@@ -9,7 +9,6 @@ import Text.JSON hiding (decode)
 import Text.JSON.Gen as J
 import qualified Data.HashMap.Strict as H
 
-import ActionQueue.PasswordReminder
 import BrandedDomain.Model
 import Company.Model
 import Context
@@ -24,6 +23,7 @@ import TestKontra as T
 import User.API
 import User.Email
 import User.Model
+import User.PasswordReminder
 import User.UserControl
 
 loginTests :: TestEnvSt -> Test

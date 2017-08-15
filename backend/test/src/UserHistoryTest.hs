@@ -5,7 +5,6 @@ import Test.Framework
 import Text.JSON
 import Text.JSON.Gen
 
-import ActionQueue.UserAccountRequest
 import BrandedDomain.Model
 import Company.Model
 import Context
@@ -21,6 +20,7 @@ import User.API
 import User.Email
 import User.History.Model
 import User.Model
+import User.UserAccountRequest
 import User.UserControl
 
 userHistoryTests :: TestEnvSt -> Test

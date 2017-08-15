@@ -9,7 +9,6 @@ import Test.QuickCheck
 import Text.XML.HaXml.Parse (xmlParse')
 import qualified Data.Text as T
 
-import ActionQueue.UserAccountRequest
 import Company.CompanyUI
 import Company.Model
 import Context
@@ -26,6 +25,7 @@ import MinutesTime
 import TestingUtil
 import TestKontra as T
 import User.Model
+import User.UserAccountRequest
 import User.UserView
 import Util.Actor
 import Util.HasSomeUserInfo

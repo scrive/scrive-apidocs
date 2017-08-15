@@ -18,10 +18,6 @@ import Happstack.StaticRouting
 import Log
 import Text.JSON.Gen hiding (object)
 
-import ActionQueue.Core
-import ActionQueue.EmailChangeRequest
-import ActionQueue.PasswordReminder
-import ActionQueue.UserAccountRequest
 import API.Monad.V1
 import Chargeable.Model
 import Company.Model
@@ -45,8 +41,11 @@ import ThirdPartyStats.Core
 import User.Action
 import User.CallbackScheme.Model
 import User.Email
+import User.EmailChangeRequest
 import User.History.Model
 import User.Model
+import User.PasswordReminder
+import User.UserAccountRequest
 import User.UserControl
 import User.UserView
 import User.Utils
@@ -281,12 +280,12 @@ apiCallSendPasswordReminder = api $ do
         Nothing -> do
           runJSONGenT $ value "send" True
         Just user -> do
-          minv <- dbQuery $ GetAction passwordReminder $ userid user
+          minv <- dbQuery $ GetPasswordReminder $ userid user
           case minv of
             Just pr@PasswordReminder{..} -> case prRemainedEmails of
               0 -> runJSONGenT $ value "send" True
               n -> do
-                _ <- dbUpdate $ UpdateAction passwordReminder $ pr { prRemainedEmails = n - 1 }
+                _ <- dbUpdate $ UpdatePasswordReminder $ pr { prRemainedEmails = n - 1 }
                 sendResetPasswordMail ctx (LinkPasswordReminder prUserID prToken) user
                 runJSONGenT $ value "send" True
             _ -> do

@@ -655,7 +655,7 @@ apiCallV1SetAutoReminder did = logDocument did . api $ do
                           then throwM . SomeDBExtraException $ (badInput "Number of days to send autoreminder must be a valid number, between 1 and number of days left till document deadline")
                           else return $ Just (fromIntegral n :: Int32)
       timezone <- documenttimezonename <$> theDocument
-      setAutoreminder did days timezone
+      setAutomaticReminder did days timezone
       triggerAPICallbackIfThereIsOne =<< theDocument
       Accepted <$> (documentJSONV1 (Just $ user) True True Nothing =<< theDocument)
 

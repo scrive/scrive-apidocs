@@ -1,3 +1,4 @@
+{-# LANGUAGE PackageImports #-}
 module Cron (main) where
 
 import Control.Monad
@@ -16,22 +17,16 @@ import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import qualified Data.Traversable as F
 
-import ActionQueue.EmailChangeRequest
-import ActionQueue.Monad
-import ActionQueue.PasswordReminder
-import ActionQueue.Scheduler
-import ActionQueue.UserAccountRequest
 import Administration.Invoicing
 import AppDBTables
 import Configuration
 import Cron.Model
-import CronConf
 import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
 import Doc.Action
 import Doc.API.Callback.Model
-import Doc.AutomaticReminder.Model
+import Doc.AutomaticReminder.Model (expireDocumentAutomaticReminders)
 import Doc.Extending.Consumer
 import Doc.Model
 import Doc.Sealing.Consumer
@@ -48,16 +43,20 @@ import MinutesTime
 import Monitoring
 import Planhat
 import Purging.Files
-import Session.Data
+import Session.Model (DeleteExpiredSessions(..))
 import SMS.Events
 import Templates
 import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
 import ThirdPartyStats.Planhat
+import User.EmailChangeRequest (DeleteExpiredEmailChangeRequests(..))
+import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
+import User.UserAccountRequest (expireUserAccountRequests)
 import Utils.IO
+import "kontrakcja" CronConf
 import qualified Amazon as AWS
-import qualified CronEnv
 import qualified MemCache
+import qualified "kontrakcja" CronEnv
 
 data CmdConf = CmdConf {
   config :: String
@@ -75,7 +74,6 @@ cmdConf progName = CmdConf {
 ----------------------------------------
 
 type CronM = CryptoRNGT (LogT IO)
-type DBCronM = DBT CronM
 
 main :: IO ()
 main = do
@@ -120,11 +118,11 @@ main = do
       Just phConf ->
         return . Just $ processPlanhatEvent reqManager phConf
 
-    let runDB :: DBCronM r -> CronM r
+    let runDB :: DBT CronM r -> CronM r
         runDB = withPostgreSQL pool
 
-        runScheduler :: Scheduler r -> CronM r
-        runScheduler = runDB . CronEnv.runScheduler cronConf
+        runCronEnv :: CronEnv.CronEnvM r -> CronM r
+        runCronEnv = runDB . CronEnv.runCronEnv cronConf
           filecache mrediscache templates
 
         docSealing   = documentSealing (cronAmazonConfig cronConf)
@@ -135,8 +133,8 @@ main = do
         docExtending = documentExtendingConsumer (cronAmazonConfig cronConf)
           (cronGuardTimeConf cronConf) templates filecache mrediscache pool
 
-        apiCallbacks = documentAPICallback runScheduler
-        cron = cronQueue cronConf reqManager mmixpanel mplanhat runScheduler runDB
+        apiCallbacks = documentAPICallback runCronEnv
+        cron = cronQueue cronConf reqManager mmixpanel mplanhat runCronEnv runDB
 
     runCryptoRNGT rng
       . finalize (localDomain "document sealing" $ runConsumer docSealing pool)
@@ -148,12 +146,12 @@ main = do
   where
     cronQueue :: CronConf
               -> Manager
-              -> Maybe (EventProcessor (DBCronM))
-              -> Maybe (EventProcessor (DBCronM))
-              -> (forall r. Scheduler r -> CronM r)
-              -> (forall r. DBCronM r -> CronM r)
+              -> Maybe (EventProcessor (DBT CronM))
+              -> Maybe (EventProcessor (DBT CronM))
+              -> (forall r. CronEnv.CronEnvM r -> CronM r)
+              -> (forall r. DBT CronM r -> CronM r)
               -> ConsumerConfig CronM JobType CronJob
-    cronQueue cronConf mgr mmixpanel mplanhat runScheduler runDB = ConsumerConfig {
+    cronQueue cronConf mgr mmixpanel mplanhat runCronEnv runDB = ConsumerConfig {
       ccJobsTable = "cron_jobs"
     , ccConsumersTable = "cron_workers"
     , ccJobSelectors = cronJobSelectors
@@ -168,7 +166,7 @@ main = do
         AmazonUpload -> do
           if AWS.isAWSConfigOk $ cronAmazonConfig cronConf
             then do
-              moved <- runScheduler (AWS.uploadSomeFilesToAmazon 10)
+              moved <- runCronEnv (AWS.uploadSomeFilesToAmazon 10)
               if moved
                 then return . RerunAfter $ iseconds 1
                 else return . RerunAfter $ iminutes 1
@@ -184,10 +182,10 @@ main = do
           runDB $ collectClockError (cronNtpServers cronConf)
           return . RerunAfter $ ihours 1
         DocumentAutomaticRemindersEvaluation -> do
-          runScheduler $ actionQueue documentAutomaticReminder
+          runCronEnv expireDocumentAutomaticReminders
           return . RerunAfter $ iminutes 1
         DocumentsPurge -> do
-          runScheduler $ do
+          runCronEnv $ do
             startTime <- currentTime
             purgedCount <- dbUpdate . PurgeDocuments 30 $ fromIntegral unsavedDocumentLingerDays
             finishTime <- currentTime
@@ -197,7 +195,7 @@ main = do
               ]
           return . RerunAfter $ iminutes 10
         DocumentsArchiveIdle -> do
-          runScheduler $ do
+          runCronEnv $ do
             now <- currentTime
             archived <- dbUpdate $ ArchiveIdleDocuments now
             logInfo "Archived documents for signatories" $ object [
@@ -205,35 +203,35 @@ main = do
               ]
           RerunAt . nextDayAtHour 19 <$> currentTime
         EmailChangeRequestsEvaluation -> do
-          runScheduler $ actionQueue emailChangeRequest
+          runCronEnv . dbUpdate $ DeleteExpiredEmailChangeRequests
           return . RerunAfter $ ihours 1
         FindAndExtendDigitalSignatures -> do
-          runScheduler findAndExtendDigitalSignatures
+          runCronEnv findAndExtendDigitalSignatures
           return . RerunAfter $ iminutes 5
         FindAndTimeoutDocuments -> do
-          runScheduler findAndTimeoutDocuments
+          runCronEnv findAndTimeoutDocuments
           return . RerunAfter $ iminutes 10
         InvoicingUpload -> do
           case cronInvoicingSFTPConf cronConf of
             Nothing -> do
               logInfo "SFTP config missing; skipping" $ object []
-            Just sftpConfig -> runScheduler $ uploadInvoicing sftpConfig
+            Just sftpConfig -> runCronEnv $ uploadInvoicing sftpConfig
           RerunAt . nextDayAtHour 1 <$> currentTime
         MailEventsProcessing -> do
-          runScheduler $ Mails.Events.processEvents (cronMailNoreplyAddress cronConf)
+          runCronEnv Mails.Events.processEvents
           return . RerunAfter $ iseconds 5
         MarkOrphanFilesForPurge -> do
           let maxMarked = 100000
               -- Share the string between all the log messages.
               orphanFileMarked = "Orphan file marked for purge"
-          fids <- runDB . dbUpdate . MarkOrphanFilesForPurgeAfter maxMarked $ idays 7
+          fids <- runCronEnv . dbUpdate . MarkOrphanFilesForPurgeAfter maxMarked $ idays 7
           forM_ fids $ \fid -> logInfo orphanFileMarked $ object [identifier_ fid]
           -- If maximum amount of files was marked, run it again shortly after.
           if length fids == maxMarked
             then return . RerunAfter $ iseconds 1
             else RerunAt . nextDayMidnight <$> currentTime
         OldDraftsRemoval -> do
-          runScheduler $ do
+          runCronEnv $ do
             delCount <- dbUpdate $ RemoveOldDrafts 100
             logInfo "Removed old, unsaved draft documents" $ object [
                 "removed" .= delCount
@@ -254,10 +252,10 @@ main = do
               ]
           RerunAt . nextDayMidnight <$> currentTime
         PasswordRemindersEvaluation -> do
-          runScheduler $ actionQueue passwordReminder
+          runCronEnv . dbUpdate $ DeleteExpiredPasswordReminders
           return . RerunAfter $ ihours 1
         PurgeOrphanFile -> do
-          found <- runScheduler purgeOrphanFile
+          found <- runCronEnv purgeOrphanFile
           return . RerunAfter $ if found
                                 then iseconds 1
                                 else iminutes 1
@@ -265,16 +263,16 @@ main = do
           case cronPlanhatConf cronConf of
             Nothing -> do
               logInfo "Planhat config missing; skipping" $ object []
-            Just phConf -> do runScheduler $ doDailyPlanhatStats phConf mgr
+            Just phConf -> do runCronEnv $ doDailyPlanhatStats phConf mgr
           RerunAt . nextDayAtHour 2 <$> currentTime
         SessionsEvaluation -> do
-          runScheduler $ actionQueue session
+          runCronEnv . dbUpdate $ DeleteExpiredSessions
           return . RerunAfter $ ihours 1
         SMSEventsProcessing -> do
-          runScheduler $ SMS.Events.processEvents (cronMailNoreplyAddress cronConf)
+          runCronEnv $ SMS.Events.processEvents
           return . RerunAfter $ iseconds 5
         UserAccountRequestEvaluation -> do
-          runScheduler $ actionQueue userAccountRequest
+          runCronEnv expireUserAccountRequests
           return . RerunAfter $ ihours 1
       logInfo_ "Job processed successfully"
       return $ Ok action
@@ -289,6 +287,6 @@ main = do
       where
         logHandlerInfo jobType action = localRandomID "job_id" $ localData ["job_type" .= show jobType] action
 
-        getEventProcessor :: EventType -> Maybe (EventProcessor DBCronM)
+        getEventProcessor :: EventType -> Maybe (EventProcessor (DBT CronM))
         getEventProcessor EventMixpanel = mmixpanel
         getEventProcessor EventPlanhat  = mplanhat

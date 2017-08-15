@@ -6,8 +6,6 @@ import Test.Framework
 import Text.JSON (JSValue)
 import Text.JSON.FromJSValue (fromJSValueField, withJSValue)
 
-import ActionQueue.Core
-import ActionQueue.UserAccountRequest
 import Context
 import DB hiding (query, update)
 import KontraPrelude
@@ -18,6 +16,7 @@ import TestingUtil
 import TestKontra as T
 import User.API
 import User.Model
+import User.UserAccountRequest
 import User.UserControl
 import Util.HasSomeUserInfo
 
@@ -111,4 +110,4 @@ assertAccountActivated fstname sndname res ctx = do
 getAccountCreatedActions :: TestEnv [UserAccountRequest]
 getAccountCreatedActions = do
   expirytime <- (30 `daysAfter`) <$> currentTime
-  dbQuery $ GetExpiredActions userAccountRequest expirytime
+  dbQuery $ GetExpiredUserAccountRequestsForTesting expirytime
