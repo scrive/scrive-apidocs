@@ -29,8 +29,6 @@ newtype BuildTestCoverage = BuildTestCoverage ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype BuildCabalConfigureOptions = BuildCabalConfigureOptions ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
-newtype TeamCityBuildDBAdminConnString = TeamCityBuildDBAdminConnString ()
-  deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype TeamCityBuildDBConnString = TeamCityBuildDBConnString ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype TeamCityBuildDBName = TeamCityBuildDBName ()
@@ -48,10 +46,8 @@ addOracles = do
   _ <- addOracle $ \(TeamCity _) ->
                      not . null . fromMaybe ""
                      <$> getEnv "TEAMCITY_VERSION"
-  _ <- addOracle $ \(TeamCityBuildDBAdminConnString _)  ->
-                     fromMaybe "" <$> getEnv "DB_BUILD_ADMIN_CONN_STRING"
   _ <- addOracle $ \(TeamCityBuildDBConnString _)  ->
-                     fromMaybe "" <$> getEnv "DB_CONN_STRING"
+                     fromMaybe "" <$> getEnv "DB_BUILD_ADMIN_CONN_STRING"
   _ <- addOracle $ \(TeamCityBuildDBName _)  ->
                      fromMaybe "" <$> getEnv "BUILD_DB_NAME"
 
@@ -116,16 +112,10 @@ oracleHelpRule = do
     explainVar "TEAMCITY_VERSION" "Used to determine if run by TeamCity CI"
     showVarVal (show tc)
 
-    tcDBAdminCS <- askOracleWith (TeamCityBuildDBAdminConnString ()) ""
+    tcDBCS <- askOracleWith (TeamCityBuildDBConnString ()) ""
     explainVar "BUILD_DB_ADMIN_CONN_STRING" $
       "Postgres connection string for admin access to the"
       ++ " isolated per-build DB. Doesn't include the DB name."
-    showVarVal (show tcDBAdminCS)
-
-    tcDBCS <- askOracleWith (TeamCityBuildDBConnString ()) ""
-    explainVar "DB_CONN_STRING" $
-      "Postgres connection string for the isolated per-build DB."
-      ++ " Doesn't include the DB name."
     showVarVal (show tcDBCS)
 
     tcDB <- askOracleWith (TeamCityBuildDBName ()) ""
