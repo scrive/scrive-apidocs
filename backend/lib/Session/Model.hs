@@ -14,7 +14,7 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Maybe
 import Crypto.RNG
-import Data.Time.Clock (NominalDiffTime, addUTCTime, diffUTCTime)
+import Data.Time.Clock (NominalDiffTime, addUTCTime, diffUTCTime, nominalDay)
 import Happstack.Server hiding (Session)
 import Log
 
@@ -132,7 +132,7 @@ sessionNowModifier :: UTCTime -> UTCTime
 sessionNowModifier = (720 `minutesAfter`)
 
 sessionExpirationDelay :: NominalDiffTime
-sessionExpirationDelay = 2 * 60 * 60 -- 2 hours
+sessionExpirationDelay = 2 * (nominalDay / 24) -- 2 hours
 
 getSession :: (MonadDB m, MonadThrow m, MonadTime m) => SessionID -> MagicHash -> String -> m (Maybe Session)
 getSession sid token domain = runMaybeT $ do
