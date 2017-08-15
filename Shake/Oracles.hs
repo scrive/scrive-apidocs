@@ -29,6 +29,13 @@ newtype BuildTestCoverage = BuildTestCoverage ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype BuildCabalConfigureOptions = BuildCabalConfigureOptions ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
+newtype TeamCityBuildDBAdminConnString = TeamCityBuildDBAdminConnString ()
+  deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
+newtype TeamCityBuildDBConnString = TeamCityBuildDBConnString ()
+  deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
+newtype TeamCityBuildDBName = TeamCityBuildDBName ()
+  deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
+
 
 addOracles :: Rules ()
 addOracles = do
@@ -41,6 +48,13 @@ addOracles = do
   _ <- addOracle $ \(TeamCity _) ->
                      not . null . fromMaybe ""
                      <$> getEnv "TEAMCITY_VERSION"
+  _ <- addOracle $ \(TeamCityBuildDBAdminConnString _)  ->
+                     fromMaybe "" <$> getEnv "BUILD_DB_ADMIN_CONN_STRING"
+  _ <- addOracle $ \(TeamCityBuildDBConnString _)  ->
+                     fromMaybe "" <$> getEnv "DB_CONN_STRING"
+  _ <- addOracle $ \(TeamCityBuildDBName _)  ->
+                     fromMaybe "" <$> getEnv "BUILD_DB_NAME"
+
   -- This is needed by our build.
   -- FIXME should be part of SHAKE_BUILD_ env vars?
   _ <- addOracle $ \(NginxConfPath _) ->
@@ -101,6 +115,23 @@ oracleHelpRule = do
     tc <- askOracleWith (TeamCity ()) True
     explainVar "TEAMCITY_VERSION" "Used to determine if run by TeamCity CI"
     showVarVal (show tc)
+
+    tcDBAdminCS <- askOracleWith (TeamCityBuildDBAdminConnString ()) ""
+    explainVar "BUILD_DB_ADMIN_CONN_STRING" $
+      "Postgres connection string for admin access to the"
+      ++ " isolated per-build DB. Doesn't include the DB name."
+    showVarVal (show tcDBAdminCS)
+
+    tcDBCS <- askOracleWith (TeamCityBuildDBConnString ()) ""
+    explainVar "DB_CONN_STRING" $
+      "Postgres connection string for the isolated per-build DB."
+      ++ " Doesn't include the DB name."
+    showVarVal (show tcDBCS)
+
+    tcDB <- askOracleWith (TeamCityBuildDBName ()) ""
+    explainVar "BUILD_DB_NAME" $ "Name of the isolated per-build DB."
+      ++ " Normally consists of a prefix and a build number."
+    showVarVal (show tcDB)
 
     nginxconfpath <- askOracle (NginxConfPath ())
     explainVar "NGINX_CONF_PATH" "Used for generating NGINX urls.txt file"
