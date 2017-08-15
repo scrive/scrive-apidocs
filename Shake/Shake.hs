@@ -368,7 +368,7 @@ serverTestRules newBuild cabalFile createDB = do
         where
           withDB DontCreateTestDB act = act
           withDB CreateTestDB     act = do
-            connString <- askOracle (TeamCityBuildDBAdminConnString ())
+            connString <- askOracle (TeamCityBuildDBConnString ())
             dbName     <- askOracle (TeamCityBuildDBName ())
             (mkDB connString dbName >> act)
               `actionFinally` (rmDB connString dbName)
