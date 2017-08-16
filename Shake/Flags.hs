@@ -10,6 +10,7 @@ data ShakeFlag = TransifexUser     String
                | TransifexLang     String
                | SrcSubdir         FilePath
                | NewBuild
+               | CreateDB
   deriving Eq
 
 shakeFlags :: [OptDescr (Either String ShakeFlag)]
@@ -19,7 +20,10 @@ shakeFlags =
   , Option "" ["lang"]       (reqArg TransifexLang     "LANG") "Language"
   , Option "" ["src-subdir"] (reqArg SrcSubdir         "DIR")
     "Source subdirectory (for hindent/stylish-haskell/hlint)"
-  , Option "" ["new-build"] (noArg  NewBuild)                  "Use 'new-build'."
+  , Option "" ["new-build"]  (noArg  NewBuild)
+    "Use 'new-build'."
+  , Option "" ["create-db"]  (noArg  CreateDB)
+    "Use a new DB for tests. See 'help-env' for relevant env var settings."
   ]
   where
     noArg  flagVal     = NoArg  (Right flagVal)

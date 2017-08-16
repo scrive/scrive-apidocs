@@ -2,10 +2,12 @@
 
 import Control.Monad
 import Data.Maybe
+import Data.Monoid
 import Development.Shake
 import Development.Shake.FilePath
 import Distribution.Text (display)
-import System.Directory (createDirectoryIfMissing)
+import System.Directory  (createDirectoryIfMissing)
+import System.Process    (callProcess)
 
 import Shake.Cabal
 import Shake.DBSchema (buildDBDocs)
@@ -20,10 +22,14 @@ opts :: String -> ShakeOptions
 opts v = shakeOptions { shakeVersion = v
                       , shakeFiles = "_build"
                       , shakeVerbosity = Loud
-                      -- When running on multiple threads, a build failure on one
-                      -- thread did not stop other threads from continuing
-                      -- Maybe this is default Shake behaviour but is annoying as
-                      -- the build error gets lost in output
+                      -- When running on multiple threads, a build
+                      -- failure on one thread does not stop other
+                      -- threads from continuing.
+                      --
+                      -- Maybe this is default Shake behaviour, but it is
+                      -- annoying as the build error gets lost in
+                      -- output.
+                      --
                       -- Run on single thread until we figure this out
                       , shakeThreads = 1
                       }
@@ -47,9 +53,9 @@ usageMsg = unlines
   , "   haddock         : Build Haddock Documentation"
   , "   db-docs         : Build database schema docs"
   , ""
-  , "                     SchemaCrawler must be installed, schemacrawler.sh must"
-  , "                     be in PATH. GraphViz must be in PATH. Also the DB must"
-  , "                     be alredy created and running."
+  , "                     SchemaCrawler must be installed, schemacrawler.sh"
+  , "                     must be in PATH. GraphViz must be in PATH. Also the"
+  , "                     DB must be alredy created and running."
   , ""
   , "# Test targets"
   , ""
@@ -73,12 +79,13 @@ usageMsg = unlines
   , "   fix-hs-import-order       : Sort Haskell imports"
   , "   test-hs-outdated-deps     : Check for outdated Haskell dependencies"
   , ""
-  , "                               Use the --src-subdir=DIR option to limit the"
-  , "                               above commands to a part of the tree."
+  , "                               Use the --src-subdir=DIR option to limit"
+  , "                               the above commands to a part of the tree."
   , ""
   , "# Utility scripts"
   , ""
-  , "   transifex-fix              : Sort local Transifex .json translation files"
+  , "   transifex-fix              : Sort local Transifex .json translation"
+  , "                                files"
   , "   transifex-push             : Push local translation to Transifex"
   , "   transifex-diff             : Diff local translation against the remote"
   , "   transifex-merge            : Merge local translation with the remote"
@@ -95,6 +102,11 @@ usageMsg = unlines
   , "   fresh          : Clean all (including Shake build data)"
   , "   clean-server   : Clean with 'cabal clean'"
   , "   clean-frontend : Clean with 'grunt clean'"
+  , ""
+  , "# Help"
+  , ""
+  , "   help           : This help message"
+  , "   help-env       : Print information about environment variables used"
   , ""
   ]
 
@@ -159,7 +171,7 @@ main = do
     -- * Rules
     componentBuildRules   newBuild cabalFile
     serverBuildRules      newBuild cabalFile
-    serverTestRules       newBuild cabalFile
+    serverTestRules       newBuild cabalFile (mkCreateTestDB flags)
     serverFormatLintRules newBuild cabalFile flags
     frontendBuildRules    newBuild
     frontendTestRules     newBuild
@@ -291,14 +303,31 @@ serverOldBuildRules cabalFile = do
 
   "cabal-clean" ~> cmd "cabal clean"
 
+-- | Should a new unique DB be created for this test run?
+data CreateTestDB = CreateTestDB | DontCreateTestDB
+
+mkCreateTestDB :: [ShakeFlag] -> CreateTestDB
+mkCreateTestDB flags =
+  if CreateDB `elem` flags then CreateTestDB else DontCreateTestDB
+
 -- | Server test rules
-serverTestRules :: UseNewBuild -> CabalFile -> Rules ()
-serverTestRules newBuild cabalFile = do
-  "kontrakcja_test.conf" %> \_ -> do
-    tc <- askOracle (TeamCity ())
-    when tc $ do
-      testConfFile <- askOracle (BuildTestConfPath ())
-      copyFile' testConfFile "kontrakcja_test.conf"
+serverTestRules :: UseNewBuild -> CabalFile -> CreateTestDB -> Rules ()
+serverTestRules newBuild cabalFile createDB = do
+  "kontrakcja_test.conf" %> \_ ->
+    case createDB of
+      CreateTestDB -> do
+        tc <- askOracle (TeamCity ())
+        when (not tc) $
+          fail "'--create-db' is only supported when running on TeamCity."
+        connString <- askOracle (TeamCityBuildDBConnString ())
+        dbName     <- askOracle (TeamCityBuildDBName ())
+        let connString' = connString <> " dbname=" <> dbName
+        liftIO $ writeFile "kontrakcja_test.conf" connString'
+      DontCreateTestDB -> do
+        tc <- askOracle (TeamCity ())
+        when tc $ do
+          testConfFile <- askOracle (BuildTestConfPath ())
+          copyFile' testConfFile "kontrakcja_test.conf"
 
   "run-server-tests" ~> do
     let testSuiteNames    = testComponentNames cabalFile
@@ -307,13 +336,14 @@ serverTestRules newBuild cabalFile = do
     -- removeFilesAfter is only performed on a successfull build, this file
     -- needs to be cleaned regardless otherwise successive builds will fail
     liftIO $ removeFiles "." ["kontrakcja-test.tix"]
-    forM_ testSuiteExePaths $ \testSuiteExe -> do
+    withDB createDB $ forM_ testSuiteExePaths $ \testSuiteExe -> do
       tc <- askOracle (TeamCity ())
       if tc
         then do
           target <- askOracle (BuildTarget ())
           let cmdopt = [Shell] ++ langEnv
-              flags = ["--plain","--output-dir _build/kontrakcja-test-artefacts"]
+              flags = ["--plain"
+                      ,"--output-dir _build/kontrakcja-test-artefacts"]
                       ++ case target of
                            "staging" -> ["--staging-tests"]
                            _         -> []
@@ -334,6 +364,23 @@ serverTestRules newBuild cabalFile = do
         ("zip -r _build/coverage-reports.zip "
          ++ "coverage-reports kontrakcja-test.tix") []
       removeFilesAfter "coverage-reports" ["//*"]
+
+        where
+          withDB DontCreateTestDB act = act
+          withDB CreateTestDB     act = do
+            connString <- askOracle (TeamCityBuildDBConnString ())
+            dbName     <- askOracle (TeamCityBuildDBName ())
+            (mkDB connString dbName >> act)
+              `actionFinally` (rmDB connString dbName)
+            where
+              mkDB connString dbName = do
+                unit $ cmd "psql" [connString <> " dbname=postgres", "-c"
+                                  ,"CREATE DATABASE " <> dbName <> ";"]
+                unit $ cmd "psql" [connString <> " dbname=" <> dbName, "-c"
+                                  ,"CREATE EXTENSION IF NOT EXISTS pgcrypto;"]
+              rmDB connString dbName =
+                callProcess "psql" [connString <> " dbname=postgres", "-c"
+                                   ,"DROP DATABASE IF EXISTS " <> dbName <> ";"]
 
 needHaskellFilesInDirectories :: [FilePath] -> Action ()
 needHaskellFilesInDirectories = needPatternsInDirectories ["//*.hs"]
@@ -559,7 +606,8 @@ scriptsUsageMsg = unlines $
   , "take-reference-screenshots"
   , "--------------------------"
   , "Update reference screenshots."
-  , "After running 'shake.sh take-reference-screenshots', do the following steps:"
+  , "After running 'shake.sh take-reference-screenshots',"
+  , "do the following steps:"
   , ""
   -- TODO: Explain the process better.
   , "x = concatLines base64 /tmp/author.png"
@@ -568,12 +616,14 @@ scriptsUsageMsg = unlines $
   , "writeFile files/reference_screenshots/author.json (dumps(authorJson))"
   , "same thing for /tmp/desktop2.png into "
     ++ "files/reference_screenshots/standard.json"
-  , "same thing for /tmp/mobile2.png into files/reference_screenshots/mobile.json"
+  , "same thing for /tmp/mobile2.png into"
+  , "files/reference_screenshots/mobile.json"
   , ""
   , "run-localization"
   , "--------------------------"
-  , "Update the pre-generated localization files in 'frontend/app/localization/'"
-  , "for all languages. To use, run 'shake.sh run-localization'."
+  , "Update the pre-generated localization files in"
+  , "'frontend/app/localization/ for all languages."
+  , "To use, run 'shake.sh run-localization'."
   ]
 
 transifexUsageMsg :: String
