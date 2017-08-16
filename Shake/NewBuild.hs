@@ -46,7 +46,8 @@ mkUseNewBuild flags cabalFile =
   else return DontUseNewBuild
 
   where
-    numericVersion   prog    = trim <$> readProcess prog ["--numeric-version"] ""
+    numericVersion   prog    = trim <$>
+                               readProcess prog ["--numeric-version"] ""
     readGhcInfo              = M.fromList . read . trim
                                <$> readProcess "ghc" ["--info"] ""
     lookupGhcVersion ghcInfo = M.findWithDefault "???" "Project version" ghcInfo
