@@ -283,7 +283,9 @@ checkCGIAuthStatus did slid = do
                 -- all the required attributes are supposed to always
                 -- be there, so bail out if this is not the case.
                 let signatoryName = just_lookup "cert.subject.cn" crsAttributes
-                let signatoryPersonalNumber = just_lookup "cert.subject.serialnumber" crsAttributes
+                -- Sometimes cert.subject.serialnumber is missing, then we use Subject.SerialNumber (Case 3320)
+                let subjectSerialNumber = just_lookup "Subject.SerialNumber" crsAttributes
+                let signatoryPersonalNumber = fromMaybe subjectSerialNumber $ lookup "cert.subject.serialnumber" crsAttributes
                 let signature = mk_binary $ fromMaybe (missing "signature") crsSignature
                 let ocspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
 
