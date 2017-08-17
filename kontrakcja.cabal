@@ -1513,7 +1513,7 @@ Executable detect_old_templates
                     containers,
                     directory,
                     fields-json,
-                    haskell-src-exts < 1.17,
+                    haskell-src-exts,
                     HStringTemplate,
                     json,
                     kontrakcja-templates,
