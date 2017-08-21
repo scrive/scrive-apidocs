@@ -57,7 +57,7 @@ documentExtendingConsumer mbAmazonConf guardTimeConf templates localCache global
   , ccJobIndex = decDocumentID
   , ccNotificationChannel = Nothing
   , ccNotificationTimeout = 60 * 1000000 -- 1 minute
-  , ccMaxRunningJobs = 5
+  , ccMaxRunningJobs = 1
   , ccProcessJob = \dec@DocumentExtendingConsumer{..} -> do
       let ac = A.AmazonConfig {
               A.awsConfig = mbAmazonConf
