@@ -23,6 +23,34 @@ var BankIDIdentify = require("../../../../scripts/eleg/bankididentify");
       });
     });
 
+    describe("Model", function () {
+      it("should set thisDevice to false if pad delivery is selected", function () {
+        sinon.stub(doc.currentSignatory(), "padDelivery").returns(true);
+
+        var model = new SwedishIdentifyModel({
+          doc: doc,
+          siglinkid:doc.currentSignatory().signatoryid()
+        });
+
+        assert.isFalse(model.thisDevice());
+
+        doc.currentSignatory().padDelivery.restore();
+      });
+
+      it("should set thisDevice to false if pad delivery isn't selected", function () {
+        sinon.stub(doc.currentSignatory(), "padDelivery").returns(false);
+
+        var model = new SwedishIdentifyModel({
+          doc: doc,
+          siglinkid:doc.currentSignatory().signatoryid()
+        });
+
+        assert.isTrue(model.thisDevice());
+
+        doc.currentSignatory().padDelivery.restore();
+      });
+    });
+
     describe("Identify", function () {
       it("should test Identify", function (done) {
         var model = new SwedishIdentifyModel({ doc: doc, siglinkid:  doc.currentSignatory().signatoryid()});
@@ -42,7 +70,7 @@ var BankIDIdentify = require("../../../../scripts/eleg/bankididentify");
 
         assert.ok(checkbox, "there should be a checkbox");
         checkbox.handleClick();
-        assert.ok(model.thisDevice() == false,"after checking checkbox this device should be set to true");
+        assert.ok(model.thisDevice() == false,"after checking checkbox this device should be set to false");
         TestUtils.Simulate.click(button.getDOMNode());
         done();
       });

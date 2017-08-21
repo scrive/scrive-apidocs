@@ -47,12 +47,18 @@ var Task = require("../navigation/task");
     getInitialState: function () {
       var model = this.props.model;
       var initialStep = this.getInitialStep();
+      var currentSignatory = model.document().currentSignatory();
+
+      var thisDevice = true;
+      if (currentSignatory.seBankIDAuthenticationToSign()) {
+        thisDevice = !currentSignatory.padDelivery();
+      }
 
       return {
         initialStep: initialStep,
         step: initialStep,
         signedStatus: 0,
-        eidThisDevice: true,
+        eidThisDevice: thisDevice,
         askForPhone: model.askForPhone(),
         askForSSN: model.askForSSN()
       };

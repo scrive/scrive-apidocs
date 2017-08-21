@@ -48,6 +48,10 @@ var ErrorModal = require("../../errormodal");
       return this.get("statusText");
     },
     thisDevice: function () {
+      if (this.doc().currentSignatory().padDelivery()) {
+        return false;
+      }
+
       return this.get("thisDevice");
     },
     setIdentify: function () {
