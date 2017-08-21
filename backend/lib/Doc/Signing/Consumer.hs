@@ -77,9 +77,10 @@ documentSigning
   -> Maybe R.Connection
   -> ConnectionSourceM m
   -> String
+  -> Int
   -> ConsumerConfig m SignatoryLinkID DocumentSigning
 documentSigning amazonConf guardTimeConf cgiGrpConf
-  templates localCache globalCache pool mailNoreplyAddress = ConsumerConfig {
+  templates localCache globalCache pool mailNoreplyAddress maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_signing_jobs"
   , ccConsumersTable = "document_signing_consumers"
   , ccJobSelectors =
@@ -117,7 +118,7 @@ documentSigning amazonConf guardTimeConf cgiGrpConf
   , ccJobIndex = signingSignatoryID
   , ccNotificationChannel = Nothing
   , ccNotificationTimeout = (fromIntegral secondsToRetry) * 1000000
-  , ccMaxRunningJobs = 5
+  , ccMaxRunningJobs = maxRunningJobs
   , ccProcessJob = \DocumentSigning{..} ->
       withPostgreSQL pool . withDocumentM (dbQuery $ GetDocumentBySignatoryLinkID signingSignatoryID) $ do
       signingDocumentID <- documentid <$> theDocument

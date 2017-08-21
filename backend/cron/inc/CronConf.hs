@@ -41,6 +41,12 @@ data CronConf = CronConf {
     -- ^ To enable data push to Planhat
   , cronMonitoringConf     :: !(Maybe MonitoringConf)
   , cronMailNoreplyAddress :: String               -- ^ Noreply address used when sending email
+    -- ^ Configure number of running jobs for individual Consumers
+  , cronConsumerCronMaxJobs :: !Int
+  , cronConsumerSealingMaxJobs :: !Int
+  , cronConsumerSigningMaxJobs :: !Int
+  , cronConsumerExtendingMaxJobs :: !Int
+  , cronConsumerAPICallbackMaxJobs :: !Int
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
@@ -100,6 +106,21 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> field "mail_noreply_address"
       cronMailNoreplyAddress
       "Noreply address used when sending email"
+  <*> field "consumer_cron_max_jobs"
+      cronConsumerCronMaxJobs
+      "Maximum number of jobs running cron itself"
+  <*> field "consumer_sealing_max_jobs"
+      cronConsumerSealingMaxJobs
+      "Maximum number of jobs running the Document Sealing Consumer"
+  <*> field "consumer_signing_max_jobs"
+      cronConsumerSigningMaxJobs
+      "Maximum number of jobs running the Document Signing Consumer"
+  <*> field "consumer_extending_max_jobs"
+      cronConsumerExtendingMaxJobs
+      "Maximum number of jobs running the Document Extending Consumer"
+  <*> field "Consumer_api_callback_max_jobs"
+      cronConsumerAPICallbackMaxJobs
+      "Maximum number of jobs running the Document API Callback Consumer"
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
@@ -123,4 +144,9 @@ instance Default CronConf where
     , cronPlanhatConf        = Nothing
     , cronMonitoringConf     = Nothing
     , cronMailNoreplyAddress = "noreply@scrive.com"
+    , cronConsumerCronMaxJobs = 10
+    , cronConsumerSealingMaxJobs = 2
+    , cronConsumerSigningMaxJobs = 5
+    , cronConsumerExtendingMaxJobs = 1
+    , cronConsumerAPICallbackMaxJobs = 32
     }

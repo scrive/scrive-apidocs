@@ -127,14 +127,15 @@ main = do
 
         docSealing   = documentSealing (cronAmazonConfig cronConf)
           (cronGuardTimeConf cronConf) templates filecache mrediscache pool (cronMailNoreplyAddress cronConf)
+          (cronConsumerSealingMaxJobs cronConf)
         docSigning   = documentSigning (cronAmazonConfig cronConf)
           (cronGuardTimeConf cronConf) (cronCgiGrpConfig cronConf)
-          templates filecache mrediscache pool (cronMailNoreplyAddress cronConf)
+          templates filecache mrediscache pool (cronMailNoreplyAddress cronConf) (cronConsumerSigningMaxJobs cronConf)
         docExtending = documentExtendingConsumer (cronAmazonConfig cronConf)
-          (cronGuardTimeConf cronConf) templates filecache mrediscache pool
+          (cronGuardTimeConf cronConf) templates filecache mrediscache pool (cronConsumerExtendingMaxJobs cronConf)
 
-        apiCallbacks = documentAPICallback runCronEnv
-        cron = cronQueue cronConf reqManager mmixpanel mplanhat runCronEnv runDB
+        apiCallbacks = documentAPICallback runCronEnv (cronConsumerAPICallbackMaxJobs cronConf)
+        cron = cronQueue cronConf reqManager mmixpanel mplanhat runCronEnv runDB (cronConsumerCronMaxJobs cronConf)
 
     runCryptoRNGT rng
       . finalize (localDomain "document sealing" $ runConsumer docSealing pool)
@@ -150,8 +151,9 @@ main = do
               -> Maybe (EventProcessor (DBT CronM))
               -> (forall r. CronEnv.CronEnvM r -> CronM r)
               -> (forall r. DBT CronM r -> CronM r)
+              -> Int
               -> ConsumerConfig CronM JobType CronJob
-    cronQueue cronConf mgr mmixpanel mplanhat runCronEnv runDB = ConsumerConfig {
+    cronQueue cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = ConsumerConfig {
       ccJobsTable = "cron_jobs"
     , ccConsumersTable = "cron_workers"
     , ccJobSelectors = cronJobSelectors
@@ -159,7 +161,7 @@ main = do
     , ccJobIndex = cjType
     , ccNotificationChannel = Nothing
     , ccNotificationTimeout = 3 * 1000000
-    , ccMaxRunningJobs = 10
+    , ccMaxRunningJobs = maxRunningJobs
     , ccProcessJob = \CronJob{..} -> logHandlerInfo cjType $ do
       logInfo_ "Processing job"
       action <- case cjType of

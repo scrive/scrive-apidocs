@@ -47,9 +47,10 @@ documentSealing
   -> Maybe R.Connection
   -> ConnectionSourceM m
   -> String
+  -> Int
   -> ConsumerConfig m DocumentID DocumentSealing
 documentSealing mbAmazonConf guardTimeConf templates
-  localCache globalCache pool mailNoreplyAddress = ConsumerConfig {
+  localCache globalCache pool mailNoreplyAddress maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_sealing_jobs"
   , ccConsumersTable = "document_sealing_consumers"
   , ccJobSelectors = ["id", "branded_domain_id", "attempts"]
@@ -61,7 +62,7 @@ documentSealing mbAmazonConf guardTimeConf templates
   , ccJobIndex = dsDocumentID
   , ccNotificationChannel = Just documentSealingNotificationChannel
   , ccNotificationTimeout = 60 * 1000000 -- 1 minute
-  , ccMaxRunningJobs = 2
+  , ccMaxRunningJobs = maxRunningJobs
   , ccProcessJob = \docsealing@DocumentSealing{..} -> withPostgreSQL pool . withDocumentID dsDocumentID $ do
       now0 <- currentTime
       bd <- dbQuery $ GetBrandedDomainByID dsBrandedDomainID

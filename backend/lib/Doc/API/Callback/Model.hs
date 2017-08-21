@@ -28,8 +28,9 @@ import Util.SignatoryLinkUtils
 
 documentAPICallback :: (MonadIO m, MonadBase IO m, MonadLog m, MonadMask m)
   => (forall r. CronEnvM r -> m r)
+  -> Int
   -> ConsumerConfig m CallbackID DocumentAPICallback
-documentAPICallback runExecute =
+documentAPICallback runExecute maxRunningJobs =
   ConsumerConfig {
       ccJobsTable = "document_api_callbacks"
     , ccConsumersTable = "document_api_callback_consumers"
@@ -45,7 +46,7 @@ documentAPICallback runExecute =
     , ccJobIndex = dacID
     , ccNotificationChannel = Just apiCallbackNotificationChannel
     , ccNotificationTimeout = 60 * 1000000 -- 1 minute
-    , ccMaxRunningJobs = 32
+    , ccMaxRunningJobs = maxRunningJobs
     , ccProcessJob = \ dac@DocumentAPICallback {..} -> logDocument dacDocumentID . runExecute $ do
         execute dac >>= \ case
           True  -> return $ Ok Remove

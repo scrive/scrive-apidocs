@@ -89,11 +89,13 @@ checkFieldsEqualAppConfCronConf
     _sales              _initialUsers        mixpanelToken     _trackjsToken
     _hubspotConf         salesforceConf     _netsConfig        _monitoringConfig)
   (CronConf
-     cronAmazonConfig       cronDBConfig           _cronMaxDBConnections
-     cronRedisCacheConfig  _cronLocalFileCacheSize _cronLogConfig
-     cronGuardTimeConf      cronCgiGrpConfig        cronMixpanelToken
-    _cronNtpServers         cronSalesforceConf     _cronInvoicingSFTPConf
-    _cronPlanhatConf       _cronMonitoringConf      cronMailNoreplyAddress)
+     cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
+     cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
+     cronGuardTimeConf             cronCgiGrpConfig                cronMixpanelToken
+    _cronNtpServers                cronSalesforceConf             _cronInvoicingSFTPConf
+    _cronPlanhatConf              _cronMonitoringConf              cronMailNoreplyAddress
+    _cronConsumerCronMaxJobs      _cronConsumerSealingMaxJobs     _cronConsumerSigningMaxJobs
+    _cronConsumerExtendingMaxJobs _cronConsumerAPICallbackMaxJobs)
 
   = checkEq "amazon"               amazonConfig       cronAmazonConfig       *>
     checkEq "database"             dbConfig           cronDBConfig           *>

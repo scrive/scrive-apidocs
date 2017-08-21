@@ -42,8 +42,9 @@ documentExtendingConsumer
   -> MemCache FileID ByteString
   -> Maybe R.Connection
   -> ConnectionSourceM m
+  -> Int
   -> ConsumerConfig m DocumentID DocumentExtendingConsumer
-documentExtendingConsumer mbAmazonConf guardTimeConf templates localCache globalCache pool = ConsumerConfig {
+documentExtendingConsumer mbAmazonConf guardTimeConf templates localCache globalCache pool maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_extending_jobs"
   , ccConsumersTable = "document_extending_consumers"
   , ccJobSelectors =
@@ -57,7 +58,7 @@ documentExtendingConsumer mbAmazonConf guardTimeConf templates localCache global
   , ccJobIndex = decDocumentID
   , ccNotificationChannel = Nothing
   , ccNotificationTimeout = 60 * 1000000 -- 1 minute
-  , ccMaxRunningJobs = 5
+  , ccMaxRunningJobs = maxRunningJobs
   , ccProcessJob = \dec@DocumentExtendingConsumer{..} -> do
       let ac = A.AmazonConfig {
               A.awsConfig = mbAmazonConf
