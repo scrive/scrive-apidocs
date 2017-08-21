@@ -22,6 +22,7 @@ properties:
     type: array
     # Note: does not currently work well with openapi2slate
     #minItems: 2
+    #uniqueItems: true
     description: |
       An array of radio button option values.
       The signatory will not see the name of the radio button values, however
@@ -31,15 +32,19 @@ properties:
       the length of `values` _must_ equal that of `placements` and vice-versa,
       otherwise an error is returned.
 
-      **Must be equal in length to `placements` and have at least 2 items.**
+      **Must be equal in length to `placements` and have at least 2 items.
+      Each item must be unique and not an empty string.**
     items:
       type: string
+      description: Empty strings are not allowed.
+      # Note: does not currently work well with openapi2slate
+      #minLength: 1
   placements:
     type: array
     # Note: does not currently work well with openapi2slate
     #minItems: 2
     description: |
-      Defines where the individual radio butoons should be placed on the
+      Defines where the individual radio buttons should be placed on the
       document.
       This is both for the signatory to fill out on the signing page, and for
       the final sealed PDF.
