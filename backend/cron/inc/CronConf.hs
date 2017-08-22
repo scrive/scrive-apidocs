@@ -118,7 +118,7 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> field "consumer_extending_max_jobs"
       cronConsumerExtendingMaxJobs
       "Maximum number of jobs running the Document Extending Consumer"
-  <*> field "Consumer_api_callback_max_jobs"
+  <*> field "consumer_api_callback_max_jobs"
       cronConsumerAPICallbackMaxJobs
       "Maximum number of jobs running the Document API Callback Consumer"
 
