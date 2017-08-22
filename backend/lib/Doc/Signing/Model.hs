@@ -64,8 +64,9 @@ instance ToSQL SignatoryScreenshots where
   toSQL s = toSQL (unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) unjsonSignatoryScreenshots s)
 
 data ScheduleDocumentSigning = ScheduleDocumentSigning SignatoryLinkID BrandedDomainID UTCTime IPAddress (Maybe UTCTime) (Maybe String) Lang SignatoryFieldsValuesForSigning [FileID] SignatoryScreenshots [String]
-instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m ScheduleDocumentSigning () where
+instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => DBUpdate m ScheduleDocumentSigning () where
   update (ScheduleDocumentSigning slid bdid st cip mct mcn sl sf saas ss nusa) = do
+    now <- currentTime
     runQuery_ . sqlInsert "document_signing_jobs" $ do
       sqlSet "id" slid
       sqlSet "branded_domain_id" bdid
@@ -78,7 +79,7 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m Sch
       sqlSet "accepted_attachments" $ Array1 saas
       sqlSet "screenshots" ss
       sqlSet "not_uploaded_sig_attachments" $ Array1 nusa
-      sqlSetCmd "run_at" "now()"
+      sqlSetCmd "run_at" $ sqlParam now
       sqlSet "attempts" (0::Int32)
 
 data IsDocumentSigningInProgress = IsDocumentSigningInProgress SignatoryLinkID

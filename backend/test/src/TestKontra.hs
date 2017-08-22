@@ -18,6 +18,7 @@ module TestKontra (
     , mkRequest
     , mkRequestWithHeaders
     , mkContext
+    , modifyTestTime
     ) where
 
 import Control.Arrow
@@ -72,10 +73,14 @@ data TestEnvSt = TestEnvSt {
   , teStagingTests      :: !Bool
   }
 
-type InnerTestEnv = ReaderT TestEnvSt (LogT (DBT IO))
+data TestEnvStRW = TestEnvStRW {
+    terwTimeDelay :: !NominalDiffTime
+  }
+
+type InnerTestEnv = StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO)))
 
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
-  deriving (Applicative, Functor, Monad, MonadLog, MonadCatch, MonadThrow, MonadMask, MonadIO, MonadReader TestEnvSt, MonadBase IO)
+  deriving (Applicative, Functor, Monad, MonadLog, MonadCatch, MonadThrow, MonadMask, MonadIO, MonadReader TestEnvSt, MonadBase IO, MonadState TestEnvStRW)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
@@ -86,7 +91,11 @@ runTestEnv st m = do
       atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
-ununTestEnv st m = teRunLogger st $ runReaderT (unTestEnv m) st
+ununTestEnv st m = teRunLogger st
+  . (\m' -> runReaderT m' st)
+  -- for each test start with no time delay
+  . (\m' -> fst <$> (runStateT m' $ TestEnvStRW { terwTimeDelay = 0 }))
+  . unTestEnv $ m
 
 instance CryptoRNG TestEnv where
   randomBytes n = asks teRNGState >>= liftIO . randomBytesIO n
@@ -108,13 +117,16 @@ instance MonadDB TestEnv where
     -- new connection.
     ConnectionSource pool <- asks teConnSource
     runLogger <- asks teRunLogger
-    TestEnv . ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
-      res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT m te
+    TestEnv . StateT $ \terw -> ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
+      res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT (runStateT m terw) te
       return (res, st)
   getNotification = TestEnv . getNotification
 
 instance MonadTime TestEnv where
-  currentTime = liftIO getCurrentTime
+  currentTime = do
+    delay <- gets terwTimeDelay
+    now <- liftIO getCurrentTime
+    return $ addUTCTime delay now
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByLanguage $ codeFromLang def
@@ -162,6 +174,11 @@ instance RunnableTestKontra Response where
     cs <- asks teConnSource
     (res, ctx', f) <- runTestKontraHelper cs rq ctx tk
     return (f res, ctx')
+
+modifyTestTime :: (MonadState TestEnvStRW m) => (UTCTime -> UTCTime) -> m ()
+modifyTestTime modtime = modify (\terw -> terw { terwTimeDelay = diffUTCTime (modtime utctime) utctime })
+  where
+    utctime = UTCTime (ModifiedJulianDay 0) 0
 
 -- Various helpers for constructing appropriate Context/Request
 

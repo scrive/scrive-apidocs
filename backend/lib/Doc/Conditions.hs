@@ -154,13 +154,14 @@ instance ToJSValue ShortDocumentIDHasNoMatch where
 
 instance DBExtraException ShortDocumentIDHasNoMatch
 
-sqlWhereShortDocumentIDIs :: (MonadState v m, SqlWhere v, SqlOrderBy v,
-                             SqlOffsetLimit v) => DocumentID -> m ()
-sqlWhereShortDocumentIDIs shortDid = do
+sqlWhereShortDocumentIDIs
+  :: (MonadState v m, SqlWhere v, SqlOrderBy v, SqlOffsetLimit v)
+  => UTCTime -> DocumentID -> m ()
+sqlWhereShortDocumentIDIs now shortDid = do
   sqlWhereE (ShortDocumentIDHasNoMatch shortDid)
     ("documents.id % 1000000 = " <?> shortDid)
-  sqlWhereE (ShortDocumentIDHasNoMatch shortDid)
-    "documents.mtime > now() - interval '24 hour'"
+  sqlWhereE (ShortDocumentIDHasNoMatch shortDid) $
+    "documents.mtime > " <?> now <+> " - interval '24 hour'"
   sqlOrderBy "documents.id DESC"
   sqlLimit 1
 

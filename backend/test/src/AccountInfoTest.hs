@@ -54,8 +54,10 @@ testChangeEmailAddress = do
   assertEqual "Response code is 200" 200 (rsCode res1)
   Just uuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Email hasn't changed yet" "bob@blue.com" (getEmail uuser)
+  -- move test time, so that email change requests expire
+  modifyTestTime (30 `daysAfter`)
+  actions <- dbQuery GetExpiredEmailChangeRequestsForTesting
 
-  actions <- getRequestChangeEmailActions
   assertEqual "A request change email action was made" 1 (length $ actions)
   let EmailChangeRequest{..} = head actions
   assertEqual "Inviter id is correct" (userid user) ecrUserID
@@ -65,7 +67,7 @@ testChangeEmailAddress = do
   assertEqual "An email was sent" 1 (length emails)
 
   req2 <- mkRequest POST [("password", inText "abc123")]
-  (res2, _ctx2) <- runTestKontra req2 ctx1 $ handlePostChangeEmail ecrUserID ecrToken 
+  (res2, _ctx2) <- runTestKontra req2 ctx1 $ handlePostChangeEmail ecrUserID ecrToken
   assertBool "Response is redirect to account page" (isRedirect LinkAccount res2)
   assertBool "Response contains a flash message" (hasFlashMessage res2)
   Just uuuser <- dbQuery $ GetUserByID (userid user)
@@ -85,7 +87,9 @@ testNeedEmailToBeUniqueToRequestChange = do
                         ]
   (res1, _) <- runTestKontra req1 ctx $ apiCallChangeEmail
   assertEqual "Response code is 200" 200 (rsCode res1)
-  actions <- getRequestChangeEmailActions
+  -- move test time, so that email change requests expire
+  modifyTestTime (30 `daysAfter`)
+  actions <- dbQuery GetExpiredEmailChangeRequestsForTesting
   assertEqual "No request email action was made" 0 (length $ actions)
 
 testEmailChangeFailsIfActionIDIsWrong :: TestEnv ()
@@ -244,8 +248,3 @@ testLoginUsingAPI = do
                                       [("authorization", [authStr])]
   (resLogin, _) <- runTestKontra reqLogin ctx $ apiCallLoginUser
   assertEqual "We should get a 303 response" 303 (rsCode resLogin)
-
-getRequestChangeEmailActions :: TestEnv [EmailChangeRequest]
-getRequestChangeEmailActions = do
-  expirytime <- (30 `daysAfter`) <$> currentTime
-  dbQuery $ GetExpiredEmailChangeRequestsForTesting expirytime

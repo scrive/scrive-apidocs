@@ -19,6 +19,7 @@ module User.History.Model (
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.Time
 import Data.Int
 import Data.Time.Clock
 import Text.JSON
@@ -111,12 +112,13 @@ instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
     fetchMany fetchUserHistory
 
 data GetUserRecentAuthFailureCount = GetUserRecentAuthFailureCount UserID
-instance (MonadDB m, MonadThrow m) => DBQuery m GetUserRecentAuthFailureCount Int64 where
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserRecentAuthFailureCount Int64 where
   query (GetUserRecentAuthFailureCount uid) = do
+    now <- currentTime
     runQuery_ $ sqlSelect "users_history" $ do
       sqlWhereEq "user_id" uid
       sqlWhereIn "event_type" [UserLoginFailure, UserPadLoginFailure, UserAPIGetPersonalTokenFailure]
-      sqlWhere "time >= cast ((NOW() - interval '10 minutes') as timestamp)"
+      sqlWhere $ "time >= cast ((" <?> now <+> " - interval '10 minutes') as timestamp)"
       sqlResult "COUNT(*)"
     fetchOne runIdentity
 

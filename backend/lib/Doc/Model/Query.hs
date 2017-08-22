@@ -178,11 +178,12 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentID Document
       sqlWhereDocumentWasNotPurged
 
 data GetDocumentByShortDocumentID = GetDocumentByShortDocumentID DocumentID
-instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByShortDocumentID Document where
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetDocumentByShortDocumentID Document where
   query (GetDocumentByShortDocumentID shortDid) = do
+    now <- currentTime
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
-      sqlWhereShortDocumentIDIs shortDid
+      sqlWhereShortDocumentIDIs now shortDid
 
 -- Like GetDocumentByDocumentID, but also retrieves purged docs,
 -- only to be used for Dave

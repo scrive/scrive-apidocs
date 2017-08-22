@@ -16,8 +16,9 @@ import KontraPrelude
 import Log.Identifier
 
 data MarkOrphanFilesForPurgeAfter = MarkOrphanFilesForPurgeAfter Int Interval
-instance (MonadDB m, MonadThrow m) => DBUpdate m MarkOrphanFilesForPurgeAfter [FileID] where
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesForPurgeAfter [FileID] where
   update (MarkOrphanFilesForPurgeAfter limit interval) = do
+    now <- currentTime
     -- Check if the database still looks similar to what the code below
     -- was written for.
     runSQL_ $ smconcat [
@@ -103,20 +104,23 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m MarkOrphanFilesForPurgeAfter [F
       , ")"
       -- Actual purge
       , "UPDATE files"
-      , "   SET purge_at = now() +" <?> interval
+      , "   SET purge_at = " <?> now <+> " +" <?> interval
       , " WHERE id IN (SELECT id FROM files_to_purge LIMIT" <?> limit <> ")"
       , "RETURNING id"
       ]
     fetchMany runIdentity
 
-purgeOrphanFile :: forall m. (MonadDB m, MonadThrow m, MonadLog m, MonadIO m, AmazonMonad m) => m Bool
+purgeOrphanFile
+  :: forall m. (MonadDB m, MonadThrow m, MonadLog m, MonadIO m, AmazonMonad m, MonadTime m)
+  => m Bool
 purgeOrphanFile = do
+  now <- currentTime
   runQuery_ . sqlSelect "files" $ do
     sqlResult "id"
     sqlResult "amazon_url"
     sqlResult "content IS NULL"
     sqlWhereFileWasNotPurged
-    sqlWhere "purge_at < now()"
+    sqlWhere $ "purge_at < " <?> now
     sqlOrderBy "purge_at"
     sqlLimit 1
   fetchMaybe id >>= \case

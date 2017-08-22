@@ -72,9 +72,10 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteExpiredEmail
     runQuery_ . sqlDelete "email_change_requests" $
       sqlWhere $ "expires < " <?> now
 
-data GetExpiredEmailChangeRequestsForTesting = GetExpiredEmailChangeRequestsForTesting UTCTime
-instance (MonadDB m, MonadThrow m) => DBQuery m GetExpiredEmailChangeRequestsForTesting [EmailChangeRequest] where
-  query (GetExpiredEmailChangeRequestsForTesting now) = do
+data GetExpiredEmailChangeRequestsForTesting = GetExpiredEmailChangeRequestsForTesting
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetExpiredEmailChangeRequestsForTesting [EmailChangeRequest] where
+  query GetExpiredEmailChangeRequestsForTesting = do
+    now <- currentTime
     runQuery_ $ sqlSelect "email_change_requests" $ do
       mapM_ sqlResult selectEmailChangeRequestSelectorsList
       sqlWhere $ "expires < " <?> now

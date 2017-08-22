@@ -91,26 +91,27 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyAccountsCountMainDomai
     fetchMany id
 
 data GetCompanyAccountsCountActive = GetCompanyAccountsCountActive
-instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyAccountsCountActive [(CompanyID, Int64)] where
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetCompanyAccountsCountActive [(CompanyID, Int64)] where
   query GetCompanyAccountsCountActive = do
-    runQuery_ activeUsersQuery
+    now <- currentTime
+    runQuery_ $ activeUsersQuery now
     fetchMany id
 
       where
 
-        activeUsersQuery :: SQL
-        activeUsersQuery = ("SELECT company_id, count(user_id) FROM") <+>
+        activeUsersQuery :: UTCTime -> SQL
+        activeUsersQuery now = ("SELECT company_id, count(user_id) FROM") <+>
                            (
                             "(" <+>
-                            loggedInRecently <+>
+                            loggedInRecently now <+>
                             "UNION" <+>
-                            docSentRecently <+>
+                            docSentRecently now <+>
                             ")"
                            ) <+>
                            "as active_users GROUP BY company_id;"
 
-        loggedInRecently :: SQL
-        loggedInRecently = toSQLCommand $
+        loggedInRecently :: UTCTime -> SQL
+        loggedInRecently now = toSQLCommand $
           sqlSelect "users u" $ do
             sqlJoinOn "users_history h" "u.id = h.user_id"
             sqlJoinOn "companies c" "c.id = u.company_id"
@@ -121,10 +122,10 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyAccountsCountActive [(
             sqlWhereIsNotScriveEmail "u.email"
             sqlGroupBy "u.id"
             sqlGroupBy "c.id"
-            sqlHaving "max(h.time) > (now() - interval '4 weeks')"
+            sqlHaving $ "max(h.time) > (" <?> now <+> " - interval '4 weeks')"
 
-        docSentRecently :: SQL
-        docSentRecently = toSQLCommand $
+        docSentRecently :: UTCTime -> SQL
+        docSentRecently now = toSQLCommand $
           sqlSelect "chargeable_items i" $ do
             sqlJoinOn "companies c" "c.id = i.company_id"
             sqlJoinOn "users u" "u.id = i.user_id"
@@ -135,7 +136,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyAccountsCountActive [(
             sqlWhereIsNotScriveEmail "u.email"
             sqlGroupBy "i.user_id"
             sqlGroupBy "i.company_id"
-            sqlHaving "max(i.time) > (now() - interval '4 weeks')"
+            sqlHaving $ "max(i.time) > (" <?> now <+> " - interval '4 weeks')"
 
 data GetCompanyAdmins = GetCompanyAdmins CompanyID
 instance MonadDB m => DBQuery m GetCompanyAdmins [User] where
@@ -158,8 +159,9 @@ instance MonadDB m => DBQuery m IsUserDeletable Bool where
     return (n == 0)
 
 data GetUsageStats = GetUsageStats (Either UserID CompanyID) StatsPartition Interval
-instance MonadDB m => DBQuery m GetUsageStats [UserUsageStats] where
+instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] where
   query (GetUsageStats eid statsPartition interval) = do
+    now <- currentTime
     -- Fetches relevant documents and then groups them by the
     -- timestamps (trimmed to the precision we want) and users to
     -- achieve desired partitioning. It is also worth noting that it
@@ -168,7 +170,7 @@ instance MonadDB m => DBQuery m GetUsageStats [UserUsageStats] where
       -- Use intermediate CTE to fetch all the relevant documents up
       -- front as the majority of them will be both sent and
       -- closed. We also save time by traversing the table only once.
-      sqlWith "stats_data" selectStatsData
+      sqlWith "stats_data" $ selectStatsData now
       -- Get the number of sent documents per time window / user.
       sqlWith "docs_sent" . sqlSelect "stats_data" $ do
         sqlResult "sent_time_window AS time_window"
@@ -215,8 +217,8 @@ instance MonadDB m => DBQuery m GetUsageStats [UserUsageStats] where
         sqlWhere "osl.document_id = d.id"
         sqlWhere "osl.is_partner"
 
-      selectStatsData :: SqlSelect
-      selectStatsData = sqlSelect "documents d" $ do
+      selectStatsData :: UTCTime -> SqlSelect
+      selectStatsData now = sqlSelect "documents d" $ do
         sqlJoinOn "signatory_links sl" "d.id = sl.document_id"
         sqlJoinOn "users u" "sl.user_id = u.id"
         sqlResult $ dateTrunc "d.invite_time" <+> "AS sent_time_window"
@@ -238,7 +240,7 @@ instance MonadDB m => DBQuery m GetUsageStats [UserUsageStats] where
             , dateTrunc maxSignTime <+> ">=" <+> startingDate
             ]
 
-          startingDate = dateTrunc ("now() -" <?> interval)
+          startingDate = dateTrunc (sqlParam now <+> " -" <?> interval)
 
       dateTrunc :: SQL -> SQL
       dateTrunc time = "date_trunc('" <> granularity <> "', " <> time <> ")"

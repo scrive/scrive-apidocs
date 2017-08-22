@@ -17,9 +17,10 @@ documentSealingNotificationChannel :: Channel
 documentSealingNotificationChannel = "document_sealing"
 
 data ScheduleDocumentSealing = ScheduleDocumentSealing BrandedDomainID
-instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m ScheduleDocumentSealing () where
+instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => DBUpdate m ScheduleDocumentSealing () where
   update (ScheduleDocumentSealing bdid) = do
     did <- documentid <$> theDocument
+    now <- currentTime
     logInfo_ "Attempting to schedule document sealing"
     -- There can be only one document sealing job for a given
     -- document. If the job already exists, ignore unique violation
@@ -28,7 +29,7 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m Sch
     (`onUniqueViolation` logErr) . withSavepoint "schedule_document_sealing" $ do
       runQuery_ . sqlInsert "document_sealing_jobs" $ do
         sqlSet "id" did
-        sqlSetCmd "run_at" "now()"
+        sqlSetCmd "run_at" $ sqlParam now
         sqlSet "attempts" (0::Int32)
         sqlSet "branded_domain_id" bdid
       notify documentSealingNotificationChannel ""
