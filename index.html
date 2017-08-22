@@ -215,6 +215,18 @@ API calls, or new API calls.
 <td>2017-07-04</td>
 <td>Remove a comment about anchoring that was due to a bug, which has now been fixed</td>
 </tr>
+<tr>
+<td>2017-08-03</td>
+<td>Revamped definitions of signatory fields, it should now be much clearer</td>
+</tr>
+<tr>
+<td></td>
+<td>Added <code class="prettyprint">SignatoryFieldRadiogroup</code>, Scrive now supports radio button fields</td>
+</tr>
+<tr>
+<td></td>
+<td>Factor out <code class="prettyprint">SignatoryFieldStandard</code> into <code class="prettyprint">SignatoryFieldEmailMobile</code> to allow for <code class="prettyprint">editable_by_signatory</code> property</td>
+</tr>
 </tbody></table>
 
 <h2 id="environments-amp-ip-addresses">Environments &amp; IP Addresses</h2>
@@ -2690,38 +2702,1059 @@ viewers and will not sign the document.</p>
 
 <div class="json-schema">
 
-<p>The object properties for Signatory <code>fields</code> in this definition are only
-the ones common to all signatory fields.</p>
-<p><strong>Note:</strong>
-A valid definition must be one of the concrete types (e.g.
-<code>SignatoryFieldCheckbox</code>).</p>
+<p>The signatory fields represent information requested from, or information
+about, the signatory.
+There are different types of fields, and the array can contain multiple
+instances of the same type.</p>
+<p>Currently, Scrive supports the following field types:</p>
+<ul>
+<li><code>SignatoryFieldName</code>: First and last name of the signatory.</li>
+<li><code>SignatoryFieldEmailMobile</code>: Email and mobile of the signatory.</li>
+<li><code>SignatoryFieldSignature</code>: A signature box placed on the document, for
+the signatory to draw their signature.</li>
+<li><code>SignatoryFieldStandard</code>: Company name and number, and personal number
+(AKA social security number).</li>
+<li><code>SignatoryFieldCheckbox</code>: Checkboxes of varying sizes.</li>
+<li><code>SignatoryFieldRadiogroup</code>: Radio buttons of varying sizes.</li>
+<li><code>SignatoryFieldCustomText</code>: A text field for any other information
+about, or requested, from the signatory.</li>
+</ul>
+<p>Please read the detailed definition of each field type for more
+information.
+New field types may be added at any point to extend Scrive eSign features.</p>
+<p>Fields can have <code>placements</code>, which define where on the document they
+will appear.
+Similarly, a single field can have multiple placements on the document.</p>
+<p><strong>Note:</strong> Some field types have <em>no effect</em> without at least one placement.</p>
 
 
-<p>All array elements must be of type:</p>
+The elements of this array must match *at least one* of the following properties:
 
-<h6>Signatory Field</h6>
+<h6>SignatoryFieldName</h6>
 <code>(object)</code>
 
 
 <div class="json-schema">
 
-<p>The common elements of all <code>SignatoryField</code> types.</p>
-<p>This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
+<p>A signatory field for the name(s) of the party.</p>
 
 
 <p>This object has the following properties:</p>
 
-<h6><code>type</code> (string, required)</h6>
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a name field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>name</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>order</code> (integer, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Whether this is the first name (<em>i.e.</em> given name)
+or second name (<em>i.e.</em> last name or surname).</p>
+<p>Please ensure that there is exacatly one first name and one second name
+field, otherwise the signatory may not be asked for their name on the
+signing page.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>1</code></li>
+<li><code>2</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>If set, where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
 
 
 <div class="json-schema">
 
 </div>
 
-<h6><code>is_obligatory</code> (boolean, required)</h6>
+<h6><code>index</code> (integer)</h6>
 
 <div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6>SignatoryFieldEmailMobile</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for email addresses and mobile numbers.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify what type of field this is.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>email</code></li>
+<li><code>mobile</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+<p><strong>For the author</strong>: the value will revert to that set in the account settings.
+Trying to set any other value will simply result in this field reverting
+back to information set in account settings.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>editable_by_signatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Whether the signatory can edit a pre-filled value for this field.
+This is useful when you have signatory details on file, but you want them
+to be able to modify their email or mobile if it has changed.</p>
+<p><strong>Note:</strong> Setting this to <code>true</code> means a signatory will <em>always</em> be able
+to change the value on the signing page.
+If you want a signatory to authenticate with SMS PIN, please be aware
+that this may affect your desired workflow.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>If set, where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6>SignatoryFieldSignature</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for placing signature boxes on the document.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>signature</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>name</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>A name for the signature field.</p>
+<p>The signatory will not see the name of the signature field, however it
+will be used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h6><code>signature</code> </h6>
+
+<div class="json-schema">
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+<p>When the signatory has not yet drawn a signature.</p>
+
+
+</div>
+
+<h6>(string)</h6>
+
+<div class="json-schema">
+
+<p>The File ID of the signature drawn by the signatory.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p><strong>Needs to be set, otherwise the signatory will not be able to draw a signature.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6>SignatoryFieldStandard</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for placing a number of standard text fields on the
+document:</p>
+<ul>
+<li>Company name</li>
+<li>Company number</li>
+<li>Personal number (AKA social security number)</li>
+</ul>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify what type of field this is.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>company</code></li>
+<li><code>company_number</code></li>
+<li><code>personal_number</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+<p><strong>For the author</strong>: the value will revert to that set in the account settings.
+Trying to set any other value will simply result in this field reverting
+back to information set in account settings.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>If set, where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6>SignatoryFieldCheckbox</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for placing checkboxes on the document.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a checkbox field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>checkbox</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>name</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>A name for the checkbox.</p>
+<p>The signatory will not see the name of the checkbox, however it will be
+used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h6><code>is_checked</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p><code>true</code> when the checkbox is checked, <code>false</code> otherwise.</p>
+<p>Setting this to <code>true</code> on a document in preparation has the effect of
+pre-checking the checkbox for the signatory.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Whether the signatory is obliged to check this checkbox in order to sign
+the document.</p>
+
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
 
 </div>
 
@@ -2729,8 +3762,10 @@ combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>
 
 <div class="json-schema">
 
-<p>If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p><strong>Needs to be set, otherwise there will be no checkbox visible to the signatory.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
 <p>Note that this is an array, you can have multiple placements for the same
 field.</p>
 <p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
@@ -2746,49 +3781,105 @@ template in the document UI design view, and use those values.</p>
 
 <p>This object has the following properties:</p>
 
-<h6><code>xrel</code> (number)</h6>
+<h6><code>xrel</code> (number, required)</h6>
 
 
 <div class="json-schema">
 
-</div>
-
-<h6><code>yrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>wrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>hrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>fsrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>page</code> (integer)</h6>
-
-<div class="json-schema">
-
-<p>The page number for this placement.</p>
+<p>Position on the x-axis, from 0 to 1.</p>
 
 
 </div>
 
-<h6><code>tip</code> (string, enum)</h6>
+<h6><code>yrel</code> (number, required)</h6>
 
 <div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width.</p>
+<p>Checkboxes can only be three sizes.
+The numbers represent <em>small</em>, <em>medium</em> and <em>large</em> checkboxes.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0.011538</code></li>
+<li><code>0.021153</code></li>
+<li><code>0.0423076</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>hrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, not used for checkboxes, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>fsrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, not used for checkboxes, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
 
 <p>This element must be one of the following enum values:</p>
 
@@ -2801,9 +3892,518 @@ template in the document UI design view, and use those values.</p>
 
 </div>
 
-<h6><code>anchors</code> (array)</h6>
+<h6>(null)</h6>
 
 <div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6>SignatoryFieldRadiogroup</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for placing radio buttons on the document.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a radio button group field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>radiogroup</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>name</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>A name for the radiogroup.</p>
+<p>The signatory will not see the name of the radiogroup, however it will be
+used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h6><code>values</code> (array, required)</h6>
+
+<div class="json-schema">
+
+<p>An array of radio button option values.
+The signatory will not see the name of the radio button values, however
+they will be used in the Evidence Log as a reference.</p>
+<p>These <em>must</em> correspond one-to-one with the list of <code>placements</code>: that is
+the length of <code>values</code> <em>must</em> equal that of <code>placements</code> and vice-versa,
+otherwise an error is returned.</p>
+<p><strong>Must be equal in length to <code>placements</code> and have at least 2 items.
+Each item must be unique and not an empty string.</strong></p>
+
+
+<p>All array elements must be of type:</p>
+
+<h6>(string)</h6>
+
+
+<div class="json-schema">
+
+<p>Empty strings are not allowed.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>placements</code> (array, required)</h6>
+
+<div class="json-schema">
+
+<p>Defines where the individual radio buttons should be placed on the
+document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>These <em>must</em> correspond one-to-one with the list of <code>values</code>: that is the
+length of <code>placements</code> <em>must</em> equal that of <code>vales</code> and vice-versa,
+otherwise an error is returned.</p>
+<p><strong>Must be equal in length to <code>values</code> and have at least 2 items.</strong></p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width.</p>
+<p>Radio buttons can only be three sizes.
+The numbers represent <em>small</em>, <em>medium</em> and <em>large</em> radio buttons.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0.014736</code></li>
+<li><code>0.021052</code></li>
+<li><code>0.025263</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>hrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, not used for radio buttons, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>fsrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, not used for radio buttons, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+<p><strong>All radio buttons within the same group must be placed on the same page.</strong></p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6>SignatoryFieldCustomText</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A custom signatory field for text values.
+Can be used for any text-based information, but provides no validation
+mechanism and must be placed on the document, otherwise the signatory will
+not be asked to fill in details.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a custom text field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>text</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>name</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>A name for the custom field.</p>
+<p>The name will be used as a placeholder value on the signing page, it will
+also be used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p><strong>Needs to be set, otherwise the signatory will not be asked or presented with this information.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
 
 <p>All array elements must be of type:</p>
 
@@ -4028,38 +5628,1059 @@ viewers and will not sign the document.</p>
 
 <div class="json-schema">
 
-<p>The object properties for Signatory <code>fields</code> in this definition are only
-the ones common to all signatory fields.</p>
-<p><strong>Note:</strong>
-A valid definition must be one of the concrete types (e.g.
-<code>SignatoryFieldCheckbox</code>).</p>
+<p>The signatory fields represent information requested from, or information
+about, the signatory.
+There are different types of fields, and the array can contain multiple
+instances of the same type.</p>
+<p>Currently, Scrive supports the following field types:</p>
+<ul>
+<li><code>SignatoryFieldName</code>: First and last name of the signatory.</li>
+<li><code>SignatoryFieldEmailMobile</code>: Email and mobile of the signatory.</li>
+<li><code>SignatoryFieldSignature</code>: A signature box placed on the document, for
+the signatory to draw their signature.</li>
+<li><code>SignatoryFieldStandard</code>: Company name and number, and personal number
+(AKA social security number).</li>
+<li><code>SignatoryFieldCheckbox</code>: Checkboxes of varying sizes.</li>
+<li><code>SignatoryFieldRadiogroup</code>: Radio buttons of varying sizes.</li>
+<li><code>SignatoryFieldCustomText</code>: A text field for any other information
+about, or requested, from the signatory.</li>
+</ul>
+<p>Please read the detailed definition of each field type for more
+information.
+New field types may be added at any point to extend Scrive eSign features.</p>
+<p>Fields can have <code>placements</code>, which define where on the document they
+will appear.
+Similarly, a single field can have multiple placements on the document.</p>
+<p><strong>Note:</strong> Some field types have <em>no effect</em> without at least one placement.</p>
 
 
-<p>All array elements must be of type:</p>
+The elements of this array must match *at least one* of the following properties:
 
-<h6>Signatory Field</h6>
+<h6>SignatoryFieldName</h6>
 <code>(object)</code>
 
 
 <div class="json-schema">
 
-<p>The common elements of all <code>SignatoryField</code> types.</p>
-<p>This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
+<p>A signatory field for the name(s) of the party.</p>
 
 
 <p>This object has the following properties:</p>
 
-<h6><code>type</code> (string, required)</h6>
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a name field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>name</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>order</code> (integer, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Whether this is the first name (<em>i.e.</em> given name)
+or second name (<em>i.e.</em> last name or surname).</p>
+<p>Please ensure that there is exacatly one first name and one second name
+field, otherwise the signatory may not be asked for their name on the
+signing page.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>1</code></li>
+<li><code>2</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>If set, where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
 
 
 <div class="json-schema">
 
 </div>
 
-<h6><code>is_obligatory</code> (boolean, required)</h6>
+<h6><code>index</code> (integer)</h6>
 
 <div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6>SignatoryFieldEmailMobile</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for email addresses and mobile numbers.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify what type of field this is.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>email</code></li>
+<li><code>mobile</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+<p><strong>For the author</strong>: the value will revert to that set in the account settings.
+Trying to set any other value will simply result in this field reverting
+back to information set in account settings.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>editable_by_signatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Whether the signatory can edit a pre-filled value for this field.
+This is useful when you have signatory details on file, but you want them
+to be able to modify their email or mobile if it has changed.</p>
+<p><strong>Note:</strong> Setting this to <code>true</code> means a signatory will <em>always</em> be able
+to change the value on the signing page.
+If you want a signatory to authenticate with SMS PIN, please be aware
+that this may affect your desired workflow.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>If set, where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6>SignatoryFieldSignature</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for placing signature boxes on the document.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>signature</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>name</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>A name for the signature field.</p>
+<p>The signatory will not see the name of the signature field, however it
+will be used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h6><code>signature</code> </h6>
+
+<div class="json-schema">
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+<p>When the signatory has not yet drawn a signature.</p>
+
+
+</div>
+
+<h6>(string)</h6>
+
+<div class="json-schema">
+
+<p>The File ID of the signature drawn by the signatory.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p><strong>Needs to be set, otherwise the signatory will not be able to draw a signature.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6>SignatoryFieldStandard</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for placing a number of standard text fields on the
+document:</p>
+<ul>
+<li>Company name</li>
+<li>Company number</li>
+<li>Personal number (AKA social security number)</li>
+</ul>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify what type of field this is.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>company</code></li>
+<li><code>company_number</code></li>
+<li><code>personal_number</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+<p><strong>For the author</strong>: the value will revert to that set in the account settings.
+Trying to set any other value will simply result in this field reverting
+back to information set in account settings.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>If set, where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6>SignatoryFieldCheckbox</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for placing checkboxes on the document.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a checkbox field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>checkbox</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>name</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>A name for the checkbox.</p>
+<p>The signatory will not see the name of the checkbox, however it will be
+used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h6><code>is_checked</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p><code>true</code> when the checkbox is checked, <code>false</code> otherwise.</p>
+<p>Setting this to <code>true</code> on a document in preparation has the effect of
+pre-checking the checkbox for the signatory.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Whether the signatory is obliged to check this checkbox in order to sign
+the document.</p>
+
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
 
 </div>
 
@@ -4067,8 +6688,10 @@ combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>
 
 <div class="json-schema">
 
-<p>If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p><strong>Needs to be set, otherwise there will be no checkbox visible to the signatory.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
 <p>Note that this is an array, you can have multiple placements for the same
 field.</p>
 <p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
@@ -4084,49 +6707,105 @@ template in the document UI design view, and use those values.</p>
 
 <p>This object has the following properties:</p>
 
-<h6><code>xrel</code> (number)</h6>
+<h6><code>xrel</code> (number, required)</h6>
 
 
 <div class="json-schema">
 
-</div>
-
-<h6><code>yrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>wrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>hrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>fsrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>page</code> (integer)</h6>
-
-<div class="json-schema">
-
-<p>The page number for this placement.</p>
+<p>Position on the x-axis, from 0 to 1.</p>
 
 
 </div>
 
-<h6><code>tip</code> (string, enum)</h6>
+<h6><code>yrel</code> (number, required)</h6>
 
 <div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width.</p>
+<p>Checkboxes can only be three sizes.
+The numbers represent <em>small</em>, <em>medium</em> and <em>large</em> checkboxes.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0.011538</code></li>
+<li><code>0.021153</code></li>
+<li><code>0.0423076</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>hrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, not used for checkboxes, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>fsrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, not used for checkboxes, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
 
 <p>This element must be one of the following enum values:</p>
 
@@ -4139,9 +6818,518 @@ template in the document UI design view, and use those values.</p>
 
 </div>
 
-<h6><code>anchors</code> (array)</h6>
+<h6>(null)</h6>
 
 <div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6>SignatoryFieldRadiogroup</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for placing radio buttons on the document.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a radio button group field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>radiogroup</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>name</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>A name for the radiogroup.</p>
+<p>The signatory will not see the name of the radiogroup, however it will be
+used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h6><code>values</code> (array, required)</h6>
+
+<div class="json-schema">
+
+<p>An array of radio button option values.
+The signatory will not see the name of the radio button values, however
+they will be used in the Evidence Log as a reference.</p>
+<p>These <em>must</em> correspond one-to-one with the list of <code>placements</code>: that is
+the length of <code>values</code> <em>must</em> equal that of <code>placements</code> and vice-versa,
+otherwise an error is returned.</p>
+<p><strong>Must be equal in length to <code>placements</code> and have at least 2 items.
+Each item must be unique and not an empty string.</strong></p>
+
+
+<p>All array elements must be of type:</p>
+
+<h6>(string)</h6>
+
+
+<div class="json-schema">
+
+<p>Empty strings are not allowed.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>placements</code> (array, required)</h6>
+
+<div class="json-schema">
+
+<p>Defines where the individual radio buttons should be placed on the
+document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>These <em>must</em> correspond one-to-one with the list of <code>values</code>: that is the
+length of <code>placements</code> <em>must</em> equal that of <code>vales</code> and vice-versa,
+otherwise an error is returned.</p>
+<p><strong>Must be equal in length to <code>values</code> and have at least 2 items.</strong></p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width.</p>
+<p>Radio buttons can only be three sizes.
+The numbers represent <em>small</em>, <em>medium</em> and <em>large</em> radio buttons.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0.014736</code></li>
+<li><code>0.021052</code></li>
+<li><code>0.025263</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>hrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, not used for radio buttons, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>fsrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, not used for radio buttons, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+<p><strong>All radio buttons within the same group must be placed on the same page.</strong></p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h6>SignatoryFieldCustomText</h6>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A custom signatory field for text values.
+Can be used for any text-based information, but provides no validation
+mechanism and must be placed on the document, otherwise the signatory will
+not be asked to fill in details.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>type</code> (string, enum, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a custom text field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>text</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>name</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>A name for the custom field.</p>
+<p>The name will be used as a placeholder value on the signing page, it will
+also be used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h6><code>value</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h6><code>is_obligatory</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h6><code>should_be_filled_by_sender</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h6><code>placements</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p><strong>Needs to be set, otherwise the signatory will not be asked or presented with this information.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
 
 <p>All array elements must be of type:</p>
 
@@ -5042,6 +8230,7 @@ be changed.</p>
       </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"noemail@scrive.com"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"editable_by_signatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
@@ -5164,38 +8353,1059 @@ viewers and will not sign the document.</p>
 
 <div class="json-schema">
 
-<p>The object properties for Signatory <code>fields</code> in this definition are only
-the ones common to all signatory fields.</p>
-<p><strong>Note:</strong>
-A valid definition must be one of the concrete types (e.g.
-<code>SignatoryFieldCheckbox</code>).</p>
+<p>The signatory fields represent information requested from, or information
+about, the signatory.
+There are different types of fields, and the array can contain multiple
+instances of the same type.</p>
+<p>Currently, Scrive supports the following field types:</p>
+<ul>
+<li><code>SignatoryFieldName</code>: First and last name of the signatory.</li>
+<li><code>SignatoryFieldEmailMobile</code>: Email and mobile of the signatory.</li>
+<li><code>SignatoryFieldSignature</code>: A signature box placed on the document, for
+the signatory to draw their signature.</li>
+<li><code>SignatoryFieldStandard</code>: Company name and number, and personal number
+(AKA social security number).</li>
+<li><code>SignatoryFieldCheckbox</code>: Checkboxes of varying sizes.</li>
+<li><code>SignatoryFieldRadiogroup</code>: Radio buttons of varying sizes.</li>
+<li><code>SignatoryFieldCustomText</code>: A text field for any other information
+about, or requested, from the signatory.</li>
+</ul>
+<p>Please read the detailed definition of each field type for more
+information.
+New field types may be added at any point to extend Scrive eSign features.</p>
+<p>Fields can have <code>placements</code>, which define where on the document they
+will appear.
+Similarly, a single field can have multiple placements on the document.</p>
+<p><strong>Note:</strong> Some field types have <em>no effect</em> without at least one placement.</p>
 
 
-<p>All array elements must be of type:</p>
+The elements of this array must match *at least one* of the following properties:
 
-<h4>Signatory Field</h4>
+<h4>SignatoryFieldName</h4>
 <code>(object)</code>
 
 
 <div class="json-schema">
 
-<p>The common elements of all <code>SignatoryField</code> types.</p>
-<p>This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
+<p>A signatory field for the name(s) of the party.</p>
 
 
 <p>This object has the following properties:</p>
 
-<h5><code>type</code> (string, required)</h5>
+<h5><code>type</code> (string, enum, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a name field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>name</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>order</code> (integer, enum, required)</h5>
+
+<div class="json-schema">
+
+<p>Whether this is the first name (<em>i.e.</em> given name)
+or second name (<em>i.e.</em> last name or surname).</p>
+<p>Please ensure that there is exacatly one first name and one second name
+field, otherwise the signatory may not be asked for their name on the
+signing page.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>1</code></li>
+<li><code>2</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>value</code> (string)</h5>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h5><code>is_obligatory</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h5><code>should_be_filled_by_sender</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h5><code>placements</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>If set, where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
 
 
 <div class="json-schema">
 
 </div>
 
-<h5><code>is_obligatory</code> (boolean, required)</h5>
+<h6><code>index</code> (integer)</h6>
 
 <div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h4>SignatoryFieldEmailMobile</h4>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for email addresses and mobile numbers.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h5><code>type</code> (string, enum, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Used to specify what type of field this is.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>email</code></li>
+<li><code>mobile</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>value</code> (string)</h5>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+<p><strong>For the author</strong>: the value will revert to that set in the account settings.
+Trying to set any other value will simply result in this field reverting
+back to information set in account settings.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h5><code>is_obligatory</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h5><code>should_be_filled_by_sender</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h5><code>editable_by_signatory</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Whether the signatory can edit a pre-filled value for this field.
+This is useful when you have signatory details on file, but you want them
+to be able to modify their email or mobile if it has changed.</p>
+<p><strong>Note:</strong> Setting this to <code>true</code> means a signatory will <em>always</em> be able
+to change the value on the signing page.
+If you want a signatory to authenticate with SMS PIN, please be aware
+that this may affect your desired workflow.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h5><code>placements</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>If set, where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h4>SignatoryFieldSignature</h4>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for placing signature boxes on the document.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h5><code>type</code> (string, enum, required)</h5>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>signature</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>name</code> (string, required)</h5>
+
+<div class="json-schema">
+
+<p>A name for the signature field.</p>
+<p>The signatory will not see the name of the signature field, however it
+will be used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h5><code>signature</code> </h5>
+
+<div class="json-schema">
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+<p>When the signatory has not yet drawn a signature.</p>
+
+
+</div>
+
+<h6>(string)</h6>
+
+<div class="json-schema">
+
+<p>The File ID of the signature drawn by the signatory.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h5><code>is_obligatory</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h5><code>should_be_filled_by_sender</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h5><code>placements</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p><strong>Needs to be set, otherwise the signatory will not be able to draw a signature.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h4>SignatoryFieldStandard</h4>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for placing a number of standard text fields on the
+document:</p>
+<ul>
+<li>Company name</li>
+<li>Company number</li>
+<li>Personal number (AKA social security number)</li>
+</ul>
+
+
+<p>This object has the following properties:</p>
+
+<h5><code>type</code> (string, enum, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Used to specify what type of field this is.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>company</code></li>
+<li><code>company_number</code></li>
+<li><code>personal_number</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>value</code> (string)</h5>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+<p><strong>For the author</strong>: the value will revert to that set in the account settings.
+Trying to set any other value will simply result in this field reverting
+back to information set in account settings.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h5><code>is_obligatory</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h5><code>should_be_filled_by_sender</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h5><code>placements</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>If set, where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h4>SignatoryFieldCheckbox</h4>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for placing checkboxes on the document.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h5><code>type</code> (string, enum, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a checkbox field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>checkbox</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>name</code> (string, required)</h5>
+
+<div class="json-schema">
+
+<p>A name for the checkbox.</p>
+<p>The signatory will not see the name of the checkbox, however it will be
+used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h5><code>is_checked</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p><code>true</code> when the checkbox is checked, <code>false</code> otherwise.</p>
+<p>Setting this to <code>true</code> on a document in preparation has the effect of
+pre-checking the checkbox for the signatory.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h5><code>is_obligatory</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Whether the signatory is obliged to check this checkbox in order to sign
+the document.</p>
+
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h5><code>should_be_filled_by_sender</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
 
 </div>
 
@@ -5203,8 +9413,10 @@ combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>
 
 <div class="json-schema">
 
-<p>If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p><strong>Needs to be set, otherwise there will be no checkbox visible to the signatory.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
 <p>Note that this is an array, you can have multiple placements for the same
 field.</p>
 <p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
@@ -5220,49 +9432,105 @@ template in the document UI design view, and use those values.</p>
 
 <p>This object has the following properties:</p>
 
-<h6><code>xrel</code> (number)</h6>
+<h6><code>xrel</code> (number, required)</h6>
 
 
 <div class="json-schema">
 
-</div>
-
-<h6><code>yrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>wrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>hrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>fsrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>page</code> (integer)</h6>
-
-<div class="json-schema">
-
-<p>The page number for this placement.</p>
+<p>Position on the x-axis, from 0 to 1.</p>
 
 
 </div>
 
-<h6><code>tip</code> (string, enum)</h6>
+<h6><code>yrel</code> (number, required)</h6>
 
 <div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width.</p>
+<p>Checkboxes can only be three sizes.
+The numbers represent <em>small</em>, <em>medium</em> and <em>large</em> checkboxes.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0.011538</code></li>
+<li><code>0.021153</code></li>
+<li><code>0.0423076</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>hrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, not used for checkboxes, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>fsrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, not used for checkboxes, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
 
 <p>This element must be one of the following enum values:</p>
 
@@ -5275,9 +9543,518 @@ template in the document UI design view, and use those values.</p>
 
 </div>
 
-<h6><code>anchors</code> (array)</h6>
+<h6>(null)</h6>
 
 <div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h4>SignatoryFieldRadiogroup</h4>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A signatory field for placing radio buttons on the document.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h5><code>type</code> (string, enum, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a radio button group field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>radiogroup</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>name</code> (string, required)</h5>
+
+<div class="json-schema">
+
+<p>A name for the radiogroup.</p>
+<p>The signatory will not see the name of the radiogroup, however it will be
+used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h5><code>values</code> (array, required)</h5>
+
+<div class="json-schema">
+
+<p>An array of radio button option values.
+The signatory will not see the name of the radio button values, however
+they will be used in the Evidence Log as a reference.</p>
+<p>These <em>must</em> correspond one-to-one with the list of <code>placements</code>: that is
+the length of <code>values</code> <em>must</em> equal that of <code>placements</code> and vice-versa,
+otherwise an error is returned.</p>
+<p><strong>Must be equal in length to <code>placements</code> and have at least 2 items.
+Each item must be unique and not an empty string.</strong></p>
+
+
+<p>All array elements must be of type:</p>
+
+<h6>(string)</h6>
+
+
+<div class="json-schema">
+
+<p>Empty strings are not allowed.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h5><code>placements</code> (array, required)</h5>
+
+<div class="json-schema">
+
+<p>Defines where the individual radio buttons should be placed on the
+document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>These <em>must</em> correspond one-to-one with the list of <code>values</code>: that is the
+length of <code>placements</code> <em>must</em> equal that of <code>vales</code> and vice-versa,
+otherwise an error is returned.</p>
+<p><strong>Must be equal in length to <code>values</code> and have at least 2 items.</strong></p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width.</p>
+<p>Radio buttons can only be three sizes.
+The numbers represent <em>small</em>, <em>medium</em> and <em>large</em> radio buttons.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0.014736</code></li>
+<li><code>0.021052</code></li>
+<li><code>0.025263</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>hrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, not used for radio buttons, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>fsrel</code> (number, enum, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, not used for radio buttons, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+<p><strong>All radio buttons within the same group must be placed on the same page.</strong></p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h4>SignatoryFieldCustomText</h4>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A custom signatory field for text values.
+Can be used for any text-based information, but provides no validation
+mechanism and must be placed on the document, otherwise the signatory will
+not be asked to fill in details.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h5><code>type</code> (string, enum, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a custom text field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>text</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>name</code> (string, required)</h5>
+
+<div class="json-schema">
+
+<p>A name for the custom field.</p>
+<p>The name will be used as a placeholder value on the signing page, it will
+also be used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h5><code>value</code> (string)</h5>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h5><code>is_obligatory</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h5><code>should_be_filled_by_sender</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h5><code>placements</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p><strong>Needs to be set, otherwise the signatory will not be asked or presented with this information.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>xrel</code> (number, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>yrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>wrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>hrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>fsrel</code> (number, required)</h6>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h6><code>page</code> (integer, required)</h6>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h6><code>tip</code> </h6>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h6><code>anchors</code> <code>(array)</code></h6>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
 
 <p>All array elements must be of type:</p>
 
@@ -5664,145 +10441,9 @@ and will only be visible when accessing the document as the author.</p>
 
 <p></div></p>
 
-<h2 id="signatory-field">Signatory Field</h2>
+<h2 id="signatoryfieldname">SignatoryFieldName</h2>
 
 <p><code class="prettyprint">(object)</code></p>
-
-<div class="json-schema">
-
-<p>The common elements of all <code>SignatoryField</code> types.</p>
-<p>This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
-
-
-<p>This object has the following properties:</p>
-
-<h3><code>type</code> (string, required)</h3>
-
-
-<div class="json-schema">
-
-</div>
-
-<h3><code>is_obligatory</code> (boolean, required)</h3>
-
-<div class="json-schema">
-
-</div>
-
-<h3><code>placements</code> (array)</h3>
-
-<div class="json-schema">
-
-<p>If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.</p>
-<p>Note that this is an array, you can have multiple placements for the same
-field.</p>
-<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
-template in the document UI design view, and use those values.</p>
-
-
-<p>All array elements must be of type:</p>
-
-<h4>(object)</h4>
-
-
-<div class="json-schema">
-
-<p>This object has the following properties:</p>
-
-<h5><code>xrel</code> (number)</h5>
-
-
-<div class="json-schema">
-
-</div>
-
-<h5><code>yrel</code> (number)</h5>
-
-<div class="json-schema">
-
-</div>
-
-<h5><code>wrel</code> (number)</h5>
-
-<div class="json-schema">
-
-</div>
-
-<h5><code>hrel</code> (number)</h5>
-
-<div class="json-schema">
-
-</div>
-
-<h5><code>fsrel</code> (number)</h5>
-
-<div class="json-schema">
-
-</div>
-
-<h5><code>page</code> (integer)</h5>
-
-<div class="json-schema">
-
-<p>The page number for this placement.</p>
-
-
-</div>
-
-<h5><code>tip</code> (string, enum)</h5>
-
-<div class="json-schema">
-
-<p>This element must be one of the following enum values:</p>
-
-<ul>
-
-<li><code>left</code></li>
-<li><code>right</code></li>
-
-</ul>
-
-</div>
-
-<h5><code>anchors</code> (array)</h5>
-
-<div class="json-schema">
-
-<p>All array elements must be of type:</p>
-
-<h6>(object)</h6>
-
-
-<div class="json-schema">
-
-<p>This object has the following properties:</p>
-
-<h6><code>text</code> (string)</h6>
-
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>index</code> (integer)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<p></div></p>
-
-<p></div></p>
-
-<p></div></p>
-
-<p></div></p>
-
-<p></div></p>
-
-<h2 id="signatoryfieldname">SignatoryFieldName</h2>
 
 <blockquote>
 <h3 id="example-json-for-quot-signatoryfieldname-quot">Example JSON: for &ldquo;SignatoryFieldName&rdquo;</h3>
@@ -5815,11 +10456,11 @@ template in the document UI design view, and use those values.</p>
   </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.18842105263157893</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.19866071428571427</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.07368421052631578</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.025297619047619048</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.016842105263157894</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.26105263157894737</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0975609756097561</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.07894736842105263</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.024390243902439025</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.01263157894736842</span><span class="p">,</span><span class="w">
       </span><span class="nt">"page"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
       </span><span class="nt">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
@@ -5830,101 +10471,176 @@ template in the document UI design view, and use those values.</p>
 
 <div class="json-schema">
 
-<p>A <code>SignatoryField</code> for the name(s) of the party.</p>
-
-
-The elements of this item must match *all* of the following properties:
-
-<h3>Signatory Field</h3>
-<code>(object)</code>
-
-
-<div class="json-schema">
-
-<p>The common elements of all <code>SignatoryField</code> types.</p>
-<p>This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
+<p>A signatory field for the name(s) of the party.</p>
 
 
 <p>This object has the following properties:</p>
 
-<h4><code>type</code> (string, required)</h4>
+<h3><code>type</code> (string, enum, required)</h3>
 
 
 <div class="json-schema">
+
+<p>Used to specify that this is a name field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>name</code></li>
+
+</ul>
 
 </div>
 
-<h4><code>is_obligatory</code> (boolean, required)</h4>
+<h3><code>order</code> (integer, enum, required)</h3>
 
 <div class="json-schema">
+
+<p>Whether this is the first name (<em>i.e.</em> given name)
+or second name (<em>i.e.</em> last name or surname).</p>
+<p>Please ensure that there is exacatly one first name and one second name
+field, otherwise the signatory may not be asked for their name on the
+signing page.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>1</code></li>
+<li><code>2</code></li>
+
+</ul>
 
 </div>
 
-<h4><code>placements</code> (array)</h4>
+<h3><code>value</code> (string)</h3>
 
 <div class="json-schema">
 
-<p>If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h3><code>is_obligatory</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h3><code>should_be_filled_by_sender</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h3><code>placements</code> <code>(array)</code></h3>
+
+<div class="json-schema">
+
+<p>If set, where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
 <p>Note that this is an array, you can have multiple placements for the same
 field.</p>
 <p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
 template in the document UI design view, and use those values.</p>
 
 
+<p>Default:
+<code>
+[]
+</code></p>
+
 <p>All array elements must be of type:</p>
 
-<h5>(object)</h5>
+<h4>(object)</h4>
 
 
 <div class="json-schema">
 
 <p>This object has the following properties:</p>
 
-<h6><code>xrel</code> (number)</h6>
+<h5><code>xrel</code> (number, required)</h5>
 
 
 <div class="json-schema">
 
-</div>
-
-<h6><code>yrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>wrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>hrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>fsrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>page</code> (integer)</h6>
-
-<div class="json-schema">
-
-<p>The page number for this placement.</p>
+<p>Position on the x-axis, from 0 to 1.</p>
 
 
 </div>
 
-<h6><code>tip</code> (string, enum)</h6>
+<h5><code>yrel</code> (number, required)</h5>
 
 <div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>wrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>hrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>fsrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>page</code> (integer, required)</h5>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h5><code>tip</code> </h5>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
 
 <p>This element must be one of the following enum values:</p>
 
@@ -5937,9 +10653,26 @@ template in the document UI design view, and use those values.</p>
 
 </div>
 
-<h6><code>anchors</code> (array)</h6>
+<h6>(null)</h6>
 
 <div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h5><code>anchors</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
 
 <p>All array elements must be of type:</p>
 
@@ -5973,13 +10706,306 @@ template in the document UI design view, and use those values.</p>
 
 <p></div></p>
 
-<h3>(object)</h3>
+<h2 id="signatoryfieldemailmobile">SignatoryFieldEmailMobile</h2>
+
+<p><code class="prettyprint">(object)</code></p>
+
+<blockquote>
+<h3 id="example-json-for-quot-signatoryfieldemailmobile-quot">Example JSON: for &ldquo;SignatoryFieldEmailMobile&rdquo;</h3>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mobile"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"+461234567890"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"editable_by_signatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.09052631578947369</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.2700892857142857</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.09157894736842105</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.025297619047619048</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.016842105263157894</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"page"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<div class="json-schema">
+
+<p>A signatory field for email addresses and mobile numbers.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h3><code>type</code> (string, enum, required)</h3>
+
+
+<div class="json-schema">
+
+<p>Used to specify what type of field this is.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>email</code></li>
+<li><code>mobile</code></li>
+
+</ul>
+
+</div>
+
+<h3><code>value</code> (string)</h3>
+
+<div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+<p><strong>For the author</strong>: the value will revert to that set in the account settings.
+Trying to set any other value will simply result in this field reverting
+back to information set in account settings.</p>
+
+
+<p>Default: <code>""</code></p>
+
+</div>
+
+<h3><code>is_obligatory</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h3><code>should_be_filled_by_sender</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h3><code>editable_by_signatory</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Whether the signatory can edit a pre-filled value for this field.
+This is useful when you have signatory details on file, but you want them
+to be able to modify their email or mobile if it has changed.</p>
+<p><strong>Note:</strong> Setting this to <code>true</code> means a signatory will <em>always</em> be able
+to change the value on the signing page.
+If you want a signatory to authenticate with SMS PIN, please be aware
+that this may affect your desired workflow.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h3><code>placements</code> <code>(array)</code></h3>
+
+<div class="json-schema">
+
+<p>If set, where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h4>(object)</h4>
+
 
 <div class="json-schema">
 
 <p>This object has the following properties:</p>
 
-<h4><code>type</code> (string, enum, required)</h4>
+<h5><code>xrel</code> (number, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>yrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>wrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>hrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>fsrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>page</code> (integer, required)</h5>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h5><code>tip</code> </h5>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h5><code>anchors</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h2 id="signatoryfieldsignature">SignatoryFieldSignature</h2>
+
+<p><code class="prettyprint">(object)</code></p>
+
+<blockquote>
+<h3 id="example-json-for-quot-signatoryfieldsignature-quot">Example JSON: for &ldquo;SignatoryFieldSignature&rdquo;</h3>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"signature"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Signature 1"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"signature"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9215148251416996589"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3510526315789474</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1796747967479675</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.2736842105263158</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.08292682926829269</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0168</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"page"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<div class="json-schema">
+
+<p>A signatory field for placing signature boxes on the document.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h3><code>type</code> (string, enum, required)</h3>
 
 
 <div class="json-schema">
@@ -5988,29 +11014,225 @@ template in the document UI design view, and use those values.</p>
 
 <ul>
 
-<li><code>name</code></li>
+<li><code>signature</code></li>
 
 </ul>
 
 </div>
 
-<h4><code>order</code> (integer, required)</h4>
+<h3><code>name</code> (string, required)</h3>
+
+<div class="json-schema">
+
+<p>A name for the signature field.</p>
+<p>The signatory will not see the name of the signature field, however it
+will be used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h3><code>signature</code> </h3>
+
+<div class="json-schema">
+
+The elements of this item must match *at least one* of the following properties:
+
+<h4>(null)</h4>
+
+
+<div class="json-schema">
+
+<p>When the signatory has not yet drawn a signature.</p>
+
+
+</div>
+
+<h4>(string)</h4>
+
+<div class="json-schema">
+
+<p>The File ID of the signature drawn by the signatory.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h3><code>is_obligatory</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h3><code>should_be_filled_by_sender</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h3><code>placements</code> <code>(array)</code></h3>
+
+<div class="json-schema">
+
+<p><strong>Needs to be set, otherwise the signatory will not be able to draw a signature.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h4>(object)</h4>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h5><code>xrel</code> (number, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>yrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>wrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>hrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>fsrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>page</code> (integer, required)</h5>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h5><code>tip</code> </h5>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h5><code>anchors</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
 
 <div class="json-schema">
 
 </div>
 
-<h4><code>value</code> (string)</h4>
+<h6><code>index</code> (integer)</h6>
 
 <div class="json-schema">
 
 </div>
 
-<h4><code>should_be_filled_by_sender</code> (boolean)</h4>
+<p></div></p>
 
-<div class="json-schema">
+<p></div></p>
 
-</div>
+<p></div></p>
 
 <p></div></p>
 
@@ -6018,12 +11240,14 @@ template in the document UI design view, and use those values.</p>
 
 <h2 id="signatoryfieldstandard">SignatoryFieldStandard</h2>
 
+<p><code class="prettyprint">(object)</code></p>
+
 <blockquote>
 <h3 id="example-json-for-quot-signatoryfieldstandard-quot">Example JSON: for &ldquo;SignatoryFieldStandard&rdquo;</h3>
 </blockquote>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mobile"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"company"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Scrive AB"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
@@ -6043,104 +11267,165 @@ template in the document UI design view, and use those values.</p>
 
 <div class="json-schema">
 
-<p>A <code>SignatoryField</code> for placing a number of standard text fields on the
-document.</p>
-<p>This excludes their name, but includes email, mobile number, personal number,
-and company number.</p>
-
-
-The elements of this item must match *all* of the following properties:
-
-<h3>Signatory Field</h3>
-<code>(object)</code>
-
-
-<div class="json-schema">
-
-<p>The common elements of all <code>SignatoryField</code> types.</p>
-<p>This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
+<p>A signatory field for placing a number of standard text fields on the
+document:</p>
+<ul>
+<li>Company name</li>
+<li>Company number</li>
+<li>Personal number (AKA social security number)</li>
+</ul>
 
 
 <p>This object has the following properties:</p>
 
-<h4><code>type</code> (string, required)</h4>
+<h3><code>type</code> (string, enum, required)</h3>
 
 
 <div class="json-schema">
+
+<p>Used to specify what type of field this is.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>company</code></li>
+<li><code>company_number</code></li>
+<li><code>personal_number</code></li>
+
+</ul>
 
 </div>
 
-<h4><code>is_obligatory</code> (boolean, required)</h4>
+<h3><code>value</code> (string)</h3>
 
 <div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+<p><strong>For the author</strong>: the value will revert to that set in the account settings.
+Trying to set any other value will simply result in this field reverting
+back to information set in account settings.</p>
+
+
+<p>Default: <code>""</code></p>
 
 </div>
 
-<h4><code>placements</code> (array)</h4>
+<h3><code>is_obligatory</code> (boolean)</h3>
 
 <div class="json-schema">
 
-<p>If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h3><code>should_be_filled_by_sender</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h3><code>placements</code> <code>(array)</code></h3>
+
+<div class="json-schema">
+
+<p>If set, where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
 <p>Note that this is an array, you can have multiple placements for the same
 field.</p>
 <p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
 template in the document UI design view, and use those values.</p>
 
 
+<p>Default:
+<code>
+[]
+</code></p>
+
 <p>All array elements must be of type:</p>
 
-<h5>(object)</h5>
+<h4>(object)</h4>
 
 
 <div class="json-schema">
 
 <p>This object has the following properties:</p>
 
-<h6><code>xrel</code> (number)</h6>
+<h5><code>xrel</code> (number, required)</h5>
 
 
 <div class="json-schema">
 
-</div>
-
-<h6><code>yrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>wrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>hrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>fsrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>page</code> (integer)</h6>
-
-<div class="json-schema">
-
-<p>The page number for this placement.</p>
+<p>Position on the x-axis, from 0 to 1.</p>
 
 
 </div>
 
-<h6><code>tip</code> (string, enum)</h6>
+<h5><code>yrel</code> (number, required)</h5>
 
 <div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>wrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>hrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>fsrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>page</code> (integer, required)</h5>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h5><code>tip</code> </h5>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
 
 <p>This element must be one of the following enum values:</p>
 
@@ -6153,9 +11438,26 @@ template in the document UI design view, and use those values.</p>
 
 </div>
 
-<h6><code>anchors</code> (array)</h6>
+<h6>(null)</h6>
 
 <div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h5><code>anchors</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
 
 <p>All array elements must be of type:</p>
 
@@ -6189,38 +11491,275 @@ template in the document UI design view, and use those values.</p>
 
 <p></div></p>
 
-<h3>(object)</h3>
+<h2 id="signatoryfieldcheckbox">SignatoryFieldCheckbox</h2>
+
+<p><code class="prettyprint">(object)</code></p>
+
+<blockquote>
+<h3 id="example-json-for-quot-signatoryfieldcheckbox-quot">Example JSON: for &ldquo;SignatoryFieldCheckbox&rdquo;</h3>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"checkbox"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Checkbox Name"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"is_checked"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.17526315789473684</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3382113821138211</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.011538</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"page"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"left"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
 
 <div class="json-schema">
+
+<p>A signatory field for placing checkboxes on the document.</p>
+
 
 <p>This object has the following properties:</p>
 
-<h4><code>type</code> (string, enum, required)</h4>
+<h3><code>type</code> (string, enum, required)</h3>
 
 
 <div class="json-schema">
+
+<p>Used to specify that this is a checkbox field.</p>
+
 
 <p>This element must be one of the following enum values:</p>
 
 <ul>
 
-<li><code>company</code></li>
-<li><code>company_number</code></li>
-<li><code>email</code></li>
-<li><code>mobile</code></li>
-<li><code>personal_number</code></li>
+<li><code>checkbox</code></li>
 
 </ul>
 
 </div>
 
-<h4><code>value</code> (string)</h4>
+<h3><code>name</code> (string, required)</h3>
+
+<div class="json-schema">
+
+<p>A name for the checkbox.</p>
+<p>The signatory will not see the name of the checkbox, however it will be
+used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h3><code>is_checked</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p><code>true</code> when the checkbox is checked, <code>false</code> otherwise.</p>
+<p>Setting this to <code>true</code> on a document in preparation has the effect of
+pre-checking the checkbox for the signatory.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h3><code>is_obligatory</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Whether the signatory is obliged to check this checkbox in order to sign
+the document.</p>
+
+
+<p>Default: <code>true</code></p>
+
+</div>
+
+<h3><code>should_be_filled_by_sender</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h3><code>placements</code> (array)</h3>
+
+<div class="json-schema">
+
+<p><strong>Needs to be set, otherwise there will be no checkbox visible to the signatory.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>Note that this is an array, you can have multiple placements for the same
+field.</p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>All array elements must be of type:</p>
+
+<h4>(object)</h4>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h5><code>xrel</code> (number, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>yrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>wrel</code> (number, enum, required)</h5>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width.</p>
+<p>Checkboxes can only be three sizes.
+The numbers represent <em>small</em>, <em>medium</em> and <em>large</em> checkboxes.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0.011538</code></li>
+<li><code>0.021153</code></li>
+<li><code>0.0423076</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>hrel</code> (number, enum, required)</h5>
+
+<div class="json-schema">
+
+<p>Height of placement, not used for checkboxes, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>fsrel</code> (number, enum, required)</h5>
+
+<div class="json-schema">
+
+<p>Font size of placement, not used for checkboxes, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>page</code> (integer, required)</h5>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h5><code>tip</code> </h5>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h5><code>anchors</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
 
 <div class="json-schema">
 
 </div>
 
-<h4><code>should_be_filled_by_sender</code> (boolean)</h4>
+<h6><code>index</code> (integer)</h6>
 
 <div class="json-schema">
 
@@ -6230,14 +11769,327 @@ template in the document UI design view, and use those values.</p>
 
 <p></div></p>
 
-<h2 id="signatoryfieldtext">SignatoryFieldText</h2>
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h2 id="signatoryfieldradiogroup">SignatoryFieldRadiogroup</h2>
+
+<p><code class="prettyprint">(object)</code></p>
 
 <blockquote>
-<h3 id="example-json-for-quot-signatoryfieldtext-quot">Example JSON: for &ldquo;SignatoryFieldText&rdquo;</h3>
+<h3 id="example-json-for-quot-signatoryfieldradiogroup-quot">Example JSON: for &ldquo;SignatoryFieldRadiogroup&rdquo;</h3>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"radiogroup"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Large Radio buttons"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"selected_value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Radio button 2"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.7405263157894737</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3796747967479675</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.025263</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"page"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.7405263157894737</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.4008130081300813</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.021052</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"page"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.7410526315789474</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.4211382113821138</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.014736</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"page"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"values"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="s2">"Radio button 1"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Radio button 2"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Radio button 3"</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<div class="json-schema">
+
+<p>A signatory field for placing radio buttons on the document.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h3><code>type</code> (string, enum, required)</h3>
+
+
+<div class="json-schema">
+
+<p>Used to specify that this is a radio button group field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>radiogroup</code></li>
+
+</ul>
+
+</div>
+
+<h3><code>name</code> (string, required)</h3>
+
+<div class="json-schema">
+
+<p>A name for the radiogroup.</p>
+<p>The signatory will not see the name of the radiogroup, however it will be
+used in the Evidence Log as a reference.</p>
+
+
+</div>
+
+<h3><code>values</code> (array, required)</h3>
+
+<div class="json-schema">
+
+<p>An array of radio button option values.
+The signatory will not see the name of the radio button values, however
+they will be used in the Evidence Log as a reference.</p>
+<p>These <em>must</em> correspond one-to-one with the list of <code>placements</code>: that is
+the length of <code>values</code> <em>must</em> equal that of <code>placements</code> and vice-versa,
+otherwise an error is returned.</p>
+<p><strong>Must be equal in length to <code>placements</code> and have at least 2 items.
+Each item must be unique and not an empty string.</strong></p>
+
+
+<p>All array elements must be of type:</p>
+
+<h4>(string)</h4>
+
+
+<div class="json-schema">
+
+<p>Empty strings are not allowed.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h3><code>placements</code> (array, required)</h3>
+
+<div class="json-schema">
+
+<p>Defines where the individual radio buttons should be placed on the
+document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
+<p>These <em>must</em> correspond one-to-one with the list of <code>values</code>: that is the
+length of <code>placements</code> <em>must</em> equal that of <code>vales</code> and vice-versa,
+otherwise an error is returned.</p>
+<p><strong>Must be equal in length to <code>values</code> and have at least 2 items.</strong></p>
+<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
+template in the document UI design view, and use those values.</p>
+
+
+<p>All array elements must be of type:</p>
+
+<h4>(object)</h4>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h5><code>xrel</code> (number, required)</h5>
+
+
+<div class="json-schema">
+
+<p>Position on the x-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>yrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>wrel</code> (number, enum, required)</h5>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width.</p>
+<p>Radio buttons can only be three sizes.
+The numbers represent <em>small</em>, <em>medium</em> and <em>large</em> radio buttons.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0.014736</code></li>
+<li><code>0.021052</code></li>
+<li><code>0.025263</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>hrel</code> (number, enum, required)</h5>
+
+<div class="json-schema">
+
+<p>Height of placement, not used for radio buttons, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>fsrel</code> (number, enum, required)</h5>
+
+<div class="json-schema">
+
+<p>Font size of placement, not used for radio buttons, must be 0.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>0</code></li>
+
+</ul>
+
+</div>
+
+<h5><code>page</code> (integer, required)</h5>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+<p><strong>All radio buttons within the same group must be placed on the same page.</strong></p>
+
+
+</div>
+
+<h5><code>tip</code> </h5>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>left</code></li>
+<li><code>right</code></li>
+
+</ul>
+
+</div>
+
+<h6>(null)</h6>
+
+<div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h5><code>anchors</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>text</code> (string)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>index</code> (integer)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<h2 id="signatoryfieldcustomtext">SignatoryFieldCustomText</h2>
+
+<p><code class="prettyprint">(object)</code></p>
+
+<blockquote>
+<h3 id="example-json-for-quot-signatoryfieldcustomtext-quot">Example JSON: for &ldquo;SignatoryFieldCustomText&rdquo;</h3>
 </blockquote>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"text"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Custom Field"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Custom Field Name"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
   </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
   </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
@@ -6258,159 +12110,21 @@ template in the document UI design view, and use those values.</p>
 
 <div class="json-schema">
 
-<p>A custom text <code>SignatoryField</code> that can be used for any other information.</p>
-
-
-The elements of this item must match *all* of the following properties:
-
-<h3>Signatory Field</h3>
-<code>(object)</code>
-
-
-<div class="json-schema">
-
-<p>The common elements of all <code>SignatoryField</code> types.</p>
-<p>This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
+<p>A custom signatory field for text values.
+Can be used for any text-based information, but provides no validation
+mechanism and must be placed on the document, otherwise the signatory will
+not be asked to fill in details.</p>
 
 
 <p>This object has the following properties:</p>
 
-<h4><code>type</code> (string, required)</h4>
+<h3><code>type</code> (string, enum, required)</h3>
 
 
 <div class="json-schema">
 
-</div>
+<p>Used to specify that this is a custom text field.</p>
 
-<h4><code>is_obligatory</code> (boolean, required)</h4>
-
-<div class="json-schema">
-
-</div>
-
-<h4><code>placements</code> (array)</h4>
-
-<div class="json-schema">
-
-<p>If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.</p>
-<p>Note that this is an array, you can have multiple placements for the same
-field.</p>
-<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
-template in the document UI design view, and use those values.</p>
-
-
-<p>All array elements must be of type:</p>
-
-<h5>(object)</h5>
-
-
-<div class="json-schema">
-
-<p>This object has the following properties:</p>
-
-<h6><code>xrel</code> (number)</h6>
-
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>yrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>wrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>hrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>fsrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>page</code> (integer)</h6>
-
-<div class="json-schema">
-
-<p>The page number for this placement.</p>
-
-
-</div>
-
-<h6><code>tip</code> (string, enum)</h6>
-
-<div class="json-schema">
-
-<p>This element must be one of the following enum values:</p>
-
-<ul>
-
-<li><code>left</code></li>
-<li><code>right</code></li>
-
-</ul>
-
-</div>
-
-<h6><code>anchors</code> (array)</h6>
-
-<div class="json-schema">
-
-<p>All array elements must be of type:</p>
-
-<h6>(object)</h6>
-
-
-<div class="json-schema">
-
-<p>This object has the following properties:</p>
-
-<h6><code>text</code> (string)</h6>
-
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>index</code> (integer)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<p></div></p>
-
-<p></div></p>
-
-<p></div></p>
-
-<p></div></p>
-
-<p></div></p>
-
-<h3>(object)</h3>
-
-<div class="json-schema">
-
-<p>This object has the following properties:</p>
-
-<h4><code>type</code> (string, enum, required)</h4>
-
-
-<div class="json-schema">
 
 <p>This element must be one of the following enum values:</p>
 
@@ -6422,151 +12136,143 @@ template in the document UI design view, and use those values.</p>
 
 </div>
 
-<h4><code>name</code> (string, required)</h4>
+<h3><code>name</code> (string, required)</h3>
 
 <div class="json-schema">
+
+<p>A name for the custom field.</p>
+<p>The name will be used as a placeholder value on the signing page, it will
+also be used in the Evidence Log as a reference.</p>
+
 
 </div>
 
-<h4><code>value</code> (string)</h4>
+<h3><code>value</code> (string)</h3>
 
 <div class="json-schema">
+
+<p>Either a pre-filled value, or the value entered by the signatory.</p>
+
+
+<p>Default: <code>""</code></p>
 
 </div>
 
-<h4><code>should_be_filled_by_sender</code> (boolean)</h4>
+<h3><code>is_obligatory</code> (boolean)</h3>
 
 <div class="json-schema">
+
+<p>Default: <code>true</code></p>
 
 </div>
 
-<p></div></p>
-
-<p></div></p>
-
-<h2 id="signatoryfieldsignature">SignatoryFieldSignature</h2>
-
-<blockquote>
-<h3 id="example-json-for-quot-signatoryfieldsignature-quot">Example JSON: for &ldquo;SignatoryFieldSignature&rdquo;</h3>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"signature"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Signature 1"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"signature"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.4305263157894737</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16741071428571427</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.2736842105263158</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.07589285714285714</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0168</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"page"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
+<h3><code>should_be_filled_by_sender</code> (boolean)</h3>
 
 <div class="json-schema">
 
-<p>A <code>SignatoryField</code> for placing signature boxes on the document.</p>
-
-
-The elements of this item must match *all* of the following properties:
-
-<h3>Signatory Field</h3>
-<code>(object)</code>
-
-
-<div class="json-schema">
-
-<p>The common elements of all <code>SignatoryField</code> types.</p>
-<p>This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
-
-
-<p>This object has the following properties:</p>
-
-<h4><code>type</code> (string, required)</h4>
-
-
-<div class="json-schema">
+<p>Default: <code>false</code></p>
 
 </div>
 
-<h4><code>is_obligatory</code> (boolean, required)</h4>
+<h3><code>placements</code> <code>(array)</code></h3>
 
 <div class="json-schema">
 
-</div>
-
-<h4><code>placements</code> (array)</h4>
-
-<div class="json-schema">
-
-<p>If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.</p>
+<p><strong>Needs to be set, otherwise the signatory will not be asked or presented with this information.</strong></p>
+<p>Defines where this field should be placed on the document.
+This is both for the signatory to fill out on the signing page, and for
+the final sealed PDF.</p>
 <p>Note that this is an array, you can have multiple placements for the same
 field.</p>
 <p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
 template in the document UI design view, and use those values.</p>
 
 
+<p>Default:
+<code>
+[]
+</code></p>
+
 <p>All array elements must be of type:</p>
 
-<h5>(object)</h5>
+<h4>(object)</h4>
 
 
 <div class="json-schema">
 
 <p>This object has the following properties:</p>
 
-<h6><code>xrel</code> (number)</h6>
+<h5><code>xrel</code> (number, required)</h5>
 
 
 <div class="json-schema">
 
-</div>
-
-<h6><code>yrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>wrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>hrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>fsrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>page</code> (integer)</h6>
-
-<div class="json-schema">
-
-<p>The page number for this placement.</p>
+<p>Position on the x-axis, from 0 to 1.</p>
 
 
 </div>
 
-<h6><code>tip</code> (string, enum)</h6>
+<h5><code>yrel</code> (number, required)</h5>
 
 <div class="json-schema">
+
+<p>Position on the y-axis, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>wrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Width of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>hrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Height of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>fsrel</code> (number, required)</h5>
+
+<div class="json-schema">
+
+<p>Font size of placement, as proportion of total width, from 0 to 1.</p>
+
+
+</div>
+
+<h5><code>page</code> (integer, required)</h5>
+
+<div class="json-schema">
+
+<p>The page number for this placement, starting from 1.</p>
+
+
+</div>
+
+<h5><code>tip</code> </h5>
+
+<div class="json-schema">
+
+<p>Default: <code>null</code></p>
+
+The elements of this item must match *at least one* of the following properties:
+
+<h6>(string, enum)</h6>
+
+
+<div class="json-schema">
+
+<p>From which side the arrow on the signing page should point
+to the field.</p>
+
 
 <p>This element must be one of the following enum values:</p>
 
@@ -6579,9 +12285,26 @@ template in the document UI design view, and use those values.</p>
 
 </div>
 
-<h6><code>anchors</code> (array)</h6>
+<h6>(null)</h6>
 
 <div class="json-schema">
+
+<p>Let the signing page default to either <code>left</code> or <code>right</code>
+depending on the field type.</p>
+
+
+</div>
+
+<p></div></p>
+
+<h5><code>anchors</code> <code>(array)</code></h5>
+
+<div class="json-schema">
+
+<p>Default:
+<code>
+[]
+</code></p>
 
 <p>All array elements must be of type:</p>
 
@@ -6610,257 +12333,6 @@ template in the document UI design view, and use those values.</p>
 <p></div></p>
 
 <p></div></p>
-
-<p></div></p>
-
-<p></div></p>
-
-<h3>(object)</h3>
-
-<div class="json-schema">
-
-<p>This object has the following properties:</p>
-
-<h4><code>type</code> (string, enum, required)</h4>
-
-
-<div class="json-schema">
-
-<p>This element must be one of the following enum values:</p>
-
-<ul>
-
-<li><code>signature</code></li>
-
-</ul>
-
-</div>
-
-<h4><code>name</code> (string, required)</h4>
-
-<div class="json-schema">
-
-</div>
-
-<h4><code>signature</code> (string, read only)</h4>
-
-<div class="json-schema">
-
-</div>
-
-<p></div></p>
-
-<p></div></p>
-
-<h2 id="signatoryfieldcheckbox">SignatoryFieldCheckbox</h2>
-
-<blockquote>
-<h3 id="example-json-for-quot-signatoryfieldcheckbox-quot">Example JSON: for &ldquo;SignatoryFieldCheckbox&rdquo;</h3>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"checkbox"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Checkbox 1"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"is_checked"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"is_obligatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"should_be_filled_by_sender"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"placements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"xrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.8473684210526315</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"yrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16220238095238096</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"wrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.010526315789473684</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"hrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00744047619047619</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"fsrel"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0168</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"page"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"left"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<div class="json-schema">
-
-<p>A <code>SignatoryField</code> for placing checkboxes on the document.</p>
-
-
-The elements of this item must match *all* of the following properties:
-
-<h3>Signatory Field</h3>
-<code>(object)</code>
-
-
-<div class="json-schema">
-
-<p>The common elements of all <code>SignatoryField</code> types.</p>
-<p>This definition by itself is not sufficient, you need to use it in
-combination with one of the concrete types (e.g. <code>SignatoryFieldName</code>).</p>
-
-
-<p>This object has the following properties:</p>
-
-<h4><code>type</code> (string, required)</h4>
-
-
-<div class="json-schema">
-
-</div>
-
-<h4><code>is_obligatory</code> (boolean, required)</h4>
-
-<div class="json-schema">
-
-</div>
-
-<h4><code>placements</code> (array)</h4>
-
-<div class="json-schema">
-
-<p>If set, where this should be placed on the document, both for the
-signatory to fill out on the signing page, and in the final sealed PDF.</p>
-<p>Note that this is an array, you can have multiple placements for the same
-field.</p>
-<p>The easiest way to set the <code>xrel</code>, <code>yrel</code>, etc. values is to create a
-template in the document UI design view, and use those values.</p>
-
-
-<p>All array elements must be of type:</p>
-
-<h5>(object)</h5>
-
-
-<div class="json-schema">
-
-<p>This object has the following properties:</p>
-
-<h6><code>xrel</code> (number)</h6>
-
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>yrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>wrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>hrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>fsrel</code> (number)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>page</code> (integer)</h6>
-
-<div class="json-schema">
-
-<p>The page number for this placement.</p>
-
-
-</div>
-
-<h6><code>tip</code> (string, enum)</h6>
-
-<div class="json-schema">
-
-<p>This element must be one of the following enum values:</p>
-
-<ul>
-
-<li><code>left</code></li>
-<li><code>right</code></li>
-
-</ul>
-
-</div>
-
-<h6><code>anchors</code> (array)</h6>
-
-<div class="json-schema">
-
-<p>All array elements must be of type:</p>
-
-<h6>(object)</h6>
-
-
-<div class="json-schema">
-
-<p>This object has the following properties:</p>
-
-<h6><code>text</code> (string)</h6>
-
-
-<div class="json-schema">
-
-</div>
-
-<h6><code>index</code> (integer)</h6>
-
-<div class="json-schema">
-
-</div>
-
-<p></div></p>
-
-<p></div></p>
-
-<p></div></p>
-
-<p></div></p>
-
-<p></div></p>
-
-<h3>(object)</h3>
-
-<div class="json-schema">
-
-<p>This object has the following properties:</p>
-
-<h4><code>type</code> (string, enum, required)</h4>
-
-
-<div class="json-schema">
-
-<p>This element must be one of the following enum values:</p>
-
-<ul>
-
-<li><code>checkbox</code></li>
-
-</ul>
-
-</div>
-
-<h4><code>name</code> (string, required)</h4>
-
-<div class="json-schema">
-
-</div>
-
-<h4><code>is_checked</code> (boolean)</h4>
-
-<div class="json-schema">
-
-</div>
-
-<h4><code>should_be_filled_by_sender</code> (boolean)</h4>
-
-<div class="json-schema">
-
-</div>
 
 <p></div></p>
 
