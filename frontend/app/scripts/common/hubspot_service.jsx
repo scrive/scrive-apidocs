@@ -76,11 +76,11 @@ var $ = require("jquery");
 var expose = {
 
   // shorthand for the form ids defined in the hubspotConf object
-  FORM_SIGNUP         : hubspotConf.forms.signup,
-  FORM_INVITE         : hubspotConf.forms.invite,
-  FORM_TOS_SUBMIT     : hubspotConf.forms.tos_submit,
-  FORM_NO_SENDS_DOCS  : hubspotConf.forms.no_sends_docs,
-  FORM_YES_SENDS_DOCS : hubspotConf.forms.yes_sends_docs,
+  FORM_SIGNUP         : hubspotConf ? hubspotConf.forms.signup : undefined,
+  FORM_INVITE         : hubspotConf ? hubspotConf.forms.invite : undefined,
+  FORM_TOS_SUBMIT     : hubspotConf ? hubspotConf.forms.tos_submit : undefined,
+  FORM_NO_SENDS_DOCS  : hubspotConf ? hubspotConf.forms.no_sends_docs : undefined,
+  FORM_YES_SENDS_DOCS : hubspotConf ? hubspotConf.forms.yes_sends_docs : undefined,
 
   track : function(formId, formData, noCookie) {
 
