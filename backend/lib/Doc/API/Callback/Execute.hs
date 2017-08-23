@@ -222,13 +222,15 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
           sc <- ask
           when (attempts == 4 && isJust (salesforceErrorEmail sc)) $ do
             logInfo_ "Salesforce API callback failed for 5th time, sending email."
-            user <- fmap fromJust (dbQuery $ GetUserByID uid)
+            muser <- dbQuery $ GetUserByID uid
+            let userEmail = maybe "<unknown>" getEmail muser
+                userName = maybe "<unknown>" getFullName muser
             company <- dbQuery $ GetCompanyByUserID $ uid
 
             let mail = emptyMail {
                     to = [ MailAddress { fullname = "Salesforce Admin", email = fromJust (salesforceErrorEmail sc) } ]
                   , title = "[Salesforce Callback Error] " ++
-                            "(user: " ++ getEmail user ++ ") " ++
+                            "(user: " ++ userEmail ++ ") " ++
                             "(company: " ++ companyname (companyinfo company) ++ ") " ++
                             "(documentid: " ++ show (documentid doc) ++ ") " ++
                             "(http_code: " ++ http_code ++ ")"
@@ -242,10 +244,10 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                           ++ "<strong>Curl stderr:</strong> " ++ escapeHTML stderr ++ "<br />\r\n"
                           ++ "<strong>HTTP response code:</strong> " ++ escapeHTML http_code ++ "<br />\r\n"
                           ++ "<br />"
-                          ++ "<strong>User ID:</strong> " ++ show (userid user) ++ "<br />\r\n"
+                          ++ "<strong>User ID:</strong> " ++ show uid ++ "<br />\r\n"
                           ++ "<strong>Document ID:</strong> " ++ show (documentid doc) ++ "<br />\r\n"
                           ++ "<strong>User Company ID:</strong> " ++ show (companyid company) ++ "<br />\r\n"
-                          ++ "<strong>User Name:</strong> " ++ escapeHTML (getFullName user) ++ "<br />\r\n"
-                          ++ "<strong>User Email:</strong> " ++ escapeHTML (getEmail user) ++ "<br />\r\n"
+                          ++ "<strong>User Name:</strong> " ++ escapeHTML userName ++ "<br />\r\n"
+                          ++ "<strong>User Email:</strong> " ++ escapeHTML userEmail ++ "<br />\r\n"
                   }
             scheduleEmailSendout mail
