@@ -291,7 +291,7 @@ insertMainFiles documentid rfiles = do
     sqlSetList "document_status" $ mainfiledocumentstatus <$> files
     sqlSetList "seal_status" $ mainfilesealstatus <$> files
 
-insertSignatoryScreenshots :: (MonadDB m, MonadThrow m)
+insertSignatoryScreenshots :: (MonadDB m, MonadThrow m, MonadTime m)
                            => [(SignatoryLinkID, SignatoryScreenshots)] -> m Int
 insertSignatoryScreenshots l = do
   let (slids, types, times, ss) = unzip4 $ f "first" first
@@ -1342,7 +1342,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
         actor
 
 data SignDocument = SignDocument SignatoryLinkID MagicHash (Maybe ESignature) (Maybe String) SignatoryScreenshots Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpdate m SignDocument () where
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadTime m) => DBUpdate m SignDocument () where
   update (SignDocument slid mh mesig mpin screenshots actor) = do
     updateDocumentWithID $ \docid -> do
       let ipnumber = fromMaybe noIP $ actorIP actor

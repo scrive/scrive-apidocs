@@ -5,6 +5,7 @@ module AppDBMigrations (
 import Control.Monad.Catch
 import Log
 
+import Amazon.Migrations
 import BrandedDomain.Migrations
 import Chargeable.Migrations
 import Company.Migrations
@@ -52,4 +53,6 @@ kontraMigrations = [
   , addPlanhatJob
   , addEditableBySignatoryFlag
   , brandedDomainDropNoreplyEmail
+  , createAmazonUploadConsumers
+  , createAmazonUploadJobs
   ]

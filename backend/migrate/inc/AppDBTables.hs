@@ -8,6 +8,7 @@ module AppDBTables (
 
 import Database.PostgreSQL.PQTypes.Model
 
+import Amazon.Tables
 import Attachment.Tables
 import BrandedDomain.Tables
 import Chargeable.Tables
@@ -129,6 +130,8 @@ kontraTables =
   , tableThemeOwnership
   , tableEIDAuthentications
   , tableHighlightedPages
+  , tableAmazonUploadConsumers
+  , tableAmazonUploadJobs
   ] ++ cronTables
     ++ mailerTables
     ++ messengerTables

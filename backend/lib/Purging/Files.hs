@@ -41,6 +41,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
            , ("signatory_screenshots", "file_id")
            , ("signatory_link_fields", "value_file_id")
            , ("highlighted_pages", "file_id")
+           , ("amazon_upload_jobs", "id")
            ]
 
     when (sort expected_refs /= sort refs) $ do

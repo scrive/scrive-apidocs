@@ -18,6 +18,7 @@ import qualified Data.Text as T
 import qualified Data.Traversable as F
 
 import Administration.Invoicing
+import Amazon.Consumer
 import AppDBTables
 import Configuration
 import Cron.Model
@@ -133,6 +134,7 @@ main = do
           templates filecache mrediscache pool (cronMailNoreplyAddress cronConf) (cronConsumerSigningMaxJobs cronConf)
         docExtending = documentExtendingConsumer (cronAmazonConfig cronConf)
           (cronGuardTimeConf cronConf) templates filecache mrediscache pool (cronConsumerExtendingMaxJobs cronConf)
+        amazonFileUpload = amazonUploadConsumer (cronAmazonConfig cronConf) pool (cronConsumerAmazonMaxJobs cronConf)
 
         apiCallbacks = documentAPICallback runCronEnv (cronConsumerAPICallbackMaxJobs cronConf)
         cron = cronQueue cronConf reqManager mmixpanel mplanhat runCronEnv runDB (cronConsumerCronMaxJobs cronConf)
@@ -142,6 +144,7 @@ main = do
       . finalize (localDomain "document signing" $ runConsumer docSigning pool)
       . finalize (localDomain "document extending" $ runConsumer docExtending pool)
       . finalize (localDomain "api callbacks" $ runConsumer apiCallbacks pool)
+      . finalize (localDomain "amazon file upload" $ runConsumer amazonFileUpload pool)
       . finalize (localDomain "cron" $ runConsumer cron pool) $ do
       liftBase waitForTermination
   where

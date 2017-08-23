@@ -47,6 +47,7 @@ data CronConf = CronConf {
   , cronConsumerSigningMaxJobs :: !Int
   , cronConsumerExtendingMaxJobs :: !Int
   , cronConsumerAPICallbackMaxJobs :: !Int
+  , cronConsumerAmazonMaxJobs :: !Int
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
@@ -121,6 +122,9 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> field "consumer_api_callback_max_jobs"
       cronConsumerAPICallbackMaxJobs
       "Maximum number of jobs running the Document API Callback Consumer"
+  <*> field "consumer_amazon_max_jobs"
+      cronConsumerAmazonMaxJobs
+      "Maximum number of jobs running the Amazon Document Upload Consumer"
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
@@ -149,4 +153,5 @@ instance Default CronConf where
     , cronConsumerSigningMaxJobs = 5
     , cronConsumerExtendingMaxJobs = 1
     , cronConsumerAPICallbackMaxJobs = 32
+    , cronConsumerAmazonMaxJobs = 2
     }

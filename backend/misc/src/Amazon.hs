@@ -10,6 +10,7 @@ module Amazon (
   , runAmazonMonadT
   , AmazonConfig(..)
   , deleteFile
+  , exportFile
   ) where
 
 import Control.Concurrent.Async.Lifted

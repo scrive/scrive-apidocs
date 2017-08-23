@@ -7,6 +7,7 @@ module Doc.API.V2.Calls.SignatoryCallsUtils (
 ) where
 
 import Control.Monad.Catch
+import Control.Monad.Time
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
@@ -93,7 +94,7 @@ signDocument slid mh fields acceptedAuthorAttachments notUploadedSignatoryAttach
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 
-fieldsToFieldsWithFiles :: (MonadDB m, MonadThrow m) =>
+fieldsToFieldsWithFiles :: (MonadDB m, MonadThrow m, MonadTime m) =>
   SignatoryFieldsValuesForSigning -> m ([(FieldIdentity,FieldValue)],[(FileID,BS.ByteString)])
 fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning []) = return ([],[])
 fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do

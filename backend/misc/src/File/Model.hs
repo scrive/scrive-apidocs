@@ -2,6 +2,7 @@ module File.Model (
       module File.FileID
     , FileMovedToAWS(..)
     , GetFileByFileID(..)
+    , GetMaybeFileByFileID(..)
     , GetFilesThatShouldBeMovedToAmazon(..)
     , NewFile(..)
     , PurgeFile(..)
@@ -28,8 +29,17 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetFileByFileID File where
       sqlWhereFileIDIs fid
       sqlWhereFileWasNotPurged
 
+data GetMaybeFileByFileID = GetMaybeFileByFileID FileID
+instance (MonadDB m, MonadThrow m) => DBQuery m GetMaybeFileByFileID (Maybe File) where
+  query (GetMaybeFileByFileID fid) = do
+    runQuery_ $ sqlSelect "files" $ do
+      mapM_ sqlResult filesSelectors
+      sqlWhereFileIDIs fid
+      sqlWhereFileWasNotPurged
+    fetchMaybe fetchFile
+
 data NewFile = NewFile String BS.ByteString
-instance (MonadDB m, MonadThrow m) => DBUpdate m NewFile FileID where
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m NewFile FileID where
   update (NewFile filename content) = do
     runQuery_ $ sqlInsert "files" $ do
         sqlSet "name" filename
@@ -37,7 +47,14 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m NewFile FileID where
         sqlSet "checksum" $ SHA1.hash content
         sqlSet "size" (fromIntegral . BS.length $ content :: Int32)
         sqlResult "id"
-    fetchOne runIdentity
+    fileid <- fetchOne runIdentity
+    now <- currentTime
+    -- Every new file is uploaded to Amazon
+    runQuery_ . sqlInsert "amazon_upload_jobs" $ do
+      sqlSet "id" fileid
+      sqlSetCmd "run_at" $ "" <?> now <+> " + interval '1 minute'"
+      sqlSet "attempts" (0::Int32)
+    return fileid
 
 data FileMovedToAWS = FileMovedToAWS FileID String AESConf
 instance MonadDB m => DBUpdate m FileMovedToAWS () where
@@ -56,6 +73,11 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetFilesThatShouldBeMovedToAmazo
     runQuery_ $ sqlSelect "files" $ do
       mapM_ sqlResult filesSelectors
       sqlWhere "content IS NOT NULL"
+      -- GetFilesThatShouldBeMovedToAmazon is kept only temporarily
+      -- until we finish transition to Consumer AWS upload
+      -- see case #3358
+      sqlWhereNotExists . sqlSelect "amazon_upload_jobs" $ do
+          sqlWhere "files.id = amazon_upload_jobs.id"
       sqlOrderBy "id"
       sqlLimit n
     fetchMany fetchFile

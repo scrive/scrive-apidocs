@@ -69,5 +69,6 @@
     "consumer_sealing_max_jobs" : 2,
     "consumer_signing_max_jobs" : 5,
     "consumer_extending_max_jobs" : 1,
-    "Consumer_api_callback_max_jobs" : 32
+    "consumer_api_callback_max_jobs" : 32,
+    "consumer_amazon_max_jobs" : 2
 }

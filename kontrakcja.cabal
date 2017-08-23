@@ -91,6 +91,8 @@ Library
                  , Amazon
                  , Amazon.Class
                  , Amazon.Config
+                 , Amazon.Consumer
+                 , Amazon.Tables
                  , Analytics.Include
                  , AppConf
                  , AppControl
@@ -692,7 +694,9 @@ Executable kontrakcja-migrate
 
   Main-is: AppDBMain.hs
   GHC-options: -main-is AppDBMain
-  Other-Modules: AppDBConfig
+  Other-Modules: Amazon.Migrations
+                 Amazon.Tables
+                 AppDBConfig
                  AppDBMigrations
                  AppDBTables
                  Attachment.Tables
@@ -1148,6 +1152,8 @@ Test-suite kontrakcja-test
   GHC-options: -main-is TestMain
   Other-Modules: AccountInfoTest
                  AdministrationTest
+                 Amazon.Migrations
+                 Amazon.Tables
                  AppDBMigrations
                  AppDBTables
                  ArchiveTest

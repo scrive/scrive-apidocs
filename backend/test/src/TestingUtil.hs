@@ -593,10 +593,10 @@ addNewCompany = do
     Just company <- dbQuery $ GetCompany cid
     return company
 
-addNewFile :: (CryptoRNG m, MonadDB m, MonadThrow m) => String -> BS.ByteString -> m FileID
+addNewFile :: (MonadDB m, MonadThrow m, MonadTime m) => String -> BS.ByteString -> m FileID
 addNewFile filename content = dbUpdate $ NewFile filename content
 
-addNewRandomFile :: (MonadIO m, CryptoRNG m, MonadDB m, MonadThrow m) => m FileID
+addNewRandomFile :: (MonadIO m, CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m) => m FileID
 addNewRandomFile = do
   fn <- rand 1 $ elements [ inTestDir "pdfs/simple.pdf"
                           , inTestDir "pdfs/telia.pdf"
