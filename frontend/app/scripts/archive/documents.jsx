@@ -325,7 +325,7 @@ module.exports = React.createClass({
                     var url = "/d/csv?";
                     var params =  listmodel.urlParams();
                     _.each(params,function(a,b){url+=(b+"="+a+"&");});
-                    window.open(url);
+                    window.location.href = url;
                     return true;
                   }
                 },
