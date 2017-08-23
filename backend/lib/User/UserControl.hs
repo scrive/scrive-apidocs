@@ -266,7 +266,11 @@ handleAccountSetupGet uid token sm = do
         F.value "signupmethod" $ show sm
       internalResponse <$> (simpleHtmlResponse content)
     (Just _user, Just _)  -> return $ internalResponse $ LinkDesignView
-    _ -> return $ internalResponse $ LinkLogin $ ctxlang ctx
+    _ -> do
+      flashmessage <- case sm of
+        CompanyInvitation -> flashMessageUserAccountRequestExpiredCompany
+        _                 -> flashMessageUserAccountRequestExpired
+      return . internalResponseWithFlash flashmessage . LinkLogin $ ctxlang ctx
 
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPost uid token sm = do
