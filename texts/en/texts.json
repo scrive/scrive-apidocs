@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Some fields are not filled out correctly.",
 "_flashMessageTemplateArchiveDone":"The selected templates have been deleted.",
 "_flashMessageTemplateShareDone":"The selected templates have been shared with your organisation.",
+"_flashMessageUserAccountRequestExpired":"Your invitation link has expired. Please sign up again.",
+"_flashMessageUserAccountRequestExpiredCompany":"Your invitation link has expired. Please contact an administrator at your company to get a new account activation link.",
 "_flashMessageUserActivated":"Welcome to Scrive!",
 "_flashMessageUserAlreadyActivated":"You have already activated this account.",
 "_flashMessageUserDetailsSaved":"Your account settings have been saved.",

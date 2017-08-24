@@ -24,3 +24,7 @@ flashMessageBecomeCompanyLogInDifferentUser=$_flashMessageBecomeCompanyLogInDiff
 ####
 flashMessageUserHasIdentifiedWithDifferentSSN=$_flashMessageUserHasIdentifiedWithDifferentSSN()$
 ###
+flashMessageUserAccountRequestExpired=$_flashMessageUserAccountRequestExpired()$
+###
+flashMessageUserAccountRequestExpiredCompany=$_flashMessageUserAccountRequestExpiredCompany()$
+###

@@ -20,6 +20,8 @@ module User.UserView (
     flashMessageProblemWithEmailChange,
     flashMessageProblemWithPassword,
     flashMessageYourEmailHasChanged,
+    flashMessageUserAccountRequestExpired,
+    flashMessageUserAccountRequestExpiredCompany,
 
     userStatsToJSON,
     companyStatsToJSON,
@@ -206,3 +208,11 @@ flashMessageProblemWithPassword =
 flashMessageYourEmailHasChanged :: TemplatesMonad m => m FlashMessage
 flashMessageYourEmailHasChanged =
   toFlashMsg OperationDone <$> renderTemplate_ "flashMessageYourEmailHasChanged"
+
+flashMessageUserAccountRequestExpiredCompany :: TemplatesMonad m => m FlashMessage
+flashMessageUserAccountRequestExpiredCompany =
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserAccountRequestExpiredCompany"
+
+flashMessageUserAccountRequestExpired :: TemplatesMonad m => m FlashMessage
+flashMessageUserAccountRequestExpired =
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserAccountRequestExpired"
