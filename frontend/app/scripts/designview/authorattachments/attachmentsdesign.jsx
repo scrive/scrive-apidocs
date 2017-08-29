@@ -48,6 +48,7 @@ var _ = require("underscore");
               <div className="attachmentsButtonsTable">
                 <div style={{width: "45%", display: "inline-block"}}>
                   <UploadButton
+                    fileType="application/pdf,.pdf"
                     size="big"
                     text={localization.authorattachments.selectFile}
                     maxlength={2}

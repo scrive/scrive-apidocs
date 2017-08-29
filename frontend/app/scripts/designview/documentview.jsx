@@ -257,6 +257,7 @@ var Modal = require("../common/modal");
                             }
 
                             <UploadButton
+                              fileType="application/pdf,.pdf"
                               type="action"
                               size="big"
                               text={localization.uploadButton}

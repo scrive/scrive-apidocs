@@ -117,6 +117,7 @@ var Checkbox = require("../../common/checkbox");
           }
           {/* if */ !model.isMarkedAsNotUploaded() &&
             <UploadButton
+              fileType="application/pdf,image/jpeg,image/png,*.pdf,*.jpg,*.jpeg,*.png"
               ref="uploadButton"
               size="small"
               name="attachment"
