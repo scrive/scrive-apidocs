@@ -58,6 +58,10 @@ module.exports = function (grunt) {
           "<%= yeoman.kontrakcja %>/templates/javascript-langs.st"
         ],
         tasks: ["updateLocalization"]
+      },
+      apiExplorer: {
+        files: ["<%= yeoman.app %>/api-explorer/**/*"],
+        tasks: ["copy:apiExplorer"]
       }
     },
 
@@ -189,7 +193,6 @@ module.exports = function (grunt) {
             dest: "<%= yeoman.dist %>",
             src: [
               "./*.{html,xml,jpg,png,ico,txt}",
-              "api-explorer/**/*",
               "enable-cookies/**/*",
               "css/fonts/*.woff",
               "css/assets/*",
@@ -200,6 +203,17 @@ module.exports = function (grunt) {
               "pdf/**/*",
               "localization/*.*.js"
             ]
+          }
+        ]
+      },
+      apiExplorer: {
+        files: [
+          {
+            expand: true,
+            dot: true,
+            cwd: "<%= yeoman.app %>",
+            dest: "<%= yeoman.dist %>",
+            src: ["api-explorer/**/*"]
           }
         ]
       }
@@ -218,7 +232,7 @@ module.exports = function (grunt) {
     },
 
     concurrent: {
-      dist: ["copy:dist"],
+      dist: ["copy:dist", "copy:apiExplorer"],
       watch: {
         tasks: ["watch", "webpack:allWatch", "webpack:signviewWatch"],
         options: {logConcurrentOutput: true}
