@@ -32,12 +32,40 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-view-icon-dk-nemid";
     }
   },
+  title: function () {
+    var title = [localization.designview.addParties.authenticationToView];
+
+    var authMethod = (
+      this.props.model.signs() ? this.props.model.authenticationToView() : "standard"
+    );
+
+    if (authMethod == "standard") {
+      title.push(
+        localization.designview.addParties.authenticationToViewStandard
+      );
+    } else if (authMethod == "se_bankid") {
+      title.push(
+        localization.designview.addParties.authenticationToViewSEBankID
+      );
+    } else if (authMethod == "no_bankid") {
+      title.push(
+        localization.designview.addParties.authenticationToViewNOBankID
+      );
+    } else if (authMethod == "dk_nemid") {
+      title.push(
+        localization.designview.addParties.authenticationToViewDKNemID
+      );
+    }
+
+    return title.join(": ");
+  },
   render: function () {
     var self = this;
     var sig = this.props.model;
     return (
       <div className="design-view-action-participant-icon-auth-to-view"
            onClick={function (e) { self.onClick(); e.stopPropagation(); }}
+           title={this.title()}
       >
         <div className="design-view-action-participant-icon-auth-to-view-inner">
           <div className={"design-view-action-participant-icon-auth-to-view-icon " + self.icon()}>

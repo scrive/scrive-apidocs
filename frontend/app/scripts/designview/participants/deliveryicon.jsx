@@ -38,6 +38,29 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-device-icon-email-mobile";
     }
   },
+  title: function () {
+    var title = [localization.designview.addParties.invitation];
+
+    var deliveryMethod = (
+      this.props.model.isLastViewer() ? "standard" : this.props.model.delivery()
+    );
+
+    if (deliveryMethod == "none") {
+      title.push(localization.designview.addParties.invitationNone);
+    } else if (deliveryMethod == "email") {
+      title.push(localization.designview.addParties.invitationEmail);
+    } else if (deliveryMethod == "pad") {
+      title.push(localization.designview.addParties.invitationInPerson);
+    } else if (deliveryMethod == "mobile") {
+      title.push(localization.designview.addParties.invitationSMS);
+    } else if (deliveryMethod == "email_mobile") {
+      title.push(localization.designview.addParties.invitationEmailSMS);
+    } else if (deliveryMethod == "api") {
+      title.push(localization.designview.addParties.invitationAPI);
+    }
+
+    return title.join(": ");
+  },
   render: function () {
     var self = this;
     var sig = this.props.model;
@@ -45,6 +68,7 @@ module.exports = React.createClass({
       <div
         className="design-view-action-participant-icon-device"
         onClick={function (e) { self.onClick(); e.stopPropagation(); }}
+        title={this.title()}
       >
         <div className="design-view-action-participant-icon-device-inner">
           <div className={"design-view-action-participant-icon-device-icon " + self.icon()}>

@@ -28,12 +28,36 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-sign-icon-sms-pin";
     }
   },
+  title: function () {
+    var title = [localization.designview.addParties.authenticationToSign];
+
+    var authMethod = (
+      this.props.model.signs() ? this.props.model.authenticationToSign() : "standard"
+    );
+
+    if (authMethod == "standard") {
+      title.push(
+        localization.designview.addParties.authenticationToSignStandard
+      );
+    } else if (authMethod == "se_bankid") {
+      title.push(
+        localization.designview.addParties.authenticationToSignSEBankID
+      );
+    } else if (authMethod == "sms_pin") {
+      title.push(
+        localization.designview.addParties.authenticationToSignSMSPin
+      );
+    }
+
+    return title.join(": ");
+  },
   render: function () {
     var self = this;
     var sig = this.props.model;
     return (
       <div className="design-view-action-participant-icon-auth-to-sign"
            onClick={function (e) { self.onClick(); e.stopPropagation(); }}
+           title={this.title()}
       >
         <div className="design-view-action-participant-icon-auth-to-sign-inner">
           <div className={"design-view-action-participant-icon-auth-to-sign-icon " + self.icon()}>

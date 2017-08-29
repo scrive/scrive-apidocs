@@ -14,6 +14,14 @@ module.exports = React.createClass({
     }
     sig.setSignOrder(o);
   },
+  title: function () {
+    var title = [
+      localization.designview.addParties.invitationOrder,
+      "" + this.props.model.signorder()
+    ];
+
+    return title.join(": ");
+  },
   render: function () {
     var self = this;
     var sig = this.props.model;
@@ -21,6 +29,7 @@ module.exports = React.createClass({
       <div
         className="design-view-action-participant-icon-order"
         onClick={function (e) { self.onClick(); e.stopPropagation(); }}
+        title={this.title()}
       >
         <div className="design-view-action-participant-icon-order-inner">
           {sig.signorder()}
