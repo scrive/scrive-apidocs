@@ -340,12 +340,12 @@ module.exports = React.createClass({
                     }
                     else if (selected.length == 1) {
                       var url =  "/api/frontend/documents/" + selected[0].field("id") + "/files/main/" + encodeURIComponent(selected[0].field("title")) + ".pdf";
-                      window.open(url);
+                      window.location.href = url;
                       return true;
                     } else {
                       var url =  "/d/zip?";
                       url += "documentids=[" + _.map(selected,function(s){return s.field("id");}) + "]";
-                      window.open(url);
+                      window.location.href = url;
                       return true;
                     }
                   }
