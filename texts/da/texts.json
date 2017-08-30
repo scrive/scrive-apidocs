@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Nogle af felterne er ikke udfyldt korrekt.",
 "_flashMessageTemplateArchiveDone":"De valgte skabeloner er blevet slettet.",
 "_flashMessageTemplateShareDone":"De valgte skabeloner er blevet delt med din organisation.",
+"_flashMessageUserAccountRequestExpired":"",
+"_flashMessageUserAccountRequestExpiredCompany":"",
 "_flashMessageUserActivated":"Velkommen til Scrive!",
 "_flashMessageUserAlreadyActivated":"Du har allerede aktiveret denne konto.",
 "_flashMessageUserDetailsSaved":"Dine kontoindstillinger er blevet gemt.",

@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Kai kurie laukeliai neteisingai užpildyti.",
 "_flashMessageTemplateArchiveDone":"Pasirinkti šablonai ištrinti.",
 "_flashMessageTemplateShareDone":"Pasirinkti šablonai taip pat pateikti ir Jūsų organizacijai.",
+"_flashMessageUserAccountRequestExpired":"",
+"_flashMessageUserAccountRequestExpiredCompany":"",
 "_flashMessageUserActivated":"Sveiki atvykę į „Scrive“!",
 "_flashMessageUserAlreadyActivated":"Jūs jau suaktyvinote šią paskyrą.",
 "_flashMessageUserDetailsSaved":"Jūsų paskyros nustatymai įrašyti.",

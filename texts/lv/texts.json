@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Atsevišķi lauki ir aizpildīti nepareizi.",
 "_flashMessageTemplateArchiveDone":"Atzīmētās veidnes tika izdzēstas.",
 "_flashMessageTemplateShareDone":"Atzīmētās veidnes tika kopīgotas ar Jūsu organizāciju.",
+"_flashMessageUserAccountRequestExpired":"",
+"_flashMessageUserAccountRequestExpiredCompany":"",
 "_flashMessageUserActivated":"Sveicināti Scrive!",
 "_flashMessageUserAlreadyActivated":"Jūs jau esat aktivizējis šo kontu.",
 "_flashMessageUserDetailsSaved":"Jūsu konta iestatījumi ir saglabāti.",

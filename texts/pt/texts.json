@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Alguns campos não estão correctamente preenchidos.",
 "_flashMessageTemplateArchiveDone":"Os modelos seleccionados foram eliminados.",
 "_flashMessageTemplateShareDone":"Os modelos seleccionados foram partilhados com a sua organização.",
+"_flashMessageUserAccountRequestExpired":"",
+"_flashMessageUserAccountRequestExpiredCompany":"",
 "_flashMessageUserActivated":"Bem-vindo ao Scrive!",
 "_flashMessageUserAlreadyActivated":"Já activou esta conta.",
 "_flashMessageUserDetailsSaved":"As suas definições da conta foram guardadas.",

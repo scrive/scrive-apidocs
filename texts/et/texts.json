@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Mõned väljad on valesti täidetud.",
 "_flashMessageTemplateArchiveDone":"Valitud mallid on kustutatud.",
 "_flashMessageTemplateShareDone":"Valitud malle jagati Teie ettevõttega.",
+"_flashMessageUserAccountRequestExpired":"",
+"_flashMessageUserAccountRequestExpiredCompany":"",
 "_flashMessageUserActivated":"Tere tulemast Scrive kasutajaks!",
 "_flashMessageUserAlreadyActivated":"See konto on juba aktiveeritud.",
 "_flashMessageUserDetailsSaved":"Teie konto on juba salvestatud.",
