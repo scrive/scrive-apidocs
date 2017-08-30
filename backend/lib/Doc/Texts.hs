@@ -58,11 +58,12 @@ runJavaTextExtract json content = do
     let (rects :: Maybe JSValue) = fromJSValueField "rects" json
     let config = runJSONGen $ do
                    value "rects" rects
+                   value "input" tmpin
 
     liftIO $ BS.writeFile tmpin content
     liftIO $ BS.writeFile specpath (BS.fromString $ show $ J.pp_value (toJSValue config))
     (code, stdout, stderr) <- liftIO $ do
-      readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "extract-texts", specpath, tmpin] (BSL.empty)
+      readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "extract-texts", specpath] (BSL.empty)
     case code of
       ExitSuccess -> do
           let (decoderesult :: Result JSValue) = decode $ BSL.toString stdout
