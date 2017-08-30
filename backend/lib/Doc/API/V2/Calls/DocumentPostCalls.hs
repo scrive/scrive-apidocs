@@ -367,16 +367,20 @@ docApiV2SetAttachments did = logDocument did . api $ do
 
     (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
 
-    forM_ attachmentDetails $ \ad ->  case (aadFileOrFileParam ad) of
+    newFileContentsWithDetails' <- forM attachmentDetails $ \ad ->  case (aadFileOrFileParam ad) of
       Left fid -> do
         attachmentFromAttachmentArchive <- (not null) <$> dbQuery (attachmentsQueryFor user fid)
         when (not (fileWasAlreadAnAttachmnet fid || attachmentFromAttachmentArchive)) $
             apiError $ resourceNotFound $ "File id " <+> (T.pack . show $ fid)
               <+> " can't be used. It may not exist or you don't have permission to use it."
-        dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (aadAddToSealedFile ad) fid actor
-      Right fp -> do
-        newFile <- apiV2ParameterObligatory (ApiV2ParameterFilePDF $ fp)
-        dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (aadAddToSealedFile ad) (fileid newFile) actor
+        _ <- dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (aadAddToSealedFile ad) fid actor
+        return Nothing
+      Right fp -> return $ Just (ad, fp)
+    let newFileContentsWithDetails = catMaybes newFileContentsWithDetails'
+        newFileContents = map snd newFileContentsWithDetails
+    newFiles <- apiV2ParameterObligatory $ ApiV2ParameterFilePDFs newFileContents
+    let newFilesWithDetails = zip (map fst newFileContentsWithDetails) newFiles
+    forM_ newFilesWithDetails $ \(ad, newFile) -> dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (aadAddToSealedFile ad) (fileid newFile) actor
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
   where
