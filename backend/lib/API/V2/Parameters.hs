@@ -37,6 +37,7 @@ data ApiV2Parameter a where
   ApiV2ParameterTextUnjson :: T.Text -> UnjsonDef a -> ApiV2Parameter a
   ApiV2ParameterAeson :: Aeson.FromJSON a => T.Text -> ApiV2Parameter a
   ApiV2ParameterFilePDF        :: T.Text -> ApiV2Parameter File
+  ApiV2ParameterFilePDFs       :: [T.Text] -> ApiV2Parameter [File]
   ApiV2ParameterFilePDFOrImage :: T.Text -> ApiV2Parameter File
   ApiV2ParameterBase64PNGImage :: T.Text -> ApiV2Parameter File
 
@@ -101,26 +102,37 @@ apiV2ParameterOptional (ApiV2ParameterAeson name) = do
       Right js -> return $ Just js
     Nothing -> return Nothing
 
+
 apiV2ParameterOptional (ApiV2ParameterFilePDF name) = do
-  mValue <- getDataFn' (lookInput $ T.unpack name)
-  case mValue of
-    Nothing -> return Nothing
-    Just (Input _ Nothing _) -> apiError $ requestParameterInvalid name "file was empty"
-    Just (Input contentspec (Just filename') _contentType) -> do
-      let filename = reverse . takeWhile (/='\\') . reverse $ filename' -- Drop filepath for windows
-      content' <- case contentspec of
-        Left filepath -> liftIO $ BS.readFile filepath
-        Right content -> return (BS.concat $ BSL.toChunks content)
+  mFiles <- apiV2ParameterOptional (ApiV2ParameterFilePDFs [name])
+  case mFiles of
+    Just [file] -> return $ Just file
+    _ -> return Nothing
 
-      pdfcontent <- do
-        res <- preCheckPDF content'
-        case res of
-          Right r -> return r
-          Left _ ->  apiError $ requestParameterParseError name $ "not a valid PDF"
+apiV2ParameterOptional (ApiV2ParameterFilePDFs names) = do
+  contentsWithNames <- forM names $ \name -> do
+    mValue <- getDataFn' (lookInput $ T.unpack name)
+    case mValue of
+      Nothing -> return Nothing
+      Just (Input _ Nothing _) -> apiError $ requestParameterInvalid name "file was empty"
+      Just (Input contentspec (Just filename') _contentType) -> do
+        let filename = reverse . takeWhile (/='\\') . reverse $ filename' -- Drop filepath for windows
+        content <- case contentspec of
+          Left filepath -> liftIO $ BS.readFile filepath
+          Right content -> return $ BS.concat $ BSL.toChunks content
+        return $ Just (filename, content)
+  let contentsWithNames' = catMaybes contentsWithNames
+  pdfcontents <- do
+    res <- preCheckPDFs $ map snd contentsWithNames'
+    case res of
+      Right r -> return $ zip (map fst contentsWithNames') r
+      Left _ -> apiError $ requestParameterParseError "name" $ "not a valid PDF"
 
-      fileid <- dbUpdate $ NewFile filename pdfcontent
-      file <- dbQuery $ GetFileByFileID fileid
-      return $ Just file
+  files <- forM pdfcontents $ \(filename, pdfcontent) -> do
+    fileid <- dbUpdate $ NewFile filename pdfcontent
+    file <- dbQuery $ GetFileByFileID fileid
+    return file
+  return $ Just files
 
 apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
   mValue <- getDataFn' (lookInput $ T.unpack name)
@@ -182,5 +194,6 @@ getParameterName (ApiV2ParameterJSON n _) = n
 getParameterName (ApiV2ParameterTextUnjson n _) = n
 getParameterName (ApiV2ParameterAeson n) = n
 getParameterName (ApiV2ParameterFilePDF n) = n
+getParameterName (ApiV2ParameterFilePDFs ns) = T.intercalate "," ns
 getParameterName (ApiV2ParameterFilePDFOrImage n) = n
 getParameterName (ApiV2ParameterBase64PNGImage n) = n

@@ -451,6 +451,7 @@ Library
                , deepseq
                , digest
                , directory
+               , either
                , ekg-core
                , ekg-statsd
                , exceptions

@@ -24,6 +24,7 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Data.Aeson (Value(..))
 import Data.Char
+import Data.Either.Combinators (rightToMaybe)
 import Data.Int
 import Data.String.Utils (replace, strip)
 import Data.Text (unpack)
@@ -275,13 +276,13 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
           checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
     when (not $ (auid == userid user)) $ do
           throwM . SomeDBExtraException $ serverError "Permission problem. Not an author."
-    attachmentFilesWithDetails <- getAttachments 0 =<< theDocument
+    attachmentFilesWithDetails <- precheckNewAttachments =<< getAttachments 0 =<< theDocument
     (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
     forM_ attachmentFilesWithDetails $ \(attfile, maad) -> do
       dbUpdate $ AddDocumentAttachment (fromMaybe (T.pack $ filename attfile) (aadName <$> maad))  (fromMaybe False (aadRequired <$> maad)) (fromMaybe True (aadAddToSealedFile <$> maad)) (fileid attfile) actor
     Ok <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
      where
-          getAttachments :: Kontrakcja m => Int -> Document -> m [(File,Maybe AuthorAttachmentDetails)]
+          getAttachments :: Kontrakcja m => Int -> Document -> m [(Either File (String, BSL.ByteString), Maybe AuthorAttachmentDetails)]
           getAttachments i doc = do
               mf <- tryGetFile doc i
               case mf of
@@ -303,25 +304,38 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
                  _ -> throwM . SomeDBExtraException $ (badInput $ "Details for author attachment " ++ show i ++ " are invalid")
               _ -> throwM . SomeDBExtraException $ (badInput $ "Details for author attachment " ++ show i ++ " is not a valid JSON")
 
-          tryGetFile ::  Kontrakcja m => Document -> Int -> m  (Maybe File)
+          precheckNewAttachments :: Kontrakcja m
+                                 => [(Either File (String, BSL.ByteString), Maybe AuthorAttachmentDetails)]
+                                 -> m [(File, Maybe AuthorAttachmentDetails)]
+          precheckNewAttachments xs = do
+            -- We will extract all new files (name, bytestring) and preCheck them all at once, because
+            -- it's faster. Then we will put them back into the list.
+            let (filenames, blobs) = unzip . mapMaybe (rightToMaybe . fst) $ xs
+            cres <- preCheckPDFs $ map BSL.toStrict blobs
+            newFiles <- case cres of
+              Left _ -> throwM . SomeDBExtraException $ (badInput $ "One of Attached files is not a valid PDF")
+              Right contents -> forM (zip filenames contents) $ \(filename, content) -> do
+                fid <- dbUpdate $ NewFile filename content
+                dbQuery $ GetFileByFileID fid
+            let putNewFiles ((Left  f, mdetails) : rest) newfs      = (f , mdetails) : putNewFiles rest newfs
+                putNewFiles ((Right _, mdetails) : rest) (nf:newfs) = (nf, mdetails) : putNewFiles rest newfs
+                putNewFiles []                           []         = []
+                putNewFiles _                            _          = $unexpectedError "Wrong amount of preChecked new files"
+            return $ putNewFiles xs newFiles
+
+          tryGetFile ::  Kontrakcja m => Document -> Int -> m (Maybe (Either File (String, BSL.ByteString)))
           tryGetFile doc i = do
               inp <- getDataFn' (lookInput $ "attachment_" ++ show i)
               case inp of
                    Just (Input (Left filepath) (Just filename) _contentType) -> do
                        content <- liftIO $ BSL.readFile filepath
-                       cres <- preCheckPDF (BSL.toStrict content)
-                       case cres of
-                         Left _ -> do
-                           throwM . SomeDBExtraException $ (badInput $ "AttachFile " ++ show i ++ " file is not a valid PDF")
-                         Right content' -> do
-                            fid <- dbUpdate $ NewFile filename content'
-                            Just <$> dbQuery (GetFileByFileID fid)
+                       return $ Just $ Right (filename, content)
                    Just (Input  (Right c)  _ _)  -> do
                         case maybeRead (BSL.toString c) of
                             Just fid -> do
                               access <- hasAccess doc fid
                               if access
-                                then Just <$> dbQuery (GetFileByFileID fid)
+                                then Just <$> Left <$> dbQuery (GetFileByFileID fid)
                                 else throwM . SomeDBExtraException $ (forbidden $ "Access to attachment " ++ show i ++ " forbiden")
                             Nothing -> throwM . SomeDBExtraException $ (badInput $ "Can parse attachment id for attachment " ++ show i)
                    _ -> return Nothing

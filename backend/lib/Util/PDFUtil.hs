@@ -10,6 +10,7 @@ module Util.PDFUtil
     ( renderPage
     , FileError(..)
     , preCheckPDF
+    , preCheckPDFs
     , getNumberOfPDFPages
     , pickPages
     , clipHighlightImageFromPage
@@ -24,7 +25,7 @@ import Log
 import Numeric
 import System.Directory
 import System.Exit
-import System.IO
+import System.IO hiding (stderr, stdout)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import System.Timeout.Lifted
 import qualified Control.Exception.Lifted as E
@@ -99,64 +100,63 @@ data FileError = FileSizeError Int Int
                | FileOtherError String
                deriving (Eq, Ord, Show, Read, Typeable)
 
-preCheckPDFHelper :: BS.ByteString
-                  -> String
-                  -> IO (Either FileError BS.ByteString)
-preCheckPDFHelper content tmppath =
+preCheckPDFsHelper :: [BS.ByteString]
+                   -> String
+                   -> IO (Either FileError [BS.ByteString])
+preCheckPDFsHelper contents tmppath =
     runExceptT $ do
-      checkSize
-      checkHeader
+      mapM_ checkSize contents
+      mapM_ checkHeader contents
       checkRemoveJavaScript
-      checkNormalize
-      readOutput
+      mapM_ checkNormalize $ zip [1..] contents
+      mapM readOutput [1..length contents]
   where
-    sourcepath = tmppath ++ "/source.pdf"
-    jsremovedpath = tmppath ++ "/jsremoved.pdf"
-    normalizedpath = tmppath ++ "/normalized.pdf"
+    jsremovedpath    num = tmppath ++ "/jsremoved"  ++ show num ++ ".pdf"
+    jsremovespecpath num = tmppath ++ "/jsremove"   ++ show num ++ ".json"
+    normalizedpath   num = tmppath ++ "/normalized" ++ show num ++ ".pdf"
+    sourcepath       num = tmppath ++ "/source"     ++ show num ++ ".pdf"
 
     sizeLimit = 10 * 1000 * 1000
-    contentLength = BS.length content
 
     headerPattern = BS.pack "%PDF-1."
 
-    checkSize = do
-      when (contentLength > sizeLimit) $
-           throwError (FileSizeError sizeLimit contentLength)
+    checkSize content = let contentLength = BS.length content
+                        in when (contentLength > sizeLimit) $
+                             throwError (FileSizeError sizeLimit contentLength)
 
-    checkHeader = do
+    checkHeader content = do
       when (not $ headerPattern `BS.isPrefixOf` content) $ do
         throwError (FileFormatError)
 
     checkRemoveJavaScript = do
-      liftIO $ BS.writeFile sourcepath content
-      (code,stdout1,stderr1) <- liftIO $ do
-        let jsremovespecpath = tmppath ++ "/jsremove.json"
-        let config = RemoveJavaScriptSpec { input = sourcepath, output = jsremovedpath }
-        let json_config = Unjson.unjsonToByteStringLazy unjsonRemoveJavaScriptSpec config
-
-        liftIO $ BSL.writeFile jsremovespecpath json_config
-        readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "remove-javascript", jsremovespecpath] (BSL.empty)
+      forM_ (zip [1..] contents) $ \(num, content) -> do
+        liftIO $ BS.writeFile (sourcepath num) content
+        let config = RemoveJavaScriptSpec { input = sourcepath num, output = jsremovedpath num }
+            json_config = Unjson.unjsonToByteStringLazy unjsonRemoveJavaScriptSpec config
+        liftIO $ BSL.writeFile (jsremovespecpath num) json_config
+      let jsremovespecpaths = map jsremovespecpath [1..length contents]
+      (code, stdout, stderr) <- liftIO $
+        readProcessWithExitCode "java" (["-jar", "scrivepdftools/scrivepdftools.jar", "remove-javascript"] ++ jsremovespecpaths) (BSL.empty)
       case code of
         ExitSuccess -> return ()
         ExitFailure _ -> do
           throwError $ FileRemoveJavaScriptError $ BSL.concat [ BSL.pack ("Exit failure \n")
-                                                              , stdout1
+                                                              , stdout
                                                               , BSL.pack "\n"
-                                                              , stderr1
+                                                              , stderr
                                                               ]
 
-
-    checkNormalize = do
+    checkNormalize (num, content) = do
 
       -- dont rely on mutool exit code - for mupdf-1.6 it's always 1
       -- just check if the output file is there
-      (_, stdout1, stderr1) <- liftIO $ readProcessWithExitCode "mutool"
+      (_, stdout, stderr) <- liftIO $ readProcessWithExitCode "mutool"
                                    [ "clean"
                                    , "-gg"
-                                   , jsremovedpath
-                                   , normalizedpath
+                                   , jsremovedpath num
+                                   , normalizedpath num
                                    ] BSL.empty
-      flag <- liftIO $ doesFileExist normalizedpath
+      flag <- liftIO $ doesFileExist $ normalizedpath num
       when (not flag) $ do
         liftIO $ do
           systmp <- getTemporaryDirectory
@@ -165,12 +165,12 @@ preCheckPDFHelper content tmppath =
           hClose handle
 
         throwError $ FileNormalizeError $ BSL.concat [ BSL.pack ("Exit failure \n")
-                                                     , stdout1
+                                                     , stdout
                                                      , BSL.pack "\n"
-                                                     , stderr1
+                                                     , stderr
                                                      ]
 
-    readOutput = liftIO $ BS.readFile normalizedpath
+    readOutput num = liftIO $ BS.readFile $ normalizedpath num
 
 -- | The 'preCheckPDF' function should be invoked just after receiving
 -- uploaded document from user and before it gets into the
@@ -190,11 +190,11 @@ preCheckPDFHelper content tmppath =
 -- Return value is either a 'BS.ByteString' with normalized document
 -- content or 'FileError' enumeration stating what is going on.
 --
-preCheckPDF :: (MonadLog m, MonadBaseControl IO m) => BS.ByteString
-            -> m (Either FileError BS.ByteString)
-preCheckPDF content =
+preCheckPDFs :: (MonadLog m, MonadBaseControl IO m) => [BS.ByteString]
+            -> m (Either FileError [BS.ByteString])
+preCheckPDFs contents =
   withSystemTempDirectory' "precheck" $ \tmppath -> do
-    res <- liftBase (preCheckPDFHelper content tmppath)
+    res <- liftBase (preCheckPDFsHelper contents tmppath)
       `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
     case res of
       Left x -> logInfo "preCheckPDF failed" $ object [
@@ -202,6 +202,15 @@ preCheckPDF content =
         ]
       Right _ -> return ()
     return res
+
+preCheckPDF :: (MonadLog m, MonadBaseControl IO m) => BS.ByteString
+            -> m (Either FileError BS.ByteString)
+preCheckPDF content = do
+  res <- preCheckPDFs [content]
+  case res of
+    Left e -> return $ Left e
+    Right [x] -> return $ Right $ x
+    _ -> $unexpectedError "preCheckPDFs returned wrong amount of contents"
 
 
 getNumberOfPDFPages :: BS.ByteString -> IO (Either String Int)

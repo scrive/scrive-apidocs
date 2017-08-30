@@ -602,7 +602,7 @@
 "_january":"januari",
 "_july":"juli",
 "_june":"juni",
-"_last12Months":"",
+"_last12Months":"Senaste 12 månaderna",
 "_last30Days":"Senaste 30 dagarna",
 "_listLocalDialogsBody":"Är du säker på att du vill radera <span class='put-one-or-more-things-to-be-deleted-here'></span>?",
 "_listRestoreDialogBody":"Vill du återställa markerade dokument?",
