@@ -1,4 +1,7 @@
-module Chargeable.Migrations (createIndexesForChargeableItems) where
+module Chargeable.Migrations
+    ( createIndexesForChargeableItems
+    , createJointTypeCompanyIDTimeIndexForChargeableItems
+    ) where
 
 import Chargeable.Tables
 import DB
@@ -12,4 +15,15 @@ createIndexesForChargeableItems = Migration {
       let tname = tblName tableChargeableItems
       runQuery_ . sqlCreateIndex tname $ (indexOnColumn "\"time\"")
       runQuery_ . sqlCreateIndex tname $ (indexOnColumn "type")
+  }
+
+
+createJointTypeCompanyIDTimeIndexForChargeableItems :: MonadDB m => Migration m
+createJointTypeCompanyIDTimeIndexForChargeableItems = Migration {
+    mgrTableName = tblName tableChargeableItems
+  , mgrFrom = 2
+  , mgrAction = StandardMigration $ do
+      let tname = tblName tableChargeableItems
+      runQuery_ . sqlCreateIndex tname $
+                  (indexOnColumns  ["type", "company_id", "\"time\""])
   }

@@ -23,6 +23,8 @@ module User.UserControl(
 
 import Control.Monad.State
 import Data.Functor
+import Data.Time.Calendar
+import Data.Time.Clock
 import Log
 import Text.JSON (JSValue(..))
 import Text.StringTemplates.Templates
@@ -181,21 +183,35 @@ getDaysStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
 getDaysStats = getStats PartitionByDay (idays 30)
 
 getMonthsStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
-getMonthsStats = getStats PartitionByMonth (imonths 12)
+getMonthsStats = getStats PartitionByMonth (imonths 6)
 
 getStats :: Kontrakcja m => StatsPartition -> Interval -> Either UserID CompanyID -> m JSValue
-getStats statsPartition interval = \case
-  Left uid -> do
-    stats <- dbQuery $ GetUsageStats (Left uid) statsPartition interval
-    return $ userStatsToJSON timeFormat stats
-  Right cid -> do
-    totalS <- renderTemplate_ "statsOrgTotal"
-    stats <- dbQuery $ GetUsageStats (Right cid) statsPartition interval
-    return $ companyStatsToJSON timeFormat totalS stats
-  where timeFormat :: UTCTime -> String
-        timeFormat = case statsPartition of
-                       PartitionByDay   -> formatTimeYMD
-                       PartitionByMonth -> formatTime' "%Y-%m"
+getStats statsPartition interval eid = do
+    -- @note: This is a hack around the fact that we don't yet have enough data
+    -- in `chargeable_items` table to use queries for longer periods.  The code
+    -- can be reset 6 months after 20170601 (if a 6 month interval is indeed
+    -- used).
+    now <- currentTime
+    let timeDiffSinceFstJune =
+            diffUTCTime now (UTCTime (fromGregorian 2017 6 1) 0)
+        intervalDaysSinceFstJune =
+            idays . floor $ timeDiffSinceFstJune / nominalDay
+        queryConstructor =
+            if intervalDaysSinceFstJune >= interval
+            then GetUsageStatsNew
+            else GetUsageStatsOld
+    case eid of
+      Left uid -> do
+        stats <- dbQuery $ queryConstructor (Left uid) statsPartition interval
+        return $ userStatsToJSON timeFormat stats
+      Right cid -> do
+        totalS <- renderTemplate_ "statsOrgTotal"
+        stats <- dbQuery $ queryConstructor (Right cid) statsPartition interval
+        return $ companyStatsToJSON timeFormat totalS stats
+      where timeFormat :: UTCTime -> String
+            timeFormat = case statsPartition of
+                           PartitionByDay   -> formatTimeYMD
+                           PartitionByMonth -> formatTime' "%Y-%m"
 
 {- |
     Checks for live documents owned by the user.

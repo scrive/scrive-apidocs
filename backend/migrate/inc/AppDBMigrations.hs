@@ -55,4 +55,5 @@ kontraMigrations = [
   , brandedDomainDropNoreplyEmail
   , createAmazonUploadConsumers
   , createAmazonUploadJobs
+  , createJointTypeCompanyIDTimeIndexForChargeableItems
   ]

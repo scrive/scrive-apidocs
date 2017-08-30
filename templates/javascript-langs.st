@@ -1043,7 +1043,7 @@ javascriptLocalisation =
           , stats : {
                 name : "$_HeadUsageStats()$"
               , last30days : "$_last30Days()$"
-              , last12months : "$_last12Months()$"
+              , last6months : "$_last6Months()$"
               , columnDate: "$_usageStatsDate()$"
               , columnSender : "$_statsSender()$"
               , columnClosedDocuments : "$_closedDocuments()$"
