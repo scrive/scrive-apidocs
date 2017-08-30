@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Noen felt er ikke riktig utfylt.",
 "_flashMessageTemplateArchiveDone":"De valgte malene har blitt slettet.",
 "_flashMessageTemplateShareDone":"De valgte malene har blitt delt med din organisasjon.",
+"_flashMessageUserAccountRequestExpired":"",
+"_flashMessageUserAccountRequestExpiredCompany":"",
 "_flashMessageUserActivated":"Velkommen til Scrive!",
 "_flashMessageUserAlreadyActivated":"Du har allerede aktivert denne kontoen.",
 "_flashMessageUserDetailsSaved":"Dine kontoinnstillinger har blitt lagret.",

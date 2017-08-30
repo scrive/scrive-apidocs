@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Joitakin kenttiä ei ole täytetty oikein.",
 "_flashMessageTemplateArchiveDone":"Valitut mallit on poistettu.",
 "_flashMessageTemplateShareDone":"Valitut mallit on jaettu organisaatiollesi.",
+"_flashMessageUserAccountRequestExpired":"",
+"_flashMessageUserAccountRequestExpiredCompany":"",
 "_flashMessageUserActivated":"Tervetuloa Scriveen!",
 "_flashMessageUserAlreadyActivated":"Olet jo aktivoinut tämän tilin.",
 "_flashMessageUserDetailsSaved":"Tiliasetuksesi on tallennettu.",

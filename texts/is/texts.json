@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Sumir reitir eru ekki fylltir út á réttan máta.",
 "_flashMessageTemplateArchiveDone":"Völdum sniðmátum hefur verið eytt.",
 "_flashMessageTemplateShareDone":"Völdum sniðmátum hefur verið deilt með fyrirtækinu þínu.",
+"_flashMessageUserAccountRequestExpired":"",
+"_flashMessageUserAccountRequestExpiredCompany":"",
 "_flashMessageUserActivated":"Velkomin/n í Scrive!",
 "_flashMessageUserAlreadyActivated":"Þú hefur þegar virkjað þennan reikning.",
 "_flashMessageUserDetailsSaved":"Reikningsstillingar þínar hafa verið vistaðar.",

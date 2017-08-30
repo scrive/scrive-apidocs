@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Μερικά πεδία δεν έχουν συμπληρωθεί σωστά. ",
 "_flashMessageTemplateArchiveDone":"Τα επιλεγμένα πρότυπα έχουν διαγραφεί. ",
 "_flashMessageTemplateShareDone":"Τα επιλεγμένα πρότυπα έχουν κοινοποιηθεί στην οργάνωσή σας. ",
+"_flashMessageUserAccountRequestExpired":"",
+"_flashMessageUserAccountRequestExpiredCompany":"",
 "_flashMessageUserActivated":"Καλωσήρθατε στην υπηρεσία Scrive! ",
 "_flashMessageUserAlreadyActivated":"Έχετε ήδη ενεργοποιήσει αυτό τον λογαριασμό. ",
 "_flashMessageUserDetailsSaved":"Οι ρυθμίσεις του λογαριασμού σας έχουν αποθηκευτεί. ",

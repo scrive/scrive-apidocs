@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Algunos campos no han sido completados correctamente.",
 "_flashMessageTemplateArchiveDone":"Las plantillas seleccionadas han sido eliminadas.",
 "_flashMessageTemplateShareDone":"Las plantillas seleccionadas han sido compartidas con su organización.",
+"_flashMessageUserAccountRequestExpired":"",
+"_flashMessageUserAccountRequestExpiredCompany":"",
 "_flashMessageUserActivated":"¡Bienvenido a Scrive!",
 "_flashMessageUserAlreadyActivated":"Ya ha activado esta cuenta.",
 "_flashMessageUserDetailsSaved":"La configuración de su cuenta ha sido guardada.",

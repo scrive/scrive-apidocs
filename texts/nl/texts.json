@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Sommige velden zijn niet correct ingevuld.",
 "_flashMessageTemplateArchiveDone":"De gekozen templates zijn verwijderd.",
 "_flashMessageTemplateShareDone":"De gekozen templates zijn gedeeld met uw organisatie.",
+"_flashMessageUserAccountRequestExpired":"",
+"_flashMessageUserAccountRequestExpiredCompany":"",
 "_flashMessageUserActivated":"Welkom bij Scrive! ",
 "_flashMessageUserAlreadyActivated":"U heeft deze account al geactiveerd.",
 "_flashMessageUserDetailsSaved":"Uw accountinstellingen zijn opgeslagen.",

@@ -545,6 +545,8 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Certains champs ne sont pas remplis correctement.",
 "_flashMessageTemplateArchiveDone":"Les modèles de documents sélectionnés ont été supprimés.",
 "_flashMessageTemplateShareDone":"Les modèles sélectionnés ont été partagés avec votre organisation.",
+"_flashMessageUserAccountRequestExpired":"",
+"_flashMessageUserAccountRequestExpiredCompany":"",
 "_flashMessageUserActivated":"Bienvenue sur Scrive!",
 "_flashMessageUserAlreadyActivated":"Vous avez déjà activé ce compte.",
 "_flashMessageUserDetailsSaved":"Les paramètres de votre compte ont été sauvegardés.",
