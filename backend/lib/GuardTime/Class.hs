@@ -15,12 +15,6 @@ data GuardTimeConf = GuardTimeConf {
 , guardTimeSigningLoginKey :: String
 , guardTimeExtendingLoginUser :: String
 , guardTimeExtendingLoginKey :: String
-
--- this is old guardtime config to handle pre-KSI GT gateway
-, guardTimeOldURL :: String
-, guardTimeOldExtendingServiceURL :: String
-, guardTimeOldControlPublicationsURL :: String
-
 } deriving (Eq, Ord, Show)
 
 instance Unjson GuardTimeConf where
@@ -46,16 +40,6 @@ instance Unjson GuardTimeConf where
     <*> field "extending_login_key"
         guardTimeExtendingLoginKey
         "GuardTime password for extending service"
-    -- this is old guardtime config to handle pre-KSI GT gateway
-    <*> field "old_url"
-        guardTimeOldURL
-        "Old GuardTime URL"
-    <*> field "old_extending_service_url"
-        guardTimeOldExtendingServiceURL
-        "Old GuardTime Extendind Service URL"
-    <*> field "old_control_publications_url"
-        guardTimeOldControlPublicationsURL
-        "Old GuardTime Control Publications URL"
 
 instance Default GuardTimeConf where
   def = GuardTimeConf {
@@ -66,9 +50,6 @@ instance Default GuardTimeConf where
       , guardTimeSigningLoginKey = "anon"
       , guardTimeExtendingLoginUser ="anon"
       , guardTimeExtendingLoginKey = "1234"
-      , guardTimeOldURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
-      , guardTimeOldExtendingServiceURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
-      , guardTimeOldControlPublicationsURL = "http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-controlpublications.bin"
       }
 
 class Monad m => GuardTimeConfMonad m where

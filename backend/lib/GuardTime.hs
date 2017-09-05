@@ -88,12 +88,6 @@ withGuardtimeConf GuardTimeConf{..} credentials action = do
     liftIO $ removeFile confpath
     return result
 
-invokeGuardtimeOldTool :: MonadIO m => String -> [String] -> m (ExitCode, BSL.ByteString, BSL.ByteString)
-invokeGuardtimeOldTool tool args = do
-  let a = ([ "-jar", "GuardTime_old/" ++ tool ++ ".jar"
-             ] ++ args)
-  liftIO $ readProcessWithExitCode "java" a BSL.empty
-
 digitallySign :: (MonadLog m, MonadIO m, MonadMask m) => GuardTimeConf -> String -> m (ExitCode, BSL.ByteString, BSL.ByteString)
 digitallySign conf inputFileName = do
   (code,stdout,stderr) <- invokeGuardtimeTool conf GTSigningCredentials "pdf-signer"
@@ -190,47 +184,11 @@ instance ToJSValue VerifyResult where
           then []
           else " (stdout: " ++ BSL.toString stdout ++ ", stderr: " ++ BSL.toString stderr ++ ")"
 
-verify :: (MonadIO m, MonadMask m, MonadLog m) => GuardTimeConf -> String -> m VerifyResult
-verify conf inputFileName = do
-  vrnew <- verifyNew conf inputFileName
-  case vrnew of
-    Problem stdoutnew stderrnew msgnew -> do
-      vrold <- verifyOld conf inputFileName
-      case vrold of
-        Problem stdoutold stderrold msgold -> do
-          logAttention "GuardTime New and Old verification failed" $ object [
-              "new_msg" .= msgnew
-            , "new_stdout" `equalsExternalBSL` stdoutnew
-            , "new_stderr" `equalsExternalBSL` stderrnew
-            , "old_msg" .= msgold
-            , "old_stdout" `equalsExternalBSL` stdoutold
-            , "old_stderr" `equalsExternalBSL` stderrold
-            ]
-          return vrnew -- old gateway also has a problem, so it's probably not upgrade related. Return only new gateway error.
-        _ -> return vrold -- old gateway returned Valid or Invalid
-    _ -> return vrnew -- new gateway returned Valid or Invalid
 
-verifyNew :: (MonadIO m, MonadMask m) => GuardTimeConf -> String -> m VerifyResult
-verifyNew conf inputFileName = do
+verify :: (MonadIO m, MonadMask m) => GuardTimeConf -> String -> m VerifyResult
+verify conf inputFileName = do
   (code,stdout,stderr) <- invokeGuardtimeTool conf GTExtendingCredentials "pdf-verifier"
              [ "-j"
-             , "-f", inputFileName
-             ]
-  case code of
-    ExitSuccess -> do
-      case (runGetJSON readJSObject $ BSL.toString stdout) of
-        Left s -> return . Problem stdout stderr $ "GuardTime verification result bad format: " ++ s
-        Right json -> case fromJSValue json of
-          Nothing -> return $ Problem stdout stderr "GuardTime verification result parsing error"
-          Just res -> return res
-    _ -> return $ Problem stdout stderr "GuardTime verification failed"
-
-verifyOld :: MonadIO m => GuardTimeConf -> String -> m VerifyResult
-verifyOld conf inputFileName = do
-  (code,stdout,stderr) <- invokeGuardtimeOldTool "PdfVerifier"
-             [ "-j"
-             , "-x", guardTimeOldExtendingServiceURL conf       -- http://127.0.0.1:8080/gt-extendingservice
-             , "-p", guardTimeOldControlPublicationsURL conf    -- http://127.0.0.1:8080/gt-controlpublications.bin
              , "-f", inputFileName
              ]
   case code of
