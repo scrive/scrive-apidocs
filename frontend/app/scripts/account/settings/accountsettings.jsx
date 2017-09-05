@@ -1,4 +1,6 @@
 var Backbone = require("backbone");
+var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
+var EmptyValidation = require("../../../js/validation.js").EmptyValidation;
 var Submit = require("../../../js/submits.js").Submit;
 var User = require("../../../js/account/user.js").User;
 var FlashMessages = require("../../../js/flashmessages.js");
@@ -70,6 +72,9 @@ module.exports = Backbone.Model.extend({
   },
   setPhone: function (v) {
      this.set({"phone": v});
+  },
+  phoneValid: function () {
+    return new PhoneValidation().or(new EmptyValidation()).validateData(this.phone());
   },
   companyname: function () {
      return this.get("companyname");
@@ -198,6 +203,8 @@ module.exports = Backbone.Model.extend({
       message = localization.validation.companyNumberTooLong;
     } else if (number.match(validCharsRegex) === null) {
       message = localization.validation.companyNumberInvalidChars;
+    } else if (!this.phoneValid()) {
+      message = localization.account.accountDetails.invalidPhone;
     }
     if (message !== null) {
       new FlashMessage({content: message, type: "error"});

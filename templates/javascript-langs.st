@@ -1000,6 +1000,7 @@ javascriptLocalisation =
               , detailSaved : "$_flashMessageUserDetailsSaved()$"
               , mismatchedEmails : "$_flashMessageMismatchedEmails()$"
               , invalidEmail : "$_flashMessageInvalidEmailFormat()$"
+              , invalidPhone : "$_flashMessageInvalidPhoneFormat()$"
               , emailAlreadyInUse : "$_flashCantChangeEmail()$"
               , changeEmailMailSent : "$_flashMessageChangeEmailMailSent()$"
             }
