@@ -11,6 +11,7 @@ module Amazon (
   , AmazonConfig(..)
   , deleteFile
   , exportFile
+  , newFileInAmazon
   ) where
 
 import Control.Concurrent.Async.Lifted
@@ -34,6 +35,7 @@ import qualified Data.Foldable as F
 import qualified Database.Redis as R
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.AWS.AWSConnection as AWS
+import qualified Network.AWS.S3Object as AWS
 import qualified Network.HTTP as HTTP
 
 import Amazon.Class
@@ -138,6 +140,63 @@ urlFromFile File{filename, fileid, filechecksum} =
     </> show fileid
     </> (BSC.unpack . Base16.encode $ filechecksum)
     </> (HTTP.urlEncode . BSC.unpack . BS.fromString $ filename)
+
+-- | Create a new file, by uploading content straight to AWS S3, asking AWS to
+-- perform an MD5 integrity check on the contents.
+-- If AWS config is absent, database is used for storage.
+--
+-- First creates an "empty" file using NewEmptyFileForAWS which has NULL
+-- content, but other values set in database.
+-- If upload to AWS S3 succeeds, then it updates the file using FileMovedToAWS.
+--
+-- If the upload fails then the new NewEmptyFileForAWS is purged, and a
+-- "regular" new file is created using NewFile.
+newFileInAmazon :: (AmazonMonad m, MonadBase IO m, MonadIO m, MonadLog m,
+                       MonadDB m, MonadThrow m, CryptoRNG m)
+                      => String -> BS.ByteString -> m FileID
+newFileInAmazon fName fContent = do
+  mAwsConf <- awsConfig <$> getAmazonConfig
+  case mAwsConf of
+    Nothing -> do
+      logInfo_ "newFileInAmazon: no AWS config, creating file in DB"
+      dbUpdate $ NewFile fName fContent
+    Just (awsBucket,awsAccessKey,awsSecretKey) -> do
+      startTime <- liftBase getCurrentTime
+      (fid, awsUrl) <- do
+        emptyFile <- dbUpdate $ NewEmptyFileForAWS fName fContent
+        return (fileid emptyFile, urlFromFile emptyFile)
+      Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
+      let encryptedContent = aesEncrypt aes fContent
+          s3Conn = AWS.amazonS3Connection awsAccessKey awsSecretKey
+          s3Obj = AWS.S3Object { AWS.obj_bucket = awsBucket
+                               , AWS.obj_name   = awsUrl
+                               , AWS.content_type = ""
+                               , AWS.obj_headers = []
+                               , AWS.obj_data = BSL.fromChunks [encryptedContent]
+                               }
+      result <- liftIO $ AWS.sendObjectMIC s3Conn s3Obj
+      case result of
+        Right _ -> do
+          dbUpdate $ FileMovedToAWS fid awsUrl aes
+          finishTime <- liftBase getCurrentTime
+          logInfo "newFileInAmazon: new file successfully created with content in S3" $ object [
+              "url" .= (awsBucket </> awsUrl)
+            , identifier_ fid
+            , "elapsed_time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
+            ]
+          return fid
+        Left err -> do
+          let attnMsg = "newFileInAmazon: failed to upload to AWS, purging file and creating new file in DB as fallback"
+          logAttention attnMsg $ object [
+              "url" .= (awsBucket </> awsUrl)
+            , "error" .= show err
+            , identifier_ fid
+            ]
+          dbUpdate $ PurgeFile fid
+          fallback <- dbUpdate $ NewFile fName fContent
+          logAttention "newFileInAmazon: purged file, new file created in DB as fallback" $
+            object [ identifier_ fallback ]
+          return fallback
 
 -- | Upload a document file. This means one of:
 --

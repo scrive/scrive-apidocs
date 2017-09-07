@@ -5,6 +5,7 @@ module File.Model (
     , GetMaybeFileByFileID(..)
     , GetFilesThatShouldBeMovedToAmazon(..)
     , NewFile(..)
+    , NewEmptyFileForAWS(..)
     , PurgeFile(..)
     ) where
 
@@ -55,6 +56,25 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m NewFile FileID whe
       sqlSetCmd "run_at" $ "" <?> now <+> " + interval '1 minute'"
       sqlSet "attempts" (0::Int32)
     return fileid
+
+data NewEmptyFileForAWS = NewEmptyFileForAWS String BS.ByteString
+instance (MonadDB m, MonadThrow m) => DBUpdate m NewEmptyFileForAWS File where
+  update (NewEmptyFileForAWS fname fcontent) = do
+    let fchecksum = SHA1.hash fcontent
+        fsize     = (fromIntegral . BS.length $ fcontent :: Int32)
+    runQuery_ $ sqlInsert "files" $ do
+      sqlSet "name"     fname
+      sqlSet "content"  (Nothing :: Maybe BS.ByteString)
+      sqlSet "checksum" fchecksum
+      sqlSet "size"     fsize
+      sqlResult "id"
+    fid <- fetchOne runIdentity
+    return $ File { fileid       = fid
+                  , filename     = fname
+                  , filestorage  = FileStorageMemory fcontent
+                  , filechecksum = fchecksum
+                  , filesize     = fsize
+                  }
 
 data FileMovedToAWS = FileMovedToAWS FileID String AESConf
 instance MonadDB m => DBUpdate m FileMovedToAWS () where
