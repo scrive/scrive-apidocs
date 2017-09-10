@@ -13,7 +13,6 @@ import DB
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Model.Expressions
-import Doc.SealStatus (SealStatus(..))
 import KontraPrelude
 import MinutesTime
 import User.UserID
@@ -29,7 +28,6 @@ import User.UserID
 -- the route we got to the document, i. e. signatory_links!.
 data DocumentFilter
   = DocumentFilterStatuses [DocumentStatus]   -- ^ Any of listed statuses
-  | DocumentFilterBySealStatus [SealStatus]   -- ^ Any of listed seal statuses
   | DocumentFilterByStatusClass [StatusClass] -- ^ Any of listed status classes
   | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags (warning: this is ALL tags)
   | DocumentFilterByString FilterString       -- ^ Contains the string in title, list of people involved or anywhere
@@ -50,20 +48,11 @@ data DocumentFilter
   | DocumentFilterLinkIsPartner Bool          -- ^ Only documents visible by signatory_links.is_partner equal to param
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
   | DocumentFilterByModificationTimeAfter UTCTime -- ^ That were modified after given time
-  | DocumentFilterByLatestSignTimeBefore UTCTime  -- ^ With latest sign time before given time
-  | DocumentFilterByLatestSignTimeAfter UTCTime   -- ^ With latest sign time after given time
-  | DocumentFilterNoExtentionTaskScheduled   -- ^ If no extention has been scheduled for given document (before 04.VII.2017)
   deriving Show
 
 documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m ()
 documentFilterToSQL (DocumentFilterStatuses statuses) = do
   sqlWhereIn "documents.status" statuses
-documentFilterToSQL (DocumentFilterBySealStatus statuses) = do
-  sqlWhereExists $ sqlSelect "main_files" $ do
-    sqlWhere "main_files.document_id = documents.id"
-    sqlWhere "main_files.id = (SELECT (max(id)) FROM main_files where document_id = documents.id)"
-    sqlWhereIn "main_files.seal_status" statuses
-
 
 -- Filter on statuses is much faster then on status class. We need to keep it for compatibility reasons
 -- but it should be gone with new API version since it's very expensive
@@ -92,10 +81,6 @@ documentFilterToSQL (DocumentFilterByModificationTimeAfter mtime) = do
             <> ")) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
             <+> ">=" <?> mtime)
 
-documentFilterToSQL (DocumentFilterByLatestSignTimeBefore time) = do
-  sqlWhere $ documentLatestSignTimeExpression <+> "<" <?> time
-documentFilterToSQL (DocumentFilterByLatestSignTimeAfter time) = do
-  sqlWhere $ documentLatestSignTimeExpression <+> ">" <?> time
 documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) = do
   sqlWhere $ raw $ unsafeSQL $ "(documents.mtime > '" ++ show year ++  "-" ++ show month ++ "-1')"
 documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) = do
@@ -184,10 +169,6 @@ documentFilterToSQL (DocumentFilterDeleted flag1) = do
   if flag1
      then sqlWhere "signatory_links.deleted IS NOT NULL"
      else sqlWhere "signatory_links.deleted IS NULL"
-
-documentFilterToSQL (DocumentFilterNoExtentionTaskScheduled) = do
-  sqlWhereNotExists $ sqlSelect "document_extending_jobs AS dej" $ do
-                        sqlWhere "dej.id = documents.id"
 
 data FilterString = Quoted T.Text | Unquoted T.Text
   deriving (Show, Eq)

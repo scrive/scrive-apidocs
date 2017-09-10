@@ -4,17 +4,15 @@ module Doc.Action (
   , postDocumentCanceledChange
   , postDocumentPendingChange
   , postDocumentClosedActions
-  , findAndExtendDigitalSignatures
   , findAndTimeoutDocuments
   ) where
 
 import Control.Conditional (ifM, unlessM, whenM)
-import Control.Monad.Base (MonadBase, liftBase)
+import Control.Monad.Base (MonadBase)
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG
-import Data.Time
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad)
 
@@ -26,7 +24,7 @@ import DB
 import DB.TimeZoneName
 import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
-import Doc.DigitalSignature (addDigitalSignature, extendDigitalSignature)
+import Doc.DigitalSignature (addDigitalSignature)
 import Doc.DocInfo
 import Doc.DocMails (sendClosedEmails, sendDocumentErrorEmail, sendInvitationEmails, sendRejectEmails)
 import Doc.DocSeal (sealDocument)
@@ -40,7 +38,7 @@ import Doc.Sealing.Model
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryLinkID
 import Doc.Signing.Model ()
-import GuardTime (GuardTimeConfMonad, runGuardTimeConfT)
+import GuardTime (GuardTimeConfMonad)
 import Kontra
 import KontraPrelude
 import Log.Identifier
@@ -245,62 +243,6 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
   -- Sealing or signing of document could have failed. We need to tell the caller,
   -- so that the action can be re-scheduled
   return resultisok
-
-
--- | Extend (replace with keyless) signatures of documents older than latest publication code (if they are not already extended)
-findAndExtendDigitalSignatures :: (MonadBaseControl IO m, MonadReader CronEnv m, CryptoRNG m, AmazonMonad m, MonadDB m, MonadMask m, MonadIO m, MonadLog m) => m ()
-findAndExtendDigitalSignatures = do
-  lpt <- latest_publication_time
-  gtconf <- asks ceGuardTimeConf
-  logInfo "findAndExtendDigitalSignatures: logging latest publication time" $ object [
-      "latest_publication_time" .= lpt
-    ]
-  docs <- dbQuery $ GetDocuments DocumentsOfWholeUniverse
-            [ DocumentFilterStatuses [Closed]
-            , DocumentFilterNoExtentionTaskScheduled
-            , DocumentFilterByLatestSignTimeBefore lpt
-            , DocumentFilterBySealStatus
-              [ Guardtime{ extended = False, private = True }
-              , Guardtime{ extended = False, private = False }
-              ]
-            ] [] 100
-  when (not (null docs)) $ do
-    logInfo "findAndExtendDigitalSignatures: considering documents" $ object [
-        "documents" .= length docs
-      ]
-  startTime <- liftBase getCurrentTime
-  templates <- asks ceTemplates
-  (alreadyExtended, failedExtend, success) <- foldM (\(ext,f,s) d ->
-    case documentsealstatus d of
-      Just (Guardtime{ extended = False }) -> do
-        r <- withDocument d . runGuardTimeConfT gtconf . runTemplatesT (def, templates) $ extendDigitalSignature
-        commit
-        if r then return (ext,f,s+1)
-             else return (ext,f+1,s)
-      _ -> return (ext+1,f,s)
-    ) (0,0,0) docs
-  finishTime <- liftBase getCurrentTime
-  logInfo "findAndExtendDigitalSignatures: done considering documents" $ object [
-      "documents_already_extended" .= (alreadyExtended :: Int)
-    , "documents_failed_extending" .= (failedExtend :: Int)
-    , "documents_successfully_extended" .= (success :: Int)
-    , "elapsed_time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
-    ]
-
--- | Estimate when the latest Guardtime publication code was published
--- (sometime after the 15th of the month).
-latest_publication_time :: (MonadDB m, MonadThrow m, MonadTime m) => m UTCTime
-latest_publication_time = localTimeToUTC utc . f . utcToLocalTime utc <$> currentTime
-  where
-    f LocalTime{..} = LocalTime {
-        localDay = if localDay > fifteenth
-          then fifteenth
-          else addGregorianMonthsClip (-1) fifteenth
-      , localTimeOfDay = midnight
-      }
-      where
-        fifteenth = fromGregorian year month 15
-        (year, month, _) = toGregorian localDay
 
 stateMismatchError :: (MonadBase IO m, MonadLog m) => String -> DocumentStatus -> Document -> m a
 stateMismatchError funame expected doc = do

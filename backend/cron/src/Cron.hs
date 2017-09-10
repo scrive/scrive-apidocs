@@ -210,9 +210,6 @@ main = do
         EmailChangeRequestsEvaluation -> do
           runDB . dbUpdate $ DeleteExpiredEmailChangeRequests
           return . RerunAfter $ ihours 1
-        FindAndExtendDigitalSignatures -> do
-          runCronEnv findAndExtendDigitalSignatures
-          return . RerunAfter $ iminutes 5
         FindAndTimeoutDocuments -> do
           runCronEnv findAndTimeoutDocuments
           return . RerunAfter $ iminutes 10

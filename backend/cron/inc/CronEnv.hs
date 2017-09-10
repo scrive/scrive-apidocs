@@ -17,18 +17,16 @@ import qualified Data.ByteString as BS
 import qualified Database.Redis as R
 
 import Amazon
-import CronConf (CronConf, cronAmazonConfig, cronGuardTimeConf, cronMailNoreplyAddress, cronSalesforceConf)
+import CronConf (CronConf, cronAmazonConfig, cronMailNoreplyAddress, cronSalesforceConf)
 import DB
 import File.FileID (FileID)
-import GuardTime (GuardTimeConf)
 import KontraPrelude
 import Salesforce.Conf
 import Templates (KontrakcjaGlobalTemplates)
 import qualified MemCache
 
 data CronEnv = CronEnv {
-    ceGuardTimeConf      :: GuardTimeConf
-  , ceSalesforceConf     :: Maybe SalesforceConf
+    ceSalesforceConf     :: Maybe SalesforceConf
   , ceTemplates          :: KontrakcjaGlobalTemplates
   , ceMailNoreplyAddress :: String
   }
@@ -43,8 +41,8 @@ runCronEnv :: MonadBase IO m
 runCronEnv cronConf localCache globalCache templates x = do
   let amazoncfg     = AmazonConfig (cronAmazonConfig cronConf)
                       localCache globalCache
-      schedulerData = CronEnv (cronGuardTimeConf cronConf)
-                      (cronSalesforceConf cronConf) templates (cronMailNoreplyAddress cronConf)
+      schedulerData = CronEnv (cronSalesforceConf cronConf) templates
+                      (cronMailNoreplyAddress cronConf)
   runAmazonMonadT amazoncfg $ runReaderT (unCronEnvT x) schedulerData
 
 type CronEnvM = CronEnvT (AmazonMonadT (DBT (CryptoRNGT (LogT IO)))) CronEnv

@@ -3,6 +3,7 @@ module Cron.Migrations (
   , removeFindAndDoPostDocumentClosedActions
   , addInvoicingJob
   , addPlanhatJob
+  , removeFindAndExtendDigitalSignaturesFromCronJobs
 ) where
 
 import Control.Monad.Catch
@@ -41,6 +42,16 @@ removeRecurlySynchronizationFromCronJobs = Migration {
   , mgrFrom = 4
   , mgrAction = StandardMigration $ do
       n <- runSQL "DELETE FROM cron_jobs WHERE id = 'recurly_synchronization'"
+      when (n /= 1) $ do
+        $unexpectedErrorM "Wrong amount of rows deleted"
+  }
+
+removeFindAndExtendDigitalSignaturesFromCronJobs :: (MonadDB m, MonadThrow m) => Migration m
+removeFindAndExtendDigitalSignaturesFromCronJobs = Migration {
+    mgrTableName = tblName tableCronJobs
+  , mgrFrom = 8
+  , mgrAction = StandardMigration $ do
+      n <- runSQL "DELETE FROM cron_jobs WHERE id = 'find_and_extend_digital_signatures'"
       when (n /= 1) $ do
         $unexpectedErrorM "Wrong amount of rows deleted"
   }

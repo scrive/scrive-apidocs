@@ -21,7 +21,6 @@ data JobType
   | DocumentsPurge
   | DocumentsArchiveIdle
   | EmailChangeRequestsEvaluation
-  | FindAndExtendDigitalSignatures
   | FindAndTimeoutDocuments
   | InvoicingUpload
   | MailEventsProcessing
@@ -45,7 +44,6 @@ jobTypeMapper = [
   , (DocumentsPurge, "documents_purge")
   , (DocumentsArchiveIdle, "documents_archive_idle")
   , (EmailChangeRequestsEvaluation, "email_change_requests_evaluation")
-  , (FindAndExtendDigitalSignatures, "find_and_extend_digital_signatures")
   , (FindAndTimeoutDocuments, "find_and_timeout_documents")
   , (InvoicingUpload, "invoice_upload")
   , (MailEventsProcessing, "mail_events_processing")

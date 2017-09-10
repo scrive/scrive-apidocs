@@ -46,7 +46,7 @@ tableCronWorkers = tblTable {
 tableCronJobs :: Table
 tableCronJobs = tblTable {
     tblName = "cron_jobs"
-  , tblVersion = 8
+  , tblVersion = 9
   , tblColumns = [
     -- Type of the task.
       tblColumn { colName = "id", colType = TextT, colNullable = False }
@@ -79,7 +79,6 @@ tableCronJobs = tblTable {
       , "documents_archive_idle"
       , "documents_purge"
       , "email_change_requests_evaluation"
-      , "find_and_extend_digital_signatures"
       , "find_and_timeout_documents"
       , "invoice_upload"
       , "mail_events_processing"

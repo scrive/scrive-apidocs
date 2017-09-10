@@ -56,4 +56,5 @@ kontraMigrations = [
   , createAmazonUploadConsumers
   , createAmazonUploadJobs
   , createJointTypeCompanyIDTimeIndexForChargeableItems
+  , removeFindAndExtendDigitalSignaturesFromCronJobs
   ]

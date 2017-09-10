@@ -7,16 +7,15 @@ import Data.Functor
 import Test.Framework
 import qualified Data.ByteString as BS
 
-import CronConf (CronConf(cronDBConfig))
-import CronEnv
 import DB
-import Doc.Action (findAndExtendDigitalSignatures)
+import Doc.DigitalSignature (extendDigitalSignature)
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentMonad (theDocument, withDocumentID)
 import Doc.DocUtils
 import Doc.Model
 import Doc.SealStatus (SealStatus(..))
+import GuardTime
 import KontraPrelude
 import MinutesTime
 import Templates
@@ -46,15 +45,22 @@ testExtendDigitalSignatures = do
     -- Append a file to tweak the modification time
     dbUpdate $ AppendSealedFile file1 Guardtime{ extended = False, private = False } actor
     dbUpdate $ AppendExtendedSealedFile file2 Guardtime{ extended = False, private = False } actor
-    runCronEnv' findAndExtendDigitalSignatures
+
+    -- Run extending
+    filecache <- MemCache.new BS.length 52428800
+    templates <- liftBase readGlobalTemplates
+    let ac = AWS.AmazonConfig {
+              AWS.awsConfig = Nothing
+            , AWS.awsLocalCache = filecache
+            , AWS.awsGlobalCache = Nothing
+            }
+    void
+      . runTemplatesT (def, templates)
+      . runGuardTimeConfT def
+      . AWS.runAmazonMonadT ac
+      $ extendDigitalSignature
+
   withDocumentID did $ do
     documentsealstatus <$> theDocument >>= \case
       Just (Guardtime{ extended = True }) -> assertSuccess
       s -> assertFailure $ "Unexpected extension status: " ++ show s
-
-runCronEnv' :: MonadBase IO m => CronEnvT (AWS.AmazonMonadT m) CronEnv a -> m a
-runCronEnv' m = do
-  let cronConf = def { cronDBConfig = "" }
-  templates <- liftBase readGlobalTemplates
-  filecache <- MemCache.new BS.length 52428800
-  runCronEnv cronConf filecache Nothing templates m
