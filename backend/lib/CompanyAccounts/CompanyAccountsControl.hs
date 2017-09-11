@@ -33,6 +33,7 @@ import KontraPrelude
 import Mails.SendMail
 import MinutesTime
 import User.Action
+import User.CallbackScheme.Model
 import User.Email
 import User.History.Model
 import User.UserAccountRequest
@@ -250,6 +251,7 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
     (True,True) -> do
             -- We remove user, so we also want to drop all invites - they should be invalid at this point anyway.
              _ <- dbUpdate $ RemoveUserCompanyInvites (userid removeuser)
+             _ <- dbUpdate $ DeleteUserCallbackScheme $ userid removeuser
              _ <- dbUpdate $ DeleteUser (userid removeuser)
              runJSONGenT $ value "removed" True
     (True,False) -> do

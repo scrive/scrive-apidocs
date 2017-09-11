@@ -129,7 +129,9 @@ module.exports = React.createClass({
                   <InfoTextInput
                     ref="phone"
                     name="phone"
+                    className={!model.phoneValid() ? "redborder" : ""}
                     value={model.phone()}
+                    infotext={localization.phonePlaceholder}
                     onChange={this.onPhoneChange}
                   />
                 </td>

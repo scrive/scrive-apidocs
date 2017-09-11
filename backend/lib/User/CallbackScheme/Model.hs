@@ -15,6 +15,7 @@
 
 module User.CallbackScheme.Model (
       UserCallbackScheme(..)
+    , DeleteUserCallbackScheme(..)
     , GetUserCallbackSchemeByUserID(..)
     , UpdateUserCallbackScheme(..)
   ) where

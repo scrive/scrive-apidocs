@@ -74,6 +74,7 @@ import MinutesTime
 import PadApplication.Data (padAppModeFromText)
 import Routing
 import Theme.Control
+import User.CallbackScheme.Model
 import User.Email
 import User.History.Model
 import User.UserControl
@@ -287,6 +288,7 @@ handleDeleteInvite cid uid = onlySalesOrAdmin $ do
 handleDeleteUser :: Kontrakcja m => UserID -> m ()
 handleDeleteUser uid = onlySalesOrAdmin $ do
   _ <- dbUpdate $ RemoveUserCompanyInvites uid
+  _ <- dbUpdate $ DeleteUserCallbackScheme uid
   _ <- dbUpdate $ DeleteUser uid
   return ()
 

@@ -3,6 +3,7 @@ module Doc.DigitalSignature
   , extendDigitalSignature
   ) where
 
+import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -13,7 +14,7 @@ import System.FilePath ((</>))
 import Text.StringTemplates.Templates (TemplatesMonad)
 import qualified Data.ByteString as BS
 
-import Amazon (AmazonMonad)
+import Amazon (AmazonMonad, newFileInAmazon)
 import DB (dbUpdate)
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.Data.Document (documentsealedfile)
@@ -99,7 +100,9 @@ extendDigitalSignature = do
     -- /verify service can detect and provide an extended version if
     -- the verified document was extensible.
 
-digitallyExtendFile :: (TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadLog m, MonadIO m, MonadMask m, DocumentMonad m, GuardTimeConfMonad m)
+digitallyExtendFile :: (AmazonMonad m, TemplatesMonad m, MonadBase IO m,
+                        MonadThrow m, CryptoRNG m, MonadLog m, MonadIO m,
+                        MonadMask m, DocumentMonad m, GuardTimeConfMonad m)
                     => UTCTime -> FilePath -> String -> m Bool
 digitallyExtendFile ctxtime pdfpath pdfname = do
   gtconf <- getGuardTimeConf
@@ -129,7 +132,7 @@ digitallyExtendFile ctxtime pdfpath pdfname = do
     Nothing -> return False
     Just (extendedfilepdf, status) -> do
       logInfo_ "Adding new extended file to DB"
-      sealedfileid <- dbUpdate $ NewFile pdfname extendedfilepdf
+      sealedfileid <- newFileInAmazon pdfname extendedfilepdf
       logInfo "Finished adding extended file to DB, adding to document" $ object [
           identifier_ sealedfileid
         ]
