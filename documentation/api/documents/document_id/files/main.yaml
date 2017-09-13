@@ -20,8 +20,13 @@ get:
   responses:
     200:
       description: The PDF file.
-    # FIXME
-    # $document_id$ is closed but sealed PDF is not yet available
-    # 503 Service Unavailable
-    # document_state_error
-    # The sealed PDF for the document is not ready yet, please wait and try again.
+    503:
+      description: |
+        Error message:
+        _The sealed PDF for the document is not ready yet, please wait and try again._
+
+        This happens immediately after all signatories have signed (_i.e._
+        Document status is `closed`), as Scrive eSign is preparing the
+        finalised PDF.
+        It should not take more than ~10 seconds for the finalised PDF to be
+        available.
