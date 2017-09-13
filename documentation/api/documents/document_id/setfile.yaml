@@ -11,6 +11,13 @@ post:
     If the `file` parameter is blank, the main file for the document will be
     removed (if any).
 
+    _A note about anchors:_
+    Signatory field placements with anchors are only recalculated if a main file
+    was already set on the document, as it requires the relative placement in
+    original file to recalculate placements for the new file.
+    Contact us to learn more about anchors, and discuss advanced features that
+    we may be able to offer you.
+
     *OAuth Privileges required: `DOC_CREATE`*
 
   parameters:
