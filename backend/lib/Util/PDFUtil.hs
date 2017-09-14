@@ -304,7 +304,7 @@ clipHighlightImageFromPage pdfFileContent highlightFileContent pageNo = do
                               "-composite",
                                 "-transparent","white", "-fuzz", "10%", thresholdOutputPath,
                                 highlightImagePath,
-                                maskedHighlightOutputPath
+                                "PNG32:" ++ maskedHighlightOutputPath
                               ] ""
                           case clipCode of
                             ExitFailure code -> do
