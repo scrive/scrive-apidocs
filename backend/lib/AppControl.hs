@@ -134,7 +134,7 @@ appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> HandlerM Respo
 appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler_id" $ do
   realStartTime <- liftBase getCurrentTime
   temp <- liftIO getTemporaryDirectory
-  let quota = 10000000
+  let quota = 30000000
       bodyPolicy = defaultBodyPolicy temp quota quota quota
   logInfo_ "Incoming request, decoding body"
   withDecodedBody bodyPolicy $ do
