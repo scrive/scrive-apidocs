@@ -23,7 +23,6 @@ module Doc.Data.SignatoryField (
   , getFieldByIdentity
   , getTextValueOfField
   , fieldTextValue
-  , TextCustomValidation(..)
   ) where
 
 import Control.Monad.Catch
@@ -291,14 +290,7 @@ data SignatoryTextField = TextField {
   , stfObligatory             :: !Bool
   , stfShouldBeFilledBySender :: !Bool
   , stfPlacements             :: ![FieldPlacement]
-  , stfCustomValidation       :: !(Maybe TextCustomValidation)
 } deriving (Show, Typeable)
-
-data TextCustomValidation = TextCustomValidation {
-    tcvPattern         :: !String
-  , tcvPositiveExample :: !String
-  , tcvTooltip         :: !String
-  } deriving (Show, Typeable)
 
 data SignatoryCheckboxField = CheckboxField {
     schfID                     :: !SignatoryFieldID
@@ -308,6 +300,7 @@ data SignatoryCheckboxField = CheckboxField {
   , schfShouldBeFilledBySender :: !Bool
   , schfPlacements             :: ![FieldPlacement]
 } deriving (Show, Typeable)
+
 
 data SignatorySignatureField = SignatureField {
     ssfID                     :: !SignatoryFieldID
@@ -351,9 +344,6 @@ signatoryFieldsSelectors = [
   , "signatory_link_fields.editable_by_signatory"
   , "ARRAY(" <> placements <> ")"
   , "signatory_link_fields.radio_button_group_values"
-  , "signatory_link_fields.custom_validation_pattern"
-  , "signatory_link_fields.custom_validation_positive_example"
-  , "signatory_link_fields.custom_validation_tooltip"
   ]
   where
     placements = "SELECT (id, xrel, yrel, wrel, hrel, fsrel, page, tip, ARRAY(" <> anchors <> "))::field_placement FROM field_placements WHERE field_placements.signatory_field_id = signatory_link_fields.id ORDER BY field_placements.id"
@@ -361,14 +351,13 @@ signatoryFieldsSelectors = [
     anchors = "SELECT (text, index)::placement_anchor FROM placement_anchors WHERE placement_anchors.field_placement_id = field_placements.id ORDER BY placement_anchors.id"
 
 
-
-type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe Bool, Maybe FileID, Bool, Bool, Maybe Bool, CompositeArray1 FieldPlacement, Maybe (Array1 String), Maybe String, Maybe String, Maybe String)
+type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe Bool, Maybe FileID, Bool, Bool, Maybe Bool, CompositeArray1 FieldPlacement, Maybe (Array1 String))
 
 instance PQFormat SignatoryField where
   pqFormat = const "%signatory_field"
 
 instance CompositeFromSQL SignatoryField where
-  toComposite (sfid, ftype, mname_order, custom_name, is_author_filled, mvalue_text, mvalue_bool, mvalue_file, obligatory, should_be_filled_by_sender, meditable_by_signatory, CompositeArray1 placements, mradio_button_group_values, mcustom_validation_pattern, mcustom_validation_positive_example, mcustom_validation_tooltip) =
+  toComposite (sfid, ftype, mname_order, custom_name, is_author_filled, mvalue_text, mvalue_bool, mvalue_file, obligatory, should_be_filled_by_sender, meditable_by_signatory, CompositeArray1 placements, mradio_button_group_values) =
     case ftype of
       NameFT -> SignatoryNameField $ NameField {
           snfID                     = sfid
@@ -423,7 +412,6 @@ instance CompositeFromSQL SignatoryField where
         , stfObligatory             = obligatory
         , stfShouldBeFilledBySender = should_be_filled_by_sender
         , stfPlacements             = placements
-        , stfCustomValidation       = TextCustomValidation <$> mcustom_validation_pattern <*> mcustom_validation_positive_example <*> mcustom_validation_tooltip
       }
       CheckboxFT -> SignatoryCheckboxField $ CheckboxField {
           schfID                     = sfid

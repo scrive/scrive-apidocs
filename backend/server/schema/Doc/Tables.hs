@@ -395,7 +395,7 @@ ctPlacementAnchor = CompositeType {
 tableSignatoryLinkFields :: Table
 tableSignatoryLinkFields = tblTable {
     tblName = "signatory_link_fields"
-  , tblVersion = 15
+  , tblVersion = 14
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
@@ -409,40 +409,28 @@ tableSignatoryLinkFields = tblTable {
     , tblColumn { colName = "value_bool", colType = BoolT }
     , tblColumn { colName = "value_file_id", colType = BigIntT }
     , tblColumn { colName = "radio_button_group_values", colType = ArrayT TextT }
-    , tblColumn { colName = "editable_by_signatory", colType = BoolT }
-    , tblColumn { colName = "custom_validation_pattern", colType = TextT, colNullable = True }
-    , tblColumn { colName = "custom_validation_positive_example", colType = TextT, colNullable = True }
-    , tblColumn { colName = "custom_validation_tooltip", colType = TextT, colNullable = True }
+   ,  tblColumn { colName = "editable_by_signatory", colType = BoolT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [
-      Check "check_signatory_link_fields_name_fields_are_well_defined" $
-        "type = 1 AND name_order IS NOT NULL AND value_bool IS NULL AND value_file_id IS NULL AND value_text IS NOT NULL AND radio_button_group_values IS NULL"
-        <+> "OR type <> 1"
-    , Check "check_signatory_link_fields_signatures_are_well_defined" $
-        "type = 8 AND name_order IS NULL AND value_bool IS NULL AND value_text IS NULL AND radio_button_group_values IS NULL"
-        <+> "OR type <> 8"
-    , Check "check_signatory_link_fields_checkboxes_are_well_defined" $
-        "type = 9 AND name_order IS NULL AND value_bool IS NOT NULL AND value_file_id IS NULL AND value_text IS NULL AND radio_button_group_values IS NULL"
-        <+> "OR type <> 9"
-    , Check "check_signatory_link_fields_other_text_fields_are_well_defined" $
-        "(type = ANY (ARRAY[3, 4, 5, 6, 7, 10])) AND name_order IS NULL AND value_bool IS NULL AND value_file_id IS NULL AND value_text IS NOT NULL AND radio_button_group_values IS NULL"
-        <+> "OR NOT (type = ANY (ARRAY[3, 4, 5, 6, 7, 10]))"
-    , Check "check_signatory_link_fields_radio_buttons_are_well_defined" $
-        "type = 11 AND name_order IS NULL AND value_bool IS NULL AND value_file_id IS NULL AND radio_button_group_values IS NOT NULL"
-        <+> "OR type <> 11"
-    , Check "check_signatory_link_fields_editable_by_signatory__well_defined" $
-        "(type = ANY (ARRAY[6, 10])) AND editable_by_signatory IS NOT NULL"
-        <+> "OR (type <> ALL (ARRAY[6, 10])) AND editable_by_signatory IS NULL"
-    , Check "check_signatory_link_fields_custom_validations_are_well_defined" $
-            "type <> 7 \
-            \AND custom_validation_pattern IS NULL \
-            \AND custom_validation_positive_example IS NULL \
-            \AND custom_validation_tooltip IS NULL \
-         \OR type = 7 \
-            \AND custom_validation_pattern IS NOT NULL \
-            \AND custom_validation_positive_example IS NOT NULL \
-            \AND custom_validation_tooltip IS NOT NULL"
+          Check "check_signatory_link_fields_name_fields_are_well_defined" $
+            "type = 1 AND name_order IS NOT NULL AND value_bool IS NULL AND value_file_id IS NULL AND value_text IS NOT NULL AND radio_button_group_values IS NULL"
+            <+> "OR type <> 1"
+        , Check "check_signatory_link_fields_signatures_are_well_defined" $
+            "type = 8 AND name_order IS NULL AND value_bool IS NULL AND value_text IS NULL AND radio_button_group_values IS NULL"
+            <+> "OR type <> 8"
+        , Check "check_signatory_link_fields_checkboxes_are_well_defined" $
+            "type = 9 AND name_order IS NULL AND value_bool IS NOT NULL AND value_file_id IS NULL AND value_text IS NULL AND radio_button_group_values IS NULL"
+            <+> "OR type <> 9"
+        , Check "check_signatory_link_fields_other_text_fields_are_well_defined" $
+            "(type = ANY (ARRAY[3, 4, 5, 6, 7, 10])) AND name_order IS NULL AND value_bool IS NULL AND value_file_id IS NULL AND value_text IS NOT NULL AND radio_button_group_values IS NULL"
+            <+> "OR NOT (type = ANY (ARRAY[3, 4, 5, 6, 7, 10]))"
+        , Check "check_signatory_link_fields_radio_buttons_are_well_defined" $
+            "type = 11 AND name_order IS NULL AND value_bool IS NULL AND value_file_id IS NULL AND radio_button_group_values IS NOT NULL"
+            <+> "OR type <> 11"
+        , Check "check_signatory_link_fields_editable_by_signatory__well_defined" $
+            "(type = ANY (ARRAY[6, 10])) AND editable_by_signatory IS NOT NULL"
+            <+> "OR (type <> ALL (ARRAY[6, 10])) AND editable_by_signatory IS NULL"
     ]
   , tblForeignKeys = [
         (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
@@ -474,9 +462,6 @@ ctSignatoryField = CompositeType {
   , CompositeColumn { ccName = "editable_by_signatory", ccType = BoolT }
   , CompositeColumn { ccName = "placements", ccType = ArrayT $ CustomT "field_placement" }
   , CompositeColumn { ccName = "radio_button_group_values", ccType = ArrayT TextT }
-  , CompositeColumn { ccName = "custom_validation_pattern", ccType = TextT }
-  , CompositeColumn { ccName = "custom_validation_positive_example", ccType = TextT }
-  , CompositeColumn { ccName = "custom_validation_tooltip", ccType = TextT }
   ]
 }
 

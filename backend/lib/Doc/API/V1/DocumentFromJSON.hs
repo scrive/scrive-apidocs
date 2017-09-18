@@ -313,7 +313,6 @@ instance FromJSValueWithUpdate SignatoryTextField where
                 , stfObligatory = obligatory
                 , stfShouldBeFilledBySender = filledbysender
                 , stfPlacements = placements
-                , stfCustomValidation = msf >>= stfCustomValidation -- Custom validations are not supported on V1 API, so we will not parse them from JSON
               }
           _ -> return Nothing
       where

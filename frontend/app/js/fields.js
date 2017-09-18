@@ -11,7 +11,6 @@ var Validation = require("./validation.js").Validation;
 var NoValidation = require("./validation.js").NoValidation;
 var EmptyValidation = require("./validation.js").EmptyValidation;
 var PhoneValidationNO = require("./validation.js").PhoneValidationNO;
-var CustomValidation = require("./customvalidations.js").CustomValidation;
 
 /* Fields of signatories */
 
@@ -29,8 +28,7 @@ var Field = exports.Field = Backbone.Model.extend({
         editable_by_signatory: false,
         hasChanged: false,
         radio_button_values: [],
-        next_radio_button_values: [],
-        custom_validation: null
+        next_radio_button_values: []
     },
     initialize : function(args){
         var field = this;
@@ -52,16 +50,6 @@ var Field = exports.Field = Backbone.Model.extend({
             value: args.selected_value || "",
             radio_button_values: values,
             next_radio_button_values: _.rest(values, 0)
-          });
-        }
-
-        if (args.custom_validation) {
-          this.set({
-            custom_validation: new CustomValidation({
-              pattern: args.custom_validation.pattern,
-              tooltipMessage: args.custom_validation.tooltip,
-              validExample: args.custom_validation.positive_example
-            })
           });
         }
 
@@ -174,7 +162,7 @@ var Field = exports.Field = Backbone.Model.extend({
     readyForSign : function(){
         if (this.isEmail() && this.isOptional() && this.value() != "") {
           return new EmailValidation().validateData(this.value());
-        } else if (this.isOptional() && !(this.isCustom() && this.hasCustomValidation())) {
+        } else if (this.isOptional()) {
             return true;
         } else if (this.isFstName() || this.isSndName()) {
             return new NotEmptyValidation().validateData(this.value());
@@ -197,20 +185,6 @@ var Field = exports.Field = Backbone.Model.extend({
               )
            ) {
             return new PhoneValidation().validateData(this.value());
-        } else if (this.isCustom() && this.hasCustomValidation()) {
-          var result = true;
-
-          var customValidationResult = (
-            this.customValidation().validate(this.value()) !== false
-          );
-
-          if (this.isObligatory()) {
-            result = ((this.value() != "") && customValidationResult);
-          } else {
-            result = ((this.value() == "") || customValidationResult)
-          }
-
-          return result;
         } else if (this.isText() && (this.value() != "")) {
             return true;
         } else if (this.canBeIgnored()) {
@@ -530,20 +504,11 @@ var Field = exports.Field = Backbone.Model.extend({
       if (this.isEmail() || this.isMobile) {
         result["editable_by_signatory"] = this.editablebysignatory();
       }
-
       if (this.isRadioGroup()) {
         result["values"] = (
           this.areRadioButtonValuesUnique() ? this.radioButtonValues() : this.get("radio_button_values")
         );
         result["selected_value"] = (this.value() == "" ? null : this.value());
-      }
-
-      if (this.isCustom() && this.hasCustomValidation()) {
-        result["custom_validation"] = {
-          pattern: this.customValidation().pattern(),
-          positive_example: this.customValidation().validExample(),
-          tooltip: this.customValidation().tooltipMessage()
-        };
       }
 
       return result;
@@ -718,15 +683,6 @@ var Field = exports.Field = Backbone.Model.extend({
       });
 
       return allUnique;
-    },
-    customValidation: function () {
-      return this.get("custom_validation");
-    },
-    hasCustomValidation: function () {
-      return (this.customValidation() !== null);
-    },
-    setCustomValidation: function (newValue) {
-      return this.set("custom_validation", newValue);
     }
 });
 

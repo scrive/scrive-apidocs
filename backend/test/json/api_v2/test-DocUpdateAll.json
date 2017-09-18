@@ -124,22 +124,7 @@
           "value": "#☭ҖEMAIL",
           "is_obligatory": true,
           "should_be_filled_by_sender": false,
-          "placements": [],
-          "custom_validation": null
-        },
-        {
-          "type": "text",
-          "name": "#☭ҖTEXT_FIELD_WITH_VALIDATION",
-          "value": "#☭ҖEMAIL",
-          "is_obligatory": true,
-          "should_be_filled_by_sender": false,
-          "placements": [],
-          "custom_validation" :
-            {
-              "pattern" : "^a.*$",
-              "positive_example" : "abc",
-              "tooltip" : "type anything beginning with 'a'"
-            }
+          "placements": []
         },
         {
           "type": "checkbox",

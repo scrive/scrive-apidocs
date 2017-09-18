@@ -10,9 +10,6 @@ var isElementInViewport = require("../../common/iselementinviewport");
 var isTouchDevice = require("../../common/is_touch_device");
 var Track = require("../../common/track");
 var ModelObserverMixin = require("../model_observer_mixin");
-var PlacementTooltipView = require("./placementtooltipview");
-
-var tooltipVars = require("../../../less/signview/placementtooltip.less");
 
 var ORIGINAL_PAGE_SIZE = 950;
 
@@ -32,10 +29,6 @@ var ORIGINAL_PAGE_SIZE = 950;
 
     componentWillMount: function () {
       this._lastValue = "";
-    },
-
-    componentDidMount: function () {
-      this.positionTooltip();
     },
 
     shouldComponentUpdate: function (nextProps, nextState) {
@@ -60,7 +53,7 @@ var ORIGINAL_PAGE_SIZE = 950;
     },
 
     componentWillUpdate: function (prevProps, prevState) {
-      this._lastWidth = $(this.refs.placement.getDOMNode()).width(); // Width is mangled just before zooming.
+      this._lastWidth = $(this.getDOMNode()).width(); // Width is mangled just before zooming.
     },
 
     componentDidUpdate: function (prevProps, prevState) {
@@ -74,77 +67,13 @@ var ORIGINAL_PAGE_SIZE = 950;
     },
 
     zoomTo: function () {
-      var $node = $(this.refs.placement.getDOMNode());
+      var $node = $(this.getDOMNode());
       var offset = $node.offset();
       var middleX = offset.left + (this._lastWidth / 2);
       var middleY = offset.top - $(window).scrollTop() + ($node.height() / 2);
       var zoomPoint = {x: middleX, y: middleY};
       var zoom = ORIGINAL_PAGE_SIZE / $(window).width();
       this.context.zoomToPoint(zoomPoint, zoom);
-    },
-
-    positionTooltip: function () {
-      if (this.refs.tooltipView) {
-        var $node = $(this.refs.placement.getDOMNode());
-        var $tooltipNode = $(this.refs.tooltipView.getDOMNode());
-
-        var pageWidth = $tooltipNode.offsetParent().outerWidth();
-        var nodeLeft = $node[0].offsetLeft;
-        var nodeTop = $node[0].offsetTop;
-        var nodeWidth = $node.outerWidth();
-        var tooltipWidth = $tooltipNode.outerWidth();
-        var maxAbsoluteTooltipLeft = pageWidth - tooltipWidth - 1;
-        var minAbsoluteTooltipLeft = 1;
-
-        var newTooltipLeft = (
-          nodeLeft - ((tooltipWidth - nodeWidth) / 2)
-        );
-
-        if (nodeWidth > tooltipWidth) {
-          newTooltipLeft = (
-            nodeLeft + ((nodeWidth - tooltipWidth) / 2)
-          );
-        }
-
-        var newTooltipTop = (
-          nodeTop + $node.outerHeight() + (
-            tooltipVars.placementTooltipTopDistance * this.scale()
-          )
-        );
-
-        if (newTooltipLeft < minAbsoluteTooltipLeft) {
-          newTooltipLeft = minAbsoluteTooltipLeft;
-        } else if (newTooltipLeft > maxAbsoluteTooltipLeft) {
-          newTooltipLeft = maxAbsoluteTooltipLeft;
-        }
-
-        var tipWidth = tooltipVars.placementTooltipTopWidth * this.scale();
-        var newTipLeft = (tooltipWidth - tipWidth) / 2;
-
-        if (newTooltipLeft <= minAbsoluteTooltipLeft || newTooltipLeft >= maxAbsoluteTooltipLeft) {
-          var tooltipTextWidth = $("p", $tooltipNode).outerWidth();
-          var minTooltipTextWidth = Math.ceil(
-            tooltipVars.placementTooltipMinWidth * this.scale()
-          );
-
-          if (tooltipTextWidth > minTooltipTextWidth) {
-            newTipLeft = (
-              (nodeLeft - newTooltipLeft) + nodeWidth / 2 - (tipWidth / 2)
-            );
-
-            var maxTipLeft = tooltipWidth - (tipWidth * 2);
-            if (newTipLeft < 0) {
-              newTipLeft = tooltipVars.placementTooltipTopWidth * this.scale();
-            } else if (newTipLeft > maxTipLeft) {
-              newTipLeft = maxTipLeft;
-            }
-          }
-        }
-
-        this.refs.tooltipView.setLayout(
-          newTooltipLeft, Math.floor(newTooltipTop), newTipLeft
-        );
-      }
     },
 
     createTasks: function () {
@@ -162,7 +91,7 @@ var ORIGINAL_PAGE_SIZE = 950;
         isComplete: function () {
           return field.readyForSign();
         },
-        el: $(self.refs.placement.getDOMNode()),
+        el: $(self.getDOMNode()),
         onArrowClick: function () {
           self.startInlineEditing();
         },
@@ -199,7 +128,7 @@ var ORIGINAL_PAGE_SIZE = 950;
     },
 
     startInlineEditing: function () {
-      if (this.canSign() && !this.state.editing && isElementInViewport.part(this.refs.placement.getDOMNode())) {
+      if (this.canSign() && !this.state.editing && isElementInViewport.part(this.getDOMNode())) {
         this.setState({editing: true});
       }
     },
@@ -225,14 +154,6 @@ var ORIGINAL_PAGE_SIZE = 950;
       this.accept();
     },
 
-    handleFocus: function (e) {
-      this.positionTooltip();
-    },
-
-    handleAutoGrowth: function () {
-      this.positionTooltip();
-    },
-
     handleChange: function (value) {
       var field = this.props.model.field();
       this._lastValue = value;
@@ -255,14 +176,6 @@ var ORIGINAL_PAGE_SIZE = 950;
 
     onMouseDown: function (event) {
       event.stopPropagation();
-    },
-
-    hasTooltip: function () {
-      return (
-        this.props.model.field().isCustom() &&
-        this.props.model.field().hasCustomValidation() &&
-        this.props.model.field().customValidation().tooltipMessage()
-      );
     },
 
     render: function () {
@@ -343,55 +256,42 @@ var ORIGINAL_PAGE_SIZE = 950;
       };
 
       return (
-        <div>
-          <div
-            ref="placement"
-            onMouseDown={this.onMouseDown}
-            onClick={this.handleClick}
-            className={divClass}
-            style={divStyle}
-          >
-            <div className="placedfield-placement-wrapper">
-              <div
-                className={boxClass}
-                style={boxStyle}
-              >
-                <pre className="placedfield-placement-pre-wrapper">
-                  {field.nicetext()}
-                </pre>
-              </div>
+        <div
+          onMouseDown={this.onMouseDown}
+          onClick={this.handleClick}
+          className={divClass}
+          style={divStyle}
+        >
+          <div className="placedfield-placement-wrapper">
+            <div
+              className={boxClass}
+              style={boxStyle}
+            >
+              <pre className="placedfield-placement-pre-wrapper">
+                {field.nicetext()}
+              </pre>
             </div>
-            <InfoTextInput
-              ref="input"
-              infotext={field.nicename()}
-              value={field.value()}
-              onChange={this.handleChange}
-              style={textStyle}
-              inputStyle={inputStyle}
-              className="text-inline-editing"
-              autoGrowth={true}
-              onEnter={self.accept}
-              onTab={(e) => {
-                e.preventDefault();
-                // force InfoTextInput to trigger blur event on input elemnt
-                // because Firefox will not trigger it in this case
-                self.refs.input.blurInput();
-                self.accept();
-              }
-              }
-              onBlur={self.handleBlur}
-              onFocus={self.handleFocus}
-              onAutoGrowth={self.handleAutoGrowth}
-            />
           </div>
-          {this.hasTooltip() &&
-            <PlacementTooltipView
-              ref="tooltipView"
-              message={field.customValidation().tooltipMessage()}
-              scale={this.scale()}
-              visible={this.state.editing}
-            />
-          }
+          <InfoTextInput
+            ref="input"
+            infotext={field.nicename()}
+            value={field.value()}
+            onChange={this.handleChange}
+            style={textStyle}
+            inputStyle={inputStyle}
+            className="text-inline-editing"
+            autoGrowth={true}
+            onEnter={self.accept}
+            onTab={(e) => {
+              e.preventDefault();
+              // force InfoTextInput to trigger blur event on input elemnt
+              // because Firefox will not trigger it in this case
+              self.refs.input.blurInput();
+              self.accept();
+            }
+            }
+            onBlur={self.handleBlur}
+          />
         </div>
       );
     }

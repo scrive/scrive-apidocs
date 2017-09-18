@@ -83,18 +83,6 @@
           "should_be_filled_by_sender": false
         },
         {
-          "type": "text",
-          "name": "#☭ҖTEXT_FIELD_WITH_VALIDATION",
-          "value": "#☭ҖEMAIL",
-          "should_be_filled_by_sender": false,
-          "custom_validation" :
-            {
-              "pattern": "^a.*$",
-              "positive_example": "abc",
-              "tooltip": "type anything beginning with 'a'"
-            }
-        },
-        {
           "type": "checkbox",
           "name": "#☭ҖCHECKBOX",
           "is_checked": false

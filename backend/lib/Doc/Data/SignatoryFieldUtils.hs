@@ -16,7 +16,6 @@ module Doc.Data.SignatoryFieldUtils (
     , fieldRadioGroupValues
     , fieldsAreAlmostEqual
     , fieldsListsAreAlmostEqual
-    , fieldTextCustomValidation
   ) where
 
 import Doc.Data.SignatoryField
@@ -137,18 +136,6 @@ fieldRadioGroupValues (SignatoryTextField _)           = Nothing
 fieldRadioGroupValues (SignatoryCheckboxField _)       = Nothing
 fieldRadioGroupValues (SignatorySignatureField _)      = Nothing
 fieldRadioGroupValues (SignatoryRadioGroupField f)     = Just $ srgfValues f
-
-fieldTextCustomValidation :: SignatoryField -> Maybe TextCustomValidation
-fieldTextCustomValidation (SignatoryNameField _)           = Nothing
-fieldTextCustomValidation (SignatoryCompanyField _)        = Nothing
-fieldTextCustomValidation (SignatoryPersonalNumberField _) = Nothing
-fieldTextCustomValidation (SignatoryCompanyNumberField _)  = Nothing
-fieldTextCustomValidation (SignatoryEmailField _)          = Nothing
-fieldTextCustomValidation (SignatoryMobileField _)         = Nothing
-fieldTextCustomValidation (SignatoryTextField f)           = stfCustomValidation f
-fieldTextCustomValidation (SignatoryCheckboxField _)       = Nothing
-fieldTextCustomValidation (SignatorySignatureField _)      = Nothing
-fieldTextCustomValidation (SignatoryRadioGroupField _)     = Nothing
 
 -- fieldsAreAlmostEqual compares properties of fields that can be changed by user of scrive system.
 -- It ignores fieldID and filledByAuthor properties - since they are set automatically and are not controled by user.

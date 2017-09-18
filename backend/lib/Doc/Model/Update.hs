@@ -202,9 +202,6 @@ insertSignatoryLinkFields xs = do
     sqlSetList "should_be_filled_by_author" $ map fieldShouldBeFilledBySender fields
     sqlSetList "radio_button_group_values" $ map (fmap Array1 . fieldRadioGroupValues) fields
     sqlSetList "editable_by_signatory" $ map fieldEditableBySignatory fields
-    sqlSetList "custom_validation_pattern" $ map (fmap tcvPattern . fieldTextCustomValidation) fields
-    sqlSetList "custom_validation_positive_example" $ map (fmap tcvPositiveExample . fieldTextCustomValidation) fields
-    sqlSetList "custom_validation_tooltip" $ map (fmap tcvTooltip . fieldTextCustomValidation) fields
     sqlResult "id"
   insertFieldPlacements
     . concat

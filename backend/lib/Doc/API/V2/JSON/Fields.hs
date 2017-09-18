@@ -117,23 +117,16 @@ unjsonMobileField = pure (\v ob sfbs ebs  ps -> MobileField (unsafeSignatoryFiel
 
 
 unjsonTextField :: Ap (FieldDef SignatoryField) SignatoryTextField
-unjsonTextField  = pure (\n v ob sfbs ps -> TextField  (unsafeSignatoryFieldID 0) n (v == "") v ob sfbs ps)
+unjsonTextField  = pure (\n v  ob sfbs ps -> TextField  (unsafeSignatoryFieldID 0) n (v == "") v ob sfbs ps)
   <*> field "name"  (unsafeFromTextField  stfName) "Name of the field"
   <*> fieldDef "value" "" (unsafeFromTextField  stfValue) "Value of the field"
   <*> fieldDef "is_obligatory" True (unsafeFromTextField stfObligatory) "If is oligatory"
   <*> fieldDef "should_be_filled_by_sender" False (unsafeFromTextField stfShouldBeFilledBySender) "If should be filled by sender"
   <*> fieldDefBy "placements" [] (unsafeFromTextField stfPlacements) "Placements" (arrayOf unsonFieldPlacement)
-  <*> fieldOptBy "custom_validation" (unsafeFromTextField stfCustomValidation) "Customer defined validation of this field" unjsonTextCustomValidation
   where
     unsafeFromTextField  :: (SignatoryTextField  -> a) -> SignatoryField -> a
     unsafeFromTextField  f (SignatoryTextField  a) = f a
     unsafeFromTextField  _ _ = $unexpectedError "unsafeFromTextField "
-
-unjsonTextCustomValidation :: UnjsonDef TextCustomValidation
-unjsonTextCustomValidation = objectOf $ pure TextCustomValidation
-  <*> field "pattern" tcvPattern "Regexp pattern for field validation"
-  <*> field "positive_example" tcvPositiveExample "Example text, which matches pattern"
-  <*> field "tooltip" tcvTooltip "Tooltip for the text field"
 
 unjsonCheckboxField :: Ap (FieldDef SignatoryField) SignatoryCheckboxField
 unjsonCheckboxField  = pure (\n v ob sfbs ps -> CheckboxField  (unsafeSignatoryFieldID 0) n v ob sfbs ps)

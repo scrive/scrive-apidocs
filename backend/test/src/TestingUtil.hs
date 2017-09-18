@@ -429,10 +429,6 @@ instance Arbitrary SignatoryTextField where
     v <- arbString 1 100
     filled <- arbitrary
     p <- arbitrary
-    usecustomvalidation <- arbitrary
-    valpattern <- arbString 1 20
-    valexample <- arbString 1 20
-    valtooltip <- arbString 1 200
     return $ TextField {
          stfID = unsafeSignatoryFieldID 0
        , stfName = l
@@ -441,9 +437,6 @@ instance Arbitrary SignatoryTextField where
        , stfObligatory = True
        , stfShouldBeFilledBySender = False
        , stfPlacements = p
-       , stfCustomValidation = case usecustomvalidation of
-           False -> Nothing
-           True  -> Just $ TextCustomValidation valpattern valexample valtooltip
     }
 
 instance Arbitrary AuthenticationToSignMethod where
@@ -1048,6 +1041,5 @@ fieldForTests (TextFI l) v = SignatoryTextField $ TextField {
     , stfObligatory             = True
     , stfShouldBeFilledBySender = False
     , stfPlacements             = []
-    , stfCustomValidation       = Nothing
   }
 fieldForTests _ _  = $unexpectedError "cant use signature or checkbox fields with this function"

@@ -465,23 +465,6 @@ javascriptLocalisation =
              , radiobutton: "$_radioButtonPlacementName()$"
              , radioButtonNames: "$_radioButtonNames()$"
              , radioButtonNamesNotUnique: "$_radioButtonNamesNotUnique()$"
-             , customValidation : {
-                 custom: "$_designViewCustomValidationCustom()$"
-               , fieldValidation: "$_designViewCustomValidationFieldValidation()$"
-               , pattern: "$_designViewCustomValidationPattern()$"
-               , patternName : {
-                   email: "$_designViewCustomValidationPatternNameEmail()$"
-                 , numbers: "$_designViewCustomValidationPatternNameNumbers()$"
-                 , phone: "$_designViewCustomValidationPatternNamePhone()$"
-               }
-               , patternPlaceholder: "$_designViewCustomValidationPatternPlaceholder()$"
-               , remainingCharacters: "$_designViewCustomValidationRemainingCharacters()$"
-               , tooltipMessage: "$_designViewCustomValidationTooltipMessage()$"
-               , tooltipMessagePlaceholder: "$_designViewCustomValidationTooltipMessagePlaceholder()$"
-               , validation: "$_designViewCustomValidationValidation()$"
-               , validExample: "$_designViewCustomValidationValidExample()$"
-               , validExamplePlaceholder: "$_designViewCustomValidationValidExamplePlaceholder()$"
-             }
          }
          , validation : {
                 required: "$_nameRequired()$"

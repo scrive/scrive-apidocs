@@ -134,8 +134,7 @@
           "value": "",
           "is_obligatory": true,
           "should_be_filled_by_sender": false,
-          "placements": [],
-          "custom_validation": null
+          "placements": []
         },
         {
           "type": "text",
@@ -143,8 +142,7 @@
           "value": "",
           "is_obligatory": true,
           "should_be_filled_by_sender": false,
-          "placements": [],
-          "custom_validation": null
+          "placements": []
         },
         {
           "type": "signature",
