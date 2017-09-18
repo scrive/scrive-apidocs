@@ -12,6 +12,7 @@ var FieldSelector = require("./fieldselector");
 var FontSelector = require("./fontselector");
 var Anchor = require("./anchor");
 var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldPlacementGlobal;
+var ValidationSelector = require("./validationselector");
 
   module.exports = React.createClass({
     displayName: "TextTypesetterView",
@@ -126,6 +127,9 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
           </div>
           <More>
             <FontSelector model={model} />
+            {field.isCustom() &&
+              <ValidationSelector model={model} />
+            }
             <Anchor model={model} />
           </More>
           <Done field={field} onDone={this.done} />

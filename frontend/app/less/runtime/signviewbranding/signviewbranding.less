@@ -333,3 +333,22 @@
     }
   }
 }
+
+.signview {
+  .placement-tooltip {
+    background: mix(@actioncolor, white, 20%);
+    border: 1px solid @actioncolor;
+
+    .top {
+      #Triangle {
+        use {
+          fill: mix(@actioncolor, white, 20%);
+        }
+
+        path {
+          stroke: @actioncolor;
+        }
+      }
+    }
+  }
+}

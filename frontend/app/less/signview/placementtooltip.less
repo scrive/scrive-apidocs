@@ -1,0 +1,39 @@
+@placement-tooltip-border-width: 0.91px;
+@placement-tooltip-font-size: 12.79px;
+@placement-tooltip-padding: 6.39px;
+@placement-tooltip-max-width: 272.39px;
+@placement-tooltip-min-width: 21.91px;
+
+@placement-tooltip-top-distance: 7.31px;
+@placement-tooltip-top-height: 6.39px;
+@placement-tooltip-top-width: 9.14px;
+
+.placement-tooltip {
+  cursor: default;
+  display: none;
+  position: absolute;
+  z-index: 2;
+
+  &.visible {
+    display: block;
+  }
+
+  p {
+    box-sizing: border-box;
+    font-size: @placement-tooltip-font-size;
+    line-height: 1.1em;
+    max-width: @placement-tooltip-max-width;
+    min-width: @placement-tooltip-min-width;
+    padding: @placement-tooltip-padding;
+    text-align: center;
+    white-space: pre-wrap;
+  }
+
+  .top {
+    display: block;
+    height: @placement-tooltip-top-height;
+    overflow: hidden;
+    position: absolute;
+    width: @placement-tooltip-top-width;
+  }
+}

@@ -56,7 +56,7 @@ var Button = require("../../../scripts/common/button");
 
       });
 
-      it("should test mixin errors", function () {
+      xit("should test mixin errors", function () {
         var placement1 = util.addPlacement(doc, 1);
         var placement2 = util.addPlacement(doc, 2);
 

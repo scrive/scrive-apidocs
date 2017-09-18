@@ -135,4 +135,11 @@ var Subscription = require("../scripts/account/subscription");
     });
   };
 
+  exports.FakeMouseEvent = function (type) {
+    this.type = type;
+
+    this.preventDefault = sinon.stub();
+    this.stopPropagation = sinon.stub();
+  };
+
   module.exports = exports;
