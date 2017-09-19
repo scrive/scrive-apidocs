@@ -2,15 +2,18 @@ var React = require("react");
 var InfoTextInput = require("../../common/infotextinput");
 var Button = require("../../common/button");
 var LanguageSelect = require("./languageselect");
+var Track = require("../../common/track");
 
-var ChangePasswordPopup = require(
-  "../../../js/account/accountsettings/changepasswordpopup.js"
-);
-var ChangeEmailPopup = require(
-  "../../../js/account/accountsettings/changeemailpopup.js"
-);
+var ChangeEmailModal = require("./changeemailmodal");
+var ChangePasswordModal = require("./changepasswordmodal");
 
 module.exports = React.createClass({
+  getInitialState: function () {
+    return {
+      showChangeEmailModal: false,
+      showChangePasswordModal: false
+    };
+  },
   onFstnameChange: function (value) {
     this.props.model.setFstname(value);
   },
@@ -27,10 +30,17 @@ module.exports = React.createClass({
     this.props.model.setCompanyposition(value);
   },
   onChangeEmailClick: function () {
-    new ChangeEmailPopup(this.props.model);
+    Track.track("Click change email button");
+    this.setState({showChangeEmailModal: true});
+  },
+  onChangeEmailModalClose: function () {
+    this.setState({showChangeEmailModal: false});
   },
   onChangePasswordClick: function () {
-    new ChangePasswordPopup();
+    this.setState({showChangePasswordModal: true});
+  },
+  onChangePasswordModalClose: function () {
+    this.setState({showChangePasswordModal: false});
   },
   render: function () {
     var self = this;
@@ -163,6 +173,17 @@ module.exports = React.createClass({
             </tbody>
           </table>
         </div>
+
+        <ChangeEmailModal
+          accountSettings={this.props.model}
+          active={this.state.showChangeEmailModal}
+          onClose={this.onChangeEmailModalClose}
+        />
+
+        <ChangePasswordModal
+          active={this.state.showChangePasswordModal}
+          onClose={this.onChangePasswordModalClose}
+        />
       </div>
     );
   }
