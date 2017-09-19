@@ -105,3 +105,8 @@ main = do
       hPutStrLn h $ "location ~ ^" ++ url ++ " {"
       hPutStrLn h $ "    include " ++ include ++ ";"
       hPutStrLn h "}"
+    -- verify upload cap hack
+    hPutStrLn h $ "location ~ ^/verify {"
+    hPutStrLn h $ "    client_max_body_size 30M;"
+    hPutStrLn h $ "    include " ++ include ++ ";"
+    hPutStrLn h "}"
