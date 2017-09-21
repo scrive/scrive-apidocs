@@ -197,7 +197,7 @@ guardThatDocumentCanBeStarted doc = do
     unless (all signatoryHasValidSSNForIdentifyToView $ documentsignatorylinks doc) $ do
        apiError $ documentStateError "Some parties have an invalid personal numbers, their 'authentication_to_view' requires it to be valid and not empty."
     unless (all signatoryHasValidAuthSettings $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Some parties have an invalid personal numbers, their 'authentication_to_sign' requires it to be valid or empty."
+       apiError $ documentStateError "Some parties have an invalid personal/mobile numbers, their 'authentication_to_sign' requires it to be valid or empty."
     unless (all signatoryHasValidMobileForIdentifyToView $ documentsignatorylinks doc) $ do
        apiError $ documentStateError "Some parties have an invalid mobile number and it is required for identification to view document."
     when (isNothing $ documentfile doc) $ do
@@ -217,6 +217,7 @@ guardThatDocumentCanBeStarted doc = do
     signatoryHasValidAuthSettings sl = authToSignIsValid sl
     authToSignIsValid sl = null (getPersonalNumber sl) || case signatorylinkauthenticationtosignmethod sl of
       SEBankIDAuthenticationToSign -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
+      SMSPinAuthenticationToSign -> isJust (getFieldByIdentity MobileFI $ signatoryfields sl) && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
       _ -> True
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN   $ getPersonalNumber sl
