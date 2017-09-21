@@ -1,5 +1,15 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+#ifndef MIN_VERSION_shake
+#define MIN_VERSION_shake(a,b,c) 0
+#endif
+
+#if MIN_VERSION_shake(0,16,0)
+{-# LANGUAGE TypeFamilies               #-}
+#endif
+
 module Shake.Oracles where
 
 import Data.Maybe
@@ -34,6 +44,19 @@ newtype TeamCityBuildDBConnString = TeamCityBuildDBConnString ()
 newtype TeamCityBuildDBName = TeamCityBuildDBName ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 
+#if MIN_VERSION_shake(0,16,0)
+type instance RuleResult GhcVersion                 = String
+type instance RuleResult TeamCity                   = Bool
+type instance RuleResult NginxConfPath              = String
+type instance RuleResult BuildTarget                = String
+type instance RuleResult BuildSandbox               = String
+type instance RuleResult BuildTestConfPath          = String
+type instance RuleResult BuildDev                   = Bool
+type instance RuleResult BuildTestCoverage          = Bool
+type instance RuleResult BuildCabalConfigureOptions = String
+type instance RuleResult TeamCityBuildDBConnString  = String
+type instance RuleResult TeamCityBuildDBName        = String
+#endif
 
 addOracles :: Rules ()
 addOracles = do
