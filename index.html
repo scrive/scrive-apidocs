@@ -1804,6 +1804,14 @@ Will not change.</p>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The PDF file.</p>
 </td> </tr>
+<tr> <td>503</td> <td><p>Error message:
+<em>The sealed PDF for the document is not ready yet, please wait and try again.</em></p>
+<p>This happens immediately after all signatories have signed (<em>i.e.</em>
+Document status is <code>closed</code>), as Scrive eSign is preparing the
+finalised PDF.
+It should not take more than ~10 seconds for the finalised PDF to be
+available.</p>
+</td> </tr>
 </table>
 
 <div><a id="apiv2documents{document_id}files{file_id}{filename}"></a></div>
