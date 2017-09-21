@@ -111,6 +111,7 @@
           "value": "Some text",
           "is_obligatory": true,
           "should_be_filled_by_sender": false,
+          "custom_validation": null,
           "placements": [
             {
               "xrel": 0.5,
@@ -130,6 +131,7 @@
           "value": "Some text",
           "is_obligatory": true,
           "should_be_filled_by_sender": false,
+          "custom_validation": null,
           "placements": []
         },
         {
@@ -138,6 +140,7 @@
           "value": "Some text",
           "is_obligatory": true,
           "should_be_filled_by_sender": false,
+          "custom_validation": null,
           "placements": [
             {
               "xrel": 0.5,
@@ -157,6 +160,7 @@
           "value": "Some text",
           "is_obligatory": true,
           "should_be_filled_by_sender": false,
+          "custom_validation": null,
           "placements": [
             {
               "xrel": 0.5,

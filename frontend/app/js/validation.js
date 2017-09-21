@@ -4,6 +4,7 @@ var $ = require("jquery");
 var _ = require("underscore");
 var DigitsLettersValidation = require("./validation.js").DigitsLettersValidation;
 var NotEmptyValidation = require("./validation.js").NotEmptyValidation;
+var defs = require("./defs");
 
 
 var Validation = exports.Validation = Backbone.Model.extend({
@@ -101,7 +102,8 @@ var EmailValidation = exports.EmailValidation = Validation.extend({
                 t = t || "";
                 t = t.trim();
                 // this does not allow international characters, which for the moment is good
-                if (/^[\w._%+-]+@[a-zA-Z0-9.-]+[.][a-z]{2,}$/i.test(t))
+                var regex = new RegExp(defs.PATTERN_EMAIL, "i");
+                if (regex.test(t))
                     return true;
                 return false;
             },
@@ -117,7 +119,8 @@ var PhoneValidation = exports.PhoneValidation = Validation.extend({
                  * including country code. Prefix it with plus sign.
                  */
                 var z = t.replace(/-/g, "").replace(/\s/g, "");
-                return /^\+[0-9]{9,}$/i.test(z);
+                var regex = new RegExp(defs.PATTERN_PHONE, "i");
+                return regex.test(z);
             },
             message: "Wrong phone number format!"
     }

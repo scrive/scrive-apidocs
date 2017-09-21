@@ -30,6 +30,17 @@
   border-color: @negativecolor;
 }
 
+.greenborder,
+.greenborder:hover {
+  border: 1px solid @actioncolor !important;
+  background: fade(@actioncolor, 10%);
+}
+
+.greenborder input {
+  background: transparent;
+  border-color: @actioncolor;
+}
+
 .designview .placedfield.invalid {
   background-color: @negativecolor;
 }

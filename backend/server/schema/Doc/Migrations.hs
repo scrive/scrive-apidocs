@@ -7,6 +7,7 @@ module Doc.Migrations (
   , addRequiredFlagToSignatoryAttachment
   , signatoryLinkFieldsAddRadioGroupValues
   , addEditableBySignatoryFlag
+  , signatoryLinkFieldsAddCustomValidation
 ) where
 
 import Data.Int
@@ -129,7 +130,7 @@ signatoryLinkFieldsAddRadioGroupValues = Migration {
         , Check "check_signatory_link_fields_radio_buttons_are_well_defined" $
             "type = 11 AND name_order IS NULL AND value_bool IS NULL AND value_file_id IS NULL AND radio_button_group_values IS NOT NULL"
             <+> "OR type <> 11"
-        ]
+          ]
   }
 
 addEditableBySignatoryFlag :: MonadDB m  => Migration m
@@ -152,3 +153,25 @@ addEditableBySignatoryFlag = Migration {
           ]
 
     }
+
+signatoryLinkFieldsAddCustomValidation :: MonadDB m => Migration m
+signatoryLinkFieldsAddCustomValidation = Migration {
+    mgrTableName = tblName tableSignatoryLinkFields
+  , mgrFrom = 14
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "signatory_link_fields" [
+          sqlAddColumn tblColumn { colName = "custom_validation_pattern", colType = TextT, colNullable = True }
+        , sqlAddColumn tblColumn { colName = "custom_validation_positive_example", colType = TextT, colNullable = True }
+        , sqlAddColumn tblColumn { colName = "custom_validation_tooltip", colType = TextT, colNullable = True }
+        ]
+      runQuery_ $ sqlAlterTable "signatory_link_fields"  $ map sqlAddCheck [
+          Check "check_signatory_link_fields_custom_validations_are_well_defined" $
+                    "custom_validation_pattern IS NULL \
+                \AND custom_validation_positive_example IS NULL \
+                \AND custom_validation_tooltip IS NULL \
+             \OR type = 7 \
+                \AND custom_validation_pattern IS NOT NULL \
+                \AND custom_validation_positive_example IS NOT NULL \
+                \AND custom_validation_tooltip IS NOT NULL"
+        ]
+  }
