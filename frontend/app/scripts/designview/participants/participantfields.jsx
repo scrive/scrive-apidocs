@@ -8,6 +8,7 @@ var ParticipantNotNamedField = require("./participantnotnamedfield");
 var ParticipantAddField = require("./participantaddfield");
 var _ = require("underscore");
 var CsvSignatoryDesignPopup = require("../../../js/designview/csvsignatorydesign.js").CsvSignatoryDesignPopup;
+var ParticipantMobileField = require("./participantmobilefield");
 
 module.exports = React.createClass({
 
@@ -34,6 +35,14 @@ module.exports = React.createClass({
           _.map(sig.fields(), function (f, i) {
             if (f.isBlank()) {
               return (<ParticipantSelectField model={f} key={"select-field" + f.cid}/>);
+            } else if (f.isMobile()) {
+              return (
+                <ParticipantMobileField
+                  last={i == lastTextFieldIndex}
+                  model={f}
+                  key={"field-" + f.cid}
+                />
+              );
             } else if (f.noName()) {
               return (<ParticipantNotNamedField
                          last={i == lastTextFieldIndex}
