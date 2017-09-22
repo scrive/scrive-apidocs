@@ -294,6 +294,12 @@ getFileFromRedis cache rkey = do
         void $ tryPutMVar semaphore ()
         return mempty
 
+data GetContentRetry = RegularRetry
+                     | RetryEncoded
+                     | AnotherRetryEncoded
+                     | NoRetry
+  deriving Show
+
 getFileContents
   :: forall m. (MonadBase IO m, MonadLog m, MonadThrow m)
   => S3Action
@@ -301,7 +307,7 @@ getFileContents
   -> Maybe (R.Connection, RedisKey)
   -> m BS.ByteString
 getFileContents s3action File{..} mredis = localData fileData $ do
-  getContent True filestorage >>= verifyContent >>= cacheContent
+  getContent RegularRetry filestorage >>= verifyContent >>= cacheContent
   where
     fileData = [
         identifier_ fileid
@@ -309,7 +315,7 @@ getFileContents s3action File{..} mredis = localData fileData $ do
       , "filesize" .= filesize
       ]
 
-    getContent :: Bool -> FileStorage -> m BS.ByteString
+    getContent :: GetContentRetry -> FileStorage -> m BS.ByteString
     getContent _ (FileStorageMemory content) = return $ content
     getContent retry fs@(FileStorageAWS url aes) = do
       (result, timeDiff) <- do
@@ -330,11 +336,13 @@ getFileContents s3action File{..} mredis = localData fileData $ do
           logAttention "Fetching file from AWS failed" $ object [
               "error" .= show err
             , "elapsed_time" .= timeDiff
-            , "retry" .= retry
+            , "retry" .= show retry
             ]
-          if (retry)
-             then getContent False fs
-             else throwM $ AmazonException $ show err
+          case retry of
+            RegularRetry -> getContent RetryEncoded fs
+            RetryEncoded -> getContent AnotherRetryEncoded $ FileStorageAWS (HTTP.urlEncode url) aes
+            AnotherRetryEncoded -> getContent NoRetry fs
+            NoRetry -> throwM $ AmazonException $ show err
 
     verifyContent :: BS.ByteString -> m BS.ByteString
     verifyContent content = if SHA1.hash content /= filechecksum
