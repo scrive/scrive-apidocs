@@ -88,10 +88,13 @@ getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map makeAbs
 -- urls like /no /en (where it's a lang code), should not cover anything longer, like /now-hiring
 -- 3)
 -- /pricing and /en/pricing (or /sv/pricing) should disappear for some reason because IT said so
+-- 4)
+-- /verify gets its own special rule at the end
 exceptions :: String -> [String]
 exceptions ('/':c1:c2:[]) | [c1, c2] `elem` map codeFromLang allLangs = [['/', c1, c2, '$']]
 exceptions ('/':c:[]) | c `elem` ("asd"::String) = [['/', c, '/'], ['/', c, '$']]
 exceptions "/pricing" = []
+exceptions "/verify" = []
 exceptions ('/':c1:c2:"/pricing") | [c1, c2] `elem` map codeFromLang allLangs = []
 exceptions s = [s]
 
@@ -105,3 +108,8 @@ main = do
       hPutStrLn h $ "location ~ ^" ++ url ++ " {"
       hPutStrLn h $ "    include " ++ include ++ ";"
       hPutStrLn h "}"
+    -- verify upload cap hack
+    hPutStrLn h $ "location ~ ^/verify {"
+    hPutStrLn h $ "    client_max_body_size 30M;"
+    hPutStrLn h $ "    include " ++ include ++ ";"
+    hPutStrLn h "}"
