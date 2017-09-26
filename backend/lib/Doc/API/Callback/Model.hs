@@ -7,11 +7,15 @@ module Doc.API.Callback.Model (
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
+import Control.Monad.Reader
 import Control.Monad.State
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Crypto.RNG (CryptoRNG)
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log
 
+import Amazon (AmazonMonad)
 import API.APIVersion
 import CronEnv
 import DB
@@ -26,8 +30,11 @@ import MinutesTime
 import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
 
-documentAPICallback :: (MonadIO m, MonadBase IO m, MonadLog m, MonadMask m)
-  => (forall r. CronEnvM r -> m r)
+documentAPICallback
+  :: ( MonadIO m, MonadBase IO m, MonadLog m, MonadMask m
+     , AmazonMonad cronenv, CryptoRNG cronenv, MonadBaseControl IO cronenv, MonadDB cronenv
+     , MonadIO cronenv, MonadLog cronenv, MonadReader CronEnv cronenv, MonadMask cronenv)
+  => (forall r. cronenv r -> m r)
   -> Int
   -> ConsumerConfig m CallbackID DocumentAPICallback
 documentAPICallback runExecute maxRunningJobs =
