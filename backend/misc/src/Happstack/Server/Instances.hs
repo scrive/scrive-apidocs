@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE OverlappingInstances #-}
 module Happstack.Server.Instances where
 
 import Control.DeepSeq

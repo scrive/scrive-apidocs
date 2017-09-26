@@ -21,7 +21,7 @@ newtype MailContextT m a = MailContextT { unMailContextT :: ReaderT MailContext 
 runMailContextT :: MailContext -> MailContextT m a -> m a
 runMailContextT ts m = runReaderT (unMailContextT m) ts
 
-instance Monad m => MailContextMonad (MailContextT m) where
+instance {-# OVERLAPPING #-} Monad m => MailContextMonad (MailContextT m) where
   getMailContext = MailContextT ask
 
 instance MonadBaseControl IO m => MonadBaseControl IO (MailContextT m) where

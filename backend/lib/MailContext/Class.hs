@@ -1,4 +1,3 @@
-{-# LANGUAGE OverlappingInstances #-}
 module MailContext.Class (
     MailContext(..)
   , mctxDomainUrl

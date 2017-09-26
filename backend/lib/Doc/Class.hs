@@ -1,4 +1,3 @@
-{-# LANGUAGE OverlappingInstances #-}
 module Doc.Class where
 
 import Control.Monad.Trans

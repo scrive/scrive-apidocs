@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE OverlappingInstances #-}
 module Control.Monad.Trans.Instances () where
 
 import Control.Monad.Reader
@@ -9,7 +8,7 @@ import Control.Monad.Trans.Control
 import Control.Monad.Trans.Control.Util
 import KontraPrelude
 
-instance (
+instance {-# OVERLAPS #-} (
     Monad (t m)
   , MonadTrans t
   , MonadTransControl t
@@ -18,7 +17,7 @@ instance (
     ask       = lift ask
     local f m = controlT $ \run -> local f (run m)
 
-instance (
+instance {-# OVERLAPS #-} (
     Monad (t m)
   , MonadTrans t
   , MonadState s m

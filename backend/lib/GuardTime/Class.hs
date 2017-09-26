@@ -1,4 +1,3 @@
-{-# LANGUAGE OverlappingInstances #-}
 module GuardTime.Class where
 
 import Control.Monad.Trans

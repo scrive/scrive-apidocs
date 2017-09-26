@@ -1,4 +1,3 @@
-{-# LANGUAGE OverlappingInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
 -- |
@@ -92,7 +91,7 @@ instance InspectXML (S.Set DocumentTag) where
 instance InspectXML BrandedDomainID where
     inspectXML x = "<a href='/adminonly/brandeddomain/" ++ show x ++ "'>"  ++ show x ++"</a>"
 
-instance InspectXML String where
+instance {-# OVERLAPPING #-} InspectXML String where
   inspectXML str = "\"" ++ escapeString str ++ "\""
 
 instance InspectXML B.ByteString where

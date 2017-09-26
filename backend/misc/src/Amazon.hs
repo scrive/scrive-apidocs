@@ -84,7 +84,7 @@ instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-instance Monad m => AmazonMonad (AmazonMonadT m) where
+instance {-# OVERLAPPING #-} Monad m => AmazonMonad (AmazonMonadT m) where
   getAmazonConfig = AmazonMonadT ask
 
 uploadSomeFilesToAmazon :: (AmazonMonad m, MonadBase IO m, MonadIO m,

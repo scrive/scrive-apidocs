@@ -1,4 +1,3 @@
-{-# LANGUAGE OverlappingInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
@@ -310,7 +309,7 @@ filterSingleFieldIdentity :: [SignatoryField] -> [SignatoryField]
 filterSingleFieldIdentity [] = []
 filterSingleFieldIdentity (f:fs) = f : filterSingleFieldIdentity (filter (\h-> fieldIdentity f /= fieldIdentity h) fs)
 
-instance Arbitrary [SignatoryField] where
+instance {-# OVERLAPPING #-} Arbitrary [SignatoryField] where
   arbitrary = do
     fn <- arbString 1 20
     ln <- arbString 1 20
@@ -858,7 +857,7 @@ class RandomQuery a b where
 instance (DBQuery TestEnv ev res) => RandomQuery ev res where
   randomQuery = dbQuery
 
-instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
+instance {-# OVERLAPPING #-} (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
   randomQuery f = do
     a <- rand 10 arbitrary
     randomQuery $ f a
@@ -870,7 +869,7 @@ class RandomUpdate a b m where
 instance (DBUpdate m ev res) => RandomUpdate ev res m where
   randomUpdate = dbUpdate
 
-instance (CryptoRNG m, Arbitrary a, RandomUpdate c b m) => RandomUpdate (a -> c) b m where
+instance {-# OVERLAPPING #-} (CryptoRNG m, Arbitrary a, RandomUpdate c b m) => RandomUpdate (a -> c) b m where
   randomUpdate f = do
     a <- rand 10 arbitrary
     randomUpdate $ f a

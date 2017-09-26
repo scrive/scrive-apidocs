@@ -57,8 +57,8 @@ testFileNewFile  = replicateM_ 100 $ do
 
 testFileDoesNotExist :: TestEnv ()
 testFileDoesNotExist = replicateM_ 5 $ do
-  assertRaisesKontra (\FileDoesNotExist {} -> True) $ do
-    randomQuery $ GetFileByFileID
+  assertRaisesKontra (\FileDoesNotExist {} -> True) $
+    randomQuery GetFileByFileID
 
 testFileMovedToAWS :: TestEnv ()
 testFileMovedToAWS  = replicateM_ 100 $ do

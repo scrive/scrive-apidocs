@@ -6,3 +6,6 @@
 -- packages: . ../path/to/log
 
 packages: .
+
+package kontrakcja
+    ghc-options: -fprint-potential-instances

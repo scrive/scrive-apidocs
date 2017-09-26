@@ -1,4 +1,3 @@
-{-# LANGUAGE OverlappingInstances #-}
 module TestKontra (
       inTestDir
     , TestEnv
@@ -169,7 +168,7 @@ instance RunnableTestKontra a where
     (res, ctx', _) <- runTestKontraHelper cs rq ctx tk
     return (res, ctx')
 
-instance RunnableTestKontra Response where
+instance {-# OVERLAPPING #-} RunnableTestKontra Response where
   runTestKontra rq ctx tk = do
     cs <- asks teConnSource
     (res, ctx', f) <- runTestKontraHelper cs rq ctx tk

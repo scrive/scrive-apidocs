@@ -1,4 +1,3 @@
-{-# LANGUAGE OverlappingInstances #-}
 module KontraMonad (
       Kontrakcja
     , KontraMonad(..)

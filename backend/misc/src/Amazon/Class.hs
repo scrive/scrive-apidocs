@@ -1,4 +1,3 @@
-{-# LANGUAGE OverlappingInstances #-}
 module Amazon.Class where
 
 import Control.Exception.Lifted

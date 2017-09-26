@@ -70,7 +70,7 @@ Library
                   backend/misc/schema backend/misc/src
                   backend/server/schema backend/server/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
   if impl(ghc > 8)
@@ -552,7 +552,7 @@ Executable kontrakcja-server
 
   Hs-source-dirs: backend/server/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
@@ -612,7 +612,7 @@ Executable kontrakcja-server
 Executable cron
 
   Hs-source-dirs: backend/cron/src
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
@@ -684,7 +684,7 @@ Executable kontrakcja-migrate
                   backend/misc/schema backend/misc/src
                   backend/server/schema
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
@@ -839,7 +839,7 @@ Executable mailing-server
   Hs-source-dirs: backend/mailer/inc backend/mailer/schema backend/mailer/src
                   backend/misc/schema backend/misc/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
@@ -1001,7 +1001,7 @@ Executable messenger-server
                   backend/messenger/src
                   backend/misc/schema backend/misc/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
@@ -1140,7 +1140,7 @@ Test-suite kontrakcja-test
                   backend/server/schema
                   backend/test/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
@@ -1342,7 +1342,7 @@ Executable config-checker
                   backend/cron/inc,
                   backend/mailer/src,
                   backend/messenger/src
-  GHC-options: -Werror -Wall -fno-warn-deprecated-flags
+  GHC-options: -Werror -Wall
   Main-is: ConfigChecker.hs
   Other-modules: CronConf
                  MailingServerConf
@@ -1362,7 +1362,7 @@ Executable localization
                   backend/misc/src
                   localization/src
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
@@ -1431,7 +1431,7 @@ Executable routinglist
 
   Hs-source-dirs: backend/routinglist
 
-  GHC-Options: -Werror -Wall -fno-warn-type-defaults -fno-warn-deprecated-flags
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
