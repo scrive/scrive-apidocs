@@ -73,8 +73,6 @@ Library
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  if impl(ghc > 8)
-    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -556,8 +554,6 @@ Executable kontrakcja-server
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  if impl(ghc > 8)
-    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -616,8 +612,6 @@ Executable cron
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  if impl(ghc > 8)
-    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -688,8 +682,6 @@ Executable kontrakcja-migrate
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  if impl(ghc > 8)
-    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -843,8 +835,6 @@ Executable mailing-server
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  if impl(ghc > 8)
-    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -1005,8 +995,6 @@ Executable messenger-server
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  if impl(ghc > 8)
-    GHC-options: -fno-warn-redundant-constraints
   if flag(server-coverage)
     GHC-Options: -fhpc
 
@@ -1144,8 +1132,6 @@ Test-suite kontrakcja-test
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  if impl(ghc > 8)
-    GHC-options: -fno-warn-redundant-constraints
   if flag(test-coverage)
     GHC-Options: -fhpc
 
@@ -1366,9 +1352,6 @@ Executable localization
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  if impl(ghc > 8)
-    GHC-options: -fno-warn-redundant-constraints
-
   Main-Is: LocalizationMain.hs
   GHC-options: -main-is LocalizationMain
   Other-Modules: KontraPrelude
@@ -1434,9 +1417,6 @@ Executable routinglist
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
-
-  if impl(ghc > 8)
-    GHC-options: -fno-warn-redundant-constraints
 
   Main-Is: RoutingListMain.hs
   GHC-options: -main-is RoutingListMain
