@@ -73,6 +73,9 @@ instance InspectXML SignatoryField where
         CheckboxFT -> if (fromJust (fieldBoolValue field))
                          then "checked"
                          else "not checked"
+        RadioGroupFT -> inspectXML $ case fieldTextValue field of
+                         Nothing -> "<not picked>"
+                         Just s -> s
         _ -> inspectXML (fromJust (fieldTextValue field))
 
 --Link creating types
