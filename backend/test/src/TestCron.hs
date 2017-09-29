@@ -24,65 +24,84 @@ import TestKontra
 import qualified CronEnv
 
 runTestCronUntilIdle :: Context -> TestEnv ()
-runTestCronUntilIdle ctx = runTestCronPartsUntilIdle ctx [True, True, True, True, True, True]
-
-runTestCronPartsUntilIdle :: Context -> [Bool] -> TestEnv ()
-runTestCronPartsUntilIdle Context{..} enabled = do
+runTestCronUntilIdle  Context{..} = do
+  -- This is intented to run as part of a test and tests are usually one big transaction.
+  -- Running consumers spawns additional processes with their own DB transactions,
+  -- which do not see changes of the test transaction ... unless there is a commit.
+  commit
   ConnectionSource pool <- asks teConnSource
   -- Will not be used, because Planhat is not configured when testing, but it is a parameter for cronConsumer.
   reqManager <- newTlsManager
 
-  let docSealing   = documentSealing (cronAmazonConfig cronConf)
-        (cronGuardTimeConf cronConf) ctxglobaltemplates ctxfilecache ctxmrediscache pool (cronMailNoreplyAddress cronConf)
-        (cronConsumerSealingMaxJobs cronConf)
-      docSigning   = documentSigning (cronAmazonConfig cronConf)
-        (cronGuardTimeConf cronConf) (cronCgiGrpConfig cronConf)
-        ctxglobaltemplates ctxfilecache ctxmrediscache pool (cronMailNoreplyAddress cronConf) (cronConsumerSigningMaxJobs cronConf)
-      docExtending = documentExtendingConsumer (cronAmazonConfig cronConf)
-        (cronGuardTimeConf cronConf) ctxglobaltemplates ctxfilecache ctxmrediscache pool (cronConsumerExtendingMaxJobs cronConf)
-      amazonFileUpload = amazonUploadConsumer (cronAmazonConfig cronConf) pool (cronConsumerAmazonMaxJobs cronConf)
+  let -- for testing, one of each is sufficient
+      cronConf = def
+        { cronConsumerCronMaxJobs        = 1
+        , cronConsumerSealingMaxJobs     = 1
+        , cronConsumerSigningMaxJobs     = 1
+        , cronConsumerExtendingMaxJobs   = 1
+        , cronConsumerAPICallbackMaxJobs = 1
+        , cronConsumerAmazonMaxJobs      = 1
+        }
 
-      apiCallbacks = documentAPICallback {-runCronEnv-} id (cronConsumerAPICallbackMaxJobs cronConf)
-      cron = cronConsumer cronConf reqManager {-mmixpanel-} Nothing {-mplanhat-} Nothing {-runCronEnv-} id {-runDB-} id (cronConsumerCronMaxJobs cronConf)
-
-  idleSignals <- forM [1..6::Int] . const . liftIO . atomically $ newEmptyTMVar
-  idleStatuses :: TVar [Bool] <- liftIO . atomically . newTVar . map not $ enabled
-
-  let cronEnvData = CronEnv.CronEnv (cronSalesforceConf cronConf) ctxglobaltemplates
+      -- make timeouts small, so that the test runs faster
+      modTimeout = \c -> c { ccNotificationTimeout = 100 * 1000 }
+      cronPartRunners =
+        [ ( "document sealing"
+          , runConsumerWithIdleSignal . modTimeout
+            $ documentSealing (cronAmazonConfig cronConf) (cronGuardTimeConf cronConf)
+                ctxglobaltemplates ctxfilecache ctxmrediscache pool
+                (cronMailNoreplyAddress cronConf) (cronConsumerSealingMaxJobs cronConf)
+          )
+        , ( "document signing"
+          , runConsumerWithIdleSignal . modTimeout
+            $ documentSigning (cronAmazonConfig cronConf) (cronGuardTimeConf cronConf)
+                (cronCgiGrpConfig cronConf) ctxglobaltemplates ctxfilecache ctxmrediscache
+                pool (cronMailNoreplyAddress cronConf) (cronConsumerSigningMaxJobs cronConf)
+          )
+        , ( "document extending"
+          , runConsumerWithIdleSignal . modTimeout
+            $ documentExtendingConsumer (cronAmazonConfig cronConf) (cronGuardTimeConf cronConf)
+                ctxglobaltemplates ctxfilecache ctxmrediscache pool (cronConsumerExtendingMaxJobs cronConf)
+          )
+        , ( "api callbacks"
+          , runConsumerWithIdleSignal . modTimeout
+            $ documentAPICallback {-runCronEnv-} id (cronConsumerAPICallbackMaxJobs cronConf)
+          )
+        , ( "amazon file upload"
+          , runConsumerWithIdleSignal . modTimeout
+            $ amazonUploadConsumer (cronAmazonConfig cronConf) pool (cronConsumerAmazonMaxJobs cronConf)
+          )
+        , ( "cron"
+          , runConsumerWithIdleSignal . modTimeout
+            $ cronConsumer cronConf reqManager {-mmixpanel-} Nothing {-mplanhat-} Nothing
+                {-runCronEnv-} id {-runDB-} id (cronConsumerCronMaxJobs cronConf)
+          )
+        ]
+      cronEnvData = CronEnv.CronEnv (cronSalesforceConf cronConf) ctxglobaltemplates
                       (cronMailNoreplyAddress cronConf)
       amazonCfg   = AmazonConfig (cronAmazonConfig cronConf) ctxfilecache ctxmrediscache
+
+      finalizeRunner ((label, runner), idleSignal) =
+        finalize (localDomain label $ runner pool idleSignal)
+
+
+
+  (idleSignals, idleStatuses) <- liftIO . atomically $ do
+    sigs <- replicateM (length cronPartRunners) $ newEmptyTMVar
+    stats <- newTVar $ replicate (length cronPartRunners) False
+    return (sigs, stats)
 
   -- To simplify things, runDB and runCronEnv requirements are added to the TestEnv. So then runDB and runCronEnv can be just "id".
   (\m -> runReaderT m cronEnvData)
     . runAmazonMonadT amazonCfg
-    . ifnot (enabled !! 0) id (finalize (localDomain "document sealing"   $ runConsumerWithIdleSignal  (modTimeout docSealing      ) pool (idleSignals !! 0)))
-    . ifnot (enabled !! 1) id (finalize (localDomain "document signing"   $ runConsumerWithIdleSignal  (modTimeout docSigning      ) pool (idleSignals !! 1)))
-    . ifnot (enabled !! 2) id (finalize (localDomain "document extending" $ runConsumerWithIdleSignal  (modTimeout docExtending    ) pool (idleSignals !! 2)))
-    . ifnot (enabled !! 3) id (finalize (localDomain "api callbacks"      $ runConsumerWithIdleSignal  (modTimeout apiCallbacks    ) pool (idleSignals !! 3)))
-    . ifnot (enabled !! 4) id (finalize (localDomain "amazon file upload" $ runConsumerWithIdleSignal  (modTimeout amazonFileUpload) pool (idleSignals !! 4)))
-    . ifnot (enabled !! 5) id (finalize (localDomain "cron"               $ runConsumerWithIdleSignal  (modTimeout cron            ) pool (idleSignals !! 5)))
-    $ whileM_ (not <$> allConsumersAreIdle idleSignals idleStatuses) $ return ()
+    . foldr1 (.) (finalizeRunner <$> (zip cronPartRunners idleSignals))
+    $ whileM_ (not <$> allSignalsTrue idleSignals idleStatuses) $ return ()
 
-  where
-    ifnot True  _a  b = b
-    ifnot False  a _b = a
+allSignalsTrue :: (MonadIO m) => [TMVar Bool] -> TVar [Bool] -> m Bool
+allSignalsTrue idleSignals idleStatuses = liftIO . atomically $ do
+  (idx, isIdle) <- takeAnyMVar idleSignals
+  modifyTVar idleStatuses (\ss -> take idx ss ++ [isIdle] ++ drop (idx+1) ss)
+  all id <$> readTVar idleStatuses
 
-    cronConf = def
-      { cronConsumerCronMaxJobs        = 1
-      , cronConsumerSealingMaxJobs     = 1
-      , cronConsumerSigningMaxJobs     = 1
-      , cronConsumerExtendingMaxJobs   = 1
-      , cronConsumerAPICallbackMaxJobs = 1
-      , cronConsumerAmazonMaxJobs      = 1
-      }
-
-    -- make timeouts small, so that the test runs faster
-    modTimeout = \c -> c { ccNotificationTimeout = 100 * 1000 }
-
-    allConsumersAreIdle idleSignals idleStatuses = liftIO . atomically $ do
-        (idx, isIdle) <- takeAnyMVar idleSignals
-        modifyTVar idleStatuses (\ss -> take idx ss ++ [isIdle] ++ drop (idx+1) ss)
-        all id <$> readTVar idleStatuses
-
-    takeAnyMVar :: [TMVar a] -> STM (Int, a)
-    takeAnyMVar = foldr1 orElse . fmap (\(idx,t) -> liftM (idx,) $ takeTMVar t) . zip [0..]
+takeAnyMVar :: [TMVar a] -> STM (Int, a)
+takeAnyMVar = foldr1 orElse . fmap (\(idx,t) -> liftM (idx,) $ takeTMVar t) . zip [0..]

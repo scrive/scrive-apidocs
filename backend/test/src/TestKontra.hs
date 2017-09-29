@@ -76,8 +76,8 @@ data TestEnvSt = TestEnvSt {
   }
 
 data TestEnvStRW = TestEnvStRW {
-    terwTimeDelay   :: !NominalDiffTime
-  , terwCurrentTime :: !(Maybe UTCTime)
+    terwTimeDelay   :: !NominalDiffTime -- Modifies currentTime, when taken from IO
+  , terwCurrentTime :: !(Maybe UTCTime) -- When 'Nothing', currentTime is taken from IO
   }
 
 type InnerTestEnv = StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO)))
