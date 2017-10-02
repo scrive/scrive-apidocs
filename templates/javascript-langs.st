@@ -280,6 +280,8 @@ javascriptLocalisation =
               , et : "$_Estonian()$"
               , lv : "$_Latvian()$"
               , lt : "$_Lithuanian()$"
+              , cs : "$_Czech()$"
+              , pl : "$_Polish()$"
               , svInSv :"$SwedishInSwedish()$"
               , enInEn : "$EnglishInEnglish()$"
               , deInDe : "$GermanInGerman()$"
@@ -296,6 +298,8 @@ javascriptLocalisation =
               , etInEt : "$EstonianInEstonian()$"
               , lvInLv : "$LatvianInLatvian()$"
               , ltInLt : "$LithuanianInLithuanian()$"
+              , csInCs : "$CzechInCzech()$"
+              , plInPl : "$PolishInPolish()$"
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"

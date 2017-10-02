@@ -20,7 +20,9 @@ var LANGUAGES = [
   {name: "Icelandic", value: "is"},
   {name: "Estonian", value: "et"},
   {name: "Latvian", value: "lv"},
-  {name: "Lithuanian", value: "lt"}
+  {name: "Lithuanian", value: "lt"},
+  {name: "Czech", value: "cs"},
+  {name: "Polish", value: "pl"}
 ];
 
 var LANGUAGE_OPTIONS = underscore.sortBy(LANGUAGES, function (l) {
