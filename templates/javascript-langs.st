@@ -109,7 +109,6 @@ javascriptLocalisation =
                  , problem           : "$_tooltiperror()$"
              }
              , listand : "$_listand()$"
-             , you : "$_you()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , reviewAttachment: "$_ReviewAttachment()$"
              , reviewPDF: "$_ReviewPDF()$"
