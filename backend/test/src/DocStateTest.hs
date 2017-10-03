@@ -5,7 +5,6 @@ import Control.Conditional ((<|), (|>))
 import Control.Monad.Reader
 import Data.Functor
 import Data.Text (unpack)
-import Happstack.Server (Method(..))
 import Log
 import Test.Framework
 import Test.QuickCheck
@@ -14,13 +13,9 @@ import qualified Data.Set as S
 
 import Amazon
 import Company.Model
-import Context
 import Context (ctxtime)
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
-import Doc.API.V2.Calls.CallsTestUtils
-import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
-import Doc.API.V2.Mock.TestUtils
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocSeal
@@ -36,7 +31,6 @@ import EvidenceLog.View (getSignatoryIdentifierMap, simplyfiedEventText)
 import File.FileID
 import KontraPrelude
 import MinutesTime
-import TestCron
 import TestingUtil
 import TestKontra
 import Text.XML.DirtyContent (renderXMLContent)
@@ -209,8 +203,7 @@ docStateTests env = testGroup "DocState" [
   testThat "When document is signed it's status class is signed" env testStatusClassSignedWhenAllSigned,
   testThat "When document is pending and some invitation is undelivered it's status is undelivered" env testStatusClassSignedWhenAllSigned,
 
-  testThat "ChangeAuthenticationToSignMethod works and evidence is as expected" env testChangeAuthenticationToSignMethod,
-  testThat "When document is purged before extending, the extending job is not rescheduled." env testExtendingIsNotRescheduledForPurgedDocs
+  testThat "ChangeAuthenticationToSignMethod works and evidence is as expected" env testChangeAuthenticationToSignMethod
   ]
 
 testNewDocumentForNonCompanyUser :: TestEnv ()
@@ -1898,56 +1891,6 @@ testStatusClassSignedWhenAllSigned = replicateM_ 10 $ do
   doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
 
   assertEqual "Statusclass for signed documents is signed" SCSigned (documentstatusclass doc')
-
-testExtendingIsNotRescheduledForPurgedDocs :: TestEnv ()
-testExtendingIsNotRescheduledForPurgedDocs = do
-  setTestTime unixEpoch
-  user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  -- Create a document
-  mockDoc <- testDocApiV2Start' ctx
-  let did = getMockDocId mockDoc
-  let slid = getMockDocSigLinkId 1 mockDoc
-
-  -- Sign document
-  _ <- mockDocTestRequestHelper ctx
-    POST
-      [ ("fields", inText "[]")
-      , ("accepted_author_attachments", inText "[]")
-      ]
-    (docApiV2SigSign did slid) 200
-
-  -- There is a document sealing job scheduled
-  runSQL01_ $ "SELECT EXISTS (SELECT id FROM document_sealing_jobs WHERE id = " <?> did <> ")"
-  fetchOne runIdentity >>= assertEqual "Document is scheduled for sealing" True
-
-  -- Commit is not completely necessary here, because there is a commit in the middle
-  -- of signing. See also the other runTestCronUntilIdle.
-  commit
-
-  -- Run cron job
-  runTestCronUntilIdle ctx
-
-  -- There is a document extending job scheduled
-  runSQL01_ $ "SELECT EXISTS (SELECT id FROM document_extending_jobs WHERE id = " <?> did <> ")"
-  fetchOne runIdentity >>= assertEqual "Document is scheduled for extending" True
-
-  -- Purge document
-  withDocumentID did $ randomUpdate $ \t -> ArchiveDocument (userid user) (systemActor t)
-  purgedcount <- dbUpdate $ PurgeDocuments 0 0
-  assertEqual "Purged single document" 1 purgedcount
-
-  -- Move time forward to the scheduled extending job (40 days to be sure)
-  modifyTestTime (40 `daysAfter`)
-  -- commit is necessary here, because cron runs new processes, which means a different DB transaction
-  commit
-
-  -- Run cron job
-  runTestCronUntilIdle ctx
-
-  -- There is no extending job scheduled for this document
-  runSQL01_ $ "SELECT EXISTS (SELECT id FROM document_extending_jobs WHERE id = " <?> did <> ")"
-  fetchOne runIdentity >>= assertEqual "Document is not scheduled for extending" False
 
 -- Moved from Eq instance of SignatoryLink. Instance got dropped as it is not usefull in main server - but it's good to have way to compare SignatoryLinks in tests.
 signatoryLinksAreAlmostEqualForTests :: SignatoryLink -> SignatoryLink -> Bool
