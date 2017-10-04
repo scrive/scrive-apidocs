@@ -5,6 +5,7 @@ import Control.Conditional ((<|), (|>))
 import Control.Monad.Reader
 import Data.Functor
 import Data.Text (unpack)
+import Log
 import Test.Framework
 import Test.QuickCheck
 import qualified Data.ByteString as BS

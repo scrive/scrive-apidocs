@@ -18,6 +18,7 @@ module TestKontra (
     , mkRequestWithHeaders
     , mkContext
     , modifyTestTime
+    , setTestTime
     ) where
 
 import Control.Arrow
@@ -50,6 +51,7 @@ import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
 import KontraPrelude
+import MinutesTime
 import Session.SessionID
 import Templates
 import User.Lang
@@ -73,7 +75,8 @@ data TestEnvSt = TestEnvSt {
   }
 
 data TestEnvStRW = TestEnvStRW {
-    terwTimeDelay :: !NominalDiffTime
+    terwTimeDelay   :: !NominalDiffTime -- Modifies currentTime, when taken from IO
+  , terwCurrentTime :: !(Maybe UTCTime) -- When 'Nothing', currentTime is taken from IO
   }
 
 type InnerTestEnv = StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO)))
@@ -93,7 +96,7 @@ ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
 ununTestEnv st m = teRunLogger st
   . (\m' -> runReaderT m' st)
   -- for each test start with no time delay
-  . (\m' -> fst <$> (runStateT m' $ TestEnvStRW { terwTimeDelay = 0 }))
+  . (\m' -> fst <$> (runStateT m' $ TestEnvStRW { terwTimeDelay = 0, terwCurrentTime = Nothing }))
   . unTestEnv $ m
 
 instance CryptoRNG TestEnv where
@@ -123,9 +126,15 @@ instance MonadDB TestEnv where
 
 instance MonadTime TestEnv where
   currentTime = do
-    delay <- gets terwTimeDelay
-    now <- liftIO getCurrentTime
-    return $ addUTCTime delay now
+    mtesttime <- gets terwCurrentTime
+    case mtesttime of
+      -- we use static time
+      Just testtime -> return testtime
+      -- we use IO time, but with a configurable delay
+      Nothing -> do
+        delay <- gets terwTimeDelay
+        now   <- liftIO getCurrentTime
+        return $ addUTCTime delay now
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByLanguage $ codeFromLang def
@@ -174,10 +183,17 @@ instance {-# OVERLAPPING #-} RunnableTestKontra Response where
     (res, ctx', f) <- runTestKontraHelper cs rq ctx tk
     return (f res, ctx')
 
+-- | Modifies time, but does not change, whether the time is static or from IO.
 modifyTestTime :: (MonadState TestEnvStRW m) => (UTCTime -> UTCTime) -> m ()
-modifyTestTime modtime = modify (\terw -> terw { terwTimeDelay = diffUTCTime (modtime utctime) utctime })
-  where
-    utctime = UTCTime (ModifiedJulianDay 0) 0
+modifyTestTime modtime = do
+  mtesttime <- gets terwCurrentTime
+  case mtesttime of
+    Just testtime -> modify (\terw -> terw { terwCurrentTime = Just $ modtime testtime })
+    Nothing       -> modify (\terw -> terw { terwTimeDelay = diffUTCTime (modtime unixEpoch) unixEpoch })
+
+-- | Sets time and also stops time flow
+setTestTime :: (MonadState TestEnvStRW m) => UTCTime -> m ()
+setTestTime currtime = modify (\terw -> terw { terwCurrentTime = Just currtime })
 
 -- Various helpers for constructing appropriate Context/Request
 
@@ -348,3 +364,10 @@ clearTables = do
   runSQL_ "DELETE FROM sessions"
 
   runSQL_ "DELETE FROM mails"
+
+  runSQL_ "DELETE FROM async_event_queue"
+  runSQL_ "DELETE FROM signatory_link_fields"
+  runSQL_ "DELETE FROM kontra_info_for_mails"
+  runSQL_ "DELETE FROM main_files"
+  runSQL_ "DELETE FROM document_sealing_jobs"
+  runSQL_ "DELETE FROM amazon_upload_jobs"

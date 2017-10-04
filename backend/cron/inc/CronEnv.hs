@@ -41,9 +41,9 @@ runCronEnv :: MonadBase IO m
 runCronEnv cronConf localCache globalCache templates x = do
   let amazoncfg     = AmazonConfig (cronAmazonConfig cronConf)
                       localCache globalCache
-      schedulerData = CronEnv (cronSalesforceConf cronConf) templates
+      cronEnvData   = CronEnv (cronSalesforceConf cronConf) templates
                       (cronMailNoreplyAddress cronConf)
-  runAmazonMonadT amazoncfg $ runReaderT (unCronEnvT x) schedulerData
+  runAmazonMonadT amazoncfg $ runReaderT (unCronEnvT x) cronEnvData
 
 type CronEnvM = CronEnvT (AmazonMonadT (DBT (CryptoRNGT (LogT IO)))) CronEnv
 

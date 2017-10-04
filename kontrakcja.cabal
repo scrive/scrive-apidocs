@@ -439,7 +439,7 @@ Library
                , case-insensitive
                , cond
                , conduit
-               , consumers
+               , consumers >= 2.1.0.0
                , containers >= 0.5 && < 0.6
                , crypto-api
                , crypto-rng
@@ -1121,6 +1121,7 @@ Executable messenger-server
 Test-suite kontrakcja-test
   Type:           exitcode-stdio-1.0
   Hs-source-dirs: backend/cron/schema
+                  backend/cron/src
                   backend/mailer/schema
                   backend/messenger/schema
                   backend/migrate/inc
@@ -1230,6 +1231,7 @@ Test-suite kontrakcja-test
                  Session.Tables
                  SessionsTest
                  SignupTest
+                 TestCron
                  TestKontra
                  TestingUtil
                  Theme.Tables
@@ -1260,10 +1262,10 @@ Test-suite kontrakcja-test
                , binary
                , bytestring
                , cond
+               , consumers
                , containers
                , crypto-rng
                , data-default
-               , hpqtypes-extras
                , directory
                , exceptions
                , fields-json
@@ -1271,11 +1273,15 @@ Test-suite kontrakcja-test
                , happstack-server
                , hedis
                , hpqtypes
+               , hpqtypes-extras
+               , http-client
+               , http-client-tls
                , json
                , kontrakcja-templates
                , lifted-base
                , log-base >= 0.7
                , monad-control
+               , monad-loops
                , mtl
                , network-uri
                , regex-tdfa

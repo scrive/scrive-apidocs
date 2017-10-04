@@ -1,17 +1,44 @@
-module Cron.Model (
-    JobType(..)
-  , CronJob(..)
-  , cronJobSelectors
-  , cronJobFetcher
-  ) where
+module Cron.Model (cronConsumer) where
 
+import Control.Monad.Base
 import Control.Monad.Catch
+import Control.Monad.Reader
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Crypto.RNG (CryptoRNG)
 import Data.Int
+import Data.Time (diffUTCTime)
+import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes
+import Log
+import Network.HTTP.Client (Manager)
 import qualified Data.Text as T
 
+import Administration.Invoicing
+import Amazon (AmazonMonad)
+import CronConf
+import DB
+import Doc.Action
+import Doc.AutomaticReminder.Model (expireDocumentAutomaticReminders)
+import Doc.Model
+import HostClock.Collector (collectClockError)
 import KontraPrelude
+import Log.Configuration
+import Log.Identifier
+import Log.Model
+import Log.Utils
+import Mails.Events
+import MinutesTime
+import Planhat
+import Purging.Files
+import Session.Model (DeleteExpiredSessions(..))
+import SMS.Events
+import ThirdPartyStats.Core
+import User.EmailChangeRequest (DeleteExpiredEmailChangeRequests(..))
+import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
+import User.UserAccountRequest (expireUserAccountRequests)
 import Utils.List
+import qualified Amazon as AWS
+import qualified CronEnv
 
 data JobType
   = AmazonUpload
@@ -91,3 +118,156 @@ cronJobFetcher (jtype, attempts) = CronJob {
   cjType = jtype
 , cjAttempts = attempts
 }
+
+---------------------------------------
+
+cronConsumer
+  :: ( CryptoRNG m, MonadBase IO m, MonadBaseControl IO m, MonadCatch m, MonadIO m
+     , MonadLog m, MonadMask m, MonadThrow m, MonadTime m
+     , AmazonMonad cronenv, CryptoRNG cronenv, MonadBaseControl IO cronenv, MonadDB cronenv
+     , MonadIO cronenv, MonadLog cronenv, MonadMask cronenv, MonadReader CronEnv.CronEnv cronenv
+     , MonadBaseControl IO dbt, MonadCatch dbt, MonadDB dbt, MonadIO dbt, MonadLog dbt
+     , MonadThrow dbt, MonadTime dbt)
+  => CronConf
+  -> Manager
+  -> Maybe (EventProcessor dbt)
+  -> Maybe (EventProcessor dbt)
+  -> (forall r. cronenv r -> m r)
+  -> (forall r. dbt r -> m r)
+  -> Int
+  -> ConsumerConfig m JobType CronJob
+cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = ConsumerConfig {
+  ccJobsTable = "cron_jobs"
+, ccConsumersTable = "cron_workers"
+, ccJobSelectors = cronJobSelectors
+, ccJobFetcher = cronJobFetcher
+, ccJobIndex = cjType
+, ccNotificationChannel = Nothing
+, ccNotificationTimeout = 3 * 1000000
+, ccMaxRunningJobs = maxRunningJobs
+, ccProcessJob = \CronJob{..} -> logHandlerInfo cjType $ do
+  logInfo_ "Processing job"
+  action <- case cjType of
+    AmazonUpload -> do
+      if AWS.isAWSConfigOk $ cronAmazonConfig cronConf
+        then do
+          moved <- runCronEnv (AWS.uploadSomeFilesToAmazon 10)
+          if moved
+            then return . RerunAfter $ iseconds 1
+            else return . RerunAfter $ iminutes 1
+        else do
+          logInfo_ "No valid AWS config, skipping"
+          return . RerunAfter $ iminutes 1
+    AsyncEventsProcessing -> do
+      runDB $ do
+        let processMaximum = 200
+        asyncProcessEvents getEventProcessor (NoMoreThan processMaximum)
+      return . RerunAfter $ iseconds 10
+    ClockErrorCollection -> do
+      runDB $ collectClockError (cronNtpServers cronConf)
+      return . RerunAfter $ ihours 1
+    DocumentAutomaticRemindersEvaluation -> do
+      runCronEnv expireDocumentAutomaticReminders
+      return . RerunAfter $ iminutes 1
+    DocumentsPurge -> do
+      runDB $ do
+        startTime <- currentTime
+        purgedCount <- dbUpdate . PurgeDocuments 30 $ fromIntegral unsavedDocumentLingerDays
+        finishTime <- currentTime
+        logInfo "Purged documents" $ object [
+            "purged" .= purgedCount
+          , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
+          ]
+      return . RerunAfter $ iminutes 10
+    DocumentsArchiveIdle -> do
+      runDB $ do
+        now <- currentTime
+        archived <- dbUpdate $ ArchiveIdleDocuments now
+        logInfo "Archived documents for signatories" $ object [
+            "signatory_count" .= archived
+          ]
+      RerunAt . nextDayAtHour 19 <$> currentTime
+    EmailChangeRequestsEvaluation -> do
+      runDB . dbUpdate $ DeleteExpiredEmailChangeRequests
+      return . RerunAfter $ ihours 1
+    FindAndTimeoutDocuments -> do
+      runCronEnv findAndTimeoutDocuments
+      return . RerunAfter $ iminutes 10
+    InvoicingUpload -> do
+      case cronInvoicingSFTPConf cronConf of
+        Nothing -> do
+          logInfo "SFTP config missing; skipping" $ object []
+        Just sftpConfig -> runDB $ uploadInvoicing sftpConfig
+      RerunAt . nextDayAtHour 1 <$> currentTime
+    MailEventsProcessing -> do
+      runCronEnv Mails.Events.processEvents
+      return . RerunAfter $ iseconds 5
+    MarkOrphanFilesForPurge -> do
+      let maxMarked = 100000
+          -- Share the string between all the log messages.
+          orphanFileMarked = "Orphan file marked for purge"
+      fids <- runDB . dbUpdate . MarkOrphanFilesForPurgeAfter maxMarked $ idays 7
+      forM_ fids $ \fid -> logInfo orphanFileMarked $ object [identifier_ fid]
+      -- If maximum amount of files was marked, run it again shortly after.
+      if length fids == maxMarked
+        then return . RerunAfter $ iseconds 1
+        else RerunAt . nextDayMidnight <$> currentTime
+    OldDraftsRemoval -> do
+      runDB $ do
+        delCount <- dbUpdate $ RemoveOldDrafts 100
+        logInfo "Removed old, unsaved draft documents" $ object [
+            "removed" .= delCount
+          ]
+      return . RerunAfter $ ihours 1
+    OldLogsRemoval -> do
+      let connSource ci = simpleSource def { csConnInfo = ci }
+          logDBs = catMaybes . for (lcLoggers $ cronLogConfig cronConf) $ \case
+            PostgreSQL ci -> Just ci
+            _             -> Nothing
+      forM_ logDBs $ \ci -> runDBT (unConnectionSource $ connSource ci) def $ do
+        runSQL_ "SELECT current_database()::text"
+        dbName :: T.Text <- fetchOne runIdentity
+        n <- dbUpdate $ CleanLogsOlderThanDays 30
+        logInfo "Old logs removed" $ object [
+            "database" .= dbName
+          , "logs_removed" .= n
+          ]
+      RerunAt . nextDayMidnight <$> currentTime
+    PasswordRemindersEvaluation -> do
+      runDB . dbUpdate $ DeleteExpiredPasswordReminders
+      return . RerunAfter $ ihours 1
+    PurgeOrphanFile -> do
+      found <- runCronEnv purgeOrphanFile
+      return . RerunAfter $ if found
+                            then iseconds 1
+                            else iminutes 1
+    PushPlanhatStats -> do
+      case cronPlanhatConf cronConf of
+        Nothing -> do
+          logInfo "Planhat config missing; skipping" $ object []
+        Just phConf -> do runDB $ doDailyPlanhatStats phConf mgr
+      RerunAt . nextDayAtHour 2 <$> currentTime
+    SessionsEvaluation -> do
+      runDB . dbUpdate $ DeleteExpiredSessions
+      return . RerunAfter $ ihours 1
+    SMSEventsProcessing -> do
+      runCronEnv $ SMS.Events.processEvents
+      return . RerunAfter $ iseconds 5
+    UserAccountRequestEvaluation -> do
+      runDB expireUserAccountRequests
+      return . RerunAfter $ ihours 1
+  logInfo_ "Job processed successfully"
+  return $ Ok action
+, ccOnException = \_ CronJob{..} -> return $ case cjAttempts of
+  1 -> RerunAfter $ iminutes 1
+  2 -> RerunAfter $ iminutes 5
+  3 -> RerunAfter $ iminutes 10
+  4 -> RerunAfter $ iminutes 15
+  5 -> RerunAfter $ iminutes 30
+  _ -> RerunAfter $ ihours 1
+}
+  where
+    logHandlerInfo jobType action = localRandomID "job_id" $ localData ["job_type" .= show jobType] action
+
+    getEventProcessor EventMixpanel = mmixpanel
+    getEventProcessor EventPlanhat  = mplanhat
