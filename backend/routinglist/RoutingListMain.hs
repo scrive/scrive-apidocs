@@ -85,12 +85,14 @@ getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map makeAbs
 -- so turn those cases (/s, /d, /a) into two rules, one with explicit end of line regex match $,
 -- and one rule that matches longer urls with additional path elems after another slash
 -- 2)
--- urls like /no /en (where it's a lang code), should not cover anything longer, like /now-hiring
+-- urls like /sv /en (where it's a lang code), should not cover anything longer, like /now-hiring
+-- except for /no which is needed in front page stuff
 -- 3)
 -- /pricing and /en/pricing (or /sv/pricing) should disappear for some reason because IT said so
 -- 4)
 -- /verify gets its own special rule at the end
 exceptions :: String -> [String]
+exceptions "/no" = []
 exceptions ('/':c1:c2:[]) | [c1, c2] `elem` map codeFromLang allLangs = [['/', c1, c2, '$']]
 exceptions ('/':c:[]) | c `elem` ("asd"::String) = [['/', c, '/'], ['/', c, '$']]
 exceptions "/pricing" = []
