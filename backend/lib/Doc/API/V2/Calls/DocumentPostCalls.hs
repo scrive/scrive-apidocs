@@ -291,7 +291,7 @@ docApiV2SetFile did = logDocument did . api $ do
         moldfileid <- fmap mainfileid <$> documentfile <$> theDocument
         dbUpdate $ AttachFile (fileid file) actor
         case moldfileid of
-          Just oldfileid -> recalcuateAnchoredFieldPlacements oldfileid (fileid file)
+          Just oldfileid -> recalculateAnchoredFieldPlacements oldfileid (fileid file)
           Nothing -> return ()
     -- Result
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument

@@ -1,5 +1,5 @@
 module Doc.Anchors (
-    recalcuateAnchoredFieldPlacements
+    recalculateAnchoredFieldPlacements
   , getAnchorPositions
   ) where
 
@@ -90,10 +90,10 @@ anchorSorter (Just _) _ = Ord.GT
 anchorSorter _ (Just _) = Ord.LT
 anchorSorter Nothing Nothing = Ord.EQ
 
-recalcuateAnchoredFieldPlacements :: (Kontrakcja m,DocumentMonad m) => FileID -> FileID -> m ()
-recalcuateAnchoredFieldPlacements oldfileid newfileid | oldfileid == newfileid = do
+recalculateAnchoredFieldPlacements :: (Kontrakcja m,DocumentMonad m) => FileID -> FileID -> m ()
+recalculateAnchoredFieldPlacements oldfileid newfileid | oldfileid == newfileid = do
     return ()
-recalcuateAnchoredFieldPlacements oldfileid newfileid = do
+recalculateAnchoredFieldPlacements oldfileid newfileid = do
   doc <- theDocument
   -- Algo:
   -- 1. Enumerate all anchors.
