@@ -316,13 +316,9 @@ serverTestRules newBuild cabalFile createDB = do
   "kontrakcja_test.conf" %> \_ ->
     case createDB of
       CreateTestDB -> do
-        tc <- askOracle (TeamCity ())
-        when (not tc) $
-          fail "'--create-db' is only supported when running on TeamCity."
-        connString <- askOracle (TeamCityBuildDBConnString ())
-        dbName     <- askOracle (TeamCityBuildDBName ())
-        let connString' = connString <> " dbname=" <> dbName
-        liftIO $ writeFile "kontrakcja_test.conf" connString'
+        (dbName, initialConnString) <- askOracle (CreateTestDBData ())
+        liftIO $ writeFile "kontrakcja_test.conf"
+          (initialConnString <> " dbname='" <> dbName <> "'")
       DontCreateTestDB -> do
         tc <- askOracle (TeamCity ())
         when tc $ do
@@ -368,8 +364,7 @@ serverTestRules newBuild cabalFile createDB = do
         where
           withDB DontCreateTestDB act = act
           withDB CreateTestDB     act = do
-            connString <- askOracle (TeamCityBuildDBConnString ())
-            dbName     <- askOracle (TeamCityBuildDBName ())
+            (dbName, connString) <- askOracle (CreateTestDBData ())
             (mkDB connString dbName >> act)
               `actionFinally` (rmDB connString dbName)
             where

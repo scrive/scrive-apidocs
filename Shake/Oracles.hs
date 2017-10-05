@@ -13,6 +13,8 @@
 module Shake.Oracles where
 
 import Data.Maybe
+import Data.Time.Clock
+import Data.Time.Format
 import Development.Shake
 import Development.Shake.Classes
 
@@ -43,6 +45,8 @@ newtype TeamCityBuildDBConnString = TeamCityBuildDBConnString ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype TeamCityBuildDBName = TeamCityBuildDBName ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
+newtype CreateTestDBData = CreateTestDBData ()
+  deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 
 #if MIN_VERSION_shake(0,16,0)
 type instance RuleResult GhcVersion                 = String
@@ -56,6 +60,7 @@ type instance RuleResult BuildTestCoverage          = Bool
 type instance RuleResult BuildCabalConfigureOptions = String
 type instance RuleResult TeamCityBuildDBConnString  = String
 type instance RuleResult TeamCityBuildDBName        = String
+type instance RuleResult CreateTestDBData           = (String, String)
 #endif
 
 addOracles :: Rules ()
@@ -93,6 +98,19 @@ addOracles = do
                      <$> getEnv "SHAKE_BUILD_TEST_COVERAGE"
   _ <- addOracle $ \(BuildCabalConfigureOptions _)  ->
                      fromMaybe "" <$> getEnv "SHAKE_BUILD_CABAL_CONFIGURE_OPTS"
+  _ <- addOracle $ \(CreateTestDBData _) -> do
+    tc  <- askOracle (TeamCity ())
+    now <- liftIO $ getCurrentTime
+    let defDBName     = formatTime defaultTimeLocale
+                        "kontrakcja_test_%Y_%m_%d_%H_%M_%S"
+                        now
+        defConnString = "host='localhost' user='kontra' password='kontrapwd'"
+    connString <- if tc then askOracle (TeamCityBuildDBConnString ())
+                        else return defConnString
+    dbName     <- if tc then askOracle (TeamCityBuildDBName ())
+                        else return defDBName
+    return $ (dbName, connString)
+
   return ()
 
 oracleHelpRule :: Rules ()
