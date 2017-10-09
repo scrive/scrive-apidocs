@@ -3,13 +3,15 @@ var SignviewSettingsModal = require("./signviewsettings");
 var AttachmentsList = require("./attachmentslist");
 var Button = require("../../common/button");
 var Track = require("../../common/track");
-var DesignAuthorAttachmentsPopup = require("../../../js/designview/authoraattachmentsdesign.js").DesignAuthorAttachmentsPopup;
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var DocumentSaveMixin = require("../document_save_mixin");
 var Document = require("../../../js/documents.js").Document;
 var Modal = require("../../common/modal");
 var SignatoryAttachmentsModal = require(
   "../signatoryattachments/signatoryattachmentsmodal"
+);
+var AuthorAttachmentsModal = require(
+  "../authorattachments/authorattachmentsmodal"
 );
 
 
@@ -20,9 +22,13 @@ module.exports = React.createClass({
   mixins: [DocumentSaveMixin],
   getInitialState: function() {
     return {
+      authorAttachmentsModalOpened: false,
       settingsModalOpened: false,
       signatoryAttachmentsModalOpened: false
     };
+  },
+  onAuthorAttchmentsModalCancel: function () {
+    this.setState({authorAttachmentsModalOpened: false});
   },
   onSignviewSettingsModalCancel: function () {
     this.setState({settingsModalOpened: false});
@@ -54,10 +60,7 @@ module.exports = React.createClass({
             onClick= {function() {
               Track.track('Open author attachments');
               document.save();
-              new DesignAuthorAttachmentsPopup({
-                document: document,
-                saveAndFlashMessageIfAlreadySaved: self.saveAndFlashMessageIfAlreadySaved
-              });
+              self.setState({authorAttachmentsModalOpened: true});
             }}
           />
           <Button
@@ -89,6 +92,13 @@ module.exports = React.createClass({
             document={document}
             saveAndFlashMessageIfAlreadySaved={self.saveAndFlashMessageIfAlreadySaved}
             onClose={self.onSignatoryAttachmentsModalCancel}
+          />
+
+          <AuthorAttachmentsModal
+            active={self.state.authorAttachmentsModalOpened}
+            document={document}
+            saveAndFlashMessageIfAlreadySaved={self.saveAndFlashMessageIfAlreadySaved}
+            onClose={self.onAuthorAttchmentsModalCancel}
           />
         </div>
       </div>
