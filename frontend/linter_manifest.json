@@ -23,6 +23,7 @@
   "./app/scripts/authorview/fileview/*.jsx",
   "./app/scripts/authorview/signatories/*.jsx",
   "./app/scripts/authorview/titleboxview.jsx",
+  "./app/scripts/authorview/prolongmodal.jsx",
   "./app/scripts/authorview/authorattachmentsview.jsx",
   "./app/scripts/authorview/authorviewautomaticreminders.jsx",
   "./app/scripts/authorview/signatoriesattachmentsview.jsx",

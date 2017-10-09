@@ -140,7 +140,7 @@ describe("authorview/titleboxview", function () {
       $('.s-prolong-button', React.findDOMNode(component))[0]
     );
 
-    assert.lengthOf($(".prolong-modal-content"), 1);
+    assert.isTrue(component.state.showProlongModal);
   });
 
   // Withdraw button

@@ -10,7 +10,7 @@ var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
 var LoadingDialog = require("../../js/loading.js").LoadingDialog;
 var LocalStorage = require("../../js/storage.js").LocalStorage;
 var Modal = require("../common/modal");
-var ProlongModal = require("../../js/authorview/prolongmodal.js").ProlongModal;
+var ProlongModal = require("./prolongmodal");
 var Select = require("../common/select");
 var Submit = require("../../js/submits.js").Submit;
 var Track = require("../common/track");
@@ -110,7 +110,8 @@ module.exports = React.createClass({
     return {
       showWithdrawModal: false,
       showGiveToNextSignatoryPadModal: false,
-      padNextSignatory: null
+      padNextSignatory: null,
+      showProlongModal: false
     };
   },
   canBeRestarted: function () {
@@ -185,8 +186,7 @@ module.exports = React.createClass({
   },
   onProlongButtonClick: function () {
     Track.track("Click prolong button");
-    new ProlongModal({authorview: this.props.authorview,
-                      document: this.props.document});
+    this.setState({showProlongModal: true});
   },
   onWithdrawButtonClick: function () {
     Track.track("Click withdraw button");
@@ -240,6 +240,18 @@ module.exports = React.createClass({
     if (this.state.padNextSignatory != null) {
       this.state.padNextSignatory.giveForPadSigning().send();
     }
+  },
+  onProlongModalAccept: function (days) {
+    var self = this;
+
+    this.setState({showProlongModal: false});
+    this.props.document.prolong(days).sendAjax(function () {
+      LoadingDialog.open();
+      self.props.authorview.triggerReload();
+    });
+  },
+  onProlongModalClose: function () {
+    this.setState({showProlongModal: false});
   },
   render: function () {
     var document_ = this.props.document;
@@ -346,6 +358,14 @@ module.exports = React.createClass({
               />
             </Modal.Footer>
           </Modal.Container>
+        }
+
+        { /* if */ this.canBeProlonged() &&
+          <ProlongModal
+            active={this.state.showProlongModal}
+            onAccept={this.onProlongModalAccept}
+            onClose={this.onProlongModalClose}
+          />
         }
       </div>
     );
