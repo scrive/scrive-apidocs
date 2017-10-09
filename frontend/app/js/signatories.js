@@ -230,10 +230,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         return localization.process.nonsignatoryname;
     },
     smartname: function() {
-        if (this.current())
-         return localization.you;
-        else
-         return this.nameOrEmailOrMobile();
+        return this.nameOrEmailOrMobile();
     },
     nameForLists : function() {
         if (this.isCsv()) {

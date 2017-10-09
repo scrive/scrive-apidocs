@@ -32,7 +32,7 @@ translationFile lang Signview = "texts/" ++ lang ++ "/signview.json"
 
 
 allLangs :: [String]
-allLangs = ["en","sv","de","fr","it","es","pt"
+allLangs = ["en","sv","de","fr","it","es","pt","cs", "pl"
            ,"nl","da","no","el","fi","is","et","lv","lt"]
 
 sourceLang :: String

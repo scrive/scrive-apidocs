@@ -4,6 +4,7 @@
 "_CompanySettings":"Branding",
 "_ContractReminderBodyMulti":"Are you sure you want to send reminders to the parties involved in the <span class='put-number-of-documents-here'></span> documents?",
 "_ContractReminderBodySingel":"Are you sure you want to send a reminder to the parties involved in the document <span class='put-document-name-here'></span>?",
+"_Czech":"Czech",
 "_Danish":"Danish",
 "_Download":"Download",
 "_DownloadPDF":"Download PDF",
@@ -79,6 +80,7 @@
 "_PasswordValidationMessageNeedsLetterAndDigit":"Password must contain at least 8 characters and contain at least one letter and one digit.",
 "_PasswordValidationMessagePasswordsDontMatch":"The passwords do not match.",
 "_PhoneInfoText":"Your mobile number",
+"_Polish":"Polish",
 "_Portuguese":"Portuguese",
 "_PresentPassword":"Current password",
 "_RepeatNewPassword":"Confirm new password",
@@ -886,7 +888,6 @@
 "_verificationTitle":"Verify the document's authenticity",
 "_vivochaCallUsNow":"Call us now",
 "_vivochaSendEmail":"Send an email",
-"_you":"you",
 "_youCantCancelThisDocuments":"Some of the selected documents can't be withdrawn.",
 "_youCantSendRemindersToThisDocuments":"Reminders can’t be sent for some of the selected documents.",
 "_zip":"ZIP"

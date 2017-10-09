@@ -22,7 +22,9 @@ module.exports = React.createClass({
         {name: localization.languages.isInIs, value: "is"},
         {name: localization.languages.etInEt, value: "et"},
         {name: localization.languages.lvInLv, value: "lv"},
-        {name: localization.languages.ltInLt, value: "lt"}
+        {name: localization.languages.ltInLt, value: "lt"},
+        {name: localization.languages.csInCs, value: "cs"},
+        {name: localization.languages.plInPl, value: "pl"}
       ];
 
       this._languages = _.sortBy(knownLanguages, function (l) {

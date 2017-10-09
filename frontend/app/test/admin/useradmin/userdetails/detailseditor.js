@@ -196,7 +196,7 @@ describe("admin/useradmin/userdetails/detailseditor", function () {
     assert.lengthOf(select, 1);
 
     var input = $("select", select);
-    assert.equal(input.val(), "2");
+    assert.equal(input.val(), "3");
   });
 
   it("should propagate change of the language select", function () {
@@ -206,7 +206,7 @@ describe("admin/useradmin/userdetails/detailseditor", function () {
       "div.user-details-select-lang select", component.getDOMNode()
     );
 
-    input.val("1");
+    input.val("2");
     TestUtils.Simulate.change(input[0]);
 
     assert.isTrue(component.props.onFieldChange.calledWith("lang", "nl"));

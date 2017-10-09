@@ -109,7 +109,6 @@ javascriptLocalisation =
                  , problem           : "$_tooltiperror()$"
              }
              , listand : "$_listand()$"
-             , you : "$_you()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , reviewAttachment: "$_ReviewAttachment()$"
              , reviewPDF: "$_ReviewPDF()$"
@@ -280,6 +279,8 @@ javascriptLocalisation =
               , et : "$_Estonian()$"
               , lv : "$_Latvian()$"
               , lt : "$_Lithuanian()$"
+              , cs : "$_Czech()$"
+              , pl : "$_Polish()$"
               , svInSv :"$SwedishInSwedish()$"
               , enInEn : "$EnglishInEnglish()$"
               , deInDe : "$GermanInGerman()$"
@@ -296,6 +297,8 @@ javascriptLocalisation =
               , etInEt : "$EstonianInEstonian()$"
               , lvInLv : "$LatvianInLatvian()$"
               , ltInLt : "$LithuanianInLithuanian()$"
+              , csInCs : "$CzechInCzech()$"
+              , plInPl : "$PolishInPolish()$"
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"

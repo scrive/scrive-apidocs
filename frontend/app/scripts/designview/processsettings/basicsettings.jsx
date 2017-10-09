@@ -25,6 +25,8 @@ module.exports = React.createClass({
       , {name: localization.languages.et, value: "et"}
       , {name: localization.languages.lv, value: "lv"}
       , {name: localization.languages.lt, value: "lt"}
+      , {name: localization.languages.cs, value: "cs"}
+      , {name: localization.languages.pl, value: "pl"}
     ];
     return _.sortBy(languages, function(l) {return l.name.toLowerCase();});
   },
