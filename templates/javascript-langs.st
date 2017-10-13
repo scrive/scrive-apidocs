@@ -615,6 +615,7 @@ javascriptLocalisation =
                 , authornamePlaceholder : "$_authorParty()$"
              }
              , clearHighlightingHere: "$_clearHighlightingHere()$"
+             , doneHighlighting: "$_doneHighlighting()$"
              , eleg : {
                   bankid : {
                         faultModalTitle : "$_elegBankIDFaultModalTitle()$"
