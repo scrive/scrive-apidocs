@@ -371,7 +371,6 @@ module.exports = React.createClass({
         doc.setHighlight(pageno, imageData).send();
       }
     );
-    this.setState({highlighting: false});
   },
 
   handleCancelHighlighting: function () {
