@@ -191,7 +191,7 @@ instance Arbitrary UTCTime where
      Like author signatorylink that by default does not have any fields attached
      This is a class to make it more random - so to attach this fields for example.
 -}
-class ExtendWithRandomnes a where
+class ExtendWithRandomness a where
     moreRandom :: a -> Gen a
     extendRandomness :: a -> TestEnv a
     extendRandomness a = do

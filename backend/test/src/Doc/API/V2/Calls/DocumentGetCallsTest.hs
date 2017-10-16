@@ -198,17 +198,33 @@ testDocApiV2FilesMain :: TestEnv ()
 testDocApiV2FilesMain = do
   user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2New' ctx
+  doc <- testDocApiV2New' ctx
+  let did = getMockDocId doc
 
-  req <- mkRequest GET []
-  (rsp,_) <- runTestKontra req ctx $ docApiV2FilesMain did "filename.pdf"
-  assertEqual "Successful `docApiV2FilesMain` response code" 200 (rsCode rsp)
+  -- Normal GET request
+  getReq ctx did [] "(standard)" 200
+
+  -- GET request via access token
+  let ctx' = ctx { ctxmaybeuser = Nothing }
+      vars = [ ("access_token"
+               , inText . getMockDocAccessToken $ doc) ]
+  getReq ctx' did []   "(no access token - expected failure)" 401
+  getReq ctx' did vars "(access token)" 200
+
+
+  where
+    getReq ctx did vars desc expected_code = do
+      req <- mkRequest GET vars
+      (rsp,_) <- runTestKontra req ctx $ docApiV2FilesMain did "filename.pdf"
+      assertEqual ("Successful `docApiV2FilesMain` " ++ desc ++ " response code")
+        expected_code (rsCode rsp)
 
 testDocApiV2FilesGet :: TestEnv ()
 testDocApiV2FilesGet = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2New' ctx
+  ctx  <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  doc  <- testDocApiV2New' ctx
+  let did = getMockDocId doc
 
   mockDocSet <- mockDocTestRequestHelper ctx POST [
       ("attachments", inText $ "[{\"name\" : \"simple-rotate-90.pdf\", \"required\" : false, \"add_to_sealed_file\" : true, \"file_param\" : \"afile\"}]")
@@ -216,9 +232,24 @@ testDocApiV2FilesGet = do
     ] (docApiV2SetAttachments did) 200
 
   let fid = getMockDocAuthorAttachmentFileId 1 mockDocSet
-  req <- mkRequest GET []
-  (rsp,_) <- runTestKontra req ctx $ docApiV2FilesGet did fid "somefile.pdf"
-  assertEqual "Successful `docApiV2FilesGet` response code" 200 (rsCode rsp)
+
+  -- Normal GET request
+  getReq ctx did fid [] "(standard)" 200
+
+  -- GET request via access token
+  let ctx' = ctx { ctxmaybeuser = Nothing }
+      vars = [ ("access_token"
+               , inText . getMockDocAccessToken $ doc) ]
+  getReq ctx' did fid []   "(no access token - expected failure)" 401
+  getReq ctx' did fid vars "(access token)" 200
+
+
+  where
+    getReq ctx did fid vars desc expected_code = do
+      req <- mkRequest GET vars
+      (rsp,_) <- runTestKontra req ctx $ docApiV2FilesGet did fid "somefile.pdf"
+      assertEqual ("Successful `docApiV2FilesGet` " ++ desc ++ " response code")
+        expected_code (rsCode rsp)
 
 testDocApiV2Texts :: TestEnv ()
 testDocApiV2Texts = do

@@ -243,4 +243,3 @@ instance Unjson MockSigHighlightedPage where
   unjsonDef = objectOf $ pure MockSigHighlightedPage
     <*> field "page" mockSigHighlightedPagePage       "MockSigAttachment Page"
     <*> field "file_id" mockSigHighlightedPageFileID  "MockSigAttachment FileID"
-

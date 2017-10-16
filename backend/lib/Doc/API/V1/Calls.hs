@@ -1060,7 +1060,7 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
                   unless (isAuthor sl) $ do
                     throwM . SomeDBExtraException $ forbidden "Authorization to view is needed"
                 theDocument
-            (_, _, Just _) -> getDocByDocIDEx did maccesstoken
+            (_, _, Just _) -> getDocByDocIDAndAccessTokenV1 did maccesstoken
             _ ->  do
                   (user, _actor, external) <- getAPIUser APIDocCheck
                   if (external)
@@ -1103,7 +1103,7 @@ apiCallV1DownloadFile did fileid nameForBrowser = logDocumentAndFile did fileid 
                   unless (isAuthor sl) $ do
                     throwM . SomeDBExtraException $ forbidden "Authorization to view is needed"
                 theDocument
-            (_, _, Just _accesstoken) -> getDocByDocIDEx did maccesstoken
+            (_, _, Just _accesstoken) -> getDocByDocIDAndAccessTokenV1 did maccesstoken
             _ ->  do
                   (user, _actor, external) <- getAPIUser APIDocCheck
                   if (external)

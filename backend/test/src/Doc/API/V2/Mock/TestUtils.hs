@@ -31,6 +31,7 @@ module Doc.API.V2.Mock.TestUtils (
 , getMockDocAuthorAttachmentHasFile
 , getMockDocAuthorAttachmentFileId
 , getMockDocHasAutoRemindTime
+, getMockDocAccessToken
 , getMockDocIsTemplate
 , getMockDocIsShared
 , getMockDocIsTrashed
@@ -171,6 +172,12 @@ getMockDocAuthorAttachmentFileId i md = case maybeRead (mockAuthorAttachmentFile
 
 getMockDocHasAutoRemindTime :: MockDoc -> Bool
 getMockDocHasAutoRemindTime = isJust . mockDocAutoRemindTime
+
+getMockDocAccessToken :: MockDoc -> String
+getMockDocAccessToken md = case mockDocAccessToken md of
+  Just t  -> t
+  Nothing -> $unexpectedError $
+    "No access token for MockDoc: " ++ show md
 
 getMockDocIsTemplate :: MockDoc -> Bool
 getMockDocIsTemplate = mockDocIsTemplate

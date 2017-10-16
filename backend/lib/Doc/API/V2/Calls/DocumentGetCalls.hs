@@ -30,11 +30,13 @@ import Doc.API.V2.JSON.Misc (evidenceAttachmentsToJSONBS)
 import Doc.Data.MainFile
 import Doc.DocSeal (presealDocumentFile)
 import Doc.DocStateData
+import Doc.DocStateQuery (getDocByDocIDAndAccessTokenV2)
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.DocUtils (fileFromMainFile)
 import Doc.Logging
 import Doc.Model
+import Doc.SignatoryLinkID
 import Doc.Texts
 import EvidenceLog.Model
 import EvidenceLog.View
@@ -43,6 +45,7 @@ import File.Storage
 import Kontra
 import KontraPrelude
 import Log.Identifier
+import MagicHash
 import OAuth.Model
 import User.Model
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
@@ -121,11 +124,11 @@ docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ d
 
 docApiV2FilesMain :: Kontrakcja m => DocumentID -> String -> m Response
 docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
-  mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
-  download <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
-  fileContents <- withDocumentID did $ do
-    doc <- theDocument
-    _ <- guardDocumentReadAccess mslid doc
+  mslid        <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
+  download     <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
+  maccesstoken <- apiV2ParameterOptional (ApiV2ParameterRead "access_token")
+  doc          <- getDocBySignatoryLinkIdOrAccessToken did mslid maccesstoken
+  fileContents <- do
     when (isJust mslid) $ guardSignatoryNeedsToIdentifyToView (fromJust mslid) doc
     case documentstatus doc of
       Closed -> do
@@ -144,12 +147,22 @@ docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
              Right f -> return $ f
   return $ Ok $ respondWithPDF download fileContents
 
+getDocBySignatoryLinkIdOrAccessToken :: Kontrakcja m =>
+  DocumentID -> Maybe SignatoryLinkID -> Maybe MagicHash -> m Document
+getDocBySignatoryLinkIdOrAccessToken did mslid maccesstoken =
+  withDocumentID did $ case maccesstoken of
+    Just token -> getDocByDocIDAndAccessTokenV2 did token
+    Nothing    -> do
+      void $ guardDocumentReadAccess mslid =<< theDocument
+      theDocument
+
 docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
 docApiV2FilesGet did fid filename = logDocumentAndFile did fid . api $ do
-  mslid <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
-  download <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
-  doc <- dbQuery $ GetDocumentByDocumentID did
-  _ <- guardDocumentReadAccess mslid doc
+  mslid        <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
+  download     <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
+  maccesstoken <- apiV2ParameterOptional (ApiV2ParameterRead "access_token")
+  doc          <- getDocBySignatoryLinkIdOrAccessToken did mslid maccesstoken
+
   when (isJust mslid) $ guardSignatoryNeedsToIdentifyToView (fromJust mslid) doc
   let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++
                       (authorattachmentfileid <$> documentauthorattachments doc) ++

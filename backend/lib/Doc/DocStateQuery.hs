@@ -26,7 +26,8 @@
 
 module Doc.DocStateQuery
     ( getDocByDocID
-    , getDocByDocIDEx
+    , getDocByDocIDAndAccessTokenV1
+    , getDocByDocIDAndAccessTokenV2
     , getDocByDocIDForAuthor
     , getDocByDocIDForAuthorOrAuthorsCompanyAdmin
     , getMagicHashForDocumentSignatoryWithUser
@@ -34,8 +35,10 @@ module Doc.DocStateQuery
     , getDocumentAndSignatoryForEID
     ) where
 
+import Control.Monad.Catch (throwM)
 import Log
 
+import API.V2.Errors
 import DB
 import Doc.DocStateData
 import Doc.DocumentID
@@ -54,10 +57,28 @@ import Util.SignatoryLinkUtils
 -- TODO: clean this up, try combining it with DocumentMonad.
 
 getDocByDocID :: Kontrakcja m => DocumentID -> m Document
-getDocByDocID docid = getDocByDocIDEx docid Nothing
+getDocByDocID docid = getDocByDocIDAndAccessTokenV1 docid Nothing
 
-getDocByDocIDEx :: Kontrakcja m => DocumentID -> Maybe MagicHash -> m Document
-getDocByDocIDEx did = \case
+getDocByDocIDAndAccessTokenV1 :: Kontrakcja m
+                              => DocumentID -> Maybe MagicHash -> m Document
+getDocByDocIDAndAccessTokenV1 did mhash =
+  getDocByDocIDAndAccessToken did mhash TryUserDocuments
+
+getDocByDocIDAndAccessTokenV2 :: Kontrakcja m
+                              => DocumentID -> MagicHash -> m Document
+getDocByDocIDAndAccessTokenV2 did hash =
+  getDocByDocIDAndAccessToken did (Just hash) DontTryUserDocuments
+
+
+data TryUserDocuments = TryUserDocuments | DontTryUserDocuments
+  deriving Eq
+
+-- | Common implementation of
+-- getDocByDocIDAndAccessToken{V1,V2}. TryUserDocuments case only
+-- happens in V1.
+getDocByDocIDAndAccessToken :: Kontrakcja m =>
+  DocumentID -> Maybe MagicHash -> TryUserDocuments -> m Document
+getDocByDocIDAndAccessToken did mhash tryuser = case mhash of
   Just accessToken -> do
     logInfo "Trying to get a document via access token" $ object [
         identifier_ did
@@ -70,12 +91,22 @@ getDocByDocIDEx did = \case
       1
     case mdoc of
       [doc] -> return doc
-      _ -> do
-        logInfo "Access token was invalid, trying user documents" $ object [
-            identifier_ did
-          ]
-        getDocumentOfUser
-  Nothing -> getDocumentOfUser
+      _ | tryuser == TryUserDocuments -> do
+            logInfo "Access token was invalid, trying user documents" $ object [
+              identifier_ did
+              ]
+            getDocumentOfUser
+
+        | otherwise -> do
+            logInfo "Access token was invalid" $ object [ identifier_ did ]
+            throwM . SomeDBExtraException $ invalidAuthorizationWithMsg
+              "Access token was invalid."
+
+  Nothing | tryuser == TryUserDocuments -> getDocumentOfUser
+          | otherwise                   -> do
+              logInfo "No access token provided" $ object [ identifier_ did ]
+              throwM . SomeDBExtraException $ invalidAuthorizationWithMsg
+                "No access token provided."
   where
     getDocumentOfUser = do
       user <- guardJust . getContextUser =<< getContext

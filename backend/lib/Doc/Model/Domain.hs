@@ -16,8 +16,8 @@ import User.UserID
 
 -- | Document security domain.
 --
--- This data type should be regarder our most precious and important
--- security measure against unarthorized document access. When using
+-- This data type should be regarded our most precious and important
+-- security measure against unauthorized document access. When using
 -- `GetDocuments` or derivatives we should always specify on whose
 -- behalf are we acting upon a document. If we have user id then using
 -- `DocumentsVisibleToUser` ensures that we are touching only
