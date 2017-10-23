@@ -280,7 +280,7 @@ module.exports = React.createClass({
                 }
               }}
             >
-              {localization.cancel}
+              {localization.docsignview.doneHighlighting}
             </button>
           }
         </div>

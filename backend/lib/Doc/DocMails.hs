@@ -355,8 +355,11 @@ sendAllReminderEmailsWithFilter :: (MonadLog m, TemplatesMonad m, MonadCatch m, 
 sendAllReminderEmailsWithFilter f actor automatic = do
     ifM (isPending <$> theDocument)
     {-then-} (do
-      unsignedsiglinks <- filter <$> isEligibleForReminder <$> theDocument <*> (documentsignatorylinks <$> theDocument)
-      sequence . map (sendReminderEmail Nothing actor automatic) $ filter f unsignedsiglinks)
+      doc <- theDocument
+      let unsignedsiglinks = filter (isEligibleForReminder doc) $ documentsignatorylinks doc
+          text = documentinvitetext doc
+          mCustomMessage = if null text then Nothing else Just text
+      mapM (sendReminderEmail mCustomMessage actor automatic) $ filter f unsignedsiglinks)
     {-else-} $ do
       return []
 
