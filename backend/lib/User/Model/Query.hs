@@ -9,6 +9,7 @@ module User.Model.Query (
   , GetUserByIDIncludeDeleted(..)
   , GetUserByEmail(..)
   , GetUsers(..)
+  , GetUserWherePasswordStrengthIsLessThan(..)
   , GetUsersWithCompanies(..)
   , IsUserDeletable(..)
   ) where
@@ -37,6 +38,16 @@ instance MonadDB m => DBQuery m GetUsers [User] where
   query GetUsers = do
     runQuery_ $ selectUsersSQL <+> "WHERE deleted IS NULL ORDER BY first_name || ' ' || last_name"
     fetchMany fetchUser
+
+data GetUserWherePasswordStrengthIsLessThan = GetUserWherePasswordStrengthIsLessThan Int16
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUserWherePasswordStrengthIsLessThan (Maybe User) where
+  query (GetUserWherePasswordStrengthIsLessThan n) = do
+    runQuery_ $ selectUsersSQL
+      -- We include deleted users, we want to strengthen those too if they have a password
+      <+> "WHERE password IS NOT NULL"
+      <+> "AND (password_strength IS NULL OR password_strength < " <?> n <+> ")"
+      <+> "LIMIT 1"
+    fetchMaybe fetchUser
 
 data GetUserByID = GetUserByID UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByID (Maybe User) where

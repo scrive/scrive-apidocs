@@ -129,6 +129,7 @@ selectUsersSelectorsList =
   , "email"
   , "lang"
   , "associated_domain_id"
+  , "password_strength"
   ]
 
 selectUsersSelectors :: SQL
@@ -183,10 +184,10 @@ composeFullName (fstname, sndname) = if null sndname
   then fstname
   else fstname ++ " " ++ sndname
 
-fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID) -> User
-fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id) = User {
+fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16) -> User
+fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_strength) = User {
   userid = uid
-, userpassword = maybePassword (password, salt)
+, userpassword = maybeMkPassword (password, salt, password_strength)
 , useriscompanyadmin = is_company_admin
 , useraccountsuspended = account_suspended
 , userhasacceptedtermsofservice = has_accepted_terms_of_service
@@ -204,12 +205,12 @@ fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepte
 , userassociateddomainid = associated_domain_id
 }
 
-fetchUserWithCompany :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode, Bool) -> (User, Company)
-fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, cid, name, number, address, zip', city, country, ip_address_mask, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, payment_plan, partner_id, pad_app_mode, pad_earchive_enabled) = (user, company)
+fetchUserWithCompany :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode, Bool) -> (User, Company)
+fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_strength, cid, name, number, address, zip', city, country, ip_address_mask, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, payment_plan, partner_id, pad_app_mode, pad_earchive_enabled) = (user, company)
   where
     user = User {
       userid = uid
-    , userpassword = maybePassword (password, salt)
+    , userpassword = maybeMkPassword (password, salt, password_strength)
     , useriscompanyadmin = is_company_admin
     , useraccountsuspended = account_suspended
     , userhasacceptedtermsofservice = has_accepted_terms_of_service

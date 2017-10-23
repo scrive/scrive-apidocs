@@ -51,6 +51,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
         runQuery_ $ sqlInsert "users" $ do
             sqlSet "password" $ pwdHash <$> mpwd
             sqlSet "salt" $ pwdSalt <$> mpwd
+            sqlSet "password_strength" $ pwdStrength <$> mpwd
             sqlSet "is_company_admin" admin
             sqlSet "account_suspended" False
             sqlSet "has_accepted_terms_of_service" (Nothing :: Maybe UTCTime)
@@ -160,6 +161,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserPassword Bool where
     runQuery01 . sqlUpdate "users" $ do
       sqlSet "password" $ pwdHash pwd
       sqlSet "salt" $ pwdSalt pwd
+      sqlSet "password_strength" $ pwdStrength pwd
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 

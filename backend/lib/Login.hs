@@ -69,7 +69,7 @@ handleLoginPost = do
                         Nothing -> return True
             case maybeuser of
                 Just user@User{userpassword,userid,useraccountsuspended}
-                    | verifyPassword userpassword passwd
+                    | maybeVerifyPassword userpassword passwd
                     && ipIsOK && not useraccountsuspended -> do
                         failedAttemptCount <- dbQuery $ GetUserRecentAuthFailureCount userid
                         if failedAttemptCount <= 5
@@ -108,7 +108,7 @@ handleLoginPost = do
                             logInfo "User login failed (too many attempts)" $ logObject_ user
                             J.runJSONGenT $ J.value "logged" False
 
-                Just u@User{userpassword} | not (verifyPassword userpassword passwd) -> do
+                Just u@User{userpassword} | not (maybeVerifyPassword userpassword passwd) -> do
                         logInfo "User login failed (invalid password)" $ logObject_ u
                         _ <- if padlogin
                           then dbUpdate $ LogHistoryPadLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)

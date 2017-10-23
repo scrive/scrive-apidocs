@@ -73,6 +73,7 @@ import TestKontra
 import ThirdPartyStats
 import User.APITest
 import UserHistoryTest
+import UserPasswordTest
 import UserStateTest
 import qualified HostClock.Model as HC
 
@@ -81,8 +82,8 @@ allTests = [
     accountInfoTests
   , administrationTests
   , apiV1CallsTests
-  , apiV1JSONTests
   , apiV1ForwardsCompatibilityTests
+  , apiV1JSONTests
   , apiV2CallLogTests
   , apiV2CallsTests
   , apiV2JSONTests
@@ -125,6 +126,7 @@ allTests = [
   , thirdPartyStatsTests
   , userAPITests
   , userHistoryTests
+  , userPasswordTests
   , userStateTests
   ]
 

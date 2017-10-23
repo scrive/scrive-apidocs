@@ -392,6 +392,7 @@ Library
                  , User.History.Tables
                  , User.JSON
                  , User.Lang
+                 , User.Migrations
                  , User.Model
                  , User.Model.Filter
                  , User.Model.OrderBy
@@ -507,6 +508,7 @@ Library
                , regex-tdfa
                , resource-pool
                , scientific
+               , scrypt
                , semigroups
                , soap
                , split
@@ -776,6 +778,7 @@ Executable kontrakcja-migrate
                  User.EmailChangeRequest.Tables
                  User.History.Migrations
                  User.History.Tables
+                 User.Migrations
                  User.PasswordReminder.Tables
                  User.Tables
                  User.UserAccountRequest.Tables
@@ -1285,10 +1288,12 @@ Test-suite kontrakcja-test
                  User.EmailChangeRequest.Tables
                  User.History.Migrations
                  User.History.Tables
+                 User.Migrations
                  User.PasswordReminder.Tables
                  User.Tables
                  User.UserAccountRequest.Tables
                  UserHistoryTest
+                 UserPasswordTest
                  UserStateTest
 
   Build-depends: kontrakcja

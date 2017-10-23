@@ -127,7 +127,7 @@ test_setUserPassword_changesPassword = do
   passwordhash <- createPassword "Secret Password!"
   _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
-  assert $ verifyPassword (userpassword (fromJust queriedUser)) "Secret Password!"
+  assert $ maybeVerifyPassword (userpassword (fromJust queriedUser)) "Secret Password!"
 
 test_addUser_repeatedEmailReturnsNothing :: TestEnv ()
 test_addUser_repeatedEmailReturnsNothing = do

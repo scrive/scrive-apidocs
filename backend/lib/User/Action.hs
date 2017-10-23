@@ -83,7 +83,7 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
 createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Email -> (String, String) -> (CompanyID,Bool) -> Lang -> SignupMethod -> m (Maybe User)
 createUser email names companyandrole lang sm = do
   ctx <- getContext
-  passwd <- createPassword =<< randomPassword
+  passwd <- randomPassword
   muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyandrole lang (bdid $ ctxbrandeddomain ctx) sm
   case muser of
     Just user -> do

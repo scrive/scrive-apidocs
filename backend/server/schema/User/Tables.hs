@@ -6,7 +6,7 @@ import KontraPrelude
 tableUsers :: Table
 tableUsers = tblTable {
     tblName = "users"
-  , tblVersion = 20
+  , tblVersion = 21
     , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "password", colType = BinaryT }
@@ -25,6 +25,7 @@ tableUsers = tblTable {
     , tblColumn { colName = "lang", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "associated_domain_id", colType = BigIntT , colNullable = False }
+    , tblColumn { colName = "password_strength", colType = SmallIntT, colNullable = True }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [Check "check_users_lowercase_email" "email = lower(email)"]

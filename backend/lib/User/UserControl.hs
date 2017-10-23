@@ -106,7 +106,7 @@ handlePostChangeEmail uid hash =  withUser $ \user -> do
   mpassword <- getOptionalField asDirtyPassword "password"
   case mpassword of
     Nothing -> return $ internalResponse $ LinkAccount
-    Just password | verifyPassword (userpassword user) password -> do
+    Just password | maybeVerifyPassword (userpassword user) password -> do
       changed <- maybe (return False)
                       (dbUpdate . SetUserEmail (userid user))
                       mnewemail

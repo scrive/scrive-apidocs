@@ -33,7 +33,11 @@ import Purging.Files
 import Session.Model (DeleteExpiredSessions(..))
 import SMS.Events
 import ThirdPartyStats.Core
+import User.Data.User (User(..))
 import User.EmailChangeRequest (DeleteExpiredEmailChangeRequests(..))
+import User.Model.Query (GetUserWherePasswordStrengthIsLessThan(..))
+import User.Model.Update (SetUserPassword(..))
+import User.Password (strengthenPassword)
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
 import User.UserAccountRequest (expireUserAccountRequests)
 import Utils.List
@@ -61,6 +65,7 @@ data JobType
   | PushPlanhatStats
   | SessionsEvaluation
   | SMSEventsProcessing
+  | StrengthenPasswords
   | UserAccountRequestEvaluation
   deriving (Eq, Ord, Show)
 
@@ -84,6 +89,7 @@ jobTypeMapper = [
   , (PushPlanhatStats, "push_planhat_stats")
   , (SessionsEvaluation, "sessions_evaluation")
   , (SMSEventsProcessing, "sms_events_processing")
+  , (StrengthenPasswords, "strengthen_passwords")
   , (UserAccountRequestEvaluation, "user_account_request_evaluation")
   , (DocumentSearchUpdate, "document_search_update")
   , (DocumentsAuthorIDMigration, "document_author_id_job")
@@ -128,10 +134,11 @@ cronJobFetcher (jtype, attempts) = CronJob {
 cronConsumer
   :: ( CryptoRNG m, MonadBase IO m, MonadBaseControl IO m, MonadCatch m, MonadIO m
      , MonadLog m, MonadMask m, MonadThrow m, MonadTime m
-     , AmazonMonad cronenv, CryptoRNG cronenv, MonadBaseControl IO cronenv, MonadDB cronenv
-     , MonadIO cronenv, MonadLog cronenv, MonadMask cronenv, MonadReader CronEnv.CronEnv cronenv
-     , MonadBaseControl IO dbt, MonadCatch dbt, MonadDB dbt, MonadIO dbt, MonadLog dbt
-     , MonadThrow dbt, MonadTime dbt)
+     , AmazonMonad cronenv, CryptoRNG cronenv, MonadBaseControl IO cronenv
+     , MonadDB cronenv, MonadIO cronenv, MonadLog cronenv, MonadMask cronenv
+     , MonadReader CronEnv.CronEnv cronenv
+     , CryptoRNG dbt, MonadBaseControl IO dbt, MonadCatch dbt, MonadDB dbt
+     , MonadIO dbt, MonadLog dbt, MonadThrow dbt, MonadTime dbt)
   => CronConf
   -> Manager
   -> Maybe (EventProcessor dbt)
@@ -273,6 +280,22 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     SessionsEvaluation -> do
       runDB . dbUpdate $ DeleteExpiredSessions
       return . RerunAfter $ ihours 1
+    StrengthenPasswords -> do
+      runDB $ do
+        muser <- dbQuery $ GetUserWherePasswordStrengthIsLessThan 1
+        case muser of
+          -- If no passwords to strengthen, we can relax for a while
+          Nothing   -> return . RerunAfter $ idays 14
+          Just user ->
+            case userpassword user of
+              Nothing -> do
+                logAttention_ $ "StrengthenPasswords got a user without password"
+                  <> ", should not happen"
+                return . RerunAfter $ iseconds 1
+              Just password -> do
+                newPassword <- strengthenPassword password
+                void $ dbUpdate $ SetUserPassword (userid user) newPassword
+                return . RerunAfter $ iseconds 5
     SMSEventsProcessing -> do
       runCronEnv $ SMS.Events.processEvents
       return . RerunAfter $ iseconds 5

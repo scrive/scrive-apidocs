@@ -501,7 +501,7 @@ instance Arbitrary UserInfo where
                       }
 
 instance Arbitrary Password where
-  arbitrary = Password <$> arbitrary <*> arbitrary
+  arbitrary = LegacyPassword <$> arbitrary <*> arbitrary
 
 instance Arbitrary SignupMethod where
   arbitrary = elements [AccountRequest, ViralInvitation, ByAdmin, CompanyInvitation]

@@ -102,7 +102,7 @@ apiCallGetUserPersonalToken = api $ do
                 throwM . SomeDBExtraException $ serverError wrongPassMsg
               Just user -> do
                 ctx <- getContext
-                if verifyPassword (userpassword user) passwd
+                if maybeVerifyPassword (userpassword user) passwd
                   then do
                     let uid = userid user
                     _success <- dbUpdate $ CreatePersonalToken uid
@@ -150,7 +150,7 @@ apiCallChangeUserPassword = api $ do
   mpassword <- getOptionalField asValidPassword "password"
   case (mpassword) of
      (Just password) ->
-          if (verifyPassword (userpassword user) oldpassword)
+          if (maybeVerifyPassword (userpassword user) oldpassword)
             then do
               passwordhash <- createPassword password
               _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
