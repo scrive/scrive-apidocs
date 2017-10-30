@@ -106,7 +106,12 @@ module.exports = React.createClass({
           && event.target.tagName.toLowerCase() === "input") {
         // event bubbled from filling input field, skip it
       } else {
-        this.handleStartHighlight();
+        const doc = this.context.document;
+        const currentSig = doc.currentSignatory();
+        const currentSigCanHighlight = currentSig.canSign() && currentSig.allowshighlighting();
+        if (currentSigCanHighlight) {
+          this.handleStartHighlight();
+        }
       }
     }
   },
