@@ -1,6 +1,5 @@
 var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
-var HubSpot = require("../../common/hubspot_service");
 var Select = require("../../common/select");
 var Track = require("../../common/track");
 var List = require("../../lists/list");
