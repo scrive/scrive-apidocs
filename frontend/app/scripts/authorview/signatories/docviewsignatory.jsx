@@ -6,6 +6,7 @@ var LanguageService = require("../../common/language_service");
 var ChangeAuthenticationToViewModal = require("./changeauthenticationtoviewmodal");
 var ChangeAuthenticationToSignModal = require("./changeauthenticationtosignmodal");
 var ChangeSignatoryDetailModal = require("./changesignatorydetailmodal");
+var ChangeEmailAndMobileModal = require("./changeemailandmobilemodal");
 var ShowAPIDeliveryModal = require("./showapideliverymodal");
 var EmailValidation = require("../../../js/validation.js").EmailValidation;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
@@ -31,6 +32,7 @@ var Modal = require("../../common/modal");
         showChangeAuthenticationToViewMethodModal: false,
         showChangeEmailModal: false,
         showChangeMobileModal: false,
+        showChangeEmailAndMobileModal: false,
         showRemindViaEmailAndSMSModal: false,
         showRemindViaSMSModal: false
       };
@@ -112,13 +114,20 @@ var Modal = require("../../common/modal");
       }
     },
 
+    hasChangeEmailAndMobileOption: function () {
+      var signatory = this.props.signatory;
+      return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
+        && signatory.document().pending()
+        && !signatory.hasSigned()
+        && signatory.emailMobileDelivery();
+    },
+
     hasChangeEmailOption: function () {
       var signatory = this.props.signatory;
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
-        && signatory.undeliveredMailInvitation()
         && signatory.document().pending()
         && !signatory.hasSigned()
-        && (signatory.emailDelivery() || signatory.emailMobileDelivery());
+        && signatory.emailDelivery();
     },
 
     hasExtraSignatoryDetails: function () {
@@ -142,13 +151,12 @@ var Modal = require("../../common/modal");
       && !signatory.hasSigned();
     },
 
-    hasChangePhoneOption: function () {
+    hasChangeMobileOption: function () {
       var signatory = this.props.signatory;
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
-        && signatory.undeliveredSMSInvitation()
         && signatory.document().pending()
         && !signatory.hasSigned()
-        && (signatory.mobileDelivery() || signatory.emailMobileDelivery());
+        && signatory.mobileDelivery();
     },
 
     hasGoToSignviewOption: function () {
@@ -162,7 +170,8 @@ var Modal = require("../../common/modal");
     hasAnyOptions: function () {
       return this.hasRemindOption()
         || this.hasChangeEmailOption()
-        || this.hasChangePhoneOption()
+        || this.hasChangeMobileOption()
+        || this.hasChangeEmailAndMobileOption()
         || this.hasGoToSignviewOption();
     },
 
@@ -175,6 +184,37 @@ var Modal = require("../../common/modal");
        || signatory.personalnumber();
     },
 
+    handleStartChangingEmailAndMobile: function () {
+      Track.track(
+        "Click change email and phone",
+        {
+          "Signatory index": this.props.signatory.signIndex()
+        }
+      );
+
+      this.setState({showChangeEmailAndMobileModal: true});
+    },
+
+    onChangeEmailAndMobileModalClose: function () {
+      this.setState({showChangeEmailAndMobileModal: false});
+    },
+
+    onChangeEmailAndMobileModalAction: function (newValue) {
+      Track.track_timeout(
+        "Accept",
+        {
+          "Signatory index": this.props.signatory.signIndex(),
+          "Accept": "change email"
+        }
+      );
+
+      LoadingDialog.open();
+
+      var self = this;
+      this.props.signatory.changeEmailAndPhone(newValue).sendAjax(function () {
+        self.triggerOnAction();
+      });
+    },
     handleStartChangingEmail: function () {
       Track.track(
         "Click change email",
@@ -586,10 +626,16 @@ var Modal = require("../../common/modal");
                 style={{"margin-bottom": "10px"}}
               />
             }
-            {/* if */ this.hasChangePhoneOption() &&
+            {/* if */ this.hasChangeMobileOption() &&
               <Button
                 text={localization.changePhone}
                 onClick={this.handleStartChangingMobile}
+              />
+            }
+            {/* if */ this.hasChangeEmailAndMobileOption() &&
+              <Button
+                text={localization.changeEmailAndPhone}
+                onClick={this.handleStartChangingEmailAndMobile}
               />
             }
           </div>
@@ -633,13 +679,19 @@ var Modal = require("../../common/modal");
             onAction={this.props.onAction}
           />
 
+          <ChangeEmailAndMobileModal active={this.state.showChangeEmailAndMobileModal}
+            email={signatory.email()}
+            mobile={signatory.mobile()}
+            onAction={this.onChangeEmailAndMobileModalAction}
+            onClose={this.onChangeEmailAndMobileModalClose}
+          />
+
           <ChangeSignatoryDetailModal active={this.state.showChangeEmailModal}
             value={signatory.email()}
             validator={new EmailValidation()}
             label={localization.changeEmailModal.label}
             placeholder={localization.changeEmailModal.placeholder}
             title={localization.changeEmailModal.title}
-            acceptButtonText={localization.changeEmailModal.acceptButton}
             invalidValueFlash={localization.changeEmailModal.invalidEmailFlash}
             onAction={this.onChangeEmailModalAction}
             onClose={this.onChangeEmailModalClose}
@@ -651,7 +703,6 @@ var Modal = require("../../common/modal");
             label={localization.changeMobileModal.label}
             placeholder={localization.changeMobileModal.placeholder}
             title={localization.changeMobileModal.title}
-            acceptButtonText={localization.changeMobileModal.acceptButton}
             invalidValueFlash={localization.changeMobileModal.invalidMobileFlash}
             onAction={this.onChangeMobileModalAction}
             onClose={this.onChangeMobileModalClose}

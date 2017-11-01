@@ -231,6 +231,12 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
               mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
               logAttention "Respond404" . object $ logRequest rq mbody
               notFoundPage >>= notFound
+            LinkInvalid -> do
+              rq <- askRq
+              mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
+              logAttention "LinkInvalid" . object $ logRequest rq mbody
+              -- We reply with 422, because the request is in correct form (so not 400)
+              linkInvalidPage >>= resp 422
         , E.Handler $ \e@DBException{..} -> Left <$> do
             rq <- askRq
             mbody <- liftIO (tryReadMVar $ rqInputsBody rq)

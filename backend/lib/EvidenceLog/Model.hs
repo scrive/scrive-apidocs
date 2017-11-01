@@ -290,7 +290,6 @@ data CurrentEvidenceEventType =
   RestartDocumentEvidence                          |
   MarkInvitationReadEvidence                       |
   CloseDocumentEvidence                            |
-  ChangeSignatoryEmailWhenUndeliveredEvidence      |
   CancelDocumentEvidence                           |
   AttachSealedFileEvidence                         |
   PreparationToPendingEvidence                     |
@@ -349,7 +348,9 @@ data CurrentEvidenceEventType =
   AuthorAttachmentAccepted                           |
   PageHighlightingAdded                              |
   PageHighlightingCleared                            |
-  SignatoryAttachmentNotUploaded
+  SignatoryAttachmentNotUploaded                     |
+  ChangeSignatoryEmailEvidence                       |
+  ChangeSignatoryPhoneEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -414,7 +415,8 @@ data ObsoleteEvidenceEventType =
   UpdateFieldTextEvidence                         |
   SignWithELegFailureEvidence                     |
   SignatoryLinkVisited                            |
-  ObsoleteAuthorAttachmentAccepted
+  ObsoleteAuthorAttachmentAccepted                |
+  ChangeSignatoryEmailWhenUndeliveredEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 
@@ -453,7 +455,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Obsolete NewDocumentEvidence)                             = toSQL (28::Int16)
   toSQL (Current MarkInvitationReadEvidence)                       = toSQL (29::Int16)
   toSQL (Current CloseDocumentEvidence)                            = toSQL (30::Int16)
-  toSQL (Current ChangeSignatoryEmailWhenUndeliveredEvidence)      = toSQL (31::Int16)
+  toSQL (Obsolete ChangeSignatoryEmailWhenUndeliveredEvidence)     = toSQL (31::Int16)
   toSQL (Obsolete ChangeMainfileEvidence)                          = toSQL (32::Int16)
   toSQL (Obsolete CancelDocumenElegEvidence)                       = toSQL (33::Int16)
   toSQL (Current CancelDocumentEvidence)                           = toSQL (34::Int16)
@@ -548,6 +550,9 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence) = toSQL (123::Int16)
   toSQL (Current SignatoryAttachmentNotUploaded) = toSQL (124::Int16)
   toSQL (Current UpdateFieldRadioGroupEvidence) = toSQL (125::Int16)
+  toSQL (Current ChangeSignatoryEmailEvidence) = toSQL (126::Int16)
+  toSQL (Current ChangeSignatoryPhoneEvidence) = toSQL (127::Int16)
+
 
 
 instance FromSQL EvidenceEventType where
@@ -585,7 +590,7 @@ instance FromSQL EvidenceEventType where
       28 -> return (Obsolete NewDocumentEvidence)
       29 -> return (Current MarkInvitationReadEvidence)
       30 -> return (Current CloseDocumentEvidence)
-      31 -> return (Current ChangeSignatoryEmailWhenUndeliveredEvidence)
+      31 -> return (Obsolete ChangeSignatoryEmailWhenUndeliveredEvidence)
       32 -> return (Obsolete ChangeMainfileEvidence)
       33 -> return (Obsolete CancelDocumenElegEvidence)
       34 -> return (Current CancelDocumentEvidence)
@@ -680,8 +685,10 @@ instance FromSQL EvidenceEventType where
       123 -> return (Current ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence)
       124 -> return (Current SignatoryAttachmentNotUploaded)
       125 -> return (Current UpdateFieldRadioGroupEvidence)
+      126 -> return (Current ChangeSignatoryEmailEvidence)
+      127 -> return (Current ChangeSignatoryPhoneEvidence)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 125)]
+        reRange = [(1, 127)]
       , reValue = n
       }
 

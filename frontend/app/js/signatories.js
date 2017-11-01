@@ -554,16 +554,24 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
                 mobile_number: mobileNumber
         });
     },
+    changeEmailAndPhone: function(newValue) {
+        return new Submit({
+                url: "/changeemailandphone/" + this.document().documentid() + "/" + this.signatoryid(),
+                method: "POST",
+                email: newValue.email,
+                phone: newValue.mobile
+         });
+    },
     changeEmail: function(email) {
         return new Submit({
-                url: "/changeemail/" + this.document().documentid() + "/" + this.signatoryid(),
+                url: "/changeemailandphone/" + this.document().documentid() + "/" + this.signatoryid(),
                 method: "POST",
                 email: email
          });
     },
     changePhone: function(phone) {
         return new Submit({
-                url: "/changephone/" + this.document().documentid() + "/" + this.signatoryid(),
+                url: "/changeemailandphone/" + this.document().documentid() + "/" + this.signatoryid(),
                 method: "POST",
                 phone: phone
          });

@@ -6,8 +6,8 @@ module Doc.Model.Update
   , AppendSealedFile(..)
   , AppendExtendedSealedFile(..)
   , CancelDocument(..)
-  , ChangeSignatoryEmailWhenUndelivered(..)
-  , ChangeSignatoryPhoneWhenUndelivered(..)
+  , ChangeSignatoryEmail(..)
+  , ChangeSignatoryPhone(..)
   , ChangeAuthenticationToViewMethod(..)
   , ChangeAuthenticationToSignMethod(..)
   , CloseDocument(..)
@@ -517,9 +517,10 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m CancelD
                   (return ())
                   actor
 
-data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered SignatoryLinkID (Maybe User) String Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeSignatoryEmailWhenUndelivered () where
-  update (ChangeSignatoryEmailWhenUndelivered slid muser email actor) = do
+data ChangeSignatoryEmail = ChangeSignatoryEmail SignatoryLinkID (Maybe User) String Actor
+instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeSignatoryEmail () where
+  update (ChangeSignatoryEmail slid muser email actor) = do
+    magichash :: MagicHash <- random
     oldemail <- updateDocumentWithID $ const $ do
       oldemail :: String <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "signatory_link_fields" $ do
              sqlFrom "signatory_link_fields AS signatory_link_fields_old"
@@ -529,6 +530,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeS
              sqlWhereEq "signatory_link_fields.signatory_link_id" slid
              sqlWhereEq "signatory_link_fields.type" EmailFT
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+          sqlSet "token" magichash
           sqlSet "mail_invitation_delivery_status" Unknown
           sqlSet "user_id" $ fmap userid muser
           sqlWhereEq "signatory_links.id" slid
@@ -538,13 +540,15 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeS
       updateMTimeAndObjectVersion (actorTime actor)
       return oldemail
     void $ update $ InsertEvidenceEvent
-          ChangeSignatoryEmailWhenUndeliveredEvidence
+          ChangeSignatoryEmailEvidence
           (F.value "oldemail" oldemail >> F.value "newemail" email)
           actor
 
-data ChangeSignatoryPhoneWhenUndelivered = ChangeSignatoryPhoneWhenUndelivered SignatoryLinkID String Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeSignatoryPhoneWhenUndelivered () where
-  update (ChangeSignatoryPhoneWhenUndelivered slid phone actor) = do
+data ChangeSignatoryPhone = ChangeSignatoryPhone SignatoryLinkID String Actor
+instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m)
+  => DBUpdate m ChangeSignatoryPhone () where
+  update (ChangeSignatoryPhone slid phone actor) = do
+    magichash :: MagicHash <- random
     oldphone <- updateDocumentWithID $ const $ do
       oldphone :: String <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "signatory_link_fields" $ do
              sqlFrom "signatory_link_fields AS signatory_link_fields_old"
@@ -554,6 +558,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeS
              sqlWhereEq "signatory_link_fields.signatory_link_id" slid
              sqlWhereEq "signatory_link_fields.type" MobileFT
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+          sqlSet "token" magichash
           sqlSet "sms_invitation_delivery_status" Unknown
           sqlSet "user_id" (Nothing :: Maybe UserID)
           sqlWhereEq "signatory_links.id" slid
@@ -563,7 +568,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeS
       updateMTimeAndObjectVersion (actorTime actor)
       return oldphone
     void $ update $ InsertEvidenceEvent
-          ChangeSignatoryPhoneWhenUndeliveredEvidence
+          ChangeSignatoryPhoneEvidence
           (F.value "oldphone" oldphone >> F.value "newphone" phone)
           actor
 

@@ -943,7 +943,8 @@ assertionPredicate = liftIO . T.assertionPredicate
 assertRaisesInternalError :: (Show v, MonadIO m, MonadMask m) =>  m v -> m ()
 assertRaisesInternalError a = catchJust (\case
   KE.Respond404      -> Nothing
-  KE.InternalError _ -> Just ())
+  KE.InternalError _ -> Just ()
+  KE.LinkInvalid     -> Nothing)
   (a >>= assertFailure . ("Expecting InternalError but got " ++) . show)
   return
 

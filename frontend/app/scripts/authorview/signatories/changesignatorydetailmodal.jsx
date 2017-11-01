@@ -75,7 +75,6 @@ module.exports = React.createClass({
     label: React.PropTypes.string.isRequired,
     placeholder: React.PropTypes.string.isRequired,
     title: React.PropTypes.string.isRequired,
-    acceptButtonText: React.PropTypes.string.isRequired,
     invalidValueFlash: React.PropTypes.string.isRequired,
     onAction: React.PropTypes.func.isRequired,
     onClose: React.PropTypes.func.isRequired
@@ -118,7 +117,6 @@ module.exports = React.createClass({
         <Modal.Footer>
           <Modal.CancelButton onClick={this.props.onClose} />
           <Modal.AcceptButton
-            title={this.props.acceptButtonText}
             onClick={this.onAccept}
           />
         </Modal.Footer>

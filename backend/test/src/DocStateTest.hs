@@ -63,7 +63,7 @@ docStateTests env = testGroup "DocState" [
   testThat "DeleteSigAttachment will not work after signing" env testDeleteSigAttachmentAlreadySigned,
   testThat "DeleteSigAttachment adds to the log" env testDeleteSigAttachmentEvidenceLog,
   testThat "CloseDocument adds to the log" env testCloseDocumentEvidenceLog,
-  testThat "ChangeSignatoryEmailWhenUndelivered adds to the log" env testChangeSignatoryEmailWhenUndeliveredEvidenceLog,
+  testThat "ChangeSignatoryEmail adds to the log" env testChangeSignatoryEmailEvidenceLog,
   testThat "CancelDocument adds to the log" env testCancelDocumentEvidenceLog,
 
   testThat "AppendFirstSealedFile adds to the log" env testAppendFirstSealedFileEvidenceLog,
@@ -415,15 +415,15 @@ testCancelDocumentEvidenceLog = do
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
     assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg
 
-testChangeSignatoryEmailWhenUndeliveredEvidenceLog :: TestEnv ()
-testChangeSignatoryEmailWhenUndeliveredEvidenceLog = do
+testChangeSignatoryEmailEvidenceLog :: TestEnv ()
+testChangeSignatoryEmailEvidenceLog = do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (isPending && ((<=) 2 . length . documentsignatorylinks)) `withDocumentM` do
     Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
-    success <- randomUpdate $ \t-> ChangeSignatoryEmailWhenUndelivered (signatorylinkid sl) Nothing "email@email.com" (systemActor t)
+    success <- randomUpdate $ \t-> ChangeSignatoryEmail (signatorylinkid sl) Nothing "email@email.com" (systemActor t)
     assert success
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
-    assertJust $ find (\e -> evType e == Current ChangeSignatoryEmailWhenUndeliveredEvidence) lg
+    assertJust $ find (\e -> evType e == Current ChangeSignatoryEmailEvidence) lg
 
 testCloseDocumentEvidenceLog :: TestEnv ()
 testCloseDocumentEvidenceLog = do

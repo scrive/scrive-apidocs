@@ -55,7 +55,11 @@ CancelDocumentEvidenceArchive=$_CancelDocumentEvidenceTextSimpleArchive()$
 CancelDocumentEvidenceVerificationPages=$_CancelDocumentEvidenceTextSimpleNotArchive()$
 ###
 ###
+ChangeSignatoryEmailEvidenceLog=The user <span class="actor"/> changed the email address for the party from $oldemail$ to $newemail$.
+###
 ChangeSignatoryEmailWhenUndeliveredEvidenceLog=The user <span class="actor"/> changed the email address for the party from $oldemail$ to $newemail$.
+###
+ChangeSignatoryPhoneEvidenceLog=The user <span class="actor"/> changed the mobile number for the party from $oldphone$ to $newphone$.
 ###
 ChangeSignatoryPhoneWhenUndeliveredEvidenceLog=The user <span class="actor"/> changed the mobile number for the party from $oldphone$ to $newphone$.
 ###

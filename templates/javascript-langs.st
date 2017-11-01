@@ -512,16 +512,19 @@ javascriptLocalisation =
          , changeEmailModal: {
              title: "$_changeEmailModalTitle()$"
            , label: "$_changeEmailModalLabel()$"
-           , acceptButton: "$_changeEmailModalAcceptButton()$"
            , invalidEmailFlash: "$_changeEmailModalAcceptInvalidEmailFlash()$"
            , placeholder: "$_changeEmailModalPlaceholder()$"
          }
          , changeMobileModal: {
              title: "$_changeMobileModalTitle()$"
            , label: "$_changeMobileModalLabel()$"
-           , acceptButton: "$_changeMobileModalAcceptButton()$"
            , invalidMobileFlash: "$_changeMobileModalAcceptInvalidMobileFlash()$"
            , placeholder: "$_changeMobileModalPlaceholder()$"
+         }
+         , changeEmailAndPhone : "$_changeEmailAndPhone()$"
+         , changeEmailAndMobileModal: {
+             title: "$_changeEmailAndMobileModalTitle()$"
+           , label: "$_changeEmailAndMobileModalLabel()$"
          }
          , changePhone : "$_changePhone()$"
          , newPasswordModal: {

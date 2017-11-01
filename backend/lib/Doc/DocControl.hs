@@ -17,8 +17,7 @@ module Doc.DocControl(
     , handleIssueGoToSignviewPad
     , prepareEmailPreview
     , handleResend
-    , handleChangeSignatoryEmail
-    , handleChangeSignatoryPhone
+    , handleChangeSignatoryEmailAndPhone
     , showPage
     , showPreview
     , showPreviewForSignatory
@@ -58,7 +57,7 @@ import Cookies
 import DB
 import DB.TimeZoneName
 import Doc.API.Callback.Model
-import Doc.Conditions (DocumentDoesNotExist(..))
+import Doc.Conditions (DocumentDoesNotExist(..), SignatoryTokenDoesNotMatch(..))
 import Doc.DocInfo
 import Doc.DocMails
 import Doc.DocStateData
@@ -83,6 +82,7 @@ import InternalResponse
 import Kontra
 import KontraLink
 import KontraPrelude
+import Log.Identifier
 import MagicHash
 import Redirect
 import User.Email
@@ -213,11 +213,15 @@ handleAfterSigning slid = logSignatory slid $ do
 -- call Apple service and enable cookies (again) on their phone.
 {-# NOINLINE handleSignShowSaveMagicHash #-}
 handleSignShowSaveMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
-handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $ (do
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
-    dbUpdate $ AddDocumentSessionToken sid mh
-    -- Redirect to propper page
-    sendRedirect $ LinkSignDocNoMagicHash did sid) `catchDBExtraException` (\(DocumentDoesNotExist _) -> respond404)
+handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $
+  (do
+    dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
+      dbUpdate $ AddDocumentSessionToken sid mh
+      -- Redirect to propper page
+      sendRedirect $ LinkSignDocNoMagicHash did sid
+  )
+  `catchDBExtraException` (\(DocumentDoesNotExist _) -> respond404)
+  `catchDBExtraException` (\SignatoryTokenDoesNotMatch -> respondLinkInvalid)
 
 -- |
 --   /s/[documentid]/[signatorylinkid] and /sp/[documentid]/[signatorylinkid]
@@ -433,28 +437,72 @@ handleResend docid signlinkid = guardLoggedInOrThrowInternalError $ do
     _ <- sendReminderEmail customMessage actor False signlink
     return ()
 
--- This only works for undelivered mails
-handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
-handleChangeSignatoryEmail docid slid = guardLoggedInOrThrowInternalError $ do
-  email <- getCriticalField asValidEmail "email"
-  getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
-    muser <- dbQuery $ GetUserByEmail (Email email)
-    actor <- guardJustM $ mkAuthorActor <$> getContext
-    dbUpdate $ ChangeSignatoryEmailWhenUndelivered slid muser email actor
-    sl <- guardJust . getSigLinkFor slid =<< theDocument
-    _ <- sendInvitationEmail1 sl
-    J.runJSONGenT $ return ()
+handleChangeSignatoryEmailAndPhone :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
+handleChangeSignatoryEmailAndPhone docid slid = guardLoggedInOrThrowInternalError $ do
+  memail <- getCorrectOptionalField asValidEmail "email"
+  mphone <- getCorrectOptionalField asValidPhone "phone"
+  -- at least one of email or phone must be provided
+  when (isNothing memail && isNothing mphone) $ do
+    logAttention "At least one of email or phone has to be provided" $ object [
+        identifier_ docid
+      , identifier_ slid
+      ]
+    internalError
 
--- This only works for undelivered smses
-handleChangeSignatoryPhone :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
-handleChangeSignatoryPhone docid slid = guardLoggedInOrThrowInternalError $ do
-  phone <- getCriticalField asValidPhone "phone"
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
     actor <- guardJustM $ mkAuthorActor <$> getContext
-    dbUpdate $ ChangeSignatoryPhoneWhenUndelivered slid phone actor
-    -- get (updated) siglink from updated document
-    sl <- guardJust . getSigLinkFor slid =<< theDocument
-    _ <- sendInvitationEmail1 sl
+    sl <- guardJustM $ getSigLinkFor slid <$> theDocument
+    -- this signatory must not have signed
+    when (hasSigned sl) $ do
+      logAttention "Signatory has already signed" $ object [
+          identifier_ docid
+        , identifier_ slid
+        ]
+      internalError
+    -- the document must be available for signing
+    whenM ((not . isPending) <$> theDocument) $ do
+      logAttention "Document is not pending" $ object [
+          identifier_ docid
+        ]
+      internalError
+
+    case memail of
+      Nothing -> return ()
+      Just email -> do
+
+        -- email field has to be defined
+        let hasEmailField  = isJust . getFieldByIdentity EmailFI . signatoryfields $ sl
+        when (not $ hasEmailField) $ do
+          logAttention "Cannot set email. Field is not defined for signatory." $ object [
+              identifier_ docid
+            , identifier_ slid
+            ]
+          internalError
+
+        when (getEmail sl /= email) $ do
+          muser <- dbQuery $ GetUserByEmail (Email email)
+          dbUpdate $ ChangeSignatoryEmail slid muser email actor
+
+    case mphone of
+      Nothing -> return ()
+      Just phone -> do
+        -- phone field has to be defined
+        let hasPhoneField  = isJust . getFieldByIdentity MobileFI . signatoryfields $ sl
+        when (not $ hasPhoneField) $ do
+          logAttention "Cannot set phone. Field is not defined for signatory." $ object [
+              identifier_ docid
+            , identifier_ slid
+            ]
+          internalError
+
+        when (getMobile sl /= phone) $
+          dbUpdate $ ChangeSignatoryPhone slid phone actor
+
+    -- When either of email or phone is changed, the magichash is regenerated,
+    -- so we need a new SL from DB.
+    sl' <- guardJust . getSigLinkFor slid =<< theDocument
+    -- We always send both email and mobile invitations, even when nothing was changed.
+    _ <- sendInvitationEmail1 sl'
     J.runJSONGenT $ return ()
 
 handlePadList :: Kontrakcja m => m Response

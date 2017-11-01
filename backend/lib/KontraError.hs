@@ -13,6 +13,7 @@ import KontraPrelude
 data KontraError =
     Respond404
   | InternalError [String]
+  | LinkInvalid
   deriving (Show, Typeable)
 
 instance E.Exception KontraError
@@ -24,6 +25,9 @@ internalError = do
 
 respond404 :: MonadThrow m => m a
 respond404 = throwM Respond404
+
+respondLinkInvalid :: MonadThrow m => m a
+respondLinkInvalid = throwM LinkInvalid
 
 {-# NOINLINE preventTailCallOptimization #-}
 preventTailCallOptimization :: (Monad m) => m ()
