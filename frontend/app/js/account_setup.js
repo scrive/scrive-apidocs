@@ -147,15 +147,15 @@ var Track = require("../scripts/common/track");
               };
               mixpanel.register(ps);
               mixpanel.people.set(ps);
-              // HubSpot.track(HubSpot.FORM_TOS_SUBMIT,
-              //               { "signup_method" : model.signupMethod(),
-              //                 "fullname" : model.sndname() ? model.fstname() + ' ' + model.sndname() : model.fstname(),
-              //                 "firstname" : model.fstname(),
-              //                 "lastname" : model.sndname(),
-              //                 "email"    : model.email(),
-              //                 "phone" : model.phone(),
-              //                 "company" : model.company(),
-              //                 "jobtitle" : model.position()});
+              HubSpot.track(HubSpot.FORM_TOS_SUBMIT,
+                            { "signup_method" : model.signupMethod(),
+                              "fullname" : model.sndname() ? model.fstname() + ' ' + model.sndname() : model.fstname(),
+                              "firstname" : model.fstname(),
+                              "lastname" : model.sndname(),
+                              "email"    : model.email(),
+                              "phone" : model.phone(),
+                              "company" : model.company(),
+                              "jobtitle" : model.position()});
 
               Track.track_timeout('Sign TOS', {}, function() {
                   window.location = rs.location;
