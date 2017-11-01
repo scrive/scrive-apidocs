@@ -140,6 +140,9 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
    // end Mixpanel
 ####
 analyticsLoaderKontrakcja=
+$loadScript(src="//js.hubspot.com/forms/current.js")$
+$loadScript(src="//js.hs-analytics.net/analytics/431732.js")$
+
 <script>
   $analyticsLoaderBase()$
   mixpanel.track_links('#logo', 'Click Logo');
