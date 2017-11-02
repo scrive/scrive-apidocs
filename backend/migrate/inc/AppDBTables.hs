@@ -41,6 +41,7 @@ import SMS.FromKontra.Tables
 import SMS.Tables
 import Theme.Tables
 import ThirdPartyStats.Tables
+import User.APILog.Tables
 import User.CallbackScheme.Tables
 import User.EmailChangeRequest.Tables
 import User.History.Tables
@@ -140,4 +141,5 @@ kontraTables =
     ++ [
     tableKontraInfoForMails
   , tableKontraInfoForSMSes
+  , tableAPILogs
   ]

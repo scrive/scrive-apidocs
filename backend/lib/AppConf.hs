@@ -62,6 +62,9 @@ data AppConf = AppConf {
     -- ^ Configuration of Nets - .DK/.NO BankID provider.
   , monitoringConfig   :: Maybe MonitoringConf
     -- ^ Configuration of the ekg-statsd-based monitoring.
+  , isAPILogEnabled :: Bool
+    -- ^ If true, (limited amount of) API calls are logged in DB and available
+    --   for user to inspect.
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -153,6 +156,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldOpt "monitoring"
       monitoringConfig
       "Configuration of the ekg-statsd-based monitoring."
+  <*> fieldDef "api_call_log_enabled" False
+      isAPILogEnabled
+      "Enable API Call logging in DB."
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf
@@ -184,4 +190,5 @@ instance Default AppConf where
     , salesforceConf     = Nothing
     , netsConfig         = Nothing
     , monitoringConfig   = Nothing
+    , isAPILogEnabled    = False
     }

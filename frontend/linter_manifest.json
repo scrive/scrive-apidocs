@@ -57,6 +57,7 @@
   "./app/scripts/common/trackingview.jsx",
   "./app/scripts/common/transporter.jsx",
   "./app/scripts/common/modal.jsx",
+  "./app/scripts/account/apisettings/apilogview/*.jsx",
   "./app/scripts/account/settings/*.jsx",
   "./app/scripts/account/subscription.jsx",
   "./app/scripts/account/subscription/*.jsx",

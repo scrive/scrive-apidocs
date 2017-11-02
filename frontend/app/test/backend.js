@@ -4,6 +4,7 @@ var doc2 = require("./data/document2");
 var profile = require("./data/profile");
 var file = require("./data/file");
 var evidence_attachments = require("./data/evidence_attachments");
+var apilog = require("./data/apilog");
   var exports = {};
 
   exports.createServer = function () {
@@ -106,6 +107,12 @@ var evidence_attachments = require("./data/evidence_attachments");
       xhr.respond(200, { "Content-Type": "application/json" }, JSON.stringify(subscriptionJSON));
     });
 
+    server.respondWith(/\/api\/frontend\/apilog\/list/, function (xhr) {
+      xhr.respond(
+        200, {"Content-Type": "application/json"},
+        JSON.stringify(_.clone(apilog))
+      );
+    });
 
 
     return server;

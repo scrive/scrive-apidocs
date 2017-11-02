@@ -25,6 +25,7 @@ import Redirect
 import Routing
 import Salesforce.Control as Salesforce
 import User.API
+import User.APILog.API
 import qualified Administration.AdministrationControl as Administration
 import qualified Archive.Control as ArchiveControl
 import qualified Attachment.Control as AttachmentControl
@@ -167,6 +168,7 @@ staticRoutes production = choice
      , userAPI
      , padApplicationAPI
      , oauth
+     , apiLogAPI
 
      -- api explorer
      , dir "api-explorer" $ remainingPath GET $ runWebSandboxT (runPlusSandboxT $ serveDirectory EnableBrowsing ["index.html"] (staticDir ++ "/api-explorer")) >>= either return (maybe respond404 return)

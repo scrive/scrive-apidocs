@@ -87,7 +87,8 @@ checkFieldsEqualAppConfCronConf
     _logConfig          _production         _cdnBaseUrl         guardTimeConf
     _isMailBackdoorOpen  mailNoreplyAddress  cgiGrpConfig      _admins
     _sales              _initialUsers        mixpanelToken     _trackjsToken
-    _hubspotConf         salesforceConf     _netsConfig        _monitoringConfig)
+    _hubspotConf         salesforceConf     _netsConfig        _monitoringConfig
+    _isAPILogEnabled)
   (CronConf
      cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
      cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
@@ -118,7 +119,8 @@ checkFieldsEqualAppConfMailerConf
     _logConfig          _production         _cdnBaseUrl        _guardTimeConf
     _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig      _admins
     _sales              _initialUsers       _mixpanelToken     _trackjsToken
-    _hubspotConf        _salesforceConf     _netsConfig        _monitoringConfig)
+    _hubspotConf        _salesforceConf     _netsConfig        _monitoringConfig
+    _isAPILogEnabled)
   (MailingServerConf
     _mailerHttpBindAddress     mailerDBConfig
     _mailerMaxDBConnections    mailerRedisCacheConfig
@@ -143,7 +145,8 @@ checkFieldsEqualAppConfMessengerConf
     _logConfig          _production         _cdnBaseUrl        _guardTimeConf
     _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig      _admins
     _sales              _initialUsers       _mixpanelToken     _trackjsToken
-    _hubspotConf        _salesforceConf     _netsConfig        _monitoringConfig)
+    _hubspotConf        _salesforceConf     _netsConfig        _monitoringConfig
+    _isAPILogEnabled)
   (MessengerServerConf
     _messengerHttpBindAddress   messengerDBConfig
     _messengerMaxDBConnections _messengerLogConfig

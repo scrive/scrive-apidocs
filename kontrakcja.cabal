@@ -81,6 +81,7 @@ Library
                  , API.V2
                  , API.V2.Errors
                  , API.V2.Monad
+                 , API.V2.MonadUtils
                  , API.V2.Parameters
                  , API.V2.User
                  , Administration.AdministrationControl
@@ -367,6 +368,10 @@ Library
                  , ThirdPartyStats.Tables
                  , ThirdPartyStats.Utils
                  , User.API
+                 , User.APILog.API
+                 , User.APILog.Migrations
+                 , User.APILog.Model
+                 , User.APILog.Tables
                  , User.Action
                  , User.Data.SignupMethod
                  , User.Data.Stats
@@ -751,6 +756,8 @@ Executable kontrakcja-migrate
                  Theme.Tables
                  ThirdPartyStats.Migrations
                  ThirdPartyStats.Tables
+                 User.APILog.Migrations
+                 User.APILog.Tables
                  User.CallbackScheme.Tables
                  User.EmailChangeRequest.Tables
                  User.History.Tables
@@ -1174,6 +1181,7 @@ Test-suite kontrakcja-test
                  Doc.API.V1.ForwardsCompatibilityTest
                  Doc.API.V1.JSONTest
                  Doc.API.V2.AesonTestUtils
+                 Doc.API.V2.APILogTest
                  Doc.API.V2.Calls.CallsTestUtils
                  Doc.API.V2.Calls.DocumentGetCallsTest
                  Doc.API.V2.Calls.DocumentPostCallsTest
@@ -1246,6 +1254,8 @@ Test-suite kontrakcja-test
                  ThirdPartyStats
                  ThirdPartyStats.Migrations
                  ThirdPartyStats.Tables
+                 User.APILog.Migrations
+                 User.APILog.Tables
                  User.APITest
                  User.CallbackScheme.Tables
                  User.EmailChangeRequest.Tables

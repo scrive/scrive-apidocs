@@ -35,6 +35,7 @@ import DB.SQLFunction
 import Doc.API.V1.CallsTest
 import Doc.API.V1.ForwardsCompatibilityTest
 import Doc.API.V1.JSONTest
+import Doc.API.V2.APILogTest
 import Doc.API.V2.CallsTest
 import Doc.API.V2.JSONTest
 import DocControlTest
@@ -80,6 +81,7 @@ allTests = [
   , apiV1CallsTests
   , apiV1JSONTests
   , apiV1ForwardsCompatibilityTests
+  , apiV2CallLogTests
   , apiV2CallsTests
   , apiV2JSONTests
   , archiveTests

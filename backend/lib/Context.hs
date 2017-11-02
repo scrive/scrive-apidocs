@@ -56,6 +56,7 @@ data Context = Context
     , ctxbrandeddomain       :: BrandedDomain
     , ctxsalesforceconf      :: Maybe SalesforceConf
     , ctxnetsconfig          :: Maybe NetsConfig
+    , ctxisapilogenabled     :: Bool
     }
 
 ctxDomainUrl :: Context -> String

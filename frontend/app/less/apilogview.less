@@ -1,0 +1,188 @@
+.apilogview {
+  .apicallslistview {
+    &.hidden {
+      display: none;
+    }
+
+    tbody {
+      tr {
+        cursor: pointer;
+
+        .request-status {
+          font-weight: bold;
+        }
+      }
+    }
+
+    tfoot {
+      .load-more {
+        cursor: pointer;
+        text-align: center;
+      }
+    }
+  }
+
+  .apicallview {
+    position: relative;
+
+    .closer {
+      background: url(~"@{img-base-url}/editor-view-remove-party.png");
+      background-position: 0 0;
+      cursor: pointer;
+      display: inline-block;
+      height: 22px;
+      left: -9px;
+      position: absolute;
+      top: -9px;
+      width: 24px;
+
+      &:hover {
+        background-position: -24px 0;
+      }
+    }
+
+    .section {
+      background: white;
+      margin-bottom: 3px;
+      padding: 40px;
+      padding-top: 30px;
+
+      &:after {
+        clear: both;
+        content: '';
+        display: block;
+        height: 0px;
+      }
+
+      .col {
+        float: left;
+
+        &.col-left {
+          margin-right: 20px;
+          width: 210px;
+        }
+
+        &.col-right {
+          width: 708px;
+        }
+      }
+
+      .header,
+      .placeholder {
+        font-size: 16px;
+        font-weight: bold;
+        line-height: 24px;
+        text-transform: uppercase;
+      }
+
+      .placeholder {
+        color: #ccc;
+        font-size: 14px;
+        text-transform: uppercase;;
+      }
+
+      &.meta {
+        .col-left {
+          width: 798px;
+
+          > p {
+            &.uri {
+              font-size: 18px;
+              font-weight: bold;
+              line-height: 26px;
+            }
+
+            &.time {
+              font-size: 14px;
+              line-height: 22px;
+            }
+          }
+        }
+
+        .col-right {
+          width: 120px;
+
+          p {
+            font-size: 18px;
+            line-height: 26px;
+            font-weight: bold;;
+
+            &:first-child {
+              font-size: 16px;
+              line-height: 24px;
+              text-transform: uppercase;
+            }
+          }
+        }
+      }
+
+      &.params {
+        table {
+          font-size: 14px;
+          margin-top: 20px;
+
+          tr {
+            text-align: left;
+
+            th {
+              color: #505050;
+              font-weight: bold;
+              text-transform: uppercase;
+              width: 354px;
+            }
+
+            td {
+              font-size: 14px;
+              padding-top: 40px;
+            }
+          }
+        }
+      }
+
+      &.body {
+        .pre-wrapper {
+          position: relative;
+
+          pre {
+            background: #f7f8f9;
+            box-sizing: border-box;
+            color: #4568a1;
+            font-size: 12px;
+            line-height: 1.2em;
+            padding: 35px 75px;
+            padding-bottom: 50px;
+          }
+
+          &.collapsed {
+            pre {
+              max-height: 250px;
+              overflow: hidden;
+              padding-bottom: 15px;
+            }
+          }
+
+          .expander,
+          .collapser {
+            bottom: 0px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            height: 50px;
+            left: 0px;
+            line-height: 50px;
+            position: absolute;
+            text-align: center;
+            text-transform: uppercase;
+            right: 0px;
+          }
+
+          .expander {
+            background-image: repeating-linear-gradient(
+              180deg, transparent, rgba(247, 248, 249, 0.9)
+            );
+          }
+        }
+      }
+    }
+  }
+}

@@ -12,13 +12,12 @@ module TestKontra (
     , mkCookies
     , getHeader
     , getCookie
-    , defaultUri
-    , defaultDomain
     , mkRequest
     , mkRequestWithHeaders
     , mkContext
     , modifyTestTime
     , setTestTime
+    , setRequestURI
     ) where
 
 import Control.Arrow
@@ -77,6 +76,7 @@ data TestEnvSt = TestEnvSt {
 data TestEnvStRW = TestEnvStRW {
     terwTimeDelay   :: !NominalDiffTime -- Modifies currentTime, when taken from IO
   , terwCurrentTime :: !(Maybe UTCTime) -- When 'Nothing', currentTime is taken from IO
+  , terwRequestURI  :: !String
   }
 
 type InnerTestEnv = StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO)))
@@ -96,7 +96,12 @@ ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
 ununTestEnv st m = teRunLogger st
   . (\m' -> runReaderT m' st)
   -- for each test start with no time delay
-  . (\m' -> fst <$> (runStateT m' $ TestEnvStRW { terwTimeDelay = 0, terwCurrentTime = Nothing }))
+  . (\m' -> fst <$> (runStateT m' $ TestEnvStRW
+      { terwTimeDelay = 0
+      , terwCurrentTime = Nothing
+      , terwRequestURI = "http://testkontra.fake"
+      }
+    ))
   . unTestEnv $ m
 
 instance CryptoRNG TestEnv where
@@ -195,6 +200,10 @@ modifyTestTime modtime = do
 setTestTime :: (MonadState TestEnvStRW m) => UTCTime -> m ()
 setTestTime currtime = modify (\terw -> terw { terwCurrentTime = Just currtime })
 
+-- | Sets current uri of all test requests
+setRequestURI :: (MonadState TestEnvStRW m) => String -> m ()
+setRequestURI uri = modify (\terw -> terw { terwRequestURI = uri })
+
 -- Various helpers for constructing appropriate Context/Request
 
 -- | Creates GET/POST input text variable
@@ -256,39 +265,33 @@ getHeader name hdrs = BSU.toString <$> join
 getCookie :: String -> [(String, Cookie)] -> Maybe String
 getCookie name cookies = cookieValue <$> lookup name cookies
 
--- | Default domain and uri used for tests
-defaultDomain :: String
-defaultDomain = "testkontra.fake"
-
--- | Default uri used for tests
-defaultUri :: String
-defaultUri = "http://" ++ defaultDomain
-
 -- | Constructs initial request with given data (POST or GET)
-mkRequest :: MonadIO m => Method -> [(String, Input)] -> m Request
+mkRequest :: (MonadState TestEnvStRW m, MonadIO m) => Method -> [(String, Input)] -> m Request
 mkRequest method vars = mkRequestWithHeaders method vars [("host",["testkontra.fake"])]
 
-mkRequestWithHeaders :: MonadIO m => Method -> [(String, Input)] -> [(String, [String])]-> m Request
-mkRequestWithHeaders method vars headers = liftIO $ do
-    rqbody <- newEmptyMVar
-    ib <- newMVar vars
-    let iq = if isReqPost
-                then []
-                else vars
-    return Request {
-          rqSecure = False
-        , rqMethod = POST
-        , rqPaths = []
-        , rqUri = defaultUri
-        , rqQuery = ""
-        , rqInputsQuery = iq
-        , rqInputsBody = ib
-        , rqCookies = []
-        , rqVersion = HttpVersion 1 1
-        , rqHeaders = mkHeaders $ headers
-        , rqBody = rqbody
-        , rqPeer = ("", 0)
-    }
+mkRequestWithHeaders ::(MonadState TestEnvStRW m, MonadIO m) =>  Method -> [(String, Input)] -> [(String, [String])]-> m Request
+mkRequestWithHeaders method vars headers = do
+    uri <- gets terwRequestURI
+    liftIO $ do
+      rqbody <- newEmptyMVar
+      ib <- newMVar vars
+      let iq = if isReqPost
+                  then []
+                  else vars
+      return Request {
+            rqSecure = False
+          , rqMethod = POST
+          , rqPaths = []
+          , rqUri = uri
+          , rqQuery = ""
+          , rqInputsQuery = iq
+          , rqInputsBody = ib
+          , rqCookies = []
+          , rqVersion = HttpVersion 1 1
+          , rqHeaders = mkHeaders $ headers
+          , rqBody = rqbody
+          , rqPeer = ("", 0)
+      }
     where
         isReqPost = method == POST || method == PUT
 
@@ -329,6 +332,7 @@ mkContext lang = do
         , ctxbrandeddomain = bd
         , ctxsalesforceconf = Nothing
         , ctxnetsconfig = Nothing
+        , ctxisapilogenabled = True
     }
 
 -- pgsql database --

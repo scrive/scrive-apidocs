@@ -50,7 +50,7 @@ testSessionUpdate = do
   _ <- do
     rq <- mkRequest GET []
     runTestKontra rq ctx $ updateSession sess (sesID sess) (sesUserID sess) (Just uid)
-  msess' <- getSession (sesID sess) (sesToken sess) defaultDomain
+  msess' <- getSession (sesID sess) (sesToken sess) "some.domain.com"
   assertBool "modified session successfully taken from the database" (isJust msess')
 
   let sess' = fromJust msess'
@@ -100,7 +100,7 @@ testElegTransactionUpdate = replicateM_ 10 $ do
 insertNewSession :: UserID -> TestEnv (Maybe Session, Context)
 insertNewSession uid = do
   (sess, ctx) <- do
-    rq <- mkRequest GET []
+    rq <- mkRequestWithHeaders GET [] [("host",["some.domain.com"])]
     ctx <- mkContext def
     runTestKontra rq ctx $ do
       initialSession <- emptySession
@@ -111,7 +111,7 @@ insertNewSession uid = do
   -- a bad idea
   runSQL_ "SELECT id FROM sessions ORDER BY id DESC LIMIT 1"
   sid <- fetchOne runIdentity
-  msess <- getSession sid (sesToken sess) defaultDomain
+  msess <- getSession sid (sesToken sess) "some.domain.com"
   return (msess, ctx)
 
 addDocumentAndInsertToken :: TestEnv (User, Document, Context)

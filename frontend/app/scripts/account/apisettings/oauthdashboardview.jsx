@@ -69,7 +69,7 @@ module.exports = React.createClass({
     render: function() {
       var self = this;
       return (
-        <div className="tab-container apidashboard">
+        <div className="apidashboard">
           <div className="oauth-section">
             <div className="oauth-section-header">{localization.apiDashboard.grandedTokens}</div>
             <div className="oauth-section-label">{localization.apiDashboard.grantedPriviligesDescription}</div>

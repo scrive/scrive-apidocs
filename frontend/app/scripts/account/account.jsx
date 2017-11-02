@@ -1,11 +1,11 @@
 var React = require("react");
 
 var AccountSettingsPanel = require("./settings/accountsettingspanel");
+var APISettingsPanel = require("./apisettings/apisettingspanel");
 var CompanyAccountsAndStatsView = require(
   "./usersandstats/companyaccountsandstats"
 );
 var CompanyBrandingPanel = require("./branding/companybrandingpanel");
-var OAuthDashboardView = require("./apisettings/oauthdashboardview");
 var StatsView = require("../stats/stats");
 var Subscription = require("../../scripts/account/subscription");
 var SubscriptionPanel = require("./subscription/subscriptionpanel");
@@ -101,6 +101,7 @@ var AccountView = React.createClass({
         }
         <TabViewer.TabViewerTab
           hash="api-dashboard"
+          aliases={["api-log", "api-call"]}
           title={localization.account.apiSettings.name}
         >
           <TrackingView
@@ -108,7 +109,7 @@ var AccountView = React.createClass({
             mixpanelSubcontext="API settings tab"
             trackEvent="View API settings tab"
           >
-            <OAuthDashboardView loadLater={false} />
+            <APISettingsPanel loadLater={false} />
           </TrackingView>
         </TabViewer.TabViewerTab>
         {this.props.companyAdmin &&

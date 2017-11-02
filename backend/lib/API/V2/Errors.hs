@@ -12,7 +12,8 @@ module API.V2.Errors (
   , documentNotFound
   , resourceNotFound
   -- * Internal to API.V2
-  , APIError
+  , APIError(..)
+  , APIErrorType(..)
   , endpointNotFound
   , invalidAuthorization
   , invalidAuthorizationWithMsg

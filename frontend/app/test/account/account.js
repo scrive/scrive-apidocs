@@ -17,8 +17,8 @@ var CompanyBrandingPanel = require(
 var CompanyAccountsAndStatsView = require(
   "../../scripts/account/usersandstats/companyaccountsandstats"
 );
-var OAuthDashboardView = require(
-  "../../scripts/account/apisettings/oauthdashboardview"
+var APISettingsPanel = require(
+  "../../scripts/account/apisettings/apisettingspanel"
 );
 var StatsView = require("../../scripts/stats/stats");
 var SubscriptionPanel = require(
@@ -320,7 +320,7 @@ describe("account/account", function () {
       },
       function () {
         var apiSettingsView = TestUtils.findRenderedComponentWithType(
-          component, OAuthDashboardView
+          component, APISettingsPanel
         );
 
         assert.isFalse(apiSettingsView.props.loadLater);
@@ -342,7 +342,7 @@ describe("account/account", function () {
       },
       function () {
         var apiSettingsView = TestUtils.findRenderedComponentWithType(
-          component, OAuthDashboardView
+          component, APISettingsPanel
         );
 
         assert.isFalse(apiSettingsView.props.loadLater);

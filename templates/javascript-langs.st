@@ -1028,6 +1028,24 @@ javascriptLocalisation =
               , emailAlreadyInUse : "$_flashCantChangeEmail()$"
               , changeEmailMailSent : "$_flashMessageChangeEmailMailSent()$"
             }
+          , apiLog : {
+                dateAndTime : "$_apiLogDateAndTime()$"
+              , expand : "$_apiLogExpand()$"
+              , getParams : "$_apiLogGETParams()$"
+              , hide : "$_apiLogHide()$"
+              , httpStatus : "$_apiLogHTTPStatus()$"
+              , key : "$_apiLogKey()$"
+              , name : "$_apiLogName()$"
+              , noGetParams : "$_apiLogNoGETParams()$"
+              , noPostParams : "$_apiLogNoPOSTParams()$"
+              , noRequestBody : "$_apiLogNoRequestBody()$"
+              , noResponseBody : "$_apiLogNoResponseBody()$"
+              , postParams : "$_apiLogPOSTParams()$"
+              , request : "$_apiLogRequest()$"
+              , requestBody : "$_apiLogRequestBody()$"
+              , responseBody : "$_apiLogResponseBody()$"
+              , value : "$_apiLogValue()$"
+          }
           , apiSettings : {
                 name : "$_apiSettings()$"
           }

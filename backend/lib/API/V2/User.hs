@@ -13,7 +13,7 @@ import Log
 import qualified Data.Text as T
 
 import API.V2.Errors
-import API.V2.Monad
+import API.V2.MonadUtils
 import Cookies
 import DB
 import Doc.DocStateData
