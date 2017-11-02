@@ -7,6 +7,7 @@ $htmlopentag()$
     $standardHeaderContents()$
   </head>
   <body $if(custombackground)$style="background:$custombackground$;"$endif$ class='designview'>
+    $currentSubscription()$
     $header()$
     $flashmessages()$
 

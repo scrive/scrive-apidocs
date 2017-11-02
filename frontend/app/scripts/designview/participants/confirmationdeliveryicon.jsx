@@ -1,20 +1,43 @@
 var React = require("react");
 var Track = require("../../common/track");
+var Subscription = require("../../account/subscription");
 
 module.exports = React.createClass({
+  isAllowedConfirmationMethod: function (dm) {
+    var sig = this.props.model;
+    if (sig.isLastViewer() && sig.confirmationdelivery() == "none") {
+      return false;
+    } else if (!Subscription.currentSubscription().canUseSMSConfirmations()) {
+      return dm != "mobile" && dm != "email_mobile";
+    } else {
+      return true;
+    }
+  },
   onClick: function () {
     var sig = this.props.model;
     Track.track("Choose confirmation delivery method", {
       Where: "icon"
     });
-    if (sig.confirmationdelivery() == "email") {
-      sig.setConfirmationDelivery("mobile");
-    } else if (sig.confirmationdelivery() == "mobile") {
-      sig.setConfirmationDelivery("email_mobile");
-    } else if (sig.confirmationdelivery() == "email_mobile" && !sig.isLastViewer()) {
-      sig.setConfirmationDelivery("none");
-    } else {
-      sig.setConfirmationDelivery("email");
+    var cdms = ["email", "mobile", "email_mobile", "none"];
+    var i = (_.indexOf(cdms, sig.confirmationdelivery()) + 1) || 0;
+    while (!this.isAllowedConfirmationMethod(cdms[i % cdms.length])) {
+      i++;
+    }
+    sig.setConfirmationDelivery(cdms[i % cdms.length]);
+    if (sig.isDeliverySynchedWithConfirmationDelivery()) {
+      this.synchDelivery();
+    }
+  },
+  synchDelivery: function () {
+    var sig = this.props.model;
+    if (sig.emailConfirmationDelivery()) {
+      sig.setDeliverySynchedWithConfirmationDelivery("email");
+    } else if (sig.mobileConfirmationDelivery() && Subscription.currentSubscription().canUseSMSInvitations()) {
+      sig.setDeliverySynchedWithConfirmationDelivery("mobile");
+    } else if (sig.emailMobileConfirmationDelivery() && Subscription.currentSubscription().canUseSMSInvitations()) {
+      sig.setDeliverySynchedWithConfirmationDelivery("email_mobile");
+    } else if (sig.noneConfirmationDelivery()) {
+      sig.setDeliverySynchedWithConfirmationDelivery("email");
     }
   },
   icon: function () {

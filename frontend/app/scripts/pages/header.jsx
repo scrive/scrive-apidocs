@@ -1,6 +1,8 @@
 var React = require("react");
 var Button = require("../common/button");
 var Track = require("../common/track");
+var BlockingModal = require("../blocking/blockingmodal");
+var Subscription = require("../account/subscription");
 
 module.exports = React.createClass({
   propTypes: {
@@ -14,9 +16,13 @@ module.exports = React.createClass({
     return false;
   },
   handleNewFromTemplate: function () {
-    Track.track_timeout("Click create from template", {}, function (e) {
-            window.location.href = "/fromtemplate";
+    if (!Subscription.currentSubscription().canUseTemplates())  {
+      this.refs.blockingModal.openContactUsModal();
+    } else {
+      Track.track_timeout("Click create from template", {}, function (e) {
+        window.location.href = "/fromtemplate";
       });
+    }
     return false;
   },
   handleLogout: function () {
@@ -60,7 +66,9 @@ module.exports = React.createClass({
                 type="main"
                 onClick={this.handleNewFromTemplate}
                 text={localization.header.template}
+                locked={!Subscription.currentSubscription().canUseTemplates()}
               />
+              <BlockingModal ref="blockingModal"/>
             </li>
             <li className="session-create float-right">
               <Button

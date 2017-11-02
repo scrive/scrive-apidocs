@@ -3,6 +3,8 @@ var Select = require("../../common/select");
 var Track = require("../../common/track");
 var LanguageService = require("../../common/language_service");
 var _ = require("underscore");
+var Subscription = require("../../account/subscription");
+var BlockingModal = require("../../blocking/blockingmodal");
 
 module.exports = React.createClass({
   signorderOptions: function () {
@@ -36,6 +38,17 @@ module.exports = React.createClass({
     var self = this;
     var sig = this.props.model;
     var deliveryTypes = sig.isLastViewer() ? ["none"] : ["email", "pad", "mobile", "email_mobile", "api"];
+    if (!Subscription.currentSubscription().canUseSMSInvitations()) {
+
+      if (sig.delivery() != "mobile") {
+        deliveryTypes = _.without(deliveryTypes, "mobile");
+      }
+
+      if (sig.delivery() != "email_mobile") {
+        deliveryTypes = _.without(deliveryTypes, "email_mobile");
+      }
+    }
+
     return _.map(deliveryTypes, function (t) {
       return {name: self.deliveryText(t), value: t};
     });
@@ -60,11 +73,23 @@ module.exports = React.createClass({
   authenticationToViewOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes = sig.signs() ? ["standard", "se_bankid", "no_bankid", "dk_nemid"] : ["standard"];
-    authTypes = _.filter(authTypes
-                        , function (authToView) {
-                            return sig.authenticationMethodsCanMix(authToView, sig.authenticationToSign());
-                          });
+    var authTypes = !sig.signs() ? ["standard"] : ["standard", "se_bankid", "no_bankid", "dk_nemid"];
+
+    if (!Subscription.currentSubscription().canUseSEAuthenticationToView() && !sig.seBankIDAuthenticationToView()) {
+      authTypes = _.without(authTypes, "se_bankid");
+    }
+
+    if (!Subscription.currentSubscription().canUseNOAuthenticationToView() && !sig.noBankIDAuthenticationToView()) {
+      authTypes = _.without(authTypes, "no_bankid");
+    }
+
+    if (!Subscription.currentSubscription().canUseDKAuthenticationToView() && !sig.dkNemIDAuthenticationToView()) {
+      authTypes = _.without(authTypes, "dk_nemid");
+    }
+
+    authTypes = _.filter(authTypes, function (authToView) {
+      return sig.authenticationMethodsCanMix(authToView, sig.authenticationToSign());
+    });
 
     return _.map(authTypes, function (t) {
       return {name: self.authenticationToViewText(t), value: t};
@@ -82,11 +107,19 @@ module.exports = React.createClass({
   authenticationToSignOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes = sig.signs() ? ["standard", "se_bankid", "sms_pin"] : ["standard"];
-    authTypes = _.filter(authTypes
-                        , function (authToSign) {
-                            return sig.authenticationMethodsCanMix(sig.authenticationToView(), authToSign);
-                          });
+    var authTypes = !sig.signs() ? ["standard"] : ["standard", "se_bankid", "sms_pin"];
+
+    if (!Subscription.currentSubscription().canUseSEAuthenticationToSign() && !sig.seBankIDAuthenticationToSign()) {
+      authTypes = _.without(authTypes, "se_bankid");
+    }
+
+    if (!Subscription.currentSubscription().canUseSMSPinAuthenticationToSign() && !sig.smsPinAuthenticationToSign()) {
+      authTypes = _.without(authTypes, "sms_pin");
+    }
+
+    authTypes = _.filter(authTypes, function (authToSign) {
+      return sig.authenticationMethodsCanMix(sig.authenticationToView(), authToSign);
+    });
 
     return _.map(authTypes, function (t) {
       return {name: self.authenticationToSignText(t), value: t};
@@ -106,9 +139,23 @@ module.exports = React.createClass({
   confirmationDeliveryOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var deliveryTypes = sig.isLastViewer() ?
-      ["email", "mobile", "email_mobile"] :
-      ["email", "mobile", "email_mobile", "none"];
+    var deliveryTypes =  ["email", "mobile", "email_mobile", "none"];
+
+    if (sig.isLastViewer() && sig.confirmationdelivery() != "none") {
+      deliveryTypes = _.without(deliveryTypes, "none");
+    }
+
+    if (!Subscription.currentSubscription().canUseSMSConfirmations()) {
+
+      if (sig.confirmationdelivery() != "mobile") {
+        deliveryTypes = _.without(deliveryTypes, "mobile");
+      }
+
+      if (sig.confirmationdelivery() != "email_mobile") {
+        deliveryTypes = _.without(deliveryTypes, "email_mobile");
+      }
+    }
+
     return _.map(deliveryTypes, function (t) {
       return {name: self.confirmationDeliveryText(t), value: t};
     });
@@ -173,6 +220,9 @@ module.exports = React.createClass({
                 });
                 sig.setAuthenticationToView(v);
               }}
+              onClickWhenInactive={function () {
+                self.refs.blockingModal.openContactUsModal();
+              }}
             />
           </span>
         </div>
@@ -218,6 +268,9 @@ module.exports = React.createClass({
                 });
                 sig.setAuthenticationToSign(v);
               }}
+              onClickWhenInactive={function () {
+                self.refs.blockingModal.openContactUsModal();
+              }}
             />
           </span>
 
@@ -240,6 +293,7 @@ module.exports = React.createClass({
           </span>
 
         </div>
+        <BlockingModal ref="blockingModal"/>
       </div>
     );
   }

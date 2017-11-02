@@ -44,19 +44,6 @@ var Subscription = require("../scripts/account/subscription");
     });
   };
 
-  var createSubscription = exports.createSubscription = function (cb) {
-    var sub = new Subscription({});
-    var triggered = false;
-    sub.fetch({ processData: true, cache: false });
-    sub.on("change:ready", function () {
-      if (!triggered) {
-        triggered = true
-        cb(sub);
-      }
-    });
-  };
-
-
   var waitUntil = exports.waitUntil = function (fn, cb) {
     if (fn()) {
       return cb();
@@ -109,6 +96,11 @@ var Subscription = require("../scripts/account/subscription");
     }
     $('body').empty();
   };
+
+  exports.unstubCurrentSubscription = function() {
+    window.currentSubscription = new Subscription({});
+  };
+
 
   exports.withSmallScreen = function (fn) {
     var oldBrowserInfo = window.BrowserInfo;

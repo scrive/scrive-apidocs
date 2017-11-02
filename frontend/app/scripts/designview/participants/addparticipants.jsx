@@ -1,9 +1,11 @@
+var _ = require("underscore");
 var React = require("react");
 var Button = require("../../common/button");
 var Track = require("../../common/track");
 var Signatory = require("../../../js/signatories.js").Signatory;
 var CsvSignatoryDesignPopup = require("../../../js/designview/csvsignatorydesign.js").CsvSignatoryDesignPopup;
-var _ = require("underscore");
+var BlockingModal = require("../../blocking/blockingmodal");
+var Subscription = require("../../account/subscription");
 
 module.exports = React.createClass({
   onDone: function () {
@@ -20,14 +22,18 @@ module.exports = React.createClass({
     this.props.onAddSingle();
   },
   addMultisendParticipant: function () {
-    Track.track("Click add CSV");
-    new CsvSignatoryDesignPopup({
-      document: this.props.document,
-      setParticipantDetail: this.props.setParticipantDetail
-    });
+    if (!Subscription.currentSubscription().canUseMassSendout())  {
+      this.refs.blockingModal.openContactUsModal();
+    } else {
+      Track.track("Click add CSV");
+      new CsvSignatoryDesignPopup({
+        document: this.props.document,
+        setParticipantDetail: this.props.setParticipantDetail
+      });
+    }
   },
+
   render: function () {
-    var self = this;
 
     return (
       <div className="design-view-action-participant-new-box-buttons">
@@ -37,7 +43,7 @@ module.exports = React.createClass({
                ref="close-button"
                type="action"
                text={localization.designview.addParties.close}
-               onClick={function () { self.onDone(); }}
+               onClick={this.onDone}
             />
           </div>
         }
@@ -48,8 +54,10 @@ module.exports = React.createClass({
                 <Button
                   ref="add-multi-button"
                   text={localization.designview.addMultisend}
-                  onClick={function () { self.addMultisendParticipant(); }}
+                  onClick={this.addMultisendParticipant}
+                  locked={!Subscription.currentSubscription().canUseMassSendout()}
                 />
+                <BlockingModal ref="blockingModal"/>
               </div>
             }
 
@@ -58,7 +66,7 @@ module.exports = React.createClass({
                 ref="add-single-button"
                 type="action"
                 text={localization.designview.addParty}
-                onClick={function () { self.addSingleParticipant(); }}
+                onClick={this.addSingleParticipant}
               />
             </div>
 

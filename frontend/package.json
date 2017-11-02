@@ -12,6 +12,7 @@
     "closure-linter-wrapper": "~0.2.9",
     "connect-livereload": "~0.2.0",
     "esprima-fb": "~12001.1.0-dev-harmony-fb",
+    "es6-object-assign": "^1.1.0",
     "grunt-autoprefixer": "^3.0.3",
     "grunt-concurrent": "~0.3.0",
     "grunt-connect-proxy": "~0.2.0",

@@ -195,7 +195,8 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateCompany Company where
     companyidx :: CompanyID <- fetchOne runIdentity
     runQuery_ $ sqlInsert "company_uis" $ do
       sqlSet "company_id" companyidx
-
+    runQuery_ $ sqlInsert "feature_flags" $ do
+      sqlSet "company_id" companyidx
     runQuery_ $ sqlSelect "companies" $ do
       sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors

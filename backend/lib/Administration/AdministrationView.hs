@@ -31,10 +31,12 @@ adminMainPage ctx = renderTemplate "adminsmain" $ do
 adminCompanyPage :: TemplatesMonad m => Context -> CompanyID ->  m String
 adminCompanyPage ctx cid = renderTemplate "admincompany" $ do
   F.value "companyid" $ show cid
+  F.value "admin" $ isAdmin ctx
   entryPointFields ctx
 
 adminUserPage :: TemplatesMonad m => Context -> UserID -> m String
 adminUserPage ctx uid = renderTemplate "adminuser" $ do
   F.value "userid" $ show uid
+  F.value "admin" $ isAdmin ctx
   entryPointFields ctx
 

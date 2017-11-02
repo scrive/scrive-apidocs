@@ -14,6 +14,7 @@ import DB
 import Doc.Extending.Migrations
 import Doc.Migrations
 import Doc.Signing.Migrations
+import FeatureFlags.Migrations
 import Mails.FromKontra.Migrations
 import Mails.Migrations
 import Partner.Migrations
@@ -58,4 +59,5 @@ kontraMigrations = [
   , createJointTypeCompanyIDTimeIndexForChargeableItems
   , removeFindAndExtendDigitalSignaturesFromCronJobs
   , signatoryLinkFieldsAddCustomValidation
+  , createFeatureFlags
   ]

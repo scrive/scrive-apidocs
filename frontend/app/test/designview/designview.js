@@ -8,7 +8,7 @@ var BrowserInfo = require("../../js/utils/browserinfo").BrowserInfo;
 var DesignView = require("../../scripts/designview/designview.jsx");
 
 describe("designview/designview", function () {
-  var server, document_, subscription_;
+  var server, document_;
   var container = null;
 
   var renderComponent = function() {
@@ -17,7 +17,7 @@ describe("designview/designview", function () {
     var component = React.render(
       React.createElement(
         DesignView,
-        {model: document_, subscription: subscription_}
+        {model: document_}
       ),
       container[0]
     );
@@ -33,10 +33,7 @@ describe("designview/designview", function () {
   beforeEach(function (done) {
     util.createDocument(function (doc) {
       document_ = doc;
-      util.createSubscription(function(sub) {
-          subscription_ = sub;
-          done();
-      });
+      done();
     });
 
 

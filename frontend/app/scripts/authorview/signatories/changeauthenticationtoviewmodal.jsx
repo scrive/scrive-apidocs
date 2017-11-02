@@ -13,6 +13,7 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
 var Track = require("../../common/track");
 var classNames = require("classnames");
+var Subscription = require("../../account/subscription");
 
 var Modal = require("../../common/modal");
 
@@ -69,10 +70,6 @@ var Modal = require("../../common/modal");
 
     NOBankIDAuthenticationValue: function () {
       return "no_bankid";
-    },
-
-    canUseNonSwedishID: function () {
-      return this.signatory().authenticationToSign() != "se_bankid";
     },
 
     isAuthenticationNOBankID: function () {
@@ -179,33 +176,52 @@ var Modal = require("../../common/modal");
 
     getAuthenticationMethodOptions: function () {
       var model = this.props.model;
+      var sig = model.signatory();
+      var options = [];
 
       var standard = {
         name: localization.docview.signatory.authenticationToViewStandard,
         selected: model.isAuthenticationStandard(),
         value: model.standardAuthenticationValue()
       };
+      options.push(standard);
+
+
       var seBankid = {
         name: localization.docview.signatory.authenticationToViewSEBankID,
         selected: model.isAuthenticationSEBankID(),
         value: model.SEBankIDAuthenticationValue()
       };
+
+      if (sig.seBankIDAuthenticationToView() || Subscription.currentSubscription().canUseSEAuthenticationToView()) {
+        options.push(seBankid);
+      }
+
       var noBankid = {
         name: localization.docview.signatory.authenticationToViewNOBankID,
         selected: model.isAuthenticationNOBankID(),
         value: model.NOBankIDAuthenticationValue()
       };
+
+      if (sig.noBankIDAuthenticationToView() ||
+         (Subscription.currentSubscription().canUseNOAuthenticationToView() && !sig.seBankIDAuthenticationToSign())
+      ) {
+        options.push(noBankid);
+      }
+
       var dkNemid = {
         name: localization.docview.signatory.authenticationToViewDKNemID,
         selected: model.isAuthenticationDKNemID(),
         value: model.DKNemIDAuthenticationValue()
       };
 
-      if (model.canUseNonSwedishID()) {
-        return [standard, seBankid, noBankid, dkNemid];
-      } else {
-        return [standard, seBankid];
+      if (sig.dkNemIDAuthenticationToView() ||
+         (Subscription.currentSubscription().canUseDKAuthenticationToView() && !sig.seBankIDAuthenticationToSign())
+      ) {
+        options.push(dkNemid);
       }
+
+      return options;
     },
 
     setPersonalNumber: function (v) {

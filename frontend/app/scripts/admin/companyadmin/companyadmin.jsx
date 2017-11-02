@@ -15,7 +15,8 @@ var TemplatesList = require("../templateslist");
 
 var CompanyAdminView = React.createClass({
   propTypes: {
-    companyId: React.PropTypes.string.isRequired
+    companyId: React.PropTypes.string.isRequired,
+    forAdmin: React.PropTypes.bool.isRequired
   },
   render: function () {
     return (
@@ -49,6 +50,7 @@ var CompanyAdminView = React.createClass({
         </TabViewer.TabViewerTab>
         <TabViewer.TabViewerTab hash="payments" title="Payments">
           <PaymentsPanel
+            forAdmin={this.props.forAdmin}
             companyid={this.props.companyId}
             loadLater={false}
           />
@@ -58,14 +60,14 @@ var CompanyAdminView = React.createClass({
         </TabViewer.TabViewerTab>
         <TabViewer.TabViewerTab hash="templates" title="Templates">
           <TemplatesList
-            forAdmin={true}
+            forAdmin={this.props.forAdmin}
             loadLater={false}
             companyid={this.props.companyId}
           />
         </TabViewer.TabViewerTab>
         <TabViewer.TabViewerTab hash="documents" title="Documents">
           <DocumentsList
-            forAdmin={true}
+            forAdmin={this.props.forAdmin}
             loadLater={false}
             companyid={this.props.companyId}
           />

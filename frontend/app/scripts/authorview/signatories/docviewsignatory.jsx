@@ -15,7 +15,7 @@ var ConfirmationWithEmail = require("../../../js/confirmationsWithEmails.js").Co
 var $ = require("jquery");
 var LocalStorage = require("../../../js/storage.js").LocalStorage;
 var Track = require("../../common/track");
-
+var Subscription = require("../../account/subscription");
 var Modal = require("../../common/modal");
 
   module.exports = React.createClass({
@@ -137,18 +137,23 @@ var Modal = require("../../common/modal");
 
     hasChangeAuthenticationToView: function () {
       var signatory = this.props.signatory;
+      var currentSubscription = Subscription.currentSubscription();
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
-      && signatory.document().pending()
-      && signatory.signs()
-      && !signatory.hasSigned()
-      && !signatory.hasAuthenticatedToView();
+        && signatory.document().pending()
+        && signatory.signs()
+        && !signatory.hasSigned()
+        && !signatory.hasAuthenticatedToView()
+        && (!signatory.standardAuthenticationToView() || currentSubscription.canUseNonstandardAuthenticationToView());
+
     },
     hasChangeAuthenticationToSign: function () {
       var signatory = this.props.signatory;
+      var currentSubscription = Subscription.currentSubscription();
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
-      && signatory.document().pending()
-      && signatory.signs()
-      && !signatory.hasSigned();
+        && signatory.document().pending()
+        && signatory.signs()
+        && !signatory.hasSigned()
+        && (!signatory.standardAuthenticationToSign() || currentSubscription.canUseNonstandardAuthenticationToSign());
     },
 
     hasChangeMobileOption: function () {

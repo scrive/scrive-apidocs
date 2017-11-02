@@ -6,12 +6,15 @@ var Subscription = require("../account/subscription");
 var BackboneMixin = require("../common/backbone_mixin");
 var Select = require("../common/select");
 var Button = require("../common/button");
+var Checkbox = require("../common/checkbox");
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 
 module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     propTypes: {
-      loadLater: React.PropTypes.bool
+      loadLater: React.PropTypes.bool,
+      forAdmin: React.PropTypes.bool,
+      companyid: React.PropTypes.string
     },
     getBackboneModels: function () {
       return [this.state.subscription];
@@ -27,21 +30,80 @@ module.exports = React.createClass({
     getInitialState: function () {
       return {
         subscription: new Subscription({companyid : this.props.companyid, forAdmin: true}),
-        selectedPlan: undefined
+        initiated: false,
       };
+    },
+    initStateFromSubscription : function() {
+      var subscription = this.state.subscription;
+      this.setState({
+        initiated: true,
+        canUseTemplates: subscription.canUseTemplates(),
+        canUseBranding: subscription.canUseBranding(),
+        canUseAuthorAttachments: subscription.canUseAuthorAttachments(),
+        canUseSignatoryAttachments: subscription.canUseSignatoryAttachments(),
+        canUseMassSendout: subscription.canUseMassSendout(),
+        canUseSMSInvitations: subscription.canUseSMSInvitations(),
+        canUseSMSConfirmations: subscription.canUseSMSConfirmations(),
+        canUseDKAuthenticationToView: subscription.canUseDKAuthenticationToView(),
+        canUseNOAuthenticationToView: subscription.canUseNOAuthenticationToView(),
+        canUseSEAuthenticationToView: subscription.canUseSEAuthenticationToView(),
+        canUseSEAuthenticationToSign: subscription.canUseSEAuthenticationToSign(),
+        canUseSMSPinAuthenticationToSign: subscription.canUseSMSPinAuthenticationToSign()
+      });
     },
     savePlan: function() {
       var self = this;
-      if (this.state.selectedPlan) {
-        this.state.subscription.updateSubscriptionAsAdmin(this.state.selectedPlan, function() {
+      this.state.subscription.updateSubscriptionAsAdmin({
+          selectedPlan : this.state.selectedPlan,
+          canUseTemplates : this.state.canUseTemplates,
+          canUseBranding : this.state.canUseBranding,
+          canUseAuthorAttachments : this.state.canUseAuthorAttachments,
+          canUseSignatoryAttachments : this.state.canUseSignatoryAttachments,
+          canUseMassSendout : this.state.canUseMassSendout,
+          canUseSMSInvitations : this.state.canUseSMSInvitations,
+          canUseSMSConfirmations : this.state.canUseSMSConfirmations,
+          canUseDKAuthenticationToView : this.state.canUseDKAuthenticationToView,
+          canUseNOAuthenticationToView : this.state.canUseNOAuthenticationToView,
+          canUseSEAuthenticationToView : this.state.canUseSEAuthenticationToView,
+          canUseSEAuthenticationToSign : this.state.canUseSEAuthenticationToSign,
+          canUseSMSPinAuthenticationToSign : this.state.canUseSMSPinAuthenticationToSign
+        }, function() {
           new FlashMessage({ type: "success", content: "Saved" });
           self.reload();
         });
-      } else {
-        new FlashMessage({ type: "success", content: "Nothing changed" });
-        this.reload();
+    },
+    componentWillUpdate: function() {
+      if (!this.state.initiated) {
+        this.initStateFromSubscription();
       }
     },
+    renderTROptionSeparator(desc) {
+      return (
+        <tr>
+          <td>
+            <strong>{desc}</strong>
+          </td>
+        </tr>
+      );
+    },
+    renderTRForOptionWithCheckbox(desc, stateProp) {
+      var self = this;
+      return (
+        <tr>
+          <td>
+            {desc}
+          </td>
+          <td>
+            <Checkbox
+              disabled={!this.props.forAdmin}
+              checked={this.state[stateProp]}
+              onChange={function(v) { self.setState({[stateProp]:v})}}
+            />
+          </td>
+        </tr>
+      );
+    },
+
     render: function() {
       var self = this;
       var subscription = this.state.subscription;
@@ -51,7 +113,7 @@ module.exports = React.createClass({
           { /* if */ (subscription.ready()) &&
             <table>
               <tr>
-                <th style={{"width":"120px"}}>
+                <th style={{"width":"250px"}}>
                 </th>
                 <th style={{"width":"200px"}}>
                 </th>
@@ -91,6 +153,22 @@ module.exports = React.createClass({
                   />
                 </td>
               </tr>
+              {this.renderTROptionSeparator("General features")}
+              {this.renderTRForOptionWithCheckbox("Can use templates","canUseTemplates")}
+              {this.renderTRForOptionWithCheckbox("Can use branding","canUseBranding")}
+              {this.renderTRForOptionWithCheckbox("Can use mass sendout","canUseMassSendout")}
+              {this.renderTROptionSeparator("Attachments")}
+              {this.renderTRForOptionWithCheckbox("Can use author attachments","canUseAuthorAttachments")}
+              {this.renderTRForOptionWithCheckbox("Can use signatory attachments","canUseSignatoryAttachments")}
+              {this.renderTROptionSeparator("SMS")}
+              {this.renderTRForOptionWithCheckbox("Can use sms invitations","canUseSMSInvitations")}
+              {this.renderTRForOptionWithCheckbox("Can use sms confirmations","canUseSMSConfirmations")}
+              {this.renderTRForOptionWithCheckbox("Can use SMS Pin authorization to sign","canUseSMSPinAuthenticationToSign")}
+              {this.renderTROptionSeparator("eID to view and sign")}
+              {this.renderTRForOptionWithCheckbox("Can use DK authorization to view","canUseDKAuthenticationToView")}
+              {this.renderTRForOptionWithCheckbox("Can use NO authorization to view","canUseNOAuthenticationToView")}
+              {this.renderTRForOptionWithCheckbox("Can use SE authorization to view","canUseSEAuthenticationToView")}
+              {this.renderTRForOptionWithCheckbox("Can use SE authorization to sign","canUseSEAuthenticationToSign")}
               <tr>
                 <td>
                   <Button

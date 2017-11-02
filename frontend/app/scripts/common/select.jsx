@@ -55,6 +55,7 @@ module.exports = React.createClass({
     style: React.PropTypes.object,
     onSelect: React.PropTypes.func,
     onRemove: React.PropTypes.func,
+    onClickWhenInactive: React.PropTypes.func,
     options: React.PropTypes.array.isRequired
   },
 
@@ -102,7 +103,11 @@ module.exports = React.createClass({
       onSelect(option.value);
     }
   },
-
+  handleClick: function (e) {
+    if (this.inactive() && this.props.onClickWhenInactive) {
+      this.props.onClickWhenInactive();
+    }
+  },
   render: function () {
     var mainStyle = {maxWidth: this.props.width + "px"};
     var buttonStyle = {width: this.props.width + "px"};
@@ -118,6 +123,7 @@ module.exports = React.createClass({
       <div
         className={mainClass}
         style={mainStyle}
+        onClick={this.handleClick}
       >
         <select
           value={this.selectedOptionIndex()}

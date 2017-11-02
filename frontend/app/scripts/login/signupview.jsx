@@ -2,7 +2,6 @@ var React = require("react");
 var BackboneMixin = require("../common/backbone_mixin");
 var Button = require("../common/button");
 var InfoTextInput = require("../common/infotextinput");
-var HubSpot = require("../common/hubspot_service");
 var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
 var Track = require("../common/track");
 var Language = require("../../js/utils/language.js").Language;

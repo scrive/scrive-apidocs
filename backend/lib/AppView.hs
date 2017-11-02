@@ -23,7 +23,6 @@ module AppView(
               ) where
 
 import Control.Arrow (second)
-import Control.Monad.Catch
 import Data.String.Utils hiding (join)
 import Data.Unjson
 import Happstack.Server.SimpleHTTP
@@ -31,6 +30,7 @@ import Log
 import Text.StringTemplates.Templates
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.Base64.Lazy as B64
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
@@ -41,12 +41,15 @@ import qualified Text.StringTemplates.Fields as F
 import Analytics.Include
 import BrandedDomain.BrandedDomain
 import Branding.Adler32
+import Chargeable.Model
 import Company.CompanyUI
 import Company.Model
 import DB
+import FeatureFlags.Model
 import Kontra
 import KontraPrelude
 import ThirdPartyStats.Core
+import User.JSON
 import User.Lang
 import User.Model
 import Utils.HTTP
@@ -108,6 +111,17 @@ companyUIForPage = do
   case (ctxmaybeuser ctx) of
        Just User{usercompany = cid} -> Just <$> (dbQuery $ GetCompanyUI cid)
        _ -> return Nothing
+
+currentSubscriptionJSON :: Kontrakcja m => m (Maybe JSON.JSValue)
+currentSubscriptionJSON = do
+  mcompany <- companyForPage
+  case mcompany of
+    Just company -> do
+      users <- dbQuery $ GetCompanyAccounts $ companyid company
+      docsStartedThisMonth <- fromIntegral <$> (dbQuery $ GetNumberOfDocumentsStartedThisMonth $ companyid company)
+      ff <- dbQuery $ GetFeatureFlags $ companyid company
+      return $ Just $ subscriptionJSON company users docsStartedThisMonth ff
+    _ -> return Nothing
 
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = pageWhereLanguageCanBeInUrl $ do
@@ -190,7 +204,7 @@ handleTermsOfService = withAnonymousContext $ do
   ad <- getAnalyticsData
   simpleHtmlResponse =<< renderTemplate "termsOfService" (standardPageFields ctx Nothing ad)
 
-standardPageFields :: (TemplatesMonad m, MonadDB m, MonadThrow m) => Context -> Maybe CompanyUI -> AnalyticsData -> Fields m ()
+standardPageFields :: (Kontrakcja m) => Context -> Maybe CompanyUI -> AnalyticsData -> Fields m ()
 standardPageFields ctx mcompanyui ad = do
   F.value "langcode" $ codeFromLang $ ctxlang ctx
   F.value "logged" $ isJust (ctxmaybeuser ctx)
@@ -203,6 +217,7 @@ standardPageFields ctx mcompanyui ad = do
   F.object "analytics" $ analyticsTemplates ad
   F.value "trackjstoken" (ctxtrackjstoken ctx)
   F.valueM "brandinghash" $ brandingAdler32 ctx mcompanyui
+  F.valueM "b64subscriptiondata" $  fmap (B64.encode . BSL.fromString . JSON.encode) <$> currentSubscriptionJSON
   F.value "title" $ case emptyToNothing . strip =<< companyBrowserTitle =<< mcompanyui of
                       Just ctitle -> ctitle ++ " - " ++ (bdBrowserTitle $ ctxbrandeddomain ctx)
                       Nothing -> (bdBrowserTitle $ ctxbrandeddomain ctx)

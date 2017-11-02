@@ -12,6 +12,7 @@ var Submit = require("../../../js/submits.js").Submit;
 var DocumentSaveMixin = require("../document_save_mixin");
 var Modal = require("../../common/modal");
 var Subscription = require("../../account/subscription");
+var BlockingModal = require("../../blocking/blockingmodal");
 
 var CantSignModalContent = require("./cantsignmodalcontent");
 var ConfirmationModalAcceptButton = require("./confirmationmodalacceptbutton");
@@ -21,9 +22,7 @@ var SendConfirmationModalContent = require("./sendconfirmationmodalcontent");
 module.exports = React.createClass({
   mixins: [BackboneMixin.BackboneMixin, DocumentSaveMixin],
   propTypes: {
-    document: React.PropTypes.instanceOf(Document).isRequired,
-    subscription: React.PropTypes.instanceOf(Subscription).isRequired,
-    onBlocked: React.PropTypes.func.isRequired
+    document: React.PropTypes.instanceOf(Document).isRequired
   },
   componentWillMount: function () {
     this._confirmationModal = null;
@@ -81,9 +80,13 @@ module.exports = React.createClass({
     submit.send();
   },
   onSaveTemplateButtonClick: function () {
-    Track.track("Click save as template");
-    this.props.document.makeTemplate();
-    this.saveDocument();
+    if (!Subscription.currentSubscription().canUseTemplates())  {
+      this.refs.blockingModal.openContactUsModal();
+    } else {
+      Track.track("Click save as template");
+      this.props.document.makeTemplate();
+      this.saveDocument();
+    }
   },
   onRemoveDocumentButtonClick: function () {
     Track.track("Click remove file");
@@ -117,8 +120,8 @@ module.exports = React.createClass({
       });
 
       doc.save();
-      if (this.props.subscription.isOverLimit()) {
-        this.props.onBlocked();
+      if (Subscription.currentSubscription().isOverLimit()) {
+        this.refs.blockingModal.openContactUsModal();
       } else if (isSigning) {
         this.showSignConfirmationModal();
       } else {
@@ -299,6 +302,7 @@ module.exports = React.createClass({
 
           <Button
             className={(this.props.document.isTemplate() ? "button-save-template" : "button-save-as-template")}
+            locked={!Subscription.currentSubscription().canUseTemplates()}
             text={this.saveTemplateButtonText()}
             onClick={this.onSaveTemplateButtonClick}
           />
@@ -385,6 +389,7 @@ module.exports = React.createClass({
               </Modal.Footer>
             </Modal.Container>
           }
+          <BlockingModal ref="blockingModal"/>
         </div>
       </div>
     );

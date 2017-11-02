@@ -12,6 +12,7 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
 var Track = require("../../common/track");
 var classNames = require("classnames");
+var Subscription = require("../../account/subscription");
 
 var Modal = require("../../common/modal");
 
@@ -170,27 +171,41 @@ var Modal = require("../../common/modal");
       var model = this.props.model;
       var sig = model.signatory();
 
+      var options = [];
       var standard = {
         name: localization.docview.signatory.authenticationToSignStandard,
         selected: model.isNewAuthenticationStandard(),
         value: "standard"
       };
+
+      options.push(standard);
+
       var eleg = {
         name: localization.docview.signatory.authenticationToSignSEBankID,
         selected: model.isNewAuthenticationELeg(),
         value: "se_bankid"
       };
+
+      if (sig.seBankIDAuthenticationToSign() ||
+          (Subscription.currentSubscription().canUseSEAuthenticationToSign() &&
+            (!sig.dkNemIDAuthenticationToView() && !sig.noBankIDAuthenticationToView())
+          )
+      ) {
+        options.push(eleg);
+      }
+
+
       var sms = {
         name: localization.docview.signatory.authenticationToSignSMSPin,
         selected: model.isNewAuthenticationPINbySMS(),
         value: "sms_pin"
       };
 
-      if (sig.authenticationToView() === "no_bankid" || sig.authenticationToView() === "dk_nemid") {
-        return [standard, sms];
+      if (sig.smsPinAuthenticationToSign() || Subscription.currentSubscription().canUseSMSPinAuthenticationToSign()) {
+        options.push(sms);
       }
 
-      return [standard, eleg, sms];
+      return options;
     },
 
     showAuthenticationValueField: function () {

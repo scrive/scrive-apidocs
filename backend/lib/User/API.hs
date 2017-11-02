@@ -23,6 +23,7 @@ import Chargeable.Model
 import Company.Model
 import Context
 import DB
+import FeatureFlags.Model
 import Happstack.Fields
 import InputValidation
 import Kontra
@@ -43,6 +44,7 @@ import User.CallbackScheme.Model
 import User.Email
 import User.EmailChangeRequest
 import User.History.Model
+import User.JSON
 import User.Model
 import User.PasswordReminder
 import User.UserAccountRequest
@@ -128,7 +130,7 @@ apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
   company <- getCompanyForUser user
-  Ok <$> userJSON user company
+  return $ Ok $ userJSON user company
 
 
 apiCallGetSubscription :: Kontrakcja m => m Response
@@ -137,7 +139,8 @@ apiCallGetSubscription =  api $ do
   company <- getCompanyForUser user
   users <- dbQuery $ GetCompanyAccounts $ companyid company
   docsStartedThisMonth <- fromIntegral <$> (dbQuery $ GetNumberOfDocumentsStartedThisMonth $ companyid company)
-  Ok <$> subscriptionJSON company users docsStartedThisMonth
+  ff <- dbQuery $ GetFeatureFlags $ companyid company
+  return $ Ok $ subscriptionJSON company users docsStartedThisMonth ff
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do

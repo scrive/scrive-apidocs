@@ -1,8 +1,21 @@
 var React = require("react");
 var Track = require("../../common/track");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var Subscription = require("../../account/subscription");
+var BlockingModal = require("../../blocking/blockingmodal");
 
 module.exports = React.createClass({
+  isAllowedAuthenticationMethod: function (am) {
+    if (!Subscription.currentSubscription().canUseSEAuthenticationToView() && am == "se_bankid") {
+      return false;
+    } else if (!Subscription.currentSubscription().canUseNOAuthenticationToView() && am == "no_bankid") {
+      return false;
+    } else if (!Subscription.currentSubscription().canUseDKAuthenticationToView() && am == "dk_nemid") {
+      return false;
+    } else {
+      return true;
+    }
+  },
   onClick: function () {
     var sig = this.props.model;
     Track.track("Choose auth to view", {
@@ -10,14 +23,18 @@ module.exports = React.createClass({
     });
     if (!sig.signs()) {
       new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
-    } else if (sig.standardAuthenticationToView()) {
-      sig.setAuthenticationToView("se_bankid");
-    } else if (sig.seBankIDAuthenticationToView()) {
-      sig.setAuthenticationToView("no_bankid");
-    } else if (sig.noBankIDAuthenticationToView()) {
-       sig.setAuthenticationToView("dk_nemid");
-    } else if (sig.dkNemIDAuthenticationToView()) {
-      sig.setAuthenticationToView("standard");
+    } else {
+      var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid"];
+      var i = (_.indexOf(ams, sig.authenticationToView()) + 1) || 0;
+      while (!this.isAllowedAuthenticationMethod(ams[i % ams.length])) {
+        i++;
+      }
+      var newAuthToView = ams[i % ams.length];
+      if (sig.authenticationToView() == newAuthToView && newAuthToView == "standard") {
+        this.refs.blockingModal.openContactUsModal();
+      } else {
+        sig.setAuthenticationToView(newAuthToView);
+      }
     }
   },
   icon: function () {
@@ -71,6 +88,7 @@ module.exports = React.createClass({
           <div className={"design-view-action-participant-icon-auth-to-view-icon " + self.icon()}>
           </div>
         </div>
+        <BlockingModal ref="blockingModal"/>
       </div>
     );
   }

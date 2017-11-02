@@ -253,6 +253,8 @@ Library
                  , EvidencePackage.EvidenceLog
                  , EvidencePackage.EvidenceOfIntent
                  , EvidencePackage.EvidenceOfTime
+                 , FeatureFlags.Model
+                 , FeatureFlags.Tables
                  , File.Conditions
                  , File.File
                  , File.FileID
@@ -376,6 +378,7 @@ Library
                  , User.EmailChangeRequest.Tables
                  , User.History.Model
                  , User.History.Tables
+                 , User.JSON
                  , User.Lang
                  , User.Model
                  , User.Model.Filter
@@ -724,6 +727,8 @@ Executable kontrakcja-migrate
                  EID.CGI.GRP.Transaction.Tables
                  EID.Signature.Tables
                  EvidenceLog.Tables
+                 FeatureFlags.Migrations
+                 FeatureFlags.Tables
                  File.Tables
                  HostClock.Tables
                  KontraPrelude
@@ -1198,6 +1203,9 @@ Test-suite kontrakcja-test
                  EvidenceAttachmentsTest
                  EvidenceLog.Tables
                  EvidenceLogTest
+                 FeatureFlags.Migrations
+                 FeatureFlags.Tables
+                 FeatureFlagsTest
                  File.Tables
                  FileTest
                  FlashMessages

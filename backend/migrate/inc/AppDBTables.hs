@@ -28,6 +28,7 @@ import EID.Authentication.Tables
 import EID.CGI.GRP.Transaction.Tables
 import EID.Signature.Tables
 import EvidenceLog.Tables
+import FeatureFlags.Tables
 import File.Tables
 import HostClock.Tables
 import KontraPrelude
@@ -132,6 +133,7 @@ kontraTables =
   , tableHighlightedPages
   , tableAmazonUploadConsumers
   , tableAmazonUploadJobs
+  , tableFeatureFlags
   ] ++ cronTables
     ++ mailerTables
     ++ messengerTables

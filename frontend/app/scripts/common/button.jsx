@@ -48,6 +48,7 @@ var Track = require("./track");
       multiline   : React.PropTypes.bool,
       href        : React.PropTypes.string,
       id          : React.PropTypes.string,
+      locked      : React.PropTypes.bool,
       oneClick    : React.PropTypes.bool
     },
     getDefaultProps : function() {
@@ -58,6 +59,7 @@ var Track = require("./track");
           "href"      : undefined,
           "id"        : undefined,
           "style"     : {},
+          locked      : false,
           onClick: function () { }
         };
       },
@@ -96,7 +98,7 @@ var Track = require("./track");
         "button-small": this.props.size == "tiny",
         "button-large": this.props.size == "big",
         "inactive": this.props.oneClick && this.state.clicked,
-        "button-signleline" : this.props.multiline
+        "locked": this.props.locked
       });
     },
     style : function() {
@@ -123,6 +125,9 @@ var Track = require("./track");
             }
             {/*else*/ !this.props.multiline &&
               this.props.text
+            }
+            {/* if */ this.props.locked &&
+              <div className="button-lock"/>
             }
           </div>
         </a>

@@ -43,7 +43,8 @@ describe("admin/companyadmin/companyadmin", function () {
 
     var actualProps = _.extendOwn(
       {
-        companyId: "1"
+        companyId: "1",
+        forAdmin: true
       },
       props || {}
     );

@@ -23,21 +23,32 @@ var Track = require("./track");
     propTypes: {
       label: React.PropTypes.string.isRequired,
       checked: React.PropTypes.bool.isRequired,
+      disabled: React.PropTypes.bool,
       onChange: React.PropTypes.func
     },
+
+    getDefaultProps : function() {
+      return {
+        "disabled" : false
+      };
+    },
+
     handleClick: function() {
       // The mixpanel events are named "Check|Uncheck <label>"
       var eventName = (this.props.checked ? 'Uncheck' : 'Check') + ' ' + this.props.label;
       Track.track(eventName);
-      if (this.props.onChange) { this.props.onChange(!this.props.checked); }
+      if (!this.props.disabled && this.props.onChange) {
+        this.props.onChange(!this.props.checked);
+      }
 
     },
 
     render: function() {
 
       var checkboxClasses = classNames({
-        'checkbox': true,
-        'checked': this.props.checked
+        "checkbox": true,
+        "checked": this.props.checked,
+        "disabled": this.props.disabled
       });
 
       return (

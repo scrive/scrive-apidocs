@@ -36,4 +36,20 @@ var Button = require("../../scripts/common/button");
       TestUtils.Simulate.click(anchor);
       TestUtils.Simulate.click(anchor);
     });
+
+    it("should test the locked button has locked icon but can be clicked", function (done) {
+      var clickCount = 0;
+      var button = TestUtils.renderIntoDocument(React.createElement(Button, {
+        text: "Button"
+      , onClick: function () { done(); }
+      , size: "tiny"
+      , locked: true
+      }));
+
+      assert.isTrue($(React.findDOMNode(button)).hasClass("locked"));
+      assert.isTrue($(".button-lock", $(React.findDOMNode(button))).size() > 0);
+      var anchor = TestUtils.findRenderedDOMComponentWithTag(button, "a");
+      TestUtils.Simulate.click(anchor);
+    });
+
   });

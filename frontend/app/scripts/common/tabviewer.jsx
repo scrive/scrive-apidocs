@@ -20,7 +20,8 @@ var TabViewerTabView = React.createClass({
   render: function () {
     var className = ClassNames("float-left", {
       "active": this.props.active,
-      "last-tab": this.props.last
+      "last-tab": this.props.last,
+      "locked": this.props.locked
     });
 
     if (this.props.hidden) {
@@ -29,8 +30,14 @@ var TabViewerTabView = React.createClass({
 
     return (
       <li onClick={this.onClick} className={className}>
-        <h5>{this.props.title}</h5>
+        <div className={"inner-wrapper"}>
+          <h5>{this.props.title}</h5>
+          {/* if */ this.props.locked &&
+            <div className="tab-lock"/>
+          }
+        </div>
       </li>
+
     );
   }
 });
@@ -117,8 +124,9 @@ var TabViewer = React.createClass({
   },
   onTabClick: function (newTabIndex) {
     var newTab = this._tabAtIndex(newTabIndex);
-
-    if (newTab.props.url) {
+    if (newTab.props.onClick) {
+      newTab.props.onClick();
+    } else if (newTab.props.url) {
       window.location = newTab.props.url;
     } else if (newTab.props.hash) {
       window.location.hash = newTab.props.hash;
@@ -156,6 +164,7 @@ var TabViewer = React.createClass({
                   index={index}
                   last={index == React.Children.count(self.props.children) - 1}
                   title={item.props.title}
+                  locked={item.props.locked}
                   onClick={self.onTabClick}
                 />
               );
@@ -178,7 +187,8 @@ var TabViewerTab = React.createClass({
     ]),
     hidden: React.PropTypes.bool,
     title: React.PropTypes.string.isRequired,
-    url: React.PropTypes.string
+    url: React.PropTypes.string,
+    locked: React.PropTypes.bool
   },
   render: function () {
     return this.props.children;

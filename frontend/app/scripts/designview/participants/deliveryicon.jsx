@@ -1,8 +1,16 @@
 var React = require("react");
 var Track = require("../../common/track");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var Subscription = require("../../account/subscription");
 
 module.exports = React.createClass({
+  isAllowedDeliveryMethod: function (dm) {
+    if (!Subscription.currentSubscription().canUseSMSInvitations()) {
+      return dm != "mobile" && dm != "email_mobile";
+    } else {
+      return true;
+    }
+  },
   onClick: function () {
     var sig = this.props.model;
     Track.track("Choose delivery method", {
@@ -10,16 +18,30 @@ module.exports = React.createClass({
     });
     if (sig.isLastViewer()) {
       new FlashMessage({type: "error", content: localization.designview.lastViewerOnlyGetsConfirmation});
-    } else if (sig.delivery() == "email") {
-      sig.setDelivery("pad");
-    } else if (sig.delivery() == "pad") {
-      sig.setDelivery("mobile");
-    } else if (sig.delivery() == "mobile") {
-      sig.setDelivery("email_mobile");
-    } else if (sig.delivery() == "email_mobile") {
-      sig.setDelivery("api");
     } else {
-      sig.setDelivery("email");
+      var dms = ["email", "pad", "mobile", "email_mobile", "api"];
+      var i = (_.indexOf(dms, sig.delivery()) + 1) || 0;
+      while (!this.isAllowedDeliveryMethod(dms[i % dms.length])) {
+        i++;
+      }
+      sig.setDelivery(dms[i % dms.length]);
+      if (sig.isConfirmationDeliverySynchedWithDelivery()) {
+        this.synchConfirmationDelivery();
+      }
+    }
+  },
+  synchConfirmationDelivery: function () {
+    var sig = this.props.model;
+    if (sig.emailDelivery()) {
+      sig.setConfirmationDeliverySynchedWithDelivery("email");
+    } else if (sig.mobileDelivery()  && Subscription.currentSubscription().canUseSMSConfirmations()) {
+      sig.setConfirmationDeliverySynchedWithDelivery("mobile");
+    } else if (sig.emailMobileDelivery() && Subscription.currentSubscription().canUseSMSConfirmations()) {
+      sig.setConfirmationDeliverySynchedWithDelivery("email_mobile");
+    } else if (sig.padDelivery()) {
+      sig.setConfirmationDeliverySynchedWithDelivery("email");
+    } else if (sig.apiDelivery()) {
+      sig.setConfirmationDeliverySynchedWithDelivery("email");
     }
   },
   icon: function () {

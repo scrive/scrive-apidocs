@@ -171,6 +171,51 @@ describe("common/tabviewer", function () {
       assert.equal(tabViewer.state.currentTabIndex, 1);
     });
 
+    it("should handle clicking on tab with onClick set", function () {
+      var clickCount = 0;
+      var tabViewer = renderTabViewer({}, [
+        React.createElement(
+          TabViewer.TabViewerTab,
+          {key: 0, hash: "fst", title: "FST"},
+          React.createElement("div", {}, "FST tab")
+        ),
+        React.createElement(
+          TabViewer.TabViewerTab,
+          {key: 1, hash: "snd", title: "SND", onClick: function() {clickCount++; }},
+          React.createElement("div", {}, "SND tab")
+        )
+      ]);
+
+      assert.equal(tabViewer.state.currentTabIndex, 0);
+      tabViewer.onTabClick(1);
+      assert.equal(tabViewer.state.currentTabIndex, 0);
+      assert.equal(clickCount, 1);
+
+   });
+
+
+   it("should render locked tab with locked icon", function () {
+      var tabViewer = renderTabViewer({}, [
+        React.createElement(
+          TabViewer.TabViewerTab,
+          {key: 0, hash: "other", title: "Other"},
+          React.createElement("div", {})
+        ),
+        React.createElement(
+          TabViewer.TabViewerTab,
+          {key: 1, title: "Locked 1", locked: true},
+          React.createElement("div", {})
+        ),
+        React.createElement(
+          TabViewer.TabViewerTab,
+          {key: 2, title: "Locked 2", locked: true},
+          React.createElement("div", {})
+        )
+      ]);
+      assert.isTrue($("li.locked", tabViewer.getDOMNode()).size() == 2);
+      assert.isTrue($(".tab-lock", tabViewer.getDOMNode()).size() == 2);
+    });
+
     it("handle initial render without matching location hash and initial tab", function () {
       window.location.hash = "i-dont-match";
 
