@@ -257,6 +257,7 @@ module.exports = function (grunt) {
           sourceMap: true
         },
         src: [
+          "<%= yeoman.app %>/../node_modules/es6-object-assign/dist/object-assign-auto.min.js",
           "<%= yeoman.app %>/bower_components/trackjs/tracker.js",
           "<%= yeoman.app %>/bower_components/jquery/dist/jquery.js",
           "<%= yeoman.app %>/bower_components/jquery-migrate/jquery-migrate.js",
@@ -279,6 +280,7 @@ module.exports = function (grunt) {
       },
       prod: {
         src: [
+          "<%= yeoman.app %>/../node_modules/es6-object-assign/dist/object-assign-auto.min.js",
           "<%= yeoman.app %>/bower_components/trackjs/tracker.js",
           "<%= yeoman.app %>/bower_components/jquery/dist/jquery.min.js",
           "<%= yeoman.app %>/bower_components/jquery-migrate/jquery-migrate.min.js",
@@ -301,6 +303,7 @@ module.exports = function (grunt) {
       },
       signview: {
         src: [
+          "<%= yeoman.app %>/../node_modules/es6-object-assign/dist/object-assign-auto.min.js",
           "<%= yeoman.app %>/bower_components/trackjs/tracker.js",
           "<%= yeoman.app %>/bower_components/jquery/dist/jquery.min.js",
           "<%= yeoman.app %>/bower_components/jquery-migrate/jquery-migrate.min.js",
