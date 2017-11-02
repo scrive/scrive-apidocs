@@ -20,7 +20,8 @@ adminuser=
 <div class='admin'></div>
 <script>
 var fromTemplate = {
-  userId: "$userid$"
+  userId: "$userid$",
+  forAdmin: $if(admin)$true$else$false$endif$
 };
 </script>
 <script src="$cdnbaseurl$/compiled/all/useradmin-$versioncode$.js" crossorigin="anonymous"></script>
@@ -34,7 +35,8 @@ admincompany=
 <div class='admin'></div>
 <script>
 var fromTemplate = {
-  companyId: "$companyid$"
+  companyId: "$companyid$",
+  forAdmin: $if(admin)$true$else$false$endif$
 };
 </script>
 <script src="$cdnbaseurl$/compiled/all/companyadmin-$versioncode$.js" crossorigin="anonymous"></script>

@@ -29,7 +29,8 @@ describe("admin/useradmin/useradmin", function () {
 
     var actualProps = underscore.extendOwn(
       {
-        userId: "1"
+        userId: "1",
+        forAdmin: true
       },
       props || {}
     );

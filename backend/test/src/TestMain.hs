@@ -43,6 +43,7 @@ import DumpEvidenceTexts
 import ESignatureTest
 import EvidenceAttachmentsTest
 import EvidenceLogTest
+import FeatureFlagsTest
 import FileTest
 import FlashMessages
 import GTWorkflowTest
@@ -98,6 +99,7 @@ allTests = [
   , evidenceAttachmentsTest
   , evidenceLogTests
   , fileTests
+  , featureFlagsTest
   , flashMessagesTests
   , htmlTests
   , inputValidationTests

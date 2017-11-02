@@ -163,4 +163,46 @@ var Select = require("../../scripts/common/select");
       TestUtils.Simulate.click($(".closer",node)[0]);
     });
 
+    it("select with one option is inactive and onClickWhenInactive is called when clicked", function (done) {
+      var options = [
+        {
+          name: "Default option",
+          value: "A"
+        }
+      ];
+
+      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
+        options: options,
+        onSelect: function (v) { assert.fail("onSelect should not be called for inactive select")},
+        onClickWhenInactive: function() { done(); }
+      }));
+
+      var node = select.getDOMNode();
+      assert.ok($(node).hasClass("inactive") , "it should have inactive class");
+      TestUtils.Simulate.click(node);
+    });
+
+    it("select with two option isn't inactive and onClickWhenInactive isn't called when clicked", function () {
+      var options = [
+        {
+          name: "Default option",
+          value: "A"
+        },
+        {
+          name: "Other option to make whole thing active",
+          value: "B"
+        }
+      ];
+
+      var select = TestUtils.renderIntoDocument(React.createElement(Select, {
+        options: options,
+        onSelect: function (v) { assert.fail("onSelect shouldn't be called in this scenario")},
+        onClickWhenInactive: function() { assert.fail("onClickWhenInactive  shouldn't be called for active select") }
+      }));
+
+      var node = select.getDOMNode();
+      assert.ok(!$(node).hasClass("inactive") , "it shouldn't have inactive class");
+      TestUtils.Simulate.click(node);
+    });
+
   });

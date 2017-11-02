@@ -32,8 +32,8 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         confirmation_delivery_method : "email",
         allows_highlighting: false,
         // Internal properties used by design view for "goldfish" memory
-        changedDelivery : false,
-        changedConfirmationDelivery : false,
+        deliverySynchedWithConfirmationDelivery : true,
+        confirmationDeliverySynchedWithDelivery : true,
         deliveryGoldfishMemory : null,
         confirmationDeliveryWasNone  : false,
         highlightedPages : [],
@@ -42,7 +42,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
 
     initialize: function(args) {
         var signatory = this;
-        signatory.desynchronizeDeliveryAndConfirmationDeliveryIfNeeded();
+        signatory.initDeliveryAndConfirmationDeliverySynchFlags();
         var extendedWithSignatory = function(hash) {
                     hash.signatory = signatory;
                     return hash;
@@ -644,59 +644,34 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     confirmationdelivery : function() {
         return this.get('confirmation_delivery_method');
     },
-    setDelivery: function(d) {
-        this.set({delivery_method : d, changedDelivery : true});
-        if (!this.get("changedConfirmationDelivery"))
-          this.synchConfirmationDelivery();
-        return this;
+    setDelivery: function(d, silent) {
+        this.set({delivery_method : d, deliverySynchedWithConfirmationDelivery : false});
+    },
+    setDeliverySynchedWithConfirmationDelivery: function(d) {
+        this.set({delivery_method:d});
+    },
+    isDeliverySynchedWithConfirmationDelivery : function() {
+      return this.get("deliverySynchedWithConfirmationDelivery");
     },
     setConfirmationDelivery: function(d) {
-        this.set({confirmation_delivery_method:d, changedConfirmationDelivery : true});
-        if (!this.get("changedDelivery"))
-          this.synchDelivery();
-        return this;
+        this.set({confirmation_delivery_method:d, confirmationDeliverySynchedWithDelivery : false});
     },
-    desynchronizeDeliveryAndConfirmationDeliveryIfNeeded : function() {
-      if (this.emailDelivery() && this.emailConfirmationDelivery())
-        return;
-      if (this.mobileDelivery() && this.mobileConfirmationDelivery())
-        return;
-      if (this.emailMobileDelivery() && this.emailMobileConfirmationDelivery())
-        return;
-      if (this.padDelivery() && this.emailDelivery())
-        return;
-
-      this.set({changedDelivery : true, changedConfirmationDelivery : true});
+    setConfirmationDeliverySynchedWithDelivery: function(d) {
+        this.set({confirmation_delivery_method:d});
     },
-    synchConfirmationDelivery : function() {
-      if (this.emailDelivery()) {
-        this.set({confirmation_delivery_method:"email"});
-      }
-      else if (this.mobileDelivery()) {
-        this.set({confirmation_delivery_method:"mobile"});
-      }
-      else if (this.emailMobileDelivery()) {
-        this.set({confirmation_delivery_method:"email_mobile"});
-      }
-      else if (this.padDelivery()) {
-        this.set({confirmation_delivery_method:"email"});
-      }
-      else if (this.apiDelivery()) {
-        this.set({confirmation_delivery_method:"email"});
-      }
+    isConfirmationDeliverySynchedWithDelivery : function() {
+      return this.get("confirmationDeliverySynchedWithDelivery");
     },
-    synchDelivery : function() {
-      if (this.emailConfirmationDelivery()) {
-        this.set({delivery_method:"email"});
-      }
-      else if (this.mobileConfirmationDelivery()) {
-        this.set({delivery_method:"mobile"});
-      }
-      else if (this.emailMobileConfirmationDelivery()) {
-        this.set({delivery_method:"email_mobile"});
-      }
-      else if (this.noneConfirmationDelivery()) {
-        this.set({delivery_method:"email"});
+    initDeliveryAndConfirmationDeliverySynchFlags : function() {
+      if (
+        (this.emailDelivery() && this.emailConfirmationDelivery()) ||
+        (this.mobileDelivery() && this.mobileConfirmationDelivery()) ||
+        (this.emailMobileDelivery() && this.emailMobileConfirmationDelivery()) ||
+        (this.padDelivery() && this.emailDelivery())
+      ) {
+        this.set({deliverySynchedWithConfirmationDelivery : true, confirmationDeliverySynchedWithDelivery : true});
+      } else {
+        this.set({deliverySynchedWithConfirmationDelivery : false, confirmationDeliverySynchedWithDelivery : false});
       }
     },
     authenticationToView: function() {

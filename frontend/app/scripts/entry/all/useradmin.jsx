@@ -6,7 +6,7 @@ var UserAdminView = require("../../admin/useradmin/useradmin.jsx");
 $(function () {
   var $container = $("<div></div>");
   var view = React.render(
-    React.createElement(UserAdminView, {userId: fromTemplate.userId}),
+    React.createElement(UserAdminView, {userId: fromTemplate.userId, forAdmin: fromTemplate.forAdmin}),
     $container[0]
   );
 

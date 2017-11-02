@@ -7,10 +7,12 @@ var CompanyAccountsAndStatsView = require(
 var CompanyBrandingPanel = require("./branding/companybrandingpanel");
 var OAuthDashboardView = require("./apisettings/oauthdashboardview");
 var StatsView = require("../stats/stats");
+var Subscription = require("../../scripts/account/subscription");
 var SubscriptionPanel = require("./subscription/subscriptionpanel");
 var TabViewer = require("../common/tabviewer");
 var Track = require("../common/track");
 var TrackingView = require("../common/trackingview");
+var BlockingModal = require("../blocking/blockingmodal");
 
 var AccountView = React.createClass({
   propTypes: {
@@ -20,8 +22,12 @@ var AccountView = React.createClass({
     mixpanel.register({Context: "Account Page"});
     Track.track("View Account Page");
   },
+  openBlockingModal: function () {
+    this.refs.blockingModal.openContactUsModal();
+  },
   render: function () {
     return (
+      <div>
       <TabViewer.TabViewer>
         <TabViewer.TabViewerTab
           hash="details"
@@ -67,7 +73,7 @@ var AccountView = React.createClass({
             </TrackingView>
           </TabViewer.TabViewerTab>
         }
-        {this.props.companyAdmin &&
+        {/* if */  this.props.companyAdmin && Subscription.currentSubscription().canUseBranding() &&
           <TabViewer.TabViewerTab
             hash="branding-themes-email"
             aliases={[
@@ -83,6 +89,14 @@ var AccountView = React.createClass({
             >
               <CompanyBrandingPanel loadLater={false} />
             </TrackingView>
+          </TabViewer.TabViewerTab>
+        }
+        {/* else */ this.props.companyAdmin && !Subscription.currentSubscription().canUseBranding() &&
+          <TabViewer.TabViewerTab
+            title={localization.account.companySettings}
+            onClick={this.openBlockingModal}
+            locked={true}
+          >
           </TabViewer.TabViewerTab>
         }
         <TabViewer.TabViewerTab
@@ -106,6 +120,8 @@ var AccountView = React.createClass({
           </TabViewer.TabViewerTab>
         }
       </TabViewer.TabViewer>
+      <BlockingModal ref="blockingModal"/>
+      </div>
     );
   }
 });

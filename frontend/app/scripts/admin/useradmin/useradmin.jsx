@@ -10,7 +10,8 @@ var UserDetailsViewFactory = require(
 
 var UserAdminView = React.createClass({
   propTypes: {
-    userId: React.PropTypes.string.isRequired
+    userId: React.PropTypes.string.isRequired,
+    forAdmin: React.PropTypes.bool.isRequired
   },
   render: function () {
     return (
@@ -28,7 +29,7 @@ var UserAdminView = React.createClass({
         </TabViewer.TabViewerTab>
         <TabViewer.TabViewerTab hash="documents" title="Documents">
           <DocumentsList
-            forAdmin={true}
+            forAdmin={this.props.forAdmin}
             loadLater={false}
             userid={this.props.userId}
           />

@@ -71,10 +71,6 @@
     }
   }
 
-  &.button-singleline {
-    max-height: 16px;
-  }
-
   &.main {
     border: 1px solid @brandtextcolor;
     .colored-button(@brandcolor, @brandtextcolor);
@@ -104,6 +100,34 @@
   }
 }
 
+
+// Special styles for lock - it's hard to combine them with other styles
+.button.locked {
+  background-color: #ECECEC;
+  color: #CCCCCC;
+
+  .button-lock {
+    width: 9px;
+    height:9px;
+    display: inline-block;
+    background-image: url(/img/button/plus_dark.png);
+    background-position: 0px 0px;
+    background-repeat: no-repeat;
+    background-size: 9px 9px;
+    vertical-align: top;
+    margin-left: 2px;
+  }
+
+  &.main {
+    background-color: @brandcolor;
+    color: @brandtextcolor;
+    border-style: dashed;
+
+    .button-lock {
+      background-image: url(/img/button/plus_light.png);
+    }
+  }
+}
 
 // Special fixes for special browsers
 input[type=submit].button.button-large,

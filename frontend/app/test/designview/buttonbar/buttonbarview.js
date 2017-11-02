@@ -1,21 +1,24 @@
 var backend = require("../../backend");
 var util = require("../../util");
 var React = require("react");
+var Subscription = require("../../../scripts/account/subscription");
 
 var TestUtils = React.addons.TestUtils;
 
 var ButtonBarView = require("../../../scripts/designview/buttonbar/buttonbarview.jsx");
 
 describe("designview/buttonbarview", function () {
-  var server, document_, subscription_;
+  var server, document_;
 
   var renderComponent = function() {
+    var div = $("<div/>");
+    $("body").append(div);
     var component = React.render(
       React.createElement(
         ButtonBarView,
-        {document: document_, subscription: subscription_, onBlocked: function() {}}
+        {document: document_}
       ),
-      $("body")[0]
+      div[0]
     );
 
     return component;
@@ -28,10 +31,7 @@ describe("designview/buttonbarview", function () {
   beforeEach(function (done) {
     util.createDocument(function (doc) {
       document_ = doc;
-      util.createSubscription(function(sub) {
-          subscription_ = sub;
-          done();
-      });
+      done();
     });
   });
 
@@ -42,6 +42,7 @@ describe("designview/buttonbarview", function () {
 
   afterEach(function () {
     util.cleanTimeoutsAndBody();
+    util.unstubCurrentSubscription();
   });
 
   it("should render buttons for template with file", function () {
@@ -343,4 +344,33 @@ describe("designview/buttonbarview", function () {
       }
     );
   });
+
+  it("should render save as template button locked if subscription doesn't allow templates", function () {
+    sinon.stub(Subscription.currentSubscription(), "canUseTemplates", function () {
+      return false;
+    });
+
+    var component = renderComponent();
+    assert.isTrue($(".button-save-as-template", $(React.findDOMNode(component))).hasClass("locked"));
+    assert.isTrue($(".modal.active").size() == 0);
+
+    TestUtils.Simulate.click($(".button-save-as-template")[0]);
+    assert.isTrue($(".modal.active").size() > 0);
+  });
+
+  it("should render save template button locked if subscription doesn't allow templates", function () {
+    sinon.stub(document_, "isTemplate").returns(true);
+    sinon.stub(Subscription.currentSubscription(), "canUseTemplates", function () {
+      return false;
+    });
+
+    var component = renderComponent();
+    assert.isTrue($(".button-save-template", $(React.findDOMNode(component))).hasClass("locked"));
+    assert.isTrue($(".modal.active").size() == 0);
+
+    TestUtils.Simulate.click($(".button-save-template")[0]);
+    assert.isTrue($(".modal.active").size() > 0);
+  });
+
+
 });

@@ -16,6 +16,21 @@ nomorethanonelist=$list:strong()$
 flashmessages =
 <script src="$cdnbaseurl$/compiled/all/flashmessage-$versioncode$.js" crossorigin="anonymous"></script>
 ####
+currentSubscription=
+<script>
+        var subscriptionData;
+        try {
+          subscriptionData = JSON.parse(Base64.decode("$b64subscriptiondata$"));
+        } catch (e) {
+          console.log("Could not parse subscription data embedded in the DOM", e);
+        }
+
+        var fromCurrentSubscriptionTemplate = {
+          subscriptionData: subscriptionData
+        };
+</script>
+<script src="$cdnbaseurl$/compiled/all/current_subscription-$versioncode$.js" crossorigin="anonymous"></script>
+####
 EnglishInEnglish=English
 ####
 SwedishInSwedish=Svenska

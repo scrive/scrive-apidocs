@@ -1,8 +1,19 @@
 var React = require("react");
 var Track = require("../../common/track");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
+var Subscription = require("../../account/subscription");
+var BlockingModal = require("../../blocking/blockingmodal");
 
 module.exports = React.createClass({
+  isAllowedAuthenticationMethod: function (am) {
+    if (!Subscription.currentSubscription().canUseSEAuthenticationToSign() && am == "se_bankid") {
+      return false;
+    } else if (!Subscription.currentSubscription().canUseSMSPinAuthenticationToSign() && am == "sms_pin") {
+      return false;
+    } else {
+      return true;
+    }
+  },
   onClick: function () {
     var sig = this.props.model;
     Track.track("Choose auth", {
@@ -10,13 +21,22 @@ module.exports = React.createClass({
     });
     if (!sig.signs()) {
       new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
-    } else if (sig.standardAuthenticationToSign()) {
-      sig.setAuthenticationToSign("se_bankid");
-    } else if (sig.seBankIDAuthenticationToSign()) {
-      sig.setAuthenticationToSign("sms_pin");
-    } else if (sig.smsPinAuthenticationToSign()) {
-      sig.setAuthenticationToSign("standard");
+    } else {
+      var ams = ["standard", "se_bankid", "sms_pin"];
+      var i = (_.indexOf(ams, sig.authenticationToSign()) + 1) || 0;
+      while (!this.isAllowedAuthenticationMethod(ams[i % ams.length])) {
+        i++;
+      }
+
+      var newAuthToView = ams[i % ams.length];
+      if (sig.authenticationToSign() == newAuthToView && newAuthToView == "standard") {
+        this.refs.blockingModal.openContactUsModal();
+      } else {
+        sig.setAuthenticationToSign(newAuthToView);
+      }
+
     }
+
   },
   icon: function () {
     var sig = this.props.model;
@@ -63,6 +83,7 @@ module.exports = React.createClass({
           <div className={"design-view-action-participant-icon-auth-to-sign-icon " + self.icon()}>
           </div>
         </div>
+        <BlockingModal ref="blockingModal"/>
       </div>
     );
   }

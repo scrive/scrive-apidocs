@@ -8,6 +8,7 @@ wholePage=$doctype()$
       </head>
       <body $if(custombackground)$style="background:$custombackground$;"$endif$>
         <div class="wrapper-position-footer">
+         $currentSubscription()$
          $header()$
          $flashmessages()$
          $content:noescape()$

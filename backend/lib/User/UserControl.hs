@@ -51,6 +51,7 @@ import User.Action
 import User.Email
 import User.EmailChangeRequest
 import User.History.Model
+import User.JSON
 import User.Model
 import User.PasswordReminder
 import User.UserAccountRequest

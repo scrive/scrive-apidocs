@@ -12,15 +12,14 @@ var ParticipantsTabView = require("./participants/participants");
 var ProcessSettingsTabView = require("./processsettings/processsettings");
 var TabBarView = require("./tabbar").TabBarView;
 var TabView = require("./tabbar").TabView;
-var Blocking = require("./blocking/blocking");
 var Subscription = require("../account/subscription");
 var DragAndDropUploaderView = require("./draganddropuploaderview");
+var UsageInfo = require("./usageinfo/usageinfo");
 
 module.exports = React.createClass({
   mixins: [BackboneMixin.BackboneMixin],
   propTypes: {
-    model: React.PropTypes.instanceOf(Document).isRequired,
-    subscription: React.PropTypes.instanceOf(Subscription).isRequired
+    model: React.PropTypes.instanceOf(Document).isRequired
   },
   getBackboneModels: function (argument) {
     return [this.props.model];
@@ -131,9 +130,6 @@ module.exports = React.createClass({
   onWindowResizeScroll: function () {
     this.affix();
   },
-  onBlocked: function () {
-    this.refs.blockingComponent.openContactUsModal();
-  },
   onDnDUploaderStart: function () {
     this.setState({isDnDUploaderVisible: true});
   },
@@ -150,7 +146,7 @@ module.exports = React.createClass({
           style={{opacity: this.state.topBarStyle.position == "fixed" ? "0" : ""}}
           ref="blocking"
         >
-          <Blocking subscription={this.props.subscription} ref="blockingComponent"/>
+          <UsageInfo/>
         </div>
         <div className="design-view-frame-top-bar" ref="topBar" style={this.state.topBarStyle}>
           <TabBarView document={this.props.model}>
@@ -189,7 +185,7 @@ module.exports = React.createClass({
           isDnDUploaderVisible={this.state.isDnDUploaderVisible}
         />
 
-        <ButtonBarView document={this.props.model}  subscription={this.props.subscription} onBlocked={this.onBlocked}/>
+        <ButtonBarView document={this.props.model} />
 
         {this.props.model.mainfile() == undefined && this.dragAndDropEnabled &&
           <DragAndDropUploaderView
@@ -198,6 +194,7 @@ module.exports = React.createClass({
             onEnd={this.onDnDUploaderEnd}
           />
         }
+
       </div>
     );
   }

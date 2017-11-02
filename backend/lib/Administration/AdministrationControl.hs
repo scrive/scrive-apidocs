@@ -56,6 +56,7 @@ import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots (SignatoryScreenshots(..))
 import EvidenceLog.Model
+import FeatureFlags.Model
 import File.File
 import File.Model
 import File.Storage
@@ -77,6 +78,7 @@ import Theme.Control
 import User.CallbackScheme.Model
 import User.Email
 import User.History.Model
+import User.JSON
 import User.UserControl
 import User.UserView
 import User.Utils
@@ -168,13 +170,13 @@ handleUserGetProfile:: Kontrakcja m => UserID -> m JSValue
 handleUserGetProfile uid = onlySalesOrAdmin $ do
   user <- guardJustM $ dbQuery $ GetUserByID uid
   company <- getCompanyForUser user
-  userJSON user company
+  return $ userJSON user company
 
 
 handleCompanyGetProfile:: Kontrakcja m => CompanyID -> m JSValue
 handleCompanyGetProfile cid = onlySalesOrAdmin $ do
   company <- guardJustM $ dbQuery $ GetCompany cid
-  companyJSON  company
+  return $ companyJSON company
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
 showAdminCompany companyid = onlySalesOrAdmin $ do
@@ -607,14 +609,44 @@ handleCompanyGetSubscription cid = onlySalesOrAdmin $ do
   company <- guardJustM $ dbQuery $ GetCompany cid
   users <- dbQuery $ GetCompanyAccounts $ cid
   docsStartedThisMonth <- fromIntegral <$> (dbQuery $ GetNumberOfDocumentsStartedThisMonth $ cid)
-  subscriptionJSON company users docsStartedThisMonth
+  ff <- dbQuery $ GetFeatureFlags cid
+  return $ subscriptionJSON company users docsStartedThisMonth ff
 
 handleCompanyUpdateSubscription :: Kontrakcja m => CompanyID -> m ()
 handleCompanyUpdateSubscription cid = onlySalesOrAdmin $ do
   paymentPlan <- guardJustM $ join <$> fmap paymentPlanFromText <$> getField "payment_plan"
   _ <- dbUpdate $ SetCompanyPaymentPlan cid paymentPlan
-  return ()
 
+  canUseTemplates <- fmap ((==) "true") $ guardJustM $ getField "can_use_templates"
+  canUseBranding <- fmap ((==) "true") $ guardJustM $ getField "can_use_branding"
+  canUseAuthorAttachments  <- fmap ((==) "true") $ guardJustM $ getField "can_use_author_attachments"
+  canUseSignatoryAttachments  <- fmap ((==) "true") $ guardJustM $ getField "can_use_signatory_attachments"
+  canUseMassSendout  <- fmap ((==) "true") $ guardJustM $ getField "can_use_mass_sendout"
+
+  canUseSMSInvitations  <- fmap ((==) "true") $ guardJustM $ getField "can_use_sms_invitations"
+  canUseSMSConfirmations  <- fmap ((==) "true") $ guardJustM $ getField "can_use_sms_confirmations"
+
+  canUseDKAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_dk_authentication_to_view"
+  canUseNOAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_no_authentication_to_view"
+  canUseSEAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_se_authentication_to_view"
+  canUseSEAuthenticationToSign  <- fmap ((==) "true") $ guardJustM $ getField "can_use_se_authentication_to_sign"
+  canUseSMSPinAuthenticationToSign  <- fmap ((==) "true") $ guardJustM $ getField "can_use_sms_pin_authentication_to_sign"
+
+  _ <- dbUpdate $ UpdateFeatureFlags cid $ FeatureFlags {
+      ffCanUseTemplates = canUseTemplates
+    , ffCanUseBranding = canUseBranding
+    , ffCanUseAuthorAttachments = canUseAuthorAttachments
+    , ffCanUseSignatoryAttachments = canUseSignatoryAttachments
+    , ffCanUseMassSendout = canUseMassSendout
+    , ffCanUseSMSInvitations = canUseSMSInvitations
+    , ffCanUseSMSConfirmations = canUseSMSConfirmations
+    , ffCanUseDKAuthenticationToView = canUseDKAuthenticationToView
+    , ffCanUseNOAuthenticationToView = canUseNOAuthenticationToView
+    , ffCanUseSEAuthenticationToView = canUseSEAuthenticationToView
+    , ffCanUseSEAuthenticationToSign = canUseSEAuthenticationToSign
+    , ffCanUseSMSPinAuthenticationToSign = canUseSMSPinAuthenticationToSign
+    }
+  return ()
 
 jsonBrandedDomainsList ::Kontrakcja m => m Aeson.Value
 jsonBrandedDomainsList = onlySalesOrAdmin $ do

@@ -40,6 +40,7 @@ import Doc.SignatoryLinkID
 import Doc.TestInvariants
 import EID.CGI.GRP.Transaction.Model
 import EID.Signature.Model
+import FeatureFlags.Model
 import File.File
 import File.FileID
 import File.Model
@@ -183,6 +184,36 @@ instance Arbitrary DeliveryStatus where
                        , Unknown
                        , Deferred
                        ]
+
+
+instance Arbitrary FeatureFlags where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    e <- arbitrary
+    f <- arbitrary
+    g <- arbitrary
+    h <- arbitrary
+    i <- arbitrary
+    j <- arbitrary
+    k <- arbitrary
+    l <- arbitrary
+    return $ FeatureFlags {
+        ffCanUseTemplates = a
+      , ffCanUseBranding  = b
+      , ffCanUseAuthorAttachments = c
+      , ffCanUseSignatoryAttachments = d
+      , ffCanUseMassSendout = e
+      , ffCanUseSMSInvitations = f
+      , ffCanUseSMSConfirmations = g
+      , ffCanUseDKAuthenticationToView = h
+      , ffCanUseNOAuthenticationToView = i
+      , ffCanUseSEAuthenticationToView = j
+      , ffCanUseSEAuthenticationToSign = k
+      , ffCanUseSMSPinAuthenticationToSign = l
+      }
 
 instance Arbitrary UTCTime where
   arbitrary = posixSecondsToUTCTime . fromInteger <$> arbitrary

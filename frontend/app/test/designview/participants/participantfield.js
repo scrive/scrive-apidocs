@@ -28,6 +28,7 @@ var ParticipantField = require("../../../scripts/designview/participants/partici
       TestUtils.Simulate.change(field.refs["input"].refs["input"].getDOMNode(),{target: {value: "axel@scrive.com"}});
       assert.equal("axel@scrive.com",signatory.emailField().value());
       signatory.setDelivery("mobile");
+      signatory.setConfirmationDelivery("mobile");
       field.forceUpdate();
       assert.equal($(".closer",field.getDOMNode()).length,1);
       TestUtils.Simulate.click(field.refs["input"].refs["close"].getDOMNode());

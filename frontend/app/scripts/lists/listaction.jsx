@@ -9,6 +9,7 @@ module.exports = React.createClass({
        type :  React.PropTypes.string,
        size:  React.PropTypes.string,
        className : React.PropTypes.string,
+       locked : React.PropTypes.bool,
        width : React.PropTypes.number
     },
     getDefaultProps: function() {
@@ -35,6 +36,7 @@ module.exports = React.createClass({
             text={this.props.name}
             width={this.props.width}
             className={"float-left actionButton " + this.props.className}
+            locked={this.props.locked}
           />
         );
       }

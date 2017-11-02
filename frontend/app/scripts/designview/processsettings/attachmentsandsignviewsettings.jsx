@@ -13,6 +13,8 @@ var SignatoryAttachmentsModal = require(
 var AuthorAttachmentsModal = require(
   "../authorattachments/authorattachmentsmodal"
 );
+var BlockingModal = require("../../blocking/blockingmodal");
+var Subscription = require("../../account/subscription");
 
 
 module.exports = React.createClass({
@@ -57,17 +59,25 @@ module.exports = React.createClass({
           <Button
             text={localization.designview.addRemove}
             className='design-view-action-process-left-column-attachments-author-button'
+            locked={!Subscription.currentSubscription().canUseAuthorAttachments()}
             onClick= {function() {
-              Track.track('Open author attachments');
-              document.save();
-              self.setState({authorAttachmentsModalOpened: true});
+              if (!Subscription.currentSubscription().canUseAuthorAttachments())  {
+                self.refs.blockingModal.openContactUsModal();
+              } else {
+                Track.track('Open author attachments');
+                document.save();
+                self.setState({authorAttachmentsModalOpened: true});
+              }
             }}
           />
           <Button
             text={localization.designview.request}
             className="design-view-action-process-left-column-attachments-signatory-button"
+            locked={!Subscription.currentSubscription().canUseSignatoryAttachments()}
             onClick= {function() {
-              if(document.signatoriesWhoSign().length == 0 || document.authorIsOnlySignatory()) {
+             if (!Subscription.currentSubscription().canUseSignatoryAttachments())  {
+                self.refs.blockingModal.openContactUsModal();
+              } else if(document.signatoriesWhoSign().length == 0 || document.authorIsOnlySignatory()) {
                 Track.track('Open signatory attachments but not enough participants');
                 new FlashMessage({ type: 'error' , content: localization.designview.validation.requestAttachmentFlashMessage});
               } else {
@@ -100,6 +110,8 @@ module.exports = React.createClass({
             saveAndFlashMessageIfAlreadySaved={self.saveAndFlashMessageIfAlreadySaved}
             onClose={self.onAuthorAttchmentsModalCancel}
           />
+
+          <BlockingModal ref="blockingModal"/>
         </div>
       </div>
     );

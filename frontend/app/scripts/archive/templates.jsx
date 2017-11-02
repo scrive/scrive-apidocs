@@ -8,6 +8,8 @@ var jQuery = require("jquery");
 var _ = require("underscore");
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 var $ = require("jquery");
+var Subscription = require("../account/subscription");
+var BlockingModal = require("../blocking/blockingmodal");
 
 var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
 var Modal = require("../common/modal");
@@ -173,8 +175,13 @@ module.exports = React.createClass({
 
             <List.ListAction
               name={localization.archive.templates.createnew}
+              locked={!Subscription.currentSubscription().canUseTemplates()}
               onSelect={function() {
-                self.createNewTemplate();
+                if (!Subscription.currentSubscription().canUseTemplates()) {
+                  self.refs.blockingModal.openContactUsModal();
+                } else {
+                  self.createNewTemplate();
+                }
               }}
             />
 
@@ -241,6 +248,8 @@ module.exports = React.createClass({
 
             <List.Pagination/>
           </List.List>
+
+          <BlockingModal ref="blockingModal"/>
 
           <Modal.Container active={self.state.showShareModal}>
             <Modal.Header

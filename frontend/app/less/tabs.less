@@ -43,6 +43,29 @@
         }
       }
       
+
+    &.locked {
+      margin-top: 4px;
+      height: 10px;
+      background-color: #f2f2f2;
+
+      .inner-wrapper {
+        margin-top: -4px;
+
+        .tab-lock {
+          width: 9px;
+          height:9px;
+          display: inline-block;
+          background-image: url(/img/button/plus_dark.png);
+          background-position: 0px 0px;
+          background-repeat: no-repeat;
+          background-size: 9px 9px;
+          vertical-align: top;
+          margin-left: 2px;
+        }
+      }
+    }
+
       h1,
       h2,
       h3,
@@ -51,6 +74,7 @@
       h6 {
         color: @black;
         font-weight: 300;
+        display: inline-block;
         
         &:hover {
           color: #333;
