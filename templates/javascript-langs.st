@@ -1038,11 +1038,9 @@ javascriptLocalisation =
               , name : "$_apiLogName()$"
               , noGetParams : "$_apiLogNoGETParams()$"
               , noPostParams : "$_apiLogNoPOSTParams()$"
-              , noRequestBody : "$_apiLogNoRequestBody()$"
               , noResponseBody : "$_apiLogNoResponseBody()$"
               , postParams : "$_apiLogPOSTParams()$"
               , request : "$_apiLogRequest()$"
-              , requestBody : "$_apiLogRequestBody()$"
               , responseBody : "$_apiLogResponseBody()$"
               , value : "$_apiLogValue()$"
           }

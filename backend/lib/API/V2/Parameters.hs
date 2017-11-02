@@ -126,7 +126,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFs names) = do
     res <- preCheckPDFs $ map snd contentsWithNames'
     case res of
       Right r -> return $ zip (map fst contentsWithNames') r
-      Left _ -> apiError $ requestParameterParseError "name" $ "not a valid PDF"
+      Left _ -> apiError $ requestParameterParseError (T.intercalate ", " names) $ "not a valid PDF"
 
   files <- forM pdfcontents $ \(filename, pdfcontent) -> do
     fileid <- dbUpdate $ NewFile filename pdfcontent
