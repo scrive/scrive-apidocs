@@ -637,7 +637,7 @@
 "_june":"June",
 "_last30Days":"Past 30 days",
 "_last6Months":"Past 6 months",
-"_linkInvalidError":"<h1>This link is no longer valid.</h1><h4>You have landed here because you have clicked on a link to a document, which has been withdrawn or expired. If you think, that this is a mistake, please contact the author or the document.</h4>",
+"_linkInvalidError":"<h1>This link is no longer valid.</h1><h4>You have landed here because you have clicked on a link to a document, which has been withdrawn or expired. If you think, that this is a mistake, please contact the author of the document.</h4>",
 "_listLocalDialogsBody":"Are you sure that you want to delete <span class='put-one-or-more-things-to-be-deleted-here'></span>?",
 "_listRestoreDialogBody":"Would you like to restore the selected documents?",
 "_listRestoreDialogHead":"Restore",
