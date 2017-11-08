@@ -7,9 +7,22 @@ var ParticipantSelectField = require("./participantselectfield");
 var ParticipantNotNamedField = require("./participantnotnamedfield");
 var ParticipantAddField = require("./participantaddfield");
 var _ = require("underscore");
-var CsvSignatoryDesignPopup = require("../../../js/designview/csvsignatorydesign.js").CsvSignatoryDesignPopup;
+var CSVSignatoryDesignModal = require("./csvsignatorydesignmodal");
 
 module.exports = React.createClass({
+  getInitialState: function () {
+    return {
+      showCSVSignatoryDesignModal: false
+    };
+  },
+
+  onShowCSVSignatoryDesignModalButtonClick: function () {
+    Track.track("Open CSV Popup");
+    this.setState({showCSVSignatoryDesignModal: true});
+  },
+  onCSVSignatoryDesignModalClose: function () {
+    this.setState({showCSVSignatoryDesignModal: false});
+  },
 
   render: function () {
     var self = this;
@@ -58,18 +71,19 @@ module.exports = React.createClass({
               ref="view-csv-button"
               text={localization.designview.viewCSV}
               type="optional"
-              onClick={function () {
-                Track.track("Open CSV Popup");
-                new CsvSignatoryDesignPopup({
-                  document: self.props.document,
-                  setParticipantDetail: self.props.setParticipantDetail
-                });
-              }}
+              onClick={this.onShowCSVSignatoryDesignModalButtonClick}
             />
           </div>
        }
 
        <ParticipantAddField model={sig}/>
+
+       <CSVSignatoryDesignModal
+          active={this.state.showCSVSignatoryDesignModal}
+          document={this.props.document}
+          setParticipantDetail={this.props.setParticipantDetail}
+          onClose={this.onCSVSignatoryDesignModalClose}
+        />
 
       </div>
     );

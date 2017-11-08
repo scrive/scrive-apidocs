@@ -3,11 +3,16 @@ var React = require("react");
 var Button = require("../../common/button");
 var Track = require("../../common/track");
 var Signatory = require("../../../js/signatories.js").Signatory;
-var CsvSignatoryDesignPopup = require("../../../js/designview/csvsignatorydesign.js").CsvSignatoryDesignPopup;
 var BlockingModal = require("../../blocking/blockingmodal");
 var Subscription = require("../../account/subscription");
+var CSVSignatoryDesignModal = require("./csvsignatorydesignmodal");
 
 module.exports = React.createClass({
+  getInitialState: function () {
+    return {
+      showCSVSignatoryDesignModal: false
+    };
+  },
   onDone: function () {
     Track.track("Close participant");
     this.props.setParticipantDetail(undefined);
@@ -26,11 +31,11 @@ module.exports = React.createClass({
       this.refs.blockingModal.openContactUsModal();
     } else {
       Track.track("Click add CSV");
-      new CsvSignatoryDesignPopup({
-        document: this.props.document,
-        setParticipantDetail: this.props.setParticipantDetail
-      });
+      this.setState({showCSVSignatoryDesignModal: true});
     }
+  },
+  onCSVSignatoryDesignModalClose: function () {
+    this.setState({showCSVSignatoryDesignModal: false});
   },
 
   render: function () {
@@ -72,6 +77,13 @@ module.exports = React.createClass({
 
           </div>
         }
+
+        <CSVSignatoryDesignModal
+          active={this.state.showCSVSignatoryDesignModal}
+          document={this.props.document}
+          setParticipantDetail={this.props.setParticipantDetail}
+          onClose={this.onCSVSignatoryDesignModalClose}
+        />
       </div>
     );
   }

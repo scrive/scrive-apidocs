@@ -9,6 +9,7 @@
   "./app/scripts/designview/typesetters/*.jsx",
   "./app/scripts/designview/processsettings/signviewsettings.jsx",
   "./app/scripts/designview/participants/*.jsx",
+  "./app/scripts/designview/participants/csvsignatorydesignmodal/*.jsx",
   "./app/scripts/designview/fileview/*.jsx",
   "./app/scripts/designview/buttonbar/*.jsx",
   "./app/scripts/designview/authorattachments/*.jsx",

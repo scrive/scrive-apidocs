@@ -16,7 +16,7 @@ var TestUtils = React.addons.TestUtils;
       });
     });
 
-    it(" works as expected", function (done) {
+    it(" works as expected", function () {
       var addParticipants = TestUtils.renderIntoDocument(React.createElement(AddParticipants, {
         document: document_,
         currentParticipantDetail: undefined,
@@ -40,17 +40,6 @@ var TestUtils = React.addons.TestUtils;
       addParticipants.forceUpdate();
       assert.ok($(".design-view-action-participant-new-multi",addParticipants.getDOMNode()).length > 0);
       assert.ok($(".design-view-action-participant-new-multi .button.locked",addParticipants.getDOMNode()).length == 0);
-
-      assert.ok($(".modal.active").length == 0);
-      TestUtils.Simulate.click(addParticipants.refs["add-multi-button"].getDOMNode());
-      util.waitUntil(
-        function() {
-          return $(".modal.active").length > 0;
-        },
-        function() {
-          done();
-        }
-      );
     });
 
     it(" mass sendout is locked if subscription doesn't allow it", function () {
