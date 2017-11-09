@@ -59,15 +59,12 @@ dobFromDKPersonalNumber personalnumber = case T.chunksOf 2 (T.pack $ take 6 $ pe
 
 cnFromDN ::T.Text -> T.Text
 cnFromDN dn =
-  extractCN $ lookup "CN" $ fmap parsePair $ T.splitOn ", " $ dn
+  fromMaybe parseError $ lookup "CN" $ fmap parsePair $ concatMap (T.splitOn " + ") $ T.splitOn ", " $ dn
     where
       parsePair s = case T.splitOn "=" s of
         (name:values) -> (name, T.intercalate "=" values)
         _ -> $unexpectedError $ "Cannot parse DN value: " <> show dn
-      extractCN (Just s) = case T.splitOn " + " s of
-        (cn:_) -> cn
-        _      -> s
-      extractCN Nothing = $unexpectedError $ "Cannot parse DN value: " <> show dn
+      parseError = $unexpectedError $ "Cannot parse DN value: " <> show dn
 
 decodeCertificate :: T.Text -> B.ByteString
 decodeCertificate = either ($unexpectedError $ "invalid base64 of nets certificate") id . B64.decode . T.encodeUtf8
