@@ -28,6 +28,7 @@ data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aCompany        :: Maybe Company
                                    , aToken          :: Maybe String
                                    , aHubSpotConf    :: Maybe HubSpotConf
+                                   , aGACode         :: Maybe String
                                    , aLanguage       :: Lang
                                    }
 
@@ -38,6 +39,7 @@ getAnalyticsData = do
     Just user -> dbQuery $ GetCompany $ usercompany user
     _ -> return Nothing
   token <- ctxmixpaneltoken <$> getContext
+  gaToken <- ctxgatoken <$> getContext
   hubspotConf <- ctxhubspotconf <$> getContext
   lang <- ctxlang <$> getContext
 
@@ -46,6 +48,7 @@ getAnalyticsData = do
                          , aCompany      = mcompany
                          , aToken        = token
                          , aHubSpotConf  = hubspotConf
+                         , aGACode       = gaToken
                          , aLanguage     = lang
                          }
 
@@ -56,6 +59,7 @@ analyticsTemplates :: Monad m => AnalyticsData -> Fields m ()
 analyticsTemplates ad = do
   mnop (F.value "userid" . show . userid) $ aUser ad
   F.value "token" $ aToken ad
+  F.value "gacode" $ aGACode ad
   F.value "hubspotConf" $ encode $ toJSValue $ aHubSpotConf ad
   F.value "properties" $ encode $ toJSValue ad
 

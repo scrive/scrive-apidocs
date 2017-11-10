@@ -86,8 +86,9 @@ checkFieldsEqualAppConfCronConf
      dbConfig           _maxDBConnections    redisCacheConfig  _localFileCacheSize
     _logConfig          _production         _cdnBaseUrl         guardTimeConf
     _isMailBackdoorOpen  mailNoreplyAddress  cgiGrpConfig      _admins
-    _sales              _initialUsers        mixpanelToken     _trackjsToken
-    _hubspotConf         salesforceConf     _netsConfig        _monitoringConfig)
+    _sales              _initialUsers        mixpanelToken     _gaToken
+    _trackjsToken       _hubspotConf         salesforceConf     _netsConfig
+    _monitoringConfig)
   (CronConf
      cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
      cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
@@ -117,8 +118,9 @@ checkFieldsEqualAppConfMailerConf
      dbConfig           _maxDBConnections    redisCacheConfig  _localFileCacheSize
     _logConfig          _production         _cdnBaseUrl        _guardTimeConf
     _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig      _admins
-    _sales              _initialUsers       _mixpanelToken     _trackjsToken
-    _hubspotConf        _salesforceConf     _netsConfig        _monitoringConfig)
+    _sales              _initialUsers       _mixpanelToken     _gaToken
+    _trackjsToken       _hubspotConf        _salesforceConf     _netsConfig
+    _monitoringConfig)
   (MailingServerConf
     _mailerHttpBindAddress     mailerDBConfig
     _mailerMaxDBConnections    mailerRedisCacheConfig
@@ -142,8 +144,9 @@ checkFieldsEqualAppConfMessengerConf
      dbConfig           _maxDBConnections   _redisCacheConfig  _localFileCacheSize
     _logConfig          _production         _cdnBaseUrl        _guardTimeConf
     _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig      _admins
-    _sales              _initialUsers       _mixpanelToken     _trackjsToken
-    _hubspotConf        _salesforceConf     _netsConfig        _monitoringConfig)
+    _sales              _initialUsers       _mixpanelToken     _gaToken
+    _trackjsToken       _hubspotConf        _salesforceConf     _netsConfig
+    _monitoringConfig)
   (MessengerServerConf
     _messengerHttpBindAddress   messengerDBConfig
     _messengerMaxDBConnections _messengerLogConfig
