@@ -146,6 +146,7 @@ testSalesforce rtoken url = do
           , "-L" -- make curl follow redirects
           , "--post302" -- make curl still post after redirect
           , "-H", "Authorization: Bearer " ++ atoken
+          , "-H", "Content-Length: 0"
           , url
           ]
           BSL.empty
