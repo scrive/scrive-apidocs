@@ -75,7 +75,7 @@ post:
         * `file_id` refers to a file in the Scrive system.
           You must have the rights to access the `file_id` to use it.
 
-        Must of of type [Author Attachments](#author-attachments).
+        Must be of type [Author Attachments](#author-attachments).
 
       schema:
         $ref: ../../../scrive_api.yaml#/definitions/AuthorAttachments
