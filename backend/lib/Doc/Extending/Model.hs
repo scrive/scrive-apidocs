@@ -20,9 +20,13 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => D
       sqlWhereEq "id" did
     runQuery_ . sqlInsert "document_extending_jobs" $ do
       sqlSet "id" did
-      -- Documents can be extended only after the next GuardTime publications file release. Now, when is that going to happen?
-      -- In a publications file, there are all signatures signed before midnight 15th day of the month. The publications file itself
-      -- is released a few days after. So all documents closed BEFORE 15th day 00:00:00 will be scheduled for extending on 20th day.
-      -- All documents closed AFTER 15th day midnight will be scheduled for extending on 20th day next month.
-      sqlSetCmd "run_at" $ "date_trunc('month', " <?> now <+> " - interval '14 days') + interval '1 month' + interval '20 days'"
+      -- Documents can be extended whenever the next GuardTime publications file
+      -- is released. In a publications file all documents closed before
+      -- midnight 15th day of the month are collected. The publications file
+      -- itself is released a few days after. So theoretically we could schedule
+      -- all documents closed BEFORE 15th day 00:00:00 for extending on 20th
+      -- day. However, as GuardTime Java tools induce a relatively high CPU
+      -- load, we want to spread this out more evenly; we thus agreed to
+      -- schedule it 40 days after we close it.
+      sqlSetCmd "run_at" $ (sqlParam now) <+> "interval '40 days'"
       sqlSet "attempts" (0::Int32)
