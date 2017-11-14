@@ -25,13 +25,13 @@ var APICallsListView = React.createClass({
             <thead>
               <tr>
                 <th>
-                  <span>{localization.account.apiLog.dateAndTime}</span>
+                  <span>{"Date & Time (UTC)"}</span>
                 </th>
                 <th>
-                  <span>{localization.account.apiLog.request}</span>
+                  <span>{"Request"}</span>
                 </th>
                 <th>
-                  <span>{localization.account.apiLog.httpStatus}</span>
+                  <span>{"HTTP Status"}</span>
                 </th>
               </tr>
             </thead>
