@@ -106,7 +106,7 @@ getAccessTokenFromRefreshToken rtoken = do
             "curl_exit_code" .= err
           , "stderr" `equalsExternalBSL` stderr
           ]
-      return $ Left ("curl connection to Salesforce closed", err, BSL.unpack stdout, BSL.unpack stderr, httpCode)
+      return $ Left ("curl connection to Salesforce closed", err, BSL.unpack stdout, BSL.unpack stderr, show httpCode)
     ExitSuccess ->
       case decode $ BSL.toString stdout of
         J.Ok js -> do
@@ -116,17 +116,17 @@ getAccessTokenFromRefreshToken rtoken = do
             Nothing -> do
               logInfo "No token found while parsing Salesforce access response" $
                 object [
-                    "http_code" .= httpCode
+                    "http_code" .= show httpCode
                   , "stdout" `equalsExternalBSL` stdout
                   ]
-              return $ Left ("Salesforce access response is valid JSON, but no access token found", 0, BSL.unpack stdout, BSL.unpack stderr, httpCode)
+              return $ Left ("Salesforce access response is valid JSON, but no access token found", 0, BSL.unpack stdout, BSL.unpack stderr, show httpCode)
         _ -> do
           logInfo "Parsing JSON from Salesforce access response stdout failed" $
             object [
-              "http_code" .= httpCode
+              "http_code" .= show httpCode
             , "stdout" `equalsExternalBSL` stdout
             ]
-          return $ Left ("Salesforce access response is not valid JSON", 0, BSL.unpack stdout, BSL.unpack stderr, httpCode)
+          return $ Left ("Salesforce access response is not valid JSON", 0, BSL.unpack stdout, BSL.unpack stderr, show httpCode)
 
 {- Used by API call test salesforce. Let you check if salesfoce integration is set and working for a given url -}
 testSalesforce ::
@@ -143,26 +143,29 @@ testSalesforce rtoken url = do
             "--tlsv1.2"
           , "-X", "POST"
           , "--write-out","\n%{http_code}"
-          , "-f" -- make curl return exit code (22) if it got anything else but 2XX
           , "-L" -- make curl follow redirects
           , "--post302" -- make curl still post after redirect
           , "-H", "Authorization: Bearer " ++ atoken
+          , "-H", "Content-Length: 0"
           , url
           ]
           BSL.empty
       let httpCode = httpCodeFromStdoutWithHTTPCode stdoutWithCode
           stdout = stdoutFromStdoutWithHTTPCode stdoutWithCode
-      case exitcode of
-        ExitSuccess ->
-          return $ Right (httpCode, BSL.unpack stdout)
-        ExitFailure err ->
-          return $ Left ("Salesforce access token worked, but callback failed", err, BSL.unpack stdout, BSL.unpack stderr, httpCode)
+      case (exitcode, httpCode) of
+        (ExitSuccess, n) | n < 300 -> return $ Right (show httpCode, BSL.unpack stdout)
+        (ExitSuccess, _) ->
+          return $ Left ("Salesforce access token worked, but callback failed", 0, BSL.unpack stdout, BSL.unpack stderr, show httpCode)
+        (ExitFailure err, _) ->
+          return $ Left ("Salesforce access token worked, but callback failed", err, BSL.unpack stdout, BSL.unpack stderr, show httpCode)
 
 stdoutFromStdoutWithHTTPCode :: BSL.ByteString -> BSL.ByteString
 stdoutFromStdoutWithHTTPCode stdoutWithCode = BSL.take (lastEOLIndex stdoutWithCode) stdoutWithCode
 
-httpCodeFromStdoutWithHTTPCode :: BSL.ByteString -> String
-httpCodeFromStdoutWithHTTPCode stdoutWithCode = BSL.unpack $ BSL.drop (lastEOLIndex stdoutWithCode + 1) stdoutWithCode
+httpCodeFromStdoutWithHTTPCode :: BSL.ByteString -> Int
+httpCodeFromStdoutWithHTTPCode stdoutWithCode = case reads $ BSL.unpack $ BSL.drop (lastEOLIndex stdoutWithCode + 1) stdoutWithCode of
+                                                [(n, "")] -> n
+                                                _ -> $unexpectedError "Couldn't parse http status from curl output"
 
 lastEOLIndex :: BSL.ByteString -> Int64
 lastEOLIndex bs = last (BSL.elemIndices '\n' bs)

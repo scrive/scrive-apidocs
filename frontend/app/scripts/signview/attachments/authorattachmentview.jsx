@@ -127,6 +127,7 @@ var Document = require("../../../js/documents.js").Document;
                   className="large-checkbox branded-checkbox"
                   checked={model.isAccepted()}
                   label={this.mandatoryCheckboxLabel()}
+                  customEventName="the checkbox for a mandatory attachment"
                   onChange={function (v) { model.setAccepted(v); }}
                 />
               }

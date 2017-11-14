@@ -55,6 +55,7 @@ data AppConf = AppConf {
   , initialUsers       :: [(Email,String)]
     -- ^ E-mail and passwords for initial users.
   , mixpanelToken      :: Maybe String         -- ^ For mixpanel integration.
+  , gaToken            :: Maybe String         -- ^ For Google Analytics integration.
   , trackjsToken       :: Maybe String         -- ^ For Track.js integration.
   , hubspotConf        :: Maybe HubSpotConf    -- ^ For Hubspot integration.
   , salesforceConf     :: Maybe SalesforceConf -- ^ Configuration of Salesforce.
@@ -141,6 +142,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldOpt "mixpanel"
       mixpanelToken
       "Token for Mixpanel"
+  <*> fieldOpt "googleanalytics"
+      gaToken
+      "Token for Google Analytics"
   <*> fieldOpt "trackjs"
       trackjsToken
       "API Token for Track.js"
@@ -185,6 +189,7 @@ instance Default AppConf where
     , sales              = []
     , initialUsers       = []
     , mixpanelToken      = Nothing
+    , gaToken            = Nothing
     , trackjsToken       = Nothing
     , hubspotConf        = Nothing
     , salesforceConf     = Nothing

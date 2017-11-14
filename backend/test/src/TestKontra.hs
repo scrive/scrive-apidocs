@@ -328,6 +328,7 @@ mkContext lang = do
         , ctxsessionid = tempSessionID
         , ctxtrackjstoken = Nothing
         , ctxmixpaneltoken = Nothing
+        , ctxgatoken = Nothing
         , ctxhubspotconf = Nothing
         , ctxbrandeddomain = bd
         , ctxsalesforceconf = Nothing

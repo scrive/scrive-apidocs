@@ -1,5 +1,6 @@
 var React = require("react");
 var BackboneMixin = require("../../common/backbone_mixin");
+var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 var Participant = require("./participant");
 var AddParticipants = require("./addparticipants");
 var $ = require("jquery");
@@ -68,6 +69,17 @@ module.exports = React.createClass({
     if (this.state.needsToScroll) {
       this.scrollToOpenParticipant();
       this.setState({needsToScroll: false});
+    }
+  },
+  componentDidMount: function () {
+    // IE11 needs a reflow to workaround a bug
+    if (BrowserInfo.isIE()) {
+      setTimeout(function () {
+        $("body").css("transform", "translateZ(0)");
+        setTimeout(function () {
+          $("body").css("transform", "");
+        }, 1);
+      }, 250); // 200ms to wait for animation to finish. +50 because why not
     }
   },
   scrollToOpenParticipant: function () {

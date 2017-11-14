@@ -330,6 +330,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , ctxusehttps           = useHttps appConf
         , ctxsessionid          = sesID session
         , ctxtrackjstoken       = trackjsToken appConf
+        , ctxgatoken            = gaToken appConf
         , ctxmixpaneltoken      = mixpanelToken appConf
         , ctxhubspotconf        = hubspotConf appConf
         , ctxbrandeddomain      = brandeddomain

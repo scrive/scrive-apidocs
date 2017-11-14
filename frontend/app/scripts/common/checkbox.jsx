@@ -9,11 +9,13 @@ var Track = require("./track");
  * label, a string labeling the checkbox.
  * checked, a boolean representing if checked checked(=true)/unchecked(=false) state.
  * onChange, a callback function being called every time the checkbox is clicked.
+ * customEventName, if you prefer 'Check <customEventName>' to 'Check <labelText>'
  *
  * Example usage:
  * var checkbox = React.render(React.createElement(Checkbox.Checkbox,{
  *    checked: args.checked,
  *    label: args.label,
+ *    customEventName: "Custom event name",
  *    onChange : args.function, Bool -> ()
  * }), div);
  *
@@ -24,6 +26,7 @@ var Track = require("./track");
       label: React.PropTypes.string.isRequired,
       checked: React.PropTypes.bool.isRequired,
       disabled: React.PropTypes.bool,
+      customEventName: React.PropTypes.bool,
       onChange: React.PropTypes.func
     },
 
@@ -35,7 +38,8 @@ var Track = require("./track");
 
     handleClick: function() {
       // The mixpanel events are named "Check|Uncheck <label>"
-      var eventName = (this.props.checked ? 'Uncheck' : 'Check') + ' ' + this.props.label;
+      var eventName = (this.props.checked ? 'Uncheck' : 'Check') + ' ';
+      eventName += (this.props.customEventName !== undefined) ? this.props.customEventName : this.props.label;
       Track.track(eventName);
       if (!this.props.disabled && this.props.onChange) {
         this.props.onChange(!this.props.checked);
