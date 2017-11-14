@@ -49,14 +49,17 @@ Unfortunately, the current UI tooling for OpenAPI specifications did not meet
 our requirements, so we hacked together
 [`openapi2slate`](https://www.npmjs.com/package/openapi2slate).
 
-You will need to `npm install --global openapi2slate`.
+You will need to run `npm install --global openapi2slate`
+(or `yarn global add openapi2slate` if you prefer [`yarn`](https://yarnpkg.com/en/) to `npm`).
 
-This gives you a command line tool where you specify an input file, and it gives
-you Slate Markdown via `stdout`.
+This gives you a command line tool, `openapi2slate`, that converts Yaml source to
+Slate Markdown and outputs the result to `stdout`.
 
 You will also need to install the Slate dependencies, running `bundle install`
-in this directory should be enough.  More details are available in the
-[original documentation](https://github.com/lord/slate#getting-started-with-slate).
+in this directory should be enough (or `bundle install --path vendor/bundle` 
+to install dependencies to the current directory). See the
+[official Slate documentation](https://github.com/lord/slate#getting-started-with-slate)
+for more details.
 
 ### Generating documentation on your local machine
 
