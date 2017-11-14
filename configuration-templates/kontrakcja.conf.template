@@ -67,5 +67,5 @@
          , "prefix"         : "app_kontrakcja."
          , "suffix"         : ""
          },
-    "_api_log_enabled": false
+    "_api_call_log_enabled": false
 }
