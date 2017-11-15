@@ -56,6 +56,7 @@ info:
     | 2017-08-03  | Revamped definitions of signatory fields, it should now be much clearer |
     |             | Added `SignatoryFieldRadiogroup`, Scrive now supports radio button fields |
     |             | Factor out `SignatoryFieldStandard` into `SignatoryFieldEmailMobile` to allow for `editable_by_signatory` property |
+    | 2017-11-15  | Custom validations for the `SignatoryFieldCustomField` are now supported |
 
     ## Environments & IP Addresses
 
