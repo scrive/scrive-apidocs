@@ -14,12 +14,12 @@ var APISettingsPanel = React.createClass({
         <div className="tab-content">
           <TabViewer.TabViewer inner={true}>
             <TabViewer.TabViewerInnerTab
-              text={localization.account.apiSettings.name}
+              text={"API Requests"}
             />
             <TabViewer.TabViewerTab
               hash="api-dashboard"
               initial={true}
-              title={localization.account.apiSettings.name}
+              title={"API Requests"}
             >
               <OAuthDashboardView loadLater={this.props.loadLater} />
             </TabViewer.TabViewerTab>
