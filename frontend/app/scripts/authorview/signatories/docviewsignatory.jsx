@@ -127,6 +127,7 @@ var Modal = require("../../common/modal");
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.document().pending()
         && !signatory.hasSigned()
+        && !signatory.author()
         && signatory.emailDelivery();
     },
 
