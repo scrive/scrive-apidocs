@@ -9,6 +9,7 @@ module Mails.Data (
   , SendGridEvent(..)
   , MailGunEvent(..)
   , SocketLabsEvent(..)
+  , MailJetEvent(..)
   , Event(..)
   , Mail(..)
   --, unjsonAddress
@@ -234,10 +235,22 @@ data SocketLabsEvent
   | SL_Complained
     deriving (Eq, Ord, Show, Data, Typeable)
 
+data MailJetEvent
+  = MJ_Sent
+  | MJ_Open
+  | MJ_Click
+  | MJ_Bounce_Hard
+  | MJ_Bounce_Soft
+  | MJ_Spam
+  | MJ_Blocked
+  | MJ_Unsub
+    deriving (Eq, Ord, Show, Data, Typeable)
+
 data Event
   = SendGridEvent !String !SendGridEvent !String   -- ^ email, event, category
   | MailGunEvent !String !MailGunEvent             -- ^ email, event
   | SocketLabsEvent !String !SocketLabsEvent       -- ^ email, event
+  | MailJetEvent !String !MailJetEvent             -- ^ email, event
   deriving (Eq, Ord, Show, Data, Typeable)
 
 instance PQFormat Event where

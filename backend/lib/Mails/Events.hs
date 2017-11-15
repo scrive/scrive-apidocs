@@ -138,7 +138,14 @@ handleEventInvitation docid slid eid timeDiff templates eventType mailNoreplyAdd
                 SL_Failed 0 5001 -> handleDeliveredInvitation mailNoreplyAddress bd slid timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
                 SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation mailNoreplyAddress bd slid
                 _ -> return ()
-
+            handleEv (MailJetEvent email ev) = do
+              logEmails email
+              case ev of
+                MJ_Open -> handleOpenedInvitation slid email muid
+                MJ_Sent -> handleDeliveredInvitation mailNoreplyAddress bd slid timeDiff
+                MJ_Bounce_Hard -> handleUndeliveredInvitation mailNoreplyAddress bd slid
+                MJ_Blocked -> handleUndeliveredInvitation mailNoreplyAddress bd slid
+                _ -> return ()
         theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
 
 handleEventOtherMail
@@ -162,6 +169,9 @@ handleEventOtherMail docid eid timeDiff templates eventType = logDocument docid 
           handleEv (SocketLabsEvent _ ev) = case ev of
                                               SL_Delivered -> logDeliveryTime timeDiff
                                               SL_Failed 0 5001 -> logDeliveryTime timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
+                                              _ -> return ()
+          handleEv (MailJetEvent _ ev) = case ev of
+                                              MJ_Sent -> logDeliveryTime timeDiff
                                               _ -> return ()
       -- no templates are used here, so runTemplatesT is not necessary, right? XXX
       theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType

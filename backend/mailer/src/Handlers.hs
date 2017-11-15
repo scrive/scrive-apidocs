@@ -18,6 +18,7 @@ import KontraPrelude
 import Mailer
 import MailGun
 import MailingServerConf
+import MailJet
 import SendGrid
 import SocketLabs
 
@@ -35,6 +36,7 @@ handlers conf = choice [
   , dir "mail" $ dir "sendgrid"   $ hPost $ handleSendGridEvents
   , dir "mail" $ dir "mailgun"    $ hPost $ withDecodedBody_ handleMailGunEvents
   , dir "mail" $ dir "socketlabs" $ hPost $ withDecodedBody_ $ handleSocketLabsEvents conf
+  , dir "mail" $ dir "mailjet"    $ hPost $ handleMailJetEvents
   ]
   where
     hGet = path GET id
