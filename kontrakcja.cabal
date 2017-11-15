@@ -886,6 +886,7 @@ Executable mailing-server
                  Log.Utils
                  MagicHash
                  MailGun
+                 MailJet
                  Mailer
                  MailingServerConf
                  Mails.Data
