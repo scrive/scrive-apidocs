@@ -67,7 +67,7 @@ describe("account/apisettings/apisettingspanel", function () {
     );
     assert.equal(
       $("li:nth-child(3)", tabs).text(),
-      localization.account.apiLog.name
+      "API Requests"
     );
   });
 
