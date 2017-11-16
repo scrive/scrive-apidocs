@@ -232,6 +232,10 @@ This is the only officially supported encoding for our API.
 <td></td>
 <td>Factor out <code class="prettyprint">SignatoryFieldStandard</code> into <code class="prettyprint">SignatoryFieldEmailMobile</code> to allow for <code class="prettyprint">editable_by_signatory</code> property</td>
 </tr>
+<tr>
+<td>2017-11-15</td>
+<td>Custom validations for the <code class="prettyprint">SignatoryFieldCustomField</code> are now supported</td>
+</tr>
 </tbody></table>
 
 <h2 id="environments-amp-ip-addresses">Environments &amp; IP Addresses</h2>
@@ -1360,7 +1364,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 <tr><td><p><code>document</code><br/><em>required</em></p></td><td><p><strong>The document metadata</strong></p>
-<p>Must of of type <code>Document</code>, see <a href="#definitions">Definitions</a>.</p>
+<p>Must be of type <code>Document</code>, see <a href="#definitions">Definitions</a>.</p>
 <p>Can be a subset of the JSON structure, for example it is possible to
 just update the title of a document with <code>{&quot;title&quot;: &quot;New title&quot;}</code>.</p>
 <p>Not all fields can be set this way, please refer to the definitions for
@@ -1517,7 +1521,7 @@ This is the suggested way to include files.</p>
 You must have the rights to access the <code>file_id</code> to use it.</p>
 </li>
 </ul>
-<p>Must of of type <a href="#author-attachments">Author Attachments</a>.</p>
+<p>Must be of type <a href="#author-attachments">Author Attachments</a>.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 <tr><td><p><code>{attachment_name}</code><br/><em>optional</em></p></td><td><p><strong>The named file parameters</strong></p>
 <p>Any <code>file_param</code> in the <code>attachments</code> JSON must be supplied as named
@@ -1768,7 +1772,7 @@ of documents in the order you provided.</p>
 <p>If not supplied, the default is
 <code>[ { &quot;sort_by&quot;:&quot;mtime&quot;, &quot;order&quot;:&quot;descending&quot; } ]</code>,
 <em>i.e.</em>, sort by modification time, newest first.</p>
-<p>Must of of type <a href="#list-sorting">List Sorting</a>.</p>
+<p>Must be of type <a href="#list-sorting">List Sorting</a>.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
 </table>
 
@@ -4229,10 +4233,11 @@ depending on the field type.</p>
 
 <div class="json-schema">
 
-<p>A custom signatory field for text values.
-Can be used for any text-based information, but provides no validation
-mechanism and must be placed on the document, otherwise the signatory will
-not be asked to fill in details.</p>
+<p>A custom signatory field for text values. Can be used for any
+text-based information. Must be placed on the document, otherwise
+the signatory will not be asked to fill in details. Provides an
+optional regular expression-based validation mechanism via the
+<code>custom_validation</code> field (see below).</p>
 
 
 <p>This object has the following properties:</p>
@@ -4452,6 +4457,48 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<p></div></p>
+
+<h6><code>custom_validation</code> <code>(object)</code></h6>
+
+<div class="json-schema">
+
+<p>Optional. Describes how to validate the input to this field using a
+custom regular expression.</p>
+
+
+<p>Default: <code>null</code></p>
+
+<p>The <code>custom_validation</code> object has the following properties:</p>
+
+<h6><code>pattern</code> (string, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Regular expression pattern for field validation.</p>
+
+
+</div>
+
+<h6><code>positive_example</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>Example of an input that matches the pattern.</p>
+
+
+</div>
+
+<h6><code>tooltip</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>Tooltip for the input text field.</p>
+
+
+</div>
 
 <p></div></p>
 
@@ -7155,10 +7202,11 @@ depending on the field type.</p>
 
 <div class="json-schema">
 
-<p>A custom signatory field for text values.
-Can be used for any text-based information, but provides no validation
-mechanism and must be placed on the document, otherwise the signatory will
-not be asked to fill in details.</p>
+<p>A custom signatory field for text values. Can be used for any
+text-based information. Must be placed on the document, otherwise
+the signatory will not be asked to fill in details. Provides an
+optional regular expression-based validation mechanism via the
+<code>custom_validation</code> field (see below).</p>
 
 
 <p>This object has the following properties:</p>
@@ -7378,6 +7426,48 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<p></div></p>
+
+<h6><code>custom_validation</code> <code>(object)</code></h6>
+
+<div class="json-schema">
+
+<p>Optional. Describes how to validate the input to this field using a
+custom regular expression.</p>
+
+
+<p>Default: <code>null</code></p>
+
+<p>The <code>custom_validation</code> object has the following properties:</p>
+
+<h6><code>pattern</code> (string, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Regular expression pattern for field validation.</p>
+
+
+</div>
+
+<h6><code>positive_example</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>Example of an input that matches the pattern.</p>
+
+
+</div>
+
+<h6><code>tooltip</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>Tooltip for the input text field.</p>
+
+
+</div>
 
 <p></div></p>
 
@@ -9880,10 +9970,11 @@ depending on the field type.</p>
 
 <div class="json-schema">
 
-<p>A custom signatory field for text values.
-Can be used for any text-based information, but provides no validation
-mechanism and must be placed on the document, otherwise the signatory will
-not be asked to fill in details.</p>
+<p>A custom signatory field for text values. Can be used for any
+text-based information. Must be placed on the document, otherwise
+the signatory will not be asked to fill in details. Provides an
+optional regular expression-based validation mechanism via the
+<code>custom_validation</code> field (see below).</p>
 
 
 <p>This object has the following properties:</p>
@@ -10103,6 +10194,48 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<p></div></p>
+
+<h5><code>custom_validation</code> <code>(object)</code></h5>
+
+<div class="json-schema">
+
+<p>Optional. Describes how to validate the input to this field using a
+custom regular expression.</p>
+
+
+<p>Default: <code>null</code></p>
+
+<p>The <code>custom_validation</code> object has the following properties:</p>
+
+<h6><code>pattern</code> (string, required)</h6>
+
+
+<div class="json-schema">
+
+<p>Regular expression pattern for field validation.</p>
+
+
+</div>
+
+<h6><code>positive_example</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>Example of an input that matches the pattern.</p>
+
+
+</div>
+
+<h6><code>tooltip</code> (string, required)</h6>
+
+<div class="json-schema">
+
+<p>Tooltip for the input text field.</p>
+
+
+</div>
 
 <p></div></p>
 
@@ -12124,16 +12257,22 @@ depending on the field type.</p>
       </span><span class="nt">"tip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"anchors"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"custom_validation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"pattern"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^foo|bar|baz$"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"positive_example"</span><span class="p">:</span><span class="w"> </span><span class="s2">"foo"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"tooltip"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Must be either 'foo', 'bar', or 'baz'."</span><span class="w">
+  </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
 <div class="json-schema">
 
-<p>A custom signatory field for text values.
-Can be used for any text-based information, but provides no validation
-mechanism and must be placed on the document, otherwise the signatory will
-not be asked to fill in details.</p>
+<p>A custom signatory field for text values. Can be used for any
+text-based information. Must be placed on the document, otherwise
+the signatory will not be asked to fill in details. Provides an
+optional regular expression-based validation mechanism via the
+<code>custom_validation</code> field (see below).</p>
 
 
 <p>This object has the following properties:</p>
@@ -12353,6 +12492,48 @@ depending on the field type.</p>
 <p></div></p>
 
 <p></div></p>
+
+<p></div></p>
+
+<h3><code>custom_validation</code> <code>(object)</code></h3>
+
+<div class="json-schema">
+
+<p>Optional. Describes how to validate the input to this field using a
+custom regular expression.</p>
+
+
+<p>Default: <code>null</code></p>
+
+<p>The <code>custom_validation</code> object has the following properties:</p>
+
+<h4><code>pattern</code> (string, required)</h4>
+
+
+<div class="json-schema">
+
+<p>Regular expression pattern for field validation.</p>
+
+
+</div>
+
+<h4><code>positive_example</code> (string, required)</h4>
+
+<div class="json-schema">
+
+<p>Example of an input that matches the pattern.</p>
+
+
+</div>
+
+<h4><code>tooltip</code> (string, required)</h4>
+
+<div class="json-schema">
+
+<p>Tooltip for the input text field.</p>
+
+
+</div>
 
 <p></div></p>
 
