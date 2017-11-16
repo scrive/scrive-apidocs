@@ -79,7 +79,7 @@ get:
         `[ { "sort_by":"mtime", "order":"descending" } ]`,
         *i.e.*, sort by modification time, newest first.
 
-        Must of of type [List Sorting](#list-sorting).
+        Must be of type [List Sorting](#list-sorting).
 
       schema:
         $ref: ../../scrive_api.yaml#/definitions/ListSorting

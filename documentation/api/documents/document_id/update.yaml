@@ -20,7 +20,7 @@ post:
       description: |
         **The document metadata**
 
-        Must of of type `Document`, see [Definitions](#definitions).
+        Must be of type `Document`, see [Definitions](#definitions).
 
         Can be a subset of the JSON structure, for example it is possible to
         just update the title of a document with `{"title": "New title"}`.
