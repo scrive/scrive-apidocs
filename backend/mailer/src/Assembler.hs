@@ -39,7 +39,9 @@ assembleContent Mail{..} = do
       mailgundata = runJSONGen datafields
       xsmtpapi = runJSONGen $ J.object "unique_args" datafields
       lineReplyTo = case mailReplyTo of
-                     Just addr -> "Reply-To: " ++ createAddrString addr ++ "\r\n"
+                     -- temporarily make reply-to equal to from header
+                     -- to workaround spam issues
+                     Just _addr -> "Reply-To: " ++ createAddrString mailFrom ++ "\r\n"
                      Nothing   -> ""
   let -- FIXME: add =?UTF8?B= everywhere it is needed here
       headerEmail =
