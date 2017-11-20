@@ -30,8 +30,8 @@ var ParametersSectionView = React.createClass({
             <table>
               <thead>
                 <tr>
-                  <th>{localization.account.apiLog.key}</th>
-                  <th>{localization.account.apiLog.value}</th>
+                  <th>{"Key"}</th>
+                  <th>{"Value"}</th>
                 </tr>
               </thead>
 
@@ -105,7 +105,7 @@ var BodySectionView = React.createClass({
                   className="expander"
                   onClick={this.onCollapserExpanderClick}
                 >
-                  <span>{localization.account.apiLog.expand} ▼</span>
+                  <span>{"Expand"} ▼</span>
                 </div>
               }
 
@@ -115,7 +115,7 @@ var BodySectionView = React.createClass({
                   className="collapser"
                   onClick={this.onCollapserExpanderClick}
                 >
-                  <span>{localization.account.apiLog.hide} ▲</span>
+                  <span>{"Hide"} ▲</span>
                 </div>
               }
             </div>
@@ -148,7 +148,7 @@ var APICallView = React.createClass({
           </div>
 
           <div className="col col-right">
-            <p>{localization.account.apiLog.httpStatus}</p>
+            <p>{"HTTP Status"}</p>
             <p className={statusClassName}>
               {this.props.call.get("responseCode")}
             </p>
@@ -156,21 +156,21 @@ var APICallView = React.createClass({
         </div>
 
         <ParametersSectionView
-          header={localization.account.apiLog.getParams}
+          header={"GET Parameters"}
           params={this.props.call.get("requestParamsGET")}
-          placeholder={localization.account.apiLog.noGetParams}
+          placeholder={"No GET Parameters"}
         />
 
         <ParametersSectionView
-          header={localization.account.apiLog.postParams}
+          header={"POST Parameters"}
           params={this.props.call.get("requestParamsPOST")}
-          placeholder={localization.account.apiLog.noPostParams}
+          placeholder={"No POST Parameters"}
         />
 
         <BodySectionView
           body={this.props.call.get("responseBody")}
-          header={localization.account.apiLog.responseBody}
-          placeholder={localization.account.apiLog.noResponseBody}
+          header={"Response Body"}
+          placeholder={"No Response Body"}
         />
 
         <div

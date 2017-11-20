@@ -26,7 +26,7 @@ var APISettingsPanel = React.createClass({
             <TabViewer.TabViewerTab
               hash="api-log"
               aliases={["api-call"]}
-              title={localization.account.apiLog.name}
+              title={"API Requests"}
             >
               <APILogView loadLater={this.props.loadLater} />
             </TabViewer.TabViewerTab>
