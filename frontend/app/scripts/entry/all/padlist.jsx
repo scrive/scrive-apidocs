@@ -1,5 +1,5 @@
 var React = require("react");
-var AcceptTOS = require("../../../js/accept_tos").AcceptTOS;
+var AcceptTOSView = require("../../account/accepttos");
 var $ = require("jquery");
 var Header = require("../../pages/special/header");
 var Footer = require("../../pages/special/footer");
@@ -7,7 +7,13 @@ var Submit = require("../../../js/submits").Submit;
 var PadList = require("../../padlist/padlist");
 
 $(function () {
-  $(".inner").append(new AcceptTOS({}).el());
+  (function () {
+    var container = document.createElement("div");
+    container.className = "short-input-section accept-tos s-accept-tos";
+
+    var view = React.render(React.createElement(AcceptTOSView, {}), container);
+    $(".inner").append(container);
+  })();
 
    $(function(){
     var padlistDiv = $('<div/>')
