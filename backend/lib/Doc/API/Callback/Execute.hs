@@ -79,23 +79,37 @@ executeStandardCallback ::
   Maybe (String,String) -> Document -> DocumentAPICallback -> m Bool
 executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
   callbackParams <- callbackParamsWithDocumentJSON (dacApiVersion dac) doc
-  (exitcode, _ , stderr) <- readCurl curlParams callbackParams
-  case exitcode of
-    ExitSuccess -> do
+  (exitcode, stdout , stderr) <- readCurl curlParams callbackParams
+  let httpCodeStr = case reverse . lines . BSL.unpack $ stdout of
+                      [] -> ""
+                      c:_ -> c
+      httpCode = case reads httpCodeStr of
+                    [(n::Int, "")] -> n
+                    _ -> $unexpectedError "Couldn't parse http status from curl output"
+  case (exitcode, httpCode) of
+    (ExitSuccess, n) | n < 300 -> do
       logInfo "API callback executeStandardCallback succeeded" $ logObject_ dac
       return True
-    ExitFailure ec -> do
+    (ExitSuccess, _) -> do
+      logInfo "API callback executeStandardCallback failed" $ object [
+          logPair_ dac
+        , "stderr" `equalsExternalBSL` stderr
+        , "stdout" `equalsExternalBSL` stdout
+        ]
+      return False
+    (ExitFailure ec, _) -> do
       logInfo "API callback executeStandardCallback failed" $ object [
           logPair_ dac
         , "curl_exitcode" .= show ec
         , "stderr" `equalsExternalBSL` stderr
+        , "stdout" `equalsExternalBSL` stdout
         ]
       return False
   where
     curlParams =  [
           "-X", "POST"
-        , "-f" -- make curl return exit code (22) if it got anything else but 2XX
         , "-L" -- make curl follow redirects
+        , "--write-out","\n%{http_code}"
         , "--data-binary", "@-"          -- take binary data from stdin
         , "-H", "Content-type: application/x-www-form-urlencoded; charset=UTF-8"
         ] ++
@@ -110,7 +124,6 @@ executeOAuth2Callback :: (AmazonMonad m, MonadIO m, MonadDB m, MonadMask m, Mona
 executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid doc) $ do
    (exitcode1, stdout1 , stderr1) <- readCurl [
           "-X", "POST"
-        , "-f" -- make curl return exit code (22) if it got anything else but 2XX
         , "-L" -- make curl follow redirects
         , "-d", "{\"login\":{\"scope\":[\"" ++ scope ++ "\"]}}\""
         , "-H", "Content-Type: application/json; charset=UTF-8"
@@ -122,32 +135,49 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid 
           logPair_ dac
         , "curl_exitcode" .= show ec1
         , "stderr" `equalsExternalBSL` stderr1
+        , "stdout" `equalsExternalBSL` stdout1
         ]
       return False
     ExitSuccess -> case parseAccessToken stdout1 of
       Nothing -> do
        logInfo "API callback executeOAuth2Callback failed for token parsing" $ object [
-         "stdout" .= show stdout1
+           "stdout" .= show stdout1
+         , "stderr" .= show stderr1
          ]
        return False
       Just t -> do
         callbackParams <- callbackParamsWithDocumentJSON (dacApiVersion dac) doc
-        (exitcode2, _ , stderr2) <- readCurl [
+        (exitcode2, stdout2 , stderr2) <- readCurl [
             "-X", "POST"
-          , "-f" -- make curl return exit code (22) if it got anything else but 2XX
+          , "--write-out","\n%{http_code}"
           , "-L" -- make curl follow redirects
           , "-H", "Authorization: Bearer " ++ t
           , "--data-binary", "@-"          -- take binary data from stdin
           , dacURL dac ] callbackParams
-        case exitcode2 of
-          ExitSuccess -> do
-            logInfo "API callback executeOAuth2Callback succeeded" $ logObject_ dac
-            return True
-          ExitFailure ec2 -> do
+        let httpCodeStr = case reverse . lines . BSL.unpack $ stdout2 of
+              [] -> ""
+              c:_ -> c
+            httpCode = case reads httpCodeStr of
+                          [(n::Int, "")] -> n
+                          _ -> $unexpectedError "Couldn't parse http status from curl output"
+        case (exitcode2, httpCode) of
+          (ExitSuccess, n) | n < 300 -> do
+                               logInfo "API callback executeOAuth2Callback succeeded" $ logObject_ dac
+                               return True
+                           | otherwise -> do
+                               logInfo "API callback executeOAuth2Callback failed" $ object [
+                                   logPair_ dac
+                                 , "curl_exitcode" .= show exitcode2
+                                 , "stderr" `equalsExternalBSL` stderr2
+                                 , "stdout" `equalsExternalBSL` stdout2
+                                 ]
+                               return False
+          (ExitFailure ec2, _) -> do
             logInfo "API callback executeOAuth2Callback failed" $ object [
                 logPair_ dac
               , "curl_exitcode" .= show ec2
               , "stderr" `equalsExternalBSL` stderr2
+              , "stdout" `equalsExternalBSL` stdout2
               ]
             return False
 
@@ -208,18 +238,17 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
         let httpCodeStr = case reverse . lines . BSL.unpack $ stdout of
               [] -> ""
               c:_ -> c
-            mHttpCode = case reads httpCodeStr of
-                          [(n::Int, "")] -> Just n
-                          _ -> Nothing
+            httpCode = case reads httpCodeStr of
+                          [(n::Int, "")] -> n
+                          _ -> $unexpectedError "Couldn't parse http status from curl output"
             sendAndFail mErr = do
                 logInfo "Salesforce API callback failed" $ object ["stderr" `equalsExternalBSL` stderr]
                 emailErrorIfNeeded ("Request to callback URL failed", fromMaybe "<unknown>" mErr, BSL.unpack stdout,
-                                    BSL.unpack stderr, maybe "<unknown>" show mHttpCode)
+                                    BSL.unpack stderr, show httpCode)
                 return False
-        case (exitcode, mHttpCode) of
-            (ExitSuccess, Just n) | n < 300 -> return True
-                                  | otherwise -> sendAndFail Nothing
-            (ExitSuccess, Nothing) -> sendAndFail Nothing
+        case (exitcode, httpCode) of
+            (ExitSuccess, n) | n < 300 -> return True
+                             | otherwise -> sendAndFail Nothing
             (ExitFailure err, _) -> sendAndFail $ Just $ show err
 
   where emailErrorIfNeeded (msg, curl_err, stdout, stderr, http_code :: String) = do
