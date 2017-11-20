@@ -35,8 +35,7 @@ flashCookieParse =
             (t :: Maybe String) <- fromJSValueField "type"
             (c :: Maybe String) <- fromJSValueField "content"
             return (t,c)
-        case r of 
+        case r of
           (Just t, Just c) -> return $ (t `elem` ["success", "error"]) && (urlDecode c == flashMessage f)
-          _ -> return False                     
-      _ -> return False                     
-
+          _ -> return False
+      _ -> return False

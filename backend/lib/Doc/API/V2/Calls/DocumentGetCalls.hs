@@ -9,7 +9,9 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 , docApiV2Texts
 ) where
 
+import Control.Monad.Base
 import Data.Char
+import Data.Time
 import Data.Unjson
 import Happstack.Server.Types
 import Log
@@ -69,8 +71,16 @@ docApiV2List = api $ do
     , "filters"   .= map show documentFilters
     , "sorting"   .= map show documentSorting
     ]
+  startQueryTime <- liftBase getCurrentTime
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit (DocumentsVisibleToUser $ userid user) documentFilters documentSorting (offset, 1000, maxcount)
-  logInfo_ "Fetching done"
+  finishQueryTime <- liftBase getCurrentTime
+  ctx <- getContext
+  logInfo "Fetching for docApiV2List done" $ object [
+      "query_time" .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)
+    , identifier_ $ usercompany user
+    , identifier_ $ userid user
+    , "ip" .= show (ctxipnumber ctx)
+    ]
   -- Result
   let headers = mkHeaders [("Content-Type","application/json; charset=UTF-8")]
   return $ Ok $ Response 200 headers nullRsFlags (listToJSONBS (allDocsCount,(\d -> (documentAccessForUser user d,d)) <$> allDocs)) Nothing
