@@ -41,4 +41,3 @@ testNewCompanyFeatureFlagDefaults  = do
   assertEqual "New company can use se authentication to view" True (ffCanUseSEAuthenticationToView ff)
   assertEqual "New company can use se authentication to sign" True (ffCanUseSEAuthenticationToSign ff)
   assertEqual "New company can use sms pin authentication to sing" True (ffCanUseSMSPinAuthenticationToSign ff)
-
