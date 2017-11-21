@@ -67,11 +67,13 @@ info:
     This is the live production environment, for testing, please use API Testbed.
     </aside>
 
-    The IP addresses that will be used as endpoints to and from our system are:
+    The IP addresses that may be used as endpoints to and from our system are:
 
-    * 54.246.132.30
-    * 54.72.251.235
     * 46.51.201.244
+    * 52.208.49.53
+    * 54.246.132.30
+    * 54.72.249.47
+    * 54.72.251.235
 
     ### API Testbed
 
