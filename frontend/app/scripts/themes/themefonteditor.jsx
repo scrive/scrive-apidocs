@@ -18,7 +18,7 @@ module.exports = React.createClass({
        , {name :'Narrow', value:  '\"arial narrow\",sans-serif'}
        , {name :'Sans Serif', value:  'arial,helvetica,sans-serif'}
        , {name :'Serif', value:  '\"times new roman\",serif'}
-       , {name :'Source Sans Pro', value: '\"Source Sans Pro\", \"Open Sans\", \"Helvetica Neue\", Arial, sans-serif'}
+       , {name :'Source Sans Pro', value: '\"Source Sans Pro\", \"Helvetica Neue\", Arial, sans-serif'}
        , {name :'Tahoma', value: 'tahoma,sans-serif'}
        , {name :'Trebuchet MS', value:  '\"trebuchet ms\",sans-serif'}
        , {name :'Verdana', value:  'verdana,sans-serif'}
