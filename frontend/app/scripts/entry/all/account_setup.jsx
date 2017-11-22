@@ -1,19 +1,31 @@
 var React = require("react");
-var AccountSetup = require("../../../js/account_setup").AccountSetup;
 var $ = require("jquery");
 
-$(function () {
-  $(".create-account-box").append(new AccountSetup({
-    fstname: fromTemplate.fstname,
-    sndname: fromTemplate.sndname,
-    email: fromTemplate.email,
-    company : fromTemplate.company,
-    userid : fromTemplate.userid,
-    signupmethod : fromTemplate.signupmethod,
-    position : fromTemplate.companyPosition,
-    phone : fromTemplate.mobile,
-    companyAdmin : fromTemplate.companyAdmin
-  }).el());
+var AccountSetupView = require("../../account/setup/accountsetupview");
 
-  $(".short-input-section input:first").focus();
+$(function () {
+  var container = document.createElement("div");
+  container.className = "short-input-section account-setup";
+
+  var dirs = window.location.pathname.split("/").reverse();
+  var view = React.render(
+    React.createElement(
+      AccountSetupView,
+      {
+        fstname: fromTemplate.fstname,
+        sndname: fromTemplate.sndname,
+        email: fromTemplate.email,
+        company: fromTemplate.company,
+        userid: fromTemplate.userid,
+        signupmethod: fromTemplate.signupmethod,
+        position: fromTemplate.companyPosition,
+        phone: fromTemplate.mobile,
+        companyAdmin: fromTemplate.companyAdmin,
+        invitationId: dirs[1]
+      }
+    ),
+    container
+  );
+
+  $(".create-account-box").append(container);
 });
