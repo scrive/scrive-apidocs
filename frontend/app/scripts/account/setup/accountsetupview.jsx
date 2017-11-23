@@ -7,6 +7,7 @@ var FlashMessages = require("../../../js/flashmessages.js");
 var HtmlTextWithSubstitution = require(
   "../../common/htmltextwithsubstitution"
 );
+var HubSpot = require("../../common/hubspot_service");
 var InfoTextInput = require("../../common/infotextinput");
 var Submits = require("../../../js/submits.js");
 var Track = require("../../common/track");
@@ -63,6 +64,7 @@ var AccountSetupView = React.createClass({
     link.attr("class", "clickable");
     link.attr("target", "_blank");
     link.attr("href", "/terms");
+    link.text(" " + link.text());
   },
   fullName: function () {
     var parts = [this.props.fstname];
@@ -117,7 +119,7 @@ var AccountSetupView = React.createClass({
       mixpanel.register(mixpanelPayload);
       mixpanel.people.set(mixpanelPayload);
 
-      window.HubSpot.track(window.HubSpot.FORM_TOS_SUBMIT, {
+      HubSpot.track(HubSpot.FORM_TOS_SUBMIT, {
         "signup_method": this.props.signupmethod,
         "fullname": this.fullName(),
         "firstname": this.state.fstname,
