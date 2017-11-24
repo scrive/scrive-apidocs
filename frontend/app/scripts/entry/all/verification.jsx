@@ -1,6 +1,10 @@
-var FileVerifier = require("../../../js/fileverifier.js").FileVerifier;
+var React = require("react");
 var $ = require("jquery");
 
+var VerificationView = require("../../pages/verification");
+
 $(function () {
-  $(".verificationContainer").append(FileVerifier.init().view.el);
+  var view = React.render(
+    React.createElement(VerificationView, {}), $(".verificationContainer")[0]
+  );
 });
