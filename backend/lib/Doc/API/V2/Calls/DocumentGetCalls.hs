@@ -2,6 +2,7 @@ module Doc.API.V2.Calls.DocumentGetCalls (
   docApiV2List
 , docApiV2Get
 , docApiV2GetByShortID
+, docApiV2GetQRCode
 , docApiV2History
 , docApiV2EvidenceAttachments
 , docApiV2FilesMain
@@ -10,6 +11,7 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 ) where
 
 import Control.Monad.Base
+import Control.Monad.IO.Class (liftIO)
 import Data.Char
 import Data.Time
 import Data.Unjson
@@ -38,6 +40,7 @@ import Doc.DocumentMonad
 import Doc.DocUtils (fileFromMainFile)
 import Doc.Logging
 import Doc.Model
+import Doc.QRCode (encodeQR)
 import Doc.SignatoryLinkID
 import Doc.Texts
 import EvidenceLog.Model
@@ -45,11 +48,13 @@ import EvidenceLog.View
 import File.Model
 import File.Storage
 import Kontra
+import KontraLink
 import KontraPrelude
 import Log.Identifier
 import MagicHash
 import OAuth.Model
 import User.Model
+import Util.SignatoryLinkUtils
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 
 docApiV2List :: Kontrakcja m => m Response
@@ -96,12 +101,44 @@ docApiV2GetByShortID :: Kontrakcja m => DocumentID -> m Response
 docApiV2GetByShortID shortDid = api $ do
   logInfo "docApiV2GetByShortID" $ object $ [ identifier ("short_"<>) shortDid ]
   when (length (show shortDid) > 6) $
-    apiError $ requestParameterInvalid "short_document_id" "was greater than 6 digits"
+    apiError $ requestParameterInvalid "short_document_id"
+    "was greater than 6 digits"
   doc <- dbQuery $ GetDocumentByShortDocumentID shortDid
   da <- guardDocumentReadAccess Nothing doc
   logInfo "docApiV2GetByShortID: got a document" $ logObject_ doc
   guardDocumentStatus Pending doc
   return $ Ok (unjsonDocument da, doc)
+
+-- | Produces a QR-encoded .png image that contains a URL of form
+-- 'scrive://$domain/s/$did/$signatorylinkid/$signatorymagichash'.
+docApiV2GetQRCode :: forall m . Kontrakcja m => DocumentID -> SignatoryLinkID
+                  -> m Response
+docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
+  doc <- dbQuery $ GetDocumentByDocumentID did
+
+  void $ guardDocumentReadAccess Nothing doc
+  guardDocumentStatus Pending doc
+
+  domainURL <- ctxDomainUrl <$> getContext
+  sigLink   <- apiGuardJust (documentNotFound did) $ getSigLinkFor slid doc
+  qrCode    <- liftIO $ encodeQR (mkSignLink domainURL sigLink)
+
+  return $ Ok qrCode
+
+    where
+      -- | Create a URL to be QR-encoded.
+      mkSignLink :: String -> SignatoryLink -> String
+      mkSignLink domainURL sigLink =
+        let relativeLink = LinkSignDoc did sigLink
+        in (setProtocol domainURL) <> (show relativeLink)
+
+      -- | Sets the protocol part of the URL to 'scrive://'.
+      setProtocol :: String -> String
+      setProtocol url = case break (== ':') url of
+        (_protocol, srv@(':':'/':'/':_)) ->
+          "scrive" ++ srv                -- http://scrive.com
+        (_srv,      _null_or_port      ) ->
+          "scrive://" ++ url             -- scrive.com or localhost:8000
 
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History did = logDocument did . api $ do

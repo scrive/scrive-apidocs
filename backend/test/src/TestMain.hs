@@ -39,6 +39,7 @@ import Doc.API.V1.JSONTest
 import Doc.API.V2.APILogTest
 import Doc.API.V2.CallsTest
 import Doc.API.V2.JSONTest
+import Doc.QRCodeTest
 import DocControlTest
 import DocStateTest
 import DumpEvidenceTexts
@@ -117,6 +118,7 @@ allTests = [
   , oauthTest
   , padAplicationAPITests
   , partnerAPITests
+  , qrCodeTests
   , sessionsTests
   , signupTests
   , thirdPartyStatsTests

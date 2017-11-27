@@ -271,7 +271,7 @@ mockDocAuthorAttachmentNumber num mockdoc
 getMockSigLinkNumber :: Int -> MockDoc -> MockSigLink
 getMockSigLinkNumber num mockdoc
   | num > length (mockDocParties  mockdoc) = $unexpectedError $
-      "getMockSigLinkIndex could not get index " ++ show num ++ " from MockDoc:\n" ++ show mockdoc
+      "getMockSigLinkNumber could not get index " ++ show num ++ " from MockDoc:\n" ++ show mockdoc
   | otherwise = (mockDocParties mockdoc) !! (num-1)
 
 -- | Internal use only

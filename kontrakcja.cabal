@@ -219,6 +219,7 @@ Library
                  , Doc.Model.Query
                  , Doc.Model.Search
                  , Doc.Model.Update
+                 , Doc.QRCode
                  , Doc.SMSPin.Model
                  , Doc.SMSPin.Tables
                  , Doc.Screenshot
@@ -1204,6 +1205,7 @@ Test-suite kontrakcja-test
                  Doc.Extending.Tables
                  Doc.Functions
                  Doc.Migrations
+                 Doc.QRCodeTest
                  Doc.SMSPin.Tables
                  Doc.Sealing.Tables
                  Doc.Signing.Migrations

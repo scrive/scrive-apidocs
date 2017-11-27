@@ -2,6 +2,7 @@
 module API.V2.Monad (
   -- * Response types
     APIResponse(..)
+  , ToAPIResponse(..)
   -- * API Monad runner
   , api
   -- * API Monad utils

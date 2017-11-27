@@ -1,11 +1,16 @@
 module Doc.API.V2.Calls.DocumentGetCallsTest (apiV2DocumentGetCallsTests) where
 
+import Control.Monad.IO.Class
+import Control.Monad.State
 import Data.Aeson (Value(String))
 import Data.Default
 import Data.Time (UTCTime(..), fromGregorian)
 import Happstack.Server
+import Log
 import Test.Framework
+import qualified Data.Text as T
 
+import BrandedDomain.BrandedDomain (BrandedDomain(bdUrl))
 import Company.Model
 import Context
 import DB.Query (dbUpdate)
@@ -16,9 +21,11 @@ import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.API.V2.Mock.TestUtils
 import Doc.Data.DocumentStatus (DocumentStatus(..))
-import Doc.DocumentID (unsafeDocumentID)
+import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Update (SetDocumentSharing(..), updateMTimeAndObjectVersion)
+import Doc.QRCode
+import Kontra (Kontra)
 import KontraPrelude
 import TestingUtil
 import TestKontra
@@ -28,6 +35,7 @@ apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
   [ testThat "API v2 List"                  env testDocApiV2List
   , testThat "API v2 Get"                   env testDocApiV2Get
   , testThat "API v2 Get by shortcode"      env testDocApiV2GetShortCode
+  , testThat "API v2 Get QR code"           env testDocApiV2GetQRCode
   , testThat "API v2 Get by Company Admin"  env testDocApiV2GetByAdmin
   , testThat "API v2 Get for Shared doc"    env testDocApiV2GetShared
   , testThat "API v2 History"               env testDocApiV2History
@@ -64,40 +72,110 @@ testDocApiV2Get = do
   assertEqual "Mock Document from `docApiV2Get` should match from `docApiV2New`" getMockDoc newMockDoc
   assertEqual "Document viewer should be" "signatory" (getMockDocViewerRole getMockDoc)
 
+mockDocToShortID :: MockDoc -> DocumentID
+mockDocToShortID md = read $ reverse $ take 6 $ reverse $ show (getMockDocId md)
+
 testDocApiV2GetShortCode :: TestEnv ()
 testDocApiV2GetShortCode = do
   user <- addNewRandomUser
   ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
   newMockDoc <- testDocApiV2Start' ctx
-  let mockDocToShortID md = read $ reverse $ take 6 $ reverse $ show (getMockDocId md)
-      shortDid = mockDocToShortID newMockDoc
+  let shortDid = mockDocToShortID newMockDoc
 
   -- Test that everything works normally...
-  getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2GetByShortID shortDid) 200
-  assertEqual "Mock Document from `docApiV2Get` should match from `docApiV2New`" getMockDoc newMockDoc
-  assertEqual "Document viewer should be" "signatory" (getMockDocViewerRole getMockDoc)
+  getMockDoc <- mockDocTestRequestHelper ctx GET []
+    (docApiV2GetByShortID shortDid) 200
+  assertEqual "Mock document from `docApiV2Get` should match from `docApiV2New`"
+    getMockDoc newMockDoc
+  assertEqual "Document viewer should be" "signatory"
+    (getMockDocViewerRole getMockDoc)
 
-  -- Now try some failure cases, we reuse getRequest
+  -- Now test some failure cases...
+
+  -- We reuse getRequest.
   getRequest <- mkRequestWithHeaders GET [] []
 
-  -- A malicious mallory should not be able to get the document
-  mallory <- addNewRandomUser
-  ctxMallory <- (\c -> c { ctxmaybeuser = Just mallory }) <$> mkContext def
-  (resMallory,_) <- runTestKontra getRequest ctxMallory $ docApiV2GetByShortID shortDid
-  assertEqual "We should get a 403 response for someone elses document" 403 (rsCode resMallory)
+  testMallory getRequest (docApiV2GetByShortID shortDid)
 
   -- Short DocID should be <= 6 digits
   (resLong,_) <- runTestKontra getRequest ctx $ docApiV2GetByShortID (unsafeDocumentID 1234567)
-  assertEqual "We should get a 400 response for a long docid" 400 (rsCode resLong)
+  assertEqual "We should get a 400 response for a long docid"
+    400 (rsCode resLong)
+
   -- Should not work for documents older than 24h, make the document "old"
   withDocumentID (getMockDocId newMockDoc) $ do
-    updateMTimeAndObjectVersion $ UTCTime { utctDay = fromGregorian 2000 1 1, utctDayTime = 0 }
+    updateMTimeAndObjectVersion $
+      UTCTime { utctDay = fromGregorian 2000 1 1, utctDayTime = 0 }
   (resOld,_) <- runTestKontra getRequest ctx $ docApiV2GetByShortID shortDid
-  assertEqual "We should get a 404 response for old documents" 404 (rsCode resOld)
+  assertEqual "We should get a 404 response for old documents"
+    404 (rsCode resOld)
+
   -- Should not work for other document status, we only test preparation here...
   prepDoc <- testDocApiV2New' ctx
   (resPrep,_) <- runTestKontra getRequest ctx $ docApiV2GetByShortID (mockDocToShortID prepDoc)
-  assertEqual "We should get a 409 response for a document in Preparation" 409 (rsCode resPrep)
+  assertEqual "We should get a 409 response for a document in Preparation"
+    409 (rsCode resPrep)
+
+-- | A malicious Mallory should not be able to execute this request.
+testMallory :: Request -> Kontra Response -> TestEnv ()
+testMallory getRequest req = do
+  mallory <- addNewRandomUser
+  ctxMallory <- (\c -> c { ctxmaybeuser = Just mallory }) <$> mkContext def
+  (resMallory,_) <- runTestKontra getRequest ctxMallory $ req
+  assertEqual "We should get a 403 response for someone else's document"
+    403 (rsCode resMallory)
+
+testDocApiV2GetQRCode :: TestEnv ()
+testDocApiV2GetQRCode = do
+  user <- addNewRandomUser
+  ctx  <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  newMockDoc <- testDocApiV2Start' ctx
+  let did  = getMockDocId newMockDoc
+      slid = getMockDocSigLinkId 1 newMockDoc
+
+  -- Test that everything works normally...
+  forM_ [ "https://scrive.com", "http://scrive.com", "http://scrive.com:9000"
+        , "scrive.com", "scrive.com:9000", "localhost:8000" ] $ \domain -> do
+    let ctx' = ctx { ctxbrandeddomain =
+                     (ctxbrandeddomain ctx) { bdUrl = domain } }
+    getQRCode <- testRequestHelper ctx' GET [] (docApiV2GetQRCode did slid) 200
+    getURL    <- liftIO $ decodeQRBSL getQRCode
+    logInfo_ $ "Decoded QR code: " <> (T.pack getURL)
+    let (urlScheme, rest)    = splitAt 9 getURL
+        (server,    rest')   = span (/= '/') rest
+        (docID,     rest'')  = span (/= '/') $ drop 3 rest'
+        (sigID,     rest''') = span (/= '/') $ tail rest''
+        _token               = tail rest'''
+        domain'              = stripUrlScheme domain
+        stripUrlScheme   url = case break (== ':') url of
+          (_protocol, ':':'/':'/':srv) -> srv
+          _                            -> url
+
+    assertEqual "URL scheme must be `scrive://`" "scrive://"  urlScheme
+    assertEqual ("Server name must be `" <> domain' <> "`") domain' server
+    assertEqual "Doc ID from `getqrcode` should match the one from `new`"
+      (getMockDocId newMockDoc) (read docID)
+
+    assertEqual "Signatory link ID should match the one from `new`"
+      slid (read sigID)
+
+
+  -- Next, test some failure cases...
+
+  -- We reuse getRequest.
+  getRequest <- mkRequestWithHeaders GET [] []
+
+  -- Access control.
+  testMallory getRequest (docApiV2GetQRCode did slid)
+
+  -- Should not work for other document status, we only test preparation here...
+  prepDoc <- testDocApiV2New' ctx
+  (resPrep,_) <- runTestKontra getRequest ctx $
+                 docApiV2GetQRCode (getMockDocId prepDoc)
+                 (getMockDocSigLinkId 1 prepDoc)
+  assertEqual "We should get a 409 response for a document in Preparation"
+    409 (rsCode resPrep)
+
 
 testDocApiV2GetByAdmin :: TestEnv ()
 testDocApiV2GetByAdmin = do

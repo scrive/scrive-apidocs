@@ -43,6 +43,8 @@ documentAPIV2  = dir "documents" $ choice [
 
   , param $ dir "texts" $ hGet $ toK2 $ docApiV2Texts
 
+  , param $ param $ dir "getqrcode"               $ hGet  $ toK2 $ docApiV2GetQRCode
+
   , param $ param $ dir "sign"                    $ hPost $ toK2 $ docApiV2SigSign
   , param $ param $ dir "check"                   $ hPost $ toK2 $ docApiV2SigCheck
   , param $ param $ dir "setauthenticationtoview" $ hPost $ toK2 $ docApiV2SigSetAuthenticationToView
