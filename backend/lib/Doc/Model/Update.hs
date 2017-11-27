@@ -1442,9 +1442,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m) =>
               }
           case res of
             Nothing -> return Nothing
-            Just d -> do
-              copyEvidenceLogToNewDocument (documentid document) $ documentid d
-              return $ Just $ documentid d
+            Just d -> return $ Just $ documentid d
 
 data StoreDocumentForTesting = StoreDocumentForTesting Document
 instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => DBUpdate m StoreDocumentForTesting DocumentID where
