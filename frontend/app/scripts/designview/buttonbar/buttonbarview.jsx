@@ -120,7 +120,8 @@ module.exports = React.createClass({
       });
 
       doc.save();
-      if (Subscription.currentSubscription().isOverLimit()) {
+      var numberOfDocs = doc.isCsv() ? doc.csv().length - 1 : 1;
+      if (Subscription.currentSubscription().isOverLimit(numberOfDocs)) {
         this.refs.blockingModal.openContactUsModal();
       } else if (isSigning) {
         this.showSignConfirmationModal();

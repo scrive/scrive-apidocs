@@ -467,9 +467,11 @@ var Field = exports.Field = Backbone.Model.extend({
        return res;
     },
     defaultTip : function() {
-      if (this.isCheckbox())
+      if (this.isCheckbox() || this.isRadioGroup()) {
         return "left";
-      return "right";
+      } else {
+        return "right";
+      }
     },
     makeOptional : function() {
         this.set({"is_obligatory":false});

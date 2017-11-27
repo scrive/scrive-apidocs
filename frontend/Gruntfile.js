@@ -194,7 +194,7 @@ module.exports = function (grunt) {
             src: [
               "./*.{html,xml,jpg,png,ico,txt}",
               "enable-cookies/**/*",
-              "css/fonts/*.woff",
+              "css/fonts/*.ttf",
               "css/assets/*",
               "compiled/**/*",
               "fonts/**/*",

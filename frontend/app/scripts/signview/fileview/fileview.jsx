@@ -78,6 +78,7 @@ module.exports = React.createClass({
   componentWillUnmount: function () {
     this.props.model.view = null;
     $(window).off("resize", this.handleResize);
+    $(document).off("keypress", this.handleKeyboardHighlighting);
     clearTimeout(self.resizeTimeout);
   },
 
@@ -95,6 +96,24 @@ module.exports = React.createClass({
     const node = this.refs.pages.getDOMNode();
 
     node.style.webkitOverflowScrolling = "touch";
+
+    $(document).on("keypress", this.handleKeyboardHighlighting);
+  },
+
+  handleKeyboardHighlighting: function (event) {
+    if (event.key === "h") {
+      if (typeof event.target === "object" && typeof event.target.tagName === "string"
+          && event.target.tagName.toLowerCase() === "input") {
+        // event bubbled from filling input field, skip it
+      } else {
+        const doc = this.context.document;
+        const currentSig = doc.currentSignatory();
+        const currentSigCanHighlight = currentSig.canSign() && currentSig.allowshighlighting();
+        if (currentSigCanHighlight) {
+          this.handleStartHighlight();
+        }
+      }
+    }
   },
 
   componentWillUpdate: function (nextProps, nextState) {
@@ -371,6 +390,7 @@ module.exports = React.createClass({
         doc.setHighlight(pageno, imageData).send();
       }
     );
+    this.setState({highlighting: false});
   },
 
   handleCancelHighlighting: function () {

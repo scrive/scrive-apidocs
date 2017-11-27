@@ -111,10 +111,13 @@ var Subscription = Backbone.Model.extend({
     return this.canUseSEAuthenticationToSign() ||
       this.canUseSMSPinAuthenticationToSign();
   },
-  isOverLimit: function () {
-    if (this.hasFreePlan() && this.startedLastMonth() >= FREE_DOCUMENT_LIMIT) {
+  isOverLimit: function (numberOfDocs) {
+    if (numberOfDocs === undefined) {
+      numberOfDocs = 1;
+    }
+    if (this.hasFreePlan() && (this.startedLastMonth() + numberOfDocs) > FREE_DOCUMENT_LIMIT) {
       return true;
-    } else if (this.hasTeamPlan() && this.startedLastMonth() >= TEAM_DOCUMENT_LIMIT) {
+    } else if (this.hasTeamPlan() && (this.startedLastMonth() + numberOfDocs) > TEAM_DOCUMENT_LIMIT) {
       return true;
     }
     return false;
