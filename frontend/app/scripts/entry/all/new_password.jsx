@@ -1,12 +1,16 @@
 var React = require("react");
-var NewPassword = require("../../../js/new_password").NewPassword;
 var $ = require("jquery");
-var Track = require("../../common/track");
+
+var NewPasswordView = require("../../../scripts/account/newpassword");
 
 $(function () {
-  var linkchangepassword = fromTemplate.linkchangepassword;
-
-  $(".global-table-cell").append(new NewPassword({
-    linkchangepassword: linkchangepassword
-  }).el());
+  var view = React.render(
+    React.createElement(
+      NewPasswordView,
+      {
+        url: fromTemplate.linkchangepassword
+      }
+    ),
+    $(".global-table-cell")[0]
+  )
 });
