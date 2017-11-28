@@ -68,6 +68,7 @@
   "./app/scripts/stats/*.jsx",
   "./app/scripts/pages/footer.jsx",
   "./app/scripts/pages/header.jsx",
+  "./app/scripts/pages/verification/*.jsx",
   "./app/scripts/icons/radiobutton.jsx",
   "./app/js/anchors.js",
   "./app/js/flashmessages.js",

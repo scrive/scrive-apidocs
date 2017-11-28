@@ -15,40 +15,37 @@
   padding: 20px 50px;
 }
 
-.model.verificationModal,
-.model.verificationModal .modal-container {
-  min-height: 120px;
-  width: 300px;
-}
+.verificationResultModal {
+  height: 100px;
+  margin: 0px auto;
+  width: 546px;
 
-.model.verificationModal.failed,
-.model.verificationModal.failed .modal-container {
-  min-height: 120px;
-  width: 280px;
-}
+  .float-left {
+    text-align: center;
+    width: 60px;
 
-.model.verificationModal .modal-close {
-  float: right;
-  margin: 5px;
-  position: relative;
-  z-index: 1070;
-}
+    .verificationSuccessIcon {
+      background: url(~"@{img-base-url}/icons.png") 0 0 no-repeat;
+      background-position: 0 -339px;
+      height: 61px;
+      margin: 15px;
+      width: 64px;
+    }
 
-.verificationSuccessIcon {
-  background: url(~"@{img-base-url}/icons.png") 0 0 no-repeat;
-  background-position: 0 -339px;
-  height: 61px;
-  margin: 15px;
-  width: 64px;
-}
+    .verificationFailedIcon,
+    .verificationErrorIcon {
+      background-image: url(~"@{img-base-url}/spr-flash-icons.png");
+      background-position: 0 0;
+      background-repeat: no-repeat;
+      display: block;
+      height: 30px;
+      margin: 15px;
+      margin-top: 25px;
+      width: 30px;
+    }
+  }
 
-.verificationFailedIcon,
-.verificationErrorIcon {
-  background-image: url(~"@{img-base-url}/spr-flash-icons.png");
-  background-position: 0 0;
-  background-repeat: no-repeat;
-  display: block;
-  height: 30px;
-  margin: 15px;
-  width: 30px;
+  .float-right {
+    width: 450px;
+  }
 }
