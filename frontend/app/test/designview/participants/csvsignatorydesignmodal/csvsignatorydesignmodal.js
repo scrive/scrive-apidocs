@@ -267,13 +267,9 @@ describe("designview/participants/csvsignatorydesignmodal", function () {
       component.onAcceptButtonClick();
       assert.isFalse(document_.addExistingSignatory.called);
 
-      assert.equal(signatory.addField.callCount, 2);
+      assert.equal(signatory.addField.callCount, 1);
 
-      var addedNameField = signatory.addField.firstCall.args[0];
-      assert.equal(addedNameField.signatory(), signatory);
-      assert.equal(addedNameField.type(), "name");
-
-      var addedCustomField = signatory.addField.secondCall.args[0];
+      var addedCustomField = signatory.addField.firstCall.args[0];
       assert.equal(addedCustomField.signatory(), signatory);
       assert.equal(addedCustomField.type(), "text");
       assert.equal(addedCustomField.name(), "spam");

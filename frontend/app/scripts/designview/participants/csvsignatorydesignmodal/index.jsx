@@ -96,9 +96,11 @@ var CSVSignatoryDesignModal = React.createClass({
     var csvSignatory = this.csvSignatory();
     if (csvSignatory) {
       for (var i = 0; i < fields.length; i++) {
-        csvSignatory.addField(
-          new Field(_.extendOwn(fields[i], {signatory: csvSignatory}))
-        );
+        if (!csvSignatory.hasField(fields[i].type, fields[i].order, undefined)) {
+          csvSignatory.addField(
+            new Field(_.extendOwn(fields[i], {signatory: csvSignatory}))
+          );
+        }
       }
 
       csvSignatory.setCsv(this._model.csv());
