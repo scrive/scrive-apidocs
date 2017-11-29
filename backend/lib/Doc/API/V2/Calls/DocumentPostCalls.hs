@@ -18,6 +18,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2Callback
 , docApiV2SigSetAuthenticationToView
 , docApiV2SigSetAuthenticationToSign
+, docApiV2SigChangeEmailAndMobile
 ) where
 
 import Control.Monad.Base
@@ -46,7 +47,7 @@ import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.Misc
 import Doc.AutomaticReminder.Model (setAutomaticReminder)
 import Doc.DocInfo (isPending, isTimedout)
-import Doc.DocMails (sendAllReminderEmailsExceptAuthor, sendForwardEmail)
+import Doc.DocMails (sendAllReminderEmailsExceptAuthor, sendForwardEmail, sendInvitationEmail1)
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad
@@ -57,15 +58,17 @@ import Doc.SignatoryLinkID
 import File.File (File(..))
 import File.Model
 import File.Storage
-import InputValidation (Result(..), asValidEmail)
+import InputValidation (Result(..), asValidEmail, asValidPhone)
 import Kontra
 import KontraPrelude
 import Log.Identifier
 import MinutesTime
 import OAuth.Model
+import User.Email (Email(..))
 import User.Model
+import Util.HasSomeUserInfo (getEmail, getMobile)
 import Util.PDFUtil
-import Util.SignatoryLinkUtils (getAuthorSigLink, getSigLinkFor)
+import Util.SignatoryLinkUtils (getAuthorSigLink, getSigLinkFor, isAuthor)
 
 docApiV2New :: Kontrakcja m => m Response
 docApiV2New = api $ do
@@ -522,3 +525,64 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
     dbUpdate $ ChangeAuthenticationToSignMethod slid authentication_type mSSN mMobile actor
     -- Return
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
+
+docApiV2SigChangeEmailAndMobile :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . api $ do
+  -- Permissions
+  (user, actor) <- getAPIUser APIDocSend
+  withDocumentID did $ do
+    -- Guards
+    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+    guardThatObjectVersionMatchesIfProvided did
+    guardDocumentStatus Pending =<< theDocument
+    guardSignatoryHasNotSigned slid =<< theDocument
+    -- Parameters
+    validMobile <- do
+      paramMobile <- apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
+      -- We are not using `asValidPhoneForSMS`, as we might not need to be so
+      -- strict. Instead `guardThatDocumentCanBeStarted` checks stuff later.
+      case fmap (asValidPhone . T.unpack) paramMobile of
+        Just (Good m) -> return $ Just m
+        Nothing -> return Nothing
+        _ -> apiError $ requestParameterInvalid "mobile_number" "Not a valid mobile number"
+    validEmail <- do
+      paramEmail  <- apiV2ParameterOptional (ApiV2ParameterText "email")
+      case fmap (asValidEmail . T.unpack) paramEmail of
+        Just (Good e)-> return $ Just e
+        Nothing -> return Nothing
+        _ -> apiError $ requestParameterInvalid "email" "Not a valid email addrress"
+    -- Guard Parameters
+    when (isNothing validMobile && isNothing validEmail ) (apiError $ requestParameterMissing "mobile_number or email")
+    sl <- fromJust . getSigLinkFor slid <$> theDocument
+    when (isAuthor sl)
+      (apiError $ signatoryStateError "Cannot change email or mobile of document author")
+    let hasMobileField = isJust . getFieldByIdentity MobileFI . signatoryfields $ sl
+        hasEmailField  = isJust . getFieldByIdentity EmailFI  . signatoryfields $ sl
+    when (isJust validMobile && not hasMobileField)
+      (apiError $ signatoryStateError "Signatory has no mobile field, cannot set mobile number")
+    when (isJust validEmail && not hasEmailField)
+      (apiError $ signatoryStateError "Signatory has no email field, cannot set email")
+    -- API call actions
+    -- update mobile and email as per parameters
+    case validMobile of
+      Nothing -> return ()
+      Just mobile ->
+        when (getMobile sl /= mobile) (dbUpdate $ ChangeSignatoryPhone slid mobile actor)
+    case validEmail of
+      Nothing -> return ()
+      Just email ->
+        when (getEmail sl /= email) $ do
+          emailUser <- dbQuery $ GetUserByEmail (Email email)
+          dbUpdate $ ChangeSignatoryEmail slid emailUser email actor
+    -- Once we've updated everything, the starting conditions should still be
+    -- valid!
+    -- This checks that email and mobile are valid for: invitation delivery,
+    -- authentication to view and to sign
+    guardThatDocumentCanBeStarted =<< theDocument
+    -- When either of email or phone is changed, the magichash is regenerated,
+    -- so we need a new SL from DB.
+    sl' <- fromJust . getSigLinkFor slid <$> theDocument
+    -- We always send both email and mobile invitations, even when nothing was changed.
+    _ <- sendInvitationEmail1 sl'
+    -- API call actions
+    Ok . (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument

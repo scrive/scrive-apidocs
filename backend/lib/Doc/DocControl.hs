@@ -17,7 +17,6 @@ module Doc.DocControl(
     , handleIssueGoToSignviewPad
     , prepareEmailPreview
     , handleResend
-    , handleChangeSignatoryEmailAndPhone
     , showPage
     , showPreview
     , showPreviewForSignatory
@@ -77,12 +76,10 @@ import File.File (fileid)
 import File.Model
 import File.Storage (getFileIDContents)
 import Happstack.Fields
-import InputValidation
 import InternalResponse
 import Kontra
 import KontraLink
 import KontraPrelude
-import Log.Identifier
 import MagicHash
 import Redirect
 import User.Email
@@ -439,74 +436,6 @@ handleResend docid signlinkid = guardLoggedInOrThrowInternalError $ do
     actor <- guardJustM $ fmap mkAuthorActor getContext
     _ <- sendReminderEmail customMessage actor False signlink
     return ()
-
-handleChangeSignatoryEmailAndPhone :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
-handleChangeSignatoryEmailAndPhone docid slid = guardLoggedInOrThrowInternalError $ do
-  memail <- getCorrectOptionalField asValidEmail "email"
-  mphone <- getCorrectOptionalField asValidPhone "phone"
-  -- at least one of email or phone must be provided
-  when (isNothing memail && isNothing mphone) $ do
-    logAttention "At least one of email or phone has to be provided" $ object [
-        identifier_ docid
-      , identifier_ slid
-      ]
-    internalError
-
-  getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
-    actor <- guardJustM $ mkAuthorActor <$> getContext
-    sl <- guardJustM $ getSigLinkFor slid <$> theDocument
-    -- this signatory must not have signed
-    when (hasSigned sl) $ do
-      logAttention "Signatory has already signed" $ object [
-          identifier_ docid
-        , identifier_ slid
-        ]
-      internalError
-    -- the document must be available for signing
-    whenM ((not . isPending) <$> theDocument) $ do
-      logAttention "Document is not pending" $ object [
-          identifier_ docid
-        ]
-      internalError
-
-    case memail of
-      Nothing -> return ()
-      Just email -> do
-
-        -- email field has to be defined
-        let hasEmailField  = isJust . getFieldByIdentity EmailFI . signatoryfields $ sl
-        when (not $ hasEmailField) $ do
-          logAttention "Cannot set email. Field is not defined for signatory." $ object [
-              identifier_ docid
-            , identifier_ slid
-            ]
-          internalError
-
-        when (getEmail sl /= email) $ do
-          muser <- dbQuery $ GetUserByEmail (Email email)
-          dbUpdate $ ChangeSignatoryEmail slid muser email actor
-
-    case mphone of
-      Nothing -> return ()
-      Just phone -> do
-        -- phone field has to be defined
-        let hasPhoneField  = isJust . getFieldByIdentity MobileFI . signatoryfields $ sl
-        when (not $ hasPhoneField) $ do
-          logAttention "Cannot set phone. Field is not defined for signatory." $ object [
-              identifier_ docid
-            , identifier_ slid
-            ]
-          internalError
-
-        when (getMobile sl /= phone) $
-          dbUpdate $ ChangeSignatoryPhone slid phone actor
-
-    -- When either of email or phone is changed, the magichash is regenerated,
-    -- so we need a new SL from DB.
-    sl' <- guardJust . getSigLinkFor slid =<< theDocument
-    -- We always send both email and mobile invitations, even when nothing was changed.
-    _ <- sendInvitationEmail1 sl'
-    J.runJSONGenT $ return ()
 
 handlePadList :: Kontrakcja m => m Response
 handlePadList = do

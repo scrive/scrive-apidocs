@@ -556,24 +556,24 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     },
     changeEmailAndPhone: function(newValue) {
         return new Submit({
-                url: "/changeemailandphone/" + this.document().documentid() + "/" + this.signatoryid(),
+                url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.signatoryid() + "/changeemailandphone",
                 method: "POST",
                 email: newValue.email,
-                phone: newValue.mobile
+                mobile_number: newValue.mobile
          });
     },
     changeEmail: function(email) {
         return new Submit({
-                url: "/changeemailandphone/" + this.document().documentid() + "/" + this.signatoryid(),
+                url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.signatoryid() + "/changeemailandphone",
                 method: "POST",
                 email: email
          });
     },
     changePhone: function(phone) {
         return new Submit({
-                url: "/changeemailandphone/" + this.document().documentid() + "/" + this.signatoryid(),
+                url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.signatoryid() + "/changeemailandphone",
                 method: "POST",
-                phone: phone
+                mobile_number: phone
          });
     },
     remindMail: function() {

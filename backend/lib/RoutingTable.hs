@@ -105,7 +105,6 @@ staticRoutes production = choice
 
      --This are actions on documents. We may integrate it with all the stuff above, but I don't like it. MR
      , dir "resend"  $ hPost $ toK2 $ DocControl.handleResend
-     , dir "changeemailandphone" $ hPost $ toK2 $ DocControl.handleChangeSignatoryEmailAndPhone
 
      , dir "pages"  $ hGet $ toK2 $ DocControl.showPage
      -- HTMP emails can have embedded preview image

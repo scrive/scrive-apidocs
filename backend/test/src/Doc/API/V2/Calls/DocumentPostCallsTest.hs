@@ -23,7 +23,7 @@ import TestKontra
 import Util.Actor (userActor)
 
 apiV2DocumentPostCallsTests :: TestEnvSt -> Test
-apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls" $
+apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
   [ testThat "API v2 New"                                   env testDocApiV2New
   , testThat "API v2 New from template"                     env testDocApiV2NewFromTemplate
   , testThat "API v2 New from template for company shared"  env testDocApiV2NewFromTemplateShared
@@ -44,6 +44,7 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls" $
   , testThat "API v2 Callback"                              env testDocApiV2Callback
   , testThat "API v2 Set signatory authentication to-view"  env testDocApiV2SigSetAuthenticationToView
   , testThat "API v2 Set signatory authentication to-sign"  env testDocApiV2SigSetAuthenticationToSign
+  , testThat "API v2 Change email and mobile"               env testDocApiV2SigChangeEmailAndMobile
   ]
 
 testDocApiV2New :: TestEnv ()
@@ -482,3 +483,76 @@ testDocApiV2SigSetAuthenticationToSign = do
     assertEqual "Authentication to sign should be set" StandardAuthenticationToSign (getAuthToSign mockDocStandard2)
     assertEqual "Mobile number should STILL be set" valid_mobile (getMobileNumber mockDocStandard2)
     assertEqual "Personal number should STILL be set (12 digit SE)" se_ssn_12 (getPersonalNumber mockDocStandard2)
+
+testDocApiV2SigChangeEmailAndMobile :: TestEnv ()
+testDocApiV2SigChangeEmailAndMobile = do
+  user <- addNewRandomUser
+  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+
+  -- Params that we will re-use
+  let param_email x = ("email", inText x)
+      valid_email = "person+23@scrive.se"
+      invalid_email = "@random_junk.foo"
+      param_mobile x = ("mobile_number", inText x)
+      valid_mobile = "+46987654321"
+      invalid_mobile = "45678"
+      orig_email = "testperson@scrive.se"
+      orig_mobile = "+46123456789"
+  -- Creates a document with extra signatory, that has the right fields
+  let documentForTest = do
+        draftDoc <- testDocApiV2New' ctx
+        let did = getMockDocId draftDoc
+            updateDoc = mockDocToInput
+              . setMockDocSigLinkStandardField 2 "email" orig_email
+              . setMockDocSigLinkStandardField 2 "mobile" orig_mobile $
+              addStandardSigLinksToMockDoc 1 draftDoc
+        _start <- getMockDocId <$> mockDocTestRequestHelper ctx POST [("document", updateDoc)] (docApiV2Update did) 200
+        mockDoc <- mockDocTestRequestHelper ctx POST [] (docApiV2Start did) 200
+        assertEqual "Document status should match after 'start' call" Pending (getMockDocStatus mockDoc)
+        return (did, getMockDocSigLinkId 1 mockDoc, getMockDocSigLinkId 2 mockDoc)
+
+
+  -- You should not be able to change the author's email or mobile
+  do
+    (did, author_slid, _slid) <- documentForTest
+    _ <- jsonTestRequestHelper ctx POST [param_email valid_email, param_mobile valid_mobile]
+      (docApiV2SigChangeEmailAndMobile did author_slid) 409
+    _ <- jsonTestRequestHelper ctx POST [param_email valid_email]
+      (docApiV2SigChangeEmailAndMobile did author_slid) 409
+    _ <- jsonTestRequestHelper ctx POST [param_mobile valid_mobile]
+      (docApiV2SigChangeEmailAndMobile did author_slid) 409
+    return ()
+
+  -- Should work for other signatory
+  do
+    (did, _author_slid, slid) <- documentForTest
+    -- Try invalid combinations
+    _ <- testRequestHelper ctx POST [param_email invalid_email, param_mobile invalid_mobile]
+      (docApiV2SigChangeEmailAndMobile did slid) 400
+    _ <- testRequestHelper ctx POST [param_email valid_email, param_mobile invalid_mobile]
+      (docApiV2SigChangeEmailAndMobile did slid) 409
+    _ <- testRequestHelper ctx POST [param_email invalid_email, param_mobile valid_mobile]
+      (docApiV2SigChangeEmailAndMobile did slid) 400
+    -- Then test valid case
+    emailAndPhone <- mockDocTestRequestHelper ctx POST [param_email valid_email, param_mobile valid_mobile]
+      (docApiV2SigChangeEmailAndMobile did slid) 200
+    assertEqual "Email should have changed" valid_email (getMockDocSigLinkEmail 2 emailAndPhone)
+    assertEqual "Mobile should have changed" valid_mobile (getMockDocSigLinkMobileNumber 2 emailAndPhone)
+
+  do
+    (did, _author_slid, slid) <- documentForTest
+    _ <- testRequestHelper ctx POST [param_email invalid_email]
+      (docApiV2SigChangeEmailAndMobile did slid) 400
+    emailOnly <- mockDocTestRequestHelper ctx POST [param_email valid_email]
+      (docApiV2SigChangeEmailAndMobile did slid) 200
+    assertEqual "Email should have changed" valid_email (getMockDocSigLinkEmail 2 emailOnly)
+    assertEqual "Mobile should NOT have changed" orig_mobile (getMockDocSigLinkMobileNumber 2 emailOnly)
+
+  do
+    (did, _author_slid, slid) <- documentForTest
+    _ <- testRequestHelper ctx POST [param_mobile invalid_mobile]
+      (docApiV2SigChangeEmailAndMobile did slid) 409
+    mobileOnly <- mockDocTestRequestHelper ctx POST [param_mobile valid_mobile]
+      (docApiV2SigChangeEmailAndMobile did slid) 200
+    assertEqual "Email should NOT have changed" orig_email (getMockDocSigLinkEmail 2 mobileOnly)
+    assertEqual "Mobile should have changed" valid_mobile (getMockDocSigLinkMobileNumber 2 mobileOnly)

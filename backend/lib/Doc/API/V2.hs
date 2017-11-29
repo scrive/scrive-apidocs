@@ -49,6 +49,7 @@ documentAPIV2  = dir "documents" $ choice [
   , param $ param $ dir "check"                   $ hPost $ toK2 $ docApiV2SigCheck
   , param $ param $ dir "setauthenticationtoview" $ hPost $ toK2 $ docApiV2SigSetAuthenticationToView
   , param $ param $ dir "setauthenticationtosign" $ hPost $ toK2 $ docApiV2SigSetAuthenticationToSign
+  , param $ param $ dir "changeemailandmobile"    $ hPost $ toK2 $ docApiV2SigChangeEmailAndMobile
   , param $ param $ dir "reject"                  $ hPost $ toK2 $ docApiV2SigReject
   , param $ param $ dir "sendsmspin"              $ hPost $ toK2 $ docApiV2SigSendSmsPin
   , param $ param $ dir "setattachment"           $ hPost $ toK2 $ docApiV2SigSetAttachment
