@@ -40,8 +40,11 @@ module.exports = function (grunt) {
       child = spawnSync(
           "ghc", ["-e", 'print $ System.Info.arch ++ "-" ++ System.Info.os']);
       var archOs = child.output[1].toString().trim();
+      child = spawnSync("cabal", ["--numeric-version"]);
+      var cabalVerStr = child.output[1].toString();
+      var cabalBuildTypeDir = cabalVerStr >= "2.1.0.0" ? "x" : "c";
       buildDir = "./dist-newstyle/build/" + archOs + "/ghc-"
-          + ghcVer + "/kontrakcja-1.0/c/localization";
+          + ghcVer + "/kontrakcja-1.0/" + cabalBuildTypeDir + "/localization";
   }
 
   grunt.initConfig({

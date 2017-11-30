@@ -328,7 +328,7 @@ serverTestRules newBuild cabalFile createDB = do
   "run-server-tests" ~> do
     let testSuiteNames    = testComponentNames cabalFile
         testSuiteExePaths = map (componentTargetPath newBuild) testSuiteNames
-    need $ "kontrakcja_test.conf":testSuiteNames
+    need $ "kontrakcja_test.conf" : map componentName testSuiteNames
     -- removeFilesAfter is only performed on a successfull build, this file
     -- needs to be cleaned regardless otherwise successive builds will fail
     liftIO $ removeFiles "." ["kontrakcja-test.tix"]
@@ -394,11 +394,11 @@ serverFormatLintRules newBuild cabalFile flags = do
 
   "_build/hs-import-order" %>>> do
     needAllHaskellFiles cabalFile
-    need [componentTargetPath newBuild "sort_imports"]
+    need [componentTargetPath newBuild (ExecutableName "sort_imports")]
     hsImportOrderAction True srcSubdirs
 
   "fix-hs-import-order" ~> do
-    need [componentTargetPath newBuild "sort_imports"]
+    need [componentTargetPath newBuild (ExecutableName "sort_imports")]
     hsImportOrderAction False srcSubdirs
 
   "test-hs-outdated-deps" ~> do
@@ -440,14 +440,15 @@ serverFormatLintRules newBuild cabalFile flags = do
       hsImportOrderAction checkOnly dirs = do
         let sortImportsFlags = if checkOnly then ("--check":dirs) else dirs
         command ([Shell] ++ langEnv)
-          (componentTargetPath newBuild "sort_imports") sortImportsFlags
+          (componentTargetPath newBuild (ExecutableName "sort_imports"))
+          sortImportsFlags
 
 
 -- * Frontend
 
 gruntNewBuildArg :: UseNewBuild -> String
-gruntNewBuildArg (UseNewBuild _) = "--new-build"
-gruntNewBuildArg DontUseNewBuild = "--no-new-build"
+gruntNewBuildArg unb | useNewBuild unb = "--new-build"
+                     | otherwise       = "--no-new-build"
 
 -- | Frontend build rules
 frontendBuildRules :: UseNewBuild -> Rules ()
@@ -501,12 +502,14 @@ distributionRules newBuild = do
         ++ "with Shake when running from TeamCity"
     when (null nginxconfpath) $ do
       fail "ERROR: NGINX_CONF_PATH is empty"
-    let routingListPath = componentTargetPath newBuild "routinglist"
+    let routingListPath = componentTargetPath newBuild
+                          (ExecutableName "routinglist")
     need [routingListPath]
     command_ [] routingListPath [nginxconfpath]
     removeFilesAfter "." ["urls.txt"]
 
-  let binaryNames = [ "kontrakcja-server"
+  let binaryNames = map ExecutableName $
+                    [ "kontrakcja-server"
                     , "cron"
                     , "kontrakcja-migrate"
                     , "mailing-server"
@@ -541,10 +544,9 @@ distributionRules newBuild = do
 
       -- | For each given exe component, generate a rule for copying
       -- it to 'dist/build/compname', if needed.
-      copyBinariesRules :: [FilePath] -> Rules ()
-      copyBinariesRules binaryNames = case newBuild of
-        DontUseNewBuild -> return ()
-        UseNewBuild _   ->
+      copyBinariesRules :: [CabalComponentName] -> Rules ()
+      copyBinariesRules binaryNames =
+        whenNewBuild newBuild $ \_ ->
           forM_ binaryNames $ \binaryName -> do
             let sourcePath = componentTargetPath newBuild binaryName
                 targetPath = binaryPath binaryName
@@ -662,13 +664,13 @@ transifexUsageMsg = unlines $
 
 runTX :: UseNewBuild -> String -> [String] -> Action ()
 runTX newBuild a args = do
-  let scriptPath = componentTargetPath newBuild "transifex"
+  let scriptPath = componentTargetPath newBuild (ExecutableName "transifex")
   need [scriptPath]
   command_ [] scriptPath ([a] ++ args)
 
 runTransifexUsageScript :: UseNewBuild -> Action ()
 runTransifexUsageScript newBuild = do
-  let scriptPath = componentTargetPath newBuild "transifex"
+  let scriptPath = componentTargetPath newBuild (ExecutableName "transifex")
   need [scriptPath]
   -- 'transifex' prints out usage info if no command provided.
   cmd scriptPath
@@ -715,13 +717,15 @@ runTransifexMergeScript newBuild flags = do
 
 runDetectOldLocalizationsScript :: UseNewBuild -> Action ()
 runDetectOldLocalizationsScript newBuild = do
-  let scriptPath = componentTargetPath newBuild "detect_old_localizations"
+  let scriptPath = componentTargetPath newBuild
+                   (ExecutableName "detect_old_localizations")
   need [scriptPath]
   cmd scriptPath
 
 runDetectOldTemplatesScript :: UseNewBuild -> Action ()
 runDetectOldTemplatesScript newBuild = do
-  let scriptPath = componentTargetPath newBuild "detect_old_templates"
+  let scriptPath = componentTargetPath newBuild
+                   (ExecutableName "detect_old_templates")
   need [scriptPath]
   cmd scriptPath
 
@@ -732,6 +736,7 @@ runTakeReferenceScreenshotsScript = do
 
 runLocalization :: UseNewBuild -> Action ()
 runLocalization newBuild = do
-  let exePath = componentTargetPath newBuild "localization"
+  let exePath = componentTargetPath newBuild
+                (ExecutableName "localization")
   need [exePath]
   cmd  exePath

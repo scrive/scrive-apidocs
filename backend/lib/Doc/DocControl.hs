@@ -305,14 +305,17 @@ handleIssueGoToSignview docid = withUser $ \user -> do
    URL: /d/signview/{documentid}/{signatorylinkid}
    Method: POST
  -}
-handleIssueGoToSignviewPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
+handleIssueGoToSignviewPad :: Kontrakcja m => DocumentID -> SignatoryLinkID
+                           -> m KontraLink
 handleIssueGoToSignviewPad docid slid= do
   ctx <- getContext
   doc <- getDocByDocIDForAuthor docid
   user <- guardJust $ getContextUser ctx
-  case (isAuthor <$> getMaybeSignatoryLink (doc,user), getMaybeSignatoryLink (doc,slid)) of
+  case ( isAuthor <$> getMaybeSignatoryLink (doc,user)
+       , getMaybeSignatoryLink (doc,slid) ) of
     (Just True,Just sl) | signatorylinkdeliverymethod sl == PadDelivery -> do
-      dbUpdate $ AddDocumentSessionToken (signatorylinkid sl) (signatorymagichash sl)
+      dbUpdate $ AddDocumentSessionToken (signatorylinkid sl)
+        (signatorymagichash sl)
       return $ LinkSignDocPad docid slid
     _ -> return LoopBack
 
