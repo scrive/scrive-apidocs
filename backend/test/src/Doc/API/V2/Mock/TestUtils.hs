@@ -48,6 +48,7 @@ module Doc.API.V2.Mock.TestUtils (
 , getMockDocSigLinkAttachmentsLength
 , getMockDocSigLinkAttachmentHasFile
 , setMockDocSigLinkAttachments
+, setMockDocSigLinkStandardField
 ) where
 
 import Data.Aeson
@@ -257,6 +258,26 @@ setMockDocSigLinkAttachments i namesdesc = setForSigNumberFromMockDoc i
                }
   )
 
+setMockDocSigLinkStandardField :: Int -> String -> String -> MockDoc -> MockDoc
+setMockDocSigLinkStandardField i fieldType value =
+  setForSigNumberFromMockDoc i
+    $ \msl -> msl { mockSigLinkFields = newField : oldFieldsWithoutFieldType msl }
+  where
+    newField = MockSigField
+                 { mockSigFieldType                   = fieldType
+                 , mockSigFieldIsObligatory           = True
+                 , mockSigFieldShouldBeFilledBySender = True
+                 , mockSigFieldPlacements             = []
+                 , mockSigFieldValue                  = Just value
+                 , mockSigFieldIsChecked              = Nothing
+                 , mockSigFieldOrder                  = Nothing
+                 , mockSigFieldName                   = Nothing
+                 , mockSigFieldSignature              = Nothing
+                 }
+    oldFieldsWithoutFieldType msl =
+      filter (\slf -> mockSigFieldType slf /= fieldType)
+        (mockSigLinkFields msl)
+
 -- * Internal use only!
 -----------------------
 
@@ -282,9 +303,9 @@ getFieldValueOfTypeForSigNumberFromMockDoc i ft md =
     [] -> $unexpectedError $
       "Could not get field of type " ++ ft ++ " for signatory " ++ show i
       ++ " from MockDoc:\n" ++ show md
-  where
-    getMockFieldsOfType :: String -> MockSigLink -> [MockSigField]
-    getMockFieldsOfType fts msl = filter (\f -> mockSigFieldType f == fts) (mockSigLinkFields msl)
+
+getMockFieldsOfType :: String -> MockSigLink -> [MockSigField]
+getMockFieldsOfType fts msl = filter (\f -> mockSigFieldType f == fts) (mockSigLinkFields msl)
 
 -- | Internal use only
 setForSigNumberFromMockDoc :: Int -> (MockSigLink -> MockSigLink) -> MockDoc -> MockDoc
