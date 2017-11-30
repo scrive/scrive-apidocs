@@ -44,11 +44,13 @@ module Doc.API.V2.Mock.TestUtils (
 , getMockDocSigLinkAuthToSignMethod
 , setMockDocSigLinkAuthToSignMethod
 , getMockDocSigLinkPersonalNumber
+, getMockDocSigLinkEmail
 , getMockDocSigLinkMobileNumber
 , getMockDocSigLinkAttachmentsLength
 , getMockDocSigLinkAttachmentHasFile
 , setMockDocSigLinkAttachments
 , setMockDocSigLinkStandardField
+, addStandardSigLinksToMockDoc
 ) where
 
 import Data.Aeson
@@ -233,6 +235,9 @@ setMockDocSigLinkAuthToSignMethod i auth = setForSigNumberFromMockDoc i
 getMockDocSigLinkPersonalNumber :: Int -> MockDoc -> String
 getMockDocSigLinkPersonalNumber i = getFieldValueOfTypeForSigNumberFromMockDoc i "personal_number"
 
+getMockDocSigLinkEmail :: Int -> MockDoc -> String
+getMockDocSigLinkEmail i = getFieldValueOfTypeForSigNumberFromMockDoc i "email"
+
 getMockDocSigLinkMobileNumber :: Int -> MockDoc -> String
 getMockDocSigLinkMobileNumber i = getFieldValueOfTypeForSigNumberFromMockDoc i "mobile"
 
@@ -278,6 +283,36 @@ setMockDocSigLinkStandardField i fieldType value =
       filter (\slf -> mockSigFieldType slf /= fieldType)
         (mockSigLinkFields msl)
 
+addStandardSigLinksToMockDoc :: Int -> MockDoc -> MockDoc
+addStandardSigLinksToMockDoc i md = md { mockDocParties = mockDocParties md ++ newParties }
+  where
+    newParties = replicate i partyTemplate
+    partyTemplate = MockSigLink {
+        mockSigLinkId                     = "does not get used"
+      , mockSigLinkUserId                 = Nothing
+      , mockSigLinkIsAuthor               = False
+      , mockSigLinkIsSignatory            = True
+      , mockSigLinkFields                 = []
+      , mockSigLinkSignOrder              = 1
+      , mockSigLinkSignTime               = Nothing
+      , mockSigLinkSeenTime               = Nothing
+      , mockSigLinkReadInvitationTime     = Nothing
+      , mockSigLinkRejectedTime           = Nothing
+      , mockSigLinkSignRedirectURL        = Nothing
+      , mockSigLinkRejectRedirectURL      = Nothing
+      , mockSigLinkEmailDeliveryStatus    = "does not get used"
+      , mockSigLinkMobileDeliveryStatus   = "does not get used"
+      , mockSigLinkCSV                    = Nothing
+      , mockSigLinkDeliveryMethod         = "email_mobile"
+      , mockSigLinkAuthMethodToView       = "standard"
+      , mockSigLinkAuthMethodToSign       = "standard"
+      , mockSigLinkConfirmationDelivery   = "email_mobile"
+      , mockSigLinkAllowsHighlighting     = False
+      , mockSigLinkHighlightedPages       = []
+      , mockSigLinkAttachments            = []
+      , mockSigLinkAPIDeliveryURL         = Nothing
+      }
+
 -- * Internal use only!
 -----------------------
 
@@ -304,6 +339,7 @@ getFieldValueOfTypeForSigNumberFromMockDoc i ft md =
       "Could not get field of type " ++ ft ++ " for signatory " ++ show i
       ++ " from MockDoc:\n" ++ show md
 
+-- | Internal use only
 getMockFieldsOfType :: String -> MockSigLink -> [MockSigField]
 getMockFieldsOfType fts msl = filter (\f -> mockSigFieldType f == fts) (mockSigLinkFields msl)
 
