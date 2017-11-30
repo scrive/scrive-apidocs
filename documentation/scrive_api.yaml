@@ -846,6 +846,9 @@ paths:
   /{document_id}/{signatory_id}/setauthenticationtosign:
     $ref: ./api/documents/document_id/signatory_id/setauthenticationtosign.yaml
 
+  /{document_id}/{signatory_id}/changeemailandmobile:
+    $ref: ./api/documents/document_id/signatory_id/changeemailandmobile.yaml
+
   # Sign
 
   /{document_id}/{signatory_id}/check:
