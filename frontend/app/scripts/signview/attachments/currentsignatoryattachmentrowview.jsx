@@ -48,18 +48,27 @@ var Checkbox = require("../../common/checkbox");
         },
         ajaxerror: function (d, a) {
           if (d && d.status == 409) {
-            var button =  new Button({
-              type: "optional",
-              size: "small",
-              text: localization.reloadPage,
-              onClick: function () {
-                document.location.reload(true);
-              }
-            });
             var content = $("<div/>");
             content.text(localization.signviewAttachmentUploadedInOtherWindow);
-            content.append($("<div style='margin-top: 40px;' />"));
-            content.append(button.el());
+
+            var buttonContainer = $("<div style='margin-top: 40px;' />");
+            content.append(buttonContainer);
+
+            React.render(
+              React.createElement(
+                Button,
+                {
+                  type: "optional",
+                  size: "small",
+                  text: localization.reloadPage,
+                  onClick: function () {
+                    document.location.reload(true);
+                  }
+                }
+              ),
+              buttonContainer[0]
+            );
+
             ReloadManager.stopBlocking();
             ScreenBlockingDialog.open({header: content});
           } else {
