@@ -8,6 +8,7 @@ module Doc.Migrations (
   , signatoryLinkFieldsAddRadioGroupValues
   , addEditableBySignatoryFlag
   , signatoryLinkFieldsAddCustomValidation
+  , addSearchColumnsToDocument
 ) where
 
 import Data.Int
@@ -16,6 +17,21 @@ import Database.PostgreSQL.PQTypes.Checks
 import DB
 import Doc.Tables
 import KontraPrelude
+
+addSearchColumnsToDocument :: MonadDB m => Migration m
+addSearchColumnsToDocument = Migration {
+    mgrTableName = tblName tableDocuments
+  , mgrFrom = 44
+  , mgrAction = StandardMigration $ do
+      let tname = tblName tableDocuments
+      runQuery_ $ sqlAlterTable "documents"
+        [
+          sqlAddColumn tblColumn { colName = "archive_search_terms", colType = TextT, colNullable = True }
+        , sqlAddColumn tblColumn { colName = "archive_search_fts", colType = TSVectorT, colNullable = True }
+        ]
+      runQuery_ . sqlCreateIndex tname $ (indexOnColumn "archive_search_terms") { idxWhere = Just ("archive_search_terms IS NULL") }
+      runQuery_ . sqlCreateIndex tname $ (indexOnColumnWithMethod "archive_search_fts" GIN)
+  }
 
 addIsReceiptToDocument :: MonadDB m => Migration m
 addIsReceiptToDocument = Migration {

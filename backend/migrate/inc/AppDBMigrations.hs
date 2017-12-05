@@ -62,4 +62,6 @@ kontraMigrations = [
   , signatoryLinkFieldsAddCustomValidation
   , createFeatureFlags
   , createAPILogsTable
+  , addSearchColumnsToDocument
+  , addDocumentSearchUpdateJob
   ]

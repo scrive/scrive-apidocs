@@ -13,6 +13,7 @@ import Configuration
 import DB
 import DB.PostgreSQL
 import DB.SQLFunction
+import DB.SQLTrigger
 import KontraPrelude
 import Log.Configuration
 
@@ -47,3 +48,4 @@ main = do
       migrateDatabase migrationOptions kontraExtensions kontraDomains kontraTables kontraMigrations
       defineComposites kontraComposites
       defineFunctions kontraFunctions
+      defineTriggers kontraTriggers

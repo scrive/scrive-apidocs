@@ -26,6 +26,7 @@ module MinutesTime (
   , beginningOfDay
   , nextDayMidnight
   , nextDayAtHour
+  , todayAtHour
   ) where
 
 import Control.Monad.Time
@@ -150,4 +151,9 @@ nextDayAtHour :: Int -> UTCTime -> UTCTime
 nextDayAtHour hours time = UTCTime {
   utctDay = 1 `addDays` utctDay time
 , utctDayTime = secondsToDiffTime . toInteger $ 3600 * hours
+}
+
+todayAtHour :: Int -> UTCTime -> UTCTime
+todayAtHour hours time = time {
+  utctDayTime = secondsToDiffTime . toInteger $ 3600 * hours
 }

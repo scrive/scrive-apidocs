@@ -6,7 +6,7 @@ import KontraPrelude
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 44
+  , tblVersion = 45
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -37,7 +37,8 @@ tableDocuments = tblTable {
     , tblColumn { colName = "author_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "allow_reject_reason", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "is_receipt", colType = BoolT, colNullable = False, colDefault = Just "false" }
-
+    , tblColumn { colName = "archive_search_terms", colType = TextT, colNullable = True }
+    , tblColumn { colName = "archive_search_fts", colType = TSVectorT, colNullable = True }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -54,6 +55,10 @@ tableDocuments = tblTable {
     , indexOnColumn "status"
       -- for joining with signatory links
     , uniqueIndexOnColumn "author_id"
+      -- @todo: drop when `documents.archive_search_terms` has been updated with
+      -- historical data
+    , (indexOnColumn "archive_search_terms") { idxWhere = Just ("archive_search_terms IS NULL") }
+    , (indexOnColumnWithMethod "archive_search_fts" GIN)
     ]
   , tblChecks = [
         Check "check_documents_pending_are_not_purged"

@@ -141,6 +141,7 @@ Library
                  , DB.Query
                  , DB.RowCache
                  , DB.SQLFunction
+                 , DB.SQLTrigger
                  , DB.TimeZoneName
                  , DB.Utils
                  , DB.XML
@@ -208,6 +209,7 @@ Library
                  , Doc.Extending.Consumer
                  , Doc.Extending.Model
                  , Doc.Extending.Tables
+                 , Doc.Functions
                  , Doc.Logging
                  , Doc.Model
                  , Doc.Model.Domain
@@ -215,6 +217,7 @@ Library
                  , Doc.Model.Filter
                  , Doc.Model.OrderBy
                  , Doc.Model.Query
+                 , Doc.Model.Search
                  , Doc.Model.Update
                  , Doc.SMSPin.Model
                  , Doc.SMSPin.Tables
@@ -235,6 +238,7 @@ Library
                  , Doc.Texts
                  , Doc.Tokens.Model
                  , Doc.Tokens.Tables
+                 , Doc.Trigger
                  , EID.Authentication.Model
                  , EID.Authentication.Tables
                  , EID.CGI.GRP.Config
@@ -716,12 +720,15 @@ Executable kontrakcja-migrate
                  DB.PostgreSQL
                  DB.Query
                  DB.SQLFunction
+                 DB.SQLTrigger
                  DB.Utils
                  Doc.API.Callback.Tables
                  Doc.AutomaticReminder.Tables
                  Doc.Extending.Migrations
                  Doc.Extending.Tables
+                 Doc.Functions
                  Doc.Migrations
+                 Doc.Trigger
                  Doc.SMSPin.Tables
                  Doc.Sealing.Tables
                  Doc.Signing.Migrations
@@ -1192,8 +1199,10 @@ Test-suite kontrakcja-test
                  Doc.API.V2.Mock.MockDocInternal
                  Doc.API.V2.Mock.TestUtils
                  Doc.AutomaticReminder.Tables
+                 Doc.DBActions
                  Doc.Extending.Migrations
                  Doc.Extending.Tables
+                 Doc.Functions
                  Doc.Migrations
                  Doc.SMSPin.Tables
                  Doc.Sealing.Tables
@@ -1202,6 +1211,7 @@ Test-suite kontrakcja-test
                  Doc.Tables
                  Doc.TestInvariants
                  Doc.Tokens.Tables
+                 Doc.Trigger
                  DocControlTest
                  DocStateTest
                  DumpEvidenceTexts

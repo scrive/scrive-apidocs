@@ -45,6 +45,7 @@ data JobType
   | AsyncEventsProcessing
   | ClockErrorCollection
   | DocumentAutomaticRemindersEvaluation
+  | DocumentSearchUpdate
   | DocumentsPurge
   | DocumentsArchiveIdle
   | EmailChangeRequestsEvaluation
@@ -83,6 +84,7 @@ jobTypeMapper = [
   , (SessionsEvaluation, "sessions_evaluation")
   , (SMSEventsProcessing, "sms_events_processing")
   , (UserAccountRequestEvaluation, "user_account_request_evaluation")
+  , (DocumentSearchUpdate, "document_search_update")
   ]
 
 instance PQFormat JobType where
@@ -187,6 +189,12 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
             "signatory_count" .= archived
           ]
       RerunAt . nextDayAtHour 19 <$> currentTime
+    DocumentSearchUpdate -> do
+      runDB updateHistoricalSearchData
+      now <- currentTime
+      if now < todayAtHour 4 now
+      then RerunAfter <$> return (iseconds 1)
+      else RerunAt . nextDayMidnight <$> currentTime
     EmailChangeRequestsEvaluation -> do
       runDB . dbUpdate $ DeleteExpiredEmailChangeRequests
       return . RerunAfter $ ihours 1

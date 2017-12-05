@@ -4,6 +4,7 @@ module AppDBTables (
   , kontraExtensions
   , kontraFunctions
   , kontraTables
+  , kontraTriggers
   ) where
 
 import Database.PostgreSQL.PQTypes.Model
@@ -16,14 +17,17 @@ import Company.Tables
 import CompanyAccounts.Tables
 import Cron.Tables
 import DB.SQLFunction
+import DB.SQLTrigger
 import Doc.API.Callback.Tables
 import Doc.AutomaticReminder.Tables
 import Doc.Extending.Tables
+import Doc.Functions
 import Doc.Sealing.Tables
 import Doc.Signing.Tables
 import Doc.SMSPin.Tables
 import Doc.Tables
 import Doc.Tokens.Tables
+import Doc.Trigger
 import EID.Authentication.Tables
 import EID.CGI.GRP.Transaction.Tables
 import EID.Signature.Tables
@@ -77,6 +81,16 @@ kontraExtensions = [
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [
     insertDocumentSessionToken
+  , archiveSearchTerms
+  , postProcessSearchString
+  , extractEmails
+  , splitEmail
+  ]
+
+kontraTriggers :: [SQLTrigger]
+kontraTriggers = [
+    searchUpdateDocs
+  , searchUpdateSignatoryLinkFields
   ]
 
 kontraTables :: [Table]

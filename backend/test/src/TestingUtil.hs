@@ -810,10 +810,13 @@ addRandomDocumentWithFile fileid rda = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
-
+      title <- rand 1 $ arbString 10 25
       siglinks <- rand 10 (listOf $ randomSigLinkByStatus status)
 
-      let doc = doc' { documenttype = xtype, documentstatus = status }
+      let doc = doc' { documenttype = xtype
+                     , documentstatus = status
+                     , documenttitle = title
+                     }
 
       partner <- rand 10 arbitrary
       asl' <- rand 10 $ randomAuthorLinkByStatus status

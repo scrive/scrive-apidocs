@@ -4,6 +4,7 @@ module Cron.Migrations (
   , addInvoicingJob
   , addPlanhatJob
   , removeFindAndExtendDigitalSignaturesFromCronJobs
+  , addDocumentSearchUpdateJob
 ) where
 
 import Control.Monad.Catch
@@ -11,6 +12,13 @@ import Control.Monad.Catch
 import Cron.Tables
 import DB
 import KontraPrelude
+
+addDocumentSearchUpdateJob :: (MonadDB m, MonadThrow m) => Migration m
+addDocumentSearchUpdateJob = Migration {
+    mgrTableName = tblName tableCronJobs
+  , mgrFrom = 9
+  , mgrAction = StandardMigration $ runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('document_search_update', to_timestamp(0))"
+  }
 
 addPlanhatJob :: (MonadDB m, MonadThrow m) => Migration m
 addPlanhatJob = Migration {
