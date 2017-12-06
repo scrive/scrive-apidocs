@@ -33,7 +33,8 @@ import Util.HasSomeUserInfo
 
 newtype SignOrder = SignOrder { unSignOrder :: Int32 }
   deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''SignOrder)
+deriving newtype instance Read SignOrder
+deriving newtype instance Show SignOrder
 
 instance Unjson SignOrder where
   unjsonDef = invmap SignOrder unSignOrder unjsonDef

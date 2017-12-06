@@ -14,7 +14,8 @@ import Log.Identifier
 
 newtype CallbackID = CallbackID Int64
   deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''CallbackID)
+deriving newtype instance Read CallbackID
+deriving newtype instance Show CallbackID
 
 instance Identifier CallbackID Int64 where
   idDefaultLabel _       = "callback_id"

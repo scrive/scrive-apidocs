@@ -12,13 +12,13 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import DB.Derive
 import KontraPrelude
 import Log.Identifier
 
 newtype UserID = UserID Int64
   deriving (Eq, Ord, PQFormat, Typeable)
-$(newtypeDeriveUnderlyingReadShow ''UserID)
+deriving newtype instance Read UserID
+deriving newtype instance Show UserID
 
 instance FromReqURI UserID where
   fromReqURI = maybeRead

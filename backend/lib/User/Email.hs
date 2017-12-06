@@ -13,7 +13,8 @@ import KontraPrelude
 -- newtypes
 newtype Email = Email { unEmail :: String }
   deriving (Eq, Ord, PQFormat, Typeable)
-$(newtypeDeriveUnderlyingReadShow ''Email)
+deriving newtype instance Read Email
+deriving newtype instance Show Email
 
 instance FromSQL Email where
   type PQBase Email = PQBase String

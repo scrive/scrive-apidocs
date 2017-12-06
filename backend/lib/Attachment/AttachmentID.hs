@@ -8,12 +8,12 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import DB.Derive
 import KontraPrelude
 
 newtype AttachmentID = AttachmentID Int64
   deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''AttachmentID)
+deriving newtype instance Read AttachmentID
+deriving newtype instance Show AttachmentID
 
 instance FromReqURI AttachmentID where
   fromReqURI = maybeRead

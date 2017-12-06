@@ -11,12 +11,12 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import DB.Derive
 import KontraPrelude
 
 newtype ThemeID = ThemeID Int64
   deriving (Eq, Ord, PQFormat, Typeable)
-$(newtypeDeriveUnderlyingReadShow ''ThemeID)
+deriving newtype instance Read ThemeID
+deriving newtype instance Show ThemeID
 
 instance FromReqURI ThemeID where
   fromReqURI = maybeRead

@@ -537,6 +537,7 @@ Library
                     , DeriveDataTypeable
                     , DeriveFunctor
                     , DeriveGeneric
+                    , DerivingStrategies
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -596,6 +597,7 @@ Executable kontrakcja-server
                     , DeriveDataTypeable
                     , DeriveFunctor
                     , DeriveGeneric
+                    , DerivingStrategies
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -660,6 +662,7 @@ Executable cron
                     , DeriveDataTypeable
                     , DeriveFunctor
                     , DeriveGeneric
+                    , DerivingStrategies
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -824,6 +827,7 @@ Executable kontrakcja-migrate
                     , DeriveDataTypeable
                     , DeriveFunctor
                     , DeriveGeneric
+                    , DerivingStrategies
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -984,6 +988,7 @@ Executable mailing-server
                     , DeriveDataTypeable
                     , DeriveFunctor
                     , DeriveGeneric
+                    , DerivingStrategies
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -1117,6 +1122,7 @@ Executable messenger-server
                     , DeriveDataTypeable
                     , DeriveFunctor
                     , DeriveGeneric
+                    , DerivingStrategies
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -1338,6 +1344,7 @@ Test-suite kontrakcja-test
                     , DeriveDataTypeable
                     , DeriveFunctor
                     , DeriveGeneric
+                    , DerivingStrategies
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -1421,6 +1428,7 @@ Executable localization
                     , DeriveDataTypeable
                     , DeriveFunctor
                     , DeriveGeneric
+                    , DerivingStrategies
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies
@@ -1470,6 +1478,7 @@ Executable routinglist
                     , DeriveDataTypeable
                     , DeriveFunctor
                     , DeriveGeneric
+                    , DerivingStrategies
                     , FlexibleContexts
                     , FlexibleInstances
                     , FunctionalDependencies

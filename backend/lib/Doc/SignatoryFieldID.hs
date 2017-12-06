@@ -10,12 +10,12 @@ import Data.Int
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import DB.Derive
 import KontraPrelude
 
 newtype SignatoryFieldID = SignatoryFieldID Int64
   deriving (Eq, Ord, PQFormat, Typeable, Data)
-$(newtypeDeriveUnderlyingReadShow ''SignatoryFieldID)
+deriving newtype instance Read SignatoryFieldID
+deriving newtype instance Show SignatoryFieldID
 
 instance FromReqURI SignatoryFieldID where
   fromReqURI = maybeRead

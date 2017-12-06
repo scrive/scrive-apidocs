@@ -1,58 +1,18 @@
 module DB.Derive (
-    newtypeDeriveUnderlyingReadShow
-  , jsonFromSQL
+    jsonFromSQL
   , jsonToSQL
   , jsonFromSQL'
   , jsonToSQL'
   , nothingToResult
   ) where
 
-import Control.Arrow
 import Data.Typeable
 import Database.PostgreSQL.PQTypes
 import Foreign.Ptr
-import Language.Haskell.TH
 import Text.JSON.Generic
 import Text.JSON.String
 
 import KontraPrelude
-
--- | Derives Read/Show instances for a given newtype
--- that behave like the ones of underlying type.
--- Given newtype T, it expands to the following code:
---
--- instance Show T where
---   showsPrec p (T v) = showsPrec p v
--- instance Read T where
---   readsPrec p s = first T `fmap` readsPrec p s
---
-newtypeDeriveUnderlyingReadShow :: Name -> Q [Dec]
-newtypeDeriveUnderlyingReadShow t = do
-  info <- reify t
-  case info of
-    TyConI (NewtypeD _ name _ _ tcon _) -> do
-      let con = case tcon of
-            RecC c _    -> c
-            NormalC c _ -> c
-            _ -> $unexpectedError $ "wrong constructor: " ++ show tcon
-      p' <- newName "p"
-      s' <- newName "s"
-      v' <- newName "v"
-      return [
-        InstanceD Nothing [] (AppT (ConT ''Read) (ConT name)) [
-            FunD 'readsPrec [
-              Clause [VarP p', VarP s']
-                (NormalB (InfixE (Just (AppE (VarE 'first) (ConE con))) (VarE 'fmap) (Just (AppE (AppE (VarE 'readsPrec) (VarE p')) (VarE s'))))) []
-              ]
-            ]
-        , InstanceD Nothing [] (AppT (ConT ''Show) (ConT name)) [
-            FunD 'showsPrec [
-              Clause [VarP p', ConP con [VarP v']]
-                (NormalB (AppE (AppE (VarE 'showsPrec) (VarE p')) (VarE v'))) []
-              ]
-            ]
-        ]
-    _ -> $unexpectedError $ "not a newtype declaration: " ++ show info
 
 jsonFromSQL :: (Data a, Typeable a) => Maybe (PQBase String) -> IO a
 jsonFromSQL = jsonFromSQL' fromJSON
