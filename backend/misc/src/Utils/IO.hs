@@ -74,6 +74,7 @@ importantExecutables =
   , ("lessc", ["-v"])
   , ("gnuplot", ["--version"])
   , ("pdfdetach", ["-v"])
+  , ("qrencode", ["--version"])
   ]
 
 checkExecutables :: (MonadLog m, MonadBase IO m, Functor m) => m ()
