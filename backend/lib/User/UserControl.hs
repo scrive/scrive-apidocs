@@ -338,7 +338,7 @@ handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handlePasswordReminderPost uid token = do
   muser <- getPasswordReminderUser uid token
   case muser of
-    Just user -> do
+    Just user | not (useraccountsuspended user) -> do
       switchLang (getLang user)
       Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
       password <- guardJustM $ getField "password"
@@ -350,6 +350,9 @@ handlePasswordReminderPost uid token = do
       J.runJSONGenT $ do
           J.value "logged" True
           J.value "location" $ show LinkDesignView
+    Just _ -> do
+      {- MR: useraccountsuspended must be true here. This is a hack for Hi3G. It will be removed in future -}
+      J.runJSONGenT $ J.value "logged" False
     Nothing -> J.runJSONGenT $ J.value "logged" False
 
 -- please treat this function like a public query form, it's not secure
