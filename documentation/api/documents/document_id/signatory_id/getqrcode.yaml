@@ -1,0 +1,22 @@
+---
+get:
+
+  summary: Get a sign link as a QR code
+
+  tags:
+    - Get
+    - Sign
+
+  description: |
+    Get a sign link for a given signatory `signatory_id` and a
+    document `document_id` as a QR code image in `.png` format.
+
+    *OAuth Privileges required: `DOC_CHECK`*
+
+  parameters:
+    - $ref: ../../../../extras/parameters.yaml#/DocumentID
+    - $ref: ../../../../extras/parameters.yaml#/SignatoryID
+
+  responses:
+    200:
+      $ref: ../../../../extras/responses.yaml#/PNGImage
