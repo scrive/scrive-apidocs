@@ -38,14 +38,15 @@ import Util.PDFUtil
 
 handleShare :: Kontrakcja m => m JSValue
 handleShare =  do
-    user <- guardJustM $ ctxmaybeuser <$> getContext
+    user <- guardJustM $ get ctxmaybeuser <$> getContext
     ids <- getCriticalField asValidAttachmentIDList "attachmentids"
     dbUpdate $ SetAttachmentsSharing (userid user) ids True
     J.runJSONGenT $ return ()
 
 handleDelete :: Kontrakcja m => m JSValue
 handleDelete = do
-    ctx@(Context { ctxmaybeuser = Just user}) <- getContext
+    ctx <- getContext
+    let Just user = get ctxmaybeuser ctx
     ids <- getCriticalField asValidAttachmentIDList "attachmentids"
     let actor = userActor ctx user
     dbUpdate $ DeleteAttachments (userid user) ids actor
@@ -56,7 +57,7 @@ handleDelete = do
 -- download file as is.
 handleDownloadAttachment :: Kontrakcja m => AttachmentID -> String -> m Response
 handleDownloadAttachment attid _nameForBrowser = do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
+  user <- guardJustM $ get ctxmaybeuser <$> getContext
   atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
                                             , AttachmentsOfAuthorDeleteValue (userid user) True
                                             , AttachmentsOfAuthorDeleteValue (userid user) False
@@ -86,7 +87,7 @@ handleCreateNew = guardLoggedInOrThrowInternalError $ do
           let title = takeBaseName filename
           actor <- guardJustM $ mkAuthorActor <$> getContext
           ctx <- getContext
-          _ <- dbUpdate $ NewAttachment (userid $ fromJust $ ctxmaybeuser ctx) title filename content' actor
+          _ <- dbUpdate $ NewAttachment (userid $ fromJust $ get ctxmaybeuser ctx) title filename content' actor
           J.runJSONGenT $ return ()
     _ -> internalError
 

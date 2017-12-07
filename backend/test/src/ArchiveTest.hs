@@ -32,7 +32,7 @@ testListDocs = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   -- send a doc as author
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   req <- mkRequest POST [ ("expectedType", inText "text")
                        , ("file", inFile $ inTestDir "pdfs/simple.pdf")]
   _ <- runTestKontra req ctx $ apiCallV1CreateFromFile
@@ -44,7 +44,7 @@ testListDocs = do
 
   -- send a doc to author from someoneelse
   (Just user2) <- addNewUser "Jackie" "Chan" "jackie@chan.com"
-  ctx2 <- (\c -> c { ctxmaybeuser = Just user2 }) <$> mkContext def
+  ctx2 <- (set ctxmaybeuser (Just user2)) <$> mkContext def
   req2 <- mkRequest POST [ ("expectedType", inText "text")
                         , ("file", inFile $ inTestDir "pdfs/simple.pdf")]
   _ <- runTestKontra req2 ctx2 $ apiCallV1CreateFromFile

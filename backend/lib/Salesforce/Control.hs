@@ -24,7 +24,7 @@ import User.Utils
 handleSalesforceIntegration :: Kontrakcja m => m InternalKontraResponse
 handleSalesforceIntegration  = withUser $ \user -> do
   ctx <- getContext
-  case ctxsalesforceconf ctx of
+  case get ctxsalesforceconf ctx of
     Nothing -> noConfigurationError "Salesforce"
     Just sc -> do
       mcode <- getField "code"
@@ -43,7 +43,7 @@ handleSalesforceIntegration  = withUser $ \user -> do
 getSalesforceKeys :: Kontrakcja m => m JSValue
 getSalesforceKeys = do
   ctx <- getContext
-  case ctxsalesforceconf ctx of
+  case get ctxsalesforceconf ctx of
     Nothing -> noConfigurationError "Salesforce"
     Just sc ->
       runJSONGenT $ do

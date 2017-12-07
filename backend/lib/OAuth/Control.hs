@@ -50,7 +50,7 @@ oauth = choice [
 
 tempCredRequest :: Kontrakcja m => m Response
 tempCredRequest = api $ do
-  time <- ctxtime <$> getContext
+  time <- get ctxtime <$> getContext
 
   etcr <- getTempCredRequest
   case etcr of
@@ -67,11 +67,11 @@ tempCredRequest = api $ do
 
 authorization :: Kontrakcja m => m (Either KontraLink Response)
 authorization = do
-  ctx <- getContext
-  time   <- ctxtime      <$> getContext
-  lang <- ctxlang        <$> getContext
+  ctx  <- getContext
+  let time = get ctxtime ctx
+      lang = get ctxlang ctx
 
-  mtk <- getDataFn' (look "oauth_token")
+  mtk   <- getDataFn' (look "oauth_token")
   token <- guardJust $ maybeRead =<< mtk
 
   mprivs <- dbQuery $ GetRequestedPrivileges token time
@@ -83,8 +83,8 @@ authorization = do
 
 authorizationDenied :: Kontrakcja m => m KontraLink
 authorizationDenied = do
-  time   <- ctxtime <$> getContext
-  lang   <- ctxlang <$> getContext
+  time   <- get ctxtime <$> getContext
+  lang   <- get ctxlang <$> getContext
   mtk <- getDataFn' (look "oauth_token")
   token <- guardJust $ maybeRead =<< mtk
   murl <- dbUpdate $ DenyCredentials token time
@@ -98,8 +98,8 @@ authorizationGranted :: Kontrakcja m => m KontraLink
 authorizationGranted = do
   mtk <- getDataFn' (look "oauth_token")
   token <- guardJust $ maybeRead =<< mtk
-  muser <- ctxmaybeuser <$> getContext
-  time <- ctxtime <$> getContext
+  muser <- get ctxmaybeuser <$> getContext
+  time  <- get ctxtime <$> getContext
   case muser of
     Nothing ->
       return $ LinkOAuthAuthorization token
@@ -110,7 +110,7 @@ authorizationGranted = do
 
 tokenCredRequest :: Kontrakcja m => m Response
 tokenCredRequest = api $ do
-  time <- ctxtime <$> getContext
+  time <- get ctxtime <$> getContext
   etr <- getTokenRequest
   case etr of
     Left errors -> (throwM . SomeDBExtraException) $ badInput errors
@@ -124,23 +124,23 @@ tokenCredRequest = api $ do
 
 apiDashboardPersonalTokens :: Kontrakcja m => m Value
 apiDashboardPersonalTokens = do
-  Context{..} <- getContext
-  user <- guardJust ctxmaybeuser
+  ctx <- getContext
+  user <- guardJust . get ctxmaybeuser $ ctx
   ls <- map (unjsonToJSON unjsonOAuthAuthorization) <$> maybeToList <$> (dbQuery $ GetPersonalToken (userid user))
   return $ object [ "personal_tokens" .= ls ]
 
 apiDashboardAPITokens :: Kontrakcja m => m JSValue
 apiDashboardAPITokens = do
-  Context{..} <- getContext
-  user <- guardJust ctxmaybeuser
+  ctx <- getContext
+  user <- guardJust . get ctxmaybeuser $ ctx
   ls <- map jsonFromAPIToken <$> (dbQuery $ GetAPITokensForUser (userid user))
   return $ J.runJSONGen $ do
     J.value "api_tokens" $  ls
 
 apiDashboardGrantedPrivileges :: Kontrakcja m => m JSValue
 apiDashboardGrantedPrivileges = do
-  Context{..} <- getContext
-  user <- guardJust ctxmaybeuser
+  ctx <- getContext
+  user <- guardJust . get ctxmaybeuser $ ctx
   ds <- mapKeepM privilegeDescription [APIDocCreate, APIDocSend, APIDocCheck]
   ls <- concatMap (\p->jsonFromGrantedPrivilege p ds) <$> (dbQuery $ GetGrantedPrivileges (userid user))
   return $ J.runJSONGen $ do
@@ -153,14 +153,14 @@ success = J.toJSValue $ singleton ("status" :: String) ("success" :: String)
 
 createAPIToken :: Kontrakcja m => m JSValue
 createAPIToken = do
-  muser <- ctxmaybeuser <$> getContext
+  muser <- get ctxmaybeuser <$> getContext
   user <- guardJust muser
   _success <- dbUpdate $ CreateAPIToken (userid user)
   return success
 
 deleteAPIToken :: Kontrakcja m => m JSValue
 deleteAPIToken = do
-  muser <- ctxmaybeuser <$> getContext
+  muser <- get ctxmaybeuser <$> getContext
   user <- guardJust muser
   mtk <- getDataFn' (look "apitoken")
   case maybeRead =<< mtk of
@@ -170,21 +170,21 @@ deleteAPIToken = do
 
 createPersonalToken :: Kontrakcja m => m JSValue
 createPersonalToken = do
-  muser <- ctxmaybeuser <$> getContext
+  muser <- get ctxmaybeuser <$> getContext
   user <- guardJust muser
   _success <- dbUpdate $ CreatePersonalToken (userid user)
   return success
 
 deletePersonalToken :: Kontrakcja m => m JSValue
 deletePersonalToken = do
-  muser <- ctxmaybeuser <$> getContext
+  muser <- get ctxmaybeuser <$> getContext
   user <- guardJust muser
   _success <- dbUpdate $ DeletePersonalToken (userid user)
   return success
 
 deletePrivilege :: Kontrakcja m => m JSValue
 deletePrivilege = do
-  muser <- ctxmaybeuser <$> getContext
+  muser <- get ctxmaybeuser <$> getContext
   user <- guardJust muser
   mtk <- getDataFn' (look "tokenid")
   case maybeRead =<< mtk of

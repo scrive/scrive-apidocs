@@ -84,7 +84,7 @@ docApiV2List = api $ do
       "query_time" .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)
     , identifier_ $ usercompany user
     , identifier_ $ userid user
-    , "ip" .= show (ctxipnumber ctx)
+    , "ip" .= show (get ctxipnumber ctx)
     ]
   -- Result
   let headers = mkHeaders [("Content-Type","application/json; charset=UTF-8")]

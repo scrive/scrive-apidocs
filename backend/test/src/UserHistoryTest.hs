@@ -5,6 +5,7 @@ import Test.Framework
 import Text.JSON
 import Text.JSON.Gen
 
+import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.Model
 import Context
@@ -143,7 +144,7 @@ testHandlerForLoginSuccess = do
 testHandlerForPasswordSetup :: TestEnv ()
 testHandlerForPasswordSetup = do
     user <- createTestUser
-    ctx <- (\c -> c { ctxmaybeuser = Just user})
+    ctx <- (set ctxmaybeuser (Just user))
       <$> mkContext def
     req <- mkRequest POST [ ("oldpassword", inText "test_password")
                           , ("password", inText "test1111test")
@@ -157,7 +158,7 @@ testHandlerForPasswordSetup = do
 testHandlerForPasswordSetupReq :: TestEnv ()
 testHandlerForPasswordSetupReq = do
     user <- createTestUser
-    ctx <- (\c -> c { ctxmaybeuser = Just user})
+    ctx <- (set ctxmaybeuser (Just user))
       <$> mkContext def
     req <- mkRequest POST [ ("oldpassword", inText "test")
                           , ("password", inText "test1111test")
@@ -203,7 +204,7 @@ testHandlerForTOSAccept = do
 testHandlerForDetailsChanged :: TestEnv ()
 testHandlerForDetailsChanged = do
     user <- createTestUser
-    ctx <- (\c -> c { ctxmaybeuser = Just user})
+    ctx <- (set ctxmaybeuser (Just user))
       <$> mkContext def
     req <- mkRequest POST [ ("fstname", inText "Karol")
                           , ("sndname", inText "Samborski")
@@ -247,7 +248,7 @@ createTestUser = do
                                 (Just pwd)
                                 (companyid company,True)
                                 def
-                                (bdid bd)
+                                (get bdid bd)
                                 AccountRequest
     case muser of
         Nothing     -> $unexpectedErrorM "can't create user"

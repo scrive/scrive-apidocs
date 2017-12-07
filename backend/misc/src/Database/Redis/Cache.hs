@@ -5,7 +5,7 @@ import Control.Concurrent.Lifted
 import Control.Monad.Catch
 import Control.Monad.Trans.Control
 import Data.Either
-import Data.Function
+import Data.Function (fix)
 import Log
 import qualified Data.ByteString.Char8 as BS
 import qualified Database.Redis as R
@@ -26,7 +26,7 @@ mfetch
   -> (Maybe (R.Connection, RedisKey) -> m r) -- ^ What to do if there is no
   -- Redis connection or key is not in cache
   -> m r
-mfetch mredis rkey get construct = case mredis of
+mfetch mredis rkey actGet construct = case mredis of
   Nothing -> construct Nothing
   Just cache -> tryAny (fetch cache) >>= \case
     -- In case fetching/generating values with Redis fails, retry without it. If
@@ -41,7 +41,7 @@ mfetch mredis rkey get construct = case mredis of
       logAttention "Key invalidated while its value was being fetched" $ object [
           "reason" .= show err
         ]
-      mfetch mredis rkey get construct
+      mfetch mredis rkey actGet construct
     Right (Right res) -> return res
   where
     fetch :: R.Connection -> m (Either KeyInvalidated r)
@@ -72,7 +72,7 @@ mfetch mredis rkey get construct = case mredis of
           -- instance responsible for its generation unexpectedly terminated and
           -- we need to restart the whole process.
           eres <- withAsync ttlMonitor $ \monitor -> do
-            withAsync (get cache rkey) $ \getter -> do
+            withAsync (actGet cache rkey) $ \getter -> do
               waitEither monitor getter
 
           case eres of

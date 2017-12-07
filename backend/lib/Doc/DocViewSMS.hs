@@ -44,7 +44,9 @@ mkSMS doc sl mkontraInfoForSMS msgBody = do
           orig <- companySmsOriginator <$> (dbQuery $ GetCompanyUI $ usercompany user)
           prov <- companysmsprovider . companyinfo <$> (dbQuery $ GetCompanyByUserID (userid user))
           return (orig, prov)
-  let originator = fromMaybe (bdSmsOriginator $ mctxcurrentBrandedDomain mctx) (justEmptyToNothing moriginator)
+  let originator = fromMaybe
+        (get (bdSmsOriginator . mctxcurrentBrandedDomain) mctx)
+        (justEmptyToNothing moriginator)
   return $ SMS (getMobile sl) mkontraInfoForSMS msgBody originator provider
 
 smsDocumentErrorAuthor :: (MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryLink -> m SMS

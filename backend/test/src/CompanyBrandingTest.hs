@@ -41,7 +41,7 @@ testFetchCompanyBranding:: TestEnv ()
 testFetchCompanyBranding = do
   company <- addNewCompany
   Just user <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
   req1 <- mkRequest GET []
   (avalue1, _) <- runTestKontra req1 ctx $ handleGetCompanyBranding Nothing
@@ -68,11 +68,10 @@ testUpdateCompanyTheme:: TestEnv ()
 testUpdateCompanyTheme = do
   company <- addNewCompany
   Just user <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   mainbd <- dbQuery $ GetMainBrandedDomain
-  mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
+  mailTheme <- dbQuery $ GetTheme (get bdMailTheme mainbd)
   newTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailTheme
   let newChangedTheme1 =  newTheme {themeBrandColor = "#12399a"}
   let newChangedThemeStr1 =  unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newChangedTheme1
@@ -128,10 +127,10 @@ testDeleteCompanyTheme :: TestEnv ()
 testDeleteCompanyTheme = do
   company <- addNewCompany
   Just user <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
   mainbd <- dbQuery $ GetMainBrandedDomain
-  mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
+  mailTheme <- dbQuery $ GetTheme (get bdMailTheme mainbd)
   newTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailTheme
   req1 <- mkRequest POST []
   ((), _) <- runTestKontra req1 ctx $ handleDeleteTheme Nothing (themeID newTheme)
@@ -148,11 +147,11 @@ testNormalUserCantChangeOrDeleteTheme = do
   True <-  dbUpdate $ SetUserCompanyAdmin (userid user1) False
   Just user2 <- dbQuery $ GetUserByID (userid user1)
 
-  ctx <- (\c -> c { ctxmaybeuser = Just user2 })
+  ctx <- (set ctxmaybeuser (Just user2))
     <$> mkContext def
 
   mainbd <- dbQuery $ GetMainBrandedDomain
-  mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
+  mailTheme <- dbQuery $ GetTheme (get bdMailTheme mainbd)
   newTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailTheme
   let newChangedTheme1 =  newTheme {themeBrandColor = "#12399a"}
   let newChangedThemeStr1 =  unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newChangedTheme1
@@ -177,11 +176,11 @@ testChangeCompanyUI:: TestEnv ()
 testChangeCompanyUI = do
   company <- addNewCompany
   Just user <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
   mainbd <- dbQuery $ GetMainBrandedDomain
-  mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
+  mailTheme <- dbQuery $ GetTheme (get bdMailTheme mainbd)
   newTheme1 <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailTheme
   newTheme2 <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailTheme
   newTheme3 <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailTheme
@@ -206,11 +205,11 @@ testNormalUseCantChangeCompanyUI = do
   Just user1 <- addNewCompanyUser "Mariusz" "Rak" "mariusz+ut@scrive.com" (companyid company)
   True <-  dbUpdate $ SetUserCompanyAdmin (userid user1) False
   Just user2 <- dbQuery $ GetUserByID (userid user1)
-  ctx <- (\c -> c { ctxmaybeuser = Just user2 })
+  ctx <- (set ctxmaybeuser (Just user2))
     <$> mkContext def
 
   mainbd <- dbQuery $ GetMainBrandedDomain
-  mailTheme <- dbQuery $ GetTheme (bdMailTheme mainbd)
+  mailTheme <- dbQuery $ GetTheme (get bdMailTheme mainbd)
   newTheme1 <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailTheme
   newTheme2 <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailTheme
   newTheme3 <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailTheme
@@ -236,8 +235,8 @@ testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
   ctx <- mkContext def
 
   mainbd <- dbQuery $ GetMainBrandedDomain
-  bdSignviewTheme <- dbQuery $ GetTheme (bdSignviewTheme mainbd)
-  newTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) bdSignviewTheme {themeBrandColor = "#669713"}
+  signviewTheme <- dbQuery $ GetTheme (get bdSignviewTheme mainbd)
+  newTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) signviewTheme {themeBrandColor = "#669713"}
   initialCompanyUI <- dbQuery $ GetCompanyUI (companyid company)
   _ <- dbUpdate $ SetCompanyUI (companyid company) $ initialCompanyUI {
           companyMailTheme = Just $ themeID newTheme

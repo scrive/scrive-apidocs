@@ -29,7 +29,7 @@ mkAuthorActor ctx = case getContextUser ctx of
   Nothing   -> Nothing
 
 mkAdminActor :: Context -> Maybe Actor
-mkAdminActor ctx = case ctxmaybeuser ctx of
+mkAdminActor ctx = case get ctxmaybeuser ctx of
   Just user -> Just $ adminActor ctx user
   Nothing   -> Nothing
 
@@ -57,28 +57,28 @@ data Actor = Actor {
 
 contextActor :: Context -> Actor
 contextActor ctx = Actor
-  { actorTime = ctxtime ctx
-  , actorClientTime = ctxclienttime ctx
-  , actorClientName = ctxclientname ctx
-  , actorIP = Just (ctxipnumber ctx)
-  , actorUserID = Nothing
-  , actorEmail = Nothing
-  , actorSigLinkID = Nothing
-  , actorAPIString = Nothing
-  , actorWho = ""
+  { actorTime       = get ctxtime ctx
+  , actorClientTime = get ctxclienttime ctx
+  , actorClientName = get ctxclientname ctx
+  , actorIP         = Just (get ctxipnumber ctx)
+  , actorUserID     = Nothing
+  , actorEmail      = Nothing
+  , actorSigLinkID  = Nothing
+  , actorAPIString  = Nothing
+  , actorWho        = ""
   }
 
 systemActor :: UTCTime -> Actor
 systemActor time = Actor {
-    actorTime = time
+    actorTime       = time
   , actorClientTime = Nothing
   , actorClientName = Nothing
-  , actorIP = Nothing
-  , actorUserID = Nothing
-  , actorEmail = Nothing
-  , actorSigLinkID = Nothing
-  , actorAPIString = Nothing
-  , actorWho = "the Scrive system"
+  , actorIP         = Nothing
+  , actorUserID     = Nothing
+  , actorEmail      = Nothing
+  , actorSigLinkID  = Nothing
+  , actorAPIString  = Nothing
+  , actorWho        = "the Scrive system"
 }
 
 -- | For an action that requires an operation on a document and an

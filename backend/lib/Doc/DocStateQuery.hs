@@ -168,7 +168,7 @@ signatoryNeedsToIdentifyToView sl = do
     else case (signatorylinkauthenticationtoviewmethod sl) of
       StandardAuthenticationToView -> return False
       authtoview -> do
-        sid <- ctxsessionid <$> getContext
+        sid <- get ctxsessionid <$> getContext
         mauthindb <- dbQuery (GetEAuthentication sid $ signatorylinkid sl)
         return $ case mauthindb of
           Nothing -> True

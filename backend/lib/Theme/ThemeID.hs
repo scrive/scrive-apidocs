@@ -4,7 +4,7 @@ module Theme.ThemeID (
   , fromThemeID
   ) where
 
-import Data.Binary
+import Data.Binary as B
 import Data.Int
 import Data.Typeable
 import Data.Unjson
@@ -23,7 +23,7 @@ instance FromReqURI ThemeID where
 
 instance Binary ThemeID where
   put (ThemeID cid) = put cid
-  get = fmap ThemeID get
+  get = fmap ThemeID B.get
 
 instance FromSQL ThemeID where
   type PQBase ThemeID = PQBase Int64

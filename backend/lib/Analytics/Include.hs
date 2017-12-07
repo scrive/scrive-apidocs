@@ -34,14 +34,14 @@ data AnalyticsData = AnalyticsData { aUser           :: Maybe User
 
 getAnalyticsData :: Kontrakcja m => m AnalyticsData
 getAnalyticsData = do
-  muser <- ctxmaybeuser <$> getContext
+  muser    <- get ctxmaybeuser <$> getContext
   mcompany <- case muser of
     Just user -> dbQuery $ GetCompany $ usercompany user
-    _ -> return Nothing
-  token <- ctxmixpaneltoken <$> getContext
-  gaToken <- ctxgatoken <$> getContext
-  hubspotConf <- ctxhubspotconf <$> getContext
-  lang <- ctxlang <$> getContext
+    _         -> return Nothing
+  token       <- get ctxmixpaneltoken <$> getContext
+  gaToken     <- get ctxgatoken <$> getContext
+  hubspotConf <- get ctxhubspotconf <$> getContext
+  lang        <- get ctxlang <$> getContext
 
 
   return $ AnalyticsData { aUser         = muser

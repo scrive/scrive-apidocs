@@ -4,7 +4,7 @@ module Doc.SignatoryFieldID (
   , fromSignatoryFieldID
   ) where
 
-import Data.Binary
+import Data.Binary as B
 import Data.Data
 import Data.Int
 import Database.PostgreSQL.PQTypes
@@ -22,7 +22,7 @@ instance FromReqURI SignatoryFieldID where
 
 instance Binary SignatoryFieldID where
   put (SignatoryFieldID did) = put did
-  get = fmap SignatoryFieldID get
+  get = fmap SignatoryFieldID B.get
 
 instance FromSQL SignatoryFieldID where
   type PQBase SignatoryFieldID = PQBase Int64

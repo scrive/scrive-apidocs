@@ -1,7 +1,6 @@
 -- | A subset of 'Context' needed for e.g. generating mail and SMS messages
 module MailContext (
     module MailContext.Class
-  , MailContext(..)
   , MailContextMonad(..)
   , MailContextT(..)
   , runMailContextT

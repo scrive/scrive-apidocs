@@ -5,7 +5,7 @@ module Doc.DocumentID (
   ) where
 
 import Data.Aeson
-import Data.Binary
+import Data.Binary as B
 import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
@@ -31,7 +31,7 @@ instance Unjson DocumentID where
 
 instance Binary DocumentID where
   put (DocumentID did) = put did
-  get = fmap DocumentID get
+  get = fmap DocumentID B.get
 
 instance FromSQL DocumentID where
   type PQBase DocumentID = PQBase Int64

@@ -65,7 +65,7 @@ signupForAccount ctx email = do
 
 assertSignupSuccessful :: Context -> TestEnv UserAccountRequest
 assertSignupSuccessful ctx = do
-  assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
+  assertEqual "User is not logged in" Nothing (get ctxmaybeuser ctx)
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
   return $ head actions
@@ -77,7 +77,7 @@ followActivationLink ctx uid token = do
 
 assertActivationPageOK :: Context -> TestEnv ()
 assertActivationPageOK ctx = do
-  assertEqual "User is not logged in" Nothing (ctxmaybeuser ctx)
+  assertEqual "User is not logged in" Nothing (get ctxmaybeuser ctx)
 
 activateAccount :: Context -> UserID -> MagicHash -> Bool -> String -> String -> String -> String -> Maybe String -> TestEnv (JSValue, Context)
 activateAccount ctx uid token tos fstname sndname password password2 phone = do
@@ -96,16 +96,16 @@ activateAccount ctx uid token tos fstname sndname password password2 phone = do
 
 assertAccountActivatedFor :: UserID -> String -> String -> JSValue -> Context -> TestEnv ()
 assertAccountActivatedFor uid fstname sndname res ctx = do
-  assertEqual "User is logged in" (Just uid) (fmap userid $ ctxmaybeuser ctx)
+  assertEqual "User is logged in" (Just uid) (fmap userid $ get ctxmaybeuser ctx)
   assertAccountActivated fstname sndname res ctx
 
 assertAccountActivated :: String -> String -> JSValue -> Context -> TestEnv ()
 assertAccountActivated fstname sndname res ctx = do
   ((Just resultOk) :: Maybe Bool) <- withJSValue res $ fromJSValueField "ok"
   assertEqual "Account activation succeeded" True resultOk
-  assertBool "Accepted TOS" $ isJust ((ctxmaybeuser ctx) >>= userhasacceptedtermsofservice)
-  assertEqual "First name was set" (Just fstname) (getFirstName <$> ctxmaybeuser ctx)
-  assertEqual "Second name was set" (Just sndname) (getLastName <$> ctxmaybeuser ctx)
+  assertBool "Accepted TOS" $ isJust ((get ctxmaybeuser ctx) >>= userhasacceptedtermsofservice)
+  assertEqual "First name was set" (Just fstname) (getFirstName <$> get ctxmaybeuser ctx)
+  assertEqual "Second name was set" (Just sndname) (getLastName <$> get ctxmaybeuser ctx)
 
 getAccountCreatedActions :: TestEnv [UserAccountRequest]
 getAccountCreatedActions = do

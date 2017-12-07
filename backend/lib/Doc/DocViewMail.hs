@@ -306,16 +306,19 @@ documentMailFields doc mctx = do
     mcompanyui <- case mcompany of
                     Just comp -> (dbQuery $ GetCompanyUI (companyid comp)) >>= return . Just
                     Nothing -> return Nothing
-    let themeid = fromMaybe (bdMailTheme $ mctxcurrentBrandedDomain mctx) (join $ companyMailTheme <$> mcompanyui)
+    let themeid = fromMaybe (get (bdMailTheme . mctxcurrentBrandedDomain) mctx)
+                  (join $ companyMailTheme <$> mcompanyui)
     theme <- dbQuery $ GetTheme themeid
     return $ do
       F.value "ctxhostpart" $ mctxDomainUrl mctx
-      F.value "ctxlang" (codeFromLang $ mctxlang mctx)
+      F.value "ctxlang" (codeFromLang $ get mctxlang mctx)
       F.value "documenttitle" $ documenttitle doc
       F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
       -- brandingdomainid and brandinguserid are needed only for preview/email logo
-      F.value "brandingdomainid" (show . bdid . mctxcurrentBrandedDomain $ mctx)
-      F.value "brandinguserid" (show <$> (join $ maybesignatory <$> getAuthorSigLink doc))
+      F.value "brandingdomainid"
+        (show $ get (bdid . mctxcurrentBrandedDomain) mctx)
+      F.value "brandinguserid"
+        (show <$> (join $ maybesignatory <$> getAuthorSigLink doc))
       brandingMailFields theme
 
 documentMail :: (HasLang a, MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => a -> Document -> String -> Fields m () -> m Mail
@@ -327,10 +330,13 @@ documentMail haslang doc mailname otherfields = do
   mcompanyui <- case mcompany of
                     Just comp -> (dbQuery $ GetCompanyUI (companyid comp)) >>= return . Just
                     Nothing -> return Nothing
-  let themeid = fromMaybe (bdMailTheme $ mctxcurrentBrandedDomain mctx) (join $ companyMailTheme <$> mcompanyui)
+  let themeid = fromMaybe (get (bdMailTheme . mctxcurrentBrandedDomain) mctx)
+                (join $ companyMailTheme <$> mcompanyui)
   theme <- dbQuery $ GetTheme themeid
   allfields <- documentMailFields doc mctx
-  kontramaillocal (mctxmailNoreplyAddress mctx) (mctxcurrentBrandedDomain mctx) theme haslang mailname $ allfields >> otherfields
+  kontramaillocal (get mctxmailNoreplyAddress mctx)
+    (get mctxcurrentBrandedDomain mctx) theme haslang mailname $ allfields
+    >> otherfields
 
 brandingMailFields :: Monad m => Theme -> Fields m ()
 brandingMailFields theme = do

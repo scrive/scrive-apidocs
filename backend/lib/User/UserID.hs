@@ -5,7 +5,7 @@ module User.UserID (
   ) where
 
 import Data.Aeson
-import Data.Binary
+import Data.Binary as B
 import Data.Int
 import Data.Typeable
 import Data.Unjson
@@ -25,7 +25,7 @@ instance FromReqURI UserID where
 
 instance Binary UserID where
   put (UserID uid) = put uid
-  get = fmap UserID get
+  get = fmap UserID B.get
 
 instance Identifier UserID Int64 where
   idDefaultLabel _ = "user_id"

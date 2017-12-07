@@ -12,7 +12,6 @@ module CompanyAccounts.CompanyAccountsControl (
   , sendNewCompanyUserMail
   ) where
 
-import Control.Monad.State
 import Data.Char
 import Data.Functor
 import Data.Ord
@@ -62,7 +61,7 @@ handleCompanyAccountsForAdminOnly cid = onlySalesOrAdmin $ do
 -}
 handleCompanyAccountsInternal :: Kontrakcja m => CompanyID -> m JSValue
 handleCompanyAccountsInternal cid = do
-  Context{ctxmaybeuser = Just user} <- getContext
+  Just user <- get ctxmaybeuser <$> getContext
   companyusers <- dbQuery $ GetCompanyAccounts cid
   deletableuserids <- map userid <$> filterM isUserDeletable companyusers
   companyinvites <- dbQuery $ GetCompanyInvitesWithUsersData cid
@@ -165,12 +164,12 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   case (mexistinguser) of
       (Nothing) -> do
         --create a new company user
-        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (companyid company,False) (ctxlang ctx) CompanyInvitation
+        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (companyid company,False) (get ctxlang ctx) CompanyInvitation
         _ <- dbUpdate $
-             LogHistoryUserInfoChanged (userid newuser') (ctxipnumber ctx) (ctxtime ctx)
+             LogHistoryUserInfoChanged (userid newuser') (get ctxipnumber ctx) (get ctxtime ctx)
                                        (userinfo newuser')
                                        ((userinfo newuser') { userfstname = fstname , usersndname = sndname })
-                                       (userid <$> ctxmaybeuser ctx)
+                                       (userid <$> get ctxmaybeuser ctx)
         newuser <- guardJustM $ dbQuery $ GetUserByID (userid newuser')
         _ <- sendNewCompanyUserMail user company newuser
         runJSONGenT $ value "added" True

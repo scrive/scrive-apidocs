@@ -22,7 +22,7 @@ import VersionTH
 
 brandingAdler32 :: (MonadDB m, MonadThrow m) => Context -> Maybe CompanyUI -> m String
 brandingAdler32 ctx mcompanyui = do
-  ad1 <- domainAdler32 $ ctxbrandeddomain ctx
+  ad1 <- domainAdler32 $ get ctxbrandeddomain ctx
   ad2 <- case mcompanyui of
     Just cui1 -> companyUIAdler32 cui1
     Nothing  -> return ""
@@ -40,28 +40,31 @@ imageAdler32 image = BSC8.unpack $ adler32BS $ image
 
 domainAdler32:: (MonadDB m, MonadThrow m) => BrandedDomain -> m String
 domainAdler32 bd = do
-  themesMD5 <- dbQuery $ GetThemesMD5 $ [bdMailTheme bd,bdSignviewTheme bd,bdServiceTheme bd,bdLoginTheme bd]
+  themesMD5 <- dbQuery $ GetThemesMD5 $ [ get bdMailTheme bd
+                                        , get bdSignviewTheme bd
+                                        , get bdServiceTheme bd
+                                        , get bdLoginTheme bd ]
   return $ BSC8.unpack $ adler32BS $ BSC8.pack $ concat $ [
-      show (bdid bd)
-    , imageAdler32 (bdFavicon bd)
-    , bdParticipantColor1 bd
-    , bdParticipantColor2 bd
-    , bdParticipantColor3 bd
-    , bdParticipantColor4 bd
-    , bdParticipantColor5 bd
-    , bdParticipantColor6 bd
-    , bdDraftColor        bd
-    , bdCancelledColor    bd
-    , bdInitatedColor     bd
-    , bdSentColor         bd
-    , bdDeliveredColor    bd
-    , bdOpenedColor       bd
-    , bdReviewedColor     bd
-    , bdSignedColor       bd
-    , show $ bdMailTheme bd
-    , show $ bdSignviewTheme bd
-    , show $ bdServiceTheme bd
-    , show $ bdLoginTheme bd
+      show         (get bdid      bd)
+    , imageAdler32 (get bdFavicon bd)
+    , get bdParticipantColor1     bd
+    , get bdParticipantColor2     bd
+    , get bdParticipantColor3     bd
+    , get bdParticipantColor4     bd
+    , get bdParticipantColor5     bd
+    , get bdParticipantColor6     bd
+    , get bdDraftColor            bd
+    , get bdCancelledColor        bd
+    , get bdInitatedColor         bd
+    , get bdSentColor             bd
+    , get bdDeliveredColor        bd
+    , get bdOpenedColor           bd
+    , get bdReviewedColor         bd
+    , get bdSignedColor           bd
+    , show $ get bdMailTheme      bd
+    , show $ get bdSignviewTheme  bd
+    , show $ get bdServiceTheme   bd
+    , show $ get bdLoginTheme     bd
     ] ++ themesMD5
 
 companyUIAdler32 :: (MonadDB m, MonadThrow m) => CompanyUI -> m String

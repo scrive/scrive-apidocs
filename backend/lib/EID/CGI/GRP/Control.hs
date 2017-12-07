@@ -65,7 +65,7 @@ handleAuthRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleAuthRequest did slid = do
   CgiGrpConfig{..} <- do
     ctx <- getContext
-    case ctxcgigrpconfig ctx of
+    case get ctxcgigrpconfig ctx of
       Nothing -> noConfigurationError "CGI Group"
       Just cc -> return cc
   (doc,_) <- getDocumentAndSignatoryForEID did slid
@@ -105,7 +105,7 @@ handleSignRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
 handleSignRequest did slid = do
   CgiGrpConfig{..} <- do
     ctx <- getContext
-    case ctxcgigrpconfig ctx of
+    case get ctxcgigrpconfig ctx of
       Nothing -> noConfigurationError "CGI Group"
       Just cc -> return cc
   (doc,_) <- getDocumentAndSignatoryForEID did slid
@@ -238,7 +238,7 @@ checkCGIAuthStatus :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either
 checkCGIAuthStatus did slid = do
   CgiGrpConfig{..} <- do
     ctx <- getContext
-    case ctxcgigrpconfig ctx of
+    case get ctxcgigrpconfig ctx of
       Nothing -> noConfigurationError "CGI Group"
       Just cc -> return cc
   (doc,sl) <- getDocumentAndSignatoryForEID did slid
@@ -247,7 +247,7 @@ checkCGIAuthStatus did slid = do
   mcgiTransaction <- dbQuery (GetCgiGrpTransaction CgiGrpAuth slid)
   case mcgiTransaction of
     Nothing -> do
-      sesid <- ctxsessionid <$> getContext
+      sesid <- get ctxsessionid <$> getContext
       success <- isJust <$> (dbQuery $ GetEAuthentication sesid slid)
       if (success)
         then return $ Right Complete

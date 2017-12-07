@@ -25,6 +25,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 import qualified Test.HUnit as T
 
+import BrandedDomain.BrandedDomain
 import BrandedDomain.BrandedDomainID
 import BrandedDomain.Model
 import Company.Model
@@ -659,7 +660,7 @@ addNewUser :: (MonadDB m, MonadThrow m, MonadLog m) => String -> String -> Strin
 addNewUser firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
   company <- dbUpdate $ CreateCompany
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) def (bdid bd) AccountRequest
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) def (get bdid bd) AccountRequest
 
 addNewUserWithCompany :: (MonadDB m, MonadThrow m, MonadLog m)
                       => String
@@ -669,7 +670,7 @@ addNewUserWithCompany :: (MonadDB m, MonadThrow m, MonadLog m)
 addNewUserWithCompany firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
   companyId <- companyid <$> (dbUpdate $ CreateCompany)
-  mUser <- dbUpdate $ AddUser (firstname, secondname) email Nothing (companyId, True) def (bdid bd) AccountRequest
+  mUser <- dbUpdate $ AddUser (firstname, secondname) email Nothing (companyId, True) def (get bdid bd) AccountRequest
   case mUser of
     Nothing -> return Nothing
     Just user -> return $ Just (user, companyId)
@@ -677,7 +678,7 @@ addNewUserWithCompany firstname secondname email = do
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid = do
   bd <- dbQuery $ GetMainBrandedDomain
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) def (bdid bd) CompanyInvitation
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) def (get bdid bd) CompanyInvitation
 
 addNewRandomUser :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => m User
 addNewRandomUser = do
@@ -867,12 +868,12 @@ addRandomDocumentWithFile fileid rda = do
 
 -- | Synchronously seal a document.
 sealTestDocument :: Context -> DocumentID -> TestEnv ()
-sealTestDocument ctx@Context{..} did
+sealTestDocument ctx did
   = void
   . withDocumentID did
-  . runGuardTimeConfT ctxgtconf
-  . runTemplatesT (ctxlang, ctxglobaltemplates)
-  . A.runAmazonMonadT (A.AmazonConfig Nothing ctxfilecache Nothing)
+  . runGuardTimeConfT (get ctxgtconf ctx)
+  . runTemplatesT ((get ctxlang ctx), (get ctxglobaltemplates ctx))
+  . A.runAmazonMonadT (A.AmazonConfig Nothing (get ctxfilecache ctx) Nothing)
   . runMailContextT (contextToMailContext ctx)
   $ do
       res <- (postDocumentClosedActions True False) `catch` (\(_::KE.KontraError) -> return False)

@@ -69,11 +69,11 @@ sendDocumentMails author = do
       let aa = authorActor ctx author
       req <- mkRequest POST []
       runTestKontra req ctx $ (randomUpdate (NewDocument author "Document title" Signable defaultTimeZoneName 0 aa)) `withDocumentM` do
-        True <- dbUpdate $ SetDocumentLang l (systemActor $ ctxtime ctx)
+        True <- dbUpdate $ SetDocumentLang l (systemActor $ get ctxtime ctx)
 
         asl <- head . documentsignatorylinks <$> theDocument
         file <- addNewRandomFile
-        randomUpdate $ AttachFile file (systemActor $ ctxtime ctx)
+        randomUpdate $ AttachFile file (systemActor $ get ctxtime ctx)
 
         islf <- rand 10 arbitrary
 
@@ -94,9 +94,9 @@ sendDocumentMails author = do
                               validMail s m
         checkMail "Invitation" $ mailInvitation True Sign (Just sl) =<< theDocument
         -- DELIVERY MAILS
-        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) sl =<< theDocument
-        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) sl =<< theDocument
-        checkMail "Delivered invitation"   $  mailDeliveredInvitation (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) sl =<< theDocument
+        checkMail "Deferred invitation"    $  mailDeferredInvitation (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) sl =<< theDocument
+        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) sl =<< theDocument
+        checkMail "Delivered invitation"   $  mailDeliveredInvitation (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) sl =<< theDocument
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind False Nothing sl True =<< theDocument
         checkMail "Reminder notsigned" $ mailDocumentRemind True Nothing sl True =<< theDocument
@@ -107,7 +107,7 @@ sendDocumentMails author = do
         checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor (def :: Lang) =<< theDocument
         -- Virtual signing
         randomUpdate . SignDocument (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots
-                                   =<< (signatoryActor ctx{ ctxtime = 10 `minutesAfter` now } sl)
+                                   =<< (signatoryActor (set ctxtime (10 `minutesAfter` now) ctx) sl)
 
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed False sl False False =<< theDocument
@@ -129,13 +129,13 @@ testUserMails = do
                            m <- fst <$> (runTestKontra req ctx $ mg)
                            validMail s m
     checkMail "New account" $ do
-          al <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
+          al <- newUserAccountRequestLink (get ctxlang ctx) (userid user) AccountRequest
           newUserMail ctx (getEmail user) al
     checkMail "New account by admin" $ do
-          al <- newUserAccountRequestLink (ctxlang ctx) (userid user) ByAdmin
-          mailNewAccountCreatedByAdmin ctx (ctxlang ctx) (getEmail user) al
+          al <- newUserAccountRequestLink (get ctxlang ctx) (userid user) ByAdmin
+          mailNewAccountCreatedByAdmin ctx (get ctxlang ctx) (getEmail user) al
     checkMail "Reset password mail" $ do
-          al <- newUserAccountRequestLink (ctxlang ctx) (userid user) AccountRequest
+          al <- newUserAccountRequestLink (get ctxlang ctx) (userid user) AccountRequest
           resetPasswordMail ctx user al
   commit
 

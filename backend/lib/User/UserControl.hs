@@ -21,7 +21,6 @@ module User.UserControl(
   , getMonthsStats -- Exported for admin section
 ) where
 
-import Control.Monad.State
 import Data.Functor
 import Data.Time.Calendar
 import Data.Time.Clock
@@ -102,7 +101,8 @@ handleGetChangeEmail uid hash = withUser $ \_ -> do
 handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m InternalKontraResponse
 handlePostChangeEmail uid hash =  withUser $ \user -> do
   mnewemail <- getEmailChangeRequestNewEmail uid hash
-  Context{ctxipnumber, ctxtime} <- getContext
+  ctx <- getContext
+  let (ipnumber, time) = (get ctxipnumber ctx, get ctxtime ctx)
   mpassword <- getOptionalField asDirtyPassword "password"
   case mpassword of
     Nothing -> return $ internalResponse $ LinkAccount
@@ -112,7 +112,7 @@ handlePostChangeEmail uid hash =  withUser $ \user -> do
                       mnewemail
       flashmessage <- if changed
         then do
-            _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime
+            _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) ipnumber time
                                                      [("email", unEmail $ useremail $ userinfo user, unEmail $ fromJust mnewemail)]
                                                      (Just $ userid user)
             flashMessageYourEmailHasChanged
@@ -165,7 +165,7 @@ getCompanyInfoUpdate = do
 
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
+  user <- guardJustM $ get ctxmaybeuser <$> getContext
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
     then getDaysStats (Right $ usercompany user)
@@ -174,7 +174,7 @@ handleUsageStatsJSONForUserDays = do
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserMonths = do
-  user  <- guardJustM $ ctxmaybeuser <$> getContext
+  user  <- guardJustM $ get ctxmaybeuser <$> getContext
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
     then getMonthsStats (Right $ usercompany user)
@@ -250,13 +250,15 @@ handleAcceptTOSGet = withUser $ \_ -> internalResponse <$> (pageAcceptTOS =<< ge
 
 handleAcceptTOSPost :: Kontrakcja m => m ()
 handleAcceptTOSPost = do
-  Context{ctxmaybeuser,ctxtime, ctxipnumber} <- getContext
-  userid <- guardJustM $ return $ userid <$>ctxmaybeuser
+  ctx <- getContext
+  let (maybeuser, time, ipnumber) = ( get ctxmaybeuser ctx, get ctxtime ctx
+                                    , get ctxipnumber ctx )
+  userid <- guardJustM $ return $ userid <$> maybeuser
   tos <- getDefaultedField False asValidCheckBox "tos"
   case tos of
     Just True -> do
-      _ <- dbUpdate $ AcceptTermsOfService userid ctxtime
-      _ <- dbUpdate $ LogHistoryTOSAccept userid ctxipnumber ctxtime (Just userid)
+      _ <- dbUpdate $ AcceptTermsOfService userid time
+      _ <- dbUpdate $ LogHistoryTOSAccept  userid ipnumber time (Just userid)
       return ()
     _ -> internalError
 
@@ -287,7 +289,7 @@ handleAccountSetupGet uid token sm = do
       flashmessage <- case sm of
         CompanyInvitation -> flashMessageUserAccountRequestExpiredCompany
         _                 -> flashMessageUserAccountRequestExpired
-      return . internalResponseWithFlash flashmessage . LinkLogin $ ctxlang ctx
+      return . internalResponseWithFlash flashmessage . LinkLogin $ get ctxlang ctx
 
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPost uid token sm = do
@@ -304,7 +306,7 @@ handleAccountSetupPost uid token sm = do
       _ <- handleActivate mfstname msndname (user,company) sm
       _ <- dbUpdate $ DeleteUserAccountRequest uid
       ctx <- getContext
-      _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = ctxlang ctx }
+      _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = get ctxlang ctx }
       link <- getHomeOrDesignViewLink
       J.runJSONGenT $ do
         J.value "ok" True
@@ -331,7 +333,7 @@ handlePasswordReminderGet uid token = do
     Nothing -> do
       ctx <- getContext
       flashmessage <- flashMessagePasswordChangeLinkNotValid
-      return $ internalResponseWithFlash flashmessage $ LinkLoginDirect (ctxlang ctx)
+      return $ internalResponseWithFlash flashmessage $ LinkLoginDirect (get ctxlang ctx)
 
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
@@ -340,12 +342,16 @@ handlePasswordReminderPost uid token = do
   case muser of
     Just user | not (useraccountsuspended user) -> do
       switchLang (getLang user)
-      Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
+      ctx <- getContext
+      let time      = get ctxtime ctx
+          ipnumber  = get ctxipnumber ctx
+          maybeuser = get ctxmaybeuser ctx
       password <- guardJustM $ getField "password"
       _ <- dbUpdate $ DeletePasswordReminder uid
       passwordhash <- createPassword password
       _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-      _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ctxipnumber ctxtime (userid <$> ctxmaybeuser)
+      _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time
+           (userid <$> maybeuser)
       logUserToContext $ Just user
       J.runJSONGenT $ do
           J.value "logged" True
@@ -365,8 +371,9 @@ handleContactSales = do
   message <- getField' "message"
   plan    <- getField' "plan"
 
-  let uid = maybe "user not logged in" ((++) "user with id " . show . userid) (ctxmaybeuser ctx)
-      domainInfo = " (from domain " ++ bdUrl (ctxbrandeddomain ctx) ++ " )"
+  let uid = maybe "user not logged in" ((++) "user with id " . show . userid)
+            (get ctxmaybeuser ctx)
+      domainInfo = " (from domain " ++ (get (bdUrl . ctxbrandeddomain) ctx) ++ " )"
       content = "<p>Hi there!</p>" ++
                 "<p>Someone requested information from the payments form" ++
                 domainInfo ++

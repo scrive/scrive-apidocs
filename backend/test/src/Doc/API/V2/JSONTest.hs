@@ -45,7 +45,7 @@ apiV2JSONTests env = testGroup "DocAPIV2JSON"
 testJSONCtx :: TestEnv Context
 testJSONCtx = do
   (Just user)  <- addNewUser "BobTest" "JonesTest" "test@scrive.com"
-  (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  (set ctxmaybeuser (Just user)) <$> mkContext def
 
 runApiJSONTest :: Context          -- ^ Context to run the test in
                -> Method           -- ^ HTTP Method to use for API Call

@@ -91,22 +91,22 @@ handleGetThemes mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
 
 handleGetDomainThemes :: Kontrakcja m =>  m Aeson.Value
 handleGetDomainThemes = do
-  bd <- ctxbrandeddomain <$> getContext
+  bd <- get ctxbrandeddomain <$> getContext
   handleGetThemesUsedByDomain bd
 
 handleGetSignviewTheme :: Kontrakcja m => m Aeson.Value
 handleGetSignviewTheme = withUserCompany $ \(_,company) -> do
   cu <- dbQuery $ GetCompanyUI $ companyid company
-  bd <- ctxbrandeddomain <$> getContext
-  handleGetTheme $ fromMaybe (bdSignviewTheme bd) (companySignviewTheme cu)
+  bd <- get ctxbrandeddomain <$> getContext
+  handleGetTheme $ fromMaybe (get bdSignviewTheme bd) (companySignviewTheme cu)
 
 handleNewTheme :: Kontrakcja m =>  String -> Maybe CompanyID -> m Aeson.Value
 handleNewTheme s mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
-  bd <- ctxbrandeddomain <$> getContext
+  bd <- get ctxbrandeddomain <$> getContext
   tid <- case s of
-           "signview" -> return $ bdSignviewTheme bd
-           "service"  -> return $ bdServiceTheme bd
-           "mail" -> return $ bdMailTheme bd
+           "signview" -> return $ get bdSignviewTheme bd
+           "service"  -> return $ get bdServiceTheme bd
+           "mail" -> return $ get bdMailTheme bd
            _ -> internalError
   handleNewThemeForCompany (companyid company) tid
 

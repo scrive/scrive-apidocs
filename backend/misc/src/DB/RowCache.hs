@@ -15,7 +15,7 @@ module DB.RowCache
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Catch
 import Control.Monad.Reader
-import Control.Monad.State.Strict
+import Control.Monad.State.Strict as S
 import Control.Monad.Trans.Control
 import Database.PostgreSQL.PQTypes (MonadDB)
 
@@ -73,7 +73,7 @@ type InnerRowCacheT r m = StateT (RowState r) (ReaderT (ID r) m)
 
 -- | Retrieve a row from the cache, or from the storage if the cache is invalid
 rowCache :: GetRow r m => RowCacheT r m r
-rowCache = RowCacheT get >>= \case
+rowCache = RowCacheT S.get >>= \case
                         Row r -> return r
                         Invalid -> do
                           r <- rowCacheID >>= lift . getRow

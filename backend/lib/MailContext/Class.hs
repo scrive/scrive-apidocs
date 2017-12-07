@@ -1,25 +1,19 @@
 module MailContext.Class (
-    MailContext(..)
+    MailContext
+  , module MailContext.Labels
   , mctxDomainUrl
   , MailContextMonad(..)
   ) where
 
 import Control.Monad.Trans
-import Data.Time
 
 import BrandedDomain.BrandedDomain
 import KontraPrelude
-import User.Model
-
-data MailContext = MailContext {
-  mctxlang                 :: !Lang
-, mctxcurrentBrandedDomain :: !BrandedDomain
-, mctxtime                 :: !UTCTime
-, mctxmailNoreplyAddress   :: !String
-} deriving Show
+import MailContext.Internal
+import MailContext.Labels
 
 mctxDomainUrl :: MailContext -> String
-mctxDomainUrl = bdUrl . mctxcurrentBrandedDomain
+mctxDomainUrl = get (bdUrl . mctxcurrentBrandedDomain)
 
 class Monad m => MailContextMonad m where
   getMailContext :: m MailContext

@@ -124,7 +124,7 @@ postDocumentRejectedChange siglinkid customMessage doc@Document{..} = logDocumen
   -- Log the fact that the current user rejected a document.
   maybe (return ())
         (\user -> logDocEvent "Doc Rejected" user [] doc)
-        (ctxmaybeuser ctx)
+        (get ctxmaybeuser ctx)
   sendRejectEmails customMessage (fromJust $ getSigLinkFor siglinkid doc) doc
   return ()
 
@@ -151,7 +151,7 @@ postDocumentPendingChange olddoc = do
   ifM (allSignatoriesSigned <$> theDocument)
   {-then-} (do
       theDocument >>= \d -> logInfo "All have signed, document will be closed" $ logObject_ d
-      time <- mctxtime <$> getMailContext
+      time <- get mctxtime <$> getMailContext
       dbUpdate $ CloseDocument (systemActor time)
       dbUpdate $ ChargeCompanyForClosingDocument $ documentid olddoc
       author <- theDocument >>= getDocAuthor
@@ -164,7 +164,7 @@ postDocumentPendingChange olddoc = do
       asyncLogEvent SetUserProps
                     (userMixpanelData author now)
                     EventMixpanel
-      dbUpdate . ScheduleDocumentSealing . bdid . mctxcurrentBrandedDomain =<< getMailContext)
+      dbUpdate . ScheduleDocumentSealing . get (bdid . mctxcurrentBrandedDomain) =<< getMailContext)
   {-else-} $ do
       theDocument >>= triggerAPICallbackIfThereIsOne
       whenM ((\d -> documentcurrentsignorder d /= documentcurrentsignorder olddoc) <$> theDocument) $ do

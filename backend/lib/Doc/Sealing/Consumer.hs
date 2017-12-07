@@ -27,6 +27,7 @@ import GuardTime
 import KontraPrelude
 import Log.Identifier
 import MailContext
+import MailContext.Internal
 import MemCache (MemCache)
 import Templates
 import User.Lang
@@ -74,10 +75,10 @@ documentSealing mbAmazonConf guardTimeConf templates
             , A.awsGlobalCache = globalCache
             }
           mc = MailContext {
-              mctxlang                 = lang
-            , mctxcurrentBrandedDomain = bd
-            , mctxtime                 = now0
-            , mctxmailNoreplyAddress   = mailNoreplyAddress
+              _mctxlang                 = lang
+            , _mctxcurrentBrandedDomain = bd
+            , _mctxtime                 = now0
+            , _mctxmailNoreplyAddress   = mailNoreplyAddress
             }
       resultisok <- runGuardTimeConfT guardTimeConf
         . runTemplatesT (lang, templates)

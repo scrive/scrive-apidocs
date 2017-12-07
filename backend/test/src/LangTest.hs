@@ -4,6 +4,7 @@ import Happstack.Server
 import Test.Framework
 
 import AppControl
+import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.Model
 import Context
@@ -35,12 +36,11 @@ testLoggedInLangSwitching :: TestEnv ()
 testLoggedInLangSwitching = do
     --create a new swedish user - after login from english page - he should still use swedish
     user <- createTestUser LANG_SV
-    ctx0 <- (\c -> c { ctxlang = LANG_EN })
-      <$> mkContext def
+    ctx0 <- (set ctxlang LANG_EN) <$> mkContext def
     req0 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
     (_, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost
 
-    assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx1) == Just (userid user)
+    assertBool "User was logged into context" $ (userid <$> get ctxmaybeuser ctx1) == Just (userid user)
     assertUserLang (userid user) LANG_SV
     assertContextLang (userid user) ctx1 LANG_SV
 
@@ -59,8 +59,8 @@ testLoggedInLangSwitching = do
 testDocumentLangSwitchToEnglish :: TestEnv ()
 testDocumentLangSwitchToEnglish = do
   user <- createTestUser LANG_SV
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  doc <- createTestDoc user (ctxtime ctx)
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  doc <- createTestDoc user (get ctxtime ctx)
 
   --make sure the doc lang matches the author lang
   assertEqual "Initial lang is Swedish" LANG_SV (getLang doc)
@@ -69,8 +69,8 @@ testDocumentLangSwitchToEnglish = do
 testDocumentLangSwitchToSwedish :: TestEnv ()
 testDocumentLangSwitchToSwedish = do
   user <- createTestUser LANG_EN
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
-  doc <- createTestDoc user (ctxtime ctx)
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  doc <- createTestDoc user (get ctxtime ctx)
 
   -- make sure the doc lang matches the author's lang
   assertEqual "Initial lang is English" LANG_EN (getLang doc)
@@ -87,5 +87,5 @@ createTestUser lang = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
     company <- dbUpdate $ CreateCompany
-    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) lang (bdid bd) AccountRequest
+    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) lang (get bdid bd) AccountRequest
     return user

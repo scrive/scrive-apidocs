@@ -39,30 +39,30 @@ import User.Utils
 import Util.MonadUtils
 
 handleServiceBranding :: Kontrakcja m => BrandedDomainID -> String -> String -> m Response
-handleServiceBranding bdid uidstr _ = do
+handleServiceBranding bdID uidstr _ = do
   muser <- case uidstr of
     "_"-> return Nothing
     s -> case maybeRead s of
       Nothing -> return Nothing
       Just uid -> dbQuery $ GetUserByID uid
-  theme <- getServiceTheme bdid muser
+  theme <- getServiceTheme bdID muser
   brandingCSS <- serviceBrandingCSS theme
   return (cssResponse brandingCSS)
 
 getServiceTheme ::  Kontrakcja m => BrandedDomainID -> Maybe User -> m Theme
-getServiceTheme bdid muser = do
-  bd <- dbQuery $ GetBrandedDomainByID bdid
+getServiceTheme bdID muser = do
+  bd <- dbQuery $ GetBrandedDomainByID bdID
   case muser of
-    Nothing -> dbQuery $ GetTheme $ bdServiceTheme bd
+    Nothing -> dbQuery $ GetTheme $ get bdServiceTheme bd
     Just user -> do
       company <- getCompanyForUser user
       companyui <- dbQuery $ GetCompanyUI (companyid company)
-      dbQuery $ GetTheme $ fromMaybe (bdServiceTheme bd) (companyServiceTheme $ companyui)
+      dbQuery $ GetTheme $ fromMaybe (get bdServiceTheme bd) (companyServiceTheme $ companyui)
 
 handleLoginBranding :: Kontrakcja m => BrandedDomainID -> String -> m Response
-handleLoginBranding bdid _ = do
-  bd <- dbQuery $ GetBrandedDomainByID bdid
-  theme <- dbQuery $ GetTheme (bdLoginTheme bd)
+handleLoginBranding bdID _ = do
+  bd <- dbQuery $ GetBrandedDomainByID bdID
+  theme <- dbQuery $ GetTheme (get bdLoginTheme bd)
   brandingCSS <- loginBrandingCSS theme
   return (cssResponse brandingCSS)
 
@@ -74,81 +74,81 @@ handleScriveBranding _ = do
 
 -- Generates domain branding - enything that is onlu branded at domain level - i.e colors of status icons
 handleDomainBranding :: Kontrakcja m => BrandedDomainID -> String -> m Response
-handleDomainBranding bdid _ = do
-  bd <- dbQuery $ GetBrandedDomainByID bdid
+handleDomainBranding bdID _ = do
+  bd <- dbQuery $ GetBrandedDomainByID bdID
   brandingCSS <- domainBrandingCSS bd
   return (cssResponse brandingCSS)
 
 -- Used to brand signview
 handleSignviewBranding :: Kontrakcja m => BrandedDomainID -> DocumentID -> String -> m Response
-handleSignviewBranding bdid did _ = do
-  theme <- getSignviewTheme bdid did
+handleSignviewBranding bdID did _ = do
+  theme <- getSignviewTheme bdID did
   brandingCSS <- signviewBrandingCSS theme
   return (cssResponse brandingCSS)
 
 getSignviewTheme :: Kontrakcja m => BrandedDomainID -> DocumentID -> m Theme
-getSignviewTheme bdid did = do
-  bd <- dbQuery $ GetBrandedDomainByID bdid
+getSignviewTheme bdID did = do
+  bd <- dbQuery $ GetBrandedDomainByID bdID
   doc <- dbQuery $ GetDocumentByDocumentID did
   cid <- guardJust (documentauthorcompanyid doc)
   companyui <- dbQuery $ GetCompanyUI cid
-  dbQuery $ GetTheme $ fromMaybe (bdSignviewTheme bd) (companySignviewTheme companyui)
+  dbQuery $ GetTheme $ fromMaybe (get bdSignviewTheme bd) (companySignviewTheme companyui)
 
 -- Used to brand some view with signview branding but without any particular document. It requires some user to be logged in.
 handleSignviewBrandingWithoutDocument :: Kontrakcja m => BrandedDomainID -> UserID -> String -> m Response
-handleSignviewBrandingWithoutDocument bdid uid _ = do
-  theme <- getSignviewThemeWithoutDocument bdid uid
+handleSignviewBrandingWithoutDocument bdID uid _ = do
+  theme <- getSignviewThemeWithoutDocument bdID uid
   brandingCSS <- signviewBrandingCSS theme
   return (cssResponse brandingCSS)
 
 getSignviewThemeWithoutDocument :: Kontrakcja m => BrandedDomainID -> UserID -> m Theme
-getSignviewThemeWithoutDocument bdid uid = do
-  bd <- dbQuery $ GetBrandedDomainByID bdid
+getSignviewThemeWithoutDocument bdID uid = do
+  bd <- dbQuery $ GetBrandedDomainByID bdID
   muser <- dbQuery $ GetUserByID uid
   user <- guardJust muser
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  dbQuery $ GetTheme $ fromMaybe (bdSignviewTheme bd) (companySignviewTheme companyui)
+  dbQuery $ GetTheme $ fromMaybe (get bdSignviewTheme bd) (companySignviewTheme companyui)
 
 loginLogo :: Kontrakcja m => BrandedDomainID -> String -> m Response
-loginLogo bdid _ = do
-  bd <- dbQuery $ GetBrandedDomainByID bdid
-  theme <- dbQuery $ GetTheme (bdLoginTheme bd)
+loginLogo bdID _ = do
+  bd <- dbQuery $ GetBrandedDomainByID bdID
+  theme <- dbQuery $ GetTheme (get bdLoginTheme bd)
   return (imageResponse $ themeLogo theme)
 
 serviceLogo :: Kontrakcja m => BrandedDomainID -> String -> String -> m Response
-serviceLogo bdid uidstr _ = do
+serviceLogo bdID uidstr _ = do
   muser <- case uidstr of
     "_" -> return Nothing
     s -> case maybeRead s of
       Nothing -> return Nothing
       Just uid -> dbQuery $ GetUserByID uid
-  theme <- getServiceTheme bdid muser
+  theme <- getServiceTheme bdID muser
   return (imageResponse $ themeLogo theme)
 
 emailLogo :: Kontrakcja m => BrandedDomainID -> UserID -> String -> m Response
-emailLogo bdid uid _ = do
-  bd <- dbQuery $ GetBrandedDomainByID bdid
+emailLogo bdID uid _ = do
+  bd <- dbQuery $ GetBrandedDomainByID bdID
   muser <- dbQuery $ GetUserByID uid
   user <- guardJust muser
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme bd) (companyMailTheme companyui)
+  theme <- dbQuery $ GetTheme $ fromMaybe (get bdMailTheme bd) (companyMailTheme companyui)
   return (imageResponse $ themeLogo theme)
 
 signviewLogo :: Kontrakcja m => BrandedDomainID -> DocumentID -> String -> m Response
-signviewLogo bdid did _ = do
-  theme <- getSignviewTheme bdid did
+signviewLogo bdID did _ = do
+  theme <- getSignviewTheme bdID did
   return (imageResponse $ themeLogo theme)
 
 
 signviewLogoWithoutDocument :: Kontrakcja m => BrandedDomainID -> UserID -> String -> m Response
-signviewLogoWithoutDocument bdid uid _ = do
-  theme <- getSignviewThemeWithoutDocument bdid uid
+signviewLogoWithoutDocument bdID uid _ = do
+  theme <- getSignviewThemeWithoutDocument bdID uid
   return (imageResponse $ themeLogo theme)
 
 faviconIcon :: Kontrakcja m => BrandedDomainID -> String -> String -> m Response
-faviconIcon bdid uidstr _ = do
+faviconIcon bdID uidstr _ = do
   mCompanyFavicon <- case uidstr of
     "_" -> return Nothing
     s -> case (maybeRead s :: Maybe UserID) of
@@ -161,8 +161,8 @@ faviconIcon bdid uidstr _ = do
             company <- getCompanyForUser user
             companyui <- dbQuery $ GetCompanyUI (companyid company)
             return (companyFavicon companyui)
-  bd <- dbQuery $ GetBrandedDomainByID bdid
-  let favicon = fromMaybe (bdFavicon bd) mCompanyFavicon
+  bd <- dbQuery $ GetBrandedDomainByID bdID
+  let favicon = fromMaybe (get bdFavicon bd) mCompanyFavicon
   return (imageResponse favicon)
 
 

@@ -26,8 +26,8 @@ test_jsonCompanies = do
   Just _standarduser2 <- addNewCompanyUser "Bob" "Blue" "jony@blue.com" (companyid company2)
   _ <- dbUpdate $ SetCompanyPaymentPlan (companyid company2) OnePlan
 
-  ctx <- (\c -> c { ctxmaybeuser = Just adminuser2
-                , ctxadminaccounts = [Email "jet.li@example.com"] }) <$> mkContext def
+  ctx <- (set ctxmaybeuser     (Just adminuser2) .
+          set ctxadminaccounts [Email "jet.li@example.com"]) <$> mkContext def
 
   req2 <- mkRequest GET [ ("nonFree", inText "true")
                        , ("limit", inText "10")

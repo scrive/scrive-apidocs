@@ -41,7 +41,8 @@ import InputValidation
 import Kontra
 import KontraPrelude
 import Log.Identifier
-import MailContext (MailContext(..), MailContextMonad, MailContextT, getMailContext, runMailContextT)
+import MailContext
+import MailContext.Internal
 import Mails.MailsData
 import Mails.SendMail
 import SMS.SMS (scheduleSMS)
@@ -147,7 +148,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
               (return ())
               (Just signatorylink)
               (Just text <| text /= "" |> Nothing)
-              (systemActor $ mctxtime mctx)
+              (systemActor $ get mctxtime mctx)
 
 sendInvitationEmail1 authorsiglink = do
   when (isSignatory authorsiglink) $ do
@@ -431,9 +432,9 @@ runMailT templates mailNoreplyAddress doc m = do
   mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) $ join $ maybesignatory <$> getAuthorSigLink doc
   bd <- maybe (dbQuery GetMainBrandedDomain) (dbQuery . GetBrandedDomainByUserID) (userid <$> mauthor)
   let mctx = MailContext {
-          mctxlang = documentlang doc
-        , mctxcurrentBrandedDomain = bd
-        , mctxtime = now
-        , mctxmailNoreplyAddress = mailNoreplyAddress
+          _mctxlang                 = documentlang doc
+        , _mctxcurrentBrandedDomain = bd
+        , _mctxtime                 = now
+        , _mctxmailNoreplyAddress   = mailNoreplyAddress
         }
   runTemplatesT (getLang doc, templates) . runMailContextT mctx $ m

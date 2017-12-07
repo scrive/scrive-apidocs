@@ -101,14 +101,14 @@ pageFromBody ctx ad bodytext fields = do
 companyForPage  :: Kontrakcja m => m (Maybe Company)
 companyForPage = do
   ctx <- getContext
-  case (ctxmaybeuser ctx) of
+  case (get ctxmaybeuser ctx) of
        Nothing -> return Nothing
        Just user -> fmap Just $ dbQuery $ GetCompanyByUserID (userid user)
 
 companyUIForPage  :: Kontrakcja m => m (Maybe CompanyUI)
 companyUIForPage = do
   ctx <- getContext
-  case (ctxmaybeuser ctx) of
+  case (get ctxmaybeuser ctx) of
        Just User{usercompany = cid} -> Just <$> (dbQuery $ GetCompanyUI cid)
        _ -> return Nothing
 
@@ -206,21 +206,23 @@ handleTermsOfService = withAnonymousContext $ do
 
 standardPageFields :: (Kontrakcja m) => Context -> Maybe CompanyUI -> AnalyticsData -> Fields m ()
 standardPageFields ctx mcompanyui ad = do
-  F.value "langcode" $ codeFromLang $ ctxlang ctx
-  F.value "logged" $ isJust (ctxmaybeuser ctx)
-  F.value "padlogged" $ isJust (ctxmaybepaduser ctx)
-  F.value "hostpart" $ ctxDomainUrl ctx
-  F.value "production" (ctxproduction ctx)
-  F.value "brandingdomainid" (show . bdid . ctxbrandeddomain $ ctx)
-  F.value "brandinguserid" (fmap (show . userid) (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx))
-  F.value "ctxlang" $ codeFromLang $ ctxlang ctx
+  F.value "langcode"  $ codeFromLang $ get ctxlang ctx
+  F.value "logged"    $ isJust (get ctxmaybeuser ctx)
+  F.value "padlogged" $ isJust (get ctxmaybepaduser ctx)
+  F.value "hostpart"  $ ctxDomainUrl ctx
+  F.value "production" (get ctxproduction ctx)
+  F.value "brandingdomainid" (show $ get (bdid . ctxbrandeddomain) ctx)
+  F.value "brandinguserid" (fmap (show . userid)
+                            (get ctxmaybeuser ctx `mplus` get ctxmaybepaduser ctx))
+  F.value "ctxlang" $ codeFromLang $ get ctxlang ctx
   F.object "analytics" $ analyticsTemplates ad
-  F.value "trackjstoken" (ctxtrackjstoken ctx)
+  F.value "trackjstoken" (get ctxtrackjstoken ctx)
   F.valueM "brandinghash" $ brandingAdler32 ctx mcompanyui
   F.valueM "b64subscriptiondata" $  fmap (B64.encode . BSL.fromString . JSON.encode) <$> currentSubscriptionJSON
   F.value "title" $ case emptyToNothing . strip =<< companyBrowserTitle =<< mcompanyui of
-                      Just ctitle -> ctitle ++ " - " ++ (bdBrowserTitle $ ctxbrandeddomain ctx)
-                      Nothing -> (bdBrowserTitle $ ctxbrandeddomain ctx)
+                      Just ctitle -> ctitle ++ " - " ++
+                                     (get (bdBrowserTitle . ctxbrandeddomain) ctx)
+                      Nothing -> (get (bdBrowserTitle . ctxbrandeddomain) ctx)
   entryPointFields ctx
 
 -- Official documentation states that JSON mime type is
@@ -265,5 +267,5 @@ respondWithPDF forceDownload contents =
 -}
 entryPointFields :: TemplatesMonad m => Context -> Fields m ()
 entryPointFields ctx =  do
-  F.value "cdnbaseurl" (ctxcdnbaseurl ctx)
+  F.value "cdnbaseurl" (get ctxcdnbaseurl ctx)
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID

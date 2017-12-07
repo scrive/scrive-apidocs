@@ -11,6 +11,10 @@ module KontraPrelude (
   , module Data.Monoid.Utils
   , module Prelude
   , (!!)
+  , (.)
+  , id
+  , get
+  , set
   , for
   , maybeRead
   , head
@@ -26,11 +30,13 @@ module KontraPrelude (
   ) where
 
 import Control.Applicative
+import Control.Category
 import Control.Exception (throw)
 import Control.Monad
 import Control.Monad.Catch
 import Data.Algebra.Boolean
 import Data.Foldable (foldMap)
+import Data.Label (get, set)
 import Data.List hiding ((!!), all, and, any, head, last, maximum, minimum, or, tail)
 import Data.Maybe hiding (fromJust)
 import Data.Monoid
@@ -39,7 +45,7 @@ import Data.Typeable
 import GHC.Stack (HasCallStack)
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
-import Prelude hiding ((!!), (&&), (||), all, and, any, error, head, last, maximum, minimum, not, or, read, tail)
+import Prelude hiding ((!!), (&&), (.), (||), all, and, any, error, head, id, last, maximum, minimum, not, or, read, tail)
 import qualified Prelude as P
 
 -- | Boolean algebra of functions.

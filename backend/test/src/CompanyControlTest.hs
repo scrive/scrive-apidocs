@@ -35,7 +35,7 @@ test_handleGetCompanyJSON = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
   req <- mkRequest GET []
@@ -66,15 +66,16 @@ test_settingUIWithHandleChangeCompanyBranding = do
 
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
   -- Try setting new themes
-  mailThemeFromDomain <- dbQuery $ GetTheme (bdMailTheme $ ctxbrandeddomain ctx)
+  mailThemeFromDomain <- dbQuery $ GetTheme
+                         (get (bdMailTheme . ctxbrandeddomain) ctx)
   mailTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailThemeFromDomain
-  signviewThemeFromDomain <- dbQuery $ GetTheme (bdSignviewTheme $ ctxbrandeddomain ctx)
+  signviewThemeFromDomain <- dbQuery $ GetTheme (get (bdSignviewTheme . ctxbrandeddomain) ctx)
   signviewTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) signviewThemeFromDomain
-  serviceThemeFromDomain <- dbQuery $ GetTheme (bdSignviewTheme $ ctxbrandeddomain ctx)
+  serviceThemeFromDomain <- dbQuery $ GetTheme (get (bdSignviewTheme . ctxbrandeddomain) ctx)
   serviceTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) serviceThemeFromDomain
   let browserTitle = "Super"
   let smsOriginator = "Super SMS"
@@ -117,19 +118,19 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership :: TestEnv (
 test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
 
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
 
   --Test we can't set mailTheme to domain theme
-  req1 <- mkRequest POST [ ("companyui", inText $ "{\"companyid\":\""++show (companyid company) ++"\",\"mailTheme\":\""++show (bdMailTheme $ ctxbrandeddomain ctx)++"\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}")]
+  req1 <- mkRequest POST [ ("companyui", inText $ "{\"companyid\":\""++show (companyid company) ++"\",\"mailTheme\":\""++show (get (bdMailTheme . ctxbrandeddomain) ctx)++"\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}")]
   (_, _) <- runTestKontra req1 ctx $ handleChangeCompanyBranding Nothing
   companyui1 <- dbQuery $ GetCompanyUI (companyid company)
   assertEqual "Can't set domain theme as company theme"  (companyMailTheme companyui1) (Nothing)
 
   -- Create theme for other company
   (_, othercompany) <- addNewAdminUserAndCompany "Other" "Guy" "other_guy@skrivapa.se"
-  someTheme <- dbQuery $ GetTheme (bdMailTheme $ ctxbrandeddomain ctx)
+  someTheme <- dbQuery $ GetTheme (get (bdMailTheme . ctxbrandeddomain) ctx)
   othercompanyTheme <- dbUpdate $ InsertNewThemeForCompany (companyid othercompany) someTheme
 
   --Test we can't set mailTheme to other company theme

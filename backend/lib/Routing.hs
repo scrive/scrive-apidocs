@@ -133,7 +133,7 @@ hPostNoXTokenHttp = hPostWrap allowHttp
 https:: Kontra Response -> Kontra Response
 https action = do
     secure <- isSecure
-    useHttps <- ctxusehttps <$> getContext
+    useHttps <- get ctxusehttps <$> getContext
     if secure || not useHttps
        then action
        else sendSecureLoopBack
@@ -171,7 +171,7 @@ guardXToken action = do
       tokensFromString = catMaybes . map (maybeRead . unQuote) . splitOn ";"
   mxtokenString <- getField cookieNameXToken
   case mxtokenString of
-    Just xtokenString | ctxxtoken ctx `elem` tokensFromString xtokenString -> action
+    Just xtokenString | get ctxxtoken ctx `elem` tokensFromString xtokenString -> action
     _ -> do -- Requests authorized by something else then xtoken, can't access session data or change context stuff.
       modifyContext anonymousContext
       res <- action

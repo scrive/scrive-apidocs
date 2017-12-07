@@ -14,7 +14,6 @@ module Administration.AdministrationControl(
           , jsonCompanies -- for tests
           ) where
 
-import Control.Monad.State
 import Data.Char
 import Data.Functor.Invariant
 import Data.Unjson
@@ -242,9 +241,9 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we just want to make this account an admin
       newuser <- guardJustM $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
-        _ <- dbUpdate $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx)
+        _ <- dbUpdate $ LogHistoryDetailsChanged uid (get ctxipnumber ctx) (get ctxtime ctx)
              [("is_company_admin", "false", "true")]
-             (userid <$> ctxmaybeuser ctx)
+             (userid <$> get ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companystandardaccount", True) -> do
@@ -252,9 +251,9 @@ handleUserChange uid = onlySalesOrAdmin $ do
       newuser <- guardJustM $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid False
         _ <- dbUpdate
-                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx)
+                 $ LogHistoryDetailsChanged uid (get ctxipnumber ctx) (get ctxtime ctx)
                                             [("is_company_admin", "true", "false")]
-                                            (userid <$> ctxmaybeuser ctx)
+                                            (userid <$> get ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       return newuser
     _ -> return olduser
@@ -262,9 +261,9 @@ handleUserChange uid = onlySalesOrAdmin $ do
   let applyChanges = do
         _ <- dbUpdate $ SetUserInfo uid $ infoChange $ userinfo user
         _ <- dbUpdate
-              $ LogHistoryUserInfoChanged uid (ctxipnumber ctx) (ctxtime ctx)
+              $ LogHistoryUserInfoChanged uid (get ctxipnumber ctx) (get ctxtime ctx)
                     (userinfo user) (infoChange $ userinfo user)
-                    (userid <$> ctxmaybeuser ctx)
+                    (userid <$> get ctxmaybeuser ctx)
         settingsChange <- getUserSettingsChange
         _ <- dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
         return ()
@@ -424,7 +423,7 @@ getUserInfoChange = do
 
 jsonDocuments :: Kontrakcja m => m Response
 jsonDocuments = onlySalesOrAdmin $ do
-  adminUser <- guardJustM $ ctxmaybeuser <$> getContext
+  adminUser <- guardJustM $ get ctxmaybeuser <$> getContext
   muid <- readField "userid"
   mcid <- readField "companyid"
   offset   <- guardJustM $ readField "offset"
@@ -654,14 +653,14 @@ jsonBrandedDomainsList = onlySalesOrAdmin $ do
     return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonBrandedDomainsList allBrandedDomains
 
 jsonBrandedDomain :: Kontrakcja m => BrandedDomainID -> m Aeson.Value
-jsonBrandedDomain bdid = onlySalesOrAdmin $ do
-  bd <- dbQuery $ GetBrandedDomainByID bdid
+jsonBrandedDomain bdID = onlySalesOrAdmin $ do
+  bd <- dbQuery $ GetBrandedDomainByID bdID
   return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonBrandedDomain bd
 
 updateBrandedDomain :: Kontrakcja m => BrandedDomainID -> m ()
 updateBrandedDomain xbdid = onlySalesOrAdmin $ do
     obd <- dbQuery $ GetBrandedDomainByID xbdid
-    when (bdMainDomain obd) $ do
+    when (get bdMainDomain obd) $ do
       logInfo_ "Main domain can't be changed"
       internalError
     -- keep this 1to1 consistent with fields in the database
@@ -674,44 +673,47 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
       internalError
      Right js -> case (Unjson.parse unjsonBrandedDomain js) of
         (Result newDomain []) -> do
-          _ <- dbUpdate $ UpdateBrandedDomain newDomain {bdid = bdid obd, bdMainDomain = bdMainDomain obd}
+          _ <- dbUpdate $ UpdateBrandedDomain
+                 (set bdid (get bdid obd) $
+                   set bdMainDomain (get bdMainDomain obd) $
+                   newDomain)
           return ()
         _ -> internalError
 
 unjsonBrandedDomain :: UnjsonDef BrandedDomain
 unjsonBrandedDomain = objectOf $ pure BrandedDomain
   <*> field "id"
-      bdid
+      (get bdid)
       "Id of a branded domain (unique)"
   <*> field "mainDomain"
-      bdMainDomain
+      (get bdMainDomain)
       "Is this a main domain"
   <*> field "url"
-      bdUrl
+      (get bdUrl)
       "URL that will match this domain"
   <*> field "smsOriginator"
-      bdSmsOriginator
+      (get bdSmsOriginator)
       "Originator for text messages"
   <*> field "emailOriginator"
-      bdEmailOriginator
+      (get bdEmailOriginator)
       "Originator for email messages"
   <*> field "mailTheme"
-      bdMailTheme
+      (get bdMailTheme)
       "Email theme"
   <*> field "signviewTheme"
-      bdSignviewTheme
+      (get bdSignviewTheme)
       "Signview theme"
   <*> field "serviceTheme"
-      bdServiceTheme
+      (get bdServiceTheme)
       "Service theme"
   <*> field "loginTheme"
-      bdLoginTheme
+      (get bdLoginTheme)
       "Login theme"
   <*> field "browserTitle"
-      bdBrowserTitle
+      (get bdBrowserTitle)
       "Browser title"
   <*> fieldBy "favicon"
-      bdFavicon
+      (get bdFavicon)
       "Favicon"
        (invmap
           (\l -> B64.decodeLenient $ BSC8.pack $  drop 1 $ dropWhile ((/=) ',') l)
@@ -719,46 +721,46 @@ unjsonBrandedDomain = objectOf $ pure BrandedDomain
           unjsonDef
        )
    <*> field "participantColor1"
-      bdParticipantColor1
+      (get bdParticipantColor1)
       "Participant 1 color"
    <*> field "participantColor2"
-      bdParticipantColor2
+      (get bdParticipantColor2)
       "Participant 2 color"
    <*> field "participantColor3"
-      bdParticipantColor3
+      (get bdParticipantColor3)
       "Participant 3 color"
    <*> field "participantColor4"
-      bdParticipantColor4
+      (get bdParticipantColor4)
       "Participant 4 color"
    <*> field "participantColor5"
-      bdParticipantColor5
+      (get bdParticipantColor5)
       "Participant 5 color"
    <*> field "participantColor6"
-      bdParticipantColor6
+      (get bdParticipantColor6)
       "Participant 6 color"
    <*> field "draftColor"
-      bdDraftColor
+      (get bdDraftColor)
       "Draft color"
    <*> field "cancelledColor"
-      bdCancelledColor
+      (get bdCancelledColor)
       "Cancelled color"
    <*> field "initatedColor"
-      bdInitatedColor
+      (get bdInitatedColor)
       "Initated color"
    <*> field "sentColor"
-      bdSentColor
+      (get bdSentColor)
       "Sent color"
    <*> field "deliveredColor"
-      bdDeliveredColor
+      (get bdDeliveredColor)
       "Delivered color"
    <*> field "openedColor"
-      bdOpenedColor
+      (get bdOpenedColor)
       "Opened color"
    <*> field "reviewedColor"
-      bdReviewedColor
+      (get bdReviewedColor)
       "Reviewed color"
    <*> field "signedColor"
-      bdSignedColor
+      (get bdSignedColor)
       "Signed color"
 
 unjsonBrandedDomainsList :: UnjsonDef [BrandedDomain]
@@ -771,6 +773,6 @@ unjsonBrandedDomainsList = objectOf $
 
 createBrandedDomain :: Kontrakcja m => m JSValue
 createBrandedDomain = do
-    bdid <- dbUpdate $ NewBrandedDomain
+    bdID <- dbUpdate $ NewBrandedDomain
     runJSONGenT $ do
-      value "id" (show bdid)
+      value "id" (show bdID)

@@ -94,7 +94,7 @@ test_startDocumentCharging = do
   company <- addNewCompany
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   True <- dbUpdate $ SetUserCompany (userid user) (companyid company)
-  ctxWithUser <- (\c -> c { ctxmaybeuser = Just user })<$> mkContext def
+  ctxWithUser <- (set ctxmaybeuser (Just user))<$> mkContext def
 
   did1 <- newDocumentReadyToStart user
   req1 <- mkRequest POST []
@@ -142,7 +142,7 @@ test_startDocumentCharging = do
 test_closeDocAndSigCharging :: TestEnv ()
 test_closeDocAndSigCharging = do
   (user, companyId) <- addNewRandomUserWithCompany
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   let queryChargeableSigClose =
           "SELECT count(*) FROM chargeable_items WHERE type = 9 " <>
           "AND quantity = 1 AND company_id = " <?> companyId

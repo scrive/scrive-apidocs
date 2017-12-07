@@ -66,7 +66,9 @@ apiCallGetPadClientTheme = api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
   company <- getCompanyForUser user
   companyui <- dbQuery $ GetCompanyUI (companyid company)
-  theme <- dbQuery $ GetTheme $ fromMaybe (bdSignviewTheme $ ctxbrandeddomain ctx) (companySignviewTheme $ companyui)
+  theme <- dbQuery $ GetTheme $ fromMaybe
+    (get (bdSignviewTheme . ctxbrandeddomain) ctx)
+    (companySignviewTheme $ companyui)
   simpleAesonResponse $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme theme
 
 apiCallGetPadInfo :: Kontrakcja m => m Response

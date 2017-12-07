@@ -28,7 +28,7 @@ apiV2CallLogTests env = testGroup "APILog" $
 testApiLogIsStored :: TestEnv ()
 testApiLogIsStored = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -41,7 +41,7 @@ testApiLogIsStored = do
 testApiLogIsRotated :: TestEnv ()
 testApiLogIsRotated = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -54,7 +54,7 @@ testApiLogIsRotated = do
 testApiLogGetItemWorks :: TestEnv ()
 testApiLogGetItemWorks = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -68,7 +68,7 @@ testApiLogGetItemWorks = do
 testApiLogGetListWorks :: TestEnv ()
 testApiLogGetListWorks = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -80,7 +80,7 @@ testApiLogGetListWorks = do
 testApiLog2Users :: TestEnv ()
 testApiLog2Users = do
   userA <- addNewRandomUser
-  ctxA <- (\c -> c { ctxmaybeuser = Just userA }) <$> mkContext def
+  ctxA <- (set ctxmaybeuser (Just userA)) <$> mkContext def
   newMockDocA <- testDocApiV2New' ctxA
   let didA = getMockDocId newMockDocA
 
@@ -91,7 +91,7 @@ testApiLog2Users = do
   assertEqual "There should be 5 logged API Calls for user A" 5 (length logsUserA)
 
   userB <- addNewRandomUser
-  ctxB <- (\c -> c { ctxmaybeuser = Just userB }) <$> mkContext def
+  ctxB <- (set ctxmaybeuser (Just userB)) <$> mkContext def
   newMockDocB <- testDocApiV2New' ctxB
   let didB = getMockDocId newMockDocB
 

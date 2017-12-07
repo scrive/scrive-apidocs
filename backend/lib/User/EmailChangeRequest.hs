@@ -37,7 +37,7 @@ getEmailChangeRequestNewEmail :: (MonadDB m, MonadThrow m, MonadTime m, KontraMo
 getEmailChangeRequestNewEmail uid token = runMaybeT $ do
   Just EmailChangeRequest{..} <- dbQuery $ GetEmailChangeRequest uid
   guard $ ecrToken == token
-  Context{ctxmaybeuser = Just loggeduser} <- lift getContext
+  Just loggeduser <- get ctxmaybeuser <$> lift getContext
   guard $ ecrUserID == userid loggeduser
   -- check if a user didn't create an account with this email
   -- between requesting email change and confirming the change

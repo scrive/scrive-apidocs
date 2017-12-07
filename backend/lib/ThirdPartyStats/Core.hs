@@ -19,7 +19,7 @@ module ThirdPartyStats.Core (
   ) where
 
 import Control.Monad.IO.Class
-import Data.Binary
+import Data.Binary as B
 import Data.Int
 import Data.String
 import Data.Time.Clock.POSIX
@@ -55,10 +55,10 @@ instance Binary PropValue where
   get = do
     tag <- getWord8
     case tag of
-      0 -> PVNumber      <$> get
-      1 -> PVString      <$> get
-      2 -> PVBool        <$> get
-      3 -> PVUTCTime <$> get
+      0 -> PVNumber      <$> B.get
+      1 -> PVString      <$> B.get
+      2 -> PVBool        <$> B.get
+      3 -> PVUTCTime     <$> B.get
       n -> fail $ "Couldn't parse PropValue constructor tag: " ++ show n
 
 -- | Type class to keep the user from having to wrap stuff in annoying data
@@ -129,7 +129,7 @@ instance Binary EventName where
       case tag of
         0   -> return SetUserProps
         1   -> return SetCompanyProps
-        255 -> NamedEvent <$> get
+        255 -> NamedEvent <$> B.get
         t   -> fail $ "Unable to parse EventName constructor tag: " ++ show t
 
 
@@ -165,16 +165,16 @@ instance Binary EventProperty where
   get = do
     tag <- getWord8
     case tag of
-      0   -> MailProp . Email <$> get
-      1   -> IPProp           <$> get
-      2   -> NameProp         <$> get
-      3   -> UserIDProp       <$> get
-      4   -> TimeProp         <$> get
-      5   -> DocIDProp        <$> get
-      6   -> CompanyIDProp    <$> get
-      7   -> FirstNameProp    <$> get
-      8   -> LastNameProp     <$> get
-      255 -> SomeProp         <$> get <*> get
+      0   -> MailProp . Email <$> B.get
+      1   -> IPProp           <$> B.get
+      2   -> NameProp         <$> B.get
+      3   -> UserIDProp       <$> B.get
+      4   -> TimeProp         <$> B.get
+      5   -> DocIDProp        <$> B.get
+      6   -> CompanyIDProp    <$> B.get
+      7   -> FirstNameProp    <$> B.get
+      8   -> LastNameProp     <$> B.get
+      255 -> SomeProp         <$> B.get <*> B.get
       n   -> fail $ "Couldn't parse EventProperty constructor tag: " ++ show n
 
 
@@ -183,7 +183,7 @@ data AsyncEvent = AsyncEvent EventName [EventProperty] EventType deriving (Show,
 
 instance Binary AsyncEvent where
   put (AsyncEvent ename eprops etype) = put ename >> put eprops >> put etype
-  get = AsyncEvent <$> get <*> get <*> get
+  get = AsyncEvent <$> B.get <*> B.get <*> B.get
 
 
 -- | Denotes how many events should be processed.

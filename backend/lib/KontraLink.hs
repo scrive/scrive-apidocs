@@ -143,6 +143,6 @@ setParams uri params = uri { uriQuery = "?" ++ vars }
 getHomeOrDesignViewLink :: KontraMonad m => m KontraLink
 getHomeOrDesignViewLink = do
   ctx <- getContext
-  case ctxmaybeuser ctx of
+  case get ctxmaybeuser ctx of
     Just _ -> return LinkDesignView
-    Nothing -> return $ LinkHome (ctxlang ctx)
+    Nothing -> return $ LinkHome (get ctxlang ctx)

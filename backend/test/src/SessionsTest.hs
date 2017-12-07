@@ -5,6 +5,7 @@ import Happstack.Server
 import Test.Framework
 import Test.QuickCheck
 
+import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.Model
 import Context
@@ -63,7 +64,7 @@ testSessionUpdate = do
 testDocumentTicketInsertion :: TestEnv ()
 testDocumentTicketInsertion = replicateM_ 10 $ do
   (_, _, ctx) <- addDocumentAndInsertToken
-  runSQL_ $ "SELECT COUNT(*) FROM document_session_tokens WHERE session_id =" <?> ctxsessionid ctx
+  runSQL_ $ "SELECT COUNT(*) FROM document_session_tokens WHERE session_id =" <?> get ctxsessionid ctx
   tokens :: Int64 <- fetchOne runIdentity
   assertEqual "token successfully inserted into the database" 1 tokens
 
@@ -126,7 +127,7 @@ addDocumentAndInsertToken = do
       sess <- emptySession
       dbUpdate $ AddDocumentSessionToken (signatorylinkid asl) (signatorymagichash asl)
       ctx' <- getContext
-      updateSession sess (ctxsessionid ctx') (sesUserID sess) (sesPadUserID sess)
+      updateSession sess (get ctxsessionid ctx') (sesUserID sess) (sesPadUserID sess)
   return (author, doc, ctx)
 
 
@@ -136,8 +137,8 @@ addCgiGrpTransaction = do
   let Just asl = getAuthorSigLink doc
   trans_ <-rand 20 arbitrary
   let trans = case trans_ of
-        (CgiGrpAuthTransaction _  tid orf _) ->  (CgiGrpAuthTransaction (signatorylinkid asl) tid orf $ ctxsessionid ctx)
-        (CgiGrpSignTransaction _  tbs tid orf _) -> (CgiGrpSignTransaction (signatorylinkid asl) tbs tid orf $ ctxsessionid ctx)
+        (CgiGrpAuthTransaction _  tid orf _) ->  (CgiGrpAuthTransaction (signatorylinkid asl) tid orf $ get ctxsessionid ctx)
+        (CgiGrpSignTransaction _  tbs tid orf _) -> (CgiGrpSignTransaction (signatorylinkid asl) tbs tid orf $ get ctxsessionid ctx)
   rq <- mkRequest GET []
   runTestKontra rq ctx $ do
     dbUpdate $ MergeCgiGrpTransaction trans
@@ -148,5 +149,5 @@ testUser = do
   bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
   company <- dbUpdate $ CreateCompany
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) def (bdid bd) AccountRequest
+  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) def (get bdid bd) AccountRequest
   return $ userid user

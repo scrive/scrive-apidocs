@@ -5,7 +5,7 @@ module Company.CompanyID (
   ) where
 
 import Data.Aeson
-import Data.Binary
+import Data.Binary as B
 import Data.Int
 import Data.Typeable
 import Data.Unjson
@@ -25,7 +25,7 @@ instance FromReqURI CompanyID where
 
 instance Binary CompanyID where
   put (CompanyID cid) = put cid
-  get = fmap CompanyID get
+  get = fmap CompanyID B.get
 
 instance FromSQL CompanyID where
   type PQBase CompanyID = PQBase Int64

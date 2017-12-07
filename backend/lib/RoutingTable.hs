@@ -140,10 +140,10 @@ staticRoutes production = choice
      , allLangDirs $ dir "enter" $ hGet $ toK0 $ handleLoginGet
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
      , dir "logout_ajax" $ hGet  $ toK0 $ handleLogoutAJAX
-     , allLangDirs $ dir "login" $ hGet $ toK0 $ LinkLoginDirect <$> ctxlang <$> getContext -- Drop this after EE is migrated
+     , allLangDirs $ dir "login" $ hGet $ toK0 $ LinkLoginDirect <$> get ctxlang <$> getContext -- Drop this after EE is migrated
      , dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
      , dir "loginwithredirect" $ hGet $ toK0 $ handleLoginWithRedirectGet
-     , allLangDirs $ dir "signup"      $ hGetAllowHttp $ toK0 $ LinkSignup <$> ctxlang <$> getContext -- Drop this after EE is migrated
+     , allLangDirs $ dir "signup"      $ hGetAllowHttp $ toK0 $ LinkSignup <$> get ctxlang <$> getContext -- Drop this after EE is migrated
      , allLangDirs $ dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
      , allLangDirs $ dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
      , allLangDirs $ dir "mynewaccount"  $ hGet $ toK2 $ \(_::String) (_::String) -> return LinkArchive

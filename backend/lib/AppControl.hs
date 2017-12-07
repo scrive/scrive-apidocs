@@ -38,6 +38,7 @@ import qualified Database.Redis as R
 import AppConf
 import AppView as V
 import BrandedDomain.Model
+import Context.Internal
 import Cookies (lookCookieValue)
 import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
@@ -167,7 +168,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         let usehttps = useHttps appConf
         when (issecure || not usehttps) $ do
           logInfo_ "Updating session"
-          updateSession session (ctxsessionid ctx') (userid <$> ctxmaybeuser ctx') (userid <$> ctxmaybepaduser ctx')
+          updateSession session (get ctxsessionid ctx') (userid <$> get ctxmaybeuser ctx') (userid <$> get ctxmaybepaduser ctx')
 
         logInfo_ "Evaluating response"
         -- Make sure response is well defined before passing it further.
@@ -307,34 +308,34 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
       userlang <- getStandardLang muser
 
       return Context {
-          ctxmaybeuser          = muser
-        , ctxtime               = minutestime
-        , ctxclientname         = clientName `mplus` userAgent
-        , ctxclienttime         = clientTime
-        , ctxipnumber           = peerip
-        , ctxproduction         = production appConf
-        , ctxcdnbaseurl         = cdnBaseUrl appConf
-        , ctxtemplates          = localizedVersion userlang templates2
-        , ctxglobaltemplates    = templates2
-        , ctxlang               = userlang
-        , ctxismailbackdooropen = isMailBackdoorOpen appConf
-        , ctxmailnoreplyaddress = mailNoreplyAddress appConf
-        , ctxgtconf             = guardTimeConf appConf
-        , ctxcgigrpconfig       = cgiGrpConfig appConf
-        , ctxmrediscache        = mrediscache appGlobals
-        , ctxfilecache          = filecache appGlobals
-        , ctxxtoken             = sesCSRFToken session
-        , ctxadminaccounts      = admins appConf
-        , ctxsalesaccounts      = sales appConf
-        , ctxmaybepaduser       = mpaduser
-        , ctxusehttps           = useHttps appConf
-        , ctxsessionid          = sesID session
-        , ctxtrackjstoken       = trackjsToken appConf
-        , ctxgatoken            = gaToken appConf
-        , ctxmixpaneltoken      = mixpanelToken appConf
-        , ctxhubspotconf        = hubspotConf appConf
-        , ctxbrandeddomain      = brandeddomain
-        , ctxsalesforceconf     = salesforceConf appConf
-        , ctxnetsconfig         = netsConfig appConf
-        , ctxisapilogenabled    = isAPILogEnabled appConf
+          _ctxmaybeuser          = muser
+        , _ctxtime               = minutestime
+        , _ctxclientname         = clientName `mplus` userAgent
+        , _ctxclienttime         = clientTime
+        , _ctxipnumber           = peerip
+        , _ctxproduction         = production appConf
+        , _ctxcdnbaseurl         = cdnBaseUrl appConf
+        , _ctxtemplates          = localizedVersion userlang templates2
+        , _ctxglobaltemplates    = templates2
+        , _ctxlang               = userlang
+        , _ctxismailbackdooropen = isMailBackdoorOpen appConf
+        , _ctxmailnoreplyaddress = mailNoreplyAddress appConf
+        , _ctxgtconf             = guardTimeConf appConf
+        , _ctxcgigrpconfig       = cgiGrpConfig appConf
+        , _ctxmrediscache        = mrediscache appGlobals
+        , _ctxfilecache          = filecache appGlobals
+        , _ctxxtoken             = sesCSRFToken session
+        , _ctxadminaccounts      = admins appConf
+        , _ctxsalesaccounts      = sales appConf
+        , _ctxmaybepaduser       = mpaduser
+        , _ctxusehttps           = useHttps appConf
+        , _ctxsessionid          = sesID session
+        , _ctxtrackjstoken       = trackjsToken appConf
+        , _ctxgatoken            = gaToken appConf
+        , _ctxmixpaneltoken      = mixpanelToken appConf
+        , _ctxhubspotconf        = hubspotConf appConf
+        , _ctxbrandeddomain      = brandeddomain
+        , _ctxsalesforceconf     = salesforceConf appConf
+        , _ctxnetsconfig         = netsConfig appConf
+        , _ctxisapilogenabled    = isAPILogEnabled appConf
         }

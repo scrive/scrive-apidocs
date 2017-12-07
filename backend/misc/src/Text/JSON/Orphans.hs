@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Text.JSON.Orphans where
 
-import Data.Binary
+import Data.Binary as B
 import Data.Int
 import Data.String
 import Test.QuickCheck (Arbitrary(..), Gen, frequency, oneof)
@@ -11,11 +11,11 @@ import KontraPrelude
 import MinutesTime ()
 
 instance Binary J.JSString where
-  get = J.toJSString <$> get
+  get = J.toJSString <$> B.get
   put = put . J.fromJSString
 
 instance Binary a => Binary (J.JSObject a) where
-  get = J.toJSObject <$> get
+  get = J.toJSObject <$> B.get
   put = put . J.fromJSObject
 
 instance Binary J.JSValue where
@@ -30,11 +30,11 @@ instance Binary J.JSValue where
     tag <- getWord8
     case tag of
       0 -> return J.JSNull
-      1 -> J.JSBool <$> get
-      2 -> J.JSRational <$> get <*> get
-      3 -> J.JSString <$> get
-      4 -> J.JSArray <$> get
-      5 -> J.JSObject <$> get
+      1 -> J.JSBool     <$> B.get
+      2 -> J.JSRational <$> B.get <*> B.get
+      3 -> J.JSString   <$> B.get
+      4 -> J.JSArray    <$> B.get
+      5 -> J.JSObject   <$> B.get
       _ -> fail $ "Unable to parse JSValue because of bad tag: " ++ show tag
 
 -- Arbitrary instances for testing

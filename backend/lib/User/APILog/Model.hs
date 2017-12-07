@@ -16,7 +16,7 @@ module User.APILog.Model (
   ) where
 
 import Control.Monad.Catch
-import Data.Binary
+import Data.Binary as B
 import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
@@ -117,7 +117,7 @@ instance Unjson CallLogID where
 
 instance Binary CallLogID where
   put (CallLogID did) = put did
-  get = fmap CallLogID get
+  get = fmap CallLogID B.get
 
 instance FromSQL CallLogID where
   type PQBase CallLogID = PQBase Int64

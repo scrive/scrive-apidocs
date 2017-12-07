@@ -38,7 +38,7 @@ import Utils.HTTP
 handleLoginGet :: Kontrakcja m => m (Either KontraLink Response)
 handleLoginGet = do
   ctx <- getContext
-  case (ctxmaybeuser ctx) of
+  case (get ctxmaybeuser ctx) of
        Nothing -> do
           referer <- getField "referer"
           ad <- getAnalyticsData
@@ -65,7 +65,7 @@ handleLoginPost = do
                         Just u -> do
                              (company :: Company) <- dbQuery $ GetCompanyByUserID (userid u)
                              return $ null (companyipaddressmasklist (companyinfo company)) ||
-                                               (any (ipAddressIsInNetwork (ctxipnumber ctx)) (companyipaddressmasklist (companyinfo company)))
+                                               (any (ipAddressIsInNetwork (get ctxipnumber ctx)) (companyipaddressmasklist (companyinfo company)))
                         Nothing -> return True
             case maybeuser of
                 Just user@User{userpassword,userid,useraccountsuspended}
@@ -87,21 +87,21 @@ handleLoginPost = do
                                 asyncLogEvent
                                   "Login"
                                   [ UserIDProp uid
-                                  , IPProp $ ctxipnumber ctx
-                                  , TimeProp $ ctxtime ctx ]
+                                  , IPProp $ get ctxipnumber ctx
+                                  , TimeProp $ get ctxtime ctx ]
                                   EventMixpanel
                                 asyncLogEvent
                                   SetUserProps
                                   [ UserIDProp uid
-                                  , someProp "Last login" $ ctxtime ctx ]
+                                  , someProp "Last login" $ get ctxtime ctx ]
                                   EventMixpanel
                               _ -> return ()
                             if padlogin
                               then do
-                                _ <- dbUpdate $ LogHistoryPadLoginSuccess userid (ctxipnumber ctx) (ctxtime ctx)
+                                _ <- dbUpdate $ LogHistoryPadLoginSuccess userid (get ctxipnumber ctx) (get ctxtime ctx)
                                 logPadUserToContext muuser
                               else do
-                                _ <- dbUpdate $ LogHistoryLoginSuccess userid (ctxipnumber ctx) (ctxtime ctx)
+                                _ <- dbUpdate $ LogHistoryLoginSuccess userid (get ctxipnumber ctx) (get ctxtime ctx)
                                 logUserToContext muuser
                             J.runJSONGenT $ J.value "logged" True
                           else do
@@ -111,25 +111,25 @@ handleLoginPost = do
                 Just u@User{userpassword} | not (maybeVerifyPassword userpassword passwd) -> do
                         logInfo "User login failed (invalid password)" $ logObject_ u
                         _ <- if padlogin
-                          then dbUpdate $ LogHistoryPadLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
-                          else dbUpdate $ LogHistoryLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                          then dbUpdate $ LogHistoryPadLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
+                          else dbUpdate $ LogHistoryLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
                         J.runJSONGenT $ J.value "logged" False
 
                 Just u | not ipIsOK -> do
                         logInfo "User login failed (ip not on allowed list)" $ object [
                             logPair_ u
-                          , "ip" .= show (ctxipnumber ctx)
+                          , "ip" .= show (get ctxipnumber ctx)
                           ]
                         _ <- if padlogin
-                          then dbUpdate $ LogHistoryPadLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
-                          else dbUpdate $ LogHistoryLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                          then dbUpdate $ LogHistoryPadLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
+                          else dbUpdate $ LogHistoryLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
 
                         company <- dbQuery $ GetCompanyByUserID (userid u)
                         admins <-  dbQuery $ GetCompanyAdmins (companyid company)
                         case admins of
                           (admin:_) -> J.runJSONGenT $ do
                                          J.value "logged" False
-                                         J.value "ipaddr" (show (ctxipnumber ctx))
+                                         J.value "ipaddr" (show (get ctxipnumber ctx))
                                          J.value "adminname" (getSmartName admin)
                           _ -> J.runJSONGenT $ do
                                          J.value "logged" False
@@ -137,8 +137,8 @@ handleLoginPost = do
                   {- MR: useraccountsuspended must be true here. This is a hack for Hi3G. It will be removed in future -}
                         logInfo "User login failed (user account suspended)" $ object [logPair_ u]
                         _ <- if padlogin
-                          then dbUpdate $ LogHistoryPadLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
-                          else dbUpdate $ LogHistoryLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                          then dbUpdate $ LogHistoryPadLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
+                          else dbUpdate $ LogHistoryLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
                         J.runJSONGenT $ J.value "logged" False
                 Nothing -> do
                     logInfo "User login failed (user not found)" $ object [

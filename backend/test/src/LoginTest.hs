@@ -9,6 +9,7 @@ import Text.JSON hiding (decode)
 import Text.JSON.Gen as J
 import qualified Data.HashMap.Strict as H
 
+import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Company.Model
 import Context
@@ -46,8 +47,8 @@ testSuccessfulLogin = do
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
-    assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
-    assertBool "User was not logged into context as pad user" $ ctxmaybepaduser ctx' == Nothing
+    assertBool "User was logged into context" $ (userid <$> get ctxmaybeuser ctx') == Just uid
+    assertBool "User was not logged into context as pad user" $ get ctxmaybepaduser ctx' == Nothing
 
 testSuccessfulLoginToPadQueue :: TestEnv ()
 testSuccessfulLoginToPadQueue  = do
@@ -56,8 +57,8 @@ testSuccessfulLoginToPadQueue  = do
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("pad", inText "true")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
-    assertBool "User was logged into context as pad user" $ (userid <$> ctxmaybepaduser ctx') == Just uid
-    assertBool "User was not logged into context" $ ctxmaybeuser ctx' == Nothing
+    assertBool "User was logged into context as pad user" $ (userid <$> get ctxmaybepaduser ctx') == Just uid
+    assertBool "User was not logged into context" $ get ctxmaybeuser ctx' == Nothing
 
 testCantLoginWithInvalidUser :: TestEnv ()
 testCantLoginWithInvalidUser = do
@@ -81,7 +82,7 @@ testSuccessfulLoginSavesAStatEvent = do
   ctx <- mkContext def
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
-  assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
+  assertBool "User was logged into context" $ (userid <$> get ctxmaybeuser ctx') == Just uid
 
 testCanLoginWithRedirect :: TestEnv ()
 testCanLoginWithRedirect = do
@@ -108,7 +109,7 @@ testCanLoginWithRedirect = do
     , ("url"       , inText redirecturl1)
     ]
   (res3, ctx3) <- runTestKontra req3 ctx $ handleLoginWithRedirectGet
-  assertBool "Session was set" $ ctxsessionid ctx /= ctxsessionid ctx3
+  assertBool "Session was set" $ get ctxsessionid ctx /= get ctxsessionid ctx3
   assertBool "Redirect was set to provided url" (isRedirect (LinkExternal redirecturl1) res3)
 
     -- Test that call with fail if "url" for redirection is not provided
@@ -124,7 +125,7 @@ testCanLoginWithRedirect = do
     , ("url"       , inText redirecturl2)
     ]
   (res5, ctx5) <- runTestKontra req5 ctx $ handleLoginWithRedirectGet
-  assertBool "Session was set again" $ ctxsessionid ctx /= ctxsessionid ctx5
+  assertBool "Session was set again" $ get ctxsessionid ctx /= get ctxsessionid ctx5
   assertBool "Redirect was set to other url" (isRedirect (LinkExternal redirecturl2) res5)
 
   -- Test that usage of invalid session_id will work
@@ -133,7 +134,7 @@ testCanLoginWithRedirect = do
     , ("url"       , inText redirecturl2)
     ]
   (res6, ctx6) <- runTestKontra req6 ctx $ handleLoginWithRedirectGet
-  assertBool "ctxsessionid will not be changed if session_id is invalid" $ ctxsessionid ctx == ctxsessionid ctx6
+  assertBool "ctxsessionid will not be changed if session_id is invalid" $ get ctxsessionid ctx == get ctxsessionid ctx6
   assertBool "Redirect was still set to other url" (isRedirect (LinkExternal redirecturl2) res6)
 
 testCantLoginAfterFailedAttempts :: TestEnv ()
@@ -154,19 +155,19 @@ testCantLoginAfterFailedAttempts = do
 assertResettingPasswordLogsIn :: TestEnv ()
 assertResettingPasswordLogsIn = do
   (user, ctx) <- createUserAndResetPassword
-  assertEqual "User was logged into context" (Just $ userid user) (userid <$> ctxmaybeuser ctx)
+  assertEqual "User was logged into context" (Just $ userid user) (userid <$> get ctxmaybeuser ctx)
 
 assertResettingPasswordRecordsALoginEvent :: TestEnv ()
 assertResettingPasswordRecordsALoginEvent = do
   (user, ctx) <- createUserAndResetPassword
-  assertEqual "User was logged into context" (Just $ userid user) (userid <$> ctxmaybeuser ctx)
+  assertEqual "User was logged into context" (Just $ userid user) (userid <$> get ctxmaybeuser ctx)
 
 createUserAndResetPassword :: TestEnv (User, Context)
 createUserAndResetPassword = do
   bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
   company <- dbUpdate $ CreateCompany
-  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) def (bdid bd) AccountRequest
+  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) def (get bdid bd) AccountRequest
   PasswordReminder{..} <- newPasswordReminder $ userid user
   ctx <- mkContext def
   req <- mkRequest POST [("password", inText "password123")]
@@ -179,12 +180,12 @@ createUserAndResetPassword = do
 loginFailureChecks :: JSValue -> Context -> TestEnv ()
 loginFailureChecks res ctx = do
     assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" False)
-    assertBool "User wasn't logged into context" $ ctxmaybeuser ctx == Nothing
+    assertBool "User wasn't logged into context" $ get ctxmaybeuser ctx == Nothing
 
 createTestUser :: TestEnv UserID
 createTestUser = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
     company <- dbUpdate $ CreateCompany
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) def (bdid bd) AccountRequest
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) def (get bdid bd) AccountRequest
     return userid

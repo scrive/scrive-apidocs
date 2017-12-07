@@ -1,11 +1,11 @@
 module RoutingListMain where
 
-import Control.Monad.State
 import Happstack.Server (Method, Response)
 import Happstack.StaticRouting (Route)
 import System.Environment (getArgs)
 import System.IO
 import Unsafe.Coerce (unsafeCoerce)
+import qualified Control.Monad.State as S
 
 import Kontra
 import KontraPrelude
@@ -43,10 +43,10 @@ coerce = unsafeCoerce
 ------------------------------------------------------------------------------
 -- go over Route object (recursively) and return list of urls inside
 -- this a stateful computation (for counting how many parameters are in the url)
-worker :: MyRoute (Kontra Response) -> State Int [String]
+worker :: MyRoute (Kontra Response) -> S.State Int [String]
 worker (MyDir _segment (MyHandler (Nothing, _) _ _)) = return [] -- [segment ++ " <SERVING FILES FROM SOME DIRECTORY>"]
 worker (MyDir segment (MyHandler (Just n, _method') _ _)) = do
-  nParams <- get
+  nParams <- S.get
   let n' = n - nParams
   case n' of
     0 -> return [show segment]
@@ -54,21 +54,21 @@ worker (MyDir segment (MyHandler (Just n, _method') _ _)) = do
 worker (MyDir segment route) = mapM (\s -> return $ show segment ++ "/" ++ s) =<< worker route
 worker (MyHandler (Nothing, _) _ _) = return [] -- ["<SERVING FILES FROM SOME DIRECTORY>"]
 worker (MyHandler (Just n, _method') _ _) = do
-  nParams <- get
+  nParams <- S.get
   let n' = n - nParams
   case n' of
     0 -> return [""]
     _ -> return ["SHOULD NOT HAPPEN"]
 worker (MyChoice routes) = do
-  let localState :: State s a -> State s a
+  let localState :: S.State s a -> S.State s a
       localState f = do
-        s <- get
+        s <- S.get
         x <- f
-        put s
+        S.put s
         return x
   concat <$> mapM (localState . worker) routes
 worker (MyParam route) = do
-  modify (+1)
+  S.modify (+1)
   mapM (\s -> return $ if s == "" then "[a-zA-Z0-9_-]+" else "[a-zA-Z0-9_-]+/" ++ s) =<< worker route
 
 getUrls :: Route (Kontra Response) -> [String]
@@ -76,7 +76,7 @@ getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map makeAbs
   where route' = coerce route
         makeAbsoluteUrl url = "/" ++ url
         isRoot url = url == "/"
-        result = fst $ runState (worker route') 0
+        result = fst $ S.runState (worker route') 0
 
 -- handle exceptions
 -- 1)

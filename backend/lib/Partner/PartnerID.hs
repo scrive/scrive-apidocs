@@ -5,7 +5,7 @@ module Partner.PartnerID (
   ) where
 
 import Data.Aeson
-import Data.Binary
+import Data.Binary as B
 import Data.Default (Default(..))
 import Data.Int
 import Data.Typeable
@@ -29,7 +29,7 @@ instance FromReqURI PartnerID where
 
 instance Binary PartnerID where
   put (PartnerID uid) = put uid
-  get = fmap PartnerID get
+  get = fmap PartnerID B.get
 
 instance FromSQL PartnerID where
   type PQBase PartnerID = PQBase Int64

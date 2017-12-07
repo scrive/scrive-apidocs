@@ -74,7 +74,7 @@ test_addingANewCompanyAccount :: TestEnv ()
 test_addingANewCompanyAccount = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
   req <- mkRequest POST [ ("add", inText "True")
@@ -105,7 +105,7 @@ test_addingExistingCompanyUserAsCompanyAccount = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   (existinguser, existingcompany) <- addNewAdminUserAndCompany "Bob" "Blue" "bob@blue.com"
 
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
   req <- mkRequest POST [ ("add", inText "True")
@@ -132,7 +132,7 @@ test_resendingInviteToNewCompanyAccount = do
   Just newuser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company newuser
 
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
   req <- mkRequest POST [ ("resend", inText "True")
@@ -156,7 +156,7 @@ test_switchingStandardToAdminUser = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just standarduser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
 
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
   req <- mkRequest POST [ ("changerole", inText "True")
@@ -179,7 +179,7 @@ test_switchingAdminToStandardUser = do
   _ <- dbUpdate $ SetUserCompanyAdmin (userid standarduser) True
   Just adminuser <- dbQuery $ GetUserByID (userid user)
 
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
   req <- mkRequest POST [ ("changerole", inText "True")
@@ -202,7 +202,7 @@ test_removingCompanyAccountInvite = do
 
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company standarduser
 
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
   req <- mkRequest POST [ ("remove", inText "True")
@@ -223,7 +223,7 @@ test_removingCompanyAccountWorks = do
 
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company standarduser
 
-  ctx <- (\c -> c { ctxmaybeuser = Just adminuser })
+  ctx <- (set ctxmaybeuser (Just adminuser))
     <$> mkContext def
 
   companydocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser) [DocumentFilterUnsavedDraft False] [] maxBound
@@ -256,7 +256,7 @@ test_privateUserTakoverWorks = do
 
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company user
 
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
   req <- mkRequest POST []
@@ -282,7 +282,7 @@ test_mustBeInvitedForTakeoverToWork = do
   company <- addNewCompany
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
-  ctx <- (\c -> c { ctxmaybeuser = Just user })
+  ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
   req <- mkRequest POST []

@@ -38,8 +38,8 @@ import Util.HasSomeUserInfo
 mailNewCompanyUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
                                Context -> a -> b -> Company -> CompanyUI -> KontraLink -> UTCTime -> m Mail
 mailNewCompanyUserInvite ctx invited inviter company companyui link expires = do
-  theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme (ctxbrandeddomain ctx)) (companyMailTheme companyui)
-  kontramail (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) theme "mailNewCompanyUserInvite" $ do
+  theme <- dbQuery $ GetTheme $ fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx) (companyMailTheme companyui)
+  kontramail (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) theme "mailNewCompanyUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxDomainUrl ctx) link
     brandingMailFields theme
@@ -50,9 +50,9 @@ mailNewCompanyUserInvite ctx invited inviter company companyui link expires = do
 mailTakeoverSingleUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
                                Context -> a -> b -> Company -> CompanyUI -> KontraLink -> m Mail
 mailTakeoverSingleUserInvite ctx invited inviter company companyui link = do
-  theme <- dbQuery $ GetTheme $ fromMaybe (bdMailTheme (ctxbrandeddomain ctx)) (companyMailTheme companyui)
+  theme <- dbQuery $ GetTheme $ fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx) (companyMailTheme companyui)
   --invite in the language of the existing user rather than in the inviter's language
-  kontramaillocal (ctxmailnoreplyaddress ctx) (ctxbrandeddomain ctx) theme invited  "mailTakeoverSingleUserInvite" $ do
+  kontramaillocal (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) theme invited  "mailTakeoverSingleUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields (ctxDomainUrl ctx) link
     brandingMailFields theme

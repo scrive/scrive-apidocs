@@ -173,7 +173,7 @@ apiCallV1CreateFromFile = api $ do
   (mfile, title) <- case minput of
     Nothing -> do
       title <- renderTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
-      return (Nothing,  replace "  " " " $ title ++ " " ++ formatTimeSimple (ctxtime ctx))
+      return (Nothing,  replace "  " " " $ title ++ " " ++ formatTimeSimple (get ctxtime ctx))
     Just (Input _ Nothing _) -> throwM . SomeDBExtraException $ badInput "Missing file"
     Just (Input contentspec (Just filename') _contentType) -> do
       let filename = dropFilePathFromWindows filename'
@@ -342,7 +342,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
 
           hasAccess ::  Kontrakcja m => Document -> FileID -> m Bool
           hasAccess doc fid = do
-            user <- fromJust <$> ctxmaybeuser <$> getContext
+            user <- fromJust <$> get ctxmaybeuser <$> getContext
             if (fid `elem` (authorattachmentfileid <$> documentauthorattachments doc))
              then return True
              else do
@@ -386,7 +386,7 @@ apiCallV1Ready did = logDocument did . api $ do
             throwM . SomeDBExtraException $ serverError "Some signatories have invalid phone number and it is required for identification to view document."
       whenM (isNothing . documentfile <$> theDocument) $ do
             throwM . SomeDBExtraException $ serverError "File must be provided before document can be made ready."
-      t <- ctxtime <$> getContext
+      t <- get ctxtime <$> getContext
       timezone <- documenttimezonename <$> theDocument
       dbUpdate $ PreparationToPending actor timezone
       dbUpdate $ SetDocumentInviteTime t actor
@@ -665,7 +665,7 @@ apiCallV1SetAutoReminder did = logDocument did . api $ do
       days <- case mdays of
            Nothing -> return Nothing
            Just n -> do tot <- documenttimeouttime <$> theDocument
-                        if n < 1 || (isJust tot && n `daysAfter` (ctxtime ctx) > fromJust tot)
+                        if n < 1 || (isJust tot && n `daysAfter` (get ctxtime ctx) > fromJust tot)
                           then throwM . SomeDBExtraException $ (badInput "Number of days to send autoreminder must be a valid number, between 1 and number of days left till document deadline")
                           else return $ Just (fromIntegral n :: Int32)
       timezone <- documenttimezonename <$> theDocument
@@ -979,7 +979,7 @@ apiCallV1List = api $ do
               "query_time" .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)
             , identifier_ $ usercompany user
             , identifier_ $ userid user
-            , "ip" .= show (ctxipnumber ctx)
+            , "ip" .= show (get ctxipnumber ctx)
             ]
           let docs = PagedList {  list       = allDocs
                                 , params     = params
@@ -1035,7 +1035,7 @@ apiCallV1History :: Kontrakcja m => DocumentID -> m Response
 apiCallV1History did = logDocument did . api $ do
   (user, _actor, _) <- getAPIUser APIDocCheck
   ctx <- getContext
-  modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
+  modifyContext $ set ctxmaybeuser (Just user)
   mlang <- (join . (fmap langFromCode)) <$> getField "lang"
   switchLang $ fromMaybe (lang $ usersettings user) mlang
 
@@ -1046,7 +1046,7 @@ apiCallV1History did = logDocument did . api $ do
       J.value "list" $ for (reverse events) $ J.runJSONGen . (J.value "fields")
       J.value "paging" $ pagingParamsJSON (PagedList events 1000 emptyListParams (length events))
 
-  modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
+  modifyContext $ set ctxmaybeuser (get ctxmaybeuser ctx)
   return res
 
 
@@ -1075,9 +1075,9 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
                   if (external)
                     then do
                       ctx <- getContext
-                      modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
+                      modifyContext $ set ctxmaybeuser (Just user)
                       res <- getDocByDocID did
-                      modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
+                      modifyContext $ set ctxmaybeuser (get ctxmaybeuser ctx)
                       return res;
                     else getDocByDocID did
 
@@ -1118,9 +1118,9 @@ apiCallV1DownloadFile did fileid nameForBrowser = logDocumentAndFile did fileid 
                   if (external)
                     then do
                       ctx <- getContext
-                      modifyContext (\ctx' -> ctx' {ctxmaybeuser = Just user});
+                      modifyContext $ set ctxmaybeuser (Just user)
                       res <- getDocByDocID did
-                      modifyContext (\ctx' -> ctx' {ctxmaybeuser = ctxmaybeuser ctx});
+                      modifyContext $ set ctxmaybeuser (get ctxmaybeuser ctx)
                       return res;
                     else getDocByDocID did
   let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++

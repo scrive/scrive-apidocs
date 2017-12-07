@@ -41,7 +41,7 @@ apiV1JSONTests env = testGroup "JSONAPIV1"
 testFromFileAndReadySimple :: TestEnv ()
 testFromFileAndReadySimple = do
   (Just user)  <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                       , ("file", inFile $ inTestDir "pdfs/simple.pdf")
@@ -60,7 +60,7 @@ testFromFileAndReadySimple = do
 testFromFileAndUpdate :: TestEnv ()
 testFromFileAndUpdate = do
   (Just user)  <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                       , ("file", inFile $ inTestDir "pdfs/simple.pdf")
@@ -80,7 +80,7 @@ testFromFileAndUpdate = do
 testFromTemplateAndReadySimple :: TestEnv ()
 testFromTemplateAndReadySimple = do
   (Just user)  <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                       , ("file", inFile $ inTestDir "pdfs/simple.pdf")
@@ -115,7 +115,7 @@ testFromTemplateAndReadySimple = do
 testUpdateFields :: TestEnv ()
 testUpdateFields = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                       , ("file", inFile $ inTestDir "pdfs/simple.pdf")
@@ -152,7 +152,7 @@ testUpdateFields = do
 testUpdateWithReplacementFields :: TestEnv ()
 testUpdateWithReplacementFields = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                       , ("file", inFile $ inTestDir "pdfs/simple.pdf")
@@ -188,7 +188,7 @@ testUpdateWithReplacementFields = do
 testUpdateWithSubset :: TestEnv ()
 testUpdateWithSubset = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   reqDoc <- mkRequestWithHeaders POST [] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
@@ -207,7 +207,7 @@ testUpdateWithSubset = do
 testUpdateWithAllFeatures :: TestEnv ()
 testUpdateWithAllFeatures = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                       , ("file", inFile $ inTestDir "pdfs/simple.pdf")
@@ -241,7 +241,7 @@ testUpdateWithAllFeatures = do
 testList :: TestEnv ()
 testList = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                       , ("file", inFile $ inTestDir "pdfs/simple.pdf")
@@ -322,7 +322,7 @@ testList = do
 testSignWithSignature :: TestEnv ()
 testSignWithSignature = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                       , ("file", inFile $ inTestDir "pdfs/simple.pdf")

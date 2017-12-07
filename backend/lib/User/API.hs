@@ -113,14 +113,14 @@ apiCallGetUserPersonalToken = api $ do
                            attemptCount <- dbQuery $ GetUserRecentAuthFailureCount (userid user)
                            if attemptCount <= 5
                              then do
-                               _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenSuccess uid (ctxipnumber ctx) (ctxtime ctx)
+                               _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenSuccess uid (get ctxipnumber ctx) (get ctxtime ctx)
                                return $ Right $ Ok (unjsonOAuthAuthorization, t)
                              else
                                -- use an ambiguous message, so that this cannot be used to determine
                                -- whether a user has an account with Scrive
                                throwM . SomeDBExtraException $ serverError wrongPassMsg
                   else do
-                    _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user) (ctxipnumber ctx) (ctxtime ctx)
+                    _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
                     logInfo "getpersonaltoken failed (invalid password)" $ logObject_ user
                     -- we do not want rollback here, so we don't raise exception
                     return $ Left $ serverError wrongPassMsg
@@ -154,10 +154,10 @@ apiCallChangeUserPassword = api $ do
             then do
               passwordhash <- createPassword password
               _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-              _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber ctx) (ctxtime ctx) (Just $ userid $ user)
+              _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) (get ctxipnumber ctx) (get ctxtime ctx) (Just $ userid $ user)
               Ok <$> (runJSONGenT $ value "changed" True)
             else do
-              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (Just $ userid $ user)
+              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (get ctxipnumber ctx) (get ctxtime ctx) (Just $ userid $ user)
               Ok <$> (runJSONGenT $ value "changed" False)
      _ ->  throwM . SomeDBExtraException $ serverError "Newpassword fields do not match Scrive standard"
 
@@ -168,7 +168,7 @@ apiCallLoginUser = api $ do
 
   redirectUrl <- apiGuardJustM (badInput "Redirect URL not provided or invalid.") $ getField "redirect"
 
-  _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
+  _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
   logUserToContext $ Just user
   sendRedirect $ LinkExternal redirectUrl
 
@@ -182,9 +182,9 @@ apiCallUpdateUserProfile = api $ do
   when_ (isJust mlang) $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = fromJust mlang  }
 
   _ <- dbUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-  _ <- dbUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
+  _ <- dbUpdate $ LogHistoryUserInfoChanged (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
                                                (userinfo user) (infoUpdate $ userinfo user)
-                                               (userid <$> ctxmaybeuser ctx)
+                                               (userid <$> get ctxmaybeuser ctx)
   if (useriscompanyadmin user)
     then do
       company <- getCompanyForUser user
@@ -235,7 +235,7 @@ apiCallSignup = api $ do
   phone           <- fromMaybe "" <$> getOptionalField asValidPhone "phone"
   companyName     <- fromMaybe "" <$> getOptionalField asValidCompanyName "companyName"
   companyPosition <- fromMaybe "" <$> getOptionalField asValidPosition "companyPosition"
-  lang <- fromMaybe (ctxlang ctx) <$> langFromCode <$> getField' "lang"
+  lang <- fromMaybe (get ctxlang ctx) <$> langFromCode <$> getField' "lang"
   switchLang lang
   muser <- dbQuery $ GetUserByEmail $ Email email
   muser' <- case muser of
@@ -255,13 +255,13 @@ apiCallSignup = api $ do
           l <- newUserAccountRequestLink lang (userid user) AccountRequest
           asyncLogEvent "Send account confirmation email"
                         [ UserIDProp $ userid user
-                        , IPProp $ ctxipnumber ctx
-                        , TimeProp $ ctxtime ctx
+                        , IPProp     $ get ctxipnumber ctx
+                        , TimeProp   $ get ctxtime ctx
                         , someProp "Context" ("Acount request" :: String) ]
                         EventMixpanel
           asyncLogEvent SetUserProps
                         [ UserIDProp $ userid user
-                        , someProp "Account confirmation email" $ ctxtime ctx
+                        , someProp "Account confirmation email" $ get ctxtime ctx
                         , NameProp (firstname ++ " " ++ lastname)
                         , FirstNameProp firstname
                         , LastNameProp lastname
@@ -335,7 +335,7 @@ apiCallTestSalesforceIntegration = api $ do
   fmap Ok $ case scheme of
       Just (SalesforceScheme token)  -> do
         ctx <- getContext
-        case ctxsalesforceconf ctx of
+        case get ctxsalesforceconf ctx of
           Nothing -> noConfigurationError "Salesforce"
           Just sc -> do
             res <- flip runReaderT sc $ testSalesforce token url
@@ -364,12 +364,12 @@ apiCallLoginUserAndGetSession = V2.api $ do
       ctx <- getContext
       asyncLogEvent "Login"
                     [ UserIDProp userid
-                    , IPProp $ ctxipnumber ctx
-                    , TimeProp $ ctxtime ctx ]
+                    , IPProp   $ get ctxipnumber ctx
+                    , TimeProp $ get ctxtime ctx ]
                     EventMixpanel
       asyncLogEvent SetUserProps
                     [ UserIDProp userid
-                    , someProp "Last login" $ ctxtime ctx ]
+                    , someProp "Last login" $ get ctxtime ctx ]
                     EventMixpanel
       emptysession <- emptySession
       ses <- startNewSession emptysession (Just userid) Nothing

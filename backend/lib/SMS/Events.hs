@@ -78,7 +78,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, s
             bd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
               Nothing -> dbQuery $ GetMainBrandedDomain
               Just uid -> dbQuery $ GetBrandedDomainByUserID uid
-            let host = bdUrl bd
+            let host = get bdUrl bd
                 -- since when email is reported deferred author has a possibility to
                 -- change email address, we don't want to send him emails reporting
                 -- success/failure for old signatory address, so we need to compare
@@ -159,7 +159,7 @@ handleUndeliveredSMSInvitation mailNoreplyAddress bd hostpart signlinkid = logSi
 
 smsUndeliveredInvitation :: (TemplatesMonad m,MonadDB m,MonadThrow m) => String -> BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
 smsUndeliveredInvitation mailNoreplyAddress bd hostpart doc signlink = do
-  theme <- dbQuery $ GetTheme $ bdMailTheme bd
+  theme <- dbQuery $ GetTheme $ get bdMailTheme bd
   kontramail mailNoreplyAddress bd theme "invitationSMSUndelivered" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc

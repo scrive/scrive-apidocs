@@ -4,7 +4,7 @@ module BrandedDomain.BrandedDomainID (
   , unBrandedDomainID
   ) where
 
-import Data.Binary
+import Data.Binary as B
 import Data.Int
 import Data.Typeable
 import Data.Unjson
@@ -23,7 +23,7 @@ instance FromReqURI BrandedDomainID where
 
 instance Binary BrandedDomainID where
   put (BrandedDomainID uid) = put uid
-  get = fmap BrandedDomainID get
+  get = fmap BrandedDomainID B.get
 
 instance FromSQL BrandedDomainID where
   type PQBase BrandedDomainID = PQBase Int64

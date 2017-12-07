@@ -57,9 +57,9 @@ instance (
 withAnonymousContext :: KontraMonad m => m a -> m a
 withAnonymousContext action = do
   ctx <- getContext
-  let ctx' = ctx { ctxmaybeuser = Nothing
-                 , ctxmaybepaduser = Nothing
-                 }
+  let ctx' = set ctxmaybeuser    Nothing $
+             set ctxmaybepaduser Nothing $
+             ctx
   modifyContext $ const ctx'
   res <- action
   modifyContext $ const ctx

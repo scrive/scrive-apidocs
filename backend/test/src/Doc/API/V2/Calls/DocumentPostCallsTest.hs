@@ -50,14 +50,14 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
 testDocApiV2New :: TestEnv ()
 testDocApiV2New = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   status <- getMockDocStatus <$> testDocApiV2New' ctx
   assertEqual "Document should be in preparation" Preparation status
 
 testDocApiV2NewFromTemplate :: TestEnv ()
 testDocApiV2NewFromTemplate = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -74,7 +74,7 @@ testDocApiV2NewFromTemplateShared :: TestEnv ()
 testDocApiV2NewFromTemplateShared = do
   (Company {companyid}) <- addNewCompany
   author <- addNewRandomCompanyUser companyid False
-  ctxauthor <- (\c -> c { ctxmaybeuser = Just author }) <$> mkContext def
+  ctxauthor <- (set ctxmaybeuser (Just author)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -85,7 +85,7 @@ testDocApiV2NewFromTemplateShared = do
 
   _ <- randomUpdate $ SetDocumentSharing [did] True
   user <- addNewRandomCompanyUser companyid False
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     is_not_template <- getMockDocIsTemplate <$> mockDocTestRequestHelper ctx POST [] (docApiV2NewFromTemplate did) 201
@@ -94,7 +94,7 @@ testDocApiV2NewFromTemplateShared = do
 testDocApiV2Update :: TestEnv ()
 testDocApiV2Update = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   let new_title = "testTitle blah 42$#$%^"
@@ -105,14 +105,14 @@ testDocApiV2Update = do
 testDocApiV2Start :: TestEnv ()
 testDocApiV2Start = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   _ <- testDocApiV2Start' ctx
   return ()
 
 testDocApiV2Prolong :: TestEnv ()
 testDocApiV2Prolong = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   mockDoc <- testDocApiV2Start' ctx
   assertEqual "Default number of days should match" 90 $ getMockDocDaysToSign mockDoc
   let did = getMockDocId mockDoc
@@ -126,7 +126,7 @@ testDocApiV2Prolong = do
 testDocApiV2Cancel :: TestEnv ()
 testDocApiV2Cancel = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2Start' ctx
 
   cancel_status <- getMockDocStatus <$> mockDocTestRequestHelper ctx POST [] (docApiV2Cancel did) 200
@@ -135,7 +135,7 @@ testDocApiV2Cancel = do
 testDocApiV2Trash :: TestEnv ()
 testDocApiV2Trash = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   is_trashed <- getMockDocIsTrashed <$> mockDocTestRequestHelper ctx POST [] (docApiV2Trash did) 200
@@ -144,7 +144,7 @@ testDocApiV2Trash = do
 testDocApiV2Delete :: TestEnv ()
 testDocApiV2Delete = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   _ <- mockDocTestRequestHelper ctx POST [] (docApiV2Trash did) 200
@@ -156,7 +156,7 @@ testDocApiV2Delete = do
 testDocApiV2Remind :: TestEnv ()
 testDocApiV2Remind = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2Start' ctx
   _ <- testRequestHelper ctx POST [] (docApiV2Remind did) 202
   return ()
@@ -164,7 +164,7 @@ testDocApiV2Remind = do
 testDocApiV2Forward :: TestEnv ()
 testDocApiV2Forward = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   mockDoc <- testDocApiV2Start' ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -183,7 +183,7 @@ testDocApiV2Forward = do
 testDocApiV2SetFile :: TestEnv ()
 testDocApiV2SetFile = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -199,7 +199,7 @@ testDocApiV2SetFile = do
 testDocApiV2SetAttachments :: TestEnv ()
 testDocApiV2SetAttachments = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -234,7 +234,7 @@ testDocApiV2SetAttachments = do
 testDocApiV2SetAutoReminder :: TestEnv ()
 testDocApiV2SetAutoReminder = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2Start' ctx
 
   _auto_remind_time <- getMockDocHasAutoRemindTime <$> mockDocTestRequestHelper ctx
@@ -246,7 +246,7 @@ testDocApiV2SetAutoReminder = do
 testDocApiV2Clone :: TestEnv ()
 testDocApiV2Clone = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   mockDoc <- testDocApiV2New' ctx
   let did = getMockDocId mockDoc
 
@@ -256,7 +256,7 @@ testDocApiV2Clone = do
 testDocApiV2RemovePages :: TestEnv ()
 testDocApiV2RemovePages = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   do -- File changes and name stays the same when removing pages
@@ -272,7 +272,7 @@ testDocApiV2RemovePages = do
 testDocApiV2Restart :: TestEnv ()
 testDocApiV2Restart = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   mockDoc <- testDocApiV2Start' ctx
   let did = getMockDocId mockDoc
 
@@ -284,7 +284,7 @@ testDocApiV2Restart = do
 testDocApiV2Callback :: TestEnv ()
 testDocApiV2Callback = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   mockDoc <- testDocApiV2New' ctx
   let did = getMockDocId mockDoc
 
@@ -311,7 +311,7 @@ testDocApiV2Callback = do
 testDocApiV2SigSetAuthenticationToView :: TestEnv ()
 testDocApiV2SigSetAuthenticationToView = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   mockDoc <- testDocApiV2Start' ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -407,7 +407,7 @@ testDocApiV2SigSetAuthenticationToView = do
 testDocApiV2SigSetAuthenticationToSign :: TestEnv ()
 testDocApiV2SigSetAuthenticationToSign = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   mockDoc <- testDocApiV2Start' ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -487,7 +487,7 @@ testDocApiV2SigSetAuthenticationToSign = do
 testDocApiV2SigChangeEmailAndMobile :: TestEnv ()
 testDocApiV2SigChangeEmailAndMobile = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   -- Params that we will re-use
   let param_email x = ("email", inText x)

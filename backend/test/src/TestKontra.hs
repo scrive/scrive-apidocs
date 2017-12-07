@@ -44,6 +44,7 @@ import qualified Data.Map as M
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import BrandedDomain.Model
+import Context.Internal
 import DB
 import DB.PostgreSQL
 import Happstack.Server.ReqHandler
@@ -304,36 +305,36 @@ mkContext lang = do
   liftIO $ do
     filecache <- MemCache.new BS.length 52428800
     return Context {
-          ctxmaybeuser = Nothing
-        , ctxtime = time
-        , ctxclientname = Nothing
-        , ctxclienttime = Nothing
-        , ctxipnumber = noIP
-        , ctxproduction = False
-        , ctxcdnbaseurl = Nothing
-        , ctxtemplates = localizedVersion lang globaltemplates
-        , ctxglobaltemplates = globaltemplates
-        , ctxlang = lang
-        , ctxismailbackdooropen = False
-        , ctxmailnoreplyaddress = "noreply@scrive.com"
-        , ctxcgigrpconfig = Nothing
-        , ctxmrediscache = Nothing
-        , ctxfilecache = filecache
-        , ctxxtoken = $unexpectedError "xtoken is not defined"
-        , ctxadminaccounts = []
-        , ctxsalesaccounts = []
-        , ctxmaybepaduser = Nothing
-        , ctxusehttps = False
-        , ctxgtconf = def
-        , ctxsessionid = tempSessionID
-        , ctxtrackjstoken = Nothing
-        , ctxmixpaneltoken = Nothing
-        , ctxgatoken = Nothing
-        , ctxhubspotconf = Nothing
-        , ctxbrandeddomain = bd
-        , ctxsalesforceconf = Nothing
-        , ctxnetsconfig = Nothing
-        , ctxisapilogenabled = True
+          _ctxmaybeuser = Nothing
+        , _ctxtime = time
+        , _ctxclientname = Nothing
+        , _ctxclienttime = Nothing
+        , _ctxipnumber = noIP
+        , _ctxproduction = False
+        , _ctxcdnbaseurl = Nothing
+        , _ctxtemplates = localizedVersion lang globaltemplates
+        , _ctxglobaltemplates = globaltemplates
+        , _ctxlang = lang
+        , _ctxismailbackdooropen = False
+        , _ctxmailnoreplyaddress = "noreply@scrive.com"
+        , _ctxcgigrpconfig = Nothing
+        , _ctxmrediscache = Nothing
+        , _ctxfilecache = filecache
+        , _ctxxtoken = $unexpectedError "xtoken is not defined"
+        , _ctxadminaccounts = []
+        , _ctxsalesaccounts = []
+        , _ctxmaybepaduser = Nothing
+        , _ctxusehttps = False
+        , _ctxgtconf = def
+        , _ctxsessionid = tempSessionID
+        , _ctxtrackjstoken = Nothing
+        , _ctxmixpaneltoken = Nothing
+        , _ctxgatoken = Nothing
+        , _ctxhubspotconf = Nothing
+        , _ctxbrandeddomain = bd
+        , _ctxsalesforceconf = Nothing
+        , _ctxnetsconfig = Nothing
+        , _ctxisapilogenabled = True
     }
 
 -- pgsql database --

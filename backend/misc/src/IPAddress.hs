@@ -8,7 +8,7 @@ module IPAddress (
   , ipAddressIsInNetwork
   ) where
 
-import Data.Binary
+import Data.Binary as B
 import Data.Bits
 import Data.Char
 import Data.Int
@@ -22,7 +22,7 @@ newtype IPAddress = IPAddress Word32
 
 instance Binary IPAddress where
   put (IPAddress w32) = put w32
-  get = IPAddress `fmap` get
+  get = IPAddress `fmap` B.get
 
 -- IP addresses are currently cast to signed Int32 in DB
 instance PQFormat IPAddress where

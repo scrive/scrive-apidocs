@@ -56,15 +56,15 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
       companyname = companyname
   }
   _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
-    (ctxipnumber ctx) (ctxtime ctx) (userinfo actvuser)
+    (get ctxipnumber ctx) (get ctxtime ctx) (userinfo actvuser)
     ((userinfo actvuser) { userfstname = fromMaybe "" mfstname , usersndname =  fromMaybe "" msndname })
-    (userid <$> ctxmaybeuser ctx)
-  _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-  _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
-  _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
+    (userid <$> get ctxmaybeuser ctx)
+  _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (get ctxipnumber ctx) (get ctxtime ctx) (userid <$> get ctxmaybeuser ctx)
+  _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (get ctxtime ctx)
+  _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (get ctxipnumber ctx) (get ctxtime ctx) (userid <$> get ctxmaybeuser ctx)
   _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
 
-  dbUpdate $ ConnectSignatoriesToUser (Email $ getEmail actvuser) (userid actvuser) (14 `daysBefore` ctxtime ctx)
+  dbUpdate $ ConnectSignatoriesToUser (Email $ getEmail actvuser) (userid actvuser) (14 `daysBefore` get ctxtime ctx)
 
   mpassword <- getOptionalField asValidPassword "password"
   F.forM_ mpassword $ \password -> do
@@ -84,9 +84,9 @@ createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMon
 createUser email names companyandrole lang sm = do
   ctx <- getContext
   passwd <- randomPassword
-  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyandrole lang (bdid $ ctxbrandeddomain ctx) sm
+  muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyandrole lang (get (bdid . ctxbrandeddomain) ctx) sm
   case muser of
     Just user -> do
-      _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) email (userid <$> getContextUser ctx)
+      _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (get ctxipnumber ctx) (get ctxtime ctx) email (userid <$> getContextUser ctx)
       return muser
     _ -> return muser

@@ -87,7 +87,7 @@ flashMessageUserHasIdentifiedWithDifferentSSN =
 handleResolve :: Kontrakcja m => m InternalKontraResponse
 handleResolve = do
   ctx <- getContext
-  case (ctxnetsconfig ctx) of
+  case (get ctxnetsconfig ctx) of
     Nothing -> do
       logAttention_ "Request to resolve nets authorization when no nets config available"
       internalError
@@ -139,7 +139,7 @@ handleResolve = do
 
 handleResolveNetsNOBankID :: Kontrakcja m => GetAssertionResponse -> Document -> NetsTarget -> SignatoryLink -> Context -> m Bool
 handleResolveNetsNOBankID res doc nt sl ctx = do
-  sessionID <- ctxsessionid <$> getContext
+  sessionID <- get ctxsessionid <$> getContext
   let decodeInternalProvider s = case s of
          "no_bankid"         -> NetsNOBankIDStandard
          "no_bidmob"         -> NetsNOBankIDMobile
@@ -200,7 +200,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
 
 handleResolveNetsDKNemID :: Kontrakcja m => GetAssertionResponse -> Document -> NetsTarget -> SignatoryLink -> Context -> m Bool
 handleResolveNetsDKNemID res doc nt sl ctx = do
-  sessionID <- ctxsessionid <$> getContext
+  sessionID <- get ctxsessionid <$> getContext
   let decodeInternalProvider s = case s of
          "dk_nemid_js"       -> NetsDKNemIDKeyCard
          "dk_nemid-opensign" -> NetsDKNemIDKeyFile

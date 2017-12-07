@@ -241,35 +241,35 @@ handleUndeliveredInvitation mailNoreplyAddress bd slid = do
 
 mailDeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => String -> BrandedDomain -> SignatoryLink -> Document -> m Mail
 mailDeliveredInvitation mailNoreplyAddress bd signlink doc =do
-  theme <- dbQuery $ GetTheme $ bdMailTheme bd
+  theme <- dbQuery $ GetTheme $ get bdMailTheme bd
   kontramail mailNoreplyAddress bd theme "invitationMailDeliveredAfterDeferred" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "email" $ getEmail signlink
     F.value "documenttitle" $ documenttitle doc
-    F.value "ctxhostpart" $ bdUrl bd
+    F.value "ctxhostpart" $ get bdUrl bd
     brandingMailFields theme
 
 
 mailDeferredInvitation ::(TemplatesMonad m, MonadDB m, MonadThrow m) => String -> BrandedDomain -> SignatoryLink -> Document -> m Mail
 mailDeferredInvitation mailNoreplyAddress bd sl doc = do
-  theme <- dbQuery $ GetTheme $ bdMailTheme bd
+  theme <- dbQuery $ GetTheme $ get bdMailTheme bd
   kontramail mailNoreplyAddress bd theme"invitationMailDeferred" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "counterpartname" $ getFullName sl
     F.value "counterpartemail" $ getEmail sl
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
-    F.value "ctxhostpart" $ bdUrl bd
+    F.value "ctxhostpart" $ get bdUrl bd
     brandingMailFields theme
 
 
 mailUndeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => String -> BrandedDomain -> SignatoryLink -> Document -> m Mail
 mailUndeliveredInvitation mailNoreplyAddress bd signlink doc =do
-  theme <- dbQuery $ GetTheme $ bdMailTheme bd
+  theme <- dbQuery $ GetTheme $ get bdMailTheme bd
   kontramail mailNoreplyAddress bd theme "invitationMailUndelivered" $ do
     F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink
     F.value "name" $ getFullName signlink
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
-    F.value "ctxhostpart" $ bdUrl bd
+    F.value "ctxhostpart" $ get bdUrl bd
     brandingMailFields theme

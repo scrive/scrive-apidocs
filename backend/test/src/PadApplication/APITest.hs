@@ -25,7 +25,7 @@ testPadApplicationPadInfoGet :: TestEnv ()
 testPadApplicationPadInfoGet = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  ctx1 <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx1 <- (set ctxmaybeuser (Just user)) <$> mkContext def
   req1 <- mkRequest GET []
   (res1, _ctx2) <- runTestKontra req1 ctx1 apiCallGetPadInfo
   let Just (Object resObject1) = decode (rsBody res1) :: Maybe Value

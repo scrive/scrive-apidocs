@@ -124,6 +124,7 @@ Library
                  , CompanyAccounts.Tables
                  , Configuration
                  , Context
+                 , Context.Internal
                  , Control.Monad.Trans.Control.Util
                  , Control.Monad.Trans.Instances
                  , Cookies
@@ -437,6 +438,11 @@ Library
                  , Version
                  , VersionTH
 
+  Other-Modules: BrandedDomain.BrandedDomain.Internal,
+                 BrandedDomain.BrandedDomain.Labels,
+                 Context.Labels,
+                 MailContext.Internal,
+                 MailContext.Labels
   Build-depends: base
                , AES
                , Crypto
@@ -471,6 +477,7 @@ Library
                , ekg-statsd
                , exceptions
                , explicit-exception
+               , fclabels
                , fields-json
                , filepath
                , free
@@ -803,6 +810,7 @@ Executable kontrakcja-migrate
                , data-default
                , directory
                , exceptions
+               , fclabels
                , fields-json
                , hpqtypes
                , hpqtypes-extras
@@ -951,6 +959,7 @@ Executable mailing-server
                , ekg-core
                , ekg-statsd
                , exceptions
+               , fclabels
                , fields-json
                , filepath
                , hS3
@@ -1090,6 +1099,7 @@ Executable messenger-server
                , ekg-core
                , ekg-statsd
                , exceptions
+               , fclabels
                , fields-json
                , happstack-server
                , happstack-static-routing
@@ -1423,6 +1433,7 @@ Executable localization
                , data-default
                , directory
                , exceptions
+               , fclabels
                , happstack-server
                , hpqtypes
                , kontrakcja-templates

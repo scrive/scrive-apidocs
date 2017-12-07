@@ -103,7 +103,7 @@ handleNewDocument = withUser $ \user -> do
     Nothing -> logInfo_ "'timezone' cookie not found"
     _ -> return ()
   timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezonename)
-  timestamp <- formatTimeSimpleWithTZ timezone (ctxtime ctx)
+  timestamp <- formatTimeSimpleWithTZ timezone (get ctxtime ctx)
   doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ timestamp) Signable timezone 1 actor
   -- Default document on the frontend has different requirements,
   -- this sets up the signatories to match those requirements.
@@ -330,7 +330,7 @@ handleEvidenceAttachment docid aname = logDocument docid $ localData ["attachmen
 handleIssueShowGet :: Kontrakcja m => DocumentID -> m InternalKontraResponse
 handleIssueShowGet docid = withUserTOS $ \_ -> do
   document <- getDocByDocID docid
-  muser <- ctxmaybeuser <$> getContext
+  muser <- get ctxmaybeuser <$> getContext
 
   authorsiglink <- guardJust $ getAuthorSigLink document
 
@@ -449,7 +449,7 @@ handleToStart :: Kontrakcja m => m Response
 handleToStart = do
   ctx <- getContext
   ad <- getAnalyticsData
-  case (ctxmaybeuser ctx) of
+  case (get ctxmaybeuser ctx) of
     Just _ -> simpleHtmlResponse =<< pageDocumentToStartList ctx  ad
     _ -> simpleHtmlResponse =<< pageDocumentToStartLogin ctx  ad
 
@@ -498,7 +498,7 @@ checkFileAccessWith fid msid mmh mdid mattid =
        indoc <- dbQuery $ FileInDocument did fid
        when (not indoc) $ internalError
     (_,_,_,Just attid) -> guardLoggedInOrThrowInternalError $ do
-       user <- guardJustM $ ctxmaybeuser <$> getContext
+       user <- guardJustM $ get ctxmaybeuser <$> getContext
        atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
                                             , AttachmentsOfAuthorDeleteValue (userid user) True
                                             , AttachmentsOfAuthorDeleteValue (userid user) False
@@ -547,7 +547,7 @@ handleVerify = do
                     return pth
             _ -> internalError
       ctx <- getContext
-      J.toJSValue <$> GuardTime.verify (ctxgtconf ctx) filepath
+      J.toJSValue <$> GuardTime.verify (get ctxgtconf ctx) filepath
 
 handleMarkAsSaved :: Kontrakcja m => DocumentID -> m JSValue
 handleMarkAsSaved docid = guardLoggedInOrThrowInternalError $ do
@@ -561,5 +561,5 @@ addEventForVisitingSigningPageIfNeeded ev sl = do
   ctx <- getContext
   doc <- theDocument
   when (isPending doc && isNothing (maybesigninfo sl)) $ do
-    updateMTimeAndObjectVersion $ ctxtime ctx
+    updateMTimeAndObjectVersion $ get ctxtime ctx
     void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg ev  (return ()) (Just sl) Nothing =<< signatoryActor ctx sl

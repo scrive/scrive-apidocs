@@ -120,9 +120,9 @@ kontramailHelper noreplyAddress bd theme renderFunc tname fields = do
                              [] -> $unexpectedError "Couldnt separate email content from title"
                              (title':contentChunks) -> (unescapeHTML title', join "\r\n" contentChunks)
     return $ emptyMail {
-                         originator = bdEmailOriginator bd
+                         originator      = get bdEmailOriginator bd
                        , originatorEmail = noreplyAddress
-                       , title   = title
-                       , content = content
+                       , title           = title
+                       , content         = content
                        , attachments = [("logo-"++ (imageAdler32 $ themeLogo  theme) ++ ".png", Left $ themeLogo theme)]
                        }

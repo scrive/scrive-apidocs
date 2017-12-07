@@ -35,11 +35,12 @@ getCompanyForUser user = dbQuery $ GetCompanyByUserID $ userid user
 withUser :: Kontrakcja m => (User -> m InternalKontraResponse) -> m InternalKontraResponse
 withUser action = do
     ctx <- getContext
-    case ctxmaybeuser ctx of
+    case get ctxmaybeuser ctx of
       Just user -> action user
       Nothing   -> do
        flashmessage <- flashMessageLoginRedirect
-       return $ internalResponseWithFlash flashmessage (LinkLogin (ctxlang ctx))
+       return $ internalResponseWithFlash flashmessage
+         (LinkLogin (get ctxlang ctx))
 
 {- |
   Guard against a GET/POST with no logged in user.
@@ -48,7 +49,7 @@ withUser action = do
 guardLoggedInOrThrowInternalError :: Kontrakcja m => m a -> m a
 guardLoggedInOrThrowInternalError action = do
    ctx <- getContext
-   case ctxmaybeuser ctx of
+   case get ctxmaybeuser ctx of
      Just _user -> action
      Nothing    -> internalError
 
@@ -69,9 +70,9 @@ withUserTOS action = withUser $ \user -> do
 -}
 withUserCompany :: Kontrakcja m => ((User, Company) -> m a) -> m a
 withUserCompany action = do
-  Context{ ctxmaybeuser } <- getContext
-  user <- guardJust ctxmaybeuser
-  company <- getCompanyForUser user
+  maybeuser <- get ctxmaybeuser <$> getContext
+  user      <- guardJust maybeuser
+  company   <- getCompanyForUser user
   action (user, company)
 
 {- |

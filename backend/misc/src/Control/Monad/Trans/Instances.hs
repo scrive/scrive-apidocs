@@ -2,7 +2,7 @@
 module Control.Monad.Trans.Instances () where
 
 import Control.Monad.Reader
-import Control.Monad.State
+import Control.Monad.State as S
 import Control.Monad.Trans.Control
 
 import Control.Monad.Trans.Control.Util
@@ -22,7 +22,7 @@ instance {-# OVERLAPS #-} (
   , MonadTrans t
   , MonadState s m
   ) => MonadState s (t m) where
-    get = lift get
+    get = lift S.get
     put = lift . put
 
 {-

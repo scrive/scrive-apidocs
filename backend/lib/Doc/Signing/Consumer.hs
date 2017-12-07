@@ -42,6 +42,7 @@ import IPAddress
 import KontraError
 import KontraPrelude
 import MailContext
+import MailContext.Internal
 import MemCache (MemCache)
 import MinutesTime
 import Templates
@@ -130,10 +131,10 @@ documentSigning amazonConf guardTimeConf cgiGrpConf
             , A.awsGlobalCache = globalCache
             }
           mc = MailContext {
-              mctxlang = signingLang
-            , mctxcurrentBrandedDomain = bd
-            , mctxtime = now
-            , mctxmailNoreplyAddress = mailNoreplyAddress
+              _mctxlang                 = signingLang
+            , _mctxcurrentBrandedDomain = bd
+            , _mctxtime                 = now
+            , _mctxmailNoreplyAddress   = mailNoreplyAddress
             }
       runTemplatesT (signingLang, templates)
         . A.runAmazonMonadT ac

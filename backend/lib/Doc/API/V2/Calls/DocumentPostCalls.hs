@@ -82,7 +82,7 @@ docApiV2New = api $ do
     Nothing -> do
       ctx <- getContext
       title <- renderTemplate_ "newDocumentTitle"
-      return $ title ++ " " ++ formatTimeSimple (ctxtime ctx)
+      return $ title ++ " " ++ formatTimeSimple (get ctxtime ctx)
     Just f -> return . dropExtension . filename $ f
   (dbUpdate $ NewDocument user title Signable defaultTimeZoneName 0 actor) `withDocumentM` do
     dbUpdate $ SetDocumentUnsavedDraft (not saved)
@@ -154,7 +154,7 @@ docApiV2Start did = logDocument did . api $ do
     guardThatDocumentCanBeStarted =<< theDocument
     -- Parameters
     authorSignsNow <- apiV2ParameterDefault False (ApiV2ParameterBool "author_signs_now")
-    t <- ctxtime <$> getContext
+    t <- get ctxtime <$> getContext
     timezone <- documenttimezonename <$> theDocument
     dbUpdate $ PreparationToPending actor timezone
     dbUpdate $ SetDocumentInviteTime t actor
@@ -408,7 +408,7 @@ docApiV2SetAutoReminder did = logDocument did . api $ do
       Just d -> do
         ctx <- getContext
         tot <- documenttimeouttime <$> theDocument
-        if d < 1 || (isJust tot && d `daysAfter` (ctxtime ctx) > fromJust tot)
+        if d < 1 || (isJust tot && d `daysAfter` (get ctxtime ctx) > fromJust tot)
           then apiError $ requestParameterInvalid "days" "Must be a number between 1 and the number of days left to sign"
           else return $ Just d
     -- API call actions

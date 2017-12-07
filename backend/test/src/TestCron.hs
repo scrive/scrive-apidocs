@@ -24,7 +24,7 @@ import TestKontra
 import qualified CronEnv
 
 runTestCronUntilIdle :: Context -> TestEnv ()
-runTestCronUntilIdle  Context{..} = do
+runTestCronUntilIdle ctx = do
   -- This is intented to run as part of a test and tests are usually one big transaction.
   -- Running consumers spawns additional processes with their own DB transactions,
   -- which do not see changes of the test transaction ... unless there is a commit.
@@ -49,19 +49,19 @@ runTestCronUntilIdle  Context{..} = do
         [ ( "document sealing"
           , runConsumerWithIdleSignal . modTimeout
             $ documentSealing (cronAmazonConfig cronConf) (cronGuardTimeConf cronConf)
-                ctxglobaltemplates ctxfilecache ctxmrediscache pool
+                (get ctxglobaltemplates ctx) (get ctxfilecache ctx) (get ctxmrediscache ctx) pool
                 (cronMailNoreplyAddress cronConf) (cronConsumerSealingMaxJobs cronConf)
           )
         , ( "document signing"
           , runConsumerWithIdleSignal . modTimeout
             $ documentSigning (cronAmazonConfig cronConf) (cronGuardTimeConf cronConf)
-                (cronCgiGrpConfig cronConf) ctxglobaltemplates ctxfilecache ctxmrediscache
+                (cronCgiGrpConfig cronConf) (get ctxglobaltemplates ctx) (get ctxfilecache ctx) (get ctxmrediscache ctx)
                 pool (cronMailNoreplyAddress cronConf) (cronConsumerSigningMaxJobs cronConf)
           )
         , ( "document extending"
           , runConsumerWithIdleSignal . modTimeout
             $ documentExtendingConsumer (cronAmazonConfig cronConf) (cronGuardTimeConf cronConf)
-                ctxglobaltemplates ctxfilecache ctxmrediscache pool (cronConsumerExtendingMaxJobs cronConf)
+                (get ctxglobaltemplates ctx) (get ctxfilecache ctx) (get ctxmrediscache ctx) pool (cronConsumerExtendingMaxJobs cronConf)
           )
         , ( "api callbacks"
           , runConsumerWithIdleSignal . modTimeout
@@ -77,9 +77,9 @@ runTestCronUntilIdle  Context{..} = do
                 {-runCronEnv-} id {-runDB-} id (cronConsumerCronMaxJobs cronConf)
           )
         ]
-      cronEnvData = CronEnv.CronEnv (cronSalesforceConf cronConf) ctxglobaltemplates
+      cronEnvData = CronEnv.CronEnv (cronSalesforceConf cronConf) (get ctxglobaltemplates ctx)
                       (cronMailNoreplyAddress cronConf)
-      amazonCfg   = AmazonConfig (cronAmazonConfig cronConf) ctxfilecache ctxmrediscache
+      amazonCfg   = AmazonConfig (cronAmazonConfig cronConf) (get ctxfilecache ctx) (get ctxmrediscache ctx)
 
       finalizeRunner ((label, runner), idleSignal) =
         finalize (localDomain label $ runner pool idleSignal)

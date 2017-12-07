@@ -20,12 +20,12 @@ module Kontra
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
-import Control.Monad.State.Strict
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Happstack.Server
 import Log
 import Text.StringTemplates.Templates
+import qualified Control.Monad.State.Strict as S
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import Context
@@ -46,7 +46,7 @@ import User.Model
 import Utils.HTTP
 import qualified Amazon as AWS
 
-type InnerKontra = StateT Context (DBT (AWS.AmazonMonadT (CryptoRNGT (LogT (ReqHandlerT IO)))))
+type InnerKontra = S.StateT Context (DBT (AWS.AmazonMonadT (CryptoRNGT (LogT (ReqHandlerT IO)))))
 
 -- | Kontra is a traditional Happstack handler monad except that it's
 -- not WebMonad.
@@ -58,7 +58,7 @@ newtype Kontra a = Kontra { unKontra :: InnerKontra a }
   deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, ServerMonad, AWS.AmazonMonad, MonadLog)
 
 runKontra :: Context -> Kontra a -> DBT (AWS.AmazonMonadT (CryptoRNGT (LogT (ReqHandlerT IO)))) a
-runKontra ctx f = evalStateT (unKontra f) ctx
+runKontra ctx f = S.evalStateT (unKontra f) ctx
 
 instance MonadBaseControl IO Kontra where
   type StM Kontra a = StM InnerKontra a
@@ -68,33 +68,33 @@ instance MonadBaseControl IO Kontra where
   {-# INLINE restoreM #-}
 
 instance MonadTime Kontra where
-  currentTime = ctxtime <$> getContext
+  currentTime = get ctxtime <$> getContext
 
 instance KontraMonad Kontra where
-  getContext    = Kontra get
-  modifyContext = Kontra . modify
+  getContext    = Kontra S.get
+  modifyContext = Kontra . S.modify
 
 instance TemplatesMonad Kontra where
-  getTemplates = ctxtemplates <$> getContext
+  getTemplates = get ctxtemplates <$> getContext
   getTextTemplatesByLanguage langStr = do
-     Context{ctxglobaltemplates} <- getContext
-     return $ TL.localizedVersion langStr ctxglobaltemplates
+     globaltemplates <- get ctxglobaltemplates <$> getContext
+     return $ TL.localizedVersion langStr globaltemplates
 
 instance GuardTimeConfMonad Kontra where
-  getGuardTimeConf = ctxgtconf <$> getContext
+  getGuardTimeConf = get ctxgtconf <$> getContext
 
 instance MailContextMonad Kontra where
   getMailContext = contextToMailContext <$> getContext
 
 {- Logged in user is admin-}
 isAdmin :: Context -> Bool
-isAdmin ctx = maybe False (`elem` ctxadminaccounts ctx)
-  (useremail <$> userinfo <$> ctxmaybeuser ctx)
+isAdmin ctx = maybe False (`elem` get ctxadminaccounts ctx)
+  (useremail <$> userinfo <$> get ctxmaybeuser ctx)
 
 {- Logged in user is sales -}
 isSales :: Context -> Bool
-isSales ctx = maybe False (`elem` ctxsalesaccounts ctx)
-  (useremail <$> userinfo <$> ctxmaybeuser ctx)
+isSales ctx = maybe False (`elem` get ctxsalesaccounts ctx)
+  (useremail <$> userinfo <$> get ctxmaybeuser ctx)
 
 {- |
    Will 404 if not logged in as an admin.
@@ -121,7 +121,7 @@ onlySalesOrAdmin m = do
 -}
 onlyBackdoorOpen :: Kontrakcja m => m a -> m a
 onlyBackdoorOpen a = do
-  backdoorOpen <- ctxismailbackdooropen <$> getContext
+  backdoorOpen <- get ctxismailbackdooropen <$> getContext
   if backdoorOpen
     then a
     else respond404
@@ -131,11 +131,11 @@ onlyBackdoorOpen a = do
 -}
 logUserToContext :: Kontrakcja m => Maybe User -> m ()
 logUserToContext user =
-    modifyContext $ \ctx -> ctx { ctxmaybeuser = user}
+    modifyContext $ set ctxmaybeuser user
 
 logPadUserToContext :: Kontrakcja m => Maybe User -> m ()
 logPadUserToContext user =
-    modifyContext $ \ctx -> ctx { ctxmaybepaduser = user}
+    modifyContext $ set ctxmaybepaduser user
 
 unsafeSessionTakeover :: Kontrakcja m => SessionCookieInfo -> m (Maybe Session)
 unsafeSessionTakeover SessionCookieInfo{..} = do
@@ -146,15 +146,18 @@ unsafeSessionTakeover SessionCookieInfo{..} = do
    Just s -> do
     mUser <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesUserID s
     mPadUser <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesPadUserID s
-    modifyContext $ \ctx -> ctx { ctxsessionid = sesID s, ctxmaybeuser = mUser, ctxmaybepaduser = mPadUser}
+    modifyContext $ (\ctx -> set ctxsessionid (sesID s) $
+                             set ctxmaybeuser mUser $
+                             set ctxmaybepaduser mPadUser $ ctx)
     return $ Just s
 
 switchLang :: Kontrakcja m => Lang -> m ()
 switchLang lang =
-     modifyContext $ \ctx -> ctx {
-         ctxlang       = lang,
-         ctxtemplates  = localizedVersion lang (ctxglobaltemplates ctx)
-     }
+     modifyContext $
+     \ctx -> set ctxlang lang $
+             set ctxtemplates
+             (localizedVersion lang (get ctxglobaltemplates ctx))
+             $ ctx
 
 -- | Extract data from GET or POST request. Fail with 'internalError' if param
 -- variable not present or when it cannot be read.

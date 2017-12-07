@@ -10,7 +10,7 @@ import Log
 import Test.Framework
 import qualified Data.Text as T
 
-import BrandedDomain.BrandedDomain (BrandedDomain(bdUrl))
+import BrandedDomain.BrandedDomain
 import Company.Model
 import Context
 import DB.Query (dbUpdate)
@@ -49,7 +49,7 @@ apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
 testDocApiV2List :: TestEnv ()
 testDocApiV2List = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   _ <- testDocApiV2New' ctx
   _ <- testDocApiV2New' ctx
@@ -64,7 +64,7 @@ testDocApiV2List = do
 testDocApiV2Get :: TestEnv ()
 testDocApiV2Get = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -78,7 +78,7 @@ mockDocToShortID md = read $ reverse $ take 6 $ reverse $ show (getMockDocId md)
 testDocApiV2GetShortCode :: TestEnv ()
 testDocApiV2GetShortCode = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   newMockDoc <- testDocApiV2Start' ctx
   let shortDid = mockDocToShortID newMockDoc
 
@@ -120,7 +120,7 @@ testDocApiV2GetShortCode = do
 testMallory :: Request -> Kontra Response -> TestEnv ()
 testMallory getRequest req = do
   mallory <- addNewRandomUser
-  ctxMallory <- (\c -> c { ctxmaybeuser = Just mallory }) <$> mkContext def
+  ctxMallory <- (set ctxmaybeuser (Just mallory)) <$> mkContext def
   (resMallory,_) <- runTestKontra getRequest ctxMallory $ req
   assertEqual "We should get a 403 response for someone else's document"
     403 (rsCode resMallory)
@@ -128,7 +128,7 @@ testMallory getRequest req = do
 testDocApiV2GetQRCode :: TestEnv ()
 testDocApiV2GetQRCode = do
   user <- addNewRandomUser
-  ctx  <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext def
   newMockDoc <- testDocApiV2Start' ctx
   let did  = getMockDocId newMockDoc
       slid = getMockDocSigLinkId 1 newMockDoc
@@ -136,8 +136,7 @@ testDocApiV2GetQRCode = do
   -- Test that everything works normally...
   forM_ [ "https://scrive.com", "http://scrive.com", "http://scrive.com:9000"
         , "scrive.com", "scrive.com:9000", "localhost:8000" ] $ \domain -> do
-    let ctx' = ctx { ctxbrandeddomain =
-                     (ctxbrandeddomain ctx) { bdUrl = domain } }
+    let ctx' = set (bdUrl . ctxbrandeddomain) domain $ ctx
     getQRCode <- testRequestHelper ctx' GET [] (docApiV2GetQRCode did slid) 200
     getURL    <- liftIO $ decodeQRBSL getQRCode
     logInfo_ $ "Decoded QR code: " <> (T.pack getURL)
@@ -181,11 +180,11 @@ testDocApiV2GetByAdmin :: TestEnv ()
 testDocApiV2GetByAdmin = do
   (Company {companyid}) <- addNewCompany
   author <- addNewRandomCompanyUser companyid False
-  ctxauthor <- (\c -> c { ctxmaybeuser = Just author }) <$> mkContext def
+  ctxauthor <- (set ctxmaybeuser (Just author)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   admin <- addNewRandomCompanyUser companyid True
-  ctx <- (\c -> c { ctxmaybeuser = Just admin }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just admin)) <$> mkContext def
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be" "company_admin" (getMockDocViewerRole getMockDoc)
 
@@ -193,7 +192,7 @@ testDocApiV2GetShared :: TestEnv ()
 testDocApiV2GetShared = do
   (Company {companyid}) <- addNewCompany
   author <- addNewRandomCompanyUser companyid False
-  ctxauthor <- (\c -> c { ctxmaybeuser = Just author }) <$> mkContext def
+  ctxauthor <- (set ctxmaybeuser (Just author)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   _ <- mockDocTestRequestHelper ctxauthor POST [("document", inText "{\"is_template\":true}")] (docApiV2Update did) 200
@@ -202,7 +201,7 @@ testDocApiV2GetShared = do
   assert setshare
 
   user <- addNewRandomCompanyUser companyid False
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be" "company_shared" (getMockDocViewerRole getMockDoc)
   assertEqual "Document should be template" True (getMockDocIsTemplate getMockDoc)
@@ -211,7 +210,7 @@ testDocApiV2GetShared = do
 testDocApiV2History :: TestEnv ()
 testDocApiV2History = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   let checkHistoryHasNItems :: Int -> TestEnv ()
@@ -232,8 +231,8 @@ testDocApiV2HistoryPermissionCheck :: TestEnv ()
 testDocApiV2HistoryPermissionCheck = do
   userAuthor <- addNewRandomUser
   userOther <- addNewRandomUser
-  ctxWithAuthor <- (\c -> c { ctxmaybeuser = Just userAuthor }) <$> mkContext def
-  ctxWithOtherUser <- (\c -> c { ctxmaybeuser = Just userOther }) <$> mkContext def
+  ctxWithAuthor <- (set ctxmaybeuser (Just userAuthor)) <$> mkContext def
+  ctxWithOtherUser <- (set ctxmaybeuser (Just userOther)) <$> mkContext def
 
   did <- getMockDocId <$> testDocApiV2New' ctxWithAuthor
 
@@ -245,7 +244,7 @@ testDocApiV2HistoryPermissionCheck = do
 testDocApiV2EvidenceAttachments :: TestEnv ()
 testDocApiV2EvidenceAttachments = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   mockDoc <- testDocApiV2Start' ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -275,7 +274,7 @@ testDocApiV2EvidenceAttachments = do
 testDocApiV2FilesMain :: TestEnv ()
 testDocApiV2FilesMain = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   doc <- testDocApiV2New' ctx
   let did = getMockDocId doc
 
@@ -283,7 +282,7 @@ testDocApiV2FilesMain = do
   getReq ctx did [] "(standard)" 200
 
   -- GET request via access token
-  let ctx' = ctx { ctxmaybeuser = Nothing }
+  let ctx' = set ctxmaybeuser Nothing ctx
       vars = [ ("access_token"
                , inText . getMockDocAccessToken $ doc) ]
   getReq ctx' did []   "(no access token - expected failure)" 401
@@ -300,7 +299,7 @@ testDocApiV2FilesMain = do
 testDocApiV2FilesGet :: TestEnv ()
 testDocApiV2FilesGet = do
   user <- addNewRandomUser
-  ctx  <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext def
   doc  <- testDocApiV2New' ctx
   let did = getMockDocId doc
 
@@ -315,7 +314,7 @@ testDocApiV2FilesGet = do
   getReq ctx did fid [] "(standard)" 200
 
   -- GET request via access token
-  let ctx' = ctx { ctxmaybeuser = Nothing }
+  let ctx' = set ctxmaybeuser Nothing ctx
       vars = [ ("access_token"
                , inText . getMockDocAccessToken $ doc) ]
   getReq ctx' did fid []   "(no access token - expected failure)" 401
@@ -332,7 +331,7 @@ testDocApiV2FilesGet = do
 testDocApiV2Texts :: TestEnv ()
 testDocApiV2Texts = do
   user <- addNewRandomUser
-  ctx <- (\c -> c { ctxmaybeuser = Just user }) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctx
 
   mockDocSetFile <- mockDocTestRequestHelper ctx POST [("file", inFile $ inTestDir "pdfs/simple.pdf")] (docApiV2SetFile did) 200
