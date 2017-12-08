@@ -64,14 +64,14 @@ kontraExtensions = map EnableExtension [
 
 -- returns list of [recursive] exps (e.g. if a file contains "1+2",
 -- it will return [1, 2, 1+2]
-fileExps :: FilePath -> IO (S.Set (Exp SrcSpanInfo))
+fileExps :: FilePath -> IO (Maybe (S.Set (Exp SrcSpanInfo)))
 fileExps path = do
   parseResult <- parseFileWithMode mode' path
   case parseResult of
-    ParseOk module' -> return $ moduleExps module'
+    ParseOk module' -> return . Just . moduleExps $ module'
     ParseFailed (SrcLoc _ line _) e -> do
       hPutStrLn stderr $ path ++ ":" ++ show line ++ ": " ++ e
-      return S.empty
+      return Nothing
   where mode' = defaultParseMode{ fixities   = Just []
                                 , extensions = kontraExtensions
                                 }
@@ -301,7 +301,10 @@ setCatMaybes = S.fromList . catMaybes . S.toList
 main :: IO ()
 main = do
   files <- filter (".hs" `isSuffixOf`) <$> directoryFilesRecursive "backend"
-  exps <- S.unions <$> mapM fileExps files
+  mexps <- mapM fileExps files
+  when (Nothing `elem` mexps) $
+    exitFailure
+  let exps = S.unions . catMaybes $ mexps
   let topLevelTemplatesFromSources = setCatMaybes $ S.map expTemplateName exps
   events <- elogEvents
   let elogTemplates = S.unions [ S.map (++"Log") events
